@@ -57,7 +57,10 @@ firebase
     })
     .catch(error => clog(`firebase.init error: ${error}`));
 
-import './app.scss';
+// import './app.scss';
+
+const test = require('./app.scss');
+console.log(test);
 import { isIOS } from 'tns-core-modules/platform';
 
 import { primaryColor } from './variables';
@@ -76,7 +79,7 @@ Vue.use(FiltersPlugin);
 
 import { TNSFontIcon } from 'nativescript-fonticon';
 TNSFontIcon.paths = {
-    mdi: './assets/mdi.css'
+    mdi: './assets/materialdesignicons.min.css'
 };
 TNSFontIcon.loadCss();
 

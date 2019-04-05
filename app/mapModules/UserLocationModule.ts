@@ -59,7 +59,7 @@ export default class UserLocationModule extends MapModule {
             const projection = this.mapView.projection;
             this.localVectorDataSource = new LocalVectorDataSource({ projection });
 
-            const layer = new VectorLayer({ dataSource: this.localVectorDataSource });
+            const layer = new VectorLayer({ visibleZoomRange: [0, 24], dataSource: this.localVectorDataSource });
 
             // always add it at 1 to respect local order
             this.mapView.addLayer(layer);
@@ -100,6 +100,8 @@ export default class UserLocationModule extends MapModule {
             });
             this.userMarker = new Point({ position, projection, styleBuilder });
             this.localVectorDataSource.add(this.userMarker);
+            this.userBackMarker.position = position;
+            this.userMarker.position = position;
         } else {
             const projection = this.mapView.projection;
             this.userBackMarker.position = position;
@@ -117,7 +119,7 @@ export default class UserLocationModule extends MapModule {
         this.updateUserLocation(data.location);
         if (!!this.userFollow) {
             this.mapView.setFocusPos(data.location, 200);
-            this.mapView.setZoom(Math.max(this.mapView.zoom, 14), 200);
+            this.mapView.setZoom(Math.max(this.mapView.zoom, 16), 200);
         }
     }
     onServiceLoaded(geoHandler: GeoHandler) {

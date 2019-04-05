@@ -23,7 +23,7 @@
                     <Search ref="searchView" row="1" :projection="mapProjection" />
 
                     <GridLayout rows="auto,*,auto" columns="auto,*,auto" row="2">
-                        <label col="0" colSpan="3" row="2" :text="'zoom:' + currentMapZoom.toFixed(2)" verticalAlignment="bottom" />
+                        <Label col="0" colSpan="3" row="2" :text="'zoom:' + currentMapZoom.toFixed(2)" verticalAlignment="bottom" horizontalAlignment="center" />
                         <StackLayout orientation="vertical" col="0" row="2">
                             <!-- <MDButton @tap="openSearch" class="floating-btn" :text="'mdi-magnify' | fonticon" /> -->
                             <transition name="fade" duration="100">
@@ -39,12 +39,12 @@
                             </transition>
                             <MDButton @tap="askUserLocation" @longPress="onWatchLocation" class="floating-btn" :text="'mdi-crosshairs-gps' | fonticon" />
                         </StackLayout>
-                        <GridLayout row="1" col="0" colSpan="3" columns="'auto,*,auto">
+                        <!-- <GridLayout row="0" col="0" colSpan="3" columns="'auto,*,auto"> -->
                             <transition name="fade" duration="100">
-                                <MDButton v-show="currentMapRotation !== 0" col="2" @tap="resetBearing" class="small-floating-btn" :text="'mdi-compass' | fonticon" :rotate="(-30 + currentMapRotation)" />
+                                <MDButton v-show="currentMapRotation !== 0" col="2" @tap="resetBearing" class="small-floating-btn" :text="'mdi-compass' | fonticon" :rotate="(-45 + currentMapRotation)" verticalAlignment="top"/>
                             </transition>
 
-                        </GridLayout>
+                        <!-- </GridLayout> -->
 
                         <Progress col="0" colSpan="3" row="2" :value="totalDownloadProgress" v-show="totalDownloadProgress > 0" verticalAlignment="bottom" />
                     </GridLayout>
