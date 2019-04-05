@@ -1,0 +1,16 @@
+# JetBrains project files
+.idea
+
+# NPM
+node_modules
+
+# NativeScript application
+hooks
+platforms
+
+certs
+/.vscode/settings.json
+/API_KEYS.ts
+report/
+*.html
+package-lock.json

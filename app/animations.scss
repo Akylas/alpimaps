@@ -1,0 +1,35 @@
+
+.fade-enter-active {
+    animation-name: fade;
+    animation-duration: 300ms;
+    animation-fill-mode: forwards;
+}
+.fade-leave-active {
+    animation-name: fade;
+    animation-duration: 300ms;
+    animation-direction: reverse;
+    animation-fill-mode: forwards;
+}
+
+@keyframes fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+
+.scale-enter-active {
+    animation-name: scale;
+    animation-duration: 200ms;
+    animation-fill-mode: forwards;
+}
+.scale-leave-active {
+    animation-name: scale;
+    animation-duration: 200ms;
+    animation-direction: reverse;
+    animation-fill-mode: forwards;
+}
+
+@keyframes scale {
+    from { transform: scale(0,0); }
+    to { transform: scale(1,1); }
+}

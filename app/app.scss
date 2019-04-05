@@ -1,0 +1,113 @@
+// @import '~nativescript-theme-core/css/core.light.css';
+@import './variables';
+@import './theme';
+@import './animations';
+
+.page {
+    background-color: $background-color;
+}
+
+button {
+    background-color: transparent;
+    color: $primary-color;
+}
+
+mdactivityindicator {
+    width: 50;
+    height: 50;
+}
+
+mdbutton {
+    background-color: transparent;
+    color: $primary-color;
+    ripple-color: $primary-color;
+}
+
+.buttonwhite {
+    background-color: white;
+    color: $text-color;
+    ripple-color: $primary-color;
+}
+.buttonthemed {
+    background-color: $primary-color;
+    color: white;
+    ripple-color: $dark-color;
+}
+.buttontext {
+    background-color: white;
+    color: $primary-color;
+    ripple-color: $primary-color;
+}
+
+.mdi {
+    font-family: 'Material Design Icons', 'MaterialDesignIcons', 'materialdesignicons';
+}
+
+.lato {
+    font-family: 'Lato', 'Lato-Regular';
+}
+
+.themedBack {
+    background-color: $primary-color;
+}
+
+.icon-btn {
+    @extend .mdi, .buttonwhite;
+    color: $text-color;
+    width: 44;
+    height: 44;
+    font-size: 24;
+    margin: 0;
+    padding: 0;
+}
+.floating-btn {
+    @extend .mdi;
+    background-color: $background-color;
+    color: $primary-color;
+    font-size: 36;
+    padding: 0;
+    margin: 0;
+    width: 64;
+    height: 64;
+    border-radius: 32;
+}
+.small-floating-btn {
+    @extend .mdi, .buttonwhite;
+    color: $primary-color;
+    font-size: 20;
+    padding: 0;
+    width: 40;
+    height: 40;
+    border-radius: 20;
+}
+.section-title {
+    font-size: 10;
+}
+
+.list-group {
+    .list-group-item {
+        padding: 0;
+    }
+    .thumb {
+        margin-right: 0;
+    }
+}
+
+.borderBottom {
+    border-bottom-color: #eeeeee;
+    border-bottom-width: 1;
+}
+
+.borderTop {
+    border-top-color: #eeeeee;
+    border-top-width: 1;
+}
+
+.borderRight {
+    border-right-color: #eeeeee;
+    border-right-width: 1;
+}
+.borderLeft {
+    border-left-color: #eeeeee;
+    border-left-width: 1;
+}
