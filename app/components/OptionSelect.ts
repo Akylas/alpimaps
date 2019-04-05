@@ -1,0 +1,40 @@
+import { Component, Prop } from 'vue-property-decorator';
+import Vue from 'nativescript-vue';
+import { Frame, topmost } from 'tns-core-modules/ui/frame/frame';
+
+import { ItemEventData } from 'tns-core-modules/ui/list-view/list-view';
+import { android as androidApp } from 'application';
+import localize from 'nativescript-localize';
+import { clog } from '~/utils/logging';
+
+@Component({})
+export default class OptionSelect extends Vue {
+    @Prop({})
+    public options: Array<{ name: string; data: string }>;
+
+    public height = androidApp ? 350 : '100%';
+    @Prop({ default: 'available devices' })
+    title: string;
+    public constructor() {
+        super();
+    }
+
+    public close(value?: { name: string; data: string }) {
+        this.$modal.close(value);
+        // this.indicator.hide();
+    }
+
+    mounted() {}
+
+    public onItemTap(args: ItemEventData) {
+        clog('Item Tapped at cell index: ', args.index, this.options[args.index]);
+        const result = this.options[args.index];
+        if (result) {
+            this.close(result);
+            // this.bleService.once(BLEConnectedEvent, ()=>{
+            //     this.close();
+            // })
+            // this.bleService.connect(device.UUID);
+        }
+    }
+}
