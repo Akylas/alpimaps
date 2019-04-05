@@ -1,0 +1,19 @@
+{
+  "layers": [
+    "contour", 
+    "hillshade"
+  ], 
+  "styles": [
+    "terrain/style.mss", 
+    "terrain.mss" 
+  ], 
+  "nutiparameters": {
+    "lang": {
+      "default": "en"
+    }, 
+    "fallback_lang": {
+      "default": "en"
+    }
+  },
+  "name": "terrain"
+}

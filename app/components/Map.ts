@@ -104,9 +104,9 @@ export default class Map extends BgServiceComponent {
             this.$packageService.on('onProgress', this.onTotalDownloadProgress);
         }
     }
-    updated() {
-        clog('Map updated');
-    }
+    // updated() {
+        // clog('Map updated');
+    // }
     @profile
     onLoaded() {
         if (isAndroid) {
@@ -115,7 +115,7 @@ export default class Map extends BgServiceComponent {
                     clog('registerLicense done', result);
                     this.$getAppComponent().setCartoLicenseRegistered(result);
                 });
-            }, 500);
+            }, 200);
         } else {
             registerLicense(process.env.CARTO_IOS_TOKEN);
         }
@@ -228,7 +228,7 @@ export default class Map extends BgServiceComponent {
         if (appSettings.getString('mapFocusPos')) {
             cartoMap.setFocusPos(JSON.parse(appSettings.getString('mapFocusPos')), 0);
         }
-        cartoMap.setZoom(appSettings.getNumber('mapZoom', 10), 0);
+        cartoMap.setZoom(Math.min(appSettings.getNumber('mapZoom', 10), 14), 0);
         setTimeout(() => {
             perms
                 .request('storage')

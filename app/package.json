@@ -3,7 +3,6 @@
         "markingMode": "none",
         "v8Flags": "--expose_gc"
     },
-    "profiling": "timeline",
     "main": "main.js",
     "name": "akylas.alpi.maps",
     "version": "1.0.0"

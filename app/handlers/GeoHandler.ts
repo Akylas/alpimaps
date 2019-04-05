@@ -9,12 +9,12 @@ import { localize } from 'nativescript-localize';
 import { clog } from '~/utils/logging';
 
 export let desiredAccuracy = isAndroid ? Accuracy.high : kCLLocationAccuracyBestForNavigation;
-export let updateDistance = 0;
+export let updateDistance = 1;
 export let maximumAge = 60000;
 export let timeout = 20000;
 export let minimumUpdateTime = 1000; // Should update every 1 second according ;
 
-// geolocation.setGPSDebug(true);
+geolocation.setGPSDebug(true);
 geolocation.setMockEnabled(true);
 
 function mean(array) {
@@ -184,7 +184,7 @@ export class GeoHandler extends Observable {
     }
 
     getLocation() {
-        return geolocation.getCurrentLocation({ desiredAccuracy, updateDistance, maximumAge, timeout }) as Promise<GeoLocation>;
+        return this.getCurrentLocation();
     }
 
     onDeferred = () => {
@@ -219,7 +219,7 @@ export class GeoHandler extends Observable {
         if (this.watchId) {
             return;
         }
-        const options: geolocation.Options = { desiredAccuracy, updateDistance, minimumUpdateTime, onDeferred: this.onDeferred };
+        const options: geolocation.Options = { desiredAccuracy, maximumAge, timeout, onDeferred: this.onDeferred };
         if (this._isIOSBackgroundMode) {
             options.pausesLocationUpdatesAutomatically = false;
             options.allowsBackgroundLocationUpdates = true;
@@ -245,13 +245,14 @@ export class GeoHandler extends Observable {
 
     getCurrentLocation(options?) {
         return geolocation
-            .getCurrentLocation(options || { desiredAccuracy, updateDistance, minimumUpdateTime, onDeferred: this.onDeferred })
+            .getCurrentLocation(options || { desiredAccuracy, minimumUpdateTime, timeout, onDeferred: this.onDeferred })
             .then(r => {
                 this.notify({
                     eventName: UserLocationdEvent,
                     object: this,
                     location: r
                 } as UserLocationdEventData);
+                return r;
             })
             .catch(err => {
                 this.notify({
@@ -259,6 +260,7 @@ export class GeoHandler extends Observable {
                     object: this,
                     error: err
                 } as UserLocationdEventData);
+                return Promise.reject(err);
             });
     }
 
