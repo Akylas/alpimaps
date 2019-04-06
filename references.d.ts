@@ -6,7 +6,14 @@
 //     import Vue from 'nativescript-vue';
 //     export default Vue;
 // }
-declare module '*.scss';
+declare module '*.scss' {
+    const content: any;
+    
+    export default content;
+    export function toString(): string
+    export const locals
+    export const i
+}
 
 declare const TNS_ENV;
 declare const process: { env: any };

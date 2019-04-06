@@ -191,7 +191,9 @@ module.exports = env => {
                         'nativescript-dev-webpack/apply-css-loader.js',
                         {
                             loader: 'css-loader',
-                            options: { url: false }
+                            options: {
+                                url: false
+                            }
                         }
                     ]
                 },
@@ -202,7 +204,9 @@ module.exports = env => {
                         'nativescript-dev-webpack/apply-css-loader.js',
                         {
                             loader: 'css-loader',
-                            options: { url: false }
+                            options: {
+                                url: false
+                            }
                         },
                         'sass-loader'
                     ]
