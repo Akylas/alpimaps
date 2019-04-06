@@ -57,10 +57,13 @@ firebase
     })
     .catch(error => clog(`firebase.init error: ${error}`));
 
-// import './app.scss';
+// import * as test from './app.scss';
 
-const test = require('./app.scss');
-console.log(test);
+// console.log(
+//     typeof test,
+//     Object.keys(test.locals),
+//     test.locals['mdi']
+//     );
 import { isIOS } from 'tns-core-modules/platform';
 
 import { primaryColor } from './variables';
