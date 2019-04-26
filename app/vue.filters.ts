@@ -1,4 +1,4 @@
-import { fonticon } from 'nativescript-fonticon';
+import { fonticon } from 'nativescript-akylas-fonticon';
 import { localize } from 'nativescript-localize';
 import VueStringFilter from 'vue-string-filter/VueStringFilter';
 import { GeoLocation } from 'nativescript-gps';

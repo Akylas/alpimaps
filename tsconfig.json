@@ -1,20 +1,25 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
         "target": "es5",
+        "module": "esnext",
+        "moduleResolution": "node",
+        "incremental": true,
+        "tsBuildInfoFile": ".tsbuildinfo",
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "importHelpers": true,
         "noEmitHelpers": true,
         "noEmitOnError": true,
         "preserveSymlinks": true,
+        "sourceMap": true,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "noImplicitUseStrict": true,
         "lib": ["es6", "dom", "es2015.iterable"],
         "baseUrl": ".",
         "paths": {
-            "~/*": ["app/*"],
+             "nativescript-vue": ["./node_modules/akylas-nativescript-vue"],
+           "~/*": ["app/*"],
             "*": ["./node_modules/tns-core-modules/*", "./node_modules/*"]
         }
     },

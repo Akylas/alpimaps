@@ -1,7 +1,7 @@
 import BaseVueComponent from './BaseVueComponent';
 import { Component } from 'vue-property-decorator';
 import { CartoPackageManager, PackageAction, PackageInfo, PackageInfoVector, PackageStatus } from 'nativescript-carto/packagemanager/packagemanager';
-import { ObservableArray } from 'tns-core-modules/data/observable-array/observable-array';
+import { ObservableArray } from 'tns-core-modules/data/observable-array';
 import { ItemEventData } from 'tns-core-modules/ui/list-view';
 import { isAndroid } from 'tns-core-modules/platform';
 import { PackageType } from '~/services/PackageService';
@@ -279,7 +279,7 @@ export default class PackagesDownloadComponent extends BaseVueComponent {
         // }, 800);
     }
     onLoaded() {
-        if (isAndroid) {
+        if (gVars.isAndroid) {
             (this.$refs.listView.nativeView.nativeViewProtected as android.widget.ListView).setNestedScrollingEnabled(true);
         }
     }

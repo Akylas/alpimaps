@@ -1,20 +1,14 @@
-import { Address, GeocodingResult, GeocodingResultVector, GeocodingService, MapBoxOnlineGeocodingService, PackageManagerGeocodingService } from 'nativescript-carto/geocoding/service';
-import Vue from 'nativescript-vue';
+import { Address, GeocodingResult, GeocodingResultVector, GeocodingService, PackageManagerGeocodingService } from 'nativescript-carto/geocoding/service';
 import BaseVueComponent from './BaseVueComponent';
-import BgServiceComponent from './BgServiceComponent';
-import { Component, Inject, Prop } from 'vue-property-decorator';
+import { Component, Prop } from 'vue-property-decorator';
 import { device, isAndroid } from 'tns-core-modules/platform';
 import { TextField } from 'tns-core-modules/ui/text-field';
 import { getJSON } from 'tns-core-modules/http';
-import { VectorTileSearchService } from 'nativescript-carto/search/search';
 import { queryString } from '../utils/http';
-import { ObservableArray } from 'tns-core-modules/data/observable-array/observable-array';
-import { Feature, FeatureCollection, VectorTileFeature, VectorTileFeatureCollection } from 'nativescript-carto/geometry/feature';
+import { Feature, FeatureCollection, VectorTileFeatureCollection } from 'nativescript-carto/geometry/feature';
 import { VectorTileLayer } from 'nativescript-carto/layers/vector';
 import { Projection } from 'nativescript-carto/projections/projection';
-import { CartoMap } from 'nativescript-carto/ui/ui';
-import { fromNativeMapPos, MapBounds, MapPos } from 'nativescript-carto/core/core';
-import Map from '~/components/Map';
+import { fromNativeMapPos, MapPos } from 'nativescript-carto/core/core';
 import { ItemEventData } from 'tns-core-modules/ui/list-view/list-view';
 import { clog } from '~/utils/logging';
 const deburr = require('deburr');
@@ -57,6 +51,9 @@ class PhotonAddress {
         }
     }
     getStreet() {
+        if (this.properties['osm_key'] === 'highway') {
+            return this.properties.name;
+        }
         return this.properties.street;
     }
     getCountry() {
@@ -92,10 +89,17 @@ class PhotonFeature {
     geometry: MapPos;
     address: PhotonAddress;
     constructor(private data) {
+        clog('PhotonFeature', data);
         this.properties = data.properties;
         this.geometry = { latitude: data.geometry.coordinates[1], longitude: data.geometry.coordinates[0] };
         this.address = new PhotonAddress(data.properties);
     }
+}
+
+interface SearchItem {
+    properties: { [k: string]: any };
+    geometry: MapPos;
+    address: Address;
 }
 
 @Component({})
@@ -112,37 +116,56 @@ export default class Search extends BaseVueComponent {
     _offlineSearchService: PackageManagerGeocodingService;
     // searchService: MapBoxOnlineGeocodingService;
     searchAsTypeTimer;
-    dataItems: Array<{ properties: { [k: string]: any }; geometry: MapPos; address: Address }> = [];
+    dataItems: SearchItem[] = [];
     loading = false;
 
     currentSearchText: string = null;
 
     get searchResultsVisible() {
-        return this.loading || (this.dataItems && this.dataItems.length > 0);
+        return (this.loading || this.hasFocus) && this.searchResultsCount > 0;
     }
-    getItemAddress(item: { properties: { [k: string]: any }; geometry: MapPos; address: Address }) {
-        let result = '';
+    getItemAddress(item: SearchItem) {
+        let result: string;
         const address = item.address;
+        // console.log('getItemAddress', item);
         if (address) {
-            result += address.getStreet();
+            const street = address.getStreet();
+            if (street && street !== this.getItemName(item)) {
+                result = street;
+            }
             const city = address.getLocality();
             if (city) {
-                result += ', ' + city;
+                result = (result ? result + ', ' : '') + city;
             }
             const county = address.getCounty();
             if (county && county !== city) {
-                result += ' ' + county;
+                result = (result ? result + ' ' : '') + county;
             }
             const postcode = address.getPostcode();
             if (postcode) {
-                result += ' ' + postcode;
+                result = (result ? result + ' ' : '') + postcode;
             }
+            const country = address.getCountry();
+            if (country) {
+                result = (result ? result + ' ' : '') + country;
+            }
+            return result;
         }
 
         return item.address && item.address.getStreet();
     }
-    getItemName(item: { properties: { [k: string]: any }; geometry: MapPos; address: Address }) {
+    getItemName(item: SearchItem) {
         return (item.properties && item.properties.name) || (item.address && item.address.getName());
+    }
+    getItemIcon(item: SearchItem) {
+        const result = [];
+        if (item.properties['osm_value']) {
+            result.push('maki-' + item.properties['osm_value']);
+        }
+        if (item.properties['osm_key']) {
+            result.push('maki-' + item.properties['osm_key']);
+        }
+        return result;
     }
     get offlineSearchService() {
         if (!this._offlineSearchService) {
@@ -176,12 +199,18 @@ export default class Search extends BaseVueComponent {
         super.mounted();
     }
     onLoaded() {}
+    hasFocus = false
     onFocus(e) {
-        if (this.currentSearchText) {
+        clog('onFocus')
+        this.hasFocus = true;
+        if (this.currentSearchText && this.searchResultsCount === 0) {
             this.instantSearch(this.currentSearchText);
         }
     }
-    onBlur(e) {}
+    onBlur(e) {
+        clog('onBlur')
+        this.hasFocus = false;
+    }
     onTextChange(e) {
         const query = e.value;
         if (this.searchAsTypeTimer) {
@@ -194,7 +223,7 @@ export default class Search extends BaseVueComponent {
                 this.instantSearch(query);
             }, 500);
         } else if (this.currentSearchText && this.currentSearchText.length > 2) {
-            this.clearSearch();
+            this.unfocus();
         }
         this.currentSearchText = query;
     }
@@ -249,7 +278,6 @@ export default class Search extends BaseVueComponent {
                 'http://photon.komoot.de/api'
             )
         ).then(function(results: any) {
-            console.log('photon result', JSON.stringify(results));
             return results.features.map(f => new PhotonFeature(f));
         });
     }
@@ -274,8 +302,10 @@ export default class Search extends BaseVueComponent {
             this.searchInGeocodingService(this.offlineSearchService, options)
         ])
             .then(results => {
-                this.dataItems = [].concat.apply([], results);
-                console.log('instantSearch done', this.dataItems.length);
+                if (this.hasFocus) {
+                    this.dataItems = [].concat.apply([], results);
+                    console.log('instantSearch done', this.dataItems.length);
+                }
             })
             .catch(err => {
                 console.log('instantSearch error', err);
@@ -292,34 +322,41 @@ export default class Search extends BaseVueComponent {
             this.searchAsTypeTimer = null;
         }
         this.dataItems = [] as any;
-        // this.currentSearchText = null;
+        this.currentSearchText = null;
+        this.textField.text = null;
         this.unfocus();
     }
     unfocus() {
-        if (isAndroid) {
+        if (this.searchAsTypeTimer) {
+            clearTimeout(this.searchAsTypeTimer);
+            this.searchAsTypeTimer = null;
+        }
+        if (gVars.isAndroid) {
             (this.textField.nativeViewProtected as android.view.View).clearFocus();
         }
         this.textField.dismissSoftInput();
     }
     public onItemTap(args: ItemEventData) {
         const item = this.dataItems[args.index];
-        clog('Item Tapped', args.index, item);
+        const extent = item.properties.extent;
+        clog('Item Tapped', args.index, item.geometry, extent, item);
         this.$getMapComponent().selectPosition(
             item.geometry,
             item.properties,
             true,
-            item.properties.extent
-                ? {
-                    northeast: {
-                          latitude: 0,
-                          longitude: 0
-                      },
-                    southwest: {
-                          latitude: 0,
-                          longitude: 0
-                      }
-                }
-                : undefined
+            // extent
+            //     ? {
+            //         southwest: {
+            //               latitude: extent[3],
+            //               longitude: extent[0]
+            //           },
+            //           northeast: {
+            //               latitude: extent[1],
+            //               longitude: extent[2]
+            //           }
+            //     }
+            //     : 
+                undefined
         );
         this.clearSearch();
     }

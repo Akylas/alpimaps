@@ -1,5 +1,5 @@
 import { locals } from './variables.scss';
-import { screen } from 'tns-core-modules/platform/platform';
+import { screen } from 'tns-core-modules/platform';
 
 export const primaryColor: string = locals.primaryColor;
 export const darkColor: string = locals.darkColor;

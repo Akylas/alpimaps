@@ -4,6 +4,7 @@
         "v8Flags": "--expose_gc"
     },
     "main": "main.js",
+    "profiling": "none",
     "name": "akylas.alpi.maps",
     "version": "1.0.0"
 }

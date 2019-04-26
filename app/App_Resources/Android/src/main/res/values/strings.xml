@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="_zoom__8nqDT">"test"</string>
+  <string name="gps_not_authorized">"please enable GPS and authorize «Alpi Maps» to use it to determine your location"</string>
+  <string name="gps_not_enabled">"please enable GPS to allow «Alpi Maps» to determine your location"</string>
+  <string name="settings">"settings"</string>
+  <string name="elevation_gain">"elevation gain"</string>
+  <string name="_title_activity_kimera_PKGla">"Alpi Maps"</string>
+  <string name="_app_name_1k3Sbz">"Alpi Maps"</string>
+  <string name="app_name">"Alpi Maps"</string>
+  <string name="title_activity_kimera">"Alpi Maps"</string>
+  <string name="_ios_info_plist_NSBluetoothPeripheralUsageDescription_2uVDqX">"«Alpi Maps» use Bluetooth to connect to your glasses"</string>
+  <string name="_ios_info_plist_NSLocationAlwaysAndWhenInUseUsageDescription_Z122jwE">"«Alpi Maps» use your GPS location to display it on your glasses"</string>
+  <string name="_ios_info_plist_NSLocationAlwaysUsageDescription_Z1cD1M8">"«Alpi Maps» use your GPS location to display it on your glasses"</string>
+  <string name="_ios_info_plist_NSLocationWhenInUseUsageDescription_ZpKiIF">"«Alpi Maps» use your GPS location to display it on your glasses"</string>
+  <string name="start">"start"</string>
+  <string name="stop_session_are_you_sure">"stop_session_are_you_sure"</string>
+  <string name="stop_session">"stop_session"</string>
+  <string name="close">"close"</string>
+  <string name="cancel">"cancel"</string>
+</resources>

@@ -15,7 +15,7 @@
                @pan="onBackDropPan"
                @tap="close()" />
 
-        <template v-for="side in computedSidesEnabled">
+        <template v-for="side in computedSidesEnabled" IsPassThroughParentEnabled="true">
             <!-- Drawer Content -->
             <GridLayout @layoutChanged="onDrawerLayoutChange(side)"
                         :col="computedLayout[side].col"
@@ -30,6 +30,7 @@
             <Label v-show="computedShowSwipeOpenTrigger(side)"
                    v-bind="computedSwipeOpenTriggerProperties(side)"
                    @pan="onOpenTriggerPan(side, $event)"
+               IsPassThroughParentEnabled="true"
                    :col="computedLayout[side].col"
                    :key="`${side}Trigger`"
                    v-if="!optionsInternal[side].fixed" />

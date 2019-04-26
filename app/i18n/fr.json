@@ -1,0 +1,20 @@
+{
+  "app.name": "Alpi Maps",
+  "title.activity.kimera": "Alpi Maps",
+  "ios.info.plist": {
+    "NSLocationWhenInUseUsageDescription": "«Alpi Maps» utilise le GPS pour l'afficher sur vos lunettes",
+    "NSLocationAlwaysUsageDescription": "«Alpi Maps» utilise le GPS pour l'afficher sur vos lunettes",
+    "NSLocationAlwaysAndWhenInUseUsageDescription": "«Alpi Maps» utilise le GPS pour l'afficher sur vos lunettes",
+    "NSBluetoothPeripheralUsageDescription": "«Alpi Maps» utilise le Bluetooth pour se connecter à vos lunettes"
+  },
+  "cancel": "annuler",
+  "close": "fermer",
+  "stop_session": "arrêter la session",
+  "stop_session_are_you_sure": "êtes-vous sur de vouloir arrêter la session ?",
+  "start": "démarrer",
+  "elevation_gain": "dénivelé",
+  "settings": "réglages",
+  "gps_not_enabled": "activez le GPS pour permettre à «Alpi Maps» de vous localiser",
+  "gps_not_authorized": "activez le GPS et autorisez «Alpi Maps» à l'utiliser pour vous localiser",
+  "zoom:": "test"
+}

@@ -1,6 +1,6 @@
-import { EventData, Observable } from 'tns-core-modules/data/observable/observable';
-import * as appSettings from 'tns-core-modules/application-settings/application-settings';
-import { ApplicationEventData, exitEvent, on as applicationOn, resumeEvent, suspendEvent } from 'tns-core-modules/application/application';
+import { EventData, Observable } from 'tns-core-modules/data/observable';
+import * as appSettings from 'tns-core-modules/application-settings';
+import { ApplicationEventData, exitEvent, on as applicationOn, resumeEvent, suspendEvent } from 'tns-core-modules/application';
 import * as geolocation from 'nativescript-gps';
 import { Accuracy } from 'tns-core-modules/ui/enums/enums';
 import { isAndroid } from 'platform';

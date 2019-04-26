@@ -3,7 +3,7 @@ import * as EInfo from 'nativescript-extendedinfo';
 import Vue, { NativeScriptVue } from 'nativescript-vue';
 import { GridLayout } from 'tns-core-modules/ui/layouts/grid-layout';
 import { StackLayout } from 'tns-core-modules/ui/layouts/stack-layout';
-import { isIOS } from 'tns-core-modules/ui/page/page';
+import { isIOS } from 'tns-core-modules/platform';
 import { GC } from 'tns-core-modules/utils/utils';
 import { Frame, topmost } from 'ui/frame/frame';
 import { Component } from 'vue-property-decorator';
@@ -12,7 +12,6 @@ import { GeoHandler } from '~/handlers/GeoHandler';
 import { BaseVueComponentRefs } from './BaseVueComponent';
 import BgServiceComponent from './BgServiceComponent';
 import { clog } from '~/utils/logging';
-// const firebase = require('nativescript-plugin-firebase');
 
 export interface AppRefs extends BaseVueComponentRefs {
     [key: string]: any;
@@ -203,7 +202,7 @@ export default class App extends BgServiceComponent {
         });
     }
     navigateBack() {
-        if (isIOS) {
+        if (gVars.isIOS) {
             this.innerFrame && this.innerFrame.goBack();
         } else {
             this.$navigateBack();

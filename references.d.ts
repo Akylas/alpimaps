@@ -7,12 +7,24 @@
 //     export default Vue;
 // }
 declare module '*.scss' {
-    const content: any;
-    
-    export default content;
-    export function toString(): string
-    export const locals
-    export const i
+    // const content: any;
+
+    // export default content;
+    // export function toString(): string
+    export const locals;
+    // export const i
+}
+
+declare const gVars: {
+    isIOS: boolean;
+    isAndroid: boolean;
+    CARTO_ANDROID_TOKEN: string;
+    CARTO_IOS_TOKEN: string;
+    IGN_TOKEN: string;
+    THUNDERFOREST_TOKEN: string;
+    MAPBOX_TOKEN: string;
+    HER_APP_ID: string;
+    HER_APP_CODE: string;
 }
 
 declare const TNS_ENV;

@@ -11,7 +11,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-feature android:name="android.hardware.location.gps" />
     <application android:name="com.tns.NativeScriptApplication" android:allowBackup="true" android:icon="@drawable/icon" android:label="@string/app_name" android:theme="@style/AppTheme" android:hardwareAccelerated="true" android:networkSecurityConfig="@xml/network_security_config">
-        <activity android:name="com.tns.NativeScriptActivity" android:label="@string/title_activity_kimera" android:configChanges="keyboardHidden|orientation|screenSize" android:theme="@style/LaunchScreenTheme">
+        <activity android:name="com.tns.NativeScriptActivity" android:label="@string/title_activity_kimera" android:configChanges="keyboardHidden|orientation|screenSize" android:theme="@style/LaunchScreenTheme">        <meta-data android:name="com.bugsnag.android.API_KEY" android:value="767d861562cf9edbb3a9cb1a54d23fb8" />
+
             <meta-data android:name="SET_THEME_ON_LAUNCH" android:resource="@style/AppTheme" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -20,5 +21,6 @@
         </activity>
         <activity android:name="com.tns.ErrorReportActivity" />
         <service android:name="akylas.alpi.maps.BgService" android:enabled="true" android:exported="false"  android:stopWithTask="false" />
-    </application>
+         <meta-data android:name="com.bugsnag.android.API_KEY" android:value="8867d5b66eda43f1be76e345a36a72df" />
+   </application>
 </manifest>

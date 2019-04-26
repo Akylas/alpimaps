@@ -1,13 +1,8 @@
-import { crashlytics } from 'nativescript-plugin-firebase'; // and do: firebaseCrashlytics.sendCrashLogexport const DEV_LOG = TNS_ENV === 'development';
+// import { getAppId } from 'nativescript-extendedinfo';
 export const DEV_LOG = TNS_ENV === 'development';
-// export const DEV_LOG = false;
 
-import { Chalk } from 'chalk';
-
-import { getAppId } from 'nativescript-extendedinfo';
-
-let appId: string;
-getAppId().then(r => (appId = r));
+// let appId: string;
+// getAppId().then(r => (appId = r));
 // let chalk: Chalk;
 
 // function getChalk() {
@@ -76,17 +71,14 @@ function timelineProfileFunctionFactory(target: any, always: boolean, key?, desc
 // export function clog(...args) {
 //     return console.log.apply(this, [appId].concat(args));
 // }
-const origConsole = {
+const origConsole: { [k: string]: Function } = {
     log: console.log,
     error: console.error,
     warn: console.warn
 };
 
 function actualLog(level: string, ...args) {
-    if (!DEV_LOG) {
-        crashlytics.log(level.toUpperCase(), args.join(' '));
-    }
-    origConsole[level].apply(this, args);
+    origConsole[level].apply(this, ...args);
 }
 
 export const clog = (...args) => actualLog('log', args);

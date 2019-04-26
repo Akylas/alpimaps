@@ -1,13 +1,11 @@
+import * as application from 'application';
 import localize from 'nativescript-localize';
-import { clog } from './utils/logging';
+import { device, isAndroid, isIOS } from 'tns-core-modules/platform';
 import App from '~/components/App';
 import Map from '~/components/Map';
-import { isAndroid, isIOS } from 'tns-core-modules/platform';
-import { device } from 'tns-core-modules/platform/platform';
-import { BgService } from './services/BgService';
 import PackageService from '~/services/PackageService';
-import { registerLicense } from 'nativescript-carto/ui/ui';
-import * as application from 'application';
+import { BgService } from './services/BgService';
+import { clog } from './utils/logging';
 const Plugin = {
     install(Vue) {
         const bgService = new BgService();
@@ -16,9 +14,9 @@ const Plugin = {
         Vue.prototype.$packageService = packageService;
         // Vue.prototype.$cartoLicenseRegistered = false;
 
-        if (isAndroid) {
+        if (gVars.isAndroid) {
             application.on(application.launchEvent, () => {
-                // registerLicense(process.env.CARTO_ANDROID_TOKEN, result => {
+                // registerLicense(gVars.CARTO_ANDROID_TOKEN, result => {
                 //     clog('registerLicense done', result);
                 //     // Vue.prototype.$cartoLicenseRegistered = result;
                 //     appComponent && appComponent.setCartoLicenseRegistered(result);
@@ -27,11 +25,10 @@ const Plugin = {
                 // packageService.start();
             });
         } else {
-            // registerLicense(process.env.CARTO_IOS_TOKEN);
+            // registerLicense(gVars.CARTO_IOS_TOKEN);
             bgService.start();
             // packageService.start();
         }
-
         let appComponent: App;
         Vue.prototype.$setAppComponent = function(comp: App) {
             appComponent = comp;
@@ -51,6 +48,7 @@ const Plugin = {
         Vue.prototype.$isAndroid = isAndroid;
         Vue.prototype.$isIOS = isIOS;
         const filters = (Vue.prototype.$filters = Vue['options'].filters);
+        Vue.prototype.$t = localize;
         Vue.prototype.$ltc = function(s: string, ...args) {
             return filters.titlecase(localize(s, ...args));
         };

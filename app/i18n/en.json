@@ -1,0 +1,15 @@
+{
+  "ios.info.plist": {
+    "NSLocationWhenInUseUsageDescription": "«Alpi Maps» use your GPS location to display it on your glasses",
+    "NSLocationAlwaysUsageDescription": "«Alpi Maps» use your GPS location to display it on your glasses",
+    "NSLocationAlwaysAndWhenInUseUsageDescription": "«Alpi Maps» use your GPS location to display it on your glasses",
+    "NSBluetoothPeripheralUsageDescription": "«Alpi Maps» use Bluetooth to connect to your glasses"
+  },
+  "app.name": "Alpi Maps",
+  "title.activity.kimera": "Alpi Maps",
+  "elevation_gain": "elevation gain",
+  "settings": "settings",
+  "gps_not_enabled": "please enable GPS to allow «Alpi Maps» to determine your location",
+  "gps_not_authorized": "please enable GPS and authorize «Alpi Maps» to use it to determine your location",
+  "zoom:": "test"
+}
