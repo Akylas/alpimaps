@@ -1,7 +1,6 @@
 import { BgServiceLoadedEvent } from '~/services/BgService';
 import { GeoHandler } from '~/handlers/GeoHandler';
 import BaseVueComponent from './BaseVueComponent';
-import { clog } from '~/utils/logging';
 
 export default abstract class BgServiceComponent extends BaseVueComponent {
     constructor() {

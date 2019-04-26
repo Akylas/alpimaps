@@ -1,74 +1,57 @@
-const oldLog = console.log;
 import Vue from 'nativescript-vue';
-console.log = oldLog;
+import { knownFolders } from 'tns-core-modules/file-system';
 
-import * as application from 'tns-core-modules/application';
-import * as firebase from 'nativescript-plugin-firebase';
-import * as trace from 'tns-core-modules/trace';
-import { cerror, clog, cwarn, DEV_LOG } from '~/utils/logging';
+import { getBuildNumber, getVersionName } from 'nativescript-extendedinfo';
+import { cerror, clog, cwarn } from '~/utils/logging';
+import { Client } from 'nativescript-bugsnag';
 
 // override to get all logs
 console.log = clog;
 console.error = cerror;
 console.warn = cwarn;
 
-function sendCrashLog(err) {
-    if (!DEV_LOG) {
-        firebase.crashlytics.sendCrashLog(err);
-    }
-}
+/* DEV-START */
+const currentApp = knownFolders.currentApp();
+require('source-map-support').install({
+    environment: 'node',
+    handleUncaughtExceptions: false,
+    retrieveSourceMap(source) {
+        const sourceMapPath = source + '.map';
+        const sourceMapRelativePath = sourceMapPath.replace('file://', '').replace(currentApp.path + '/', '');
 
-firebase
-    .init()
-    .then(() => {
-        console.log('firebase did init');
-        // if (!DEV_LOG) {
-        application.on(application.uncaughtErrorEvent, args => {
-            if (application.android) {
-                // For Android applications, args.android is an NativeScriptError.
-                cerror(' *** NativeScriptError *** : ' + args.android);
-                cerror(' *** StackTrace *** : ' + args.android.stackTrace);
-                cerror(' *** nativeException *** : ' + args.android.nativeException);
-                sendCrashLog(args.android.nativeException);
-                // throw args.android;
-            } else if (application.ios) {
-                // For iOS applications, args.ios is NativeScriptError.
-                cerror(' *** NativeScriptError  *** : ' + args.ios);
-                sendCrashLog(args.ios);
-                // throw args.ios;
-            }
-        });
-
-        const errorHandler: trace.ErrorHandler = {
-            handlerError(err) {
-                cerror(err);
-                // if (!DEV_LOG) {
-                sendCrashLog(err);
-                // }
-                // throw err;
-                // (development 2)
-                // trace.write(err, "unhandlede-error", type.error);
-                // (production)
-                // reportToAnalytics(err)
-            }
+        return {
+            url: sourceMapRelativePath + '/',
+            map: currentApp.getFile(sourceMapRelativePath).readTextSync()
         };
-        trace.setErrorHandler(errorHandler);
-        // }
+    }
+});
+/* DEV-END */
+
+const bugsnag = (Vue.prototype.$bugsnag = new Client());
+Promise.all([getVersionName(), getBuildNumber()])
+    .then(result => {
+        console.log('did get Versions', result);
+        let fullVersion = result[0];
+        if (!/[0-9]+\.[0-9]+\.[0-9]+/.test(fullVersion)) {
+            fullVersion += '.0';
+        }
+        fullVersion += ` (${result[1]})`;
+        return bugsnag.init({ apiKey: '8867d5b66eda43f1be76e345a36a72df', codeBundleId: result[1].toFixed(), automaticallyCollectBreadcrumbs: false });
     })
-    .catch(error => clog(`firebase.init error: ${error}`));
+    .then(() => {
+        bugsnag.enableConsoleBreadcrumbs();
+        bugsnag.handleUncaughtErrors();
+        console.log('bugsnag did init');
+        // bugsnag.notify(new Error('Test error'));
+    })
+    .catch(err => {
+        console.log('bugsnag  init failed', err);
+    });
 
-// import * as test from './app.scss';
-
-// console.log(
-//     typeof test,
-//     Object.keys(test.locals),
-//     test.locals['mdi']
-//     );
-import { isIOS } from 'tns-core-modules/platform';
 
 import { primaryColor } from './variables';
 import { install, themer } from 'nativescript-material-core';
-if (isIOS) {
+if (gVars.isIOS) {
     themer.setPrimaryColor(primaryColor);
 }
 install();
@@ -80,9 +63,11 @@ Vue.use(ViewsPlugin);
 import FiltersPlugin from './vue.filters';
 Vue.use(FiltersPlugin);
 
-import { TNSFontIcon } from 'nativescript-fonticon';
+import { TNSFontIcon } from 'nativescript-akylas-fonticon';
+// TNSFontIcon.debug = true;
 TNSFontIcon.paths = {
-    mdi: './assets/materialdesignicons.min.css'
+    mdi: './assets/materialdesignicons.min.css',
+    maki: './assets/maki.css'
 };
 TNSFontIcon.loadCss();
 

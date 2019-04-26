@@ -17,13 +17,13 @@
                 </StackLayout>
             </GridLayout>
             <AbsoluteLayout class="page">
-                <CartoMap v-if="licenseRegistered" width="100%" height="100%" zoom="10" focusPos="45.2002,5.7222" @mapReady="onMapReady" @mapMoved="onMapMove" @mapStable="onMapStable" @mapClicked="onMapClicked" />
+                <CartoMap ref="mapView" v-if="licenseRegistered" width="100%" height="100%" zoom="16" focusPos="45.2002,5.7222" @mapReady="onMapReady" @mapMoved="onMapMove" @mapStable="onMapStable" @mapClicked="onMapClicked" />
                 <GridLayout ref="subHolder" rows="20,auto,*,auto" colums="*" width="100%" height="100%">
                     <BottomSheet ref="bottomSheet" row="3" />
                     <Search ref="searchView" row="1" :projection="mapProjection" />
 
                     <GridLayout rows="auto,*,auto" columns="auto,*,auto" row="2">
-                        <Label col="0" colSpan="3" row="2" :text="'zoom:' + currentMapZoom.toFixed(2)" verticalAlignment="bottom" horizontalAlignment="center" />
+                        <Label col="0" colSpan="3" row="2" :text="$t('zoom:') + currentMapZoom.toFixed(2)" verticalAlignment="bottom" horizontalAlignment="center" />
                         <StackLayout orientation="vertical" col="0" row="2">
                             <!-- <MDButton @tap="openSearch" class="floating-btn" :text="'mdi-magnify' | fonticon" /> -->
                             <transition name="fade" duration="100">

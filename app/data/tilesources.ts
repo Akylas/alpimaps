@@ -1,7 +1,8 @@
 import { HTTPTileDataSourceOptions } from 'nativescript-carto/datasources/http';
-import { TileLayerOptions } from 'nativescript-carto/layers/layer';
 import { RasterTileLayerOptions } from 'nativescript-carto/layers/raster';
 
+
+console.log('Tile Data sources');
 export interface DataProviderOptions {
     [k: string]: any;
 }
@@ -45,11 +46,11 @@ export const data: { [k: string]: DataProvider } = {
     //         // style:'style',
     //         // styleFile:'mapzen.zip'
     //     },
-    //     url: ['carto.streets', 'https://a.tiles.mapbox.com/v4/mapbox.mapbox-terrain-v2/{zoom}/{x}/{y}.vector.pbf?access_token=' + process.env.MAPBOX_TOKEN]
+    //     url: ['carto.streets', 'https://a.tiles.mapbox.com/v4/mapbox.mapbox-terrain-v2/{zoom}/{x}/{y}.vector.pbf?access_token=' + gVars.MAPBOX_TOKEN]
     // },
     // MapBoxVector: {
     //     // styleFile: "carto_mapbox.zip",
-    //     url: 'https://a.tiles.mapbox.com/v4/{variant}/{zoom}/{x}/{y}.vector.pbf?access_token=' + process.env.MAPBOX_TOKEN,
+    //     url: 'https://a.tiles.mapbox.com/v4/{variant}/{zoom}/{x}/{y}.vector.pbf?access_token=' + gVars.MAPBOX_TOKEN,
     //     attribution: 'Imagery from <a href="http://mapbox.com/about/maps/">MapBox</a> &mdash; ' + 'Map data {attribution.OpenStreetMap}',
     //     urlOptions: {
     //         variant: 'mapbox.mapbox-streets-v7'
@@ -100,10 +101,8 @@ export const data: { [k: string]: DataProvider } = {
         category: 'france',
         legend: 'https://www.geoportail.gouv.fr/depot/layers/{variant}/legendes/{variant}-legend.png',
         url:
-            'http://wxs.ign.fr/' +
-            process.env.IGN_TOKEN +
-            '/geoportail/wmts?LAYER={variant}&EXCEPTIONS=text/xml&FORMAT={format}&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&STYLE={style}&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
-        cacheable: process.env.NODE_ENV !== 'production',
+            `http://wxs.ign.fr/${gVars.IGN_TOKEN}/geoportail/wmts?LAYER={variant}&EXCEPTIONS=text/xml&FORMAT={format}&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&STYLE={style}&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}`,
+        cacheable: TNS_ENV !== 'production',
         urlOptions: {
             variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS',
             format: 'image/jpeg',
@@ -273,13 +272,13 @@ export const data: { [k: string]: DataProvider } = {
         }
     },
     OpenCycleMap: {
-        url: 'https://{s}.tile.thunderforest.com/{variant}/{z}/{x}/{y}@2x.png?apikey=' + process.env.THUNDERFOREST_TOKEN,
+        url: `https://{s}.tile.thunderforest.com/{variant}/{z}/{x}/{y}@2x.png?apikey=${gVars.THUNDERFOREST_TOKEN}`,
         attribution: '&copy; <a href="http://www.opencyclemap.org">OpenCycleMap</a>, {attribution.OpenStreetMap}',
         sourceOptions: {
             maxZoom: 18
         },
         layerOptions: {
-            zoomLevelBias: 0
+            zoomLevelBias: 1
         },
         urlOptions: {
             variant: 'cycle'
@@ -389,7 +388,7 @@ export const data: { [k: string]: DataProvider } = {
         }
     },
     MapBox: {
-        url: 'https://{s}.tiles.mapbox.com/v4/{variant}/{z}/{x}/{y}{2x}.png?access_token=' + process.env.MAPBOX_TOKEN,
+        url: `https://{s}.tiles.mapbox.com/v4/{variant}/{z}/{x}/{y}{2x}.png?access_token=${gVars.MAPBOX_TOKEN}`,
         attribution: 'Imagery from <a href="http://mapbox.com/about/maps/">MapBox</a> &mdash; ' + 'Map data {attribution.OpenStreetMap}',
         layerOptions: {
             zoomLevelBias: 0
@@ -622,8 +621,8 @@ export const data: { [k: string]: DataProvider } = {
         attribution: 'Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
         urlOptions: {
             mapID: 'newest',
-            app_id: process.env.HER_APP_ID,
-            app_code: process.env.HER_APP_CODE,
+            app_id: gVars.HER_APP_ID,
+            app_code: gVars.HER_APP_CODE,
             base: 'base',
             variant: 'normal.day'
         },

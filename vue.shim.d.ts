@@ -15,6 +15,7 @@ declare module 'vue/types/vue' {
         $isAndroid: boolean;
         // $cartoLicenseRegistered: boolean;
         $isIOS: boolean;
+        $l: (s: string, ...args) => string;
         $ltc: (s: string, ...args) => string;
         $luc: (s: string, ...args) => string;
         $filters: {

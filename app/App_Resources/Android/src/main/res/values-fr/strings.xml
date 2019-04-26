@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="_zoom__8nqDT">"test"</string>
+  <string name="gps_not_authorized">"activez le GPS et autorisez «Alpi Maps» à l\'utiliser pour vous localiser"</string>
+  <string name="gps_not_enabled">"activez le GPS pour permettre à «Alpi Maps» de vous localiser"</string>
+  <string name="settings">"réglages"</string>
+  <string name="elevation_gain">"dénivelé"</string>
+  <string name="start">"démarrer"</string>
+  <string name="stop_session_are_you_sure">"êtes-vous sur de vouloir arrêter la session ?"</string>
+  <string name="stop_session">"arrêter la session"</string>
+  <string name="close">"fermer"</string>
+  <string name="cancel">"annuler"</string>
+  <string name="_ios_info_plist_NSBluetoothPeripheralUsageDescription_2uVDqX">"«Alpi Maps» utilise le Bluetooth pour se connecter à vos lunettes"</string>
+  <string name="_ios_info_plist_NSLocationAlwaysAndWhenInUseUsageDescription_Z122jwE">"«Alpi Maps» utilise le GPS pour l\'afficher sur vos lunettes"</string>
+  <string name="_ios_info_plist_NSLocationAlwaysUsageDescription_Z1cD1M8">"«Alpi Maps» utilise le GPS pour l\'afficher sur vos lunettes"</string>
+  <string name="_ios_info_plist_NSLocationWhenInUseUsageDescription_ZpKiIF">"«Alpi Maps» utilise le GPS pour l\'afficher sur vos lunettes"</string>
+  <string name="_title_activity_kimera_PKGla">"Alpi Maps"</string>
+  <string name="_app_name_1k3Sbz">"Alpi Maps"</string>
+  <string name="app_name">"Alpi Maps"</string>
+  <string name="title_activity_kimera">"Alpi Maps"</string>
+</resources>

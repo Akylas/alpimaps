@@ -1,6 +1,7 @@
 import BaseVueComponent from './BaseVueComponent';
 import { VueConstructor } from 'vue';
-import { NavigationEntry, Page, topmost } from 'tns-core-modules/ui/frame/frame';
+import { NavigationEntry, topmost } from 'tns-core-modules/ui/frame';
+import { Page } from 'tns-core-modules/ui/page';
 
 export default class BasePageComponent extends BaseVueComponent {
     loading = false;

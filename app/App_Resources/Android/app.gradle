@@ -21,38 +21,35 @@ android {
     additionalParameters "--no-version-vectors"  
   }  
 
-  splits {
-    abi {
-      // Enables building multiple APKs per ABI.
-      enable true
+  // splits {
+  //   abi {
+  //     // Enables building multiple APKs per ABI.
+  //     enable true
 
-      // By default all ABIs are included, so use reset() and include to specify that we only
-      // want APKs for x86, armeabi-v7a, and mips.
+  //     // By default all ABIs are included, so use reset() and include to specify that we only
+  //     // want APKs for x86, armeabi-v7a, and mips.
 
-      // Resets the list of ABIs that Gradle should create APKs for to none.
-      reset()
+  //     // Resets the list of ABIs that Gradle should create APKs for to none.
+  //     reset()
 
-      // Specifies a list of ABIs that Gradle should create APKs for.
-      include "armeabi-v7a"//, "arm64-v8a"
-      // include "armeabi-v7a"
+  //     // Specifies a list of ABIs that Gradle should create APKs for.
+  //     include "armeabi-v7a"//, "arm64-v8a"
+  //     // include "armeabi-v7a"
 
-      // Specifies that we do not want to also generate a universal APK that includes all ABIs.
-      universalApk false
-    }
+  //     // Specifies that we do not want to also generate a universal APK that includes all ABIs.
+  //     universalApk false
+  //   }
+  // }
+}
+
+// Ignore sourcemaps in release as they will be sent to bugsnap
+android.applicationVariants.all { variant ->
+  if (variant.buildType.name == 'release') {
+      variant.mergeAssets.doLast {
+          println("deleting source map files from variant")
+          delete(fileTree(dir: variant.mergeAssets.outputDir, includes: ['**/*.map']))
+      }
   }
 }
 
-def settingsGradlePath
-
-if(project.hasProperty("appResourcesPath")){
-    settingsGradlePath = "$project.appResourcesPath/Android/settings.gradle";
-} else {
-    settingsGradlePath = "$rootDir/../../app/App_Resources/Android/settings.gradle";
-}
-
-def settingsGradleFile = new File(settingsGradlePath);
-
-if(settingsGradleFile.exists())
-{
-    apply from: settingsGradleFile;
-}
+apply plugin: 'com.bugsnag.android.gradle'

@@ -8,6 +8,7 @@ import SliderPlugin from 'nativescript-material-slider/vue';
 import TextFieldPlugin from 'nativescript-material-textfield/vue';
 import BottomSheetPlugin from 'nativescript-material-bottomsheet/vue';
 import CartoPlugin from 'nativescript-carto/vue';
+import FabPlugin from 'nativescript-vue-fab';
 // import MultiDrawer from 'nativescript-vue-multi-drawer';
 const Plugin = {
     install(Vue) {
@@ -20,6 +21,7 @@ const Plugin = {
         Vue.use(TextFieldPlugin);
         Vue.use(BottomSheetPlugin);
         Vue.use(CartoPlugin);
+        Vue.use(FabPlugin);
         // Vue.use(MultiDrawer);
 
         registerElement('HTMLLabel', () => require('nativescript-htmllabel').Label);

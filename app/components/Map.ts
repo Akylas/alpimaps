@@ -15,7 +15,6 @@ import * as perms from 'nativescript-perms';
 import Vue from 'nativescript-vue';
 import * as appSettings from 'tns-core-modules/application-settings/application-settings';
 import { Folder, knownFolders, path } from 'tns-core-modules/file-system';
-import { isAndroid } from 'tns-core-modules/platform';
 import { GC } from 'tns-core-modules/utils/utils';
 import { action } from 'ui/dialogs';
 import { Component, Prop, Watch } from 'vue-property-decorator';
@@ -53,8 +52,15 @@ export default class Map extends BgServiceComponent {
     onLicenseRegisteredChanged(value) {
         clog('onLicenseRegisteredChanged', value);
     }
+
+    get darkMode() {
+        return this.currentLayerStyle === CartoMapStyle.POSITRON;
+    }
+    set darkMode(value: boolean) {
+        this.setCurrentLayerStyle(value ? CartoMapStyle.POSITRON : CartoMapStyle.VOYAGER);
+    }
     currentLayer: VectorTileLayer;
-    currentLayerType = 'voyager';
+    currentLayerStyle: CartoMapStyle = CartoMapStyle.VOYAGER;
     localVectorDataSource: LocalVectorDataSource;
     localVectorLayer: VectorLayer;
     currentMapRotation = 0;
@@ -105,19 +111,19 @@ export default class Map extends BgServiceComponent {
         }
     }
     // updated() {
-        // clog('Map updated');
+    // clog('Map updated');
     // }
     @profile
     onLoaded() {
-        if (isAndroid) {
+        if (gVars.isAndroid) {
             setTimeout(() => {
-                registerLicense(process.env.CARTO_ANDROID_TOKEN, result => {
+                registerLicense(gVars.CARTO_ANDROID_TOKEN, result => {
                     clog('registerLicense done', result);
                     this.$getAppComponent().setCartoLicenseRegistered(result);
                 });
             }, 200);
         } else {
-            registerLicense(process.env.CARTO_IOS_TOKEN);
+            registerLicense(gVars.CARTO_IOS_TOKEN);
         }
         GC();
     }
@@ -226,8 +232,10 @@ export default class Map extends BgServiceComponent {
         options.setEnvelopeThreadPoolSize(2);
         options.setDrawDistance(8);
         if (appSettings.getString('mapFocusPos')) {
+            console.log('saved focusPos', appSettings.getString('mapFocusPos'))
             cartoMap.setFocusPos(JSON.parse(appSettings.getString('mapFocusPos')), 0);
         }
+        console.log('saved mapZoom', appSettings.getNumber('mapZoom'))
         cartoMap.setZoom(Math.min(appSettings.getNumber('mapZoom', 10), 14), 0);
         setTimeout(() => {
             perms
@@ -236,7 +244,7 @@ export default class Map extends BgServiceComponent {
                     console.log('on request storage', status);
                     // if (status === 'authorized') {
                     this.$packageService.start();
-                    this.setCurrentLayer(this.currentLayerType);
+                    this.setCurrentLayer(this.currentLayerStyle);
                     this.runOnModules('onMapReady', this, this.cartoMap);
                     cartoMap.requestRedraw();
                     // } else {
@@ -264,7 +272,7 @@ export default class Map extends BgServiceComponent {
         return new Point({ position, projection: this.mapProjection, styleBuilder });
     }
     selectPosition(position: MapPos, metaData?, isFeatureInteresting = false, zoomBounds?: MapBounds) {
-        // console.log('selectPosition', position, isFeatureInteresting, metaData);
+        console.log('selectPosition', position, isFeatureInteresting, zoomBounds, metaData);
 
         if (isFeatureInteresting) {
             if (!this.selectedPosMarker) {
@@ -343,13 +351,13 @@ export default class Map extends BgServiceComponent {
         this.selectPosition(position, undefined, false);
         this.runOnModules('onMapClicked', e);
     }
-    setCurrentLayer(id: string) {
+    setCurrentLayer(id: CartoMapStyle) {
         const cartoMap = this.cartoMap;
         if (this.currentLayer) {
             cartoMap.removeLayer(this.currentLayer);
             this.currentLayer = null;
         }
-        this.currentLayerType = id;
+        this.currentLayerStyle = id;
         const vectorTileDecoder = this.getVectorTileDecoder();
         vectorTileDecoder.setStyleParameter('lang', 'fr');
         vectorTileDecoder.setStyleParameter('buildings', '2');
@@ -395,6 +403,25 @@ export default class Map extends BgServiceComponent {
         return this.vectorTileDecoder || this.$packageService.getVectorTileDecoder();
     }
 
+
+    getStyleFromCartoMapStyle(style: CartoMapStyle) {
+        switch (style) {
+
+            case CartoMapStyle.DARKMATTER:
+                return 'darkmatter';
+            case CartoMapStyle.POSITRON:
+                return 'positron';
+            case CartoMapStyle.VOYAGER:
+            default:
+                return 'voyager';
+        }
+    }
+    setCurrentLayerStyle(style: CartoMapStyle) {
+        this.currentLayerStyle = style;
+        if (this.vectorTileDecoder instanceof CartoOnlineVectorTileLayer) {
+            // this.vectorTileDecoder.style = this.getStyleFromCartoMapStyle(this.currentLayerStyle);
+        }
+    }
     selectStyle() {
         const assetsFolder = Folder.fromPath(path.join(knownFolders.currentApp().path, 'assets', 'styles'));
         assetsFolder.getEntities().then(files => {
@@ -406,16 +433,16 @@ export default class Map extends BgServiceComponent {
             }).then(result => {
                 if (result) {
                     if (result === 'default') {
-                        this.vectorTileDecoder = new CartoOnlineVectorTileLayer({ style: CartoMapStyle.VOYAGER }).getTileDecoder();
+                        this.vectorTileDecoder = new CartoOnlineVectorTileLayer({ style: this.currentLayerStyle }).getTileDecoder();
                     } else {
                         this.vectorTileDecoder = new MBVectorTileDecoder({
-                            style: 'voyager',
+                            style: this.getStyleFromCartoMapStyle(this.currentLayerStyle),
                             // dirPath: `~/assets/styles/${result}`
                             zipPath: `~/assets/styles/${result}`
                         });
                     }
 
-                    this.setCurrentLayer(this.currentLayerType);
+                    this.setCurrentLayer(this.currentLayerStyle);
                 }
             });
         });

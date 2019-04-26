@@ -1,5 +1,5 @@
 import { GeoHandler } from '~/handlers/GeoHandler';
-import { Observable } from 'tns-core-modules/ui/page/page';
+import { Observable } from 'tns-core-modules/data/observable';
 
 export const BgServiceLoadedEvent: string;
 

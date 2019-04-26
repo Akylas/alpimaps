@@ -1,7 +1,8 @@
 import Vue, { NativeScriptVue } from 'nativescript-vue';
 import { Prop } from 'vue-property-decorator';
 import { NavigatedData, Page } from 'tns-core-modules/ui/page/page';
-import { Color, View } from 'tns-core-modules/ui/core/view';
+import { View } from 'tns-core-modules/ui/core/view';
+import { Color } from 'tns-core-modules/color';
 
 import { actionBarHeight, darkColor, primaryColor } from '../variables';
 import { VueConstructor } from 'vue';
@@ -70,7 +71,7 @@ export default class BaseVueComponent extends Vue {
     mounted() {
         const page = this.page;
         if (page) {
-            if (this.$isIOS) {
+            if (gVars.isIOS) {
                 page.backgroundSpanUnderStatusBar = true;
                 page.statusBarStyle = 'light';
             } else {

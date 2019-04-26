@@ -3,88 +3,96 @@ import mergeOptions from 'merge-options';
 import { Component, Model, Prop, Watch } from 'vue-property-decorator';
 import Vue, { NativeScriptVue } from 'nativescript-vue';
 import { View } from 'tns-core-modules/ui/core/view';
+import { Style } from 'tns-core-modules/ui/styling/style';
+
+const DEFAULT_ANIM_DURATION = 300;
+const DEFAULT_TRIGGER_WIDTH = 30;
+const DEFAULT_MENU_WIDTH = '70%';
+const DEFAULT_MENU_HEIGHT = '40%';
+const DEFAULT_MENU_BACK_COLOR = '#ffffff';
 
 export const defaultOptions = {
     debug: false,
     backdropColor: 'rgba(0, 0, 0, 0.7)',
     left: {
-        width: '70%',
+        width: DEFAULT_MENU_WIDTH,
         height: null,
         enabled: true,
         fixed: false,
-        backgroundColor: '#ffffff',
+        backgroundColor: DEFAULT_MENU_BACK_COLOR,
         canSwipeOpen: true,
-        swipeOpenTriggerWidth: 30,
+        swipeOpenTriggerWidth: DEFAULT_TRIGGER_WIDTH,
         swipeOpenTriggerHeight: null,
-        swipeOpenTriggerMinDrag: 50,
-        swipeCloseTriggerMinDrag: 50,
+        swipeOpenTriggerMinDrag: DEFAULT_TRIGGER_WIDTH,
+        swipeCloseTriggerMinDrag: DEFAULT_TRIGGER_WIDTH,
         swipeOpenTriggerProperties: {},
         animation: {
-            openDuration: 300,
-            closeDuration: 300
+            openDuration: DEFAULT_ANIM_DURATION,
+            closeDuration: DEFAULT_ANIM_DURATION
         },
         translationOffsetMultiplier: -1,
         axis: 'X'
     },
     right: {
-        width: '70%',
+        width: DEFAULT_MENU_WIDTH,
         height: null,
         enabled: true,
         fixed: false,
-        backgroundColor: '#ffffff',
+        backgroundColor: DEFAULT_MENU_BACK_COLOR,
         canSwipeOpen: true,
-        swipeOpenTriggerWidth: 30,
+        swipeOpenTriggerWidth: DEFAULT_TRIGGER_WIDTH,
         swipeOpenTriggerHeight: null,
-        swipeOpenTriggerMinDrag: 50,
-        swipeCloseTriggerMinDrag: 50,
+        swipeOpenTriggerMinDrag: DEFAULT_TRIGGER_WIDTH,
+        swipeCloseTriggerMinDrag: DEFAULT_TRIGGER_WIDTH,
         swipeOpenTriggerProperties: {},
         animation: {
-            openDuration: 300,
-            closeDuration: 300
+            openDuration: DEFAULT_ANIM_DURATION,
+            closeDuration: DEFAULT_ANIM_DURATION
         },
         translationOffsetMultiplier: 1,
         axis: 'X'
     },
     top: {
         width: null,
-        height: '40%',
+        height: DEFAULT_MENU_HEIGHT,
         enabled: true,
         fixed: false,
-        backgroundColor: '#ffffff',
+        backgroundColor: DEFAULT_MENU_BACK_COLOR,
         canSwipeOpen: true,
         swipeOpenTriggerWidth: null,
-        swipeOpenTriggerHeight: 50,
-        swipeOpenTriggerMinDrag: 50,
-        swipeCloseTriggerMinDrag: 50,
+        swipeOpenTriggerHeight: DEFAULT_TRIGGER_WIDTH,
+        swipeOpenTriggerMinDrag: DEFAULT_TRIGGER_WIDTH,
+        swipeCloseTriggerMinDrag: DEFAULT_TRIGGER_WIDTH,
         swipeOpenTriggerProperties: {},
         animation: {
-            openDuration: 300,
-            closeDuration: 300
+            openDuration: DEFAULT_ANIM_DURATION,
+            closeDuration: DEFAULT_ANIM_DURATION
         },
         translationOffsetMultiplier: -1,
         axis: 'Y'
     },
     bottom: {
         width: null,
-        height: '40%',
+        height: DEFAULT_MENU_HEIGHT,
         enabled: true,
         fixed: false,
-        backgroundColor: '#ffffff',
+        backgroundColor: DEFAULT_MENU_BACK_COLOR,
         canSwipeOpen: true,
         swipeOpenTriggerWidth: null,
-        swipeOpenTriggerHeight: 30,
-        swipeOpenTriggerMinDrag: 50,
-        swipeCloseTriggerMinDrag: 50,
+        swipeOpenTriggerHeight: DEFAULT_TRIGGER_WIDTH,
+        swipeOpenTriggerMinDrag: DEFAULT_TRIGGER_WIDTH,
+        swipeCloseTriggerMinDrag: DEFAULT_TRIGGER_WIDTH,
         swipeOpenTriggerProperties: {},
         animation: {
-            openDuration: 300,
-            closeDuration: 300
+            openDuration: DEFAULT_ANIM_DURATION,
+            closeDuration: DEFAULT_ANIM_DURATION
         },
         translationOffsetMultiplier: 1,
         axis: 'Y'
     }
 };
-type OptionsType = Partial<typeof defaultOptions>;
+type DeepPartial<T> = { [P in keyof T]?: DeepPartial<T[P]> };
+export type OptionsType = DeepPartial<typeof defaultOptions>;
 export interface MultiDrawerRefs {
     [key: string]: any;
     backDrop: NativeScriptVue<View>;
@@ -119,18 +127,26 @@ export default class MultiDrawer extends Vue {
     sides = {
         left: {
             open: false,
+            invisible: true,
+            translation: 0,
             translationOffset: 0
         },
         right: {
             open: false,
+            invisible: true,
+            translation: 0,
             translationOffset: 0
         },
         top: {
             open: false,
+            invisible: true,
+            translation: 0,
             translationOffset: 0
         },
         bottom: {
             open: false,
+            invisible: true,
+            translation: 0,
             translationOffset: 0
         }
     };
@@ -147,13 +163,20 @@ export default class MultiDrawer extends Vue {
         return Object.keys(this.$slots).filter(slotName => validSides.indexOf(slotName) !== -1 && this.optionsInternal[slotName].enabled);
     }
     get computedDrawerStyle() {
-        return side => ({
-            transform: `translate${this.optionsInternal[side].axis}(${this.sides[side].open || this.optionsInternal[side].fixed ? 0 : this.sides[side].translationOffset})`,
-            ...(this.optionsInternal[side].width ? { width: this.optionsInternal[side].width } : {}),
-            ...(this.optionsInternal[side].height ? { height: this.optionsInternal[side].height } : {}),
-            backgroundColor: this.optionsInternal[side].backgroundColor,
-            [this.optionsInternal[side].axis === 'X' ? 'horizontalAlignment' : 'verticalAlignment']: side
-        });
+        return side => {
+            const isOpened = this.sides[side].open || this.optionsInternal[side].fixed || !this.sides[side].invisible;
+            const isVisible = isOpened || this.sides[side].invisible !== true;
+            // console.log('computedDrawerStyle', side, this.sides[side].open, this.sides[side].translationOffset, this.sides[side].invisible, isVisible);
+            return {
+                ...(isVisible ? {} : { transform: `translate${this.optionsInternal[side].axis}(${this.sides[side].translationOffset})` }),
+                // transform: `translate${this.optionsInternal[side].axis}(${isOpened ? 0 : this.sides[side].translationOffset})`,
+                ...(this.optionsInternal[side].width ? { width: this.optionsInternal[side].width } : {}),
+                ...(this.optionsInternal[side].height ? { height: this.optionsInternal[side].height } : {}),
+                backgroundColor: this.optionsInternal[side].backgroundColor,
+                visibility: isVisible ? 'visible' : 'hidden',
+                [this.optionsInternal[side].axis === 'X' ? 'horizontalAlignment' : 'verticalAlignment']: side
+            };
+        };
     }
     get computedSwipeOpenTriggerProperties() {
         return side => ({
@@ -182,6 +205,13 @@ export default class MultiDrawer extends Vue {
     }
     get computedOpenSide() {
         return this.computedSidesEnabled.find(side => this.sides[side].open) || false;
+    }
+    isSideOpened(side = null) {
+        if (!side) {
+            side = this.computedSidesEnabled[0];
+        }
+
+        return this.sides[side].open === true;
     }
     get computedLayout() {
         const options = this.optionsInternal;
@@ -218,13 +248,14 @@ export default class MultiDrawer extends Vue {
     get backDrop() {
         return this.$refs.backDrop.nativeView;
     }
-    async open(side = null) {
+    async open(side = null, animationFactor = 1) {
         if (!side) {
             if (!this.computedSidesEnabled.length) {
                 throw new Error('No sides are enabled, at least one side must be enabled to open the drawer');
             }
             side = this.computedSidesEnabled[0];
         }
+        // console.log('open', side, this.isPanning, this.isAnimating);
 
         if (this.computedSidesEnabled.indexOf(side) === -1) {
             return;
@@ -235,28 +266,31 @@ export default class MultiDrawer extends Vue {
         }
 
         this.isPanning = false;
-        this.isAnimating = true;
         this.backdropVisible = true;
+        this.sides[side].invisible = false;
+        if (animationFactor !== 0) {
+            this.isAnimating = true;
+            const duration = this.optionsInternal[side].animation.openDuration * animationFactor;
 
-        const duration = this.optionsInternal[side].animation.openDuration;
-
-        this.$refs.backDrop.nativeView.animate({
-            opacity: 1,
-            duration
-        });
-        await this.$refs[`${side}Drawer`][0].nativeView.animate({
-            translate: {
-                x: 0,
-                y: 0
-            },
-            duration
-        });
+            this.$refs.backDrop.nativeView.animate({
+                opacity: 1,
+                duration
+            });
+            await this.$refs[`${side}Drawer`][0].nativeView.animate({
+                translate: {
+                    x: 0,
+                    y: 0
+                },
+                duration
+            });
+            this.isAnimating = false;
+        }
 
         this.sides[side].open = true;
-        this.isAnimating = false;
+        // console.log('did open', side);
         this.$emit('stateChange', side);
     }
-    async close(side = null) {
+    async close(side = null, animationFactor = 1) {
         if (this.isAnimating) {
             return;
         }
@@ -266,27 +300,32 @@ export default class MultiDrawer extends Vue {
         if (!side) {
             return;
         }
+        // console.log('closing', side);
 
         this.isPanning = false;
-        this.isAnimating = true;
 
-        const duration = this.optionsInternal[side].animation.closeDuration;
+        if (animationFactor !== 0) {
+            this.isAnimating = true;
+            const duration = this.optionsInternal[side].animation.closeDuration * animationFactor;
 
-        this.$refs[`${side}Drawer`][0].nativeView.animate({
-            translate: {
-                ...(this.optionsInternal[side].axis === 'X' ? { x: this.sides[side].translationOffset } : { x: 0 }),
-                ...(this.optionsInternal[side].axis === 'Y' ? { y: this.sides[side].translationOffset } : { y: 0 })
-            },
-            duration
-        });
-        await this.$refs.backDrop.nativeView.animate({
-            opacity: 0,
-            duration
-        });
+            this.$refs[`${side}Drawer`][0].nativeView.animate({
+                translate: {
+                    x: this.optionsInternal[side].axis === 'X' ? this.sides[side].translationOffset : 0,
+                    y: this.optionsInternal[side].axis === 'Y' ? this.sides[side].translationOffset : 0
+                },
+                duration
+            });
+            await this.$refs.backDrop.nativeView.animate({
+                opacity: 0,
+                duration
+            });
+            this.isAnimating = false;
+        }
+        // console.log('closed', side);
 
         this.sides[side].open = false;
+        this.sides[side].invisible = true;
         this.backdropVisible = false;
-        this.isAnimating = false;
         this.$emit('stateChange', false);
     }
     onDrawerLayoutChange(side) {
@@ -296,19 +335,25 @@ export default class MultiDrawer extends Vue {
             utils.layout.toDeviceIndependentPixels(this.optionsInternal[side].axis === 'X' ? view.getMeasuredWidth() : view.getMeasuredHeight());
     }
     onBackDropPan(args) {
+        // console.log('onBackDropPan', this.computedOpenSide, this.isPanning, this.isAnimating);
         this.onDrawerPan(this.computedOpenSide, args);
     }
     onOpenTriggerPan(side, args) {
+        // console.log('onOpenTriggerPan', side, this.isPanning, this.isAnimating);
         this.onDrawerPan(side, args);
     }
     onDrawerPan(side, args) {
+        // console.log('onDrawerPan', side, this.isPanning, this.isAnimating);
+        if (side === false) {
+            return;
+        }
         if (this.optionsInternal[side].fixed) {
             return;
         }
-        if ((this.isPanning && this.isPanning !== side) || this.isAnimating) {
+        if (!side) {
             return;
         }
-        if (!side) {
+        if ((this.isPanning && this.isPanning !== side) || this.isAnimating) {
             return;
         }
         const view = this.$refs[`${side}Drawer`][0].nativeView;
@@ -321,6 +366,7 @@ export default class MultiDrawer extends Vue {
             if (!this.sides[side].open) {
                 this.$refs.backDrop.nativeView.opacity = 0;
                 this.backdropVisible = true;
+                this.sides[side].invisible = false;
             }
 
             this.prevDeltaX = 0;
@@ -353,9 +399,9 @@ export default class MultiDrawer extends Vue {
                     distanceFromFullyOpen = Math.abs(view.translateY);
                 }
                 if (distanceFromFullyOpen > this.optionsInternal[side].swipeCloseTriggerMinDrag) {
-                    this.close(side);
+                    this.close(side, 1 - distanceFromFullyOpen / Math.abs(this.sides[side].translationOffset));
                 } else {
-                    this.open(side);
+                    this.open(side, distanceFromFullyOpen / Math.abs(this.sides[side].translationOffset));
                 }
             } else {
                 const offsetAbs = Math.abs(this.sides[side].translationOffset);
@@ -368,9 +414,9 @@ export default class MultiDrawer extends Vue {
                 }
 
                 if (distanceFromEdge < this.optionsInternal[side].swipeOpenTriggerMinDrag) {
-                    this.close(side);
+                    this.close(side, distanceFromEdge / Math.abs(this.sides[side].translationOffset));
                 } else {
-                    this.open(side);
+                    this.open(side, 1 - distanceFromEdge / Math.abs(this.sides[side].translationOffset));
                 }
             }
 
@@ -380,42 +426,40 @@ export default class MultiDrawer extends Vue {
     }
     constrainX(view, side, x) {
         const offset = this.sides[side].translationOffset;
+        let trX = x;
         if (offset < 0) {
             if (x > 0) {
-                view.translateX = 0;
+                trX = 0;
             } else if (this.sides[side].open && x < offset) {
-                view.translateX = offset;
-            } else {
-                view.translateX = x;
+                trX = offset;
             }
         } else {
             if (x < 0) {
-                view.translateX = 0;
+                trX = 0;
             } else if (this.sides[side].open && x > offset) {
-                view.translateX = offset;
-            } else {
-                view.translateX = x;
+                trX = offset;
             }
         }
+        // console.log('constrainX', trX);
+        view.translateX = trX;
     }
     constrainY(view, side, y) {
         const offset = this.sides[side].translationOffset;
+        let trY = y;
         if (offset < 0) {
             if (y > 0) {
-                view.translateY = 0;
+                trY = 0;
             } else if (this.sides[side].open && y < offset) {
-                view.translateY = offset;
-            } else {
-                view.translateY = y;
+                trY = offset;
             }
         } else {
             if (y < 0) {
-                view.translateY = 0;
+                trY = 0;
             } else if (this.sides[side].open && y > offset) {
-                view.translateY = offset;
-            } else {
-                view.translateY = y;
+                trY = offset;
             }
         }
+        // console.log('constrainY', trY);
+        view.translateY = trY;
     }
 }
