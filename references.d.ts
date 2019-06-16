@@ -18,14 +18,16 @@ declare module '*.scss' {
 declare const gVars: {
     isIOS: boolean;
     isAndroid: boolean;
-    CARTO_ANDROID_TOKEN: string;
-    CARTO_IOS_TOKEN: string;
+    CARTO_TOKEN: string;
     IGN_TOKEN: string;
     THUNDERFOREST_TOKEN: string;
     MAPBOX_TOKEN: string;
     HER_APP_ID: string;
     HER_APP_CODE: string;
+    BUGNSAG: string;
 }
 
 declare const TNS_ENV;
-declare const process: { env: any };
+declare const LOG_LEVEL: string;
+declare const TEST_LOGS: string;
+// declare const process: { env: any };

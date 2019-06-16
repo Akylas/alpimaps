@@ -1,23 +1,18 @@
+import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
 import { HTTPTileDataSource } from 'nativescript-carto/datasources/http';
-import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
-import { CartoMap } from 'nativescript-carto/ui/ui';
-import { Point } from 'nativescript-carto/vectorelements/point';
-import { Polygon } from 'nativescript-carto/vectorelements/polygon';
-import Map from '~/components/Map';
-import MapModule from './MapModule';
 import { TileLayer } from 'nativescript-carto/layers/layer';
 import { RasterTileLayer } from 'nativescript-carto/layers/raster';
-import { VectorLayer } from 'nativescript-carto/layers/vector';
-import * as appSettings from 'tns-core-modules/application-settings/application-settings';
-import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
-import { File, path } from 'tns-core-modules/file-system';
-import { getDataFolder } from '~/utils';
-import { DataProvider, Provider } from '~/data/tilesources';
-import OptionSelect from '~/components/OptionSelect';
+import { CartoMap } from 'nativescript-carto/ui/ui';
 import localize from 'nativescript-localize';
-import { cerror, clog } from '~/utils/logging';
-
 import Vue from 'nativescript-vue';
+import * as appSettings from 'tns-core-modules/application-settings/application-settings';
+import { File, path } from 'tns-core-modules/file-system';
+import Map from '~/components/Map';
+import OptionSelect from '~/components/OptionSelect';
+import { DataProvider, Provider } from '~/data/tilesources';
+import { getDataFolder } from '~/utils';
+import { cerror, clog } from '~/utils/logging';
+import MapModule from './MapModule';
 
 const rasterCachePath = path.join(getDataFolder(), 'rastercache');
 
@@ -44,7 +39,7 @@ export default class CustomLayersModule extends MapModule {
     createRasterLayer(id: string, provider: Provider) {
         const opacity = appSettings.getNumber(`${id}_opacity`, 1);
         const databasePath = File.fromPath(path.join(rasterCachePath, id)).path;
-        console.log('createRasterLayer', id, opacity, provider.url, databasePath);
+        // console.log('createRasterLayer', id, opacity, provider.url, databasePath);
 
         const dataSource = new HTTPTileDataSource({
             url: provider.url as string,
@@ -182,14 +177,14 @@ export default class CustomLayersModule extends MapModule {
         }
     }
     getSourcesLibrary() {
-        clog('getSourcesLibrary', this.sourcesLoaded);
+        // clog('getSourcesLibrary', this.sourcesLoaded);
         if (this.sourcesLoaded) {
             return Promise.resolve();
         }
-        clog('loading source library');
-        // return Promise.resolve()
-        //     .then(function() {
-        //         try {
+        // clog('loading source library');
+        // // return Promise.resolve()
+        // //     .then(function() {
+        // //         try {
         //             return require('~/data/tilesources');
         //         } catch (err) {
         //             cerror(err);
@@ -199,7 +194,6 @@ export default class CustomLayersModule extends MapModule {
             import('~/data/tilesources')
                 // })
                 .then(module => {
-                    clog('test', module);
                     const providers = module.data;
                     for (const provider in module.data) {
                         this.addProvider(provider, providers);
@@ -221,9 +215,9 @@ export default class CustomLayersModule extends MapModule {
     }
 
     onMapReady(mapComp: Map, mapView: CartoMap) {
-        this.mapView = mapView;
-        this.mapComp = mapComp;
+        super.onMapReady(mapComp, mapView);
         const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
+        this.log('onMapReady', savedSources, this.customSources);
         if (savedSources.length > 0) {
             this.getSourcesLibrary().then(() => {
                 savedSources.forEach(s => {
@@ -232,10 +226,15 @@ export default class CustomLayersModule extends MapModule {
                     this.customSources.push(data);
                 });
                 this.customSources.forEach((data, index) => {
-                    mapView.addLayer(data.layer, 1 + index);
+                    mapComp.addLayer(data.layer, 'customLayers', index);
                 });
             });
         }
+    }
+
+    onMapDestroyed() {
+        super.onMapDestroyed();
+        this.customSources = [];
     }
     addSource() {
         this.getSourcesLibrary().then(() => {
@@ -251,7 +250,7 @@ export default class CustomLayersModule extends MapModule {
                 if (result) {
                     const data = this.createRasterLayer(result.name, result.provider);
                     clog('about to add', data.layer, !!this.mapView);
-                    this.mapView.addLayer(data.layer, 1 + this.customSources.length);
+                    this.mapComp.addLayer(data.layer, 'customLayers', this.customSources.length);
                     this.customSources.push(data);
                     clog('layer added');
                     const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));

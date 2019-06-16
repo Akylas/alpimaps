@@ -1,4 +1,4 @@
-import { registerElement } from 'nativescript-vue';
+import Vue from 'nativescript-vue';
 import ActivityIndicatorPlugin from 'nativescript-material-activityindicator/vue';
 import ButtonPlugin from 'nativescript-material-button/vue';
 import CardViewPlugin from 'nativescript-material-cardview/vue';
@@ -8,6 +8,7 @@ import SliderPlugin from 'nativescript-material-slider/vue';
 import TextFieldPlugin from 'nativescript-material-textfield/vue';
 import BottomSheetPlugin from 'nativescript-material-bottomsheet/vue';
 import CartoPlugin from 'nativescript-carto/vue';
+import CollectionViewPlugin from 'nativescript-collectionview/vue';
 import FabPlugin from 'nativescript-vue-fab';
 // import MultiDrawer from 'nativescript-vue-multi-drawer';
 const Plugin = {
@@ -22,10 +23,11 @@ const Plugin = {
         Vue.use(BottomSheetPlugin);
         Vue.use(CartoPlugin);
         Vue.use(FabPlugin);
+        Vue.use(CollectionViewPlugin);
         // Vue.use(MultiDrawer);
 
-        registerElement('HTMLLabel', () => require('nativescript-htmllabel').Label);
-        registerElement('SVGImage', () => require('@teammaestro/nativescript-svg').SVGImage);
+        Vue.registerElement('HTMLLabel', () => require('nativescript-htmllabel').Label);
+        // registerElement('SVGImage', () => require('@teammaestro/nativescript-svg').SVGImage);
     }
 };
 

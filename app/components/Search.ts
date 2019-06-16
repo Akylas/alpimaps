@@ -1,16 +1,19 @@
-import { Address, GeocodingResult, GeocodingResultVector, GeocodingService, PackageManagerGeocodingService } from 'nativescript-carto/geocoding/service';
-import BaseVueComponent from './BaseVueComponent';
-import { Component, Prop } from 'vue-property-decorator';
-import { device, isAndroid } from 'tns-core-modules/platform';
-import { TextField } from 'tns-core-modules/ui/text-field';
-import { getJSON } from 'tns-core-modules/http';
-import { queryString } from '../utils/http';
-import { Feature, FeatureCollection, VectorTileFeatureCollection } from 'nativescript-carto/geometry/feature';
+import { MapPos } from 'nativescript-carto/core/core';
 import { VectorTileLayer } from 'nativescript-carto/layers/vector';
 import { Projection } from 'nativescript-carto/projections/projection';
-import { fromNativeMapPos, MapPos } from 'nativescript-carto/core/core';
+import { CartoMap } from 'nativescript-carto/ui/ui';
+import { getJSON } from 'tns-core-modules/http';
 import { ItemEventData } from 'tns-core-modules/ui/list-view/list-view';
+import { TextField } from 'tns-core-modules/ui/text-field';
+import { Component, Prop } from 'vue-property-decorator';
+import Map from '~/components/Map';
+import { Address, Item } from '~/mapModules/ItemsModule';
+import MapModule from '~/mapModules/MapModule';
 import { clog } from '~/utils/logging';
+import { queryString } from '../utils/http';
+import BaseVueComponent from './BaseVueComponent';
+import ItemFormatter from '~/mapModules/ItemFormatter';
+const addressFormatter = require('@fragaria/address-formatter'); // const OPEN_DURATION = 200;
 const deburr = require('deburr');
 function cleanUpString(s) {
     return new deburr.Deburr(s)
@@ -20,100 +23,105 @@ function cleanUpString(s) {
         .trim();
 }
 
-class VectorTileArray {
-    length: number;
-    constructor(private collection?: VectorTileFeatureCollection) {
-        this.length = collection ? collection.getFeatureCount() : 0;
-    }
-    getItem(index: number) {
-        return this.collection.getFeature(index);
-    }
-}
+// class VectorTileArray {
+//     length: number;
+//     constructor(private collection?: VectorTileFeatureCollection) {
+//         this.length = collection ? collection.getFeatureCount() : 0;
+//     }
+//     getItem(index: number) {
+//         return this.collection.getFeature(index);
+//     }
+// }
 
-class GeocodingResultArray {
-    length: number;
-    constructor(private vector?: GeocodingResultVector) {
-        this.length = vector ? vector.size() : 0;
-    }
-    getItem(index: number): GeocodingResult {
-        return this.vector.get(index);
-    }
-}
+// class GeocodingResultArray {
+//     length: number;
+//     constructor(private vector?: GeocodingResultVector) {
+//         this.length = vector ? vector.size() : 0;
+//     }
+//     getItem(index: number): GeocodingResult {
+//         return this.vector.get(index);
+//     }
+// }
 
 class PhotonAddress {
-    categories = [];
+    // categories = [];
     constructor(private properties) {
-        if (properties['osm_value']) {
-            this.categories.push(properties['osm_value']);
-        }
-        if (properties['osm_key']) {
-            this.categories.push(properties['osm_key']);
-        }
+        // if (properties['osm_value']) {
+        //     this.categories.push(properties['osm_value']);
+        // }
+        // if (properties['osm_key']) {
+        //     this.categories.push(properties['osm_key']);
+        // }
     }
-    getStreet() {
+    get road() {
         if (this.properties['osm_key'] === 'highway') {
             return this.properties.name;
         }
         return this.properties.street;
     }
-    getCountry() {
+    get country() {
         return this.properties.country;
     }
-    getCounty() {
+    get county() {
         return this.properties.county;
     }
-    getName() {
+    get name() {
         return this.properties.name;
     }
-    getCategories() {
-        return this.categories;
-    }
-    getNeighbourhood() {
+    // get categories() {
+    //     return this.categories;
+    // }
+    get neighbourhood() {
         return this.properties.neighbourhood;
     }
-    getPostcode() {
+    get postcode() {
         return this.properties.postcode;
     }
-    getHouseNumber() {
+    get houseNumber() {
         return this.properties.housenumber;
     }
-    getRegion() {
+    get region() {
         return this.properties.region;
     }
-    getLocality() {
+    get locality() {
         return this.properties.city;
     }
 }
 class PhotonFeature {
     properties: { [k: string]: any };
-    geometry: MapPos;
+    position: MapPos;
     address: PhotonAddress;
     constructor(private data) {
         clog('PhotonFeature', data);
-        this.properties = data.properties;
-        this.geometry = { latitude: data.geometry.coordinates[1], longitude: data.geometry.coordinates[0] };
+        this.properties = data.properties || {};
+        this.position = { lat: data.geometry.coordinates[1], lon: data.geometry.coordinates[0] };
         this.address = new PhotonAddress(data.properties);
     }
 }
 
-interface SearchItem {
-    properties: { [k: string]: any };
-    geometry: MapPos;
-    address: Address;
-}
+interface SearchItem extends Item {}
 
 @Component({})
-export default class Search extends BaseVueComponent {
+export default class Search extends BaseVueComponent implements MapModule {
+    mapView: CartoMap;
+    mapComp: Map;
     @Prop()
     searchLayer: VectorTileLayer;
     @Prop()
     projection: Projection;
 
+    _formatter: ItemFormatter;
+    get formatter() {
+        if (!this._formatter && this.mapComp) {
+            this._formatter = this.mapComp.mapModule('formatter');
+        }
+        return this._formatter;
+    }
+
     get textField() {
         return this.$refs.textField.nativeView as TextField;
     }
 
-    _offlineSearchService: PackageManagerGeocodingService;
     // searchService: MapBoxOnlineGeocodingService;
     searchAsTypeTimer;
     dataItems: SearchItem[] = [];
@@ -124,74 +132,25 @@ export default class Search extends BaseVueComponent {
     get searchResultsVisible() {
         return (this.loading || this.hasFocus) && this.searchResultsCount > 0;
     }
-    getItemAddress(item: SearchItem) {
-        let result: string;
-        const address = item.address;
-        // console.log('getItemAddress', item);
-        if (address) {
-            const street = address.getStreet();
-            if (street && street !== this.getItemName(item)) {
-                result = street;
-            }
-            const city = address.getLocality();
-            if (city) {
-                result = (result ? result + ', ' : '') + city;
-            }
-            const county = address.getCounty();
-            if (county && county !== city) {
-                result = (result ? result + ' ' : '') + county;
-            }
-            const postcode = address.getPostcode();
-            if (postcode) {
-                result = (result ? result + ' ' : '') + postcode;
-            }
-            const country = address.getCountry();
-            if (country) {
-                result = (result ? result + ' ' : '') + country;
-            }
-            return result;
-        }
 
-        return item.address && item.address.getStreet();
-    }
-    getItemName(item: SearchItem) {
-        return (item.properties && item.properties.name) || (item.address && item.address.getName());
-    }
     getItemIcon(item: SearchItem) {
-        const result = [];
-        if (item.properties['osm_value']) {
-            result.push('maki-' + item.properties['osm_value']);
-        }
-        if (item.properties['osm_key']) {
-            result.push('maki-' + item.properties['osm_key']);
-        }
-        return result;
+        return this.formatter.geItemIcon(item);
     }
-    get offlineSearchService() {
-        if (!this._offlineSearchService) {
-            this._offlineSearchService = new PackageManagerGeocodingService({
-                packageManager: this.$packageService.geoPackageManager,
-                language: 'fr'
-            });
-        }
-        return this._offlineSearchService;
+    getItemTitle(item: SearchItem) {
+        return this.formatter.getItemTitle(item);
+    }
+    getItemSubtitle(item: SearchItem) {
+        return this.formatter.getItemSubtitle(item);
     }
 
-    constructor() {
-        super();
-        // this.searchService = new VectorTileSearchService({
-        //     dataSource: this.$packageService.getDataSource(),
-        //     decoder: this.$packageService.getVectorTileDecoder(),
-        //     minZoom: 10,
-        //     maxZoom: 14
-        // });
-
-        // this.searchService = new MapBoxOnlineGeocodingService({
-        //     apiKey: 'pk.eyJ1IjoiYWt5bGFzIiwiYSI6IkVJVFl2OXMifQ.TGtrEmByO3-99hA0EI44Ew',
-        //     // language: 'fr'
-        // });
+    onMapReady(mapComp: Map, mapView: CartoMap) {
+        this.mapView = mapView;
+        this.mapComp = mapComp;
     }
-
+    onMapDestroyed() {
+        this.mapView = null;
+        this.mapComp = null;
+    }
     get searchResultsCount() {
         return this.dataItems ? this.dataItems.length : 0;
     }
@@ -199,16 +158,16 @@ export default class Search extends BaseVueComponent {
         super.mounted();
     }
     onLoaded() {}
-    hasFocus = false
+    hasFocus = false;
     onFocus(e) {
-        clog('onFocus')
+        clog('onFocus');
         this.hasFocus = true;
         if (this.currentSearchText && this.searchResultsCount === 0) {
             this.instantSearch(this.currentSearchText);
         }
     }
     onBlur(e) {
-        clog('onBlur')
+        clog('onBlur');
         this.hasFocus = false;
     }
     onTextChange(e) {
@@ -228,50 +187,20 @@ export default class Search extends BaseVueComponent {
         this.currentSearchText = query;
     }
 
-    searchInGeocodingService(
-        service: GeocodingService<any, any>,
-        options
-    ): Promise<
-        Array<{
-            properties: any;
-            address: any;
-        }>
-    > {
-        return new Promise((resolve, reject) => {
-            service.calculateAddresses(options, (err, result) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-                console.log('found results', result.size());
-                const items = [];
-                // this.dataItems = new GeocodingResultArray(result);
-                let geoRes: GeocodingResult, features: FeatureCollection, feature: Feature;
-                for (let i = 0; i < result.size(); i++) {
-                    geoRes = result.get(i);
-                    const address = geoRes.getAddress();
-                    features = geoRes.getFeatureCollection();
-                    console.log('search features', features.getFeatureCount());
-                    for (let j = 0; j < features.getFeatureCount(); j++) {
-                        // geoRes = result.get(j);
-                        feature = features.getFeature(j);
-                        console.log('search item', feature.properties, address, feature.geometry);
-                        items.push({ properties: feature.properties, address, geometry: feature.geometry ? fromNativeMapPos(feature.geometry.getCenterPos()) : undefined });
-                    }
-                }
-                console.log('about to resolve searchInGeocodingService', items);
-                resolve(items);
-            });
-        });
+    searchInGeocodingService(options) {
+        return this.$packageService.searchInPackageGeocodingService(options).then(result => result.map(this.$packageService.prepareGeoCodingResult));
     }
     photonSearch(options: { query: string; language?: string; location?: MapPos; locationRadius?: number }) {
+        if (!this.$networkService.connected) {
+            return Promise.resolve([]);
+        }
         console.log('photonSearch', options);
         return getJSON(
             queryString(
                 {
                     q: options.query,
-                    lat: options.location && options.location.latitude,
-                    lon: options.location && options.location.longitude,
+                    lat: options.location && options.location.lat,
+                    lon: options.location && options.location.lon,
                     lang: options.language,
                     limit: 40
                 },
@@ -296,15 +225,15 @@ export default class Search extends BaseVueComponent {
         console.log('instantSearch', _query, options);
 
         // TODO: dont fail when offline!!!
-        return Promise.all([
-            this.photonSearch(options),
-            // this.searchInGeocodingService(this.searchService, options),
-            this.searchInGeocodingService(this.offlineSearchService, options)
-        ])
+        return Promise.all([this.photonSearch(options), this.searchInGeocodingService(options)])
             .then(results => {
+                const items = [].concat.apply([], results);
+                if (items.length === 0) {
+                    this.$showToast(this.$t('no_result_found'));
+                }
                 if (this.hasFocus) {
-                    this.dataItems = [].concat.apply([], results);
-                    console.log('instantSearch done', this.dataItems.length);
+                    this.dataItems = items;
+                    console.log('instantSearch done', this.dataItems.length, this.dataItems);
                 }
             })
             .catch(err => {
@@ -316,7 +245,6 @@ export default class Search extends BaseVueComponent {
             });
     }
     clearSearch() {
-        console.log('clearSearch');
         if (this.searchAsTypeTimer) {
             clearTimeout(this.searchAsTypeTimer);
             this.searchAsTypeTimer = null;
@@ -324,7 +252,7 @@ export default class Search extends BaseVueComponent {
         this.dataItems = [] as any;
         this.currentSearchText = null;
         this.textField.text = null;
-        this.unfocus();
+        // this.unfocus();
     }
     unfocus() {
         if (this.searchAsTypeTimer) {
@@ -336,28 +264,16 @@ export default class Search extends BaseVueComponent {
         }
         this.textField.dismissSoftInput();
     }
+
+    showMenu(side = 'left') {
+        this.log('showMenu', side);
+        this.$getAppComponent().drawer.open(side);
+    }
     public onItemTap(args: ItemEventData) {
         const item = this.dataItems[args.index];
         const extent = item.properties.extent;
-        clog('Item Tapped', args.index, item.geometry, extent, item);
-        this.$getMapComponent().selectPosition(
-            item.geometry,
-            item.properties,
-            true,
-            // extent
-            //     ? {
-            //         southwest: {
-            //               latitude: extent[3],
-            //               longitude: extent[0]
-            //           },
-            //           northeast: {
-            //               latitude: extent[1],
-            //               longitude: extent[2]
-            //           }
-            //     }
-            //     : 
-                undefined
-        );
-        this.clearSearch();
+        clog('Item Tapped', args.index, item.position, extent, item);
+        this.mapComp.selectItem(item, true);
+        this.unfocus();
     }
 }

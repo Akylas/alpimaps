@@ -1,9 +1,11 @@
 import * as app from 'application';
+import { compose } from 'nativescript-email';
 import * as EInfo from 'nativescript-extendedinfo';
+import { prompt } from 'nativescript-material-dialogs';
 import Vue, { NativeScriptVue } from 'nativescript-vue';
+import { device, isIOS, screen } from 'tns-core-modules/platform';
 import { GridLayout } from 'tns-core-modules/ui/layouts/grid-layout';
 import { StackLayout } from 'tns-core-modules/ui/layouts/stack-layout';
-import { isIOS } from 'tns-core-modules/platform';
 import { GC } from 'tns-core-modules/utils/utils';
 import { Frame, topmost } from 'ui/frame/frame';
 import { Component } from 'vue-property-decorator';
@@ -11,8 +13,21 @@ import Map from '~/components/Map';
 import { GeoHandler } from '~/handlers/GeoHandler';
 import { BaseVueComponentRefs } from './BaseVueComponent';
 import BgServiceComponent from './BgServiceComponent';
-import { clog } from '~/utils/logging';
+import MapRightMenu from './MapRightMenu';
+import MultiDrawer, { OptionsType } from './MultiDrawer';
 
+function base64Encode(value) {
+    if (gVars.isIOS) {
+        const text = NSString.stringWithString(value);
+        const data = text.dataUsingEncoding(NSUTF8StringEncoding);
+        return data.base64EncodedStringWithOptions(0);
+    }
+    if (gVars.isAndroid) {
+        const text = new java.lang.String(value);
+        const data = text.getBytes('UTF-8');
+        return android.util.Base64.encodeToString(data, android.util.Base64.DEFAULT);
+    }
+}
 export interface AppRefs extends BaseVueComponentRefs {
     [key: string]: any;
     innerFrame: NativeScriptVue<Frame>;
@@ -34,6 +49,8 @@ const routes = {
 
 @Component({
     components: {
+        MultiDrawer,
+        MapRightMenu,
         Map
     }
 })
@@ -53,6 +70,9 @@ export default class App extends BgServiceComponent {
     get innerFrame() {
         return this.$refs.innerFrame && this.$refs.innerFrame.nativeView;
     }
+    get drawer() {
+        return this.$refs['drawer'] as MultiDrawer;
+    }
     constructor() {
         super();
         this.$setAppComponent(this);
@@ -61,6 +81,14 @@ export default class App extends BgServiceComponent {
         this.appVersion = EInfo.getVersionNameSync() + '.' + EInfo.getBuildNumberSync();
     }
 
+    drawerOptions: OptionsType = {
+        left: {
+            swipeOpenTriggerWidth: 10
+        },
+        right: {
+            swipeOpenTriggerWidth: 10
+        }
+    };
     menuItems = [
         {
             title: 'map',
@@ -73,8 +101,7 @@ export default class App extends BgServiceComponent {
             //     url: 'settings'
         }
     ];
-    onNavigatingTo() {
-        clog(this.constructor.name, 'onNavigatingTo');
+    onLoaded() {
         GC();
     }
 
@@ -239,8 +266,88 @@ export default class App extends BgServiceComponent {
             this.navigateBack();
         }
     }
-    cartoLicenseRegistered = false;
+    static cartoLicenseRegistered = false;
+    cartoLicenseRegistered = App.cartoLicenseRegistered;
     setCartoLicenseRegistered(result: boolean) {
-        this.cartoLicenseRegistered = result;
+        if (App.cartoLicenseRegistered !== result) {
+            App.cartoLicenseRegistered = result;
+            this.cartoLicenseRegistered = result;
+        }
+    }
+    mapMounted = false;
+    setMapMounted(result: boolean) {
+        console.log('setMapMounted', result);
+        this.mapMounted = result;
+    }
+    onTap(command: string) {
+        switch (command) {
+            case 'sendFeedback':
+                compose({
+                    subject: `[${EInfo.getAppNameSync()}(${this.appVersion})] Feedback`,
+                    to: ['martin@akylas.fr'],
+                    attachments: [
+                        {
+                            fileName: 'report.json',
+                            path: `base64://${base64Encode(
+                                JSON.stringify(
+                                    {
+                                        device: {
+                                            model: device.model,
+                                            deviceType: device.deviceType,
+                                            language: device.language,
+                                            manufacturer: device.manufacturer,
+                                            os: device.os,
+                                            osVersion: device.osVersion,
+                                            region: device.region,
+                                            sdkVersion: device.sdkVersion,
+                                            uuid: device.uuid
+                                        },
+                                        screen: {
+                                            widthDIPs: screen.mainScreen.widthDIPs,
+                                            heightDIPs: screen.mainScreen.heightDIPs,
+                                            widthPixels: screen.mainScreen.widthPixels,
+                                            heightPixels: screen.mainScreen.heightPixels,
+                                            scale: screen.mainScreen.scale
+                                        }
+                                    },
+                                    null,
+                                    4
+                                )
+                            )}`,
+                            mimeType: 'application/json'
+                        }
+                    ]
+                }).catch(this.$showError);
+                break;
+            case 'sendBugReport':
+                prompt({
+                    message: this.$ltc('send_bug_report'),
+                    okButtonText: this.$t('send'),
+                    cancelButtonText: this.$t('cancel'),
+                    autoFocus: true,
+                    textFieldProperties: {
+                        marginLeft: 10,
+                        marginRight: 10,
+                        hint: this.$ltc('please_describe_error')
+                    }
+                } as any).then(result => {
+                    if (result.result && this.$bugsnag) {
+                        this.$bugsnag
+                            .notify({
+                                error: new Error('bug_report_error'),
+                                metadata: {
+                                    report: {
+                                        message: result.text
+                                    }
+                                }
+                            })
+                            .then(() => {
+                                this.$alert('bug_report_sent');
+                            })
+                            .catch(this.$showError);
+                    }
+                });
+                break;
+        }
     }
 }

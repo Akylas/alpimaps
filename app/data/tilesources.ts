@@ -2,7 +2,6 @@ import { HTTPTileDataSourceOptions } from 'nativescript-carto/datasources/http';
 import { RasterTileLayerOptions } from 'nativescript-carto/layers/raster';
 
 
-console.log('Tile Data sources');
 export interface DataProviderOptions {
     [k: string]: any;
 }
@@ -205,8 +204,8 @@ export const data: { [k: string]: DataProvider } = {
             France: {
                 url: 'http://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
                 attribution: '&copy; Openstreetmap France | {attribution.OpenStreetMap}',
-                urlOptions: {
-                    sourceOptions: 18
+                sourceOptions: {
+                    maxZoom: 18
                 }
             },
             HOT: {
@@ -452,7 +451,7 @@ export const data: { [k: string]: DataProvider } = {
                 sourceOptions: {
                     minZoom: 4,
                     maxZoom: 18,
-                    bounds: [[22, -132], [70, -56]]
+                    // bounds: [[22, -132], [70, -56]]
                 },
                 urlOptions: {
                     variant: 'terrain'
@@ -462,7 +461,7 @@ export const data: { [k: string]: DataProvider } = {
                 sourceOptions: {
                     minZoom: 4,
                     maxZoom: 18,
-                    bounds: [[22, -132], [70, -56]]
+                    // bounds: [[22, -132], [70, -56]]
                 },
                 urlOptions: {
                     variant: 'terrain-background'

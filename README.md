@@ -17,3 +17,8 @@ tns debug <platform> --bundle
 # Build, watch for changes and run the application
 tns run <platform> --bundle
 ```
+
+
+
+#### MAki replacement regexp
+```.maki-(.*):before[\s\n\r{]*content:\s"\\e(.*)";```

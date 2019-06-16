@@ -12,7 +12,7 @@ import { AlertDialog } from 'nativescript-material-dialogs';
 import localize from 'nativescript-localize';
 import { StackLayout } from 'tns-core-modules/ui/layouts/stack-layout/stack-layout';
 import { ActivityIndicator } from 'nativescript-material-activityindicator';
-import { log } from '~/utils/logging';
+import { clog, log } from '~/utils/logging';
 
 export interface BaseVueComponentRefs {
     [key: string]: any;
@@ -79,7 +79,7 @@ export default class BaseVueComponent extends Vue {
                 page.androidStatusBarBackground = new Color(this.darkColor);
             }
             page.actionBarHidden = true;
-            page.backgroundColor = this.themeColor;
+            page.backgroundColor = this.darkColor;
             // page.backgroundColor = this.themeColor;
             // page.on(Page.navigatingToEvent, () => {
 
@@ -94,6 +94,10 @@ export default class BaseVueComponent extends Vue {
     destroyed() {}
 
     noop() {}
+
+    log(...args) {
+        clog(`[${this.constructor.name}]`, ...args);
+    }
 
     navigateTo(component: VueConstructor, options?: NavigationEntry & { props?: any }, cb?: () => Page) {
         options = options || {};

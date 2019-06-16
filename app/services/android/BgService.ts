@@ -61,7 +61,7 @@ export class BgService extends android.app.Service {
     }
 
     private createNotificationChannel(color) {
-        const channelId = 'microoled_service';
+        const channelId = 'alpimaps_service';
         const channelName = 'Glasses background Service';
         const chan = new android.app.NotificationChannel(channelId, channelName, android.app.NotificationManager.IMPORTANCE_NONE);
         chan.setLightColor(color);

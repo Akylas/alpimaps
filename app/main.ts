@@ -4,11 +4,9 @@ import { knownFolders } from 'tns-core-modules/file-system';
 import { getBuildNumber, getVersionName } from 'nativescript-extendedinfo';
 import { cerror, clog, cwarn } from '~/utils/logging';
 import { Client } from 'nativescript-bugsnag';
+import { setMapPosKeys } from 'nativescript-carto/core/core';
 
-// override to get all logs
-console.log = clog;
-console.error = cerror;
-console.warn = cwarn;
+setMapPosKeys('lat', 'lon');
 
 /* DEV-START */
 const currentApp = knownFolders.currentApp();
@@ -27,34 +25,38 @@ require('source-map-support').install({
 });
 /* DEV-END */
 
-const bugsnag = (Vue.prototype.$bugsnag = new Client());
-Promise.all([getVersionName(), getBuildNumber()])
-    .then(result => {
-        console.log('did get Versions', result);
-        let fullVersion = result[0];
-        if (!/[0-9]+\.[0-9]+\.[0-9]+/.test(fullVersion)) {
-            fullVersion += '.0';
-        }
-        fullVersion += ` (${result[1]})`;
-        return bugsnag.init({ apiKey: '8867d5b66eda43f1be76e345a36a72df', codeBundleId: result[1].toFixed(), automaticallyCollectBreadcrumbs: false });
-    })
-    .then(() => {
-        bugsnag.enableConsoleBreadcrumbs();
-        bugsnag.handleUncaughtErrors();
-        console.log('bugsnag did init');
-        // bugsnag.notify(new Error('Test error'));
-    })
-    .catch(err => {
-        console.log('bugsnag  init failed', err);
-    });
-
+if (TNS_ENV === 'production') {
+    const bugsnag = (Vue.prototype.$bugsnag = new Client());
+    Promise.all([getVersionName(), getBuildNumber()])
+        .then(result => {
+            console.log('did get Versions', result);
+            let fullVersion = result[0];
+            if (!/[0-9]+\.[0-9]+\.[0-9]+/.test(fullVersion)) {
+                fullVersion += '.0';
+            }
+            fullVersion += ` (${result[1]})`;
+            return bugsnag.init({ appVersion: result[0], apiKey: gVars.BUGNSAG, codeBundleId: result[1].toFixed(), automaticallyCollectBreadcrumbs: false, detectAnrs: false });
+        })
+        .then(() => {
+            bugsnag.enableConsoleBreadcrumbs();
+            bugsnag.handleUncaughtErrors();
+            console.log('bugsnag did init');
+        })
+        .catch(err => {
+            console.log('bugsnag  init failed', err);
+        });
+}
 
 import { primaryColor } from './variables';
 import { install, themer } from 'nativescript-material-core';
+import { install as installBottomSheets } from 'nativescript-material-bottomsheet';
+import { install as installGestures } from 'nativescript-gesturehandler';
 if (gVars.isIOS) {
     themer.setPrimaryColor(primaryColor);
 }
 install();
+installBottomSheets();
+installGestures();
 
 import ViewsPlugin from './vue.views';
 Vue.use(ViewsPlugin);
@@ -75,10 +77,12 @@ TNSFontIcon.loadCss();
 import PrototypePlugin from './vue.prototype';
 Vue.use(PrototypePlugin);
 
+// import './app.scss'
+
 // Prints Vue logs when --env.production is *NOT* set while building
 // Vue.config.silent = !DEV_LOG;
 // Vue.config['debug'] = DEV_LOG;
-Vue.config.silent = false;
+Vue.config.silent = true;
 Vue.config['debug'] = false;
 
 Vue.config.errorHandler = (e, vm, info) => {
@@ -91,12 +95,14 @@ Vue.config.warnHandler = function(msg, vm, trace) {
 
 /* DEV-START */
 // const VueDevtools = require('nativescript-vue-devtools');
-// Vue.use(VueDevtools, { host: '192.168.1.43' });
+// Vue.use(VueDevtools
+// , { host: '192.168.1.43' }
+// );
 /* DEV-END */
 
 import App from '~/components/App';
 new Vue({
     render: h => {
-        return h('frame', [h(App)]);
+        return h(App);
     }
 }).$start();

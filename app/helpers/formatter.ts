@@ -1,9 +1,18 @@
 import * as Platform from 'platform';
 import dayjs from 'dayjs';
-import LocalizedFormat from 'dayjs/plugin/localizedFormat'
-dayjs.extend(LocalizedFormat)
+import LocalizedFormat from 'dayjs/plugin/localizedFormat';
+dayjs.extend(LocalizedFormat);
 // const dayjs: (...args) => Dayjs = require('dayjs');
-const Duration = require('duration');
+
+import humanUnit from 'human-unit';
+const timePreset = {
+    factors: [1000, 60, 60, 24],
+    units: ['ms', 's', 'min', 'hour', 'day']
+};
+const distancePreset = {
+    factors: [1000],
+    units: ['m', 'km']
+};
 
 const supportedLanguages = ['en', 'fr'];
 
@@ -24,12 +33,13 @@ export function convertTime(date, formatStr: string) {
 //     return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds());
 // }
 
-export function convertDuration(date, formatStr: string) {
-    const test = new Date(date);
-    test.setTime(test.getTime() + test.getTimezoneOffset() * 60 * 1000);
-    const result = dayjs(test).format(formatStr);
+export function convertDuration(milliseconds) {
     // clog('convertDuration', date, formatStr, test, result);
-    return result;
+    return humanUnit(milliseconds, timePreset);
+}
+export function convertDistance(meters) {
+    // clog('convertDuration', date, formatStr, test, result);
+    return humanUnit(meters, distancePreset);
 }
 
 export function convertValueToUnit(value: any, unit, otherParam?) {
@@ -39,7 +49,7 @@ export function convertValueToUnit(value: any, unit, otherParam?) {
     // clog('convertValueToUnit', value, unit, otherParam);
     switch (unit) {
         case 'duration':
-            return [convertDuration(value, 'HH:mm:ss'), ''];
+            return [convertDuration(value), ''];
 
         case 'date':
             return [convertTime(value, 'M/d/yy h:mm a'), ''];
@@ -70,3 +80,5 @@ export function formatValueToUnit(value: any, unit, options?: { prefix?: string;
     }
     return result;
 }
+
+

@@ -11,5 +11,8 @@
   "settings": "settings",
   "gps_not_enabled": "please enable GPS to allow «Alpi Maps» to determine your location",
   "gps_not_authorized": "please enable GPS and authorize «Alpi Maps» to use it to determine your location",
-  "zoom:": "test"
+  "zoom:": "zoom",
+  "select_style": "map style",
+  "offline_packages": "offline maps",
+  "select_language": "map language"
 }

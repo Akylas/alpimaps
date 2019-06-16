@@ -1,8 +1,9 @@
-// import { getAppId } from 'nativescript-extendedinfo';
-export const DEV_LOG = TNS_ENV === 'development';
+import { getAppId } from 'nativescript-extendedinfo';
+// import { crashlytics } from 'nativescript-plugin-firebase'; // and do: firebaseCrashlytics.sendCrashLogexport const DEV_LOG = TNS_ENV === 'development';
+export const DEV_LOG = TNS_ENV === 'development' && LOG_LEVEL === 'full';
 
-// let appId: string;
-// getAppId().then(r => (appId = r));
+let appId: string;
+getAppId().then(r => (appId = r));
 // let chalk: Chalk;
 
 // function getChalk() {
@@ -17,12 +18,12 @@ export function log(always: boolean): (target: any, k?, desc?: PropertyDescripto
 export function log(alwaysOrTarget: boolean | any, k?, desc?: PropertyDescriptor) {
     // console.log('test log dec', alwaysOrTarget, typeof alwaysOrTarget, k, desc, Object.getOwnPropertyNames(alwaysOrTarget));
     if (typeof alwaysOrTarget !== 'boolean') {
-        // console.log(nameOrTarget.name, ' is now decorated');
+        // console.log(alwaysOrTarget.name, ' is now decorated');
         return timelineProfileFunctionFactory(alwaysOrTarget, true, k, desc);
     } else {
         // factory
         return function(target: any, key?: string, descriptor?: PropertyDescriptor) {
-            // const name = nameOrTarget || target.name;
+            // const name = alwaysOrTarget || target.name;
             return timelineProfileFunctionFactory(target, alwaysOrTarget, key, descriptor);
             // console.log(name, ' is now decorated');
         };
@@ -71,14 +72,18 @@ function timelineProfileFunctionFactory(target: any, always: boolean, key?, desc
 // export function clog(...args) {
 //     return console.log.apply(this, [appId].concat(args));
 // }
-const origConsole: { [k: string]: Function } = {
-    log: console.log,
-    error: console.error,
-    warn: console.warn
-};
+// const origConsole: { [k: string]: Function } = {
+//     log: console.log,
+//     error: console.error,
+//     warn: console.warn
+// };
+
+
 
 function actualLog(level: string, ...args) {
-    origConsole[level].apply(this, ...args);
+    if (TEST_LOGS) {
+        console[level].apply(this, ...args);
+    }
 }
 
 export const clog = (...args) => actualLog('log', args);

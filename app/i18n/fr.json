@@ -16,5 +16,8 @@
   "settings": "réglages",
   "gps_not_enabled": "activez le GPS pour permettre à «Alpi Maps» de vous localiser",
   "gps_not_authorized": "activez le GPS et autorisez «Alpi Maps» à l'utiliser pour vous localiser",
-  "zoom:": "test"
+  "zoom:": "zoom",
+  "select_style": "style de carte ",
+  "offline_packages": "cartes hors-ligne",
+  "select_language": "choix de la langue"
 }
