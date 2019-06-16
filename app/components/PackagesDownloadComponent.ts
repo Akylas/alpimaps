@@ -38,7 +38,7 @@ class Package {
     }
 
     isCustomRegionPackage() {
-        if (!this.id ) {
+        if (!this.id) {
             return false;
         }
 
@@ -256,27 +256,18 @@ export default class PackagesDownloadComponent extends BaseVueComponent {
         super.mounted();
         // this.dataItems = new ObservableArray([] as any);
         // console.log('package view mounted');
-        // setTimeout(() => {
         const packageService = this.$packageService;
-        packageService.on('onPackageListUpdated', this.onPackageListUpdated);
-        packageService.on('onPackageListFailed', this.onPackageListFailed);
-        packageService.on('onPackageStatusChanged', this.onPackageStatusChanged);
-        packageService.on('onPackageUpdated', this.onPackageUpdated);
-        packageService.on('onPackageCancelled', this.onPackageCancelled);
-        packageService.on('onPackageFailed', this.onPackageFailed);
-        const manager = packageService.packageManager;
-        const age = manager.getServerPackageListAge();
-        // console.log('getServerPackageListAge', age);
-        if (age <= 0 || age > 3600 * 24 * 30) {
-            // this.loading = true;
-        } else {
-            this.updateDataItems();
-        }
-        const downloadStarted = manager.startPackageListDownload();
-        const geoDownloadStarted = packageService.geoPackageManager.startPackageListDownload();
-        const routingDownloadStarted = packageService.routingPackageManager.startPackageListDownload();
-        console.log('startPackageListDownload', downloadStarted, geoDownloadStarted, routingDownloadStarted);
-        // }, 800);
+        packageService.on('onPackageListUpdated', this.onPackageListUpdated, this);
+        packageService.on('onPackageListFailed', this.onPackageListFailed, this);
+        packageService.on('onPackageStatusChanged', this.onPackageStatusChanged, this);
+        packageService.on('onPackageUpdated', this.onPackageUpdated, this);
+        packageService.on('onPackageCancelled', this.onPackageCancelled, this);
+        packageService.on('onPackageFailed', this.onPackageFailed, this);
+        setTimeout(() => {
+            if (!packageService.updatePackagesLists()) {
+                this.updateDataItems();
+            }
+        }, 800);
     }
     onLoaded() {
         if (gVars.isAndroid) {
@@ -284,42 +275,42 @@ export default class PackagesDownloadComponent extends BaseVueComponent {
         }
     }
     destroyed() {
-        console.log('package view destroyed');
+        // console.log('package view destroyed');
         const packageService = this.$packageService;
-        packageService.off('onPackageListUpdated', this.onPackageListUpdated);
-        packageService.off('onPackageListFailed', this.onPackageListFailed);
-        packageService.off('onPackageStatusChanged', this.onPackageStatusChanged);
-        packageService.off('onPackageUpdated', this.onPackageUpdated);
-        packageService.off('onPackageCancelled', this.onPackageCancelled);
-        packageService.off('onPackageFailed', this.onPackageFailed);
+        packageService.off('onPackageListUpdated', this.onPackageListUpdated, this);
+        packageService.off('onPackageListFailed', this.onPackageListFailed, this);
+        packageService.off('onPackageStatusChanged', this.onPackageStatusChanged, this);
+        packageService.off('onPackageUpdated', this.onPackageUpdated, this);
+        packageService.off('onPackageCancelled', this.onPackageCancelled, this);
+        packageService.off('onPackageFailed', this.onPackageFailed, this);
     }
 
     downloadComplete() {
         // updatePackages();
     }
     onPackageListUpdated(e) {
-        console.log('received onPackageListUpdated', e.type);
+        // console.log('received onPackageListUpdated', e.type);
         this.updateDataItems().then(() => {
             this.loading = false;
         });
     }
     onPackageListFailed(e) {
-        console.log('received onPackageListFailed', e.type);
+        // console.log('received onPackageListFailed', e.type);
         alert('failed to get packages list');
     }
 
     onPackageCancelled(e) {
-        console.log('received onPackageCancelled', e.type);
+        // console.log('received onPackageCancelled', e.type);
         this.onPackageUpdated(e);
     }
     onPackageFailed(e) {
-        console.log('received onPackageFailed', e.type);
+        // console.log('received onPackageFailed', e.type);
         this.onPackageUpdated(e);
     }
 
     onPackageStatusChanged(e) {
         const { id, status } = e.data;
-        console.log('onPackageStatusChanged', e.type, id, status.getProgress(), this.dataItems.length);
+        // console.log('onPackageStatusChanged', e.type, id, status.getProgress(), this.dataItems.length);
 
         this.dataItems.some((d, index) => {
             if (d.id === id) {
@@ -373,10 +364,15 @@ export default class PackagesDownloadComponent extends BaseVueComponent {
     }
     currentServerPackages: PackageInfoVector;
     updateDataItems() {
+        console.log('updateDataItems');
         const manager = this.$packageService.packageManager;
         const geomanager = this.$packageService.geoPackageManager;
         const routingmanager = this.$packageService.routingPackageManager;
-
+        // routingmanager.getServerPackages(res=>{
+        //     for (let i = 0; i < res.size(); i++) {
+        //         console.log('routing', res.get(i).getName(), res.get(i).getPackageId());
+        //     }
+        // })
         return Promise.resolve()
             .then(() => {
                 if (this.currentServerPackages) {
@@ -396,7 +392,7 @@ export default class PackagesDownloadComponent extends BaseVueComponent {
                 for (let i = 0; i < count; i++) {
                     const info = packages.get(i);
                     name = info.getName();
-                    // console.log('test', info.getPackageId(), name);
+                    // console.log('test1', info.getPackageId(), name);
 
                     if (!name.startsWith(this.currentFolder)) {
                         continue; // belongs to a different folder, so ignore
@@ -413,8 +409,9 @@ export default class PackagesDownloadComponent extends BaseVueComponent {
                         const geoStatus = geomanager.getLocalPackageStatus(id, -1);
                         const routingStatus = routingmanager.getLocalPackageStatus(id, -1);
                         const geoInfo = geomanager.getServerPackage(id);
+                        // const routingInfo = routingmanager.getServerPackage(id + '-routing');
                         const routingInfo = routingmanager.getServerPackage(id);
-                        console.log('test', id, info.getName(), status, geoInfo, routingInfo);
+                        // console.log('test2', id, info.getName(), status, geoInfo, routingInfo);
                         pkg = new Package({ name, info, status, geoStatus, routingStatus, geoInfo, routingInfo });
                     } else {
                         // This is package group
@@ -456,9 +453,11 @@ export default class PackagesDownloadComponent extends BaseVueComponent {
     handlePackageAction(type: PackageType, item: Package) {
         const action = item.getActionText(type);
         let manager: CartoPackageManager;
+        const suffix = '';
         if (type === 'geo') {
             manager = this.$packageService.geoPackageManager;
         } else if (type === 'routing') {
+            // suffix =  '-routing';
             manager = this.$packageService.routingPackageManager;
         } else {
             manager = this.$packageService.packageManager;
@@ -469,32 +468,32 @@ export default class PackagesDownloadComponent extends BaseVueComponent {
             case Package.ACTION_ROUTING_DOWNLOAD:
             case Package.ACTION_DOWNLOAD:
                 console.log('manager start', item.id);
-                manager.startPackageDownload(item.id);
+                manager.startPackageDownload(item.id + suffix);
                 // if (item.geoInfo) {
                 //     console.log('geomanager start', item.id);
                 //     geomanager.startPackageDownload(item.id);
                 // }
                 break;
             case Package.ACTION_PAUSE:
-                manager.setPackagePriority(item.id, -1);
+                manager.setPackagePriority(item.id + suffix, -1);
                 // if (item.geoInfo) {
                 //     geomanager.setPackagePriority(item.id, -1);
                 // }
                 break;
             case Package.ACTION_RESUME:
-                manager.setPackagePriority(item.id, 0);
+                manager.setPackagePriority(item.id + suffix, 0);
                 // if (item.geoInfo) {
                 //     geomanager.setPackagePriority(item.id, 0);
                 // }
                 break;
             case Package.ACTION_CANCEL:
-                manager.cancelPackageTasks(item.id);
+                manager.cancelPackageTasks(item.id + suffix);
                 // if (item.geoInfo) {
                 //     geomanager.cancelPackageTasks(item.id);
                 // }
                 break;
             case Package.ACTION_REMOVE:
-                manager.startPackageRemove(item.id);
+                manager.startPackageRemove(item.id + suffix);
                 // if (item.geoInfo) {
                 //     geomanager.startPackageRemove(item.id);
                 // }

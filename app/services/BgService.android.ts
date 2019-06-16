@@ -1,13 +1,13 @@
-import { BgServiceCommon, BgServiceLoadedEvent } from '~/services/BgService.common';
-
+import { ApplicationEventData, exitEvent, off as applicationOff, on as applicationOn } from 'tns-core-modules/application/application';
 import * as utils from 'tns-core-modules/utils/utils';
+import { GeoHandler } from '~/handlers/GeoHandler';
 import { BgService as AndroidBgService } from '~/services/android/BgService';
 import { BgServiceBinder } from '~/services/android/BgServiceBinder';
+import { BgServiceCommon, BgServiceLoadedEvent } from '~/services/BgService.common';
+import { clog } from '~/utils/logging';
+
 
 export { BgServiceLoadedEvent };
-import { ApplicationEventData, exitEvent, off as applicationOff, on as applicationOn } from 'tns-core-modules/application/application';
-import { clog } from '~/utils/logging';
-import { GeoHandler } from '~/handlers/GeoHandler';
 
 export class BgService extends BgServiceCommon {
     private serviceConnection: android.content.ServiceConnection;

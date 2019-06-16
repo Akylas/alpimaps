@@ -20,5 +20,4 @@
         </GridLayout>
     </StackLayout>
 </template>
-
  <script lang="ts" src="./OptionSelect.ts"></script>

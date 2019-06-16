@@ -1,7 +1,13 @@
 // @import '~nativescript-theme-core/css/core.light.css';
 @import './variables';
-@import './theme';
 @import './animations';
+@import '../node_modules/nativescript-vue-fab/style.css';
+
+label,
+button,
+mdbutton {
+    font-family: Roboto;
+}
 
 .page {
     background-color: $background-color;
@@ -20,13 +26,13 @@ mdactivityindicator {
 mdbutton {
     background-color: transparent;
     color: $primary-color;
-    ripple-color: $primary-color;
+    ripple-color: $dark-color;
 }
 
 .buttonwhite {
-    background-color: white;
-    color: $text-color;
-    ripple-color: $primary-color;
+    background-color: transparent;
+    color: white;
+    ripple-color: white;
 }
 .buttonthemed {
     background-color: $primary-color;
@@ -36,49 +42,76 @@ mdbutton {
 .buttontext {
     background-color: white;
     color: $primary-color;
-    ripple-color: $primary-color;
+    ripple-color: $dark-color;
 }
 
 .mdi {
-    font-family: 'Material Design Icons', 'MaterialDesignIcons', 'materialdesignicons';
+    font-family: 'Material Design Icons', 'MaterialDesignIcons', 'materialdesignicons-webfont';
 }
 
 .maki {
     font-family: 'maki';
 }
 
-
 .themedBack {
     background-color: $primary-color;
 }
 
 .icon-btn {
-    @extend .mdi, .buttonwhite;
+    @extend .mdi;
+    background-color: transparent;
     color: $text-color;
+    ripple-color: $text-color;
     width: 44;
     height: 44;
     font-size: 24;
     margin: 0;
     padding: 0;
 }
-.floating-btn {
+
+.label-icon-btn {
     @extend .mdi;
-    background-color: $background-color;
-    color: $primary-color;
-    font-size: 36;
-    padding: 0;
+    color: $text-color;
+    font-size: 24;
     margin: 0;
-    width: 64;
-    height: 64;
-    border-radius: 32;
+    padding: 0 4 0 4;
+}
+
+.icon-btn-white {
+    @extend .icon-btn;
+    background-color: transparent;
+    color: white;
+    ripple-color: white ;
+
+}
+.icon-btn-text {
+    @extend .icon-btn;
+    background-color: white;
+    color: $primary-color;
+    ripple-color: $dark-color;
+
+}
+.icon-btn-rounded {
+    border-radius: 22;
+}
+
+.floating-btn {
+    @extend .mdi, .buttonthemed;
+    font-size: 24;
+    padding: 0;
+    margin: 8;
+    width: 54;
+    height: 54;
+    border-radius: 27;
 }
 .small-floating-btn {
-    @extend .mdi, .buttonwhite;
+    @extend .mdi, .buttontext;
     color: $primary-color;
-    font-size: 20;
+    font-size: 24;
     padding: 0;
     width: 40;
     height: 40;
+    margin: 8;
     border-radius: 20;
 }
 .section-title {
@@ -111,4 +144,34 @@ mdbutton {
 .borderLeft {
     border-left-color: #eeeeee;
     border-left-width: 1;
+}
+
+.fab-button,
+.fab-item {
+    background-color: $dark-color;
+}
+.fab-icon,
+.fab-item {
+    color: white;
+}
+.fab-backdrop {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+
+.menuButtons {
+    padding-left: 12;
+    padding-right: 12;
+    margin-bottom: 10;
+}
+
+.menu-btn {
+    @extend .icon-btn;
+    border-radius: 22;
+    ripple-color: #b8b7b7;
+    color: $accent-color;
+}
+.menuButtons mdbutton {
+    @extend .menu-btn;
+
 }

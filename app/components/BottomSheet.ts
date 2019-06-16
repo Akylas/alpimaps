@@ -1,233 +1,118 @@
+import { Component, Prop, Watch } from 'vue-property-decorator';
+import { convertDistance, convertDuration } from '~/helpers/formatter';
+import { Item } from '~/mapModules/ItemsModule';
 import BaseVueComponent from './BaseVueComponent';
-import { Component } from 'vue-property-decorator';
-import { actionBarHeight } from '../variables';
-import { MapPos } from 'nativescript-carto/core/core';
-import { layout } from 'tns-core-modules/utils/utils';
+import { RouteInstruction } from './DirectionsPanel';
+import ItemFormatter from '~/mapModules/ItemFormatter';
+import BottomSheetBase from './BottomSheet/BottomSheetBase';
+import { BottomSheetHolderScrollEventData } from './BottomSheet/BottomSheetHolder';
 
-const OPEN_DURATION = 200;
-const CLOSE_DURATION = 200;
 @Component({})
-export default class BottomSheet extends BaseVueComponent {
-    actionBarHeight = actionBarHeight;
-    opened = false;
-    selectedMetaData;
-    selectedTitle: string = '';
-    selectedSubtitle: string = '';
-    selectedSVGSrc: string = '';
-    selectedPosition: MapPos;
-    constructor() {
-        super();
-    }
+export default class BottomSheet extends BottomSheetBase {
+    @Prop({
+        default: () => [50]
+    })
+    steps;
+    @Prop() item: Item;
+
+    dataItems: any[] = [];
+    listVisible = false;
+    _formatter: ItemFormatter;
+
     mounted() {
         super.mounted();
+        this.holder.$on('scroll', this.onScroll);
     }
-    openSheet(position, metaData) {
-        this.selectedPosition = position;
-        this.selectedMetaData = metaData;
-        const icon = metaData && (metaData.class || metaData.layer);
-        if (icon) {
-            this.selectedSVGSrc = `~/assets/icons/${icon}-11.svg`;
-        } else {
-            this.selectedSVGSrc = undefined;
-        }
-
-        this.renderSelectedTitle();
-        this.renderSelectedSubtitle();
-        if (this.opened) {
-            return;
-        }
-        // console.log('openSheet', metaData,this.actionBarHeight, this.selectedSVGSrc);
-        this.opened = true;
-        const bottomSheet = this.getRef('bottomSheet');
-        if (bottomSheet) {
-            bottomSheet.translateY = actionBarHeight;
-            bottomSheet.animate({
-                translate: { x: 0, y: 0 },
-                duration: OPEN_DURATION
-            });
-        }
+    destroyed() {
+        super.destroyed();
     }
-    closeSheet() {
-        if (!this.opened) {
-            return;
+    get formatter() {
+        if (!this._formatter && this.$getMapComponent()) {
+            this._formatter = this.$getMapComponent().mapModule('formatter');
         }
-        const bottomSheet = this.getRef('bottomSheet');
-        if (bottomSheet) {
-            bottomSheet
-                .animate({
-                    translate: { x: 0, y: actionBarHeight },
-                    duration: CLOSE_DURATION
-                })
-                .then(_ => {
-                    this.opened = false;
-                });
-        } else {
-            this.opened = false;
-        }
+        return this._formatter;
     }
-    renderSelectedTitle() {
-        if (this.selectedMetaData) {
-            this.selectedTitle = this.selectedMetaData.name;
-        } else if (this.selectedPosition) {
-            this.selectedTitle = `${this.selectedPosition.latitude.toFixed(3)}, ${this.selectedPosition.longitude.toFixed(3)}`;
-        } else {
-            this.selectedTitle = '';
-        }
-    }
-    renderSelectedSubtitle() {
-        if (this.selectedMetaData && this.selectedPosition) {
-            this.selectedSubtitle = `${this.selectedPosition.latitude.toFixed(3)}, ${this.selectedPosition.longitude.toFixed(3)}`;
-        } else {
-            this.selectedSubtitle = '';
-        }
-        // return this.selectedPosition.toString()
-    }
-    isAnimating = false;
-    isPanning = false;
-    invisible = false;
-    async open(animationFactor = 1) {
-        if (this.isPanning || this.isAnimating) {
-            return;
-        }
 
-        this.isPanning = false;
-        this.invisible = false;
-        if (animationFactor !== 0) {
-            this.isAnimating = true;
-            const duration = OPEN_DURATION * animationFactor;
-
-            this.$refs.backDrop.nativeView.animate({
-                opacity: 1,
-                duration
-            });
-            const bottomSheet = this.getRef('bottomSheet');
-            await bottomSheet.animate({
-                translate: {
-                    x: 0,
-                    y: 0
-                },
-                duration
-            });
-            this.isAnimating = false;
-        }
-
-        this.opened = true;
-        // console.log('did open', side);
-        // this.$emit('stateChange', side);
-    }
-    async close(animationFactor = 1) {
-        if (this.isAnimating) {
-            return;
-        }
-
-        // console.log('closing', side);
-
-        this.isPanning = false;
-
-        if (animationFactor !== 0) {
-            this.isAnimating = true;
-            const duration = CLOSE_DURATION * animationFactor;
-
-            const bottomSheet = this.getRef('bottomSheet');
-            bottomSheet.animate({
-                translate: {
-                    x: 0,
-                    y: this.translationOffset
-                },
-                duration
-            });
-            await this.$refs.backDrop.nativeView.animate({
-                opacity: 0,
-                duration
-            });
-            this.isAnimating = false;
-        }
-        // console.log('closed', side);
-
-        this.opened = false;
-        this.invisible = true;
-        // this.$emit('stateChange', false);
-    }
-    translationOffset = 0;
-    prevDeltaY = 0;
-    onDrawerLayoutChange(side) {
-        // const view = this.$refs[`${side}Drawer`][0].nativeView;
-        const bottomSheet = this.getRef('bottomSheet');
-        this.translationOffset = 1 * layout.toDeviceIndependentPixels(bottomSheet.getMeasuredHeight());
-    }
-    onDrawerPan(args) {
-        if (this.isAnimating) {
-            return;
-        }
-        const bottomSheet = this.getRef('bottomSheet');
-        let panProgress = 0;
-
-        if (args.state === 1) {
-            // down
-            this.isPanning = true;
-
-            if (!this.opened) {
-                this.$refs.backDrop.nativeView.opacity = 0;
-                this.invisible = false;
-            }
-
-            this.prevDeltaY = 0;
-        } else if (args.state === 2) {
-            // panning
-
-            this.constrainY(bottomSheet, bottomSheet.translateY + (args.deltaY - this.prevDeltaY));
-            panProgress = Math.abs(bottomSheet.translateY) / Math.abs(this.translationOffset);
-
-            // this.prevDeltaX = args.deltaX;
-            this.prevDeltaY = args.deltaY;
-
-            this.$refs.backDrop.nativeView.opacity = 1 - panProgress;
-        } else if (args.state === 3) {
-            // up
-            this.isPanning = false;
-
-            if (this.opened) {
-                // already open
-                let distanceFromFullyOpen = 0;
-                distanceFromFullyOpen = Math.abs(bottomSheet.translateY);
-                if (distanceFromFullyOpen > 50) {
-                    this.close(1 - distanceFromFullyOpen / Math.abs(this.translationOffset));
-                } else {
-                    this.open(distanceFromFullyOpen / Math.abs(this.translationOffset));
-                }
+    get rows() {
+        let result = '';
+        this.steps.forEach((step, i) => {
+            if (i === 0) {
+                result += step;
             } else {
-                const offsetAbs = Math.abs(this.translationOffset);
-                const multiplier = 1;
-                let distanceFromEdge = 0;
-                distanceFromEdge = offsetAbs - multiplier * bottomSheet.translateY;
-
-                if (distanceFromEdge < 50) {
-                    this.close(distanceFromEdge / Math.abs(this.translationOffset));
-                } else {
-                    this.open(1 - distanceFromEdge / Math.abs(this.translationOffset));
-                }
+                result += ',' + (step - this.steps[i - 1]);
             }
+        });
+        // const result = this.steps.join(',');
+        // this.log('rows', result);
+        return result;
+    }
+    get selectedIcon() {
+        if (this.item) {
+            return this.formatter.geItemIcon(this.item);
+        }
+        return [];
+    }
 
-            this.prevDeltaY = 0;
+    get selectedTitle() {
+        if (this.item) {
+            return this.formatter.getItemTitle(this.item);
         }
     }
-    constrainY(view, y) {
-        const offset = this.translationOffset;
-        let trY = y;
-        if (offset < 0) {
-            if (y > 0) {
-                trY = 0;
-            } else if (this.opened && y < offset) {
-                trY = offset;
-            }
+    get selectedSubtitle() {
+        if (this.item) {
+            return this.formatter.getItemSubtitle(this.item);
+        }
+    }
+    get listViewAvailable() {
+        return this.steps.length > 2;
+    }
+    get showListView() {
+        return this.listViewAvailable && this.listVisible;
+    }
+    @Watch('item')
+    onSelectedItemChange(item: Item) {
+        // console.log('bottom sheet item changed', item);
+        this.listVisible = false;
+        if (item && item.route) {
+            this.dataItems = item.route.instructions;
         } else {
-            if (y < 0) {
-                trY = 0;
-            } else if (this.opened && y > offset) {
-                trY = offset;
+            this.dataItems = [];
+        }
+    }
+    onScroll(e: BottomSheetHolderScrollEventData) {
+        // this.log('onScroll', this.listViewAvailable, this.listVisible, e.height, this.steps[1]);
+        if (this.listViewAvailable) {
+            if (!this.listVisible && e.height > this.steps[1]) {
+                this.listVisible = true;
+            }
+            if (this.listVisible && !this.isListViewAtTop && e.height < this.steps[1]) {
+                // this.log('resetting listViewAtTop to ensure pan enabled');
+                this.listViewAtTop = true;
+                this.listView.scrollToIndex(0, false);
             }
         }
-        // console.log('constrainY', trY);
-        view.translateY = trY;
+    }
+    saveItem() {
+        const mapComp = this.$getMapComponent();
+        mapComp
+            .mapModule('items')
+            .saveItem(this.item)
+            .then(item => {
+                mapComp.selectItem(item, true);
+            });
+    }
+    deleteItem() {
+        const mapComp = this.$getMapComponent();
+        mapComp.mapModule('items').deleteItem(this.item);
+    }
+
+    getRouteInstructionIcon(item: any) {
+        return [];
+    }
+    getRouteInstructionTitle(item: RouteInstruction) {
+        return item.action;
+    }
+    getRouteInstructionSubtitle(item: RouteInstruction) {
+        return item.streetName;
     }
 }

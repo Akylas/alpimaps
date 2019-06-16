@@ -1,31 +1,32 @@
 import { EventData, Observable } from 'tns-core-modules/data/observable';
 import * as appSettings from 'tns-core-modules/application-settings';
-import { ApplicationEventData, exitEvent, on as applicationOn, resumeEvent, suspendEvent } from 'tns-core-modules/application';
-import * as geolocation from 'nativescript-gps';
+import { ApplicationEventData, on as applicationOn, resumeEvent, suspendEvent } from 'tns-core-modules/application';
 import { Accuracy } from 'tns-core-modules/ui/enums/enums';
 import { isAndroid } from 'platform';
 import { confirm } from 'nativescript-material-dialogs';
 import { localize } from 'nativescript-localize';
-import { clog } from '~/utils/logging';
+import { clog, DEV_LOG } from '~/utils/logging';
+
+import { GeoLocation, GPS, Options as GeolocationOptions, setMockEnabled } from 'nativescript-gps';
+let geolocation: GPS;
 
 export let desiredAccuracy = isAndroid ? Accuracy.high : kCLLocationAccuracyBestForNavigation;
 export let updateDistance = 1;
-export let maximumAge = 60000;
+export let maximumAge = 3000;
 export let timeout = 20000;
 export let minimumUpdateTime = 1000; // Should update every 1 second according ;
 
-geolocation.setGPSDebug(true);
-geolocation.setMockEnabled(true);
+setMockEnabled(true);
 
-function mean(array) {
-    return (
-        array.reduce(function(p, c) {
-            return p + c;
-        }) / array.length
-    );
-}
+// function mean(array) {
+//     return (
+//         array.reduce(function(p, c) {
+//             return p + c;
+//         }) / array.length
+//     );
+// }
 export interface Session {
-    lastLoc: geolocation.GeoLocation;
+    lastLoc: GeoLocation;
     currentSpeed: number;
     averageSpeed: number;
     altitudeGain: number;
@@ -35,7 +36,7 @@ export interface Session {
     endTime: Date;
     pauseDuration: number;
     state: SessionState;
-    locs: geolocation.GeoLocation[];
+    locs: GeoLocation[];
 }
 
 export enum SessionState {
@@ -44,21 +45,29 @@ export enum SessionState {
     PAUSED
 }
 
-export type GeoLocation = geolocation.GeoLocation;
+export type GeoLocation = GeoLocation;
 
 export const SessionStateEvent = 'sessionState';
 export const SessionChronoEvent = 'sessionChrono';
 export const SessionUpdatedEvent = 'sessionUpdated';
+export const GPSStatusChangedEvent = 'status';
+export const SessionFirstPositionEvent = 'sessionFirstPosition';
 export const UserLocationdEvent = 'userLocation';
-export interface SessionEventData extends EventData {
+
+interface GPSEvent extends EventData {
+    data?: any;
+}
+
+export interface SessionEventData extends GPSEvent {
     data: Session;
 }
-export interface UserLocationdEventData extends EventData {
-    location?: geolocation.GeoLocation;
+
+export interface UserLocationdEventData extends GPSEvent {
+    location?: GeoLocation;
     error?: Error;
 }
 
-export interface SessionChronoEventData extends EventData {
+export interface SessionChronoEventData extends GPSEvent {
     data: number; // chrono
 }
 
@@ -71,7 +80,7 @@ export class GeoHandler extends Observable {
     currentSession: Session;
     // paused = false;
     sessionState: SessionState = SessionState.STOPPED;
-    lastLoc: geolocation.GeoLocation;
+    lastLoc: GeoLocation;
     lastAlt: number;
     // lastSpeeds: number[];
 
@@ -79,6 +88,11 @@ export class GeoHandler extends Observable {
     // deltaDistance: number;
     constructor() {
         super();
+        clog('creating GPS Handler', !!geolocation, DEV_LOG);
+        if (!geolocation) {
+            geolocation = new GPS();
+            geolocation.debug = DEV_LOG;
+        }
         applicationOn(suspendEvent, (args: ApplicationEventData) => {
             if (args.ios) {
                 this._isIOSBackgroundMode = true;
@@ -104,42 +118,55 @@ export class GeoHandler extends Observable {
             }
         });
 
-        applicationOn(exitEvent, (args: ApplicationEventData) => {
-            this.stopSession();
+        geolocation.on(GPS.gps_status_event, (e: GPSEvent) => {
+            const enabled = e.data.enabled;
+            clog('GPS state change', enabled);
+            if (!enabled) {
+                this.stopSession();
+            }
+            this.notify({
+                eventName: GPSStatusChangedEvent,
+                object: this,
+                data: e['data']
+            });
         });
+
+        // applicationOn(exitEvent, (args: ApplicationEventData) => {
+        //     this.stopSession();
+        // });
     }
 
     askToEnableIfNotEnabled() {
         if (geolocation.isEnabled()) {
-            return true;
+            return Promise.resolve();
         } else {
-            confirm({
+            return confirm({
                 // title: localize('stop_session'),
                 message: localize('gps_not_enabled'),
                 okButtonText: localize('settings'),
                 cancelButtonText: localize('cancel')
             }).then(result => {
-                // clog('stop_session, confirmed', result );
-                if (result) {
-                    geolocation.openGPSSettings();
+                clog('askToEnableIfNotEnabled, confirmed', result);
+                if (!!result) {
+                    return geolocation.openGPSSettings();
                 }
+                return Promise.reject();
             });
-            return false;
         }
     }
     checkEnabledAndAuthorized(always = true) {
         return Promise.resolve()
             .then(() => {
-                if (!geolocation.isAuthorized()) {
-                    clog('calling authorize', always);
-                    return geolocation.authorize(always);
-                }
+                return geolocation.isAuthorized().then(r => {
+                    if (!r) {
+                        return geolocation.authorize(always);
+                    } else {
+                        return r;
+                    }
+                });
             })
-            .then(() => {
-                const result = this.askToEnableIfNotEnabled();
-                if (!result) {
-                    return Promise.reject(undefined); // reject without error not to alert as it is normal (we are asking the user to enable gps)
-                }
+            .then(didAuthorize => {
+                return this.askToEnableIfNotEnabled();
             })
             .catch(err => {
                 if (err && /denied/i.test(err.message)) {
@@ -183,67 +210,7 @@ export class GeoHandler extends Observable {
         // );
     }
 
-    getLocation() {
-        return this.getCurrentLocation();
-    }
-
-    onDeferred = () => {
-        this._deferringUpdates = false;
-    }
-    onLocation = (loc: geolocation.GeoLocation, manager?: any) => {
-        if (loc) {
-            // clog('Received location: ', loc);
-            this.currentWatcher && this.currentWatcher(null, loc);
-            this.notify({
-                eventName: UserLocationdEvent,
-                object: this,
-                location: loc
-            } as UserLocationdEventData);
-        }
-        if (manager && this._isIOSBackgroundMode && !this._deferringUpdates) {
-            this._deferringUpdates = true;
-            manager.allowDeferredLocationUpdatesUntilTraveledTimeout(0, 10);
-        }
-    }
-    onLocationError = (err: Error) => {
-        this.currentWatcher(err);
-        this.notify({
-            eventName: UserLocationdEvent,
-            object: this,
-            error: err
-        } as UserLocationdEventData);
-    }
-    startWatch(onLoc?: Function) {
-        // clog('startWatch');
-        this.currentWatcher = onLoc;
-        if (this.watchId) {
-            return;
-        }
-        const options: geolocation.Options = { desiredAccuracy, maximumAge, timeout, onDeferred: this.onDeferred };
-        if (this._isIOSBackgroundMode) {
-            options.pausesLocationUpdatesAutomatically = false;
-            options.allowsBackgroundLocationUpdates = true;
-        } else {
-            options.pausesLocationUpdatesAutomatically = true;
-            options.allowsBackgroundLocationUpdates = true;
-        }
-        this.watchId = geolocation.watchLocation(this.onLocation, this.onLocationError, options);
-    }
-
-    stopWatch() {
-        // clog('stopWatch', this.watchId);
-        if (this.watchId) {
-            geolocation.clearWatch(this.watchId);
-            this.watchId = null;
-            this.currentWatcher = null;
-        }
-    }
-
-    isWatching() {
-        return !!this.watchId;
-    }
-
-    getCurrentLocation(options?) {
+    getLocation(options?) {
         return geolocation
             .getCurrentLocation(options || { desiredAccuracy, minimumUpdateTime, timeout, onDeferred: this.onDeferred })
             .then(r => {
@@ -264,11 +231,68 @@ export class GeoHandler extends Observable {
             });
     }
 
-    getDistance(loc1, loc2) {
-        const result = geolocation.distance(loc1, loc2);
-        return result;
+    onDeferred = () => {
+        this._deferringUpdates = false;
     }
-    updateSessionWithLoc(loc: geolocation.GeoLocation) {
+    onLocation = (loc: GeoLocation, manager?: any) => {
+        // clog('Received location: ', loc);
+        if (loc) {
+            this.currentWatcher && this.currentWatcher(null, loc);
+            this.notify({
+                eventName: UserLocationdEvent,
+                object: this,
+                location: loc
+            } as UserLocationdEventData);
+        }
+        if (manager && this._isIOSBackgroundMode && !this._deferringUpdates) {
+            this._deferringUpdates = true;
+            manager.allowDeferredLocationUpdatesUntilTraveledTimeout(0, 10);
+        }
+    }
+    onLocationError = (err: Error) => {
+        clog(' location error: ', err);
+        this.currentWatcher && this.currentWatcher(err);
+    }
+    startWatch(onLoc?: Function) {
+        this.currentWatcher = onLoc;
+        const options: GeolocationOptions = { desiredAccuracy, minimumUpdateTime, onDeferred: this.onDeferred };
+        clog('startWatch', options);
+        if (!isAndroid) {
+            if (this._isIOSBackgroundMode) {
+                options.pausesLocationUpdatesAutomatically = false;
+                options.allowsBackgroundLocationUpdates = true;
+            } else {
+                options.pausesLocationUpdatesAutomatically = true;
+                options.allowsBackgroundLocationUpdates = true;
+            }
+        }
+        geolocation.watchLocation(this.onLocation, this.onLocationError, options).then(id => (this.watchId = id));
+    }
+
+    stopWatch() {
+        clog('stopWatch', this.watchId);
+        if (this.watchId) {
+            geolocation.clearWatch(this.watchId);
+            this.watchId = null;
+            this.currentWatcher = null;
+        }
+    }
+
+    isWatching() {
+        return !!this.watchId;
+    }
+
+    getDistance(loc1, loc2) {
+        return Math.round(geolocation.distance(loc1, loc2) * 1000) / 1000;
+    }
+    updateSessionWithLoc(loc: GeoLocation) {
+        if (this.lastLoc === null && loc) {
+            this.notify({
+                eventName: SessionFirstPositionEvent,
+                object: this,
+                data: loc
+            } as GPSEvent);
+        }
         this.lastLoc = loc;
         if (!this.lastAlt) {
             this.lastAlt = loc.altitude;
@@ -286,10 +310,10 @@ export class GeoHandler extends Observable {
             this.onUpdatedSession(this.currentSession);
         }
     }
-    onNewLoc = (err, loc: geolocation.GeoLocation) => {
+    onNewLoc = (err, loc: GeoLocation) => {
         // clog(
         //     'onNewLoc test',
-        //     `${loc.speed && loc.speed.toFixed(1)}, loc:${loc.latitude.toFixed(2)},${loc.longitude.toFixed(2)}, ${loc.timestamp.toLocaleTimeString()}, ${loc.horizontalAccuracy}, ${
+        //     `${loc.speed && loc.speed.toFixed(1)}, loc:${loc.lat.toFixed(2)},${loc.lon.toFixed(2)}, ${loc.timestamp.toLocaleTimeString()}, ${loc.horizontalAccuracy}, ${
         //         loc.verticalAccuracy
         //     }`
         // );
@@ -321,8 +345,9 @@ export class GeoHandler extends Observable {
             if (this.lastAlt !== undefined && loc.altitude !== undefined && loc.altitude >= 0) {
                 const newAlt = Math.round(loc.altitude);
                 deltaAlt = newAlt - this.lastAlt;
-                // clog('deltaAlt', deltaAlt, this.lastAlt, newAlt);
+                clog('deltaAlt', deltaAlt, this.lastAlt, newAlt);
                 // we only look for positive altitude gain
+                // we ignore little variations as it might induce wrong readings
                 if (deltaAlt >= 3) {
                     // clog('new loc based on altitude', deltaAlt, newAlt);
                     // filter not to constantly increase
@@ -335,31 +360,39 @@ export class GeoHandler extends Observable {
             // check for new speed
             let newSpeed;
             if (loc.speed >= 0) {
-                newSpeed = Math.round(loc.speed * 3.6); //  1m/s === 3.6 km/h
+                newSpeed = loc.speed * 3.6; //  1m/s === 3.6 km/h
             } else {
-                newSpeed = Math.round((deltaDistance / deltaTime) * 3600); // 1m/s === 3.6 km/h => 1m/ms === 1000m/s === 3600 km/h
+                newSpeed = (deltaDistance / deltaTime) * 3600; // 1m/s === 3.6 km/h => 1m/ms === 1000m/s === 3600 km/h
+                clog('new speed based on points', newSpeed, deltaDistance, deltaTime);
                 loc.speed = newSpeed;
             }
 
             // newSpeed defined means we are still moving, should be taken into account then
             if (newSpeed !== this.currentSession.currentSpeed) {
-                // clog('new loc based on speed', newSpeed, loc.speed);
-                this.currentSession.currentSpeed = newSpeed;
+                clog('new loc based on speed', newSpeed, loc.speed);
+                // we also round the speed to 3 digits to prevent too small values
+                this.currentSession.currentSpeed = Math.round(newSpeed * 1000) / 1000;
                 shouldNotif = true;
             }
 
             if (deltaDistance > 2 || shouldNotif) {
-                // clog('deltaDistance', deltaDistance, this.currentSession.currentDistance);
+                clog('deltaDistance', deltaDistance, this.currentSession.currentDistance);
                 this.currentSession.currentDistance = this.currentSession.currentDistance + deltaDistance;
                 shouldNotif = true;
             }
 
-            // m/ms
-            const newAvg = Math.round((this.currentSession.currentDistance / (loc.timestamp.valueOf() - this.currentSession.startTime.valueOf() - this.currentSession.pauseDuration)) * 3600); // 1m/s === 3.6 km/h => 1m/ms === 1000m/s === 3600 km/h
-            if (newAvg !== this.currentSession.averageSpeed) {
-                this.currentSession.averageSpeed = newAvg;
-                // clog('new loc based on avg', newAvg);
-                shouldNotif = true;
+            // wait to have a little more data to compugte / show average speed
+            const sessionDuration = loc.timestamp.valueOf() - this.currentSession.startTime.valueOf() - this.currentSession.pauseDuration;
+            clog('sessionDuration', sessionDuration);
+            clog('currentDistance', this.currentSession.currentDistance);
+            if (sessionDuration > 3000 && this.currentSession.currentDistance > 10 && shouldNotif) {
+                const newAvg = Math.round((this.currentSession.currentDistance / sessionDuration) * 3600); // 1m/s === 3.6 km/h => 1m/ms === 1000m/s === 3600 km/h
+                clog('average Speed', newAvg);
+                if (newAvg !== this.currentSession.averageSpeed) {
+                    this.currentSession.averageSpeed = newAvg;
+                    // clog('new loc based on avg', newAvg);
+                    // shouldNotif = true;
+                }
             }
 
             clog(
@@ -371,8 +404,17 @@ export class GeoHandler extends Observable {
                 this.updateSessionWithLoc(loc);
             }
         } else {
+            const deltaTime = Date.now() - loc.timestamp.valueOf();
+            if (deltaTime > maximumAge) {
+                // very old last loc, let's make it as if it was the first one
+                return;
+            }
             this.updateSessionWithLoc(loc);
         }
+    }
+
+    waitingForLocation() {
+        return this.currentSession && this.currentSession.lastLoc === null;
     }
     startSession(onUpdate?: Function) {
         if (this.currentSession) {
@@ -423,11 +465,14 @@ export class GeoHandler extends Observable {
 
             if (this.currentSession.currentDistance > 0) {
                 delete this.currentSession.lastLoc;
+                this.currentSession.endTime = new Date();
                 if (this.currentSession.lastPauseTime) {
-                    this.currentSession.pauseDuration += Date.now() - this.currentSession.lastPauseTime.valueOf();
+                    this.currentSession.pauseDuration += this.currentSession.endTime.valueOf() - this.currentSession.lastPauseTime.valueOf();
                     this.currentSession.lastPauseTime = null;
                 }
-                this.currentSession.endTime = new Date();
+                this.currentSession.averageSpeed = Math.round(
+                    (this.currentSession.currentDistance / (this.currentSession.endTime.valueOf() - this.currentSession.startTime.valueOf() - this.currentSession.pauseDuration)) * 3600
+                );
                 this.sessionsHistory.push(this.currentSession);
                 appSettings.setString('sessionsHistory', JSON.stringify(this.sessionsHistory));
             }

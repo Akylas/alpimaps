@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="_zoom__8nqDT">"test"</string>
+  <string name="select_language">"map language"</string>
+  <string name="offline_packages">"offline maps"</string>
+  <string name="select_style">"map style"</string>
+  <string name="_zoom__8nqDT">"zoom"</string>
   <string name="gps_not_authorized">"please enable GPS and authorize «Alpi Maps» to use it to determine your location"</string>
   <string name="gps_not_enabled">"please enable GPS to allow «Alpi Maps» to determine your location"</string>
   <string name="settings">"settings"</string>

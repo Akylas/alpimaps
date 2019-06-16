@@ -24,5 +24,4 @@
         <ActivityIndicator v-show="loading" row="2" col="1" busy="true" class="activity-indicator" />
     </GridLayout>
 </template>
-
 <script lang="ts" src="./PackagesDownloadComponent.ts"/>

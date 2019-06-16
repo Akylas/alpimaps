@@ -21,27 +21,42 @@ android {
     additionalParameters "--no-version-vectors"  
   }  
 
-  // splits {
-  //   abi {
-  //     // Enables building multiple APKs per ABI.
-  //     enable true
+  splits {
+    abi {
+      // Enables building multiple APKs per ABI.
+      enable true
 
-  //     // By default all ABIs are included, so use reset() and include to specify that we only
-  //     // want APKs for x86, armeabi-v7a, and mips.
+      // By default all ABIs are included, so use reset() and include to specify that we only
+      // want APKs for x86, armeabi-v7a, and mips.
 
-  //     // Resets the list of ABIs that Gradle should create APKs for to none.
-  //     reset()
+      // Resets the list of ABIs that Gradle should create APKs for to none.
+      reset()
 
-  //     // Specifies a list of ABIs that Gradle should create APKs for.
-  //     include "armeabi-v7a"//, "arm64-v8a"
-  //     // include "armeabi-v7a"
+      // Specifies a list of ABIs that Gradle should create APKs for.
+      include 'arm64-v8a', 'armeabi-v7a', 'x86'
+      // include "armeabi-v7a"
 
-  //     // Specifies that we do not want to also generate a universal APK that includes all ABIs.
-  //     universalApk false
-  //   }
-  // }
+      // Specifies that we do not want to also generate a universal APK that includes all ABIs.
+      universalApk true
+    }
+  }
+  sourceSets {
+      main {
+          jniLibs.srcDirs = ["$projectDir/libs/jni", "$projectDir/snapshot-build/build/ndk-build/libs"]
+      }
+  }
 }
 
+project.ext.abiCodes = ['armeabi-v7a': 1, 'arm64-v8a': 2, 'x86': 3]
+
+android.applicationVariants.all { variant ->
+    variant.outputs.each { output ->
+        def baseAbiVersionCode = project.ext.abiCodes.get(output.getFilter("ABI"), 0)
+        if (baseAbiVersionCode != null) {
+            output.versionCodeOverride = baseAbiVersionCode * 10000000 + variant.versionCode
+        }
+    }
+}
 // Ignore sourcemaps in release as they will be sent to bugsnap
 android.applicationVariants.all { variant ->
   if (variant.buildType.name == 'release') {

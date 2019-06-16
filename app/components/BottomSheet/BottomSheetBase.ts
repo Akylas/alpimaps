@@ -1,0 +1,74 @@
+import BaseVueComponent from '../BaseVueComponent';
+import { Component, Inject, Prop, Watch } from 'vue-property-decorator';
+// import { GestureHandlerStateEvent, GestureHandlerTouchEvent, GestureStateEventData, GestureTouchEventData, Manager } from 'nativescript-gesturehandler';
+import BottomSheetHolder, { PAN_GESTURE_TAG } from './BottomSheetHolder';
+import Vue from 'nativescript-vue';
+import { GestureHandlerStateEvent, GestureHandlerTouchEvent, GestureState, GestureStateEventData, GestureTouchEventData, HandlerType, Manager, PanGestureHandler } from 'nativescript-gesturehandler';
+import { View } from 'tns-core-modules/ui/page/page';
+import { CollectionView } from 'nativescript-collectionview';
+export const NATIVE_GESTURE_TAG = 4;
+
+@Component({})
+export default class BottomSheetBase extends BaseVueComponent {
+    constructor() {
+        super();
+    }
+
+    isListViewAtTop = true;
+    isScrollEnabled = true;
+    set scrollEnabled(value) {
+        if (value !== this.isScrollEnabled) {
+            this.isScrollEnabled = value;
+        }
+    }
+    get scrollEnabled() {
+        return this.isScrollEnabled;
+    }
+    get listViewAtTop() {
+        return this.isListViewAtTop;
+    }
+    set listViewAtTop(value) {
+        if (value !== this.isListViewAtTop) {
+            this.isListViewAtTop = value;
+            this.$emit('listViewAtTop', value);
+        }
+    }
+    holder: BottomSheetHolder;
+    panGestureHandler: PanGestureHandler;
+    get listView() {
+        return this.$refs['listView'].nativeView as CollectionView;
+    }
+    mounted() {
+        super.mounted();
+
+        let parent: Vue = this;
+        while (parent !== null && !(parent instanceof BottomSheetHolder)) {
+            parent = parent.$parent as any;
+        }
+        const listView = this.listView;
+        this.log('mounted', !!parent, !!listView);
+        if (parent instanceof BottomSheetHolder) {
+            this.holder = parent;
+            parent.setBottomSheet(this);
+        }
+        if (gVars.isIOS && listView && !!this.holder) {
+            const manager = Manager.getInstance();
+            const gestureHandler = manager.createGestureHandler(HandlerType.NATIVE_VIEW, NATIVE_GESTURE_TAG, {
+                disallowInterruption: true,
+                simultaneousHandlers: [PAN_GESTURE_TAG]
+            });
+            gestureHandler.attachToView(this.listView);
+        }
+    }
+
+    onListViewScroll(args) {
+        if (!this.isScrollEnabled || this.holder.isPanning) {
+            return;
+        }
+        if (!this.listViewAtTop && args.scrollOffset <= 0) {
+            this.listViewAtTop = true;
+        } else if (this.listViewAtTop && args.scrollOffset > 0) {
+            this.listViewAtTop = false;
+        }
+    }
+}
