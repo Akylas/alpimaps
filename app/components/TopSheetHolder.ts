@@ -7,6 +7,12 @@ import DirectionsPanel from './DirectionsPanel';
 
 const OPEN_DURATION = 200;
 const CLOSE_DURATION = 200;
+export const DEFAULT_TOP = 60;
+export interface TopSheetHolderScrollEventData {
+    bottom: number;
+    percentage: number;
+    height: number;
+}
 
 function getClosestValue(array, goal) {
     return array.reduce(function(prev, curr) {
@@ -45,15 +51,20 @@ export default class TopSheetHolder extends BaseVueComponent {
     viewHeight = 0;
 
     currentSlotTop = 0;
-    nCurrentViewTop = 0;
+    nCurrentViewTop = null;
     set currentViewTop(value) {
         this.nCurrentViewTop = value;
         const slotTopOnScreen = this.translationMaxOffset + value;
-        if (slotTopOnScreen <= 60) {
-            this.currentSlotTop = 60;
+        if (slotTopOnScreen <= DEFAULT_TOP) {
+            this.currentSlotTop = DEFAULT_TOP;
         } else {
             this.currentSlotTop = slotTopOnScreen;
         }
+        this.$emit('scroll', {
+            bottom: this.currentSlotTop,
+            percentage: slotTopOnScreen / this.translationMaxOffset,
+            height: slotTopOnScreen
+        } as TopSheetHolderScrollEventData);
         // console.log('set currentViewTop', value, this.translationMaxOffset, slotTopOnScreen);
     }
     get currentViewTop() {
@@ -62,14 +73,17 @@ export default class TopSheetHolder extends BaseVueComponent {
     onLayoutChange() {
         this.viewHeight = Math.round(layout.toDeviceIndependentPixels(this.nativeView.getMeasuredHeight()));
         // console.log('onLayoutChange1', this.viewHeight, this.$refs['slotView']);
-        if (!this.$refs['slotView']) {
-            return;
-        }
+        // if (!this.$refs['slotView']) {
+        //     return;
+        //
         const view = this.$refs['topSheet'].nativeView;
         this.translationMaxOffset = Math.round(layout.toDeviceIndependentPixels(view.getMeasuredHeight()));
-        this.currentViewTop = -this.translationMaxOffset;
+        if (this.currentViewTop === null) {
+            this.currentViewTop = -this.translationMaxOffset;
+        }
         // console.log('onLayoutChange', view, this.translationMaxOffset);
     }
+
     onPan(args) {
         // console.log('onPan', this.isPanning, this.isAnimating, args.state, args.deltaY);
 
@@ -100,14 +114,14 @@ export default class TopSheetHolder extends BaseVueComponent {
             const topSheet = this.topSheet;
             let distanceFromFullyOpen = 0;
             distanceFromFullyOpen = this.translationMaxOffset - Math.abs(viewTop);
-            console.log('onPan', 'done', this.translationMaxOffset, viewTop, distanceFromFullyOpen);
+            // console.log('onPan', 'done', this.translationMaxOffset, viewTop, distanceFromFullyOpen);
             if (distanceFromFullyOpen <= Math.abs(this.translationMaxOffset / 2)) {
                 // console.log('onPan', 'done', 'shouldClose');
                 this.$emit('shouldClose');
                 // this.closeSheet();
             } else {
                 const steps = topSheet.steps;
-                console.log('on pan up', distanceFromFullyOpen, Math.abs(viewTop), steps, getClosestValue(steps, distanceFromFullyOpen));
+                // console.log('on pan up', distanceFromFullyOpen, Math.abs(viewTop), steps, getClosestValue(steps, distanceFromFullyOpen));
                 this.scrollSheetToPosition(this.translationMaxOffset - getClosestValue(steps, Math.abs(distanceFromFullyOpen)));
             }
             this.prevDeltaY = 0;
@@ -128,13 +142,15 @@ export default class TopSheetHolder extends BaseVueComponent {
         const view = this.scrollView;
         if (view) {
             const viewTop = this.currentViewTop;
-            // console.log('scrollSheetToPosition', viewTop, position);
+            // this.log('scrollSheetToPosition', viewTop, position);
             return new Promise(resolve => {
+                // this.log('scrollSheetToPosition2', viewTop, position);
                 new Animation.Animation({ value: viewTop })
-                    .to({ value: -position }, OPEN_DURATION)
+                    .to({ value: -position }, duration)
                     .easing(Animation.Easing.Quadratic.Out)
                     .onUpdate(obj => {
                         this.currentViewTop = obj.value;
+                        // this.log('onUpdate', obj.value);
                     })
                     .onComplete(resolve)
                     .onStop(resolve)
@@ -146,7 +162,7 @@ export default class TopSheetHolder extends BaseVueComponent {
 
     peekSheet() {
         const topSheet = this.topSheet;
-        // console.log('peekSheet', this.opened);
+        // this.log('peekSheet', this.opened);
         if (!!this.opened) {
             return Promise.resolve();
         }
@@ -154,7 +170,7 @@ export default class TopSheetHolder extends BaseVueComponent {
         return this.scrollSheetToPosition(this.translationMaxOffset - topSheet.peekHeight);
     }
     closeSheet() {
-        // console.log('closeSheet', this.opened);
+        // this.log('closeSheet', this.opened);
         if (!this.opened) {
             return Promise.resolve();
         }

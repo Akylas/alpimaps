@@ -1,157 +1,142 @@
-import { BgServiceBinder } from '~/services/android/BgServiceBinder';
-import { GeoHandler, SessionEventData, SessionState, SessionStateEvent } from '~/handlers/GeoHandler';
-import { ad } from 'tns-core-modules/utils/utils';
-import { ApplicationEventData, off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from 'tns-core-modules/application/application';
 import { localize } from 'nativescript-localize';
-import { primaryColor } from '~/variables';
+import { ApplicationEventData, off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from 'tns-core-modules/application';
+import { GeoHandler, SessionChronoEvent, SessionChronoEventData, SessionEventData, SessionState, SessionStateEvent } from '~/handlers/GeoHandler';
+import { BgServiceBinder } from '~/services/android/BgServiceBinder';
 import { clog } from '~/utils/logging';
+import { ACTION_PAUSE, ACTION_RESUME, NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL, NotificationHelper } from './NotifcationHelper';
 // function getSystemResourceId(systemIcon: string): number {
 //     return android.content.res.Resources.getSystem().getIdentifier(systemIcon, 'drawable', 'android');
 // }
 
-declare global {
-    namespace akylas {
-        export namespace alpi {
-            export namespace maps {
-                class BgService extends android.app.Service {}
-            }
-        }
-    }
-}
 function titlecase(value) {
     return value.replace(/\w\S*/g, function(txt) {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
 }
 const DEFAULT_TEXT = titlecase(localize('tap_to_open'));
-const FOREGROUND_ID = 3426824;
+const NOTIFICATION_ID = 3426824;
 @JavaProxy('akylas.alpi.maps.BgService')
 export class BgService extends android.app.Service {
     geoHandler: GeoHandler;
-    builder: android.support.v4.app.NotificationCompat.Builder;
+    builder: androidx.core.app.NotificationCompat.Builder;
     recording = false;
     currentNotifText: string;
     inBackground = false;
+    bounded = false;
 
     alwaysShowNotification = false;
+
+    notificationManager: android.app.NotificationManager;
 
     constructor() {
         super();
     }
+    log(...args) {
+        clog(`[BgService]`, ...args);
+    }
     onStartCommand(intent: android.content.Intent, flags: number, startId: number) {
         super.onStartCommand(intent, flags, startId);
+        const action = intent ? intent.getAction() : null;
+        // this.log('onStartCommand', this.inBackground, this.recording, this.alwaysShowNotification, action);
+        if (action === ACTION_RESUME) {
+            this.geoHandler.resumeSession();
+        } else if (action === ACTION_PAUSE) {
+            this.geoHandler.pauseSession();
+        }
+        return android.app.Service.START_STICKY;
+    }
+    onCreate() {
         this.currentNotifText = DEFAULT_TEXT;
         this.recording = false;
         this.inBackground = false;
-        this.alwaysShowNotification = android.os.Build.VERSION.SDK_INT >= 26; // oreo
-        return android.app.Service.START_STICKY;
+        this.alwaysShowNotification = false; // oreo
+        // this.alwaysShowNotification = android.os.Build.VERSION.SDK_INT >= 26; // oreo
+        this.notificationManager = this.getSystemService(android.content.Context.NOTIFICATION_SERVICE);
+        NotificationHelper.createNotificationChannel(this);
+        // this.log('onCreate', this.inBackground, this.recording, this.alwaysShowNotification);
     }
-    onCreate() {}
     onDestroy() {
-        this.geoHandler.off(SessionStateEvent, this.onSessionStateEvent, this);
+        // this.log('onDestroy');
+        if (this.geoHandler) {
+            this.geoHandler.off(SessionStateEvent, this.onSessionStateEvent, this);
+            this.geoHandler.off(SessionChronoEvent, this.onSessionChronoEvent, this);
+            this.geoHandler = null;
+        }
         applicationOff(resumeEvent, this.onAppEvent, this);
         applicationOff(suspendEvent, this.onAppEvent, this);
-        this.geoHandler = null;
     }
 
     onBind(intent: android.content.Intent) {
+        // a client is binding to the service with bindService()
+        this.bounded = true;
         const result = new BgServiceBinder();
         result.setService(this);
+        // this.log('onBind', intent, result);
         return result;
     }
-
-    private createNotificationChannel(color) {
-        const channelId = 'alpimaps_service';
-        const channelName = 'Glasses background Service';
-        const chan = new android.app.NotificationChannel(channelId, channelName, android.app.NotificationManager.IMPORTANCE_NONE);
-        chan.setLightColor(color);
-        // chan.lockscreenVisibility = android.app.Notification.VISIBILITY_PRIVATE;
-        const service = this.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
-        service.createNotificationChannel(chan);
-        return channelId;
+    onUnbind(intent: android.content.Intent) {
+        this.bounded = false;
+        // this.log('onUnbind', intent);
+        this.removeForeground();
+        // return true if you would like to have the service's onRebind(Intent) method later called when new clients bind to it.
+        return true;
     }
-    private buildForegroundNotification() {
-        let updateOnly = true;
-        if (!this.builder) {
-            updateOnly = false;
-            this.builder = new android.support.v4.app.NotificationCompat.Builder(this);
-        }
-        // clog('buildForegroundNotification', this.currentNotifText, updateOnly);
-
-        const builder = this.builder;
-
-        if (updateOnly) {
-            builder.setContentText(this.currentNotifText);
-        } else {
-            const context = ad.getApplicationContext(); // get a reference to the application context in Android
-            const color = android.graphics.Color.parseColor(primaryColor);
-            let channelId: string;
-            if (android.os.Build.VERSION.SDK_INT >= 26) {
-                channelId = this.createNotificationChannel(color);
-            }
-            builder
-                .setColor(color)
-                .setOngoing(true)
-                .setVisibility(android.support.v4.app.NotificationCompat.VISIBILITY_SECRET)
-                .setPriority(android.support.v4.app.NotificationCompat.PRIORITY_MIN)
-                .setOnlyAlertOnce(true)
-                .setSmallIcon(ad.resources.getDrawableId('ic_stat'));
-            // builder.setLargeIcon(bitmap)
-
-            if (channelId) {
-                builder.setChannelId(channelId);
-                builder.setCategory(android.app.Notification.CATEGORY_SERVICE);
-            }
-
-            const mainIntent = new android.content.Intent(context, (com as any).tns.NativeScriptActivity.class);
-            mainIntent.setAction(android.content.Intent.ACTION_MAIN);
-            mainIntent.addCategory(android.content.Intent.CATEGORY_LAUNCHER);
-            const pendingIntent = android.app.PendingIntent.getActivity(context, 0, mainIntent, 0);
-            builder.setContentIntent(pendingIntent);
-        }
-
-        return builder.build();
+    onRebind(intent: android.content.Intent) {
+        // a client is binding to the service with bindService(), after onUnbind() has already been called
     }
 
+    private mNotification: android.app.Notification;
+    private mNotificationBuilder: androidx.core.app.NotificationCompat.Builder;
+    displayNotification(sessionRunning) {
+        this.mNotificationBuilder = new androidx.core.app.NotificationCompat.Builder(this, NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL);
+
+        this.mNotification = NotificationHelper.getNotification(this, this.mNotificationBuilder, this.geoHandler.currentSession);
+        this.notificationManager.notify(NOTIFICATION_ID, this.mNotification); // todo check if necessary in pre Android O
+    }
+    dismissNotification() {
+        // cancel notification
+        this.notificationManager.cancel(NOTIFICATION_ID); // todo check if necessary?
+        this.stopForeground(android.app.Service.STOP_FOREGROUND_REMOVE);
+    }
     private onSessionStateEvent(e: SessionEventData) {
+        // this.log('onSessionStateEvent', e.data.state);
         switch (e.data.state) {
             case SessionState.RUNNING:
                 this.recording = true;
-                clog('startForeground');
-                this.updateNotifText('Chrono: 00:00:00');
                 break;
             case SessionState.STOPPED:
                 this.recording = false;
-                if (!this.inBackground) {
-                    this.removeForeground();
-                }
-                this.updateNotifText(DEFAULT_TEXT);
                 break;
         }
+        this.updateNotification();
+    }
+    protected updateNotification() {
+        this.mNotification = NotificationHelper.getUpdatedNotification(this, this.mNotificationBuilder, this.geoHandler.currentSession);
+        this.notificationManager.notify(NOTIFICATION_ID, this.mNotification);
+    }
+    protected onSessionChronoEvent(e: SessionChronoEventData) {
+        this.updateNotification();
     }
 
-    updateNotifText(text: string) {
-        this.currentNotifText = text || DEFAULT_TEXT;
-        // clog('updateNotifText', text);
-        // const service = this.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
-        this.showForeground();
-    }
     showForeground() {
-        // clog('showForeground', this.inBackground, this.recording, this.alwaysShowNotification);
+        if (!this.bounded) {
+            return;
+        }
+        // this.log('showForeground', this.inBackground, this.recording, this.alwaysShowNotification);
         if (this.inBackground || this.recording || this.alwaysShowNotification) {
             try {
-                this.startForeground(FOREGROUND_ID, this.buildForegroundNotification());
+                this.displayNotification(this.recording);
+                this.startForeground(NOTIFICATION_ID, this.mNotification);
             } catch (err) {
                 console.error(err);
             }
         }
     }
+
     removeForeground() {
-        // clog('removeForeground', this.inBackground, this.recording, this.alwaysShowNotification);
-        this.stopForeground(true);
-        const service = this.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
-        service.cancel(FOREGROUND_ID);
-        this.builder = null;
+        // this.log('removeForeground', this.inBackground, this.recording, this.alwaysShowNotification);
+        this.stopForeground(android.app.Service.STOP_FOREGROUND_DETACH);
+        this.notificationManager.cancel(NOTIFICATION_ID);
     }
     onAppEvent(event: ApplicationEventData) {
         if (event.eventName === suspendEvent) {
@@ -161,19 +146,19 @@ export class BgService extends android.app.Service {
         } else if (event.eventName === resumeEvent) {
             if (this.inBackground) {
                 this.inBackground = false;
-                if (!this.alwaysShowNotification) {
-                    this.removeForeground();
-                }
+                // if (!this.alwaysShowNotification) {
+                    // this.removeForeground();
+                // }
             }
         }
     }
     onBounded() {
-        clog('onBounded');
-        // this.showForeground();
+        // this.log('onBounded');
         this.geoHandler = new GeoHandler();
-
         this.geoHandler.on(SessionStateEvent, this.onSessionStateEvent, this);
+        this.geoHandler.on(SessionChronoEvent, this.onSessionChronoEvent, this);
         applicationOn(resumeEvent, this.onAppEvent, this);
         applicationOn(suspendEvent, this.onAppEvent, this);
+        this.showForeground();
     }
 }

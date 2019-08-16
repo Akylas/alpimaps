@@ -1,7 +1,7 @@
 import BaseVueComponent from './BaseVueComponent';
 import { Component } from 'vue-property-decorator';
 import { CartoMap } from 'nativescript-carto/ui/ui';
-import MapModule from '~/mapModules/MapModule';
+import { IMapModule } from '~/mapModules/MapModule';
 import Map from '~/components/Map';
 import { MapPos } from 'nativescript-carto/core/core';
 import { screen } from 'tns-core-modules/platform';
@@ -22,7 +22,7 @@ const PX_PER_CM = XDPI / 2.54;
 const INCH_IN_CM = 2.54;
 
 @Component({})
-export default class ScaleView extends BaseVueComponent implements MapModule {
+export default class ScaleView extends BaseVueComponent implements IMapModule {
     mapView: CartoMap;
     mapComp: Map;
 

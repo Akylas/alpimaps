@@ -4,7 +4,21 @@ import { GeoHandler } from '~/handlers/GeoHandler';
 import { VectorElementEventData, VectorTileEventData } from 'nativescript-carto/layers/vector';
 import { Item } from './ItemsModule';
 import { clog } from '~/utils/logging';
-export default abstract class MapModule {
+import Observable from 'nativescript-observable';
+
+export interface IMapModule {
+    onMapReady(mapComp: Map, mapView: CartoMap);
+    onMapDestroyed();
+    onServiceLoaded?(geoHandler: GeoHandler);
+    onServiceUnloaded?(geoHandler: GeoHandler);
+    onMapMove?(e);
+    onMapClicked?(e);
+    onVectorTileClicked?(data: VectorTileEventData);
+    onVectorElementClicked?(data: VectorElementEventData);
+    onSelectedItem?(item: Item, oldItem: Item);
+}
+
+export default abstract class MapModule extends Observable implements IMapModule {
     mapView: CartoMap;
     mapComp: Map;
     onMapReady(mapComp: Map, mapView: CartoMap) {

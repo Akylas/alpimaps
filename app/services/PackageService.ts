@@ -1,5 +1,5 @@
+import { CartoOnlineVectorTileLayer } from 'nativescript-carto/layers/vector';
 import { CartoMapStyle, fromNativeMapPos, MapPos, nativeVectorToArray } from 'nativescript-carto/core/core';
-import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
 import { CartoOnlineTileDataSource } from 'nativescript-carto/datasources/cartoonline';
 import { MergedMBVTTileDataSource, OrderedTileDataSource, TileDataSource } from 'nativescript-carto/datasources/datasource';
 import { HTTPTileDataSource } from 'nativescript-carto/datasources/http';
@@ -15,22 +15,23 @@ import {
     ReverseGeocodingService
 } from 'nativescript-carto/geocoding/service';
 import { Feature, FeatureCollection } from 'nativescript-carto/geometry/feature';
-import { CartoOnlineVectorTileLayer } from 'nativescript-carto/layers/vector';
+import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
 import { CartoPackageManager, CartoPackageManagerListener, PackageErrorType, PackageManagerTileDataSource, PackageStatus } from 'nativescript-carto/packagemanager/packagemanager';
 import { MBVectorTileDecoder } from 'nativescript-carto/vectortiles/vectortiles';
 import { Observable } from 'tns-core-modules/data/observable/observable';
 import { File, Folder, path } from 'tns-core-modules/file-system';
 import { getDataFolder } from '~/utils';
-import { log } from '~/utils/logging';
+import { clog, log } from '~/utils/logging';
 import { Item } from '~/mapModules/ItemsModule';
+import Vue from 'nativescript-vue';
 
 export type PackageType = 'geo' | 'routing' | 'map';
-const docPath = getDataFolder();
 
 interface GeoResult {
     properties?: { [k: string]: any };
     address: Address;
     position?: MapPos;
+    provider?: string;
 }
 
 class PackageManagerListener implements CartoPackageManagerListener {
@@ -61,9 +62,6 @@ class PackageManagerListener implements CartoPackageManagerListener {
     // }
 }
 export default class PackageService extends Observable {
-    dataFolder = Folder.fromPath(path.join(docPath, 'packages'));
-    geoDataFolder = Folder.fromPath(path.join(docPath, 'geocodingpackages'));
-    routingDataFolder = Folder.fromPath(path.join(docPath, 'routingpackages'));
     _packageManager: CartoPackageManager;
     _geoPackageManager: CartoPackageManager;
     _routingPackageManager: CartoPackageManager;
@@ -76,20 +74,46 @@ export default class PackageService extends Observable {
         // this.packageManager.start();
     }
 
+    log(...args) {
+        clog(`[${this.constructor.name}]`, ...args);
+    }
+    _docPath;
+    get docPath() {
+        if (!this._docPath) {
+            this._docPath = getDataFolder();
+            this.log('docPath', this._docPath);
+        }
+        return this._docPath;
+    }
+    get dataFolder() {
+        return Folder.fromPath(path.join(this.docPath, 'packages'));
+    }
+    get geoDataFolder() {
+        return Folder.fromPath(path.join(this.docPath, 'geocodingpackages'));
+    }
+    get routingDataFolder() {
+        return Folder.fromPath(path.join(this.docPath, 'routingpackages'));
+    }
     get packageManager() {
         if (!this._packageManager) {
-            console.log('creating package manager', this.dataFolder.path);
+            // console.log('creating package manager', this.dataFolder.path);
+            // try {
             this._packageManager = new CartoPackageManager({
                 source: 'carto.streets',
                 dataFolder: this.dataFolder.path,
                 listener: new PackageManagerListener('map', this)
             });
+            // this._packageManager.getNative(); // to ensure we catch the error right away
+            // } catch (error) {
+            //     console.log('test', Object.keys(error), Object.keys(error.nativeException), typeof error, error.nativeException);
+            //     // Vue.prototype.$showError(error);
+            // }
         }
         return this._packageManager;
     }
     get geoPackageManager() {
         if (!this._geoPackageManager) {
-            console.log('creating geo package manager', this.geoDataFolder.path);
+            // console.log('creating geo package manager', this.geoDataFolder.path);
             this._geoPackageManager = new CartoPackageManager({
                 source: 'geocoding:carto.streets',
                 dataFolder: this.geoDataFolder.path,
@@ -100,7 +124,7 @@ export default class PackageService extends Observable {
     }
     get routingPackageManager() {
         if (!this._routingPackageManager) {
-            console.log('creating routing package manager', this.routingDataFolder.path);
+            // console.log('creating routing package manager', this.routingDataFolder.path);
             this._routingPackageManager = new CartoPackageManager({
                 // source: 'routing:nutiteq.osm.car',
                 source: 'routing:carto.streets',
@@ -111,19 +135,22 @@ export default class PackageService extends Observable {
         return this._routingPackageManager;
     }
     start() {
+        if (!Folder.exists(this.docPath)) {
+            this.log('creating doc folder', Folder.fromPath(this.docPath).path);
+        }
         const managerStarted = this.packageManager.start();
         const geoManagerStarted = this.geoPackageManager.start();
         const routingManagerStarted = this.routingPackageManager.start();
         const packages = this._packageManager.getLocalPackages();
-        console.log('start packageManager', managerStarted, packages.size());
+        // this.log('start packageManager', managerStarted, packages.size());
         const geoPackages = this._geoPackageManager.getLocalPackages();
-        console.log('start geoPackageManager', geoManagerStarted, geoPackages.size());
+        // this.log('start geoPackageManager', geoManagerStarted, geoPackages.size());
 
         const routingPackages = this._routingPackageManager.getLocalPackages();
-        if (routingPackages.size() > 0) {
-            console.log('test routingPackageManager', routingPackages.get(0).getName(), routingPackages.get(0).getPackageType());
-        }
-        console.log('start routingPackageManager', routingManagerStarted, routingPackages.size());
+        // if (routingPackages.size() > 0) {
+        // this.log('test routingPackageManager', routingPackages.get(0).getName(), routingPackages.get(0).getPackageType());
+        // }
+        // this.log('start routingPackageManager', routingManagerStarted, routingPackages.size());
         this.updatePackagesLists();
     }
     updatePackagesList(manager: CartoPackageManager) {
@@ -234,10 +261,10 @@ export default class PackageService extends Observable {
 
     getDataSource() {
         if (!this.dataSource) {
-            const maptileCacheFolder = File.fromPath(path.join(docPath, 'maptiler.db'));
-            const cacheFolder = File.fromPath(path.join(docPath, 'carto.db'));
-            const terrainCacheFolder = File.fromPath(path.join(docPath, 'terrain.db'));
-            console.log('create main vector datasource', cacheFolder.path);
+            const maptileCacheFolder = File.fromPath(path.join(this.docPath, 'maptiler.db'));
+            const cacheFolder = File.fromPath(path.join(this.docPath, 'carto.db'));
+            const terrainCacheFolder = File.fromPath(path.join(this.docPath, 'terrain.db'));
+            // console.log('create main vector datasource', cacheFolder.path);
             this.dataSource = new MergedMBVTTileDataSource({
                 dataSources: [
                     new OrderedTileDataSource({
@@ -373,7 +400,16 @@ export default class PackageService extends Observable {
     prepareGeoCodingResult(result: GeoResult) {
         const address: any = result.address || {};
 
-        [['country', 'getCountry'], ['neighbourhood', 'getNeighbourhood'], ['postcode', 'getPostcode'], ['road', 'getStreet'], ['houseNumber', 'getHouseNumber'], ['city', 'getCounty']].forEach(d => {
+        [
+            ['country', 'getCountry'],
+            ['locality', 'getLocality'],
+            ['neighbourhood', 'getNeighbourhood'],
+            ['state', 'getRegion'],
+            ['postcode', 'getPostcode'],
+            ['road', 'getStreet'],
+            ['houseNumber', 'getHouseNumber'],
+            ['county', 'getCounty']
+        ].forEach(d => {
             if (!address[d[0]]) {
                 const value = result.address[d[1]]();
                 if (value.length > 0) {
@@ -381,8 +417,17 @@ export default class PackageService extends Observable {
                 }
             }
         });
+
+        const cat = result.address.getCategories();
+        if (cat && cat.size() > 0) {
+            result['categories'] = nativeVectorToArray(cat);
+        }
         result.address = address;
+        result.provider = 'carto';
         result.properties.name = result.properties.name || result.address.getName();
+        if (result.properties.name.length === 0) {
+            delete result.properties.name;
+        }
         return result as Item;
     }
 }

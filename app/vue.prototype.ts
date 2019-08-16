@@ -8,6 +8,7 @@ import { BgService } from './services/BgService';
 import { clog } from './utils/logging';
 import { NetworkService } from './services/NetworkService';
 import { ToastDuration, ToastPosition, Toasty } from 'nativescript-toasty';
+import * as imageModule from 'nativescript-image';
 
 const Plugin = {
     install(Vue) {
@@ -18,12 +19,31 @@ const Plugin = {
         const networkService = new NetworkService();
         Vue.prototype.$networkService = networkService;
 
-        if (gVars.isAndroid) {
-            application.on(application.launchEvent, () => {
+        application.on(application.launchEvent, () => {
+            console.log('App Launched');
+            imageModule.initialize({ isDownsampleEnabled: true });
+
+            if (gVars.isAndroid) {
                 bgService.start();
                 networkService.start();
-            });
-        } else {
+                const receiverCallback = (androidContext, intent: android.content.Intent) => {
+                    console.log('receiverCallback', intent.getAction(), intent.getAction() === android.content.Intent.ACTION_SCREEN_ON);
+                    // (Vue.prototype.$getAppComponent() as App).$emit('screen', intent.getAction() === android.content.Intent.ACTION_SCREEN_ON);
+                };
+                application.android.registerBroadcastReceiver(android.content.Intent.ACTION_SCREEN_ON, receiverCallback);
+                application.android.registerBroadcastReceiver(android.content.Intent.ACTION_SCREEN_OFF, receiverCallback);
+            }
+        });
+        application.on(application.exitEvent, () => {
+            console.log('App Exited');
+            imageModule.shutDown();
+            networkService.stop();
+            if (gVars.isAndroid) {
+                application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_ON);
+                application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_OFF);
+            }
+        });
+        if (gVars.isIOS) {
             bgService.start();
             networkService.start();
         }
@@ -43,34 +63,41 @@ const Plugin = {
             return mapComponent;
         };
 
-        Vue.prototype.$isSimulator = false;
-        Vue.prototype.$isAndroid = gVars.isAndroid;
-        Vue.prototype.$isIOS = gVars.isIOS;
+        // Vue.prototype.__defineGetter__('isSimulator', () => false);
+        // Vue.prototype.__defineGetter__('isAndroid', () => gVars.isAndroid);
+        // Vue.prototype.__defineGetter__('isIOS', () => gVars.isIOS);
+
+        Vue.prototype.isSimulator = false;
+        Vue.prototype.isAndroid = gVars.isAndroid;
+        Vue.prototype.isIOS = gVars.isIOS;
         const filters = (Vue.prototype.$filters = Vue['options'].filters);
         Vue.prototype.$t = localize;
-        Vue.prototype.$ltc = function(s: string, ...args) {
+        Vue.prototype.$tc = function(s: string, ...args) {
+            return filters.capitalize(localize(s, ...args));
+        };
+        Vue.prototype.$tt = function(s: string, ...args) {
             return filters.titlecase(localize(s, ...args));
         };
-        Vue.prototype.$luc = function(s: string, ...args) {
+        Vue.prototype.$tu = function(s: string, ...args) {
             return filters.uppercase(localize(s, ...args));
         };
         Vue.prototype.$showError = function(err: Error) {
-            clog('showError', err, err.toString(), err['stack']);
+            clog('showError', err, err.toString(), err.stack);
             const message = typeof err === 'string' ? err : err.toString();
             return alert({
-                title: Vue.prototype.$ltc('error'),
-                okButtonText: Vue.prototype.$ltc('ok'),
+                title: Vue.prototype.$tc('error'),
+                okButtonText: Vue.prototype.$tc('ok'),
                 message
             });
         };
-        Vue.prototype.$showToast = function(message: string, duration?: ToastDuration, position?: ToastPosition) {
-            const toasty = new Toasty(message, duration, position);
+        Vue.prototype.$showToast = function(text: string, duration?: ToastDuration, position?: ToastPosition) {
+            const toasty = new Toasty({ text, duration, position });
             toasty.show();
             return toasty;
         };
         Vue.prototype.$alert = function(message) {
             return alert({
-                okButtonText: Vue.prototype.$ltc('ok'),
+                okButtonText: Vue.prototype.$tc('ok'),
                 message
             });
         };

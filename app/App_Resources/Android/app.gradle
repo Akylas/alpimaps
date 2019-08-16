@@ -13,6 +13,8 @@ android {
 
   defaultConfig {  
     // versionCode googleVer
+    multiDexEnabled true
+       
     ndk {
       abiFilters.clear()
     }
@@ -68,3 +70,18 @@ android.applicationVariants.all { variant ->
 }
 
 apply plugin: 'com.bugsnag.android.gradle'
+
+def settingsGradlePath
+
+if(project.hasProperty("appResourcesPath")){
+    settingsGradlePath = "$project.appResourcesPath/Android/settings.gradle";
+} else {
+    settingsGradlePath = "$rootDir/../../app/App_Resources/Android/settings.gradle";
+}
+
+def settingsGradleFile = new File(settingsGradlePath);
+
+if(settingsGradleFile.exists())
+{
+    apply from: settingsGradleFile;
+}

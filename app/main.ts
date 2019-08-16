@@ -2,34 +2,70 @@ import Vue from 'nativescript-vue';
 import { knownFolders } from 'tns-core-modules/file-system';
 
 import { getBuildNumber, getVersionName } from 'nativescript-extendedinfo';
-import { cerror, clog, cwarn } from '~/utils/logging';
-import { Client } from 'nativescript-bugsnag';
+import { cerror, clog, cwarn, DEV_LOG } from '~/utils/logging';
+import { Client as BugsnagClient } from 'nativescript-bugsnag';
 import { setMapPosKeys } from 'nativescript-carto/core/core';
+import * as application from 'tns-core-modules/application';
+
 
 setMapPosKeys('lat', 'lon');
+function CustomError(error) {
+    this.name = 'CustomError';
+    this.message = error.message || '';
+    error.name = this.name;
+    this.stack = error['stackTrace'];
+}
+CustomError.prototype = Object.create(Error.prototype);
 
-/* DEV-START */
+application.on(application.discardedErrorEvent, args => {
+    const error = args.error;
+    // const jsError = new Error(error.message);
+    error.stack = error.stackTrace;
+    // console.log(error);
+    // console.log('[stackTrace test Value]', error.message, error.stackTrace);
+    // console.log('[stack test value]', error.message, error.stack);
+    // console.log(jsError);
+    setTimeout(() => {
+        throw new Error('test');
+    }, 0);
+});
+
+// import { Client as FlipperClient } from 'nativescript-flipper';
 const currentApp = knownFolders.currentApp();
 require('source-map-support').install({
     environment: 'node',
     handleUncaughtExceptions: false,
     retrieveSourceMap(source) {
         const sourceMapPath = source + '.map';
-        const sourceMapRelativePath = sourceMapPath.replace('file://', '').replace(currentApp.path + '/', '');
-
+        const appPath = currentApp.path;
+        let sourceMapRelativePath = sourceMapPath
+            .replace('file:///', '')
+            .replace('file://', '')
+            .replace(appPath + '/', '');
+        console.log('retrieveSourceMap', source, sourceMapRelativePath);
+        if (sourceMapRelativePath.startsWith('app/')) {
+            sourceMapRelativePath = sourceMapRelativePath.slice(4);
+        }
         return {
-            url: sourceMapRelativePath + '/',
+            url: sourceMapRelativePath,
             map: currentApp.getFile(sourceMapRelativePath).readTextSync()
         };
     }
 });
-/* DEV-END */
+
+// Error.prepareStackTrace = function() {
+//     console.log('test', 'prepareStackTrace');
+// };
+// const flipper = new FlipperClient();
+// flipper.start({
+//     plugins: ['network', 'inspector', 'database', 'prefs', 'crash']
+// });
 
 if (TNS_ENV === 'production') {
-    const bugsnag = (Vue.prototype.$bugsnag = new Client());
+    const bugsnag = (Vue.prototype.$bugsnag = new BugsnagClient());
     Promise.all([getVersionName(), getBuildNumber()])
         .then(result => {
-            console.log('did get Versions', result);
+            // console.log('did get Versions', result);
             let fullVersion = result[0];
             if (!/[0-9]+\.[0-9]+\.[0-9]+/.test(fullVersion)) {
                 fullVersion += '.0';
@@ -40,7 +76,7 @@ if (TNS_ENV === 'production') {
         .then(() => {
             bugsnag.enableConsoleBreadcrumbs();
             bugsnag.handleUncaughtErrors();
-            console.log('bugsnag did init');
+            // console.log('bugsnag did init');
         })
         .catch(err => {
             console.log('bugsnag  init failed', err);
@@ -58,6 +94,9 @@ install();
 installBottomSheets();
 installGestures();
 
+import MixinsPlugin from './vue.mixins';
+Vue.use(MixinsPlugin);
+
 import ViewsPlugin from './vue.views';
 Vue.use(ViewsPlugin);
 
@@ -71,19 +110,34 @@ TNSFontIcon.paths = {
     mdi: './assets/materialdesignicons.min.css',
     maki: './assets/maki.css'
 };
-TNSFontIcon.loadCss();
+TNSFontIcon.loadCssSync();
 
 // adding to Vue prototype
 import PrototypePlugin from './vue.prototype';
 Vue.use(PrototypePlugin);
+
+// application.on(application.uncaughtErrorEvent, args => {
+//     const error = args.error;
+//     // const nErrror = args.android as java.lang.Exception;
+//     // clog('onNativeError', error, Object.keys(args), Object.keys(error), error.message, error.stackTrace);
+//     // clog('nErrror', nErrror);
+//     clog('uncaughtErrorEvent', error);
+// });
+// application.on(application.discardedErrorEvent, args => {
+//     const error = args.error;
+//     // const nErrror = args.android as java.lang.Exception;
+//     // clog('onNativeError', error, Object.keys(args), Object.keys(error), error.message, error.stackTrace);
+//     // clog('nErrror', nErrror);
+//     clog('discardedErrorEvent', error);
+// });
 
 // import './app.scss'
 
 // Prints Vue logs when --env.production is *NOT* set while building
 // Vue.config.silent = !DEV_LOG;
 // Vue.config['debug'] = DEV_LOG;
-Vue.config.silent = true;
-Vue.config['debug'] = false;
+Vue.config.silent = !DEV_LOG;
+Vue.config['debug'] = DEV_LOG;
 
 Vue.config.errorHandler = (e, vm, info) => {
     throw e;

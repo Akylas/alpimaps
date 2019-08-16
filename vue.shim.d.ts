@@ -16,12 +16,14 @@ declare module 'vue/types/vue' {
         $networkService: NetworkService;
         $bugsnag: Client;
 
-        $isAndroid: boolean;
+        isAndroid: boolean;
+        isIOS: boolean;
+        isSimulator: boolean;
         // $cartoLicenseRegistered: boolean;
-        $isIOS: boolean;
         $t: (s: string, ...args) => string;
-        $ltc: (s: string, ...args) => string;
-        $luc: (s: string, ...args) => string;
+        $tc: (s: string, ...args) => string;
+        $tt: (s: string, ...args) => string;
+        $tu: (s: string, ...args) => string;
         $filters: {
             titleclase(s: string): string;
             uppercase(s: string): string;

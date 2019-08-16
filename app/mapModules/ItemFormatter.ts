@@ -3,14 +3,14 @@ import { CartoMap } from 'nativescript-carto/ui/ui';
 import Map from '~/components/Map';
 import MapModule from './MapModule';
 import { Item } from './ItemsModule';
-import { convertDistance, convertDuration } from '~/helpers/formatter';
+import { convertDistance, convertDuration, formatAddress } from '~/helpers/formatter';
 
-const addressFormatter = require('@fragaria/address-formatter'); // const OPEN_DURATION = 200;
+// const addressFormatter = require('@fragaria/address-formatter'); // const OPEN_DURATION = 200;
 
 export default class ItemFormatter extends MapModule {
     onMapReady(mapComp: Map, mapView: CartoMap) {
         super.onMapReady(mapComp, mapView);
-        this.log('onMapReady');
+        // this.log('onMapReady');
     }
 
     geItemIcon(item: Item) {
@@ -22,18 +22,24 @@ export default class ItemFormatter extends MapModule {
             return result;
         }
         const properties = item.properties;
-        if (properties.osm_value) {
-            result.push('maki-' + properties.osm_value);
+        if (properties) {
+            if (properties.osm_value) {
+                result.push('maki-' + properties.osm_value);
+            }
+            if (properties.osm_key) {
+                result.push('maki-' + properties.osm_key);
+            }
+            if (properties.class) {
+                result.push('maki-' + properties.class);
+            }
+            if (properties.layer) {
+                result.push('maki-' + properties.layer);
+            }
         }
-        if (properties.osm_key) {
-            result.push('maki-' + properties.osm_key);
+        if (item.categories) {
+            result.push('maki-' + item.categories[0]);
         }
-        if (properties.class) {
-            result.push('maki-' + properties.class);
-        }
-        if (properties.layer) {
-            result.push('maki-' + properties.layer);
-        }
+
         // console.log('itemIcon', result);
         return result;
     }
@@ -46,14 +52,11 @@ export default class ItemFormatter extends MapModule {
         const position = item.position;
         return `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`;
     }
-    getItemAddress(item: Item) {
+    getItemAddress(item: Item, part = 0) {
         const address = item.address;
         if (address) {
             // console.log('getItemAddress', address, getCode(address.country), this.$getMapComponent().currentLanguage.toUpperCase());
-            return addressFormatter.format(address, {
-                countryCode: 'FR',
-                appendCountry: false
-            });
+            return formatAddress(address, part);
             // const houseNumber = address.houseNumber;
             // if (houseNumber > 0) {
             //     result = houseNumber + ', ';
@@ -87,9 +90,9 @@ export default class ItemFormatter extends MapModule {
                 const route = item.route;
                 const dataT = convertDuration(route.totalTime * 1000);
                 const dataD = convertDistance(route.totalDistance);
-                return `${dataT.value.toFixed()} ${dataT.unit} ${dataD.value.toFixed()} ${dataD.unit}`;
+                return `<>${dataT} ${dataD.value.toFixed(1)} ${dataD.unit}`;
             }
-            return this.getItemName(item) || this.getItemAddress(item);
+            return this.getItemName(item) || this.getItemAddress(item, 1);
         }
         return '';
     }
@@ -97,6 +100,9 @@ export default class ItemFormatter extends MapModule {
         if (item) {
             if (this.getItemName(item)) {
                 return this.getItemAddress(item) || this.getItemPositionToString(item);
+            } else {
+                return this.getItemAddress(item, 2) || this.getItemPositionToString(item);
+
             }
         }
     }

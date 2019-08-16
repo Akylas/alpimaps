@@ -1,19 +1,48 @@
 
 .fade-enter-active {
     animation-name: fade;
-    animation-duration: 300ms;
+    animation-duration: 100ms;
     animation-fill-mode: forwards;
 }
 .fade-leave-active {
     animation-name: fade;
-    animation-duration: 300ms;
+    animation-duration: 100ms;
     animation-direction: reverse;
     animation-fill-mode: forwards;
 }
 
+
+.slide-enter-active {
+    animation-name: slide;
+    animation-duration: 200ms;
+    animation-fill-mode: forwards;
+}
+.slide-leave-active {
+    animation-name: slide;
+    animation-duration: 200ms;
+    animation-direction: reverse;
+    animation-fill-mode: forwards;
+}
+
+.fade-blink {
+    animation-name: fadeAndBack;
+    animation-duration: 800ms;
+    animation-iteration-count: infinite;
+    animation-fill-mode: forwards;
+}
+
+@keyframes fadeAndBack {
+    0%   { opacity: 1; }
+    50%  { opacity: 0; }
+    100% { opacity: 1; }
+}
 @keyframes fade {
     from { opacity: 0; }
     to { opacity: 1; }
+}
+@keyframes slide {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0);}
 }
 
 

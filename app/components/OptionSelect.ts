@@ -25,7 +25,6 @@ export default class OptionSelect extends Vue {
     mounted() {}
 
     public onItemTap(args: ItemEventData) {
-        clog('Item Tapped at cell index: ', args.index, this.options[args.index]);
         const result = this.options[args.index];
         if (result) {
             this.close(result);

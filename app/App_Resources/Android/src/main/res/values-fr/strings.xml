@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="select_language">"choix de la langue"</string>
+  <string name="select_language">"langue de la carte"</string>
   <string name="offline_packages">"cartes hors-ligne"</string>
   <string name="select_style">"style de carte "</string>
   <string name="_zoom__8nqDT">"zoom"</string>

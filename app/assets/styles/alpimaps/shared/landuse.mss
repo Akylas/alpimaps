@@ -62,18 +62,21 @@
 	[class=industrial],
 	[class=retail],
 	[class=stadium],
+	[class=commercial]{
+		[zoom>=10] {
+			polygon-fill: linear([view::zoom], (12, rgba(179, 179, 179, 0.5)), (16, rgba(232, 230, 223, 0.5)));
+		}
+	}
 	[class=college],
 	[class=university],
-	[class=school],
-	[class=commercial]{
-		[zoom>=10][zoom<=22] {
-			polygon-fill: linear([view::zoom], (12, rgba(179, 179, 179, 0.5)), (16, rgba(232, 230, 223, 0.5)));
+	[class=school]{
+		[zoom>=10] {
+			polygon-fill: rgba(255, 255, 229, 0.5);
 		}
 	}
 
 	[class=playground],
 	[class=theme_park],
-	[class=stadium],
 	[class=zoo]{
 		[zoom>=10][zoom<=22] {
 			polygon-fill: #D1CDA7;
@@ -84,9 +87,12 @@
 	[class=residential][zoom<=16]{
 		polygon-fill: linear([view::zoom], (9, fadeout(@urbanareas, 0.4)), (12, fadeout(@urbanareas,0.9)));
 	}
+	[class=track],
+	[class=pitch],
 	[class=cemetery],
 	[class=stadium]{
-		polygon-fill: linear([view::zoom], (2, rgba(175, 169, 157, 0.0)), (11, rgba(175, 169, 157, 0.6)), (15, rgba(175, 169, 157, 0.7)));
+		line-color: #92D0B7
+		polygon-fill: linear([view::zoom], (2, rgba(170, 224, 203, 0.0)), (11, rgba(170, 224, 203, 0.6)), (15, rgba(170, 224, 203, 0.7)));
 	}
 	[class=vineyard] {
 		[zoom >= 5] {
@@ -107,17 +113,17 @@
 	
 }
 
-#building [zoom>=13]['mapnik::geometry_type'=3]['nuti::buildings'>0]{
+#building [zoom>=14]['nuti::buildings'>0]{
 	::3d['nuti::buildings'>1][zoom>=17]{
 	  building-height: [render_height] ? [render_height] : 10;
 	  building-min-height: [render_min_height];
-	  building-fill: lighten(@buildings,10%);
-	  building-fill-opacity: linear([view::zoom], (15, 0.0), (18, 0.25));
+	  building-fill: lighten(@buildings3d,10%);
+	  building-fill-opacity: linear([view::zoom], (17, 0.0), (18, 0.25));
 	} 
   
-	::shadow['nuti::buildings'=1][zoom>=15]{
+	::shadow['nuti::buildings'=1][zoom>=17]{
 	  polygon-fill: @building_shadow;
-	  polygon-opacity: linear([view::zoom], (14.5, 0.0), (15, 1.0));
+	  polygon-opacity: linear([view::zoom], (17, 0.0), (18, 1.0));
 	  [zoom>=15] { polygon-geometry-transform: translate(0,1); }
 	  [zoom>=16] { polygon-geometry-transform: translate(0,2); }
 	  [zoom>=17] { polygon-geometry-transform: translate(0,3); }
@@ -125,31 +131,21 @@
 		
 	}
   
-	::fill{
-	  polygon-fill: @buildings;
-	  polygon-opacity: linear([view::zoom], (13, 0.0), (14.5, 0.8), (15, 1.0));
-	}
+		['nuti::buildings'=1],
+		['nuti::buildings'>1][zoom<17]{
+			::fill{
+			polygon-fill: @buildings;
+			polygon-opacity: linear([view::zoom], (14, 0.0), (14.2, 0.8), (14.5, 1.0));
+			}
+			
+		}
+		::case[zoom>=16]{
+			line-cap: butt;
+			line-width: linear([view::zoom], (16, 0.0), (17, 0.6));
+			line-color: #aaa;
+		}
+	  
   }
-// #building{
-// 	[zoom>=13]['mapnik::geometry_type'=3]['nuti::buildings'>0]{
-// 		::3d['nuti::buildings'>1][zoom>=17]{
-// 			building-height: @buildingHeight;
-// 			building-min-height: [render_min_height];
-// 			building-fill: #ffffff;
-// 			building-fill-opacity: 0.5;
-// 		} 
-// 		polygon-fill: @buildings;
-// 		polygon-opacity: linear([view::zoom], (13, 0.0), (16, 1.0));
-// 		['nuti::buildings'=1] {
-// 			::fill[zoom>=16]{
-// 				line-cap: butt;
-// 				line-width: linear([view::zoom], (16, 0.0), (18, 1.0));
-// 				line-color: #888;
-// 			}
-// 		}
-		
-// 	}
-// }
 #aeroway{
 	line-cap: butt;
 	line-join: miter;

@@ -1,16 +1,20 @@
+import { Page } from 'tns-core-modules/ui/page';
 import * as app from 'application';
-import { compose } from 'nativescript-email';
 import * as EInfo from 'nativescript-extendedinfo';
 import { prompt } from 'nativescript-material-dialogs';
 import Vue, { NativeScriptVue } from 'nativescript-vue';
 import { device, isIOS, screen } from 'tns-core-modules/platform';
+import { NavigationEntry } from 'tns-core-modules/ui/frame';
+import { Frame } from 'tns-core-modules/ui/frame/';
 import { GridLayout } from 'tns-core-modules/ui/layouts/grid-layout';
 import { StackLayout } from 'tns-core-modules/ui/layouts/stack-layout';
+import { compose } from 'nativescript-email';
 import { GC } from 'tns-core-modules/utils/utils';
-import { Frame, topmost } from 'ui/frame/frame';
+import { VueConstructor } from 'vue';
 import { Component } from 'vue-property-decorator';
 import Map from '~/components/Map';
 import { GeoHandler } from '~/handlers/GeoHandler';
+import { navigationBarHeight, screenHeightDips, screenWidthDips } from '~/variables';
 import { BaseVueComponentRefs } from './BaseVueComponent';
 import BgServiceComponent from './BgServiceComponent';
 import MapRightMenu from './MapRightMenu';
@@ -35,17 +39,11 @@ export interface AppRefs extends BaseVueComponentRefs {
     // drawer: NativeScriptVue<RadSideDrawer>;
 }
 
-const routes = {
-    map: {
-        component: Map
-    }
-    // settings: {
-    //     component: Settings
-    // },
-    // history: {
-    //     component: History
-    // }
-};
+export enum ComponentIds {
+    Map = 'map'
+}
+
+export const navigateUrlProperty = 'navigateUrl';
 
 @Component({
     components: {
@@ -57,12 +55,18 @@ const routes = {
 export default class App extends BgServiceComponent {
     $refs: AppRefs;
 
-    public activatedUrl = 'map';
+    public activatedUrl = '';
     // private _sideDrawerTransition: DrawerTransitionBase;
 
     public appVersion: string;
 
     stack: string[] = [];
+
+    protected routes: { [k: string]: { component: typeof Vue } } = {
+        [ComponentIds.Map]: {
+            component: Map
+        }
+    };
 
     // get drawer() {
     //     return this.$refs.drawer && this.$refs.drawer.nativeView;
@@ -76,19 +80,43 @@ export default class App extends BgServiceComponent {
     constructor() {
         super();
         this.$setAppComponent(this);
+
         // this.cartoLicenseRegistered = Vue.prototype.$cartoLicenseRegistered;
         this.stack.push(this.activatedUrl);
         this.appVersion = EInfo.getVersionNameSync() + '.' + EInfo.getBuildNumberSync();
     }
 
-    drawerOptions: OptionsType = {
-        left: {
-            swipeOpenTriggerWidth: 10
-        },
-        right: {
-            swipeOpenTriggerWidth: 10
+    get drawerOptions() {
+        const result: OptionsType = {
+            left: {
+                swipeOpenTriggerWidth: 10,
+                additionalProperties: {
+                    paddingBottom: gVars.isAndroid ? `${navigationBarHeight}` : undefined
+                }
+            }
+        };
+        if (this.mapMounted) {
+            result.right = {
+                backgroundColor: '#aa000000',
+                showBackDrop: false,
+                width: '200' as any,
+                swipeOpenTriggerWidth: 10,
+                additionalProperties: {
+                    paddingBottom: gVars.isAndroid ? `${navigationBarHeight}` : undefined
+                }
+                //
+            };
         }
-    };
+        return result;
+    }
+    // drawerOptions: OptionsType = {
+    //     left: {
+    //         swipeOpenTriggerWidth: 10
+    //     },
+    //     right: {
+    //         swipeOpenTriggerWidth: 10
+    //     }
+    // };
     menuItems = [
         {
             title: 'map',
@@ -102,18 +130,16 @@ export default class App extends BgServiceComponent {
         }
     ];
     onLoaded() {
-        GC();
+        // GC();
+        // if (gVars.isAndroid) {
+        //     // c2c981c1a35d7302
+        //     console.log('test ANDROID_ID', android.provider.Settings.Secure.getString(app.android.foregroundActivity.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID));
+        // }
     }
 
     onServiceLoaded(geoHandler: GeoHandler) {}
-    destroyed() {
-        super.destroyed();
-    }
     mounted(): void {
         super.mounted();
-        // this.page.actionBarHidden = true;
-        // setDrawerInstance(this.drawer);
-
         if (isIOS && app.ios.window.safeAreaInsets) {
             const bottomSafeArea: number = app.ios.window.safeAreaInsets.bottom;
             if (bottomSafeArea > 0) {
@@ -122,98 +148,86 @@ export default class App extends BgServiceComponent {
               `);
             }
         }
-        // this.activatedUrl = '/pairing';
-        // this._sideDrawerTransition = new SlideInOnTopTransition();
-
-        // this.router.events.subscribe((event: NavigationEnd) => {
-        //     if (event instanceof NavigationEnd) {
-        //         this.activatedUrl = event.urlAfterRedirects;
-        //     }
-        // });
+        this.innerFrame.on(Page.navigatingToEvent, this.onPageNavigation, this);
+    }
+    destroyed() {
+        this.innerFrame.off(Page.navigatingToEvent, this.onPageNavigation, this);
+        super.destroyed();
     }
 
-    // get sideDrawerTransition(): DrawerTransitionBase {
-    //     return this._sideDrawerTransition;
-    // }
-
-    // get gesturesEnabled(): boolean {
-    //     // clog('gestureEnabled', this.activatedUrl);
-    //     // return this.activatedUrl === '/home';
-    //     return true;
-    // }
+    static cartoLicenseRegistered = false;
+    cartoLicenseRegistered = App.cartoLicenseRegistered;
+    setCartoLicenseRegistered(result: boolean) {
+        if (App.cartoLicenseRegistered !== result) {
+            App.cartoLicenseRegistered = result;
+            this.cartoLicenseRegistered = result;
+        }
+    }
+    mapMounted = false;
+    setMapMounted(result: boolean) {
+        // console.log('setMapMounted', result);
+        this.mapMounted = result;
+    }
+    onNavigatingTo() {
+        // this.$navigateTo(Login, {
+        //         animated: false
+        //     })
+        // setTimeout(() =>
+        //     this.$navigateBack(), 5000)
+    }
+    onPageNavigation(event) {
+        const page = event.entry.resolvedPage;
+        if (page) {
+            const device = gVars.isAndroid ? 'android android' : 'ios ios';
+            page.className = `${page.className || ''} ${device}`;
+        }
+        // this.log('onPageNavigation', event.entry.resolvedPage, event.entry.resolvedPage[navigateUrlProperty]);
+        this.closeDrawer();
+        this.setActivatedUrl(event.entry.resolvedPage[navigateUrlProperty]);
+    }
 
     isComponentSelected(url: string) {
-        // clog('isComponentSelected', url, this.activatedUrl);
+        // this.log('isComponentSelected', url, this.activatedUrl);
         return this.activatedUrl === url;
     }
 
-    // openDrawer() {
-    //     this.drawer.showDrawer();
-    // }
-    // closeDrawer() {
-    //     this.drawer && this.drawer.closeDrawer();
-    // }
-    // onCloseDrawerTap() {
-    //     this.closeDrawer();
-    // }
-
-    onNavigatingFrom() {
-        // console.log('onNavigatingFrom', this.activatedUrl, this.stack);
-        if (this.stack.length === 1) {
-            return;
-        }
-        this.stack.pop();
-        const id = this.stack[this.stack.length - 1];
-        if (routes[id]) {
-            this.setActivatedUrl(id);
-        }
+    openDrawer() {
+        this.drawer.open();
     }
-    navigateBackToRoot() {
-        this.setActivatedUrl(this.stack[0]);
-        this.stack = [this.stack[0]];
-        const backstackEntryFirstPage = topmost().backStack[0];
-        (this.$navigateBack as any)({}, backstackEntryFirstPage);
+    closeDrawer() {
+        this.drawer && this.drawer.close();
     }
-    _findParentFrame() {
-        let frame: any = topmost();
-        if (!frame) {
-            frame = this.$parent;
-            while (frame && frame.$parent && frame.$options.name !== 'Frame') {
-                frame = frame.$parent;
-            }
-            if (frame && frame.$options.name === 'Frame') {
-                return frame['nativeView'] as Frame;
-            }
-            return undefined;
-        } else {
-            return frame;
-        }
+    onCloseDrawerTap() {
+        this.closeDrawer();
     }
     onMenuIcon() {
-        const canGoBack = this._findParentFrame().canGoBack();
+        const canGoBack = this.canGoBack();
         // const canGoBack = this.innerFrame && this.innerFrame.canGoBack();
 
         if (canGoBack) {
             return this.navigateBack();
         } else {
-            // this.$emit('tapMenuIcon');
+            this.$emit('tapMenuIcon');
             // const drawer = getDrawerInstance();
             // if (drawer) {
-            // this.drawer.toggleDrawerState();
+            if (this.drawer.isSideOpened()) {
+                this.drawer.close();
+            } else {
+                this.drawer.open();
+            }
             // }
         }
     }
     canGoBack() {
-        return this.stack.length > 1;
+        return this.innerFrame && this.innerFrame.canGoBack();
     }
 
     isActiveUrl(id) {
-        // clog('isActiveUrl', id, this.activatedUrl);
+        // this.log('isActiveUrl', id, this.activatedUrl);
         return this.activatedUrl === id;
     }
-    // @log
-    setActivatedUrl(id) {
-        this.activatedUrl = id;
+
+    handleSetActivatedUrl(id) {
         this.$nextTick(() => {
             this.$refs.menu &&
                 this.$refs.menu.nativeView.eachChildView((c: GridLayout) => {
@@ -228,56 +242,46 @@ export default class App extends BgServiceComponent {
                 });
         });
     }
-    navigateBack() {
-        if (gVars.isIOS) {
-            this.innerFrame && this.innerFrame.goBack();
-        } else {
-            this.$navigateBack();
-        }
-    }
-    navigateInFrameTo(id: string | typeof Vue, props?) {
-        let comp: typeof Vue;
-        if (typeof id === 'string') {
-            comp = routes[id].component;
-            this.setActivatedUrl(id);
-        } else {
-            comp = id as any;
-            id = comp.name;
-        }
-        const params = {
-            props
-        } as any;
-        if (isIOS && this.innerFrame) {
-            params.frame = this.innerFrame.id;
-        }
-        this.$navigateTo(comp, params);
-        this.stack.push(id);
-        // this.closeDrawer();
-    }
-
-    onNavItemTap(url: string, comp?: any): void {
-        if (this.isActiveUrl(url)) {
+    // @log
+    setActivatedUrl(id) {
+        if (!id) {
             return;
         }
-        const index = this.stack.indexOf(url);
-        if (index === -1) {
-            this.navigateInFrameTo(url);
-        } else {
+        this.activatedUrl = id;
+        // this.log('setActivatedUrl', id);
+        this.handleSetActivatedUrl(id);
+    }
+    navigateBack(backEntry?) {
+        this.innerFrame && this.innerFrame.goBack(backEntry);
+    }
+
+    navigateBackIfUrl(url) {
+        if (this.isActiveUrl(url)) {
             this.navigateBack();
         }
     }
-    static cartoLicenseRegistered = false;
-    cartoLicenseRegistered = App.cartoLicenseRegistered;
-    setCartoLicenseRegistered(result: boolean) {
-        if (App.cartoLicenseRegistered !== result) {
-            App.cartoLicenseRegistered = result;
-            this.cartoLicenseRegistered = result;
+    findNavigationUrlIndex(url) {
+        return this.innerFrame.backStack.findIndex(b => b.resolvedPage[navigateUrlProperty] === url);
+    }
+    navigateBackToUrl(url) {
+        const index = this.findNavigationUrlIndex(url);
+        // console.log('navigateBackToUrl', url, index);
+        if (index === -1) {
+            // console.log(url, 'not in backstack');
+            return;
+        }
+        this.navigateBack(this.innerFrame.backStack[index]);
+    }
+    navigateBackToRoot() {
+        const stack = this.innerFrame.backStack;
+        if (stack.length > 0) {
+            this.innerFrame && this.innerFrame.goBack(stack[0]);
         }
     }
-    mapMounted = false;
-    setMapMounted(result: boolean) {
-        console.log('setMapMounted', result);
-        this.mapMounted = result;
+    onNavItemTap(url: string, comp?: any): void {
+        // this.log('onNavItemTap', url);
+        this.navigateToUrl(url as any);
+        // });
     }
     onTap(command: string) {
         switch (command) {
@@ -303,8 +307,8 @@ export default class App extends BgServiceComponent {
                                             uuid: device.uuid
                                         },
                                         screen: {
-                                            widthDIPs: screen.mainScreen.widthDIPs,
-                                            heightDIPs: screen.mainScreen.heightDIPs,
+                                            widthDIPs: screenWidthDips,
+                                            heightDIPs: screenHeightDips,
                                             widthPixels: screen.mainScreen.widthPixels,
                                             heightPixels: screen.mainScreen.heightPixels,
                                             scale: screen.mainScreen.scale
@@ -317,18 +321,18 @@ export default class App extends BgServiceComponent {
                             mimeType: 'application/json'
                         }
                     ]
-                }).catch(this.$showError);
+                }).catch(err => this.showError(err));
                 break;
             case 'sendBugReport':
                 prompt({
-                    message: this.$ltc('send_bug_report'),
+                    message: this.$tc('send_bug_report'),
                     okButtonText: this.$t('send'),
                     cancelButtonText: this.$t('cancel'),
                     autoFocus: true,
                     textFieldProperties: {
                         marginLeft: 10,
                         marginRight: 10,
-                        hint: this.$ltc('please_describe_error')
+                        hint: this.$tc('please_describe_error')
                     }
                 } as any).then(result => {
                     if (result.result && this.$bugsnag) {
@@ -344,10 +348,38 @@ export default class App extends BgServiceComponent {
                             .then(() => {
                                 this.$alert('bug_report_sent');
                             })
-                            .catch(this.$showError);
+                            .catch(err => this.showError(err));
                     }
                 });
                 break;
+        }
+    }
+
+    navigateTo(component: VueConstructor, options?: NavigationEntry & { props?: any }, cb?: () => Page) {
+        options = options || {};
+        // options.transition = options.transition || {
+        //     name: 'fade',
+        //     duration: 200,
+        //     curve: 'easeIn'
+        // },
+        (options as any).frame = options['frame'] || this.innerFrame.id;
+        return super.navigateTo(component, options, cb);
+    }
+    navigateToUrl(url: ComponentIds, options?: NavigationEntry & { props?: any }, cb?: () => Page) {
+        if (this.isActiveUrl(url) || !this.routes[url]) {
+            return;
+        }
+        // options = options || {};
+        // options.props = options.props || {};
+        // options.props[navigateUrlProperty] = url;
+
+        this.closeDrawer();
+        // console.log('navigateToUrl', url);
+        const index = this.findNavigationUrlIndex(url);
+        if (index === -1) {
+            this.navigateTo(this.routes[url].component, options);
+        } else {
+            this.navigateBackToUrl(url);
         }
     }
 }

@@ -1,10 +1,18 @@
 import { GeoHandler } from '~/handlers/GeoHandler';
 import { Observable } from 'tns-core-modules/data/observable';
+import { ApplicationEventData, exitEvent, launchEvent, off as applicationOff, on as applicationOn } from 'tns-core-modules/application';
+import { clog } from '~/utils/logging';
 
 export const BgServiceLoadedEvent = 'BgServiceLoadedEvent';
 export abstract class BgServiceCommon extends Observable {
     readonly geoHandler: GeoHandler;
     protected _loaded = false;
+
+    constructor() {
+        super();
+        applicationOn(exitEvent, this.onAppExit, this);
+        applicationOn(launchEvent, this.onAppLaunch, this);
+    }
     get loaded() {
         return this._loaded;
     }
@@ -18,6 +26,21 @@ export abstract class BgServiceCommon extends Observable {
             });
         }
     }
+    log(...args) {
+        clog(`[${this.constructor.name}]`, ...args);
+    }
+
+    abstract stop();
     abstract start();
-    updateNotifText(text: string) {}
+    onAppLaunch(args: ApplicationEventData) {
+        this.log('onAppLaunch');
+        this.start();
+    }
+    onAppExit(args: ApplicationEventData) {
+        this.log('onAppExit');
+        // applicationOff(exitEvent, this.onAppExit, this);
+        this.geoHandler.onAppExit(args);
+
+    }
+    // updateNotifText(text: string) {}
 }

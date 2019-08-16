@@ -13,8 +13,7 @@ import { DataProvider, Provider } from '~/data/tilesources';
 import { getDataFolder } from '~/utils';
 import { cerror, clog } from '~/utils/logging';
 import MapModule from './MapModule';
-
-const rasterCachePath = path.join(getDataFolder(), 'rastercache');
+import { ObservableArray } from 'tns-core-modules/data/observable-array/observable-array';
 
 function templateString(str: string, data) {
     return str.replace(
@@ -34,9 +33,16 @@ export interface SourceItem {
 }
 
 export default class CustomLayersModule extends MapModule {
-    public customSources: SourceItem[] = [];
+    public customSources: ObservableArray<SourceItem> = new ObservableArray([]);
+
+    constructor() {
+        super();
+        // this.customSources = new ObservableArray([]) as any;
+    }
 
     createRasterLayer(id: string, provider: Provider) {
+        const rasterCachePath = path.join(getDataFolder(), 'rastercache');
+
         const opacity = appSettings.getNumber(`${id}_opacity`, 1);
         const databasePath = File.fromPath(path.join(rasterCachePath, id)).path;
         // console.log('createRasterLayer', id, opacity, provider.url, databasePath);
@@ -47,6 +53,7 @@ export default class CustomLayersModule extends MapModule {
         });
         return {
             name: id,
+            legend: provider.legend,
             opacity,
             layer: new RasterTileLayer({
                 dataSource:
@@ -106,7 +113,6 @@ export default class CustomLayersModule extends MapModule {
             id,
             category: data.category,
             url: data.url,
-            legend: data.legend,
             sourceOptions: {
                 minZoom: 0,
                 maxZoom: 22,
@@ -115,6 +121,10 @@ export default class CustomLayersModule extends MapModule {
             urlOptions: data.urlOptions,
             layerOptions: data.layerOptions
         };
+
+        if (data.legend) {
+            provider.legend = templateString(data.legend, provider.urlOptions);
+        }
 
         // overwrite values in provider from variant.
         if (variantName && 'variants' in data) {
@@ -217,7 +227,7 @@ export default class CustomLayersModule extends MapModule {
     onMapReady(mapComp: Map, mapView: CartoMap) {
         super.onMapReady(mapComp, mapView);
         const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
-        this.log('onMapReady', savedSources, this.customSources);
+        // this.log('onMapReady', savedSources, this.customSources);
         if (savedSources.length > 0) {
             this.getSourcesLibrary().then(() => {
                 savedSources.forEach(s => {
@@ -234,37 +244,45 @@ export default class CustomLayersModule extends MapModule {
 
     onMapDestroyed() {
         super.onMapDestroyed();
-        this.customSources = [];
+        this.customSources.splice(0, this.customSources.length);
     }
     addSource() {
         this.getSourcesLibrary().then(() => {
             const options = {
                 props: {
                     title: localize('pick_source'),
-                    options: Object.keys(this.baseProviders).map(s => ({ name: s, provider: this.baseProviders[s], data: '' }))
+                    options: Object.keys(this.baseProviders).map(s => ({ name: s, provider: this.baseProviders[s] }))
                 },
                 fullscreen: false
             };
             (this.mapComp as Vue).$showModal(OptionSelect, options).then((result: { name: string; provider: Provider }) => {
-                clog(result);
                 if (result) {
                     const data = this.createRasterLayer(result.name, result.provider);
-                    clog('about to add', data.layer, !!this.mapView);
+                    // clog('about to add', data.name, data.legend, !!this.mapView, result.provider);
                     this.mapComp.addLayer(data.layer, 'customLayers', this.customSources.length);
                     this.customSources.push(data);
-                    clog('layer added');
+                    // clog('layer added');
                     const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
                     savedSources.push(result.name);
-                    clog('saving added_providers', savedSources);
+                    // clog('saving added_providers', savedSources);
                     appSettings.setString('added_providers', JSON.stringify(savedSources));
                 }
             });
         });
     }
     deleteSource(name: string) {
-        let index = this.customSources.findIndex(d => d.name === name);
+        let index = -1;
+
+        this.customSources.some((d, i) => {
+            if (d.name === name) {
+                index = i;
+                return true;
+            }
+            return false;
+        });
+        // this.log('deleteSource', name, index);
         if (index !== -1) {
-            this.mapView.removeLayer(this.customSources[index].layer);
+            this.mapComp.removeLayer(this.customSources.getItem(index).layer, 'customLayers', index);
             this.customSources.splice(index, 1);
         }
         const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));

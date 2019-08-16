@@ -1,19 +1,15 @@
 import { BgService } from '~/services/android/BgService';
 
-declare global {
-    namespace akylas { export namespace alpi { export namespace maps {  class BgServiceBinder extends android.os.Binder {} } } }
-}
-
 @JavaProxy('akylas.alpi.maps.BgServiceBinder')
 export class BgServiceBinder extends android.os.Binder {
-    service: WeakRef<BgService>;
+    service: BgService;
     constructor() {
         super();
     }
     getService() {
-        return this.service.get();
+        return this.service;
     }
     setService(service: BgService) {
-        this.service = new WeakRef(service);
+        this.service = service;
     }
 }

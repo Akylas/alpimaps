@@ -3,8 +3,8 @@
         "target": "es5",
         "module": "esnext",
         "moduleResolution": "node",
-        "incremental": true,
-        "tsBuildInfoFile": ".tsbuildinfo",
+        // "incremental": true,
+        // "tsBuildInfoFile": ".tsbuildinfo",
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "importHelpers": true,
@@ -13,12 +13,13 @@
         "preserveSymlinks": true,
         "sourceMap": true,
         "esModuleInterop": true,
+        "downlevelIteration": true,
         "allowSyntheticDefaultImports": true,
         "noImplicitUseStrict": true,
         "lib": ["es6", "dom", "es2015.iterable"],
         "baseUrl": ".",
         "paths": {
-             "nativescript-vue": ["./node_modules/akylas-nativescript-vue"],
+             "nativescript-vue": ["./node_modules/nativescript-akylas-vue"],
            "~/*": ["app/*"],
             "*": ["./node_modules/tns-core-modules/*", "./node_modules/*"]
         }

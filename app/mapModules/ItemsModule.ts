@@ -5,6 +5,7 @@ import { CartoMap } from 'nativescript-carto/ui/ui';
 import { Route } from '~/components/DirectionsPanel';
 import Map from '~/components/Map';
 import MapModule from './MapModule';
+import Vue from 'nativescript-vue';
 
 import { NativeSQLite } from '@nano-sql/adapter-sqlite-nativescript';
 // MUST include nSQL from the lib path.
@@ -20,6 +21,7 @@ export const tables: InanoSQLTableConfig[] = [
         name: 'items',
         model: {
             'id:int': { pk: true, ai: true },
+            'provider:string': {},
             'properties:obj': {
                 default: () => undefined,
                 model: {
@@ -67,6 +69,7 @@ export const tables: InanoSQLTableConfig[] = [
         name: 'routes',
         model: {
             'id:int': { pk: true, ai: true },
+            'provider:string': {},
             'properties:obj': {
                 default: () => undefined,
                 model: {
@@ -104,9 +107,7 @@ export const tables: InanoSQLTableConfig[] = [
             },
 
             'route:obj': {
-                default: () => undefined,
                 model: {
-                    '*:any': {},
                     'totalTime:number': {},
                     'totalDistance:number': {},
                     'positions:geo[]': {},
@@ -120,9 +121,29 @@ export const tables: InanoSQLTableConfig[] = [
                             'turnAngle:number': {},
                             'streetName:string': {}
                         }
+                    },
+                    'profile:obj': {
+                        default: () => undefined,
+                        model: {
+                            'min:number[]': {},
+                            'max:number[]': {},
+                            'dplus:number': {},
+                            'dmin:number': {},
+                            'points:geo[]': {
+                                default: () => undefined
+                            },
+                            'data:obj[]': {
+                                default: () => undefined,
+                                model: {
+                                    'x:number': {},
+                                    'y:number': {}
+                                }
+                            }
+                        }
                     }
                 }
             },
+
             'zoomBounds:obj': {
                 default: () => undefined,
                 model: {
@@ -145,6 +166,7 @@ export interface Address {
     country?: string;
     name?: string;
     county?: string;
+    state?: string;
     // locality: r.address.getLocality(),
     neighbourhood?: string;
     postcode?: string;
@@ -162,6 +184,8 @@ export interface Item {
         class?: string;
         layer?: string;
     };
+    provider?: 'photon' | 'here' | 'carto';
+    categories?: string[];
     address?: Address;
     zoomBounds?: MapBounds;
     route?: Route;
@@ -175,39 +199,58 @@ export default class ItemsModule extends MapModule {
     localVectorLayer: VectorLayer;
 
     onMapReady(mapComp: Map, mapView: CartoMap) {
-        this.log('onMapReady');
+        // this.log('onMapReady');
         super.onMapReady(mapComp, mapView);
-        nSQL()
-            .createDatabase({
-                id: 'alpimaps_items',
-                mode: new NativeSQLite(),
-                tables,
-                types
+        Promise.resolve()
+            .then(() => {
+                return nSQL().createDatabase({
+                    id: 'alpimaps',
+                    mode: new NativeSQLite(),
+                    tables
+                    // types
+                });
             })
             .catch(err => {
                 this.log('catching error', err); // TODO: catch already created for now. need to look at how to do it
             })
             .then(() => {
-                this.log('database created');
+                // this.log('database created', nSQL().listDatabases());
+                // return nSQL().transaction([
                 return Promise.all([
                     nSQL('routes')
                         .query('select')
-                        .exec()
-                        .then(r => this.addItemsToLayer(r)),
+                        .exec(),
+                    // .then(this.addItemsToLayer),
                     nSQL('items')
                         .query('select')
                         .exec()
-                        .then(r => this.addItemsToLayer(r))
+                    // .exec()
+                    // .then(this.addItemsToLayer)
                 ]);
             })
+            .then(r => {
+                r.forEach(items => {
+                    // console.log('got result', items.length);
+                    this.addItemsToLayer(items);
+                });
+            })
             .catch(err => {
-                console.error(err);
+                Vue.prototype.$showError(err);
             });
     }
     onMapDestroyed() {
-        this.log('onMapDestroyed');
+        // this.log('onMapDestroyed');
         super.onMapDestroyed();
         nSQL().disconnect();
+
+        if (this.localVectorDataSource) {
+            this.localVectorDataSource.clear();
+            this.localVectorDataSource = null;
+        }
+        if (this.localVectorLayer) {
+            this.localVectorLayer.setVectorElementEventListener(null);
+            this.localVectorLayer = null;
+        }
     }
 
     getOrCreateLocalVectorLayer() {
@@ -274,7 +317,28 @@ export default class ItemsModule extends MapModule {
         }
     }
     addItemsToLayer(items: Item[]) {
+        // this.log('addItemsToLayer', items);
         items.forEach(this.addItemToLayer, this);
+    }
+    updateItem(item: Item) {
+        const tableId = item.route ? 'routes' : 'items';
+        // console.log('saveItem', !!item.route, !!item.vectorElement, item.route);
+        return nSQL(tableId)
+            .query('upsert', item)
+            .exec()
+            .then(r => {
+                const rItem = r[0] as Item;
+                const selectedElement = item.vectorElement;
+                if (selectedElement) {
+                    selectedElement.metaData = this.itemToMetaData(item);
+                    Object.assign(selectedElement, item.styleOptions);
+                    // this.localVectorDataSource.add(selectedElement);
+                    rItem.vectorElement = selectedElement;
+                } else {
+                    rItem.vectorElement = this.addItemToLayer(rItem);
+                }
+                return rItem; // return the first one
+            });
     }
     saveItem(item: Item, styleOptions?: MarkerStyleBuilderOptions | PointStyleBuilderOptions | LineStyleBuilderOptions) {
         if (item.route) {
@@ -293,11 +357,13 @@ export default class ItemsModule extends MapModule {
                 ...item.styleOptions
             };
         }
+        const tableId = item.route ? 'routes' : 'items';
         // console.log('saveItem', !!item.route, !!item.vectorElement, item.route);
-        return nSQL(item.route ? 'routes' : 'items')
+        return nSQL(tableId)
             .query('upsert', item)
             .exec()
             .then(r => {
+                // this.log('upsert done', tableId, r);
                 const rItem = r[0] as Item;
                 const selectedElement = item.vectorElement;
                 if (selectedElement) {

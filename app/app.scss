@@ -3,19 +3,29 @@
 @import './animations';
 @import '../node_modules/nativescript-vue-fab/style.css';
 
-label,
-button,
-mdbutton {
-    font-family: Roboto;
+.lato {
+    font-family: 'Lato Regular', 'res/lato';
 }
 
-.page {
-    background-color: $background-color;
+.mdi {
+    font-family: 'Material Design Icons', 'materialdesignicons-webfont', 'MaterialDesignIcons';
+}
+
+label,
+htmllabel,
+button,
+mdtextfield,
+mdbutton {
+    @extend .lato;
 }
 
 button {
     background-color: transparent;
     color: $primary-color;
+}
+label,
+htmllabel {
+    color: $text-color;
 }
 
 mdactivityindicator {
@@ -27,6 +37,14 @@ mdbutton {
     background-color: transparent;
     color: $primary-color;
     ripple-color: $dark-color;
+}
+
+.cardView {
+    border-radius: 2;
+    elevation: 1;
+    dynamic-elevation-offset: 5;
+    ripple-color: $primary-color;
+    background-color: white;
 }
 
 .buttonwhite {
@@ -45,10 +63,6 @@ mdbutton {
     ripple-color: $dark-color;
 }
 
-.mdi {
-    font-family: 'Material Design Icons', 'MaterialDesignIcons', 'materialdesignicons-webfont';
-}
-
 .maki {
     font-family: 'maki';
 }
@@ -64,9 +78,18 @@ mdbutton {
     ripple-color: $text-color;
     width: 44;
     height: 44;
+    border-radius: 22;
     font-size: 24;
     margin: 0;
     padding: 0;
+}
+.small-icon-btn {
+    @extend .icon-btn;
+    background-color: transparent;
+    width: 30;
+    height: 30;
+    border-radius: 15;
+    font-size: 16;
 }
 
 .label-icon-btn {
@@ -81,15 +104,13 @@ mdbutton {
     @extend .icon-btn;
     background-color: transparent;
     color: white;
-    ripple-color: white ;
-
+    ripple-color: white;
 }
 .icon-btn-text {
     @extend .icon-btn;
     background-color: white;
     color: $primary-color;
     ripple-color: $dark-color;
-
 }
 .icon-btn-rounded {
     border-radius: 22;
@@ -97,6 +118,8 @@ mdbutton {
 
 .floating-btn {
     @extend .mdi, .buttonthemed;
+    elevation: 6;
+    dynamicelevationoffset: 6;
     font-size: 24;
     padding: 0;
     margin: 8;
@@ -107,6 +130,8 @@ mdbutton {
 .small-floating-btn {
     @extend .mdi, .buttontext;
     color: $primary-color;
+    elevation: 3;
+    dynamicelevationoffset: 3;
     font-size: 24;
     padding: 0;
     width: 40;
@@ -116,15 +141,6 @@ mdbutton {
 }
 .section-title {
     font-size: 10;
-}
-
-.list-group {
-    .list-group-item {
-        padding: 0;
-    }
-    .thumb {
-        margin-right: 0;
-    }
 }
 
 .borderBottom {
@@ -146,18 +162,26 @@ mdbutton {
     border-left-width: 1;
 }
 
+
+.fab-item-title {
+    background-color: #444;
+    vertical-text-alignment: middle;
+    border-radius: 6;
+    color: white;
+}
+
 .fab-button,
 .fab-item {
-    background-color: $dark-color;
+    background-color: $primary-color;
+    ripple-color: $dark-color;
 }
 .fab-icon,
 .fab-item {
     color: white;
 }
 .fab-backdrop {
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.4);
 }
-
 
 .menuButtons {
     padding-left: 12;
@@ -173,5 +197,36 @@ mdbutton {
 }
 .menuButtons mdbutton {
     @extend .menu-btn;
+}
 
+.route-details {
+    padding: 10;
+}
+
+.route-details-label {
+    font-size: 14;
+    horizontal-alignment: left;
+    vertical-alignment: center;
+    text-alignment: left;
+    color: black;
+}
+.route-details-icon {
+    @extend .mdi;
+    margin-right: 10;
+    color: gray;
+}
+
+.searchView {
+    vertical-alignment: top;
+}
+
+// .android .overMapWidgets {
+//     padding: 0 0 $navigation-bar-height 0;
+// }
+
+.navigationBarOverlay {
+    height: $navigation-bar-height;
+    width: 100%;
+    background-color: #aa000000;
+    vertical-alignment: bottom;
 }

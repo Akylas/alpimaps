@@ -1,9 +1,11 @@
 
 @name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
 @maki_icon: [nuti::maki-[subclass]] ? [nuti::maki-[subclass]] : [nuti::maki-[class]];
+// @id_test: (([osm_id]) = [nuti::selected_id]) ? #f00 : #fff;
+// @name_test: (([name]) = [nuti::selected_name]) ? #0f0 : #fff;
 
-#water_name[class=ocean][zoom>=2][zoom<=8],
-#water_name[class=sea][zoom>=5]{
+#water_name[class=ocean][zoom>=3][zoom<=9],
+#water_name[class=sea][zoom>=6]{
 	text-name: @name;
 	text-face-name: @mont_it_md;
 	text-wrap-width: 50;
@@ -21,9 +23,9 @@
 }
 
 #park[rank=1][zoom<=16]{
-	[class=nature_reserve][zoom>=5],
-	[class=national_park][zoom>=5],
-	[class=protected_area][zoom>=10]{
+	[class=nature_reserve][zoom>=6],
+	[class=national_park][zoom>=6],
+	[class=protected_area][zoom>=11]{
 		text-name: @name;
 		text-face-name: @mont_it_md;
 		text-wrap-width: 50;
@@ -218,8 +220,8 @@
 		}
 	}
 	[class=village] {
-		[zoom>=12][zoom<=14][rank<=11],
-		[zoom>=15][zoom<=16]{
+		[zoom>=10][zoom<=12][rank<=11],
+		[zoom>=13]{
 			text-name: @name;
 			text-face-name: @mont_md;
 			text-placement: [nuti::texts3d];
@@ -284,19 +286,24 @@
 
 #waterway{
 	[class=river][zoom>=10],
-	[class=stream][zoom>=13]
+	[class=stream][zoom>=12]
 	[zoom>=13]{
-
+		// text-allow-overlap: true;
+	// text-spacing: 100;
 	text-name: @name;
 	text-face-name: @mont;
 	text-fill: @water_label;
-	text-avoid-edges: true;
-	text-halo-rasterizer: fast;
+	text-avoid-edges: false;
+	// text-halo-rasterizer: fast;
 	text-placement: line;
 	text-dy:-1;
-	text-character-spacing: 1;
-	text-wrap-width: step([zoom], (13, 80), (17, 150));
-	text-size: linear([view::zoom], (10, 7.0), (15, 8.0), (16, 10.0), (17, 11.0));
+	text-wrap-before: true;
+	// text-character-spacing: 1;
+	// text-wrap-width: step([zoom], (13, 80), (17, 150));
+	text-size: linear([view::zoom], (10, 7.0), (15, 8.0), (16, 10.0), (17, 10.0));
+	[class=stream] {
+		text-size: linear([view::zoom], (10, 6.0), (15, 7.0), (17, 9.0));
+	}
 }
 }
 
@@ -333,11 +340,11 @@
 	[class=trunk][zoom>=10],
 	[class=primary][zoom>=14],
 	[class=track][zoom>=15],
-	[class=path][zoom>=17],
-	[class=service][zoom>=17],
-	[class=minor][zoom>=16],
 	[class=tertiary][zoom>=15],
-	[class=secondary][zoom>=15]{
+	[class=secondary][zoom>=15],
+	[class=minor][zoom>=16],
+	[class=service][zoom>=17],
+	[class=path][zoom>=17]{
 		text-avoid-edges: false;
 		text-name: @name;
 		text-placement: line;
@@ -347,21 +354,21 @@
 		text-halo-fill: @minor_halo;
 		text-halo-radius: 1;
 		text-halo-rasterizer: fast;
-		text-min-distance: 10;
-		text-size: linear([view::zoom], (13, 6.0), (18, 10.0));
+		text-min-distance: 5;
+		text-size: linear([view::zoom], (13, 6.0), (18, 8.0));
 		text-vertical-alignment: middle;
 		
 		[class=motorway],
 		[class=trunk],
 		[class=primary]{
 			text-halo-fill: @primary_halo;
-			text-size: linear([view::zoom], (13, 9.0), (18, 13.0));
+			text-size: linear([view::zoom], (13, 6.0), (18, 13.0)) + 0.00004;
 			[class=motorway], [class=trunk] { text-halo-fill: @motorway_halo; }
 		}
 		
 		[class=secondary],
 		[class=tertiary]{
-			text-size: linear([view::zoom], (13, 10.0), (18, 12.0)) ;
+			text-size: linear([view::zoom], (13, 6.0), (18, 12.0)) + 0.00003;
 		}
 		[class=minor]{
 			text-size: linear([view::zoom], (13, 6.0), (18, 10.0)) + 0.00002;
@@ -386,36 +393,82 @@
 }
 
 #poi {
-	[class=lodging][rank<=10],
-	[zoom=14][rank<=1][class!='information'][class!='bus'][subclass!='tram_stop'],
-	[zoom=15][rank<=2][class!='toilets'],
+	// [osm_id = 'nuti::selected_id'],
+	// [name = 'nuti::selected_name'],
+	[class=campsite][rank<=10],
+	[subclass='alpine_hut'][rank<=10],
+	// [class=school],
+	[zoom=14][rank<=1][class!='information'][class!='toilets'][class!='bus'][subclass!='tram_stop'][subclass!='station'][class!='picnic_site'],
+	[zoom=15][rank<=2][class!='toilets'][class!='information'][class!='bus'][subclass!='tram_stop'][subclass!='station'],
 	[zoom=16][rank<=3],
 	[zoom=17][rank<=4],
 	[zoom>=15][class=park][rank<=10],
 	[zoom>=16][class=park][rank<=20],
 	[zoom>=17][class=park][rank<=30],
 	[zoom>=18] {
-		::icon[class!=null] {
-			text-placement: [nuti::markers3d];
-			text-name: @maki_icon;
-			text-size: 14 - 0.000001 * [rank];
-			text-face-name: @maki;
-			text-fill: #333;
-			text-opacity:0.8;
-			text-feature-id: [name];
-		}
-		::label[name!=null] {
-			text-name: @name;
-			text-face-name: @mont;
-			text-placement: [nuti::markers3d];
-			text-line-spacing: -1;
-			text-wrap-before: true;
-			text-avoid-edges: true;
-			text-fill: @poi_dark;
-			text-size: 9 - 0.000001 * [rank];
-			text-wrap-width: step([zoom], (15, 80), (16, 90), (18, 100));
-			text-feature-id: [name];
-			[class!=null] { text-dy: 10; }
+
+		[class='information']['nuti::poi_information'=1],[class!='information']{
+			::icon[class!=null]{
+					text-placement: [nuti::markers3d];
+					text-name: @maki_icon;
+					text-size: 14 - 0.000001 * [rank];
+					text-face-name: @maki;
+					// text-opacity:0.8;
+					text-feature-id: [name];
+		
+					text-halo-fill: @peak_halo;
+					text-halo-rasterizer: fast;
+					text-halo-radius: 1;
+					text-fill: #495063;
+					[class='park'] {
+						text-fill: #76BC54;
+					}
+					[subclass='alpine_hut'],[class='campsite'] {
+						text-fill: #854d04;
+					}
+					[class='hospital'] {
+						text-fill: #4AA0E7;
+					}
+					[class='information'] {
+						text-fill: #F3C600;
+					}
+					[class='bakery'], [class='restaurant'] {
+						text-fill: #EF8000;
+					}
+			}
+			::label[name!=null] {
+				text-name: @name;
+				text-face-name: @mont;
+				text-placement: [nuti::markers3d];
+				text-line-spacing: -1;
+				text-wrap-before: true;
+				text-avoid-edges: true;
+				text-fill: @poi_dark;
+				text-size: 9 - 0.000001 * [rank];
+				text-wrap-width: step([zoom], (15, 80), (16, 90), (18, 100));
+				text-feature-id: [name];
+				[class!=null] { text-dy: 10; }
+				text-halo-fill: @peak_halo;
+				text-halo-rasterizer: fast;
+				text-halo-radius: 1;
+
+				// text-fill: #495063;
+				// [class='park'] {
+				// 	text-fill: #76BC54;
+				// }
+				// [class='lodging'] {
+				// 	text-fill: #854d04;
+				// }
+				// [class='hospital'] {
+				// 	text-fill: #4AA0E7;
+				// }
+				// [class='information'] {
+				// 	text-fill: #F3C600;
+				// }
+				// [class='bakery'], [class='restaurant'] {
+				// 	text-fill: #EF8000;
+				// }
+			}
 		}
 	}
 }
@@ -424,7 +477,7 @@
 	[zoom>=12][ele>300],
 	[zoom>=14][ele>200],
 	[zoom>=16][ele>0] {
-		[index=5][zoom>=14],
+		[index=5][zoom>=16],
 		[index=10] {
 			text-name: [ele]+' m';
 			text-face-name: @mont;
@@ -441,6 +494,8 @@
 	}
 }
 #mountain_peak {
+	// [osm_id = 'nuti::selected_id'],
+	// [name = 'nuti::selected_name'],
 	[zoom>=4][comment =~'.*Highest.*'],
 	[zoom>=4][comment =~'.*highest.*'],
 	[zoom>=7][ele>=4000],
@@ -456,8 +511,8 @@
 			text-fill: @peak_label;
 			text-halo-fill: @peak_halo;
 			text-feature-id: [name];
-			text-halo-radius: 1;
 			text-halo-rasterizer: fast;
+			text-halo-radius: 1;
 		}
 	}
 	[zoom>=4][comment =~'.*Highest.*'],

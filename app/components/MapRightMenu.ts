@@ -4,55 +4,85 @@ import * as appSettings from 'tns-core-modules/application-settings/application-
 import { profile } from 'tns-core-modules/profiling';
 import { action } from 'ui/dialogs';
 import { Component } from 'vue-property-decorator';
-import { SourceItem } from '~/mapModules/CustomLayersModule';
+import CustomLayersModule, { SourceItem } from '~/mapModules/CustomLayersModule';
 import BaseVueComponent from './BaseVueComponent';
 import Map, { MapModules } from './Map';
 import { CartoMap } from 'nativescript-carto/ui/ui';
+import { IMapModule } from '~/mapModules/MapModule';
+import { ObservableArray } from 'tns-core-modules/data/observable-array/observable-array';
 
 @Component({
     components: {}
 })
-export default class MapRightMenu extends BaseVueComponent {
+export default class MapRightMenu extends BaseVueComponent implements IMapModule {
+    mapView: CartoMap;
+    mapComp: Map;
+    customLayers: CustomLayersModule = null;
+    customSources: ObservableArray<SourceItem> = new ObservableArray([]);
+    currentLegend: string = null;
+    onMapReady(mapComp: Map, mapView: CartoMap) {
+        this.mapView = mapView;
+        this.mapComp = mapComp;
+        this.customLayers = this.mapComp.mapModules.customLayers;
+        this.customSources = this.customLayers.customSources;
+        // this.log('onMapReady', this.customSources);
+    }
+    onMapDestroyed() {
+        // this.log('onMapDestroyed');
+        this.mapView = null;
+        this.mapComp = null;
+        this.customLayers = null;
+        this.customSources = null;
+    }
+
     mapModule<T extends keyof MapModules>(id: T) {
-        return this.mapComp.mapModules[id];
+        if (this.mapComp) {
+            return this.mapComp.mapModules[id];
+        }
+        return null;
     }
     constructor() {
         super();
-    }
-    get customSources() {
-        return this.mapModule('customLayers').customSources;
-    }
-    mMapComp: Map;
-    mCartoMap: CartoMap;
-    get cartoMap() {
-        if (!this.mCartoMap && this.mapComp) {
-            this.mCartoMap = this.mapComp.cartoMap;
-        }
-        return this.mCartoMap;
-    }
 
-    get mapComp() {
-        if (!this.mMapComp) {
-            this.mMapComp = this.$getMapComponent();
-        }
-        return this.mMapComp;
-    }
-    @profile
-    mounted() {
-        super.mounted();
-        this.log('mounted');
         this.bShow3DBuildings = appSettings.getBoolean('show3DBuildings', false);
         this.bShowContourLines = appSettings.getBoolean('showContourLines', false);
         this.bShowGlobe = appSettings.getBoolean('showGlobe', false);
+        this.bZoomBiais = appSettings.getNumber('zoomBiais', 0);
+        if (isNaN(this.bZoomBiais)) {
+            this.bZoomBiais = 0;
+        }
+    }
+    // get customSources() {
+    //     this.log('get customSources', !!this.mapComp);
+    //     if (this.mapComp) {
+    //         return this.customLayers.customSources;
+    //     }
+    //     return [];
+    // }
+
+    // get mapComp() {
+    //     this.log('get mapComp1', !!this.mMapComp);
+    //     if (!this.mMapComp) {
+    //         this.mMapComp = this.$getMapComponent();
+    //         this.log('get mapComp', this.mMapComp);
+    //     }
+    //     return this.mMapComp;
+    // }
+
+    @profile
+    mounted() {
+        super.mounted();
+        this.$getMapComponent().mapModules.rightMenu = this;
+        // this.log('mounted', !!this.mapComp);
     }
     onLayerOpacityChanged(item, event) {
         const opacity = event.value / 100;
+        // this.log('onLayerOpacityChanged', item.name, opacity);
         item.layer.opacity = opacity;
         appSettings.setNumber(item.name + '_opacity', opacity);
         item.layer.visible = opacity !== 0;
-        this.cartoMap.requestRedraw();
+        this.mapView.requestRedraw();
         // item.layer.refresh();
-        console.log('onLayerOpacityChanged', item.name, event.value, item.opacity);
     }
 
     onSourceLongPress(item: SourceItem) {
@@ -66,11 +96,11 @@ export default class MapRightMenu extends BaseVueComponent {
         action({
             title: `${item.name} Source`,
             message: 'Pick Action',
-            actions: ['delete', 'clear_cache'].map(s => localize(s))
+            actions: actions.map(s => localize(s))
         }).then(result => {
             switch (result) {
                 case 'delete': {
-                    this.mapModule('customLayers').deleteSource(item.name);
+                    this.customLayers.deleteSource(item.name);
                     break;
                 }
                 case 'clear_cache': {
@@ -79,8 +109,15 @@ export default class MapRightMenu extends BaseVueComponent {
                     break;
                 }
                 case 'legend':
-                    const PhotoViewer = require('nativescript-photoviewer');
-                    new PhotoViewer().showGallery([item.legend]);
+                    // this.log('showing legend', item.legend);
+                    this.currentLegend = item.legend;
+                    // if (item.legend.endsWith('.html')) {
+
+                    // } else {
+                    //     const PhotoViewer = require('nativescript-photoviewer');
+                    //     new PhotoViewer().showGallery([item.legend]);
+                    // }
+
                     break;
             }
         });
@@ -138,5 +175,23 @@ export default class MapRightMenu extends BaseVueComponent {
         if (this.mapComp) {
             this.mapComp.contourLinesOpacity = value;
         }
+    }
+
+    bZoomBiais = 0;
+    get zoomBiais() {
+        return this.bZoomBiais + '';
+    }
+    set zoomBiais(value: string) {
+        this.bZoomBiais = parseFloat(value);
+        if (isNaN(this.bZoomBiais)) {
+            this.bZoomBiais = 0;
+        }
+        appSettings.setNumber('zoomBiais', this.bZoomBiais);
+        if (this.mapComp) {
+            this.mapComp.zoomBiais = this.bZoomBiais;
+        }
+    }
+    onZoomBiaisChanged(e) {
+        this.zoomBiais = e.value;
     }
 }

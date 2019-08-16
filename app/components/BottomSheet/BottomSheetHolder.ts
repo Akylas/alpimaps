@@ -24,25 +24,30 @@ export default class BottomSheetHolder extends BaseVueComponent {
         this.bottomSheet = comp;
         if (comp) {
             comp.$on('listViewAtTop', value => {
+                // this.log('listViewAtTop changed', value);
                 this.panEnabled = value;
-                if (value && this._isPanning) {
-                    this.bottomSheet && (this.bottomSheet.scrollEnabled = !value);
-                }
+                // if (value && this._isPanning) {
+                // if (this.bottomSheet) {
+                //     this.bottomSheet.scrollEnabled = !value;
+                // }
+                // }
             });
         }
     }
     opened = false;
     _isPanning = false;
     set isPanning(value) {
+        // console.log('set isPanning', value);
         if (value !== this._isPanning) {
             this._isPanning = value;
-            // console.log('set isPanning', value, this.panEnabled);
+            // console.log('set isPanning1', value, this.panEnabled, this._isPanning);
             // if (value && this.panEnabled) {
             this.bottomSheet && (this.bottomSheet.scrollEnabled = !(value && this.panEnabled));
             // }
         }
     }
     get isPanning() {
+        // console.log('get isPanning1', this._isPanning);
         return this._isPanning;
     }
     isAnimating = false;
@@ -50,15 +55,24 @@ export default class BottomSheetHolder extends BaseVueComponent {
     viewHeight = 0;
     mCurrentViewHeight = 0;
     set currentViewHeight(value) {
+        value = Math.round(value);
+        if (this.bottomSheet) {
+            // console.log('currentViewHeight', this.translationMaxOffset, this.mCurrentViewHeight, value);
+            this.bottomSheet.scrollEnabled = this.mCurrentViewHeight === value;
+        }
         this.mCurrentViewHeight = value;
+        value += this.bottomDecale;
+        const delta = Math.max(this.viewHeight - value, 0);
         this.$emit('scroll', {
             top: value,
-            percentage: (this.viewHeight - value) / this.viewHeight,
-            height: this.viewHeight - value
+            percentage: delta / this.viewHeight,
+            height: delta
         } as BottomSheetHolderScrollEventData);
     }
     get currentViewHeight() {
-        return this.mCurrentViewHeight;
+        const result = this.mCurrentViewHeight;
+
+        return result;
     }
     currentSheetTop = 0;
 
@@ -66,6 +80,10 @@ export default class BottomSheetHolder extends BaseVueComponent {
         default: () => [50]
     })
     peekerSteps;
+    @Prop({
+        default: 0
+    })
+    bottomDecale;
     // @Prop()
     // shouldPan: Function;
     @Prop({
@@ -119,27 +137,36 @@ export default class BottomSheetHolder extends BaseVueComponent {
     }
     get scrollingView() {
         return this.$refs['scrollingView'].nativeView as View;
+        // return this.bottomSheet.nativeView;
     }
     get translationMaxOffset() {
-        return this.peekerSteps.slice(-1)[0];
+        let result = this.peekerSteps.slice(-1)[0];
+        result += this.bottomDecale;
+        return result;
     }
     onLayoutChange() {
-        this.viewHeight = layout.toDeviceIndependentPixels(this.nativeView.getMeasuredHeight());
-        if (this.currentViewHeight === 0) {
+        const viewHeight = Math.round(layout.toDeviceIndependentPixels(this.nativeView.getMeasuredHeight()));
+        // this.log('onLayoutChange', viewHeight, this.viewHeight, this.currentViewHeight, this.translationMaxOffset);
+        if (this.mCurrentViewHeight === 0) {
+            this.viewHeight = viewHeight;
             this.currentViewHeight = this.viewHeight;
+        } else {
+            const shown = this.viewHeight - this.mCurrentViewHeight;
+            this.viewHeight = viewHeight;
+            this.currentViewHeight = this.viewHeight - shown;
         }
     }
     onGestureState(args: GestureStateEventData) {
         const { state, prevState, extraData, view } = args.data;
 
-        console.log('onGestureState', state, prevState, GestureState.ACTIVE, this.panEnabled);
         this.updateIsPanning(state);
+        // this.log('onGestureState', state, prevState, GestureState.ACTIVE, this._isPanning, this.panEnabled);
         if (!this.panEnabled) {
             return;
         }
         if (prevState === GestureState.ACTIVE) {
             const { velocityY, translationY } = extraData;
-            const viewTop = this.currentViewHeight - this.viewHeight;
+            const viewTop = this.mCurrentViewHeight - this.viewHeight;
 
             const dragToss = 0.05;
             const endOffsetY = viewTop + translationY - this.prevDeltaY + dragToss * velocityY;
@@ -162,22 +189,29 @@ export default class BottomSheetHolder extends BaseVueComponent {
         }
     }
     updateIsPanning(state: GestureState) {
-        const viewTop = this.currentViewHeight - this.viewHeight;
-        this.isPanning = (state === GestureState.ACTIVE || state === GestureState.BEGAN) && viewTop !== -this.translationMaxOffset;
+        const viewTop = this.mCurrentViewHeight - this.viewHeight;
+        this.isPanning = state === GestureState.ACTIVE || state === GestureState.BEGAN;
+        // if (this._isPanning) {
+
+        // }
+
+        // && viewTop !== -this.translationMaxOffset;
+        // this.log('updateIsPanning', state, viewTop, this.translationMaxOffset, this._isPanning);
     }
     onGestureTouch(args: GestureTouchEventData) {
         const data = args.data;
+        // this.log('onGestureTouch', this._isPanning, this.panEnabled, this.isAnimating, data.state, data.extraData.translationY, this.prevDeltaY);
+
         if (data.state !== GestureState.ACTIVE) {
             return;
         }
-        // console.log('onGestureTouch', this.isPanning, this.panEnabled, this.isAnimating, data.state, data.extraData.translationY, this.prevDeltaY);
         const deltaY = data.extraData.translationY;
-        if (this.isAnimating || !this.isPanning || !this.panEnabled) {
+        if (this.isAnimating || !this._isPanning || !this.panEnabled) {
             this.prevDeltaY = deltaY;
             return;
         }
 
-        const viewTop = this.currentViewHeight - this.viewHeight;
+        const viewTop = this.mCurrentViewHeight - this.viewHeight;
 
         const y = deltaY - this.prevDeltaY;
         // console.log('onPan', 'moving', viewTop, deltaY, this.prevDeltaY, y, this.translationMaxOffset);
@@ -196,15 +230,24 @@ export default class BottomSheetHolder extends BaseVueComponent {
         }
         this.currentViewHeight = this.viewHeight + trY;
     }
-
+    currentStep = 0;
     scrollSheetToPosition(position, duration = OPEN_DURATION) {
-        const viewTop = this.currentViewHeight - this.viewHeight;
+        const viewTop = this.mCurrentViewHeight - this.viewHeight;
+
+        if (position > 0) {
+            position += this.bottomDecale;
+        }
+
+        this.currentStep = this.peekerSteps.indexOf(position);
+        // this.log('scrollSheetToPosition', position, this.currentViewHeight, this.viewHeight);
         return new Promise(resolve => {
+            // this.log('scrollSheetToPosition2', position, viewTop);
             new Animation.Animation({ value: viewTop })
-                .to({ value: -position }, OPEN_DURATION)
+                .to({ value: -position }, duration)
                 .easing(Animation.Easing.Quadratic.Out)
                 .onUpdate(obj => {
                     this.currentViewHeight = this.viewHeight + obj.value;
+                    // this.log('onUpdate', this.viewHeight, obj.value);
                 })
                 .onComplete(resolve)
                 .onStop(resolve)
@@ -225,9 +268,14 @@ export default class BottomSheetHolder extends BaseVueComponent {
         // if (!!this.opened) {
         //     return Promise.resolve();
         // }
-        this.scrollSheetToPosition(this.peekerSteps[0]);
+        // this.log('peek', this.opened);
+        const steps = this.peekerSteps;
+        const currentStep = this.currentStep;
+        const dest = currentStep >= 0 && currentStep < steps.length ? steps[this.currentStep] : steps[0];
+        this.scrollSheetToPosition(dest);
     }
     close() {
+        // this.log('close', this.opened);
         if (!this.opened) {
             return Promise.resolve();
         }

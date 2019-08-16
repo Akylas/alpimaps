@@ -1,7 +1,7 @@
 <template>
     <StackLayout class="page" :height="height">
         <GridLayout rows="auto,*,auto" margin="12 20 0 20">
-            <Label row="0"  paddingBottom="15" class="h4" fontWeight="800" :text="title | capitalize" verticalAlignment="center" textWrap="true" />
+            <Label row="0"  paddingBottom="15" class="h4" fontWeight="800" :text="title | capitalize" verticalAlignment="center" textWrap />
             <ListView row="1" for="item in options" class="list-group" @itemTap="onItemTap">
                 <v-template>
                     <GridLayout columns="*" class="list-group-item" orientation="horizontal" paddingBottom="4">
@@ -15,7 +15,7 @@
                 </v-template>
             </ListView>
             <GridLayout rows="auto" columns="*,auto,auto" row="2" horizontalAlignment="right" orientation="horizontal" borderTopColor="#EEEEEE" borderTopWidth="1" width="100%">
-                <MDButton row="0" col="2" variant="text" class="buttontext" :text="'cancel' | L" @tap="close()" />
+                <MDButton row="0" col="2" variant="text" class="buttontext" :text="$t('cancel') @tap="close()" />
             </GridLayout>
         </GridLayout>
     </StackLayout>

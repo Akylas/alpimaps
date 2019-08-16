@@ -1,10 +1,16 @@
 import * as Platform from 'platform';
-import dayjs from 'dayjs';
-import LocalizedFormat from 'dayjs/plugin/localizedFormat';
-dayjs.extend(LocalizedFormat);
+// import dayjs from 'dayjs';
+// import LocalizedFormat from 'dayjs/plugin/localizedFormat';
+// dayjs.extend(LocalizedFormat);
 // const dayjs: (...args) => Dayjs = require('dayjs');
+import moment from 'moment';
+import * as momentDurationFormatSetup from 'moment-duration-format';
+momentDurationFormatSetup(moment);
+// var moment = require("moment");
+// var momentDurationFormatSetup = require("moment-duration-format");
 
 import humanUnit from 'human-unit';
+import { Address } from '~/mapModules/ItemsModule';
 const timePreset = {
     factors: [1000, 60, 60, 24],
     units: ['ms', 's', 'min', 'hour', 'day']
@@ -12,6 +18,11 @@ const timePreset = {
 const distancePreset = {
     factors: [1000],
     units: ['m', 'km']
+};
+
+const elevationPreset = {
+    factors: [],
+    units: ['m']
 };
 
 const supportedLanguages = ['en', 'fr'];
@@ -26,7 +37,7 @@ export function getCurrentDateLanguage() {
 
 export function convertTime(date, formatStr: string) {
     // clog('convertTime', date, formatStr);
-    return dayjs(date).format(formatStr);
+    return moment(date).format(formatStr);
 }
 
 // function createDateAsUTC(date) {
@@ -35,17 +46,31 @@ export function convertTime(date, formatStr: string) {
 
 export function convertDuration(milliseconds) {
     // clog('convertDuration', date, formatStr, test, result);
-    return humanUnit(milliseconds, timePreset);
+    return formatDuration(milliseconds);
 }
 export function convertDistance(meters) {
     // clog('convertDuration', date, formatStr, test, result);
     return humanUnit(meters, distancePreset);
+}
+export function convertElevation(meters) {
+    // clog('convertDuration', date, formatStr, test, result);
+    return humanUnit(meters, elevationPreset);
+}
+
+export function formatDuration(_time): string {
+    if (_time < 0) {
+        return '';
+    }
+    return (moment.duration(_time) as any).format('h [hrs], m [min]', {
+        trim: false
+    });
 }
 
 export function convertValueToUnit(value: any, unit, otherParam?) {
     if (value === undefined || value === null) {
         return ['', ''];
     }
+    const isString = typeof value === 'string';
     // clog('convertValueToUnit', value, unit, otherParam);
     switch (unit) {
         case 'duration':
@@ -55,8 +80,11 @@ export function convertValueToUnit(value: any, unit, otherParam?) {
             return [convertTime(value, 'M/d/yy h:mm a'), ''];
 
         case 'm':
-            return [value.toFixed(), unit];
+            return [isString ? value : value.toFixed(), unit];
         case 'km':
+            if (isString) {
+                return [value, unit];
+            }
             if (value < 1000) {
                 return [value.toFixed(), 'm'];
             } else if (value > 100000) {
@@ -65,10 +93,19 @@ export function convertValueToUnit(value: any, unit, otherParam?) {
                 return [(value / 1000).toFixed(1), unit];
             }
         case 'km/h':
+            if (isString) {
+                return [value, unit];
+            }
             return [value.toFixed(), unit];
         case 'min/km':
+            if (isString) {
+                return [value, unit];
+            }
             return [value === 0 ? value.toFixed() : (60 / value).toFixed(1), unit];
         default:
+            if (isString) {
+                return [value, unit];
+            }
             return [value.toFixed(), unit];
     }
 }
@@ -81,4 +118,34 @@ export function formatValueToUnit(value: any, unit, options?: { prefix?: string;
     return result;
 }
 
+export function formatAddress(address: Address, part = 0) {
+    let result = '';
+    if (part !== 2) {
+        if (address.houseNumber) {
+            result += address.houseNumber + ' ';
+        }
+        if (address.road) {
+            result += address.road + ' ';
+        }
+    }
 
+    if (part === 1 && result.length > 0) {
+        return result;
+    }
+    if (part === 2 && result.length === 0) {
+        return result;
+    }
+    if (address.postcode) {
+        result += address.postcode + ' ';
+    }
+    if (address.county) {
+        result += address.county + ' ';
+    }
+    // if (address.county) {
+    //     result += address.county + ' ';
+    // }
+    if (address.region) {
+        result += address.region + ' ';
+    }
+    return result.trimRight();
+}
