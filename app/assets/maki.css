@@ -83,6 +83,9 @@
 .maki-campsite:before {
   content: "\e91b";
 }
+.maki-camping:before {
+  content: "\e91b";
+}
 .maki-car_rental:before {
   content: "\e91c";
 }

@@ -1,5 +1,5 @@
+import { ad, layout } from 'tns-core-modules/utils/utils';
 import { throttle } from 'helpful-decorators';
-import { CartoMapStyle, ClickType, MapPos, ScreenPos, toNativeScreenPos } from 'nativescript-carto/core/core';
 import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
 import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
 import { Layer } from 'nativescript-carto/layers/layer';
@@ -11,14 +11,17 @@ import { Line, LineEndType, LineJointType, LineStyleBuilder, LineStyleBuilderOpt
 import { Marker, MarkerStyleBuilder, MarkerStyleBuilderOptions } from 'nativescript-carto/vectorelements/marker';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from 'nativescript-carto/vectorelements/point';
 import { MBVectorTileDecoder } from 'nativescript-carto/vectortiles/vectortiles';
+import { allowSleepAgain, keepAwake } from 'nativescript-insomnia';
 import { localize } from 'nativescript-localize';
 import * as perms from 'nativescript-perms';
-import Vue from 'nativescript-vue';
-import * as appSettings from 'tns-core-modules/application-settings/application-settings';
+import * as SocialShare from 'nativescript-social-share';
+import { AppURL, handleOpenURL } from 'nativescript-urlhandler';
+import * as appSettings from 'tns-core-modules/application-settings';
 import { Folder, knownFolders, path } from 'tns-core-modules/file-system';
 import { screen } from 'tns-core-modules/platform';
 import { profile } from 'tns-core-modules/profiling';
-import { layout } from 'tns-core-modules/utils/utils';
+import { GridLayout } from 'tns-core-modules/ui/layouts/grid-layout';
+import { CartoMapStyle, ClickType, MapPos, ScreenPos, toNativeScreenPos } from 'nativescript-carto/core/core';
 import { action } from 'ui/dialogs';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import { GeoHandler } from '~/handlers/GeoHandler';
@@ -27,19 +30,22 @@ import ItemFormatter from '~/mapModules/ItemFormatter';
 import ItemsModule, { Item } from '~/mapModules/ItemsModule';
 import MapModule from '~/mapModules/MapModule';
 import UserLocationModule from '~/mapModules/UserLocationModule';
+import { NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
 import { getBoundsZoomLevel, getCenter } from '~/utils/geo';
 import { clog } from '~/utils/logging';
-import { actionBarButtonHeight, primaryColor } from '../variables';
-import BgServiceComponent from './BgServiceComponent';
+import { actionBarButtonHeight, actionBarHeight, navigationBarHeight, primaryColor } from '../variables';
+import App from './App';
+import BgServicePageComponent from './BgServicePageComponent';
 import BottomSheet from './BottomSheet';
 import BottomSheetHolder, { BottomSheetHolderScrollEventData } from './BottomSheet/BottomSheetHolder';
 import DirectionsPanel from './DirectionsPanel';
+import MapRightMenu from './MapRightMenu';
 import MapScrollingWidgets from './MapScrollingWidgets';
-import MapWidgets from './MapWidgets';
 import PackagesDownloadComponent from './PackagesDownloadComponent';
 import Search from './Search';
-import TopSheetHolder from './TopSheetHolder';
-import App from './App';
+import TopSheetHolder, { DEFAULT_TOP, TopSheetHolderScrollEventData } from './TopSheetHolder';
+
+const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
 const tinycolor = require('tinycolor2');
 
@@ -47,9 +53,9 @@ function distance(pos1: ScreenPos, pos2: ScreenPos) {
     return Math.sqrt(Math.pow(pos1.x - pos2.x, 2) + Math.pow(pos1.y - pos2.y, 2));
 }
 
-export type LayerType = 'map' | 'customLayers' | 'selection' | 'items' | 'directions' | 'userLocation';
+export type LayerType = 'map' | 'customLayers' | 'selection' | 'items' | 'directions' | 'userLocation' | 'search';
 
-const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'selection', 'items', 'directions', 'userLocation'];
+const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'selection', 'items', 'directions', 'search', 'userLocation'];
 const mapLanguages = [
     'ar',
     'az',
@@ -110,34 +116,36 @@ const mapLanguages = [
 export interface MapModules {
     // [k: string]: MapModule;
     mapScrollingWidgets: MapScrollingWidgets;
-    mapWidgets: MapWidgets;
+    // mapWidgets: MapWidgets;
     search: Search;
     customLayers: CustomLayersModule;
     directionsPanel: DirectionsPanel;
     userLocation: UserLocationModule;
     items: ItemsModule;
     formatter: ItemFormatter;
+    rightMenu: MapRightMenu;
+    bottomSheet: BottomSheet;
 }
 
-const defaultLiveSync = global.__onLiveSync;
+let defaultLiveSync = global.__onLiveSync;
 @Component({
     components: {
         BottomSheet,
         BottomSheetHolder,
         TopSheetHolder,
         Search,
-        MapWidgets,
+        // MapWidgets,
         MapScrollingWidgets
     }
 })
-export default class Map extends BgServiceComponent {
+export default class Map extends BgServicePageComponent {
     mapModules: MapModules;
 
     @Prop({ default: false }) readonly licenseRegistered!: boolean;
-    @Watch('licenseRegistered')
-    onLicenseRegisteredChanged(value) {
-        clog('onLicenseRegisteredChanged', value);
-    }
+    // @Watch('licenseRegistered')
+    // onLicenseRegisteredChanged(value) {
+    // clog('onLicenseRegisteredChanged', value);
+    // }
 
     mapModule<T extends keyof MapModules>(id: T) {
         return this.mapModules[id];
@@ -149,7 +157,7 @@ export default class Map extends BgServiceComponent {
         this.setMapStyle(value ? 'positron' : 'voyager');
     }
     currentLayer: VectorTileLayer;
-    currentLayerStyle: CartoMapStyle;
+    currentLayerStyle: string;
     localVectorDataSource: LocalVectorDataSource;
     localVectorLayer: VectorLayer;
     actionBarButtonHeight = actionBarButtonHeight;
@@ -163,6 +171,7 @@ export default class Map extends BgServiceComponent {
     addedLayers: string[] = [];
 
     showingDownloadPackageDialog = false;
+    keepAwake = false;
 
     set selectedItem(value) {
         this.runOnModules('onSelectedItem', value, this.mSelectedItem);
@@ -175,31 +184,121 @@ export default class Map extends BgServiceComponent {
     get searchResultsVisible() {
         return this.searchView && this.searchView.searchResultsVisible;
     }
+    get mapWidgetsTopPadding() {
+        return this.topSheetTranslation;
+    }
     _cartoMap: CartoMap = null;
     get cartoMap() {
-        console.log('get cartoMap', !!this._cartoMap);
+        // console.log('get cartoMap', !!this._cartoMap);
         return this._cartoMap;
     }
-
+    navigationBarHeight = navigationBarHeight;
     get peekHeight() {
         return 70;
     }
     fullHeight = 0;
     onLayoutChange() {
         this.fullHeight = layout.toDeviceIndependentPixels(this.nativeView.getMeasuredHeight());
+        // this.log('onLayoutChange', this.fullHeight);
     }
     get bottomSheetSteps() {
-        // console.log('peekerSteps', this.shouldShowFullHeight, this.peekHeight, this.actionBarHeight, this.fullHeight);
-        if (this.shouldShowFullHeight) {
-            return [this.peekHeight, this.peekHeight + this.actionBarHeight, this.fullHeight];
+        const result = [this.peekHeight, this.peekHeight + actionBarHeight];
+        if (!!this.mSelectedItem) {
+            if (!!this.mSelectedItem.route) {
+                if (!!this.mSelectedItem.route.profile && !!this.mSelectedItem.route.profile.max) {
+                    result.push(result[result.length - 1] + 100);
+                }
+                result.push(result[result.length - 1] + 150);
+            }
         }
-        return [this.peekHeight, this.peekHeight + this.actionBarHeight];
+        // this.log('peekerSteps', result, !!this.mSelectedItem, !!this.mSelectedItem && !!this.mSelectedItem.route);
+        return result;
+        // if (this.shouldShowFullHeight) {
+        //     return [this.peekHeight, this.peekHeight + this.actionBarHeight, this.fullHeight];
+        // }
+        // return [this.peekHeight, this.peekHeight + this.actionBarHeight];
+    }
+
+    get bottomSheetHolder() {
+        return this.$refs['bottomSheetHolder'] as BottomSheetHolder;
+    }
+
+    get bottomSheet() {
+        return this.$refs['bottomSheet'] as BottomSheet;
+    }
+    get topSheetHolder() {
+        return this.$refs['topSheetHolder'] as TopSheetHolder;
+    }
+    get topSheet() {
+        return this.topSheetHolder.topSheet;
     }
     get shouldShowFullHeight() {
         return !!this.mSelectedItem && !!this.mSelectedItem.route;
     }
     constructor() {
         super();
+        handleOpenURL(this.onAppUrl);
+    }
+    searchText: string = null;
+    onAppUrl(appURL: AppURL) {
+        console.log('Got the following appURL', appURL.path, Array.from(appURL.params.entries()));
+        if (appURL.path.startsWith('eo')) {
+            const latlong = appURL.path
+                .split(':')[1]
+                .split(',')
+                .map(parseFloat) as [number, number];
+            const loaded = !!this._cartoMap;
+            if (latlong[0] !== 0 || latlong[1] !== 0) {
+                if (loaded) {
+                    this._cartoMap.setFocusPos({ lat: latlong[0], lon: latlong[1] }, 0);
+                } else {
+                    // happens before map ready
+                    appSettings.setString('mapFocusPos', `{"lat":${latlong[0]},"lon":${latlong[1]}}`);
+                }
+            }
+            if (appURL.params.has('z')) {
+                const zoom = parseFloat(appURL.params.get('z'));
+                if (loaded) {
+                    this._cartoMap.setZoom(zoom, 0);
+                } else {
+                    appSettings.setNumber('mapZoom', zoom);
+                }
+            }
+            if (appURL.params.has('q')) {
+                const geoTextRegexp = /([\d\.-]+),([\d\.-]+)\((.*?)\)/;
+                const query = appURL.params.get('q');
+                const match = query.match(geoTextRegexp);
+                const actualQuery = decodeURIComponent(query).replace(/[+]/g, ' ');
+                if (match) {
+                    this.selectItem( {
+                        properties: {
+                            name: actualQuery
+                        },
+                        position: {
+                            lat: parseFloat(match[1]),
+                            lon: parseFloat(match[2])
+                        }
+                    }, true);
+                } else {
+                    this.showLoading(this.$tc(`searching_for:${actualQuery}`));
+                    this.$packageService
+                        .searchInPackageGeocodingService({
+                            projection: this.mapProjection,
+                            query: actualQuery.replace(/[,]/g, ' ')
+                        })
+                        .then(result => {
+                            if (result.length > 0) {
+                                console.log('found it!', this.$packageService.prepareGeoCodingResult(result[0]));
+                                this.selectItem( this.$packageService.prepareGeoCodingResult(result[0]), true, true, 16);
+                            } else {
+                                this.searchText = actualQuery.replace(/[,]/g, ' ');
+                            }
+                        })
+                        .catch(err => this.showError(err))
+                        .then(() => this.hideLoading());
+                }
+            }
+        }
     }
 
     // get cartoMap() {
@@ -207,11 +306,25 @@ export default class Map extends BgServiceComponent {
     // }
 
     get customSources() {
-        console.log('get', 'customSources');
         return this.mapModules['customLayers'].customSources;
+    }
+
+    get shouldShowNavigationBarOverlay() {
+        return gVars.isAndroid && navigationBarHeight !== 0 && !!this.mSelectedItem;
+    }
+    get bottomSheetDecale() {
+        return navigationBarHeight;
     }
     @profile
     mounted() {
+        super.mounted();
+        // if (gVars.isAndroid) {
+        // (this.$refs.fab.nativeView as GridLayout).getChildAt(0).marginBottom = -navigationBarHeight;
+        // this.nativeView.marginBottom = navigationBarHeight;
+        // this.overMapWidgets.nativeView.marginBottom = layout.toDevicePixels(navigationBarHeight);
+        // }
+        this.searchView = this.$refs.searchView;
+        this.$setMapComponent(this);
         this.mapModules = {
             items: new ItemsModule(),
             userLocation: new UserLocationModule(),
@@ -219,43 +332,44 @@ export default class Map extends BgServiceComponent {
             formatter: new ItemFormatter(),
             directionsPanel: this.topSheet,
             search: this.searchView,
-            mapWidgets: this.$refs.mapWidgets,
-            mapScrollingWidgets: this.$refs.mapScrollingWidgets
+            rightMenu: null,
+            mapScrollingWidgets: this.$refs.mapScrollingWidgets,
+            bottomSheet: this.bottomSheet
         };
-        super.mounted();
-        this.$setMapComponent(this);
-        this.log('mounted', App.cartoLicenseRegistered);
-        if (!App.cartoLicenseRegistered) {
-            // if (gVars.isAndroid) {
-            // setTimeout(() => {
-            registerLicense(gVars.CARTO_TOKEN, result => {
-                clog('registerLicense done', result);
-                this.$getAppComponent().setCartoLicenseRegistered(result);
-                setShowDebug(true);
-            });
-            // }, 200);
-            // } else {
-            //     registerLicense(gVars.CARTO_IOS_TOKEN, result => {
-            //         clog('registerLicense done', result);
-            //         this.$getAppComponent().setCartoLicenseRegistered(result);
-            //     });
-            //     // registerLicense(gVars.CARTO_IOS_TOKEN);
-            // }
-        } else {
-            setShowDebug(true);
-        }
+        // this.log('mounted', App.cartoLicenseRegistered, Object.keys(this.mapModules), !!this.searchView);
+        // this.mapModules.userLocation.on('location', this.onNewLocation, this);
 
-        global.__onLiveSync = (context?: ModuleContext) => {
-            clog('__onLiveSync', context);
-            if (!context) {
+        defaultLiveSync = global.__onLiveSync.bind(global);
+        global.__onLiveSync = (...args) => {
+            // clog('__onLiveSync', args);
+            const context = args[0];
+            if (!context && !!this.currentLayerStyle && !this.currentLayerStyle.endsWith('.zip')) {
                 this.reloadMapStyle && this.reloadMapStyle();
             }
-            defaultLiveSync(context);
+            defaultLiveSync.apply(global, args);
         };
+    }
+    onDeviceScreen(isScreenOn: boolean) {
+        this.log('onDeviceScreen', isScreenOn);
+    }
+    onLoaded() {
+        // this.$getAppComponent().$on('screen', this.onDeviceScreen);
+        if (!App.cartoLicenseRegistered) {
+            registerLicense(gVars.CARTO_TOKEN, result => {
+                // clog('registerLicense done', result);
+                this.$getAppComponent().setCartoLicenseRegistered(result);
+
+                setShowDebug(true);
+            });
+        }
+        // }, 0);
     }
     destroyed() {
         this.runOnModules('onMapDestroyed');
+        // this.$getAppComponent().$off('screen', this.onDeviceScreen);
         this.$setMapComponent(null);
+        // this.mapModules.userLocation.off('location', this.onNewLocation, this);
+        this.mapModules = null;
 
         this.localVectorLayer = null;
         if (this.localVectorDataSource) {
@@ -290,9 +404,14 @@ export default class Map extends BgServiceComponent {
     }
 
     runOnModules(functionName: string, ...args) {
+        // this.log('runOnModules', Object.keys(this.mapModules));
+        if (!this.mapModules) {
+            return;
+        }
         let m: MapModule;
         return Object.keys(this.mapModules).some(k => {
             m = this.mapModules[k];
+            // this.log('call module', k, functionName, m && m.constructor.name, m && !!m[functionName]);
             if (m && m[functionName]) {
                 const result = (m[functionName] as Function).call(m, ...args);
                 if (result) {
@@ -304,11 +423,11 @@ export default class Map extends BgServiceComponent {
     }
 
     onServiceLoaded(geoHandler: GeoHandler) {
-        this.log('onServiceLoaded');
+        // this.log('onServiceLoaded');
         this.runOnModules('onServiceLoaded', geoHandler);
     }
     onServiceUnloaded(geoHandler: GeoHandler) {
-        this.log('onServiceUnloaded');
+        // this.log('onServiceUnloaded');
         this.runOnModules('onServiceUnloaded', geoHandler);
     }
 
@@ -317,8 +436,12 @@ export default class Map extends BgServiceComponent {
         if (!cartoMap) {
             return;
         }
-        // console.log('onMapMove',e.data);
+        // this.log('onMapMove');
+        // const bearing = cartoMap.bearing;
+        // this.log('onMapMove', bearing);
+        // this.currentMapRotation = Math.round(bearing * 100) / 100;
         this.runOnModules('onMapMove', e);
+        this.unFocusSearch();
         // if (zoom < 10) {
         //     this.suggestionPackage = undefined;
         //     this.suggestionPackageName = undefined;
@@ -331,12 +454,16 @@ export default class Map extends BgServiceComponent {
         }
         this.runOnModules('onMapIdle', e);
         const zoom = cartoMap.zoom;
-        console.log('onMapIdle', zoom);
+        // this.log('onMapIdle', zoom);
     }
     @throttle(100)
     saveSettings() {
-        appSettings.setNumber('mapZoom', this._cartoMap.zoom);
-        appSettings.setString('mapFocusPos', JSON.stringify(this._cartoMap.focusPos));
+        if (!this._cartoMap) {
+            return;
+        }
+        const cartoMap = this._cartoMap;
+        appSettings.setNumber('mapZoom', cartoMap.zoom);
+        appSettings.setString('mapFocusPos', JSON.stringify(cartoMap.focusPos));
     }
     onMapStable(e) {
         const cartoMap = this.cartoMap;
@@ -346,14 +473,14 @@ export default class Map extends BgServiceComponent {
         this.saveSettings();
         this.runOnModules('onMapStable', e);
         const zoom = cartoMap.zoom;
-        // console.log('onMapStable', zoom);
+        // this.log('onMapStable', zoom);
     }
 
     onMapReady(e) {
         const cartoMap = (this._cartoMap = e.object as CartoMap);
 
         this.mapProjection = cartoMap.projection;
-        this.log('onMapReady');
+        // this.log('onMapReady');
 
         const options = cartoMap.getOptions();
         options.setWatermarkScale(0.5);
@@ -366,17 +493,17 @@ export default class Map extends BgServiceComponent {
         options.setRotatable(true);
         // options.setDrawDistance(8);
         this.showGlobe = appSettings.getBoolean('showGlobe', false);
-        console.log('test', JSON.parse('{"lat":45.2002,"lon":5.7222}'));
+        // console.log('test', JSON.parse('{"lat":45.2002,"lon":5.7222}'));
         const pos = JSON.parse(appSettings.getString('mapFocusPos', '{"lat":45.2002,"lon":5.7222}')) as MapPos;
         const zoom = appSettings.getNumber('mapZoom', 10);
-        console.log('map start pos', pos, zoom);
+        // console.log('map start pos', pos, zoom);
         cartoMap.setFocusPos(pos, 0);
         cartoMap.setZoom(zoom, 0);
 
         perms
             .request('storage')
             .then(status => {
-                this.log('on request storage', status, this.actionBarButtonHeight, !!this._cartoMap);
+                // this.log('on request storage', status, this.actionBarButtonHeight, !!this._cartoMap);
                 this.$packageService.start();
                 this.setMapStyle(appSettings.getString('mapStyle', 'alpimaps.zip'));
                 this.runOnModules('onMapReady', this, cartoMap);
@@ -384,21 +511,7 @@ export default class Map extends BgServiceComponent {
                 // TODO: calling setCurrentLayer twice is a trick to get the map to load on close/start
                 this.setCurrentLayer(this.currentLayerStyle);
             })
-            .catch(err => console.error(err));
-    }
-    get bottomSheetHolder() {
-        return this.$refs['bottomSheetHolder'] as BottomSheetHolder;
-    }
-
-    get bottomSheet() {
-        return this.bottomSheetHolder.bottomSheet;
-    }
-    get topSheetHolder() {
-        return this.$refs['topSheetHolder'] as TopSheetHolder;
-    }
-
-    get topSheet() {
-        return this.topSheetHolder.topSheet;
+            .catch(err => this.showError(err));
     }
 
     createLocalMarker(position: MapPos, options: MarkerStyleBuilderOptions) {
@@ -416,8 +529,8 @@ export default class Map extends BgServiceComponent {
         const styleBuilder = new LineStyleBuilder(options);
         return new Line({ positions, projection: this.mapProjection, styleBuilder });
     }
-    selectItem(item: Item, isFeatureInteresting = false) {
-        console.log('selectItem', isFeatureInteresting, !!item.route);
+    selectItem(item: Item, isFeatureInteresting = false, peek = true, zoom?:number) {
+        // this.log('selectItem', isFeatureInteresting, item);
         if (isFeatureInteresting) {
             if (item.route) {
                 if (!this.selectedRouteLine) {
@@ -464,12 +577,20 @@ export default class Map extends BgServiceComponent {
             }
 
             this.selectedItem = item;
+            // console.log('selected_id', item.properties, item.route);
+            // const vectorTileDecoder = this.getVectorTileDecoder();
+            // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
+            // vectorTileDecoder.setStyleParameter('selected_name', (item.properties && item.properties.name) || '');
 
             this.bottomSheetHolder.peek();
             if (item.zoomBounds) {
                 const zoomLevel = getBoundsZoomLevel(item.zoomBounds, { width: screen.mainScreen.widthPixels, height: screen.mainScreen.heightPixels });
-                this.cartoMap.setZoom(zoomLevel, getCenter(item.zoomBounds.northeast, item.zoomBounds.southwest), 200);
+                this.cartoMap.setZoom(zoomLevel, 200);
+                this.cartoMap.setFocusPos( getCenter(item.zoomBounds.northeast, item.zoomBounds.southwest), 200);
             } else {
+                if (zoom) {
+                    this.cartoMap.setZoom(zoom, 200);
+                }
                 this.cartoMap.setFocusPos(item.position, 200);
             }
         } else {
@@ -487,6 +608,9 @@ export default class Map extends BgServiceComponent {
                 this.selectedRouteLine.visible = false;
             }
             this.bottomSheetHolder.close();
+            // const vectorTileDecoder = this.getVectorTileDecoder();
+            // vectorTileDecoder.setStyleParameter('selected_id', '0');
+            // vectorTileDecoder.setStyleParameter('selected_name', '');
         }
     }
     cancelDirections() {
@@ -494,6 +618,7 @@ export default class Map extends BgServiceComponent {
     }
     onMapClicked(e) {
         const { clickType, position } = e.data;
+        // this.log('onMapClicked', clickType, position);
         const handledByModules = this.runOnModules('onMapClicked', e);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             this.selectItem({ position }, false);
@@ -503,18 +628,7 @@ export default class Map extends BgServiceComponent {
     }
     onVectorTileClicked(data: VectorTileEventData) {
         const { clickType, position, featureLayerName, featureData, featurePosition } = data;
-        // console.log(
-        //     'onVectorTileClicked',
-        //     // position,
-        //     // map.mapToScreen(position),
-        //     // featurePosition,
-        //     // map.mapToScreen(featurePosition),
-        //     featureLayerName,
-        //     featureData.class,
-        //     featureData.subclass,
-        //     featureData.name,
-        //     featureData.ele
-        // );
+        this.log('onVectorTileClicked', featureLayerName, featureData);
         const handledByModules = this.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             const map = this._cartoMap;
@@ -523,6 +637,7 @@ export default class Map extends BgServiceComponent {
             if (
                 featureLayerName === 'transportation' ||
                 featureLayerName === 'waterway' ||
+                featureLayerName === 'hillshade' ||
                 featureLayerName === 'transportation_name' ||
                 featureLayerName === 'contour' ||
                 featureLayerName === 'building' ||
@@ -533,11 +648,11 @@ export default class Map extends BgServiceComponent {
             }
             const distanceFromClick = distance(map.mapToScreen(position), map.mapToScreen(featurePosition));
 
-            console.log(
-                `onVectorTileClicked distanceFromClick:${distanceFromClick}, elevation:${featureData.ele}, name:${featureData.name} layer: ${featureLayerName} class: ${featureData.class}`,
-                this.actionBarHeight,
-                this.bShow3DBuildings
-            );
+            // console.log(
+            //     `onVectorTileClicked distanceFromClick:${distanceFromClick}, elevation:${featureData.ele}, name:${featureData.name} layer: ${featureLayerName} class: ${featureData.class}`,
+            //     actionBarHeight,
+            //     this.bShow3DBuildings
+            // );
 
             // const languages = [];
             // Object.keys(featureData).forEach(k => {
@@ -573,7 +688,7 @@ export default class Map extends BgServiceComponent {
                         return foundBetterRes;
                     })
                     .then(actualRes => {
-                        console.log('actualRes', actualRes);
+                        // console.log('actualRes', actualRes);
                         if (actualRes) {
                             this.selectItem(JSON.parse(JSON.stringify(result)), isFeatureInteresting);
                         }
@@ -582,8 +697,9 @@ export default class Map extends BgServiceComponent {
                         console.error(err);
                     });
                 // }
-
-                this.selectItem(result, isFeatureInteresting);
+                try {
+                    this.selectItem(result, isFeatureInteresting);
+                } catch (err) {}
             }
             this.unFocusSearch();
 
@@ -607,10 +723,12 @@ export default class Map extends BgServiceComponent {
         }
         return handledByModules;
     }
-    get searchView() {
-        return this.$refs.searchView as Search;
-    }
+    // get searchView() {
+    // return this.$refs[''] as Search;
+    // }
+    searchView: Search;
     unFocusSearch() {
+        // this.log('unFocusSearch', !!this.searchView, !!this.searchView && this.searchView.hasFocus);
         if (this.searchView && this.searchView.hasFocus) {
             this.searchView.unfocus();
         }
@@ -637,6 +755,7 @@ export default class Map extends BgServiceComponent {
         return this.bShowContourLines;
     }
     set showContourLines(value: boolean) {
+        // this.log('set showContourLines', value);
         this.bShowContourLines = value;
         this.getVectorTileDecoder().setStyleParameter('contours', value ? '1' : '0');
     }
@@ -649,20 +768,38 @@ export default class Map extends BgServiceComponent {
         const vectorTileDecoder = this.getVectorTileDecoder();
         vectorTileDecoder.setStyleParameter('contoursOpacity', value.toFixed(1));
     }
-    setCurrentLayer(id: CartoMapStyle) {
+    _zoomBiais = 0;
+    get zoomBiais() {
+        return this._zoomBiais;
+    }
+    set zoomBiais(value: number) {
+        // this.log('setting zoomBiais', value);
+        this._zoomBiais = value;
+        if (this.currentLayer) {
+            this.currentLayer.zoomLevelBias = value;
+        }
+        const vectorTileDecoder = this.getVectorTileDecoder();
+        vectorTileDecoder.setStyleParameter('zoomBiais', value.toFixed());
+    }
+    setCurrentLayer(id: string) {
         // const cartoMap = this._cartoMap;
         if (this.currentLayer) {
             this.removeLayer(this.currentLayer, 'map');
             this.currentLayer.setVectorTileEventListener(null);
             this.currentLayer = null;
         }
-        clog('setCurrentLayer', id);
+        // clog('setCurrentLayer', id);
         this.currentLayerStyle = id;
         const vectorTileDecoder = this.getVectorTileDecoder();
-        // clog('vectorTileDecoder', vectorTileDecoder);
+        let zoomBiais = appSettings.getNumber('zoomBiais', 0);
+        if (isNaN(zoomBiais)) {
+            zoomBiais = 0;
+        }
+        this.zoomBiais = zoomBiais;
 
         this.currentLayer = new VectorTileLayer({
             preloading: true,
+            zoomLevelBias: this.zoomBiais,
             dataSource: this.$packageService.getDataSource(),
             decoder: vectorTileDecoder
         });
@@ -719,11 +856,11 @@ export default class Map extends BgServiceComponent {
     //         // this.vectorTileDecoder.style = this.getStyleFromCartoMapStyle(this.currentLayerStyle);
     //     }
     // }
-    setMapStyle(layerStyle: any, force = false) {
+    setMapStyle(layerStyle: string, force = false) {
         if (!layerStyle) {
             return;
         }
-        console.log('setMapStyle', layerStyle);
+        // console.log('setMapStyle', layerStyle);
         if (layerStyle !== this.currentLayerStyle || !!force) {
             this.currentLayerStyle = layerStyle;
             appSettings.setString('mapStyle', layerStyle);
@@ -775,7 +912,7 @@ export default class Map extends BgServiceComponent {
         item.layer.visible = opacity !== 0;
         this.cartoMap.requestRedraw();
         // item.layer.refresh();
-        console.log('onLayerOpacityChanged', item.name, event.value, item.opacity);
+        // console.log('onLayerOpacityChanged', item.name, event.value, item.opacity);
     }
 
     onSourceLongPress(item: SourceItem) {
@@ -835,9 +972,10 @@ export default class Map extends BgServiceComponent {
     }
 
     downloadPackages() {
-        const ComponentClass = Vue.extend(PackagesDownloadComponent);
-        let instance = new ComponentClass();
+        // const ComponentClass = Vue.extend(PackagesDownloadComponent);
+        let instance = new PackagesDownloadComponent();
         instance.$mount();
+        // this.log('downloadPackages', instance, instance.nativeView);
         this.nativeView._addViewCore(instance.nativeView);
         this.nativeView.showBottomSheet({
             view: instance.nativeView,
@@ -866,8 +1004,10 @@ export default class Map extends BgServiceComponent {
         this.showingDownloadPackageDialog = true;
         // cfalertDialog.show(options); // That's about it ;)
     }
-    removeLayer(layer: Layer<any, any>, layerId: LayerType) {
-        const index = this.addedLayers.indexOf(layerId);
+    removeLayer(layer: Layer<any, any>, layerId: LayerType, offset?: number) {
+        const realLayerId = offset ? layerId + offset : layerId;
+        const index = this.addedLayers.indexOf(realLayerId);
+        // this.log('removeLayer', layerId, realLayerId, this.addedLayers, index);
         if (index !== -1) {
             this.addedLayers.splice(index, 1);
         }
@@ -875,29 +1015,45 @@ export default class Map extends BgServiceComponent {
     }
     addLayer(layer: Layer<any, any>, layerId: LayerType, offset?: number) {
         const realLayerId = offset ? layerId + offset : layerId;
-        this.log('addLayer', layerId, realLayerId, index, !!this._cartoMap, this.addedLayers.indexOf(layerId), this.addedLayers);
+        // this.log('addLayer', layerId, realLayerId, !!this._cartoMap, this.addedLayers.indexOf(layerId), this.addedLayers);
         if (this._cartoMap) {
             if (this.addedLayers.indexOf(realLayerId) !== -1) {
                 return;
             }
-            const index = LAYERS_ORDER.indexOf(layerId);
+            const layerIndex = LAYERS_ORDER.indexOf(layerId);
+            // this.log('layerIndex', layerIndex);
             let realIndex = 0;
-            for (let i = 0; i < index; i++) {
-                if (this.addedLayers.indexOf(LAYERS_ORDER[i]) !== -1) {
+            this.addedLayers.some(s => {
+                if (LAYERS_ORDER.indexOf(s as any) < layerIndex) {
                     realIndex++;
+                    return false;
                 }
-            }
+                return true;
+            });
+            // for (let i = 0; i < index; i++) {
+            //     if (this.addedLayers.indexOf(LAYERS_ORDER[i]) !== -1) {
+            //         realIndex++;
+            //     }
+            // }
             if (realIndex >= 0) {
                 this._cartoMap.addLayer(layer, realIndex + (offset || 0));
             } else {
                 this._cartoMap.addLayer(layer);
             }
             this.addedLayers.splice(realIndex + (offset || 0), 0, realLayerId);
-            // console.log('addedLayer', layerId, index, realIndex, offset, addedLayers);
+            // this.log('addedLayer', layerId, realIndex, offset, this.addedLayers);
             this._cartoMap.requestRedraw();
         }
     }
-    bottomSheetTranslation = 0;
+    mBottomSheetTranslation = 0;
+    get bottomSheetTranslation() {
+        const result = this.mBottomSheetTranslation + navigationBarHeight;
+        // if (gVars.isAndroid) {
+        //     result += 48;
+        // }
+        return result;
+    }
+    topSheetTranslation = DEFAULT_TOP;
     bottomSheetPercentage = 0;
     get scrollingWidgetsOpacity() {
         if (this.bottomSheetPercentage <= 0.5) {
@@ -907,7 +1063,83 @@ export default class Map extends BgServiceComponent {
     }
     onBottomSheetScroll(e: BottomSheetHolderScrollEventData) {
         // console.log('onBottomSheetScroll', e);
-        this.bottomSheetTranslation = e.height;
+        this.mBottomSheetTranslation = e.height;
         this.bottomSheetPercentage = e.percentage;
+    }
+    onTopSheetScroll(e: TopSheetHolderScrollEventData) {
+        // console.log('onTopSheetScroll', e.height, e.bottom);
+        this.topSheetTranslation = e.bottom;
+        // this.bottomSheetPercentage = e.percentage;
+    }
+
+    public showKeepAwakeNotification() {
+        if (gVars.isAndroid) {
+            const context: android.content.Context = ad.getApplicationContext();
+            const builder = new androidx.core.app.NotificationCompat.Builder(context, NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL);
+
+            // create notification channel
+            const color = android.graphics.Color.parseColor(this.accentColor);
+            NotificationHelper.createNotificationChannel(context);
+
+            const activityClass = (com as any).tns.NativeScriptActivity.class;
+            const tapActionIntent = new android.content.Intent(context, activityClass);
+            tapActionIntent.setAction(android.content.Intent.ACTION_MAIN);
+            tapActionIntent.addCategory(android.content.Intent.CATEGORY_LAUNCHER);
+            const tapActionPendingIntent = android.app.PendingIntent.getActivity(context, 10, tapActionIntent, 0);
+
+            // construct notification in builder
+            builder.setVisibility(androidx.core.app.NotificationCompat.VISIBILITY_SECRET);
+            builder.setShowWhen(false);
+            builder.setOngoing(true);
+            builder.setColor(color);
+            builder.setOnlyAlertOnce(true);
+            builder.setPriority(androidx.core.app.NotificationCompat.PRIORITY_MIN);
+            builder.setContentIntent(tapActionPendingIntent);
+            builder.setSmallIcon(ad.resources.getDrawableId('ic_stat_logo'));
+            builder.setContentTitle('Alpi Maps is keeping the screen awake');
+            // builder.setLargeIcon();
+            const notifiction = builder.build();
+            const service = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
+            service.notify(KEEP_AWAKE_NOTIFICATION_ID, notifiction);
+        }
+    }
+
+    public hideKeepAwakeNotification() {
+        if (gVars.isAndroid) {
+            const context: android.content.Context = ad.getApplicationContext();
+            const service = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
+            service.cancel(KEEP_AWAKE_NOTIFICATION_ID);
+        }
+    }
+
+    switchKeepAwake() {
+        // this.log('switchKeepAwake', this.keepAwake);
+        if (this.keepAwake) {
+            allowSleepAgain()
+                .then(() => {
+                    this.keepAwake = false;
+                    this.hideKeepAwakeNotification();
+                    // this.log('allowSleepAgain done', this.keepAwake);
+                })
+                .catch(err => this.showError(err));
+        } else {
+            keepAwake()
+                .then(() => {
+                    this.keepAwake = true;
+                    this.showKeepAwakeNotification();
+                    // this.log('keepAwake done', this.keepAwake);
+                })
+                .catch(err => this.showError(err));
+        }
+    }
+
+    switchLocationInfo() {
+        this.mapModules.mapScrollingWidgets.showLocationInfo = !this.mapModules.mapScrollingWidgets.showLocationInfo;
+    }
+
+    shareScreenshot() {
+        this.cartoMap.captureRendering(true).then(result => {
+            SocialShare.shareImage(result);
+        });
     }
 }

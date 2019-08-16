@@ -6,6 +6,7 @@ import Vue from 'nativescript-vue';
 import { GestureHandlerStateEvent, GestureHandlerTouchEvent, GestureState, GestureStateEventData, GestureTouchEventData, HandlerType, Manager, PanGestureHandler } from 'nativescript-gesturehandler';
 import { View } from 'tns-core-modules/ui/page/page';
 import { CollectionView } from 'nativescript-collectionview';
+import { RadCartesianChart } from 'nativescript-ui-chart';
 export const NATIVE_GESTURE_TAG = 4;
 
 @Component({})
@@ -18,6 +19,7 @@ export default class BottomSheetBase extends BaseVueComponent {
     isScrollEnabled = true;
     set scrollEnabled(value) {
         if (value !== this.isScrollEnabled) {
+            // this.log('set scrollEnabled', value);
             this.isScrollEnabled = value;
         }
     }
@@ -30,13 +32,17 @@ export default class BottomSheetBase extends BaseVueComponent {
     set listViewAtTop(value) {
         if (value !== this.isListViewAtTop) {
             this.isListViewAtTop = value;
+            // this.log('set listViewAtTop ', value);
             this.$emit('listViewAtTop', value);
         }
     }
     holder: BottomSheetHolder;
     panGestureHandler: PanGestureHandler;
     get listView() {
-        return this.$refs['listView'].nativeView as CollectionView;
+        return this.$refs['listView'] && (this.$refs['listView'].nativeView as CollectionView);
+    }
+    get graphView() {
+        return this.$refs['graphView'] && (this.$refs['graphView'].nativeView as RadCartesianChart);
     }
     mounted() {
         super.mounted();
@@ -46,7 +52,7 @@ export default class BottomSheetBase extends BaseVueComponent {
             parent = parent.$parent as any;
         }
         const listView = this.listView;
-        this.log('mounted', !!parent, !!listView);
+        // this.log('mounted', !!parent, !!listView);
         if (parent instanceof BottomSheetHolder) {
             this.holder = parent;
             parent.setBottomSheet(this);
@@ -61,13 +67,20 @@ export default class BottomSheetBase extends BaseVueComponent {
         }
     }
 
+    reset() {
+        this.listViewAtTop = true;
+        this.scrollEnabled = true;
+    }
+
     onListViewScroll(args) {
-        if (!this.isScrollEnabled || this.holder.isPanning) {
+        // this.log('onListViewScroll', this.isScrollEnabled , this.holder.isPanning, this.listViewAtTop, args.scrollOffset);
+        if (!this.isScrollEnabled) {
             return;
         }
         if (!this.listViewAtTop && args.scrollOffset <= 0) {
             this.listViewAtTop = true;
         } else if (this.listViewAtTop && args.scrollOffset > 0) {
+            // this.log('listViewAtTop', this.listViewAtTop);
             this.listViewAtTop = false;
         }
     }

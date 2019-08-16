@@ -179,6 +179,7 @@ export const data: { [k: string]: DataProvider } = {
     },
     OpenStreetMap: {
         url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        legend:'https://www.openstreetmap.org/key.html',
         downloadable: true,
         sourceOptions: {
             minZoom: 2,

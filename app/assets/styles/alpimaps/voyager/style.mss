@@ -107,7 +107,8 @@ Map {
 @park: rgba(130, 191, 90, 1.0);
 
 //buildings
-@buildings:           #f3eadc;
+@buildings3d:       #f3eadc;
+@buildings:           rgb(204, 203, 192);
 @building_shadow:     #e4dcd0; //mix(@buildings,#777,88);
 @building_outline:    #e9d8be; //darken(@urbanareas,8);
 
@@ -127,9 +128,10 @@ Map {
 @secondary_case:          #e9ac77;
 
 @street:                  #fff;
-@street_lowzoom:          #fff;
-@minor_case:              rgb(181, 178, 175);
-@minor:                  rgba(234, 234, 234, 1);
+@pedestrian:                  rgb(126, 126, 141);
+@pedestrian_dark:          rgb(144, 144, 151);
+@minor_case:              rgb(43, 42, 41);
+@minor:                  rgb(248, 244, 244);
 
 @path:                    rgb(95, 93, 53);
 @track:                   #b37700;

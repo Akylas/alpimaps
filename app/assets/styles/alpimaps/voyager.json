@@ -23,6 +23,15 @@
         "lang": {
             "default": "en"
         },
+        "zoomBiais": {
+            "default": 0
+        },
+        "selected_id": {
+            "default": 0
+        },
+        "selected_name": {
+            "default": ""
+        },
         "buildings": {
             "default": 1,
             "values": {
@@ -33,6 +42,13 @@
         },
         "contours": {
             "default": 1,
+            "values": {
+                "1": 1,
+                "0": 0
+            }
+        },
+        "poi_information": {
+            "default": 0,
             "values": {
                 "1": 1,
                 "0": 0

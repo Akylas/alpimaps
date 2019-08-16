@@ -160,7 +160,7 @@ class Package {
     static ACTION_PAUSE = 'PAUSE';
     static ACTION_RESUME = 'RESUME';
     static ACTION_CANCEL = 'CANCEL';
-    static ACTION_DOWNLOAD = 'DOWNLOAD';
+    static ACTION_DOWNLOAD = 'MAP';
     static ACTION_GEO_DOWNLOAD = 'GEO';
     static ACTION_ROUTING_DOWNLOAD = 'ROUTING';
     static ACTION_REMOVE = 'REMOVE';
@@ -334,7 +334,7 @@ export default class PackagesDownloadComponent extends BaseVueComponent {
     }
     onPackageUpdated(e) {
         const { id } = e.data;
-        console.log('onPackageUpdated', id, e.type);
+        // console.log('onPackageUpdated', id, e.type);
         this.dataItems.some((d, index) => {
             if (d.id === id) {
                 // console.log('updating full item!', id, index);
@@ -364,7 +364,7 @@ export default class PackagesDownloadComponent extends BaseVueComponent {
     }
     currentServerPackages: PackageInfoVector;
     updateDataItems() {
-        console.log('updateDataItems');
+        // console.log('updateDataItems');
         const manager = this.$packageService.packageManager;
         const geomanager = this.$packageService.geoPackageManager;
         const routingmanager = this.$packageService.routingPackageManager;
@@ -462,12 +462,12 @@ export default class PackagesDownloadComponent extends BaseVueComponent {
         } else {
             manager = this.$packageService.packageManager;
         }
-        console.log(type, action);
+        // console.log(type, action);
         switch (action) {
             case Package.ACTION_GEO_DOWNLOAD:
             case Package.ACTION_ROUTING_DOWNLOAD:
             case Package.ACTION_DOWNLOAD:
-                console.log('manager start', item.id);
+                // console.log('manager start', item.id);
                 manager.startPackageDownload(item.id + suffix);
                 // if (item.geoInfo) {
                 //     console.log('geomanager start', item.id);

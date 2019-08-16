@@ -1,11 +1,10 @@
 <template>
-    <GridLayout @layoutChanged="onLayoutChange">
-        <slot />
-        <AbsoluteLayout isPassThroughParentEnabled="true">
-            <StackLayout ref="scrollingView" :marginTop="currentViewHeight" width="100%" :height="translationMaxOffset">
-                <slot name="bottomSheet"/>
-            </StackLayout>
-        </AbsoluteLayout>
-    </GridLayout>
+    <AbsoluteLayout @layoutChanged="onLayoutChange" isPassThroughParentEnabled>
+        <!-- <AbsoluteLayout isPassThroughParentEnabled> -->
+        <StackLayout ref="scrollingView"  width="100%" :marginTop="currentViewHeight" :height="translationMaxOffset" isPassThroughParentEnabled="false" backgroundColor="#cc000000">
+            <slot name="bottomSheet" />
+        </StackLayout>
+        <!-- </AbsoluteLayout> -->
+    </AbsoluteLayout>
 </template>
 <script lang="ts" src="./BottomSheetHolder.ts"/>

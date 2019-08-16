@@ -8,9 +8,9 @@ export class BgService extends BgServiceCommon {
     constructor() {
         super();
         this.geoHandler = new GeoHandler();
-    }
-    start() {
         this._handlerLoaded();
     }
-    updateNotifText(text: string) {}
+    // updateNotifText(text: string) {}
+    stop() {}
+    start() {}
 }

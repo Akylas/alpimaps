@@ -1,5 +1,5 @@
 const WebpackTemplate = require('nativescript-akylas-webpack-template');
-const { resolve } = require('path');
+const { resolve, join } = require('path');
 const { readFileSync } = require('fs');
 const { BugsnagBuildReporterPlugin, BugsnagSourceMapUploaderPlugin } = require('webpack-bugsnag-plugins');
 const webpack = require('webpack');
@@ -48,21 +48,31 @@ module.exports = env => {
         }
     });
 
-    console.log('running webpack with env', development, uglify, production, sourceMap, typeof sourceMap);
+    console.log('running webpack with env', env, resolve(__dirname, 'node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf'));
     const config = WebpackTemplate(env, {
         projectRoot: __dirname,
         appComponents: appComponents,
         snapshotPlugin: {
             useLibs: true,
             androidNdkPath: '/Volumes/data/dev/androidNDK/r19c',
-            targetArchs: ['arm', 'arm64', 'ia32']
+            // targetArchs: ['arm', 'arm64', 'ia32']
         },
         alias: {
             'nativescript-vue': 'nativescript-akylas-vue',
             vue: 'nativescript-vue'
         },
-        copyPlugin: [{ from: '../node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf', to: 'fonts' }, { from: '../node_modules/@mdi/font/css/materialdesignicons.min.css', to: 'assets' }],
+        copyPlugin: [
+            { from: resolve(__dirname, 'node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf'), to: 'fonts' },
+            { from: resolve(__dirname, 'node_modules/@mdi/font/css/materialdesignicons.min.css'), to: 'assets' }
+        ],
         definePlugin: defines
+        // terserOptions: {
+        // terserOptions: {
+        // keep_fnames: false,
+        // keep_classnames: false,
+        // mangle: { toplevel: true, keep_fnames: false, keep_classnames: false }
+        // }
+        // }
     });
 
     config.module.rules.push({

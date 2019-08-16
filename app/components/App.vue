@@ -1,6 +1,9 @@
 <template>
-    <Frame ref="innerFrame">
-        <Page ref="page" class="page" @loaded="onLoaded">
+    <Page ref="page">
+        <GridLayout ref="page" class="page" @loaded="onLoaded">
+            <Label :text="$t('loading_map')" color="black" backgroundColor="#E3E1D3" verticalTextAlignment="middle" textAlignment="center" />
+            <StatusBar ios:barStyle="light" :barColor="darkColor" />
+            <NavigationBar :barColor="themeColor" />
             <MultiDrawer ref="drawer" :options="drawerOptions">
                 <GridLayout slot="left" rows="auto, *, auto" height="100%" backgroundColor="white">
                     <StackLayout row="2" width="100%" padding="10">
@@ -13,13 +16,13 @@
                         </StackLayout>
                     </StackLayout>
                 </GridLayout>
-                <GridLayout slot="right">
-                    <MapRightMenu v-if="mapMounted" />
-                </GridLayout>
-                <Map :licenseRegistered="cartoLicenseRegistered" />
+                <MapRightMenu slot="right" />
+                <Frame ref="innerFrame">
+                    <Map :licenseRegistered="cartoLicenseRegistered" />
+                </Frame>
             </MultiDrawer>
-        </Page>
-    </Frame>
+        </GridLayout>
+    </Page>
 </template>
-
+ 
 <script lang="ts" src="./App.ts"/>

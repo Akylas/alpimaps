@@ -5,14 +5,18 @@ import { PackageManagerValhallaRoutingService, RoutingAction, RoutingResult, Val
 import { CartoMap } from 'nativescript-carto/ui/ui';
 import { Line, LineEndType, LineJointType, LineStyleBuilder } from 'nativescript-carto/vectorelements/line';
 import { Marker, MarkerStyleBuilder } from 'nativescript-carto/vectorelements/marker';
+import { Point, PointStyleBuilder } from 'nativescript-carto/vectorelements/point';
+import { Text, TextStyleBuilder } from 'nativescript-carto/vectorelements/text';
+import { Group, GroupOptions } from 'nativescript-carto/vectorelements/group';
 import { confirm } from 'nativescript-material-dialogs';
 import { TextField } from 'tns-core-modules/ui/text-field/text-field';
 import { Component } from 'vue-property-decorator';
 // import { layout } from 'tns-core-modules/utils/utils';
 import { Item } from '~/mapModules/ItemsModule';
-import MapModule from '~/mapModules/MapModule';
+import {IMapModule} from '~/mapModules/MapModule';
 import BaseVueComponent from './BaseVueComponent';
 import Map from './Map';
+import { showSnack } from 'nativescript-material-snackbar';
 
 export interface RouteInstruction {
     position: MapPos;
@@ -24,7 +28,16 @@ export interface RouteInstruction {
     streetName: string;
 }
 
+export interface RouteProfile {
+    max: [number, number];
+    min: [number, number];
+    dplus?: any;
+    dmin?: any;
+    points: MapPos[];
+    data: Array<{ x: number; y: number }>;
+}
 export interface Route {
+    profile?: RouteProfile;
     positions: MapPos[];
     totalTime: number;
     totalDistance: number;
@@ -60,7 +73,7 @@ function routingResultToJSON(result: RoutingResult) {
 // const OPEN_DURATION = 200;
 // const CLOSE_DURATION = 200;
 @Component({})
-export default class DirectionsPanel extends BaseVueComponent implements MapModule {
+export default class DirectionsPanel extends BaseVueComponent implements IMapModule {
     mapView: CartoMap;
     mapComp: Map;
 
@@ -68,10 +81,11 @@ export default class DirectionsPanel extends BaseVueComponent implements MapModu
 
     _routeDataSource: LocalVectorDataSource;
     _routeLayer: VectorLayer;
-    startMarker: Marker = null;
-    stopMarker: Marker = null;
-    startPos: MapPos = null;
-    stopPos: MapPos = null;
+    // startMarker: Marker = null;
+    // stopMarker: Marker = null;
+    waypoints: Array<{ marker: Group; position: MapPos; isStart: boolean; isStop: boolean; metaData: any; text: string }> = [];
+    // waypoints: MapPos[] = [];
+    // stopPos: MapwaypointsPos = null;
     profile: ValhallaProfile = 'pedestrian';
 
     get profileColor() {
@@ -85,10 +99,14 @@ export default class DirectionsPanel extends BaseVueComponent implements MapModu
     }
 
     get peekHeight() {
-        return 160;
+        let result = 160;
+        if (gVars.isAndroid) {
+            result += 24;
+        }
+        return result;
     }
     get fullHeight() {
-        return 160;
+        return this.peekHeight;
     }
     get steps() {
         return [this.peekHeight];
@@ -106,6 +124,10 @@ export default class DirectionsPanel extends BaseVueComponent implements MapModu
         if (this._routeDataSource) {
             this._routeDataSource.clear();
             this._routeDataSource = null;
+        }
+
+        if (this._routeLayer) {
+            this._routeLayer.setVectorElementEventListener(null);
             this._routeLayer = null;
         }
     }
@@ -125,22 +147,129 @@ export default class DirectionsPanel extends BaseVueComponent implements MapModu
         }
         return this._routeLayer;
     }
+    line: Line;
+    addWayPoint(position: MapPos, metaData?, index = -1) {
+        const toAdd = {
+            isStart: false,
+            isStop: false,
+            position,
+            metaData,
+            marker: null,
+            text: metaData ? metaData.name : `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`
+        };
+        // this.log('addWayPoint', toAdd);
+        if (this.waypoints.length === 0 || this.waypoints[0].isStart === false) {
+            toAdd.isStart = true;
 
-    handleClickOnPos(position: MapPos, metaData?) {
-        const text = metaData ? metaData.name : `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`;
-        // console.log('handleClickOnPos', position, text);
-        if (this.startPos == null) {
-            // set start, or start again
-            this.startPos = position;
-            this.startTF.text = this.currentStartSearchText = text;
-            this.setStartPosition(position);
-        } else if (this.stopPos == null) {
-            // set stop and calculate
-            this.stopPos = position;
-            this.setStopPosition(position);
-            this.stopTF.text = this.currentStopSearchText = text;
-            // this.showRoute(this.startPos, this.stopPos);
+            const group = new Group();
+            group.elements = [
+                new Marker({
+                    position,
+                    styleBuilder: {
+                        // size: 30,
+                        hideIfOverlapped: false,
+                        scaleWithDPI: true,
+                        color: 'green'
+                    }
+                }),
+                new Text({
+                    position,
+                    text: '0',
+                    styleBuilder: {
+                        fontSize: 16,
+                        anchorPointY: 1,
+                        hideIfOverlapped: false,
+                        scaleWithDPI: true,
+                        color: 'white',
+                        backgroundColor: 'red'
+                    }
+                })
+            ];
+            // const styleBuilder = new MarkerStyleBuilder({
+            //     hideIfOverlapped: false,
+            //     size: 30,
+            //     color: 'green'
+            // });
+            // const marker = new Marker({
+            //     position,
+            //     styleBuilder
+            // });
+            toAdd.marker = group;
+            this.routeDataSource.add(group);
+            this.ensureRouteLayer();
+            this.waypoints.unshift(toAdd);
+            this.startTF.text = this.currentStartSearchText = toAdd.text;
+        } else {
+            // this.log('addWayPoint stop', this.waypoints[this.waypoints.length - 1]);
+            if (this.waypoints[this.waypoints.length - 1].isStop === true) {
+                this.waypoints[this.waypoints.length - 1].isStop = false;
+                (this.waypoints[this.waypoints.length - 1].marker.elements[0] as Point).styleBuilder = {
+                    // size: 30,
+                    hideIfOverlapped: false,
+                    scaleWithDPI: true,
+                    color: 'blue'
+                };
+            }
+            toAdd.isStop = true;
+            const group = new Group();
+            group.elements = [
+                new Marker({
+                    position,
+                    styleBuilder: {
+                        size: 30,
+                        hideIfOverlapped: false,
+                        scaleWithDPI: true,
+                        color: 'red'
+                    }
+                }),
+                new Text({
+                    position,
+                    text: this.waypoints.length + '',
+                    styleBuilder: {
+                        fontSize: 16,
+                        hideIfOverlapped: false,
+                        scaleWithDPI: true,
+                        color: 'white',
+                        backgroundColor: 'red'
+                    }
+                })
+            ];
+            toAdd.marker = group;
+            this.routeDataSource.add(group);
+            this.stopTF.text = this.currentStopSearchText = toAdd.text;
+            this.ensureRouteLayer();
+            this.waypoints.push(toAdd);
         }
+
+        if (!this.line) {
+            this.line = new Line({
+                styleBuilder: {
+                    color: 'gray',
+                    width: 6
+                },
+                positions: this.waypoints.map(w => w.position)
+            });
+            this.routeDataSource.add(this.line);
+        } else {
+            this.line.positions = this.waypoints.map(w => w.position);
+        }
+        this.mapComp.topSheetHolder.peekSheet();
+    }
+    handleClickOnPos(position: MapPos, metaData?) {
+        // this.log('onMapClicked', position, this.startPos, this.stopPos);
+        // const text = metaData ? metaData.name : `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`;
+        // // console.log('handleClickOnPos', position, text);
+        // if (this.waypoints.length === 0) {
+        //     // set start, or start =again
+        //     this.startTF.text = this.currentStartSearchText = text;
+        //     // this.setStartPosition(position);
+        // } else if (this.waypoints.length === 1) {
+        //     // set stop and calculate
+        //     // this.setStopPosition(position);
+        //     this.stopTF.text = this.currentStopSearchText = text;
+        //     // this.showRoute(this.startPos, this.stopPos);
+        // }
+        this.addWayPoint(position);
     }
     handleClickOnItem(item: Item) {
         this.handleClickOnPos(item.position, item.properties);
@@ -167,7 +296,7 @@ export default class DirectionsPanel extends BaseVueComponent implements MapModu
     }
     onMapClicked(e) {
         const { clickType, position } = e.data;
-        // console.log('onMapClicked', clickType, ClickType.LONG);
+        // this.log('onMapClicked', clickType, ClickType.LONG);
 
         if (clickType === ClickType.LONG) {
             this.handleClickOnPos(position);
@@ -175,54 +304,61 @@ export default class DirectionsPanel extends BaseVueComponent implements MapModu
         }
     }
 
-    setStartPosition(position: MapPos) {
-        if (!this.startMarker) {
-            // Create markers for start & end, and a layer for them
-            const styleBuilder = new MarkerStyleBuilder({
-                hideIfOverlapped: false,
-                size: 30,
-                color: 'green'
-            });
+    // setStartPosition(position: MapPos) {
+    //     this.log('setStartPosition', position, !!this.startMarker);
+    //     if (!this.startMarker) {
+    //         // Create markers for start & end, and a layer for them
+    //         const styleBuilder = new MarkerStyleBuilder({
+    //             hideIfOverlapped: false,
+    //             size: 30,
+    //             color: 'green'
+    //         });
 
-            this.startMarker = new Marker({
-                position,
-                styleBuilder
-            });
-            this.routeDataSource.add(this.startMarker);
-            this.ensureRouteLayer();
-        } else {
-            this.startMarker.position = position;
-            this.startMarker.visible = true;
-        }
-        this.mapComp.topSheetHolder.peekSheet();
-    }
-    setStopPosition(position: MapPos) {
-        if (!this.stopMarker) {
-            // Create markers for start & end, and a layer for them
-            const styleBuilder = new MarkerStyleBuilder({
-                hideIfOverlapped: false,
-                size: 30,
-                color: 'red'
-            });
+    //         this.startMarker = new Marker({
+    //             position,
+    //             styleBuilder
+    //         });
+    //         this.routeDataSource.add(this.startMarker);
+    //         this.ensureRouteLayer();
+    //     } else {
+    //         this.startMarker.position = position;
+    //         this.startMarker.visible = true;
+    //     }
+    //     this.mapComp.topSheetHolder.peekSheet();
+    // }
+    // setStopPosition(position: MapPos) {
+    //     this.log('setStopPosition', position, !!this.stopMarker);
+    //     if (!this.stopMarker) {
+    //         // Create markers for start & end, and a layer for them
+    //         const styleBuilder = new MarkerStyleBuilder({
+    //             hideIfOverlapped: false,
+    //             size: 30,
+    //             color: 'red'
+    //         });
 
-            this.stopMarker = new Marker({
-                position,
-                styleBuilder
-            });
-            this.routeDataSource.add(this.stopMarker);
-            this.ensureRouteLayer();
-        } else {
-            this.stopMarker.position = position;
-            this.stopMarker.visible = true;
-        }
-        this.mapComp.topSheetHolder.peekSheet();
-    }
+    //         this.stopMarker = new Marker({
+    //             position,
+    //             styleBuilder
+    //         });
+    //         this.routeDataSource.add(this.stopMarker);
+    //         this.ensureRouteLayer();
+    //     } else {
+    //         this.stopMarker.position = position;
+    //         this.stopMarker.visible = true;
+    //     }
+    //     this.mapComp.topSheetHolder.peekSheet();
+    // }
 
     cancel() {
-        this.mapComp.topSheetHolder.closeSheet().then(() => {
-            this.clearStartSearch();
-            this.clearStopSearch();
-        });
+        this.log('cancel');
+        this.waypoints = [];
+        if (this.line) {
+            this.line = null;
+        }
+        if (this._routeDataSource) {
+            this._routeDataSource.clear();
+        }
+        this.mapComp.topSheetHolder.closeSheet();
     }
     _offlineRoutingSearchService: PackageManagerValhallaRoutingService;
     get offlineRoutingSearchService() {
@@ -318,6 +454,7 @@ export default class DirectionsPanel extends BaseVueComponent implements MapModu
     }
     loading = false;
     currentRoute: Route;
+    currentLine: Line;
     showRoute(online = false) {
         this.loading = true;
         const service = online ? this.onlineRoutingSearchService : this.offlineRoutingSearchService;
@@ -325,7 +462,7 @@ export default class DirectionsPanel extends BaseVueComponent implements MapModu
         service.calculateRoute(
             {
                 projection: this.mapView.projection,
-                points: [this.startPos, this.stopPos]
+                points: this.waypoints.map(r => r.position)
             },
             (error, result) => {
                 this.loading = false;
@@ -353,11 +490,14 @@ export default class DirectionsPanel extends BaseVueComponent implements MapModu
                 // const text = 'Your route is ' + distance + 'km (' + time + ')';
 
                 // alert(text);
+                this.clearCurrentLine();
 
+                // this.routeDataSource.clear();
+                this.currentLine = this.createPolyline(route, result.getPoints());
                 this.routeDataSource.clear();
-
-                const line = this.createPolyline(route, result.getPoints());
-                this.routeDataSource.add(line);
+                this.line = null;
+                this.waypoints = [];
+                this.routeDataSource.add(this.currentLine);
                 this.ensureRouteLayer();
                 // Add instruction markers
                 // const instructions = result.getInstructions();
@@ -371,27 +511,36 @@ export default class DirectionsPanel extends BaseVueComponent implements MapModu
                 //         this.createRoutePoint(i, this.routeDataSource);
                 //     }
                 // });
-                this.mapComp.selectItem({ position: fromNativeMapPos(line.getGeometry().getCenterPos()), route }, true);
+                this.mapComp.selectItem({ position: fromNativeMapPos(this.currentLine.getGeometry().getCenterPos()), route }, true);
             }
         );
     }
     ensureRouteLayer() {
         return this.routeLayer !== null;
     }
+    clearCurrentLine() {
+        if (this.currentLine) {
+            this.routeDataSource.remove(this.currentLine);
+            this.currentLine = null;
+        }
+    }
     onUnselectedItem(item: Item) {
         if (!!item.route && item.route === this.currentRoute) {
-            this.routeDataSource.clear();
+            // this.routeDataSource.clear();
             this.currentRoute = null;
+            this.clearCurrentLine();
         }
     }
     onSelectedItem(item: Item, oldItem: Item) {
         if (!!oldItem && !!oldItem.route && oldItem.route === this.currentRoute) {
-            this.routeDataSource.clear();
+            // this.routeDataSource.clear();
             this.currentRoute = null;
+            this.clearCurrentLine();
         }
         if (!!item && !!item.route && item.route !== this.currentRoute) {
-            this.routeDataSource.clear();
+            // this.routeDataSource.clear();
             this.currentRoute = null;
+            this.clearCurrentLine();
         }
     }
 
@@ -415,10 +564,10 @@ export default class DirectionsPanel extends BaseVueComponent implements MapModu
         this.currentStopSearchText = e.value;
     }
     get startTF() {
-        return this.$refs.startTF.nativeView as TextField;
+        return this.$refs.startTF && (this.$refs.startTF.nativeView as TextField);
     }
     get stopTF() {
-        return this.$refs.stopTF.nativeView as TextField;
+        return this.$refs.stopTF && (this.$refs.stopTF.nativeView as TextField);
     }
     clearStartSearch() {
         // if (this.searchAsTypeTimer) {
@@ -426,27 +575,26 @@ export default class DirectionsPanel extends BaseVueComponent implements MapModu
         //     this.searchAsTypeTimer = null;
         // }
         // this.dataItems = [] as any;
-        this.startPos = null;
-        if (this.startMarker) {
-            this.startMarker.visible = false;
+        if (this.waypoints.length >= 1 && this.waypoints[0].isStart === true) {
+            const toRemove = this.waypoints.splice(0, 1)[0];
+            this.routeDataSource.remove(toRemove.marker);
+            if (this.line) {
+                this.line.positions = this.waypoints.map(w => w.position);
+            }
         }
         this.currentStartSearchText = null;
-        // console.log('clearStartSearch', this.startTF);
         this.startTF.text = null;
         this.unfocus(this.startTF);
     }
     clearStopSearch() {
-        // if (this.searchAsTypeTimer) {
-        //     clearTimeout(this.searchAsTypeTimer);
-        //     this.searchAsTypeTimer = null;
-        // }
-        // this.dataItems = [] as any;
-        this.stopPos = null;
-        if (this.stopMarker) {
-            this.stopMarker.visible = false;
+        if (this.waypoints.length >= 1 && this.waypoints[this.waypoints.length - 1].isStop === true) {
+            const toRemove = this.waypoints.splice(this.waypoints.length - 1, 1)[0];
+            this.routeDataSource.remove(toRemove.marker);
+            if (this.line) {
+                this.line.positions = this.waypoints.map(w => w.position);
+            }
         }
         this.currentStopSearchText = null;
-        // console.log('clearStopSearch', this.stopTF);
         this.stopTF.text = null;
         this.unfocus(this.stopTF);
     }

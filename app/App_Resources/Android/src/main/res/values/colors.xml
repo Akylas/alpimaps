@@ -4,4 +4,5 @@
     <color name="background">#ffffff</color>
 	<color name="ns_primaryDark">#0288D1</color>
 	<color name="ns_accent">#29B6F6</color>
+	<color name="ns_secondary">#29B6F6</color>
 </resources>

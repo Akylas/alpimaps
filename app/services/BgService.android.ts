@@ -1,75 +1,81 @@
-import { ApplicationEventData, exitEvent, off as applicationOff, on as applicationOn } from 'tns-core-modules/application/application';
+import { BgServiceCommon, BgServiceLoadedEvent } from '~/services/BgService.common';
+
 import * as utils from 'tns-core-modules/utils/utils';
-import { GeoHandler } from '~/handlers/GeoHandler';
 import { BgService as AndroidBgService } from '~/services/android/BgService';
 import { BgServiceBinder } from '~/services/android/BgServiceBinder';
-import { BgServiceCommon, BgServiceLoadedEvent } from '~/services/BgService.common';
-import { clog } from '~/utils/logging';
-
 
 export { BgServiceLoadedEvent };
+import { clog } from '~/utils/logging';
 
 export class BgService extends BgServiceCommon {
     private serviceConnection: android.content.ServiceConnection;
     bgService: WeakRef<AndroidBgService>;
-    context;
-    readonly _geoHandler: GeoHandler;
+    context: android.content.Context;
     constructor() {
         super();
-        this._geoHandler = new GeoHandler();
         // initServiceConnection();
-    }
-
-    start() {
-        this._handlerLoaded();
-    }
-    startBackground() {
         this.serviceConnection = new android.content.ServiceConnection({
             onServiceDisconnected: (name: android.content.ComponentName) => {
-                clog('android service disconnected');
+                // this.log('android service disconnected');
                 this.unbindService();
             },
 
             onServiceConnected: (name: android.content.ComponentName, binder: android.os.IBinder) => {
-                // clog('BgServiceProvider', 'onServiceConnected', name);
+                // this.log('BgServiceProvider', 'onServiceConnected', name, binder);
                 this.handleBinder(binder);
             },
-            onBindingDied(param0: globalAndroid.content.ComponentName) {}
+            // onNullBinding(param0: globalAndroid.content.ComponentName) {
+            //     this.log('BgServiceProvider', 'onNullBinding', param0);
+            // },
+            onBindingDied(param0: globalAndroid.content.ComponentName) {
+                // this.log('BgServiceProvider', 'onBindingDied', param0);
+            }
         });
         this.context = utils.ad.getApplicationContext();
-        const intent = new android.content.Intent(this.context, akylas.alpi.maps.BgService.class);
-
-        // if (android.os.Build.VERSION.SDK_INT >= 26) {
-        //     this.context.startForegroundService(intent);
-        // } else {
-        this.context.startService(intent);
-        // }
-        this.bindService(this.context, intent);
-        applicationOn(exitEvent, this.onAppExit);
     }
 
-    bindService(context, intent) {
+    bindService(context: android.content.Context, intent) {
+        // this.log('bindService');
         const result = context.bindService(intent, this.serviceConnection, android.content.Context.BIND_AUTO_CREATE);
         if (!result) {
             console.error('could not bind service');
         }
     }
     unbindService() {
+        // this.log('unbindService');
         this.bgService = null;
         this._loaded = false;
     }
-    onAppExit = (args: ApplicationEventData) => {
-        applicationOff(exitEvent, this.onAppExit);
-        if (this.bgService) {
-            this.bgService.get().removeForeground();
-        }
-        // if (this.bgService) {
+
+    start() {
         const intent = new android.content.Intent(this.context, akylas.alpi.maps.BgService.class);
-        this.context.stopService(intent);
+
+        // this.log('BgService start', android.os.Build.VERSION.SDK_INT >= 26); // oreo
+        // if (android.os.Build.VERSION.SDK_INT >= 26) {
+        //     // ... start service in foreground to prevent it being killed on Oreo
+        //     this.context.startForegroundService(intent);
+        // } else {
+        this.context.startService(intent);
         // }
+        this.bindService(this.context, intent);
+    }
+
+    stop() {
+        // this.log('stopping background service');
+        if (this.bgService) {
+            this.bgService.get().dismissNotification();
+            // if (this.bgService) {
+            const intent = new android.content.Intent(this.context, akylas.alpi.maps.BgService.class);
+            this.context.stopService(intent);
+            this.context.unbindService(this.serviceConnection);
+            this._loaded = false;
+        }
     }
     handleBinder(binder: android.os.IBinder) {
-        const localservice = (binder as BgServiceBinder).getService();
+        const bgBinder = binder as BgServiceBinder;
+        const localservice = bgBinder.getService();
+        bgBinder.setService(null);
+        // this.log('handleBinder', binder, localservice, localservice instanceof AndroidBgService);
         if (localservice instanceof AndroidBgService) {
             this.bgService = new WeakRef(localservice);
             localservice.onBounded();
@@ -81,12 +87,11 @@ export class BgService extends BgServiceCommon {
         if (this.bgService) {
             return this.bgService.get().geoHandler;
         }
-        return this._geoHandler;
     }
 
-    updateNotifText(text: string) {
-        if (this.bgService) {
-            return this.bgService.get().updateNotifText(text);
-        }
-    }
+    // updateNotifText(text: string) {
+    //     if (this.bgService) {
+    //         return this.bgService.get().updateNotifText(text);
+    //     }
+    // }
 }
