@@ -7,7 +7,6 @@ import { Client as BugsnagClient } from 'nativescript-bugsnag';
 import { setMapPosKeys } from 'nativescript-carto/core/core';
 import * as application from 'tns-core-modules/application';
 
-
 setMapPosKeys('lat', 'lon');
 function CustomError(error) {
     this.name = 'CustomError';
@@ -21,17 +20,21 @@ application.on(application.discardedErrorEvent, args => {
     const error = args.error;
     // const jsError = new Error(error.message);
     error.stack = error.stackTrace;
-    // console.log(error);
+    console.log(error);
     // console.log('[stackTrace test Value]', error.message, error.stackTrace);
     // console.log('[stack test value]', error.message, error.stack);
     // console.log(jsError);
-    setTimeout(() => {
-        throw new Error('test');
-    }, 0);
+    // setTimeout(() => {
+        // throw new Error('test');
+    // }, 0);
 });
 
 // import { Client as FlipperClient } from 'nativescript-flipper';
+/* DEV-START */
 const currentApp = knownFolders.currentApp();
+process.cwd = function() {
+    return '';
+}
 require('source-map-support').install({
     environment: 'node',
     handleUncaughtExceptions: false,
@@ -39,29 +42,31 @@ require('source-map-support').install({
         const sourceMapPath = source + '.map';
         const appPath = currentApp.path;
         let sourceMapRelativePath = sourceMapPath
-            .replace('file:///', '')
+            // .replace('file:///', '')
             .replace('file://', '')
+            .replace(appPath + '/', '')
             .replace(appPath + '/', '');
-        console.log('retrieveSourceMap', source, sourceMapRelativePath);
         if (sourceMapRelativePath.startsWith('app/')) {
             sourceMapRelativePath = sourceMapRelativePath.slice(4);
         }
+        // console.log('retrieveSourceMap', source, appPath, sourceMapRelativePath, currentApp.getFile(sourceMapRelativePath).readTextSync());
         return {
             url: sourceMapRelativePath,
             map: currentApp.getFile(sourceMapRelativePath).readTextSync()
         };
     }
 });
+/* DEV-END */
 
 // Error.prepareStackTrace = function() {
-//     console.log('test', 'prepareStackTrace');
+//     console.log('test', 'prepareStackTrace', new Error().stack);
 // };
 // const flipper = new FlipperClient();
 // flipper.start({
 //     plugins: ['network', 'inspector', 'database', 'prefs', 'crash']
 // });
 
-if (TNS_ENV === 'production') {
+if (TNS_ENV === 'production' || TEST_LOGS) {
     const bugsnag = (Vue.prototype.$bugsnag = new BugsnagClient());
     Promise.all([getVersionName(), getBuildNumber()])
         .then(result => {
@@ -139,8 +144,14 @@ Vue.use(PrototypePlugin);
 Vue.config.silent = !DEV_LOG;
 Vue.config['debug'] = DEV_LOG;
 
+function throwVueError(err) {
+    Vue.prototype.$showError(err);
+    // throw err;
+}
+
 Vue.config.errorHandler = (e, vm, info) => {
-    throw e;
+    console.log('[Vue]', `[${info}]`, e);
+    setTimeout(() => throwVueError(e), 0);
 };
 
 Vue.config.warnHandler = function(msg, vm, trace) {

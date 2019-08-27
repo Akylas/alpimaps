@@ -131,7 +131,7 @@ export class GeoHandler extends Observable {
     }
     wasWatchingBeforePause = false;
     watcherBeforePause;
-    dontWatchWhilePaused = false;
+    dontWatchWhilePaused = true;
     onAppResume(args: ApplicationEventData) {
         if (gVars.isIOS) {
             this._isIOSBackgroundMode = false;
@@ -203,10 +203,10 @@ export class GeoHandler extends Observable {
         applicationOff(resumeEvent, this.onAppResume, this);
     }
     onGPSStateChange(e: GPSEvent) {
-        const enabled = e.data.enabled;
         // if (DEV_LOG) {
-        //     this.log('GPS state change', enabled);
+        this.log('GPS state change', e.data);
         // }
+        const enabled = e.data.enabled;
         if (!enabled) {
             this.stopSession();
         }

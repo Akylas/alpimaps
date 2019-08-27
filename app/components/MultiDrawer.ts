@@ -210,7 +210,7 @@ export default class MultiDrawer extends Vue {
 
     get computedSidesEnabled() {
         const validSides = ['left', 'right', 'bottom', 'top'];
-        return Object.keys(this.$slots).filter(slotName => validSides.indexOf(slotName) !== -1 && this.optionsInternal[slotName].enabled);
+        return Object.keys(this.$slots).filter(slotName => validSides.indexOf(slotName) !== -1 && this.optionsInternal[slotName] && this.optionsInternal[slotName].enabled);
     }
     // drawerStyle = {};
     // updateDrawerStyle(side) {

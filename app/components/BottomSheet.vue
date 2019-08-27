@@ -1,16 +1,8 @@
 <template>
     <GridLayout ref="bottomSheet" elevation="1" width="100%" :rows="rows" @tap="noop">
-        <!-- <transition name="fade" duration="200"> -->
-        <GridLayout row="0" columns="auto,*,auto" rows="*,auto,auto,*" :visibility="itemIsRoute ? 'collapsed' : 'visible'">
-            <Label col="0" rowSpan="4" width="40" margin="0 5 0 0" v-show="!!selectedIcon" :text="selectedIcon |fonticon" class="maki" fontSize="24" textAlignment="center" verticalAlignment="center" color="white" />
-            <Label col="1" row="1" :html="selectedTitle" color="white" fontSize="16" fontWeight="bold" verticalAlignment="center" textWrap maxLines="2" />
-            <Label col="1" row="2" v-show="!!selectedSubtitle" :html="selectedSubtitle" color="#D0D0D0" fontSize="13" verticalAlignment="top" />
-            <MDActivityIndicator v-if="updatingItem" rowSpan="4" col="2" busy class="activity-indicator" />
-        </GridLayout>
-        <!-- </transition> -->
-        <!-- <transition name="fade" duration="200"> -->
-        <BottomSheetRouteView ref="routeView" row="0" :visibility="itemIsRoute ? 'visible' : 'collapsed'" :routeItem="itemIsRoute ? item : null" />
-        <!-- </transition> -->
+        <BottomSheetInfoView ref="infoView" row="0" :visibility="itemIsRoute ? 'collapsed' : 'visible'" :updating="updatingItem" :item="itemIsRoute ? null : item" />
+        <BottomSheetRouteInfoView ref="routeView" row="0" :visibility="itemIsRoute ? 'visible' : 'collapsed'" :routeItem="itemIsRoute ? item : null" />
+
         <StackLayout row="1" orientation="horizontal" width="100%" @tap="noop" borderTopWidth="1" borderBottomWidth="1" borderColor='#44ffffff'>
             <MDButton variant="text" padding="4" fontSize="10" @tap="searchItemWeb" text="search" v-show="item && !item.id" />
             <MDButton variant="text" padding="4" fontSize="10" @tap="getProfile" text="profile" v-show="itemRouteNoProfile" />

@@ -32,6 +32,8 @@
 	}
 	
 	[class=lake],
+	[class=pond],
+	[class=water],
 	[class=river][zoom>=8]{
 		polygon-fill: @water;
 		[class=river]{

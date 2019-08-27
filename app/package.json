@@ -4,7 +4,7 @@
         "markingMode": "none",
         "v8Flags": "--expose_gc"
     },
-    "discardUncaughtJsExceptions":true,
+    "discardUncaughtJsExceptions":false,
     "main": "main.js",
     "profiling": "none"
 }

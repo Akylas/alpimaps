@@ -35,8 +35,8 @@ export default class BaseVueComponent extends Vue {
     public actionBarHeight;
     needsRoundedWatchesHandle = false;
     debug = false;
-    isAndroid = gVars.isAndroid;
-    isIOS = gVars.isIOS;
+    // isAndroid = gVars.isAndroid;
+    // isIOS = gVars.isIOS;
     getRef(key: string) {
         if (this.$refs[key]) {
             return this.$refs[key].nativeView as View;

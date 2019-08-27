@@ -9,10 +9,10 @@
         </transition>
 
         <transition name="fade">
-            <GridLayout  v-if="showLocationInfo" col="1" row="0" borderRadius="40" backgroundColor="#77000000" padding="6" columns="auto,*,auto" @swipe="showLocationInfo = false">
+            <GridLayout v-if="showLocationInfo" col="1" row="0" borderRadius="40" backgroundColor="#77000000" padding="6" columns="auto,*,auto" @swipe="showLocationInfo = false">
                 <label width="60" height="60" borderRadius="30" borderWidth="4" :borderColor="accentColor" backgroundColor="#aaffffff" textWrap textAlignment="center" verticalTextAlignment="middle">
-                    <Span :text="((currentLocation && currentLocation.speed !== undefined) ? currentLocation.speed.toFixed() : '-') + '\n'" fontSize="26" fontWeight="bold"  backgroundColor="transparent"/>
-                    <Span text="km/h" fontSize="10" backgroundColor="transparent"/>
+                    <Span :text="((currentLocation && currentLocation.speed !== undefined) ? currentLocation.speed.toFixed() : '-') + '\n'" fontSize="26" fontWeight="bold" backgroundColor="transparent" />
+                    <Span text="km/h" fontSize="10" backgroundColor="transparent" />
                 </label>
                 <label col="1" textWrap marginLeft="5" verticalAlignment="top" color="#fff">
                     <Span :text="$tu('altitude') + (listeningForBarometer ? `(${$t('barometer')})`:'') + '\n\n'" fontSize="11" :color="accentColor" />
@@ -39,9 +39,9 @@
             <Label :text="suggestionPackageName" fontSize="10" verticalAlignment="center" horizontalAlignment="center" textWrap />
             <Label class="label-icon-btn" :text="'mdi-download' | fonticon" verticalAlignment="center" />
         </StackLayout> -->
-        <StackLayout orientation="vertical" col="2" row="2" verticalAlignment="bottom" isPassThroughParentEnabled padding="2">
+        <StackLayout col="2" row="2" verticalAlignment="bottom" isPassThroughParentEnabled padding="2">
             <transition name="scale">
-                <MDButton  @tap="startDirections" row="0" rowSpan="2" col="2" class="floating-btn buttonthemed" :text="'mdi-directions' | fonticon" v-show="selectedItemHasPosition" />
+                <MDButton @tap="startDirections" row="0" rowSpan="2" col="2" class="floating-btn buttonthemed" :text="'mdi-directions' | fonticon" v-show="selectedItemHasPosition" />
             </transition>
             <GridLayout class="floating-btn" :class="locationButtonClass" @tap="askUserLocation" @longPress="onWatchLocation">
                 <Label textAlignment="center" verticalTextAlignment="middle" class="mdi" :class="locationButtonLabelClass" :text="'mdi-crosshairs-gps' | fonticon" :color="watchingLocation? 'white': accentColor" />

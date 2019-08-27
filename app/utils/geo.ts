@@ -256,7 +256,7 @@ function computeAngleBetween( from: MapPos,  to: MapPos) {
 /**
  * Returns the distance between two LatLngs, in meters.
  */
-function computeDistanceBetween( from: MapPos,  to: MapPos) {
+export function computeDistanceBetween( from: MapPos,  to: MapPos) {
     return computeAngleBetween(from, to) * EARTH_RADIUS;
 }
 export function distanceToEnd( index: number, poly: MapPos[]) {

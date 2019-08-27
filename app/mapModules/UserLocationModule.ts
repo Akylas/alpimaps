@@ -22,7 +22,9 @@ const LOCATION_ANIMATION_DURATION = 300;
 const SCREENSHOT_NOTIFICATION_ID = 23466571;
 
 export default class UserLocationModule extends MapModule {
+    localBackVectorDataSource: LocalVectorDataSource;
     localVectorDataSource: LocalVectorDataSource;
+    localBackVectorLayer: VectorLayer;
     localVectorLayer: VectorLayer;
     userBackMarker: Point;
     userMarker: Point;
@@ -79,9 +81,13 @@ export default class UserLocationModule extends MapModule {
             this.localVectorDataSource = new LocalVectorDataSource({ projection });
 
             this.localVectorLayer = new VectorLayer({ visibleZoomRange: [0, 24], dataSource: this.localVectorDataSource });
+            this.localBackVectorDataSource = new LocalVectorDataSource({ projection });
+
+            this.localBackVectorLayer = new VectorLayer({ visibleZoomRange: [0, 24], dataSource: this.localBackVectorDataSource });
 
             // always add it at 1 to respect local order
-            this.mapComp.addLayer(this.localVectorLayer, 'userLocation');
+            this.mapComp.addLayer(this.localBackVectorLayer, 'userLocation');
+            this.mapComp.addLayer(this.localVectorLayer, 'userLocation', 1);
         }
     }
     onMapMove(e) {
@@ -195,7 +201,7 @@ export default class UserLocationModule extends MapModule {
                     color: accuracyColor
                 }
             });
-            this.localVectorDataSource.add(this.accuracyMarker);
+            this.localBackVectorDataSource.add(this.accuracyMarker);
             this.localVectorDataSource.add(this.userBackMarker);
             this.localVectorDataSource.add(this.userMarker);
             // this.userBackMarker.position = position;
@@ -239,6 +245,7 @@ export default class UserLocationModule extends MapModule {
     }
     geoHandler: GeoHandler;
     onServiceLoaded(geoHandler: GeoHandler) {
+        this.log('onServiceLoaded', !!geoHandler);
         this.geoHandler = geoHandler;
         geoHandler.on(UserLocationdEvent, this.onLocation, this);
     }
@@ -248,8 +255,8 @@ export default class UserLocationModule extends MapModule {
     }
 
     startWatchLocation() {
-        // console.log('startWatchLocation');
-        if (this.watchingLocation) {
+        console.log('startWatchLocation', this.watchingLocation, !!this.geoHandler);
+        if (this.watchingLocation || !this.geoHandler) {
             return;
         }
         this.userFollow = true;

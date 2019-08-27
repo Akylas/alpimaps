@@ -373,8 +373,10 @@
 		}
 	}
 }
+ 
 
-#housenumber[zoom>=16]['nuti::buildings'>0]{
+// biais
+#housenumber[zoom>=17]['nuti::buildings'>0]{
 	text-name: [housenumber];
 	text-face-name: @mont;
 	text-fill: @housenumber;
@@ -384,27 +386,29 @@
 	text-wrap-before: true;
 	text-avoid-edges: true;
 	text-transform: uppercase;
-	text-min-distance: linear([view::zoom], (16, 100.0), (17, 50), (18, 20.0));
+	text-size: linear([view::zoom], (17, 6.0), (19, 8.0), (21, 10.0));
+	text-min-distance: linear([view::zoom], (17, 100.0), (18, 50), (19, 20.0));
 }
 
+// biais
 #poi {
 	// [osm_id = 'nuti::selected_id'],
 	// [name = 'nuti::selected_name'],
 	[subclass='alpine_hut'][rank<=10],
 	[class=campsite][rank<=10],
-	[zoom=14][rank<=1][class!='information'][class!='toilets'][class!='bus'][subclass!='tram_stop'][subclass!='station'][class!='picnic_site'],
-	[zoom=15][rank<=2][class!='toilets'][class!='information'][class!='bus'][subclass!='tram_stop'][subclass!='station'],
-	[zoom=16][rank<=3],
-	[zoom=17][rank<=4],
-	[zoom>=15][class=park][rank<=10],
-	[zoom>=16][class=park][rank<=20],
-	[zoom>=17][class=park][rank<=30],
-	[zoom>=18] {
+	[zoom=15][rank<=1][class!='information'][class!='toilets'][class!='bus'][subclass!='tram_stop'][subclass!='station'][class!='picnic_site'],
+	[zoom=16][rank<=2][class!='toilets'][class!='information'][class!='bus'][subclass!='tram_stop'][subclass!='station'],
+	[zoom=17][rank<=10],
+	[zoom=18][rank<=50],
+	[zoom>=16][class=park][rank<=10],
+	[zoom>=17][class=park][rank<=20],
+	[zoom>=18][class=park][rank<=30],
+	[zoom>=19] {
 
 		::icon[class!=null] {
 			text-placement: [nuti::markers3d];
 			text-name: @maki_icon;
-			text-size: 14 - 0.000001 * [rank];
+			text-size: linear([view::zoom], (14, 10), (18, 10), (20, 14.0)) - 0.000001 * [rank];
 			text-face-name: @maki;
 			// text-opacity:0.8;
 			text-feature-id: [name];
@@ -437,7 +441,7 @@
 			text-wrap-before: true;
 			text-avoid-edges: true;
 			text-fill: @poi_dark;
-			text-size: 9 - 0.000001 * [rank];
+			text-size: linear([view::zoom], (14, 7), (18, 7), (20, 10.0)) - 0.000001 * [rank];
 			text-wrap-width: step([zoom], (15, 80), (16, 90), (18, 100));
 			text-feature-id: [name];
 			[class!=null] { text-dy: 10; }
@@ -498,7 +502,8 @@
 		::icon {
 			text-placement: [nuti::markers3d];
 			text-name: [nuti::maki-mountain];
-			text-size: 14 + [ele] * 0.00001;
+			// text-size: 14 + [ele] * 0.00001;
+			text-size: linear([view::zoom], (7, 10), (15, 14.0)) - 0.000001;
 			text-face-name: @maki;
 			text-fill: @peak_label;
 			text-halo-fill: @peak_halo;
@@ -517,7 +522,7 @@
 		::label {
 		text-name: @name ?  (@name + ' '  + [ele] + 'm'): '';
 		text-face-name: @mont_md;
-		text-size: linear([view::zoom], (6, 7.0), (14, 9)) + [ele] * 0.00001;
+		text-size: linear([view::zoom], (6, 7.0), (11, 8.0), (14, 9)) + [ele] * 0.00001;
 		text-fill: @peak_label_dark;
 		text-placement: [nuti::markers3d];
 		text-halo-fill: @peak_halo;
