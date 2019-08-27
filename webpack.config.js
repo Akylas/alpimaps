@@ -75,10 +75,10 @@ module.exports = env => {
         // }
     });
 
-    config.module.rules.push({
-        test: /\.mss$/,
-        use: './mss-hot-loader'
-    });
+    // config.module.rules.push({
+    //     test: /\.mss$/,
+    //     use: './mss-hot-loader'
+    // });
     if (!!production) {
         let appVersion;
         let buildNumber;
@@ -117,5 +117,6 @@ module.exports = env => {
             })
         );
     }
+    
     return config;
 };

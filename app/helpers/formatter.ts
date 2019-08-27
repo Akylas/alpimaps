@@ -10,7 +10,7 @@ momentDurationFormatSetup(moment);
 // var momentDurationFormatSetup = require("moment-duration-format");
 
 import humanUnit from 'human-unit';
-import { Address } from '~/mapModules/ItemsModule';
+import { Address, Item } from '~/mapModules/ItemsModule';
 const timePreset = {
     factors: [1000, 60, 60, 24],
     units: ['ms', 's', 'min', 'hour', 'day']
@@ -54,7 +54,7 @@ export function convertDistance(meters) {
 }
 export function convertElevation(meters) {
     // clog('convertDuration', date, formatStr, test, result);
-    return humanUnit(meters, elevationPreset);
+    return convertValueToUnit(meters, 'm').join(' ');
 }
 
 export function formatDuration(_time): string {
@@ -118,22 +118,26 @@ export function formatValueToUnit(value: any, unit, options?: { prefix?: string;
     return result;
 }
 
-export function formatAddress(address: Address, part = 0) {
+export function formatAddress(item: Item, part = 0) {
+    const address = item.address;
+    const properties = item.properties;
     let result = '';
-    if (part !== 2) {
-        if (address.houseNumber) {
-            result += address.houseNumber + ' ';
-        }
-        if (address.road) {
-            result += address.road + ' ';
-        }
+    if ((properties.osm_value || properties.osm_key || properties.class ) && address && address.houseNumber) {
+        result += address.houseNumber + ' ';
+    }
+    if (address.road) {
+        result += address.road + ' ';
     }
 
     if (part === 1 && result.length > 0) {
         return result;
     }
-    if (part === 2 && result.length === 0) {
-        return result;
+    if (part === 2) {
+        if ( result.length === 0) {
+            return undefined;
+        } else {
+            result = '';
+        }
     }
     if (address.postcode) {
         result += address.postcode + ' ';

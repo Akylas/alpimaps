@@ -324,7 +324,7 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
     startDirections() {
         if (this.selectedItem) {
             const module = this.mapComp.mapModule('directionsPanel');
-            module.handleClickOnItem(this.selectedItem);
+            module.addStopPoint(this.selectedItem.position, this.selectedItem.properties);
         }
     }
     resetBearing() {

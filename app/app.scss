@@ -199,18 +199,18 @@ mdbutton {
     @extend .menu-btn;
 }
 
-.route-details {
+.details {
     padding: 10;
 }
 
-.route-details-label {
+.details-label {
     font-size: 14;
     horizontal-alignment: left;
     vertical-alignment: center;
     text-alignment: left;
-    color: black;
+    color: white;
 }
-.route-details-icon {
+.details-icon {
     @extend .mdi;
     margin-right: 10;
     color: gray;

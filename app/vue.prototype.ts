@@ -19,6 +19,8 @@ const Plugin = {
         const networkService = new NetworkService();
         Vue.prototype.$networkService = networkService;
 
+        let imageModuleInitialized = false;
+
         application.on(application.launchEvent, () => {
             console.log('App Launched');
             imageModule.initialize({ isDownsampleEnabled: true });

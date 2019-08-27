@@ -1,5 +1,5 @@
+import { CartoMapStyle, ClickType, MapPos, ScreenPos, toNativeScreenPos } from 'nativescript-carto/core/core';
 import { ad, layout } from 'tns-core-modules/utils/utils';
-import { throttle } from 'helpful-decorators';
 import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
 import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
 import { Layer } from 'nativescript-carto/layers/layer';
@@ -20,8 +20,7 @@ import * as appSettings from 'tns-core-modules/application-settings';
 import { Folder, knownFolders, path } from 'tns-core-modules/file-system';
 import { screen } from 'tns-core-modules/platform';
 import { profile } from 'tns-core-modules/profiling';
-import { GridLayout } from 'tns-core-modules/ui/layouts/grid-layout';
-import { CartoMapStyle, ClickType, MapPos, ScreenPos, toNativeScreenPos } from 'nativescript-carto/core/core';
+import { throttle } from 'helpful-decorators';
 import { action } from 'ui/dialogs';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import { GeoHandler } from '~/handlers/GeoHandler';
@@ -31,8 +30,7 @@ import ItemsModule, { Item } from '~/mapModules/ItemsModule';
 import MapModule from '~/mapModules/MapModule';
 import UserLocationModule from '~/mapModules/UserLocationModule';
 import { NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
-import { getBoundsZoomLevel, getCenter } from '~/utils/geo';
-import { clog } from '~/utils/logging';
+import { computeDistanceBetween, getBoundsZoomLevel, getCenter } from '~/utils/geo';
 import { actionBarButtonHeight, actionBarHeight, navigationBarHeight, primaryColor } from '../variables';
 import App from './App';
 import BgServicePageComponent from './BgServicePageComponent';
@@ -139,7 +137,7 @@ let defaultLiveSync = global.__onLiveSync;
     }
 })
 export default class Map extends BgServicePageComponent {
-    mapModules: MapModules;
+    mapModules: MapModules = null;
 
     @Prop({ default: false }) readonly licenseRegistered!: boolean;
     // @Watch('licenseRegistered')
@@ -167,7 +165,7 @@ export default class Map extends BgServicePageComponent {
     selectedRouteLine: Line;
     mSelectedItem: Item = null;
     mapProjection: Projection = null;
-    currentLanguage = 'en';
+    currentLanguage = appSettings.getString('language', 'en');
     addedLayers: string[] = [];
 
     showingDownloadPackageDialog = false;
@@ -270,15 +268,18 @@ export default class Map extends BgServicePageComponent {
                 const match = query.match(geoTextRegexp);
                 const actualQuery = decodeURIComponent(query).replace(/[+]/g, ' ');
                 if (match) {
-                    this.selectItem( {
-                        properties: {
-                            name: actualQuery
+                    this.selectItem(
+                        {
+                            properties: {
+                                name: actualQuery
+                            },
+                            position: {
+                                lat: parseFloat(match[1]),
+                                lon: parseFloat(match[2])
+                            }
                         },
-                        position: {
-                            lat: parseFloat(match[1]),
-                            lon: parseFloat(match[2])
-                        }
-                    }, true);
+                        true
+                    );
                 } else {
                     this.showLoading(this.$tc(`searching_for:${actualQuery}`));
                     this.$packageService
@@ -289,7 +290,7 @@ export default class Map extends BgServicePageComponent {
                         .then(result => {
                             if (result.length > 0) {
                                 console.log('found it!', this.$packageService.prepareGeoCodingResult(result[0]));
-                                this.selectItem( this.$packageService.prepareGeoCodingResult(result[0]), true, true, 16);
+                                this.selectItem(this.$packageService.prepareGeoCodingResult(result[0]), true, true, 16);
                             } else {
                                 this.searchText = actualQuery.replace(/[,]/g, ' ');
                             }
@@ -315,14 +316,23 @@ export default class Map extends BgServicePageComponent {
     get bottomSheetDecale() {
         return navigationBarHeight;
     }
+
+    get watchingLocation() {
+        return this.mapModules && this.mapModules.userLocation.watchingLocation;
+    }
+    get queryingLocation() {
+        return this.mapModules && this.mapModules.userLocation.queryingLocation;
+    }
     @profile
     mounted() {
         super.mounted();
+        
         // if (gVars.isAndroid) {
         // (this.$refs.fab.nativeView as GridLayout).getChildAt(0).marginBottom = -navigationBarHeight;
         // this.nativeView.marginBottom = navigationBarHeight;
         // this.overMapWidgets.nativeView.marginBottom = layout.toDevicePixels(navigationBarHeight);
         // }
+        this.log('onMapMounted', !!this.geoHandler);
         this.searchView = this.$refs.searchView;
         this.$setMapComponent(this);
         this.mapModules = {
@@ -336,12 +346,16 @@ export default class Map extends BgServicePageComponent {
             mapScrollingWidgets: this.$refs.mapScrollingWidgets,
             bottomSheet: this.bottomSheet
         };
+
+        if (!!this.geoHandler) {
+            this.runOnModules('onServiceLoaded', this.geoHandler);
+        }
         // this.log('mounted', App.cartoLicenseRegistered, Object.keys(this.mapModules), !!this.searchView);
         // this.mapModules.userLocation.on('location', this.onNewLocation, this);
 
         defaultLiveSync = global.__onLiveSync.bind(global);
         global.__onLiveSync = (...args) => {
-            // clog('__onLiveSync', args);
+            this.log('__onLiveSync', args);
             const context = args[0];
             if (!context && !!this.currentLayerStyle && !this.currentLayerStyle.endsWith('.zip')) {
                 this.reloadMapStyle && this.reloadMapStyle();
@@ -354,17 +368,11 @@ export default class Map extends BgServicePageComponent {
     }
     onLoaded() {
         // this.$getAppComponent().$on('screen', this.onDeviceScreen);
-        if (!App.cartoLicenseRegistered) {
-            registerLicense(gVars.CARTO_TOKEN, result => {
-                // clog('registerLicense done', result);
-                this.$getAppComponent().setCartoLicenseRegistered(result);
-
-                setShowDebug(true);
-            });
-        }
+        
         // }, 0);
     }
     destroyed() {
+        this.log('onMapDestroyed');
         this.runOnModules('onMapDestroyed');
         // this.$getAppComponent().$off('screen', this.onDeviceScreen);
         this.$setMapComponent(null);
@@ -423,11 +431,11 @@ export default class Map extends BgServicePageComponent {
     }
 
     onServiceLoaded(geoHandler: GeoHandler) {
-        // this.log('onServiceLoaded');
+        this.log('onServiceLoaded', !!geoHandler);
         this.runOnModules('onServiceLoaded', geoHandler);
     }
     onServiceUnloaded(geoHandler: GeoHandler) {
-        // this.log('onServiceUnloaded');
+        this.log('onServiceUnloaded');
         this.runOnModules('onServiceUnloaded', geoHandler);
     }
 
@@ -480,15 +488,15 @@ export default class Map extends BgServicePageComponent {
         const cartoMap = (this._cartoMap = e.object as CartoMap);
 
         this.mapProjection = cartoMap.projection;
-        // this.log('onMapReady');
+        this.log('onMapReady');
 
         const options = cartoMap.getOptions();
         options.setWatermarkScale(0.5);
-        options.setWatermarkPadding(toNativeScreenPos({ x: 80, y: 0 }));
+        options.setWatermarkPadding(toNativeScreenPos({ x: 80, y: navigationBarHeight }));
         options.setRestrictedPanning(true);
         options.setSeamlessPanning(true);
-        options.setEnvelopeThreadPoolSize(2);
-        options.setTileThreadPoolSize(2);
+        // options.setEnvelopeThreadPoolSize(2);
+        // options.setTileThreadPoolSize(2);
         options.setZoomGestures(true);
         options.setRotatable(true);
         // options.setDrawDistance(8);
@@ -529,8 +537,8 @@ export default class Map extends BgServicePageComponent {
         const styleBuilder = new LineStyleBuilder(options);
         return new Line({ positions, projection: this.mapProjection, styleBuilder });
     }
-    selectItem(item: Item, isFeatureInteresting = false, peek = true, zoom?:number) {
-        // this.log('selectItem', isFeatureInteresting, item);
+    selectItem(item: Item, isFeatureInteresting = false, peek = true, zoom?: number) {
+        this.log('selectItem', isFeatureInteresting);
         if (isFeatureInteresting) {
             if (item.route) {
                 if (!this.selectedRouteLine) {
@@ -586,7 +594,7 @@ export default class Map extends BgServicePageComponent {
             if (item.zoomBounds) {
                 const zoomLevel = getBoundsZoomLevel(item.zoomBounds, { width: screen.mainScreen.widthPixels, height: screen.mainScreen.heightPixels });
                 this.cartoMap.setZoom(zoomLevel, 200);
-                this.cartoMap.setFocusPos( getCenter(item.zoomBounds.northeast, item.zoomBounds.southwest), 200);
+                this.cartoMap.setFocusPos(getCenter(item.zoomBounds.northeast, item.zoomBounds.southwest), 200);
             } else {
                 if (zoom) {
                     this.cartoMap.setZoom(zoom, 200);
@@ -628,7 +636,14 @@ export default class Map extends BgServicePageComponent {
     }
     onVectorTileClicked(data: VectorTileEventData) {
         const { clickType, position, featureLayerName, featureData, featurePosition } = data;
-        this.log('onVectorTileClicked', featureLayerName, featureData);
+        const featureDataWithoutName = JSON.parse(JSON.stringify(featureData));
+        Object.keys(featureDataWithoutName).forEach(k => {
+            if (k.startsWith('name:') || k.startsWith('name_')) {
+                delete featureDataWithoutName[k];
+            }
+        });
+        this.log('onVectorTileClicked', featureLayerName, featureData.class, featureData.subclass, featureDataWithoutName, position, featurePosition);
+        // return false;
         const handledByModules = this.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             const map = this._cartoMap;
@@ -646,7 +661,7 @@ export default class Map extends BgServicePageComponent {
             ) {
                 return false;
             }
-            const distanceFromClick = distance(map.mapToScreen(position), map.mapToScreen(featurePosition));
+            // const distanceFromClick = distance(map.mapToScreen(position), map.mapToScreen(featurePosition));
 
             // console.log(
             //     `onVectorTileClicked distanceFromClick:${distanceFromClick}, elevation:${featureData.ele}, name:${featureData.name} layer: ${featureLayerName} class: ${featureData.class}`,
@@ -669,37 +684,35 @@ export default class Map extends BgServicePageComponent {
                     position: isFeatureInteresting ? featurePosition : position
                 };
                 // if (featureLayerName === 'poi' || featureLayerName === 'housenumber') {
+                const radius = 10;
                 this.$packageService
                     .searchInPackageReverseGeocodingService({
                         projection: this.mapProjection,
                         location: featurePosition,
-                        searchRadius: 100
+                        searchRadius: radius
                     })
                     .then(res => {
-                        let foundBetterRes = false;
+                        // let foundBetterRes = false;
                         res.some(r => {
-                            console.log('search item', r.address);
-                            result = this.$packageService.prepareGeoCodingResult({ address: r.address as any, ...result });
-                            foundBetterRes = true;
-                            if (result.address.name === featureData.name || result.address.houseNumber === featureData.housenumber) {
+                            // console.log('found item search item', r, computeDistanceBetween(result.position, r.position));
+                            if (computeDistanceBetween(result.position, r.position) <= radius && r.rank > 0.9) {
+                                result = this.$packageService.prepareGeoCodingResult({ address: r.address as any, ...result });
+                                console.log('search item', r.address, result);
                                 return true;
                             }
                         });
-                        return foundBetterRes;
+                        // return foundBetterRes;
                     })
-                    .then(actualRes => {
-                        // console.log('actualRes', actualRes);
-                        if (actualRes) {
-                            this.selectItem(JSON.parse(JSON.stringify(result)), isFeatureInteresting);
-                        }
+                    .then(() => {
+                        this.selectItem(result, isFeatureInteresting);
                     })
                     .catch(err => {
                         console.error(err);
                     });
                 // }
-                try {
-                    this.selectItem(result, isFeatureInteresting);
-                } catch (err) {}
+                // try {
+                //     this.selectItem(result, isFeatureInteresting);
+                // } catch (err) {}
             }
             this.unFocusSearch();
 
@@ -768,38 +781,46 @@ export default class Map extends BgServicePageComponent {
         const vectorTileDecoder = this.getVectorTileDecoder();
         vectorTileDecoder.setStyleParameter('contoursOpacity', value.toFixed(1));
     }
-    _zoomBiais = 0;
+    _zoomBiais: string;
     get zoomBiais() {
+        if (this._zoomBiais === undefined) {
+            this._zoomBiais = appSettings.getString('zoomBiais', '0');
+        }
         return this._zoomBiais;
     }
-    set zoomBiais(value: number) {
+    set zoomBiais(value: string) {
         // this.log('setting zoomBiais', value);
         this._zoomBiais = value;
         if (this.currentLayer) {
-            this.currentLayer.zoomLevelBias = value;
+            this.currentLayer.zoomLevelBias = parseFloat(value);
         }
-        const vectorTileDecoder = this.getVectorTileDecoder();
-        vectorTileDecoder.setStyleParameter('zoomBiais', value.toFixed());
+        // const vectorTileDecoder = this.getVectorTileDecoder();
+        // vectorTileDecoder.setStyleParameter('zoomBiais', value.toFixed());
+    }
+    bPreloading = appSettings.getBoolean('preloading', false);
+    get preloading() {
+        return this.bPreloading;
+    }
+    set preloading(value: boolean) {
+        this.bPreloading = value;
+        if (this.currentLayer) {
+            this.currentLayer.preloading = value;
+        }
     }
     setCurrentLayer(id: string) {
+        this.log('setCurrentLayer', id);
         // const cartoMap = this._cartoMap;
         if (this.currentLayer) {
             this.removeLayer(this.currentLayer, 'map');
             this.currentLayer.setVectorTileEventListener(null);
             this.currentLayer = null;
         }
-        // clog('setCurrentLayer', id);
         this.currentLayerStyle = id;
         const vectorTileDecoder = this.getVectorTileDecoder();
-        let zoomBiais = appSettings.getNumber('zoomBiais', 0);
-        if (isNaN(zoomBiais)) {
-            zoomBiais = 0;
-        }
-        this.zoomBiais = zoomBiais;
 
         this.currentLayer = new VectorTileLayer({
-            preloading: true,
-            zoomLevelBias: this.zoomBiais,
+            preloading: this.preloading,
+            zoomLevelBias: parseFloat(this.zoomBiais),
             dataSource: this.$packageService.getDataSource(),
             decoder: vectorTileDecoder
         });
@@ -813,11 +834,12 @@ export default class Map extends BgServicePageComponent {
         // clog('setCurrentLayer', 'done');
     }
     updateLanguage(code: string) {
+        appSettings.setString('language', code);
+        this.currentLanguage = code;
+        this.$packageService.currentLanguage = code;
         if (this.currentLayer === null) {
             return;
         }
-        this.currentLanguage = code;
-        this.$packageService.currentLanguage = code;
         const current = this.currentLayer;
         const decoder = current.getTileDecoder();
         // this.log('updateLanguage', code, decoder);
@@ -967,6 +989,7 @@ export default class Map extends BgServicePageComponent {
             message: 'Select Language',
             actions: mapLanguages
         }).then(result => {
+            console.log('selected language', result);
             result && this.updateLanguage(result);
         });
     }

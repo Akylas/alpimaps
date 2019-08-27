@@ -24,6 +24,7 @@ import { getDataFolder } from '~/utils';
 import { clog, log } from '~/utils/logging';
 import { Item } from '~/mapModules/ItemsModule';
 import Vue from 'nativescript-vue';
+import * as appSettings from 'tns-core-modules/application-settings';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
@@ -32,6 +33,7 @@ interface GeoResult {
     address: Address;
     position?: MapPos;
     provider?: string;
+    rank?: number;
 }
 
 class PackageManagerListener implements CartoPackageManagerListener {
@@ -318,13 +320,14 @@ export default class PackageService extends Observable {
         }
         return this.vectorTileDecoder;
     }
-    _currentLanguage = 'en';
+    _currentLanguage = appSettings.getString('language', 'en');
     get currentLanguage() {
         return this._currentLanguage;
     }
     set currentLanguage(value) {
         if (this._currentLanguage === value) {
             this._currentLanguage = value;
+            // this.log('set currentLanguage', value, !!this._offlineSearchService, !!this._offlineReverseSearchService);
             if (this._offlineSearchService) {
                 this._offlineSearchService.language = value;
             }
@@ -365,7 +368,7 @@ export default class PackageService extends Observable {
             if (features.getFeatureCount() > 0) {
                 // geoRes = result.get(j);
                 feature = features.getFeature(0);
-                // console.log('convertGeoCodingResult', feature.properties, address, feature.geometry, rank);
+                console.log('convertGeoCodingResult', feature.properties, address, feature.geometry, rank);
                 items.push({
                     rank,
                     categories: nativeVectorToArray(address.getCategories()),
@@ -381,6 +384,7 @@ export default class PackageService extends Observable {
         return items;
     }
     searchInGeocodingService(service: ReverseGeocodingService<any, any> | GeocodingService<any, any>, options): Promise<GeoResult[]> {
+        // this.log('searchInGeocodingService', service['language'], options);
         return new Promise((resolve, reject) => {
             service.calculateAddresses(options, (err, result) => {
                 if (err) {
@@ -398,7 +402,7 @@ export default class PackageService extends Observable {
         return this.searchInGeocodingService(this.offlineReverseSearchService, options);
     }
     prepareGeoCodingResult(result: GeoResult) {
-        const address: any = result.address || {};
+        const address: any = {};
 
         [
             ['country', 'getCountry'],
@@ -422,9 +426,9 @@ export default class PackageService extends Observable {
         if (cat && cat.size() > 0) {
             result['categories'] = nativeVectorToArray(cat);
         }
-        result.address = address;
         result.provider = 'carto';
         result.properties.name = result.properties.name || result.address.getName();
+        result.address = address;
         if (result.properties.name.length === 0) {
             delete result.properties.name;
         }

@@ -1,24 +1,22 @@
+import * as app from 'application';
+import { MapPos } from 'nativescript-carto/core/core';
+import { CartoMap } from 'nativescript-carto/ui/ui';
+import { View } from 'tns-core-modules/ui/core/view';
 import { GridLayout } from 'tns-core-modules/ui/layouts/grid-layout/grid-layout';
+import { ItemEventData } from 'tns-core-modules/ui/list-view/list-view';
+import { layout } from 'tns-core-modules/utils/utils';
 import { Component, Prop, Watch } from 'vue-property-decorator';
-import { Item } from '~/mapModules/ItemsModule';
-import BaseVueComponent from './BaseVueComponent';
-import BottomSheetRouteView from './BottomSheetRouteView';
-import { RouteInstruction } from './DirectionsPanel';
+import { convertDistance } from '~/helpers/formatter';
 import ItemFormatter from '~/mapModules/ItemFormatter';
+import { Item } from '~/mapModules/ItemsModule';
+import { IMapModule } from '~/mapModules/MapModule';
+import { actionBarHeight } from '~/variables';
 import BottomSheetBase from './BottomSheet/BottomSheetBase';
 import { BottomSheetHolderScrollEventData } from './BottomSheet/BottomSheetHolder';
-import * as app from 'application';
-import { convertDistance, convertDuration } from '~/helpers/formatter';
-import { View } from 'tns-core-modules/ui/core/view';
-import { ItemEventData } from 'tns-core-modules/ui/list-view/list-view';
-import { actionBarHeight } from '~/variables';
-import { layout } from 'tns-core-modules/utils/utils';
-import { IMapModule } from '~/mapModules/MapModule';
+import BottomSheetInfoView from './BottomSheetInfoView';
+import BottomSheetRouteInfoView from './BottomSheetRouteInfoView';
+import { RouteInstruction } from './DirectionsPanel';
 import Map from './Map';
-import { CartoMap } from 'nativescript-carto/ui/ui';
-import { EventData } from 'tns-core-modules/data/observable';
-import { distanceToEnd, isLocationOnPath } from '~/utils/geo';
-import { MapPos } from 'nativescript-carto/core/core';
 
 function getViewTop(view: View) {
     if (gVars.isAndroid) {
@@ -30,7 +28,8 @@ function getViewTop(view: View) {
 
 @Component({
     components: {
-        BottomSheetRouteView
+        BottomSheetRouteInfoView,
+        BottomSheetInfoView
     }
 })
 export default class BottomSheet extends BottomSheetBase implements IMapModule {
@@ -45,7 +44,6 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     // dataItems: any[] = [];
     listVisible = false;
     graphViewVisible = false;
-    _formatter: ItemFormatter;
 
     mounted() {
         super.mounted();
@@ -69,36 +67,13 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         return this.$refs['bottomSheet'] && (this.$refs['bottomSheet'].nativeView as GridLayout);
     }
     get routeView() {
-        return this.$refs['routeView'] as BottomSheetRouteView;
-    }
-    get formatter() {
-        if (!this._formatter && this.$getMapComponent()) {
-            this._formatter = this.$getMapComponent().mapModule('formatter');
-        }
-        return this._formatter;
+        return this.$refs['routeView'] as BottomSheetRouteInfoView;
     }
 
     get rows() {
         const result = `70,${actionBarHeight},${this.graphAvailable ? 100 : 0},${this.listViewAvailable ? 150 : 0}`;
         // this.log('rows', result);
         return result;
-    }
-    get selectedIcon() {
-        if (this.item) {
-            return this.formatter.geItemIcon(this.item);
-        }
-        return [];
-    }
-
-    get selectedTitle() {
-        if (this.item) {
-            return this.formatter.getItemTitle(this.item);
-        }
-    }
-    get selectedSubtitle() {
-        if (this.item) {
-            return this.formatter.getItemSubtitle(this.item);
-        }
     }
     listViewAvailable = false;
     // get listViewAvailable() {

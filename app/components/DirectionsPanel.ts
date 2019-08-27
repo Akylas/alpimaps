@@ -13,7 +13,7 @@ import { TextField } from 'tns-core-modules/ui/text-field/text-field';
 import { Component } from 'vue-property-decorator';
 // import { layout } from 'tns-core-modules/utils/utils';
 import { Item } from '~/mapModules/ItemsModule';
-import {IMapModule} from '~/mapModules/MapModule';
+import { IMapModule } from '~/mapModules/MapModule';
 import BaseVueComponent from './BaseVueComponent';
 import Map from './Map';
 import { showSnack } from 'nativescript-material-snackbar';
@@ -133,7 +133,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     }
 
     get routeDataSource() {
-        if (!this._routeDataSource) {
+        if (!this._routeDataSource && this.mapView) {
             const projection = this.mapView.projection;
             this._routeDataSource = new LocalVectorDataSource({ projection });
         }
@@ -148,99 +148,97 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         return this._routeLayer;
     }
     line: Line;
-    addWayPoint(position: MapPos, metaData?, index = -1) {
+
+    addStartPoint(position: MapPos, metaData?) {
         const toAdd = {
-            isStart: false,
+            isStart: true,
             isStop: false,
             position,
             metaData,
             marker: null,
             text: metaData ? metaData.name : `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`
         };
-        // this.log('addWayPoint', toAdd);
-        if (this.waypoints.length === 0 || this.waypoints[0].isStart === false) {
-            toAdd.isStart = true;
-
-            const group = new Group();
-            group.elements = [
-                new Marker({
-                    position,
-                    styleBuilder: {
-                        // size: 30,
-                        hideIfOverlapped: false,
-                        scaleWithDPI: true,
-                        color: 'green'
-                    }
-                }),
-                new Text({
-                    position,
-                    text: '0',
-                    styleBuilder: {
-                        fontSize: 16,
-                        anchorPointY: 1,
-                        hideIfOverlapped: false,
-                        scaleWithDPI: true,
-                        color: 'white',
-                        backgroundColor: 'red'
-                    }
-                })
-            ];
-            // const styleBuilder = new MarkerStyleBuilder({
-            //     hideIfOverlapped: false,
-            //     size: 30,
-            //     color: 'green'
-            // });
-            // const marker = new Marker({
-            //     position,
-            //     styleBuilder
-            // });
-            toAdd.marker = group;
-            this.routeDataSource.add(group);
-            this.ensureRouteLayer();
-            this.waypoints.unshift(toAdd);
-            this.startTF.text = this.currentStartSearchText = toAdd.text;
-        } else {
-            // this.log('addWayPoint stop', this.waypoints[this.waypoints.length - 1]);
-            if (this.waypoints[this.waypoints.length - 1].isStop === true) {
-                this.waypoints[this.waypoints.length - 1].isStop = false;
-                (this.waypoints[this.waypoints.length - 1].marker.elements[0] as Point).styleBuilder = {
+        const group = new Group();
+        group.elements = [
+            new Marker({
+                position,
+                styleBuilder: {
                     // size: 30,
                     hideIfOverlapped: false,
                     scaleWithDPI: true,
-                    color: 'blue'
-                };
-            }
-            toAdd.isStop = true;
-            const group = new Group();
-            group.elements = [
-                new Marker({
-                    position,
-                    styleBuilder: {
-                        size: 30,
-                        hideIfOverlapped: false,
-                        scaleWithDPI: true,
-                        color: 'red'
-                    }
-                }),
-                new Text({
-                    position,
-                    text: this.waypoints.length + '',
-                    styleBuilder: {
-                        fontSize: 16,
-                        hideIfOverlapped: false,
-                        scaleWithDPI: true,
-                        color: 'white',
-                        backgroundColor: 'red'
-                    }
-                })
-            ];
-            toAdd.marker = group;
-            this.routeDataSource.add(group);
-            this.stopTF.text = this.currentStopSearchText = toAdd.text;
-            this.ensureRouteLayer();
-            this.waypoints.push(toAdd);
+                    color: 'green'
+                }
+            }),
+            new Text({
+                position,
+                text: '0',
+                styleBuilder: {
+                    fontSize: 16,
+                    anchorPointY: 1,
+                    hideIfOverlapped: false,
+                    scaleWithDPI: true,
+                    color: 'white',
+                    backgroundColor: 'red'
+                }
+            })
+        ];
+        toAdd.marker = group;
+        this.routeDataSource.add(group);
+        this.ensureRouteLayer();
+        this.waypoints.unshift(toAdd);
+        this.startTF.text = this.currentStartSearchText = toAdd.text;
+        this.updateWayPoints();
+    }
+    addStopPoint(position: MapPos, metaData?) {
+        const toAdd = {
+            isStart: false,
+            isStop: true,
+            position,
+            metaData,
+            marker: null,
+            text: metaData ? metaData.name : `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`
+        };
+        if (this.waypoints.length > 0 && this.waypoints[this.waypoints.length - 1].isStop === true) {
+            this.addStopPoint(position, metaData);
+            this.waypoints[this.waypoints.length - 1].isStop = false;
+            (this.waypoints[this.waypoints.length - 1].marker.elements[0] as Point).styleBuilder = {
+                // size: 30,
+                hideIfOverlapped: false,
+                scaleWithDPI: true,
+                color: 'blue'
+            };
         }
-
+        const group = new Group();
+        group.elements = [
+            new Marker({
+                position,
+                styleBuilder: {
+                    size: 30,
+                    hideIfOverlapped: false,
+                    scaleWithDPI: true,
+                    color: 'red'
+                }
+            }),
+            new Text({
+                position,
+                text: this.waypoints.length + '',
+                styleBuilder: {
+                    fontSize: 16,
+                    hideIfOverlapped: false,
+                    scaleWithDPI: true,
+                    color: 'white',
+                    backgroundColor: 'red'
+                }
+            })
+        ];
+        toAdd.marker = group;
+        this.routeDataSource.add(group);
+        this.stopTF.text = this.currentStopSearchText = toAdd.text;
+        this.ensureRouteLayer();
+        this.waypoints.push(toAdd);
+        this.updateWayPoints();
+    }
+    updateWayPoints() {
         if (!this.line) {
             this.line = new Line({
                 styleBuilder: {
@@ -255,6 +253,24 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         }
         this.mapComp.topSheetHolder.peekSheet();
     }
+    addWayPoint(position: MapPos, metaData?, index = -1) {
+        const toAdd = {
+            isStart: false,
+            isStop: false,
+            position,
+            metaData,
+            marker: null,
+            text: metaData ? metaData.name : `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`
+        };
+        // this.log('addWayPoint', toAdd);
+        if (this.waypoints.length === 0 || this.waypoints[0].isStart === false) {
+            this.addStartPoint(position, metaData);
+        } else {
+            this.addStopPoint(position, metaData);
+            // this.log('addWayPoint stop', this.waypoints[this.waypoints.length - 1]);
+        }
+    }
+
     handleClickOnPos(position: MapPos, metaData?) {
         // this.log('onMapClicked', position, this.startPos, this.stopPos);
         // const text = metaData ? metaData.name : `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`;
@@ -358,6 +374,8 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         if (this._routeDataSource) {
             this._routeDataSource.clear();
         }
+        this.startTF.text = null;
+        this.stopTF.text = null;
         this.mapComp.topSheetHolder.closeSheet();
     }
     _offlineRoutingSearchService: PackageManagerValhallaRoutingService;

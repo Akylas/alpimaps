@@ -10,6 +10,99 @@ import Map, { MapModules } from './Map';
 import { CartoMap } from 'nativescript-carto/ui/ui';
 import { IMapModule } from '~/mapModules/MapModule';
 import { ObservableArray } from 'tns-core-modules/data/observable-array/observable-array';
+import { TextField } from 'nativescript-material-textfield';
+
+function createGetter(key, type: string, options?: { defaultValue?: any }) {
+    return function() {
+        // console.log('calling getter', key, this.hasOwnProperty('m' + key));
+        if (!this.hasOwnProperty('m' + key) || this['m' + key] === undefined) {
+            if (type === 'boolean') {
+                this['m' + key] = appSettings.getBoolean(key, options.defaultValue || false);
+            } else if (type === 'number') {
+                this['m' + key] = appSettings.getNumber(key, options.defaultValue || 0);
+            } else {
+                this['m' + key] = appSettings.getString(key, options.defaultValue || '');
+            }
+        }
+        let result = this['m' + key];
+        if (type === 'number' && typeof result !== 'number') {
+            result = parseFloat(result);
+        } else if (type === 'string' && typeof result !== 'string') {
+            result = result + '';
+        }
+        // console.log('calling getter2', key, result, this['m' + key]);
+        return result;
+    };
+}
+function createSetter(key, type: string, options?: { defaultValue?: any }) {
+    return function(newVal) {
+        if (type === 'number') {
+            if (typeof newVal === 'string') {
+                newVal = parseFloat(newVal);
+            }
+            if (isNaN(newVal)) {
+                newVal = 0;
+            }
+        }
+        this['m' + key] = newVal;
+        if (type === 'boolean') {
+            appSettings.setBoolean(key, newVal);
+        } else if (type === 'number') {
+            appSettings.setNumber(key, newVal);
+        } else {
+            appSettings.setString(key, newVal);
+        }
+        if (this.mapComp) {
+            this.mapComp[key] = newVal;
+        }
+    };
+}
+
+function propertyGenerator(target: Object, key: string, type: string, options?: { defaultValue?: any }) {
+    // console.log('mapPropertyGenerator', key, Object.keys(options));
+    Object.defineProperty(target, key, {
+        get: createGetter(key, type, options),
+        set: createSetter(key, type, options),
+        enumerable: true,
+        configurable: true
+    });
+}
+export function numberProperty(target: any, k?, desc?: PropertyDescriptor): any;
+export function numberProperty(options: { defaultValue?: any }): (target: any, k?, desc?: PropertyDescriptor) => any;
+export function numberProperty(...args) {
+    const options = args[0];
+    if (args[1] === undefined) {
+        return function(target: any, key?: string, descriptor?: PropertyDescriptor) {
+            return propertyGenerator(target, key, 'number', options);
+        };
+    } else {
+        return propertyGenerator(args[0], args[1], 'number', {});
+    }
+}
+export function stringProperty(target: any, k?, desc?: PropertyDescriptor): any;
+export function stringProperty(options: { defaultValue?: any }): (target: any, k?, desc?: PropertyDescriptor) => any;
+export function stringProperty(...args) {
+    const options = args[0];
+    if (args[1] === undefined) {
+        return function(target: any, key?: string, descriptor?: PropertyDescriptor) {
+            return propertyGenerator(target, key, 'string', options);
+        };
+    } else {
+        return propertyGenerator(args[0], args[1], 'string', {});
+    }
+}
+export function booleanProperty(target: any, k?, desc?: PropertyDescriptor): any;
+export function booleanProperty(options: { defaultValue?: any }): (target: any, k?, desc?: PropertyDescriptor) => any;
+export function booleanProperty(...args) {
+    const options = args[0];
+    if (args[1] === undefined) {
+        return function(target: any, key?: string, descriptor?: PropertyDescriptor) {
+            return propertyGenerator(target, key, 'boolean', options);
+        };
+    } else {
+        return propertyGenerator(args[0], args[1], 'boolean', {});
+    }
+}
 
 @Component({
     components: {}
@@ -18,17 +111,18 @@ export default class MapRightMenu extends BaseVueComponent implements IMapModule
     mapView: CartoMap;
     mapComp: Map;
     customLayers: CustomLayersModule = null;
-    customSources: ObservableArray<SourceItem> = new ObservableArray([]);
+    customSources: ObservableArray<SourceItem> = null;
     currentLegend: string = null;
+
     onMapReady(mapComp: Map, mapView: CartoMap) {
         this.mapView = mapView;
         this.mapComp = mapComp;
         this.customLayers = this.mapComp.mapModules.customLayers;
         this.customSources = this.customLayers.customSources;
-        // this.log('onMapReady', this.customSources);
+        this.log('onMapReady', this.customSources);
     }
     onMapDestroyed() {
-        // this.log('onMapDestroyed');
+        this.log('onMapDestroyed');
         this.mapView = null;
         this.mapComp = null;
         this.customLayers = null;
@@ -41,16 +135,9 @@ export default class MapRightMenu extends BaseVueComponent implements IMapModule
         }
         return null;
     }
-    constructor() {
-        super();
 
-        this.bShow3DBuildings = appSettings.getBoolean('show3DBuildings', false);
-        this.bShowContourLines = appSettings.getBoolean('showContourLines', false);
-        this.bShowGlobe = appSettings.getBoolean('showGlobe', false);
-        this.bZoomBiais = appSettings.getNumber('zoomBiais', 0);
-        if (isNaN(this.bZoomBiais)) {
-            this.bZoomBiais = 0;
-        }
+    addSource() {
+        this.mapModule('customLayers').addSource();
     }
     // get customSources() {
     //     this.log('get customSources', !!this.mapComp);
@@ -69,7 +156,6 @@ export default class MapRightMenu extends BaseVueComponent implements IMapModule
     //     return this.mMapComp;
     // }
 
-    @profile
     mounted() {
         super.mounted();
         this.$getMapComponent().mapModules.rightMenu = this;
@@ -122,76 +208,26 @@ export default class MapRightMenu extends BaseVueComponent implements IMapModule
             }
         });
     }
+    @booleanProperty showGlobe: boolean;
+    @booleanProperty show3DBuildings: boolean;
+    @booleanProperty showContourLines: boolean;
+    @numberProperty contourLinesOpacity: number;
+    @booleanProperty preloading: number;
+    @stringProperty({ defaultValue: '0' }) zoomBiais: string;
 
-    bShowGlobe = false;
-    get showGlobe() {
-        return this.bShowGlobe;
-    }
-    set showGlobe(value: boolean) {
-        this.bShowGlobe = value;
-        appSettings.setBoolean('showGlobe', value);
-        if (this.mapComp) {
-            this.mapComp.showGlobe = value;
-        }
-    }
     toggleGlobe() {
-        this.showGlobe = !this.bShowGlobe;
-    }
-    bShow3DBuildings = false;
-    get show3DBuildings() {
-        return this.bShow3DBuildings;
-    }
-    set show3DBuildings(value: boolean) {
-        this.bShow3DBuildings = value;
-        appSettings.setBoolean('show3DBuildings', value);
-        if (this.mapComp) {
-            this.mapComp.show3DBuildings = value;
-        }
+        this.showGlobe = !this.showGlobe;
     }
     toggle3DBuildings() {
-        this.show3DBuildings = !this.bShow3DBuildings;
-    }
-    bShowContourLines = false;
-    get showContourLines() {
-        return this.bShowContourLines;
-    }
-    set showContourLines(value: boolean) {
-        this.bShowContourLines = value;
-        appSettings.setBoolean('showContourLines', value);
-        if (this.mapComp) {
-            this.mapComp.showContourLines = value;
-        }
-    }
-    toggleContourLines() {
-        this.showContourLines = !this.bShowContourLines;
-    }
-    _contourLinesOpacity = 1;
-    get contourLinesOpacity() {
-        return this._contourLinesOpacity;
-    }
-    set contourLinesOpacity(value: number) {
-        this._contourLinesOpacity = value;
-        appSettings.setNumber('contourLinesOpacity', value);
-        if (this.mapComp) {
-            this.mapComp.contourLinesOpacity = value;
-        }
+        this.show3DBuildings = !this.show3DBuildings;
     }
 
-    bZoomBiais = 0;
-    get zoomBiais() {
-        return this.bZoomBiais + '';
+    toggleContourLines() {
+        this.showContourLines = !this.showContourLines;
     }
-    set zoomBiais(value: string) {
-        this.bZoomBiais = parseFloat(value);
-        if (isNaN(this.bZoomBiais)) {
-            this.bZoomBiais = 0;
-        }
-        appSettings.setNumber('zoomBiais', this.bZoomBiais);
-        if (this.mapComp) {
-            this.mapComp.zoomBiais = this.bZoomBiais;
-        }
-    }
+
     onZoomBiaisChanged(e) {
-        this.zoomBiais = e.value;
+        const textField = e.object as TextField;
+        this.zoomBiais = textField.text;
     }
 }

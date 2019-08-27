@@ -9,11 +9,16 @@
         <TopSheetHolder ref="topSheetHolder" @shouldClose="cancelDirections" @scroll="onTopSheetScroll">
         </TopSheetHolder>
 
+         <StackLayout orientation="vertical" verticalAlignment="middle" horizontalAlignment="right" isUserInteractionEnabled="false">
+            <Label color="red" class="label-icon-btn" fontSize="12" :text="'mdi-crosshairs-gps' | fonticon" v-show="watchingLocation || queryingLocation"/> 
+            <Label color="red" class="label-icon-btn" fontSize="12" :text="'mdi-sleep-off' | fonticon" v-show="keepAwake"/> 
+        </StackLayout>
+
         <BottomSheetHolder ref="bottomSheetHolder"  :marginBottom="navigationBarHeight" :peekerSteps="bottomSheetSteps" isPassThroughParentEnabled @close="unselectItem" @scroll="onBottomSheetScroll">
             <BottomSheet ref="bottomSheet" slot="bottomSheet" :item="selectedItem" :steps="bottomSheetSteps" />
         </BottomSheetHolder>
         <MapScrollingWidgets ref="mapScrollingWidgets" :paddingTop="mapWidgetsTopPadding" :paddingBottom="bottomSheetTranslation" :opacity="scrollingWidgetsOpacity" />
-        <Fab ref="fab" position="left" rowSpan="2" iconClass="mdi" :icon="'mdi-plus' | fonticon" :iconOn="'mdi-close' | fonticon" :paddingBottom="bottomSheetTranslation" :opacity="scrollingWidgetsOpacity" :backgroundColor="accentColor">
+        <Fab position="left" rowSpan="2" iconClass="mdi" :icon="'mdi-plus' | fonticon" :iconOn="'mdi-close' | fonticon" :paddingBottom="bottomSheetTranslation" :opacity="scrollingWidgetsOpacity" :backgroundColor="accentColor" color="white">
             <FabItem :title="$t('keep_awake') | titlecase" iconClass="mdi" :backgroundColor="keepAwake ? 'red' : 'green'" :icon="(keepAwake ? 'mdi-sleep' : 'mdi-sleep-off') | fonticon" @tap="switchKeepAwake" />
             <FabItem :title="$t('share_screenshot') | titlecase" iconClass="mdi" :icon="'mdi-cellphone-screenshot' | fonticon" @tap="shareScreenshot" />
             <FabItem :title="$t('location_info') | titlecase" iconClass="mdi" :icon=" 'mdi-speedometer' | fonticon" @tap="switchLocationInfo" />

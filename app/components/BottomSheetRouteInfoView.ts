@@ -23,9 +23,16 @@ function omit<T, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> {
 }
 
 @Component({})
-export default class BottomSheetRouteView extends BaseVueComponent {
+export default class BottomSheetRouteInfoView extends BaseVueComponent {
     @Prop()
     routeItem: Item;
+
+    mounted() {
+        super.mounted();
+    }
+    destroyed() {
+        super.destroyed();
+    }
 
     @Watch('routeItem')
     onRouteChanged() {
@@ -86,8 +93,7 @@ export default class BottomSheetRouteView extends BaseVueComponent {
         }
         const profile = this.routeItem.route.profile;
 
-        const dataD = convertElevation(profile.dplus);
-        return `${dataD.value.toFixed()} ${dataD.unit}`;
+        return `${convertElevation(profile.dplus)}`;
     }
     get routeDmin() {
         if (!this.hasProfile) {
@@ -95,8 +101,7 @@ export default class BottomSheetRouteView extends BaseVueComponent {
         }
         const profile = this.routeItem.route.profile;
 
-        const dataD = convertElevation(-profile.dmin);
-        return `${dataD.value.toFixed()} ${dataD.unit}`;
+        return `${convertElevation(-profile.dmin)}`;
     }
     get hasProfile() {
         if (!this.routeItem) {

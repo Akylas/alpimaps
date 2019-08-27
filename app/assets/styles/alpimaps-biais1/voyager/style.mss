@@ -104,7 +104,8 @@ Map {
 @grass_outline: #92b685;
 @wood: #AABE6A;
 
-@park: rgba(130, 191, 90, 1.0);
+@park: rgba(130, 191, 90, 0.8);
+@park_outline: rgb(99, 150, 65);
 
 //buildings
 @buildings3d:       #f3eadc;
@@ -137,7 +138,7 @@ Map {
 @track:                   #b37700;
 @tunnel:                  rgba(255, 255, 255, 0.7);
 @bridge: rgba(242, 238, 218, 0.7);
-@footway: rgba(255, 255, 255, 0.8);
+@footway: rgb(255, 255, 255);
 
 @contour: #52644d;
 

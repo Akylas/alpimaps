@@ -5,11 +5,11 @@
             <StatusBar ios:barStyle="light" :barColor="darkColor" />
             <NavigationBar :barColor="themeColor" />
             <MultiDrawer ref="drawer" :options="drawerOptions">
-                <GridLayout slot="left" rows="auto, *, auto" height="100%" backgroundColor="white">
+                <GridLayout slot="left" rows="auto, *, auto" height="100%">
                     <StackLayout row="2" width="100%" padding="10">
                         <StackLayout class="menuButtons" orientation="horizontal">
                             <MDButton col="0" variant="flat" :text="'mdi-email' | fonticon" @tap="onTap('sendFeedback')" />
-                            <MDButton col="1" variant="flat" :text="'mdi-bug' | fonticon" @tap="onTap('sendBugReport')" />
+                            <MDButton col="1" variant="flat" :text="'mdi-bug' | fonticon" @tap="onTap('sendBugReport')" v-if="!!$bugsnag"/>
                         </StackLayout>
                         <StackLayout class="menuInfos">
                             <Label :text="'App version: ' + (appVersion || '')" />

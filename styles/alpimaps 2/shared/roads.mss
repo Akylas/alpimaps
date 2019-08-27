@@ -128,19 +128,16 @@
 	[class=pedestrian]['mapnik::geometry_type'=2][zoom>=14]{
 		[brunnel=bridge] {
 			::case{
-				line-cap: butt;
 				line-width: linear([view::zoom], (12, 0.0), (13, 1), (15, 4.0), (17, 6.0), (18, 12.0));
 				line-color: @bridge;
 			}
 		}[brunnel=tunnel] {
 			::case{
-				line-cap: butt;
 				line-width: linear([view::zoom], (12, 0.0), (13, 1), (15, 4.0), (17, 6.0), (18, 12.0));
 				line-color: @tunnel;
 			}
 		}
 		::line{
-			line-cap: butt;
 			line-color: @path ;
 			line-width: linear([view::zoom], (15, 0.8), (21, 5));
 			[class=path] { line-dasharray: 5, 3; }
@@ -161,7 +158,6 @@
 		 	}
 		}
 		::dash {
-			line-cap: butt;
 			line-width: linear([view::zoom], (12, 1), (18, 4.0));
 			line-color: linear([view::zoom], (12, @rail_dark), (15, @rail_light), (16, @rail_dash));
 			line-dasharray: 6,6;

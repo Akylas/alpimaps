@@ -27,8 +27,6 @@
 	[zoom>=14][ele>300],
 	[zoom>=16][ele>200],
 	[zoom>=18][ele>0] {
-		line-cap: butt;
-		line-join: miter;
 		line-width: 0.68;
 		line-color: @contour;
 		line-comp-op: minus;

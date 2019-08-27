@@ -142,8 +142,7 @@
 // 		polygon-opacity: linear([view::zoom], (13, 0.0), (16, 1.0));
 // 		['nuti::buildings'=1] {
 // 			::fill[zoom>=16]{
-// 				line-cap: butt;
-// 				line-width: linear([view::zoom], (16, 0.0), (18, 1.0));
+// // 				line-width: linear([view::zoom], (16, 0.0), (18, 1.0));
 // 				line-color: #888;
 // 			}
 // 		}
@@ -151,8 +150,6 @@
 // 	}
 // }
 #aeroway{
-	line-cap: butt;
-	line-join: miter;
 	line-color: @aeroways;
 	line-width: 0.5;
 

@@ -6,7 +6,7 @@
         </StackLayout>
         <ContentView col="1" colSpan="2" :height="height">
             <slot name="title">
-                <Label v-if="!!showLogo && !title" class="cairn" :fontSize="Math.min(height, 200)" color="white" :text="'cairn-full_logo' | fonticon" verticalAlignment="center" @tap="$emit('titleTap', $event)" />
+                <!-- <Label v-if="!!showLogo && !title" class="cairn" :fontSize="Math.min(height, 200)" color="white" :text="'cairn-full_logo' | fonticon" verticalAlignment="center" @tap="$emit('titleTap', $event)" /> -->
             </slot>
         </ContentView>
 

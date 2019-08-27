@@ -122,7 +122,7 @@ export class BgService extends android.app.Service {
         if (!this.bounded) {
             return;
         }
-        // this.log('showForeground', this.inBackground, this.recording, this.alwaysShowNotification);
+        this.log('showForeground', this.inBackground, this.recording, this.alwaysShowNotification, new Error().stack);
         if (this.inBackground || this.recording || this.alwaysShowNotification) {
             try {
                 this.displayNotification(this.recording);
@@ -159,6 +159,6 @@ export class BgService extends android.app.Service {
         this.geoHandler.on(SessionChronoEvent, this.onSessionChronoEvent, this);
         applicationOn(resumeEvent, this.onAppEvent, this);
         applicationOn(suspendEvent, this.onAppEvent, this);
-        this.showForeground();
+        // this.showForeground();
     }
 }

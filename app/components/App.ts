@@ -1,5 +1,5 @@
+import { VueConstructor } from 'vue';
 import { Page } from 'tns-core-modules/ui/page';
-import * as app from 'application';
 import * as EInfo from 'nativescript-extendedinfo';
 import { prompt } from 'nativescript-material-dialogs';
 import Vue, { NativeScriptVue } from 'nativescript-vue';
@@ -10,7 +10,7 @@ import { GridLayout } from 'tns-core-modules/ui/layouts/grid-layout';
 import { StackLayout } from 'tns-core-modules/ui/layouts/stack-layout';
 import { compose } from 'nativescript-email';
 import { GC } from 'tns-core-modules/utils/utils';
-import { VueConstructor } from 'vue';
+import * as app from 'application';
 import { Component } from 'vue-property-decorator';
 import Map from '~/components/Map';
 import { GeoHandler } from '~/handlers/GeoHandler';
@@ -19,6 +19,9 @@ import { BaseVueComponentRefs } from './BaseVueComponent';
 import BgServiceComponent from './BgServiceComponent';
 import MapRightMenu from './MapRightMenu';
 import MultiDrawer, { OptionsType } from './MultiDrawer';
+import { CartoMap, registerLicense, RenderProjectionMode } from 'nativescript-carto/ui/ui';
+import { setShowDebug, setShowInfo, setShowWarn, setShowError } from 'nativescript-carto/utils/utils';
+import { DEV_LOG } from '~/utils/logging';
 
 function base64Encode(value) {
     if (gVars.isIOS) {
@@ -80,6 +83,7 @@ export default class App extends BgServiceComponent {
     constructor() {
         super();
         this.$setAppComponent(this);
+        this.log('mounted', 'cartoLicenseRegistered', App.cartoLicenseRegistered);
 
         // this.cartoLicenseRegistered = Vue.prototype.$cartoLicenseRegistered;
         this.stack.push(this.activatedUrl);
@@ -90,6 +94,7 @@ export default class App extends BgServiceComponent {
         const result: OptionsType = {
             left: {
                 swipeOpenTriggerWidth: 10,
+                backgroundColor: '#1E1E24',
                 additionalProperties: {
                     paddingBottom: gVars.isAndroid ? `${navigationBarHeight}` : undefined
                 }
@@ -140,6 +145,17 @@ export default class App extends BgServiceComponent {
     onServiceLoaded(geoHandler: GeoHandler) {}
     mounted(): void {
         super.mounted();
+        if (!App.cartoLicenseRegistered) {
+            const startTime = Date.now();
+            const result = registerLicense(gVars.CARTO_TOKEN);
+            this.log('registerLicense done', result, Date.now() - startTime, 'ms');
+            this.$getAppComponent().setCartoLicenseRegistered(result);
+
+            setShowDebug(DEV_LOG);
+            setShowInfo(DEV_LOG);
+            setShowWarn(DEV_LOG);
+            setShowError(true);
+        }
         if (isIOS && app.ios.window.safeAreaInsets) {
             const bottomSafeArea: number = app.ios.window.safeAreaInsets.bottom;
             if (bottomSafeArea > 0) {
@@ -159,6 +175,7 @@ export default class App extends BgServiceComponent {
     cartoLicenseRegistered = App.cartoLicenseRegistered;
     setCartoLicenseRegistered(result: boolean) {
         if (App.cartoLicenseRegistered !== result) {
+            this.log('setCartoLicenseRegistered', result);
             App.cartoLicenseRegistered = result;
             this.cartoLicenseRegistered = result;
         }
