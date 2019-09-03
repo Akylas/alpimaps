@@ -19,5 +19,7 @@
   "zoom:": "zoom",
   "select_style": "style de carte ",
   "offline_packages": "cartes hors-ligne",
-  "select_language": "langue de la carte"
+  "select_language": "langue de la carte",
+  "send_bug_report": "envoyer un rapport de bug",
+  "send": "envoyer"
 }

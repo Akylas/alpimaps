@@ -31,31 +31,31 @@ application.on(application.discardedErrorEvent, args => {
 
 // import { Client as FlipperClient } from 'nativescript-flipper';
 /* DEV-START */
-const currentApp = knownFolders.currentApp();
-process.cwd = function() {
-    return '';
-}
-require('source-map-support').install({
-    environment: 'node',
-    handleUncaughtExceptions: false,
-    retrieveSourceMap(source) {
-        const sourceMapPath = source + '.map';
-        const appPath = currentApp.path;
-        let sourceMapRelativePath = sourceMapPath
-            // .replace('file:///', '')
-            .replace('file://', '')
-            .replace(appPath + '/', '')
-            .replace(appPath + '/', '');
-        if (sourceMapRelativePath.startsWith('app/')) {
-            sourceMapRelativePath = sourceMapRelativePath.slice(4);
-        }
-        // console.log('retrieveSourceMap', source, appPath, sourceMapRelativePath, currentApp.getFile(sourceMapRelativePath).readTextSync());
-        return {
-            url: sourceMapRelativePath,
-            map: currentApp.getFile(sourceMapRelativePath).readTextSync()
-        };
-    }
-});
+// const currentApp = knownFolders.currentApp();
+// process.cwd = function() {
+//     return '';
+// }
+// require('source-map-support').install({
+//     environment: 'node',
+//     handleUncaughtExceptions: false,
+//     retrieveSourceMap(source) {
+//         const sourceMapPath = source + '.map';
+//         const appPath = currentApp.path;
+//         let sourceMapRelativePath = sourceMapPath
+//             // .replace('file:///', '')
+//             .replace('file://', '')
+//             .replace(appPath + '/', '')
+//             .replace(appPath + '/', '');
+//         if (sourceMapRelativePath.startsWith('app/')) {
+//             sourceMapRelativePath = sourceMapRelativePath.slice(4);
+//         }
+//         // console.log('retrieveSourceMap', source, appPath, sourceMapRelativePath, currentApp.getFile(sourceMapRelativePath).readTextSync());
+//         return {
+//             url: sourceMapRelativePath,
+//             map: currentApp.getFile(sourceMapRelativePath).readTextSync()
+//         };
+//     }
+// });
 /* DEV-END */
 
 // Error.prepareStackTrace = function() {
@@ -76,7 +76,7 @@ if (TNS_ENV === 'production' || TEST_LOGS) {
                 fullVersion += '.0';
             }
             fullVersion += ` (${result[1]})`;
-            return bugsnag.init({ appVersion: result[0], apiKey: gVars.BUGNSAG, codeBundleId: result[1].toFixed(), automaticallyCollectBreadcrumbs: false, detectAnrs: false });
+            return bugsnag.init({ appVersion: result[0], apiKey: gVars.BUGNSAG, automaticallyCollectBreadcrumbs: false, detectAnrs: false });
         })
         .then(() => {
             bugsnag.enableConsoleBreadcrumbs();
@@ -113,7 +113,8 @@ import { TNSFontIcon } from 'nativescript-akylas-fonticon';
 // TNSFontIcon.debug = true;
 TNSFontIcon.paths = {
     mdi: './assets/materialdesignicons.min.css',
-    maki: './assets/maki.css'
+    maki: './assets/maki.css',
+    osm: './assets/osm.css'
 };
 TNSFontIcon.loadCssSync();
 

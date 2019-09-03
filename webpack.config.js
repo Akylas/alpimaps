@@ -11,15 +11,8 @@ module.exports = env => {
     if (platform === 'android') {
         appComponents = [resolve(__dirname, 'app/services/android/BgService.ts'), resolve(__dirname, 'app/services/android/BgServiceBinder.ts')];
     }
-    const {
-        development = false,
-        uglify,
-        production, // --env.production
-        sourceMap, // --env.sourceMap
-        devlog, // --env.loglevel
-        adhoc // --env.adhoc
-    } = env;
-    if (adhoc) {
+    
+    if (!!env.adhoc) {
         env = Object.assign({}, env, {
             production: true,
             sourceMap: true,
@@ -29,6 +22,14 @@ module.exports = env => {
         // env.sourceMap = sourceMap = true;
         // env.uglify = uglify = true;
     }
+    const {
+        development = false,
+        uglify,
+        production, // --env.production
+        sourceMap, // --env.sourceMap
+        devlog, // --env.loglevel
+        adhoc // --env.adhoc
+    } = env;
     const BUGSNAG_KEY = '8867d5b66eda43f1be76e345a36a72df';
     const defines = {
         LOG_LEVEL: !!devlog ? '"full"' : '""',
@@ -48,7 +49,7 @@ module.exports = env => {
         }
     });
 
-    console.log('running webpack with env', env, resolve(__dirname, 'node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf'));
+    console.log('running webpack with env', env, production);
     const config = WebpackTemplate(env, {
         projectRoot: __dirname,
         appComponents: appComponents,
@@ -111,7 +112,7 @@ module.exports = env => {
             new BugsnagSourceMapUploaderPlugin({
                 apiKey: BUGSNAG_KEY,
                 appVersion,
-                // codeBundleId: buildNumber,
+                codeBundleId: buildNumber,
                 overwrite: true,
                 publicPath: '.'
             })

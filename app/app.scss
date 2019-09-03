@@ -67,6 +67,11 @@ mdbutton {
     font-family: 'maki';
 }
 
+
+.osm {
+    font-family: 'osm';
+}
+
 .themedBack {
     background-color: $primary-color;
 }
@@ -229,4 +234,11 @@ mdbutton {
     width: 100%;
     background-color: #aa000000;
     vertical-alignment: bottom;
+}
+
+// ListItem
+.icon-themed-btn {
+    @extend .icon-btn;
+    ripple-color: $accent-color;
+    color: $accent-color;
 }

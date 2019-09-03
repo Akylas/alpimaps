@@ -235,6 +235,7 @@ export default class Map extends BgServicePageComponent {
     }
     constructor() {
         super();
+        this.showContourLines = appSettings.getBoolean('showContourLines', false);
         handleOpenURL(this.onAppUrl);
     }
     searchText: string = null;
@@ -326,7 +327,7 @@ export default class Map extends BgServicePageComponent {
     @profile
     mounted() {
         super.mounted();
-        
+
         // if (gVars.isAndroid) {
         // (this.$refs.fab.nativeView as GridLayout).getChildAt(0).marginBottom = -navigationBarHeight;
         // this.nativeView.marginBottom = navigationBarHeight;
@@ -368,7 +369,6 @@ export default class Map extends BgServicePageComponent {
     }
     onLoaded() {
         // this.$getAppComponent().$on('screen', this.onDeviceScreen);
-        
         // }, 0);
     }
     destroyed() {
@@ -495,8 +495,8 @@ export default class Map extends BgServicePageComponent {
         options.setWatermarkPadding(toNativeScreenPos({ x: 80, y: navigationBarHeight }));
         options.setRestrictedPanning(true);
         options.setSeamlessPanning(true);
-        // options.setEnvelopeThreadPoolSize(2);
-        // options.setTileThreadPoolSize(2);
+        options.setEnvelopeThreadPoolSize(2);
+        options.setTileThreadPoolSize(2);
         options.setZoomGestures(true);
         options.setRotatable(true);
         // options.setDrawDistance(8);
@@ -507,19 +507,16 @@ export default class Map extends BgServicePageComponent {
         // console.log('map start pos', pos, zoom);
         cartoMap.setFocusPos(pos, 0);
         cartoMap.setZoom(zoom, 0);
-
-        perms
-            .request('storage')
-            .then(status => {
-                // this.log('on request storage', status, this.actionBarButtonHeight, !!this._cartoMap);
-                this.$packageService.start();
-                this.setMapStyle(appSettings.getString('mapStyle', 'alpimaps.zip'));
-                this.runOnModules('onMapReady', this, cartoMap);
-
-                // TODO: calling setCurrentLayer twice is a trick to get the map to load on close/start
-                this.setCurrentLayer(this.currentLayerStyle);
-            })
-            .catch(err => this.showError(err));
+        setTimeout(() => {
+            perms
+                .request('storage')
+                .then(status => {
+                    this.$packageService.start();
+                    this.runOnModules('onMapReady', this, cartoMap);
+                    this.setMapStyle(appSettings.getString('mapStyle', 'alpimaps.zip'), true);
+                })
+                .catch(err => this.showError(err));
+        }, 0);
     }
 
     createLocalMarker(position: MapPos, options: MarkerStyleBuilderOptions) {
@@ -770,7 +767,10 @@ export default class Map extends BgServicePageComponent {
     set showContourLines(value: boolean) {
         // this.log('set showContourLines', value);
         this.bShowContourLines = value;
-        this.getVectorTileDecoder().setStyleParameter('contours', value ? '1' : '0');
+        if (this.currentLayer) {
+            this.reloadMapStyle();
+        }
+        // this.getVectorTileDecoder().setStyleParameter('contours', value ? '1' : '0');
     }
     _contourLinesOpacity = 1;
     get contourLinesOpacity() {
@@ -808,7 +808,7 @@ export default class Map extends BgServicePageComponent {
         }
     }
     setCurrentLayer(id: string) {
-        this.log('setCurrentLayer', id);
+        this.log('setCurrentLayer', id, this.zoomBiais, this.preloading);
         // const cartoMap = this._cartoMap;
         if (this.currentLayer) {
             this.removeLayer(this.currentLayer, 'map');
@@ -821,17 +821,27 @@ export default class Map extends BgServicePageComponent {
         this.currentLayer = new VectorTileLayer({
             preloading: this.preloading,
             zoomLevelBias: parseFloat(this.zoomBiais),
-            dataSource: this.$packageService.getDataSource(),
+            dataSource: this.$packageService.getDataSource(this.showContourLines),
             decoder: vectorTileDecoder
         });
         this.updateLanguage(this.currentLanguage);
         this.show3DBuildings = appSettings.getBoolean('show3DBuildings', false);
-        this.showContourLines = appSettings.getBoolean('showContourLines', false);
+        // this.showContourLines = appSettings.getBoolean('showContourLines', false);
         // clog('currentLayer', !!this.currentLayer);
         this.currentLayer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
         this.currentLayer.setVectorTileEventListener(this, this.mapProjection);
-        this.addLayer(this.currentLayer, 'map');
+        try {
+            this.addLayer(this.currentLayer, 'map');
+        } catch (err) {
+            this.showError(err);
+            this.vectorTileDecoder = null;
+        }
         // clog('setCurrentLayer', 'done');
+    }
+
+    clearCache() {
+        this.currentLayer && this.currentLayer.clearTileCaches(true);
+        this.$packageService.clearCache();
     }
     updateLanguage(code: string) {
         appSettings.setString('language', code);
@@ -882,7 +892,7 @@ export default class Map extends BgServicePageComponent {
         if (!layerStyle) {
             return;
         }
-        // console.log('setMapStyle', layerStyle);
+        console.log('setMapStyle', layerStyle);
         if (layerStyle !== this.currentLayerStyle || !!force) {
             this.currentLayerStyle = layerStyle;
             appSettings.setString('mapStyle', layerStyle);
@@ -973,9 +983,8 @@ export default class Map extends BgServicePageComponent {
         assetsFolder.getEntities().then(files => {
             // files = files.filter(e => e.name.endsWith('.zip'));
             action({
-                title: 'Language',
-                message: 'Select Style',
-                actions: files.map(e => e.name).concat('default')
+                title: this.$tc('select_style'),
+                actions: files.map(e => e.name).concat(this.$tc('default'))
             }).then(result => {
                 if (result) {
                     this.setMapStyle(result);
@@ -1038,7 +1047,7 @@ export default class Map extends BgServicePageComponent {
     }
     addLayer(layer: Layer<any, any>, layerId: LayerType, offset?: number) {
         const realLayerId = offset ? layerId + offset : layerId;
-        // this.log('addLayer', layerId, realLayerId, !!this._cartoMap, this.addedLayers.indexOf(layerId), this.addedLayers);
+        // this.log('addLayer', layerId, realLayerId, offset, !!this._cartoMap, this.addedLayers.indexOf(layerId), this.addedLayers);
         if (this._cartoMap) {
             if (this.addedLayers.indexOf(realLayerId) !== -1) {
                 return;
@@ -1058,12 +1067,15 @@ export default class Map extends BgServicePageComponent {
             //         realIndex++;
             //     }
             // }
-            if (realIndex >= 0) {
-                this._cartoMap.addLayer(layer, realIndex + (offset || 0));
+            // this.log('addedLayer about to add layer', layerId, realIndex, this.addedLayers.length);
+            if (realIndex >= 0 && realIndex < this.addedLayers.length) {
+                const index = realIndex + (offset || 0);
+                this._cartoMap.addLayer(layer, index);
+                this.addedLayers.splice(index, 0, realLayerId);
             } else {
                 this._cartoMap.addLayer(layer);
+                this.addedLayers.push(realLayerId);
             }
-            this.addedLayers.splice(realIndex + (offset || 0), 0, realLayerId);
             // this.log('addedLayer', layerId, realIndex, offset, this.addedLayers);
             this._cartoMap.requestRedraw();
         }
