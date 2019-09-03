@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<Map font-directory="fonts" background-color="transparent" background-image="" north-pole-color="transparent" south-pole-color="transparent">
+	<Parameters />
+	<NutiParameters />
+	<Style name="transportation" filter-mode="first">
+		<Rule name="auto">
+			<MinScaleDenominator>68247.3438</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[class] = 'motorway' and [brunnel] = 'tunnel' and [zoom] &gt;= '11'</Filter>
+			<LineSymbolizer stroke="#0ff0f0" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>68247.3438</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[class] = 'motorway' and [ramp] = '1' and [zoom] &gt;= '7' or ( [class] = 'trunk' and [ramp] = '1' and [zoom] &gt;= '13' )</Filter>
+			<LineSymbolizer stroke="#ffff00" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>68247.3438</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[class] = 'trunk' and [brunnel] = 'tunnel' and [zoom] &gt;= '13' or ( [class] = 'primary' and [brunnel] = 'tunnel' and [zoom] &gt;= '14' ) or ( [class] = 'secondary' and [brunnel] = 'tunnel' and [zoom] &gt;= '16' ) or ( [class] = 'tertiary' and [brunnel] = 'tunnel' and [zoom] &gt;= '16' ) or ( [class] = 'minor' and [brunnel] = 'tunnel' and [zoom] &gt;= '16' ) or ( [class] = 'sevice' and [brunnel] = 'tunnel' and [zoom] &gt;= '16' )</Filter>
+			<LineSymbolizer stroke="#00ff00" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>68247.3438</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[subclass] = 'funicular' and [zoom] &gt;= '12'</Filter>
+			<LineSymbolizer stroke="#ffffff" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>68247.3438</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[subclass] = 'bridleway' and [zoom] &gt;= '14'</Filter>
+			<LineSymbolizer stroke="#00ffff" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>68247.3438</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[class] = 'motorway' and [zoom] &gt;= '4' or ( [class] = 'trunk' and [zoom] &gt;= '7' )</Filter>
+			<LineSymbolizer stroke="#ffff00" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>68247.3438</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[brunnel] = 'bridge' and [zoom] &gt;= '13'</Filter>
+			<LineSymbolizer stroke="#ff0000" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
+			<Filter>[class] = 'motorway' and [brunnel] = 'tunnel' and [zoom] &gt;= '11'</Filter>
+			<LineSymbolizer stroke="#0ff0f0" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
+			<Filter>[class] = 'motorway' and [ramp] = '1' and [zoom] &gt;= '7' or ( [class] = 'trunk' and [ramp] = '1' and [zoom] &gt;= '13' )</Filter>
+			<LineSymbolizer stroke="#ffff00" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
+			<Filter>[class] = 'trunk' and [brunnel] = 'tunnel' and [zoom] &gt;= '13' or ( [class] = 'primary' and [brunnel] = 'tunnel' and [zoom] &gt;= '14' ) or ( [class] = 'secondary' and [brunnel] = 'tunnel' and [zoom] &gt;= '16' ) or ( [class] = 'tertiary' and [brunnel] = 'tunnel' and [zoom] &gt;= '16' ) or ( [class] = 'minor' and [brunnel] = 'tunnel' and [zoom] &gt;= '16' ) or ( [class] = 'sevice' and [brunnel] = 'tunnel' and [zoom] &gt;= '16' )</Filter>
+			<LineSymbolizer stroke="#00ff00" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
+			<Filter>[subclass] = 'funicular' and [zoom] &gt;= '12'</Filter>
+			<LineSymbolizer stroke="#ffffff" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
+			<Filter>[subclass] = 'bridleway' and [zoom] &gt;= '14'</Filter>
+			<LineSymbolizer stroke="#00ffff" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
+			<Filter>[class] = 'motorway' and [zoom] &gt;= '4' or ( [class] = 'trunk' and [zoom] &gt;= '7' )</Filter>
+			<LineSymbolizer stroke="#ffff00" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
+			<Filter>[brunnel] = 'bridge' and [zoom] &gt;= '13'</Filter>
+			<LineSymbolizer stroke="#ff0000" />
+		</Rule>
+	</Style>
+	<Style name="transportation::case" filter-mode="first">
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
+			<Filter>[subclass] = 'funicular' and [zoom] &gt;= '12' and [brunnel] = 'tunnel'</Filter>
+			<LineSymbolizer stroke="#0f0f00" />
+		</Rule>
+	</Style>
+	<Layer name="transportation">
+		<StyleName>transportation</StyleName>
+		<StyleName>transportation::case</StyleName>
+	</Layer>
+</Map>

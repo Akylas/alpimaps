@@ -2,9 +2,11 @@
 @name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
 // @icon: [subclass]? [subclass] : [class];
 @maki_icon: [nuti::maki-[subclass]] ? [nuti::maki-[subclass]] : [nuti::maki-[class]];
+@osm_icon: [nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : [nuti::osm-[class]];
 // @maki_icon_txt: 'icons/' + @icon + '-11.svg';
 // @maki_icon_url: url(@maki_icon_txt)
-@name_ref: [ref]? @name + ' (' + [ref] + ')' : @name
+@name_ref: [ref] ? @name + ' (' + [ref] + ')' : @name
+@poi_color: [class]=park ? #76A723 : (([subclass]=alpine_hut || [class]=campsite) ? #854d04 : #5D60BE)
 
 
 /* 3.COUNTRIES & STATES */
@@ -180,7 +182,7 @@
 			text-halo-fill: @halo_park_label;
 			text-line-spacing: -1;
 			[class!=null] { 
-				text-dy: linear([view::zoom], (16, 10), (21, 15));
+				text-dy: linear([view::zoom], (16, 11), (21, 17));
 			}
 			
 			// text-min-distance: 100;
@@ -214,175 +216,156 @@
 		// shield-text-dy: 0;
 		// shield-min-distance: 3;
 		// shield-wrap-width: step([view::zoom], (15, 80), (18, 100));
-		::icon[class!=null] {
-			text-placement: [nuti::markers3d];
-			text-name: @maki_icon;
-			text-fill: #5D60BE;
-			text-size: linear([view::zoom], (14, 12), (15, 13), (16, 13), (21, 20)) + (100 - [rank]) * 0.0000001;
-			text-face-name: @maki;
-			text-feature-id: [name];
-			text-halo-radius: 0.7;
-			text-halo-rasterizer: fast;
-			text-halo-fill: @halo_park_label;
-			[class=park] {
-				text-fill: #76A723;
-			}
-			[subclass=alpine_hut],
-			[class=campsite] {
-				text-fill: #854d04;
-			}
-			[class=hospital] {
-				text-fill: #4AA0E7;
-			}
-			[class='information'] {
-				text-fill: #F3C600;
-			}
-			[class='school'] {
-				text-fill: #725A50;
-			}
-			[class=bakery],[class=restaurant],[class=fast_food] {
-				text-fill: #D97200;
-			}
+		::icon[class!=null]{
+				text-placement: [nuti::markers3d];
+				text-name: @osm_icon;
+				text-fill: @poi_color;
+				text-size: linear([view::zoom], (14, 12), (15, 13), (16, 13), (21, 20)) + (100 - [rank]) * 0.0000001;
+				text-face-name: @osm;
+				text-feature-id: [name];
+				text-halo-radius: 0.7;
+				text-halo-rasterizer: fast;
+				text-halo-fill: @halo_park_label;
+				
+			// [class=park] {
+			// 	text-fill: #76A723;
+			// }
+			// [subclass=alpine_hut],
+			// [class=campsite] {
+			// 	text-fill: #854d04;
+			// }
+			// [class=hospital] {
+			// 	text-fill: #4AA0E7;
+			// }
+			// [class='information'] {
+			// 	text-fill: #F3C600;
+			// }
+			// [class='school'] {
+			// 	text-fill: #725A50;
+			// }
+			// [class=bakery],[class=restaurant],[class=fast_food] {
+			// 	text-fill: #D97200;
+			// }
 		}
 	}
 }
 
-#transportation_name['mapnik::geometry_type'=2] {
 
-	[zoom>=7][zoom<=11][ref_length<=6] {
-		// ::icon {
-		// 	// text-placement: [nuti::markers3d];
-		// 	text-name: [nuti::maki-shield-default-[ref_length]];
-		// 	text-size: 20; 
-		// 	text-face-name: @maki;
-		// 	text-fill: #fff;
-		// 	text-feature-id: [ref];
-		// 	text-halo-rasterizer: fast;
-		// 	text-halo-radius: 1;
-		// 	// text-allow-overlap: true;
-		// 	text-min-distance: 100;
-		// }
-		// ::label {
-			text-placement: [nuti::markers3d];
-			text-feature-id: [ref];
-			text-name: [ref];
-			text-size: 9;
-			text-line-spacing: -4;
-			text-face-name: @mont;
-			text-fill: #333;
-			// text-allow-overlap: true;
-			// text-min-distance: 100;
-		// }
-	}
-	[class=motorway][zoom>=10],
-	[class=trunk][zoom>=10],
-	[class=primary][zoom>=10],
-	[class=tertiary][zoom>=12],
-	[class=secondary][zoom>=10],
-	[class=minor][zoom>=12],
-	[class=service][zoom>=16],
-	[class=track][zoom>=14],
-	[class=path][zoom>=14]{
-		text-avoid-edges: false;
-		text-name: @name;
-		text-placement: line;
-		text-wrap-before: true;
-		text-face-name: @mont;
-		text-halo-radius: 1;
-		text-halo-rasterizer: fast;
-		text-min-distance: 5;
-		text-vertical-alignment: middle;
-		[zoom>=16] {
-			text-name: @name_ref;
-		}
+// #transportation_name['mapnik::geometry_type'=2] {
 
-		[class=motorway],
-		[class=trunk],
-		[class=primary]{
-			text-size: linear([view::zoom], (10, 8), (12, 10), (14, 11), (16, 12)) + 0.00004;
-			text-fill: step([view::zoom], (10, @label_medium), (14, @label_dark));
-			text-halo-fill: @label_halo_medium;
-		}
-		[class=primary]{
-			text-size: linear([view::zoom], (10, 8), (12, 8), (14, 11), (16, 12)) + 0.00004;
-			text-fill: step([view::zoom], (10, @label_medium), (14, @label_dark));
-			text-halo-fill: @label_halo_medium;
-		}
+// 	::ref {
+// 			[zoom>=7][zoom<=11][ref_length<=6] {
+// 		// 	// text-placement: [nuti::markers3d];
+// 		// 	text-name: [nuti::maki-shield-default-[ref_length]];
+// 		// 	text-size: 20; 
+// 		// 	text-face-name: @maki;
+// 		// 	text-fill: #fff;
+// 		// 	text-feature-id: [ref];
+// 		// 	text-halo-rasterizer: fast;
+// 		// 	text-halo-radius: 1;
+// 		// 	// text-allow-overlap: true;
+// 		// 	text-min-distance: 100;
+// 		// }
+// 		// ::label {
+// 			text-placement: [nuti::markers3d];
+// 			text-feature-id: [ref];
+// 			text-name: [ref];
+// 			text-size: 9;
+// 			text-line-spacing: -4;
+// 			text-face-name: @mont;
+// 			text-fill: #333;
+// 			// text-allow-overlap: true;
+// 			// text-min-distance: 100;
+// 		// }
+// 		}
+// 	}
+// 	[class=motorway][zoom>=10],
+// 	[class=trunk][zoom>=10],
+// 	[class=primary][zoom>=10],
+// 	[class=tertiary][zoom>=12],
+// 	[class=secondary][zoom>=10],
+// 	[class=minor][zoom>=12],
+// 	[class=service][zoom>=16],
+// 	[class=track][zoom>=14],
+// 	[class=path][zoom>=14]{
+// 		text-avoid-edges: false;
+// 		text-name: @name;
+// 		text-placement: line;
+// 		text-wrap-before: true;
+// 		text-face-name: @mont;
+// 		text-halo-radius: 1;
+// 		text-halo-rasterizer: fast;
+// 		text-min-distance: 5;
+// 		text-vertical-alignment: middle;
+// 		[zoom>=16] {
+// 			text-name: @name_ref;
+// 		}
+
+// 		[class=motorway],
+// 		[class=trunk],
+// 		[class=primary]{
+// 			text-size: linear([view::zoom], (10, 8), (12, 10), (14, 11), (16, 12)) + 0.00004;
+// 			text-fill: step([view::zoom], (10, @label_medium), (14, @label_dark));
+// 			text-halo-fill: @label_halo_medium;
+// 		}
+// 		[class=primary]{
+// 			text-size: linear([view::zoom], (10, 8), (12, 8), (14, 11), (16, 12)) + 0.00004;
+// 			text-fill: step([view::zoom], (10, @label_medium), (14, @label_dark));
+// 			text-halo-fill: @label_halo_medium;
+// 		}
 		
-		[class=secondary]{
-			text-size: linear([view::zoom], (10, 8), (11, 9), (14, 12), (16, 13)) + 0.00004;
-			text-fill: step([view::zoom], (10, @label_light), (16, @label_dark));
-			text-halo-fill: step([view::zoom], (10, @label_halo_medium), (16, @label_halo_light));
-		}
-		[class=minor],
-		[class=tertiary]{
-			text-size: linear([view::zoom], (11, 8), (14, 10), (15, 11)) + 0.00002;
-			text-fill: step([view::zoom], (12, @label_light), (12, @label_medium));
-			text-halo-fill: step([view::zoom], (12, @label_halo_medium), (16, @label_halo_light));
-		}
-		[class=service]{
-			text-size: linear([view::zoom], (14, 8), (15, 9), (16, 10)) + 0.00001;
-			text-fill: step([view::zoom], (12, @label_medium), (12, @label_medium));
-			text-halo-fill: step([view::zoom], (12, @label_halo_medium), (16, @label_halo_light));
-		}
-		[class=path],
-		[class=track] {
-			text-name: @name_ref;
-			text-size: linear([view::zoom], (14, 8), (18, 10));
-			text-fill: darken(@pedestrian, 0.4);
-			text-face-name: @mont_md;
-			text-halo-radius: 1;
-			text-halo-fill: @label_halo_medium;
-		}
-	}
-}
+// 		[class=secondary]{
+// 			text-size: linear([view::zoom], (10, 8), (11, 9), (14, 12), (16, 13)) + 0.00004;
+// 			text-fill: step([view::zoom], (10, @label_medium), (16, @label_dark));
+// 			text-halo-fill: step([view::zoom], (10, @label_halo_medium), (16, @label_halo_light));
+// 		}
+// 		[class=minor],
+// 		[class=tertiary]{
+// 			text-size: linear([view::zoom], (11, 8), (14, 10), (15, 11)) + 0.00002;
+// 			text-fill: @label_medium;
+// 			text-halo-fill: step([view::zoom], (12, @label_halo_medium), (16, @label_halo_light));
+// 		}
+// 		[class=service]{
+// 			text-size: linear([view::zoom], (14, 8), (15, 9), (16, 10)) + 0.00001;
+// 			text-fill: @label_medium;
+// 			text-halo-fill: step([view::zoom], (12, @label_halo_medium), (16, @label_halo_light));
+// 		}
+// 		[class=path],
+// 		[class=track] {
+// 			text-name: @name_ref;
+// 			text-size: linear([view::zoom], (14, 8), (18, 10));
+// 			text-fill: darken(@pedestrian, 0.4);
+// 			text-face-name: @mont_md;
+// 			text-halo-radius: 1;
+// 			text-halo-fill: @label_halo_medium;
+// 		}
+// 	}
+// }
 
-/* 6.WATER */
-#water_name {
-	[class=ocean][zoom>=3],
-	[class=sea][zoom>=6]{
-		text-name: @name;
-		text-face-name: @mont;
-		text-placement: [nuti::texts3d];
-		text-fill: @water_label;
-		text-size: 10;
-	}
-}
-#waterway{
-	[class=river][zoom>=11],
-	[class=riverbank][zoom>=11],
-	[zoom>=13]{
-		text-face-name: @mont;
-		text-name: @name;
-		text-fill: @water_label;
-		text-placement: line;
-		text-size: linear([view::zoom], (11, 10), (14, 10), (15, 11), (17, 11), (18, 12));
-	}
+// /* 6.WATER */
+// #water_name {
+// 	[class=ocean][zoom>=3],
+// 	[class=sea][zoom>=6]{
+// 		text-name: @name;
+// 		text-face-name: @mont;
+// 		text-placement: [nuti::texts3d];
+// 		text-fill: @water_label;
+// 		text-size: 10;
+// 	}
+// }
+// #waterway{
+// 	[class=river][zoom>=11],
+// 	[class=riverbank][zoom>=11],
+// 	[zoom>=13]{
+// 		text-face-name: @mont;
+// 		text-name: @name;
+// 		text-fill: @water_label;
+// 		text-placement: line;
+// 		text-size: linear([view::zoom], (11, 10), (14, 10), (15, 11), (17, 11), (18, 12));
+// 	}
 
 	
-}
-
-#contour['nuti::contours'>0] {
-	text-face-name: @mont;
-	[zoom>=12][ele>300],
-	[zoom>=14][ele>200],
-	[zoom>=16][ele>0] {
-		[index=5][zoom>=16],
-		[index=10] {
-			text-name: [ele]+' m';
-			text-face-name: @mont;
-			text-fill: @contour;
-			text-comp-op: minus;
-			text-min-distance: 30;
-			// text-halo-fill: rgba(136, 96, 74, 0.5);
-			// text-halo-radius: 0.1;
-			text-avoid-edges: true;
-			text-placement: line;
-			text-dy:-1;
-			text-size: linear([view::zoom], (12, 6), (20, 10)) + 0.00001 * [ele];
-		}
-	}
-}
+// }
 
 
 #mountain_peak {
@@ -454,3 +437,9 @@
 	text-fill: @building_label;
 	text-size: 9;
 }
+// #aeroway[zoom>=15][ref!=null] {
+// 	text-name: [ref];
+// 	text-face-name: @mont;
+// 	text-fill: @building_label;
+// 	text-size: 9;
+// }

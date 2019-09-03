@@ -4,16 +4,17 @@ import { TileLayer } from 'nativescript-carto/layers/layer';
 import { RasterTileLayer } from 'nativescript-carto/layers/raster';
 import { CartoMap } from 'nativescript-carto/ui/ui';
 import localize from 'nativescript-localize';
+import { alert } from 'nativescript-material-dialogs';
 import Vue from 'nativescript-vue';
 import * as appSettings from 'tns-core-modules/application-settings/application-settings';
+import { ObservableArray } from 'tns-core-modules/data/observable-array/observable-array';
 import { File, path } from 'tns-core-modules/file-system';
 import Map from '~/components/Map';
 import OptionSelect from '~/components/OptionSelect';
 import { DataProvider, Provider } from '~/data/tilesources';
 import { getDataFolder } from '~/utils';
-import { cerror, clog } from '~/utils/logging';
+import { cerror } from '~/utils/logging';
 import MapModule from './MapModule';
-import { ObservableArray } from 'tns-core-modules/data/observable-array/observable-array';
 
 function templateString(str: string, data) {
     return str.replace(
@@ -45,7 +46,12 @@ export default class CustomLayersModule extends MapModule {
 
         const opacity = appSettings.getNumber(`${id}_opacity`, 1);
         const databasePath = File.fromPath(path.join(rasterCachePath, id)).path;
-        // console.log('createRasterLayer', id, opacity, provider.url, databasePath);
+
+        // Apply zoom level bias to the raster layer.
+        // By default, bitmaps are upsampled on high-DPI screens.
+        // We will correct this by applying appropriate bias
+        const zoomLevelBias = Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2);
+        // console.log('createRasterLayer', id, opacity, provider.url, databasePath, zoomLevelBias);
 
         const dataSource = new HTTPTileDataSource({
             url: provider.url as string,
@@ -64,8 +70,9 @@ export default class CustomLayersModule extends MapModule {
                             databasePath
                         })
                         : dataSource,
-                zoomLevelBias: 1,
+                zoomLevelBias: zoomLevelBias * 0.75,
                 opacity,
+                // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                 visible: opacity !== 0,
                 ...provider.layerOptions
             }),
@@ -255,10 +262,18 @@ export default class CustomLayersModule extends MapModule {
                 },
                 fullscreen: false
             };
-            (this.mapComp as Vue).$showModal(OptionSelect, options).then((result: { name: string; provider: Provider }) => {
+            const instance = new OptionSelect();
+            instance.options = Object.keys(this.baseProviders).map(s => ({ name: s, provider: this.baseProviders[s] }));
+            instance.$mount();
+            ((alert({
+                title: Vue.prototype.$tc('pick_source'),
+                okButtonText: Vue.prototype.$t('cancel'),
+                view: instance.nativeView
+            }) as any) as Promise<{ name: string; provider: Provider }>).then(results => {
+                const result = Array.isArray(results) ? results[0] : results;
                 if (result) {
                     const data = this.createRasterLayer(result.name, result.provider);
-                    // clog('about to add', data.name, data.legend, !!this.mapView, result.provider);
+                    // this.log('about to add', result, data);
                     this.mapComp.addLayer(data.layer, 'customLayers', this.customSources.length);
                     this.customSources.push(data);
                     // clog('layer added');

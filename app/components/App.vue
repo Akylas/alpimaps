@@ -18,7 +18,7 @@
                 </GridLayout>
                 <MapRightMenu slot="right" />
                 <Frame ref="innerFrame">
-                    <Map :licenseRegistered="cartoLicenseRegistered" />
+                    <Map />
                 </Frame>
             </MultiDrawer>
         </GridLayout>

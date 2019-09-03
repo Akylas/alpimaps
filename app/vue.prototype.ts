@@ -19,8 +19,6 @@ const Plugin = {
         const networkService = new NetworkService();
         Vue.prototype.$networkService = networkService;
 
-        let imageModuleInitialized = false;
-
         application.on(application.launchEvent, () => {
             console.log('App Launched');
             imageModule.initialize({ isDownsampleEnabled: true });
@@ -84,6 +82,9 @@ const Plugin = {
             return filters.uppercase(localize(s, ...args));
         };
         Vue.prototype.$showError = function(err: Error) {
+            if (!err) {
+                return;
+            }
             clog('showError', err, err.toString(), err.stack);
             const message = typeof err === 'string' ? err : err.toString();
             return alert({

@@ -14,5 +14,7 @@
   "zoom:": "zoom",
   "select_style": "map style",
   "offline_packages": "offline maps",
-  "select_language": "map language"
+  "select_language": "map language",
+  "send_bug_report": "send bug report",
+  "send": "send"
 }
