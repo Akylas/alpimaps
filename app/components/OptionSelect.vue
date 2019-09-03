@@ -1,23 +1,16 @@
 <template>
-    <StackLayout class="page" :height="height">
-        <GridLayout rows="auto,*,auto" margin="12 20 0 20">
-            <Label row="0"  paddingBottom="15" class="h4" fontWeight="800" :text="title | capitalize" verticalAlignment="center" textWrap />
-            <ListView row="1" for="item in options" class="list-group" @itemTap="onItemTap">
+    <!-- <StackLayout :height="height" backgroundColor="#1E1E24">
+        <GridLayout rows="auto,*,auto" margin="20 20 10 20">
+            <Label row="0"  paddingBottom="15" fontWeight="800" :text="title | capitalize" verticalAlignment="center" textWrap /> -->
+            <CollectionView row="1" :items="options" :height="height">
                 <v-template>
-                    <GridLayout columns="*" class="list-group-item" orientation="horizontal" paddingBottom="4">
-                        <StackLayout col="0">
-                            <Label fontWeight="500" :text="item.name | L" class="list-group-item-heading" />
-                            <Label :text="item.data" />
-                        </StackLayout>
-                        <!-- <StackLayout col="1" class="thumb img-circle" width="40" height="40" backgroundColor="#0086D6"/> -->
-                        <!-- <Label col="1" fontWeight="800" :text="device.RSSI" color="white" horizontalAlignment="center" verticalAlignment="center" textWrap="false"/> -->
-                    </GridLayout>
+                    <ListItem :title="item.name" :subtitle="item.data" showBottomLine @tap="onTap(item, $event)"/>
                 </v-template>
-            </ListView>
-            <GridLayout rows="auto" columns="*,auto,auto" row="2" horizontalAlignment="right" orientation="horizontal" borderTopColor="#EEEEEE" borderTopWidth="1" width="100%">
-                <MDButton row="0" col="2" variant="text" class="buttontext" :text="$t('cancel')" @tap="close()" />
+            </CollectionView>
+            <!-- <GridLayout rows="auto" columns="*,auto,auto" row="2" horizontalAlignment="right" orientation="horizontal" borderTopColor="#44ffffff" borderTopWidth="1" width="100%">
+                <MDButton row="0" col="2" variant="text" :text="$t('cancel')" @tap="close()" />
             </GridLayout>
         </GridLayout>
-    </StackLayout>
+    </StackLayout> -->
 </template>
  <script lang="ts" src="./OptionSelect.ts"></script>

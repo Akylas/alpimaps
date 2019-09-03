@@ -1,5 +1,7 @@
-import { VueConstructor } from 'vue';
-import { Page } from 'tns-core-modules/ui/page';
+import * as app from 'application';
+import { registerLicense } from 'nativescript-carto/ui/ui';
+import { setShowDebug, setShowError, setShowInfo, setShowWarn } from 'nativescript-carto/utils/utils';
+import { compose } from 'nativescript-email';
 import * as EInfo from 'nativescript-extendedinfo';
 import { prompt } from 'nativescript-material-dialogs';
 import Vue, { NativeScriptVue } from 'nativescript-vue';
@@ -8,9 +10,8 @@ import { NavigationEntry } from 'tns-core-modules/ui/frame';
 import { Frame } from 'tns-core-modules/ui/frame/';
 import { GridLayout } from 'tns-core-modules/ui/layouts/grid-layout';
 import { StackLayout } from 'tns-core-modules/ui/layouts/stack-layout';
-import { compose } from 'nativescript-email';
-import { GC } from 'tns-core-modules/utils/utils';
-import * as app from 'application';
+import { Page } from 'tns-core-modules/ui/page';
+import { VueConstructor } from 'vue';
 import { Component } from 'vue-property-decorator';
 import Map from '~/components/Map';
 import { GeoHandler } from '~/handlers/GeoHandler';
@@ -19,9 +20,6 @@ import { BaseVueComponentRefs } from './BaseVueComponent';
 import BgServiceComponent from './BgServiceComponent';
 import MapRightMenu from './MapRightMenu';
 import MultiDrawer, { OptionsType } from './MultiDrawer';
-import { CartoMap, registerLicense, RenderProjectionMode } from 'nativescript-carto/ui/ui';
-import { setShowDebug, setShowInfo, setShowWarn, setShowError } from 'nativescript-carto/utils/utils';
-import { DEV_LOG } from '~/utils/logging';
 
 function base64Encode(value) {
     if (gVars.isIOS) {
@@ -151,9 +149,9 @@ export default class App extends BgServiceComponent {
             this.log('registerLicense done', result, Date.now() - startTime, 'ms');
             this.$getAppComponent().setCartoLicenseRegistered(result);
 
-            setShowDebug(DEV_LOG);
-            setShowInfo(DEV_LOG);
-            setShowWarn(DEV_LOG);
+            setShowDebug(true);
+            setShowInfo(true);
+            setShowWarn(true);
             setShowError(true);
         }
         if (isIOS && app.ios.window.safeAreaInsets) {
@@ -353,9 +351,11 @@ export default class App extends BgServiceComponent {
                     }
                 } as any).then(result => {
                     if (result.result && this.$bugsnag) {
+                        const error = new Error('bug_report_error');
+                        this.log('test', error.stack);
                         this.$bugsnag
                             .notify({
-                                error: new Error('bug_report_error'),
+                                error,
                                 metadata: {
                                     report: {
                                         message: result.text

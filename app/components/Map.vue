@@ -1,7 +1,7 @@
 <template>
     <AlpiMapsPage actionBarHidden>
         <!-- <GridLayout rows="auto,*" backgroundColor="white" columns="*" @layoutChanged="onLayoutChange"> -->
-        <CartoMap ref="mapView" v-if="licenseRegistered" zoom="16" @mapReady="onMapReady" @mapMoved="onMapMove" @mapStable="onMapStable" @mapClicked="onMapClicked" @layoutChanged="onLayoutChange" />
+        <CartoMap ref="mapView" zoom="16" @mapReady="onMapReady" @mapMoved="onMapMove" @mapStable="onMapStable" @mapClicked="onMapClicked" @layoutChanged="onLayoutChange" />
         <!-- <GridLayout ref="overMapWidgets" class="overMapWidgets" @loaded="onLoaded"> -->
         <Search ref="searchView" class="searchView" :text="searchText" :projection="mapProjection" :opacity="scrollingWidgetsOpacity" :defaultElevation="topSheetTranslation === 0?1:0" />
         <!-- </transition> -->

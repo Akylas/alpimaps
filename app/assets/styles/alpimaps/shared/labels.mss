@@ -389,8 +389,6 @@
 }
 
 #poi {
-	// [osm_id = 'nuti::selected_id'],
-	// [name = 'nuti::selected_name'],
 	[subclass='alpine_hut'][rank<=10],
 	[class=campsite][rank<=10],
 	[zoom=14][rank<=1][class!='information'][class!='toilets'][class!='bus'][subclass!='tram_stop'][subclass!='station'][class!='picnic_site'],
@@ -445,23 +443,6 @@
 			text-halo-fill: @peak_halo;
 			text-halo-rasterizer: fast;
 			text-halo-radius: 1;
-
-			// text-fill: #495063;
-			// [class='park'] {
-			// 	text-fill: #76BC54;
-			// }
-			// [class='lodging'] {
-			// 	text-fill: #854d04;
-			// }
-			// [class='hospital'] {
-			// 	text-fill: #4AA0E7;
-			// }
-			// [class='information'] {
-			// 	text-fill: #F3C600;
-			// }
-			// [class='bakery'], [class='restaurant'] {
-			// 	text-fill: #EF8000;
-			// }
 		}
 	}
 }

@@ -1,117 +1,115 @@
 @buildingHeight: [render_height] ? [render_height] : 10;
 
 
-#landuse {
-	::backlayer {
-		[class=residential][zoom<=12]{
-			polygon-fill: @residential_area;
-			line-width: 0.5;
-			line-color: darken(@residential, 0.2);
-		}
-		[class=theme_park],
-		[class=zoo]{
-				polygon-fill: linear([view::zoom], (13, fadeout(@playground, 0.6)), (14, fadeout(@playground, 0.9)));
-		}
-		[class=military][zoom>=13] {
-				polygon-fill: linear([view::zoom], (13, fadeout(@military, 0.6)), (14, fadeout(@military, 0.9)));
-				// line-color: rgb(207, 211, 195)
-		}
-		[class=hospital],
-		[class=doctors]{
-			[zoom>=14] {
-				polygon-fill: linear([view::zoom], (13, fadeout(@hospital, 0.6)), (14, fadeout(@hospital, 0.9)));
-			}
-		}
-
-		/* 7.3 University & Sport */
-		[class=college],
-		[class=university],
-		[class=school]{
-			[zoom>=12] {
-					polygon-fill:linear([view::zoom], (12, fadeout(@university, 0.6)), (14, fadeout(@university, 1)));
-				line-color: @university
-				line-width: linear([view::zoom], (12, 0), (16, 1));
-			}
-		}
-		/* 7.1 Industrial */
-		[class=industrial],
-		[class=commercial],
-		[class=construction],
-		[class=landfill],
-		[class=railway],
-		[class=quarry]{
-			[zoom>=13] {
-				polygon-fill: fadeout(@industrial, 0.8);
-			}
-		}
-	}
-}
 
 #landcover {
-	::frontlayer {
-		[class=rock],
-		[class=bare_rock],
-		[class=cliff]{
-			polygon-fill: fadeout(@rock, 0.8);
-		}
+	[class=rock],
+	[class=bare_rock],
+	[class=cliff]{
+		polygon-fill: fadeout(@rock, 0.8);
+	}
 
-		[class=beach][zoom>=10] {
-			polygon-fill: @beach;
-		}
-		[class=sand] {
-			polygon-fill: fadeout(@beach, 0.3);
-		}
-		[class=ice],
-		[subclass='glacier'] {
-			polygon-fill: @glacier;
+	[class=beach][zoom>=10] {
+		polygon-fill: @beach;
+	}
+	[class=sand] {
+		polygon-fill: fadeout(@beach, 0.3);
+	}
+	[class=ice] {
+		polygon-fill: @glacier;
+		// line-width:0.5;
+		// line-color: darken(@glacier, 0.1);
+	}
+	[class=wetland][zoom>=11] {
+			polygon-fill: @wetland;
+			// [zoom>=12] {
+			// 	polygon-pattern-file: url('symbols/wetland.png');
+			// }
+	}
+
+
+	[class=heath],
+	// [class=grassland],
+	// [subclass='recreation_ground'],
+	[class='meadow'],
+	[class='orchard'],
+	[class='vineyard'],
+	[class='farland']{
+			// polygon-fill: linear([view::zoom], (12, @green1), (14, @green1));
+			polygon-fill: @green1;
+			// line-color: @park_outline;
 			// line-width:0.5;
-			// line-color: darken(@glacier, 0.1);
-		}
-		[class=wetland][zoom>=11] {
-				polygon-fill: @wetland;
-				// [zoom>=12] {
-				// 	polygon-pattern-file: url('symbols/wetland.png');
-				// }
-		}
-
-
-		[class=heath],
-		[class=grass][subclass!=park] ,
-		[class=grassland],
-		[subclass='recreation_ground'],
-		[class='meadow'],
-		[class='orchard'],
-		[class='vineyard'],
-		[class='farland'],
-		[subclass='field'],
-		[subclass=village_green]{
-				// polygon-fill: linear([view::zoom], (12, @green1), (14, @green1));
-				polygon-fill: @green1;
-				// line-color: @park_outline;
-				// line-width:0.5;
-			
-		}
-
 		
-		[class=tree],
+	}
+
+	[class=grass] {
+		polygon-fill: @green1;
 		[subclass=park] {
 			polygon-fill: linear([view::zoom], (10, @green1), (15, @green5));
 		}
-		
-		[subclass=forest],
-		[class=wood] {
+		[subclass=wood],
+		[subclass=forest] {
 			polygon-fill: linear([view::zoom], (10, @green1), (16, @forest));
 		}
-		
-		
 		[subclass='recreation_ground'][zoom>=9]{
 			polygon-fill: linear([view::zoom], (2, rgba(130, 191, 90, 0)), (11, rgba(130, 191, 90, 0.6)), (15, rgba(130, 191, 90, 0.7)));
 		}
 	}
+	
+	[class=tree] {
+		polygon-fill: linear([view::zoom], (10, @green1), (15, @green5));
+	}
+	
+	[class=wood] {
+		polygon-fill: linear([view::zoom], (10, @green1), (16, @forest));
+	}
+	
+	
 }
 
 #landuse {
-	::frontlayer2 {
+	[class=residential][zoom<=12]{
+		polygon-fill: @residential_area;
+		line-width: 0.5;
+		line-color: darken(@residential, 0.2);
+	}
+	[class=theme_park],
+	[class=zoo]{
+			polygon-fill: linear([view::zoom], (13, fadeout(@playground, 0.6)), (14, fadeout(@playground, 0.9)));
+	}
+	[class=military][zoom>=13] {
+			polygon-fill: linear([view::zoom], (13, fadeout(@military, 0.6)), (14, fadeout(@military, 0.9)));
+			// line-color: rgb(207, 211, 195)
+	}
+	[class=hospital],
+	[class=doctors]{
+		[zoom>=14] {
+			polygon-fill: linear([view::zoom], (13, fadeout(@hospital, 0.6)), (14, fadeout(@hospital, 0.9)));
+		}
+	}
+
+	/* 7.3 University & Sport */
+	[class=college],
+	[class=university],
+	[class=school]{
+		[zoom>=12] {
+				polygon-fill:linear([view::zoom], (12, fadeout(@university, 0.6)), (14, fadeout(@university, 1)));
+			line-color: @university
+			line-width: linear([view::zoom], (12, 0), (16, 1));
+		}
+	}
+	/* 7.1 Industrial */
+	[class=industrial],
+	[class=commercial],
+	[class=construction],
+	[class=landfill],
+	[class=railway],
+	[class=quarry]{
+		[zoom>=10] {
+			polygon-fill: fadeout(@industrial, 0.8);
+		}
+	}
+
 		// [class=residential]{
 	// 	polygon-fill: fadeout(@residential, 0.5);
 	// 	line-width: 0.5;
@@ -151,40 +149,36 @@
 		[class=grave_yard]{
 			polygon-fill: linear([view::zoom], (14, fadeout(@rock, 0.85)), (16, fadeout(@rock, 0.55)));
 		}
-
-
 		
 		[class=salt_pond],
 		[class=basin],
-		[class=reservoir],
-		[subclass=swimming_pool],
-		[subclass=fountain][zoom>=12]{
+		[class=reservoir][zoom>=12]{
 			polygon-fill: @river;
 		}
-	}
-	
 }
 #transportation ['mapnik::geometry_type'=3]{
 	/* 7.5 Pedestrian areas */
-	[subclass=pedestrian],
-	[subclass=footway],
-	[subclass=living_street],
-	[subclass=platform] {
-		polygon-fill:linear([view::zoom], (14, fadeout(@pedestrian_area, 0.7)), (16, fadeout(@pedestrian_area_light, 0.7)));
+	[class=path] {
+		[subclass=pedestrian],
+		[subclass=footway],
+		[subclass=living_street],
+		[subclass=platform] {
+			polygon-fill:linear([view::zoom], (14, fadeout(@pedestrian_area, 0.7)), (16, fadeout(@pedestrian_area_light, 0.7)));
+		}
 	}
+	
 
 	
 }
 
-#aeroway {
+#aeroway['mapnik::geometry_type'=3][zoom>=10][zoom<=19] {
 	/* 7.6 Airports */
 	// line-color: @aeroways;
 	// line-width: 0.5;
 	[class=airport],
+	[class=helipad],
 	[class=aerodrome] {
-		['mapnik::geometry_type'=3][zoom>=10][zoom<=19] {
-			polygon-fill:linear([view::zoom], (10, @aerodrome0), (11, @aerodrome1), (12, @aerodrome2), (13, @aerodrome3), (14, @aerodrome4), (15, @aerodrome5));
-		}
+		polygon-fill:linear([view::zoom], (10, @aerodrome0), (11, @aerodrome1), (12, @aerodrome2), (13, @aerodrome3), (14, @aerodrome4), (15, @aerodrome5));
 	}
 }
 

@@ -139,6 +139,9 @@ export default class MapRightMenu extends BaseVueComponent implements IMapModule
     addSource() {
         this.mapModule('customLayers').addSource();
     }
+    clearCache() {
+        this.mapComp.clearCache();
+    }
     // get customSources() {
     //     this.log('get customSources', !!this.mapComp);
     //     if (this.mapComp) {
@@ -163,7 +166,7 @@ export default class MapRightMenu extends BaseVueComponent implements IMapModule
     }
     onLayerOpacityChanged(item, event) {
         const opacity = event.value / 100;
-        // this.log('onLayerOpacityChanged', item.name, opacity);
+        // this.log('onLayerOpacityChanged', item.name, event.value, opacity);
         item.layer.opacity = opacity;
         appSettings.setNumber(item.name + '_opacity', opacity);
         item.layer.visible = opacity !== 0;
