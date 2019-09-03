@@ -3,8 +3,8 @@
         <CollectionView row="0" rowHeight="49" :items="customSources" @tap="noop">
             <v-template>
                 <GridLayout paddingLeft="15" paddingRight="5" rows="*,auto" columns="*,auto" @longPress="onSourceLongPress(item)">
-                    <Label row="0" :text="item.name.toUpperCase()" color="white" fontSize="13" fontWeight="bold" verticalAlignment="bottom" />
-                    <MDSlider row="1" marginLeft="10" marginRight="10" :value="Math.round(item.opacity * 100)" @valueChange="onLayerOpacityChanged(item, $event)" minValue="0" maxValue="100" verticalAlignment="center" @tap="noop" />
+                    <Label row="0" :text="item.name.toUpperCase()" :color="item.layer.opacity === 0 ? 'grey' : 'white'" fontSize="13" fontWeight="bold" verticalAlignment="bottom" />
+                    <MDSlider row="1" marginLeft="10" marginRight="10" :value="Math.round(item.layer.opacity * 100)" @valueChange="onLayerOpacityChanged(item, $event)" minValue="0" maxValue="100" verticalAlignment="center" @tap="noop" />
                     <MDButton col="1" rowSpan="2" color="white" rippleColor="white" variant="flat" class="icon-btn" :text="'mdi-dots-vertical' | fonticon" @tap="onSourceLongPress(item)" />
                 </GridLayout>
             </v-template>
@@ -12,6 +12,7 @@
         <ScrollView row="1">
             <StackLayout>
                 <MDButton class="buttonthemed" @tap="addSource" text="add source" />
+                <MDButton class="buttonthemed" @tap="clearCache" text="clear cache" />
                 <GridLayout columns="auto,*,auto" :rippleColor="themeColor" @tap="toggle3DBuildings">
                     <Label class="label-icon-btn" :text="'mdi-domain' | fonticon" :color="show3DBuildings? themeColor : 'gray'" verticalAlignment="center" padding="5" />
                     <Label col="1" :text="$t('show 3D Buildings')" verticalAlignment="center" textWrap fontSize="13" color="white" />

@@ -260,45 +260,72 @@ export default class PackageService extends Observable {
             }
         });
     }
-
-    getDataSource() {
+    clearCacheOnDataSource(dataSource: TileDataSource<any, any> & { dataSources?: Array<TileDataSource<any, any>> }) {
+        if (dataSource instanceof PersistentCacheTileDataSource) {
+            dataSource.clear();
+        }
+        if (dataSource.dataSources) {
+            dataSource.dataSources.forEach(d => this.clearCacheOnDataSource(d));
+        }
+    }
+    clearCache() {
+        this.dataSource && this.clearCacheOnDataSource(this.dataSource);
+    }
+    dataSourcehasContours = false;
+    getDataSource(withContour = false) {
+        if (this.dataSource && this.dataSourcehasContours !== withContour) {
+            this.dataSource = null;
+        }
+        this.dataSourcehasContours = withContour;
         if (!this.dataSource) {
             const maptileCacheFolder = File.fromPath(path.join(this.docPath, 'maptiler.db'));
+            const tilezenCacheFolder = File.fromPath(path.join(this.docPath, 'tilezen.db'));
             const cacheFolder = File.fromPath(path.join(this.docPath, 'carto.db'));
             const terrainCacheFolder = File.fromPath(path.join(this.docPath, 'terrain.db'));
             // console.log('create main vector datasource', cacheFolder.path);
-            this.dataSource = new MergedMBVTTileDataSource({
+
+            // const realSource =new HTTPTileDataSource({
+            //     url: 'https://tile.nextzen.org/tilezen/vector/v1/all/{z}/{x}/{y}.mvt?api_key=O5iag8fiQIeqwgPFKMsrhA',
+            //     minZoom: 0,
+            //     maxZoom: 14
+            // });
+            const realSource = new OrderedTileDataSource({
                 dataSources: [
-                    new OrderedTileDataSource({
-                        dataSources: [
-                            new PackageManagerTileDataSource({
-                                packageManager: this.packageManager
-                            }),
-                            new PersistentCacheTileDataSource({
-                                dataSource: new CartoOnlineTileDataSource({
-                                    source: 'carto.streets'
-                                }),
-                                // dataSource: new HTTPTileDataSource({
-                                //     url: 'https://api.maptiler.com/tiles/v3/{z}/{x}/{y}.pbf?key=V7KGiDaKQBCWTYsgsmxh',
-                                //     minZoom: 0,
-                                //     maxZoom: 14
-                                // }),
-                                capacity: 100 * 1024 * 1024,
-                                databasePath: cacheFolder.path
-                            })
-                        ]
+                    new PackageManagerTileDataSource({
+                        packageManager: this.packageManager
                     }),
                     new PersistentCacheTileDataSource({
-                        dataSource: new HTTPTileDataSource({
-                            minZoom: 0,
-                            maxZoom: 14,
-                            url: `https://a.tiles.mapbox.com/v4/mapbox.mapbox-terrain-v2/{zoom}/{x}/{y}.vector.pbf?access_token=${gVars.MAPBOX_TOKEN}`
+                        dataSource: new CartoOnlineTileDataSource({
+                            source: 'carto.streets'
                         }),
+                        // dataSource: new HTTPTileDataSource({
+                        //     url: 'https://tile.nextzen.org/tilezen/vector/v1/all/{z}/{x}/{y}.mvt?api_key=O5iag8fiQIeqwgPFKMsrhA',
+                        //     minZoom: 0,
+                        //     maxZoom: 14
+                        // }),
                         capacity: 100 * 1024 * 1024,
-                        databasePath: terrainCacheFolder.path
+                        databasePath: tilezenCacheFolder.path
                     })
                 ]
             });
+            if (withContour) {
+                this.dataSource = new MergedMBVTTileDataSource({
+                    dataSources: [
+                        realSource,
+                        new PersistentCacheTileDataSource({
+                            dataSource: new HTTPTileDataSource({
+                                minZoom: 0,
+                                maxZoom: 14,
+                                url: `https://a.tiles.mapbox.com/v4/mapbox.mapbox-terrain-v2/{zoom}/{x}/{y}.vector.pbf?access_token=${gVars.MAPBOX_TOKEN}`
+                            }),
+                            capacity: 100 * 1024 * 1024,
+                            databasePath: terrainCacheFolder.path
+                        })
+                    ]
+                });
+            } else {
+                this.dataSource = realSource;
+            }
         }
         return this.dataSource;
     }

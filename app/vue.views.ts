@@ -18,11 +18,13 @@ import SystemUIPlugin from 'nativescript-systemui/vue';
 
 import RadChart from 'nativescript-ui-chart/vue';
 import AlpiMapsPage from './components/AlpiMapsPage';
+import ListItem from './components/ListItem';
 
 // import MultiDrawer from 'nativescript-vue-multi-drawer';
 const Plugin = {
     install(Vue) {
         Vue.component('AlpiMapsPage', AlpiMapsPage);
+        Vue.component('ListItem', ListItem);
         Vue.use(ActivityIndicatorPlugin);
         Vue.use(ButtonPlugin);
         Vue.use(CardViewPlugin);

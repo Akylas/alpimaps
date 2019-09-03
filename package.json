@@ -6,10 +6,10 @@
     "nativescript": {
         "id": "akylas.alpi.maps",
         "tns-android": {
-            "version": "6.1.0-2019-08-21-135519-04"
+            "version": "6.1.0-2019-08-27-234550-01"
         },
         "tns-ios": {
-            "version": "next"
+            "version": "6.1.0-2019-08-28-095325-02"
         }
     },
     "author": "Martin Guillon<martin.guillon@akylas.fr>",
@@ -37,7 +37,7 @@
         "moment-duration-format": "^2.3.2",
         "nativescript-akylas-fonticon": "~2.0.6",
         "nativescript-akylas-vue": "^2.3.5",
-        "nativescript-bugsnag": "^1.0.8",
+        "nativescript-bugsnag": "^1.0.9",
         "nativescript-carto": "1.2.27",
         "nativescript-collectionview": "^1.0.26",
         "nativescript-email": "^1.5.5",
@@ -48,15 +48,15 @@
         "nativescript-image": "^2.2.5",
         "nativescript-insomnia": "^1.2.3",
         "nativescript-localize": "~4.2.0",
-        "nativescript-material-activityindicator": "^2.3.20",
-        "nativescript-material-bottomsheet": "^2.3.20",
-        "nativescript-material-button": "^2.3.20",
-        "nativescript-material-cardview": "^2.3.20",
-        "nativescript-material-dialogs": "^2.3.20",
-        "nativescript-material-progress": "^2.3.20",
-        "nativescript-material-ripple": "^2.3.20",
-        "nativescript-material-slider": "^2.3.20",
-        "nativescript-material-snackbar": "^2.3.20",
+        "nativescript-material-activityindicator": "^2.3.22",
+        "nativescript-material-bottomsheet": "^2.3.22",
+        "nativescript-material-button": "^2.3.22",
+        "nativescript-material-cardview": "^2.3.22",
+        "nativescript-material-dialogs": "^2.3.22",
+        "nativescript-material-progress": "^2.3.22",
+        "nativescript-material-ripple": "^2.3.22",
+        "nativescript-material-slider": "^2.3.22",
+        "nativescript-material-snackbar": "^2.3.22",
         "nativescript-perms": "^1.0.8",
         "nativescript-photoviewer": "^2.1.5",
         "nativescript-sensors": "^0.0.11",
@@ -85,7 +85,7 @@
         "vue": "^2.6.10",
         "vue-i18n": "^8.14.0",
         "vue-property-decorator": "^8.2.2",
-        "webpack": "^4.39.2",
+        "webpack": "^4.39.3",
         "webpack-cli": "^3.3.7"
     }
 }

@@ -12,7 +12,7 @@ dependencies:
   moment-duration-format: 2.3.2
   nativescript-akylas-fonticon: 2.0.6
   nativescript-akylas-vue: 2.3.5
-  nativescript-bugsnag: 1.0.8
+  nativescript-bugsnag: 'link:../../../../../usr/local/pnpm-global/node_modules/nativescript-bugsnag'
   nativescript-carto: 'link:../../../../../usr/local/pnpm-global/node_modules/nativescript-carto'
   nativescript-collectionview: 1.0.26
   nativescript-email: 1.5.5
@@ -23,15 +23,15 @@ dependencies:
   nativescript-image: 2.2.5
   nativescript-insomnia: 1.2.3
   nativescript-localize: 4.2.0
-  nativescript-material-activityindicator: 2.3.20
-  nativescript-material-bottomsheet: 2.3.20
-  nativescript-material-button: 2.3.20
-  nativescript-material-cardview: 2.3.20
-  nativescript-material-dialogs: 2.3.20
-  nativescript-material-progress: 2.3.20
-  nativescript-material-ripple: 2.3.20
-  nativescript-material-slider: 2.3.20
-  nativescript-material-snackbar: 2.3.20
+  nativescript-material-activityindicator: 2.3.22
+  nativescript-material-bottomsheet: 2.3.22
+  nativescript-material-button: 2.3.22
+  nativescript-material-cardview: 2.3.22
+  nativescript-material-dialogs: 2.3.22
+  nativescript-material-progress: 2.3.22
+  nativescript-material-ripple: 2.3.22
+  nativescript-material-slider: 2.3.22
+  nativescript-material-snackbar: 2.3.22
   nativescript-perms: 1.0.8
   nativescript-photoviewer: 2.1.5
   nativescript-sensors: 0.0.11
@@ -59,8 +59,8 @@ devDependencies:
   vue: 2.6.10
   vue-i18n: 8.14.0
   vue-property-decorator: 8.2.2
-  webpack: 4.39.2_webpack@4.39.2
-  webpack-cli: 3.3.7_webpack@4.39.2
+  webpack: 4.39.3_webpack@4.39.3
+  webpack-cli: 3.3.7_webpack@4.39.3
 lockfileVersion: 5.1
 packages:
   /@angular-devkit/core/8.2.0:
@@ -1608,14 +1608,14 @@ packages:
     dev: true
     resolution:
       integrity: sha1-NHHenK7DiOXIUOWX5Yom3fN2ArI=
-  /babel-loader/8.0.6_@babel+core@7.5.5+webpack@4.39.2:
+  /babel-loader/8.0.6_@babel+core@7.5.5+webpack@4.39.3:
     dependencies:
       '@babel/core': 7.5.5
       find-cache-dir: 2.1.0
       loader-utils: 1.2.3
       mkdirp: 0.5.1
       pify: 4.0.1
-      webpack: 4.39.2_webpack@4.39.2
+      webpack: 4.39.3_webpack@4.39.3
     dev: true
     engines:
       node: '>= 6.9'
@@ -2269,7 +2269,7 @@ packages:
   /browserslist/4.6.6:
     dependencies:
       caniuse-lite: 1.0.30000989
-      electron-to-chromium: 1.3.241
+      electron-to-chromium: 1.3.242
       node-releases: 1.1.28
     dev: true
     hasBin: true
@@ -2562,11 +2562,11 @@ packages:
     dev: true
     resolution:
       integrity: sha512-gvwfMsqu3HBgTVvaBa1H3AZKO03CHpr5uP92SPIktP3827EovAitwW+1xoqXyTxCuXnLYpMHG5ytS4AoukHDWA==
-  /clean-webpack-plugin/3.0.0_webpack@4.39.2:
+  /clean-webpack-plugin/3.0.0_webpack@4.39.3:
     dependencies:
       '@types/webpack': 4.39.1
       del: 4.1.1
-      webpack: 4.39.2_webpack@4.39.2
+      webpack: 4.39.3_webpack@4.39.3
     dev: true
     engines:
       node: '>=8.9.0'
@@ -2800,7 +2800,7 @@ packages:
       node: '>= 4'
     resolution:
       integrity: sha512-Y+SQCF+0NoWQryez2zXn5J5knmr9z/9qSQt7fbL78u83rxmigOy8X5+BFn8CFSuX+nKT8gpYwJX68ekqtQt6ZA==
-  /copy-webpack-plugin/5.0.4_webpack@4.39.2:
+  /copy-webpack-plugin/5.0.4_webpack@4.39.3:
     dependencies:
       cacache: 11.3.3
       find-cache-dir: 2.1.0
@@ -2813,7 +2813,7 @@ packages:
       p-limit: 2.2.1
       schema-utils: 1.0.0
       serialize-javascript: 1.8.0
-      webpack: 4.39.2_webpack@4.39.2
+      webpack: 4.39.3_webpack@4.39.3
       webpack-log: 2.0.0
     dev: true
     engines:
@@ -2949,7 +2949,7 @@ packages:
       webpack: ^4.0.0
     resolution:
       integrity: sha512-OcKJU/lt232vl1P9EEDamhoO9iKY3tIjY5GU+XDLblAykTdgs6Ux9P1hTHve8nFKy5KPpOXOsVI/hIwi3841+w==
-  /css-loader/3.2.0_webpack@4.39.2:
+  /css-loader/3.2.0_webpack@4.39.3:
     dependencies:
       camelcase: 5.3.1
       cssesc: 3.0.0
@@ -2963,7 +2963,7 @@ packages:
       postcss-modules-values: 3.0.0
       postcss-value-parser: 4.0.2
       schema-utils: 2.1.0
-      webpack: 4.39.2_webpack@4.39.2
+      webpack: 4.39.3_webpack@4.39.3
     dev: true
     engines:
       node: '>= 8.9.0'
@@ -3232,10 +3232,10 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha512-PcW2a0tyTuPHz3tWyYqtK6r1fZ3gp+3Sop8Ph+ZYN81Ob5rwmbHEzaqs10N3BEsaGTkh/ooniXK+WwszGlc2+Q==
-  /electron-to-chromium/1.3.241:
+  /electron-to-chromium/1.3.242:
     dev: true
     resolution:
-      integrity: sha512-Gb9E6nWZlbgjDDNe5cAvMJixtn79krNJ70EDpq/M10lkGo7PGtBUe7Y0CYVHsBScRwi6ybCS+YetXAN9ysAHDg==
+      integrity: sha512-7am5MBcAYfVsnXurXLSBq+I6Sj2TFrEQZ0GgkEHKcAe87Wm+i5hmvsA/zMzBI+zQi/3JOYUnTrGlrxoDYkDxTw==
   /elliptic/6.5.0:
     dependencies:
       bn.js: 4.11.8
@@ -5229,27 +5229,27 @@ packages:
       '@babel/core': 7.5.5
       '@babel/plugin-syntax-dynamic-import': 7.2.0_@babel+core@7.5.5
       '@babel/preset-env': 7.5.5_@babel+core@7.5.5
-      babel-loader: 8.0.6_@babel+core@7.5.5+webpack@4.39.2
-      clean-webpack-plugin: 3.0.0_webpack@4.39.2
-      copy-webpack-plugin: 5.0.4_webpack@4.39.2
+      babel-loader: 8.0.6_@babel+core@7.5.5+webpack@4.39.3
+      clean-webpack-plugin: 3.0.0_webpack@4.39.3
+      copy-webpack-plugin: 5.0.4_webpack@4.39.3
       css-hot-loader: 1.4.4
-      css-loader: 3.2.0_webpack@4.39.2
+      css-loader: 3.2.0_webpack@4.39.3
       fork-ts-checker-webpack-plugin: 1.5.0
       merge-options: 1.0.1
       nativescript-dev-webpack: 1.1.1_typescript@3.5.3
       nativescript-vue-template-compiler: 2.4.0
       nativescript-worker-loader: 0.9.5
       node-sass: 4.12.0
-      sass-loader: 7.3.1_webpack@4.39.2
-      string-replace-loader: 2.2.0_webpack@4.39.2
-      terser-webpack-plugin: 1.4.1_webpack@4.39.2
+      sass-loader: 7.3.1_webpack@4.39.3
+      string-replace-loader: 2.2.0_webpack@4.39.3
+      terser-webpack-plugin: 1.4.1_webpack@4.39.3
       tns-core-modules: 6.0.7
       ts-loader: 6.0.4_typescript@3.5.3
-      vue-loader: 15.7.1_css-loader@3.2.0+webpack@4.39.2
-      webpack: 4.39.2_webpack@4.39.2
-      webpack-bugsnag-plugins: 1.4.1_webpack@4.39.2
+      vue-loader: 15.7.1_css-loader@3.2.0+webpack@4.39.3
+      webpack: 4.39.3_webpack@4.39.3
+      webpack-bugsnag-plugins: 1.4.1_webpack@4.39.3
       webpack-bundle-analyzer: 3.4.1
-      webpack-strip-block: 0.2.0_webpack@4.39.2
+      webpack-strip-block: 0.2.0_webpack@4.39.3
       xcode: 2.0.0
     dev: true
     peerDependencies:
@@ -5258,10 +5258,6 @@ packages:
       typescript: '*'
     resolution:
       integrity: sha512-Y9GLLewAr25eG1MPH9ugOPmFN2hZTnf4MMYnVjTKJVqjarp1V+IE3mXhhSUP9mGGY04+xjq+T9vEBUVCdHkspA==
-  /nativescript-bugsnag/1.0.8:
-    dev: false
-    resolution:
-      integrity: sha512-HYGuPWEqKiKYWk9dgBXHqB6Z3ay7rEyPP7HRjo/jGwd4geWGghGzQd6Bw46OMWCEMxtwS0Q5CCFNfqMdePvsgg==
   /nativescript-collectionview/1.0.26:
     dev: false
     resolution:
@@ -5358,71 +5354,71 @@ packages:
     requiresBuild: true
     resolution:
       integrity: sha512-AYqQmijIgVvq8bbzT/U03odGBGBQ35qTMIwdrRALtEGV8K0JccTEGhNXc66uVY5fYHKP4CWwVOI/kbm+TC/v0g==
-  /nativescript-material-activityindicator/2.3.20:
+  /nativescript-material-activityindicator/2.3.22:
     dependencies:
-      nativescript-material-core: 2.3.20
+      nativescript-material-core: 2.3.22
     dev: false
     resolution:
-      integrity: sha512-ssNHZFjIiO5mJNLATXR8z3LA3zucSJHh2jv3TEfJzwKcHsAIW7cdwt6bhzY5PcgvQ5rEkXjPH0DxGvEb9pK2NQ==
-  /nativescript-material-bottomsheet/2.3.20:
+      integrity: sha512-4ZjUoQYUZsp8b1lZd8CI9QiG5BI969BHu+nJV5CSWETumpVtA6AFRndfGUcKTGpU0z9W/o7YkQGb5vxnYWMg3A==
+  /nativescript-material-bottomsheet/2.3.22:
     dependencies:
-      nativescript-material-core: 2.3.20
+      nativescript-material-core: 2.3.22
     dev: false
     resolution:
-      integrity: sha512-eXA2Za/1WFGdvTWrEhLOoY7yZxzDhWopTWXOTMJYI3YQs5abUNzKByhO8BiRrdekxkQycAkPZGpe5wLazqytAQ==
-  /nativescript-material-button/2.3.20:
+      integrity: sha512-AS+tcSQfSb5Kz1SbYiJci+5QS+E7ThM+cmsp+pDCBPFv/p8/shjLYTnlzPbkWzi5pQMiDCPeqY0BGWGKuDD23g==
+  /nativescript-material-button/2.3.22:
     dependencies:
-      nativescript-material-core: 2.3.20
+      nativescript-material-core: 2.3.22
     dev: false
     resolution:
-      integrity: sha512-9nl22kN3cPiv6ch74gWjrS3YYNaOTwPAYGUi135b67BZqfoqrurnexThDQdzDp/5iY479Ip8/VlarffDz/IFTA==
-  /nativescript-material-cardview/2.3.20:
+      integrity: sha512-Bp+PPtdRFPWbuplK1bUbA7S8paJu22xAqoFWPZXQHJGuMJGCJOaXWA6HTzAfLwFjkFF/AP5KpYvJilR+PiCVBA==
+  /nativescript-material-cardview/2.3.22:
     dependencies:
-      nativescript-material-core: 2.3.20
+      nativescript-material-core: 2.3.22
     dev: false
     resolution:
-      integrity: sha512-srhlcb1se3gCBWYb1vosfyykASIv+KxV/snxWtX4WsxdQU5Rj4GYUcyFjpl9vKo49BOlkhj+/B5GoLj7fFPiVw==
-  /nativescript-material-core/2.3.20:
+      integrity: sha512-i3bVebE8QEABbyFyxHvHtWiw7a3/D+FJVyz3Sc7WTPrMH4PiHWFKm5J6z10Hdl/oMj3O6F6zWv6OJnMZl18NHw==
+  /nativescript-material-core/2.3.22:
     dev: false
     resolution:
-      integrity: sha512-eXptVpK/w5xFb5r+kQOZaDtR3RrGC3D9sRUzb0YQOixayTWC0WhKuwM8DqA+3iRTzmJ/yrKuuW1xER9xgYzgzg==
-  /nativescript-material-dialogs/2.3.20:
+      integrity: sha512-juJzf5g4cF06ixw+1N59i6ayP+nT0TDBmF5zq2ZCLt8LhbsoroDmLPNop4wTt+DbKdVxETDag7zs5/LMbTl41A==
+  /nativescript-material-dialogs/2.3.22:
     dependencies:
-      nativescript-material-core: 2.3.20
-      nativescript-material-textfield: 2.3.20
+      nativescript-material-core: 2.3.22
+      nativescript-material-textfield: 2.3.22
     dev: false
     resolution:
-      integrity: sha512-Vh2ITCXBLC20ZJdEjsR97wDr6PlgysVx1JMR7l5++t8io8hyNjOM/USr/EeT4tnBczUy+PUuPaKesvz1fh5NZg==
-  /nativescript-material-progress/2.3.20:
+      integrity: sha512-pEbIgdA0c3L8ze+yYAWkBLSqhE7dmpc9UDg+tbDAkaUcNs8j24XyvKfIrDewfBwk9VLjKTQA5D5xuu7gocOJaw==
+  /nativescript-material-progress/2.3.22:
     dependencies:
-      nativescript-material-core: 2.3.20
+      nativescript-material-core: 2.3.22
     dev: false
     resolution:
-      integrity: sha512-VdGY4Mv9GZKNiTrb+5avZr/Ds/jfokf6T2bWFaVlO+k8CawfWtz3lbl8TEMr5rB/5DERBC/geoQzQ35meVuUnw==
-  /nativescript-material-ripple/2.3.20:
+      integrity: sha512-f8bJ5Ud8k4Af23VxVh1E4aXqJBHyD+kXvWK22nb5mXpB4q4Nv9CNl5a5bXKOFDANf0tqyarchx24tvgFRA5kvw==
+  /nativescript-material-ripple/2.3.22:
     dependencies:
-      nativescript-material-core: 2.3.20
+      nativescript-material-core: 2.3.22
     dev: false
     resolution:
-      integrity: sha512-6KYWgyb55/lUenUh3bAsggbQ7fq+AItlSDOLVl5wOloWdpaC8rmNSG/FF5om0kuXM8VApGfCzhYeMy1G6e45jQ==
-  /nativescript-material-slider/2.3.20:
+      integrity: sha512-AMQ9qNjlISYSEINtlE1Ebr+SJob/acS3myd+rdKMzZmGrFeSsdAdDktXTxABiYdmAU1V+rsmOVu/g2v6ECQAMQ==
+  /nativescript-material-slider/2.3.22:
     dependencies:
-      nativescript-material-core: 2.3.20
+      nativescript-material-core: 2.3.22
     dev: false
     resolution:
-      integrity: sha512-VX6nu5WjZ7WFRZEKh1LunFCeWG1hqcuM0xQGHlX3/tQ+IZVJivPOmmjnbHGPNUHgDJS67XsprLL6DDZuaiYKog==
-  /nativescript-material-snackbar/2.3.20:
+      integrity: sha512-DvrRPN+c5cDQLzBOL4aaLH3YiCokjplx4JeEtoBqqnI2i8pv6h8yvAoiKNkl1zI5+of4hD/uESRxOlK+J/M7Hw==
+  /nativescript-material-snackbar/2.3.22:
     dependencies:
-      nativescript-material-core: 2.3.20
+      nativescript-material-core: 2.3.22
     dev: false
     resolution:
-      integrity: sha512-YYSzmb48jbJgdxdKnpzzh/Re/dxTnoz4AG+JpRfqY8ZT0bqu//9f4Cx61b6Yp/8C1BMyHeuwlmMYwiAmM2/2qw==
-  /nativescript-material-textfield/2.3.20:
+      integrity: sha512-C4n/e66bwXGqVL9ovvlgSRCLb/i9D9ihjbi4RpHBrEVLRkEQsizt8UdqKYy/j6lc1NyCsUla6N3SWpiVZ6cwiQ==
+  /nativescript-material-textfield/2.3.22:
     dependencies:
-      nativescript-material-core: 2.3.20
+      nativescript-material-core: 2.3.22
     dev: false
     resolution:
-      integrity: sha512-XdiBHCouQFvtrixvQlfu2I1tZEgkTfSnNg7HyJf8kfTd7Yk7ML+/V4hbO3ENmZDafXHzp3St7l08dyD36H/Seg==
+      integrity: sha512-yO5F2ryCZ6fg9aotZQTjPQ9IMmZLz+5nQrWy//8WggbTQfJ7DaPDs1oGz+IBuJTd/10eP2W7uqO/jN9HzNJhRg==
   /nativescript-observable/1.0.1:
     dev: false
     resolution:
@@ -5477,7 +5473,7 @@ packages:
       integrity: sha512-Tl27CF5qWp17BznDbYa+qZJZbDQ1et7NkD55gc9DSqXrPea1MfExzoI2Ouz0FbKQe4qVgiYkFZR23DVU+Id0JQ==
   /nativescript-vue-fab/1.0.16:
     dependencies:
-      nativescript-material-button: 2.3.20
+      nativescript-material-button: 2.3.22
       vue-property-decorator: 8.2.2
     dev: false
     resolution:
@@ -6809,14 +6805,14 @@ packages:
       webpack: ^3.0.0 || ^4.0.0
     resolution:
       integrity: sha512-+G+BKGglmZM2GUSfT9TLuEp6tzehHPjAMoRRItOojWIqIGPloVCMhNIQuG639eJ+y033PaGTSjLaTHts8Kw79w==
-  /sass-loader/7.3.1_webpack@4.39.2:
+  /sass-loader/7.3.1_webpack@4.39.3:
     dependencies:
       clone-deep: 4.0.1
       loader-utils: 1.2.3
       neo-async: 2.6.1
       pify: 4.0.1
       semver: 6.3.0
-      webpack: 4.39.2_webpack@4.39.2
+      webpack: 4.39.3_webpack@4.39.3
     dev: true
     engines:
       node: '>= 6.9.0'
@@ -7266,11 +7262,11 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-J5siXfHVgrH1TmWt3UNS4Y+qBxM=
-  /string-replace-loader/2.2.0_webpack@4.39.2:
+  /string-replace-loader/2.2.0_webpack@4.39.3:
     dependencies:
       loader-utils: 1.2.3
       schema-utils: 1.0.0
-      webpack: 4.39.2_webpack@4.39.2
+      webpack: 4.39.3_webpack@4.39.3
     dev: true
     peerDependencies:
       webpack: 1 || 2 || 3 || 4
@@ -7460,7 +7456,7 @@ packages:
       webpack: ^4.0.0
     resolution:
       integrity: sha512-ZXmmfiwtCLfz8WKZyYUuuHf3dMYEjg8NrjHMb0JqHVHVOSkzp3cW2/XG1fP3tRhqEqSzMwzzRQGtAPbs4Cncxg==
-  /terser-webpack-plugin/1.4.1_webpack@4.39.2:
+  /terser-webpack-plugin/1.4.1_webpack@4.39.3:
     dependencies:
       cacache: 12.0.3
       find-cache-dir: 2.1.0
@@ -7469,7 +7465,7 @@ packages:
       serialize-javascript: 1.8.0
       source-map: 0.6.1
       terser: 4.2.1
-      webpack: 4.39.2_webpack@4.39.2
+      webpack: 4.39.3_webpack@4.39.3
       webpack-sources: 1.4.3
       worker-farm: 1.7.0
     dev: true
@@ -7953,15 +7949,15 @@ packages:
     dev: true
     resolution:
       integrity: sha512-utI1Rvc8i+fmmUkkKRmHaf4QQ87s7rGVL5ZZLsKvvRzmgaIr1l+GfGxxxRmsZxHpPlgeB8OxoUZ4noqZgDL6xg==
-  /vue-loader/15.7.1_css-loader@3.2.0+webpack@4.39.2:
+  /vue-loader/15.7.1_css-loader@3.2.0+webpack@4.39.3:
     dependencies:
       '@vue/component-compiler-utils': 3.0.0
-      css-loader: 3.2.0_webpack@4.39.2
+      css-loader: 3.2.0_webpack@4.39.3
       hash-sum: 1.0.2
       loader-utils: 1.2.3
       vue-hot-reload-api: 2.3.3
       vue-style-loader: 4.1.2
-      webpack: 4.39.2_webpack@4.39.2
+      webpack: 4.39.3_webpack@4.39.3
     dev: true
     peerDependencies:
       css-loader: '*'
@@ -8000,12 +7996,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-i6dHe3EyLjMmDlU1/bGQpEw25XSjkJULPuAVKCbNRefQVq48yXKUpwg538F7AZTf9kyr57zj++pQFltUa5H7yA==
-  /webpack-bugsnag-plugins/1.4.1_webpack@4.39.2:
+  /webpack-bugsnag-plugins/1.4.1_webpack@4.39.3:
     dependencies:
       bugsnag-build-reporter: 1.0.2
       bugsnag-sourcemaps: 1.2.1
       run-parallel-limit: 1.0.5
-      webpack: 4.39.2_webpack@4.39.2
+      webpack: 4.39.3_webpack@4.39.3
     dev: true
     peerDependencies:
       webpack: '>=3'
@@ -8074,7 +8070,7 @@ packages:
       webpack: ^4.x.x
     resolution:
       integrity: sha512-Cnqo7CeqeSvC6PTdts+dywNi5CRlIPbLx1AoUPK2T6vC1YAugMG3IOoO9DmEscd+Dghw7uRlnzV1KwOe5IrtgQ==
-  /webpack-cli/3.3.7_webpack@4.39.2:
+  /webpack-cli/3.3.7_webpack@4.39.3:
     dependencies:
       chalk: 2.4.2
       cross-spawn: 6.0.5
@@ -8086,7 +8082,7 @@ packages:
       loader-utils: 1.2.3
       supports-color: 6.1.0
       v8-compile-cache: 2.0.3
-      webpack: 4.39.2_webpack@4.39.2
+      webpack: 4.39.3_webpack@4.39.3
       yargs: 13.2.4
     dev: true
     engines:
@@ -8119,10 +8115,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-lgTS3Xhv1lCOKo7SA5TjKXMjpSM4sBjNV5+q2bqesbSPs5FjGmU6jjtBSkX9b4qW87vDIsCIlUPOEhbZrMdjeQ==
-  /webpack-strip-block/0.2.0_webpack@4.39.2:
+  /webpack-strip-block/0.2.0_webpack@4.39.3:
     dependencies:
       loader-utils: 1.2.3
-      webpack: 4.39.2_webpack@4.39.2
+      webpack: 4.39.3_webpack@4.39.3
     dev: true
     peerDependencies:
       webpack: '>=2.2.0'
@@ -8162,7 +8158,7 @@ packages:
       webpack: '*'
     resolution:
       integrity: sha512-WArHiLvHrlfyRM8i7f+2SFbr/XbQ0bXqTkPF8JpHOzub5482Y3wx7rEO8stuLGOKOgZJcqcisLhD7LrM/+fVMw==
-  /webpack/4.39.2_webpack@4.39.2:
+  /webpack/4.39.3_webpack@4.39.3:
     dependencies:
       '@webassemblyjs/ast': 1.8.5
       '@webassemblyjs/helper-module-context': 1.8.5
@@ -8184,7 +8180,7 @@ packages:
       node-libs-browser: 2.2.1
       schema-utils: 1.0.0
       tapable: 1.1.3
-      terser-webpack-plugin: 1.4.1_webpack@4.39.2
+      terser-webpack-plugin: 1.4.1_webpack@4.39.3
       watchpack: 1.6.0
       webpack-sources: 1.4.3
     dev: true
@@ -8194,7 +8190,7 @@ packages:
     peerDependencies:
       webpack: '*'
     resolution:
-      integrity: sha512-AKgTfz3xPSsEibH00JfZ9sHXGUwIQ6eZ9tLN8+VLzachk1Cw2LVmy+4R7ZiwTa9cZZ15tzySjeMui/UnSCAZhA==
+      integrity: sha512-BXSI9M211JyCVc3JxHWDpze85CvjC842EvpRsVTc/d15YJGlox7GIDd38kJgWrb3ZluyvIjgenbLDMBQPDcxYQ==
   /which-module/1.0.0:
     dev: true
     resolution:
@@ -8393,7 +8389,7 @@ specifiers:
   nativescript-akylas-fonticon: ~2.0.6
   nativescript-akylas-vue: ^2.3.5
   nativescript-akylas-webpack-template: ^0.2.6
-  nativescript-bugsnag: ^1.0.8
+  nativescript-bugsnag: ^1.0.9
   nativescript-carto: 1.2.27
   nativescript-collectionview: ^1.0.26
   nativescript-dev-webpack: 1.1.1
@@ -8405,15 +8401,15 @@ specifiers:
   nativescript-image: ^2.2.5
   nativescript-insomnia: ^1.2.3
   nativescript-localize: ~4.2.0
-  nativescript-material-activityindicator: ^2.3.20
-  nativescript-material-bottomsheet: ^2.3.20
-  nativescript-material-button: ^2.3.20
-  nativescript-material-cardview: ^2.3.20
-  nativescript-material-dialogs: ^2.3.20
-  nativescript-material-progress: ^2.3.20
-  nativescript-material-ripple: ^2.3.20
-  nativescript-material-slider: ^2.3.20
-  nativescript-material-snackbar: ^2.3.20
+  nativescript-material-activityindicator: ^2.3.22
+  nativescript-material-bottomsheet: ^2.3.22
+  nativescript-material-button: ^2.3.22
+  nativescript-material-cardview: ^2.3.22
+  nativescript-material-dialogs: ^2.3.22
+  nativescript-material-progress: ^2.3.22
+  nativescript-material-ripple: ^2.3.22
+  nativescript-material-slider: ^2.3.22
+  nativescript-material-snackbar: ^2.3.22
   nativescript-perms: ^1.0.8
   nativescript-photoviewer: ^2.1.5
   nativescript-sensors: ^0.0.11
@@ -8435,5 +8431,5 @@ specifiers:
   vue-i18n: ^8.14.0
   vue-property-decorator: ^8.2.2
   vue-string-filter: ^1.3.0
-  webpack: ^4.39.2
+  webpack: ^4.39.3
   webpack-cli: ^3.3.7

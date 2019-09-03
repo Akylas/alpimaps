@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+  <string name="send">"send"</string>
+  <string name="send_bug_report">"send bug report"</string>
   <string name="select_language">"map language"</string>
   <string name="offline_packages">"offline maps"</string>
   <string name="select_style">"map style"</string>

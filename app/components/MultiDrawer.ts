@@ -603,7 +603,7 @@ export default class MultiDrawer extends Vue {
         this.onDrawerPan(side, args);
     }
     onDrawerPan(side, args) {
-        // this.log('onDrawerPan', side, this.isPanning, this.isAnimating, args.state);
+        this.log('onDrawerPan', side, this.isPanning, this.isAnimating, args.state);
         if (side === false) {
             return;
         }
