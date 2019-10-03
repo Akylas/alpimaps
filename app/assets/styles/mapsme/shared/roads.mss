@@ -502,7 +502,7 @@
 
 			[subclass=footway]
 			,
-			// [subclass=path]
+			[subclass=path]
 			// [bicycle != designated][horse != designated]
 			{
 				[brunnel=bridge][zoom>=14],
@@ -1153,8 +1153,9 @@
 			}
 		
 			[subclass=footway]
-			// ,
-			// // [subclass=path][bicycle != designated][horse != designated]
+			,
+			[subclass=path]
+			// [bicycle != designated][horse != designated]
 			 {
 				[zoom>=14] {
 					[zoom>=15] {
@@ -2631,11 +2632,6 @@
 		}
 	}
 	[class=path][zoom>=15] {
-		[subclass=bridleway],
-		[subclass=footway],
-		[subclass=cycleway],
-		[subclass=path],
-		[subclass=steps],
 		[subclass=bridleway],
 		[subclass=footway],
 		[subclass=cycleway],

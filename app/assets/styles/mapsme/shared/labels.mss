@@ -143,21 +143,21 @@
 
 /* 5.VEGETATION, BEACH & GLACIER */
 
-#park[zoom<=16]{
-	[class=nature_reserve][zoom>=6],
-	[class=national_park][zoom>=6],
-	[class=protected_area][zoom>=11]{
-		text-name: @name;
-		text-face-name: @mont_it_md;
-		text-wrap-width: 50;
-		text-wrap-before: true;
-		text-fill: @park_label;
-		text-halo-fill: @halo_park_label;
-		text-halo-radius: 1;
-		text-character-spacing: 1.1;
-		text-size: linear([view::zoom], (5, 7.0), (13, 8.0), (16, 14.0));
-	}
-}
+// #park[zoom<=16]{
+// 	[class=nature_reserve][zoom>=6],
+// 	[class=national_park][zoom>=6],
+// 	[class=protected_area][zoom>=11]{
+// 		text-name: @name;
+// 		text-face-name: @mont_it_md;
+// 		text-wrap-width: 50;
+// 		text-wrap-before: true;
+// 		text-fill: @park_label;
+// 		text-halo-fill: @halo_park_label;
+// 		text-halo-radius: 1;
+// 		text-character-spacing: 1.1;
+// 		text-size: linear([view::zoom], (5, 7.0), (13, 8.0), (16, 14.0));
+// 	}
+// }
 
 /* 5.1 Vegetation */
 #poi {
@@ -220,7 +220,7 @@
 				text-placement: [nuti::markers3d];
 				text-name: @osm_icon;
 				text-fill: @poi_color;
-				text-size: linear([view::zoom], (14, 12), (15, 13), (16, 13), (21, 20)) + (100 - [rank]) * 0.0000001;
+				text-size: linear([view::zoom], (14, 12), (15, 13), (16, 13), (21, 15)) + (100 - [rank]) * 0.0000001;
 				text-face-name: @osm;
 				text-feature-id: [name];
 				text-halo-radius: 0.7;
@@ -380,7 +380,7 @@
 	[zoom>=11] {
 		::icon {
 			text-placement: [nuti::markers3d];
-			text-name: [nuti::maki-mountain];
+			text-name: [nuti::osm-peak];
 	// text-size: 14 + [ele] * 0.00001;
 			text-size: linear([view::zoom], (7, 10), (15, 14)) + (100 - [rank]) * 0.0000001; 
 			text-face-name: @maki;
