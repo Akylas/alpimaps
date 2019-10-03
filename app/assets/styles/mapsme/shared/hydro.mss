@@ -49,16 +49,16 @@
 }
 #water {
 	[class=ocean]{
-		::shadow {
-			polygon-fill: darken(@water, 0.3);
-			polygon-geometry-transform: translate(0,1);
-			[zoom>=14] {
-				polygon-geometry-transform: translate(0,2);
-			}
-		}
-		::fill {
+		// ::shadow {
+		// 	polygon-fill: darken(@water, 0.3);
+		// 	polygon-geometry-transform: translate(0,1);
+		// 	[zoom>=14] {
+		// 		polygon-geometry-transform: translate(0,2);
+		// 	}
+		// }
+		// ::fill {
 			polygon-fill: @water;
-		}
+		// }
 	}
 	
 	[class=lake],

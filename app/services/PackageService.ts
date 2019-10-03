@@ -295,16 +295,16 @@ export default class PackageService extends Observable {
                         packageManager: this.packageManager
                     }),
                     new PersistentCacheTileDataSource({
-                        dataSource: new CartoOnlineTileDataSource({
-                            source: 'carto.streets'
-                        }),
-                        // dataSource: new HTTPTileDataSource({
-                        //     url: 'https://tile.nextzen.org/tilezen/vector/v1/all/{z}/{x}/{y}.mvt?api_key=O5iag8fiQIeqwgPFKMsrhA',
-                        //     minZoom: 0,
-                        //     maxZoom: 14
+                        // dataSource: new CartoOnlineTileDataSource({
+                        //     source: 'carto.streets'
                         // }),
+                        dataSource: new HTTPTileDataSource({
+                            url: 'https://api.maptiler.com/tiles/v3/{z}/{x}/{y}.pbf?key=V7KGiDaKQBCWTYsgsmxh',
+                            minZoom: 0,
+                            maxZoom: 14
+                        }),
                         capacity: 100 * 1024 * 1024,
-                        databasePath: tilezenCacheFolder.path
+                        databasePath: maptileCacheFolder.path
                     })
                 ]
             });

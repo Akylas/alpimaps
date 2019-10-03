@@ -71,7 +71,7 @@
 
 #landuse['mapnik::geometry_type'=3] {
 
-  [class = 'residential'][zoom >= 8]{
+  [class = 'residential'][zoom >= 7]{
     polygon-fill: @built-up-lowzoom;
     [zoom >= 11] { polygon-fill: @built-up-z11; }
     [zoom >= 12] { polygon-fill: @built-up-z12; }
@@ -99,7 +99,7 @@
   // ::high-zoom[zoom >= 13] {
 
   
-    ::top_of_residential {
+  ::top_of_residential {
     [class = 'recreation_ground'][zoom >= 10],
     [class = 'playground'][zoom >= 13],
     [class = 'fitness_station'][zoom >= 13] {
@@ -227,7 +227,7 @@
         [zoom >= 11] { polygon-fill: @built-up-z11; }
         [zoom >= 12] { polygon-fill: @built-up-z12; }
         [zoom >= 13] { polygon-fill: @retail; }
-        [zoom >= 16] {
+        [zoom >= 15] {
           line-width: 0.5;
           line-color: @retail-line;
           [name != ''] {
@@ -404,6 +404,53 @@
       }
     }
 
+  [class = 'military'][zoom >= 13],
+  [class = 'danger_area'][zoom >= 9] {
+    polygon-pattern-file: url('symbols/military_red_hatch.png');
+    // polygon-pattern-alignment: global;
+    line-color: @military;
+    line-opacity: 0.24;
+    line-width: 1.0;
+    //line-offset: -0.5;
+    [zoom >= 15] {
+      [class = 'danger_area'][zoom >= 9] {
+        polygon-pattern-file: url('symbols/danger_red_hatch.png');
+        line-opacity: 0.2;
+      }
+      line-width: 2;
+      //line-offset: -1.0;
+    }
+  }
+  [class = 'embankment'][zoom >= 15]::man_made {
+    line-pattern-file: url('symbols/embankment.svg');
+  }
+  [class = 'zoo'][zoom >= 10][way_pixels >= 750],
+  [class = 'zoo'][zoom >= 17],
+  [class = 'theme_park'][zoom >= 10][way_pixels >= 750],
+  [class = 'theme_park'][zoom >= 17] {
+    a/line-width: 1;
+    // a/line-offset: -0.5;
+    a/line-color: @tourism;
+    a/line-opacity: 0.5;
+    a/line-join: round;
+    a/line-cap: round;
+    [zoom >= 17],
+    [way_pixels >= 60] {
+      b/line-width: 4;
+    //   b/line-offset: -2;
+      b/line-color: @tourism;
+      b/line-opacity: 0.3;
+      b/line-join: round;
+      b/line-cap: round;
+    }
+    [zoom >= 17] {
+      a/line-width: 2;
+    //   a/line-offset: -1;
+      b/line-width: 6;
+    //   b/line-offset: -3;
+    }
+  }
+
     [class = 'parking_space'][zoom >= 18] {
       line-width: 0.3;
       line-color: mix(@parking-outline, @parking, 50%);
@@ -425,7 +472,7 @@
       // [way_pixels >= 64] { polygon-gamma: 0.3;  }
     }
 
-    [class = 'beach'][zoom >= 10],
+    [class = 'sand'][subclass = 'beach'][zoom >= 10],
     [class = 'shoal'][zoom >= 10] {
       polygon-fill: @beach;
       // [way_pixels >= 4]  { polygon-gamma: 0.75; }
@@ -514,10 +561,6 @@
     polygon-pattern-file: url('symbols/beach.png');
     // polygon-pattern-alignment: global;
   }
-  [int_wetland != null][zoom >= 5] {
-    polygon-pattern-file: url('symbols/wetland.png');
-    // polygon-pattern-alignment: global;
-  }
   [class = 'reef'][zoom >= 10] {
     polygon-pattern-file: url('symbols/reef.png');
     // polygon-pattern-alignment: global;
@@ -547,22 +590,22 @@
       polygon-pattern-file: url('symbols/bog.png');
       // polygon-pattern-alignment: global;
     }
-    [class = 'beach'],
+    [class = 'sand'][subclass = 'beach'],
     [class = 'shoal'] {
-      [surface = 'sand'] {
+      // [surface = 'sand'] {
         polygon-pattern-file: url('symbols/beach.png');
         // polygon-pattern-alignment: global;
-      }
-      [surface = 'gravel'],
-      [surface = 'fine_gravel'],
-      [surface = 'pebbles'],
-      [surface = 'pebblestone'],
-      [surface = 'shingle'],
-      [surface = 'stones'],
-      [surface = 'shells'] {
-        polygon-pattern-file: url('symbols/beach_coarse.png');
-        // polygon-pattern-alignment: global;
-      }
+      // }
+      // [surface = 'gravel'],
+      // [surface = 'fine_gravel'],
+      // [surface = 'pebbles'],
+      // [surface = 'pebblestone'],
+      // [surface = 'shingle'],
+      // [surface = 'stones'],
+      // [surface = 'shells'] {
+      //   polygon-pattern-file: url('symbols/beach_coarse.png');
+      //   // polygon-pattern-alignment: global;
+      // }
     }
     [natural = 'scrub'] {
       polygon-pattern-file: url('symbols/scrub.png');
@@ -592,7 +635,7 @@
 
   [class = 'quarry'][zoom >= 10] {
     polygon-fill: @quarry;
-    polygon-pattern-file: url('symbols/quarry.svg');
+    // polygon-pattern-file: url('symbols/quarry.svg');
     [zoom >= 13] {
       line-width: 0.5;
       line-color: #808080;
@@ -601,32 +644,32 @@
     // [way_pixels >= 64] { polygon-pattern-gamma: 0.3;  }
   }
 
-  [class=wood][subclass = 'vineyard'] {
+  [class=farmland][subclass = 'vineyard'] {
     [zoom >= 5] {
       polygon-fill: @orchard;
       // [way_pixels >= 4]  { polygon-gamma: 0.75; }
       // [way_pixels >= 64] { polygon-gamma: 0.3;  }
     }
-    [zoom >= 13] {
-      polygon-pattern-file: url('symbols/vineyard.png');
+    // [zoom >= 13] {
+      // polygon-pattern-file: url('symbols/vineyard.png');
     //   polygon-pattern-alignment: global;
       // [way_pixels >= 4]  { polygon-pattern-gamma: 0.75; }
       // [way_pixels >= 64] { polygon-pattern-gamma: 0.3;  }
-    }
+    // }
   }
 
-  [class=wood][subclass = 'orchard'] {
+  [class=farmland][subclass = 'orchard'] {
     [zoom >= 5] {
       polygon-fill: @orchard;
       // [way_pixels >= 4]  { polygon-gamma: 0.75; }
       // [way_pixels >= 64] { polygon-gamma: 0.3;  }
     }
-    [zoom >= 13] {
-      polygon-pattern-file: url('symbols/orchard.png');
+    // [zoom >= 13] {
+      // polygon-pattern-file: url('symbols/orchard.png');
     //   polygon-pattern-alignment: global;
     //   [way_pixels >= 4]  { polygon-pattern-gamma: 0.75; }
     //   [way_pixels >= 64] { polygon-pattern-gamma: 0.3;  }
-    }
+    // }
   }
 
   [class=grass][class = 'garden'] {
@@ -770,7 +813,7 @@
   }
 
   [class=wetland] {
-    [class = 'swamp'][zoom >= 5] {
+    [class = 'swamp'][zoom >= 5], [class = 'wetland'][zoom >= 5] {
       polygon-fill: @forest;
       // [way_pixels >= 4]  { polygon-gamma: 0.75; }
       // [way_pixels >= 64] { polygon-gamma: 0.3;  }
@@ -794,56 +837,7 @@
         // [way_pixels >= 64] { polygon-gamma: 0.3;  }
       }
     }
-  }
-}
-
-#landuse['mapnik::geometry_type'=3] {
-  [class = 'military'][zoom >= 8][way_pixels > 900],
-  [class = 'military'][zoom >= 13],
-  [class = 'danger_area'][zoom >= 9] {
-    polygon-pattern-file: url('symbols/military_red_hatch.png');
-    // polygon-pattern-alignment: global;
-    line-color: @military;
-    line-opacity: 0.24;
-    line-width: 1.0;
-    //line-offset: -0.5;
-    [zoom >= 15] {
-      [military = 'danger_area'][zoom >= 9] {
-        polygon-pattern-file: url('symbols/danger_red_hatch.png');
-        line-opacity: 0.2;
-      }
-      line-width: 2;
-      //line-offset: -1.0;
-    }
-  }
-  [class = 'embankment'][zoom >= 15]::man_made {
-    line-pattern-file: url('symbols/embankment.svg');
-  }
-  [class = 'zoo'][zoom >= 10][way_pixels >= 750],
-  [class = 'zoo'][zoom >= 17],
-  [class = 'theme_park'][zoom >= 10][way_pixels >= 750],
-  [class = 'theme_park'][zoom >= 17] {
-    a/line-width: 1;
-    // a/line-offset: -0.5;
-    a/line-color: @tourism;
-    a/line-opacity: 0.5;
-    a/line-join: round;
-    a/line-cap: round;
-    [zoom >= 17],
-    [way_pixels >= 60] {
-      b/line-width: 4;
-    //   b/line-offset: -2;
-      b/line-color: @tourism;
-      b/line-opacity: 0.3;
-      b/line-join: round;
-      b/line-cap: round;
-    }
-    [zoom >= 17] {
-      a/line-width: 2;
-    //   a/line-offset: -1;
-      b/line-width: 6;
-    //   b/line-offset: -3;
-    }
+    polygon-pattern-file: url('symbols/wetland.png');
   }
 }
 

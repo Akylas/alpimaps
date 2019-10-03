@@ -97,6 +97,7 @@ export class BgService extends android.app.Service {
         // cancel notification
         this.notificationManager.cancel(NOTIFICATION_ID); // todo check if necessary?
         this.stopForeground(android.app.Service.STOP_FOREGROUND_REMOVE);
+        this.mNotification = null;
     }
     private onSessionStateEvent(e: SessionEventData) {
         // this.log('onSessionStateEvent', e.data.state);
@@ -111,8 +112,12 @@ export class BgService extends android.app.Service {
         this.updateNotification();
     }
     protected updateNotification() {
-        this.mNotification = NotificationHelper.getUpdatedNotification(this, this.mNotificationBuilder, this.geoHandler.currentSession);
-        this.notificationManager.notify(NOTIFICATION_ID, this.mNotification);
+        if (!this.mNotificationBuilder) {
+            this.displayNotification(this.recording);
+        } else {
+            this.mNotification = NotificationHelper.getUpdatedNotification(this, this.mNotificationBuilder, this.geoHandler.currentSession);
+            this.notificationManager.notify(NOTIFICATION_ID, this.mNotification);
+        }
     }
     protected onSessionChronoEvent(e: SessionChronoEventData) {
         this.updateNotification();
@@ -125,7 +130,9 @@ export class BgService extends android.app.Service {
         this.log('showForeground', this.inBackground, this.recording, this.alwaysShowNotification, new Error().stack);
         if (this.inBackground || this.recording || this.alwaysShowNotification) {
             try {
-                this.displayNotification(this.recording);
+                if (!this.mNotification) {
+                    this.displayNotification(this.recording);
+                }
                 this.startForeground(NOTIFICATION_ID, this.mNotification);
             } catch (err) {
                 console.error(err);
