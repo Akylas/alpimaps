@@ -8,11 +8,11 @@
         "aerodrome_label",
         "transportation",
         "building",
+        "boundary",
+        "park",
         "water",
         "waterway",
-        "boundary",
         "mountain_peak",
-        "park",
         "place",
         "hillshade",
         "landcover",
@@ -79,564 +79,6 @@
                 "0": "point"
             }
         },
-        "maki-shield-default-1": {
-            "default": "\ue9b0"
-        },
-        "maki-shield-default-2": {
-            "default": "\ue9b1"
-        },
-        "maki-shield-default-3": {
-            "default": "\ue9b2"
-        },
-        "maki-shield-default-4": {
-            "default": "\ue9b3"
-        },
-        "maki-shield-default-5": {
-            "default": "\ue9b4"
-        },
-        "maki-shield-default-6": {
-            "default": "\ue9b5"
-        },
-        "maki-aerialway": {
-            "default": "\ue900"
-        },
-        "maki-airfield": {
-            "default": "\ue901"
-        },
-        "maki-airport": {
-            "default": "\ue902"
-        },
-        "maki-alcohol_shop": {
-            "default": "\ue903"
-        },
-        "maki-american_football": {
-            "default": "\ue904"
-        },
-        "maki-amusement_park": {
-            "default": "\ue905"
-        },
-        "maki-aquarium": {
-            "default": "\ue906"
-        },
-        "maki-art_gallery": {
-            "default": "\ue907"
-        },
-        "maki-attraction": {
-            "default": "\ue908"
-        },
-        "maki-bakery": {
-            "default": "\ue909"
-        },
-        "maki-bank": {
-            "default": "\ue90a"
-        },
-        "maki-bar": {
-            "default": "\ue90b"
-        },
-        "maki-barrier": {
-            "default": "\ue90c"
-        },
-        "maki-baseball": {
-            "default": "\ue90d"
-        },
-        "maki-basketball": {
-            "default": "\ue90e"
-        },
-        "maki-bbq": {
-            "default": "\ue90f"
-        },
-        "maki-beach": {
-            "default": "\ue910"
-        },
-        "maki-beer": {
-            "default": "\ue911"
-        },
-        "maki-bicycle_share": {
-            "default": "\ue912"
-        },
-        "maki-bicycle": {
-            "default": "\ue913"
-        },
-        "maki-blood_bank": {
-            "default": "\ue914"
-        },
-        "maki-bowling_alley": {
-            "default": "\ue915"
-        },
-        "maki-bridge": {
-            "default": "\ue916"
-        },
-        "maki-building_alt1": {
-            "default": "\ue917"
-        },
-        "maki-building": {
-            "default": "\ue918"
-        },
-        "maki-bus": {
-            "default": "\ue919"
-        },
-        "maki-cafe": {
-            "default": "\ue91a"
-        },
-        "maki-campsite": {
-            "default": "\ue91b"
-        },
-        "maki-car_rental": {
-            "default": "\ue91c"
-        },
-        "maki-car_repair": {
-            "default": "\ue91d"
-        },
-        "maki-car": {
-            "default": "\ue91e"
-        },
-        "maki-casino": {
-            "default": "\ue91f"
-        },
-        "maki-castle": {
-            "default": "\ue920"
-        },
-        "maki-cemetery": {
-            "default": "\ue921"
-        },
-        "maki-charging_station": {
-            "default": "\ue922"
-        },
-        "maki-cinema": {
-            "default": "\ue923"
-        },
-        "maki-circle_stroked": {
-            "default": "\ue924"
-        },
-        "maki-circle": {
-            "default": "\ue925"
-        },
-        "maki-city": {
-            "default": "\ue926"
-        },
-        "maki-clothing_store": {
-            "default": "\ue927"
-        },
-        "maki-college": {
-            "default": "\ue928"
-        },
-        "maki-commercial": {
-            "default": "\ue929"
-        },
-        "maki-communications_tower": {
-            "default": "\ue92a"
-        },
-        "maki-confectionery": {
-            "default": "\ue92b"
-        },
-        "maki-convenience": {
-            "default": "\ue92c"
-        },
-        "maki-cricket": {
-            "default": "\ue92d"
-        },
-        "maki-cross": {
-            "default": "\ue92e"
-        },
-        "maki-dam": {
-            "default": "\ue92f"
-        },
-        "maki-danger": {
-            "default": "\ue930"
-        },
-        "maki-defibrillator": {
-            "default": "\ue931"
-        },
-        "maki-dentist": {
-            "default": "\ue932"
-        },
-        "maki-doctor": {
-            "default": "\ue933"
-        },
-        "maki-dog_park": {
-            "default": "\ue934"
-        },
-        "maki-drinking_water": {
-            "default": "\ue935"
-        },
-        "maki-embassy": {
-            "default": "\ue936"
-        },
-        "maki-emergency_phone": {
-            "default": "\ue937"
-        },
-        "maki-entrance_alt1": {
-            "default": "\ue938"
-        },
-        "maki-entrance": {
-            "default": "\ue939"
-        },
-        "maki-farm": {
-            "default": "\ue93a"
-        },
-        "maki-fast_food": {
-            "default": "\ue93b"
-        },
-        "maki-fence": {
-            "default": "\ue93c"
-        },
-        "maki-ferry": {
-            "default": "\ue93d"
-        },
-        "maki-fire_station": {
-            "default": "\ue93e"
-        },
-        "maki-fitness_centre": {
-            "default": "\ue93f"
-        },
-        "maki-florist": {
-            "default": "\ue940"
-        },
-        "maki-fuel": {
-            "default": "\ue941"
-        },
-        "maki-furniture": {
-            "default": "\ue942"
-        },
-        "maki-gaming": {
-            "default": "\ue943"
-        },
-        "maki-garden_centre": {
-            "default": "\ue944"
-        },
-        "maki-garden": {
-            "default": "\ue945"
-        },
-        "maki-gift": {
-            "default": "\ue946"
-        },
-        "maki-globe": {
-            "default": "\ue947"
-        },
-        "maki-golf": {
-            "default": "\ue948"
-        },
-        "maki-grocery": {
-            "default": "\ue949"
-        },
-        "maki-hairdresser": {
-            "default": "\ue94a"
-        },
-        "maki-harbor": {
-            "default": "\ue94b"
-        },
-        "maki-hardware": {
-            "default": "\ue94c"
-        },
-        "maki-heart": {
-            "default": "\ue94d"
-        },
-        "maki-heliport": {
-            "default": "\ue94e"
-        },
-        "maki-home": {
-            "default": "\ue94f"
-        },
-        "maki-horse_riding": {
-            "default": "\ue950"
-        },
-        "maki-hospital": {
-            "default": "\ue951"
-        },
-        "maki-ice_cream": {
-            "default": "\ue952"
-        },
-        "maki-industry": {
-            "default": "\ue953"
-        },
-        "maki-information": {
-            "default": "\ue954"
-        },
-        "maki-jewelry_store": {
-            "default": "\ue955"
-        },
-        "maki-karaoke": {
-            "default": "\ue956"
-        },
-        "maki-landmark": {
-            "default": "\ue957"
-        },
-        "maki-landuse": {
-            "default": "\ue958"
-        },
-        "maki-laundry": {
-            "default": "\ue959"
-        },
-        "maki-library": {
-            "default": "\ue95a"
-        },
-        "maki-lighthouse": {
-            "default": "\ue95b"
-        },
-        "maki-lodging": {
-            "default": "\ue95c"
-        },
-        "maki-logging": {
-            "default": "\ue95d"
-        },
-        "maki-marker_stroked": {
-            "default": "\ue95e"
-        },
-        "maki-marker": {
-            "default": "\ue95f"
-        },
-        "maki-mobile_phone": {
-            "default": "\ue960"
-        },
-        "maki-monument": {
-            "default": "\ue961"
-        },
-        "maki-mountain": {
-            "default": "\ue962"
-        },
-        "maki-mountain_peak": {
-            "default": "\ue962"
-        },
-        "maki-museum": {
-            "default": "\ue963"
-        },
-        "maki-music": {
-            "default": "\ue964"
-        },
-        "maki-natural": {
-            "default": "\ue965"
-        },
-        "maki-optician": {
-            "default": "\ue966"
-        },
-        "maki-paint": {
-            "default": "\ue967"
-        },
-        "maki-park_alt1": {
-            "default": "\ue968"
-        },
-        "maki-park": {
-            "default": "\ue969"
-        },
-        "maki-parking_garage": {
-            "default": "\ue96a"
-        },
-        "maki-parking": {
-            "default": "\ue96b"
-        },
-        "maki-pharmacy": {
-            "default": "\ue96c"
-        },
-        "maki-picnic_site": {
-            "default": "\ue96d"
-        },
-        "maki-pitch": {
-            "default": "\ue96e"
-        },
-        "maki-place-of_worship": {
-            "default": "\ue96f"
-        },
-        "maki-playground": {
-            "default": "\ue970"
-        },
-        "maki-police": {
-            "default": "\ue971"
-        },
-        "maki-post": {
-            "default": "\ue972"
-        },
-        "maki-prison": {
-            "default": "\ue973"
-        },
-        "maki-rail_light": {
-            "default": "\ue974"
-        },
-        "maki-tram_stop": {
-            "default": "\ue974"
-        },
-        "maki-rail_metro": {
-            "default": "\ue975"
-        },
-        "maki-rail": {
-            "default": "\ue976"
-        },
-        "maki-railway": {
-            "default": "\ue976"
-        },
-        "maki-ranger_station": {
-            "default": "\ue977"
-        },
-        "maki-recycling": {
-            "default": "\ue978"
-        },
-        "maki-religious_buddhist": {
-            "default": "\ue979"
-        },
-        "maki-religious_christian": {
-            "default": "\ue97a"
-        },
-        "maki-religious_jewish": {
-            "default": "\ue97b"
-        },
-        "maki-religious_muslim": {
-            "default": "\ue97c"
-        },
-        "maki-residential_community": {
-            "default": "\ue97d"
-        },
-        "maki-restaurant_noodle": {
-            "default": "\ue97e"
-        },
-        "maki-restaurant_pizza": {
-            "default": "\ue97f"
-        },
-        "maki-restaurant_seafood": {
-            "default": "\ue980"
-        },
-        "maki-restaurant": {
-            "default": "\ue981"
-        },
-        "maki-roadblock": {
-            "default": "\ue982"
-        },
-        "maki-rocket": {
-            "default": "\ue983"
-        },
-        "maki-school": {
-            "default": "\ue984"
-        },
-        "maki-scooter": {
-            "default": "\ue985"
-        },
-        "maki-shelter": {
-            "default": "\ue986"
-        },
-        "maki-shoe": {
-            "default": "\ue987"
-        },
-        "maki-shop": {
-            "default": "\ue988"
-        },
-        "maki-skateboard": {
-            "default": "\ue989"
-        },
-        "maki-skiing": {
-            "default": "\ue98a"
-        },
-        "maki-slaughterhouse": {
-            "default": "\ue98b"
-        },
-        "maki-slipway": {
-            "default": "\ue98c"
-        },
-        "maki-snowmobile": {
-            "default": "\ue98d"
-        },
-        "maki-soccer": {
-            "default": "\ue98e"
-        },
-        "maki-square_stroked": {
-            "default": "\ue98f"
-        },
-        "maki-square": {
-            "default": "\ue990"
-        },
-        "maki-stadium": {
-            "default": "\ue991"
-        },
-        "maki-star_stroked": {
-            "default": "\ue992"
-        },
-        "maki-star": {
-            "default": "\ue993"
-        },
-        "maki-suitcase": {
-            "default": "\ue994"
-        },
-        "maki-sushi": {
-            "default": "\ue995"
-        },
-        "maki-swimming": {
-            "default": "\ue996"
-        },
-        "maki-table_tennis": {
-            "default": "\ue997"
-        },
-        "maki-teahouse": {
-            "default": "\ue998"
-        },
-        "maki-telephone": {
-            "default": "\ue999"
-        },
-        "maki-tennis": {
-            "default": "\ue99a"
-        },
-        "maki-theatre": {
-            "default": "\ue99b"
-        },
-        "maki-toilet": {
-            "default": "\ue99c"
-        },
-        "maki-toilets": {
-            "default": "\ue99c"
-        },
-        "maki-town_hall": {
-            "default": "\ue99d"
-        },
-        "maki-town": {
-            "default": "\ue99e"
-        },
-        "maki-triangle_stroked": {
-            "default": "\ue99f"
-        },
-        "maki-triangle": {
-            "default": "\ue9a0"
-        },
-        "maki-veterinary": {
-            "default": "\ue9a1"
-        },
-        "maki-viewpoint": {
-            "default": "\ue9a2"
-        },
-        "maki-village": {
-            "default": "\ue9a3"
-        },
-        "maki-volcano": {
-            "default": "\ue9a4"
-        },
-        "maki-volleyball": {
-            "default": "\ue9a5"
-        },
-        "maki-warehouse": {
-            "default": "\ue9a6"
-        },
-        "maki-waste_basket": {
-            "default": "\ue9a7"
-        },
-        "maki-watch": {
-            "default": "\ue9a8"
-        },
-        "maki-water": {
-            "default": "\ue9a9"
-        },
-        "maki-waterfall": {
-            "default": "\ue9aa"
-        },
-        "maki-watermill": {
-            "default": "\ue9ab"
-        },
-        "maki-wetland": {
-            "default": "\ue9ac"
-        },
-        "maki-wheelchair": {
-            "default": "\ue9ad"
-        },
-        "maki-windmill": {
-            "default": "\ue9ae"
-        },
-        "maki-zoo": {
-            "default": "\ue9af"
-        },
         "book-arrow": {
             "default": "\u1f816"
         },
@@ -677,10 +119,10 @@
         "osm-mast": {
             "default": "\ue90b"
         },
-        "osm-power_tower_small .path1": {
+        "osm-power_tower_small": {
             "default": "\ue90c"
         },
-        "osm-power_tower .path1": {
+        "osm-power_tower": {
             "default": "\ue90e"
         },
         "osm-storage_tank": {
@@ -758,7 +200,7 @@
         "osm-golf": {
             "default": "\ue92a"
         },
-        "osm-miniature_golf .path1": {
+        "osm-miniature_golf": {
             "default": "\ue92b"
         },
         "osm-outdoor_seating": {
@@ -848,7 +290,7 @@
         "osm-bookmaker": {
             "default": "\ue94a"
         },
-        "osm-butcher .path1": {
+        "osm-butcher": {
             "default": "\ue94b"
         },
         "osm-car_parts": {
@@ -879,6 +321,9 @@
             "default": "\ue955"
         },
         "osm-convenience": {
+            "default": "\ue956"
+        },
+        "osm-shop": {
             "default": "\ue956"
         },
         "osm-copyshop": {
@@ -1046,7 +491,7 @@
         "osm-caravan_park": {
             "default": "\ue990"
         },
-        "osm-chalet .path1": {
+        "osm-chalet": {
             "default": "\ue991"
         },
         "osm-guest_house": {
