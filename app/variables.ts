@@ -1,6 +1,6 @@
 import { locals } from './variables.scss';
-import { screen } from 'tns-core-modules/platform';
-import { ad } from 'tns-core-modules/utils/utils';
+import { screen } from '@nativescript/core/platform';
+import { ad } from '@nativescript/core/utils/utils';
 
 export const primaryColor: string = locals.primaryColor;
 export const accentColor: string = locals.accentColor;

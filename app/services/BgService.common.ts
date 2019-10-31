@@ -1,6 +1,6 @@
 import { GeoHandler } from '~/handlers/GeoHandler';
-import { Observable } from 'tns-core-modules/data/observable';
-import { ApplicationEventData, exitEvent, launchEvent, off as applicationOff, on as applicationOn } from 'tns-core-modules/application';
+import { Observable } from '@nativescript/core/data/observable';
+import { ApplicationEventData, exitEvent, launchEvent, off as applicationOff, on as applicationOn } from '@nativescript/core/application';
 import { clog } from '~/utils/logging';
 
 export const BgServiceLoadedEvent = 'BgServiceLoadedEvent';

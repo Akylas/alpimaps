@@ -1,11 +1,11 @@
 import Vue from 'nativescript-vue';
-import { knownFolders } from 'tns-core-modules/file-system';
+import { knownFolders } from '@nativescript/core/file-system';
 
 import { getBuildNumber, getVersionName } from 'nativescript-extendedinfo';
 import { cerror, clog, cwarn, DEV_LOG } from '~/utils/logging';
 import { Client as BugsnagClient } from 'nativescript-bugsnag';
 import { setMapPosKeys } from 'nativescript-carto/core/core';
-import * as application from 'tns-core-modules/application';
+import * as application from '@nativescript/core/application';
 
 setMapPosKeys('lat', 'lon');
 function CustomError(error) {
@@ -30,33 +30,34 @@ application.on(application.discardedErrorEvent, args => {
 });
 
 // import { Client as FlipperClient } from 'nativescript-flipper';
-/* DEV-START */
-// const currentApp = knownFolders.currentApp();
-// process.cwd = function() {
-//     return '';
-// }
-// require('source-map-support').install({
-//     environment: 'node',
-//     handleUncaughtExceptions: false,
-//     retrieveSourceMap(source) {
-//         const sourceMapPath = source + '.map';
-//         const appPath = currentApp.path;
-//         let sourceMapRelativePath = sourceMapPath
-//             // .replace('file:///', '')
-//             .replace('file://', '')
-//             .replace(appPath + '/', '')
-//             .replace(appPath + '/', '');
-//         if (sourceMapRelativePath.startsWith('app/')) {
-//             sourceMapRelativePath = sourceMapRelativePath.slice(4);
-//         }
-//         // console.log('retrieveSourceMap', source, appPath, sourceMapRelativePath, currentApp.getFile(sourceMapRelativePath).readTextSync());
-//         return {
-//             url: sourceMapRelativePath,
-//             map: currentApp.getFile(sourceMapRelativePath).readTextSync()
-//         };
-//     }
-// });
-/* DEV-END */
+/* SOURCEMAP-START */
+console.log('installing sourcemap support');
+const currentApp = require('@nativescript/core/file-system').knownFolders.currentApp();
+process.cwd = function() {
+    return '';
+};
+require('source-map-support').install({
+    environment: 'node',
+    handleUncaughtExceptions: false,
+    retrieveSourceMap(source) {
+        console.log('retrieveSourceMap', source);
+        const sourceMapPath = source + '.map';
+        const appPath = currentApp.path;
+        let sourceMapRelativePath = sourceMapPath
+            // .replace('file:///', '')
+            .replace('file://', '')
+            .replace(appPath + '/', '')
+            .replace(appPath + '/', '');
+        if (sourceMapRelativePath.startsWith('app/')) {
+            sourceMapRelativePath = sourceMapRelativePath.slice(4);
+        }
+        return {
+            url: sourceMapRelativePath,
+            map: currentApp.getFile(sourceMapRelativePath).readTextSync()
+        };
+    }
+});
+/* SOURCEMAP-END */
 
 // Error.prepareStackTrace = function() {
 //     console.log('test', 'prepareStackTrace', new Error().stack);
@@ -151,8 +152,10 @@ function throwVueError(err) {
 }
 
 Vue.config.errorHandler = (e, vm, info) => {
-    console.log('[Vue]', `[${info}]`, e);
-    setTimeout(() => throwVueError(e), 0);
+    if (e) {
+        console.log('[Vue]', `[${info}]`, e);
+        setTimeout(() => throwVueError(e), 0);
+    }
 };
 
 Vue.config.warnHandler = function(msg, vm, trace) {

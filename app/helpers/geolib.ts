@@ -1,4 +1,4 @@
-import { screen } from 'tns-core-modules/platform';
+import { screen } from '@nativescript/core/platform';
 declare global {
     interface Number {
         toRad(): number;

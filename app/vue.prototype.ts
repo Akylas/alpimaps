@@ -1,6 +1,6 @@
-import * as application from 'application';
+import * as application from '@nativescript/core/application';
 import localize from 'nativescript-localize';
-import { device, screen } from 'tns-core-modules/platform';
+import { device, screen } from '@nativescript/core/platform';
 import App from '~/components/App';
 import Map from '~/components/Map';
 import PackageService from '~/services/PackageService';

@@ -1,7 +1,7 @@
 import { Session, SessionState } from '~/handlers/GeoHandler';
 import localize from 'nativescript-localize';
 import { convertDuration, formatValueToUnit } from '~/helpers/formatter';
-import { ad } from 'tns-core-modules/utils/utils';
+import { ad } from '@nativescript/core/utils/utils';
 
 export const ACTION_START = 'akylas.alpi.maps.action.START';
 export const ACTION_STOP = 'akylas.alpi.maps.action.STOP';

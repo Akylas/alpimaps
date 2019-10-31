@@ -1,3 +1,4 @@
+@aboriginal: #82643a;
 
 #boundary{
 	/* 3.1 Country */
@@ -24,20 +25,23 @@
 
 #park[class='aboriginal_lands']['mapnik::geometry_type'=3],
 #park[class='protected_area']['mapnik::geometry_type'=3] {
-    text-name: [name];
-    text-face-name: @book-fonts;
-    text-fill: #008000;
-    [class='aboriginal_lands'],
-    [class='protected_area'][protect_class='24'] {
-        text-fill: @aboriginal;
+    [zoom>=10] {
+        text-name: [name];
+        text-face-name: @book-fonts;
+        text-fill: #008000;
+        [class='aboriginal_lands'],
+        [class='protected_area'][protect_class='24'] {
+            text-fill: @aboriginal;
+        }
+        text-halo-radius: @standard-halo-radius;
+        text-halo-fill: @standard-halo-fill;
+        // text-largest-bbox-only: false;
+        text-wrap-width: 150;
+        text-wrap-before: true;
+        // text-placement: line;
+        text-min-distance: 150;
     }
-    text-halo-radius: @standard-halo-radius;
-    text-halo-fill: @standard-halo-fill;
-	// text-largest-bbox-only: false;
-	text-wrap-width: 150;
-	text-wrap-before: true;
-    // text-placement: line;
-    text-min-distance: 150;
+    
     // text-repeat-distance: 250;
     // text-margin: 10;
     // text-clip: true;
@@ -45,61 +49,62 @@
     // text-dy: -10;
 
     // [way_pixels > 750] {
-    [zoom < 10] {
+    // [zoom < 10] {
         ::fill {
-            line-color: fadeout(#008000, 0.95);
+            line-color: fadeout(#008000, 0.75);
+            polygon-fill: linear([view::zoom], (6, fadeout(#008000, 0.6)), (11, fadeout(#008000, 0.7)), (15, fadeout(#008000, 0.8)));
             [class='aboriginal_lands'],
             [class='protected_area'][protect_class='24'] {
                 polygon-fill: @aboriginal;
             }
+        // }
+        // ::outline {
+            line-width: 1.5;
+            // line-color: fadeout(#008000, 0.75);
+            // [class='aboriginal_lands'],
+            // [class='protected_area'][protect_class='24'] {
+            //     line-color: @aboriginal;
+            // }
+            // [zoom>=9] {
+            //     line-width: 1.5;
+            // }
         }
-        ::outline {
-            line-width: 1.2;
-            line-color: fadeout(#008000, 0.75);
-            [class='aboriginal_lands'],
-            [class='protected_area'][protect_class='24'] {
-                line-color: @aboriginal;
-            }
-            [zoom>=9] {
-                line-width: 1.5;
-            }
-        }
-    }
-    [zoom>=10] {
-        ::wideline {
-            line-width: 3.6;
-            line-geometry-transform: translate(-2, 0);
-            line-color: fadeout(#008000, 0.85);
-            [class='aboriginal_lands'],
-            [class='protected_area'][protect_class='24'] {
-                line-color: @aboriginal;
-            }
+    // }
+    // [zoom>=10] {
+        // ::wideline {
+        //     line-width: 3.6;
+        //     // line-geometry-transform: translate(-2, 0);
+        //     line-color: fadeout(#008000, 0.85);
+        //     [class='aboriginal_lands'],
+        //     [class='protected_area'][protect_class='24'] {
+        //         line-color: @aboriginal;
+        //     }
             
-            [zoom>=12] {
-				line-join: round;
-            	line-cap: round;
-                line-width: 4;
-				line-geometry-transform: translate(-3, 0);
-            }
-            [zoom>=14] {
-                line-width: 6;
-				line-geometry-transform: translate(-4, 0);
-            }
-        }
-        ::narrowline {
-            line-width: 1.8;
-            line-color: fadeout(#008000, 0.75);
-            [class='aboriginal_lands'],
-            [class='protected_area'][protect_class='24'] {
-                line-color: @aboriginal;
-            }
+        //     [zoom>=12] {
+		// 		line-join: round;
+        //     	line-cap: round;
+        //         line-width: 4;
+		// 		line-geometry-transform: translate(-3, 0);
+        //     }
+        //     [zoom>=14] {
+        //         line-width: 6;
+		// 		line-geometry-transform: translate(-4, 0);
+        //     }
+        // }
+        // ::narrowline {
+        //     line-width: 1.8;
+        //     line-color: fadeout(#008000, 0.75);
+        //     [class='aboriginal_lands'],
+        //     [class='protected_area'][protect_class='24'] {
+        //         line-color: @aboriginal;
+        //     }
             
-            [zoom>=12] {
-				line-join: round;
-            	line-cap: round;
-                line-width: 2;
-            }
-        }
-    }
+        //     [zoom>=12] {
+		// 		line-join: round;
+        //     	line-cap: round;
+        //         line-width: 2;
+        //     }
+        // }
+    // }
     // }
 }

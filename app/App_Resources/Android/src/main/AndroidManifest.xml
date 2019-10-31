@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
-    xmlns:android="http://schemas.android.com/apk/res/android" package="__PACKAGE__" android:versionCode="205" android:versionName="2.0">
+    xmlns:android="http://schemas.android.com/apk/res/android" package="__PACKAGE__" >
     <supports-screens android:smallScreens="true" android:normalScreens="true" android:largeScreens="true" android:xlargeScreens="true" />
-    <uses-sdk android:minSdkVersion="17" android:targetSdkVersion="__APILEVEL__" />
+    <uses-sdk android:targetSdkVersion="__APILEVEL__" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
