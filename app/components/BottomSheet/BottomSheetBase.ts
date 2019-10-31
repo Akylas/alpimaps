@@ -4,7 +4,7 @@ import { Component, Inject, Prop, Watch } from 'vue-property-decorator';
 import BottomSheetHolder, { PAN_GESTURE_TAG } from './BottomSheetHolder';
 import Vue from 'nativescript-vue';
 import { GestureHandlerStateEvent, GestureHandlerTouchEvent, GestureState, GestureStateEventData, GestureTouchEventData, HandlerType, Manager, PanGestureHandler } from 'nativescript-gesturehandler';
-import { View } from 'tns-core-modules/ui/page/page';
+import { View } from '@nativescript/core/ui/page/page';
 import { CollectionView } from 'nativescript-collectionview';
 import { RadCartesianChart } from 'nativescript-ui-chart';
 export const NATIVE_GESTURE_TAG = 4;

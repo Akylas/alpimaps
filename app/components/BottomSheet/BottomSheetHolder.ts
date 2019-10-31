@@ -1,6 +1,6 @@
 import { GestureHandlerStateEvent, GestureHandlerTouchEvent, GestureState, GestureStateEventData, GestureTouchEventData, HandlerType, Manager, PanGestureHandler } from 'nativescript-gesturehandler';
-import { View } from 'tns-core-modules/ui/core/view';
-import { layout } from 'tns-core-modules/utils/utils';
+import { View } from '@nativescript/core/ui/core/view';
+import { layout } from '@nativescript/core/utils/utils';
 import { Component, Prop } from 'vue-property-decorator';
 import * as Animation from '~/animation';
 import BaseVueComponent from '../BaseVueComponent';

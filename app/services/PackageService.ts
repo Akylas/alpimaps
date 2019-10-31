@@ -18,13 +18,13 @@ import { Feature, FeatureCollection } from 'nativescript-carto/geometry/feature'
 import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
 import { CartoPackageManager, CartoPackageManagerListener, PackageErrorType, PackageManagerTileDataSource, PackageStatus } from 'nativescript-carto/packagemanager/packagemanager';
 import { MBVectorTileDecoder } from 'nativescript-carto/vectortiles/vectortiles';
-import { Observable } from 'tns-core-modules/data/observable/observable';
-import { File, Folder, path } from 'tns-core-modules/file-system';
+import { Observable } from '@nativescript/core/data/observable/observable';
+import { File, Folder, path } from '@nativescript/core/file-system';
 import { getDataFolder } from '~/utils';
 import { clog, log } from '~/utils/logging';
 import { Item } from '~/mapModules/ItemsModule';
 import Vue from 'nativescript-vue';
-import * as appSettings from 'tns-core-modules/application-settings';
+import * as appSettings from '@nativescript/core/application-settings';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 

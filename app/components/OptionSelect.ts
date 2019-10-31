@@ -1,7 +1,7 @@
-import { android as androidApp } from 'application';
+import { android as androidApp } from '@nativescript/core/application';
 import Vue from 'nativescript-vue';
-import { View } from 'tns-core-modules/ui/core/view';
-import { ItemEventData } from 'tns-core-modules/ui/list-view';
+import { View } from '@nativescript/core/ui/core/view';
+import { ItemEventData } from '@nativescript/core/ui/list-view';
 import { Component, Prop } from 'vue-property-decorator';
 
 export interface OptionType {

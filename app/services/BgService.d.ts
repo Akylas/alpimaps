@@ -1,5 +1,5 @@
 import { GeoHandler } from '~/handlers/GeoHandler';
-import { Observable } from 'tns-core-modules/data/observable';
+import { Observable } from '@nativescript/core/data/observable';
 import { BgService as AndroidBgService } from '~/services/android/BgService';
 
 export const BgServiceLoadedEvent: string;

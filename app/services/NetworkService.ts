@@ -1,9 +1,9 @@
-import * as connectivity from 'tns-core-modules/connectivity';
-import { EventData, Observable } from 'tns-core-modules/data/observable';
+import * as connectivity from '@nativescript/core/connectivity';
+import { EventData, Observable } from '@nativescript/core/data/observable';
 import { clog } from '~/utils/logging';
 import { MapBounds, MapPos } from 'nativescript-carto/core/core';
 import geolib from '~/helpers/geolib';
-import * as http from 'tns-core-modules/http';
+import * as http from '@nativescript/core/http';
 import localize from 'nativescript-localize';
 import { RouteProfile } from '~/components/DirectionsPanel';
 type HTTPOptions = http.HttpRequestOptions;
@@ -258,10 +258,10 @@ export interface NetworkConnectionStateEventData extends EventData {
 // mapquest algos
 function decompress(encoded, precision) {
     precision = Math.pow(10, -precision);
-    let len = encoded.length,
-        index = 0,
+    let index = 0,
         lat = 0,
-        lng = 0,
+        lng = 0;
+    const len = encoded.length,
         array: MapPos[] = [];
     while (index < len) {
         let b,
@@ -305,9 +305,9 @@ function encodeNumber(num) {
 function compress(points: MapPos[], precision) {
     let oldLat = 0,
         oldLng = 0,
-        len = points.length,
         index = 0;
     let encoded = '';
+    const len = points.length;
     precision = Math.pow(10, precision);
     while (index < len) {
         const pt = points[index++];
@@ -378,7 +378,7 @@ export class CustomError extends Error {
         }
     }
 
-    localData = () => {
+    localData() {
         const res = {};
         for (const key in this.assignedLocalData) {
             res[key] = this.assignedLocalData[key];
@@ -386,7 +386,7 @@ export class CustomError extends Error {
         return res;
     }
 
-    toJSON = () => {
+    toJSON() {
         const error = {
             message: this.message
         };
@@ -397,10 +397,10 @@ export class CustomError extends Error {
         });
         return error;
     }
-    toData = () => {
+    toData() {
         return JSON.stringify(this.toJSON());
     }
-    toString = () => {
+    toString() {
         // console.log('customError to string');
         return evalTemplateString(localize(this.message), Object.assign({ localize }, this.assignedLocalData));
         // return evalMessageInContext.call(Object.assign({localize}, this.assignedLocalData), localize(this.message))
@@ -436,18 +436,15 @@ export class NoNetworkError extends CustomError {
         );
     }
 }
+export interface HTTPErrorProps {
+    statusCode: number;
+    message: string;
+    requestParams: HTTPOptions;
+}
 export class HTTPError extends CustomError {
     statusCode: number;
     requestParams: HTTPOptions;
-    constructor(
-        props:
-            | {
-                statusCode: number;
-                message: string;
-                requestParams: HTTPOptions;
-            }
-            | HTTPError
-    ) {
+    constructor(props: HTTPErrorProps | HTTPError) {
         super(
             Object.assign(
                 {
@@ -493,13 +490,13 @@ export class NetworkService extends Observable {
         clog('creating NetworkHandler Handler');
     }
     start() {
-        connectivity.startMonitoring(this.onConnectionStateChange);
+        connectivity.startMonitoring(this.onConnectionStateChange.bind(this));
         this.connectionType = connectivity.getConnectionType();
     }
     stop() {
         connectivity.stopMonitoring();
     }
-    onConnectionStateChange = (newConnectionType: connectivity.connectionType) => {
+    onConnectionStateChange(newConnectionType: connectivity.connectionType) {
         this.connectionType = newConnectionType;
     }
     request(requestParams: HttpRequestOptions, retry = 0) {

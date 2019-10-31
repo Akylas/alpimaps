@@ -19,7 +19,7 @@
         "landuse",
         "aeroway"
     ],
-    "styles": ["voyager/style.mss", "shared/admin.mss", "shared/terrain.mss", "shared/hydro.mss", "shared/landuse2.mss", "shared/roads.mss", "shared/labels.mss"],
+    "styles": ["voyager/style.mss", "shared/admin.mss", "shared/terrain.mss", "shared/hydro.mss", "shared/landuse.mss", "shared/roads.mss", "shared/labels.mss"],
     "nutiparameters": {
         "lang": {
             "default": "en"
@@ -79,10 +79,6 @@
                 "0": "point"
             }
         },
-        "book-arrow": {
-            "default": "\u1f816"
-        },
-
         "osm-cave": {
             "default": "\u1f816"
         },

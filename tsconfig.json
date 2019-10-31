@@ -20,8 +20,10 @@
         "baseUrl": ".",
         "paths": {
              "nativescript-vue": ["./node_modules/nativescript-akylas-vue"],
+             "tns-core-modules": ["./node_modules/@nativescript/core"],
+             "tns-core-modules/*": ["./node_modules/@nativescript/core/*"],
            "~/*": ["app/*"],
-            "*": ["./node_modules/tns-core-modules/*", "./node_modules/*"]
+            "*": ["./node_modules/*"]
         }
     },
     "include": ["app/**/*", "references.d.ts"],

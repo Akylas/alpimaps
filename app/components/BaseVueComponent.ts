@@ -1,21 +1,17 @@
-import Vue, { NativeScriptVue } from 'nativescript-vue';
-import { Prop } from 'vue-property-decorator';
-import { NavigatedData, Page } from 'tns-core-modules/ui/page';
-import { View } from 'tns-core-modules/ui/core/view';
-import { Color } from 'tns-core-modules/color';
-
+import { View } from '@nativescript/core/ui/core/view';
+import { Frame, NavigationEntry } from '@nativescript/core/ui/frame';
+import { Label } from '@nativescript/core/ui/label/label';
+import { StackLayout } from '@nativescript/core/ui/layouts/stack-layout';
+import { Page } from '@nativescript/core/ui/page';
 import localize from 'nativescript-localize';
-import { accentColor, actionBarHeight, darkColor, primaryColor } from '../variables';
-import { NavigationEntry, topmost } from 'tns-core-modules/ui/frame';
-import { Label } from 'tns-core-modules/ui/label/label';
-import { AlertDialog } from 'nativescript-material-dialogs';
-import { VueConstructor } from 'vue';
-import { StackLayout } from 'tns-core-modules/ui/layouts/stack-layout';
 import { ActivityIndicator } from 'nativescript-material-activityindicator';
-import { clog, log } from '~/utils/logging';
-import { isAndroid, screen } from 'tns-core-modules/platform';
-import { ad } from 'tns-core-modules/utils/utils';
-import { navigateUrlProperty } from './App';
+import { AlertDialog } from 'nativescript-material-dialogs';
+import Vue, { NativeScriptVue } from 'nativescript-vue';
+import { VueConstructor } from 'vue';
+import { Prop } from 'vue-property-decorator';
+import { clog } from '~/utils/logging';
+import { accentColor, actionBarHeight, darkColor, primaryColor } from '../variables';
+
 
 export interface BaseVueComponentRefs {
     [key: string]: any;
@@ -104,7 +100,7 @@ export default class BaseVueComponent extends Vue {
 
     navigateTo(component: VueConstructor, options?: NavigationEntry & { props?: any }, cb?: () => Page) {
         options = options || {};
-        (options as any).frame = options['frame'] || topmost().id;
+        (options as any).frame = options['frame'] || Frame.topmost().id;
         return this.$navigateTo(component, options, cb);
     }
     showError(err: Error | string) {

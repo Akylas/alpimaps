@@ -4,12 +4,9 @@ import { CartoMap } from 'nativescript-carto/ui/ui';
 import { IMapModule } from '~/mapModules/MapModule';
 import Map from '~/components/Map';
 import { MapPos } from 'nativescript-carto/core/core';
-import { screen } from 'tns-core-modules/platform';
-import humanUnit from 'human-unit';
-const distancePreset = {
-    factors: [1000],
-    units: ['m', 'km']
-};
+import { screen } from '@nativescript/core/platform';
+import { convertDistance } from '~/helpers/formatter';
+
 function getMetersPerPixel(pos: MapPos, zoom: number) {
     // 156543.03392804097 == 2 * Math.PI * 6378137 / 256
     // return dpi undependant pixels
@@ -45,7 +42,7 @@ export default class ScaleView extends BaseVueComponent implements IMapModule {
 
         const newMpp = Math.round(getMetersPerPixel(cartoMap.focusPos, zoom) * 100) / 100;
         const metersPerCM = PX_PER_CM * newMpp;
-        const data = humanUnit(metersPerCM, distancePreset);
+        const data = convertDistance(metersPerCM);
         this.scaleText = `${data.value.toFixed(1)} ${data.unit}(${zoom.toFixed(1)})`;
     }
     onMapReady(mapComp: Map, mapView: CartoMap) {

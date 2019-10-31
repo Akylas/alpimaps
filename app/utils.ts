@@ -1,5 +1,5 @@
-import { knownFolders, path } from 'tns-core-modules/file-system';
-import * as app from 'application';
+import { knownFolders, path } from '@nativescript/core/file-system';
+import * as app from '@nativescript/core/application';
 
 // export function throttle(fn, limit) {
 //     let waiting = false;

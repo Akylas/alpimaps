@@ -2,7 +2,6 @@
 <Map font-directory="fonts/" background-color="rgb(242,239,233)" background-image="" north-pole-color="rgb(139,211,224)" south-pole-color="rgb(242,239,233)">
 	<Parameters />
 	<NutiParameters>
-		<NutiParameter name="book-arrow" type="string" value="ᾁ6" />
 		<NutiParameter name="buildings" type="int" value="1">
 			<Value id="0" value="0" />
 			<Value id="1" value="1" />
@@ -3461,113 +3460,113 @@
 			<MinScaleDenominator>34942640</MinScaleDenominator>
 			<MaxScaleDenominator>69885280</MaxScaleDenominator>
 			<Filter>[comment] . match ( '.*Highest.*' ) or [comment] . match ( '.*highest.*' )</Filter>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>17471320</MinScaleDenominator>
 			<MaxScaleDenominator>34942640</MaxScaleDenominator>
 			<Filter>[comment] . match ( '.*Highest.*' ) or [comment] . match ( '.*highest.*' )</Filter>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>8735660</MinScaleDenominator>
 			<MaxScaleDenominator>17471320</MaxScaleDenominator>
 			<Filter>[comment] . match ( '.*Highest.*' ) or [comment] . match ( '.*highest.*' )</Filter>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>4367830</MinScaleDenominator>
 			<MaxScaleDenominator>8735660</MaxScaleDenominator>
 			<Filter>[comment] . match ( '.*Highest.*' ) or [comment] . match ( '.*highest.*' ) or [ele] &gt;= 4000</Filter>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>2183915</MinScaleDenominator>
 			<MaxScaleDenominator>4367830</MaxScaleDenominator>
 			<Filter>[comment] . match ( '.*Highest.*' ) or [comment] . match ( '.*highest.*' ) or [ele] &gt;= 4000 or [ele] &gt;= 3000</Filter>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>1091957.5</MinScaleDenominator>
 			<MaxScaleDenominator>2183915</MaxScaleDenominator>
 			<Filter>[comment] . match ( '.*Highest.*' ) or [comment] . match ( '.*highest.*' ) or [ele] &gt;= 4000 or [ele] &gt;= 3000 or [ele] &gt;= 2000</Filter>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>545978.75</MinScaleDenominator>
 			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
 			<Filter>[comment] . match ( '.*Highest.*' ) or [comment] . match ( '.*highest.*' ) or [ele] &gt;= 4000 or [ele] &gt;= 3000 or [ele] &gt;= 2000 or [ele] &gt;= 1500</Filter>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>272989.375</MinScaleDenominator>
 			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>136494.688</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>68247.3438</MinScaleDenominator>
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>2132.72949</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>1066.36475</MinScaleDenominator>
 			<MaxScaleDenominator>2132.72949</MaxScaleDenominator>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>533.182373</MinScaleDenominator>
 			<MaxScaleDenominator>1066.36475</MaxScaleDenominator>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>266.591187</MinScaleDenominator>
 			<MaxScaleDenominator>533.182373</MaxScaleDenominator>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>133.295593</MinScaleDenominator>
 			<MaxScaleDenominator>266.591187</MaxScaleDenominator>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>66.6477966</MinScaleDenominator>
 			<MaxScaleDenominator>133.295593</MaxScaleDenominator>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>66.6477966</MaxScaleDenominator>
-			<TextSymbolizer face-name="maki" feature-id="[name]" fill="rgb(155,112,87)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],7,10,15,14))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,6,15,8))+(((100)-([rank]))*(1.0e-07))">[nuti::osm-peak]</TextSymbolizer>
 		</Rule>
 	</Style>
 	<Style name="mountain_peak::label" filter-mode="first">
@@ -3823,194 +3822,46 @@
 	</Style>
 	<Style name="park" filter-mode="first">
 		<Rule name="combined">
-			<MinScaleDenominator>2183915</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3 and [protect_class] = '24' or ( [class] = 'aboriginal_lands' and [mapnik::geometry_type] = 3 )</Filter>
-			<TextSymbolizer fontset-name="Montserrat Regular,Noto Sans Regular" halo-fill="rgba(255,255,255,0.6)" halo-radius="1" minimum-distance="150" wrap-before="1" wrap-width="150">[name]</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>2183915</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3</Filter>
-			<TextSymbolizer fill="rgb(0,128,0)" fontset-name="Montserrat Regular,Noto Sans Regular" halo-fill="rgba(255,255,255,0.6)" halo-radius="1" minimum-distance="150" wrap-before="1" wrap-width="150">[name]</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>1091957.5</MinScaleDenominator>
-			<MaxScaleDenominator>2183915</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3 and [protect_class] = '24' or ( [class] = 'aboriginal_lands' and [mapnik::geometry_type] = 3 )</Filter>
-			<TextSymbolizer fontset-name="Montserrat Regular,Noto Sans Regular" halo-fill="rgba(255,255,255,0.6)" halo-radius="1" minimum-distance="150" wrap-before="1" wrap-width="150">[name]</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>1091957.5</MinScaleDenominator>
-			<MaxScaleDenominator>2183915</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3</Filter>
-			<TextSymbolizer fill="rgb(0,128,0)" fontset-name="Montserrat Regular,Noto Sans Regular" halo-fill="rgba(255,255,255,0.6)" halo-radius="1" minimum-distance="150" wrap-before="1" wrap-width="150">[name]</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3 and [protect_class] = '24' or ( [class] = 'aboriginal_lands' and [mapnik::geometry_type] = 3 )</Filter>
-			<TextSymbolizer fontset-name="Montserrat Regular,Noto Sans Regular" halo-fill="rgba(255,255,255,0.6)" halo-radius="1" minimum-distance="150" wrap-before="1" wrap-width="150">[name]</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3</Filter>
-			<TextSymbolizer fill="rgb(0,128,0)" fontset-name="Montserrat Regular,Noto Sans Regular" halo-fill="rgba(255,255,255,0.6)" halo-radius="1" minimum-distance="150" wrap-before="1" wrap-width="150">[name]</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3 and [protect_class] = '24' or ( [class] = 'aboriginal_lands' and [mapnik::geometry_type] = 3 )</Filter>
-			<TextSymbolizer fontset-name="Montserrat Regular,Noto Sans Regular" halo-fill="rgba(255,255,255,0.6)" halo-radius="1" minimum-distance="150" wrap-before="1" wrap-width="150">[name]</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3</Filter>
-			<TextSymbolizer fill="rgb(0,128,0)" fontset-name="Montserrat Regular,Noto Sans Regular" halo-fill="rgba(255,255,255,0.6)" halo-radius="1" minimum-distance="150" wrap-before="1" wrap-width="150">[name]</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
 			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3 and [protect_class] = '24' or ( [class] = 'aboriginal_lands' and [mapnik::geometry_type] = 3 )</Filter>
-			<TextSymbolizer fontset-name="Montserrat Regular,Noto Sans Regular" halo-fill="rgba(255,255,255,0.6)" halo-radius="1" minimum-distance="150" wrap-before="1" wrap-width="150">[name]</TextSymbolizer>
+			<TextSymbolizer fill="rgb(130,100,58)" fontset-name="Montserrat Regular,Noto Sans Regular" halo-fill="rgba(255,255,255,0.6)" halo-radius="1" minimum-distance="150" wrap-before="1" wrap-width="150">[name]</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
 			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3</Filter>
 			<TextSymbolizer fill="rgb(0,128,0)" fontset-name="Montserrat Regular,Noto Sans Regular" halo-fill="rgba(255,255,255,0.6)" halo-radius="1" minimum-distance="150" wrap-before="1" wrap-width="150">[name]</TextSymbolizer>
 		</Rule>
 	</Style>
 	<Style name="park::fill" filter-mode="first">
 		<Rule name="combined">
-			<MinScaleDenominator>2183915</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3 and [protect_class] = '24' or ( [class] = 'aboriginal_lands' and [mapnik::geometry_type] = 3 )</Filter>
-			<LineSymbolizer stroke="rgba(0,128,0,0.05)" />
-			<PolygonSymbolizer />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>2183915</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3</Filter>
-			<LineSymbolizer stroke="rgba(0,128,0,0.05)" />
-		</Rule>
-		<Rule name="combined">
 			<MinScaleDenominator>1091957.5</MinScaleDenominator>
-			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
 			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3 and [protect_class] = '24' or ( [class] = 'aboriginal_lands' and [mapnik::geometry_type] = 3 )</Filter>
-			<LineSymbolizer stroke="rgba(0,128,0,0.05)" />
-			<PolygonSymbolizer />
+			<LineSymbolizer stroke="rgba(0,128,0,0.25)" stroke-width="1.5" />
+			<PolygonSymbolizer fill="rgb(130,100,58)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>1091957.5</MinScaleDenominator>
-			<MaxScaleDenominator>2183915</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3</Filter>
-			<LineSymbolizer stroke="rgba(0,128,0,0.05)" />
-		</Rule>
-	</Style>
-	<Style name="park::outline" filter-mode="first">
-		<Rule name="combined">
-			<MinScaleDenominator>2183915</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3 and [protect_class] = '24' or ( [class] = 'aboriginal_lands' and [mapnik::geometry_type] = 3 )</Filter>
-			<LineSymbolizer stroke-width="1.2" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>2183915</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3</Filter>
-			<LineSymbolizer stroke="rgba(0,128,0,0.25)" stroke-width="1.2" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>1091957.5</MinScaleDenominator>
-			<MaxScaleDenominator>2183915</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3 and [protect_class] = '24' or ( [class] = 'aboriginal_lands' and [mapnik::geometry_type] = 3 )</Filter>
-			<LineSymbolizer stroke-width="1.5" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>1091957.5</MinScaleDenominator>
-			<MaxScaleDenominator>2183915</MaxScaleDenominator>
 			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3</Filter>
 			<LineSymbolizer stroke="rgba(0,128,0,0.25)" stroke-width="1.5" />
-		</Rule>
-	</Style>
-	<Style name="park::wideline" filter-mode="first">
-		<Rule name="combined">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3 and [protect_class] = '24' or ( [class] = 'aboriginal_lands' and [mapnik::geometry_type] = 3 )</Filter>
-			<LineSymbolizer geometry-transform="translate(-2,0)" stroke-width="3.6" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3</Filter>
-			<LineSymbolizer geometry-transform="translate(-2,0)" stroke="rgba(0,128,0,0.15)" stroke-width="3.6" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3 and [protect_class] = '24' or ( [class] = 'aboriginal_lands' and [mapnik::geometry_type] = 3 )</Filter>
-			<LineSymbolizer geometry-transform="translate(-3,0)" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3</Filter>
-			<LineSymbolizer geometry-transform="translate(-3,0)" stroke="rgba(0,128,0,0.15)" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" />
+			<PolygonSymbolizer fill="rgba(0,128,0,{linear([view::zoom],6,0.399999976,11,0.300000012,15,0.199999988)})" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3 and [protect_class] = '24' or ( [class] = 'aboriginal_lands' and [mapnik::geometry_type] = 3 )</Filter>
-			<LineSymbolizer geometry-transform="translate(-4,0)" stroke-linecap="round" stroke-linejoin="round" stroke-width="6" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3</Filter>
-			<LineSymbolizer geometry-transform="translate(-4,0)" stroke="rgba(0,128,0,0.15)" stroke-linecap="round" stroke-linejoin="round" stroke-width="6" />
-		</Rule>
-	</Style>
-	<Style name="park::narrowline" filter-mode="first">
-		<Rule name="combined">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
 			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
 			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3 and [protect_class] = '24' or ( [class] = 'aboriginal_lands' and [mapnik::geometry_type] = 3 )</Filter>
-			<LineSymbolizer stroke-width="1.8" />
+			<LineSymbolizer stroke="rgba(0,128,0,0.25)" stroke-width="1.5" />
+			<PolygonSymbolizer fill="rgb(130,100,58)" />
 		</Rule>
 		<Rule name="auto">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
 			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3</Filter>
-			<LineSymbolizer stroke="rgba(0,128,0,0.25)" stroke-width="1.8" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3 and [protect_class] = '24' or ( [class] = 'aboriginal_lands' and [mapnik::geometry_type] = 3 )</Filter>
-			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3</Filter>
-			<LineSymbolizer stroke="rgba(0,128,0,0.25)" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3 and [protect_class] = '24' or ( [class] = 'aboriginal_lands' and [mapnik::geometry_type] = 3 )</Filter>
-			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[class] = 'protected_area' and [mapnik::geometry_type] = 3</Filter>
-			<LineSymbolizer stroke="rgba(0,128,0,0.25)" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+			<LineSymbolizer stroke="rgba(0,128,0,0.25)" stroke-width="1.5" />
+			<PolygonSymbolizer fill="rgba(0,128,0,{linear([view::zoom],6,0.399999976,11,0.300000012,15,0.199999988)})" />
 		</Rule>
 	</Style>
 	<Style name="boundary" filter-mode="first">
@@ -13150,9 +13001,6 @@
 	<Layer name="park">
 		<StyleName>park</StyleName>
 		<StyleName>park::fill</StyleName>
-		<StyleName>park::outline</StyleName>
-		<StyleName>park::wideline</StyleName>
-		<StyleName>park::narrowline</StyleName>
 	</Layer>
 	<Layer name="boundary">
 		<StyleName>boundary</StyleName>

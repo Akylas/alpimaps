@@ -2,10 +2,10 @@ import { GeoLocation, GPS, Options as GeolocationOptions, setMockEnabled } from 
 import { localize } from 'nativescript-localize';
 import { confirm } from 'nativescript-material-dialogs';
 import Vue from 'nativescript-vue';
-import { android as androidApp, ApplicationEventData, launchEvent, off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from 'tns-core-modules/application';
-import * as appSettings from 'tns-core-modules/application-settings';
-import { EventData, Observable } from 'tns-core-modules/data/observable';
-import { Accuracy } from 'tns-core-modules/ui/enums/enums';
+import { android as androidApp, ApplicationEventData, launchEvent, off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
+import * as appSettings from '@nativescript/core/application-settings';
+import { EventData, Observable } from '@nativescript/core/data/observable';
+import { Accuracy } from '@nativescript/core/ui/enums/enums';
 import { BgService } from '~/services/BgService';
 import { clog, DEV_LOG } from '~/utils/logging';
 
