@@ -382,13 +382,13 @@
 			text-placement: [nuti::markers3d];
 			text-name: [nuti::osm-peak];
 	// text-size: 14 + [ele] * 0.00001;
-			text-size: linear([view::zoom], (7, 10), (15, 14)) + (100 - [rank]) * 0.0000001; 
-			text-face-name: @maki;
+			text-size: linear([view::zoom], (7, 6), (15, 8)) + (100 - [rank]) * 0.0000001; 
+			text-face-name: @osm;
 			text-fill: @peak_label;
-			text-halo-fill: @halo_park_label;
+			// text-halo-fill: @halo_park_label;
 			text-feature-id: [name];
-			text-halo-rasterizer: fast;
-			text-halo-radius: 1;
+			// text-halo-rasterizer: fast;
+			// text-halo-radius: 1;
 		}
 	}
 	[zoom>=4][comment =~'.*Highest.*'],

@@ -1,6 +1,6 @@
 import { BgServiceCommon, BgServiceLoadedEvent } from '~/services/BgService.common';
 
-import * as utils from 'tns-core-modules/utils/utils';
+import * as utils from '@nativescript/core/utils/utils';
 import { BgService as AndroidBgService } from '~/services/android/BgService';
 import { BgServiceBinder } from '~/services/android/BgServiceBinder';
 

@@ -1,15 +1,15 @@
 import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
 import { localize } from 'nativescript-localize';
-import * as appSettings from 'tns-core-modules/application-settings/application-settings';
-import { profile } from 'tns-core-modules/profiling';
-import { action } from 'ui/dialogs';
+import * as appSettings from '@nativescript/core/application-settings/application-settings';
+import { profile } from '@nativescript/core/profiling';
+import { action } from 'nativescript-material-dialogs';
 import { Component } from 'vue-property-decorator';
 import CustomLayersModule, { SourceItem } from '~/mapModules/CustomLayersModule';
 import BaseVueComponent from './BaseVueComponent';
 import Map, { MapModules } from './Map';
 import { CartoMap } from 'nativescript-carto/ui/ui';
 import { IMapModule } from '~/mapModules/MapModule';
-import { ObservableArray } from 'tns-core-modules/data/observable-array/observable-array';
+import { ObservableArray } from '@nativescript/core/data/observable-array/observable-array';
 import { TextField } from 'nativescript-material-textfield';
 
 function createGetter(key, type: string, options?: { defaultValue?: any }) {

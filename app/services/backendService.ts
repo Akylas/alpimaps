@@ -1,4 +1,4 @@
-import { getBoolean, getNumber, getString, setBoolean, setNumber, setString } from 'tns-core-modules/application-settings';
+import { getBoolean, getNumber, getString, setBoolean, setNumber, setString } from '@nativescript/core/application-settings';
 
 export const stringProperty = (target: Object, key: string | symbol) => {
     // property value
