@@ -1,5 +1,5 @@
 import { CartoMapStyle, ClickType, MapPos, ScreenPos, toNativeScreenPos } from 'nativescript-carto/core/core';
-import { ad, layout } from 'tns-core-modules/utils/utils';
+import { ad, layout } from '@nativescript/core/utils/utils';
 import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
 import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
 import { Layer } from 'nativescript-carto/layers/layer';
@@ -16,12 +16,12 @@ import { localize } from 'nativescript-localize';
 import * as perms from 'nativescript-perms';
 import * as SocialShare from 'nativescript-social-share';
 import { AppURL, handleOpenURL } from 'nativescript-urlhandler';
-import * as appSettings from 'tns-core-modules/application-settings';
-import { Folder, knownFolders, path } from 'tns-core-modules/file-system';
-import { screen } from 'tns-core-modules/platform';
-import { profile } from 'tns-core-modules/profiling';
+import * as appSettings from '@nativescript/core/application-settings';
+import { Folder, knownFolders, path } from '@nativescript/core/file-system';
+import { screen } from '@nativescript/core/platform';
+import { profile } from '@nativescript/core/profiling';
 import { throttle } from 'helpful-decorators';
-import { action } from 'ui/dialogs';
+import { action } from 'nativescript-material-dialogs';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import { GeoHandler } from '~/handlers/GeoHandler';
 import CustomLayersModule, { SourceItem } from '~/mapModules/CustomLayersModule';
@@ -513,7 +513,7 @@ export default class Map extends BgServicePageComponent {
                 .then(status => {
                     this.$packageService.start();
                     this.runOnModules('onMapReady', this, cartoMap);
-                    this.setMapStyle(appSettings.getString('mapStyle', 'alpimaps.zip'), true);
+                    this.setMapStyle(appSettings.getString('mapStyle', 'mapsmexml'), true);
                 })
                 .catch(err => this.showError(err));
         }, 0);

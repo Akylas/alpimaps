@@ -1,9 +1,9 @@
 import BaseVueComponent from './BaseVueComponent';
 import { Component } from 'vue-property-decorator';
 import { CartoPackageManager, PackageAction, PackageInfo, PackageInfoVector, PackageStatus } from 'nativescript-carto/packagemanager/packagemanager';
-import { ObservableArray } from 'tns-core-modules/data/observable-array';
-import { ItemEventData } from 'tns-core-modules/ui/list-view';
-import { isAndroid } from 'tns-core-modules/platform';
+import { ObservableArray } from '@nativescript/core/data/observable-array';
+import { ItemEventData } from '@nativescript/core/ui/list-view';
+import { isAndroid } from '@nativescript/core/platform';
 import { PackageType } from '~/services/PackageService';
 
 const mapLanguages = ['en', 'de', 'es', 'it', 'fr', 'ru'];

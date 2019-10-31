@@ -1,9 +1,9 @@
-import { Component } from 'vue-property-decorator';
-import BaseVueComponent from './BaseVueComponent';
-import AlpiMapsPage from './AlpiMapsPage';
-import { NavigationEntry, topmost } from 'tns-core-modules/ui/frame';
-import { Page } from 'tns-core-modules/ui/page';
+import { Frame, NavigationEntry } from '@nativescript/core/ui/frame';
+import { Page } from '@nativescript/core/ui/page';
 import { VueConstructor } from 'vue';
+import { Component } from 'vue-property-decorator';
+import AlpiMapsPage from './AlpiMapsPage';
+import BaseVueComponent from './BaseVueComponent';
 
 @Component({})
 export default class PageComponent extends BaseVueComponent {
@@ -45,7 +45,7 @@ export default class PageComponent extends BaseVueComponent {
     }
     navigateTo(component: VueConstructor, options?: NavigationEntry & { props?: any }, cb?: () => Page) {
         options = options || {};
-        (options as any).frame = topmost().id;
+        (options as any).frame = Frame.topmost().id;
         return this.$navigateTo(component, options, cb);
     }
 }

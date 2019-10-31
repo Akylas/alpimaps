@@ -1,10 +1,10 @@
-import * as app from 'application';
+import * as app from '@nativescript/core/application';
 import { MapPos } from 'nativescript-carto/core/core';
 import { CartoMap } from 'nativescript-carto/ui/ui';
-import { View } from 'tns-core-modules/ui/core/view';
-import { GridLayout } from 'tns-core-modules/ui/layouts/grid-layout/grid-layout';
-import { ItemEventData } from 'tns-core-modules/ui/list-view/list-view';
-import { layout } from 'tns-core-modules/utils/utils';
+import { View } from '@nativescript/core/ui/core/view';
+import { GridLayout } from '@nativescript/core/ui/layouts/grid-layout/grid-layout';
+import { ItemEventData } from '@nativescript/core/ui/list-view/list-view';
+import { layout } from '@nativescript/core/utils/utils';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import { convertDistance } from '~/helpers/formatter';
 import ItemFormatter from '~/mapModules/ItemFormatter';

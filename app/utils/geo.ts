@@ -1,5 +1,5 @@
 import { MapBounds, MapPos, ScreenBounds } from 'nativescript-carto/core/core';
-import { ScreenMetrics } from 'tns-core-modules/platform/platform';
+import { ScreenMetrics } from '@nativescript/core/platform/platform';
 
 const PI = Math.PI;
 const TO_RAD = PI / 180;

@@ -14,10 +14,10 @@ import OptionPicker from './OptionPicker';
 import UserLocationModule from '~/mapModules/UserLocationModule';
 import { MapPos } from 'nativescript-carto/core/core';
 import * as sensors from 'nativescript-sensors';
-import { Accuracy } from 'tns-core-modules/ui/enums/enums';
-import * as appSettings from 'tns-core-modules/application-settings/application-settings';
+import { Accuracy } from '@nativescript/core/ui/enums/enums';
+import * as appSettings from '@nativescript/core/application-settings/application-settings';
 import { statusBarHeight } from '~/variables';
-import { layout } from 'tns-core-modules/utils/utils';
+import { layout } from '@nativescript/core/utils/utils';
 
 @Component({
     components: {

@@ -1,6 +1,6 @@
 import { Component, Prop } from 'vue-property-decorator';
 import BaseVueComponent from './BaseVueComponent';
-import { NavigationEntry, Page, topmost } from 'tns-core-modules/ui/frame/frame';
+import { NavigationEntry, Page, topmost } from '@nativescript/core/ui/frame/frame';
 import { VueConstructor } from 'vue';
 import { primaryColor } from '~/variables';
 

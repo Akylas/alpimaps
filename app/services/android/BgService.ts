@@ -1,5 +1,5 @@
 import { localize } from 'nativescript-localize';
-import { ApplicationEventData, off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from 'tns-core-modules/application';
+import { ApplicationEventData, off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
 import { GeoHandler, SessionChronoEvent, SessionChronoEventData, SessionEventData, SessionState, SessionStateEvent } from '~/handlers/GeoHandler';
 import { BgServiceBinder } from '~/services/android/BgServiceBinder';
 import { clog } from '~/utils/logging';

@@ -1,5 +1,5 @@
-import { View } from 'tns-core-modules/ui/core/view';
-import { layout } from 'tns-core-modules/utils/utils';
+import { View } from '@nativescript/core/ui/core/view';
+import { layout } from '@nativescript/core/utils/utils';
 import { Component } from 'vue-property-decorator';
 import * as Animation from '~/animation';
 import BaseVueComponent from './BaseVueComponent';

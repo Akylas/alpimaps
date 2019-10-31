@@ -1,8 +1,8 @@
 import { Component, Prop } from 'vue-property-decorator';
 import Vue from 'nativescript-vue';
 
-import { ItemEventData } from 'tns-core-modules/ui/list-view/list-view';
-import { android as androidApp } from 'application';
+import { ItemEventData } from '@nativescript/core/ui/list-view/list-view';
+import { android as androidApp } from '@nativescript/core/application';
 import { clog } from '~/utils/logging';
 
 @Component({})

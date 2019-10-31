@@ -9,9 +9,9 @@ import { Point, PointStyleBuilder } from 'nativescript-carto/vectorelements/poin
 import { Text, TextStyleBuilder } from 'nativescript-carto/vectorelements/text';
 import { Group, GroupOptions } from 'nativescript-carto/vectorelements/group';
 import { confirm } from 'nativescript-material-dialogs';
-import { TextField } from 'tns-core-modules/ui/text-field/text-field';
+import { TextField } from '@nativescript/core/ui/text-field/text-field';
 import { Component } from 'vue-property-decorator';
-// import { layout } from 'tns-core-modules/utils/utils';
+// import { layout } from '@nativescript/core/utils/utils';
 import { Item } from '~/mapModules/ItemsModule';
 import { IMapModule } from '~/mapModules/MapModule';
 import BaseVueComponent from './BaseVueComponent';
@@ -198,8 +198,8 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             marker: null,
             text: metaData ? metaData.name : `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`
         };
+        // this.log('addStopPoint', this.waypoints.length,  this.waypoints);
         if (this.waypoints.length > 0 && this.waypoints[this.waypoints.length - 1].isStop === true) {
-            this.addStopPoint(position, metaData);
             this.waypoints[this.waypoints.length - 1].isStop = false;
             (this.waypoints[this.waypoints.length - 1].marker.elements[0] as Point).styleBuilder = {
                 // size: 30,
@@ -207,6 +207,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
                 scaleWithDPI: true,
                 color: 'blue'
             };
+            this.addStopPoint(position, metaData);
         }
         const group = new Group();
         group.elements = [
