@@ -1,7 +1,7 @@
 import { View } from '@nativescript/core/ui/core/view';
 import { layout } from '@nativescript/core/utils/utils';
 import { Component } from 'vue-property-decorator';
-import * as Animation from '~/animation';
+import { TWEEN } from 'nativescript-tween';
 import BaseVueComponent from './BaseVueComponent';
 import DirectionsPanel from './DirectionsPanel';
 
@@ -145,9 +145,9 @@ export default class TopSheetHolder extends BaseVueComponent {
             // this.log('scrollSheetToPosition', viewTop, position);
             return new Promise(resolve => {
                 // this.log('scrollSheetToPosition2', viewTop, position);
-                new Animation.Animation({ value: viewTop })
+                new TWEEN.Tween({ value: viewTop })
                     .to({ value: -position }, duration)
-                    .easing(Animation.Easing.Quadratic.Out)
+                    .easing(TWEEN.Easing.Quadratic.Out)
                     .onUpdate(obj => {
                         this.currentViewTop = obj.value;
                         // this.log('onUpdate', obj.value);

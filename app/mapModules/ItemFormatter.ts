@@ -1,4 +1,4 @@
-import { CartoMap } from 'nativescript-carto/ui/ui';
+import { CartoMap } from 'nativescript-carto/ui';
 
 import Map from '~/components/Map';
 import MapModule from './MapModule';
@@ -8,7 +8,7 @@ import { convertDistance, convertDuration, formatAddress } from '~/helpers/forma
 // const addressFormatter = require('@fragaria/address-formatter'); // const OPEN_DURATION = 200;
 
 export default class ItemFormatter extends MapModule {
-    onMapReady(mapComp: Map, mapView: CartoMap) {
+    onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
         super.onMapReady(mapComp, mapView);
         // this.log('onMapReady');
     }
@@ -42,7 +42,7 @@ export default class ItemFormatter extends MapModule {
         if (result.length === 0 && item.address && item.address.houseNumber) {
             result.push(item.address.houseNumber);
         }
-        // console.log('itemIcon', item, result);
+        console.log('itemIcon', item, result);
         return result;
     }
 

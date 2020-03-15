@@ -1,16 +1,16 @@
-import { CartoMapStyle, ClickType, MapPos, ScreenPos, toNativeScreenPos } from 'nativescript-carto/core/core';
+import { CartoMapStyle, ClickType, ScreenPos, toNativeScreenPos, MapPos } from 'nativescript-carto/core';
 import { ad, layout } from '@nativescript/core/utils/utils';
 import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
 import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
-import { Layer } from 'nativescript-carto/layers/layer';
+import { Layer } from 'nativescript-carto/layers';
 import { CartoOnlineVectorTileLayer, VectorElementEventData, VectorLayer, VectorTileEventData, VectorTileLayer, VectorTileRenderOrder } from 'nativescript-carto/layers/vector';
-import { Projection } from 'nativescript-carto/projections/projection';
-import { CartoMap, registerLicense, RenderProjectionMode } from 'nativescript-carto/ui/ui';
-import { setShowDebug } from 'nativescript-carto/utils/utils';
+import { Projection } from 'nativescript-carto/projections';
+import { CartoMap, registerLicense, RenderProjectionMode } from 'nativescript-carto/ui';
+import { setShowDebug } from 'nativescript-carto/utils';
 import { Line, LineEndType, LineJointType, LineStyleBuilder, LineStyleBuilderOptions } from 'nativescript-carto/vectorelements/line';
 import { Marker, MarkerStyleBuilder, MarkerStyleBuilderOptions } from 'nativescript-carto/vectorelements/marker';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from 'nativescript-carto/vectorelements/point';
-import { MBVectorTileDecoder } from 'nativescript-carto/vectortiles/vectortiles';
+import { MBVectorTileDecoder } from 'nativescript-carto/vectortiles';
 import { allowSleepAgain, keepAwake } from 'nativescript-insomnia';
 import { localize } from 'nativescript-localize';
 import * as perms from 'nativescript-perms';
@@ -161,8 +161,8 @@ export default class Map extends BgServicePageComponent {
     actionBarButtonHeight = actionBarButtonHeight;
     vectorTileDecoder: MBVectorTileDecoder;
 
-    selectedPosMarker: Marker;
-    selectedRouteLine: Line;
+    selectedPosMarker: Marker<LatLonKeys>;
+    selectedRouteLine: Line<LatLonKeys>;
     mSelectedItem: Item = null;
     mapProjection: Projection = null;
     currentLanguage = appSettings.getString('language', 'en');
@@ -185,7 +185,7 @@ export default class Map extends BgServicePageComponent {
     get mapWidgetsTopPadding() {
         return this.topSheetTranslation;
     }
-    _cartoMap: CartoMap = null;
+    _cartoMap: CartoMap<LatLonKeys> = null;
     get cartoMap() {
         // console.log('get cartoMap', !!this._cartoMap);
         return this._cartoMap;
@@ -485,10 +485,15 @@ export default class Map extends BgServicePageComponent {
     }
 
     onMapReady(e) {
-        const cartoMap = (this._cartoMap = e.object as CartoMap);
+        const cartoMap = (this._cartoMap = e.object as CartoMap<LatLonKeys>);
 
         this.mapProjection = cartoMap.projection;
-        this.log('onMapReady');
+        if (gVars.isAndroid) {
+            this.log('onMapReady', com.carto.ui.BaseMapView.getSDKVersion());
+        } else {
+            this.log('onMapReady');
+
+        }
 
         const options = cartoMap.getOptions();
         options.setWatermarkScale(0.5);
@@ -502,7 +507,7 @@ export default class Map extends BgServicePageComponent {
         // options.setDrawDistance(8);
         this.showGlobe = appSettings.getBoolean('showGlobe', false);
         // console.log('test', JSON.parse('{"lat":45.2002,"lon":5.7222}'));
-        const pos = JSON.parse(appSettings.getString('mapFocusPos', '{"lat":45.2002,"lon":5.7222}')) as MapPos;
+        const pos = JSON.parse(appSettings.getString('mapFocusPos', '{"lat":45.2002,"lon":5.7222}')) as MapPos<LatLonKeys>;
         const zoom = appSettings.getNumber('mapZoom', 10);
         // console.log('map start pos', pos, zoom);
         cartoMap.setFocusPos(pos, 0);
@@ -519,20 +524,20 @@ export default class Map extends BgServicePageComponent {
         }, 0);
     }
 
-    createLocalMarker(position: MapPos, options: MarkerStyleBuilderOptions) {
+    createLocalMarker(position: MapPos<LatLonKeys>, options: MarkerStyleBuilderOptions) {
         this.getOrCreateLocalVectorLayer();
         const styleBuilder = new MarkerStyleBuilder(options);
-        return new Marker({ position, projection: this.mapProjection, styleBuilder });
+        return new Marker<LatLonKeys>({ position, projection: this.mapProjection, styleBuilder });
     }
-    createLocalPoint(position: MapPos, options: PointStyleBuilderOptions) {
+    createLocalPoint(position: MapPos<LatLonKeys>, options: PointStyleBuilderOptions) {
         this.getOrCreateLocalVectorLayer();
         const styleBuilder = new PointStyleBuilder(options);
-        return new Point({ position, projection: this.mapProjection, styleBuilder });
+        return new Point<LatLonKeys>({ position, projection: this.mapProjection, styleBuilder });
     }
-    createLocalLine(positions: MapPos[], options: LineStyleBuilderOptions) {
+    createLocalLine(positions: MapPos<LatLonKeys>[], options: LineStyleBuilderOptions) {
         this.getOrCreateLocalVectorLayer();
         const styleBuilder = new LineStyleBuilder(options);
-        return new Line({ positions, projection: this.mapProjection, styleBuilder });
+        return new Line<LatLonKeys>({ positions, projection: this.mapProjection, styleBuilder });
     }
     selectItem(item: Item, isFeatureInteresting = false, peek = true, zoom?: number) {
         this.log('selectItem', isFeatureInteresting);
@@ -631,7 +636,7 @@ export default class Map extends BgServicePageComponent {
         }
         this.unFocusSearch();
     }
-    onVectorTileClicked(data: VectorTileEventData) {
+    onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureLayerName, featureData, featurePosition } = data;
         const featureDataWithoutName = JSON.parse(JSON.stringify(featureData));
         Object.keys(featureDataWithoutName).forEach(k => {
@@ -718,7 +723,7 @@ export default class Map extends BgServicePageComponent {
         }
         return handledByModules;
     }
-    onVectorElementClicked(data: VectorElementEventData) {
+    onVectorElementClicked(data: VectorElementEventData<LatLonKeys>) {
         const { clickType, position, elementPos, metaData, element } = data;
         Object.keys(metaData).forEach(k => {
             metaData[k] = JSON.parse(metaData[k]);
@@ -892,6 +897,7 @@ export default class Map extends BgServicePageComponent {
         if (!layerStyle) {
             return;
         }
+        layerStyle = layerStyle.toLowerCase()
         console.log('setMapStyle', layerStyle);
         if (layerStyle !== this.currentLayerStyle || !!force) {
             this.currentLayerStyle = layerStyle;

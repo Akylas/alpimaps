@@ -1,4 +1,4 @@
-import { MapBounds, MapPos, ScreenBounds } from 'nativescript-carto/core/core';
+import { MapBounds, MapPos, ScreenBounds } from 'nativescript-carto/core';
 import { ScreenMetrics } from '@nativescript/core/platform/platform';
 
 const PI = Math.PI;
@@ -17,7 +17,7 @@ export const DEFAULT_TOLERANCE = 0.1;
  * @param        array       Collection of coords [{lat: 51.510, lon: 7.1321} {lat: 49.1238, lon: "8° 30' W"} ...]
  * @return       object      {lat: centerLat, lon: centerLng}
  */
-export function getCenter(...coords: MapPos[]) {
+export function getCenter(...coords: MapPos<LatLonKeys>[]) {
     if (!coords.length) {
         return undefined;
     }
@@ -49,14 +49,14 @@ export function getCenter(...coords: MapPos[]) {
     return {
         lat: (lat * TO_DEG),
         lon: (lon * TO_DEG)
-    } as MapPos;
+    } as MapPos<LatLonKeys>;
 }
 
 function mod( x,  m) {
     return ((x % m) + m) % m;
 }
 
-export function getBoundsZoomLevel(bounds: MapBounds, mapDim: { width: number; height: number }, worldDim = 256) {
+export function getBoundsZoomLevel(bounds: MapBounds<LatLonKeys>, mapDim: { width: number; height: number }, worldDim = 256) {
     const zoomMax = 24;
 
     function latRad(lat) {
@@ -168,7 +168,7 @@ function isOnSegmentGC( lat1,  lng1,  lat2,  lng2,
     return sinSumAlongTrack > 0;  // Compare with half-circle == PI using sign of sin().
 }
 
-export function isLocationOnPath( point: MapPos, poly: MapPos[],  closed = false,
+export function isLocationOnPath( point: MapPos<LatLonKeys>, poly: MapPos<LatLonKeys>[],  closed = false,
                                   geodesic = true,  toleranceEarth: number = DEFAULT_TOLERANCE) {
     // console.log('isLocationOnPath', point, poly, closed, geodesic, toleranceEarth);
     const size = poly.length;
@@ -248,7 +248,7 @@ function distanceRadians( lat1,  lng1,  lat2,  lng2) {
  * Returns the angle between two LatLngs, in radians. This is the same as the distance
  * on the unit sphere.
  */
-function computeAngleBetween( from: MapPos,  to: MapPos) {
+function computeAngleBetween( from: MapPos<LatLonKeys>,  to: MapPos<LatLonKeys>) {
     return distanceRadians(toRadians(from.lat), toRadians(from.lon),
         toRadians(to.lat), toRadians(to.lon));
 }
@@ -256,13 +256,13 @@ function computeAngleBetween( from: MapPos,  to: MapPos) {
 /**
  * Returns the distance between two LatLngs, in meters.
  */
-export function computeDistanceBetween( from: MapPos,  to: MapPos) {
+export function computeDistanceBetween( from: MapPos<LatLonKeys>,  to: MapPos<LatLonKeys>) {
     return computeAngleBetween(from, to) * EARTH_RADIUS;
 }
-export function distanceToEnd( index: number, poly: MapPos[]) {
+export function distanceToEnd( index: number, poly: MapPos<LatLonKeys>[]) {
     let result = 0;
     const size = poly.length;
-    let last: MapPos;
+    let last: MapPos<LatLonKeys>;
     for (let i = index; i < size; i++) {
         const element = poly[i];
         if (last) {

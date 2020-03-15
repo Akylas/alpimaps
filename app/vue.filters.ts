@@ -1,6 +1,6 @@
 import { fonticon } from 'nativescript-akylas-fonticon';
 import { localize } from 'nativescript-localize';
-import VueStringFilter from 'vue-string-filter/VueStringFilter';
+import VueStringFilter from 'vue-string-filter';
 import { GeoLocation } from 'nativescript-gps';
 import { convertValueToUnit } from './helpers/formatter';
 const Plugin = {

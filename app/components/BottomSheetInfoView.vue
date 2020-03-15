@@ -4,7 +4,7 @@
         <Label class="details-label" col="1" row="1" :text="itemTitle" color="white" fontSize="16" fontWeight="bold" verticalAlignment="center" textWrap maxLines="2" />
         <Label class="details-label" col="1" row="2" v-show="!!itemSubtitle" :text="itemSubtitle" color="#D0D0D0" fontSize="13" verticalAlignment="top" />
         <Label v-for="(prop, index) in propsToDraw" class="details-label" row="3" :col="index+1" >
-            <Span class="details-icon" :text="propIcon(prop) | fonticon" />
+            <Span class="details-icon" :text="propIcon(prop)" />
             <Span :text="propValue(prop)" />
         </Label>
         <MDActivityIndicator v-if="updating" rowSpan="5" col="4" busy class="activity-indicator" />

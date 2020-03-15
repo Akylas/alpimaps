@@ -14,7 +14,7 @@
             <slot name="rightButtons" />
         </StackLayout>
         <ContentView col="0" verticalAlignment="top" :height="height">
-            <MDButton rippleColor="white" variant="flat" v-show="menuIconVisible" class="icon-btn" :text="menuIcon | fonticon" @tap="onMenuIcon" />
+            <MDButton rippleColor="white" variant="flat" v-show="menuIconVisible" class="icon-btn" :text="menuIcon" @tap="onMenuIcon" />
         </ContentView>
         <!-- <StackLayout col="2" orientation="horizontal"> -->
         <!-- </StackLayout> -->

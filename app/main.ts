@@ -1,10 +1,8 @@
 import Vue from 'nativescript-vue';
 import { knownFolders } from '@nativescript/core/file-system';
 
-import { getBuildNumber, getVersionName } from 'nativescript-extendedinfo';
 import { cerror, clog, cwarn, DEV_LOG } from '~/utils/logging';
-import { Client as BugsnagClient } from 'nativescript-bugsnag';
-import { setMapPosKeys } from 'nativescript-carto/core/core';
+import { setMapPosKeys } from 'nativescript-carto/core';
 import * as application from '@nativescript/core/application';
 
 setMapPosKeys('lat', 'lon');
@@ -25,68 +23,27 @@ application.on(application.discardedErrorEvent, args => {
     // console.log('[stack test value]', error.message, error.stack);
     // console.log(jsError);
     // setTimeout(() => {
-        // throw new Error('test');
+    // throw new Error('test');
     // }, 0);
 });
 
-// import { Client as FlipperClient } from 'nativescript-flipper';
-/* SOURCEMAP-START */
-console.log('installing sourcemap support');
-const currentApp = require('@nativescript/core/file-system').knownFolders.currentApp();
-process.cwd = function() {
-    return '';
-};
-require('source-map-support').install({
-    environment: 'node',
-    handleUncaughtExceptions: false,
-    retrieveSourceMap(source) {
-        console.log('retrieveSourceMap', source);
-        const sourceMapPath = source + '.map';
-        const appPath = currentApp.path;
-        let sourceMapRelativePath = sourceMapPath
-            // .replace('file:///', '')
-            .replace('file://', '')
-            .replace(appPath + '/', '')
-            .replace(appPath + '/', '');
-        if (sourceMapRelativePath.startsWith('app/')) {
-            sourceMapRelativePath = sourceMapRelativePath.slice(4);
-        }
-        return {
-            url: sourceMapRelativePath,
-            map: currentApp.getFile(sourceMapRelativePath).readTextSync()
-        };
-    }
-});
-/* SOURCEMAP-END */
-
-// Error.prepareStackTrace = function() {
-//     console.log('test', 'prepareStackTrace', new Error().stack);
-// };
-// const flipper = new FlipperClient();
-// flipper.start({
-//     plugins: ['network', 'inspector', 'database', 'prefs', 'crash']
-// });
-
-if (TNS_ENV === 'production' || TEST_LOGS) {
-    const bugsnag = (Vue.prototype.$bugsnag = new BugsnagClient());
-    Promise.all([getVersionName(), getBuildNumber()])
-        .then(result => {
-            // console.log('did get Versions', result);
-            let fullVersion = result[0];
-            if (!/[0-9]+\.[0-9]+\.[0-9]+/.test(fullVersion)) {
-                fullVersion += '.0';
-            }
-            fullVersion += ` (${result[1]})`;
-            return bugsnag.init({ appVersion: result[0], apiKey: gVars.BUGNSAG, automaticallyCollectBreadcrumbs: false, detectAnrs: false });
-        })
-        .then(() => {
-            bugsnag.enableConsoleBreadcrumbs();
-            bugsnag.handleUncaughtErrors();
-            // console.log('bugsnag did init');
-        })
-        .catch(err => {
-            console.log('bugsnag  init failed', err);
+import { device } from '@nativescript/core/platform';
+import { getBuildNumber, getVersionName } from 'nativescript-extendedinfo';
+if (PRODUCTION || gVars.sentry) {
+    import('nativescript-akylas-sentry').then(Sentry => {
+        Vue.prototype.$sentry = Sentry;
+        Promise.all([getVersionName(), getBuildNumber()]).then(res => {
+            Sentry.init({
+                dsn: gVars.SENTRY_DSN,
+                appPrefix: gVars.SENTRY_PREFIX,
+                release: `${res[0]}`,
+                dist: `${res[1]}.${gVars.isAndroid ? 'android' : 'ios'}`
+            });
+            Sentry.setTag('locale', device.language);
         });
+    });
+} else {
+    Vue.prototype.$sentry = null;
 }
 
 import { primaryColor } from './variables';
@@ -113,7 +70,7 @@ Vue.use(FiltersPlugin);
 import { TNSFontIcon } from 'nativescript-akylas-fonticon';
 // TNSFontIcon.debug = true;
 TNSFontIcon.paths = {
-    mdi: './assets/materialdesignicons.min.css',
+    // mdi: './assets/materialdesignicons.min.css',
     maki: './assets/maki.css',
     osm: './assets/osm.css'
 };

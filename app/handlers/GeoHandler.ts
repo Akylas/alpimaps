@@ -40,7 +40,7 @@ export enum SessionState {
     PAUSED = 'paused'
 }
 
-export type GeoLocation = GeoLocation;
+// export type GeoLocation = GeoLocation;
 
 export const SessionStateEvent = 'sessionState';
 export const SessionChronoEvent = 'sessionChrono';
@@ -198,7 +198,7 @@ export class GeoHandler extends Observable {
         }
         this.stopSession();
         this.launched = false;
-        geolocation.off(GPS.gps_status_event, this.onGPSStateChange, this);
+        geolocation && geolocation.off(GPS.gps_status_event, this.onGPSStateChange, this);
         applicationOff(suspendEvent, this.onAppPause, this);
         applicationOff(resumeEvent, this.onAppResume, this);
     }
@@ -505,7 +505,7 @@ export class GeoHandler extends Observable {
             if (DEV_LOG) {
                 this.log(
                     'onNewLoc',
-                    `speed: ${loc.speed && loc.speed.toFixed(1)}, loc:${loc.latitude.toFixed(2)},${loc.longitude.toFixed(2)}, ${loc.timestamp.toLocaleTimeString()}, ${shouldNotif}, ${this
+                    `speed: ${loc.speed && loc.speed.toFixed(1)}, loc:${loc.latitude.toFixed(2)},${loc.longitude.toFixed(2)}, ${new Date(loc.timestamp).toLocaleTimeString()}, ${shouldNotif}, ${this
                         .currentSession.currentSpeed && this.currentSession.currentSpeed.toFixed(1)}, ${deltaDistance}, ${deltaTime}, ${deltaAlt}`
                 );
             }

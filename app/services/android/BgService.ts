@@ -15,6 +15,7 @@ function titlecase(value) {
 }
 const DEFAULT_TEXT = titlecase(localize('tap_to_open'));
 const NOTIFICATION_ID = 3426824;
+
 @JavaProxy('akylas.alpi.maps.BgService')
 export class BgService extends android.app.Service {
     geoHandler: GeoHandler;

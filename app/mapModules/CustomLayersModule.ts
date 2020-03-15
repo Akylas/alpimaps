@@ -1,8 +1,8 @@
 import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
 import { HTTPTileDataSource } from 'nativescript-carto/datasources/http';
-import { TileLayer } from 'nativescript-carto/layers/layer';
+import { TileLayer } from 'nativescript-carto/layers';
 import { RasterTileLayer } from 'nativescript-carto/layers/raster';
-import { CartoMap } from 'nativescript-carto/ui/ui';
+import { CartoMap } from 'nativescript-carto/ui';
 import localize from 'nativescript-localize';
 import { alert } from 'nativescript-material-dialogs';
 import Vue from 'nativescript-vue';
@@ -231,7 +231,7 @@ export default class CustomLayersModule extends MapModule {
         );
     }
 
-    onMapReady(mapComp: Map, mapView: CartoMap) {
+    onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
         super.onMapReady(mapComp, mapView);
         const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
         // this.log('onMapReady', savedSources, this.customSources);
