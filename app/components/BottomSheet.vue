@@ -10,14 +10,15 @@
             <MDButton variant="text" padding="4" fontSize="10" @tap="deleteItem" text="delete item" v-show="item && item.id" />
         </StackLayout>
         <!-- <transition name="fade" duration="200"> -->
-        <RadCartesianChart row="2" ref="graphView" :visibility="showGraph ? 'visible' : 'hidden'">
-            <Palette v-tkCartesianPalette seriesName="Area">
+            <LineChart ref="graphView" row="2"  :visibility="showGraph ? 'visible' : 'hidden'" />
+
+            <!-- <Palette v-tkCartesianPalette seriesName="Area">
                 <PaletteEntry v-tkCartesianPaletteEntry fillColor="#8060B3FC" strokeWidth="2" strokeColor="#60B3FC" />
             </Palette>
             <CategoricalAxis v-tkCartesianHorizontalAxis majorTickInterval="1000" labelTextColor="transparent" />
             <LinearAxis v-tkCartesianVerticalAxis firstLabelVisibility="Hidden" labelFormat="%.0f" />
             <AreaSeries v-tkCartesianSeries seriesName="Area" selectionMode="DataPoint" :items="routeElevationProfile" categoryProperty="x" valueProperty="y" @pointSelected="onChartSelected" />
-        </RadCartesianChart>
+        </RadCartesianChart> -->
 
         <CollectionView row="3" ref="listView" rowHeight="49" :items="routeInstructions" :visibility="showListView ? 'visible' : 'hidden'" isBounceEnabled="false" @itemTap="onInstructionTap" @scroll="onListViewScroll" :isScrollEnabled="scrollEnabled">
             <v-template>

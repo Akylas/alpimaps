@@ -3,10 +3,9 @@ import { BgService } from '~/services/BgService';
 import Map from '~/components/Map';
 import App from '~/components/App';
 import PackageService from '~/services/PackageService';
-import { NativeScriptVueConstructor } from 'nativescript-vue';
 import { NetworkService } from '~/services/NetworkService';
 import { ToastDuration, ToastPosition } from 'nativescript-toasty';
-import { Client } from 'nativescript-bugsnag';
+import * as Sentry from 'nativescript-akylas-sentry';
 
 declare module 'vue/types/vue' {
     // 3. Declare augmentation for Vue
@@ -14,7 +13,7 @@ declare module 'vue/types/vue' {
         $bgService: BgService;
         $packageService: PackageService;
         $networkService: NetworkService;
-        $bugsnag: Client;
+        $sentry: typeof Sentry;
 
         isAndroid: boolean;
         isIOS: boolean;

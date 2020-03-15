@@ -20,6 +20,14 @@
   "select_style": "style de carte ",
   "offline_packages": "cartes hors-ligne",
   "select_language": "langue de la carte",
-  "send_bug_report": "envoyer un rapport de bug",
-  "send": "envoyer"
+  "send": "envoyer",
+  "send_bug_report": "envoyer le rapport de bug",
+  "send_bug_report_desc": "entrez un mail et une description du bug rencontré",
+  "please_describe_error": "veuillez décrire l'erreur",
+  "email_required": "un email valide est requis",
+  "email": "email",
+  "description": "description",
+  "non_valid_email": "email non valide",
+  "description_required": "une description est requise",
+  "bug_report_sent": "rapport de bug envoyé"
 }

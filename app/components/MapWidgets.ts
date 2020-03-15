@@ -1,4 +1,4 @@
-import { CartoMap } from 'nativescript-carto/ui/ui';
+import { CartoMap } from 'nativescript-carto/ui';
 import { Component } from 'vue-property-decorator';
 import Map from '~/components/Map';
 import { GeoHandler } from '~/handlers/GeoHandler';
@@ -10,7 +10,7 @@ import BgServiceComponent from './BgServiceComponent';
     // components: {}
 })
 export default class MapWidgets extends BgServiceComponent implements IMapModule {
-    mapView: CartoMap;
+    mapView: CartoMap<LatLonKeys>;
     mapComp: Map;
 
     currentMapRotation = 0;
@@ -45,7 +45,7 @@ export default class MapWidgets extends BgServiceComponent implements IMapModule
         // }
     }
 
-    onMapReady(mapComp: Map, mapView: CartoMap) {
+    onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
         this.mapView = mapView;
         this.mapComp = mapComp;
     }

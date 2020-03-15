@@ -5,18 +5,7 @@ $background-color: #fff;
 $text-color: white;
 $text-color-sub: #666666;
 $disabled-color: #404040;
-$actionbar-height: 50;
-$actionbar-button-height: 40;
+$actionbar-height: 60;
+$actionbar-button-height: 50;
 $navigation-bar-height: 48;
 $status-bar-height: 24;
-
-:export {
-    primaryColor: $primary-color;
-    accentColor: $accent-color;
-    darkColor: $dark-color;
-    backgroundColor: $background-color;
-    actionBarHeight: $actionbar-height;
-    actionBarButtonHeight: $actionbar-button-height;
-    navigationBarHeight: $navigation-bar-height;
-    statusBarHeight: $status-bar-height;
-  }

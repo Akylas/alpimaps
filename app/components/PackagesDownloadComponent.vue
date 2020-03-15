@@ -1,7 +1,7 @@
 <template>
     <GridLayout rows="auto,*,auto,2*" columns="*,auto,*" height="300" @loaded="onLoaded">
         <StackLayout row="0" colSpan="3" orientation="horizontal">
-            <MDButton class="mdi" width="30" variant="text" fontSize="20" :text="'mdi-arrow-left' | fonticon" v-show="currentFolder.length > 0" @tap="onBackButton" />
+            <MDButton class="mdi" width="30" variant="text" fontSize="20" text="mdi-arrow-left" v-show="currentFolder.length > 0" @tap="onBackButton" />
             <Label padding="10" color="white" fontSize="20" fontWeight="bold" text="Download Packages" />
         </StackLayout>
         <ListView ref="listView" row="1" col="0" rowSpan="3" colSpan="3" rowHeight="49" :items="dataItems" @itemTap="onPackageClick" separatorColor="darkgray">
@@ -13,7 +13,7 @@
                     <Label row="0" :text="item.name.toUpperCase()" color="white" fontSize="13" fontWeight="bold" verticalAlignment="center" />
                     <Label row="1" :text="item.getStatusText()" color="#D0D0D0" fontSize="11" v-show="!item.isGroup()" verticalAlignment="center" />
                     </StackLayout>
-                    <Label col="2" row="0" rowSpan="3" class="mdi" color="navyblue" :text="'mdi-chevron-right' | fonticon" fontSize="16" v-show="item.isGroup()" verticalAlignment="center" />
+                    <Label col="2" row="0" rowSpan="3" class="mdi" color="navyblue" text="mdi-chevron-right" fontSize="16" v-show="item.isGroup()" verticalAlignment="center" />
                     <MDButton col="1" row="0" rowSpan="3" variant="text" margin="0" padding="0" :text="item.getActionText('map')" verticalAlignment="center"  horizontalAlignment="center" v-show="!item.isGroup()" fontSize="12" @tap="handlePackageAction('map', item)" />
                     <MDButton col="2" row="0" rowSpan="3" variant="text" margin="0" padding="0" :text="item.getGeoActionText()" verticalAlignment="center" v-show="item.hasGeo()" fontSize="12" @tap="handlePackageAction('geo', item)" />
                     <MDButton col="3" row="0" rowSpan="3" variant="text" margin="0" padding="0" :text="item.getRoutingActionText()" verticalAlignment="center" v-show="item.hasRouting()" fontSize="12" @tap="handlePackageAction('routing', item)" />

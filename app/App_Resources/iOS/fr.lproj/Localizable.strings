@@ -1,5 +1,13 @@
+"bug_report_sent" = "rapport de bug envoyé";
+"description_required" = "une description est requise";
+"non_valid_email" = "email non valide";
+"description" = "description";
+"email" = "email";
+"email_required" = "un email valide est requis";
+"please_describe_error" = "veuillez décrire l'erreur";
+"send_bug_report_desc" = "entrez un mail et une description du bug rencontré";
+"send_bug_report" = "envoyer le rapport de bug";
 "send" = "envoyer";
-"send_bug_report" = "envoyer un rapport de bug";
 "select_language" = "langue de la carte";
 "offline_packages" = "cartes hors-ligne";
 "select_style" = "style de carte ";

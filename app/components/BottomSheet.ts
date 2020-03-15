@@ -1,6 +1,5 @@
 import * as app from '@nativescript/core/application';
-import { MapPos } from 'nativescript-carto/core/core';
-import { CartoMap } from 'nativescript-carto/ui/ui';
+import { CartoMap } from 'nativescript-carto/ui';
 import { View } from '@nativescript/core/ui/core/view';
 import { GridLayout } from '@nativescript/core/ui/layouts/grid-layout/grid-layout';
 import { ItemEventData } from '@nativescript/core/ui/list-view/list-view';
@@ -17,6 +16,11 @@ import BottomSheetInfoView from './BottomSheetInfoView';
 import BottomSheetRouteInfoView from './BottomSheetRouteInfoView';
 import { RouteInstruction } from './DirectionsPanel';
 import Map from './Map';
+import { MapPos } from 'nativescript-carto/core';
+import LineChart from 'nativescript-chart/charts/LineChart';
+import { LineDataSet, Mode } from 'nativescript-chart/data/LineDataSet';
+import { LineData } from 'nativescript-chart/data/LineData';
+import { XAxisPosition } from 'nativescript-chart/components/XAxis';
 
 function getViewTop(view: View) {
     if (gVars.isAndroid) {
@@ -33,7 +37,7 @@ function getViewTop(view: View) {
     }
 })
 export default class BottomSheet extends BottomSheetBase implements IMapModule {
-    mapView: CartoMap;
+    mapView: CartoMap<LatLonKeys>;
     mapComp: Map;
     @Prop({
         default: () => [50]
@@ -52,7 +56,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     destroyed() {
         super.destroyed();
     }
-    onMapReady(mapComp: Map, mapView: CartoMap) {
+    onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
         this.mapView = mapView;
         this.mapComp = mapComp;
         mapComp.mapModules.userLocation.on('location', this.onNewLocation, this);
@@ -105,7 +109,9 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
 
         this.graphViewVisible = false;
         this.graphAvailable = this.itemIsRoute && !!this.item.route.profile && !!this.item.route.profile.data && this.item.route.profile.data.length > 0;
-
+        if(this.graphAvailable) {
+            this.updateChartData();
+        }
         // if (item && item.route) {
         //     this.dataItems = item.route.instructions;
         // } else {
@@ -114,7 +120,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     }
 
     onNewLocation(e: any) {
-        const location: MapPos = e.data;
+        const location: MapPos<LatLonKeys> = e.data;
         // this.log('onNewLocation', location);
         this.routeView.onNewLocation(e);
     }
@@ -253,14 +259,47 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         return item.streetName;
     }
 
-    get routeElevationProfile() {
-        // this.log('routeElevationProfile', this.graphViewVisible, !!this.item, !!this.item && !!this.item.route, !!this.item && !!this.item.route && !!this.item.route.profile);
-        if (this.graphViewVisible) {
-            const profile = this.item.route.profile;
-            return profile ? profile.data : null;
+    updateChartData() {
+        const chart = this.$refs.graphView.nativeView as LineChart;
+        const key = (chart as any).propName;
+        const sets = [];
+        const profile = this.item.route.profile;
+        const profileData = profile?.data;
+        if (profileData) {
+            let set = new LineDataSet(profileData, 'y', 'x', 'y');
+            set.setDrawValues(false);
+            set.setDrawFilled(true);
+            set.setColor('#60B3FC');
+            // set.setMode(Mode.CUBIC_BEZIER);
+            set.setFillColor('#8060B3FC');
+            sets.push(set);
         }
-        return null;
+
+        chart.getLegend().setEnabled(false);
+        // chart.setLogEnabled(true);
+        // chart.getAxisLeft().setTextColor('white');
+        // chart.getXAxis().setPosition(XAxisPosition.BOTTOM);
+        // chart.getXAxis().setTextColor('white');
+        // chart.getXAxis().setValueFormatter({
+        //     getAxisLabel(value, axis) {
+        //         return convertDuration(value, format);
+        //     }
+        // });
+        // chart.getXAxis().setDrawLabels(true);
+        // chart.getXAxis().setDrawGridLines(true);
+        chart.getAxisRight().setEnabled(false);
+        const linedata = new LineData(sets);
+        chart.setData(linedata);
     }
+
+    // get routeElevationProfile() {
+    //     // this.log('routeElevationProfile', this.graphViewVisible, !!this.item, !!this.item && !!this.item.route, !!this.item && !!this.item.route && !!this.item.route.profile);
+    //     if (this.graphViewVisible) {
+    //         const profile = this.item.route.profile;
+    //         return profile ? profile.data : null;
+    //     }
+    //     return null;
+    // }
     get routeInstructions() {
         if (this.listVisible) {
             // const profile = this.item.route.profile;
@@ -279,8 +318,5 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
             // })
             // this.bleService.connect(device.UUID);
         }
-    }
-    public onChartSelected(event) {
-        // this.log('onChartSelected', event);
     }
 }

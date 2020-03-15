@@ -1,7 +1,7 @@
-import { MapBounds, MapPos } from 'nativescript-carto/core/core';
+import { MapBounds, MapPos } from 'nativescript-carto/core';
 import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
 import { VectorLayer } from 'nativescript-carto/layers/vector';
-import { CartoMap } from 'nativescript-carto/ui/ui';
+import { CartoMap } from 'nativescript-carto/ui';
 import { Route } from '~/components/DirectionsPanel';
 import Map from '~/components/Map';
 import MapModule from './MapModule';
@@ -14,7 +14,7 @@ import { InanoSQLTableConfig } from '@nano-sql/core/lib/interfaces';
 import { Line, LineEndType, LineJointType, LineStyleBuilder, LineStyleBuilderOptions } from 'nativescript-carto/vectorelements/line';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from 'nativescript-carto/vectorelements/point';
 import { Marker, MarkerStyleBuilder, MarkerStyleBuilderOptions } from 'nativescript-carto/vectorelements/marker';
-import { VectorElement } from 'nativescript-carto/vectorelements/vectorelements';
+import { VectorElement } from 'nativescript-carto/vectorelements';
 
 export const tables: InanoSQLTableConfig[] = [
     {
@@ -187,9 +187,9 @@ export interface Item {
     provider?: 'photon' | 'here' | 'carto';
     categories?: string[];
     address?: Address;
-    zoomBounds?: MapBounds;
+    zoomBounds?: MapBounds<LatLonKeys>;
     route?: Route;
-    position?: MapPos;
+    position?: MapPos<LatLonKeys>;
     styleOptions?: any;
     vectorElement?: VectorElement<any, any>;
 }
@@ -198,7 +198,7 @@ export default class ItemsModule extends MapModule {
     localVectorDataSource: LocalVectorDataSource;
     localVectorLayer: VectorLayer;
 
-    onMapReady(mapComp: Map, mapView: CartoMap) {
+    onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
         // this.log('onMapReady');
         super.onMapReady(mapComp, mapView);
         Promise.resolve()

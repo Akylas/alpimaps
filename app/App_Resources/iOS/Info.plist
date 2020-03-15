@@ -112,7 +112,5 @@
             <key>NSAllowsArbitraryLoads</key>
             <true/>
         </dict>
-        <key>BugsnagAPIKey</key>
-        <string>8867d5b66eda43f1be76e345a36a72df</string>
     </dict>
 </plist>

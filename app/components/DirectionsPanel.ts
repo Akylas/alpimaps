@@ -1,8 +1,8 @@
-import { ClickType, fromNativeMapPos, MapPos } from 'nativescript-carto/core/core';
+import { ClickType, fromNativeMapPos, MapPos } from 'nativescript-carto/core';
 import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
 import { VectorElementEventData, VectorLayer, VectorTileEventData } from 'nativescript-carto/layers/vector';
-import { PackageManagerValhallaRoutingService, RoutingAction, RoutingResult, ValhallaOnlineRoutingService, ValhallaProfile } from 'nativescript-carto/routing/routing';
-import { CartoMap } from 'nativescript-carto/ui/ui';
+import { PackageManagerValhallaRoutingService, RoutingAction, RoutingResult, ValhallaOnlineRoutingService, ValhallaProfile } from 'nativescript-carto/routing';
+import { CartoMap } from 'nativescript-carto/ui';
 import { Line, LineEndType, LineJointType, LineStyleBuilder } from 'nativescript-carto/vectorelements/line';
 import { Marker, MarkerStyleBuilder } from 'nativescript-carto/vectorelements/marker';
 import { Point, PointStyleBuilder } from 'nativescript-carto/vectorelements/point';
@@ -19,7 +19,7 @@ import Map from './Map';
 import { showSnack } from 'nativescript-material-snackbar';
 
 export interface RouteInstruction {
-    position: MapPos;
+    position: MapPos<LatLonKeys>;
     action: string;
     azimuth: number;
     distance: number;
@@ -33,18 +33,18 @@ export interface RouteProfile {
     min: [number, number];
     dplus?: any;
     dmin?: any;
-    points: MapPos[];
+    points: MapPos<LatLonKeys>[];
     data: Array<{ x: number; y: number }>;
 }
 export interface Route {
     profile?: RouteProfile;
-    positions: MapPos[];
+    positions: MapPos<LatLonKeys>[];
     totalTime: number;
     totalDistance: number;
     instructions: RouteInstruction[];
 }
 
-function routingResultToJSON(result: RoutingResult) {
+function routingResultToJSON(result: RoutingResult<LatLonKeys>) {
     const rInstructions = result.getInstructions();
     const instructions: RouteInstruction[] = [];
     for (let i = 0; i < rInstructions.size(); i++) {
@@ -74,7 +74,7 @@ function routingResultToJSON(result: RoutingResult) {
 // const CLOSE_DURATION = 200;
 @Component({})
 export default class DirectionsPanel extends BaseVueComponent implements IMapModule {
-    mapView: CartoMap;
+    mapView: CartoMap<LatLonKeys>;
     mapComp: Map;
 
     opened = false;
@@ -83,7 +83,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     _routeLayer: VectorLayer;
     // startMarker: Marker = null;
     // stopMarker: Marker = null;
-    waypoints: Array<{ marker: Group; position: MapPos; isStart: boolean; isStop: boolean; metaData: any; text: string }> = [];
+    waypoints: Array<{ marker: Group; position: MapPos<LatLonKeys>; isStart: boolean; isStop: boolean; metaData: any; text: string }> = [];
     // waypoints: MapPos[] = [];
     // stopPos: MapwaypointsPos = null;
     profile: ValhallaProfile = 'pedestrian';
@@ -114,7 +114,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     mounted() {
         super.mounted();
     }
-    onMapReady(mapComp: Map, mapView: CartoMap) {
+    onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
         this.mapView = mapView;
         this.mapComp = mapComp;
     }
@@ -147,9 +147,9 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         }
         return this._routeLayer;
     }
-    line: Line;
+    line: Line<LatLonKeys>;
 
-    addStartPoint(position: MapPos, metaData?) {
+    addStartPoint(position: MapPos<LatLonKeys>, metaData?) {
         const toAdd = {
             isStart: true,
             isStop: false,
@@ -189,7 +189,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         this.startTF.text = this.currentStartSearchText = toAdd.text;
         this.updateWayPoints();
     }
-    addStopPoint(position: MapPos, metaData?) {
+    addStopPoint(position: MapPos<LatLonKeys>, metaData?) {
         const toAdd = {
             isStart: false,
             isStop: true,
@@ -241,7 +241,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     }
     updateWayPoints() {
         if (!this.line) {
-            this.line = new Line({
+            this.line = new Line<LatLonKeys>({
                 styleBuilder: {
                     color: 'gray',
                     width: 6
@@ -254,7 +254,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         }
         this.mapComp.topSheetHolder.peekSheet();
     }
-    addWayPoint(position: MapPos, metaData?, index = -1) {
+    addWayPoint(position: MapPos<LatLonKeys>, metaData?, index = -1) {
         const toAdd = {
             isStart: false,
             isStop: false,
@@ -272,7 +272,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         }
     }
 
-    handleClickOnPos(position: MapPos, metaData?) {
+    handleClickOnPos(position: MapPos<LatLonKeys>, metaData?) {
         // this.log('onMapClicked', position, this.startPos, this.stopPos);
         // const text = metaData ? metaData.name : `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`;
         // // console.log('handleClickOnPos', position, text);
@@ -291,7 +291,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     handleClickOnItem(item: Item) {
         this.handleClickOnPos(item.position, item.properties);
     }
-    onVectorTileClicked(data: VectorTileEventData) {
+    onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featurePosition, featureData } = data;
         // console.log('onVectorTileClicked', clickType, ClickType.LONG);
         if (clickType === ClickType.LONG) {
@@ -303,7 +303,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         }
         return false;
     }
-    onVectorElementClicked(data: VectorElementEventData) {
+    onVectorElementClicked(data: VectorElementEventData<LatLonKeys>) {
         const { clickType, position, elementPos, metaData } = data;
         // console.log('onVectorElementClicked', clickType, ClickType.LONG);
         if (clickType === ClickType.LONG) {

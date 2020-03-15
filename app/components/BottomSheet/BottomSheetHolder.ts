@@ -2,7 +2,7 @@ import { GestureHandlerStateEvent, GestureHandlerTouchEvent, GestureState, Gestu
 import { View } from '@nativescript/core/ui/core/view';
 import { layout } from '@nativescript/core/utils/utils';
 import { Component, Prop } from 'vue-property-decorator';
-import * as Animation from '~/animation';
+import { TWEEN } from 'nativescript-tween';
 import BaseVueComponent from '../BaseVueComponent';
 import BottomSheet, { NATIVE_GESTURE_TAG } from './BottomSheetBase';
 
@@ -242,9 +242,9 @@ export default class BottomSheetHolder extends BaseVueComponent {
         // this.log('scrollSheetToPosition', position, this.currentViewHeight, this.viewHeight);
         return new Promise(resolve => {
             // this.log('scrollSheetToPosition2', position, viewTop);
-            new Animation.Animation({ value: viewTop })
+            new TWEEN.Tween({ value: viewTop })
                 .to({ value: -position }, duration)
-                .easing(Animation.Easing.Quadratic.Out)
+                .easing(TWEEN.Easing.Quadratic.Out)
                 .onUpdate(obj => {
                     this.currentViewHeight = this.viewHeight + obj.value;
                     // this.log('onUpdate', this.viewHeight, obj.value);

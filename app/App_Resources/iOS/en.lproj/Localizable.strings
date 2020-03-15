@@ -14,6 +14,14 @@
 "_ios_info_plist_NSLocationAlwaysAndWhenInUseUsageDescription_Z122jwE" = "«Alpi Maps» use your GPS location to display it on your glasses";
 "_ios_info_plist_NSLocationAlwaysUsageDescription_Z1cD1M8" = "«Alpi Maps» use your GPS location to display it on your glasses";
 "_ios_info_plist_NSLocationWhenInUseUsageDescription_ZpKiIF" = "«Alpi Maps» use your GPS location to display it on your glasses";
+"bug_report_sent" = "bug_report_sent";
+"description_required" = "description_required";
+"non_valid_email" = "non_valid_email";
+"description" = "description";
+"email" = "email";
+"email_required" = "email_required";
+"please_describe_error" = "please_describe_error";
+"send_bug_report_desc" = "send_bug_report_desc";
 "start" = "start";
 "stop_session_are_you_sure" = "stop_session_are_you_sure";
 "stop_session" = "stop_session";

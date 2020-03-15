@@ -1,7 +1,7 @@
 import { CartoOnlineVectorTileLayer } from 'nativescript-carto/layers/vector';
-import { CartoMapStyle, fromNativeMapPos, MapPos, nativeVectorToArray } from 'nativescript-carto/core/core';
+import { CartoMapStyle, fromNativeMapPos, MapPos, nativeVectorToArray } from 'nativescript-carto/core';
 import { CartoOnlineTileDataSource } from 'nativescript-carto/datasources/cartoonline';
-import { MergedMBVTTileDataSource, OrderedTileDataSource, TileDataSource } from 'nativescript-carto/datasources/datasource';
+import { MergedMBVTTileDataSource, OrderedTileDataSource, TileDataSource } from 'nativescript-carto/datasources';
 import { HTTPTileDataSource } from 'nativescript-carto/datasources/http';
 import {
     Address,
@@ -16,8 +16,8 @@ import {
 } from 'nativescript-carto/geocoding/service';
 import { Feature, FeatureCollection } from 'nativescript-carto/geometry/feature';
 import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
-import { CartoPackageManager, CartoPackageManagerListener, PackageErrorType, PackageManagerTileDataSource, PackageStatus } from 'nativescript-carto/packagemanager/packagemanager';
-import { MBVectorTileDecoder } from 'nativescript-carto/vectortiles/vectortiles';
+import { CartoPackageManager, CartoPackageManagerListener, PackageErrorType, PackageManagerTileDataSource, PackageStatus } from 'nativescript-carto/packagemanager';
+import { MBVectorTileDecoder } from 'nativescript-carto/vectortiles';
 import { Observable } from '@nativescript/core/data/observable/observable';
 import { File, Folder, path } from '@nativescript/core/file-system';
 import { getDataFolder } from '~/utils';
@@ -31,7 +31,7 @@ export type PackageType = 'geo' | 'routing' | 'map';
 interface GeoResult {
     properties?: { [k: string]: any };
     address: Address;
-    position?: MapPos;
+    position?: MapPos<LatLonKeys>;
     provider?: string;
     rank?: number;
 }
@@ -299,7 +299,7 @@ export default class PackageService extends Observable {
                         //     source: 'carto.streets'
                         // }),
                         dataSource: new HTTPTileDataSource({
-                            url: 'https://api.maptiler.com/tiles/v3/{z}/{x}/{y}.pbf?key=V7KGiDaKQBCWTYsgsmxh',
+                            url: `https://api.maptiler.com/tiles/v3/{z}/{x}/{y}.pbf?key=${gVars.MAPTILER_TOKEN}`,
                             minZoom: 0,
                             maxZoom: 14
                         }),
@@ -314,9 +314,10 @@ export default class PackageService extends Observable {
                         realSource,
                         new PersistentCacheTileDataSource({
                             dataSource: new HTTPTileDataSource({
-                                minZoom: 0,
+                                minZoom: 9,
                                 maxZoom: 14,
-                                url: `https://a.tiles.mapbox.com/v4/mapbox.mapbox-terrain-v2/{zoom}/{x}/{y}.vector.pbf?access_token=${gVars.MAPBOX_TOKEN}`
+                                url: `https://api.maptiler.com/tiles/contours/tiles.json?key=${gVars.MAPTILER_TOKEN}`
+                                // url: `https://a.tiles.mapbox.com/v4/mapbox.mapbox-terrain-v2/{zoom}/{x}/{y}.vector.pbf?access_token=${gVars.MAPBOX_TOKEN}`
                             }),
                             capacity: 100 * 1024 * 1024,
                             databasePath: terrainCacheFolder.path
@@ -422,10 +423,10 @@ export default class PackageService extends Observable {
             });
         });
     }
-    searchInPackageGeocodingService(options: GeocodingRequest) {
+    searchInPackageGeocodingService(options: GeocodingRequest<LatLonKeys>) {
         return this.searchInGeocodingService(this.offlineSearchService, options);
     }
-    searchInPackageReverseGeocodingService(options: ReverseGeocodingRequest) {
+    searchInPackageReverseGeocodingService(options: ReverseGeocodingRequest<LatLonKeys>) {
         return this.searchInGeocodingService(this.offlineReverseSearchService, options);
     }
     prepareGeoCodingResult(result: GeoResult) {

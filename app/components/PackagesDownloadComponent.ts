@@ -1,6 +1,6 @@
 import BaseVueComponent from './BaseVueComponent';
 import { Component } from 'vue-property-decorator';
-import { CartoPackageManager, PackageAction, PackageInfo, PackageInfoVector, PackageStatus } from 'nativescript-carto/packagemanager/packagemanager';
+import { CartoPackageManager, PackageAction, PackageInfo, PackageInfoVector, PackageStatus } from 'nativescript-carto/packagemanager';
 import { ObservableArray } from '@nativescript/core/data/observable-array';
 import { ItemEventData } from '@nativescript/core/ui/list-view';
 import { isAndroid } from '@nativescript/core/platform';
@@ -277,12 +277,15 @@ export default class PackagesDownloadComponent extends BaseVueComponent {
     destroyed() {
         // console.log('package view destroyed');
         const packageService = this.$packageService;
-        packageService.off('onPackageListUpdated', this.onPackageListUpdated, this);
-        packageService.off('onPackageListFailed', this.onPackageListFailed, this);
-        packageService.off('onPackageStatusChanged', this.onPackageStatusChanged, this);
-        packageService.off('onPackageUpdated', this.onPackageUpdated, this);
-        packageService.off('onPackageCancelled', this.onPackageCancelled, this);
-        packageService.off('onPackageFailed', this.onPackageFailed, this);
+        if (packageService) {
+            packageService.off('onPackageListUpdated', this.onPackageListUpdated, this);
+            packageService.off('onPackageListFailed', this.onPackageListFailed, this);
+            packageService.off('onPackageStatusChanged', this.onPackageStatusChanged, this);
+            packageService.off('onPackageUpdated', this.onPackageUpdated, this);
+            packageService.off('onPackageCancelled', this.onPackageCancelled, this);
+            packageService.off('onPackageFailed', this.onPackageFailed, this);
+        }
+        
     }
 
     downloadComplete() {

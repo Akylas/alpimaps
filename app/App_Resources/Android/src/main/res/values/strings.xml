@@ -18,6 +18,14 @@
   <string name="_ios_info_plist_NSLocationAlwaysAndWhenInUseUsageDescription_Z122jwE">"«Alpi Maps» use your GPS location to display it on your glasses"</string>
   <string name="_ios_info_plist_NSLocationAlwaysUsageDescription_Z1cD1M8">"«Alpi Maps» use your GPS location to display it on your glasses"</string>
   <string name="_ios_info_plist_NSLocationWhenInUseUsageDescription_ZpKiIF">"«Alpi Maps» use your GPS location to display it on your glasses"</string>
+  <string name="bug_report_sent">"bug_report_sent"</string>
+  <string name="description_required">"description_required"</string>
+  <string name="non_valid_email">"non_valid_email"</string>
+  <string name="description">"description"</string>
+  <string name="email">"email"</string>
+  <string name="email_required">"email_required"</string>
+  <string name="please_describe_error">"please_describe_error"</string>
+  <string name="send_bug_report_desc">"send_bug_report_desc"</string>
   <string name="start">"start"</string>
   <string name="stop_session_are_you_sure">"stop_session_are_you_sure"</string>
   <string name="stop_session">"stop_session"</string>

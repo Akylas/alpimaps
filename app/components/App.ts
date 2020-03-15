@@ -5,11 +5,12 @@ import { Frame } from '@nativescript/core/ui/frame/';
 import { GridLayout } from '@nativescript/core/ui/layouts/grid-layout';
 import { StackLayout } from '@nativescript/core/ui/layouts/stack-layout';
 import { Page } from '@nativescript/core/ui/page';
-import { registerLicense } from 'nativescript-carto/ui/ui';
-import { setShowDebug, setShowError, setShowInfo, setShowWarn } from 'nativescript-carto/utils/utils';
+import { registerLicense } from 'nativescript-carto/ui';
+import { setShowDebug, setShowError, setShowInfo, setShowWarn } from 'nativescript-carto/utils';
 import { compose } from 'nativescript-email';
 import * as EInfo from 'nativescript-extendedinfo';
-import { prompt } from 'nativescript-material-dialogs';
+import { login, prompt } from 'nativescript-material-dialogs';
+import { TextField } from 'nativescript-material-textfield';
 import Vue, { NativeScriptVue } from 'nativescript-vue';
 import { VueConstructor } from 'vue';
 import { Component } from 'vue-property-decorator';
@@ -20,6 +21,8 @@ import { BaseVueComponentRefs } from './BaseVueComponent';
 import BgServiceComponent from './BgServiceComponent';
 import MapRightMenu from './MapRightMenu';
 import MultiDrawer, { OptionsType } from './MultiDrawer';
+
+const mailRegexp = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
 
 function base64Encode(value) {
     if (gVars.isIOS) {
@@ -339,33 +342,63 @@ export default class App extends BgServiceComponent {
                 }).catch(err => this.showError(err));
                 break;
             case 'sendBugReport':
-                prompt({
-                    message: this.$tc('send_bug_report'),
+                login({
+                    title: this.$tc('send_bug_report'),
+                    message: this.$tc('send_bug_report_desc'),
                     okButtonText: this.$t('send'),
                     cancelButtonText: this.$t('cancel'),
                     autoFocus: true,
-                    textFieldProperties: {
+                    usernameTextFieldProperties: {
                         marginLeft: 10,
                         marginRight: 10,
-                        hint: this.$tc('please_describe_error')
+                        autocapitalizationType: 'none',
+                        keyboardType: 'email',
+                        autocorrect: false,
+                        error: this.$tc('email_required'),
+                        hint: this.$tc('email')
+                    },
+                    passwordTextFieldProperties: {
+                        marginLeft: 10,
+                        marginRight: 10,
+                        error: this.$tc('please_describe_error'),
+                        secure: false,
+                        hint: this.$tc('description')
+                    },
+                    beforeShow: (options, usernameTextField: TextField, passwordTextField: TextField) => {
+                        usernameTextField.on('textChange', (e: any) => {
+                            const text = e.value;
+                            if (!text) {
+                                usernameTextField.error = this.$tc('email_required');
+                            } else if (!mailRegexp.test(text)) {
+                                usernameTextField.error = this.$tc('non_valid_email');
+                            } else {
+                                usernameTextField.error = null;
+                            }
+                        });
+                        passwordTextField.on('textChange', (e: any) => {
+                            const text = e.value;
+                            if (!text) {
+                                passwordTextField.error = this.$tc('description_required');
+                            } else {
+                                passwordTextField.error = null;
+                            }
+                        });
                     }
-                } as any).then(result => {
-                    if (result.result && this.$bugsnag) {
-                        const error = new Error('bug_report_error');
-                        this.log('test', error.stack);
-                        this.$bugsnag
-                            .notify({
-                                error,
-                                metadata: {
-                                    report: {
-                                        message: result.text
-                                    }
-                                }
-                            })
-                            .then(() => {
-                                this.$alert('bug_report_sent');
-                            })
-                            .catch(err => this.showError(err));
+                }).then(result => {
+                    if (result.result && this.$sentry) {
+                        if (!result.userName || !mailRegexp.test(result.userName)) {
+                            this.showError(new Error(this.$tc('email_required')));
+                            return;
+                        }
+                        if (!result.password || result.password.length === 0) {
+                            this.showError(new Error(this.$tc('description_required')));
+                            return;
+                        }
+                        this.$sentry.withScope(scope => {
+                            scope.setUser({ email: result.userName });
+                            this.$sentry.captureMessage(result.password);
+                            this.$alert(this.$t('bug_report_sent'));
+                        });
                     }
                 });
                 break;
