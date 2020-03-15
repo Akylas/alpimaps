@@ -17,12 +17,16 @@ declare module '*.scss' {
 }
 
 declare const gVars: {
+    SENTRY_DSN: string;
+    SENTRY_PREFIX: string;
+    sentry: boolean;
     isIOS: boolean;
     isAndroid: boolean;
     CARTO_TOKEN: string;
     IGN_TOKEN: string;
     THUNDERFOREST_TOKEN: string;
     MAPBOX_TOKEN: string;
+    MAPTILER_TOKEN: string;
     MAPQUEST_TOKEN: string;
     HER_APP_ID: string;
     HER_APP_CODE: string;
@@ -30,9 +34,10 @@ declare const gVars: {
     GOOGLE_TOKEN: string;
 }
 
-declare const TNS_ENV;
+declare const TNS_ENV: string;
 declare const LOG_LEVEL: string;
-declare const TEST_LOGS: string;
+declare const TEST_LOGS: boolean;
+declare const PRODUCTION: boolean;
 // declare const process: { env: any };
 
 
@@ -45,3 +50,9 @@ declare namespace akylas {
         }
     }
 }
+
+type LatLonKeys = {
+    lat: number;
+    lon: number;
+    altitude?: number;
+};

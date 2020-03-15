@@ -1,13 +1,15 @@
 import * as connectivity from '@nativescript/core/connectivity';
 import { EventData, Observable } from '@nativescript/core/data/observable';
-import { clog } from '~/utils/logging';
-import { MapBounds, MapPos } from 'nativescript-carto/core/core';
-import geolib from '~/helpers/geolib';
 import * as http from '@nativescript/core/http';
+import { BaseError } from 'make-error';
+import mergeOptions from 'merge-options';
+import { MapBounds, MapPos } from 'nativescript-carto/core';
 import localize from 'nativescript-localize';
 import { RouteProfile } from '~/components/DirectionsPanel';
+import geolib from '~/helpers/geolib';
+import { clog } from '~/utils/logging';
+
 type HTTPOptions = http.HttpRequestOptions;
-import mergeOptions from 'merge-options';
 
 const contactEmail = 'contact%40akylas.fr';
 
@@ -262,7 +264,7 @@ function decompress(encoded, precision) {
         lat = 0,
         lng = 0;
     const len = encoded.length,
-        array: MapPos[] = [];
+        array: MapPos<LatLonKeys>[] = [];
     while (index < len) {
         let b,
             shift = 0,
@@ -302,7 +304,7 @@ function encodeNumber(num) {
     return encoded;
 }
 
-function compress(points: MapPos[], precision) {
+function compress(points: MapPos<LatLonKeys>[], precision) {
     let oldLat = 0,
         oldLng = 0,
         index = 0;
@@ -325,10 +327,10 @@ function compress(points: MapPos[], precision) {
     return encoded;
 }
 
-function latlongToOSMString(_point: MapPos) {
+function latlongToOSMString(_point: MapPos<LatLonKeys>) {
     return _point.lat.toFixed(4) + ',' + _point.lon.toFixed(4);
 }
-function regionToOSMString(_region: MapBounds) {
+function regionToOSMString(_region: MapBounds<LatLonKeys>) {
     return 'bbox:' + latlongToOSMString(_region.southwest) + ',' + latlongToOSMString(_region.northeast);
 }
 
@@ -337,7 +339,7 @@ function evalTemplateString(resource: string, obj: {}) {
     const vals = Object.keys(obj).map(key => obj[key]);
     return new Function(...names, `return \`${resource}\`;`)(...vals);
 }
-export class CustomError extends Error {
+export class CustomError extends BaseError {
     customErrorConstructorName: string;
     isCustomError = true;
     assignedLocalData: any;
@@ -578,7 +580,7 @@ export class NetworkService extends Observable {
             outType?: string;
             options?: string[];
         }>,
-        region: MapBounds,
+        region: MapBounds<LatLonKeys>,
         feature: {
             outType?: string;
             usingWays?: boolean;
@@ -703,22 +705,22 @@ export class NetworkService extends Observable {
             return results;
         });
     }
-    actualMapquestElevationProfile(_points: MapPos[]) {
+    actualMapquestElevationProfile(_points: MapPos<LatLonKeys>[]) {
         const params = {
             key: gVars.MAPQUEST_TOKEN,
             inFormat: 'json',
             outFormat: 'json'
         };
-        const postParams = {
-            json: JSON.stringify({
-                // routeType: 'pedestrian',
-                unit: 'm',
-                useFilter: true,
-                // cyclingRoadFactor:0.1,
-                shapeFormat: 'cmp6',
-                latLngCollection: compress(_points, 6)
-            })
-        };
+        // const postParams = {
+        //     json: JSON.stringify({
+        //         // routeType: 'pedestrian',
+        //         unit: 'm',
+        //         useFilter: true,
+        //         // cyclingRoadFactor:0.1,
+        //         shapeFormat: 'cmp6',
+        //         latLngCollection: compress(_points, 6)
+        //     })
+        // };
         return this.request({
             url: 'http://open.mapquestapi.com/elevation/v1/profile',
             queryParams: params,
@@ -745,7 +747,7 @@ export class NetworkService extends Observable {
             }
         });
     }
-    mapquestElevationProfile(_points: MapPos[]) {
+    mapquestElevationProfile(_points: MapPos<LatLonKeys>[]) {
         const distance = geolib.getPathLength(_points);
         // console.log('mapquestElevationProfile', distance);
         let promise = Promise.resolve(undefined);
