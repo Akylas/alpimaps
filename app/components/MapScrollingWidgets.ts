@@ -1,10 +1,10 @@
 import { Item } from '~/mapModules/ItemsModule';
 import { debounce } from 'helpful-decorators';
-import { CartoMap } from 'nativescript-carto/ui/ui';
+import { CartoMap } from 'nativescript-carto/ui';
 import { Component } from 'vue-property-decorator';
 import Map from '~/components/Map';
 import { GeoHandler } from '~/handlers/GeoHandler';
-import { PackageAction, PackageStatus } from 'nativescript-carto/packagemanager/packagemanager';
+import { PackageAction, PackageStatus } from 'nativescript-carto/packagemanager';
 import { IMapModule } from '~/mapModules/MapModule';
 import BgServiceComponent from './BgServiceComponent';
 import ScaleView from './ScaleView';
@@ -12,7 +12,7 @@ import { alert, confirm } from 'nativescript-material-dialogs';
 import Vue from 'nativescript-vue';
 import OptionPicker from './OptionPicker';
 import UserLocationModule from '~/mapModules/UserLocationModule';
-import { MapPos } from 'nativescript-carto/core/core';
+import { MapPos } from 'nativescript-carto/core';
 import * as sensors from 'nativescript-sensors';
 import { Accuracy } from '@nativescript/core/ui/enums/enums';
 import * as appSettings from '@nativescript/core/application-settings/application-settings';
@@ -25,7 +25,7 @@ import { layout } from '@nativescript/core/utils/utils';
     }
 })
 export default class MapScrollingWidgets extends BgServiceComponent implements IMapModule {
-    mapView: CartoMap;
+    mapView: CartoMap<LatLonKeys>;
     mapComp: Map;
 
     currentMapZoom = 0;
@@ -261,7 +261,7 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
         // this.log('onNewLocation', this.currentLocation);
     }
     userLocationModule: UserLocationModule = null;
-    onMapReady(mapComp: Map, mapView: CartoMap) {
+    onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
         this.mapView = mapView;
         this.mapComp = mapComp;
         this.userLocationModule = this.mapComp.mapModules.userLocation;
@@ -348,8 +348,8 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
     }
     stopBarometerAltitudeUpdate() {
         if (this.listeningForBarometer) {
-            this.listeningForBarometer = false;
             this.stopBarometer();
+            this.listeningForBarometer = false;
         }
     }
     switchBarometer() {

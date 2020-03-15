@@ -1,29 +1,38 @@
 // @import '~nativescript-theme-core/css/core.light.css';
 @import './variables';
 @import './animations';
-@import '../node_modules/nativescript-vue-fab/style.css';
+@import '~nativescript-vue-fab/style';
 
-.lato {
-    font-family: 'Lato Regular', 'res/lato';
-}
+// .lato {
+//     font-family: 'Lato Regular', 'res/lato';
+// }
 
 .mdi {
-    font-family: 'Material Design Icons', 'materialdesignicons-webfont';
+    font-family: $mdi-fontFamily;
 }
 
-label,
-htmllabel,
-button,
-mdtextfield,
-mdbutton {
-    @extend .lato;
+// label,
+// htmllabel,
+// button,
+// mdtextfield,
+// mdbutton {
+//     @extend .lato;
+// }
+
+
+page {
+    // .ns-light & {
+    status-bar-style: light;
+    // navigation-bar-color: #ddd;
+    navigation-bar-color: $primary-color;
+    status-bar-color: $dark-color;
 }
 
 button {
     background-color: transparent;
     color: $primary-color;
 }
-label,
+// label,
 htmllabel {
     color: $text-color;
 }
@@ -232,7 +241,7 @@ mdbutton {
 .navigationBarOverlay {
     height: $navigation-bar-height;
     width: 100%;
-    background-color: #aa000000;
+    background-color: #55000000;
     vertical-alignment: bottom;
 }
 

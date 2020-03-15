@@ -1,13 +1,13 @@
 import { GeoLocation } from 'nativescript-gps';
-import { MapPos, MapPosVector } from 'nativescript-carto/core/core';
+import { MapPos, MapPosVector } from 'nativescript-carto/core';
 import { VectorLayer } from 'nativescript-carto/layers/vector';
-import { CartoMap } from 'nativescript-carto/ui/ui';
+import { CartoMap } from 'nativescript-carto/ui';
 import { LineStyleBuilder } from 'nativescript-carto/vectorelements/line';
 import { Point, PointStyleBuilder } from 'nativescript-carto/vectorelements/point';
 import { Polygon, PolygonStyleBuilder } from 'nativescript-carto/vectorelements/polygon';
 import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
 import { Color } from '@nativescript/core/color/color';
-import * as Animation from '~/animation';
+import { TWEEN } from 'nativescript-tween';
 import Map from '~/components/Map';
 import { GeoHandler, UserLocationdEvent, UserLocationdEventData } from '~/handlers/GeoHandler';
 import MapModule from './MapModule';
@@ -26,9 +26,9 @@ export default class UserLocationModule extends MapModule {
     localVectorDataSource: LocalVectorDataSource;
     localBackVectorLayer: VectorLayer;
     localVectorLayer: VectorLayer;
-    userBackMarker: Point;
-    userMarker: Point;
-    accuracyMarker: Polygon;
+    userBackMarker: Point<LatLonKeys>;
+    userMarker: Point<LatLonKeys>;
+    accuracyMarker: Polygon<LatLonKeys>;
     _userFollow = true;
     get userFollow() {
         return this._userFollow;
@@ -43,7 +43,7 @@ export default class UserLocationModule extends MapModule {
         }
     }
 
-    onMapReady(mapComp: Map, mapView: CartoMap) {
+    onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
         super.onMapReady(mapComp, mapView);
         // this.log('onMapReady', this._userFollow);
     }
@@ -56,13 +56,13 @@ export default class UserLocationModule extends MapModule {
         }
     }
 
-    getCirclePoints(loc: Partial<MapPos & { horizontalAccuracy: number }>) {
+    getCirclePoints(loc: Partial<MapPos<LatLonKeys> & { horizontalAccuracy: number }>) {
         const centerLat = loc.lat;
         const centerLon = loc.lon;
         const radius = loc.horizontalAccuracy;
         const N = Math.min(radius * 8, 100);
 
-        const points = new MapPosVector();
+        const points = new MapPosVector<LatLonKeys>();
 
         for (let i = 0; i <= N; i++) {
             const angle = (Math.PI * 2 * (i % N)) / N;
@@ -93,7 +93,7 @@ export default class UserLocationModule extends MapModule {
     onMapMove(e) {
         this.userFollow = !e.data.userAction;
     }
-    public mLastUserLocation: MapPos & { horizontalAccuracy: number; verticalAccuracy: number; altitude: number; speed: number } = null;
+    public mLastUserLocation: MapPos<LatLonKeys> & { horizontalAccuracy: number; verticalAccuracy: number; speed: number } = null;
     get lastUserLocation() {
         return this.mLastUserLocation;
     }
@@ -143,11 +143,11 @@ export default class UserLocationModule extends MapModule {
         //     this.mapView.zoom = 16;
         // }
         let accuracyColor = '#0e7afe';
+        const accuracy = geoPos.horizontalAccuracy || 0;
         const deltaMinutes = moment(new Date()).diff(moment(geoPos.timestamp), 'minute', true);
         if (deltaMinutes > 2) {
             accuracyColor = 'gray';
         } else {
-            const accuracy = geoPos.horizontalAccuracy || 0;
             if (accuracy > 1000) {
                 accuracyColor = 'red';
             } else if (accuracy > 10) {
@@ -175,7 +175,7 @@ export default class UserLocationModule extends MapModule {
             this.getOrCreateLocalVectorLayer();
             // const projection = this.mapView.projection;
 
-            this.accuracyMarker = new Polygon({
+            this.accuracyMarker = new Polygon<LatLonKeys>({
                 positions: this.getCirclePoints(position),
                 styleBuilder: {
                     size: 16,
@@ -187,14 +187,14 @@ export default class UserLocationModule extends MapModule {
                 }
             });
 
-            this.userBackMarker = new Point({
+            this.userBackMarker = new Point<LatLonKeys>({
                 position: posWithoutAltitude,
                 styleBuilder: {
                     size: 17,
                     color: '#ffffff'
                 }
             });
-            this.userMarker = new Point({
+            this.userMarker = new Point<LatLonKeys>({
                 position: posWithoutAltitude,
                 styleBuilder: {
                     size: 14,
@@ -208,17 +208,18 @@ export default class UserLocationModule extends MapModule {
             // this.userMarker.position = position;
         } else {
             // const currentLocation = { lat: this.lastUserLocation.latitude, lon: this.lastUserLocation.longitude, horizontalAccuracy: this.lastUserLocation.horizontalAccuracy };
-            new Animation.Animation(this.lastUserLocation)
+            this.userMarker.styleBuilder.color = accuracyColor;
+            this.userMarker.styleBuilder.color = accuracyColor;
+            this.accuracyMarker.visible = accuracy > 10;
+            new TWEEN.Tween(this.lastUserLocation)
                 .to(position, LOCATION_ANIMATION_DURATION)
-                .easing(Animation.Easing.Quadratic.Out)
+                .easing(TWEEN.Easing.Quadratic.Out)
                 .onUpdate(newPos => {
                     if (this.userMarker) {
                         const { altitude, ...posWithoutAltitude } = newPos;
                         this.accuracyMarker.positions = this.getCirclePoints(posWithoutAltitude);
                         this.userBackMarker.position = posWithoutAltitude;
                         this.userMarker.position = posWithoutAltitude;
-                        this.userMarker.styleBuilder.color = accuracyColor;
-                        this.userMarker.styleBuilder = this.userMarker.styleBuilder;
                     }
                 })
                 .start();
@@ -250,7 +251,7 @@ export default class UserLocationModule extends MapModule {
         geoHandler.on(UserLocationdEvent, this.onLocation, this);
     }
     onServiceUnloaded(geoHandler: GeoHandler) {
-        geoHandler.off(UserLocationdEvent, this.onLocation, this);
+        geoHandler && geoHandler.off(UserLocationdEvent, this.onLocation, this);
         this.geoHandler = null;
     }
 
@@ -266,7 +267,7 @@ export default class UserLocationModule extends MapModule {
             .then(() => {
                 this.watchingLocation = true;
                 showSnack({
-                    message: this.mapComp.$tc('watching_location'),
+                    message: this.mapComp.$tc('watching_location')
                 });
                 // console.log('started watching location');
             });

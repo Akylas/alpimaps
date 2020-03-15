@@ -1,4 +1,4 @@
-import * as Platform from 'platform';
+import * as Platform from '@nativescript/core/platform';
 // import dayjs from 'dayjs';
 // import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 // dayjs.extend(LocalizedFormat);

@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+  <string name="bug_report_sent">"rapport de bug envoyé"</string>
+  <string name="description_required">"une description est requise"</string>
+  <string name="non_valid_email">"email non valide"</string>
+  <string name="description">"description"</string>
+  <string name="email">"email"</string>
+  <string name="email_required">"un email valide est requis"</string>
+  <string name="please_describe_error">"veuillez décrire l\'erreur"</string>
+  <string name="send_bug_report_desc">"entrez un mail et une description du bug rencontré"</string>
+  <string name="send_bug_report">"envoyer le rapport de bug"</string>
   <string name="send">"envoyer"</string>
-  <string name="send_bug_report">"envoyer un rapport de bug"</string>
   <string name="select_language">"langue de la carte"</string>
   <string name="offline_packages">"cartes hors-ligne"</string>
   <string name="select_style">"style de carte "</string>

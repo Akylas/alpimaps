@@ -3,7 +3,7 @@ import { Item } from '~/mapModules/ItemsModule';
 import BaseVueComponent from './BaseVueComponent';
 import { convertDistance, convertDuration, convertElevation, convertValueToUnit } from '~/helpers/formatter';
 import { distanceToEnd, isLocationOnPath } from '~/utils/geo';
-import { MapPos } from 'nativescript-carto/core/core';
+import { MapPos } from 'nativescript-carto/core';
 
 function pick<T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
     const ret: any = {};
@@ -42,7 +42,7 @@ export default class BottomSheetRouteInfoView extends BaseVueComponent {
     }
 
     remainingDistanceOnCurrentRoute = null;
-    currentLocation: MapPos = null;
+    currentLocation: MapPos<LatLonKeys> = null;
     onNewLocation(e: any) {
         this.currentLocation = e.data;
         // this.log('onNewLocation', location);

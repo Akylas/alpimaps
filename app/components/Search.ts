@@ -1,13 +1,13 @@
 import { Address, Item } from '~/mapModules/ItemsModule';
 import Map from '~/components/Map';
-import { Projection } from 'nativescript-carto/projections/projection';
-import { CartoMap } from 'nativescript-carto/ui/ui';
+import { Projection } from 'nativescript-carto/projections';
+import { CartoMap } from 'nativescript-carto/ui';
 import { getJSON } from '@nativescript/core/http';
 import { ItemEventData } from '@nativescript/core/ui/list-view/list-view';
 import { TextField } from 'nativescript-material-textfield';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import { ClusteredVectorLayer, VectorTileLayer } from 'nativescript-carto/layers/vector';
-import { MapPos } from 'nativescript-carto/core/core';
+import { MapPos } from 'nativescript-carto/core';
 import { IMapModule } from '~/mapModules/MapModule';
 import { clog } from '~/utils/logging';
 import { queryString } from '../utils/http';
@@ -15,7 +15,7 @@ import BaseVueComponent from './BaseVueComponent';
 import ItemFormatter from '~/mapModules/ItemFormatter';
 import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
 import { ClusterElementBuilder } from 'nativescript-carto/layers/cluster';
-import { VectorElementVector } from 'nativescript-carto/vectorelements/vectorelements';
+import { VectorElementVector } from 'nativescript-carto/vectorelements';
 import { Marker, MarkerStyleBuilder } from 'nativescript-carto/vectorelements/marker';
 import { Point, PointStyleBuilder } from 'nativescript-carto/vectorelements/point';
 import { ObservableArray } from '@nativescript/core/data/observable-array/observable-array';
@@ -102,7 +102,7 @@ class PhotonAddress {
 class PhotonFeature {
     // searchItem = true;
     properties: { [k: string]: any };
-    position: MapPos;
+    position: MapPos<LatLonKeys>;
     address: Address;
     provider = 'photon';
     // @enumerable(false) private data;
@@ -160,7 +160,7 @@ class HereFeature {
     // searchItem = true;
     showOnMap = true;
     properties: { [k: string]: any };
-    position: MapPos;
+    position: MapPos<LatLonKeys>;
     address: Address;
     categories?: string[];
     provider = 'here';
@@ -194,7 +194,7 @@ interface SearchItem extends Item {
 
 @Component({})
 export default class Search extends BaseVueComponent implements IMapModule {
-    mapView: CartoMap;
+    mapView: CartoMap<LatLonKeys>;
     mapComp: Map;
     _searchDataSource: LocalVectorDataSource;
     _searchLayer: ClusteredVectorLayer;
@@ -338,7 +338,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
         return this.formatter.getItemSubtitle(item);
     }
 
-    onMapReady(mapComp: Map, mapView: CartoMap) {
+    onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
         // this.log('onMapReady');
         this.mapView = mapView;
         this.mapComp = mapComp;
@@ -420,7 +420,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
     //         return result.results.filter(v => v.type[0] !== 'route' && v.type[0] !== 'neighborhood').map(f => new GoogleFeature(f));
     //     });
     // }
-    herePlaceSearch(options: { query: string; language?: string; location?: MapPos; locationRadius?: number }) {
+    herePlaceSearch(options: { query: string; language?: string; location?: MapPos<LatLonKeys>; locationRadius?: number }) {
         if (!this.$networkService.connected) {
             return Promise.resolve([]);
         }
@@ -447,7 +447,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
             return result.results.items.map(f => new HereFeature(f));
         });
     }
-    photonSearch(options: { query: string; language?: string; location?: MapPos; locationRadius?: number }) {
+    photonSearch(options: { query: string; language?: string; location?: MapPos<LatLonKeys>; locationRadius?: number }) {
         if (!this.$networkService.connected) {
             return Promise.resolve([]);
         }

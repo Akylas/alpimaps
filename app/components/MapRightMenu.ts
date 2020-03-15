@@ -7,7 +7,7 @@ import { Component } from 'vue-property-decorator';
 import CustomLayersModule, { SourceItem } from '~/mapModules/CustomLayersModule';
 import BaseVueComponent from './BaseVueComponent';
 import Map, { MapModules } from './Map';
-import { CartoMap } from 'nativescript-carto/ui/ui';
+import { CartoMap } from 'nativescript-carto/ui';
 import { IMapModule } from '~/mapModules/MapModule';
 import { ObservableArray } from '@nativescript/core/data/observable-array/observable-array';
 import { TextField } from 'nativescript-material-textfield';
@@ -108,13 +108,13 @@ export function booleanProperty(...args) {
     components: {}
 })
 export default class MapRightMenu extends BaseVueComponent implements IMapModule {
-    mapView: CartoMap;
+    mapView: CartoMap<LatLonKeys>;
     mapComp: Map;
     customLayers: CustomLayersModule = null;
     customSources: ObservableArray<SourceItem> = null;
     currentLegend: string = null;
 
-    onMapReady(mapComp: Map, mapView: CartoMap) {
+    onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
         this.mapView = mapView;
         this.mapComp = mapComp;
         this.customLayers = this.mapComp.mapModules.customLayers;
