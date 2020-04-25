@@ -1,5 +1,5 @@
 import { Session, SessionState } from '~/handlers/GeoHandler';
-import localize from 'nativescript-localize';
+import { $tc } from '~/helpers/locale';
 import { convertDuration, formatValueToUnit } from '~/helpers/formatter';
 import { ad } from '@nativescript/core/utils/utils';
 
@@ -69,7 +69,7 @@ export class NotificationHelper {
         if (session) {
             // builder.setContentText(NotificationHelper.getSessionString(session));
         } else {
-            builder.setContentText(titlecase(localize('tap_to_open')));
+            builder.setContentText($tc('tap_to_open'));
         }
     }
 

@@ -2,7 +2,7 @@
     <Page ref="page" :navigateUrl="navigateUrl" @navigatedTo="$emit('navigatedTo', $event)" backgroundColor="transparent">
         <!-- <GridLayout rows="auto,*"> -->
 
-            <GridLayout rows="*" columns="*">
+            <GridLayout>
                 <slot />
             </GridLayout>
             <!-- <CActionBar v-if="!actionBarHidden" row="0" :title="title" :subtitle="subtitle" :showMenuIcon="showMenuIcon" :backgroundColor="actionBarBackroundColor" :height="actionBarHeight" :elevation="actionBarElevation" :showLogo="actionBarShowLogo" :modalWindow="modal" @titleTap="$emit('actionBarTitleTap', $event)">

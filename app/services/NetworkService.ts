@@ -4,7 +4,7 @@ import * as http from '@nativescript/core/http';
 import { BaseError } from 'make-error';
 import mergeOptions from 'merge-options';
 import { MapBounds, MapPos } from 'nativescript-carto/core';
-import localize from 'nativescript-localize';
+import { $t } from '~/helpers/locale';
 import { RouteProfile } from '~/components/DirectionsPanel';
 import geolib from '~/helpers/geolib';
 import { clog } from '~/utils/logging';
@@ -404,7 +404,7 @@ export class CustomError extends BaseError {
     }
     toString() {
         // console.log('customError to string');
-        return evalTemplateString(localize(this.message), Object.assign({ localize }, this.assignedLocalData));
+        return evalTemplateString($t(this.message), Object.assign({ localize:$t }, this.assignedLocalData));
         // return evalMessageInContext.call(Object.assign({localize}, this.assignedLocalData), localize(this.message))
         // return this.message || this.stack;
     }

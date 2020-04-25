@@ -205,7 +205,7 @@ export default class ItemsModule extends MapModule {
             .then(() => {
                 return nSQL().createDatabase({
                     id: 'alpimaps',
-                    mode: new NativeSQLite(),
+                    mode: new NativeSQLite(null),
                     tables
                     // types
                 });
@@ -299,7 +299,7 @@ export default class ItemsModule extends MapModule {
             }
         });
         this.getOrCreateLocalVectorLayer();
-        const styleBuilder = new LineStyleBuilder({ clickWidth: 10, ...options });
+        const styleBuilder = new LineStyleBuilder({ clickWidth: 10, ...options, width: 3 });
 
         const metaData = this.itemToMetaData(item);
         // console.log('metaData', metaData);

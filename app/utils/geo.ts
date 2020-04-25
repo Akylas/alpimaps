@@ -47,12 +47,12 @@ export function getCenter(...coords: MapPos<LatLonKeys>[]) {
     lat = Math.atan2(Z, hyp);
 
     return {
-        lat: (lat * TO_DEG),
-        lon: (lon * TO_DEG)
+        lat: lat * TO_DEG,
+        lon: lon * TO_DEG
     } as MapPos<LatLonKeys>;
 }
 
-function mod( x,  m) {
+function mod(x, m) {
     return ((x % m) + m) % m;
 }
 
@@ -85,44 +85,43 @@ export function getBoundsZoomLevel(bounds: MapBounds<LatLonKeys>, mapDim: { widt
 export function toRadians(value) {
     return value * TO_RAD;
 }
-function wrap( n,  min,  max) {
-    return (n >= min && n < max) ? n : (mod(n - min , max - min) + min);
+function wrap(n, min, max) {
+    return n >= min && n < max ? n : mod(n - min, max - min) + min;
 }
-function mercator( lat) {
+function mercator(lat) {
     return Math.log(Math.tan(lat * 0.5 + PI_DIV4));
 }
-function inverseMercator( y) {
+function inverseMercator(y) {
     return 2 * Math.atan(Math.exp(y)) - PI_DIV2;
 }
-function hav( x) {
+function hav(x) {
     const sinHalf = Math.sin(x * 0.5);
     return sinHalf * sinHalf;
 }
-function clamp( x,  low,  high) {
-    return x < low ? low : (x > high ? high : x);
+function clamp(x, low, high) {
+    return x < low ? low : x > high ? high : x;
 }
-function havDistance( lat1,  lat2,  dLng) {
+function havDistance(lat1, lat2, dLng) {
     return hav(lat1 - lat2) + hav(dLng) * Math.cos(lat1) * Math.cos(lat2);
 }
-function arcHav( x) {
+function arcHav(x) {
     return 2 * Math.asin(Math.sqrt(x));
 }
 
-function sinSumFromHav( x,  y) {
+function sinSumFromHav(x, y) {
     const a = Math.sqrt(x * (1 - x));
     const b = Math.sqrt(y * (1 - y));
     return 2 * (a + b - 2 * (a * y + b * x));
 }
-function sinFromHav( h) {
+function sinFromHav(h) {
     return 2 * Math.sqrt(h * (1 - h));
 }
 
-function havFromSin( x) {
+function havFromSin(x) {
     const x2 = x * x;
-    return x2 / (1 + Math.sqrt(1 - x2)) * .5;
+    return (x2 / (1 + Math.sqrt(1 - x2))) * 0.5;
 }
-function sinDeltaBearing( lat1,  lng1,  lat2,  lng2,
-                          lat3,  lng3) {
+function sinDeltaBearing(lat1, lng1, lat2, lng2, lat3, lng3) {
     const sinLat1 = Math.sin(lat1);
     const cosLat2 = Math.cos(lat2);
     const cosLat3 = Math.cos(lat3);
@@ -137,8 +136,7 @@ function sinDeltaBearing( lat1,  lng1,  lat2,  lng2,
     const denom = (a * a + b * b) * (c * c + d * d);
     return denom <= 0 ? 1 : (a * d - b * c) / Math.sqrt(denom);
 }
-function isOnSegmentGC( lat1,  lng1,  lat2,  lng2,
-                        lat3,  lng3,  havTolerance) {
+function isOnSegmentGC(lat1, lng1, lat2, lng2, lat3, lng3, havTolerance) {
     const havDist13 = havDistance(lat1, lat3, lng1 - lng3);
     if (havDist13 <= havTolerance) {
         return true;
@@ -165,11 +163,16 @@ function isOnSegmentGC( lat1,  lng1,  lat2,  lng2,
     const havAlongTrack13 = (havDist13 - havCrossTrack) / cosCrossTrack;
     const havAlongTrack23 = (havDist23 - havCrossTrack) / cosCrossTrack;
     const sinSumAlongTrack = sinSumFromHav(havAlongTrack13, havAlongTrack23);
-    return sinSumAlongTrack > 0;  // Compare with half-circle == PI using sign of sin().
+    return sinSumAlongTrack > 0; // Compare with half-circle == PI using sign of sin().
 }
 
-export function isLocationOnPath( point: MapPos<LatLonKeys>, poly: MapPos<LatLonKeys>[],  closed = false,
-                                  geodesic = true,  toleranceEarth: number = DEFAULT_TOLERANCE) {
+export function isLocationOnPath(
+    point: MapPos<LatLonKeys>,
+    poly: MapPos<LatLonKeys>[],
+    closed = false,
+    geodesic = true,
+    toleranceEarth: number = DEFAULT_TOLERANCE
+) {
     // console.log('isLocationOnPath', point, poly, closed, geodesic, toleranceEarth);
     const size = poly.length;
     if (size === 0) {
@@ -195,11 +198,11 @@ export function isLocationOnPath( point: MapPos<LatLonKeys>, poly: MapPos<LatLon
             lng1 = lng2;
         }
     } else {
-// We project the points to mercator space, where the Rhumb segment is a straight line,
-// and compute the geodesic distance between point3 and the closest point on the
-// segment. This method is an approximation, because it uses "closest" in mercator
-// space which is not "closest" on the sphere -- but the error is small because
-// "tolerance" is small.
+        // We project the points to mercator space, where the Rhumb segment is a straight line,
+        // and compute the geodesic distance between point3 and the closest point on the
+        // segment. This method is an approximation, because it uses "closest" in mercator
+        // space which is not "closest" on the sphere -- but the error is small because
+        // "tolerance" is small.
         const minAcceptable = lat3 - tolerance;
         const maxAcceptable = lat3 + tolerance;
         let y1 = mercator(lat1);
@@ -211,11 +214,11 @@ export function isLocationOnPath( point: MapPos<LatLonKeys>, poly: MapPos<LatLon
             const y2 = mercator(lat2);
             const lng2 = toRadians(point2.lon);
             if (Math.max(lat1, lat2) >= minAcceptable && Math.min(lat1, lat2) <= maxAcceptable) {
-// We offset longitudes by -lng1; the implicit x1 is 0.
+                // We offset longitudes by -lng1; the implicit x1 is 0.
                 const x2 = wrap(lng2 - lng1, -PI, PI);
                 const x3Base = wrap(lng3 - lng1, -PI, PI);
                 xTry[0] = x3Base;
-// Also explore wrapping of x3Base around the world in both directions.
+                // Also explore wrapping of x3Base around the world in both directions.
                 xTry[1] = x3Base + 2 * PI;
                 xTry[2] = x3Base - 2 * PI;
                 for (let index2 = 0; index2 < xTry.length; index2++) {
@@ -240,7 +243,7 @@ export function isLocationOnPath( point: MapPos<LatLonKeys>, poly: MapPos<LatLon
     return -1;
 }
 
-function distanceRadians( lat1,  lng1,  lat2,  lng2) {
+function distanceRadians(lat1, lng1, lat2, lng2) {
     return arcHav(havDistance(lat1, lat2, lng1 - lng2));
 }
 
@@ -248,18 +251,17 @@ function distanceRadians( lat1,  lng1,  lat2,  lng2) {
  * Returns the angle between two LatLngs, in radians. This is the same as the distance
  * on the unit sphere.
  */
-function computeAngleBetween( from: MapPos<LatLonKeys>,  to: MapPos<LatLonKeys>) {
-    return distanceRadians(toRadians(from.lat), toRadians(from.lon),
-        toRadians(to.lat), toRadians(to.lon));
+function computeAngleBetween(from: MapPos<LatLonKeys>, to: MapPos<LatLonKeys>) {
+    return distanceRadians(toRadians(from.lat), toRadians(from.lon), toRadians(to.lat), toRadians(to.lon));
 }
 
 /**
  * Returns the distance between two LatLngs, in meters.
  */
-export function computeDistanceBetween( from: MapPos<LatLonKeys>,  to: MapPos<LatLonKeys>) {
+export function computeDistanceBetween(from: MapPos<LatLonKeys>, to: MapPos<LatLonKeys>) {
     return computeAngleBetween(from, to) * EARTH_RADIUS;
 }
-export function distanceToEnd( index: number, poly: MapPos<LatLonKeys>[]) {
+export function distanceToEnd(index: number, poly: MapPos<LatLonKeys>[]) {
     let result = 0;
     const size = poly.length;
     let last: MapPos<LatLonKeys>;
@@ -271,4 +273,43 @@ export function distanceToEnd( index: number, poly: MapPos<LatLonKeys>[]) {
         last = element;
     }
     return result;
+}
+
+function clipByRange(n, range) {
+    return n % range;
+}
+
+function clip(n, minValue, maxValue) {
+    return Math.min(Math.max(n, minValue), maxValue);
+}
+export function latLngToTileXY(lat, lng, zoom, tileSize = 256) {
+    var MinLatitude = -85.05112878,
+        MaxLatitude = 85.05112878,
+        MinLongitude = -180,
+        MaxLongitude = 180,
+        mapSize = Math.pow(2, zoom) * tileSize;
+
+    const latitude = clip(lat, MinLatitude, MaxLatitude);
+    const longitude = clip(lng, MinLongitude, MaxLongitude);
+
+    const p: { x?: number; y?: number } = {};
+    p.x = ((longitude + 180.0) / 360.0) * (1 << zoom);
+    p.y = ((1.0 - Math.log(Math.tan((latitude * Math.PI) / 180.0) + 1.0 / Math.cos(toRadians(lat))) / Math.PI) / 2.0) * (1 << zoom);
+
+    var tilex = Math.trunc(p.x);
+    var tiley = Math.trunc(p.y);
+    // var pixelX = clipByRange(tilex * tileSize + (p.x - tilex) * tileSize, mapSize - 1);
+    var pixelX = Math.trunc(clipByRange((p.x - tilex)* tileSize, tileSize));
+    var pixelY = Math.trunc(clipByRange((p.y - tiley)* tileSize, tileSize));
+    // var pixelY = tileSize - clipByRange(tiley * tileSize + (p.y - tiley) * tileSize, mapSize - 1);
+    // var pixelY = tileSize - clipByRange(tiley * tileSize + (p.y - tiley) * tileSize, mapSize - 1);
+
+    var result = {
+        x:tilex,
+        y: tiley,
+        pixelX: pixelX,
+        pixelY: pixelY
+    };
+    return result;
+
 }

@@ -6,12 +6,11 @@
     "NSBluetoothPeripheralUsageDescription": "«Alpi Maps» use Bluetooth to connect to your glasses"
   },
   "app.name": "Alpi Maps",
-  "title.activity.kimera": "Alpi Maps",
   "elevation_gain": "elevation gain",
   "settings": "settings",
   "gps_not_enabled": "please enable GPS to allow «Alpi Maps» to determine your location",
   "gps_not_authorized": "please enable GPS and authorize «Alpi Maps» to use it to determine your location",
-  "zoom:": "zoom",
+  "zoom": "zoom",
   "select_style": "map style",
   "offline_packages": "offline maps",
   "select_language": "map language",

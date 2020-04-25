@@ -22,6 +22,9 @@ import { LineDataSet, Mode } from 'nativescript-chart/data/LineDataSet';
 import { LineData } from 'nativescript-chart/data/LineData';
 import { XAxisPosition } from 'nativescript-chart/components/XAxis';
 
+export const LISTVIEW_HEIGHT = 200;
+export const PROFILE_HEIGHT = 100;
+
 function getViewTop(view: View) {
     if (gVars.isAndroid) {
         return layout.toDeviceIndependentPixels((view.nativeView as android.view.View).getTop());
@@ -46,8 +49,9 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     @Prop() item: Item;
 
     // dataItems: any[] = [];
-    listVisible = false;
-    graphViewVisible = false;
+    // graphViewVisible = false;
+    listViewAvailable = false;
+    graphAvailable = false;
 
     mounted() {
         super.mounted();
@@ -75,23 +79,25 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     }
 
     get rows() {
-        const result = `70,${actionBarHeight},${this.graphAvailable ? 100 : 0},${this.listViewAvailable ? 150 : 0}`;
+        const result = `70,${actionBarHeight},${this.graphAvailable ? PROFILE_HEIGHT : 0},${
+            this.listViewAvailable ? LISTVIEW_HEIGHT : 0
+        }`;
         // this.log('rows', result);
         return result;
     }
-    listViewAvailable = false;
     // get listViewAvailable() {
     //     return !!this.item && !!this.item.route && !!this.item.route.instructions;
     // }
     get showListView() {
-        return this.listViewAvailable && this.listVisible;
+        return this.listViewAvailable;
+        // return this.listViewAvailable && this.listViewVisible;
     }
-    graphAvailable = false;
     // get graphAvailable() {
     //     return this.itemRoute && !!this.item.route.profile && !!this.item.route.profile.data && this.item.route.profile.data.length > 0;
     // }
     get showGraph() {
-        return this.graphAvailable && this.graphViewVisible;
+        // return this.graphAvailable && this.graphViewVisible;
+        return this.graphAvailable;
     }
     get itemRouteNoProfile() {
         return this.item && !!this.item.route && (!this.item.route.profile || !this.item.route.profile.max);
@@ -104,19 +110,18 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     onSelectedItemChange(item: Item) {
         // this.log('onSelectedItemChange', !!item);
         this.reset();
-        this.listVisible = false;
+        // this.listViewVisible = false;
         this.listViewAvailable = !!this.item && !!this.item.route && !!this.item.route.instructions;
 
-        this.graphViewVisible = false;
-        this.graphAvailable = this.itemIsRoute && !!this.item.route.profile && !!this.item.route.profile.data && this.item.route.profile.data.length > 0;
-        if(this.graphAvailable) {
+        // this.graphViewVisible = false;
+        this.graphAvailable =
+            this.itemIsRoute &&
+            !!this.item.route.profile &&
+            !!this.item.route.profile.data &&
+            this.item.route.profile.data.length > 0;
+        if (this.graphAvailable) {
             this.updateChartData();
         }
-        // if (item && item.route) {
-        //     this.dataItems = item.route.instructions;
-        // } else {
-        //     // this.dataItems = [];
-        // }
     }
 
     onNewLocation(e: any) {
@@ -125,34 +130,33 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         this.routeView.onNewLocation(e);
     }
     onScroll(e: BottomSheetHolderScrollEventData) {
-        // this.log('onScroll', this.listViewAvailable, this.listVisible, e.height);
-        if (this.listViewAvailable && !this.listVisible) {
-            const locationY = getViewTop(this.listView);
-            // this.log('listViewAvailable locationY', locationY, e.height);
-            if (locationY) {
-                const listViewTop = locationY;
-                if (!this.listVisible && e.height > listViewTop + 10) {
-                    // this.log('set listVisible', listViewTop, e.height);
-                    this.listVisible = true;
-                }
-                if (this.listVisible && !this.isListViewAtTop && e.height < listViewTop) {
-                    // this.log('resetting listViewAtTop to ensure pan enabled');
-                    this.listViewAtTop = true;
-                    this.listView.scrollToIndex(0, false);
-                }
-            }
-        }
-        if (this.graphAvailable && !this.graphViewVisible) {
-            const locationY = getViewTop(this.graphView);
-            // this.log('graphAvailable locationY', locationY, e.height);
-            if (locationY) {
-                const graphViewTop = locationY;
-                if (!this.graphViewVisible && e.height > graphViewTop + 10) {
-                    // this.log('set graphViewVisible', graphViewTop, e.height);
-                    this.graphViewVisible = true;
-                }
-            }
-        }
+        // if (this.listViewAvailable && !this.listViewVisible) {
+        //     const locationY = getViewTop(this.listView);
+        //     // this.log('listViewAvailable locationY', locationY, e.height);
+        //     if (locationY) {
+        //         const listViewTop = locationY;
+        //         if (!this.listViewVisible && e.height > listViewTop + 10) {
+        //             // this.log('set listVisible', listViewTop, e.height);
+        //             this.listViewVisible = true;
+        //         }
+        //         if (this.listViewVisible && !this.isListViewAtTop && e.height < listViewTop) {
+        //             // this.log('resetting listViewAtTop to ensure pan enabled');
+        //             this.listViewAtTop = true;
+        //             this.listView.scrollToIndex(0, false);
+        //         }
+        //     }
+        // }
+        // if (this.graphAvailable && !this.graphViewVisible) {
+        //     const locationY = getViewTop(this.graphView);
+        //     // this.log('graphAvailable locationY', locationY, e.height);
+        //     if (locationY) {
+        //         const graphViewTop = locationY;
+        //         if (!this.graphViewVisible && e.height > graphViewTop + 10) {
+        //             // this.log('set graphViewVisible', graphViewTop, e.height);
+        //             this.graphViewVisible = true;
+        //         }
+        //     }
+        // }
     }
     searchItemWeb() {
         if (gVars.isAndroid) {
@@ -166,22 +170,24 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         }
     }
     updatingItem = false;
-    getProfile() {
+    async getProfile() {
         this.updatingItem = true;
-        this.$networkService
-            .mapquestElevationProfile(this.item.route.positions)
-            .then(result => {
-                this.item.route.profile = result;
-            })
-            .then(() => this.updateItem(false))
-            .then(() => {
-                // make sure the graph is visible
-                this.holder.scrollSheetToPosition(this.holder.peekerSteps[2]);
-            })
-            .catch(err => this.showError(err))
-            .then(() => {
-                this.updatingItem = true;
-            });
+        const positions = this.item.route.positions;
+        const profile = await this.$packageService.getElevationProfile(positions);
+        // this.$networkService
+        //     .mapquestElevationProfile(positions)
+        //     .then(result => {
+        this.item.route.profile = profile;
+        //     })
+        await this.updateItem(false);
+        //     .then(() => {
+        // make sure the graph is visible
+        await this.holder.scrollSheetToPosition(this.holder.peekerSteps[2]);
+        //     })
+        //     .catch(err => this.showError(err))
+        //     .then(() => {
+        this.updatingItem = true;
+        //     });
     }
     saveItem() {
         const mapComp = this.$getMapComponent();
@@ -195,9 +201,9 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
                 this.showError(err);
             });
     }
-    updateItem(peek = true) {
+    async updateItem(peek = true) {
         const mapComp = this.$getMapComponent();
-        mapComp
+        return mapComp
             .mapModule('items')
             .updateItem(this.item)
             .then(item => {
@@ -265,6 +271,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         const sets = [];
         const profile = this.item.route.profile;
         const profileData = profile?.data;
+        // console.log('updateChartData', profileData);
         if (profileData) {
             let set = new LineDataSet(profileData, 'y', 'x', 'y');
             set.setDrawValues(false);
@@ -277,16 +284,16 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
 
         chart.getLegend().setEnabled(false);
         // chart.setLogEnabled(true);
-        // chart.getAxisLeft().setTextColor('white');
-        // chart.getXAxis().setPosition(XAxisPosition.BOTTOM);
-        // chart.getXAxis().setTextColor('white');
+        chart.getAxisLeft().setTextColor('white');
+        chart.getXAxis().setPosition(XAxisPosition.BOTTOM);
+        chart.getXAxis().setTextColor('white');
         // chart.getXAxis().setValueFormatter({
         //     getAxisLabel(value, axis) {
         //         return convertDuration(value, format);
         //     }
         // });
-        // chart.getXAxis().setDrawLabels(true);
-        // chart.getXAxis().setDrawGridLines(true);
+        chart.getXAxis().setDrawLabels(true);
+        chart.getXAxis().setDrawGridLines(true);
         chart.getAxisRight().setEnabled(false);
         const linedata = new LineData(sets);
         chart.setData(linedata);
@@ -301,7 +308,8 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     //     return null;
     // }
     get routeInstructions() {
-        if (this.listVisible) {
+        if (this.listViewAvailable) {
+            // if (this.listVisible) {
             // const profile = this.item.route.profile;
             return this.item.route.instructions;
         }

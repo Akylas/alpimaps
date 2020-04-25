@@ -15,6 +15,7 @@ const { NativeScriptWorkerPlugin } = require('nativescript-worker-loader/NativeS
 const hashSalt = Date.now().toString();
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const mergeOptions = require('merge-options');
+const SentryCliPlugin = require('@sentry/webpack-plugin');
 
 // returns a new object with the values at each key mapped using mapFn(value)
 
@@ -67,6 +68,14 @@ module.exports = (env, params = {}) => {
     // Default destination inside platforms/<platform>/...
     const dist = resolve(projectRoot, nsWebpack.getAppPath(platform, projectRoot));
 
+    if (env.adhoc) {
+        env = Object.assign({}, env, {
+            production: true,
+            sentry: true,
+            sourceMap: true,
+            uglify: true
+        });
+    }
     const {
         // The 'appPath' and 'appResourcesPath' values are fetched from
         // the nsconfig.json configuration file.
@@ -74,6 +83,7 @@ module.exports = (env, params = {}) => {
         appResourcesPath = 'App_Resources',
 
         // You can provide the following flags when running 'tns run android|ios'
+        emulator, // --env.emulator
         snapshot, // --env.snapshot
         production, // --env.production
         report, // --env.report
@@ -92,14 +102,6 @@ module.exports = (env, params = {}) => {
         adhoc // --env.adhoc
     } = env;
 
-    if (adhoc) {
-        env = Object.assign({}, env, {
-            production: true,
-            sentry: true,
-            sourceMap: true,
-            uglify: true
-        });
-    }
 
     const useLibs = compileSnapshot;
     const isAnySourceMapEnabled = !!sourceMap || !!hiddenSourceMap || !!inlineSourceMap;
@@ -113,7 +115,6 @@ module.exports = (env, params = {}) => {
     const alias = env.alias || {};
     alias['~'] = appFullPath;
     alias['@'] = appFullPath;
-    alias['nativescript-vue'] = 'nativescript-akylas-vue';
     alias['vue'] = 'nativescript-vue';
 
     if (hasRootLevelScopedModules) {
@@ -154,6 +155,7 @@ module.exports = (env, params = {}) => {
             'gVars.sentry': !!sentry,
             SENTRY_DSN: `"${process.env.SENTRY_DSN}"`,
             SENTRY_PREFIX: `"${!!sentry ? process.env.SENTRY_PREFIX : ''}"`,
+            LOCAL_MBTILES: `"${!!emulator ? '/storage/100F-3415/alpimaps_mbtiles' : '/storage/C0E5-1DEA/alpimaps_mbtiles'}"`,
             LOG_LEVEL: devlog ? '"full"' : '""',
             TEST_LOGS: adhoc || !production
         },
@@ -370,6 +372,7 @@ module.exports = (env, params = {}) => {
                         {
                             loader: resolve(__dirname, 'node_modules', 'sass-loader'),
                             options: {
+                                sourceMap: false,
                                 prependData: scssPrepend
                             }
                         }
@@ -394,6 +397,7 @@ module.exports = (env, params = {}) => {
                         {
                             loader: resolve(__dirname, 'node_modules', 'sass-loader'),
                             options: {
+                                sourceMap: false,
                                 prependData: scssPrepend
                             }
                         }
@@ -594,18 +598,18 @@ module.exports = (env, params = {}) => {
         config.plugins.push(new webpack.HotModuleReplacementPlugin());
     }
 
-    if (!!production) {
-        config.plugins.push(
-            new ForkTsCheckerWebpackPlugin({
-                tsconfig: resolve(tsconfig),
-                async: false,
-                useTypescriptIncrementalApi: true,
-                checkSyntacticErrors: true,
-                memoryLimit: 4096
-                // workers: 1
-            })
-        );
-    }
+    // if (!!production) {
+    //     config.plugins.push(
+    //         new ForkTsCheckerWebpackPlugin({
+    //             tsconfig: resolve(tsconfig),
+    //             async: false,
+    //             useTypescriptIncrementalApi: true,
+    //             checkSyntacticErrors: true,
+    //             memoryLimit: 4096
+    //             // workers: 1
+    //         })
+    //     );
+    // }
 
     return config;
 };
