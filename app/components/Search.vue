@@ -6,7 +6,7 @@
         <MDButton variant="text" class="icon-btn" v-show="searchResultsVisible" row="0" col="3" text="mdi-map" @tap="showResultsOnMap" color="lightgray" />
         <MDButton variant="text" class="icon-btn" v-show="currentSearchText && currentSearchText.length > 0" row="0" col="4" text="mdi-close" @tap="clearSearch" color="lightgray" />
 
-        <MDButton col="5" variant="flat" class="icon-btn" text="mdi-layers" @tap="showMenu('right')"  color="white"/>
+        <MDButton col="5" variant="flat" class="icon-btn" text="mdi-layers" @tap="showMapMenu"  color="white"/>
 
         <CollectionView col="0" row="1" height="200" colSpan="6" rowHeight="49" :items="dataItems" :visibility="searchResultsVisible?'visible':'collapsed'">
             <v-template>

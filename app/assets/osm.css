@@ -2,6 +2,9 @@
 .osm-cave:before {
   content: "\1f816";
 }
+.osm-cave_entry:before {
+  content: "\1f816";
+}
 .osm-peak:before {
   content: "\e901";
 }
@@ -175,6 +178,12 @@
   content: "\e934";
 }
 .osm-city_gate:before {
+  content: "\e935";
+}
+.osm-sally_port:before {
+  content: "\e935";
+}
+.osm-gate:before {
   content: "\e935";
 }
 .osm-fort:before {
@@ -510,10 +519,10 @@
 .osm-wilderness_hut:before {
   content: "\e99f";
 }
-.osm-bus_stop12:before {
+.osm-bus_stop:before {
   content: "\e9a8";
 }
-.osm-elevator12:before {
+.osm-elevator:before {
   content: "\e9a9";
 }
 .osm-ford:before {

@@ -3,18 +3,22 @@ import { HTTPTileDataSource } from 'nativescript-carto/datasources/http';
 import { TileLayer } from 'nativescript-carto/layers';
 import { RasterTileLayer } from 'nativescript-carto/layers/raster';
 import { CartoMap } from 'nativescript-carto/ui';
-import localize from 'nativescript-localize';
+import { $t } from '~/helpers/locale';
 import { alert } from 'nativescript-material-dialogs';
 import Vue from 'nativescript-vue';
 import * as appSettings from '@nativescript/core/application-settings/application-settings';
 import { ObservableArray } from '@nativescript/core/data/observable-array/observable-array';
-import { File, path } from '@nativescript/core/file-system';
+import { File, Folder, path } from '@nativescript/core/file-system';
 import Map from '~/components/Map';
 import OptionSelect from '~/components/OptionSelect';
 import { DataProvider, Provider } from '~/data/tilesources';
 import { getDataFolder } from '~/utils';
 import { cerror } from '~/utils/logging';
 import MapModule from './MapModule';
+import { MergedMBVTTileDataSource } from 'nativescript-carto/datasources';
+import { MBTilesTileDataSource } from 'nativescript-carto/datasources/mbtiles';
+import { VectorTileLayer, VectorTileRenderOrder } from 'nativescript-carto/layers/vector';
+import { openFilePicker } from 'nativescript-document-picker';
 
 function templateString(str: string, data) {
     return str.replace(
@@ -31,6 +35,7 @@ export interface SourceItem {
     name: string;
     layer: TileLayer<any, any>;
     provider: Provider;
+    index?: number;
 }
 
 export default class CustomLayersModule extends MapModule {
@@ -40,7 +45,44 @@ export default class CustomLayersModule extends MapModule {
         super();
         // this.customSources = new ObservableArray([]) as any;
     }
-
+    createMergeMBtiles({ name, sources, legend }: { name: string; sources: string[]; legend?: string }) {
+        let dataSource;
+        if (sources.length === 1) {
+            dataSource = new MBTilesTileDataSource({
+                databasePath: sources[0]
+            });
+        } else {
+            dataSource = new MergedMBVTTileDataSource({
+                dataSources: sources.map(
+                    s =>
+                        new MBTilesTileDataSource({
+                            databasePath: s
+                        })
+                )
+            });
+        }
+        const mapComp = this.mapComp;
+        const opacity = appSettings.getNumber(`${name}_opacity`, 1);
+        // const zoomLevelBias = Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2);
+        const layer = new VectorTileLayer({
+            dataSource,
+            // zoomLevelBias: zoomLevelBias * 0.75,
+            opacity,
+            decoder: mapComp.getVectorTileDecoder(),
+            // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
+            visible: opacity !== 0
+        });
+        layer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
+        layer.setVectorTileEventListener(mapComp, mapComp.mapProjection);
+        return {
+            name,
+            opacity,
+            legend,
+            index: undefined,
+            layer,
+            provider: { name, sources, legend }
+        };
+    }
     createRasterLayer(id: string, provider: Provider) {
         const rasterCachePath = path.join(getDataFolder(), 'rastercache');
 
@@ -65,10 +107,10 @@ export default class CustomLayersModule extends MapModule {
                 dataSource:
                     provider.cacheable !== false
                         ? new PersistentCacheTileDataSource({
-                            dataSource,
-                            capacity: 300 * 1024 * 1024,
-                            databasePath
-                        })
+                              dataSource,
+                              capacity: 300 * 1024 * 1024,
+                              databasePath
+                          })
                         : dataSource,
                 zoomLevelBias: zoomLevelBias * 0.75,
                 opacity,
@@ -84,7 +126,10 @@ export default class CustomLayersModule extends MapModule {
     baseProviders: { [k: string]: Provider } = {};
     overlayProviders: { [k: string]: Provider } = {};
     isOverlay(providerName, provider: Provider) {
-        if (!!provider.isOverlay || (provider.layerOptions && provider.layerOptions.opacity && provider.layerOptions.opacity < 1)) {
+        if (
+            !!provider.isOverlay ||
+            (provider.layerOptions && provider.layerOptions.opacity && provider.layerOptions.opacity < 1)
+        ) {
             return true;
         }
         return false;
@@ -222,12 +267,12 @@ export default class CustomLayersModule extends MapModule {
                     }
                     this.sourcesLoaded = true;
                 })
-                .catch(err => {
-                    cerror(err);
-                    setTimeout(() => {
-                        throw err;
-                    }, 0);
-                })
+            // .catch(err => {
+            //     // cerror(err);
+            //     setTimeout(() => {
+            //         throw err;
+            //     }, 0);
+            // })
         );
     }
 
@@ -247,6 +292,119 @@ export default class CustomLayersModule extends MapModule {
                 });
             });
         }
+
+        // const localMbtilesSource = appSettings.getString('local_mbtiles_directory', path.join(getDataFolder(), 'alpimaps_mbtiles'));
+        // const localMbtilesSource = appSettings.getString('local_mbtiles_directory', '/sdcard/Download/alpimaps_mbtiles');
+        const localMbtilesSource = appSettings.getString('local_mbtiles_directory', LOCAL_MBTILES);
+        console.log('localMbtilesSource', localMbtilesSource);
+        if (localMbtilesSource) {
+            this.loadLocalMbtiles(localMbtilesSource);
+        }
+    }
+    vectorTileDecoderChanged(oldVectorTileDecoder, newVectorTileDecoder) {
+        console.log('vectorTileDecoderChanged', oldVectorTileDecoder !== newVectorTileDecoder);
+        this.customSources.forEach(s => {
+            if (s.layer instanceof VectorTileLayer && s.layer.getTileDecoder() === oldVectorTileDecoder) {
+                console.log('updating layer', s);
+                const layer = new VectorTileLayer({
+                    dataSource: s.layer.dataSource,
+                    // zoomLevelBias: zoomLevelBias * 0.75,
+                    opacity: s.layer.opacity,
+                    decoder: newVectorTileDecoder,
+                    // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
+                    visible: s.layer.opacity !== 0
+                });
+                layer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
+                layer.setVectorTileEventListener(this.mapComp, this.mapComp.mapProjection);
+
+                this.mapComp.removeLayer(s.layer, 'customLayers');
+                this.mapComp.addLayer(layer, 'customLayers', s.index);
+                s.layer = layer;
+            }
+        });
+    }
+    loadLocalMbtiles(directory: string) {
+        // console.log('loadLocalMbtiles',directory , Folder.exists(directory));
+        if (!Folder.exists(directory)) {
+            return;
+        }
+        const folder = Folder.fromPath(directory);
+
+        const mapComp = this.mapComp;
+        let index = this.customSources.length;
+        folder
+            .getEntities()
+            .then(entities => {
+                // console.log('loadLocalMbtiles', folder, entities);
+                // if (entities.length > 0) {
+                //     const e = entities[0];
+                //     console.log('handling folder', e.path);
+                //     if (Folder.exists(e.path)) {
+                //         return Folder.fromPath(e.path)
+                //             .getEntities()
+                //             .then(subentities => {
+                //                 const data = this.createMergeMBtiles({
+                //                     legend: 'https://www.openstreetmap.org/key.html',
+                //                     name: e.name,
+                //                     sources: subentities.map(e2 => e2.path).filter(s => s.endsWith('.mbtiles'))
+                //                 });
+                //                 (data.index = index++), console.log('created mbtiles layer', data);
+                //                 this.customSources.push(data);
+                //                 mapComp.addLayer(data.layer, 'customLayers', data.index);
+                //             });
+                //     }
+                // }
+                return Promise.all(
+                    entities.map(e => {
+                        console.log('handling folder', e.path);
+                        if (Folder.exists(e.path)) {
+                            return Folder.fromPath(e.path)
+                                .getEntities()
+                                .then(subentities => {
+                                    const data = this.createMergeMBtiles({
+                                        legend: 'https://www.openstreetmap.org/key.html',
+                                        name: e.name,
+                                        sources: subentities.map(e2 => e2.path).filter(s => s.endsWith('.mbtiles'))
+                                    });
+                                    data.index = index++;
+                                    // console.log('created mbtiles layer', data);
+                                    this.customSources.push(data);
+                                    mapComp.addLayer(data.layer, 'customLayers', data.index);
+                                });
+                        }
+                    })
+                );
+            })
+            .catch(err => {
+                cerror(err);
+                setTimeout(() => {
+                    throw err;
+                }, 0);
+            });
+    }
+
+    selectLocalMbtilesFolder() {
+        return openFilePicker({
+            extensions: ['file/*'],
+            multipleSelection: false,
+            pickerMode: 0
+        })
+            .then(result => {
+                console.log('selectLocalMbtilesFolder', result);
+                if (Folder.exists(result.files[0])) {
+                    const localMbtilesSource = result.files[0];
+                    appSettings.setString('local_mbtiles_directory', localMbtilesSource);
+                    this.loadLocalMbtiles(localMbtilesSource);
+                } else {
+                    return Promise.reject(new Error($t('no_folder_selected')));
+                }
+            })
+            .catch(err => {
+                cerror(err);
+                setTimeout(() => {
+                    throw err;
+                }, 0);
+            });
     }
 
     onMapDestroyed() {
@@ -254,36 +412,41 @@ export default class CustomLayersModule extends MapModule {
         this.customSources.splice(0, this.customSources.length);
     }
     addSource() {
-        this.getSourcesLibrary().then(() => {
-            const options = {
-                props: {
-                    title: localize('pick_source'),
-                    options: Object.keys(this.baseProviders).map(s => ({ name: s, provider: this.baseProviders[s] }))
-                },
-                fullscreen: false
-            };
-            const instance = new OptionSelect();
-            instance.options = Object.keys(this.baseProviders).map(s => ({ name: s, provider: this.baseProviders[s] }));
-            instance.$mount();
-            ((alert({
-                title: Vue.prototype.$tc('pick_source'),
-                okButtonText: Vue.prototype.$t('cancel'),
-                view: instance.nativeView
-            }) as any) as Promise<{ name: string; provider: Provider }>).then(results => {
-                const result = Array.isArray(results) ? results[0] : results;
-                if (result) {
-                    const data = this.createRasterLayer(result.name, result.provider);
-                    // this.log('about to add', result, data);
-                    this.mapComp.addLayer(data.layer, 'customLayers', this.customSources.length);
-                    this.customSources.push(data);
-                    // clog('layer added');
-                    const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
-                    savedSources.push(result.name);
-                    // clog('saving added_providers', savedSources);
-                    appSettings.setString('added_providers', JSON.stringify(savedSources));
-                }
+        console.log('addSource');
+        this.getSourcesLibrary()
+            .then(() => {
+                const options = {
+                    props: {
+                        title: $t('pick_source'),
+                        options: Object.keys(this.baseProviders).map(s => ({ name: s, provider: this.baseProviders[s] }))
+                    },
+                    fullscreen: false
+                };
+                const instance = new OptionSelect();
+                instance.options = Object.keys(this.baseProviders).map(s => ({ name: s, provider: this.baseProviders[s] }));
+                instance.$mount();
+                ((alert({
+                    title: Vue.prototype.$tc('pick_source'),
+                    okButtonText: Vue.prototype.$t('cancel'),
+                    view: instance.nativeView
+                }) as any) as Promise<{ name: string; provider: Provider }>).then(results => {
+                    const result = Array.isArray(results) ? results[0] : results;
+                    if (result) {
+                        const data = this.createRasterLayer(result.name, result.provider);
+                        // this.log('about to add', result, data);
+                        this.mapComp.addLayer(data.layer, 'customLayers', this.customSources.length);
+                        this.customSources.push(data);
+                        this.log('layer added', data.provider);
+                        const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
+                        savedSources.push(result.name);
+                        // clog('saving added_providers', savedSources);
+                        appSettings.setString('added_providers', JSON.stringify(savedSources));
+                    }
+                });
+            })
+            .catch(err => {
+                Vue.prototype.$showError(err);
             });
-        });
     }
     deleteSource(name: string) {
         let index = -1;

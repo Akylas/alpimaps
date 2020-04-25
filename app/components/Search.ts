@@ -177,7 +177,7 @@ class HereFeature {
         this.properties = {
             id: data.id,
             name: data.title,
-            osm_key:data.category.id ? data.category.id.split('-')[0] : undefined,
+            osm_key: data.category.id ? data.category.id.split('-')[0] : undefined,
             vicinity: data.vicinity,
             // url: data.href,
             averageRating: data.averageRating
@@ -205,6 +205,16 @@ export default class Search extends BaseVueComponent implements IMapModule {
     @Prop({ type: String })
     text: string;
 
+    _formatter: ItemFormatter;
+    // searchMarkerStyle;
+    searchClusterStyle: PointStyleBuilder;
+    // searchService: MapBoxOnlineGeocodingService;
+    searchAsTypeTimer;
+    dataItems: ObservableArray<SearchItem> = new ObservableArray([] as any);
+    loading = false;
+
+    currentSearchText: string = null;
+
     @Watch('text')
     onTextPropChange(value) {
         this.log('onTextPropChange', value, !!this.textField);
@@ -219,7 +229,6 @@ export default class Search extends BaseVueComponent implements IMapModule {
         }
     }
 
-    _formatter: ItemFormatter;
     get formatter() {
         if (!this._formatter && this.mapComp) {
             this._formatter = this.mapComp.mapModule('formatter');
@@ -238,8 +247,6 @@ export default class Search extends BaseVueComponent implements IMapModule {
         }
         return this._searchDataSource;
     }
-    searchMarkerStyle;
-    searchClusterStyle;
     buildClusterElement(position: MapPos, elements: VectorElementVector) {
         // console.log('buildClusterElement', position, elements.size());
         if (!this.searchClusterStyle) {
@@ -279,7 +286,8 @@ export default class Search extends BaseVueComponent implements IMapModule {
             projection: this.mapComp.mapProjection,
             styleBuilder: {
                 hideIfOverlapped: false,
-                size: 15,
+                size: 10,
+                scaleWithDPI: true,
                 color: item.provider === 'here' ? 'blue' : 'red'
             },
             metaData
@@ -306,13 +314,6 @@ export default class Search extends BaseVueComponent implements IMapModule {
     ensureSearchLayer() {
         return this.searchLayer !== null;
     }
-
-    // searchService: MapBoxOnlineGeocodingService;
-    searchAsTypeTimer;
-    dataItems: ObservableArray<SearchItem> = new ObservableArray([] as any);
-    loading = false;
-
-    currentSearchText: string = null;
 
     get searchResultsVisible() {
         return this.hasFocus && this.searchResultsCount > 0;
@@ -362,7 +363,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
     mounted() {
         super.mounted();
         if (gVars.isAndroid) {
-            this.nativeView.marginTop = layout.toDevicePixels(statusBarHeight);
+            this.nativeView.marginTop = statusBarHeight + 10;
         }
         if (this.text) {
             this.onTextPropChange(this.text);
@@ -371,18 +372,19 @@ export default class Search extends BaseVueComponent implements IMapModule {
     onLoaded() {}
     hasFocus = false;
     onFocus(e) {
-        // clog('onFocus');
+        clog('onFocus');
         this.hasFocus = true;
         if (this.currentSearchText && this.searchResultsCount === 0) {
             this.instantSearch(this.currentSearchText);
         }
     }
     onBlur(e) {
-        // clog('onBlur');
+        clog('onBlur');
         this.hasFocus = false;
     }
     onTextChange(e) {
         const query = e.value;
+        console.log('onTextChange', query);
         if (this.searchAsTypeTimer) {
             clearTimeout(this.searchAsTypeTimer);
             this.searchAsTypeTimer = null;
@@ -464,7 +466,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
                 'http://photon.komoot.de/api'
             )
         ).then(function(results: any) {
-            return results.features.filter(r=>r.properties.osm_type !== 'R').map(f => new PhotonFeature(f));
+            return results.features.filter(r => r.properties.osm_type !== 'R').map(f => new PhotonFeature(f));
         });
     }
     instantSearch(_query) {
@@ -480,7 +482,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
             location: this.$getMapComponent().cartoMap.focusPos
             // locationRadius: 1000
         };
-        // console.log('instantSearch', _query, options);
+        console.log('instantSearch', _query, options);
 
         // TODO: dont fail when offline!!!
         this.dataItems = new ObservableArray([] as any);
@@ -556,6 +558,11 @@ export default class Search extends BaseVueComponent implements IMapModule {
         // this.log('showMenu', side);
         this.unfocus();
         this.$getAppComponent().drawer.open(side);
+    }
+
+    showMapMenu() {
+        this.unfocus();
+        this.mapComp.showMapMenu();
     }
     public onItemTap(item: SearchItem) {
         // const item = this.dataItems[args.index];

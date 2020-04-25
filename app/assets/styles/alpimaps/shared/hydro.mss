@@ -19,19 +19,20 @@
 }
 #water {
 	[class=ocean]{
-		::shadow {
-			polygon-fill: @water_shadow;
-			polygon-geometry-transform: translate(0,1);
-			[zoom>=14] {
-				polygon-geometry-transform: translate(0,2);
-			}
-		}
-		::fill {
+		// ::shadow {
+		// 	polygon-fill: @water_shadow;
+		// 	polygon-geometry-transform: translate(0,1);
+		// 	[zoom>=14] {
+		// 		polygon-geometry-transform: translate(0,2);
+		// 	}
+		// }
+		// ::fill {
 			polygon-fill: @water;
-		}
+		// }
 	}
 	
 	[class=lake],
+	[class=fountain],
 	[class=pond],
 	[class=water],
 	[class=river][zoom>=8]{

@@ -503,8 +503,8 @@ export default class PackagesDownloadComponent extends BaseVueComponent {
                 break;
         }
     }
-    onPackageClick(e: ItemEventData) {
-        const item = this.dataItems.getItem(e.index);
+    onPackageClick(item: Package) {
+        // const item = this.dataItems.getItem(e.index);
         if (item.isGroup()) {
             this.currentFolder = this.currentFolder + item.name + '/';
             this.updateDataItems();
