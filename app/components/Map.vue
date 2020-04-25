@@ -1,35 +1,50 @@
 <template>
     <AlpiMapsPage actionBarHidden>
-        <!-- <GridLayout rows="auto,*" backgroundColor="white" columns="*" @layoutChanged="onLayoutChange"> -->
-        <CartoMap ref="mapView" zoom="16" @mapReady="onMapReady" @mapMoved="onMapMove" @mapStable="onMapStable" @mapClicked="onMapClicked" @layoutChanged="onLayoutChange" />
-        <!-- <GridLayout ref="overMapWidgets" class="overMapWidgets" @loaded="onLoaded"> -->
-        <Search ref="searchView" class="searchView" :text="searchText" :projection="mapProjection" :opacity="scrollingWidgetsOpacity" :defaultElevation="topSheetTranslation === 0?1:0" />
-        <!-- </transition> -->
+        <CartoMap ref="mapView" zoom="16" @mapReady="onMapReady" @mapMoved="onMapMove" @mapStable="onMapStable" @mapClicked="onMapClicked"/>
+        <Search ref="searchView" class="searchView" :text="searchText" :projection="mapProjection" :opacity="scrollingWidgetsOpacity" :defaultElevation="topSheetTranslation === 0 ? 1 : 0" />
+        <TopSheetHolder ref="topSheetHolder" @shouldClose="cancelDirections" @scroll="onTopSheetScroll" />
 
-        <TopSheetHolder ref="topSheetHolder" @shouldClose="cancelDirections" @scroll="onTopSheetScroll">
-        </TopSheetHolder>
-
-         <StackLayout orientation="vertical" verticalAlignment="middle" horizontalAlignment="right" isUserInteractionEnabled="false">
-            <Label color="red" class="label-icon-btn" fontSize="12" text="mdi-crosshairs-gps" v-show="watchingLocation || queryingLocation"/> 
-            <Label color="red" class="label-icon-btn" fontSize="12" text="mdi-sleep-off" v-show="keepAwake"/> 
+        <StackLayout orientation="vertical" verticalAlignment="middle" horizontalAlignment="right" isUserInteractionEnabled="false">
+            <Label color="red" class="label-icon-btn" fontSize="12" text="mdi-crosshairs-gps" v-show="watchingLocation || queryingLocation" />
+            <Label color="red" class="label-icon-btn" fontSize="12" text="mdi-sleep-off" v-show="keepAwake" />
         </StackLayout>
 
-        <BottomSheetHolder ref="bottomSheetHolder"  :marginBottom="navigationBarHeight" :peekerSteps="bottomSheetSteps" isPassThroughParentEnabled @close="unselectItem" @scroll="onBottomSheetScroll">
+        <BottomSheetHolder id="itemBSHolder" ref="bottomSheetHolder" :marginBottom="navigationBarHeight" :peekerSteps="bottomSheetSteps" isPassThroughParentEnabled @close="unselectItem" @scroll="onBottomSheetScroll">
             <BottomSheet ref="bottomSheet" slot="bottomSheet" :item="selectedItem" :steps="bottomSheetSteps" />
         </BottomSheetHolder>
-        <MapScrollingWidgets ref="mapScrollingWidgets" :paddingTop="mapWidgetsTopPadding" :paddingBottom="bottomSheetTranslation" :opacity="scrollingWidgetsOpacity" />
-        <Fab position="left" rowSpan="2" iconClass="mdi" icon="mdi-plus" iconOn="mdi-close" :paddingBottom="bottomSheetTranslation" :opacity="scrollingWidgetsOpacity" :backgroundColor="accentColor" color="white">
-            <FabItem :title="$t('keep_awake') | titlecase" iconClass="mdi" :backgroundColor="keepAwake ? 'red' : 'green'" :icon="(keepAwake ? 'mdi-sleep' : 'mdi-sleep-off')" @tap="switchKeepAwake" />
-            <FabItem :title="$t('share_screenshot') | titlecase" iconClass="mdi" icon="mdi-cellphone-screenshot" @tap="shareScreenshot" />
-            <FabItem :title="$t('location_info') | titlecase" iconClass="mdi" icon="mdi-speedometer" @tap="switchLocationInfo" />
-            <FabItem :title="$t('select_language') | titlecase" iconClass="mdi" icon="mdi-translate" @tap="selectLanguage" />
-            <FabItem :title="$t('select_style') | titlecase" iconClass="mdi" icon="mdi-layers" @tap="selectStyle" />
+
+        <!-- <transition name="scale"> -->
+        <MDButton
+            :translateY="topSheetTranslation"
+            transition="scale"
+            v-show="currentMapRotation !== 0"
+            @tap="resetBearing"
+            class="small-floating-btn"
+            text="mdi-navigation"
+            :rotate="currentMapRotation"
+            verticalAlignment="top"
+            horizontalAlignment="right"
+        />
+        <!-- </transition> -->
+
+        <MapScrollingWidgets ref="mapScrollingWidgets" :paddingTop="mapWidgetsTopPadding" :translateY="-bottomSheetTranslation" :opacity="scrollingWidgetsOpacity" />
+        <Fab position="left" iconClass="mdi" icon="mdi-plus" iconOn="mdi-close" :translateY="-bottomSheetTranslation" :opacity="scrollingWidgetsOpacity" :backgroundColor="accentColor" color="white">
             <FabItem :title="$t('offline_packages') | titlecase" iconClass="mdi" icon="mdi-earth" @tap="downloadPackages" />
+            <FabItem :title="$t('select_style') | titlecase" iconClass="mdi" icon="mdi-layers" @tap="selectStyle" />
+            <FabItem :title="$t('select_language') | titlecase" iconClass="mdi" icon="mdi-translate" @tap="selectLanguage" />
+            <FabItem :title="$t('location_info') | titlecase" iconClass="mdi" icon="mdi-speedometer" @tap="switchLocationInfo" />
+            <FabItem :title="$t('share_screenshot') | titlecase" iconClass="mdi" icon="mdi-cellphone-screenshot" @tap="shareScreenshot" />
+            <FabItem :title="$t('keep_awake') | titlecase" iconClass="mdi" :backgroundColor="keepAwake ? 'red' : 'green'" :icon="keepAwake ? 'mdi-sleep' : 'mdi-sleep-off'" @tap="switchKeepAwake" />
         </Fab>
+
+
+        <BottomSheetHolder id="rightMenuBSHolder" ref="bottomSheetHolder2" :marginBottom="navigationBarHeight" :peekerSteps="[210]" isPassThroughParentEnabled>
+            <MapRightMenu ref="mapMenu" slot="bottomSheet"/>
+        </BottomSheetHolder>
         <!-- </GridLayout> -->
         <!-- <transition name="slide" duration="10000"> -->
-            <AbsoluteLayout transition="slide" v-visible="shouldShowNavigationBarOverlay" class="navigationBarOverlay" @loaded="onLoaded" />
+        <AbsoluteLayout transition="slide" v-show="shouldShowNavigationBarOverlay" class="navigationBarOverlay" @loaded="onLoaded" />
         <!-- </transition> -->
     </AlpiMapsPage>
 </template>
-<script lang="ts" src="./Map.ts"/>
+<script lang="ts" src="./Map.ts" />

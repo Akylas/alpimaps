@@ -1,5 +1,7 @@
 import { installMixins } from 'nativescript-material-core';
 installMixins();
+import { installMixins as installUIMixins } from 'nativescript-systemui';
+installUIMixins();
 import { Label as HTMLLabel } from 'nativescript-htmllabel'; // require first to get Font res loading override
 
 import ActivityIndicatorPlugin from 'nativescript-material-activityindicator/vue';

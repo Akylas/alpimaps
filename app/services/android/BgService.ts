@@ -1,4 +1,4 @@
-import { localize } from 'nativescript-localize';
+import { $t } from '~/helpers/locale';
 import { ApplicationEventData, off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
 import { GeoHandler, SessionChronoEvent, SessionChronoEventData, SessionEventData, SessionState, SessionStateEvent } from '~/handlers/GeoHandler';
 import { BgServiceBinder } from '~/services/android/BgServiceBinder';
@@ -13,7 +13,7 @@ function titlecase(value) {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
 }
-const DEFAULT_TEXT = titlecase(localize('tap_to_open'));
+const DEFAULT_TEXT = titlecase($t('tap_to_open'));
 const NOTIFICATION_ID = 3426824;
 
 @JavaProxy('akylas.alpi.maps.BgService')

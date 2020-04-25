@@ -3,15 +3,13 @@ import { Frame, NavigationEntry } from '@nativescript/core/ui/frame';
 import { Label } from '@nativescript/core/ui/label/label';
 import { StackLayout } from '@nativescript/core/ui/layouts/stack-layout';
 import { Page } from '@nativescript/core/ui/page';
-import localize from 'nativescript-localize';
 import { ActivityIndicator } from 'nativescript-material-activityindicator';
 import { AlertDialog } from 'nativescript-material-dialogs';
 import Vue, { NativeScriptVue } from 'nativescript-vue';
 import { VueConstructor } from 'vue';
 import { Prop } from 'vue-property-decorator';
 import { clog } from '~/utils/logging';
-import { accentColor, actionBarHeight, darkColor, primaryColor } from '../variables';
-
+import { accentColor, actionBarHeight, darkColor, mdiFontFamily, navigationBarHeight, primaryColor, statusBarHeight } from '../variables';
 
 export interface BaseVueComponentRefs {
     [key: string]: any;
@@ -31,6 +29,10 @@ export default class BaseVueComponent extends Vue {
     public actionBarHeight;
     needsRoundedWatchesHandle = false;
     debug = false;
+
+    navigationBarHeight = navigationBarHeight;
+    statusBarHeight = statusBarHeight;
+    public mdiFontFamily = mdiFontFamily;
     // isAndroid = gVars.isAndroid;
     // isIOS = gVars.isIOS;
     getRef(key: string) {
@@ -66,7 +68,7 @@ export default class BaseVueComponent extends Vue {
     showLoading(msg: string) {
         const loadingIndicator = this.getLoadingIndicator();
         // this.log('showLoading', msg, !!this.loadingIndicator);
-        loadingIndicator.label.text = localize(msg) + '...';
+        loadingIndicator.label.text = msg + '...';
         this.showLoadingStartTime = Date.now();
         loadingIndicator.show();
     }

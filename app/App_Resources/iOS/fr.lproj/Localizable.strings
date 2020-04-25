@@ -11,7 +11,7 @@
 "select_language" = "langue de la carte";
 "offline_packages" = "cartes hors-ligne";
 "select_style" = "style de carte ";
-"_zoom__8nqDT" = "zoom";
+"zoom" = "zoom";
 "gps_not_authorized" = "activez le GPS et autorisez «Alpi Maps» à l'utiliser pour vous localiser";
 "gps_not_enabled" = "activez le GPS pour permettre à «Alpi Maps» de vous localiser";
 "settings" = "réglages";
@@ -21,9 +21,8 @@
 "stop_session" = "arrêter la session";
 "close" = "fermer";
 "cancel" = "annuler";
-"_ios_info_plist_NSBluetoothPeripheralUsageDescription_2uVDqX" = "«Alpi Maps» utilise le Bluetooth pour se connecter à vos lunettes";
-"_ios_info_plist_NSLocationAlwaysAndWhenInUseUsageDescription_Z122jwE" = "«Alpi Maps» utilise le GPS pour l'afficher sur vos lunettes";
-"_ios_info_plist_NSLocationAlwaysUsageDescription_Z1cD1M8" = "«Alpi Maps» utilise le GPS pour l'afficher sur vos lunettes";
-"_ios_info_plist_NSLocationWhenInUseUsageDescription_ZpKiIF" = "«Alpi Maps» utilise le GPS pour l'afficher sur vos lunettes";
-"_title_activity_kimera_PKGla" = "Alpi Maps";
-"_app_name_1k3Sbz" = "Alpi Maps";
+"ios.info.plist.NSBluetoothPeripheralUsageDescription" = "«Alpi Maps» utilise le Bluetooth pour se connecter à vos lunettes";
+"ios.info.plist.NSLocationAlwaysAndWhenInUseUsageDescription" = "«Alpi Maps» utilise le GPS pour l'afficher sur vos lunettes";
+"ios.info.plist.NSLocationAlwaysUsageDescription" = "«Alpi Maps» utilise le GPS pour l'afficher sur vos lunettes";
+"ios.info.plist.NSLocationWhenInUseUsageDescription" = "«Alpi Maps» utilise le GPS pour l'afficher sur vos lunettes";
+"app.name" = "Alpi Maps";

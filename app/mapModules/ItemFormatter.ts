@@ -24,25 +24,25 @@ export default class ItemFormatter extends MapModule {
         const properties = item.properties;
         if (properties) {
             if (properties.osm_value) {
-                result.push('osm-' + properties.osm_value);
+                result.push('maki-' + properties.osm_value);
             }
             if (properties.osm_key) {
-                result.push('osm-' + properties.osm_key);
+                result.push('maki-' + properties.osm_key);
             }
             if (properties.class) {
-                result.push('osm-' + properties.class);
+                result.push('maki-' + properties.class);
             }
             if (properties.layer && properties.layer !== 'housenumber') {
-                result.push('osm-' + properties.layer);
+                result.push('maki-' + properties.layer);
             }
         }
         if (item.categories) {
-            result.push('osm-' + item.categories[0]);
+            result.push('maki-' + item.categories[0]);
         }
         if (result.length === 0 && item.address && item.address.houseNumber) {
             result.push(item.address.houseNumber);
         }
-        console.log('itemIcon', item, result);
+        // console.log('itemIcon', item, result);
         return result;
     }
 

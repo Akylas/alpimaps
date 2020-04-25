@@ -1,15 +1,9 @@
 <template>
     <GridLayout rows="auto,*,auto" columns="70,*,70" isPassThroughParentEnabled>
-        <Label borderRadius="6" v-if="showSuggestionPackage" col="1" row="2" backgroundColor="#55000000" verticalAlignment="bottom" verticalTextAlignment="middle" horizontalAlignment="center" textWrap marginBottom="30" padding="4 2 4 4" @tap="downloadSuggestion" @longPress="customDownloadSuggestion" color="white">
-            <Span class="mdi" fontSize="15" text="mdi-download" backgroundColor="transparent" />
-            <Span :text="suggestionPackageName" fontSize="10" backgroundColor="transparent" />
-        </Label>
-        <transition name="scale">
-            <MDButton transition="scale" v-show="currentMapRotation !== 0" col="2" @tap="resetBearing" class="small-floating-btn" text="mdi-navigation" :rotate="currentMapRotation" verticalAlignment="top" horizontalAligment="right" />
-        </transition>
+        <Label borderRadius="6" v-show="showSuggestionPackage" col="1" row="2" backgroundColor="#55000000" verticalAlignment="bottom" verticalTextAlignment="middle" horizontalAlignment="center" textWrap marginBottom="30" fontSize="10" padding="4 2 4 4" @tap="downloadSuggestion" @longPress="customDownloadSuggestion" color="white" :html="`<big><big><font face="${mdiFontFamily}">mdi-download</font></big></big>${suggestionPackageName}`"/> 
 
         <transition name="fade">
-            <GridLayout v-if="showLocationInfo" col="1" row="0" borderRadius="40" backgroundColor="#77000000" padding="6" columns="auto,*,auto" @swipe="showLocationInfo = false">
+            <GridLayout v-show="showLocationInfo" col="1" row="0" borderRadius="40" backgroundColor="#77000000" padding="6" columns="auto,*,auto" @swipe="showLocationInfo = false">
                 <label width="60" height="60" borderRadius="30" borderWidth="4" :borderColor="accentColor" backgroundColor="#aaffffff" textWrap textAlignment="center" verticalTextAlignment="middle">
                     <Span :text="((currentLocation && currentLocation.speed !== undefined) ? currentLocation.speed.toFixed() : '-') + '\n'" fontSize="26" fontWeight="bold" backgroundColor="transparent" />
                     <Span text="km/h" fontSize="10" backgroundColor="transparent" />
@@ -19,10 +13,10 @@
                     <Span :text="currentAltitude" fontSize="20" fontWeight="bold" />
                     <Span text=" m" fontSize="12" />
                 </label>
-                <label col="1" v-if="listeningForBarometer && airportRefName" :text="airportRefName" verticalAlignment="bottom" horizontalAlignment="right" color="#fff" fontSize="9" />
-                <StackLayout v-if="hasBarometer" col="2" verticalAlignment="center">
+                <label col="1" v-show="listeningForBarometer && airportRefName" :text="airportRefName" verticalAlignment="bottom" horizontalAlignment="right" color="#fff" fontSize="9" />
+                <StackLayout v-show="hasBarometer" col="2" verticalAlignment="center">
                     <MDButton variant="text" class="small-icon-btn" text="mdi-gauge" @tap="switchBarometer" color="white" />
-                    <MDButton variant="text" class="small-icon-btn" v-if="listeningForBarometer" text="mdi-reflect-vertical" @tap="getNearestAirportPressure" color="white" />
+                    <MDButton variant="text" class="small-icon-btn" v-show="listeningForBarometer" text="mdi-reflect-vertical" @tap="getNearestAirportPressure" color="white" />
                 </StackLayout>
             </GridLayout>
         </transition>

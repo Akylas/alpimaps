@@ -1,6 +1,5 @@
 import { CartoOnlineVectorTileLayer } from 'nativescript-carto/layers/vector';
 import { CartoMapStyle, fromNativeMapPos, MapPos, nativeVectorToArray } from 'nativescript-carto/core';
-import { CartoOnlineTileDataSource } from 'nativescript-carto/datasources/cartoonline';
 import { MergedMBVTTileDataSource, OrderedTileDataSource, TileDataSource } from 'nativescript-carto/datasources';
 import { HTTPTileDataSource } from 'nativescript-carto/datasources/http';
 import {
@@ -16,15 +15,24 @@ import {
 } from 'nativescript-carto/geocoding/service';
 import { Feature, FeatureCollection } from 'nativescript-carto/geometry/feature';
 import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
-import { CartoPackageManager, CartoPackageManagerListener, PackageErrorType, PackageManagerTileDataSource, PackageStatus } from 'nativescript-carto/packagemanager';
+import {
+    CartoPackageManager,
+    CartoPackageManagerListener,
+    PackageErrorType,
+    PackageManagerTileDataSource,
+    PackageStatus
+} from 'nativescript-carto/packagemanager';
 import { MBVectorTileDecoder } from 'nativescript-carto/vectortiles';
-import { Observable } from '@nativescript/core/data/observable/observable';
+import Observable from 'nativescript-observable';
 import { File, Folder, path } from '@nativescript/core/file-system';
 import { getDataFolder } from '~/utils';
 import { clog, log } from '~/utils/logging';
 import { Item } from '~/mapModules/ItemsModule';
-import Vue from 'nativescript-vue';
 import * as appSettings from '@nativescript/core/application-settings';
+import { openOrCreate, SQLiteDatabase } from 'nativescript-akylas-sqlite';
+import { toRadians, latLngToTileXY } from '~/utils/geo';
+import { RouteProfile } from '~/components/DirectionsPanel';
+import geolib from '~/helpers/geolib';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
@@ -144,14 +152,14 @@ export default class PackageService extends Observable {
         const geoManagerStarted = this.geoPackageManager.start();
         const routingManagerStarted = this.routingPackageManager.start();
         const packages = this._packageManager.getLocalPackages();
-        // this.log('start packageManager', managerStarted, packages.size());
+        this.log('start packageManager', managerStarted, packages.size());
         const geoPackages = this._geoPackageManager.getLocalPackages();
         // this.log('start geoPackageManager', geoManagerStarted, geoPackages.size());
 
         const routingPackages = this._routingPackageManager.getLocalPackages();
-        // if (routingPackages.size() > 0) {
-        // this.log('test routingPackageManager', routingPackages.get(0).getName(), routingPackages.get(0).getPackageType());
-        // }
+        if (routingPackages.size() > 0) {
+            this.log('test routingPackageManager', routingPackages.get(0).getName(), routingPackages.get(0).getPackageType());
+        }
         // this.log('start routingPackageManager', routingManagerStarted, routingPackages.size());
         this.updatePackagesLists();
     }
@@ -164,7 +172,11 @@ export default class PackageService extends Observable {
         return false;
     }
     updatePackagesLists() {
-        return this.updatePackagesList(this.packageManager) || this.updatePackagesList(this.geoPackageManager) || this.updatePackagesList(this.routingPackageManager);
+        return (
+            this.updatePackagesList(this.packageManager) ||
+            this.updatePackagesList(this.geoPackageManager) ||
+            this.updatePackagesList(this.routingPackageManager)
+        );
     }
     @log
     onPackageListUpdated(type: PackageType) {
@@ -396,7 +408,7 @@ export default class PackageService extends Observable {
             if (features.getFeatureCount() > 0) {
                 // geoRes = result.get(j);
                 feature = features.getFeature(0);
-                console.log('convertGeoCodingResult', feature.properties, address, feature.geometry, rank);
+                // console.log('convertGeoCodingResult', feature.properties, address, feature.geometry, rank);
                 items.push({
                     rank,
                     categories: nativeVectorToArray(address.getCategories()),
@@ -411,7 +423,10 @@ export default class PackageService extends Observable {
         }
         return items;
     }
-    searchInGeocodingService(service: ReverseGeocodingService<any, any> | GeocodingService<any, any>, options): Promise<GeoResult[]> {
+    searchInGeocodingService(
+        service: ReverseGeocodingService<any, any> | GeocodingService<any, any>,
+        options
+    ): Promise<GeoResult[]> {
         // this.log('searchInGeocodingService', service['language'], options);
         return new Promise((resolve, reject) => {
             service.calculateAddresses(options, (err, result) => {
@@ -461,5 +476,190 @@ export default class PackageService extends Observable {
             delete result.properties.name;
         }
         return result as Item;
+    }
+
+    _elevationDb: SQLiteDatabase;
+    getElevationDB() {
+        if (!this._elevationDb) {
+            if (Folder.exists(LOCAL_MBTILES)) {
+                const folder = Folder.fromPath(LOCAL_MBTILES);
+                const entities = folder.getEntitiesSync();
+                entities.some(s => {
+                    if (s.name.endsWith('.etiles')) {
+                        console.log('loading eitles', s.path);
+                        this._elevationDb = openOrCreate(s.path, android.database.sqlite.SQLiteDatabase.OPEN_READONLY);
+                        return true;
+                    }
+                });
+            }
+        }
+        return this._elevationDb;
+    }
+
+     computeProfileFromHeights(profile: {height:number, lat:number, lon:number}[]) {
+        let last, currentHeight, coordIndex, currentDistance = 0;
+
+        const result: RouteProfile = {
+            max: [-1000, -1000],
+            min: [100000, 100000],
+            dplus: 0,
+            dmin: 0,
+            points: [],
+            data: []
+        };
+        profile.forEach(function(value, index) {
+            // console.log('test', index, value, last ? last.height : undefined, result.dplus, result.dmin);
+            currentHeight = value.height;
+            // if (currentHeight === -32768) {
+            //     return;
+            // }
+            const deltaDistance = last ? geolib.getDistance(last, value) : 0;
+            currentDistance += deltaDistance;
+
+            if (last) {
+                // if (currentDistance - last.distance < 100) {
+                //     console.log('ignore point as too close');
+                //     return;
+                // }
+                const deltaz = currentHeight - last.height;
+                if (deltaz > 0) {
+                    result.dplus += deltaz;
+                } else if (deltaz < 0) {
+                    result.dmin += deltaz;
+                }
+            }
+            if (currentDistance > result.max[0]) {
+                result.max[0] = currentDistance;
+            }
+            if (currentDistance < result.min[0]) {
+                result.min[0] = currentDistance;
+            }
+            if (currentHeight > result.max[1]) {
+                result.max[1] = currentHeight;
+            }
+            if (currentHeight < result.min[1]) {
+                result.min[1] = currentHeight;
+            }
+
+            result.data.push({ x: Math.round(currentDistance), y: currentHeight });
+            coordIndex = index * 2;
+            result.points.push({ lat: value.lat, lon: value.lon });
+            last = value;
+            // console.log('setting last', last, result.dplus, result.dmin);
+            // return memo;
+        });
+        // var result = {
+        //     profile: _.reduce(
+        //         profile,
+        //         function(memo, value, index: number) {
+        //             console.log('test', index, value, last?last.height:undefined, memo.dplus);
+        //             currentHeight = value.height;
+        //             if (currentHeight === -32768) {
+        //                 return memo;
+        //             }
+        //             currentDistance = value.distance = value.distance * 1000;
+
+        //             if (last) {
+        //                 if (currentDistance - last.distance < 100 ) {
+        //                     console.log('ignore point as too close');
+        //                     return memo;
+        //                 }
+        //                 const deltaz = currentHeight - last.height;
+        //                 if (deltaz > 0) {
+        //                     memo.dplus += deltaz;
+        //                 } else if (distance < 0) {
+        //                     memo.dmin += deltaz;
+        //                 }
+        //             }
+        //             if (currentDistance > memo.max[0]) {
+        //                 memo.max[0] = currentDistance;
+        //             }
+        //             if (currentDistance < memo.min[0]) {
+        //                 memo.min[0] = currentDistance;
+        //             }
+        //             if (currentHeight > memo.max[1]) {
+        //                 memo.max[1] = currentHeight;
+        //             }
+        //             if (currentHeight < memo.min[1]) {
+        //                 memo.min[1] = currentHeight;
+        //             }
+
+        //             memo.data[0].push(currentDistance);
+        //             memo.data[1].push(currentHeight);
+        //             coordIndex = index * 2;
+        //             memo.points.push([coords[coordIndex], coords[coordIndex + 1]]);
+        //             last = value;
+        //             console.log('setting last', last);
+        //             return memo;
+        //         },
+        //         {
+        //             max: [-1000, -1000],
+        //             min: [100000, 100000],
+        //             dplus: 0,
+        //             dmin: 0,
+        //             points: [],
+        //             data: [[], []]
+        //         }
+        //     )
+        // };
+        result.dmin = Math.round(result.dmin);
+        result.dplus = Math.round(result.dplus);
+        // console.log('got profile', result);
+        return result;
+    }
+
+    async getElevationProfile(_points: MapPos<LatLonKeys>[]) {
+        const db = this.getElevationDB();
+        if (!db) {
+            return null;
+        }
+
+        const zoom_level = 11;
+        const tilesIndexed = {};
+
+        // sort the points per tile
+        _points.forEach((p, index) => {
+            const tile = latLngToTileXY(p.lat, p.lon, zoom_level, 512);
+            const key = tile.x + '' + tile.y;
+            if (!tilesIndexed[key]) {
+                tilesIndexed[key] = { x: tile.x, y: tile.y, poses: [] };
+            }
+            tilesIndexed[key].poses.push({ index, pixelX: tile.pixelX, pixelY: tile.pixelY, ...p });
+        });
+        const result = [];
+        // request all the necessary tiles from db
+        await Promise.all(
+            Object.keys(tilesIndexed).map(k => {
+                const t = tilesIndexed[k];
+                return db
+                    .get(
+                        `SELECT tile_data FROM tiles WHERE zoom_level=${zoom_level} AND tile_row=${(1 << zoom_level) -
+                            1 -
+                            t.y} and tile_column=${t.x}`
+                    )
+                    .then(row => {
+                        if (row && row.tile_data) {
+                            const data = row.tile_data as any;
+
+                            // decode into android bitmap to get access to the pixels
+                            const bmp = android.graphics.BitmapFactory.decodeByteArray(data, 0, data.length);
+                            t.poses.forEach(p => {
+                                const pixel = bmp.getPixel(p.pixelX, p.pixelY);
+                                const R = (pixel >> 16) & 0xff;
+                                const G = (pixel >> 8) & 0xff;
+                                const B = pixel & 0xff;
+                                result[p.index] = {
+                                    lat: p.lat,
+                                    lon: p.lon,
+                                    height: Math.round(-10000 + (R * 256 * 256 + G * 256 + B) * 0.1)
+                                };
+                            });
+                            bmp.recycle();
+                        }
+                    });
+            })
+        );
+        // transform the result into a profile we can use
+        return this.computeProfileFromHeights(result);
     }
 }

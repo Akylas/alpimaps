@@ -1,5 +1,5 @@
 import * as application from '@nativescript/core/application';
-import localize from 'nativescript-localize';
+import { $t, $tc, $tt, $tu } from '~/helpers/locale';
 import { device, screen } from '@nativescript/core/platform';
 import App from '~/components/App';
 import Map from '~/components/Map';
@@ -71,21 +71,16 @@ const Plugin = {
         Vue.prototype.isAndroid = gVars.isAndroid;
         Vue.prototype.isIOS = gVars.isIOS;
         const filters = (Vue.prototype.$filters = Vue['options'].filters);
-        Vue.prototype.$t = localize;
-        Vue.prototype.$tc = function(s: string, ...args) {
-            return filters.capitalize(localize(s, ...args));
-        };
-        Vue.prototype.$tt = function(s: string, ...args) {
-            return filters.titlecase(localize(s, ...args));
-        };
-        Vue.prototype.$tu = function(s: string, ...args) {
-            return filters.uppercase(localize(s, ...args));
-        };
+        Vue.prototype.$t = $t;
+
+        Vue.prototype.$tc = $tc;
+        Vue.prototype.$tt = $tt;
+        Vue.prototype.$tu = $tu;
         Vue.prototype.$showError = function(err: Error) {
             if (!err) {
                 return;
             }
-            clog('showError', err, err.toString(), err.stack);
+            console.log('showError', err, err.toString(), err.stack);
             const message = typeof err === 'string' ? err : err.toString();
             return alert({
                 title: Vue.prototype.$tc('error'),

@@ -1,5 +1,5 @@
 <template>
-    <GridLayout ref="bottomSheet" elevation="1" width="100%" :rows="rows" @tap="noop">
+    <GridLayout ref="bottomSheet" width="100%" :rows="rows" @tap="noop">
         <BottomSheetInfoView ref="infoView" row="0" :visibility="itemIsRoute ? 'collapsed' : 'visible'" :updating="updatingItem" :item="itemIsRoute ? null : item" />
         <BottomSheetRouteInfoView ref="routeView" row="0" :visibility="itemIsRoute ? 'visible' : 'collapsed'" :routeItem="itemIsRoute ? item : null" />
 
@@ -20,7 +20,7 @@
             <AreaSeries v-tkCartesianSeries seriesName="Area" selectionMode="DataPoint" :items="routeElevationProfile" categoryProperty="x" valueProperty="y" @pointSelected="onChartSelected" />
         </RadCartesianChart> -->
 
-        <CollectionView row="3" ref="listView" rowHeight="49" :items="routeInstructions" :visibility="showListView ? 'visible' : 'hidden'" isBounceEnabled="false" @itemTap="onInstructionTap" @scroll="onListViewScroll" :isScrollEnabled="scrollEnabled">
+        <CollectionView id="bottomsheetListView" row="3" ref="listView" rowHeight="49" :items="routeInstructions" :visibility="showListView ? 'visible' : 'hidden'" isBounceEnabled="false" @itemTap="onInstructionTap" @scroll="onListViewScroll" @touch="onListViewTouch" :isScrollEnabled="scrollEnabled">
             <v-template>
                 <GridLayout columns="30,*" rows="*,auto,auto,*" height="50">
                     <Label col="0" rowSpan="4" :text="getRouteInstructionIcon(item) |fonticon" class="maki" color="white" fontSize="20" verticalAlignment="center" textAlignment="center" />

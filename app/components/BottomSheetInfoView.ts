@@ -62,6 +62,7 @@ export default class BottomSheetInfoView extends BaseVueComponent {
     }
     get propIcon() {
         return prop => {
+            console.log('propIcon', prop);
             switch (prop) {
                 case 'ele':
                     return 'mdi-elevation-rise';

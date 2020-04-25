@@ -30,7 +30,6 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
 
     currentMapZoom = 0;
     totalDownloadProgress = 0;
-    currentMapRotation = 0;
 
     selectedItem: Item = null;
     showLocationInfo = false;
@@ -120,8 +119,7 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
             return;
         }
         const scaleView = this.scaleView;
-        const bearing = cartoMap.bearing;
-        this.currentMapRotation = Math.round(bearing * 100) / 100;
+        
         scaleView && scaleView.onMapMove(e);
         // const cartoMap = this.mapView;
         // if (!cartoMap) {
@@ -184,7 +182,8 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
     lastSuggestionKey: string;
     onMapStable(e) {
         const cartoMap = this.mapView;
-        if (!cartoMap) {
+        const packageServiceEnabled = this.mapComp && this.mapComp.packageServiceEnabled
+        if (!cartoMap || !packageServiceEnabled) {
             return;
         }
         const zoom = Math.round(cartoMap.zoom);
@@ -326,9 +325,6 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
             const module = this.mapComp.mapModule('directionsPanel');
             module.addStopPoint(this.selectedItem.position, this.selectedItem.properties);
         }
-    }
-    resetBearing() {
-        this.mapView.setBearing(0, 200);
     }
     startBarometer() {
         if (this.listeningForBarometer) {

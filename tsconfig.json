@@ -3,6 +3,7 @@
         "target": "es5",
         "module": "esnext",
         "moduleResolution": "node",
+        "removeComments": false,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "sourceMap": true,
@@ -18,7 +19,6 @@
         "baseUrl": ".",
         "paths": {
             "~/*": ["app/*"],
-            "nativescript-vue": ["./node_modules/nativescript-akylas-vue"],
             "tns-core-modules": ["./node_modules/@nativescript/core"],
             "tns-core-modules/*": ["./node_modules/@nativescript/core/*"],
             "*": ["./node_modules/*"]

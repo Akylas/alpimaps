@@ -19,7 +19,7 @@ export function log(alwaysOrTarget: boolean | any, k?, desc?: PropertyDescriptor
     // console.log('test log dec', alwaysOrTarget, typeof alwaysOrTarget, k, desc, Object.getOwnPropertyNames(alwaysOrTarget));
     if (typeof alwaysOrTarget !== 'boolean') {
         // console.log(alwaysOrTarget.name, ' is now decorated');
-        return timelineProfileFunctionFactory(alwaysOrTarget, true, k, desc);
+        return timelineProfileFunctionFactory(alwaysOrTarget, false, k, desc);
     } else {
         // factory
         return function(target: any, key?: string, descriptor?: PropertyDescriptor) {
@@ -56,7 +56,7 @@ function timelineProfileFunctionFactory(target: any, always: boolean, key?, desc
     // editing the descriptor/value parameter
     descriptor.value = function() {
         // const start = time();
-        clog(name);
+        // clog(name);
         try {
             return originalMethod.apply(this, arguments);
         } finally {

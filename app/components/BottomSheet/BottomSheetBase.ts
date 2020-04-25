@@ -1,12 +1,13 @@
 import BaseVueComponent from '../BaseVueComponent';
-import { Component, Inject, Prop, Watch } from 'vue-property-decorator';
-// import { GestureHandlerStateEvent, GestureHandlerTouchEvent, GestureStateEventData, GestureTouchEventData, Manager } from 'nativescript-gesturehandler';
+import { Component } from 'vue-property-decorator';
 import BottomSheetHolder, { PAN_GESTURE_TAG } from './BottomSheetHolder';
 import Vue from 'nativescript-vue';
-import { GestureHandlerStateEvent, GestureHandlerTouchEvent, GestureState, GestureStateEventData, GestureTouchEventData, HandlerType, Manager, PanGestureHandler } from 'nativescript-gesturehandler';
-import { View } from '@nativescript/core/ui/page/page';
+import { TouchGestureEventData } from '@nativescript/core/ui/gestures';
+import { PanGestureHandler } from 'nativescript-gesturehandler';
 import { CollectionView } from 'nativescript-collectionview';
-import { RadCartesianChart } from 'nativescript-ui-chart';
+import LineChart from 'nativescript-chart/charts/LineChart';
+import { Manager, HandlerType } from 'nativescript-gesturehandler/gesturehandler';
+// import { RadCartesianChart } from 'nativescript-ui-chart';
 export const NATIVE_GESTURE_TAG = 4;
 
 @Component({})
@@ -15,7 +16,9 @@ export default class BottomSheetBase extends BaseVueComponent {
         super();
     }
 
-    isListViewAtTop = true;
+    public touchingListView = false;
+    public isListViewAtTop = true;
+    // public listViewVisible = false;
     isScrollEnabled = true;
     set scrollEnabled(value) {
         if (value !== this.isScrollEnabled) {
@@ -42,7 +45,7 @@ export default class BottomSheetBase extends BaseVueComponent {
         return this.$refs['listView'] && (this.$refs['listView'].nativeView as CollectionView);
     }
     get graphView() {
-        return this.$refs['graphView'] && (this.$refs['graphView'].nativeView as RadCartesianChart);
+        return this.$refs['graphView'] && (this.$refs['graphView'].nativeView as LineChart);
     }
     mounted() {
         super.mounted();
@@ -57,6 +60,9 @@ export default class BottomSheetBase extends BaseVueComponent {
             this.holder = parent;
             parent.setBottomSheet(this);
         }
+
+        // this is very important and necessary on ios
+        // without this the listview gesture and the pan gesture cant work together
         if (gVars.isIOS && listView && !!this.holder) {
             const manager = Manager.getInstance();
             const gestureHandler = manager.createGestureHandler(HandlerType.NATIVE_VIEW, NATIVE_GESTURE_TAG, {
@@ -72,8 +78,19 @@ export default class BottomSheetBase extends BaseVueComponent {
         this.scrollEnabled = true;
     }
 
+    onListViewTouch(event: TouchGestureEventData) {
+        switch(event.action) {
+            case 'down':
+                this.touchingListView = true;
+                break;
+            case 'up':
+            case 'cancel':
+                this.touchingListView = false;
+                break;
+        }
+    }
     onListViewScroll(args) {
-        // this.log('onListViewScroll', this.isScrollEnabled , this.holder.isPanning, this.listViewAtTop, args.scrollOffset);
+        // this.log('onListViewScroll', this.isScrollEnabled , this.listViewAtTop, args.scrollOffset);
         if (!this.isScrollEnabled) {
             return;
         }

@@ -1,9 +1,18 @@
 import Vue from 'nativescript-vue';
-import { knownFolders } from '@nativescript/core/file-system';
 
-import { cerror, clog, cwarn, DEV_LOG } from '~/utils/logging';
+import { cwarn, DEV_LOG } from '~/utils/logging';
 import { setMapPosKeys } from 'nativescript-carto/core';
 import * as application from '@nativescript/core/application';
+
+// import * as trace from '@nativescript/core/trace';
+// trace.addCategories(trace.categories.ViewHierarchy);
+// trace.addCategories(trace.categories.Navigation);
+// trace.addCategories(trace.categories.Layout);
+// trace.addCategories(trace.categories.Animation);
+// trace.addCategories(trace.categories.Style);
+// trace.addCategories(trace.categories.Style);
+// trace.addCategories(trace.categories.VisualTreeEvents);
+// trace.enable();
 
 setMapPosKeys('lat', 'lon');
 function CustomError(error) {
