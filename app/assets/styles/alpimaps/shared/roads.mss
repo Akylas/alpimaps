@@ -90,7 +90,7 @@
 		line-color: @pedestrian;
 		line-width: linear([view::zoom], (14, 0), (15, 0.4), (16, 0.8), (17, 1), (21, 12));
 	}
-	[class=path][subclass=platform]['mapnik::geometry_type'=2][zoom>=13]{
+	[class=path][subclass=platform][zoom>=13]{
 		// ::case[zoom>=15]{
 		// 	line-cap: round;
 		// 	line-join: round;
@@ -99,10 +99,12 @@
 
 		// 	[brunnel='tunnel'] { line-dasharray: 6, 3; }
 		// }
-		line-cap: [zoom]<=15 ? butt : round;
-		line-join: [zoom]<=15 ? miter : round;
+		polygon-fill: #bbbbbb;
+
+		// line-cap: [zoom]<=15 ? butt : round;
+		// line-join: [zoom]<=15 ? miter : round;
 		line-color: #BBBBBB;
-		line-width: linear([view::zoom], (11, 0), (12, 0.1), (13, 0.3), (14, 1), (21, 12));
+		line-width: linear([view::zoom], (11, 0), (13, 0.3), (14, 0.5), (21, 12));
 	}
 	
 	[class=motorway][ramp=1]['mapnik::geometry_type'=2][zoom>=11],

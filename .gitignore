@@ -14,3 +14,4 @@ certs
 report/
 *.html
 package-lock.json
+/.env.default

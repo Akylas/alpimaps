@@ -1,5 +1,5 @@
 import { GeoLocation, GPS, Options as GeolocationOptions, setMockEnabled } from 'nativescript-gps';
-import { localize } from 'nativescript-localize';
+import {$t} from '~/helpers/locale';
 import { confirm } from 'nativescript-material-dialogs';
 import Vue from 'nativescript-vue';
 import { android as androidApp, ApplicationEventData, launchEvent, off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
@@ -220,13 +220,13 @@ export class GeoHandler extends Observable {
 
     askToEnableIfNotEnabled() {
         if (geolocation.isEnabled()) {
-            return Promise.resolve();
+            return Promise.resolve(true);
         } else {
             return confirm({
                 // title: localize('stop_session'),
-                message: localize('gps_not_enabled'),
-                okButtonText: localize('settings'),
-                cancelButtonText: localize('cancel')
+                message: $t('gps_not_enabled'),
+                okButtonText: $t('settings'),
+                cancelButtonText: $t('cancel')
             }).then(result => {
                 if (DEV_LOG) {
                     this.log('askToEnableIfNotEnabled, confirmed', result);
@@ -240,25 +240,25 @@ export class GeoHandler extends Observable {
     }
     checkEnabledAndAuthorized(always = true) {
         return Promise.resolve()
-            .then(() => {
-                return geolocation.isAuthorized().then(r => {
+            .then(() =>
+                geolocation.isAuthorized().then(r => {
                     if (!r) {
                         return geolocation.authorize(always);
                     } else {
                         return r;
                     }
-                });
-            })
-            .then(didAuthorize => {
+                })
+            )
+            .then(() => {
                 return this.askToEnableIfNotEnabled();
             })
             .catch(err => {
                 if (err && /denied/i.test(err.message)) {
                     confirm({
                         // title: localize('stop_session'),
-                        message: localize('gps_not_authorized'),
-                        okButtonText: localize('settings'),
-                        cancelButtonText: localize('cancel')
+                        message: $t('gps_not_authorized'),
+                        okButtonText: $t('settings'),
+                        cancelButtonText: $t('cancel')
                     }).then(result => {
                         // this.log('stop_session, confirmed', result);
                         if (result) {
@@ -317,7 +317,7 @@ export class GeoHandler extends Observable {
 
     onDeferred = () => {
         this._deferringUpdates = false;
-    }
+    };
     onLocation = (loc: GeoLocation, manager?: any) => {
         // this.log('Received location: ', loc);
         if (loc) {
@@ -332,13 +332,13 @@ export class GeoHandler extends Observable {
             this._deferringUpdates = true;
             manager.allowDeferredLocationUpdatesUntilTraveledTimeout(0, 10);
         }
-    }
+    };
     onLocationError = (err: Error) => {
         if (DEV_LOG) {
             this.log(' location error: ', err);
         }
         this.currentWatcher && this.currentWatcher(err);
-    }
+    };
     startWatch(onLoc?: Function) {
         this.currentWatcher = onLoc;
         const options: GeolocationOptions = { desiredAccuracy, minimumUpdateTime, onDeferred: this.onDeferred };
@@ -521,7 +521,7 @@ export class GeoHandler extends Observable {
             }
             this.updateSessionWithLoc(loc);
         }
-    }
+    };
 
     waitingForLocation() {
         return this.currentSession && this.currentSession.lastLoc === null;

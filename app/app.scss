@@ -1,4 +1,3 @@
-// @import '~nativescript-theme-core/css/core.light.css';
 @import './variables';
 @import './animations';
 @import '~nativescript-vue-fab/style';
@@ -22,7 +21,7 @@
 
 page {
     // .ns-light & {
-    status-bar-style: light;
+    status-bar-style: dark;
     // navigation-bar-color: #ddd;
     navigation-bar-color: $primary-color;
     status-bar-color: $dark-color;
@@ -176,26 +175,28 @@ mdbutton {
     border-left-width: 1;
 }
 
-
-.fab-item-title {
-    background-color: #444;
-    vertical-text-alignment: middle;
-    border-radius: 6;
-    color: white;
+.fab {
+    .fab-item-title {
+        background-color: #444;
+        vertical-text-alignment: middle;
+        border-radius: 6;
+        color: white;
+    }
+    
+    .fab-button,
+    .fab-item {
+        background-color: $primary-color;
+        ripple-color: $dark-color;
+    }
+    .fab-icon,
+    .fab-item {
+        color: white;
+    }
+    .fab-backdrop {
+        background-color: rgba(0, 0, 0, 0.4);
+    }
 }
 
-.fab-button,
-.fab-item {
-    background-color: $primary-color;
-    ripple-color: $dark-color;
-}
-.fab-icon,
-.fab-item {
-    color: white;
-}
-.fab-backdrop {
-    background-color: rgba(0, 0, 0, 0.4);
-}
 
 .menuButtons {
     padding-left: 12;

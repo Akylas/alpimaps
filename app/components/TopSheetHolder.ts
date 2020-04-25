@@ -7,7 +7,7 @@ import DirectionsPanel from './DirectionsPanel';
 
 const OPEN_DURATION = 200;
 const CLOSE_DURATION = 200;
-export const DEFAULT_TOP = 60;
+export const DEFAULT_TOP = 80;
 export interface TopSheetHolderScrollEventData {
     bottom: number;
     percentage: number;
@@ -72,7 +72,6 @@ export default class TopSheetHolder extends BaseVueComponent {
     }
     onLayoutChange() {
         this.viewHeight = Math.round(layout.toDeviceIndependentPixels(this.nativeView.getMeasuredHeight()));
-        // console.log('onLayoutChange1', this.viewHeight, this.$refs['slotView']);
         // if (!this.$refs['slotView']) {
         //     return;
         //

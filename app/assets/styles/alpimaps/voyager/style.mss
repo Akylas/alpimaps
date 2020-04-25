@@ -139,7 +139,7 @@ Map {
 @bridge: rgba(242, 238, 218, 0.7);
 @footway: rgba(255, 255, 255, 0.8);
 
-@contour: #52644d;
+@contour: #226600;
 
 @rail_light:                    rgb(180, 180, 180);
 @rail_dark:                    rgb(90, 90, 90);

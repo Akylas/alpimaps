@@ -381,7 +381,7 @@ export default class MultiDrawer extends Vue {
 
     onGestureState(args: GestureStateEventData) {
         const { state, prevState, extraData } = args.data;
-        this.log('onGestureState', state, prevState, extraData);
+        // this.log('onGestureState', state, prevState, extraData);
         if (state === GestureState.BEGAN) {
             const x = extraData.x;
             const y = extraData.y;
@@ -425,7 +425,7 @@ export default class MultiDrawer extends Vue {
     }
     onGestureTouch(args: GestureTouchEventData) {
         const { state, extraData } = args.data;
-        this.log('onGestureTouch', state, extraData, this.isPanning);
+        // this.log('onGestureTouch', state, extraData, this.isPanning);
         // this.log('onGestureTouch', this._isPanning, this.panEnabled, this.isAnimating, data.state, data.extraData.translationY, this.prevDeltaY);
 
         if (!this.isPanning || state !== GestureState.ACTIVE) {
@@ -446,7 +446,7 @@ export default class MultiDrawer extends Vue {
             this.constrainY(view, side, view.translateY + (extraData.translationY - this.prevDeltaY));
             panProgress = Math.abs(view.translateY) / Math.abs(sideData.translationOffset);
         }
-        this.log('panProgress', view.translateX, extraData.translationX - this.prevDeltaX, panProgress);
+        // this.log('panProgress', view.translateX, extraData.translationX - this.prevDeltaX, panProgress);
 
         this.prevDeltaX = extraData.translationX;
         this.prevDeltaY = extraData.translationY;
@@ -603,6 +603,7 @@ export default class MultiDrawer extends Vue {
         this.onDrawerPan(side, args);
     }
     onDrawerPan(side, args) {
+        return;
         this.log('onDrawerPan', side, this.isPanning, this.isAnimating, args.state);
         if (side === false) {
             return;

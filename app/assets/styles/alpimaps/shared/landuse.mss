@@ -6,12 +6,33 @@
 	[class=residential][zoom<=14]{
 		polygon-fill: linear([view::zoom], (9, fadeout(@urbanareas, 0.2)), (12, fadeout(@urbanareas,0.5)), (13.9, fadeout(@urbanareas,0.5)), (14, fadeout(@urbanareas,1)));
 	}
-	
 }
 #landcover {
 	[class=rock][zoom>=8] {
 		polygon-fill: rgba(112, 112, 112, 0.3);
+		[subclass = 'cliff'][zoom >= 13] {
+			// line-color: #9F9F9E;
+			// line-width: 3;
+			line-pattern-file: url('symbols/cliff.svg');
+			// [zoom >= 15] {
+				// line-pattern-file: url('symbols/cliff2.svg');
+			// }
+		}
 	}
+
+	
+	[class=barrier][zoom >= 15] {
+		[subclass = 'citywalls'],
+		[subclass = 'city_wall'] {
+			line-width:linear([view::zoom], (15, 1), (17, 2),(20,3));
+			line-color: linear([view::zoom], (15, lighten(#444, 30%)), (17, #444));
+		}
+		[subclass = 'retaining_wall'] {
+			line-width:linear([view::zoom], (15, 1), (17, 2),(20,3));
+			line-color: linear([view::zoom], (15, lighten(#444, 30%)), (17, #444));
+		}
+	}
+	
 
 	[class=sand][zoom>=8],
 	[subclass='sand'][zoom>=8] {
@@ -40,11 +61,8 @@
 
 	[class=grass],
 	[class=farmland]{
-		[zoom<=10] {
-			polygon-fill: linear([view::zoom], (7, fadeout(@grass, 0.8)), (10, @grass));
-		}
+		polygon-fill: linear([view::zoom], (7, fadeout(@grass, 0.8)), (10, @grass));
 		[zoom>=10] {
-			polygon-fill: @grass;
 			line-color: @grass_outline;
 			line-width:0.5;
 		}
@@ -122,16 +140,16 @@
 	
 }
 #park[zoom>=6]{
-	polygon-fill: linear([view::zoom], (6, fadeout(@park, 0.4)), (11, fadeout(@park, 0.7)), (15, fadeout(@park, 0.8)));
+	polygon-fill: linear([view::zoom], (6, fadeout(@park, 0.4)), (11, fadeout(@park, 0.7)), (15, fadeout(@park, 0.8)));   
 	line-color: #82bf5a;
-	line-width: 1;
+	line-width: 1; 
 }
 
 #building [zoom>=15]['nuti::buildings'>0]{
-	::3d['nuti::buildings'>1][zoom>=18]{
+	::3d['nuti::buildings'>1][zoom>=18]{ 
 	  building-height: [render_height] ? [render_height] : 10;
 	  building-min-height: [render_min_height];
-	  building-fill: lighten(@buildings3d,10%);
+	  building-fill: lighten(@buildings3d,10%); 
 	  building-fill-opacity: linear([view::zoom], (18, 0.0), (19, 0.25));
 	} 
   

@@ -1,6 +1,9 @@
 
 @name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
 @maki_icon: [nuti::maki-[subclass]] ? [nuti::maki-[subclass]] : [nuti::maki-[class]];
+@osm_icon: [nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : [nuti::osm-[class]];
+@featureId: [osmid];
+
 // @id_test: (([osm_id]) = [nuti::selected_id]) ? #f00 : #fff;
 // @name_test: (([name]) = [nuti::selected_name]) ? #0f0 : #fff;
 
@@ -390,6 +393,7 @@
 
 #poi {
 	[subclass='alpine_hut'][rank<=10],
+	[subclass='wilderness_hut'][rank<=10],
 	[class=campsite][rank<=10],
 	[zoom=14][rank<=1][class!='information'][class!='toilets'][class!='bus'][subclass!='tram_stop'][subclass!='station'][class!='picnic_site'],
 	[zoom=15][rank<=2][class!='toilets'][class!='information'][class!='bus'][subclass!='tram_stop'][subclass!='station'],
@@ -415,7 +419,7 @@
 			[class='park'] {
 				text-fill: #76BC54;
 			}
-			[subclass='alpine_hut'],[class='campsite'] {
+			[subclass='alpine_hut'],[subclass='wilderness_hut'],[class='campsite'] {
 				text-fill: #854d04;
 			}
 			[class='hospital'] {

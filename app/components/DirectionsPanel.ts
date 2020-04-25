@@ -1,7 +1,14 @@
 import { ClickType, fromNativeMapPos, MapPos } from 'nativescript-carto/core';
 import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
 import { VectorElementEventData, VectorLayer, VectorTileEventData } from 'nativescript-carto/layers/vector';
-import { PackageManagerValhallaRoutingService, RoutingAction, RoutingResult, ValhallaOnlineRoutingService, ValhallaProfile } from 'nativescript-carto/routing';
+import {
+    PackageManagerValhallaRoutingService,
+    RoutingAction,
+    RoutingResult,
+    ValhallaOnlineRoutingService,
+    ValhallaProfile,
+    ValhallaOfflineRoutingService
+} from 'nativescript-carto/routing';
 import { CartoMap } from 'nativescript-carto/ui';
 import { Line, LineEndType, LineJointType, LineStyleBuilder } from 'nativescript-carto/vectorelements/line';
 import { Marker, MarkerStyleBuilder } from 'nativescript-carto/vectorelements/marker';
@@ -17,6 +24,7 @@ import { IMapModule } from '~/mapModules/MapModule';
 import BaseVueComponent from './BaseVueComponent';
 import Map from './Map';
 import { showSnack } from 'nativescript-material-snackbar';
+import { File, Folder, path } from '@nativescript/core/file-system';
 
 export interface RouteInstruction {
     position: MapPos<LatLonKeys>;
@@ -47,10 +55,11 @@ export interface Route {
 function routingResultToJSON(result: RoutingResult<LatLonKeys>) {
     const rInstructions = result.getInstructions();
     const instructions: RouteInstruction[] = [];
+    const points = result.getPoints();
     for (let i = 0; i < rInstructions.size(); i++) {
         const instruction = rInstructions.get(i);
 
-        const position = result.getPoints().get(instruction.getPointIndex());
+        const position = points.get(instruction.getPointIndex());
         instructions.push({
             position: fromNativeMapPos(position),
             action: instruction.getAction().toString(),
@@ -62,7 +71,7 @@ function routingResultToJSON(result: RoutingResult<LatLonKeys>) {
         });
     }
     const res = {
-        positions: result.getPoints().toArray(),
+        positions: points.toArray(),
         totalTime: result.getTotalTime(),
         totalDistance: result.getTotalDistance(),
         instructions
@@ -83,7 +92,14 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     _routeLayer: VectorLayer;
     // startMarker: Marker = null;
     // stopMarker: Marker = null;
-    waypoints: Array<{ marker: Group; position: MapPos<LatLonKeys>; isStart: boolean; isStop: boolean; metaData: any; text: string }> = [];
+    waypoints: Array<{
+        marker: Group;
+        position: MapPos<LatLonKeys>;
+        isStart: boolean;
+        isStop: boolean;
+        metaData: any;
+        text: string;
+    }> = [];
     // waypoints: MapPos[] = [];
     // stopPos: MapwaypointsPos = null;
     profile: ValhallaProfile = 'pedestrian';
@@ -163,24 +179,24 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             new Marker({
                 position,
                 styleBuilder: {
-                    // size: 30,
+                    size: 15,
                     hideIfOverlapped: false,
                     scaleWithDPI: true,
                     color: 'green'
                 }
-            }),
-            new Text({
-                position,
-                text: '0',
-                styleBuilder: {
-                    fontSize: 16,
-                    anchorPointY: 1,
-                    hideIfOverlapped: false,
-                    scaleWithDPI: true,
-                    color: 'white',
-                    backgroundColor: 'red'
-                }
             })
+            // new Text({
+            //     position,
+            //     text: '0',
+            //     styleBuilder: {
+            //         fontSize: 5,
+            //         anchorPointY: 1,
+            //         hideIfOverlapped: false,
+            //         // scaleWithDPI: true,
+            //         color: 'white',
+            //         // backgroundColor: 'red'
+            //     }
+            // })
         ];
         toAdd.marker = group;
         this.routeDataSource.add(group);
@@ -202,35 +218,37 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         if (this.waypoints.length > 0 && this.waypoints[this.waypoints.length - 1].isStop === true) {
             this.waypoints[this.waypoints.length - 1].isStop = false;
             (this.waypoints[this.waypoints.length - 1].marker.elements[0] as Point).styleBuilder = {
-                // size: 30,
+                size: 15,
                 hideIfOverlapped: false,
                 scaleWithDPI: true,
                 color: 'blue'
             };
             this.addStopPoint(position, metaData);
+            return;
         }
         const group = new Group();
         group.elements = [
             new Marker({
                 position,
                 styleBuilder: {
-                    size: 30,
+                    size: 15,
                     hideIfOverlapped: false,
                     scaleWithDPI: true,
                     color: 'red'
                 }
-            }),
-            new Text({
-                position,
-                text: this.waypoints.length + '',
-                styleBuilder: {
-                    fontSize: 16,
-                    hideIfOverlapped: false,
-                    scaleWithDPI: true,
-                    color: 'white',
-                    backgroundColor: 'red'
-                }
             })
+            // new Text({
+            //     position,
+            //     text: this.waypoints.length + '',
+            //     styleBuilder: {
+            //         fontSize: 5,
+            //         hideIfOverlapped: false,
+            //         anchorPointY: 1,
+            //         // scaleWithDPI: true,
+            //         color: 'white',
+            //         // backgroundColor: 'red'
+            //     }
+            // })
         ];
         toAdd.marker = group;
         this.routeDataSource.add(group);
@@ -244,7 +262,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             this.line = new Line<LatLonKeys>({
                 styleBuilder: {
                     color: 'gray',
-                    width: 6
+                    width: 4
                 },
                 positions: this.waypoints.map(w => w.position)
             });
@@ -388,6 +406,25 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         }
         return this._offlineRoutingSearchService;
     }
+    _localOfflineRoutingSearchService: ValhallaOfflineRoutingService;
+    get localOfflineRoutingSearchService() {
+        if (!this._localOfflineRoutingSearchService) {
+            if (Folder.exists(LOCAL_MBTILES)) {
+                const folder = Folder.fromPath(LOCAL_MBTILES);
+                const entities = folder.getEntitiesSync();
+                entities.some(s => {
+                    if (s.name.endsWith('.vtiles')) {
+                        console.log('loading vitles', s.path);
+                        this._localOfflineRoutingSearchService = new ValhallaOfflineRoutingService({
+                            path: s.path
+                        });
+                        return true;
+                    }
+                });
+            }
+        }
+        return this._localOfflineRoutingSearchService;
+    }
     _onlineRoutingSearchService: ValhallaOnlineRoutingService;
     get onlineRoutingSearchService() {
         if (!this._onlineRoutingSearchService) {
@@ -445,7 +482,11 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             style = this.routePointStyle;
         }
 
-        const marker = new Marker({ position: instruction.position, style, metaData: { instruction: JSON.stringify(instruction) } });
+        const marker = new Marker({
+            position: instruction.position,
+            style,
+            metaData: { instruction: JSON.stringify(instruction) }
+        });
 
         ds.add(marker);
     }
@@ -469,40 +510,45 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         const remainder = sec % 3600;
         const minutes = remainder / 60;
         const seconds = remainder % 60;
-        return (hours < 10 ? '0' : '') + hours + 'h' + (minutes < 10 ? '0' : '') + minutes + 'm' + (seconds < 10 ? '0' : '') + seconds + 's';
+        return (
+            (hours < 10 ? '0' : '') +
+            hours +
+            'h' +
+            (minutes < 10 ? '0' : '') +
+            minutes +
+            'm' +
+            (seconds < 10 ? '0' : '') +
+            seconds +
+            's'
+        );
     }
     loading = false;
     currentRoute: Route;
     currentLine: Line;
     showRoute(online = false) {
-        this.loading = true;
-        const service = online ? this.onlineRoutingSearchService : this.offlineRoutingSearchService;
-        service.profile = this.profile;
-        service.calculateRoute(
-            {
-                projection: this.mapView.projection,
-                points: this.waypoints.map(r => r.position)
-            },
-            (error, result) => {
-                this.loading = false;
-                if (error || result === null) {
-                    if (!online) {
-                        return confirm({
-                            message: this.$t('try_online'),
-                            okButtonText: this.$t('ok'),
-                            cancelButtonText: this.$t('cancel')
-                        }).then(result => {
-                            if (result) {
-                                this.showRoute(true);
-                            }
-                        });
-                    } else {
-                        this.cancel();
-                        return alert(error || 'failed to compute route');
+        return new Promise<Route>((resolve, reject) => {
+            this.loading = true;
+            
+            const service = online ? this.onlineRoutingSearchService : (this.localOfflineRoutingSearchService || this.offlineRoutingSearchService);
+            service.profile = this.profile;
+            service.calculateRoute(
+                {
+                    projection: this.mapView.projection,
+                    points: this.waypoints.map(r => r.position)
+                },
+                (error, result) => {
+                    this.loading = false;
+                    if (error || result === null) {
+                        return reject(error);
                     }
+                    this.cancel();
+                    const route = routingResultToJSON(result);
+
+                    resolve(route);
                 }
-                this.cancel();
-                const route = routingResultToJSON(result);
+            );
+        })
+            .then(route => {
                 this.currentRoute = route;
                 // const distance = route.totalDistance / 1000;
                 // const time = this.secondsToHours(route.totalTime);
@@ -512,7 +558,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
                 this.clearCurrentLine();
 
                 // this.routeDataSource.clear();
-                this.currentLine = this.createPolyline(route, result.getPoints());
+                this.currentLine = this.createPolyline(route, route.positions);
                 this.routeDataSource.clear();
                 this.line = null;
                 this.waypoints = [];
@@ -530,9 +576,27 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
                 //         this.createRoutePoint(i, this.routeDataSource);
                 //     }
                 // });
-                this.mapComp.selectItem({ position: fromNativeMapPos(this.currentLine.getGeometry().getCenterPos()), route }, true);
-            }
-        );
+                this.mapComp.selectItem(
+                    { position: fromNativeMapPos(this.currentLine.getGeometry().getCenterPos()), route },
+                    true
+                );
+            })
+            .catch(error => {
+                if (!online) {
+                    return confirm({
+                        message: this.$t('try_online'),
+                        okButtonText: this.$t('ok'),
+                        cancelButtonText: this.$t('cancel')
+                    }).then(result => {
+                        if (result) {
+                            this.showRoute(true);
+                        }
+                    });
+                } else {
+                    this.cancel();
+                    return Promise.reject(error || 'failed to compute route');
+                }
+            });
     }
     ensureRouteLayer() {
         return this.routeLayer !== null;

@@ -14,7 +14,6 @@
                         </StackLayout>
                     </StackLayout>
                 </GridLayout>
-                <MapRightMenu slot="right" />
                 <Frame ref="innerFrame">
                     <Map />
                 </Frame>

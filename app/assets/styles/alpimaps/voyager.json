@@ -1,12 +1,14 @@
 {
     "layers": [
-        "contour",
         "housenumber",
         "water_name",
         "transportation_name",
         "poi",
+        "aerodrome_label",
         "building",
+        "route",
         "transportation",
+        "contour",
         "aeroway",
         "water",
         "waterway",

@@ -38,6 +38,7 @@ declare const TNS_ENV: string;
 declare const LOG_LEVEL: string;
 declare const TEST_LOGS: boolean;
 declare const PRODUCTION: boolean;
+declare const LOCAL_MBTILES: string;
 // declare const process: { env: any };
 
 
