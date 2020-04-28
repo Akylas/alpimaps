@@ -63,7 +63,7 @@ export default class BottomSheetHolder extends BaseVueComponent {
     prevDeltaY = 0;
     viewHeight = 0;
     mCurrentViewHeight = 0;
-    isAtStep = false;
+    isAtTop = false;
     set currentViewHeight(value) {
         value = Math.round(value);
         // if (this.bottomSheet) {
@@ -73,12 +73,16 @@ export default class BottomSheetHolder extends BaseVueComponent {
         this.mCurrentViewHeight = value;
         value += this.bottomDecale;
         const delta = Math.max(this.viewHeight - value, 0);
-        this.isAtStep = this.peekerSteps.some(s => (this.currentViewHeight === this.viewHeight + s + this.bottomDecale));
-        this.$emit('scroll', {
+
+        //
+        this.isAtTop = this.peekerSteps.some(s => this.currentViewHeight + s === this.viewHeight + this.bottomDecale);
+        const eventData = {
             top: value,
             percentage: delta / this.viewHeight,
             height: delta
-        } as BottomSheetHolderScrollEventData);
+        } as BottomSheetHolderScrollEventData;
+        this.bottomSheet.handleScroll(eventData);
+        this.$emit('scroll', eventData);
     }
     get currentViewHeight() {
         const result = this.mCurrentViewHeight;
@@ -122,7 +126,7 @@ export default class BottomSheetHolder extends BaseVueComponent {
         super();
     }
     panGestureHandler: PanGestureHandler;
-    panGestureTag = PAN_GESTURE_TAG++
+    panGestureTag = PAN_GESTURE_TAG++;
     mounted() {
         super.mounted();
         const manager = Manager.getInstance();
@@ -156,8 +160,8 @@ export default class BottomSheetHolder extends BaseVueComponent {
         return result;
     }
     onLayoutChange() {
+        // we need to know the full height on layout
         const viewHeight = Math.round(layout.toDeviceIndependentPixels(this.nativeView.getMeasuredHeight()));
-        // this.log('onLayoutChange', viewHeight, this.viewHeight, this.currentViewHeight, this.translationMaxOffset);
         if (this.mCurrentViewHeight === 0) {
             this.viewHeight = viewHeight;
             this.currentViewHeight = this.viewHeight;
@@ -170,49 +174,34 @@ export default class BottomSheetHolder extends BaseVueComponent {
     didPanDuringGesture = false;
     onGestureState(args: GestureStateEventData) {
         const { state, prevState, extraData, view } = args.data;
+        if (state === GestureState.ACTIVE) {
+                this.prevDeltaY = 0;
+        }
+        else if (prevState === GestureState.ACTIVE && this.didPanDuringGesture) {
+            const comp = this.bottomSheet;
+            // we dont animate the drag velocity is the listview is enabled.
+            if (!comp.listViewVisible|| !comp.isScrollEnabled) {
+                const { velocityY, translationY } = extraData;
+                const viewTop = this.mCurrentViewHeight - this.viewHeight;
 
-        // this.log('onGestureState', state, prevState);
-        // if (!this.panEnabled) {
-        //     return;
-        // }
-        // this.updateIsPanning(state);
-        const comp = this.bottomSheet;
-        if (prevState === GestureState.ACTIVE && this.didPanDuringGesture) {
-            const { velocityY, translationY } = extraData;
-            const viewTop = this.mCurrentViewHeight - this.viewHeight;
+                const dragToss = 0.05;
+                const endOffsetY = viewTop + translationY - this.prevDeltaY + dragToss * velocityY;
 
-            const dragToss = 0.05;
-            const endOffsetY = viewTop + translationY - this.prevDeltaY + dragToss * velocityY;
-
-            const steps = [0].concat(this.peekerSteps);
-            let destSnapPoint = steps[0];
-            // console.log('onPan', 'done', viewTop, translationY, this.prevDeltaY, dragToss, velocityY, endOffsetY, steps);
-            for (let i = 0; i < steps.length; i++) {
-                const snapPoint = steps[i];
-                const distFromSnap = Math.abs(snapPoint + endOffsetY);
-                if (distFromSnap <= Math.abs(destSnapPoint + endOffsetY)) {
-                    destSnapPoint = snapPoint;
+                const steps = [0].concat(this.peekerSteps);
+                let destSnapPoint = steps[0];
+                for (let i = 0; i < steps.length; i++) {
+                    const snapPoint = steps[i];
+                    const distFromSnap = Math.abs(snapPoint + endOffsetY);
+                    if (distFromSnap <= Math.abs(destSnapPoint + endOffsetY)) {
+                        destSnapPoint = snapPoint;
+                    }
                 }
+                this.scrollSheetToPosition(destSnapPoint);
             }
-            // if (destSnapPoint === 0) {
-            //     this.$emit('');
-            // }
-            this.scrollSheetToPosition(destSnapPoint);
-            this.prevDeltaY = 0;
         }
         this.didPanDuringGesture = false;
     }
-    // updateIsPanning(state: GestureState) {
-    //     console.log('updateIsPanning', state);
-    //     const viewTop = this.mCurrentViewHeight - this.viewHeight;
-    //     this.isPanning = state === GestureState.ACTIVE || state === GestureState.BEGAN;
-    //     // if (this._isPanning) {
-
-    //     // }
-
-    //     // && viewTop !== -this.translationMaxOffset;
-    //     // this.log('updateIsPanning', state, viewTop, this.translationMaxOffset, this._isPanning);
-    // }
+    lastDraggingY = 0;
     onGestureTouch(args: GestureTouchEventData) {
         const data = args.data;
         // this.log('onGestureTouch', data.state);
@@ -222,6 +211,7 @@ export default class BottomSheetHolder extends BaseVueComponent {
         }
         const deltaY = data.extraData.translationY;
         const comp = this.bottomSheet;
+        const y = (this.lastDraggingY = deltaY - this.prevDeltaY);
         // this.log(
         //     'onGestureTouch',
         //     this.isAnimating,
@@ -233,7 +223,12 @@ export default class BottomSheetHolder extends BaseVueComponent {
         //     this.translationMaxOffset,
         //     deltaY
         // );
-        if (comp.touchingListView && !comp.listViewAtTop && !this.isAtStep) {
+
+        if (comp.listView) {
+            comp.scrollEnabled = comp.listViewVisible && (!comp.listViewAtTop || (this.isAtTop && y < 0));
+        }
+        console.log('dragging', y,comp.listViewVisible, comp.scrollEnabled);
+        if (comp.listViewVisible && comp.scrollEnabled) {
             // if (this.isAnimating || !this._isPanning || !this.panEnabled) {
             this.prevDeltaY = deltaY;
             return;
@@ -245,8 +240,6 @@ export default class BottomSheetHolder extends BaseVueComponent {
         this.didPanDuringGesture = true;
         const viewTop = this.mCurrentViewHeight - this.viewHeight;
 
-        const y = deltaY - this.prevDeltaY;
-        // console.log('onPan', 'moving', viewTop, deltaY, this.prevDeltaY, y, this.translationMaxOffset);
         this.constrainY(viewTop + y);
         // this.updateIsPanning(data.state);
         this.prevDeltaY = deltaY;
@@ -262,9 +255,6 @@ export default class BottomSheetHolder extends BaseVueComponent {
         }
         this.currentViewHeight = this.viewHeight + trY;
     }
-    // isAtStep() {
-    //     return  this.currentViewHeight = this.viewHeight + obj.value;
-    // }
     currentStep = 0;
     scrollSheetToPosition(position, duration = OPEN_DURATION) {
         const viewTop = this.mCurrentViewHeight - this.viewHeight;
@@ -282,7 +272,6 @@ export default class BottomSheetHolder extends BaseVueComponent {
                 .easing(TWEEN.Easing.Quadratic.Out)
                 .onUpdate(obj => {
                     this.currentViewHeight = this.viewHeight + obj.value;
-                    // this.log('onUpdate', this.viewHeight, obj.value);
                 })
                 .onComplete(resolve)
                 .onStop(resolve)
