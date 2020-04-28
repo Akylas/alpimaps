@@ -414,7 +414,6 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
                 const entities = folder.getEntitiesSync();
                 entities.some(s => {
                     if (s.name.endsWith('.vtiles')) {
-                        console.log('loading vitles', s.path);
                         this._localOfflineRoutingSearchService = new ValhallaOfflineRoutingService({
                             path: s.path
                         });
@@ -537,6 +536,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
                     points: this.waypoints.map(r => r.position)
                 },
                 (error, result) => {
+                    console.log('calculateRoute done', error, result);
                     this.loading = false;
                     if (error || result === null) {
                         return reject(error);
