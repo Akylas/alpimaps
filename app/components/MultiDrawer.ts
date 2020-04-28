@@ -508,7 +508,7 @@ export default class MultiDrawer extends Vue {
 
             // this.log('open2', side, this.isPanning, this.isAnimating, view.translateX, view.translateY, view.visibility);
             if (animationFactor !== 0) {
-                this.log('open starting animation', side, this.isPanning, this.isAnimating);
+                // this.log('open starting animation', side, this.isPanning, this.isAnimating);
                 this.isAnimating = true;
                 const duration = this.optionsInternal[side].animation.openDuration * animationFactor;
 
@@ -552,7 +552,7 @@ export default class MultiDrawer extends Vue {
                 const optionsInternal = this.sideOptions(side);
                 const duration = optionsInternal.animation.closeDuration * animationFactor;
 
-                this.log('starting closing animation', side);
+                // this.log('starting closing animation', side);
                 this.backdropNative.animate({
                     opacity: 0,
                     duration

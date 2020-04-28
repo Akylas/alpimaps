@@ -1,38 +1,36 @@
-import { CartoMapStyle, ClickType, ScreenPos, toNativeScreenPos, MapPos } from 'nativescript-carto/core';
-import { ad, layout } from '@nativescript/core/utils/utils';
+import * as appSettings from '@nativescript/core/application-settings';
+import { Folder, knownFolders, path } from '@nativescript/core/file-system';
+import { screen } from '@nativescript/core/platform';
+import { profile } from '@nativescript/core/profiling';
+import { ad } from '@nativescript/core/utils/utils';
+import { throttle } from 'helpful-decorators';
+import { CartoMapStyle, ClickType, MapPos, ScreenPos, toNativeScreenPos } from 'nativescript-carto/core';
 import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
 import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
 import { Layer } from 'nativescript-carto/layers';
 import { CartoOnlineVectorTileLayer, VectorElementEventData, VectorLayer, VectorTileEventData, VectorTileLayer, VectorTileRenderOrder } from 'nativescript-carto/layers/vector';
 import { Projection } from 'nativescript-carto/projections';
-import { CartoMap, registerLicense, RenderProjectionMode } from 'nativescript-carto/ui';
-import { setShowDebug } from 'nativescript-carto/utils';
+import { CartoMap, RenderProjectionMode } from 'nativescript-carto/ui';
 import { Line, LineEndType, LineJointType, LineStyleBuilder, LineStyleBuilderOptions } from 'nativescript-carto/vectorelements/line';
 import { Marker, MarkerStyleBuilder, MarkerStyleBuilderOptions } from 'nativescript-carto/vectorelements/marker';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from 'nativescript-carto/vectorelements/point';
 import { MBVectorTileDecoder } from 'nativescript-carto/vectortiles';
 import { allowSleepAgain, keepAwake } from 'nativescript-insomnia';
-import { $t } from '~/helpers/locale';
+import { action } from 'nativescript-material-dialogs';
 import * as perms from 'nativescript-perms';
 import * as SocialShare from 'nativescript-social-share';
 import { AppURL, handleOpenURL } from 'nativescript-urlhandler';
-import * as appSettings from '@nativescript/core/application-settings';
-import { Folder, knownFolders, path } from '@nativescript/core/file-system';
-import { screen } from '@nativescript/core/platform';
-import { profile } from '@nativescript/core/profiling';
-import { throttle } from 'helpful-decorators';
-import { action } from 'nativescript-material-dialogs';
-import { Component, Prop, Watch } from 'vue-property-decorator';
+import { Component, Prop } from 'vue-property-decorator';
 import { GeoHandler } from '~/handlers/GeoHandler';
+import { $t } from '~/helpers/locale';
 import CustomLayersModule, { SourceItem } from '~/mapModules/CustomLayersModule';
 import ItemFormatter from '~/mapModules/ItemFormatter';
 import ItemsModule, { Item } from '~/mapModules/ItemsModule';
 import MapModule from '~/mapModules/MapModule';
 import UserLocationModule from '~/mapModules/UserLocationModule';
-import { NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
+import { NotificationHelper, NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL } from '~/services/android/NotifcationHelper';
 import { computeDistanceBetween, getBoundsZoomLevel, getCenter } from '~/utils/geo';
 import { actionBarButtonHeight, actionBarHeight, navigationBarHeight, primaryColor } from '../variables';
-import App from './App';
 import BgServicePageComponent from './BgServicePageComponent';
 import BottomSheet, { LISTVIEW_HEIGHT, PROFILE_HEIGHT } from './BottomSheet';
 import BottomSheetHolder, { BottomSheetHolderScrollEventData } from './BottomSheet/BottomSheetHolder';
@@ -568,7 +566,7 @@ export default class Map extends BgServicePageComponent {
                         // visible: false,
                         joinType: LineJointType.ROUND,
                         endType: LineEndType.ROUND,
-                        width: item.styleOptions.width + 2,
+                        width: (item.styleOptions ? item.styleOptions.width: 6) + 2,
                         clickWidth: 0
 
                         // orientationMode: BillboardOrientation.GROUND,
