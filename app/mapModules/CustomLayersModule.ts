@@ -356,7 +356,6 @@ export default class CustomLayersModule extends MapModule {
                 // }
                 return Promise.all(
                     entities.map(e => {
-                        console.log('handling folder', e.path);
                         if (Folder.exists(e.path)) {
                             return Folder.fromPath(e.path)
                                 .getEntities()
