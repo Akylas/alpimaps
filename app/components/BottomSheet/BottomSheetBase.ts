@@ -1,25 +1,37 @@
 import BaseVueComponent from '../BaseVueComponent';
 import { Component } from 'vue-property-decorator';
-import BottomSheetHolder, { PAN_GESTURE_TAG } from './BottomSheetHolder';
+import BottomSheetHolder, { PAN_GESTURE_TAG, BottomSheetHolderScrollEventData } from './BottomSheetHolder';
 import Vue from 'nativescript-vue';
 import { TouchGestureEventData } from '@nativescript/core/ui/gestures';
 import { PanGestureHandler } from 'nativescript-gesturehandler';
 import { CollectionView } from 'nativescript-collectionview';
 import LineChart from 'nativescript-chart/charts/LineChart';
 import { Manager, HandlerType } from 'nativescript-gesturehandler/gesturehandler';
+import { layout } from '@nativescript/core/utils/utils';
+import { View } from '@nativescript/core/ui/frame';
 // import { RadCartesianChart } from 'nativescript-ui-chart';
 export const NATIVE_GESTURE_TAG = 4;
+
+function getViewTop(view: View) {
+    if (gVars.isAndroid) {
+        return layout.toDeviceIndependentPixels((view.nativeView as android.view.View).getTop());
+    } else {
+        return layout.toDeviceIndependentPixels((view.nativeView as UIView).frame.origin.y);
+    }
+}
 
 @Component({})
 export default class BottomSheetBase extends BaseVueComponent {
     constructor() {
         super();
     }
+    holder: BottomSheetHolder;
+    panGestureHandler: PanGestureHandler;
 
-    public touchingListView = false;
     public isListViewAtTop = true;
-    // public listViewVisible = false;
-    isScrollEnabled = true;
+    public listViewVisible = false;
+    public listViewAvailable = false;
+    public isScrollEnabled = true;
     set scrollEnabled(value) {
         if (value !== this.isScrollEnabled) {
             // this.log('set scrollEnabled', value);
@@ -39,13 +51,33 @@ export default class BottomSheetBase extends BaseVueComponent {
             this.$emit('listViewAtTop', value);
         }
     }
-    holder: BottomSheetHolder;
-    panGestureHandler: PanGestureHandler;
     get listView() {
         return this.$refs['listView'] && (this.$refs['listView'].nativeView as CollectionView);
     }
     get graphView() {
         return this.$refs['graphView'] && (this.$refs['graphView'].nativeView as LineChart);
+    }
+    listViewLocationY = 0;
+    onLayoutChange() {
+        if (this.listViewAvailable) {
+            this.listViewLocationY = getViewTop(this.listView);
+        }
+    }
+    handleScroll(e: BottomSheetHolderScrollEventData) {
+        if (this.listViewAvailable) {
+
+            // we use this to track if listview is visible or not.
+            // this is important to know we can drag or not
+            const listViewTop = this.listViewLocationY;
+            if (!this.listViewVisible && e.height > listViewTop + 10) {
+                this.listViewVisible = true;
+            }
+            if (this.listViewVisible && e.height <= listViewTop) {
+                this.listViewAtTop = true;
+                this.listViewVisible = false;
+                this.listView.scrollToIndex(0, false);
+            }
+        }
     }
     mounted() {
         super.mounted();
@@ -75,29 +107,20 @@ export default class BottomSheetBase extends BaseVueComponent {
 
     reset() {
         this.listViewAtTop = true;
+        this.listViewVisible = false;
         this.scrollEnabled = true;
     }
 
-    onListViewTouch(event: TouchGestureEventData) {
-        switch(event.action) {
-            case 'down':
-                this.touchingListView = true;
-                break;
-            case 'up':
-            case 'cancel':
-                this.touchingListView = false;
-                break;
-        }
-    }
+    
     onListViewScroll(args) {
-        // this.log('onListViewScroll', this.isScrollEnabled , this.listViewAtTop, args.scrollOffset);
         if (!this.isScrollEnabled) {
             return;
         }
-        if (!this.listViewAtTop && args.scrollOffset <= 0) {
+        // we use this to know with the listView is at top
+        // important for the dragging behavior
+        if (!this.listViewAtTop && args.scrollOffset <= 2) {
             this.listViewAtTop = true;
-        } else if (this.listViewAtTop && args.scrollOffset > 0) {
-            // this.log('listViewAtTop', this.listViewAtTop);
+        } else if (this.listViewAtTop && args.scrollOffset > 2) {
             this.listViewAtTop = false;
         }
     }

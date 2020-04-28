@@ -3,7 +3,6 @@ import { CartoMap } from 'nativescript-carto/ui';
 import { View } from '@nativescript/core/ui/core/view';
 import { GridLayout } from '@nativescript/core/ui/layouts/grid-layout/grid-layout';
 import { ItemEventData } from '@nativescript/core/ui/list-view/list-view';
-import { layout } from '@nativescript/core/utils/utils';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import { convertDistance } from '~/helpers/formatter';
 import ItemFormatter from '~/mapModules/ItemFormatter';
@@ -21,17 +20,13 @@ import LineChart from 'nativescript-chart/charts/LineChart';
 import { LineDataSet, Mode } from 'nativescript-chart/data/LineDataSet';
 import { LineData } from 'nativescript-chart/data/LineData';
 import { XAxisPosition } from 'nativescript-chart/components/XAxis';
+import { omit } from '~/utils';
+import { knownFolders } from '@nativescript/core/file-system/file-system';
+import { ShareFile } from 'nativescript-akylas-share-file';
 
 export const LISTVIEW_HEIGHT = 200;
 export const PROFILE_HEIGHT = 100;
 
-function getViewTop(view: View) {
-    if (gVars.isAndroid) {
-        return layout.toDeviceIndependentPixels((view.nativeView as android.view.View).getTop());
-    } else {
-        return layout.toDeviceIndependentPixels((view.nativeView as UIView).frame.origin.y);
-    }
-}
 
 @Component({
     components: {
@@ -50,12 +45,11 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
 
     // dataItems: any[] = [];
     // graphViewVisible = false;
-    listViewAvailable = false;
     graphAvailable = false;
 
     mounted() {
         super.mounted();
-        this.holder.$on('scroll', this.onScroll);
+        // this.holder.$on('scroll', this.onScroll);
     }
     destroyed() {
         super.destroyed();
@@ -89,8 +83,8 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     //     return !!this.item && !!this.item.route && !!this.item.route.instructions;
     // }
     get showListView() {
-        return this.listViewAvailable;
-        // return this.listViewAvailable && this.listViewVisible;
+        // return this.listViewAvailable;
+        return this.listViewAvailable && this.listViewVisible;
     }
     // get graphAvailable() {
     //     return this.itemRoute && !!this.item.route.profile && !!this.item.route.profile.data && this.item.route.profile.data.length > 0;
@@ -110,7 +104,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     onSelectedItemChange(item: Item) {
         // this.log('onSelectedItemChange', !!item);
         this.reset();
-        // this.listViewVisible = false;
+        this.listViewVisible = false;
         this.listViewAvailable = !!this.item && !!this.item.route && !!this.item.route.instructions;
 
         // this.graphViewVisible = false;
@@ -129,35 +123,35 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         // this.log('onNewLocation', location);
         this.routeView.onNewLocation(e);
     }
-    onScroll(e: BottomSheetHolderScrollEventData) {
-        // if (this.listViewAvailable && !this.listViewVisible) {
-        //     const locationY = getViewTop(this.listView);
-        //     // this.log('listViewAvailable locationY', locationY, e.height);
-        //     if (locationY) {
-        //         const listViewTop = locationY;
-        //         if (!this.listViewVisible && e.height > listViewTop + 10) {
-        //             // this.log('set listVisible', listViewTop, e.height);
-        //             this.listViewVisible = true;
-        //         }
-        //         if (this.listViewVisible && !this.isListViewAtTop && e.height < listViewTop) {
-        //             // this.log('resetting listViewAtTop to ensure pan enabled');
-        //             this.listViewAtTop = true;
-        //             this.listView.scrollToIndex(0, false);
-        //         }
-        //     }
-        // }
-        // if (this.graphAvailable && !this.graphViewVisible) {
-        //     const locationY = getViewTop(this.graphView);
-        //     // this.log('graphAvailable locationY', locationY, e.height);
-        //     if (locationY) {
-        //         const graphViewTop = locationY;
-        //         if (!this.graphViewVisible && e.height > graphViewTop + 10) {
-        //             // this.log('set graphViewVisible', graphViewTop, e.height);
-        //             this.graphViewVisible = true;
-        //         }
-        //     }
-        // }
-    }
+    // onScroll(e: BottomSheetHolderScrollEventData) {
+    //     if (this.listViewAvailable && !this.listViewVisible) {
+    //         const locationY = getViewTop(this.listView);
+    //         // this.log('listViewAvailable locationY', locationY, e.height);
+    //         if (locationY) {
+    //             const listViewTop = locationY;
+    //             if (!this.listViewVisible && e.height > listViewTop + 10) {
+    //                 // this.log('set listVisible', listViewTop, e.height);
+    //                 this.listViewVisible = true;
+    //             }
+    //             if (this.listViewVisible && !this.isListViewAtTop && e.height < listViewTop) {
+    //                 // this.log('resetting listViewAtTop to ensure pan enabled');
+    //                 this.listViewAtTop = true;
+    //                 this.listView.scrollToIndex(0, false);
+    //             }
+    //         }
+    //     }
+    //     // if (this.graphAvailable && !this.graphViewVisible) {
+    //     //     const locationY = getViewTop(this.graphView);
+    //     //     // this.log('graphAvailable locationY', locationY, e.height);
+    //     //     if (locationY) {
+    //     //         const graphViewTop = locationY;
+    //     //         if (!this.graphViewVisible && e.height > graphViewTop + 10) {
+    //     //             // this.log('set graphViewVisible', graphViewTop, e.height);
+    //     //             this.graphViewVisible = true;
+    //     //         }
+    //     //     }
+    //     // }
+    // }
     searchItemWeb() {
         if (gVars.isAndroid) {
             const query = this.$getMapComponent()
@@ -217,7 +211,53 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         const mapComp = this.$getMapComponent();
         mapComp.mapModule('items').deleteItem(this.item);
     }
+    // export interface Item {
+    //     id?: number;
+    //     properties?: {
+    //         [k: string]: any;
+    //         name?: string;
+    //         osm_value?: string;
+    //         osm_key?: string;
+    //         class?: string;
+    //         layer?: string;
+    //     };
+    //     provider?: 'photon' | 'here' | 'carto';
+    //     categories?: string[];
+    //     address?: Address;
+    //     zoomBounds?: MapBounds<LatLonKeys>;
+    //     route?: Route;
+    //     position?: MapPos<LatLonKeys>;
+    //     styleOptions?: any;
+    //     vectorElement?: VectorElement<any, any>;
+    // }
+    shareItem() {
+        const itemToShare = omit(this.item, 'vectorElement');
+        this.shareFile(JSON.stringify(itemToShare), `sharedItem.json`);
+    }
+    async shareFile(content: string, fileName: string) {
+        const file = knownFolders.temp().getFile(fileName);
+        // iOS: using writeText was not adding the file. Surely because it was too soon or something
+        // doing it sync works better but still needs a timeout
+        // this.showLoading('loading');
+        await file.writeText(content);
 
+        // if (gVars.isIOS) {
+        //     await timeout(1000);
+        // }
+        //we need to wait quit a bit on ios for the file to be correctly shared ...
+        // return timeout(gVars.isIOS ? 1000 : 0).then(noop => {
+        // this.hideLoading();
+        // this.log('shareFile', fileName, file.path);
+        const shareFile = new ShareFile();
+        await shareFile.open({
+            path: file.path,
+            title: fileName,
+            options: true, // optional iOS
+            animated: true // optional iOS
+        });
+
+        // });
+    }
     getRouteInstructionIcon(item: any) {
         return [];
     }

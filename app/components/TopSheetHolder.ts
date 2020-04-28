@@ -149,7 +149,6 @@ export default class TopSheetHolder extends BaseVueComponent {
                     .easing(TWEEN.Easing.Quadratic.Out)
                     .onUpdate(obj => {
                         this.currentViewTop = obj.value;
-                        // this.log('onUpdate', obj.value);
                     })
                     .onComplete(resolve)
                     .onStop(resolve)

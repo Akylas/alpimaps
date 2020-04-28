@@ -1,5 +1,5 @@
 <template>
-    <GridLayout ref="bottomSheet" width="100%" :rows="rows" @tap="noop">
+    <GridLayout ref="bottomSheet" width="100%" :rows="rows" @tap="noop"  @layoutChanged="onLayoutChange">
         <BottomSheetInfoView ref="infoView" row="0" :visibility="itemIsRoute ? 'collapsed' : 'visible'" :updating="updatingItem" :item="itemIsRoute ? null : item" />
         <BottomSheetRouteInfoView ref="routeView" row="0" :visibility="itemIsRoute ? 'visible' : 'collapsed'" :routeItem="itemIsRoute ? item : null" />
 
@@ -8,6 +8,7 @@
             <MDButton variant="text" padding="4" fontSize="10" @tap="getProfile" text="profile" v-show="itemRouteNoProfile" />
             <MDButton variant="text" padding="4" fontSize="10" @tap="saveItem" text="save item" v-show="item && !item.id" />
             <MDButton variant="text" padding="4" fontSize="10" @tap="deleteItem" text="delete item" v-show="item && item.id" />
+            <MDButton variant="text" padding="4" fontSize="10" @tap="shareItem" text="share item" v-show="item && item.id" />
         </StackLayout>
         <!-- <transition name="fade" duration="200"> -->
             <LineChart ref="graphView" row="2"  :visibility="showGraph ? 'visible' : 'hidden'" />
@@ -20,7 +21,7 @@
             <AreaSeries v-tkCartesianSeries seriesName="Area" selectionMode="DataPoint" :items="routeElevationProfile" categoryProperty="x" valueProperty="y" @pointSelected="onChartSelected" />
         </RadCartesianChart> -->
 
-        <CollectionView id="bottomsheetListView" row="3" ref="listView" rowHeight="49" :items="routeInstructions" :visibility="showListView ? 'visible' : 'hidden'" isBounceEnabled="false" @itemTap="onInstructionTap" @scroll="onListViewScroll" @touch="onListViewTouch" :isScrollEnabled="scrollEnabled">
+        <CollectionView id="bottomsheetListView" row="3" ref="listView" rowHeight="49" :items="routeInstructions" :visibility="showListView ? 'visible' : 'hidden'" isBounceEnabled="false" @itemTap="onInstructionTap" @scroll="onListViewScroll" :isScrollEnabled="scrollEnabled">
             <v-template>
                 <GridLayout columns="30,*" rows="*,auto,auto,*" height="50">
                     <Label col="0" rowSpan="4" :text="getRouteInstructionIcon(item) |fonticon" class="maki" color="white" fontSize="20" verticalAlignment="center" textAlignment="center" />
