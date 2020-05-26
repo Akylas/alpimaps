@@ -298,6 +298,7 @@ export class GeoHandler extends Observable {
         return geolocation
             .getCurrentLocation(options || { desiredAccuracy, minimumUpdateTime, timeout, onDeferred: this.onDeferred })
             .then(r => {
+                this.log('getLocation result', r);
                 this.notify({
                     eventName: UserLocationdEvent,
                     object: this,
@@ -319,7 +320,7 @@ export class GeoHandler extends Observable {
         this._deferringUpdates = false;
     };
     onLocation = (loc: GeoLocation, manager?: any) => {
-        // this.log('Received location: ', loc);
+        this.log('Received location: ', loc);
         if (loc) {
             this.currentWatcher && this.currentWatcher(null, loc);
             this.notify({

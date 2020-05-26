@@ -98,6 +98,7 @@ export default class UserLocationModule extends MapModule {
         return this.mLastUserLocation;
     }
     set lastUserLocation(value) {
+        // this.log('set lastUserLocation', value);
         this.mLastUserLocation = value;
         this.notify({
             eventName: 'location',
@@ -234,15 +235,16 @@ export default class UserLocationModule extends MapModule {
         }
         this.lastUserLocation = position;
     }
-    onLocation(data: UserLocationdEventData) {
+    onLocation(event: UserLocationdEventData) {
         this.queryingLocation = false;
         // const { android, ios, ...toPrint } = data.location;
-        // this.log('onLocation', this._userFollow, toPrint, this.userFollow);
-        if (data.error) {
-            this.log(data.error);
+        this.log('onLocation', this._userFollow, event.location, this.userFollow);
+        if (event.error) {
+            this.log(event.error);
             return;
+        } else if (event.location) {
+            this.updateUserLocation(event.location);
         }
-        this.updateUserLocation(data.location);
     }
     geoHandler: GeoHandler;
     onServiceLoaded(geoHandler: GeoHandler) {

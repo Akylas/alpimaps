@@ -46,7 +46,7 @@ export default class BottomSheetRouteInfoView extends BaseVueComponent {
     onNewLocation(e: any) {
         this.currentLocation = e.data;
         // this.log('onNewLocation', location);
-        this.updateRouteItemWithPosition(this.currentLocation);
+        return this.updateRouteItemWithPosition(this.currentLocation);
     }
 
     updateRouteItemWithPosition(location) {
@@ -61,9 +61,11 @@ export default class BottomSheetRouteInfoView extends BaseVueComponent {
             } else {
                 this.remainingDistanceOnCurrentRoute = null;
             }
+            return onPathIndex;
         } else {
             this.remainingDistanceOnCurrentRoute = null;
         }
+        return -1;
     }
     get routeDistance() {
         if (!this.routeItem) {
