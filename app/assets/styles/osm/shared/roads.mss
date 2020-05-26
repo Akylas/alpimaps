@@ -1563,11 +1563,11 @@
 			// line-cap: round;
 			line-color: #808080;
 	
-			dash/line-width: 6;
+			dash/line-width: 2;
 			// dash/line-join: round;
 			dash/line-cap: round;
 			dash/line-color: black;
-			dash/line-dasharray: 3,13;
+			dash/line-dasharray: 1,13;
 			// dash/line-clip: false;
 			// [zoom >= 17] {
 			//   text-name: "[name]";

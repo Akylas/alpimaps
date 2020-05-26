@@ -23,6 +23,7 @@ import { XAxisPosition } from 'nativescript-chart/components/XAxis';
 import { omit } from '~/utils';
 import { knownFolders } from '@nativescript/core/file-system/file-system';
 import { ShareFile } from 'nativescript-akylas-share-file';
+import { Rounding } from 'nativescript-chart/data/DataSet';
 
 export const LISTVIEW_HEIGHT = 200;
 export const PROFILE_HEIGHT = 100;
@@ -45,6 +46,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
 
     // dataItems: any[] = [];
     // graphViewVisible = false;
+    profileHeight = PROFILE_HEIGHT
     graphAvailable = false;
 
     mounted() {
@@ -72,8 +74,12 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         return this.$refs['routeView'] as BottomSheetRouteInfoView;
     }
 
+    get chart() {
+        return this.$refs.graphView.nativeView as LineChart;
+    }
+
     get rows() {
-        const result = `70,${actionBarHeight},${this.graphAvailable ? PROFILE_HEIGHT : 0},${
+        const result = `70,${actionBarHeight},auto,${
             this.listViewAvailable ? LISTVIEW_HEIGHT : 0
         }`;
         // this.log('rows', result);
@@ -119,9 +125,29 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     }
 
     onNewLocation(e: any) {
-        const location: MapPos<LatLonKeys> = e.data;
-        // this.log('onNewLocation', location);
-        this.routeView.onNewLocation(e);
+        // const location: MapPos<LatLonKeys> = e.data;
+        const index = this.routeView.onNewLocation(e);
+        // this.log('onNewLocation', index, e.data);
+        if (index !== -1 && this.graphAvailable) {
+            const profile = this.item.route.profile;
+            const profileData = profile?.data;
+            if (profileData) {
+
+                const chart = this.chart;
+                chart.highlightValue(profileData[index].x, 0, 0);
+            }
+        }
+    }
+    onChartTap(event) {
+        const chart = this.chart;
+        console.log('onChartTap', event.highlight);
+        const x = chart.getData().getDataSetByIndex(0).getEntryIndexForXValue(event.highlight.x, NaN, Rounding.CLOSEST);
+        const position = this.item.route.positions[x];
+        console.log('onChartTap2', x, position);
+        if (position) {
+            const mapComp = this.$getMapComponent();
+            mapComp.selectItem({item:{ position }, isFeatureInteresting:true, setSelected:false, peek:false});
+        }
     }
     // onScroll(e: BottomSheetHolderScrollEventData) {
     //     if (this.listViewAvailable && !this.listViewVisible) {
@@ -189,7 +215,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
             .mapModule('items')
             .saveItem(this.item)
             .then(item => {
-                mapComp.selectItem(item, true);
+                mapComp.selectItem({item, isFeatureInteresting:true});
             })
             .catch(err => {
                 this.showError(err);
@@ -201,7 +227,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
             .mapModule('items')
             .updateItem(this.item)
             .then(item => {
-                mapComp.selectItem(item, true, peek);
+                mapComp.selectItem({item, isFeatureInteresting:true, peek});
             })
             .catch(err => {
                 this.showError(err);
@@ -306,7 +332,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     }
 
     updateChartData() {
-        const chart = this.$refs.graphView.nativeView as LineChart;
+        const chart = this.chart;
         const key = (chart as any).propName;
         const sets = [];
         const profile = this.item.route.profile;
@@ -321,6 +347,11 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
             set.setFillColor('#8060B3FC');
             sets.push(set);
         }
+
+        // chart.setDoubleTapToZoomEnabled(true);
+        // chart.setScaleEnabled(true);
+        // chart.setDragEnabled(true);
+        chart.setHighlightPerTapEnabled(true);
 
         chart.getLegend().setEnabled(false);
         // chart.setLogEnabled(true);
@@ -361,10 +392,6 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         if (result) {
             this.$getMapComponent().cartoMap.setZoom(16, 100);
             this.$getMapComponent().cartoMap.setFocusPos(result.position, 100);
-            // this.bleService.once(BLEConnectedEvent, ()=>{
-            //     this.close();
-            // })
-            // this.bleService.connect(device.UUID);
         }
     }
 }

@@ -576,10 +576,10 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
                 //         this.createRoutePoint(i, this.routeDataSource);
                 //     }
                 // });
-                this.mapComp.selectItem(
-                    { position: fromNativeMapPos(this.currentLine.getGeometry().getCenterPos()), route },
-                    true
-                );
+                this.mapComp.selectItem({
+                    item:{ position: fromNativeMapPos(this.currentLine.getGeometry().getCenterPos()), route },
+                    isFeatureInteresting: true
+                });
             })
             .catch(error => {
                 if (!online) {
