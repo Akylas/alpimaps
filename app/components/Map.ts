@@ -10,7 +10,7 @@ import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
 import { Layer } from 'nativescript-carto/layers';
 import { CartoOnlineVectorTileLayer, VectorElementEventData, VectorLayer, VectorTileEventData, VectorTileLayer, VectorTileRenderOrder } from 'nativescript-carto/layers/vector';
 import { Projection } from 'nativescript-carto/projections';
-import { CartoMap, RenderProjectionMode } from 'nativescript-carto/ui';
+import { CartoMap, PanningMode, RenderProjectionMode } from 'nativescript-carto/ui';
 import { Line, LineEndType, LineJointType, LineStyleBuilder, LineStyleBuilderOptions } from 'nativescript-carto/vectorelements/line';
 import { Marker, MarkerStyleBuilder, MarkerStyleBuilderOptions } from 'nativescript-carto/vectorelements/marker';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from 'nativescript-carto/vectorelements/point';
@@ -167,12 +167,11 @@ export default class Map extends BgServicePageComponent {
     currentLanguage = appSettings.getString('language', 'en');
     addedLayers: string[] = [];
 
-    showingDownloadPackageDialog = false;
     keepAwake = false;
 
     currentMapRotation = 0;
 
-    packageServiceEnabled = true;
+    packageServiceEnabled = false;
 
     set selectedItem(value) {
         this.runOnModules('onSelectedItem', value, this.mSelectedItem);
@@ -212,12 +211,8 @@ export default class Map extends BgServicePageComponent {
                 result.push(result[result.length - 1] + LISTVIEW_HEIGHT);
             }
         }
-        // this.log('peekerSteps', result, !!this.mSelectedItem, !!this.mSelectedItem && !!this.mSelectedItem.route);
+        // this.log('peekerSteps', result);
         return result;
-        // if (this.shouldShowFullHeight) {
-        //     return [this.peekHeight, this.peekHeight + this.actionBarHeight, this.fullHeight];
-        // }
-        // return [this.peekHeight, this.peekHeight + this.actionBarHeight];
     }
 
     get bottomSheetHolder() {
@@ -274,8 +269,8 @@ export default class Map extends BgServicePageComponent {
                 const match = query.match(geoTextRegexp);
                 const actualQuery = decodeURIComponent(query).replace(/[+]/g, ' ');
                 if (match) {
-                    this.selectItem(
-                        {
+                    this.selectItem({
+                        item:{
                             properties: {
                                 name: actualQuery
                             },
@@ -284,7 +279,8 @@ export default class Map extends BgServicePageComponent {
                                 lon: parseFloat(match[2])
                             }
                         },
-                        true
+                        isFeatureInteresting:true
+                    }
                     );
                 } else {
                     this.showLoading(this.$tc(`searching_for:${actualQuery}`));
@@ -296,7 +292,7 @@ export default class Map extends BgServicePageComponent {
                         .then(result => {
                             if (result.length > 0) {
                                 console.log('found it!', this.$packageService.prepareGeoCodingResult(result[0]));
-                                this.selectItem(this.$packageService.prepareGeoCodingResult(result[0]), true, true, 16);
+                                this.selectItem({item:this.$packageService.prepareGeoCodingResult(result[0]), isFeatureInteresting: true, peek:true, zoom:16});
                             } else {
                                 this.searchText = actualQuery.replace(/[,]/g, ' ');
                             }
@@ -512,6 +508,7 @@ export default class Map extends BgServicePageComponent {
         options.setWatermarkScale(0.5);
         options.setWatermarkPadding(toNativeScreenPos({ x: 80, y: navigationBarHeight }));
         options.setRestrictedPanning(true);
+        options.setPanningMode(PanningMode.PANNING_MODE_STICKY);
         options.setSeamlessPanning(true);
         options.setEnvelopeThreadPoolSize(2);
         options.setTileThreadPoolSize(2);
@@ -555,8 +552,8 @@ export default class Map extends BgServicePageComponent {
         const styleBuilder = new LineStyleBuilder(options);
         return new Line<LatLonKeys>({ positions, projection: this.mapProjection, styleBuilder });
     }
-    selectItem(item: Item, isFeatureInteresting = false, peek = true, zoom?: number) {
-        this.log('selectItem', isFeatureInteresting);
+    selectItem({item, isFeatureInteresting = false, peek = true, setSelected = true, zoom}:{item: Item, isFeatureInteresting: boolean, peek?: boolean, setSelected?: boolean, zoom?: number}) {
+        // this.log('selec tItem', isFeatureInteresting);
         if (isFeatureInteresting) {
             if (item.route) {
                 if (!this.selectedRouteLine) {
@@ -612,13 +609,16 @@ export default class Map extends BgServicePageComponent {
             //         streetName: 'toto'
             //     }))
             // } as any
-            this.selectedItem = item;
+            if (setSelected) {
+                this.selectedItem = item;
+            }
             // console.log('selected_id', item.properties, item.route);
             // const vectorTileDecoder = this.getVectorTileDecoder();
             // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
             // vectorTileDecoder.setStyleParameter('selected_name', (item.properties && item.properties.name) || '');
-
-            this.bottomSheetHolder.peek();
+            if (peek) {
+                this.bottomSheetHolder.peek();
+            }
             if (item.zoomBounds) {
                 const zoomLevel = getBoundsZoomLevel(item.zoomBounds, { width: screen.mainScreen.widthPixels, height: screen.mainScreen.heightPixels });
                 this.cartoMap.setZoom(zoomLevel, 200);
@@ -654,10 +654,10 @@ export default class Map extends BgServicePageComponent {
     }
     onMapClicked(e) {
         const { clickType, position } = e.data;
-        // this.log('onMapClicked', clickType, position);
+        this.log('onMapClicked', clickType, position);
         const handledByModules = this.runOnModules('onMapClicked', e);
         if (!handledByModules && clickType === ClickType.SINGLE) {
-            this.selectItem({ position }, false);
+            this.selectItem({item: { position }, isFeatureInteresting: false});
             this.runOnModules('onMapClicked', e);
         }
         this.unFocusSearch();
@@ -670,7 +670,7 @@ export default class Map extends BgServicePageComponent {
         //         delete featureDataWithoutName[k];
         //     }
         // });
-        this.log('onVectorTileClicked', featureLayerName, featureData.class, featureData.subclass);
+        // this.log('onVectorTileClicked', featureLayerName, featureData.class, featureData.subclass);
         // return false;
         const handledByModules = this.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
@@ -687,7 +687,6 @@ export default class Map extends BgServicePageComponent {
             ) {
                 return false;
             }
-            // this.log('onVectorTileClicked test2', featureLayerName);
             featureData.layer = featureLayerName;
             // const distanceFromClick = distance(map.mapToScreen(position), map.mapToScreen(featurePosition));
 
@@ -706,6 +705,7 @@ export default class Map extends BgServicePageComponent {
             // console.log(JSON.stringify(languages));
 
             const isFeatureInteresting = !!featureData.name || featureLayerName === 'poi' || featureLayerName === 'mountain_peak' || featureLayerName === 'housenumber';
+            this.log('onVectorTileClicked test2', featureLayerName, isFeatureInteresting);
             if (isFeatureInteresting) {
                 let result: Item = {
                     properties: featureData,
@@ -732,7 +732,7 @@ export default class Map extends BgServicePageComponent {
                         // return foundBetterRes;
                     })
                     .then(() => {
-                        this.selectItem(result, isFeatureInteresting);
+                        this.selectItem({item:result, isFeatureInteresting});
                     })
                     .catch(err => {
                         console.error(err);
@@ -754,11 +754,11 @@ export default class Map extends BgServicePageComponent {
         Object.keys(metaData).forEach(k => {
             metaData[k] = JSON.parse(metaData[k]);
         });
-        // console.log('onVectorElementClicked', clickType, elementPos);
+        this.log('onVectorElementClicked', clickType, position, elementPos);
         const handledByModules = this.runOnModules('onVectorElementClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             const item: Item = { position, vectorElement: element, ...metaData };
-            this.selectItem(item, true);
+            this.selectItem({item, isFeatureInteresting: true});
             this.unFocusSearch();
             return true;
         }
@@ -1047,37 +1047,7 @@ export default class Map extends BgServicePageComponent {
     }
 
     downloadPackages() {
-        // const ComponentClass = Vue.extend(PackagesDownloadComponent);
-        let instance = new PackagesDownloadComponent();
-        instance.$mount();
-        // this.log('downloadPackages', instance, instance.nativeView);
-        this.nativeView._addViewCore(instance.nativeView);
-        this.nativeView.showBottomSheet({
-            view: instance.nativeView,
-            context: {},
-            closeCallback: objId => {
-                this.showingDownloadPackageDialog = false;
-                this.nativeView._removeViewCore(instance.nativeView);
-                instance.$destroy();
-                instance = null;
-            }
-        });
-        // let cfalertDialog = new CFAlertDialog();
-
-        // let options: any = {
-        //     // Options go here
-        //     dialogStyle: CFAlertStyle.BOTTOM_SHEET,
-        //     // title: 'Download Packages',
-        //     headerView: instance.nativeView.nativeView,
-        //     onDismiss: () => {
-        //         this.showingDownloadPackageDialog = false;
-        //         this.nativeView._removeViewCore(instance.nativeView);
-        //         instance.$destroy();
-        //         instance = null;
-        //     }
-        // };
-        this.showingDownloadPackageDialog = true;
-        // cfalertDialog.show(options); // That's about it ;)
+        this.$showBottomSheet(PackagesDownloadComponent);
     }
     removeLayer(layer: Layer<any, any>, layerId: LayerType, offset?: number) {
         const realLayerId = offset ? layerId + offset : layerId;

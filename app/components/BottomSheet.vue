@@ -11,7 +11,7 @@
             <MDButton variant="text" padding="4" fontSize="10" @tap="shareItem" text="share item" v-show="item && item.id" />
         </StackLayout>
         <!-- <transition name="fade" duration="200"> -->
-            <LineChart ref="graphView" row="2"  :visibility="showGraph ? 'visible' : 'hidden'" />
+        <LineChart ref="graphView" row="2" :height="profileHeight" :visibility="showGraph ? 'visible' : 'collapsed'"  @tap="onChartTap"/>
 
             <!-- <Palette v-tkCartesianPalette seriesName="Area">
                 <PaletteEntry v-tkCartesianPaletteEntry fillColor="#8060B3FC" strokeWidth="2" strokeColor="#60B3FC" />
