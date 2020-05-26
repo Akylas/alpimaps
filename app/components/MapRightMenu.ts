@@ -12,6 +12,7 @@ import { CartoMap } from 'nativescript-carto/ui';
 import { IMapModule } from '~/mapModules/MapModule';
 import { ObservableArray } from '@nativescript/core/data/observable-array/observable-array';
 import { TextField } from 'nativescript-material-textfield';
+import LayerOptionsBottomSheet from './LayerOptionsBottomSheet';
 
 function createGetter(target: Object, key, type: string, options?: { defaultValue?: any }) {
     // console.log('calling getter', key, target.hasOwnProperty('m' + key), target['m' + key]);
@@ -190,42 +191,48 @@ export default class MapRightMenu extends BottomSheetBase implements IMapModule 
         // item.layer.refresh();
     }
 
-    onSourceLongPress(item: SourceItem) {
-        const actions = [$t('delete')];
-        if (item.provider.cacheable !== false) {
-            actions.push($t('clear_cache'));
-        }
-        if (item.legend) {
-            actions.push($t('legend'));
-        }
-        action({
-            title: `${item.name} Source`,
-            message: 'Pick Action',
-            actions: actions
-        }).then(result => {
-            switch (result) {
-                case 'delete': {
-                    this.customLayers.deleteSource(item.name);
-                    break;
-                }
-                case 'clear_cache': {
-                    ((item.layer as any).dataSource as PersistentCacheTileDataSource).clear();
-                    item.layer.clearTileCaches(true);
-                    break;
-                }
-                case 'legend':
-                    // this.log('showing legend', item.legend);
-                    this.currentLegend = item.legend;
-                    // if (item.legend.endsWith('.html')) {
-
-                    // } else {
-                    //     const PhotoViewer = require('nativescript-photoviewer');
-                    //     new PhotoViewer().showGallery([item.legend]);
-                    // }
-
-                    break;
+    showSourceOptions(item: SourceItem) {
+        this.$showBottomSheet(LayerOptionsBottomSheet, {
+            props:{
+                item
             }
         });
+        this.holder.close();
+        // const actions = [$t('delete')];
+        // if (item.provider.cacheable !== false) {
+        //     actions.push($t('clear_cache'));
+        // }
+        // if (item.legend) {
+        //     actions.push($t('legend'));
+        // }
+        // action({
+        //     title: `${item.name} Source`,
+        //     message: 'Pick Action',
+        //     actions: actions
+        // }).then(result => {
+        //     switch (result) {
+        //         case 'delete': {
+        //             this.customLayers.deleteSource(item.name);
+        //             break;
+        //         }
+        //         case 'clear_cache': {
+        //             ((item.layer as any).dataSource as PersistentCacheTileDataSource).clear();
+        //             item.layer.clearTileCaches(true);
+        //             break;
+        //         }
+        //         case 'legend':
+        //             // this.log('showing legend', item.legend);
+        //             this.currentLegend = item.legend;
+        //             // if (item.legend.endsWith('.html')) {
+
+        //             // } else {
+        //             //     const PhotoViewer = require('nativescript-photoviewer');
+        //             //     new PhotoViewer().showGallery([item.legend]);
+        //             // }
+
+        //             break;
+        //     }
+        // });
     }
 
     toggleGlobe() {
