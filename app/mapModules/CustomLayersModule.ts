@@ -1,7 +1,7 @@
 import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
 import { HTTPTileDataSource } from 'nativescript-carto/datasources/http';
 import { TileLayer } from 'nativescript-carto/layers';
-import { RasterTileLayer } from 'nativescript-carto/layers/raster';
+import { RasterTileLayer, HillshadeRasterTileLayer } from 'nativescript-carto/layers/raster';
 import { CartoMap } from 'nativescript-carto/ui';
 import { $t } from '~/helpers/locale';
 import { alert } from 'nativescript-material-dialogs';
@@ -36,6 +36,7 @@ export interface SourceItem {
     layer: TileLayer<any, any>;
     provider: Provider;
     index?: number;
+    options?:{[k:string]:{min:number, max:number, value?:number}}
 }
 
 export default class CustomLayersModule extends MapModule {
@@ -370,6 +371,42 @@ export default class CustomLayersModule extends MapModule {
                                     this.customSources.push(data);
                                     mapComp.addLayer(data.layer, 'customLayers', data.index);
                                 });
+                        } else if (e.name.endsWith('.etiles')) {
+                            return Promise.resolve().then(()=>{
+                                console.log('loading hillsahdes', e.path);
+                                const dataSource = new MBTilesTileDataSource({
+                                    databasePath: e.path
+                                });
+                                const name = e.name;
+                                const contrast = appSettings.getNumber(`${name}_contrast`, 0.26);
+                                const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.51);
+                                const layer  = new HillshadeRasterTileLayer({
+                                    contrast,
+                                    heightScale,
+                                    dataSource
+                                });
+                                const opacity = appSettings.getNumber(`${name}_opacity`, 1);
+                                const data = {
+                                    index: index++,
+                                    name,
+                                    opacity,
+                                    layer,
+                                    options:{
+                                        contrast:{
+                                            min: 0,
+                                            max: 1
+                                        },
+                                        heightScale:{
+                                            min: 0,
+                                            max: 2
+                                        }
+                                    },
+                                    provider: { name }
+                                }
+                                this.customSources.push(data);
+                                mapComp.addLayer(data.layer, 'customLayers', data.index);
+                            });
+                            
                         }
                     })
                 );

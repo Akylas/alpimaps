@@ -2,7 +2,7 @@
     <GridLayout columns="*,auto" @tap="noop">
         <CollectionView col="0" rowHeight="49" :items="customSources" @tap="noop">
             <v-template>
-                <GridLayout paddingLeft="15" paddingRight="5" rows="*,auto" columns="*,auto" @longPress="onSourceLongPress(item)">
+                <GridLayout paddingLeft="15" paddingRight="5" rows="*,auto" columns="*,auto" @longPress="showSourceOptions(item)">
                     <Label row="0" :text="item.name.toUpperCase()" :color="item.layer.opacity === 0 ? 'grey' : 'white'" fontSize="13" fontWeight="bold" verticalAlignment="bottom" />
                     <MDSlider
                         row="1"
@@ -15,7 +15,7 @@
                         verticalAlignment="center"
                         @tap="noop"
                     />
-                    <MDButton col="1" rowSpan="2" color="white" rippleColor="white" variant="flat" class="icon-btn" text="mdi-dots-vertical" @tap="onSourceLongPress(item)" />
+                    <MDButton col="1" rowSpan="2" color="white" rippleColor="white" variant="flat" class="icon-btn" text="mdi-dots-vertical" @tap="showSourceOptions(item)" />
                 </GridLayout>
             </v-template>
         </CollectionView>
