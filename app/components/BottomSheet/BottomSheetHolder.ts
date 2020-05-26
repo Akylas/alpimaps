@@ -10,7 +10,7 @@ import {
 } from 'nativescript-gesturehandler';
 import { View } from '@nativescript/core/ui/core/view';
 import { layout } from '@nativescript/core/utils/utils';
-import { Component, Prop } from 'vue-property-decorator';
+import { Component, Prop, Watch } from 'vue-property-decorator';
 import { TWEEN } from 'nativescript-tween';
 import BaseVueComponent from '../BaseVueComponent';
 import BottomSheet, { NATIVE_GESTURE_TAG } from './BottomSheetBase';
@@ -227,7 +227,7 @@ export default class BottomSheetHolder extends BaseVueComponent {
         if (comp.listView) {
             comp.scrollEnabled = comp.listViewVisible && (!comp.listViewAtTop || (this.isAtTop && y < 0));
         }
-        console.log('dragging', y,comp.listViewVisible, comp.scrollEnabled);
+        // console.log('dragging', y,comp.listViewVisible, comp.scrollEnabled);
         if (comp.listViewVisible && comp.scrollEnabled) {
             // if (this.isAnimating || !this._isPanning || !this.panEnabled) {
             this.prevDeltaY = deltaY;
@@ -288,11 +288,17 @@ export default class BottomSheetHolder extends BaseVueComponent {
         });
     }
 
+    @Watch('peekerSteps')
+    onPeekerStepsChanged() {
+        if (this.currentStep >=this.peekerSteps.length) {
+            this.scrollSheetToPosition(this.peekerSteps[this.peekerSteps.length -1]);
+        }
+    }
+
     peek() {
         // if (!!this.opened) {
         //     return Promise.resolve();
         // }
-        // this.log('peek', this.opened);
         const steps = this.peekerSteps;
         const currentStep = this.currentStep;
         const dest = currentStep >= 0 && currentStep < steps.length ? steps[this.currentStep] : steps[0];

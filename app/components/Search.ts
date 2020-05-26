@@ -571,7 +571,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
         }
         // const extent = item.properties.extent;
         // clog('Item Tapped', item.position, extent, item);
-        this.mapComp.selectItem(item, true);
+        this.mapComp.selectItem({item, isFeatureInteresting: true});
         this.unfocus();
     }
 
