@@ -604,12 +604,17 @@
 	shield-name: @name ?  ( [ele] ? [ele] + 'm' + '\n ' + @name : @name): '';
 	shield-face-name: @mont_md;
 	// shield-size: 9;
-	shield-size: linear([view::zoom], (7, 7), (13, 8), (18, 14))- 0.000001 * [rank]; 
+	shield-size: linear([view::zoom], (7, 7), (13, 8), (18, 12))- 0.000001 * [rank]; 
 	shield-line-spacing: -1;
+	shield-placement: [nuti::markers3d];
 	shield-file: url(symbols/icons/[class].svg);
-	shield-fill: @peak_label;
-	shield-dy: 15;
+	shield-fill: darken(@peak_label, 20%);
+	shield-dy: linear([view::zoom], (7, 15), (13, 16), (18, 20)); 
 	shield-feature-id: @featureId;
+	
+	shield-halo-fill: @peak_halo;
+	shield-halo-rasterizer: fast;
+	shield-halo-radius: linear([view::zoom], (14, 1), (18, 0.5));
 }
 
 // #mountain_peak {

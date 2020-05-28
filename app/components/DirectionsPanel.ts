@@ -385,7 +385,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     // }
 
     cancel() {
-        this.log('cancel');
+        // this.log('cancel');
         this.waypoints = [];
         if (this.line) {
             this.line = null;
@@ -578,7 +578,8 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
                 // });
                 this.mapComp.selectItem({
                     item:{ position: fromNativeMapPos(this.currentLine.getGeometry().getCenterPos()), route },
-                    isFeatureInteresting: true
+                    isFeatureInteresting: true,
+                    showButtons:true
                 });
             })
             .catch(error => {

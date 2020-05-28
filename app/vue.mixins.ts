@@ -44,20 +44,8 @@ export function applyMixins(derivedCtor: any, baseCtors: any[]) {
 }
 
 class FrameWithEvents extends NSFrame {
-    // _updateBackstack(entry: BackstackEntry, navigationType) {
-    //     console.log('_updateBackstack', !!entry);
-    //     const isBack = navigationType === 'back';
-    //     // super._onNavigatingTo(backstackEntry, isBack);
-    //     this.notify({
-    //         eventName: NSPage.navigatingToEvent,
-    //         object: this,
-    //         isBack,
-    //         entry
-    //     });
-    //     // console.log('_onNavigatingTo2', backstackEntry.resolvedPage[navigateBackToUrlProperty], isBack);
-    // }
+
     public _onNavigatingTo(entry: BackstackEntry, isBack: boolean) {
-        // console.log('_onNavigatingTo', !!entry);
         this.notify({
             eventName: NSPage.navigatingToEvent,
             object: this,
@@ -69,7 +57,7 @@ class FrameWithEvents extends NSFrame {
 
 const Plugin = {
     install(Vue) {
-        clog('installing view mixins');
+        // clog('installing view mixins');
         const NSFrame = require('@nativescript/core/ui/frame').Frame;
         applyMixins(NSFrame, [FrameWithEvents]);
     }

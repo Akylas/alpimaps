@@ -32,7 +32,17 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
     totalDownloadProgress = 0;
 
     selectedItem: Item = null;
-    showLocationInfo = false;
+    _showLocationInfo = false;
+
+    get showLocationInfo () {
+        return this._showLocationInfo;
+    }
+    set showLocationInfo (value) {
+         this._showLocationInfo = value;
+         if (!value && this.listeningForBarometer) {
+            this.stopBarometerAltitudeUpdate();
+        }
+    }
 
     hasBarometer = sensors.isSensorAvailable('barometer');
     listeningForBarometer = false;
@@ -45,7 +55,7 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
     get currentAltitude() {
         if (this.listeningForBarometer) {
             if (!this.airportPressure) {
-                return this.$tc('you_need_a_ref');
+                return this.$t('no_ref');
             }
             return this.mCurrentAltitude || '-';
         }
@@ -359,7 +369,7 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
         return this.geoHandler.enableLocation().then(() => {
             this.geoHandler
                 .getLocation({ desiredAccuracy: Accuracy.high, maximumAge: 120000 })
-                .then(r => sensors.getAirportPressureAtLocation(r.latitude, r.longitude))
+                .then(r => sensors.getAirportPressureAtLocation(gVars.AVWX_API_KEY, r.latitude, r.longitude))
                 .then(r => {
                     this.airportPressure = r.pressure;
                     this.airportRefName = r.name;
