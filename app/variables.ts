@@ -16,9 +16,10 @@ export let navigationBarHeight: number = parseFloat(locals.navigationBarHeight);
 
 if (gVars.isAndroid) {
     const context: android.content.Context = ad.getApplicationContext();
-    const hasPermanentMenuKey = android.view.ViewConfiguration.get(context).hasPermanentMenuKey();
-    if (hasPermanentMenuKey) {
-        navigationBarHeight = 0;
+    const id = context.getResources().getIdentifier("config_showNavigationBar", "bool", "android");
+    // wont work on emulator though!
+    if( id > 0 && context.getResources().getBoolean(id)) {
+        navigationBarHeight = 48;
     }
 } else {
     navigationBarHeight = 0;

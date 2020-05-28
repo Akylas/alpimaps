@@ -80,7 +80,6 @@ export default class TopSheetHolder extends BaseVueComponent {
         if (this.currentViewTop === null) {
             this.currentViewTop = -this.translationMaxOffset;
         }
-        // console.log('onLayoutChange', view, this.translationMaxOffset);
     }
 
     onPan(args) {

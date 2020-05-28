@@ -43,11 +43,11 @@ module.exports = (env, params = {}) => {
 
     // Add your custom Activities, Services and other android app components here.
     let appComponents = env.appComponents || [];
-    appComponents.push(...['tns-core-modules/ui/frame', 'tns-core-modules/ui/frame/activity']);
+    // appComponents.push(...['tns-core-modules/ui/frame', 'tns-core-modules/ui/frame/activity']);
 
-    if (platform === 'android') {
-        appComponents.push(...[resolve(__dirname, 'app/services/android/BgService.ts'), resolve(__dirname, 'app/services/android/BgServiceBinder.ts')]);
-    }
+    // if (platform === 'android') {
+    // appComponents.push(...[resolve(__dirname, 'app/services/android/BgService.ts'), resolve(__dirname, 'app/services/android/BgServiceBinder.ts')]);
+    // }
     console.log('appComponents', appComponents);
     const platforms = ['ios', 'android'];
     const projectRoot = __dirname;
@@ -102,7 +102,6 @@ module.exports = (env, params = {}) => {
         adhoc // --env.adhoc
     } = env;
 
-
     const useLibs = compileSnapshot;
     const isAnySourceMapEnabled = !!sourceMap || !!hiddenSourceMap || !!inlineSourceMap;
     const externals = nsWebpack.getConvertedExternals(env.externals);
@@ -140,7 +139,9 @@ module.exports = (env, params = {}) => {
     const itemsToClean = [`${dist}/**/*`];
     if (platform === 'android') {
         itemsToClean.push(`${join(projectRoot, 'platforms', 'android', 'app', 'src', 'main', 'assets', 'snapshots')}`);
-        itemsToClean.push(`${join(projectRoot, 'platforms', 'android', 'app', 'build', 'configurations', 'nativescript-android-snapshot')}`);
+        itemsToClean.push(
+            `${join(projectRoot, 'platforms', 'android', 'app', 'build', 'configurations', 'nativescript-android-snapshot')}`
+        );
     }
 
     const defines = mergeOptions(
@@ -157,6 +158,7 @@ module.exports = (env, params = {}) => {
             SENTRY_PREFIX: `"${!!sentry ? process.env.SENTRY_PREFIX : ''}"`,
             LOCAL_MBTILES: `"${!!emulator ? '/storage/100F-3415/alpimaps_mbtiles' : '/storage/C0E5-1DEA/alpimaps_mbtiles'}"`,
             LOG_LEVEL: devlog ? '"full"' : '""',
+            DEV_LOG: devlog && !production,
             TEST_LOGS: adhoc || !production
         },
         params.definePlugin || {}
@@ -176,8 +178,12 @@ module.exports = (env, params = {}) => {
     console.log('defines', defines);
 
     const symbolsParser = require('scss-symbols-parser');
-    const mdiSymbols = symbolsParser.parseSymbols(readFileSync(resolve(projectRoot, 'node_modules/@mdi/font/scss/_variables.scss')).toString());
-    const mdiIcons = JSON.parse(`{${mdiSymbols.variables[mdiSymbols.variables.length - 1].value.replace(/" (F|0)(.*?)([,\n]|$)/g, '": "$1$2"$3')}}`);
+    const mdiSymbols = symbolsParser.parseSymbols(
+        readFileSync(resolve(projectRoot, 'node_modules/@mdi/font/scss/_variables.scss')).toString()
+    );
+    const mdiIcons = JSON.parse(
+        `{${mdiSymbols.variables[mdiSymbols.variables.length - 1].value.replace(/" (F|0)(.*?)([,\n]|$)/g, '": "$1$2"$3')}}`
+    );
 
     // const cairnSymbols = symbolsParser.parseSymbols(readFileSync(resolve(appFullPath, 'css/cairn.scss')).toString());
     // const cairnIcons = JSON.parse(`{${cairnSymbols.variables[cairnSymbols.variables.length - 1].value.replace(/'cairn-([a-zA-Z0-9-_]+)' (F|f|e|0)(.*?)([,\n]+|$)/g, '"$1": "$2$3"$4')}}`);
@@ -208,9 +214,14 @@ module.exports = (env, params = {}) => {
             hashSalt
         },
         resolve: {
-            extensions: ['.vue', '.ts', '.js', '.scss', '.css'],
+            extensions: ['.vue', '.mjs', '.ts', '.js', '.scss', '.css'],
             // Resolve {N} system modules from tns-core-modules
-            modules: [resolve(__dirname, `node_modules/${coreModulesPackageName}`), resolve(__dirname, 'node_modules'), `node_modules/${coreModulesPackageName}`, 'node_modules'],
+            modules: [
+                resolve(__dirname, `node_modules/${coreModulesPackageName}`),
+                resolve(__dirname, 'node_modules'),
+                `node_modules/${coreModulesPackageName}`,
+                'node_modules'
+            ],
             alias,
             // resolve symlinks to symlinked modules
             symlinks: true
@@ -260,7 +271,7 @@ module.exports = (env, params = {}) => {
                             cache: true,
                             sourceMap: isAnySourceMapEnabled,
                             terserOptions: {
-                                ecma: 6,
+                                ecma: 2016,
                                 // warnings: true,
                                 // toplevel: true,
                                 output: {
@@ -273,8 +284,8 @@ module.exports = (env, params = {}) => {
                                     collapse_vars: platform !== 'android',
                                     sequences: platform !== 'android',
                                     passes: 2
-                                },
-                                keep_fnames: true
+                                }
+                                // keep_fnames: true
                             }
                         },
                         params.terserOptions || {}
@@ -484,7 +495,8 @@ module.exports = (env, params = {}) => {
                 platforms
             }),
             // Does IPC communication with the {N} CLI to notify events when running in watch mode.
-            new nsWebpack.WatchStateLoggerPlugin()
+            new nsWebpack.WatchStateLoggerPlugin(),
+            new webpack.ContextReplacementPlugin(/dayjs[/\\]locale$/, /en|fr/)
         ]
     };
     if (hiddenSourceMap || sourceMap) {
@@ -505,11 +517,17 @@ module.exports = (env, params = {}) => {
             let appVersion;
             let buildNumber;
             if (platform === 'android') {
-                appVersion = readFileSync('app/App_Resources/Android/app.gradle', 'utf8').match(/versionName "((?:[0-9]+\.?)+)"/)[1];
+                appVersion = readFileSync('app/App_Resources/Android/app.gradle', 'utf8').match(
+                    /versionName "((?:[0-9]+\.?)+)"/
+                )[1];
                 buildNumber = readFileSync('app/App_Resources/Android/app.gradle', 'utf8').match(/versionCode ([0-9]+)/)[1];
             } else if (platform === 'ios') {
-                appVersion = readFileSync('app/App_Resources/iOS/Info.plist', 'utf8').match(/<key>CFBundleShortVersionString<\/key>[\s\n]*<string>(.*?)<\/string>/)[1];
-                buildNumber = readFileSync('app/App_Resources/iOS/Info.plist', 'utf8').match(/<key>CFBundleVersion<\/key>[\s\n]*<string>([0-9]*)<\/string>/)[1];
+                appVersion = readFileSync('app/App_Resources/iOS/Info.plist', 'utf8').match(
+                    /<key>CFBundleShortVersionString<\/key>[\s\n]*<string>(.*?)<\/string>/
+                )[1];
+                buildNumber = readFileSync('app/App_Resources/iOS/Info.plist', 'utf8').match(
+                    /<key>CFBundleVersion<\/key>[\s\n]*<string>([0-9]*)<\/string>/
+                )[1];
             }
             console.log('appVersion', appVersion, buildNumber);
 
@@ -560,10 +578,11 @@ module.exports = (env, params = {}) => {
             },
             {
                 test: /\.(html|xml)$/,
+                exclude: /assets\/styles/,
                 use: 'nativescript-dev-webpack/markup-hot-loader'
             },
 
-            { test: /\.(html|xml)$/, use: 'nativescript-dev-webpack/xml-namespace-loader' }
+            { test: /\.(html|xml)$/, exclude: /assets\/styles/, use: 'nativescript-dev-webpack/xml-namespace-loader' }
         );
     }
 
