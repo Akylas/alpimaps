@@ -489,7 +489,7 @@ export class NetworkService extends Observable {
     }
     constructor() {
         super();
-        clog('creating NetworkHandler Handler');
+        // clog('creating NetworkHandler Handler');
     }
     start() {
         connectivity.startMonitoring(this.onConnectionStateChange.bind(this));

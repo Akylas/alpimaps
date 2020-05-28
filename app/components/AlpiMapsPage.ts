@@ -48,7 +48,6 @@ export default class AlpiMapsPage extends BaseVueComponent {
             this.nativeView['navigateUrl'] = this.navigateUrl;
         }
         const page = this.page;
-        // this.log('mounted', this.nativeView, this.navigateUrl, !!page);
         if (page) {
             page.actionBarHidden = true;
             // if (gVars.isIOS) {

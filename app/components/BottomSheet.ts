@@ -199,23 +199,23 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         //     .then(result => {
         this.item.route.profile = profile;
         //     })
-        await this.updateItem(false);
+        await this.item.id ? this.updateItem(false) : this.saveItem(false);
         //     .then(() => {
         // make sure the graph is visible
         await this.holder.scrollSheetToPosition(this.holder.peekerSteps[2]);
         //     })
         //     .catch(err => this.showError(err))
         //     .then(() => {
-        this.updatingItem = true;
+        this.updatingItem = false;
         //     });
     }
-    saveItem() {
+    saveItem(peek = true) {
         const mapComp = this.$getMapComponent();
         mapComp
             .mapModule('items')
             .saveItem(this.item)
             .then(item => {
-                mapComp.selectItem({item, isFeatureInteresting:true});
+                mapComp.selectItem({item, isFeatureInteresting:true, peek});
             })
             .catch(err => {
                 this.showError(err);

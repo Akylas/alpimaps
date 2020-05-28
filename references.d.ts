@@ -32,10 +32,12 @@ declare const gVars: {
     HER_APP_CODE: string;
     BUGNSAG: string;
     GOOGLE_TOKEN: string;
+    AVWX_API_KEY: string;
 }
 
 declare const TNS_ENV: string;
 declare const LOG_LEVEL: string;
+declare const DEV_LOG: boolean;
 declare const TEST_LOGS: boolean;
 declare const PRODUCTION: boolean;
 declare const LOCAL_MBTILES: string;
