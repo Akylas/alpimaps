@@ -1,18 +1,18 @@
 <template>
-    <GridLayout rows="*,*" :columns="hasProfile ? '*,*,*' : '*'" class="details">
-        <Label class="details-label" horizontalAlignment="left" color="green" fontWeight="bold" fontSize="16" row="0" col="0" colSpan="3" :text="routeDuration" />
-        <Label class="details-label" row="1" col="0">
-            <Span class="details-icon" text="mdi-map-marker-distance" />
-            <Span :text="routeDistance" />
-        </Label>
-        <Label class="details-label" row="1" col="1" v-show="hasProfile">
-            <Span class="details-icon" text="mdi-elevation-rise" />
-            <Span :text="routeDplus" />
-        </Label>
-        <Label class="details-label" row="1" col="2" v-show="hasProfile">
-            <Span class="details-icon" text="mdi-elevation-decline" />
-            <Span :text="routeDmin" />
-        </Label>
-    </GridLayout>
+    <CanvasLabel fontSize="16" color="white" padding="10">
+        <CSpan horizontalAlignment="left" verticalAlignment="top" color="#00ff00" fontWeight="bold" fontSize="16" :text="routeDuration" />
+        <CGroup verticalAlignment="bottom" textAlignment="left">
+            <CSpan color="gray" :fontFamily="mdiFontFamily" text="mdi-map-marker-distance" />
+            <CSpan :text="' ' + routeDistance" />
+        </CGroup>
+        <CGroup verticalAlignment="bottom" textAlignment="center" v-if="hasProfile">
+            <CSpan color="gray" :fontFamily="mdiFontFamily" text="mdi-elevation-rise" />
+            <CSpan :text="' ' + routeDplus" />
+        </CGroup>
+        <CGroup verticalAlignment="bottom" textAlignment="right" v-if="hasProfile">
+            <CSpan color="gray" :fontFamily="mdiFontFamily" text="mdi-elevation-decline" />
+            <CSpan :text="routeDmin" />
+        </CGroup>
+    </CanvasLabel>
 </template>
 <script lang="ts" src="./BottomSheetRouteInfoView.ts"/>

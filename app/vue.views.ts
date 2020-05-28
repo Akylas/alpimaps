@@ -16,6 +16,7 @@ import ImagePlugin from 'nativescript-image/vue';
 import CollectionViewPlugin from 'nativescript-collectionview/vue';
 import FabPlugin from 'nativescript-vue-fab';
 import SystemUIPlugin from 'nativescript-systemui/vue';
+import CanvasLabelPlugin from 'nativescript-canvaslabel/vue';
 
 import AlpiMapsPage from './components/AlpiMapsPage';
 import ListItem from './components/ListItem';
@@ -37,6 +38,7 @@ const Plugin = {
         Vue.use(CollectionViewPlugin);
         Vue.use(SystemUIPlugin);
         Vue.use(ImagePlugin);
+        Vue.use(CanvasLabelPlugin);
         // Vue.use(MultiDrawer);
 
         Vue.registerElement('LineChart', () => require('nativescript-chart/charts/LineChart').default);

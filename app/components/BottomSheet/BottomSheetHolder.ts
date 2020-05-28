@@ -138,7 +138,6 @@ export default class BottomSheetHolder extends BaseVueComponent {
         });
         gestureHandler.on(GestureHandlerTouchEvent, this.onGestureTouch, this);
         gestureHandler.on(GestureHandlerStateEvent, this.onGestureState, this);
-        this.log('mounted', this.nativeView, this.scrollingView && this.scrollingView.nativeView);
         gestureHandler.attachToView(this.scrollingView);
         this.panGestureHandler = gestureHandler as any;
     }
@@ -175,12 +174,11 @@ export default class BottomSheetHolder extends BaseVueComponent {
     onGestureState(args: GestureStateEventData) {
         const { state, prevState, extraData, view } = args.data;
         if (state === GestureState.ACTIVE) {
-                this.prevDeltaY = 0;
-        }
-        else if (prevState === GestureState.ACTIVE && this.didPanDuringGesture) {
+            this.prevDeltaY = 0;
+        } else if (prevState === GestureState.ACTIVE && this.didPanDuringGesture) {
             const comp = this.bottomSheet;
             // we dont animate the drag velocity is the listview is enabled.
-            if (!comp.listViewVisible|| !comp.isScrollEnabled) {
+            if (!comp.listViewVisible || !comp.isScrollEnabled) {
                 const { velocityY, translationY } = extraData;
                 const viewTop = this.mCurrentViewHeight - this.viewHeight;
 
@@ -290,18 +288,23 @@ export default class BottomSheetHolder extends BaseVueComponent {
 
     @Watch('peekerSteps')
     onPeekerStepsChanged() {
-        if (this.currentStep >=this.peekerSteps.length) {
-            this.scrollSheetToPosition(this.peekerSteps[this.peekerSteps.length -1]);
+        // console.log('onPeekerStepsChanged', this.peekerSteps, this.currentStep);
+        if (this.currentStep >= this.peekerSteps.length) {
+            this.scrollSheetToPosition(this.peekerSteps[this.peekerSteps.length - 1]);
+        } else if(this.currentStep > 0){
+            this.scrollSheetToPosition(this.peekerSteps[this.currentStep]);
         }
     }
 
-    peek() {
+    peek(index = 0) {
         // if (!!this.opened) {
         //     return Promise.resolve();
         // }
+        // console.log('peek', index, this.currentStep, this.peekerSteps);
         const steps = this.peekerSteps;
         const currentStep = this.currentStep;
-        const dest = currentStep >= 0 && currentStep < steps.length ? steps[this.currentStep] : steps[0];
+        const dest =
+            currentStep >= 0 && currentStep < steps.length ? steps[index === 0 ? this.currentStep : index] : steps[index];
         this.scrollSheetToPosition(dest);
     }
     close() {

@@ -44,6 +44,8 @@ interface GeoResult {
     rank?: number;
 }
 
+const average = arr => arr.reduce((p, c) => p + c, 0) / arr.length;
+
 class PackageManagerListener implements CartoPackageManagerListener {
     constructor(private type: PackageType, public superThis: PackageService) {}
     onPackageCancelled(id: string, version: number) {
@@ -144,7 +146,12 @@ export default class PackageService extends Observable {
         }
         return this._routingPackageManager;
     }
+    started = false;
     start() {
+        if (this.started) {
+            return;
+        }
+        this.started = true;
         if (!Folder.exists(this.docPath)) {
             this.log('creating doc folder', Folder.fromPath(this.docPath).path);
         }
@@ -438,10 +445,16 @@ export default class PackageService extends Observable {
             });
         });
     }
-    searchInPackageGeocodingService(options: GeocodingRequest<LatLonKeys>) {
+    searchInPackageGeocodingService(options: GeocodingRequest<LatLonKeys>): Promise<GeoResult[]> {
+        if (!this.started) {
+            return Promise.resolve(undefined);
+        }
         return this.searchInGeocodingService(this.offlineSearchService, options);
     }
-    searchInPackageReverseGeocodingService(options: ReverseGeocodingRequest<LatLonKeys>) {
+    searchInPackageReverseGeocodingService(options: ReverseGeocodingRequest<LatLonKeys>): Promise<GeoResult[]> {
+        if (!this.started) {
+            return Promise.resolve(undefined);
+        }
         return this.searchInGeocodingService(this.offlineReverseSearchService, options);
     }
     prepareGeoCodingResult(result: GeoResult) {
@@ -496,8 +509,11 @@ export default class PackageService extends Observable {
         return this._elevationDb;
     }
 
-     computeProfileFromHeights(profile: {height:number, lat:number, lon:number}[]) {
-        let last, currentHeight, coordIndex, currentDistance = 0;
+    computeProfileFromHeights(profile: { height: number; lat: number; lon: number }[]) {
+        let last,
+            currentHeight,
+            coordIndex,
+            currentDistance = 0;
 
         const result: RouteProfile = {
             max: [-1000, -1000],
@@ -507,103 +523,48 @@ export default class PackageService extends Observable {
             points: [],
             data: []
         };
-        profile.forEach(function(value, index) {
-            // console.log('test', index, value, last ? last.height : undefined, result.dplus, result.dmin);
-            currentHeight = value.height;
-            // if (currentHeight === -32768) {
-            //     return;
-            // }
-            const deltaDistance = last ? geolib.getDistance(last, value) : 0;
-            currentDistance += deltaDistance;
 
-            if (last) {
-                // if (currentDistance - last.distance < 100) {
-                //     console.log('ignore point as too close');
-                //     return;
-                // }
-                const deltaz = currentHeight - last.height;
-                if (deltaz > 0) {
-                    result.dplus += deltaz;
-                } else if (deltaz < 0) {
-                    result.dmin += deltaz;
+        let range = 3;
+        for (let i = 0; i < profile.length; i++) {
+            let min = Math.max(i - range, 0);
+            let max = Math.min(i + range, profile.length - 1);
+            (profile[i] as any).tmpElevation = Math.round(average(profile.slice(min, max).map(s => s.height)));
+        }
+        let ascent = 0;
+        let descent = 0;
+        let lastAlt;
+        for (let i = 0; i < profile.length; i++) {
+            let sample = profile[i];
+
+            const deltaDistance = last ? geolib.getDistance(last, sample) : 0;
+            currentDistance += deltaDistance;
+            // sample.height = (sample as any).tmpElevation;
+            if (i >= 1) {
+                let diff = (sample as any).tmpElevation - lastAlt;
+                if (diff > 0) {
+                    ascent += diff;
+                } else if (diff < 0) {
+                    descent -= diff;
                 }
+                lastAlt = (sample as any).tmpElevation;
+            } else {
+                lastAlt = (sample as any).tmpElevation;
             }
-            if (currentDistance > result.max[0]) {
-                result.max[0] = currentDistance;
-            }
-            if (currentDistance < result.min[0]) {
-                result.min[0] = currentDistance;
-            }
+            delete (sample as any).tmpElevation;
+            currentHeight = sample.height;
             if (currentHeight > result.max[1]) {
                 result.max[1] = currentHeight;
             }
             if (currentHeight < result.min[1]) {
                 result.min[1] = currentHeight;
             }
-
             result.data.push({ x: Math.round(currentDistance), y: currentHeight });
-            coordIndex = index * 2;
-            result.points.push({ lat: value.lat, lon: value.lon });
-            last = value;
-            // console.log('setting last', last, result.dplus, result.dmin);
-            // return memo;
-        });
-        // var result = {
-        //     profile: _.reduce(
-        //         profile,
-        //         function(memo, value, index: number) {
-        //             console.log('test', index, value, last?last.height:undefined, memo.dplus);
-        //             currentHeight = value.height;
-        //             if (currentHeight === -32768) {
-        //                 return memo;
-        //             }
-        //             currentDistance = value.distance = value.distance * 1000;
-
-        //             if (last) {
-        //                 if (currentDistance - last.distance < 100 ) {
-        //                     console.log('ignore point as too close');
-        //                     return memo;
-        //                 }
-        //                 const deltaz = currentHeight - last.height;
-        //                 if (deltaz > 0) {
-        //                     memo.dplus += deltaz;
-        //                 } else if (distance < 0) {
-        //                     memo.dmin += deltaz;
-        //                 }
-        //             }
-        //             if (currentDistance > memo.max[0]) {
-        //                 memo.max[0] = currentDistance;
-        //             }
-        //             if (currentDistance < memo.min[0]) {
-        //                 memo.min[0] = currentDistance;
-        //             }
-        //             if (currentHeight > memo.max[1]) {
-        //                 memo.max[1] = currentHeight;
-        //             }
-        //             if (currentHeight < memo.min[1]) {
-        //                 memo.min[1] = currentHeight;
-        //             }
-
-        //             memo.data[0].push(currentDistance);
-        //             memo.data[1].push(currentHeight);
-        //             coordIndex = index * 2;
-        //             memo.points.push([coords[coordIndex], coords[coordIndex + 1]]);
-        //             last = value;
-        //             console.log('setting last', last);
-        //             return memo;
-        //         },
-        //         {
-        //             max: [-1000, -1000],
-        //             min: [100000, 100000],
-        //             dplus: 0,
-        //             dmin: 0,
-        //             points: [],
-        //             data: [[], []]
-        //         }
-        //     )
-        // };
-        result.dmin = Math.round(result.dmin);
-        result.dplus = Math.round(result.dplus);
+            coordIndex = i * 2;
+            result.points.push({ lat: sample.lat, lon: sample.lon });
+            last = sample;
+        }
+        result.dmin = Math.round(-descent);
+        result.dplus = Math.round(ascent);
         // console.log('got profile', result);
         return result;
     }

@@ -7,7 +7,7 @@ import * as appSettings from '@nativescript/core/application-settings';
 import { EventData, Observable } from '@nativescript/core/data/observable';
 import { Accuracy } from '@nativescript/core/ui/enums/enums';
 import { BgService } from '~/services/BgService';
-import { clog, DEV_LOG } from '~/utils/logging';
+import { clog } from '~/utils/logging';
 
 let geolocation: GPS;
 

@@ -29,6 +29,7 @@ export default class BottomSheetRouteInfoView extends BaseVueComponent {
 
     mounted() {
         super.mounted();
+        console.log('test', new Error().stack)
     }
     destroyed() {
         super.destroyed();
