@@ -21,7 +21,6 @@ import { BaseVueComponentRefs } from './BaseVueComponent';
 import BgServiceComponent from './BgServiceComponent';
 import MapRightMenu from './MapRightMenu';
 import MultiDrawer, { OptionsType } from './MultiDrawer';
-import { DEV_LOG } from '~/utils/logging';
 
 const mailRegexp = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
 
@@ -85,7 +84,6 @@ export default class App extends BgServiceComponent {
     constructor() {
         super();
         this.$setAppComponent(this);
-        this.log('mounted', 'cartoLicenseRegistered', App.cartoLicenseRegistered);
 
         // this.cartoLicenseRegistered = Vue.prototype.$cartoLicenseRegistered;
         this.stack.push(this.activatedUrl);
@@ -149,14 +147,14 @@ export default class App extends BgServiceComponent {
         super.mounted();
         if (!App.cartoLicenseRegistered) {
             const startTime = Date.now();
-            const result = registerLicense(gVars.CARTO_TOKEN);
-            this.log('registerLicense done', gVars.CARTO_TOKEN, result, Date.now() - startTime, 'ms');
-            this.$getAppComponent().setCartoLicenseRegistered(result);
+            // const result = registerLicense(gVars.CARTO_TOKEN);
+            // this.log('registerLicense done', gVars.CARTO_TOKEN, result, Date.now() - startTime, 'ms');
+            // this.$getAppComponent().setCartoLicenseRegistered(result);
 
-            setShowDebug(DEV_LOG);
-            setShowInfo(DEV_LOG);
-            setShowWarn(DEV_LOG);
-            setShowError(true);
+            // setShowDebug(DEV_LOG);
+            // setShowInfo(DEV_LOG);
+            // setShowWarn(DEV_LOG);
+            // setShowError(true);
         }
         if (isIOS && app.ios.window.safeAreaInsets) {
             const bottomSafeArea: number = app.ios.window.safeAreaInsets.bottom;
@@ -184,7 +182,6 @@ export default class App extends BgServiceComponent {
     }
     mapMounted = false;
     setMapMounted(result: boolean) {
-        // console.log('setMapMounted', result);
         this.mapMounted = result;
     }
     onNavigatingTo() {

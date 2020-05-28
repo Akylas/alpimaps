@@ -238,7 +238,7 @@ export default class UserLocationModule extends MapModule {
     onLocation(event: UserLocationdEventData) {
         this.queryingLocation = false;
         // const { android, ios, ...toPrint } = data.location;
-        this.log('onLocation', this._userFollow, event.location, this.userFollow);
+        // this.log('onLocation', this._userFollow, event.location, this.userFollow);
         if (event.error) {
             this.log(event.error);
             return;
@@ -248,7 +248,6 @@ export default class UserLocationModule extends MapModule {
     }
     geoHandler: GeoHandler;
     onServiceLoaded(geoHandler: GeoHandler) {
-        this.log('onServiceLoaded', !!geoHandler);
         this.geoHandler = geoHandler;
         geoHandler.on(UserLocationdEvent, this.onLocation, this);
     }

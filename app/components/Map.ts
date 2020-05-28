@@ -8,10 +8,23 @@ import { CartoMapStyle, ClickType, MapPos, ScreenPos, toNativeScreenPos } from '
 import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
 import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
 import { Layer } from 'nativescript-carto/layers';
-import { CartoOnlineVectorTileLayer, VectorElementEventData, VectorLayer, VectorTileEventData, VectorTileLayer, VectorTileRenderOrder } from 'nativescript-carto/layers/vector';
+import {
+    CartoOnlineVectorTileLayer,
+    VectorElementEventData,
+    VectorLayer,
+    VectorTileEventData,
+    VectorTileLayer,
+    VectorTileRenderOrder
+} from 'nativescript-carto/layers/vector';
 import { Projection } from 'nativescript-carto/projections';
 import { CartoMap, PanningMode, RenderProjectionMode } from 'nativescript-carto/ui';
-import { Line, LineEndType, LineJointType, LineStyleBuilder, LineStyleBuilderOptions } from 'nativescript-carto/vectorelements/line';
+import {
+    Line,
+    LineEndType,
+    LineJointType,
+    LineStyleBuilder,
+    LineStyleBuilderOptions
+} from 'nativescript-carto/vectorelements/line';
 import { Marker, MarkerStyleBuilder, MarkerStyleBuilderOptions } from 'nativescript-carto/vectorelements/marker';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from 'nativescript-carto/vectorelements/point';
 import { MBVectorTileDecoder } from 'nativescript-carto/vectortiles';
@@ -40,7 +53,8 @@ import MapScrollingWidgets from './MapScrollingWidgets';
 import PackagesDownloadComponent from './PackagesDownloadComponent';
 import Search from './Search';
 import TopSheetHolder, { DEFAULT_TOP, TopSheetHolderScrollEventData } from './TopSheetHolder';
-
+import { setShowDebug, setShowError, setShowInfo, setShowWarn } from 'nativescript-carto/utils';
+import { Brightness } from 'nativescript-brightness';
 const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
 const tinycolor = require('tinycolor2');
@@ -70,7 +84,7 @@ const mapLanguages = [
     // 'es',
     // 'et',
     // 'fi',
-    'fr',
+    'fr'
     // 'fy',
     // 'ga',
     // 'gd',
@@ -108,6 +122,8 @@ const mapLanguages = [
     // 'uk',
     // 'zh'
 ];
+
+const brightness = new Brightness();
 
 export interface MapModules {
     // [k: string]: MapModule;
@@ -237,6 +253,10 @@ export default class Map extends BgServicePageComponent {
     constructor() {
         super();
         handleOpenURL(this.onAppUrl);
+        this.keepAwake = appSettings.getBoolean('keepAwake', false);
+        if (this.keepAwake) {
+            this.showKeepAwakeNotification();
+        }
     }
     searchText: string = null;
     onAppUrl(appURL: AppURL) {
@@ -270,7 +290,7 @@ export default class Map extends BgServicePageComponent {
                 const actualQuery = decodeURIComponent(query).replace(/[+]/g, ' ');
                 if (match) {
                     this.selectItem({
-                        item:{
+                        item: {
                             properties: {
                                 name: actualQuery
                             },
@@ -279,9 +299,8 @@ export default class Map extends BgServicePageComponent {
                                 lon: parseFloat(match[2])
                             }
                         },
-                        isFeatureInteresting:true
-                    }
-                    );
+                        isFeatureInteresting: true
+                    });
                 } else {
                     this.showLoading(this.$tc(`searching_for:${actualQuery}`));
                     this.$packageService
@@ -292,7 +311,12 @@ export default class Map extends BgServicePageComponent {
                         .then(result => {
                             if (result.length > 0) {
                                 console.log('found it!', this.$packageService.prepareGeoCodingResult(result[0]));
-                                this.selectItem({item:this.$packageService.prepareGeoCodingResult(result[0]), isFeatureInteresting: true, peek:true, zoom:16});
+                                this.selectItem({
+                                    item: this.$packageService.prepareGeoCodingResult(result[0]),
+                                    isFeatureInteresting: true,
+                                    peek: true,
+                                    zoom: 16
+                                });
                             } else {
                                 this.searchText = actualQuery.replace(/[,]/g, ' ');
                             }
@@ -334,7 +358,6 @@ export default class Map extends BgServicePageComponent {
         // this.nativeView.marginBottom = navigationBarHeight;
         // this.overMapWidgets.nativeView.marginBottom = layout.toDevicePixels(navigationBarHeight);
         // }
-        this.log('onMapMounted', !!this.geoHandler);
         this.searchView = this.$refs.searchView;
         this.$setMapComponent(this);
         this.mapModules = {
@@ -436,11 +459,9 @@ export default class Map extends BgServicePageComponent {
     }
 
     onServiceLoaded(geoHandler: GeoHandler) {
-        this.log('onServiceLoaded', !!geoHandler);
         this.runOnModules('onServiceLoaded', geoHandler);
     }
     onServiceUnloaded(geoHandler: GeoHandler) {
-        this.log('onServiceUnloaded');
         this.runOnModules('onServiceUnloaded', geoHandler);
     }
 
@@ -494,9 +515,12 @@ export default class Map extends BgServicePageComponent {
         // this.log('onMapStable', zoom);
     }
 
-    onMapReady(e) {
+     onMapReady(e) {
         const cartoMap = (this._cartoMap = e.object as CartoMap<LatLonKeys>);
-
+        setShowDebug(DEV_LOG);
+        setShowInfo(DEV_LOG);
+        setShowWarn(DEV_LOG);
+        setShowError(true);
         this.mapProjection = cartoMap.projection;
         if (gVars.isAndroid) {
             this.log('onMapReady', com.carto.ui.BaseMapView.getSDKVersion());
@@ -522,19 +546,20 @@ export default class Map extends BgServicePageComponent {
         // console.log('map start pos', pos, zoom);
         cartoMap.setFocusPos(pos, 0);
         cartoMap.setZoom(zoom, 0);
-        setTimeout(() => {
-            perms
-                .request('storage')
-                .then(status => {
-                    console.log('storage permission', status);
+        // setTimeout(() => {
+        perms
+            .request('storage')
+            .then(status => {
+                if (this.packageServiceEnabled) {
                     this.$packageService.start();
-                    setTimeout(() => {
-                        this.runOnModules('onMapReady', this, cartoMap);
-                    }, 100);
-                    this.setMapStyle(appSettings.getString('mapStyle', 'osm'), true);
-                })
-                .catch(err => this.showError(err));
-        }, 0);
+                }
+                setTimeout(() => {
+                    this.runOnModules('onMapReady', this, cartoMap);
+                }, 100);
+                this.setMapStyle(appSettings.getString('mapStyle', 'osm'), true);
+            })
+            .catch(err => this.showError(err));
+        // }, 0);
     }
 
     createLocalMarker(position: MapPos<LatLonKeys>, options: MarkerStyleBuilderOptions) {
@@ -552,7 +577,21 @@ export default class Map extends BgServicePageComponent {
         const styleBuilder = new LineStyleBuilder(options);
         return new Line<LatLonKeys>({ positions, projection: this.mapProjection, styleBuilder });
     }
-    selectItem({item, isFeatureInteresting = false, peek = true, setSelected = true, zoom}:{item: Item, isFeatureInteresting: boolean, peek?: boolean, setSelected?: boolean, zoom?: number}) {
+    selectItem({
+        item,
+        isFeatureInteresting = false,
+        peek = true,
+        setSelected = true,
+        showButtons = false,
+        zoom
+    }: {
+        item: Item;
+        showButtons?: boolean;
+        isFeatureInteresting: boolean;
+        peek?: boolean;
+        setSelected?: boolean;
+        zoom?: number;
+    }) {
         // this.log('selec tItem', isFeatureInteresting);
         if (isFeatureInteresting) {
             if (item.route) {
@@ -563,7 +602,7 @@ export default class Map extends BgServicePageComponent {
                         // visible: false,
                         joinType: LineJointType.ROUND,
                         endType: LineEndType.ROUND,
-                        width: (item.styleOptions ? item.styleOptions.width: 6) + 2,
+                        width: (item.styleOptions ? item.styleOptions.width : 6) + 2,
                         clickWidth: 0
 
                         // orientationMode: BillboardOrientation.GROUND,
@@ -600,7 +639,7 @@ export default class Map extends BgServicePageComponent {
             }
             // item.route = {
             //     instructions: Array.from({length: 40}, () => ({
-            //         position: null, 
+            //         position: null,
             //         action: "left",
             //         azimuth: 0,
             //         distance: 0,
@@ -617,10 +656,13 @@ export default class Map extends BgServicePageComponent {
             // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
             // vectorTileDecoder.setStyleParameter('selected_name', (item.properties && item.properties.name) || '');
             if (peek) {
-                this.bottomSheetHolder.peek();
+                this.bottomSheetHolder.peek(showButtons ? 1 : 0);
             }
             if (item.zoomBounds) {
-                const zoomLevel = getBoundsZoomLevel(item.zoomBounds, { width: screen.mainScreen.widthPixels, height: screen.mainScreen.heightPixels });
+                const zoomLevel = getBoundsZoomLevel(item.zoomBounds, {
+                    width: screen.mainScreen.widthPixels,
+                    height: screen.mainScreen.heightPixels
+                });
                 this.cartoMap.setZoom(zoomLevel, 200);
                 this.cartoMap.setFocusPos(getCenter(item.zoomBounds.northeast, item.zoomBounds.southwest), 200);
             } else {
@@ -654,10 +696,10 @@ export default class Map extends BgServicePageComponent {
     }
     onMapClicked(e) {
         const { clickType, position } = e.data;
-        this.log('onMapClicked', clickType, position);
+        // this.log('onMapClicked', clickType, position);
         const handledByModules = this.runOnModules('onMapClicked', e);
         if (!handledByModules && clickType === ClickType.SINGLE) {
-            this.selectItem({item: { position }, isFeatureInteresting: false});
+            this.selectItem({ item: { position }, isFeatureInteresting: false });
             this.runOnModules('onMapClicked', e);
         }
         this.unFocusSearch();
@@ -677,6 +719,7 @@ export default class Map extends BgServicePageComponent {
             // this.log('onVectorTileClicked test', featureLayerName);
             if (
                 featureLayerName === 'transportation' ||
+                featureLayerName === 'route' ||
                 featureLayerName === 'waterway' ||
                 featureLayerName === 'hillshade' ||
                 featureLayerName === 'transportation_name' ||
@@ -704,8 +747,12 @@ export default class Map extends BgServicePageComponent {
             // });
             // console.log(JSON.stringify(languages));
 
-            const isFeatureInteresting = !!featureData.name || featureLayerName === 'poi' || featureLayerName === 'mountain_peak' || featureLayerName === 'housenumber';
-            this.log('onVectorTileClicked test2', featureLayerName, isFeatureInteresting);
+            const isFeatureInteresting =
+                !!featureData.name ||
+                featureLayerName === 'poi' ||
+                featureLayerName === 'mountain_peak' ||
+                featureLayerName === 'housenumber';
+            // this.log('onVectorTileClicked test2', featureLayerName, isFeatureInteresting);
             if (isFeatureInteresting) {
                 let result: Item = {
                     properties: featureData,
@@ -721,18 +768,22 @@ export default class Map extends BgServicePageComponent {
                     })
                     .then(res => {
                         // let foundBetterRes = false;
-                        res.some(r => {
-                            // console.log('found item search item', r, computeDistanceBetween(result.position, r.position));
-                            if (computeDistanceBetween(result.position, r.position) <= radius && r.rank > 0.9) {
-                                result = this.$packageService.prepareGeoCodingResult({ address: r.address as any, ...result });
-                                console.log('search item', r.address, result);
-                                return true;
-                            }
-                        });
+                        res &&
+                            res.some(r => {
+                                // console.log('found item search item', r, computeDistanceBetween(result.position, r.position));
+                                if (computeDistanceBetween(result.position, r.position) <= radius && r.rank > 0.9) {
+                                    result = this.$packageService.prepareGeoCodingResult({
+                                        address: r.address as any,
+                                        ...result
+                                    });
+                                    console.log('search item', r.address, result);
+                                    return true;
+                                }
+                            });
                         // return foundBetterRes;
                     })
                     .then(() => {
-                        this.selectItem({item:result, isFeatureInteresting});
+                        this.selectItem({ item: result, isFeatureInteresting });
                     })
                     .catch(err => {
                         console.error(err);
@@ -754,11 +805,11 @@ export default class Map extends BgServicePageComponent {
         Object.keys(metaData).forEach(k => {
             metaData[k] = JSON.parse(metaData[k]);
         });
-        this.log('onVectorElementClicked', clickType, position, elementPos);
+        // this.log('onVectorElementClicked', clickType, position, elementPos);
         const handledByModules = this.runOnModules('onVectorElementClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             const item: Item = { position, vectorElement: element, ...metaData };
-            this.selectItem({item, isFeatureInteresting: true});
+            this.selectItem({ item, isFeatureInteresting: true });
             this.unFocusSearch();
             return true;
         }
@@ -781,7 +832,11 @@ export default class Map extends BgServicePageComponent {
     }
     set showGlobe(value: boolean) {
         this.bShowGlobe = value;
-        this.cartoMap.getOptions().setRenderProjectionMode(value ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR);
+        this.cartoMap
+            .getOptions()
+            .setRenderProjectionMode(
+                value ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR
+            );
     }
     bShow3DBuildings = false;
     get show3DBuildings() {
@@ -858,7 +913,7 @@ export default class Map extends BgServicePageComponent {
         });
         this.updateLanguage(this.currentLanguage);
         this.show3DBuildings = appSettings.getBoolean('show3DBuildings', false);
-        // this.showContourLines = appSettings.getBoolean('showContourLines', true);
+        this.showContourLines = appSettings.getBoolean('showContourLines', true);
         // clog('currentLayer', !!this.currentLayer);
         this.currentLayer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
         this.currentLayer.setVectorTileEventListener(this, this.mapProjection);
@@ -874,6 +929,7 @@ export default class Map extends BgServicePageComponent {
     clearCache() {
         this.currentLayer && this.currentLayer.clearTileCaches(true);
         this.$packageService.clearCache();
+        this.cartoMap.requestRedraw();
     }
     updateLanguage(code: string) {
         appSettings.setString('language', code);
@@ -887,7 +943,7 @@ export default class Map extends BgServicePageComponent {
         if (!decoder) {
             return;
         }
-        this.log('updateLanguage', code, decoder);
+        // this.log('updateLanguage', code, decoder);
         decoder.setStyleParameter('lang', code);
         decoder.setStyleParameter('fallback_lang', 'latin');
     }
@@ -930,19 +986,23 @@ export default class Map extends BgServicePageComponent {
         //     return;
         // }
         layerStyle = layerStyle.toLowerCase();
-        console.log('setMapStyle', layerStyle, layerStyle !== this.currentLayerStyle || !!force);
+        // console.log('setMapStyle', layerStyle, layerStyle !== this.currentLayerStyle || !!force);
         if (layerStyle !== this.currentLayerStyle || !!force) {
             this.currentLayerStyle = layerStyle;
             appSettings.setString('mapStyle', layerStyle);
             const oldVectorTileDecoder = this.vectorTileDecoder;
             if (layerStyle === 'default' || layerStyle === 'voyager' || layerStyle === 'positron') {
-                this.vectorTileDecoder = new CartoOnlineVectorTileLayer({ style: this.geteCartoMapStyleFromStyle(layerStyle) }).getTileDecoder();
+                this.vectorTileDecoder = new CartoOnlineVectorTileLayer({
+                    style: this.geteCartoMapStyleFromStyle(layerStyle)
+                }).getTileDecoder();
             } else {
                 try {
                     this.vectorTileDecoder = new MBVectorTileDecoder({
                         style: this.getStyleFromCartoMapStyle(this.currentLayerStyle),
                         liveReload: TNS_ENV !== 'production',
-                        ...(layerStyle.endsWith('.zip') ? { zipPath: `~/assets/styles/${layerStyle}` } : { dirPath: `~/assets/styles/${layerStyle}` })
+                        ...(layerStyle.endsWith('.zip')
+                            ? { zipPath: `~/assets/styles/${layerStyle}` }
+                            : { dirPath: `~/assets/styles/${layerStyle}` })
                     });
                     this.runOnModules('vectorTileDecoderChanged', oldVectorTileDecoder, this.vectorTileDecoder);
                 } catch (err) {
@@ -1120,7 +1180,12 @@ export default class Map extends BgServicePageComponent {
         // this.bottomSheetPercentage = e.percentage;
     }
 
+    lastBrightness;
     public showKeepAwakeNotification() {
+        this.lastBrightness = brightness.get();
+        brightness.set({
+            intensity: 100
+        });
         if (gVars.isAndroid) {
             const context: android.content.Context = ad.getApplicationContext();
             const builder = new androidx.core.app.NotificationCompat.Builder(context, NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL);
@@ -1147,15 +1212,22 @@ export default class Map extends BgServicePageComponent {
             builder.setContentTitle('Alpi Maps is keeping the screen awake');
             // builder.setLargeIcon();
             const notifiction = builder.build();
-            const service = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
+            const service = context.getSystemService(
+                android.content.Context.NOTIFICATION_SERVICE
+            ) as android.app.NotificationManager;
             service.notify(KEEP_AWAKE_NOTIFICATION_ID, notifiction);
         }
     }
 
     public hideKeepAwakeNotification() {
+        brightness.set({
+            intensity: this.lastBrightness
+        });
         if (gVars.isAndroid) {
             const context: android.content.Context = ad.getApplicationContext();
-            const service = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
+            const service = context.getSystemService(
+                android.content.Context.NOTIFICATION_SERVICE
+            ) as android.app.NotificationManager;
             service.cancel(KEEP_AWAKE_NOTIFICATION_ID);
         }
     }
@@ -1166,6 +1238,7 @@ export default class Map extends BgServicePageComponent {
             allowSleepAgain()
                 .then(() => {
                     this.keepAwake = false;
+                    appSettings.setBoolean('keepAwake', false);
                     this.hideKeepAwakeNotification();
                     // this.log('allowSleepAgain done', this.keepAwake);
                 })
@@ -1174,6 +1247,7 @@ export default class Map extends BgServicePageComponent {
             keepAwake()
                 .then(() => {
                     this.keepAwake = true;
+                    appSettings.setBoolean('keepAwake', true);
                     this.showKeepAwakeNotification();
                     // this.log('keepAwake done', this.keepAwake);
                 })

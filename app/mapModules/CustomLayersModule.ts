@@ -303,7 +303,6 @@ export default class CustomLayersModule extends MapModule {
         }
     }
     vectorTileDecoderChanged(oldVectorTileDecoder, newVectorTileDecoder) {
-        console.log('vectorTileDecoderChanged', oldVectorTileDecoder !== newVectorTileDecoder);
         this.customSources.forEach(s => {
             if (s.layer instanceof VectorTileLayer && s.layer.getTileDecoder() === oldVectorTileDecoder) {
                 console.log('updating layer', s);
@@ -373,8 +372,9 @@ export default class CustomLayersModule extends MapModule {
                                 });
                         } else if (e.name.endsWith('.etiles')) {
                             return Promise.resolve().then(()=>{
-                                console.log('loading hillsahdes', e.path);
                                 const dataSource = new MBTilesTileDataSource({
+                                    minZoom:5,
+                                    maxZoom:12,
                                     databasePath: e.path
                                 });
                                 const name = e.name;

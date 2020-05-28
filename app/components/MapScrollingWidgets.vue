@@ -4,15 +4,19 @@
 
         <transition name="fade">
             <GridLayout v-show="showLocationInfo" col="1" row="0" borderRadius="40" backgroundColor="#77000000" padding="6" columns="auto,*,auto" @swipe="showLocationInfo = false">
-                <label width="60" height="60" borderRadius="30" borderWidth="4" :borderColor="accentColor" backgroundColor="#aaffffff" textWrap textAlignment="center" verticalTextAlignment="middle">
-                    <Span :text="((currentLocation && currentLocation.speed !== undefined) ? currentLocation.speed.toFixed() : '-') + '\n'" fontSize="26" fontWeight="bold" backgroundColor="transparent" />
-                    <Span text="km/h" fontSize="10" backgroundColor="transparent" />
-                </label>
-                <label col="1" textWrap marginLeft="5" verticalAlignment="top" color="#fff">
-                    <Span :text="$tu('altitude') + (listeningForBarometer ? `(${$t('barometer')})`:'') + '\n\n'" fontSize="11" :color="accentColor" />
-                    <Span :text="currentAltitude" fontSize="20" fontWeight="bold" />
-                    <Span text=" m" fontSize="12" />
-                </label>
+                <CanvasLabel width="60" height="60" borderRadius="30" borderWidth="4" :borderColor="accentColor" backgroundColor="#aaffffff" >
+                    <CGroup verticalAlignment="middle" textAlignment="center">
+                    <CSpan :text="((currentLocation && currentLocation.speed !== undefined) ? currentLocation.speed.toFixed() : '-') + '\n'" fontSize="26" fontWeight="bold"  />
+                    <CSpan text="km/h" fontSize="10" />
+                    </CGroup>
+                </CanvasLabel>
+                <CanvasLabel col="1" marginLeft="5" color="#fff">
+                    <CGroup verticalAlignment="top">
+                    <CSpan :text="$tu('altitude') + (listeningForBarometer ? `(${$t('barometer')})`:'') + '\n\n'" fontSize="11" :color="accentColor" />
+                    <CSpan :text="currentAltitude" fontSize="20" fontWeight="bold" />
+                    <CSpan text=" m" fontSize="12" />
+                    </CGroup>
+                </CanvasLabel>
                 <label col="1" v-show="listeningForBarometer && airportRefName" :text="airportRefName" verticalAlignment="bottom" horizontalAlignment="right" color="#fff" fontSize="9" />
                 <StackLayout v-show="hasBarometer" col="2" verticalAlignment="center">
                     <MDButton variant="text" class="small-icon-btn" text="mdi-gauge" @tap="switchBarometer" color="white" />

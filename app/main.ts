@@ -1,6 +1,6 @@
 import Vue from 'nativescript-vue';
 
-import { cwarn, DEV_LOG } from '~/utils/logging';
+import { cwarn } from '~/utils/logging';
 import { setMapPosKeys } from 'nativescript-carto/core';
 import * as application from '@nativescript/core/application';
 
@@ -22,6 +22,8 @@ function CustomError(error) {
     this.stack = error['stackTrace'];
 }
 CustomError.prototype = Object.create(Error.prototype);
+
+
 
 application.on(application.discardedErrorEvent, args => {
     const error = args.error;
@@ -79,7 +81,6 @@ Vue.use(FiltersPlugin);
 import { TNSFontIcon } from 'nativescript-akylas-fonticon';
 // TNSFontIcon.debug = true;
 TNSFontIcon.paths = {
-    // mdi: './assets/materialdesignicons.min.css',
     maki: './assets/maki.css',
     osm: './assets/osm.css'
 };
