@@ -24,6 +24,9 @@ export default class LayerOptionsBottomSheet extends BaseVueComponent {
     get options() {
         const layer = this.item.layer;
         const options =  this.item.options;
+        if (!options) {
+            return options;
+        }
         Object.keys(options).forEach(k=>{
             options[k].value = layer[k];
         })
@@ -64,5 +67,6 @@ export default class LayerOptionsBottomSheet extends BaseVueComponent {
                 break;
             }
         }
+        this.$closeBottomSheet();
     }
 }

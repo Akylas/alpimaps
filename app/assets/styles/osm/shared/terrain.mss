@@ -1,25 +1,25 @@
-#hillshade['nuti::contours'>0][zoom<=18]{
-	[class=shadow] {
-		polygon-fill: #000;
-		polygon-opacity: 0.05;
-		[level=89] {
-			polygon-opacity: 0.02;
-		}
-		[level=78] {
-			polygon-opacity: 0.04;
-		}
-		[level=67] {
-			polygon-opacity: 0.06;
-		}
-		[level=56] {
-			polygon-opacity: 0.08;
-		}
-	}
-	[class=highlight] {
-		polygon-fill: #fff;
-		polygon-opacity: 0.1;
-	}
-}
+// #hillshade['nuti::contours'>0][zoom<=18]{
+// 	[class=shadow] {
+// 		polygon-fill: #000;
+// 		polygon-opacity: 0.05;
+// 		[level=89] {
+// 			polygon-opacity: 0.02;
+// 		}
+// 		[level=78] {
+// 			polygon-opacity: 0.04;
+// 		}
+// 		[level=67] {
+// 			polygon-opacity: 0.06;
+// 		}
+// 		[level=56] {
+// 			polygon-opacity: 0.08;
+// 		}
+// 	}
+// 	[class=highlight] {
+// 		polygon-fill: #fff;
+// 		polygon-opacity: 0.1;
+// 	}
+// }
 
 #contour['nuti::contours'>0] {
 	[zoom>=12][ele>300],

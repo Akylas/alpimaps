@@ -1,10 +1,12 @@
 <template>
     <GridLayout ref="bottomSheet" width="100%" :rows="rows" @tap="noop"  @layoutChanged="onLayoutChange">
-        <BottomSheetInfoView ref="infoView" row="0" :visibility="itemIsRoute ? 'collapsed' : 'visible'" :updating="updatingItem" :item="itemIsRoute ? null : item" />
+        <BottomSheetInfoView ref="infoView" row="0" :visibility="itemIsRoute ? 'collapsed' : 'visible'" :item="itemIsRoute ? null : item" />
         <BottomSheetRouteInfoView ref="routeView" row="0" :visibility="itemIsRoute ? 'visible' : 'collapsed'" :routeItem="itemIsRoute ? item : null" />
 
+        <MDActivityIndicator v-show="updatingItem" row="0" horizontalAligment='right' busy class="activity-indicator" />
+
         <StackLayout row="1" orientation="horizontal" width="100%" @tap="noop" borderTopWidth="1" borderBottomWidth="1" borderColor='#44ffffff'>
-            <MDButton variant="text" padding="4" fontSize="10" @tap="searchItemWeb" text="search" v-show="item && !item.id" />
+            <MDButton variant="text" padding="4" fontSize="10" @tap="searchItemWeb" text="search" v-show="item && !itemIsRoute && !item.id" />
             <MDButton variant="text" padding="4" fontSize="10" @tap="getProfile" text="profile" v-show="itemRouteNoProfile" />
             <MDButton variant="text" padding="4" fontSize="10" @tap="saveItem" text="save item" v-show="item && !item.id" />
             <MDButton variant="text" padding="4" fontSize="10" @tap="deleteItem" text="delete item" v-show="item && item.id" />

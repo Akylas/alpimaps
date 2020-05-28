@@ -5,9 +5,17 @@ import Vue, { NativeScriptVue } from 'nativescript-vue';
 import { Color, View } from '@nativescript/core/ui/core/view';
 import { GridLayout } from '@nativescript/core/ui/layouts/grid-layout';
 import { Label } from '@nativescript/core/ui/label';
-import { DEV_LOG } from '~/utils/logging';
 import { Style } from '@nativescript/core/ui/core/properties';
-import { GestureHandlerStateEvent, GestureHandlerTouchEvent, GestureState, GestureStateEventData, GestureTouchEventData, HandlerType, Manager, PanGestureHandler } from 'nativescript-gesturehandler';
+import {
+    GestureHandlerStateEvent,
+    GestureHandlerTouchEvent,
+    GestureState,
+    GestureStateEventData,
+    GestureTouchEventData,
+    HandlerType,
+    Manager,
+    PanGestureHandler
+} from 'nativescript-gesturehandler';
 
 const DEFAULT_ANIM_DURATION = 200;
 const DEFAULT_TRIGGER_WIDTH = 30;
@@ -210,7 +218,10 @@ export default class MultiDrawer extends Vue {
 
     get computedSidesEnabled() {
         const validSides = ['left', 'right', 'bottom', 'top'];
-        return Object.keys(this.$slots).filter(slotName => validSides.indexOf(slotName) !== -1 && this.optionsInternal[slotName] && this.optionsInternal[slotName].enabled);
+        return Object.keys(this.$slots).filter(
+            slotName =>
+                validSides.indexOf(slotName) !== -1 && this.optionsInternal[slotName] && this.optionsInternal[slotName].enabled
+        );
     }
     // drawerStyle = {};
     // updateDrawerStyle(side) {
@@ -267,7 +278,7 @@ export default class MultiDrawer extends Vue {
                 visibility: isVisible ? 'visible' : 'hidden',
                 [optionsInternal.axis === 'X' ? 'horizontalAlignment' : 'verticalAlignment']: side
             };
-            this.log('computedDrawerStyle2', side, invisible, open, translationOffset, isOpened, isVisible, result);
+            // this.log('computedDrawerStyle2', side, invisible, open, translationOffset, isOpened, isVisible, result);
             return result;
         };
     }
@@ -278,13 +289,13 @@ export default class MultiDrawer extends Vue {
             return {
                 ...(optionsInternal.swipeOpenTriggerWidth
                     ? {
-                        width: optionsInternal.swipeOpenTriggerWidth
-                    }
+                          width: optionsInternal.swipeOpenTriggerWidth
+                      }
                     : {}),
                 ...(optionsInternal.swipeOpenTriggerHeight
                     ? {
-                        height: optionsInternal.swipeOpenTriggerHeight
-                    }
+                          height: optionsInternal.swipeOpenTriggerHeight
+                      }
                     : {}),
                 [optionsInternal.axis === 'X' ? 'horizontalAlignment' : 'verticalAlignment']: side,
                 ...(this.optionsInternal.debug ? { backgroundColor: 'rgba(0, 255, 0, 0.3)' } : {}),
@@ -483,7 +494,7 @@ export default class MultiDrawer extends Vue {
                 this.open(side, animationFactor);
             });
         }
-        this.log('open', side, this.isPanning, this.isAnimating);
+        // this.log('open', side, this.isPanning, this.isAnimating);
 
         if (this.computedSidesEnabled.indexOf(side) === -1) {
             return;
@@ -542,7 +553,7 @@ export default class MultiDrawer extends Vue {
         if (!side) {
             return;
         }
-        this.log('closing', side);
+        // this.log('closing', side);
 
         this.isPanning = false;
         const sideData = this[side + 'SideState'];
@@ -564,7 +575,7 @@ export default class MultiDrawer extends Vue {
                     },
                     duration
                 });
-                this.log(' closing animation done', side);
+                // this.log(' closing animation done', side);
             }
         } catch (err) {
             console.error(err);
@@ -573,7 +584,7 @@ export default class MultiDrawer extends Vue {
             sideData.invisible = true;
             this.backdropVisible = false;
             this.isAnimating = false;
-            this.log('drawer hidden', side);
+            // this.log('drawer hidden', side);
             this.$emit('stateChange', false);
         }
 
@@ -586,8 +597,10 @@ export default class MultiDrawer extends Vue {
         const view = this.getDrawer(side).nativeView;
         const sideData = this[side + 'SideState'];
         const optionsInternal = this.sideOptions(side);
-        const newOffset = optionsInternal.translationOffsetMultiplier * layout.toDeviceIndependentPixels(optionsInternal.axis === 'X' ? view.getMeasuredWidth() : view.getMeasuredHeight());
-        this.log('onDrawerLayoutChange', side, newOffset, sideData.translationOffset);
+        const newOffset =
+            optionsInternal.translationOffsetMultiplier *
+            layout.toDeviceIndependentPixels(optionsInternal.axis === 'X' ? view.getMeasuredWidth() : view.getMeasuredHeight());
+        // this.log('onDrawerLayoutChange', side, newOffset, sideData.translationOffset);
 
         // check for change to prevent unwanted call to computedDrawerStyle
         if (newOffset !== sideData.translationOffset) {
@@ -604,7 +617,7 @@ export default class MultiDrawer extends Vue {
     }
     onDrawerPan(side, args) {
         return;
-        this.log('onDrawerPan', side, this.isPanning, this.isAnimating, args.state);
+        // this.log('onDrawerPan', side, this.isPanning, this.isAnimating, args.state);
         if (side === false) {
             return;
         }

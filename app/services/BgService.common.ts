@@ -33,11 +33,9 @@ export abstract class BgServiceCommon extends Observable {
     abstract stop();
     abstract start();
     onAppLaunch(args: ApplicationEventData) {
-        this.log('onAppLaunch');
         this.start();
     }
     onAppExit(args: ApplicationEventData) {
-        this.log('onAppExit');
         // applicationOff(exitEvent, this.onAppExit, this);
         this.geoHandler.onAppExit(args);
 

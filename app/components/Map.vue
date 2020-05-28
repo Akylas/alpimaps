@@ -29,7 +29,7 @@
 
         <MapScrollingWidgets ref="mapScrollingWidgets" :paddingTop="mapWidgetsTopPadding" :translateY="-bottomSheetTranslation" :opacity="scrollingWidgetsOpacity" />
         <Fab position="left" iconClass="mdi" icon="mdi-plus" iconOn="mdi-close" :translateY="-bottomSheetTranslation" :opacity="scrollingWidgetsOpacity" :backgroundColor="accentColor" color="white">
-            <FabItem :title="$t('offline_packages') | titlecase" iconClass="mdi" icon="mdi-earth" @tap="downloadPackages" />
+            <FabItem v-if="packageServiceEnabled" :title="$t('offline_packages') | titlecase" iconClass="mdi" icon="mdi-earth" @tap="downloadPackages" />
             <FabItem :title="$t('select_style') | titlecase" iconClass="mdi" icon="mdi-layers" @tap="selectStyle" />
             <FabItem :title="$t('select_language') | titlecase" iconClass="mdi" icon="mdi-translate" @tap="selectLanguage" />
             <FabItem :title="$t('location_info') | titlecase" iconClass="mdi" icon="mdi-speedometer" @tap="switchLocationInfo" />
