@@ -7,9 +7,9 @@ import Map from '~/components/Map';
 import MapModule from './MapModule';
 import Vue from 'nativescript-vue';
 
-import { NativeSQLite } from '@nano-sql/adapter-sqlite-nativescript';
+import { NativeSQLite } from 'nativescript-akylas-sqlite/nanosql';
 // MUST include nSQL from the lib path.
-import { nSQL } from '@nano-sql/core/lib/index';
+import { nSQL } from '@nano-sql/core/lib';
 import { InanoSQLTableConfig } from '@nano-sql/core/lib/interfaces';
 import { Line, LineEndType, LineJointType, LineStyleBuilder, LineStyleBuilderOptions } from 'nativescript-carto/vectorelements/line';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from 'nativescript-carto/vectorelements/point';

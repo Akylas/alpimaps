@@ -650,7 +650,7 @@ export default class Map extends BgServicePageComponent {
             if (setSelected) {
                 this.selectedItem = item;
             }
-            console.log('selectedItem', item);
+            // console.log('selectedItem', item);
             // const vectorTileDecoder = this.getVectorTileDecoder();
             // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
             // vectorTileDecoder.setStyleParameter('selected_name', (item.properties && item.properties.name) || '');

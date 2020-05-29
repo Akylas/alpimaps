@@ -329,6 +329,7 @@
 		<NutiParameter name="osm-monument" type="string" value="" />
 		<NutiParameter name="osm-motel" type="string" value="" />
 		<NutiParameter name="osm-motorcycle_parking" type="string" value="" />
+		<NutiParameter name="osm-mountain_peak" type="string" value="" />
 		<NutiParameter name="osm-museum" type="string" value="" />
 		<NutiParameter name="osm-music" type="string" value="" />
 		<NutiParameter name="osm-musical_instrument" type="string" value="" />
@@ -3186,6 +3187,13 @@
 			<PolygonSymbolizer fill="rgba(203,177,154,0.3)" />
 		</Rule>
 	</Style>
+	<Style name="mountain_peak" filter-mode="first">
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<ShieldSymbolizer face-name="Montserrat Medium" feature-id="[osmid]" file="symbols/[class].svg" fill="rgb(90,65,50)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" line-spacing="-1" placement="[nuti::markers3d]" shield-dy="linear([view::zoom],7,15,13,16,18,20)" size="(linear([view::zoom],7,7,13,8,18,12))-((1.0e-06)*([rank]))">{(([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])) ? (([ele]) ? (((([ele])+('m'))+('\n '))+(([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name]))) : (([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name]))) : ('')}</ShieldSymbolizer>
+		</Rule>
+	</Style>
 	<Style name="place" filter-mode="first">
 		<Rule name="auto">
 			<MinScaleDenominator>279541120</MinScaleDenominator>
@@ -3760,13 +3768,6 @@
 			<MaxScaleDenominator>8735660</MaxScaleDenominator>
 			<Filter>[class] = 'city' and ( [rank] &lt;= 2 or [rank] &lt;= 4 or [rank] &lt;= 6 or [rank] &lt;= 7 )</Filter>
 			<TextSymbolizer dx="-5" dy="0" face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" minimum-distance="3" placement="[nuti::texts3d]" size="10" wrap-width="step(7,4,40,5,50,6,60)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-	</Style>
-	<Style name="mountain_peak" filter-mode="first">
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<ShieldSymbolizer face-name="Montserrat Medium" feature-id="[osmid]" file="symbols/icons/[class].svg" fill="rgb(90,65,50)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" line-spacing="-1" placement="[nuti::markers3d]" shield-dy="linear([view::zoom],7,15,13,16,18,20)" size="(linear([view::zoom],7,7,13,8,18,12))-((1.0e-06)*([rank]))">{(([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])) ? (([ele]) ? (((([ele])+('m'))+('\n '))+(([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name]))) : (([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name]))) : ('')}</ShieldSymbolizer>
 		</Rule>
 	</Style>
 	<Style name="waterway" filter-mode="first">
@@ -13581,7 +13582,7 @@
 			<MinScaleDenominator>559082240</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
 			<Filter>[class] &lt;&gt; null and [class] = 'spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(73,80,99)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>279541120</MinScaleDenominator>
@@ -13593,7 +13594,7 @@
 			<MinScaleDenominator>279541120</MinScaleDenominator>
 			<MaxScaleDenominator>559082240</MaxScaleDenominator>
 			<Filter>[class] &lt;&gt; null and [class] = 'spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(73,80,99)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>139770560</MinScaleDenominator>
@@ -13605,7 +13606,7 @@
 			<MinScaleDenominator>139770560</MinScaleDenominator>
 			<MaxScaleDenominator>279541120</MaxScaleDenominator>
 			<Filter>[class] &lt;&gt; null and [class] = 'spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(73,80,99)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>69885280</MinScaleDenominator>
@@ -13617,7 +13618,7 @@
 			<MinScaleDenominator>69885280</MinScaleDenominator>
 			<MaxScaleDenominator>139770560</MaxScaleDenominator>
 			<Filter>[class] &lt;&gt; null and [class] = 'spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(73,80,99)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>34942640</MinScaleDenominator>
@@ -13629,7 +13630,7 @@
 			<MinScaleDenominator>34942640</MinScaleDenominator>
 			<MaxScaleDenominator>69885280</MaxScaleDenominator>
 			<Filter>[class] &lt;&gt; null and [class] = 'spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(73,80,99)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>17471320</MinScaleDenominator>
@@ -13641,7 +13642,7 @@
 			<MinScaleDenominator>17471320</MinScaleDenominator>
 			<MaxScaleDenominator>34942640</MaxScaleDenominator>
 			<Filter>[class] &lt;&gt; null and [class] = 'spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(73,80,99)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>8735660</MinScaleDenominator>
@@ -13653,7 +13654,7 @@
 			<MinScaleDenominator>8735660</MinScaleDenominator>
 			<MaxScaleDenominator>17471320</MaxScaleDenominator>
 			<Filter>[class] &lt;&gt; null and [class] = 'spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(73,80,99)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>4367830</MinScaleDenominator>
@@ -13665,7 +13666,7 @@
 			<MinScaleDenominator>4367830</MinScaleDenominator>
 			<MaxScaleDenominator>8735660</MaxScaleDenominator>
 			<Filter>[class] &lt;&gt; null and [class] = 'spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(73,80,99)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>2183915</MinScaleDenominator>
@@ -13677,7 +13678,7 @@
 			<MinScaleDenominator>2183915</MinScaleDenominator>
 			<MaxScaleDenominator>4367830</MaxScaleDenominator>
 			<Filter>[class] &lt;&gt; null and [class] = 'spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(73,80,99)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>1091957.5</MinScaleDenominator>
@@ -13689,7 +13690,7 @@
 			<MinScaleDenominator>1091957.5</MinScaleDenominator>
 			<MaxScaleDenominator>2183915</MaxScaleDenominator>
 			<Filter>[class] &lt;&gt; null and [class] = 'spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(73,80,99)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>545978.75</MinScaleDenominator>
@@ -13701,7 +13702,7 @@
 			<MinScaleDenominator>545978.75</MinScaleDenominator>
 			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
 			<Filter>[class] &lt;&gt; null and [class] = 'spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(73,80,99)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>272989.375</MinScaleDenominator>
@@ -13713,7 +13714,7 @@
 			<MinScaleDenominator>272989.375</MinScaleDenominator>
 			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
 			<Filter>[class] &lt;&gt; null and [class] = 'spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(73,80,99)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>136494.688</MinScaleDenominator>
@@ -13725,7 +13726,7 @@
 			<MinScaleDenominator>136494.688</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class] &lt;&gt; null and [class] = 'spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(73,80,99)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>68247.3438</MinScaleDenominator>
@@ -13737,7 +13738,7 @@
 			<MinScaleDenominator>68247.3438</MinScaleDenominator>
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[class] &lt;&gt; null and [class] = 'spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(73,80,99)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
@@ -13749,7 +13750,7 @@
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[class] &lt;&gt; null and [class] = 'spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(73,80,99)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
@@ -13761,7 +13762,7 @@
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[class] &lt;&gt; null and [class] = 'spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(73,80,99)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
@@ -13772,7 +13773,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and ( [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'hospital' )</Filter>
+			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and ( [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'bassin' or [class] = 'spring' or [class] = 'hospital' )</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -13799,10 +13800,16 @@
 			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and [class] = 'park'</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(118,188,84)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
-		<Rule name="combined">
+		<Rule name="auto">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[class] &lt;&gt; null and ( [rank] &lt;= 10 or [class] = 'spring' )</Filter>
+			<Filter>[class] &lt;&gt; null and [class] = 'spring'</Filter>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>8530.91797</MinScaleDenominator>
+			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
+			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(73,80,99)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -13814,7 +13821,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
-			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and ( [class] = 'fountain' or [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'fountain' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 10 and [class] = 'hospital' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'hospital' )</Filter>
+			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and ( [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'bassin' or [class] = 'spring' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'fountain' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'bassin' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'spring' ) or ( [class] &lt;&gt; null and [rank] &lt;= 10 and [class] = 'hospital' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'hospital' )</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -13841,10 +13848,16 @@
 			<Filter>[class] = 'park' and ( [class] &lt;&gt; null and [rank] &lt;= 10 or ( [class] &lt;&gt; null and [rank] &lt;= 50 ) )</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(118,188,84)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class] &lt;&gt; null and [class] = 'spring'</Filter>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
-			<Filter>[class] &lt;&gt; null and ( [rank] &lt;= 10 or [rank] &lt;= 50 or [class] = 'spring' )</Filter>
+			<Filter>[class] &lt;&gt; null and ( [rank] &lt;= 10 or [rank] &lt;= 50 )</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(73,80,99)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -13856,7 +13869,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>2132.72949</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
-			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and ( [class] = 'fountain' or [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'fountain' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 10 and [class] = 'hospital' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'hospital' )</Filter>
+			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and ( [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'bassin' or [class] = 'spring' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'fountain' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'bassin' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'spring' ) or ( [class] &lt;&gt; null and [rank] &lt;= 10 and [class] = 'hospital' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'hospital' )</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -13892,7 +13905,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>2132.72949</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
-			<Filter>[class] &lt;&gt; null and ( [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'hospital' )</Filter>
+			<Filter>[class] &lt;&gt; null and ( [class] = 'spring' or [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'bassin' or [class] = 'hospital' )</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -13934,7 +13947,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>1066.36475</MinScaleDenominator>
 			<MaxScaleDenominator>2132.72949</MaxScaleDenominator>
-			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and ( [class] = 'fountain' or [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'fountain' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 10 and [class] = 'hospital' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'hospital' )</Filter>
+			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and ( [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'bassin' or [class] = 'spring' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'fountain' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'bassin' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'spring' ) or ( [class] &lt;&gt; null and [rank] &lt;= 10 and [class] = 'hospital' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'hospital' )</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -13970,7 +13983,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>1066.36475</MinScaleDenominator>
 			<MaxScaleDenominator>2132.72949</MaxScaleDenominator>
-			<Filter>[class] &lt;&gt; null and ( [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'hospital' )</Filter>
+			<Filter>[class] &lt;&gt; null and ( [class] = 'spring' or [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'bassin' or [class] = 'hospital' )</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -14012,7 +14025,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>533.182373</MinScaleDenominator>
 			<MaxScaleDenominator>1066.36475</MaxScaleDenominator>
-			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and ( [class] = 'fountain' or [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'fountain' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 10 and [class] = 'hospital' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'hospital' )</Filter>
+			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and ( [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'bassin' or [class] = 'spring' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'fountain' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'bassin' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'spring' ) or ( [class] &lt;&gt; null and [rank] &lt;= 10 and [class] = 'hospital' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'hospital' )</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -14048,7 +14061,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>533.182373</MinScaleDenominator>
 			<MaxScaleDenominator>1066.36475</MaxScaleDenominator>
-			<Filter>[class] &lt;&gt; null and ( [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'hospital' )</Filter>
+			<Filter>[class] &lt;&gt; null and ( [class] = 'spring' or [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'bassin' or [class] = 'hospital' )</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -14090,7 +14103,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>266.591187</MinScaleDenominator>
 			<MaxScaleDenominator>533.182373</MaxScaleDenominator>
-			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and ( [class] = 'fountain' or [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'fountain' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 10 and [class] = 'hospital' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'hospital' )</Filter>
+			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and ( [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'bassin' or [class] = 'spring' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'fountain' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'bassin' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'spring' ) or ( [class] &lt;&gt; null and [rank] &lt;= 10 and [class] = 'hospital' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'hospital' )</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -14126,7 +14139,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>266.591187</MinScaleDenominator>
 			<MaxScaleDenominator>533.182373</MaxScaleDenominator>
-			<Filter>[class] &lt;&gt; null and ( [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'hospital' )</Filter>
+			<Filter>[class] &lt;&gt; null and ( [class] = 'spring' or [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'bassin' or [class] = 'hospital' )</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -14168,7 +14181,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>133.295593</MinScaleDenominator>
 			<MaxScaleDenominator>266.591187</MaxScaleDenominator>
-			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and ( [class] = 'fountain' or [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'fountain' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 10 and [class] = 'hospital' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'hospital' )</Filter>
+			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and ( [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'bassin' or [class] = 'spring' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'fountain' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'bassin' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'spring' ) or ( [class] &lt;&gt; null and [rank] &lt;= 10 and [class] = 'hospital' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'hospital' )</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -14204,7 +14217,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>133.295593</MinScaleDenominator>
 			<MaxScaleDenominator>266.591187</MaxScaleDenominator>
-			<Filter>[class] &lt;&gt; null and ( [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'hospital' )</Filter>
+			<Filter>[class] &lt;&gt; null and ( [class] = 'spring' or [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'bassin' or [class] = 'hospital' )</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -14246,7 +14259,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>66.6477966</MinScaleDenominator>
 			<MaxScaleDenominator>133.295593</MaxScaleDenominator>
-			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and ( [class] = 'fountain' or [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'fountain' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 10 and [class] = 'hospital' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'hospital' )</Filter>
+			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and ( [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'bassin' or [class] = 'spring' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'fountain' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'bassin' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'spring' ) or ( [class] &lt;&gt; null and [rank] &lt;= 10 and [class] = 'hospital' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'hospital' )</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -14282,7 +14295,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>66.6477966</MinScaleDenominator>
 			<MaxScaleDenominator>133.295593</MaxScaleDenominator>
-			<Filter>[class] &lt;&gt; null and ( [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'hospital' )</Filter>
+			<Filter>[class] &lt;&gt; null and ( [class] = 'spring' or [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'bassin' or [class] = 'hospital' )</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -14324,7 +14337,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>66.6477966</MaxScaleDenominator>
-			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and ( [class] = 'fountain' or [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'fountain' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 10 and [class] = 'hospital' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'hospital' )</Filter>
+			<Filter>[class] &lt;&gt; null and [rank] &lt;= 10 and ( [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'bassin' or [class] = 'spring' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'fountain' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'drinking_water' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'bassin' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'spring' ) or ( [class] &lt;&gt; null and [rank] &lt;= 10 and [class] = 'hospital' ) or ( [class] &lt;&gt; null and [rank] &lt;= 50 and [class] = 'hospital' )</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -14360,7 +14373,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>66.6477966</MaxScaleDenominator>
-			<Filter>[class] &lt;&gt; null and ( [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'hospital' )</Filter>
+			<Filter>[class] &lt;&gt; null and ( [class] = 'spring' or [class] = 'fountain' or [class] = 'drinking_water' or [class] = 'bassin' or [class] = 'hospital' )</Filter>
 			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(255,255,255)" halo-radius="linear([view::zoom],14,1,18,0.5)" halo-rasterizer="fast" placement="[nuti::markers3d]" size="(linear([view::zoom],18,10,20,14.0))-((1.0e-06)*([rank]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -14941,13 +14954,13 @@
 		<StyleName>landcover</StyleName>
 		<StyleName>landcover::first</StyleName>
 	</Layer>
+	<Layer name="mountain_peak">
+		<StyleName>mountain_peak</StyleName>
+	</Layer>
 	<Layer name="place">
 		<StyleName>place</StyleName>
 		<StyleName>place::icon</StyleName>
 		<StyleName>place::label</StyleName>
-	</Layer>
-	<Layer name="mountain_peak">
-		<StyleName>mountain_peak</StyleName>
 	</Layer>
 	<Layer name="waterway">
 		<StyleName>waterway</StyleName>

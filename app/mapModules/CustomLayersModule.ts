@@ -1,13 +1,13 @@
 import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
 import { HTTPTileDataSource } from 'nativescript-carto/datasources/http';
 import { TileLayer } from 'nativescript-carto/layers';
-import { RasterTileLayer, HillshadeRasterTileLayer } from 'nativescript-carto/layers/raster';
+import { RasterTileLayer, HillshadeRasterTileLayer, RasterTileFilterMode } from 'nativescript-carto/layers/raster';
 import { CartoMap } from 'nativescript-carto/ui';
 import { $t } from '~/helpers/locale';
 import { alert } from 'nativescript-material-dialogs';
 import Vue from 'nativescript-vue';
-import * as appSettings from '@nativescript/core/application-settings/application-settings';
-import { ObservableArray } from '@nativescript/core/data/observable-array/observable-array';
+import * as appSettings from '@nativescript/core/application-settings';
+import { ObservableArray } from '@nativescript/core/data/observable-array';
 import { File, Folder, path } from '@nativescript/core/file-system';
 import Map from '~/components/Map';
 import OptionSelect from '~/components/OptionSelect';
@@ -36,7 +36,7 @@ export interface SourceItem {
     layer: TileLayer<any, any>;
     provider: Provider;
     index?: number;
-    options?:{[k:string]:{min:number, max:number, value?:number}}
+    options?: { [k: string]: { min: number; max: number; value?: number } };
 }
 
 export default class CustomLayersModule extends MapModule {
@@ -305,7 +305,7 @@ export default class CustomLayersModule extends MapModule {
     vectorTileDecoderChanged(oldVectorTileDecoder, newVectorTileDecoder) {
         this.customSources.forEach(s => {
             if (s.layer instanceof VectorTileLayer && s.layer.getTileDecoder() === oldVectorTileDecoder) {
-                console.log('updating layer', s);
+                console.log('updating layer', s.name, s.index);
                 const layer = new VectorTileLayer({
                     dataSource: s.layer.dataSource,
                     // zoomLevelBias: zoomLevelBias * 0.75,
@@ -371,16 +371,17 @@ export default class CustomLayersModule extends MapModule {
                                     mapComp.addLayer(data.layer, 'customLayers', data.index);
                                 });
                         } else if (e.name.endsWith('.etiles')) {
-                            return Promise.resolve().then(()=>{
+                            return Promise.resolve().then(() => {
                                 const dataSource = new MBTilesTileDataSource({
-                                    minZoom:5,
-                                    maxZoom:12,
+                                    minZoom: 5,
+                                    maxZoom: 12,
                                     databasePath: e.path
                                 });
                                 const name = e.name;
                                 const contrast = appSettings.getNumber(`${name}_contrast`, 0.26);
                                 const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.51);
-                                const layer  = new HillshadeRasterTileLayer({
+                                const layer = new HillshadeRasterTileLayer({
+                                    tileFilterMode: RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BILINEAR,
                                     contrast,
                                     heightScale,
                                     dataSource
@@ -391,22 +392,21 @@ export default class CustomLayersModule extends MapModule {
                                     name,
                                     opacity,
                                     layer,
-                                    options:{
-                                        contrast:{
+                                    options: {
+                                        contrast: {
                                             min: 0,
                                             max: 1
                                         },
-                                        heightScale:{
+                                        heightScale: {
                                             min: 0,
                                             max: 2
                                         }
                                     },
                                     provider: { name }
-                                }
+                                };
                                 this.customSources.push(data);
                                 mapComp.addLayer(data.layer, 'customLayers', data.index);
                             });
-                            
                         }
                     })
                 );

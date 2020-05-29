@@ -445,8 +445,12 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         const result = this.routeInstructions[args.index];
         // this.log('onInstructionTap', args.index, result);
         if (result) {
-            this.$getMapComponent().cartoMap.setZoom(16, 100);
-            this.$getMapComponent().cartoMap.setFocusPos(result.position, 100);
+            // this.$getMapComponent().cartoMap.setZoom(16, 100);
+            // this.$getMapComponent().cartoMap.setFocusPos(result.position, 100);
+
+
+            const mapComp = this.$getMapComponent();
+            mapComp.selectItem({item:{ position: result.position }, isFeatureInteresting:true, setSelected:false, peek:false});
         }
     }
 }

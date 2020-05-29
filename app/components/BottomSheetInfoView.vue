@@ -1,6 +1,6 @@
 <template>
     <CanvasLabel :columns="columns" rows="*,auto,auto,auto,*"  fontSize="16" color="white" padding="10">
-        <CSpan paddingLeft="5" width="40" v-if="!!itemIcon" :text="itemIcon |fonticon" fontFamily="maki" fontSize="24" verticalAlignment="middle" />
+        <CSpan paddingLeft="5" width="40" v-if="!!itemIcon" :text="itemIcon |fonticon" fontFamily="osm" fontSize="24" verticalAlignment="middle" />
         <CGroup paddingLeft="30" :paddingBottom="itemSubtitle?10:0" verticalAlignment="middle" textAlignment="left">
             <CSpan :text="itemTitle" fontWeight="bold"/>
             <CSpan :text="itemSubtitle ? '\n' + itemSubtitle : ''" color="#D0D0D0" fontSize="13" />
