@@ -674,6 +674,9 @@
 .osm-wilderness_hut:before {
   content: "\e9d9";
 }
+.osm-alpine_hut:before {
+  content: "\e9d9";
+}
 .osm-windmill:before {
   content: "\e9da";
 }

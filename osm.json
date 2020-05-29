@@ -1757,7 +1757,7 @@
         {
           "order": 439,
           "id": 1,
-          "name": "wilderness_hut",
+          "name": "wilderness_hut, alpine_hut",
           "prevSize": 32,
           "code": 59865,
           "tempChar": ""
