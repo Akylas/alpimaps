@@ -551,7 +551,7 @@
 				[class='hospital'] {
 					text-fill: #4AA0E7;
 				}
-				[class='fountain'],[class='drinking_water'],[class='bassin'][class='spring'] {
+				[class='fountain'],[class='drinking_water'],[class='bassin'],[class='spring'] {
 					text-fill: #4AA0E7;
 				}
 				[class='bakery'], [class='restaurant'] {
@@ -608,7 +608,7 @@
 	shield-size: linear([view::zoom], (7, 7), (13, 8), (18, 12))- 0.000001 * [rank]; 
 	shield-line-spacing: -1;
 	shield-placement: [nuti::markers3d];
-	shield-file: url(symbols/icons/[class].svg);
+	shield-file: url(symbols/[class].svg);
 	shield-fill: darken(@peak_label, 20%);
 	shield-dy: linear([view::zoom], (7, 15), (13, 16), (18, 20)); 
 	shield-feature-id: @featureId;
