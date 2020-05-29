@@ -25,6 +25,7 @@ import BaseVueComponent from './BaseVueComponent';
 import Map from './Map';
 import { showSnack } from 'nativescript-material-snackbar';
 import { File, Folder, path } from '@nativescript/core/file-system';
+import { device } from '@nativescript/core/platform';
 
 export interface RouteInstruction {
     position: MapPos<LatLonKeys>;
@@ -34,6 +35,7 @@ export interface RouteInstruction {
     time: number;
     turnAngle: number;
     streetName: string;
+    instruction: string;
 }
 
 export interface RouteProfile {
@@ -67,7 +69,8 @@ function routingResultToJSON(result: RoutingResult<LatLonKeys>) {
             distance: instruction.getDistance(),
             time: instruction.getTime(),
             turnAngle: instruction.getTurnAngle(),
-            streetName: instruction.getStreetName()
+            streetName: instruction.getStreetName(),
+            instruction: (instruction as any).getInstruction()
         });
     }
     const res = {
@@ -537,6 +540,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
                     projection: this.mapView.projection,
                     points: this.waypoints.map(r => r.position),
                     customOptions: {
+                        directions_options: { language: device.language },
                         costing_options: { pedestrian: { max_hiking_difficulty: 6 } }
                     } as any
                 },

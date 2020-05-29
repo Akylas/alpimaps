@@ -284,7 +284,7 @@ export default class ItemsModule extends MapModule {
     }
     itemToMetaData(item: Item) {
         const result = {};
-        Object.keys(item).forEach(k => {
+        Object.keys(item).filter(k=>k!== 'vectorElement').forEach(k => {
             if (item[k] !== null && item[k] !== undefined) {
                 result[k] = JSON.stringify(item[k]);
             }

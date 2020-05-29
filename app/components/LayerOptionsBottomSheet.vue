@@ -1,7 +1,7 @@
 <template>
     <ScrollView>
         <StackLayout>
-            <MDButton v-for="(action, index) in actions" variant="text" :text="action" @tap="handleAction(action)"/>
+            <MDButton v-for="(action, index) in actions" variant="text" :text="$t(action)" @tap="handleAction(action)"/>
             <GridLayout v-for="(option, name) in options" height="50" columns="auto,*,auto">
                 <Label col="0" width="80" :text="name" color="white" fontSize="13" verticalTextAlignment="center" />
                 <MDSlider

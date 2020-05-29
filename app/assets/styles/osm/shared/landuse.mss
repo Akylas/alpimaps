@@ -4,6 +4,7 @@
     text-name: @name;
     text-face-name: @mont;
     text-fill: @building_label;
+	  text-min-distance:50;
     text-size: 9;
 	  text-wrap-width: 100;
   }  

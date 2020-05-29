@@ -499,7 +499,7 @@ export default class PackageService extends Observable {
                 const entities = folder.getEntitiesSync();
                 entities.some(s => {
                     if (s.name.endsWith('.etiles')) {
-                        console.log('loading eitles', s.path);
+                        // console.log('loading etiles', s.path);
                         this._elevationDb = openOrCreate(s.path, android.database.sqlite.SQLiteDatabase.OPEN_READONLY);
                         return true;
                     }
