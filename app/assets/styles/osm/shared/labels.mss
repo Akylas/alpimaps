@@ -494,71 +494,72 @@
 		// [class=national_park][zoom>=6],
 	// [class=protected_area][zoom>=9],
 	// [class=aboriginal_lands][zoom>=9],
-	[class=lodging][subclass='alpine_hut'],
-	[class=lodging][subclass='wilderness_hut'],
-	// [class=lodging][subclass='wilderness_hut'][rank<=10][zoom>=11],
-	[class=campsite][rank<=10][zoom>=12],
-	// [zoom>=14][rank<=1][class!='information'][class!='toilets'][class!='bus'][subclass!='tram_stop'][subclass!='station'][class!='picnic_site'][subclass!='viewpoint'],
-	// [zoom>=15][rank<=2][class!='toilets'][class!='information'][class!='bus'][subclass!='tram_stop'][subclass!='station'][subclass!='viewpoint'],
-	// [class=park][zoom>=15][rank<=10],
-	[zoom>=16][rank<=10],
-	// [class=park][zoom>=16][rank<=20],
-	[zoom>=17][rank<=50],
-	// [class=park][zoom>=17][rank<=30],
-	[zoom>=18] {
+		[class=lodging][subclass='alpine_hut'],
+		[class=lodging][subclass='wilderness_hut'],
+		[class=spring],
+		// [class=lodging][subclass='wilderness_hut'][rank<=10][zoom>=11],
+		[class=campsite][rank<=10],
+		// [zoom>=14][rank<=1][class!='information'][class!='toilets'][class!='bus'][subclass!='tram_stop'][subclass!='station'][class!='picnic_site'][subclass!='viewpoint'],
+		// [zoom>=15][rank<=2][class!='toilets'][class!='information'][class!='bus'][subclass!='tram_stop'][subclass!='station'][subclass!='viewpoint'],
+		// [class=park][zoom>=15][rank<=10],
+		[zoom>=16][rank<=10],
+		// [class=park][zoom>=16][rank<=20],
+		[zoom>=17][rank<=50],
+		// [class=park][zoom>=17][rank<=30],
+		[zoom>=18] {
 
-		// shield-name: @name;
-		// shield-file: url(symbols/icons/shower.svg);
-		// shield-face-name: @mont;
-		// shield-placement: [nuti::markers3d];
-		// shield-line-spacing: -1;
-		// shield-min-distance : 200;
-		// shield-fill: @poi_dark;
-		// shield-halo-fill: @peak_halo;
-		// shield-halo-rasterizer: fast;
-		// shield-halo-radius: linear([view::zoom], (14, 1), (18, 0.5));
-		// shield-size: linear([view::zoom], (14, 7), (18, 10)) - 0.000001 * [rank];
-		// shield-wrap-width: linear([zoom], (13, 10), (18, 100));
-		// shield-feature-id: @featureId;
-		// shield-dy: 15;
+			// shield-name: @name;
+			// shield-file: url(symbols/icons/shower.svg);
+			// shield-face-name: @mont;
+			// shield-placement: [nuti::markers3d];
+			// shield-line-spacing: -1;
+			// shield-min-distance : 200;
+			// shield-fill: @poi_dark;
+			// shield-halo-fill: @peak_halo;
+			// shield-halo-rasterizer: fast;
+			// shield-halo-radius: linear([view::zoom], (14, 1), (18, 0.5));
+			// shield-size: linear([view::zoom], (14, 7), (18, 10)) - 0.000001 * [rank];
+			// shield-wrap-width: linear([zoom], (13, 10), (18, 100));
+			// shield-feature-id: @featureId;
+			// shield-dy: 15;
 
-		::icon {
-					// text-min-distance: 4;
-			text-placement: [nuti::markers3d];
-			text-name: @osm_icon;
-			// text-name: [nuti::osm-peak];
-			text-size: linear([view::zoom], (18, 10), (20, 14.0)) - 0.000001 * [rank];
-			text-face-name: @osm;
-			text-feature-id: @featureId;
-			text-halo-fill: @peak_halo;
-			// text-min-distance: 4;
-			text-halo-rasterizer: fast;
-			text-halo-radius: linear([view::zoom], (14, 1), (18, 0.5));
-			text-fill: #495063;
-			[class='park'] {
-				text-fill: #76BC54;
+			::icon {
+						// text-min-distance: 4;
+				text-placement: [nuti::markers3d];
+				text-name: @osm_icon;
+				// text-name: [nuti::osm-peak];
+				text-size: linear([view::zoom], (18, 10), (20, 14.0)) - 0.000001 * [rank];
+				text-face-name: @osm;
+				text-feature-id: @featureId;
+				text-halo-fill: @peak_halo;
+				// text-min-distance: 4;
+				text-halo-rasterizer: fast;
+				text-halo-radius: linear([view::zoom], (14, 1), (18, 0.5));
+				text-fill: #495063;
+				[class='park'] {
+					text-fill: #76BC54;
+				}
+				[class='national_park'],[class='protected_area'] {
+					text-fill: @national_park;
+				}
+				[class='aboriginal_lands'] {
+					text-fill: @aboriginal;
+				}
+				[class=lodging],[class='campsite'] {
+					text-fill: #854d04;
+				}
+				[class='hospital'] {
+					text-fill: #4AA0E7;
+				}
+				[class='fountain'],[class='drinking_water'],[class='bassin'][class='spring'] {
+					text-fill: #4AA0E7;
+				}
+				[class='bakery'], [class='restaurant'] {
+					text-fill: #EF8000; 
+				}
 			}
-			[class='national_park'],[class='protected_area'] {
-				text-fill: @national_park;
-			}
-			[class='aboriginal_lands'] {
-				text-fill: @aboriginal;
-			}
-			[class=lodging],[class='campsite'] {
-				text-fill: #854d04;
-			}
-			[class='hospital'] {
-				text-fill: #4AA0E7;
-			}
-			[class='fountain'],[class='drinking_water'],[class='bassin'] {
-				text-fill: #4AA0E7;
-			}
-			[class='bakery'], [class='restaurant'] {
-				text-fill: #EF8000; 
-			}
-		}
 
-			[name!=null][class!='information'][subclass!='viewpoint'] {
+			[class!='information'][subclass!='viewpoint'] {
 				// [class='bus'][zoom>=17],
 				// [class='railway'][zoom>=17],
 				::label {

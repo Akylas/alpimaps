@@ -8,7 +8,7 @@ import { convertDistance } from '~/helpers/formatter';
 import ItemFormatter from '~/mapModules/ItemFormatter';
 import { Item } from '~/mapModules/ItemsModule';
 import { IMapModule } from '~/mapModules/MapModule';
-import { actionBarHeight } from '~/variables';
+import { actionBarHeight, primaryColor } from '~/variables';
 import BottomSheetBase from './BottomSheet/BottomSheetBase';
 import { BottomSheetHolderScrollEventData } from './BottomSheet/BottomSheetHolder';
 import BottomSheetInfoView from './BottomSheetInfoView';
@@ -24,6 +24,8 @@ import { omit } from '~/utils';
 import { knownFolders } from '@nativescript/core/file-system/file-system';
 import { ShareFile } from 'nativescript-akylas-share-file';
 import { Rounding } from 'nativescript-chart/data/DataSet';
+// import InAppBrowser from 'nativescript-inappbrowser';
+import { openUrl } from '@nativescript/core/utils/utils';
 
 export const LISTVIEW_HEIGHT = 200;
 export const PROFILE_HEIGHT = 100;
@@ -178,15 +180,68 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     //     //     }
     //     // }
     // }
+    // async openLink(url: string) {
+    //     try {
+    //         const available = await InAppBrowser.isAvailable();
+    //         if (available) {
+    //             const result = await InAppBrowser.open(url, {
+    //                 // iOS Properties
+    //                 dismissButtonStyle: 'close',
+    //                 preferredBarTintColor: primaryColor,
+    //                 preferredControlTintColor: 'white',
+    //                 readerMode: false,
+    //                 animated: true,
+    //                 // modalPresentationStyle: 'fullScreen',
+    //                 // modalTransitionStyle: 'partialCurl',
+    //                 // modalEnabled: true,
+    //                 enableBarCollapsing: false,
+    //                 // Android Properties
+    //                 showTitle: true,
+    //                 toolbarColor: primaryColor,
+    //                 secondaryToolbarColor: 'white',
+    //                 enableUrlBarHiding: true,
+    //                 enableDefaultShare: true,
+    //                 forceCloseOnRedirection: false
+    //                 // Specify full animation resource identifier(package:anim/name)
+    //                 // or only resource name(in case of animation bundled with app).
+    //                 // animations: {
+    //                 //     startEnter: 'slide_in_right',
+    //                 //     startExit: 'slide_out_left',
+    //                 //     endEnter: 'slide_in_left',
+    //                 //     endExit: 'slide_out_right'
+    //                 // },
+    //                 // headers: {
+    //                 //     'my-custom-header': 'my custom header value'
+    //                 // }
+    //             });
+    //             // alert({
+    //             //     title: 'Response',
+    //             //     message: JSON.stringify(result),
+    //             //     okButtonText: 'Ok'
+    //             // });
+    //         } else {
+    //             openUrl(url);
+    //         }
+    //     } catch (error) {
+    //         alert({
+    //             title: 'Error',
+    //             message: error.message,
+    //             okButtonText: 'Ok'
+    //         });
+    //     }
+    // }
     searchItemWeb() {
         if (gVars.isAndroid) {
             const query = this.$getMapComponent()
                 .mapModule('formatter')
                 .getItemName(this.item);
             console.log('searchItemWeb', this.item, query);
-            const intent = new android.content.Intent(android.content.Intent.ACTION_WEB_SEARCH);
-            intent.putExtra(android.app.SearchManager.QUERY, query); // query contains search string
-            (app.android.foregroundActivity as android.app.Activity).startActivity(intent);
+            if (gVars.isAndroid) {
+                const intent = new android.content.Intent(android.content.Intent.ACTION_WEB_SEARCH);
+                intent.putExtra(android.app.SearchManager.QUERY, query); // query contains search string
+                (app.android.foregroundActivity as android.app.Activity).startActivity(intent);
+            }
+           
         }
     }
     updatingItem = false;

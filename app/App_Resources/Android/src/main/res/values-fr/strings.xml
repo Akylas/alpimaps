@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+  <string name="share_screenshot">"partager la capture d\'écran"</string>
+  <string name="keep_awake">"garder l\'écran éveillé"</string>
+  <string name="location_info">"informations de localisation"</string>
   <string name="bug_report_sent">"rapport de bug envoyé"</string>
   <string name="description_required">"une description est requise"</string>
   <string name="non_valid_email">"email non valide"</string>

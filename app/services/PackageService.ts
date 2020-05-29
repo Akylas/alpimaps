@@ -447,13 +447,13 @@ export default class PackageService extends Observable {
     }
     searchInPackageGeocodingService(options: GeocodingRequest<LatLonKeys>): Promise<GeoResult[]> {
         if (!this.started) {
-            return Promise.resolve(undefined);
+            return Promise.resolve([]);
         }
         return this.searchInGeocodingService(this.offlineSearchService, options);
     }
     searchInPackageReverseGeocodingService(options: ReverseGeocodingRequest<LatLonKeys>): Promise<GeoResult[]> {
         if (!this.started) {
-            return Promise.resolve(undefined);
+            return Promise.resolve([]);
         }
         return this.searchInGeocodingService(this.offlineReverseSearchService, options);
     }
