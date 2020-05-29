@@ -42,13 +42,14 @@ export default class ItemFormatter extends MapModule {
         if (result.length === 0 && item.address && item.address.houseNumber) {
             result.push(item.address.houseNumber);
         }
+        result.push('maki-marker_stroked');
         // console.log('itemIcon', item, result);
         return result;
     }
 
     getItemName(item: Item) {
         const properties = item.properties || {};
-        return (this.mapComp && properties[`name_${this.mapComp.currentLanguage}`]) || properties.name || (item.address && item.address.name);
+        return (this.mapComp && properties[`name_${this.mapComp.currentLanguage}`]) || properties.name || properties.name_int || (item.address && item.address.name);
     }
     getItemPositionToString(item: Item) {
         const position = item.position;
