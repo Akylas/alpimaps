@@ -759,6 +759,9 @@
         "osm-wilderness_hut": {
             "default": "\ue9d9"
         },
+        "osm-alpine_hut": {
+            "default": "\ue9d9"
+        },
         "osm-windmill": {
             "default": "\ue9da"
         },

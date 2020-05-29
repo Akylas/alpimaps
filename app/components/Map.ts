@@ -310,7 +310,7 @@ export default class Map extends BgServicePageComponent {
                         })
                         .then(result => {
                             if (result.length > 0) {
-                                console.log('found it!', this.$packageService.prepareGeoCodingResult(result[0]));
+                                // console.log('found it!', this.$packageService.prepareGeoCodingResult(result[0]));
                                 this.selectItem({
                                     item: this.$packageService.prepareGeoCodingResult(result[0]),
                                     isFeatureInteresting: true,
@@ -711,7 +711,7 @@ export default class Map extends BgServicePageComponent {
         //         delete featureDataWithoutName[k];
         //     }
         // });
-        // this.log('onVectorTileClicked', featureLayerName, featureData.class, featureData.subclass);
+        this.log('onVectorTileClicked', featureLayerName, featureData.class, featureData.subclass);
         // return false;
         const handledByModules = this.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
@@ -1087,7 +1087,6 @@ export default class Map extends BgServicePageComponent {
                 title: this.$tc('select_style'),
                 actions: files.map(e => e.name).concat(this.$tc('default'))
             }).then(result => {
-                console.log('selectStyle', result);
                 if (result) {
                     this.setMapStyle(result);
                 }
@@ -1100,7 +1099,6 @@ export default class Map extends BgServicePageComponent {
             message: 'Select Language',
             actions: mapLanguages
         }).then(result => {
-            console.log('selected language', result);
             result && this.updateLanguage(result);
         });
     }
