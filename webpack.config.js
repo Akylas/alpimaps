@@ -121,6 +121,35 @@ module.exports = (env, params = {}) => {
         alias['tns-core-modules'] = coreModulesPackageName;
     }
 
+    Object.assign(alias, {
+        '../adapters/webSQL': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        '../driver/oracle/OracleDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        './oracle/OracleDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        '../driver/cockroachdb/CockroachDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        './cockroachdb/CockroachDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        './cordova/CordovaDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        './react-native/ReactNativeDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        '../driver/react-native/ReactNativeDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        './nativescript/NativescriptDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        '../driver/nativescript/NativescriptDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        './mysql/MysqlDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        '../driver/mysql/MysqlDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        './postgres/PostgresDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        '../driver/postgres/PostgresDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        './expo/ExpoDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        './aurora-data-api/AuroraDataApiDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        '../driver/aurora-data-api/AuroraDataApiDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        './sqlite/SqliteDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        '../driver/sqljs/SqljsDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        './sqljs/SqljsDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        '../driver/sqlserver/SqlServerDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        './sqlserver/SqlServerDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        './mongodb/MongoDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        '../driver/mongodb/MongoDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        './cordova/CordovaDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
+        '../driver/cordova/CordovaDriver': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver'
+    });
+
     const appResourcesFullPath = resolve(projectRoot, appResourcesPath);
 
     const entryModule = nsWebpack.getEntryModule(appFullPath, platform);
