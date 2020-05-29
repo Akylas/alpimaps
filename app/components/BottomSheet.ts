@@ -110,10 +110,10 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     }
     @Watch('item')
     onSelectedItemChange(item: Item) {
-        // this.log('onSelectedItemChange', !!item);
+        // this.log('onSelectedItemChange', !!item, item && item.vectorElement && item.vectorElement.constructor.name);
         this.reset();
         this.listViewVisible = false;
-        this.listViewAvailable = !!this.item && !!this.item.route && !!this.item.route.instructions;
+        this.listViewAvailable = !!this.item && !!this.item.route && !!this.item.route.instructions && this.item.route.instructions.length > 0;
 
         // this.graphViewVisible = false;
         this.graphAvailable =
@@ -142,10 +142,8 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     }
     onChartTap(event) {
         const chart = this.chart;
-        console.log('onChartTap', event.highlight);
         const x = chart.getData().getDataSetByIndex(0).getEntryIndexForXValue(event.highlight.x, NaN, Rounding.CLOSEST);
         const position = this.item.route.positions[x];
-        console.log('onChartTap2', x, position);
         if (position) {
             const mapComp = this.$getMapComponent();
             mapComp.selectItem({item:{ position }, isFeatureInteresting:true, setSelected:false, peek:false});
@@ -235,7 +233,6 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
             const query = this.$getMapComponent()
                 .mapModule('formatter')
                 .getItemName(this.item);
-            console.log('searchItemWeb', this.item, query);
             if (gVars.isAndroid) {
                 const intent = new android.content.Intent(android.content.Intent.ACTION_WEB_SEARCH);
                 intent.putExtra(android.app.SearchManager.QUERY, query); // query contains search string
@@ -268,7 +265,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         const mapComp = this.$getMapComponent();
         mapComp
             .mapModule('items')
-            .saveItem(this.item)
+            .saveItem(this.mapComp.selectedItem)
             .then(item => {
                 mapComp.selectItem({item, isFeatureInteresting:true, peek});
             })
@@ -280,7 +277,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         const mapComp = this.$getMapComponent();
         return mapComp
             .mapModule('items')
-            .updateItem(this.item)
+            .updateItem(this.mapComp.selectedItem)
             .then(item => {
                 mapComp.selectItem({item, isFeatureInteresting:true, peek});
             })
@@ -290,7 +287,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     }
     deleteItem() {
         const mapComp = this.$getMapComponent();
-        mapComp.mapModule('items').deleteItem(this.item);
+        mapComp.mapModule('items').deleteItem(this.mapComp.selectedItem);
     }
     // export interface Item {
     //     id?: number;
@@ -343,44 +340,45 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         return [];
     }
     getRouteInstructionTitle(item: RouteInstruction) {
-        switch (item.action) {
-            case 'ROUTING_ACTION_HEAD_ON':
-                return `Tourner ${item.turnAngle}, partant de ${item.azimuth}`;
-            case 'ROUTING_ACTION_FINISH':
-                return `Arriver : ${new Date(item.time)}`;
-            case 'ROUTING_ACTION_NO_TURN':
-                return `NO_TURN ${item.streetName}`;
-            case 'ROUTING_ACTION_GO_STRAIGHT':
-                const dataD = convertDistance(item.distance);
-                return `Continuez pendant ${dataD.value.toFixed(1)} ${dataD.unit}`;
-            case 'ROUTING_ACTION_TURN_RIGHT':
-                return `Tournez à droite sur ${item.streetName}.`;
-            case 'ROUTING_ACTION_UTURN':
-                return `Faites demi-tour à ${item.turnAngle}pour rester sur ${item.streetName}`;
-            case 'ROUTING_ACTION_TURN_LEFT':
-                return `Tournez à gauche sur ${item.streetName}`;
-            case 'ROUTING_ACTION_REACH_VIA_LOCATION':
-                return `Votre destination est sur ${item.streetName}`;
-            case 'ROUTING_ACTION_ENTER_ROUNDABOUT':
-                return `Entrez dans le rond-point `;
-            case 'ROUTING_ACTION_STAY_ON_ROUNDABOUT':
-                return `Restez sur le rond-point`;
-            case 'ROUTING_ACTION_LEAVE_ROUNDABOUT':
-                return `Quittez le rond-point sur ${item.streetName}`;
-            case 'ROUTING_ACTION_START_AT_END_OF_STREET':
-                return `Départ de ${item.streetName}`;
-            case 'ROUTING_ACTION_ENTER_AGAINST_ALLOWED_DIRECTION':
-                return `Entrez sur ${item.streetName}.`;
-            case 'ROUTING_ACTION_LEAVE_AGAINST_ALLOWED_DIRECTION':
-                return `Quittez le rond-point dans ${item.streetName}`;
-            case 'ROUTING_ACTION_GO_UP':
-                return `Tournez à ${item.turnAngle} pour prendre la bretelle.`;
-            case 'ROUTING_ACTION_GO_DOWN':
-                return `Tournez à ${item.turnAngle} pour prendre la bretelle.`;
-            case 'ROUTING_ACTION_WAIT':
-                return `Gardez la ${item.turnAngle}pour prendre ${item.streetName}`;
-        }
-        return item.action;
+        return item.instruction;
+        // switch (item.action) {
+        //     case 'ROUTING_ACTION_HEAD_ON':
+        //         return `Tourner ${item.turnAngle}, partant de ${item.azimuth}`;
+        //     case 'ROUTING_ACTION_FINISH':
+        //         return `Arriver : ${new Date(item.time)}`;
+        //     case 'ROUTING_ACTION_NO_TURN':
+        //         return `NO_TURN ${item.streetName}`;
+        //     case 'ROUTING_ACTION_GO_STRAIGHT':
+        //         const dataD = convertDistance(item.distance);
+        //         return `Continuez pendant ${dataD.value.toFixed(1)} ${dataD.unit}`;
+        //     case 'ROUTING_ACTION_TURN_RIGHT':
+        //         return `Tournez à droite sur ${item.streetName}.`;
+        //     case 'ROUTING_ACTION_UTURN':
+        //         return `Faites demi-tour à ${item.turnAngle}pour rester sur ${item.streetName}`;
+        //     case 'ROUTING_ACTION_TURN_LEFT':
+        //         return `Tournez à gauche sur ${item.streetName}`;
+        //     case 'ROUTING_ACTION_REACH_VIA_LOCATION':
+        //         return `Votre destination est sur ${item.streetName}`;
+        //     case 'ROUTING_ACTION_ENTER_ROUNDABOUT':
+        //         return `Entrez dans le rond-point `;
+        //     case 'ROUTING_ACTION_STAY_ON_ROUNDABOUT':
+        //         return `Restez sur le rond-point`;
+        //     case 'ROUTING_ACTION_LEAVE_ROUNDABOUT':
+        //         return `Quittez le rond-point sur ${item.streetName}`;
+        //     case 'ROUTING_ACTION_START_AT_END_OF_STREET':
+        //         return `Départ de ${item.streetName}`;
+        //     case 'ROUTING_ACTION_ENTER_AGAINST_ALLOWED_DIRECTION':
+        //         return `Entrez sur ${item.streetName}.`;
+        //     case 'ROUTING_ACTION_LEAVE_AGAINST_ALLOWED_DIRECTION':
+        //         return `Quittez le rond-point dans ${item.streetName}`;
+        //     case 'ROUTING_ACTION_GO_UP':
+        //         return `Tournez à ${item.turnAngle} pour prendre la bretelle.`;
+        //     case 'ROUTING_ACTION_GO_DOWN':
+        //         return `Tournez à ${item.turnAngle} pour prendre la bretelle.`;
+        //     case 'ROUTING_ACTION_WAIT':
+        //         return `Gardez la ${item.turnAngle}pour prendre ${item.streetName}`;
+        // }
+        // return item.action;
     }
     getRouteInstructionSubtitle(item: RouteInstruction) {
         return item.streetName;
