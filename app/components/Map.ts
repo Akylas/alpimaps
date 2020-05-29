@@ -556,7 +556,7 @@ export default class Map extends BgServicePageComponent {
                 setTimeout(() => {
                     this.runOnModules('onMapReady', this, cartoMap);
                 }, 100);
-                this.setMapStyle(appSettings.getString('mapStyle', 'osm'), true);
+                this.setMapStyle(appSettings.getString('mapStyle', 'osmxml'), true);
             })
             .catch(err => this.showError(err));
         // }, 0);
@@ -592,7 +592,6 @@ export default class Map extends BgServicePageComponent {
         setSelected?: boolean;
         zoom?: number;
     }) {
-        // this.log('selec tItem', isFeatureInteresting);
         if (isFeatureInteresting) {
             if (item.route) {
                 if (!this.selectedRouteLine) {
@@ -651,7 +650,7 @@ export default class Map extends BgServicePageComponent {
             if (setSelected) {
                 this.selectedItem = item;
             }
-            // console.log('selected_id', item.properties, item.route);
+            console.log('selectedItem', item);
             // const vectorTileDecoder = this.getVectorTileDecoder();
             // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
             // vectorTileDecoder.setStyleParameter('selected_name', (item.properties && item.properties.name) || '');
@@ -706,7 +705,7 @@ export default class Map extends BgServicePageComponent {
     }
     onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureLayerName, featureData, featurePosition } = data;
-        const featureDataWithoutName = JSON.parse(JSON.stringify(featureData));
+        // const featureDataWithoutName = JSON.parse(JSON.stringify(featureData));
         // Object.keys(featureDataWithoutName).forEach(k => {
         //     if (k.startsWith('name:') || k.startsWith('name_')) {
         //         delete featureDataWithoutName[k];

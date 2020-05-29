@@ -28,5 +28,8 @@
   "description": "description",
   "non_valid_email": "email non valide",
   "description_required": "une description est requise",
-  "bug_report_sent": "rapport de bug envoyé"
+  "bug_report_sent": "rapport de bug envoyé",
+  "location_info": "informations de localisation",
+  "keep_awake": "garder l'écran éveillé",
+  "share_screenshot": "partager la capture d'écran"
 }

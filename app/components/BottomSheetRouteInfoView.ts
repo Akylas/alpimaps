@@ -29,7 +29,7 @@ export default class BottomSheetRouteInfoView extends BaseVueComponent {
 
     mounted() {
         super.mounted();
-        console.log('test', new Error().stack)
+        // console.log('test', new Error().stack)
     }
     destroyed() {
         super.destroyed();
@@ -40,7 +40,7 @@ export default class BottomSheetRouteInfoView extends BaseVueComponent {
         if (this.currentLocation) {
             this.updateRouteItemWithPosition(this.currentLocation);
         }
-    }
+    }   
 
     remainingDistanceOnCurrentRoute = null;
     currentLocation: MapPos<LatLonKeys> = null;
