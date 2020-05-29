@@ -1,808 +1,679 @@
 
-.osm-cave:before {
-  content: "\1f816";
+.osm-alcohol:before {
+  content: "\e900";
 }
-.osm-cave_entry:before {
-  content: "\1f816";
-}
-.osm-peak:before {
+.osm-alpinehut:before {
   content: "\e901";
 }
-.osm-saddle:before {
+.osm-amusement_arcade:before {
   content: "\e902";
 }
-.osm-bell_tower:before {
+.osm-apartment:before {
   content: "\e903";
 }
-.osm-chimney:before {
+.osm-archaeological_site:before {
   content: "\e904";
 }
-.osm-communications_tower:before {
+.osm-art:before {
   content: "\e905";
 }
-.osm-crane:before {
+.osm-arts_centre:before {
   content: "\e906";
 }
-.osm-cross:before {
+.osm-artwork:before {
   content: "\e907";
 }
-.osm-lighthouse:before {
+.osm-atm:before {
   content: "\e908";
 }
-.osm-mast_communications:before {
+.osm-audioguide:before {
   content: "\e909";
 }
-.osm-mast_lighting:before {
+.osm-bag:before {
   content: "\e90a";
 }
-.osm-mast:before {
+.osm-bakery:before {
   content: "\e90b";
 }
-.osm-power_tower_small .path1:before {
+.osm-bank:before {
   content: "\e90c";
-  color: rgb(134, 134, 134);
 }
-.osm-power_tower_small .path2:before {
+.osm-bar:before {
   content: "\e90d";
-  margin-left: -1em;
-  color: rgb(255, 255, 255);
 }
-.osm-power_tower .path1:before {
+.osm-bbq:before {
   content: "\e90e";
-  color: rgb(134, 134, 134);
-}
-.osm-power_tower .path2:before {
-  content: "\e90f";
-  margin-left: -1em;
-  color: rgb(255, 255, 255);
-}
-.osm-power_tower .path3:before {
-  content: "\e910";
-  margin-left: -1em;
-  color: rgb(134, 134, 134);
-}
-.osm-power_tower .path4:before {
-  content: "\e911";
-  margin-left: -1em;
-  color: rgb(134, 134, 134);
-}
-.osm-storage_tank:before {
-  content: "\e912";
-}
-.osm-telescope_dish:before {
-  content: "\e913";
-}
-.osm-telescope_dome:before {
-  content: "\e914";
-}
-.osm-tower_cantilever_communication:before {
-  content: "\e915";
-}
-.osm-tower_cooling:before {
-  content: "\e916";
-}
-.osm-tower_defensive:before {
-  content: "\e917";
-}
-.osm-tower_dish:before {
-  content: "\e918";
-}
-.osm-tower_dome:before {
-  content: "\e919";
-}
-.osm-tower_generic:before {
-  content: "\e91a";
-}
-.osm-tower_lattice_communication:before {
-  content: "\e91b";
-}
-.osm-tower_lattice_lighting:before {
-  content: "\e91c";
-}
-.osm-tower_lattice:before {
-  content: "\e91d";
-}
-.osm-tower_lighting:before {
-  content: "\e91e";
-}
-.osm-tower_observation:before {
-  content: "\e91f";
-}
-.osm-water_tower:before {
-  content: "\e920";
-}
-.osm-windmill:before {
-  content: "\e921";
-}
-.osm-slipway:before {
-  content: "\e922";
-}
-.osm-amusement_arcade:before {
-  content: "\e923";
 }
 .osm-beach_resort:before {
-  content: "\e924";
-}
-.osm-bird_hide:before {
-  content: "\e925";
-}
-.osm-bowling_alley:before {
-  content: "\e926";
-}
-.osm-firepit:before {
-  content: "\e927";
-}
-.osm-fishing:before {
-  content: "\e928";
-}
-.osm-fitness:before {
-  content: "\e929";
-}
-.osm-golf:before {
-  content: "\e92a";
-}
-.osm-miniature_golf .path1:before {
-  content: "\e92b";
-  color: rgb(0, 0, 0);
-  opacity: 0.3333;
-}
-.osm-miniature_golf .path2:before {
-  content: "\e92c";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
-}
-.osm-miniature_golf .path3:before {
-  content: "\e92d";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
-}
-.osm-outdoor_seating:before {
-  content: "\e92e";
-}
-.osm-playground:before {
-  content: "\e92f";
-}
-.osm-sauna:before {
-  content: "\e930";
-}
-.osm-water_park:before {
-  content: "\e931";
-}
-.osm-archaeological_site:before {
-  content: "\e932";
-}
-.osm-bust:before {
-  content: "\e933";
-}
-.osm-castle:before {
-  content: "\e934";
-}
-.osm-city_gate:before {
-  content: "\e935";
-}
-.osm-sally_port:before {
-  content: "\e935";
-}
-.osm-gate:before {
-  content: "\e935";
-}
-.osm-fort:before {
-  content: "\e936";
-}
-.osm-fortress:before {
-  content: "\e937";
-}
-.osm-manor:before {
-  content: "\e938";
-}
-.osm-memorial:before {
-  content: "\e939";
-}
-.osm-monument:before {
-  content: "\e93a";
-}
-.osm-obelisk:before {
-  content: "\e93b";
-}
-.osm-palace:before {
-  content: "\e93c";
-}
-.osm-plaque:before {
-  content: "\e93d";
-}
-.osm-shrine:before {
-  content: "\e93e";
-}
-.osm-statue:before {
-  content: "\e93f";
-}
-.osm-stone:before {
-  content: "\e940";
-}
-.osm-charity:before {
-  content: "\e941";
-}
-.osm-alcohol:before {
-  content: "\e942";
-}
-.osm-art:before {
-  content: "\e943";
-}
-.osm-bag:before {
-  content: "\e944";
-}
-.osm-bakery:before {
-  content: "\e945";
+  content: "\e90f";
 }
 .osm-beauty:before {
-  content: "\e946";
+  content: "\e910";
 }
 .osm-bed:before {
-  content: "\e947";
+  content: "\e911";
+}
+.osm-bell_tower:before {
+  content: "\e912";
+}
+.osm-bench:before {
+  content: "\e913";
 }
 .osm-beverages:before {
-  content: "\e948";
+  content: "\e914";
+}
+.osm-bicycle_parking:before {
+  content: "\e915";
+}
+.osm-bicycle_repair_station:before {
+  content: "\e916";
 }
 .osm-bicycle:before {
-  content: "\e949";
+  content: "\e917";
+}
+.osm-biergarten:before {
+  content: "\e918";
+}
+.osm-bird_hide:before {
+  content: "\e919";
+}
+.osm-board:before {
+  content: "\e91a";
+}
+.osm-boat_rental:before {
+  content: "\e91b";
 }
 .osm-bookmaker:before {
-  content: "\e94a";
+  content: "\e91c";
 }
-.osm-butcher .path1:before {
-  content: "\e94b";
-  color: rgb(255, 255, 255);
+.osm-bowling_alley:before {
+  content: "\e91d";
 }
-.osm-butcher .path2:before {
-  content: "\e94c";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
+.osm-bureau_de_change:before {
+  content: "\e91e";
+}
+.osm-bus_stop:before {
+  content: "\e91f";
+}
+.osm-tram_stop:before {
+  content: "\e91f";
+}
+.osm-bust:before {
+  content: "\e920";
+}
+.osm-butcher:before {
+  content: "\e921";
+}
+.osm-cafe:before {
+  content: "\e922";
+}
+.osm-camping:before {
+  content: "\e923";
+}
+.osm-campsite:before {
+  content: "\e923";
 }
 .osm-car_parts:before {
-  content: "\e94d";
+  content: "\e924";
 }
 .osm-car_repair:before {
-  content: "\e94e";
+  content: "\e925";
+}
+.osm-car_wash:before {
+  content: "\e926";
 }
 .osm-car:before {
-  content: "\e94f";
+  content: "\e927";
+}
+.osm-caravan_park:before {
+  content: "\e928";
 }
 .osm-carpet:before {
-  content: "\e950";
+  content: "\e929";
+}
+.osm-casino:before {
+  content: "\e92a";
+}
+.osm-castle:before {
+  content: "\e92b";
+}
+.osm-cave:before {
+  content: "\e92c";
+}
+.osm-cave_entrance:before {
+  content: "\e92c";
+}
+.osm-chalet:before {
+  content: "\e92d";
+}
+.osm-charging_station:before {
+  content: "\e92e";
+}
+.osm-charity:before {
+  content: "\e92f";
 }
 .osm-chemist:before {
-  content: "\e951";
+  content: "\e930";
+}
+.osm-chimney:before {
+  content: "\e931";
+}
+.osm-cinema:before {
+  content: "\e932";
+}
+.osm-city_gate:before {
+  content: "\e933";
+}
+.osm-sally_port:before {
+  content: "\e933";
+}
+.osm-gate:before {
+  content: "\e9db";
 }
 .osm-clothes:before {
-  content: "\e952";
+  content: "\e934";
 }
 .osm-coffee:before {
-  content: "\e953";
+  content: "\e935";
+}
+.osm-communications_tower:before {
+  content: "\e936";
+}
+.osm-community_centre:before {
+  content: "\e937";
 }
 .osm-computer:before {
-  content: "\e954";
+  content: "\e938";
 }
 .osm-confectionery:before {
-  content: "\e955";
+  content: "\e939";
 }
 .osm-convenience:before {
-  content: "\e956";
+  content: "\e93a";
 }
 .osm-copyshop:before {
-  content: "\e957";
+  content: "\e93b";
+}
+.osm-courthouse:before {
+  content: "\e93c";
+}
+.osm-crane:before {
+  content: "\e93d";
+}
+.osm-cross:before {
+  content: "\e93e";
 }
 .osm-dairy:before {
-  content: "\e958";
+  content: "\e93f";
 }
 .osm-deli:before {
-  content: "\e959";
+  content: "\e940";
+}
+.osm-dentist:before {
+  content: "\e941";
 }
 .osm-department_store:before {
-  content: "\e95a";
+  content: "\e942";
 }
 .osm-diy:before {
-  content: "\e95b";
+  content: "\e943";
+}
+.osm-doctors:before {
+  content: "\e944";
+}
+.osm-drinking_water:before {
+  content: "\e945";
 }
 .osm-electronics:before {
-  content: "\e95c";
+  content: "\e946";
+}
+.osm-embassy:before {
+  content: "\e947";
+}
+.osm-emergency_phone:before {
+  content: "\e948";
+}
+.osm-entrance10:before {
+  content: "\e949";
+}
+.osm-excrement_bags:before {
+  content: "\e94a";
 }
 .osm-fabric:before {
-  content: "\e95d";
+  content: "\e94b";
+}
+.osm-fast_food:before {
+  content: "\e94c";
+}
+.osm-ferry:before {
+  content: "\e94d";
+}
+.osm-firepit:before {
+  content: "\e94e";
+}
+.osm-firestation:before {
+  content: "\e94f";
+}
+.osm-fishing:before {
+  content: "\e950";
+}
+.osm-fitness:before {
+  content: "\e951";
 }
 .osm-florist:before {
-  content: "\e95e";
+  content: "\e952";
+}
+.osm-ford:before {
+  content: "\e953";
+}
+.osm-fort:before {
+  content: "\e954";
+}
+.osm-fortress:before {
+  content: "\e955";
+}
+.osm-fountain:before {
+  content: "\e956";
+}
+.osm-bassin:before {
+  content: "\e956";
+}
+.osm-fuel:before {
+  content: "\e957";
 }
 .osm-furniture:before {
-  content: "\e95f";
+  content: "\e958";
 }
 .osm-garden_centre:before {
-  content: "\e960";
+  content: "\e959";
+}
+.osm-generator_wind:before {
+  content: "\e95a";
 }
 .osm-gift:before {
-  content: "\e961";
+  content: "\e95b";
+}
+.osm-golf:before {
+  content: "\e95c";
 }
 .osm-greengrocer:before {
-  content: "\e962";
+  content: "\e95d";
+}
+.osm-guest_house:before {
+  content: "\e95e";
+}
+.osm-guidepost:before {
+  content: "\e95f";
 }
 .osm-hairdresser:before {
-  content: "\e963";
+  content: "\e960";
 }
 .osm-hifi:before {
+  content: "\e961";
+}
+.osm-hospital:before {
+  content: "\e962";
+}
+.osm-hostel:before {
+  content: "\e963";
+}
+.osm-hotel:before {
   content: "\e964";
 }
 .osm-houseware:before {
   content: "\e965";
 }
-.osm-ice_cream:before {
+.osm-hunting_stand:before {
   content: "\e966";
 }
-.osm-interior_decoration:before {
+.osm-ice_cream:before {
   content: "\e967";
 }
-.osm-jewelry:before {
+.osm-information:before {
   content: "\e968";
 }
-.osm-laundry:before {
+.osm-interior_decoration:before {
   content: "\e969";
 }
-.osm-marketplace:before {
+.osm-internet_cafe:before {
   content: "\e96a";
 }
-.osm-massage:before {
+.osm-jewelry:before {
   content: "\e96b";
 }
-.osm-medical_supply:before {
+.osm-laundry:before {
   content: "\e96c";
 }
-.osm-mobile_phone:before {
+.osm-library:before {
   content: "\e96d";
 }
-.osm-music:before {
+.osm-lighthouse:before {
   content: "\e96e";
 }
-.osm-musical_instrument:before {
+.osm-manor:before {
   content: "\e96f";
 }
-.osm-newsagent:before {
+.osm-map:before {
   content: "\e970";
 }
-.osm-optician:before {
+.osm-marketplace:before {
   content: "\e971";
 }
-.osm-outdoor:before {
+.osm-massage:before {
   content: "\e972";
 }
-.osm-paint:before {
+.osm-mast_communications:before {
   content: "\e973";
 }
-.osm-perfumery:before {
+.osm-mast_lighting:before {
   content: "\e974";
 }
-.osm-pet:before {
+.osm-mast:before {
   content: "\e975";
 }
-.osm-photo:before {
+.osm-medical_supply:before {
   content: "\e976";
 }
-.osm-seafood:before {
+.osm-memorial:before {
   content: "\e977";
 }
-.osm-second_hand:before {
+.osm-miniature_golf:before {
   content: "\e978";
 }
-.osm-shoes:before {
+.osm-mobile_phone:before {
   content: "\e979";
 }
-.osm-sports:before {
+.osm-monument:before {
   content: "\e97a";
 }
-.osm-stationery:before {
+.osm-motel:before {
   content: "\e97b";
 }
-.osm-supermarket:before {
+.osm-motorcycle_parking:before {
   content: "\e97c";
 }
-.osm-tea:before {
+.osm-museum:before {
   content: "\e97d";
 }
-.osm-tobacco:before {
+.osm-music:before {
+  content: "\e97e";
+}
+.osm-musical_instrument:before {
   content: "\e97f";
 }
-.osm-toys:before {
+.osm-newsagent:before {
   content: "\e980";
 }
-.osm-trade:before {
+.osm-nightclub:before {
   content: "\e981";
 }
-.osm-travel_agency:before {
+.osm-obelisk:before {
   content: "\e982";
 }
-.osm-tyres:before {
+.osm-office:before {
   content: "\e983";
 }
-.osm-variety_store:before {
+.osm-oneway-reverse:before {
   content: "\e984";
 }
-.osm-video_games:before {
+.osm-oneway:before {
   content: "\e985";
 }
-.osm-video:before {
+.osm-optician:before {
   content: "\e986";
 }
-.osm-hotel:before {
+.osm-outdoor_seating:before {
   content: "\e987";
 }
-.osm-alpine_hut:before {
+.osm-outdoor:before {
   content: "\e988";
 }
-.osm-apartment .path1:before {
+.osm-park:before {
+  content: "\e988";
+}
+.osm-paint:before {
   content: "\e989";
-  color: rgb(0, 0, 0);
 }
-.osm-apartment .path2:before {
+.osm-palace:before {
   content: "\e98a";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
-  opacity: 0.5;
 }
-.osm-apartment .path3:before {
+.osm-parking_entrance_multistorey:before {
   content: "\e98b";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
-  opacity: 0.5;
 }
-.osm-artwork:before {
+.osm-parking_entrance_underground:before {
   content: "\e98c";
 }
-.osm-audioguide:before {
+.osm-parking_tickets:before {
   content: "\e98d";
 }
-.osm-board:before {
+.osm-parking:before {
   content: "\e98e";
 }
-.osm-camping:before {
+.osm-peak:before {
   content: "\e98f";
 }
-.osm-caravan_park:before {
+.osm-perfumery:before {
   content: "\e990";
 }
-.osm-chalet .path1:before {
+.osm-pet:before {
   content: "\e991";
-  color: rgb(0, 0, 0);
-}
-.osm-chalet .path2:before {
-  content: "\e992";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
-  opacity: 0.2;
-}
-.osm-guest_house .path1:before {
-  content: "\e993";
-  color: rgb(0, 0, 0);
-  opacity: 0.27;
-}
-.osm-guest_house .path2:before {
-  content: "\e994";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
-}
-.osm-guidepost:before {
-  content: "\e995";
-}
-.osm-hostel:before {
-  content: "\e996";
-}
-.osm-information:before {
-  content: "\e997";
-}
-.osm-map:before {
-  content: "\e998";
-}
-.osm-motel:before {
-  content: "\e999";
-}
-.osm-museum:before {
-  content: "\e99a";
-}
-.osm-office:before {
-  content: "\e99b";
-}
-.osm-picnic:before {
-  content: "\e99c";
-}
-.osm-terminal:before {
-  content: "\e99d";
-}
-.osm-viewpoint:before {
-  content: "\e99e";
-}
-.osm-wilderness_hut:before {
-  content: "\e99f";
-}
-.osm-bus_stop:before {
-  content: "\e9a8";
-}
-.osm-elevator:before {
-  content: "\e9a9";
-}
-.osm-ford:before {
-  content: "\e9aa";
-}
-.osm-mini_roundabout .path1:before {
-  content: "\e9ab";
-  color: rgb(102, 102, 102);
-}
-.osm-mini_roundabout .path2:before {
-  content: "\e9ac";
-  margin-left: -1em;
-  color: rgb(255, 255, 255);
-}
-.osm-mini_roundabout .path3:before {
-  content: "\e9ad";
-  margin-left: -1em;
-  color: rgb(102, 102, 102);
-}
-.osm-traffic_light13:before {
-  content: "\e9ae";
-}
-.osm-bicycle_parking:before {
-  content: "\e9af";
-}
-.osm-arts_centre:before {
-  content: "\e9b0";
-}
-.osm-atm:before {
-  content: "\e9b1";
-}
-.osm-bank:before {
-  content: "\e9b2";
-}
-.osm-bar:before {
-  content: "\e9b3";
-}
-.osm-bbq:before {
-  content: "\e9b4";
-}
-.osm-bench:before {
-  content: "\e9b5";
-}
-.osm-bicycle_repair_station:before {
-  content: "\e9b6";
-}
-.osm-biergarten:before {
-  content: "\e9b7";
-}
-.osm-boat_rental:before {
-  content: "\e9b8";
-}
-.osm-bureau_de_change:before {
-  content: "\e9b9";
-}
-.osm-bus_station:before {
-  content: "\e9ba";
-}
-.osm-cafe:before {
-  content: "\e9bb";
-}
-.osm-car_wash:before {
-  content: "\e9bc";
-}
-.osm-casino:before {
-  content: "\e9bd";
-}
-.osm-charging_station:before {
-  content: "\e9be";
-}
-.osm-cinema:before {
-  content: "\e9bf";
-}
-.osm-community_centre:before {
-  content: "\e9c0";
-}
-.osm-courthouse:before {
-  content: "\e9c1";
-}
-.osm-dentist:before {
-  content: "\e9c2";
-}
-.osm-doctors:before {
-  content: "\e9c3";
-}
-.osm-drinking_water:before {
-  content: "\e9c4";
-}
-.osm-embassy:before {
-  content: "\e9c5";
-}
-.osm-emergency_phone:before {
-  content: "\e9c6";
-}
-.osm-excrement_bags:before {
-  content: "\e9c7";
-}
-.osm-fast_food:before {
-  content: "\e9c8";
-}
-.osm-ferry:before {
-  content: "\e9c9";
-}
-.osm-firestation:before {
-  content: "\e9ca";
-}
-.osm-fountain:before {
-  content: "\e9cb";
-}
-.osm-basin:before {
-  content: "\e9cb";
-}
-.osm-fuel:before {
-  content: "\e9cc";
-}
-.osm-hospital:before {
-  content: "\e9cd";
-}
-.osm-hunting_stand:before {
-  content: "\e9ce";
-}
-.osm-internet_cafe:before {
-  content: "\e9cf";
-}
-.osm-library:before {
-  content: "\e9d0";
-}
-.osm-motorcycle_parking:before {
-  content: "\e9d1";
-}
-.osm-nightclub:before {
-  content: "\e9d2";
-}
-.osm-parking_entrance:before {
-  content: "\e9d3";
-}
-.osm-parking_tickets:before {
-  content: "\e9d4";
-}
-.osm-parking:before {
-  content: "\e9d5";
 }
 .osm-pharmacy:before {
-  content: "\e9d6";
+  content: "\e992";
+}
+.osm-photo:before {
+  content: "\e993";
+}
+.osm-picnic:before {
+  content: "\e994";
 }
 .osm-place_of_worship:before {
-  content: "\e9d7";
+  content: "\e995";
+}
+.osm-plaque:before {
+  content: "\e996";
+}
+.osm-playground:before {
+  content: "\e997";
 }
 .osm-police:before {
-  content: "\e9d8";
+  content: "\e998";
 }
 .osm-post_box:before {
-  content: "\e9d9";
+  content: "\e999";
 }
 .osm-post_office:before {
-  content: "\e9da";
+  content: "\e99a";
 }
 .osm-prison:before {
-  content: "\e9db";
+  content: "\e99b";
 }
 .osm-pub:before {
-  content: "\e9dc";
+  content: "\e99c";
 }
 .osm-public_bath:before {
-  content: "\e9dd";
+  content: "\e99d";
 }
 .osm-public_bookcase:before {
-  content: "\e9de";
+  content: "\e99e";
+}
+.osm-public_transport_tickets:before {
+  content: "\e99f";
 }
 .osm-recycling:before {
-  content: "\e9e0";
+  content: "\e9a0";
 }
 .osm-rental_bicycle:before {
-  content: "\e9e1";
+  content: "\e9a1";
 }
 .osm-rental_car:before {
-  content: "\e9e2";
+  content: "\e9a2";
 }
 .osm-restaurant:before {
-  content: "\e9e3";
+  content: "\e9a3";
+}
+.osm-saddle:before {
+  content: "\e9a4";
+}
+.osm-sauna:before {
+  content: "\e9a5";
+}
+.osm-seafood:before {
+  content: "\e9a6";
+}
+.osm-second_hand:before {
+  content: "\e9a7";
 }
 .osm-shelter:before {
-  content: "\e9e4";
+  content: "\e9a8";
 }
-.osm-shower .path1:before {
-  content: "\e9e5";
-  color: rgb(255, 255, 255);
+.osm-shoes:before {
+  content: "\e9a9";
 }
-.osm-shower .path2:before {
-  content: "\e9e6";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
+.osm-shower:before {
+  content: "\e9aa";
 }
-.osm-shower .path3:before {
-  content: "\e9e7";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
+.osm-shrine:before {
+  content: "\e9ab";
 }
-.osm-shower .path4:before {
-  content: "\e9e8";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
-}
-.osm-shower .path5:before {
-  content: "\e9e9";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
-}
-.osm-shower .path6:before {
-  content: "\e9ea";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
-}
-.osm-shower .path7:before {
-  content: "\e9eb";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
-}
-.osm-shower .path8:before {
-  content: "\e9ec";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
-}
-.osm-shower .path9:before {
-  content: "\e9ed";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
-}
-.osm-shower .path10:before {
-  content: "\e9ee";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
-}
-.osm-shower .path11:before {
-  content: "\e9ef";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
-}
-.osm-shower .path12:before {
-  content: "\e9f0";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
-}
-.osm-shower .path13:before {
-  content: "\e9f1";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
-}
-.osm-shower .path14:before {
-  content: "\e9f2";
-  margin-left: -1em;
-  color: rgb(0, 0, 0);
+.osm-slipway:before {
+  content: "\e9ac";
 }
 .osm-social_facility:before {
-  content: "\e9f3";
+  content: "\e9ad";
+}
+.osm-sports:before {
+  content: "\e9ae";
+}
+.osm-spring:before {
+  content: "\e9af";
+}
+.osm-stationery:before {
+  content: "\e9b0";
+}
+.osm-statue:before {
+  content: "\e9b1";
+}
+.osm-stone:before {
+  content: "\e9b2";
+}
+.osm-storage_tank:before {
+  content: "\e9b3";
+}
+.osm-supermarket:before {
+  content: "\e9b4";
 }
 .osm-taxi:before {
-  content: "\e9f4";
+  content: "\e9b5";
+}
+.osm-tea:before {
+  content: "\e9b6";
 }
 .osm-telephone:before {
-  content: "\e9f5";
+  content: "\e9b7";
+}
+.osm-telescope_dish:before {
+  content: "\e9b8";
+}
+.osm-telescope_dome:before {
+  content: "\e9b9";
+}
+.osm-terminal:before {
+  content: "\e9ba";
 }
 .osm-theatre:before {
-  content: "\e9f6";
+  content: "\e9bb";
+}
+.osm-tobacco:before {
+  content: "\e9bc";
 }
 .osm-toilets:before {
-  content: "\e9f7";
+  content: "\e9bd";
+}
+.osm-tower_cantilever_communication:before {
+  content: "\e9be";
+}
+.osm-tower_cooling:before {
+  content: "\e9bf";
+}
+.osm-tower_defensive:before {
+  content: "\e9c0";
+}
+.osm-tower_dish:before {
+  content: "\e9c1";
+}
+.osm-tower_dome:before {
+  content: "\e9c2";
+}
+.osm-tower_generic:before {
+  content: "\e9c3";
+}
+.osm-tower_lattice_communication:before {
+  content: "\e9c4";
+}
+.osm-tower_lattice_lighting:before {
+  content: "\e9c5";
+}
+.osm-tower_lattice:before {
+  content: "\e9c6";
+}
+.osm-tower_lighting:before {
+  content: "\e9c7";
+}
+.osm-tower_observation:before {
+  content: "\e9c8";
 }
 .osm-town_hall:before {
-  content: "\e9f8";
+  content: "\e9c9";
+}
+.osm-toys:before {
+  content: "\e9ca";
+}
+.osm-trade:before {
+  content: "\e9cb";
+}
+.osm-travel_agency:before {
+  content: "\e9cc";
+}
+.osm-tyres:before {
+  content: "\e9cd";
+}
+.osm-variety_store:before {
+  content: "\e9ce";
 }
 .osm-vehicle_inspection:before {
-  content: "\e9f9";
+  content: "\e9cf";
 }
 .osm-veterinary:before {
-  content: "\e9fa";
+  content: "\e9d0";
+}
+.osm-video_games:before {
+  content: "\e9d1";
+}
+.osm-video:before {
+  content: "\e9d2";
+}
+.osm-viewpoint:before {
+  content: "\e9d3";
 }
 .osm-waste_basket:before {
-  content: "\e9fb";
+  content: "\e9d4";
 }
 .osm-waste_disposal:before {
-  content: "\e9fc";
+  content: "\e9d5";
+}
+.osm-water_park:before {
+  content: "\e9d6";
+}
+.osm-water_tower:before {
+  content: "\e9d7";
+}
+.osm-waterfall:before {
+  content: "\e9d8";
+}
+.osm-wilderness_hut:before {
+  content: "\e9d9";
+}
+.osm-windmill:before {
+  content: "\e9da";
 }

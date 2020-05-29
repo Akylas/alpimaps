@@ -15,5 +15,21 @@
   "offline_packages": "offline maps",
   "select_language": "map language",
   "send_bug_report": "send bug report",
-  "send": "send"
+  "send": "send",
+  "location_info": "location info",
+  "share_screenshot": "share screenshot",
+  "keep_awake": "keep screen awake",
+  "bug_report_sent": "bug report sent",
+  "cancel": "cancel",
+  "description": "descroption",
+  "close": "close",
+  "email": "email",
+  "email_required": "email required",
+  "non_valid_email": "non valid email",
+  "description_required": "description required",
+  "stop_session": "stop session",
+  "start": "start",
+  "please_describe_error": "please describe error",
+  "send_bug_report_desc": "send bug report",
+  "stop_session_are_you_sure": "are you sure you want to stop the session?"
 }
