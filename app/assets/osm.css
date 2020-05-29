@@ -1,4 +1,7 @@
 
+.osm-gate:before {
+  content: "\e9db";
+}
 .osm-alcohol:before {
   content: "\e900";
 }
@@ -166,9 +169,6 @@
 }
 .osm-sally_port:before {
   content: "\e933";
-}
-.osm-gate:before {
-  content: "\e9db";
 }
 .osm-clothes:before {
   content: "\e934";

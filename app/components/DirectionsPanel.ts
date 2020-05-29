@@ -527,16 +527,20 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     showRoute(online = false) {
         return new Promise<Route>((resolve, reject) => {
             this.loading = true;
-            
-            const service = online ? this.onlineRoutingSearchService : (this.localOfflineRoutingSearchService || this.offlineRoutingSearchService);
+
+            const service = online
+                ? this.onlineRoutingSearchService
+                : this.localOfflineRoutingSearchService || this.offlineRoutingSearchService;
             service.profile = this.profile;
             service.calculateRoute(
                 {
                     projection: this.mapView.projection,
-                    points: this.waypoints.map(r => r.position)
+                    points: this.waypoints.map(r => r.position),
+                    customOptions: {
+                        costing_options: { pedestrian: { max_hiking_difficulty: 6 } }
+                    } as any
                 },
                 (error, result) => {
-                    console.log('calculateRoute done', error, result);
                     this.loading = false;
                     if (error || result === null) {
                         return reject(error);
@@ -577,9 +581,9 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
                 //     }
                 // });
                 this.mapComp.selectItem({
-                    item:{ position: fromNativeMapPos(this.currentLine.getGeometry().getCenterPos()), route },
+                    item: { position: fromNativeMapPos(this.currentLine.getGeometry().getCenterPos()), route },
                     isFeatureInteresting: true,
-                    showButtons:true
+                    showButtons: true
                 });
             })
             .catch(error => {
