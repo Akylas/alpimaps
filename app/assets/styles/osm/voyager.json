@@ -13,8 +13,8 @@
         "park",
         "water",
         "waterway",
-        "mountain_peak",
         "place",
+        "mountain_peak",
         "hillshade",
         "landcover",
         "landuse",
@@ -532,6 +532,9 @@
             "default": "\ue98e"
         },
         "osm-peak": {
+            "default": "\ue98f"
+        },
+        "osm-mountain_peak": {
             "default": "\ue98f"
         },
         "osm-perfumery": {
