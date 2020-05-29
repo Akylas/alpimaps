@@ -5,11 +5,11 @@ Map {
 	font-directory: url(fonts/);
 }
 //CARTO Fonts
-@mont: "Montserrat Regular", "Noto Sans Regular";
-@mont_md: "Montserrat Medium", "Noto Sans Regular";
-@mont_bd: "Montserrat SemiBold", "Noto Sans Regular";
-@mont_it: "Montserrat Italic", "Noto Sans Regular";
-@mont_it_md: "Montserrat Italic", "Noto Sans Regular";
+@mont: "Montserrat Regular";
+@mont_md: "Montserrat Medium";
+@mont_bd: "Montserrat SemiBold";
+@mont_it: "Montserrat Italic";
+@mont_it_md: "Montserrat Italic";
 @maki: "maki";
 @osm: "osm";
 @book-fonts:@mont;

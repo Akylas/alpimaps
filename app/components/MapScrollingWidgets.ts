@@ -32,13 +32,13 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
     totalDownloadProgress = 0;
 
     selectedItem: Item = null;
-    _showLocationInfo = false;
+    mShowLocationInfo = false;
 
     get showLocationInfo () {
-        return this._showLocationInfo;
+        return this.mShowLocationInfo;
     }
     set showLocationInfo (value) {
-         this._showLocationInfo = value;
+         this.mShowLocationInfo = value;
          if (!value && this.listeningForBarometer) {
             this.stopBarometerAltitudeUpdate();
         }
