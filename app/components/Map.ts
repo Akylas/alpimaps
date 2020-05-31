@@ -50,6 +50,7 @@ import BottomSheetHolder, { BottomSheetHolderScrollEventData } from './BottomShe
 import DirectionsPanel from './DirectionsPanel';
 import MapRightMenu from './MapRightMenu';
 import MapScrollingWidgets from './MapScrollingWidgets';
+import LocationInfoPanel from './LocationInfoPanel';
 import PackagesDownloadComponent from './PackagesDownloadComponent';
 import Search from './Search';
 import TopSheetHolder, { DEFAULT_TOP, TopSheetHolderScrollEventData } from './TopSheetHolder';
@@ -147,6 +148,7 @@ let defaultLiveSync = global.__onLiveSync;
         TopSheetHolder,
         Search,
         // MapWidgets,
+        LocationInfoPanel,
         MapRightMenu,
         MapScrollingWidgets
     }
@@ -243,6 +245,9 @@ export default class Map extends BgServicePageComponent {
     }
     get topSheetHolder() {
         return this.$refs['topSheetHolder'] as TopSheetHolder;
+    }
+    get locationInfoPanel() {
+        return this.$refs['locationInfo'] as LocationInfoPanel;
     }
     get topSheet() {
         return this.topSheetHolder.topSheet;
@@ -557,6 +562,8 @@ export default class Map extends BgServicePageComponent {
                     this.runOnModules('onMapReady', this, cartoMap);
                 }, 100);
                 this.setMapStyle(appSettings.getString('mapStyle', 'osmxml'), true);
+                this.show3DBuildings = this.mapModules.rightMenu.show3DBuildings;
+                this.showContourLines = this.mapModules.rightMenu.showContourLines;
             })
             .catch(err => this.showError(err));
         // }, 0);
@@ -711,7 +718,7 @@ export default class Map extends BgServicePageComponent {
         //         delete featureDataWithoutName[k];
         //     }
         // });
-        this.log('onVectorTileClicked', featureLayerName, featureData.class, featureData.subclass);
+        // this.log('onVectorTileClicked', featureLayerName, featureData.class, featureData.subclass);
         // return false;
         const handledByModules = this.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
@@ -911,8 +918,6 @@ export default class Map extends BgServicePageComponent {
             decoder: vectorTileDecoder
         });
         this.updateLanguage(this.currentLanguage);
-        this.show3DBuildings = appSettings.getBoolean('show3DBuildings', false);
-        this.showContourLines = appSettings.getBoolean('showContourLines', true);
         // clog('currentLayer', !!this.currentLayer);
         this.currentLayer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
         this.currentLayer.setVectorTileEventListener(this, this.mapProjection);
@@ -1253,7 +1258,7 @@ export default class Map extends BgServicePageComponent {
     }
 
     switchLocationInfo() {
-        this.mapModules.mapScrollingWidgets.showLocationInfo = !this.mapModules.mapScrollingWidgets.showLocationInfo;
+        this.locationInfoPanel.showLocationInfo = !this.locationInfoPanel.showLocationInfo;
     }
 
     shareScreenshot() {

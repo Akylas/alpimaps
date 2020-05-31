@@ -380,11 +380,14 @@ export default class CustomLayersModule extends MapModule {
                                 const name = e.name;
                                 const contrast = appSettings.getNumber(`${name}_contrast`, 0.26);
                                 const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.51);
+                                const opacity = appSettings.getNumber(`${name}_opacity`, 1);
                                 const layer = new HillshadeRasterTileLayer({
                                     tileFilterMode: RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BICUBIC,
                                     contrast,
                                     heightScale,
-                                    dataSource
+                                    dataSource,
+                                    opacity,
+                                    visible: opacity !== 0
                                 });
                                 const tileFilterMode = appSettings.getString(`${name}_tileFilterMode`, 'bilinear');
                                 switch (tileFilterMode) {
@@ -400,7 +403,6 @@ export default class CustomLayersModule extends MapModule {
                                         layer.getNative().setTileFilterMode(RasterTileFilterMode.RASTER_TILE_FILTER_MODE_NEAREST);
                                         break;
                                 }
-                                const opacity = appSettings.getNumber(`${name}_opacity`, 1);
                                 const data = {
                                     index: index++,
                                     name,

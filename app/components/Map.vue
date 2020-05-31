@@ -1,7 +1,9 @@
 <template>
     <AlpiMapsPage actionBarHidden>
         <CartoMap ref="mapView" zoom="16" @mapReady="onMapReady" @mapMoved="onMapMove" @mapStable="onMapStable" @mapClicked="onMapClicked"/>
-        <Search ref="searchView" class="searchView" :text="searchText" :projection="mapProjection" :opacity="scrollingWidgetsOpacity" :defaultElevation="topSheetTranslation === 0 ? 1 : 0" />
+
+        <Search ref="searchView" verticalAlignment="top" :text="searchText" :projection="mapProjection" :opacity="scrollingWidgetsOpacity" :defaultElevation="topSheetTranslation === 0 ? 1 : 0" />
+        <LocationInfoPanel horizontalAlignment="left" verticalAlignment="top" marginLeeft="20" marginTop="90" ref="locationInfo" :opacity="scrollingWidgetsOpacity"/>
         <TopSheetHolder ref="topSheetHolder" @shouldClose="cancelDirections" @scroll="onTopSheetScroll" />
 
         <StackLayout orientation="vertical" verticalAlignment="middle" horizontalAlignment="right" isUserInteractionEnabled="false">
