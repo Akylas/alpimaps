@@ -44,7 +44,8 @@ export interface RouteProfile {
     dplus?: any;
     dmin?: any;
     points: MapPos<LatLonKeys>[];
-    data: Array<{ x: number; y: number }>;
+    data: Array<{ x: number; altitude: number; altAvg: number; grade }>;
+    colors: Array<{ x: number; color: string }>;
 }
 export interface Route {
     profile?: RouteProfile;
@@ -57,13 +58,23 @@ export interface Route {
 function routingResultToJSON(result: RoutingResult<LatLonKeys>) {
     const rInstructions = result.getInstructions();
     const instructions: RouteInstruction[] = [];
-    const points = result.getPoints();
+    const points = result.getPoints().toArray();
+    const positions = [];
+    let lastP;
+    points.forEach(p => {
+        if (!lastP || lastP.lat !== p.lat || lastP.lon !== p.lon) {
+            positions.push(p);
+        }
+        lastP = p;
+    });
+    console.log('positions', positions.length, JSON.stringify(positions));
     for (let i = 0; i < rInstructions.size(); i++) {
         const instruction = rInstructions.get(i);
 
-        const position = points.get(instruction.getPointIndex());
+        const position = points[instruction.getPointIndex()];
+        console.log('instruction', i, JSON.stringify(position), (instruction as any).getInstruction());
         instructions.push({
-            position: fromNativeMapPos(position),
+            position,
             action: instruction.getAction().toString(),
             azimuth: instruction.getAzimuth(),
             distance: instruction.getDistance(),
@@ -74,7 +85,7 @@ function routingResultToJSON(result: RoutingResult<LatLonKeys>) {
         });
     }
     const res = {
-        positions: points.toArray(),
+        positions,
         totalTime: result.getTotalTime(),
         totalDistance: result.getTotalDistance(),
         instructions

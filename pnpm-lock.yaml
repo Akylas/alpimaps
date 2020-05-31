@@ -7,6 +7,7 @@ dependencies:
   gpx-parser-builder: 1.0.2
   helpful-decorators: 2.0.6
   human-unit: 2.0.1
+  kalmanjs: 1.1.0
   make-error: 1.3.6
   merge-options: 2.0.0
   moment: 2.26.0
@@ -17,11 +18,11 @@ dependencies:
   nativescript-akylas-share-file: 1.1.4
   nativescript-akylas-sqlite: 'link:../../../../usr/local/pnpm-global/node_modules/nativescript-akylas-sqlite'
   nativescript-brightness: 1.0.1
-  nativescript-canvas: 3.0.7
-  nativescript-canvaslabel: 1.0.8
+  nativescript-canvas: 'link:../../../../usr/local/pnpm-global/node_modules/nativescript-canvas'
+  nativescript-canvaslabel: 1.0.9
   nativescript-carto: 'link:../../../../usr/local/pnpm-global/node_modules/nativescript-carto'
-  nativescript-chart: 0.0.20
-  nativescript-collectionview: 2.0.28
+  nativescript-chart: 'link:../../../../usr/local/pnpm-global/node_modules/nativescript-chart'
+  nativescript-collectionview: 2.0.29
   nativescript-document-picker: 1.0.7
   nativescript-email: 1.6.0
   nativescript-extendedinfo: 1.0.11
@@ -43,7 +44,7 @@ dependencies:
   nativescript-observable: 2.0.7
   nativescript-perms: 2.0.11
   nativescript-photoviewer: 2.1.5
-  nativescript-sensors: 1.0.1
+  nativescript-sensors: 1.0.2
   nativescript-social-share: 1.6.0
   nativescript-systemui: 1.0.14
   nativescript-toasty: 2.0.1
@@ -73,7 +74,7 @@ devDependencies:
   scss-symbols-parser: 2.0.1
   semver: 7.3.2
   string-replace-loader: 2.3.0_webpack@4.43.0
-  tns-platform-declarations: 6.5.1
+  tns-platform-declarations: 6.5.2
   tslib: 2.0.0
   typescript: 3.9.3
   vue: 2.6.11
@@ -4416,6 +4417,10 @@ packages:
       '0': node >=0.6.0
     resolution:
       integrity: sha1-MT5mvB5cwG5Di8G3SZwuXFastqI=
+  /kalmanjs/1.1.0:
+    dev: false
+    resolution:
+      integrity: sha512-Gkm2DAKIX8geuDcEJ92e80EmQ6TyIzWBJk6AFk+aDLofQ4G/KoDe1RCY9WMuXFe0NQxsTi7HYh9BVQneOtlvkg==
   /kind-of/3.2.2:
     dependencies:
       is-buffer: 1.1.6
@@ -4960,33 +4965,20 @@ packages:
     dev: false
     resolution:
       integrity: sha512-0GhEK3r+ktRnKPl814G8d6LlGbc5cnfcyipmnJkEJRWq2WI2cz+TRUH2GZC2sg6FL7efNFR/L31AvWhZEOPryA==
-  /nativescript-canvas/2.1.29:
-    dev: false
-    resolution:
-      integrity: sha512-Qeiz2RXa3LlZa6tz00+kvzCqqGRWwFzm40SMxxUnFe9D4eJs+DhSGHFA1w1NAjJGolaHn8M2B6Lu4okDrJitYw==
   /nativescript-canvas/3.0.7:
     dev: false
     resolution:
       integrity: sha512-BHNow06Ms8xC/yPmdUB3hzRvVrQgUKBmJmGoZjrOzLWNw5KbXXuPHZtq96IyjqIsa1c+UZ3xWNvmg+WDkBLJJg==
-  /nativescript-canvaslabel/1.0.8:
+  /nativescript-canvaslabel/1.0.9:
     dependencies:
       nativescript-canvas: 3.0.7
     dev: false
     resolution:
-      integrity: sha512-PRZ1QOHpF2wDnjkAWYcYSYP3uvHaaVHPsCjVeQZ0nB6colusJqwAEhjB/uYjME513VVWClCeLlWPBqY7tsMpgA==
-  /nativescript-chart/0.0.20:
-    dependencies:
-      nativescript-canvas: 2.1.29
-      nativescript-gesturehandler: 0.1.16
-      nativescript-tween: 0.0.6
-      number-format.js: 2.0.9
+      integrity: sha512-aqk64x/lktI3bY15aMdJkZyTiNspZM/5Gxl8tuPjh+rluPi9XtUHPycek9GGa+u0W6Xn1VnZ9DzV5pwCtj4FUQ==
+  /nativescript-collectionview/2.0.29:
     dev: false
     resolution:
-      integrity: sha512-XnyOBJVgOHq8P6DIneH1PyH6SjuKN/bKFb9tR0erUCFn30bNPV27zKi46vZBwrllwodVaGE7hJA1ITlOvRPyyg==
-  /nativescript-collectionview/2.0.28:
-    dev: false
-    resolution:
-      integrity: sha512-t/8mE5KoPEaZA/bF7M4ZfCAvuqSc7SpLDWu0JtlXo43L4t/Y438YFVU2IdfHOmuKS7bGDDdnmPc1Jtlp2xfecw==
+      integrity: sha512-ThDki3liDp5AvP72rDJYA+Wvl5fHZbe3S7WhLqm229adQVssaTfRZvHP09FPXq4xgywX7fd3zvwnFExjl0gO+g==
   /nativescript-dev-webpack/1.5.1_typescript@3.9.3:
     dependencies:
       '@angular-devkit/core': 8.2.0
@@ -5171,12 +5163,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-s6Tc4H+57sm/4RFzzepDbrN8hki85G7yOjpedXPZkVtsm7QDFOi+z8vf94g4zyQnPevzXJAHTQVKQbcB2Q9lew==
-  /nativescript-sensors/1.0.1:
+  /nativescript-sensors/1.0.2:
     dependencies:
       nativescript-perms: 2.0.11
     dev: false
     resolution:
-      integrity: sha512-PBaDDLhdCzsVL9P63qp20gt5E6qkBXlQGGWXdD/Q2rW8rZG6ZA5mG48B/NXLuNMd+lpTFmMsfgMOB4XrMyqNzA==
+      integrity: sha512-ZaIWXilMXfxtw4S5Gm5LkiPDro2RhfptZKv+ccz8gJlHOlXbPJFn890wW8+7BNMH1nLQHMfj+idNhduT9YbJKw==
   /nativescript-social-share/1.6.0:
     dev: false
     resolution:
@@ -5195,12 +5187,6 @@ packages:
     dev: false
     resolution:
       integrity: sha512-oVbIvEvASVYYdTVEfZNwCYogNkfrrHXfsDtmyzGWSFDOBPeKEVd/1n1NwoU6LK7PKUQmmFHwK/7w7bkr1o/hrw==
-  /nativescript-tween/0.0.6:
-    dependencies:
-      '@tweenjs/tween.js': 18.5.0
-    dev: false
-    resolution:
-      integrity: sha512-jdXYrCbT5FlOtkiQxaS8Rx506AGS1zu+tA5S/IZ2ebodxHd26QlVI6bqGLyNC6oZXZUAsDHQL6CJitkCVVvpZA==
   /nativescript-urlhandler/1.3.0:
     dev: false
     peerDependencies:
@@ -5375,12 +5361,6 @@ packages:
     dev: true
     resolution:
       integrity: sha512-2uUqazuKlTaSI/dC8AzicUck7+IrEaOnN/e0jd3Xtt1KcGpwx30v50mL7oPyr/h9bL3E4aZccVwpwP+5W9Vjkg==
-  /number-format.js/2.0.9:
-    dev: false
-    engines:
-      node: '>=8'
-    resolution:
-      integrity: sha512-VMDspFTTDRgWopKSYsIUGZKcjuL39zQw3cDG20fKxVroqSRI6OofHlWCRwUimNvOpDuLIL92L1K8NVHCRAbF1A==
   /number-is-nan/1.0.1:
     engines:
       node: '>=0.10.0'
@@ -7279,10 +7259,10 @@ packages:
       node: '>=0.6.0'
     resolution:
       integrity: sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==
-  /tns-platform-declarations/6.5.1:
+  /tns-platform-declarations/6.5.2:
     dev: true
     resolution:
-      integrity: sha512-kN94WlMEAqnS5+i4oyS3FGYXw0aUjp/lRIBCu+2kzSJW0GOaxeCbSGO6i/+bDph75VLEwz3PI9eo4hEXY8y8pg==
+      integrity: sha512-0sQ/dyoVKHsrZ9JCKZ/ZVwrNwp07LR6JKXbpFMbFKTuA3PqOtSGsHGwLpWKvqUecb6zfiAbCGfRBc0TSbYkGDQ==
   /to-arraybuffer/1.0.1:
     dev: true
     resolution:
@@ -8056,7 +8036,7 @@ packages:
     version: 1.2.3
 specifiers:
   '@mdi/font': 4.9.95
-  '@nano-sql/core': ^2.0.3
+  '@nano-sql/core': 2.3.7
   '@nativescript/core': 6.5.2
   '@sentry/webpack-plugin': ^1.11.1
   '@types/tinycolor2': ^1.4.2
@@ -8066,7 +8046,7 @@ specifiers:
   ansi-styles: ^4.2.1
   clean-webpack-plugin: 3.0.0
   cross-var: ^1.1.0
-  dayjs: ^1.8.27
+  dayjs: ^1.8.28
   deburr: 0.0.3
   del: 5.1.0
   eslint: 7.1.0
@@ -8074,6 +8054,7 @@ specifiers:
   gpx-parser-builder: ^1.0.2
   helpful-decorators: ^2.0.6
   human-unit: ^2.0.1
+  kalmanjs: ^1.1.0
   make-error: 1.3.6
   merge-options: ^2.0.0
   moment: ^2.26.0
@@ -8085,10 +8066,10 @@ specifiers:
   nativescript-akylas-sqlite: 3.0.4
   nativescript-brightness: 1.0.1
   nativescript-canvas: 3.0.7
-  nativescript-canvaslabel: 1.0.8
+  nativescript-canvaslabel: 1.0.9
   nativescript-carto: 1.3.1
   nativescript-chart: 0.0.20
-  nativescript-collectionview: 2.0.28
+  nativescript-collectionview: 2.0.29
   nativescript-dev-webpack: 1.5.1
   nativescript-document-picker: 1.0.7
   nativescript-email: 1.6.0
@@ -8111,7 +8092,7 @@ specifiers:
   nativescript-observable: 2.0.7
   nativescript-perms: 2.0.11
   nativescript-photoviewer: 2.1.5
-  nativescript-sensors: 1.0.1
+  nativescript-sensors: 1.0.2
   nativescript-social-share: 1.6.0
   nativescript-systemui: 1.0.14
   nativescript-toasty: 2.0.1
@@ -8127,7 +8108,7 @@ specifiers:
   simplify-js: 'github:farfromrefug/simplify-js'
   string-replace-loader: ^2.3.0
   tinycolor2: ^1.4.1
-  tns-platform-declarations: 6.5.1
+  tns-platform-declarations: 6.5.2
   tslib: 2.0.0
   typescript: ^3.9.3
   vue: ^2.6.11
