@@ -33,6 +33,9 @@ import { openOrCreate, SQLiteDatabase } from 'nativescript-akylas-sqlite';
 import { toRadians, latLngToTileXY } from '~/utils/geo';
 import { RouteProfile } from '~/components/DirectionsPanel';
 import geolib from '~/helpers/geolib';
+import tinycolor from 'tinycolor2';
+// const tinycolor = require('tinycolor2');
+import KalmanFilter from 'kalmanjs';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
@@ -42,6 +45,41 @@ interface GeoResult {
     position?: MapPos<LatLonKeys>;
     provider?: string;
     rank?: number;
+}
+
+class MathFilter {
+    filter(_newData): any {
+        return _newData;
+    }
+}
+
+class WindowKalmanFilter extends MathFilter {
+    windowLength: number;
+    kalmanFilter: KalmanFilter;
+    constructor(options) {
+        super();
+        this.windowLength = options?.windowLength ?? 5;
+        this.kalmanFilter = new KalmanFilter(options?.kalman ?? { R: 0.2, Q: 1 });
+    }
+
+    datas = [];
+    lastData = null;
+    filter(_newData) {
+        this.datas.push(_newData);
+        this.lastData = _newData;
+        if (this.datas.length > this.windowLength) {
+            this.datas.shift();
+        }
+        return this.kalmanFilter.filter(
+            this.datas.reduce(function(sum, num) {
+                return sum + num;
+            }, 0) / this.datas.length
+        );
+    }
+}
+
+function getGradeColor(grade) {
+    return tinycolor.mix('green', 'red', grade * 100);
 }
 
 const average = arr => arr.reduce((p, c) => p + c, 0) / arr.length;
@@ -492,12 +530,13 @@ export default class PackageService extends Observable {
     }
 
     _elevationDb: SQLiteDatabase;
+    hasElevationDB = true;
     getElevationDB() {
-        if (!this._elevationDb) {
+        if (!this._elevationDb && this.hasElevationDB) {
             if (Folder.exists(LOCAL_MBTILES)) {
                 const folder = Folder.fromPath(LOCAL_MBTILES);
                 const entities = folder.getEntitiesSync();
-                entities.some(s => {
+                this.hasElevationDB = entities.some(s => {
                     if (s.name.endsWith('.etiles')) {
                         // console.log('loading etiles', s.path);
                         this._elevationDb = openOrCreate(s.path, android.database.sqlite.SQLiteDatabase.OPEN_READONLY);
@@ -509,10 +548,17 @@ export default class PackageService extends Observable {
         return this._elevationDb;
     }
 
-    computeProfileFromHeights(profile: { height: number; lat: number; lon: number }[]) {
+    async getElevation(pos: MapPos<LatLonKeys>) {
+        if (this.hasElevationDB) {
+            const result = await this.getElevations([pos]);
+            return result ? result[0].altitude : null;
+        }
+        return null;
+    }
+
+    computeProfileFromHeights(profile: MapPos<LatLonKeys>[]) {
         let last,
             currentHeight,
-            coordIndex,
             currentDistance = 0;
 
         const result: RouteProfile = {
@@ -525,51 +571,104 @@ export default class PackageService extends Observable {
         };
 
         let range = 3;
+        // const altitudeFilter = new WindowKalmanFilter({ windowLength: 5, kalman: { R: 0.2, Q: 1 } });
         for (let i = 0; i < profile.length; i++) {
             let min = Math.max(i - range, 0);
             let max = Math.min(i + range, profile.length - 1);
-            (profile[i] as any).tmpElevation = Math.round(average(profile.slice(min, max).map(s => s.height)));
+            (profile[i] as any).tmpElevation = average(profile.slice(min, max).map(s => s.altitude));
+            // (profile[i] as any).tmp2Elevation = altitudeFilter.filter(profile[i].altitude);
         }
         let ascent = 0;
         let descent = 0;
         let lastAlt;
+        let lastAlt2;
+        let colors = [];
+        let grades = [];
         for (let i = 0; i < profile.length; i++) {
             let sample = profile[i];
 
             const deltaDistance = last ? geolib.getDistance(last, sample) : 0;
+            // const deltaDistance2 = last ? geolib.getDistanceSimple(last, sample) : 0;
             currentDistance += deltaDistance;
             // sample.height = (sample as any).tmpElevation;
+            let grade;
             if (i >= 1) {
                 let diff = (sample as any).tmpElevation - lastAlt;
-                if (diff > 0) {
-                    ascent += diff;
+                let rdiff = Math.round(diff);
+                if (rdiff > 0) {
+                    ascent += rdiff;
                 } else if (diff < 0) {
-                    descent -= diff;
+                    descent -= rdiff;
                 }
-                lastAlt = (sample as any).tmpElevation;
-            } else {
-                lastAlt = (sample as any).tmpElevation;
+                // if (deltaDistance !== 0) {
+                grade = lastAlt === undefined ? 0 : Math.round((diff / deltaDistance) * 100) / 100;
+                // console.log('test grade', (sample as any).tmpElevation,lastAlt,  diff, deltaDistance, lastGrade, grade);
+
+                // } else {
+                //     console.log('deltaDistance === 0', last, sample);
+                // }
+                grades.push(grade);
             }
-            delete (sample as any).tmpElevation;
-            currentHeight = sample.height;
+            lastAlt = (sample as any).tmpElevation;
+            // if (currentHeight === undefined || currentHeight === sample.altitude) {
+            //     deltaDistanceSinceLastHeightChange+=deltaDistance;
+
+            // } else {
+            //     deltaDistanceSinceLastHeightChange=deltaDistance;
+            // }
+
+            currentHeight = sample.altitude;
             if (currentHeight > result.max[1]) {
                 result.max[1] = currentHeight;
             }
             if (currentHeight < result.min[1]) {
                 result.min[1] = currentHeight;
             }
-            result.data.push({ x: Math.round(currentDistance), y: currentHeight });
-            coordIndex = i * 2;
+            result.data.push({
+                x: Math.round(currentDistance),
+                altitude: currentHeight,
+                grade,
+                altAvg: (sample as any).tmpElevation
+            });
             result.points.push({ lat: sample.lat, lon: sample.lon });
             last = sample;
+
+            delete (sample as any).tmpElevation;
+            // delete (sample as any).tmp2Elevation;
         }
+        grades.unshift(grades[0]); //no first grade let s copy the next one
+        result.data[0].grade = grades[0];
+
+        const gradesFiltered = [];
+        for (let i = 0; i < grades.length; i++) {
+            let min = Math.max(i - range, 0);
+            let max = Math.min(i + range, grades.length - 1);
+            gradesFiltered[i] = average(grades.slice(min, max));
+        }
+        let grade, lastGrade;
+        for (let i = 0; i < gradesFiltered.length; i++) {
+            grade = gradesFiltered[i];
+            console.log('test grade', grade, lastGrade);
+            if (lastGrade === undefined || Math.round(lastGrade * 10) !== Math.round(grade * 10)) {
+                colors.push({
+                    x: lastGrade !== undefined ? i - 1 : i,
+                    color: getGradeColor(lastGrade !== undefined ? lastGrade : grade).toHexString()
+                });
+            }
+            lastGrade = grade;
+        }
+
         result.dmin = Math.round(-descent);
         result.dplus = Math.round(ascent);
-        // console.log('got profile', result);
+        result.colors = colors;
+        console.log('altitude', JSON.stringify(result.data.map(s => s.altitude)));
+        console.log('grades', JSON.stringify(grades));
+        console.log('gradesFiltered', JSON.stringify(gradesFiltered));
+        console.log('colors', result.data.length, colors.length, JSON.stringify(colors));
         return result;
     }
 
-    async getElevationProfile(_points: MapPos<LatLonKeys>[]) {
+    async getElevations(_points: MapPos<LatLonKeys>[]) {
         const db = this.getElevationDB();
         if (!db) {
             return null;
@@ -587,7 +686,7 @@ export default class PackageService extends Observable {
             }
             tilesIndexed[key].poses.push({ index, pixelX: tile.pixelX, pixelY: tile.pixelY, ...p });
         });
-        const result = [];
+        const result: MapPos<LatLonKeys>[] = [];
         // request all the necessary tiles from db
         await Promise.all(
             Object.keys(tilesIndexed).map(k => {
@@ -612,7 +711,7 @@ export default class PackageService extends Observable {
                                 result[p.index] = {
                                     lat: p.lat,
                                     lon: p.lon,
-                                    height: Math.round(-10000 + (R * 256 * 256 + G * 256 + B) * 0.1)
+                                    altitude: Math.round(-10000 + (R * 256 * 256 + G * 256 + B) * 0.1)
                                 };
                             });
                             bmp.recycle();
@@ -620,7 +719,15 @@ export default class PackageService extends Observable {
                     });
             })
         );
-        // transform the result into a profile we can use
-        return this.computeProfileFromHeights(result);
+        return result;
+    }
+
+    async getElevationProfile(_points: MapPos<LatLonKeys>[]) {
+        if (this.hasElevationDB) {
+            const result = await this.getElevations(_points);
+            // transform the result into a profile we can use
+            return this.computeProfileFromHeights(result);
+        }
+        return null;
     }
 }
