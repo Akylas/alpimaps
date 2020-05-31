@@ -5,9 +5,12 @@ import { GeoHandler } from '~/handlers/GeoHandler';
 import { Item } from '~/mapModules/ItemsModule';
 import { IMapModule } from '~/mapModules/MapModule';
 import BgServiceComponent from './BgServiceComponent';
+import LocationInfoPanel from './LocationInfoPanel';
 
 @Component({
-    // components: {}
+    components: {
+        LocationInfoPanel
+    }
 })
 export default class MapWidgets extends BgServiceComponent implements IMapModule {
     mapView: CartoMap<LatLonKeys>;

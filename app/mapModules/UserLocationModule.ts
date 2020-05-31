@@ -151,7 +151,7 @@ export default class UserLocationModule extends MapModule {
         } else {
             if (accuracy > 1000) {
                 accuracyColor = 'red';
-            } else if (accuracy > 10) {
+            } else if (accuracy > 20) {
                 accuracyColor = 'orange';
             }
         }
