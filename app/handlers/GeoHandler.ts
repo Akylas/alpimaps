@@ -320,7 +320,7 @@ export class GeoHandler extends Observable {
         this._deferringUpdates = false;
     };
     onLocation = (loc: GeoLocation, manager?: any) => {
-        this.log('Received location: ', loc);
+        // this.log('Received location: ', loc);
         if (loc) {
             this.currentWatcher && this.currentWatcher(null, loc);
             this.notify({

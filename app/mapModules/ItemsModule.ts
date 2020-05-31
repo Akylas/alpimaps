@@ -132,11 +132,20 @@ export const tables: InanoSQLTableConfig[] = [
                             'points:geo[]': {
                                 default: () => undefined
                             },
+                            'colors:any[]': {
+                                default: () => undefined,
+                                model: {
+                                    'x:number': {},
+                                    'color:string': {}
+                                }
+                            },
                             'data:obj[]': {
                                 default: () => undefined,
                                 model: {
                                     'x:number': {},
-                                    'y:number': {}
+                                    'altitude:number': {},
+                                    'altAvg:number': {},
+                                    'grade:number': {}
                                 }
                             }
                         }

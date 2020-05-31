@@ -613,9 +613,9 @@
 	shield-dy: linear([view::zoom], (7, 15), (13, 16), (18, 20)); 
 	shield-feature-id: @featureId;
 	
-	shield-halo-fill: @peak_halo;
-	shield-halo-rasterizer: fast;
-	shield-halo-radius: linear([view::zoom], (14, 1), (18, 0.5));
+	// shield-halo-fill: @peak_halo;
+	// shield-halo-rasterizer: fast;
+	// shield-halo-radius: linear([view::zoom], (14, 1), (18, 0.5));
 }
 
 // #mountain_peak {

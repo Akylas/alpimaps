@@ -2,28 +2,7 @@
     <GridLayout rows="auto,*,auto" columns="70,*,70" isPassThroughParentEnabled>
         <Label borderRadius="6" v-show="showSuggestionPackage" col="1" row="2" backgroundColor="#55000000" verticalAlignment="bottom" verticalTextAlignment="middle" horizontalAlignment="center" textWrap marginBottom="30" fontSize="10" padding="4 2 4 4" @tap="downloadSuggestion" @longPress="customDownloadSuggestion" color="white" :html="`<big><big><font face="${mdiFontFamily}">mdi-download</font></big></big>${suggestionPackageName}`"/> 
 
-        <transition name="fade">
-            <GridLayout v-show="mShowLocationInfo" col="1" row="0" borderRadius="40" backgroundColor="#77000000" padding="6" columns="auto,*,auto" @swipe="showLocationInfo = false">
-                <CanvasLabel width="60" height="60" borderRadius="30" borderWidth="4" :borderColor="accentColor" backgroundColor="#aaffffff" >
-                    <CGroup verticalAlignment="middle" textAlignment="center">
-                    <CSpan :text="((currentLocation && currentLocation.speed !== undefined) ? currentLocation.speed.toFixed() : '-') + '\n'" fontSize="26" fontWeight="bold"  />
-                    <CSpan text="km/h" fontSize="10" />
-                    </CGroup>
-                </CanvasLabel>
-                <CanvasLabel col="1" marginLeft="5" color="#fff">
-                    <CGroup verticalAlignment="top">
-                    <CSpan :text="$tu('altitude') + (listeningForBarometer ? `(${$t('barometer')})`:'') + '\n\n'" fontSize="11" :color="accentColor" />
-                    <CSpan :text="currentAltitude" fontSize="20" fontWeight="bold" />
-                    <CSpan text=" m" fontSize="12" />
-                    </CGroup>
-                </CanvasLabel>
-                <label col="1" v-show="listeningForBarometer && airportRefName" :text="airportRefName" verticalAlignment="bottom" horizontalAlignment="right" color="#fff" fontSize="9" />
-                <StackLayout v-show="hasBarometer" col="2" verticalAlignment="center">
-                    <MDButton variant="text" class="small-icon-btn" text="mdi-gauge" @tap="switchBarometer" color="white" />
-                    <MDButton variant="text" class="small-icon-btn" v-show="listeningForBarometer" text="mdi-reflect-vertical" @tap="getNearestAirportPressure" color="white" />
-                </StackLayout>
-            </GridLayout>
-        </transition>
+            
 
         <!-- <Label v-if="currentLocation" col="0" row="0" colSpan="2" marginLeft="8" textWrap fontSize="12">
             <Span :text="$t('speed') + ': '" />

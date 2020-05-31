@@ -30,7 +30,6 @@ import { openUrl } from '@nativescript/core/utils/utils';
 export const LISTVIEW_HEIGHT = 200;
 export const PROFILE_HEIGHT = 100;
 
-
 @Component({
     components: {
         BottomSheetRouteInfoView,
@@ -48,7 +47,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
 
     // dataItems: any[] = [];
     // graphViewVisible = false;
-    profileHeight = PROFILE_HEIGHT
+    profileHeight = PROFILE_HEIGHT;
     graphAvailable = false;
 
     mounted() {
@@ -81,9 +80,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     }
 
     get rows() {
-        const result = `70,${actionBarHeight},auto,${
-            this.listViewAvailable ? LISTVIEW_HEIGHT : 0
-        }`;
+        const result = `70,${actionBarHeight},auto,${this.listViewAvailable ? LISTVIEW_HEIGHT : 0}`;
         // this.log('rows', result);
         return result;
     }
@@ -113,7 +110,8 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         // this.log('onSelectedItemChange', !!item, item && item.vectorElement && item.vectorElement.constructor.name);
         this.reset();
         this.listViewVisible = false;
-        this.listViewAvailable = !!this.item && !!this.item.route && !!this.item.route.instructions && this.item.route.instructions.length > 0;
+        this.listViewAvailable =
+            !!this.item && !!this.item.route && !!this.item.route.instructions && this.item.route.instructions.length > 0;
 
         // this.graphViewVisible = false;
         this.graphAvailable =
@@ -134,7 +132,6 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
             const profile = this.item.route.profile;
             const profileData = profile?.data;
             if (profileData) {
-
                 const chart = this.chart;
                 chart.highlightValue(profileData[index].x, 0, 0);
             }
@@ -142,11 +139,14 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     }
     onChartTap(event) {
         const chart = this.chart;
-        const x = chart.getData().getDataSetByIndex(0).getEntryIndexForXValue(event.highlight.x, NaN, Rounding.CLOSEST);
+        const x = chart
+            .getData()
+            .getDataSetByIndex(0)
+            .getEntryIndexForXValue(event.highlight.x, NaN, Rounding.CLOSEST);
         const position = this.item.route.positions[x];
         if (position) {
             const mapComp = this.$getMapComponent();
-            mapComp.selectItem({item:{ position }, isFeatureInteresting:true, setSelected:false, peek:false});
+            mapComp.selectItem({ item: { position }, isFeatureInteresting: true, setSelected: false, peek: false });
         }
     }
     // onScroll(e: BottomSheetHolderScrollEventData) {
@@ -238,7 +238,6 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
                 intent.putExtra(android.app.SearchManager.QUERY, query); // query contains search string
                 (app.android.foregroundActivity as android.app.Activity).startActivity(intent);
             }
-           
         }
     }
     updatingItem = false;
@@ -251,7 +250,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         //     .then(result => {
         this.item.route.profile = profile;
         //     })
-        await this.item.id ? this.updateItem(false) : this.saveItem(false);
+        (await this.item.id) ? this.updateItem(false) : this.saveItem(false);
         //     .then(() => {
         // make sure the graph is visible
         await this.holder.scrollSheetToPosition(this.holder.peekerSteps[2]);
@@ -267,7 +266,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
             .mapModule('items')
             .saveItem(this.mapComp.selectedItem)
             .then(item => {
-                mapComp.selectItem({item, isFeatureInteresting:true, peek});
+                mapComp.selectItem({ item, isFeatureInteresting: true, peek });
             })
             .catch(err => {
                 this.showError(err);
@@ -279,7 +278,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
             .mapModule('items')
             .updateItem(this.mapComp.selectedItem)
             .then(item => {
-                mapComp.selectItem({item, isFeatureInteresting:true, peek});
+                mapComp.selectItem({ item, isFeatureInteresting: true, peek });
             })
             .catch(err => {
                 this.showError(err);
@@ -390,20 +389,29 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         const sets = [];
         const profile = this.item.route.profile;
         const profileData = profile?.data;
-        // console.log('updateChartData', profileData);
+        // console.log(
+        //     'updateChartData',
+        //     JSON.stringify(profileData.map(s => s.x)),
+        //     JSON.stringify(profileData.map(s => s.altitude))
+        // );
         if (profileData) {
-            let set = new LineDataSet(profileData, 'y', 'x', 'y');
+            let set = new LineDataSet(profileData, 'altitude', 'x', 'altAvg');
             set.setDrawValues(false);
             set.setDrawFilled(true);
-            set.setColor('#60B3FC');
+            // set.setLineWidth(4);
+            // if (profile.colors) {
+            //     set.setColors(profile.colors);
+            // } else {
+                set.setColor('#60B3FC');
+            // }
             // set.setMode(Mode.CUBIC_BEZIER);
             set.setFillColor('#8060B3FC');
             sets.push(set);
         }
 
-        // chart.setDoubleTapToZoomEnabled(true);
-        // chart.setScaleEnabled(true);
-        // chart.setDragEnabled(true);
+        chart.setDoubleTapToZoomEnabled(true);
+        chart.setScaleEnabled(true);
+        chart.setDragEnabled(true);
         chart.setHighlightPerTapEnabled(true);
 
         chart.getLegend().setEnabled(false);
@@ -446,9 +454,13 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
             // this.$getMapComponent().cartoMap.setZoom(16, 100);
             // this.$getMapComponent().cartoMap.setFocusPos(result.position, 100);
 
-
             const mapComp = this.$getMapComponent();
-            mapComp.selectItem({item:{ position: result.position }, isFeatureInteresting:true, setSelected:false, peek:false});
+            mapComp.selectItem({
+                item: { position: result.position },
+                isFeatureInteresting: true,
+                setSelected: false,
+                peek: false
+            });
         }
     }
 }
