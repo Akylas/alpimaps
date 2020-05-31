@@ -9,13 +9,9 @@ import { IMapModule } from '~/mapModules/MapModule';
 import BgServiceComponent from './BgServiceComponent';
 import ScaleView from './ScaleView';
 import { alert, confirm } from 'nativescript-material-dialogs';
-import Vue from 'nativescript-vue';
 import OptionPicker from './OptionPicker';
 import UserLocationModule from '~/mapModules/UserLocationModule';
 import { MapPos } from 'nativescript-carto/core';
-import * as sensors from 'nativescript-sensors';
-import { Accuracy } from '@nativescript/core/ui/enums/enums';
-import * as appSettings from '@nativescript/core/application-settings/application-settings';
 import { statusBarHeight } from '~/variables';
 import { layout } from '@nativescript/core/utils/utils';
 
@@ -32,36 +28,14 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
     totalDownloadProgress = 0;
 
     selectedItem: Item = null;
-    mShowLocationInfo = false;
 
-    get showLocationInfo () {
-        return this.mShowLocationInfo;
-    }
-    set showLocationInfo (value) {
-         this.mShowLocationInfo = value;
-         if (!value && this.listeningForBarometer) {
-            this.stopBarometerAltitudeUpdate();
-        }
-    }
+    
 
-    hasBarometer = sensors.isSensorAvailable('barometer');
-    listeningForBarometer = false;
-    airportPressure = appSettings.getNumber('airport_pressure', null);
-    airportRefName: string = appSettings.getString('airport_ref', null);
-    mCurrentAltitude: number = null;
+    
     suggestionPackage: { id: string; name: string; status: PackageStatus } = null;
     suggestionPackageName: string = null;
 
-    get currentAltitude() {
-        if (this.listeningForBarometer) {
-            if (!this.airportPressure) {
-                return this.$t('no_ref');
-            }
-            return this.mCurrentAltitude || '-';
-        }
-        return this.currentLocation && this.currentLocation.altitude !== undefined ? this.currentLocation.altitude : '-';
-    }
-
+    
     get scaleView() {
         return this.$refs.scaleView as ScaleView;
     }
@@ -80,7 +54,8 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
         return (
             this.suggestionPackage &&
             (!this.suggestionPackage.status ||
-                (this.suggestionPackage.status.getCurrentAction() !== PackageAction.READY && this.suggestionPackage.status.getCurrentAction() !== PackageAction.DOWNLOADING))
+                (this.suggestionPackage.status.getCurrentAction() !== PackageAction.READY &&
+                    this.suggestionPackage.status.getCurrentAction() !== PackageAction.DOWNLOADING))
         );
     }
 
@@ -129,7 +104,7 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
             return;
         }
         const scaleView = this.scaleView;
-        
+
         scaleView && scaleView.onMapMove(e);
         // const cartoMap = this.mapView;
         // if (!cartoMap) {
@@ -192,7 +167,7 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
     lastSuggestionKey: string;
     onMapStable(e) {
         const cartoMap = this.mapView;
-        const packageServiceEnabled = this.mapComp && this.mapComp.packageServiceEnabled
+        const packageServiceEnabled = this.mapComp && this.mapComp.packageServiceEnabled;
         if (!cartoMap || !packageServiceEnabled) {
             return;
         }
@@ -228,7 +203,11 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
         }
         // const ComponentClass = Vue.extend(OptionPicker);
         let instance = new OptionPicker();
-        instance.options = [{ name: this.$tc('map_package'), checked: true }, { name: this.$tc('search_package'), checked: false }, { name: this.$tc('routing_package'), checked: false }];
+        instance.options = [
+            { name: this.$tc('map_package'), checked: true },
+            { name: this.$tc('search_package'), checked: false },
+            { name: this.$tc('routing_package'), checked: false }
+        ];
         instance.$mount();
         // this.nativeView._addViewCore(instance.nativeView);
         // console.log('instance.nativeView', instance.nativeView);
@@ -336,65 +315,5 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
             module.addStopPoint(this.selectedItem.position, this.selectedItem.properties);
         }
     }
-    startBarometer() {
-        if (this.listeningForBarometer) {
-            sensors.startListeningForSensor('barometer', this.onSensor, 1000);
-        }
-    }
-    stopBarometer() {
-        if (this.listeningForBarometer) {
-            sensors.stopListeningForSensor('barometer', this.onSensor);
-        }
-    }
-    startBarometerAltitudeUpdate() {
-        if (!this.listeningForBarometer) {
-            this.listeningForBarometer = true;
-            this.startBarometer();
-        }
-    }
-    stopBarometerAltitudeUpdate() {
-        if (this.listeningForBarometer) {
-            this.stopBarometer();
-            this.listeningForBarometer = false;
-        }
-    }
-    switchBarometer() {
-        if (this.listeningForBarometer) {
-            this.stopBarometerAltitudeUpdate();
-        } else {
-            this.startBarometerAltitudeUpdate();
-        }
-    }
-    getNearestAirportPressure() {
-        return this.geoHandler.enableLocation().then(() => {
-            this.geoHandler
-                .getLocation({ desiredAccuracy: Accuracy.high, maximumAge: 120000 })
-                .then(r => sensors.getAirportPressureAtLocation(gVars.AVWX_API_KEY, r.latitude, r.longitude))
-                .then(r => {
-                    this.airportPressure = r.pressure;
-                    this.airportRefName = r.name;
-                    appSettings.setNumber('airport_pressure', this.airportPressure);
-                    appSettings.setString('airport_ref', this.airportRefName);
-                    alert(`found nearest airport pressure ${r.name} with pressure:${r.pressure} hPa`);
-                })
-                .catch(err => {
-                    alert(`could not find nearest airport pressure: ${err}`);
-                });
-        });
-    }
-    onSensor(data, sensor: string) {
-        if (sensor === 'barometer' && this.airportPressure != null) {
-            // we can compute altitude
-            if (this.airportPressure) {
-                // this.log('barometer', data.timestamp, data.pressure, this.airportPressure);
-                this.mCurrentAltitude = Math.round(sensors.getAltitude(data.pressure, this.airportPressure));
-                this.stopBarometer();
-                if (this.listeningForBarometer) {
-                    setTimeout(() => {
-                        this.startBarometer();
-                    }, 5000);
-                }
-            }
-        }
-    }
+    
 }

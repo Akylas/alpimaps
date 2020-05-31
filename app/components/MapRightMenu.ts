@@ -16,17 +16,16 @@ import LayerOptionsBottomSheet from './LayerOptionsBottomSheet';
 
 function createGetter(target: Object, key, type: string, options?: { defaultValue?: any }) {
     // console.log('calling getter', key, target.hasOwnProperty('m' + key), target['m' + key]);
-        if (!target.hasOwnProperty('m' + key) || target['m' + key] === undefined) {
-            if (type === 'boolean') {
-                target['m' + key] = appSettings.getBoolean(key, options.defaultValue || false);
-            } else if (type === 'number') {
-                target['m' + key] = appSettings.getNumber(key, options.defaultValue || 0);
-            } else {
-                target['m' + key] = appSettings.getString(key, options.defaultValue || '');
-            }
+    if (!target.hasOwnProperty('m' + key) || target['m' + key] === undefined) {
+        if (type === 'boolean') {
+            target['m' + key] = appSettings.getBoolean(key, options.defaultValue || false);
+        } else if (type === 'number') {
+            target['m' + key] = appSettings.getNumber(key, options.defaultValue || 0);
+        } else {
+            target['m' + key] = appSettings.getString(key, options.defaultValue || '');
         }
+    }
     return function() {
-        
         let result = this['m' + key];
         if (type === 'number' && typeof result !== 'number') {
             result = parseFloat(result);
@@ -119,11 +118,11 @@ export default class MapRightMenu extends BottomSheetBase implements IMapModule 
     customSources: ObservableArray<SourceItem> = [] as any;
     currentLegend: string = null;
 
-    @booleanProperty showGlobe: boolean;
-    @booleanProperty show3DBuildings: boolean;
-    @booleanProperty showContourLines: boolean;
-    @numberProperty contourLinesOpacity: number;
-    @booleanProperty preloading: boolean;
+    @booleanProperty({ defaultValue: false }) showGlobe: boolean;
+    @booleanProperty({ defaultValue: false }) show3DBuildings: boolean;
+    @booleanProperty({ defaultValue: true }) showContourLines: boolean;
+    @numberProperty({ defaultValue: 1 }) contourLinesOpacity: number;
+    @booleanProperty({ defaultValue: true }) preloading: boolean;
     @stringProperty({ defaultValue: '0' }) zoomBiais: string;
 
     onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
@@ -193,7 +192,7 @@ export default class MapRightMenu extends BottomSheetBase implements IMapModule 
 
     showSourceOptions(item: SourceItem) {
         this.$showBottomSheet(LayerOptionsBottomSheet, {
-            props:{
+            props: {
                 item
             }
         });
