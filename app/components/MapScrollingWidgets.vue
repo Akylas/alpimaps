@@ -21,7 +21,7 @@
                 <MDButton @tap="startDirections" row="0" rowSpan="2" col="2" class="floating-btn buttonthemed" text="mdi-directions" v-show="selectedItemHasPosition" />
             </transition>
             <GridLayout class="floating-btn" :class="locationButtonClass" @tap="askUserLocation" @longPress="onWatchLocation">
-                <Label textAlignment="center" verticalTextAlignment="middle" class="mdi" :class="locationButtonLabelClass" text="mdi-crosshairs-gps" :color="watchingLocation? 'white': accentColor" />
+                <Label textAlignment="center" verticalTextAlignment="middle" class="mdi" :class="locationButtonLabelClass" text="mdi-crosshairs-gps" :color="watchingLocation? 'white': accentColor" isUserInteractionEnabled="false" />
             </GridLayout>
             <!-- <MDButton @tap="askUserLocation" @longPress="onWatchLocation"  :class="locationButtonClass" text="mdi-crosshairs-gps" /> -->
         </StackLayout>
