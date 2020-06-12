@@ -581,9 +581,9 @@ export default class PackageService extends Observable {
         let ascent = 0;
         let descent = 0;
         let lastAlt;
-        let lastAlt2;
-        let colors = [];
-        let grades = [];
+        // let lastAlt2;
+        // let colors = [];
+        // let grades = [];
         for (let i = 0; i < profile.length; i++) {
             let sample = profile[i];
 
@@ -600,23 +600,10 @@ export default class PackageService extends Observable {
                 } else if (diff < 0) {
                     descent -= rdiff;
                 }
-                // if (deltaDistance !== 0) {
-                grade = lastAlt === undefined ? 0 : Math.round((diff / deltaDistance) * 100) / 100;
-                // console.log('test grade', (sample as any).tmpElevation,lastAlt,  diff, deltaDistance, lastGrade, grade);
-
-                // } else {
-                //     console.log('deltaDistance === 0', last, sample);
-                // }
-                grades.push(grade);
+                // grade = lastAlt === undefined ? 0 : Math.round((diff / deltaDistance) * 100) / 100;
+                // grades.push(grade);
             }
             lastAlt = (sample as any).tmpElevation;
-            // if (currentHeight === undefined || currentHeight === sample.altitude) {
-            //     deltaDistanceSinceLastHeightChange+=deltaDistance;
-
-            // } else {
-            //     deltaDistanceSinceLastHeightChange=deltaDistance;
-            // }
-
             currentHeight = sample.altitude;
             if (currentHeight > result.max[1]) {
                 result.max[1] = currentHeight;
@@ -636,35 +623,35 @@ export default class PackageService extends Observable {
             delete (sample as any).tmpElevation;
             // delete (sample as any).tmp2Elevation;
         }
-        grades.unshift(grades[0]); //no first grade let s copy the next one
-        result.data[0].grade = grades[0];
+        // grades.unshift(grades[0]); //no first grade let s copy the next one
+        // result.data[0].grade = grades[0];
 
-        const gradesFiltered = [];
-        for (let i = 0; i < grades.length; i++) {
-            let min = Math.max(i - range, 0);
-            let max = Math.min(i + range, grades.length - 1);
-            gradesFiltered[i] = average(grades.slice(min, max));
-        }
-        let grade, lastGrade;
-        for (let i = 0; i < gradesFiltered.length; i++) {
-            grade = gradesFiltered[i];
-            console.log('test grade', grade, lastGrade);
-            if (lastGrade === undefined || Math.round(lastGrade * 10) !== Math.round(grade * 10)) {
-                colors.push({
-                    x: lastGrade !== undefined ? i - 1 : i,
-                    color: getGradeColor(lastGrade !== undefined ? lastGrade : grade).toHexString()
-                });
-            }
-            lastGrade = grade;
-        }
+        // const gradesFiltered = [];
+        // for (let i = 0; i < grades.length; i++) {
+        //     let min = Math.max(i - range, 0);
+        //     let max = Math.min(i + range, grades.length - 1);
+        //     gradesFiltered[i] = average(grades.slice(min, max));
+        // }
+        // let grade, lastGrade;
+        // for (let i = 0; i < gradesFiltered.length; i++) {
+        //     grade = gradesFiltered[i];
+        //     console.log('test grade', grade, lastGrade);
+        //     if (lastGrade === undefined || Math.round(lastGrade * 10) !== Math.round(grade * 10)) {
+        //         colors.push({
+        //             x: lastGrade !== undefined ? i - 1 : i,
+        //             color: getGradeColor(lastGrade !== undefined ? lastGrade : grade).toHexString()
+        //         });
+        //     }
+        //     lastGrade = grade;
+        // }
 
         result.dmin = Math.round(-descent);
         result.dplus = Math.round(ascent);
-        result.colors = colors;
-        console.log('altitude', JSON.stringify(result.data.map(s => s.altitude)));
-        console.log('grades', JSON.stringify(grades));
-        console.log('gradesFiltered', JSON.stringify(gradesFiltered));
-        console.log('colors', result.data.length, colors.length, JSON.stringify(colors));
+        // result.colors = colors;
+        // console.log('altitude', JSON.stringify(result.data.map(s => s.altitude)));
+        // console.log('grades', JSON.stringify(grades));
+        // console.log('gradesFiltered', JSON.stringify(gradesFiltered));
+        // console.log('colors', result.data.length, colors.length, JSON.stringify(colors));
         return result;
     }
 
