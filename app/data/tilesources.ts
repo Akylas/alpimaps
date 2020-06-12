@@ -865,30 +865,6 @@ export const data: { [k: string]: DataProvider } = {
             maxZoom: 15
         }
     },
-    Maptoolkit: {
-        category: 'europe,usa',
-        url: 'http://tile{s}.maptoolkit.net/{variant}/{z}/{x}/{y}.png',
-        attribution: '{attribution.OpenStreetMap} &copy; <a href="http://maptoolkit.net/">Maptoolkit</a>',
-        sourceOptions: {
-            subdomains: '123456789',
-            minZoom: 7,
-            maxZoom: 17
-        },
-        variants: {
-            Topo: {
-                url: 'http://tile{s}.maptoolkit.net/terrain/{z}/{x}/{y}.png',
-                urlOptions: {
-                    variant: 'terrain'
-                }
-            },
-            'Bike heatmap': {
-                isOverlay: true,
-                urlOptions: {
-                    variant: 'bikemap'
-                }
-            }
-        }
-    },
     'slopes > 30%': {
         category: 'europe',
         url:
