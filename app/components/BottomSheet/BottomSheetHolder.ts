@@ -28,7 +28,7 @@ export interface BottomSheetHolderScrollEventData {
 
 @Component({})
 export default class BottomSheetHolder extends BaseVueComponent {
-    bottomSheet: BottomSheet;
+    bottomSheet: BottomSheet = null;
     setBottomSheet(comp: BottomSheet) {
         this.bottomSheet = comp;
         if (comp) {
@@ -91,10 +91,10 @@ export default class BottomSheetHolder extends BaseVueComponent {
     }
     currentSheetTop = 0;
 
-    @Prop({
-        default: () => [50]
-    })
-    peekerSteps;
+    // @Prop({
+    //     default: () => [50]
+    // })
+    // peekerSteps;
     @Prop({
         default: 0
     })
@@ -151,12 +151,15 @@ export default class BottomSheetHolder extends BaseVueComponent {
     }
     get scrollingView() {
         return this.$refs['scrollingView'].nativeView as View;
-        // return this.bottomSheet.nativeView;
     }
     get translationMaxOffset() {
         let result = this.peekerSteps.slice(-1)[0];
         result += this.bottomDecale;
         return result;
+    }
+
+    get peekerSteps() {
+        return this.bottomSheet ? this.bottomSheet.steps : [];
     }
     onLayoutChange() {
         // we need to know the full height on layout
@@ -208,25 +211,20 @@ export default class BottomSheetHolder extends BaseVueComponent {
             return;
         }
         const deltaY = data.extraData.translationY;
+        const posY = data.extraData.y;
         const comp = this.bottomSheet;
         const y = (this.lastDraggingY = deltaY - this.prevDeltaY);
         // this.log(
         //     'onGestureTouch',
-        //     this.isAnimating,
-        //     comp.listViewAvailable,
-        //     comp.listViewAtTop,
-        //     this.prevDeltaY,
-        //     this.viewHeight,
-        //     this.currentViewHeight,
-        //     this.translationMaxOffset,
-        //     deltaY
+        //     posY,
+        //     comp.listViewVisible, comp.scrollEnabled , comp.listViewLocationY
         // );
 
         if (comp.listView) {
             comp.scrollEnabled = comp.listViewVisible && (!comp.listViewAtTop || (this.isAtTop && y < 0));
         }
-        // console.log('dragging', y,comp.listViewVisible, comp.scrollEnabled);
-        if (comp.listViewVisible && comp.scrollEnabled) {
+        // console.log('onGestureTouch', comp.listViewVisible, comp.listViewAtTop,this.isAtTop, comp.scrollEnabled, y,posY, comp.listViewLocationY);
+        if (comp.listViewVisible && comp.scrollEnabled && posY >= comp.listViewLocationY) {
             // if (this.isAnimating || !this._isPanning || !this.panEnabled) {
             this.prevDeltaY = deltaY;
             return;

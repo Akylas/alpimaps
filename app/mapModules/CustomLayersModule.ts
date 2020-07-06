@@ -3,8 +3,8 @@ import { HTTPTileDataSource } from 'nativescript-carto/datasources/http';
 import { TileLayer } from 'nativescript-carto/layers';
 import { RasterTileLayer, HillshadeRasterTileLayer, RasterTileFilterMode } from 'nativescript-carto/layers/raster';
 import { CartoMap } from 'nativescript-carto/ui';
+import { MapBoxElevationDataDecoder } from 'nativescript-carto/rastertiles';
 import { $t } from '~/helpers/locale';
-import { alert } from 'nativescript-material-dialogs';
 import Vue from 'nativescript-vue';
 import * as appSettings from '@nativescript/core/application-settings';
 import { ObservableArray } from '@nativescript/core/data/observable-array';
@@ -19,6 +19,9 @@ import { MergedMBVTTileDataSource } from 'nativescript-carto/datasources';
 import { MBTilesTileDataSource } from 'nativescript-carto/datasources/mbtiles';
 import { VectorTileLayer, VectorTileRenderOrder } from 'nativescript-carto/layers/vector';
 import { openFilePicker } from 'nativescript-document-picker';
+import { Color } from '@nativescript/core/color';
+import { MapPos } from 'nativescript-carto/core';
+import PackageService from '~/services/PackageService';
 
 function templateString(str: string, data) {
     return str.replace(
@@ -74,6 +77,7 @@ export default class CustomLayersModule extends MapModule {
             visible: opacity !== 0
         });
         layer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
+        // layer.setBuildingRenderOrder(VectorTileRenderOrder.LAYER);
         layer.setVectorTileEventListener(mapComp, mapComp.mapProjection);
         return {
             name,
@@ -81,6 +85,12 @@ export default class CustomLayersModule extends MapModule {
             legend,
             index: undefined,
             layer,
+            options: {
+                zoomLevelBias: {
+                    min: 0,
+                    max: 5
+                }
+            },
             provider: { name, sources, legend }
         };
     }
@@ -104,6 +114,12 @@ export default class CustomLayersModule extends MapModule {
             name: id,
             legend: provider.legend,
             opacity,
+            options: {
+                zoomLevelBias: {
+                    min: 0,
+                    max: 5
+                }
+            },
             layer: new RasterTileLayer({
                 dataSource:
                     provider.cacheable !== false
@@ -315,6 +331,7 @@ export default class CustomLayersModule extends MapModule {
                     visible: s.layer.opacity !== 0
                 });
                 layer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
+                // layer.setBuildingRenderOrder(VectorTileRenderOrder.LAYER);
                 layer.setVectorTileEventListener(this.mapComp, this.mapComp.mapProjection);
 
                 this.mapComp.removeLayer(s.layer, 'customLayers');
@@ -322,6 +339,15 @@ export default class CustomLayersModule extends MapModule {
                 s.layer = layer;
             }
         });
+    }
+    hillshadeLayer: HillshadeRasterTileLayer;
+
+    async getElevation(pos: MapPos<LatLonKeys>) {
+        if (this.hillshadeLayer) {
+            return this.hillshadeLayer.getElevation(pos);
+            // return result ? result[0].altitude : null;
+        }
+        return null;
     }
     loadLocalMbtiles(directory: string) {
         // console.log('loadLocalMbtiles',directory , Folder.exists(directory));
@@ -378,17 +404,24 @@ export default class CustomLayersModule extends MapModule {
                                     databasePath: e.path
                                 });
                                 const name = e.name;
-                                const contrast = appSettings.getNumber(`${name}_contrast`, 0.26);
-                                const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.51);
+                                const contrast = appSettings.getNumber(`${name}_contrast`, 0.30);
+                                const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.23);
+                                const illuminationDirection = appSettings.getNumber(`${name}_illuminationDirection`, 207);
                                 const opacity = appSettings.getNumber(`${name}_opacity`, 1);
-                                const layer = new HillshadeRasterTileLayer({
-                                    tileFilterMode: RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BICUBIC,
+                                const decoder = new MapBoxElevationDataDecoder();
+                                const layer = (this.hillshadeLayer = (Vue.prototype
+                                    .$packageService as PackageService).hillshadeLayer = new HillshadeRasterTileLayer({
+                                    decoder,
+                                    tileFilterMode: RasterTileFilterMode.RASTER_TILE_FILTER_MODE_NEAREST,
+                                    visibleZoomRange: [0, 13],
                                     contrast,
+                                    illuminationDirection,
+                                    highlightColor: new Color(255, 141, 141, 141),
                                     heightScale,
                                     dataSource,
                                     opacity,
                                     visible: opacity !== 0
-                                });
+                                }));
                                 const tileFilterMode = appSettings.getString(`${name}_tileFilterMode`, 'bilinear');
                                 switch (tileFilterMode) {
                                     case 'bicubic':
@@ -416,6 +449,10 @@ export default class CustomLayersModule extends MapModule {
                                         heightScale: {
                                             min: 0,
                                             max: 2
+                                        },
+                                        zoomLevelBias: {
+                                            min: 0,
+                                            max: 5
                                         }
                                     },
                                     provider: { name }
@@ -465,27 +502,25 @@ export default class CustomLayersModule extends MapModule {
     }
     addSource() {
         console.log('addSource');
-        this.getSourcesLibrary()
-            .then(() => {
-                const options = {
-                    props: {
-                        title: $t('pick_source'),
-                        options: Object.keys(this.baseProviders).map(s => ({ name: s, provider: this.baseProviders[s] }))
-                    },
-                    fullscreen: false
-                };
-                const instance = new OptionSelect();
-                instance.options = Object.keys(this.baseProviders).map(s => ({ name: s, provider: this.baseProviders[s] }));
-                instance.$mount();
-                ((alert({
-                    title: Vue.prototype.$tc('pick_source'),
-                    okButtonText: Vue.prototype.$t('cancel'),
-                    view: instance.nativeView
-                }) as any) as Promise<{ name: string; provider: Provider }>).then(results => {
+        this.getSourcesLibrary().then(() => {
+            const options = {
+                props: {
+                    title: $t('pick_source'),
+                    options: Object.keys(this.baseProviders).map(s => ({ name: s, provider: this.baseProviders[s] }))
+                },
+                fullscreen: false
+            };
+            this.mapComp.$showBottomSheet(OptionSelect, {
+                props: {
+                    title: $t('pick_source'),
+                    options: Object.keys(this.baseProviders).map(s => ({ name: s, provider: this.baseProviders[s] }))
+                },
+                closeCallback: results => {
+                    console.log('closeCallback', results);
                     const result = Array.isArray(results) ? results[0] : results;
                     if (result) {
                         const data = this.createRasterLayer(result.name, result.provider);
-                        // this.log('about to add', result, data);
+                        this.log('about to add', result, data);
                         this.mapComp.addLayer(data.layer, 'customLayers', this.customSources.length);
                         this.customSources.push(data);
                         this.log('layer added', data.provider);
@@ -494,11 +529,33 @@ export default class CustomLayersModule extends MapModule {
                         // clog('saving added_providers', savedSources);
                         appSettings.setString('added_providers', JSON.stringify(savedSources));
                     }
-                });
-            })
-            .catch(err => {
-                Vue.prototype.$showError(err);
+                }
             });
+            // const instance = new OptionSelect();
+            // instance.options = Object.keys(this.baseProviders).map(s => ({ name: s, provider: this.baseProviders[s] }));
+            // instance.$mount();
+            // ((alert({
+            //     title: Vue.prototype.$tc('pick_source'),
+            //     okButtonText: Vue.prototype.$t('cancel'),
+            //     view: instance.nativeView
+            // }) as any) as Promise<{ name: string; provider: Provider }>).then(results => {
+            //     const result = Array.isArray(results) ? results[0] : results;
+            //     if (result) {
+            //         const data = this.createRasterLayer(result.name, result.provider);
+            //         // this.log('about to add', result, data);
+            //         this.mapComp.addLayer(data.layer, 'customLayers', this.customSources.length);
+            //         this.customSources.push(data);
+            //         this.log('layer added', data.provider);
+            //         const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
+            //         savedSources.push(result.name);
+            //         // clog('saving added_providers', savedSources);
+            //         appSettings.setString('added_providers', JSON.stringify(savedSources));
+            //     }
+        });
+        // })
+        // .catch(err => {
+        //     Vue.prototype.$showError(err);
+        // });
     }
     deleteSource(name: string) {
         let index = -1;

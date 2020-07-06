@@ -4,6 +4,7 @@ import BaseVueComponent from './BaseVueComponent';
 import { convertDistance, convertDuration, convertElevation, convertValueToUnit } from '~/helpers/formatter';
 import { distanceToEnd, isLocationOnPath } from '~/utils/geo';
 import { MapPos } from 'nativescript-carto/core';
+import { RouteInstruction } from './DirectionsPanel';
 
 function pick<T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
     const ret: any = {};
@@ -40,9 +41,10 @@ export default class BottomSheetRouteInfoView extends BaseVueComponent {
         if (this.currentLocation) {
             this.updateRouteItemWithPosition(this.currentLocation);
         }
-    }   
+    }
 
     remainingDistanceOnCurrentRoute = null;
+    routeInstruction: RouteInstruction = null;
     currentLocation: MapPos<LatLonKeys> = null;
     onNewLocation(e: any) {
         this.currentLocation = e.data;
@@ -51,20 +53,32 @@ export default class BottomSheetRouteInfoView extends BaseVueComponent {
     }
 
     updateRouteItemWithPosition(location) {
-        if (this.routeItem) {
-            const positions = this.routeItem.route.positions;
+        const routeItem = this.routeItem;
+        if (routeItem) {
+            const route = routeItem.route;
+            const positions = route.positions;
             const onPathIndex = isLocationOnPath(location, positions, false, true, 10);
-            // this.log('onPathIndex', onPathIndex);
+            this.log('onPathIndex', onPathIndex);
             if (onPathIndex >= 0) {
                 const distance = distanceToEnd(onPathIndex, positions);
                 this.remainingDistanceOnCurrentRoute = distance;
-                // this.log('distance to end', distance);
+                this.routeInstruction = null;
+                for (let index = route.instructions.length - 1; index >= 0; index--) {
+                    const element = route.instructions[index];
+                    if (element.pointIndex <= onPathIndex) {
+                        this.routeInstruction = element;
+                        break;
+                    }
+                }
+                this.log('instruction', this.routeInstruction);
             } else {
+                this.routeInstruction = null;
                 this.remainingDistanceOnCurrentRoute = null;
             }
             return onPathIndex;
         } else {
             this.remainingDistanceOnCurrentRoute = null;
+            this.routeInstruction = null;
         }
         return -1;
     }
@@ -86,7 +100,9 @@ export default class BottomSheetRouteInfoView extends BaseVueComponent {
         const route = this.routeItem.route;
         let result = `${convertDuration(route.totalTime * 1000)}`;
         if (this.remainingDistanceOnCurrentRoute) {
-            result += ` (~ ${convertDuration(((route.totalTime * this.remainingDistanceOnCurrentRoute) / route.totalDistance) * 1000)})`;
+            result += ` (~ ${convertDuration(
+                ((route.totalTime * this.remainingDistanceOnCurrentRoute) / route.totalDistance) * 1000
+            )})`;
         }
         return result;
     }

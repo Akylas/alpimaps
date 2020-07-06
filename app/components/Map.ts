@@ -211,27 +211,6 @@ export default class Map extends BgServicePageComponent {
         return this._cartoMap;
     }
     navigationBarHeight = navigationBarHeight;
-    get peekHeight() {
-        return 70;
-    }
-    // fullHeight = 0;
-    // onLayoutChange() {
-    //     this.fullHeight = layout.toDeviceIndependentPixels(this.nativeView.getMeasuredHeight());
-    //     // this.log('onLayoutChange', this.fullHeight);
-    // }
-    get bottomSheetSteps() {
-        const result = [this.peekHeight, this.peekHeight + actionBarHeight];
-        if (!!this.mSelectedItem) {
-            if (!!this.mSelectedItem.route) {
-                if (!!this.mSelectedItem.route.profile && !!this.mSelectedItem.route.profile.max) {
-                    result.push(result[result.length - 1] + PROFILE_HEIGHT);
-                }
-                result.push(result[result.length - 1] + LISTVIEW_HEIGHT);
-            }
-        }
-        // this.log('peekerSteps', result);
-        return result;
-    }
 
     get bottomSheetHolder() {
         return this.$refs['bottomSheetHolder'] as BottomSheetHolder;
@@ -241,7 +220,7 @@ export default class Map extends BgServicePageComponent {
     }
 
     get bottomSheet() {
-        return this.$refs['bottomSheet'] as BottomSheet;
+        return this.$refs['bottomSheet'] as BottomSheet || null;
     }
     get topSheetHolder() {
         return this.$refs['topSheetHolder'] as TopSheetHolder;
@@ -330,6 +309,8 @@ export default class Map extends BgServicePageComponent {
                         .then(() => this.hideLoading());
                 }
             }
+        } else if (appURL.path && appURL.path.endsWith('.gpx')) {
+            console.log('importing GPX', appURL.path);
         }
     }
 
@@ -520,7 +501,7 @@ export default class Map extends BgServicePageComponent {
         // this.log('onMapStable', zoom);
     }
 
-     onMapReady(e) {
+    onMapReady(e) {
         const cartoMap = (this._cartoMap = e.object as CartoMap<LatLonKeys>);
         setShowDebug(DEV_LOG);
         setShowInfo(DEV_LOG);
@@ -718,11 +699,12 @@ export default class Map extends BgServicePageComponent {
         //         delete featureDataWithoutName[k];
         //     }
         // });
-        // this.log('onVectorTileClicked', featureLayerName, featureData.class, featureData.subclass);
+        this.log('onVectorTileClicked', featureLayerName, featureData.class, featureData.subclass, featureData);
         // return false;
         const handledByModules = this.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
-            // this.log('onVectorTileClicked test', featureLayerName);
+            
+            // this.log('onVectorTileClicked test', featureLayerName, featureData);
             if (
                 featureLayerName === 'transportation' ||
                 featureLayerName === 'route' ||
@@ -731,12 +713,14 @@ export default class Map extends BgServicePageComponent {
                 featureLayerName === 'transportation_name' ||
                 featureLayerName === 'contour' ||
                 featureLayerName === 'building' ||
+                featureLayerName === 'park' ||
                 featureLayerName === 'landcover' ||
                 featureLayerName === 'landuse'
             ) {
                 return false;
             }
             featureData.layer = featureLayerName;
+            
             // const distanceFromClick = distance(map.mapToScreen(position), map.mapToScreen(featurePosition));
 
             // console.log(
@@ -758,9 +742,13 @@ export default class Map extends BgServicePageComponent {
                 featureLayerName === 'poi' ||
                 featureLayerName === 'mountain_peak' ||
                 featureLayerName === 'housenumber';
-            // this.log('onVectorTileClicked test2', featureLayerName, isFeatureInteresting);
             if (isFeatureInteresting) {
-                let result: Item = {
+                if (!featureData.hasOwnProperty('ele') && this.$packageService.hillshadeLayer) {
+                    console.log('get elevation ', position)
+                    featureData['ele'] = this.$packageService.hillshadeLayer.getElevation(position) as any;
+                }
+            // this.log('onVectorTileClicked', featureLayerName, featureData);
+            let result: Item = {
                     properties: featureData,
                     position: isFeatureInteresting ? featurePosition : position
                 };

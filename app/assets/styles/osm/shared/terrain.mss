@@ -39,20 +39,15 @@
 			}
 		// }
 		[index=5][zoom>=14],
-		[index=10][zoom>=14] {
+		[index=10][zoom>=13] {
 			text-face-name: @mont;
 			text-name: [ele]+' m';
 			text-fill: @contour;
 			
-			// text-halo-fill: @halo_park_label;
-			// text-halo-radius: 1;
-			// text-halo-rasterizer: fast;
-			// text-comp-op: clear;
 			text-min-distance: 20;
 			text-avoid-edges: false;
 			text-placement: line;
-			// text-dy:-1;
-			text-size: linear([view::zoom], (12, 6), (20, 10)) + 0.00001 * [ele];
+			text-size: linear([view::zoom], (12, 4), (20, 10)) + 0.00001 * [ele];
 		}
 	}
 }

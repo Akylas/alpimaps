@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="__PACKAGE__">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android" package="__PACKAGE__">
     <supports-screens android:smallScreens="true" android:normalScreens="true" android:largeScreens="true" android:xlargeScreens="true" />
     <uses-sdk android:targetSdkVersion="__APILEVEL__" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -47,6 +48,16 @@
             <intent-filter>
                 <action android:name="com.google.android.gms.actions.SEARCH_ACTION" />
                 <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data
+    android:mimeType="application/gpx"
+    android:host="*" 
+    android:pathPattern=".*\\.gpx"
+  />
             </intent-filter>
         </activity>
         <activity android:name="com.tns.ErrorReportActivity" />

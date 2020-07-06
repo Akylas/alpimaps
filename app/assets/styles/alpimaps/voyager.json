@@ -13,10 +13,10 @@
         "water",
         "waterway",
         "boundary",
+        "hillshade",
         "mountain_peak",
         "park",
         "place",
-        "hillshade",
         "landuse",
         "landcover"
     ],

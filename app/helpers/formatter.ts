@@ -90,7 +90,7 @@ export function convertValueToUnit(value: any, unit, otherParam?) {
             } else if (value > 100000) {
                 return [(value / 1000).toFixed(0), unit];
             } else {
-                return [(value / 1000).toFixed(1), unit];
+                return [(value / 1000).toFixed(0), unit];
             }
         case 'km/h':
             if (isString) {

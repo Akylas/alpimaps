@@ -11,8 +11,8 @@
             <Label color="red" class="label-icon-btn" fontSize="12" text="mdi-sleep-off" v-show="keepAwake" />
         </StackLayout>
 
-        <BottomSheetHolder id="itemBSHolder" ref="bottomSheetHolder" :marginBottom="navigationBarHeight" :peekerSteps="bottomSheetSteps" isPassThroughParentEnabled @close="unselectItem" @scroll="onBottomSheetScroll">
-            <BottomSheet ref="bottomSheet" slot="bottomSheet" :item="selectedItem" :steps="bottomSheetSteps" />
+        <BottomSheetHolder id="itemBSHolder" ref="bottomSheetHolder" :marginBottom="navigationBarHeight" isPassThroughParentEnabled @close="unselectItem" @scroll="onBottomSheetScroll">
+            <BottomSheet ref="bottomSheet" slot="bottomSheet" :item="selectedItem" />
         </BottomSheetHolder>
 
         <!-- <transition name="scale"> -->
@@ -40,7 +40,7 @@
         </Fab>
 
 
-        <BottomSheetHolder id="rightMenuBSHolder" ref="bottomSheetHolder2" :marginBottom="navigationBarHeight" :peekerSteps="[210]" isPassThroughParentEnabled>
+        <BottomSheetHolder id="rightMenuBSHolder" ref="bottomSheetHolder2" :marginBottom="navigationBarHeight" isPassThroughParentEnabled>
             <MapRightMenu ref="mapMenu" slot="bottomSheet"/>
         </BottomSheetHolder>
         <!-- </GridLayout> -->

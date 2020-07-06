@@ -27,15 +27,8 @@ CustomError.prototype = Object.create(Error.prototype);
 
 application.on(application.discardedErrorEvent, args => {
     const error = args.error;
-    // const jsError = new Error(error.message);
     error.stack = error.stackTrace;
-    console.log(error);
-    // console.log('[stackTrace test Value]', error.message, error.stackTrace);
-    // console.log('[stack test value]', error.message, error.stack);
-    // console.log(jsError);
-    // setTimeout(() => {
-    // throw new Error('test');
-    // }, 0);
+    console.log('discardedErrorEvent', error);
 });
 
 import { device } from '@nativescript/core/platform';
@@ -110,8 +103,8 @@ Vue.use(PrototypePlugin);
 // Prints Vue logs when --env.production is *NOT* set while building
 // Vue.config.silent = !DEV_LOG;
 // Vue.config['debug'] = DEV_LOG;
-Vue.config.silent = !DEV_LOG;
-Vue.config['debug'] = DEV_LOG;
+Vue.config.silent = true;
+Vue.config['debug'] = false;
 
 function throwVueError(err) {
     Vue.prototype.$showError(err);
@@ -128,13 +121,6 @@ Vue.config.errorHandler = (e, vm, info) => {
 Vue.config.warnHandler = function(msg, vm, trace) {
     cwarn(msg, trace);
 };
-
-/* DEV-START */
-// const VueDevtools = require('nativescript-vue-devtools');
-// Vue.use(VueDevtools
-// , { host: '192.168.1.43' }
-// );
-/* DEV-END */
 
 import App from '~/components/App';
 new Vue({

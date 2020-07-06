@@ -55,6 +55,7 @@ export default class TopSheetHolder extends BaseVueComponent {
     set currentViewTop(value) {
         this.nCurrentViewTop = value;
         const slotTopOnScreen = this.translationMaxOffset + value;
+        // console.log('set currentViewTop', value, this.translationMaxOffset, slotTopOnScreen, DEFAULT_TOP);
         if (slotTopOnScreen <= DEFAULT_TOP) {
             this.currentSlotTop = DEFAULT_TOP;
         } else {
@@ -65,7 +66,6 @@ export default class TopSheetHolder extends BaseVueComponent {
             percentage: slotTopOnScreen / this.translationMaxOffset,
             height: slotTopOnScreen
         } as TopSheetHolderScrollEventData);
-        // console.log('set currentViewTop', value, this.translationMaxOffset, slotTopOnScreen);
     }
     get currentViewTop() {
         return this.nCurrentViewTop;
@@ -77,6 +77,7 @@ export default class TopSheetHolder extends BaseVueComponent {
         //
         const view = this.$refs['topSheet'].nativeView;
         this.translationMaxOffset = Math.round(layout.toDeviceIndependentPixels(view.getMeasuredHeight()));
+        console.log('onLayoutChange', view, this.viewHeight, this.translationMaxOffset);
         if (this.currentViewTop === null) {
             this.currentViewTop = -this.translationMaxOffset;
         }

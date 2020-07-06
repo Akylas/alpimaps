@@ -8,34 +8,22 @@
         <StackLayout row="1" orientation="horizontal" width="100%" @tap="noop" borderTopWidth="1" borderBottomWidth="1" borderColor='#44ffffff'>
             <MDButton variant="text" padding="4" fontSize="10" @tap="searchItemWeb" text="search" v-show="item && !itemIsRoute && !item.id" />
             <MDButton variant="text" padding="4" fontSize="10" @tap="getProfile" text="profile" v-show="itemIsRoute" />
+            <MDButton variant="text" padding="4" fontSize="10" @tap="toggleWebView" text="web" />
             <MDButton variant="text" padding="4" fontSize="10" @tap="saveItem" text="save item" v-show="item && !item.id" />
-            <MDButton variant="text" padding="4" fontSize="10" @tap="deleteItem" text="delete item" v-show="item && item.id" />
+            <MDButton variant="text" padding="4" fontSize="10" @tap="deleteItem" text="delete item" v-show="item && item.id" color="red" />
             <MDButton variant="text" padding="4" fontSize="10" @tap="shareItem" text="share item" v-show="item && item.id" />
         </StackLayout>
-        <!-- <transition name="fade" duration="200"> -->
         <LineChart ref="graphView" row="2" :height="profileHeight" :visibility="showGraph ? 'visible' : 'collapsed'"  @tap="onChartTap"/>
-
-            <!-- <Palette v-tkCartesianPalette seriesName="Area">
-                <PaletteEntry v-tkCartesianPaletteEntry fillColor="#8060B3FC" strokeWidth="2" strokeColor="#60B3FC" />
-            </Palette>
-            <CategoricalAxis v-tkCartesianHorizontalAxis majorTickInterval="1000" labelTextColor="transparent" />
-            <LinearAxis v-tkCartesianVerticalAxis firstLabelVisibility="Hidden" labelFormat="%.0f" />
-            <AreaSeries v-tkCartesianSeries seriesName="Area" selectionMode="DataPoint" :items="routeElevationProfile" categoryProperty="x" valueProperty="y" @pointSelected="onChartSelected" />
-        </RadCartesianChart> -->
-
-        <CollectionView id="bottomsheetListView" row="3" ref="listView" rowHeight="49" :items="routeInstructions" :visibility="showListView ? 'visible' : 'hidden'" isBounceEnabled="false" @itemTap="onInstructionTap" @scroll="onListViewScroll" :isScrollEnabled="scrollEnabled">
+        <WebViewExt row="3" displayZoomControls="false" ref="listView" :visibility="listViewVisible ? 'visible' : 'collapsed'" @scroll="onListViewScroll" :isScrollEnabled="scrollEnabled" :src="webViewSrc" :headers="{'User-Agent':'Mozilla/5.0 (iPhone; CPU iPhone OS 12_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/12.0 Mobile/15A372 Safari/604.1'}"/>
+        <!-- <CollectionView id="bottomsheetListView" row="3" ref="listView" rowHeight="40" :items="routeInstructions" :visibility="showListView ? 'visible' : 'hidden'" isBounceEnabled="false" @scroll="onListViewScroll" :isScrollEnabled="scrollEnabled">
             <v-template>
-                <GridLayout columns="30,*" rows="*,auto,auto,*" height="50">
+                <GridLayout columns="30,*" rows="*,auto,auto,*" rippleColor="white"  @tap="onInstructionTap(item)">
                     <Label col="0" rowSpan="4" :text="getRouteInstructionIcon(item) |fonticon" class="maki" color="white" fontSize="20" verticalAlignment="center" textAlignment="center" />
                     <Label col="1" row="1" :text="getRouteInstructionTitle(item)" color="white" fontSize="13" fontWeight="bold" textWrap />
-                    <!-- <Label col="1" row="2" :text="getRouteInstructionSubtitle(item)" color="#D0D0D0" fontSize="12" /> -->
                 </GridLayout>
             </v-template>
-        </CollectionView>
+        </CollectionView> -->
 
-        <!-- </transition> -->
-        <!-- <transition name="fade" duration="200"> -->
-        <!-- </transition> -->
     </GridLayout>
 </template>
 <script lang="ts" src="./BottomSheet.ts"/>

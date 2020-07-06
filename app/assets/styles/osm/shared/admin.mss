@@ -23,12 +23,9 @@
 	}
 }
 
- #park['mapnik::geometry_type'=3]{
-	[class = 'national_park'],
-	[class = 'ature_reserve'],
-	[class = 'aboriginal_lands'],
-	[class = 'protected_area'] {
-	  [zoom >= 8][way_pixels > 3000] {
+ #park['mapnik::geometry_type'=1]{
+	
+	  [zoom >= 8][zoom < 14][way_pixels > 3000] {
 		text-name: [name];
 		text-size: @landcover-font-size;
 		text-wrap-width: @landcover-wrap-width-size;
@@ -50,13 +47,8 @@
 		[class = 'aboriginal_lands'] {
 		  text-fill: @aboriginal;
 		}
-		[class = 'national_park'],
-		[class = 'nature_reserve'],
-		[class = 'protected_area'] {
 		  text-fill: @protected-area;
-		}
 	  }
-	}
 		// [class=national_park][zoom>=6],
 		// [zoom>=8]
 		// // [class=aboriginal_lands][zoom>=12],
@@ -78,8 +70,8 @@
 	    //     // text-placement: line;
 	    //     text-min-distance: 150;
 		// }
-	
-
+		}
+#park['mapnik::geometry_type'=3]{
 	[zoom >= 14][way_pixels > 10000] {
 		text-name: [name];
 		text-face-name: @mont;
@@ -87,17 +79,18 @@
 		[boundary='aboriginal_lands'] {
 		  text-fill: @aboriginal;
 		}
-		text-allow-overlap: true;
+		// text-allow-overlap: true;
 		text-halo-radius: @standard-halo-radius;
 		text-halo-fill: @standard-halo-fill;
 		// text-largest-bbox-only: false;
 		text-placement: line;
-		text-spacing: 750;
+		// text-spacing: 100;
+		// text-avoid-edges: false;
 		// text-repeat-distance: 250;
 		// text-margin: 10;
-		text-clip: true;
-		text-vertical-alignment: middle;
-		text-dy: -7;
+		// text-clip: true;
+		// text-vertical-alignment: middle;
+		text-dy: -3;
 	  }
 	  
 		[way_pixels > 750] {

@@ -116,10 +116,12 @@ export const tables: InanoSQLTableConfig[] = [
                             'position:geo': {},
                             'action:string': {},
                             'azimuth:number': {},
+                            'pointIndex:number': {},
                             'distance:number': {},
                             'time:number': {},
                             'turnAngle:number': {},
-                            'streetName:string': {}
+                            'streetName:string': {},
+                            'instruction:string': {}
                         }
                     },
                     'profile:obj': {
