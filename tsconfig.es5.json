@@ -1,6 +1,7 @@
 {
     "extends": "./tsconfig",
     "compilerOptions": {
-        // "importHelpers": false
+        "target": "es5",
+        "module": "es2015",
     }
 }

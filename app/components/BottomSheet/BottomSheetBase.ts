@@ -30,13 +30,16 @@ export default class BottomSheetBase extends BaseVueComponent {
 
     public isListViewAtTop = true;
     public listViewVisible = false;
-    public listViewAvailable = false;
+    public mListViewAvailable = false;
     public isScrollEnabled = true;
     set scrollEnabled(value) {
         if (value !== this.isScrollEnabled) {
             // this.log('set scrollEnabled', value);
             this.isScrollEnabled = value;
         }
+    }
+    get steps() {
+        return [];
     }
     get scrollEnabled() {
         return this.isScrollEnabled;
@@ -58,12 +61,25 @@ export default class BottomSheetBase extends BaseVueComponent {
         return this.$refs['graphView'] && (this.$refs['graphView'].nativeView as LineChart);
     }
     listViewLocationY = 0;
+    get listViewAvailable() {
+        return this.mListViewAvailable;
+    }
+    set listViewAvailable(value: boolean) {
+        this.mListViewAvailable = value;
+        if (this.listView) {
+            this.listViewLocationY = getViewTop(this.listView);
+            // this.log('listViewLocationY', this.listViewLocationY);
+
+        }
+    }
     onLayoutChange() {
         if (this.listViewAvailable) {
             this.listViewLocationY = getViewTop(this.listView);
+            // this.log('onLayoutChange', this.listViewAvailable, this.listViewLocationY);
         }
     }
     handleScroll(e: BottomSheetHolderScrollEventData) {
+        // this.log('handleScroll', this.listViewAvailable);
         if (this.listViewAvailable) {
 
             // we use this to track if listview is visible or not.
@@ -75,7 +91,7 @@ export default class BottomSheetBase extends BaseVueComponent {
             if (this.listViewVisible && e.height <= listViewTop) {
                 this.listViewAtTop = true;
                 this.listViewVisible = false;
-                this.listView.scrollToIndex(0, false);
+                this.listView.scrollToIndex && this.listView.scrollToIndex(0, false);
             }
         }
     }
@@ -113,6 +129,7 @@ export default class BottomSheetBase extends BaseVueComponent {
 
     
     onListViewScroll(args) {
+        this.log('onListViewScroll', args);
         if (!this.isScrollEnabled) {
             return;
         }

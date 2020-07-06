@@ -26,12 +26,14 @@ import Map from './Map';
 import { showSnack } from 'nativescript-material-snackbar';
 import { File, Folder, path } from '@nativescript/core/file-system';
 import { device } from '@nativescript/core/platform';
+import { layout } from '@nativescript/core/utils/utils';
 
 export interface RouteInstruction {
     position: MapPos<LatLonKeys>;
     action: string;
     azimuth: number;
     distance: number;
+    pointIndex: number;
     time: number;
     turnAngle: number;
     streetName: string;
@@ -45,7 +47,7 @@ export interface RouteProfile {
     dmin?: any;
     points: MapPos<LatLonKeys>[];
     data: Array<{ x: number; altitude: number; altAvg: number; grade }>;
-    colors: Array<{ x: number; color: string }>;
+    colors?: Array<{ x: number; color: string }>;
 }
 export interface Route {
     profile?: RouteProfile;
@@ -67,18 +69,18 @@ function routingResultToJSON(result: RoutingResult<LatLonKeys>) {
         }
         lastP = p;
     });
-    console.log('positions', positions.length, JSON.stringify(positions));
     for (let i = 0; i < rInstructions.size(); i++) {
         const instruction = rInstructions.get(i);
 
         const position = points[instruction.getPointIndex()];
-        console.log('instruction', i, JSON.stringify(position), (instruction as any).getInstruction());
+        // console.log('instruction', i, JSON.stringify(position), (instruction as any).getInstruction());
         instructions.push({
             position,
             action: instruction.getAction().toString(),
             azimuth: instruction.getAzimuth(),
             distance: instruction.getDistance(),
             time: instruction.getTime(),
+            pointIndex: instruction.getPointIndex(),
             turnAngle: instruction.getTurnAngle(),
             streetName: instruction.getStreetName(),
             instruction: (instruction as any).getInstruction()
@@ -117,6 +119,12 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     // waypoints: MapPos[] = [];
     // stopPos: MapwaypointsPos = null;
     profile: ValhallaProfile = 'pedestrian';
+    showOptions = false;
+    loading = false;
+    currentRoute: Route;
+    currentLine: Line;
+
+    valhallaCostingOptions = { use_hills: 0, use_roads: 0, use_ferry: 1, max_hiking_difficulty: 6 };
 
     get profileColor() {
         return p => {
@@ -129,11 +137,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     }
 
     get peekHeight() {
-        let result = 160;
-        if (gVars.isAndroid) {
-            result += 24;
-        }
-        return result;
+        return Math.round(layout.toDeviceIndependentPixels(this.nativeView.getMeasuredHeight()))
     }
     get fullHeight() {
         return this.peekHeight;
@@ -535,9 +539,15 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             's'
         );
     }
-    loading = false;
-    currentRoute: Route;
-    currentLine: Line;
+    switchValhallaSetting(key: string) {
+        this.valhallaCostingOptions[key] = !this.valhallaCostingOptions[key];
+    }
+    valhallaSetting(key: string) {
+        return this.valhallaCostingOptions[key];
+    }
+    valhallaSettingColor(key: string) {
+        return this.valhallaCostingOptions[key] ? 'white' : '#55ffffff';
+    }
     showRoute(online = false) {
         return new Promise<Route>((resolve, reject) => {
             this.loading = true;
@@ -552,7 +562,11 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
                     points: this.waypoints.map(r => r.position),
                     customOptions: {
                         directions_options: { language: device.language },
-                        costing_options: { pedestrian: { max_hiking_difficulty: 6 } }
+                        costing_options: {
+                            car: this.valhallaCostingOptions,
+                            pedestrian: this.valhallaCostingOptions,
+                            bicycle: this.valhallaCostingOptions
+                        }
                     } as any
                 },
                 (error, result) => {
