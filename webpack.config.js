@@ -52,14 +52,6 @@ module.exports = (env, params = {}) => {
     const platforms = ['ios', 'android'];
     const projectRoot = __dirname;
 
-    let tsconfig = params.tsconfig;
-    if (!tsconfig) {
-        tsconfig = 'tsconfig.json';
-        if (existsSync(resolve(projectRoot, `tsconfig.${platform}.json`))) {
-            tsconfig = `tsconfig.${platform}.json`;
-        }
-    }
-    console.log('tsconfig', tsconfig);
 
     if (env.platform) {
         platforms.push(env.platform);
@@ -99,8 +91,18 @@ module.exports = (env, params = {}) => {
         uglify, // --env.uglify
         devlog, // --env.devlog
         sentry, // --env.sentry
-        adhoc // --env.adhoc
+        adhoc, // --env.adhoc
+        es5 // --env.es5
     } = env;
+
+    let tsconfig = params.tsconfig;
+    if (!tsconfig) {
+        tsconfig = 'tsconfig.json';
+        if (es5) {
+            tsconfig = 'tsconfig.es5.json';
+        }
+    }
+    console.log('tsconfig', tsconfig);
 
     const useLibs = compileSnapshot;
     const isAnySourceMapEnabled = !!sourceMap || !!hiddenSourceMap || !!inlineSourceMap;
@@ -243,7 +245,8 @@ module.exports = (env, params = {}) => {
             hashSalt
         },
         resolve: {
-            extensions: ['.vue', '.mjs', '.ts', '.js', '.scss', '.css'],
+            mainFields: es5 ? ['main'] : ['module', 'main'],
+            extensions: es5 ? ['.vue', '.ts', '.js', '.scss', '.css'] : ['.vue', '.mjs', '.ts', '.js', '.scss', '.css'],
             // Resolve {N} system modules from tns-core-modules
             modules: [
                 resolve(__dirname, `node_modules/${coreModulesPackageName}`),

@@ -3,18 +3,18 @@
         "housenumber",
         "water_name",
         "transportation_name",
-        "poi",
-        "aerodrome_label",
-        "route",
         "transportation",
         "building",
         "contour",
+        "mountain_peak",
+        "poi",
+        "aerodrome_label",
+        "route",
         "boundary",
         "park",
         "water",
         "waterway",
         "place",
-        "mountain_peak",
         "hillshade",
         "landcover",
         "landuse",
@@ -52,6 +52,13 @@
         },
         "contours": {
             "default": 1,
+            "values": {
+                "1": 1,
+                "0": 0
+            }
+        },
+        "routes": {
+            "default": 0,
             "values": {
                 "1": 1,
                 "0": 0

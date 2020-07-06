@@ -13,6 +13,7 @@
         "importHelpers": false,
         "allowUnreachableCode": false,
         "allowUnusedLabels": false,
+        "downlevelIteration":true,
         "noEmitHelpers": false,
         "noEmitOnError": false,
         "noImplicitAny": false,

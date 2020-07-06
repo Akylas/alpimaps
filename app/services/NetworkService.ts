@@ -8,6 +8,13 @@ import { $t } from '~/helpers/locale';
 import { RouteProfile } from '~/components/DirectionsPanel';
 import geolib from '~/helpers/geolib';
 import { clog } from '~/utils/logging';
+import {
+    ApplicationEventData,
+    off as applicationOff,
+    on as applicationOn,
+    resumeEvent,
+    suspendEvent
+} from '@nativescript/core/application';
 
 type HTTPOptions = http.HttpRequestOptions;
 
@@ -491,12 +498,26 @@ export class NetworkService extends Observable {
         super();
         // clog('creating NetworkHandler Handler');
     }
+    monitoring = false;
     start() {
+        if (this.monitoring) {
+            return;
+        }
+        this.monitoring = true;
+        applicationOn(resumeEvent, this.onAppResume, this);
         connectivity.startMonitoring(this.onConnectionStateChange.bind(this));
         this.connectionType = connectivity.getConnectionType();
     }
     stop() {
+        if (!this.monitoring) {
+            return;
+        }
+        applicationOff(resumeEvent, this.onAppResume, this);
+        this.monitoring = false;
         connectivity.stopMonitoring();
+    }
+    onAppResume(args: ApplicationEventData) {
+        this.connectionType = connectivity.getConnectionType();
     }
     onConnectionStateChange(newConnectionType: connectivity.connectionType) {
         this.connectionType = newConnectionType;
@@ -820,7 +841,7 @@ export class NetworkService extends Observable {
                     result.min[1] = currentHeight;
                 }
 
-                result.data.push({ x: currentDistance, y: currentHeight });
+                result.data.push({ x: currentDistance, altitude: currentHeight, altAvg: currentHeight, grade:0 });
                 coordIndex = index * 2;
                 result.points.push({ lat: coords[coordIndex], lon: coords[coordIndex + 1] });
                 last = value;
