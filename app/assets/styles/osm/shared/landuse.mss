@@ -495,8 +495,7 @@
     text-size: 9;
     text-wrap-width: 100;
   }  
-  [class=rock][subclass = 'cliff'][zoom >= 12] { 
-
+  [class=rock][subclass=cliff][zoom>=12] { 
     line-color: #777;
     line-width: linear([view::zoom], (12, 0.5), (15,1));
     [zoom >= 15] {
@@ -505,10 +504,6 @@
       line/line-dasharray: 1,3;
       line/line-width: linear([view::zoom], (15, 0), (16,2));
     }
-    // line-pattern-file: url('symbols/cliff.svg');
-    // [zoom >= 15] {
-    // 	line-pattern-file: url('symbols/cliff2.svg');
-    // }
   }
   [class=barrier][zoom >= 15] {
 		[subclass = 'citywalls'],

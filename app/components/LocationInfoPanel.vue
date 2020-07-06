@@ -7,8 +7,8 @@
                     </CGroup>
                 </CanvasLabel>
                 <CanvasLabel col="1" marginLeft="5" color="#fff">
-                    <CGroup verticalAlignment="top">
-                    <CSpan :text="$tu('altitude') + (listeningForBarometer ? `(${$t('barometer')})`:'') + '\n\n'" fontSize="11" :color="accentColor" />
+                    <CSpan :text="$tu('altitude') + (listeningForBarometer ? `(${$t('barometer')})`:'') + '\n'" fontSize="11" :color="accentColor" verticalAlignment="top"/>
+                    <CGroup  verticalAlignment="middle">
                     <CSpan :text="currentAltitude" fontSize="20" fontWeight="bold" />
                     <CSpan text=" m" fontSize="12" />
                     </CGroup>

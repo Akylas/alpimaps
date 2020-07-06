@@ -71,7 +71,7 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
 
     get selectedItemHasPosition() {
         // console.log('selectedItemHasPosition', this.selectedItem);
-        return this.selectedItem && this.selectedItem.position;
+        return this.selectedItem && !this.selectedItem.route && this.selectedItem.position;
     }
 
     onSelectedItem(selectedItem: Item, oldItem: Item) {
