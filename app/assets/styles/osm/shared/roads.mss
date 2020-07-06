@@ -273,7 +273,7 @@
 		// 	}
 		// }
 
-		[class=path][zoom>=13] {
+		[class=path][zoom>=12] {
 			[subclass=steps] {
 				[brunnel=bridge][zoom>=14]  {
 
@@ -930,12 +930,12 @@
 			}
 		
 			[subclass=footway],
-			[subclass=path][zoom>=13]
+			[subclass=path][zoom>=12]
 			// [bicycle != designated][horse != designated]
 			 {	
 				 [sac_scale!=null],
 				[surface!=paved][zoom>=15],
-				[subclass=path][zoom>=14],
+				[subclass=path][zoom>=13],
 				[zoom>=16] {
 					// [zoom>=15] {
 					// 	background/line-color: @footway-casing;
@@ -1663,17 +1663,15 @@
 		}
 	}
 }
-#route{
-	[hiking_ref!=''],
-	[bicycle_ref!=''],
+#route['nuti::routes'>0]{
+	[ref!=null],
 	[zoom>=12] {
 		line-color: @route;
 		line-opacity: 0.35;
 		line-width: 1;
 		line-geometry-transform: translate(1,1);
-		[hiking_ref!=null],
-		[bicycle_ref!=null] {
-			text-name: [hiking_ref] ?[hiking_ref] : [bicycle_ref];
+		[ref!=null][name!=null]{
+			text-name: [name];
 			// text-avoid-edges: false;
 			text-placement: line;
 			text-wrap-before: true;
@@ -1684,12 +1682,11 @@
 			text-halo-radius: 0.5;
 			text-halo-rasterizer: fast;
 			text-min-distance: 5;
-			[zoom>=15][hiking_name!=null],
-			[zoom>=15][bicycle_name!=null] {
-				text-dy: 3;
-				text-name: [hiking_name] ? [hiking_name]: [bicycle_name];
+			// [zoom>=15][name!=null] {
+			// 	text-dy: 3;
+			// 	text-name: [name];
 				
-			}
+			// }
 		}
 	}
 	// [ref!=null][zoom<=12] {

@@ -44,7 +44,7 @@ Map {
 /* 1.BASEMAP */
 
 @white: #ffffff;
-@background: #f2efe9;
+@background: #e4e1dc;
 
 /* 2.BOUNDARY */
 
@@ -215,7 +215,7 @@ Map {
 /* blue - #2E89B0; #687E94; #598DBE; */
 
 
-@contour: #888888;
+@contour: #946233;
 
 
 
@@ -235,7 +235,7 @@ Map {
 @raceway-fill: pink;
 @road-fill: #ddd;
 // @footway-fill: salmon;
-@path: #BB9A79;
+@path: #bb7979;
 @footway-fill: #ffffff;
 @footway-fill-noaccess: #bbbbbb;
 @steps-fill: @footway-fill;

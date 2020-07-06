@@ -10,7 +10,7 @@ import BaseVueComponent from './BaseVueComponent';
 import Map, { MapModules } from './Map';
 import { CartoMap } from 'nativescript-carto/ui';
 import { IMapModule } from '~/mapModules/MapModule';
-import { ObservableArray } from '@nativescript/core/data/observable-array/observable-array';
+import { ObservableArray } from '@nativescript/core/data/observable-array';
 import { TextField } from 'nativescript-material-textfield';
 import LayerOptionsBottomSheet from './LayerOptionsBottomSheet';
 
@@ -117,6 +117,10 @@ export default class MapRightMenu extends BottomSheetBase implements IMapModule 
     customLayers: CustomLayersModule = null;
     customSources: ObservableArray<SourceItem> = [] as any;
     currentLegend: string = null;
+
+    get steps() {
+        return [210];
+    }
 
     @booleanProperty({ defaultValue: false }) showGlobe: boolean;
     @booleanProperty({ defaultValue: false }) show3DBuildings: boolean;
