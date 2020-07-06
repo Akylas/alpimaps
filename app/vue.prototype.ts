@@ -26,22 +26,22 @@ const Plugin = {
             if (gVars.isAndroid) {
                 bgService.start();
                 networkService.start();
-                const receiverCallback = (androidContext, intent: android.content.Intent) => {
-                    console.log('receiverCallback', intent.getAction(), intent.getAction() === android.content.Intent.ACTION_SCREEN_ON);
-                    // (Vue.prototype.$getAppComponent() as App).$emit('screen', intent.getAction() === android.content.Intent.ACTION_SCREEN_ON);
-                };
-                application.android.registerBroadcastReceiver(android.content.Intent.ACTION_SCREEN_ON, receiverCallback);
-                application.android.registerBroadcastReceiver(android.content.Intent.ACTION_SCREEN_OFF, receiverCallback);
+                // const receiverCallback = (androidContext, intent: android.content.Intent) => {
+                //     console.log('receiverCallback', intent.getAction(), intent.getAction() === android.content.Intent.ACTION_SCREEN_ON);
+                //     // (Vue.prototype.$getAppComponent() as App).$emit('screen', intent.getAction() === android.content.Intent.ACTION_SCREEN_ON);
+                // };
+                // application.android.registerBroadcastReceiver(android.content.Intent.ACTION_SCREEN_ON, receiverCallback);
+                // application.android.registerBroadcastReceiver(android.content.Intent.ACTION_SCREEN_OFF, receiverCallback);
             }
         });
         application.on(application.exitEvent, () => {
             console.log('App Exited');
             imageModule.shutDown();
             networkService.stop();
-            if (gVars.isAndroid) {
-                application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_ON);
-                application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_OFF);
-            }
+            // if (gVars.isAndroid) {
+                // application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_ON);
+                // application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_OFF);
+            // }
         });
         if (gVars.isIOS) {
             bgService.start();

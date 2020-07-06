@@ -277,7 +277,7 @@ export class Geolib {
             distance = Math.sqrt(distance * distance + climb * climb);
         }
 
-        return Math.floor(Math.round(distance / accuracy) * accuracy);
+        return (Math.round(distance / accuracy) * accuracy);
 
         /*
             // note: to return initial/final bearings in addition to distance, use something like:
@@ -309,7 +309,7 @@ export class Geolib {
         const elon = e['longitude'].toRad();
         const distance = Math.round(Math.acos(Math.sin(elat) * Math.sin(slat) + Math.cos(elat) * Math.cos(slat) * Math.cos(slon - elon)) * this.earthRadius);
 
-        return Math.floor(Math.round(distance / accuracy) * accuracy);
+        return (Math.round(distance / accuracy) * accuracy);
     }
 
     /**

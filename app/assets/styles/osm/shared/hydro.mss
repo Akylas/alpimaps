@@ -4,8 +4,8 @@
 #waterway{
 	
 	[class=stream][zoom>=13],
+	[class=river][zoom>=12],
 	[class=riverbank][zoom>=13]{
-		line-cap: round;
 		line-color: @river;
 		line-width: linear([view::zoom], (8, 0.5), (15, 1), (16, 2));
 		// line-dasharray: 7, 5;
@@ -19,33 +19,28 @@
 
 	// [class=river],
 	[class=riverbank] {
-		line-cap: round;
 		line-color: @river;
 		line-width: 0;
 	}
-	[class=stream][zoom>=13],
-	[class=canal][zoom>=13]{
-		line-cap: round; 
+	[class=stream][zoom>=12],
+	[class=canal][zoom>=12]{
 		line-color: @river; 
 		line-width: linear([view::zoom], (13, 0.7), (14, 1), (15, 1.6));
 	}
 	[class=dam][zoom>=15],
 	[class=weir][zoom>=15]{
-		line-cap: round;
 		line-color: @bridge_casing;
 		line-width: 1;
 	}
 	[class=lock][zoom>=16]{
-		line-cap: round;
 		line-color: @river;
 		line-width: 1.5;
 	}
 	[class=ditch][zoom>=15],
 	[class=drain][zoom>=15]{
-		line-cap: round;
 		line-color: @river;
-		line-width: 1.8;
-		line-dasharray: 0.9, 0.9;
+		line-width: 1.4;
+		line-dasharray: 2, 2;
 	}
 	
 }
