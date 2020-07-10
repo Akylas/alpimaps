@@ -63,7 +63,7 @@ module.exports = (env, params = {}) => {
     if (env.adhoc) {
         env = Object.assign({}, env, {
             production: true,
-            sentry: true,
+            sentry: false,
             sourceMap: true,
             uglify: true
         });
@@ -71,8 +71,8 @@ module.exports = (env, params = {}) => {
     const {
         // The 'appPath' and 'appResourcesPath' values are fetched from
         // the nsconfig.json configuration file.
-        appPath = '../common/app',
-        appResourcesPath = 'App_Resources',
+        appPath = 'app',
+        appResourcesPath = 'app/App_Resources',
 
         // You can provide the following flags when running 'tns run android|ios'
         emulator, // --env.emulator

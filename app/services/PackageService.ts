@@ -1,5 +1,5 @@
 import { CartoOnlineVectorTileLayer } from 'nativescript-carto/layers/vector';
-import { CartoMapStyle, fromNativeMapPos, MapPos, nativeVectorToArray } from 'nativescript-carto/core';
+import { CartoMapStyle, fromNativeMapPos, MapPos, nativeVectorToArray, IntVector } from 'nativescript-carto/core';
 import { MergedMBVTTileDataSource, OrderedTileDataSource, TileDataSource } from 'nativescript-carto/datasources';
 import { HTTPTileDataSource } from 'nativescript-carto/datasources/http';
 import {
@@ -11,7 +11,9 @@ import {
     PackageManagerGeocodingService,
     PackageManagerReverseGeocodingService,
     ReverseGeocodingRequest,
-    ReverseGeocodingService
+    ReverseGeocodingService,
+    OSMOfflineReverseGeocodingService,
+    OSMOfflineGeocodingService
 } from 'nativescript-carto/geocoding/service';
 import { Feature, FeatureCollection } from 'nativescript-carto/geometry/feature';
 import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
@@ -124,7 +126,7 @@ export default class PackageService extends Observable {
     dataSource: TileDataSource<any, any>;
     vectorTileDecoder: MBVectorTileDecoder;
     downloadingPackages: { [k: string]: number } = {};
-    hillshadeLayer?: HillshadeRasterTileLayer
+    hillshadeLayer?: HillshadeRasterTileLayer;
     constructor() {
         super();
 
@@ -426,6 +428,12 @@ export default class PackageService extends Observable {
             if (this._offlineReverseSearchService) {
                 this._offlineReverseSearchService.language = value;
             }
+            if (this._localOSMOfflineGeocodingService) {
+                this._localOSMOfflineGeocodingService.language = value;
+            }
+            if (this._localOSMOfflineReverseGeocodingService) {
+                this._localOSMOfflineReverseGeocodingService.language = value;
+            }
         }
     }
     _offlineSearchService: PackageManagerGeocodingService;
@@ -448,61 +456,119 @@ export default class PackageService extends Observable {
         }
         return this._offlineReverseSearchService;
     }
-    convertGeoCodingResult(result: GeocodingResultVector) {
+    convertGeoCodingResults(result: GeocodingResultVector) {
         const items = [];
         // this.dataItems = new GeocodingResultArray(result);
-        let geoRes: GeocodingResult, features: FeatureCollection, feature: Feature;
-        for (let i = 0; i < result.size(); i++) {
-            geoRes = result.get(i);
-            const address = geoRes.getAddress();
-            const rank = geoRes.getRank();
-            features = geoRes.getFeatureCollection();
-            if (features.getFeatureCount() > 0) {
-                // geoRes = result.get(j);
-                feature = features.getFeature(0);
-                // console.log('convertGeoCodingResult', feature.properties, address, feature.geometry, rank);
-                items.push({
-                    rank,
-                    categories: nativeVectorToArray(address.getCategories()),
-                    properties: feature.properties,
-                    address,
-                    position: feature.geometry ? fromNativeMapPos(feature.geometry.getCenterPos()) : undefined
-                });
+        let geoRes: GeoResult, features: FeatureCollection, feature: Feature;
+        const size = result.size();
+        for (let i = 0; i < size; i++) {
+            if (geoRes) {
+                items.push(geoRes);
             }
-            // for (let j = 0; j < features.getFeatureCount(); j++) {
-
-            // }
         }
         return items;
+    }
+    convertGeoCodingResult(result: GeocodingResult) {
+        // this.dataItems = new GeocodingResultArray(result);
+        let features: FeatureCollection, feature: Feature;
+        const rank = result.getRank();
+        features = result.getFeatureCollection();
+        if (features.getFeatureCount() > 0) {
+            // geoRes = result.get(j);
+            feature = features.getFeature(0);
+            // console.log('convertGeoCodingResult', feature.properties, address, feature.geometry, rank);
+            return {
+                rank,
+                // categories: nativeVectorToArray(address.getCategories()),
+                properties: feature.properties,
+                address: result.getAddress(),
+                position: feature.geometry ? fromNativeMapPos(feature.geometry.getCenterPos()) : undefined
+            } as GeoResult;
+        }
+        // for (let j = 0; j < features.getFeatureCount(); j++) {
+
+        // }
     }
     searchInGeocodingService(
         service: ReverseGeocodingService<any, any> | GeocodingService<any, any>,
         options
-    ): Promise<GeoResult[]> {
+    ): Promise<GeocodingResultVector> {
         // this.log('searchInGeocodingService', service['language'], options);
         return new Promise((resolve, reject) => {
             service.calculateAddresses(options, (err, result) => {
+                // this.log('searchInGeocodingService done', err, result && result.size());
                 if (err) {
                     reject(err);
                     return;
                 }
-                resolve(this.convertGeoCodingResult(result));
+                resolve(result);
             });
         });
     }
-    searchInPackageGeocodingService(options: GeocodingRequest<LatLonKeys>): Promise<GeoResult[]> {
+
+    _localOSMOfflineGeocodingService: OSMOfflineGeocodingService;
+    get localOSMOfflineGeocodingService() {
+        if (!this._localOSMOfflineGeocodingService) {
+            if (Folder.exists(LOCAL_MBTILES)) {
+                const folder = Folder.fromPath(LOCAL_MBTILES);
+                const entities = folder.getEntitiesSync();
+                entities.some(s => {
+                    if (s.name.endsWith('.nutigeodb')) {
+                        this.log('localOSMOfflineGeocodingService', s.name);
+                        this._localOSMOfflineGeocodingService = new OSMOfflineGeocodingService({
+                            language: this.currentLanguage,
+                            path: s.path
+                        });
+                        this.log('localOSMOfflineGeocodingService done');
+                        return true;
+                    }
+                });
+            }
+        }
+        return this._localOSMOfflineGeocodingService;
+    }
+    _localOSMOfflineReverseGeocodingService: OSMOfflineReverseGeocodingService;
+    get localOSMOfflineReverseGeocodingService() {
+        if (!this._localOSMOfflineReverseGeocodingService) {
+            if (Folder.exists(LOCAL_MBTILES)) {
+                const folder = Folder.fromPath(LOCAL_MBTILES);
+                const entities = folder.getEntitiesSync();
+                entities.some(s => {
+                    if (s.name.endsWith('.nutigeodb')) {
+                        this.log('localOSMOfflineReverseGeocodingService', s.name);
+                        this._localOSMOfflineReverseGeocodingService = new OSMOfflineReverseGeocodingService({
+                            language: this.currentLanguage,
+                            path: s.path
+                        });
+                        this.log('localOSMOfflineReverseGeocodingService done');
+                        return true;
+                    }
+                });
+            }
+        }
+        return this._localOSMOfflineReverseGeocodingService;
+    }
+    searchInPackageGeocodingService(options: GeocodingRequest<LatLonKeys>): Promise<GeocodingResultVector> {
         if (!this.started) {
-            return Promise.resolve([]);
+            return Promise.resolve(null);
         }
         return this.searchInGeocodingService(this.offlineSearchService, options);
     }
-    searchInPackageReverseGeocodingService(options: ReverseGeocodingRequest<LatLonKeys>): Promise<GeoResult[]> {
+    searchInPackageReverseGeocodingService(options: ReverseGeocodingRequest<LatLonKeys>): Promise<GeocodingResultVector> {
         if (!this.started) {
-            return Promise.resolve([]);
+            return Promise.resolve(null);
         }
         return this.searchInGeocodingService(this.offlineReverseSearchService, options);
     }
-    prepareGeoCodingResult(result: GeoResult) {
+    searchInLocalReverseGeocodingService(options: ReverseGeocodingRequest<LatLonKeys>): Promise<GeocodingResultVector> {
+        const service = this.localOSMOfflineReverseGeocodingService;
+        if (!service) {
+            return Promise.resolve(null);
+        }
+        return this.searchInGeocodingService(service, options);
+    }
+    prepareGeoCodingResult(geoRes: GeoResult) {
+        // const geoRes = this.convertGeoCodingResult(result);
         const address: any = {};
 
         [
@@ -516,26 +582,56 @@ export default class PackageService extends Observable {
             ['county', 'getCounty']
         ].forEach(d => {
             if (!address[d[0]]) {
-                const value = result.address[d[1]]();
+                // console.log('test', d[1], geoRes, geoRes.address[d[1]]);
+                const value = geoRes.address[d[1]]();
                 if (value.length > 0) {
                     address[d[0]] = value;
                 }
             }
         });
 
-        const cat = result.address.getCategories();
+        const cat = geoRes.address.getCategories();
         if (cat && cat.size() > 0) {
-            result['categories'] = nativeVectorToArray(cat);
+            geoRes['categories'] = nativeVectorToArray(cat);
         }
-        result.provider = 'carto';
-        result.properties.name = result.properties.name || result.address.getName();
-        result.address = address;
-        if (result.properties.name.length === 0) {
-            delete result.properties.name;
+        geoRes.provider = 'carto';
+        geoRes.properties.name = geoRes.properties.name || geoRes.address.getName();
+        geoRes.address = address;
+        if (geoRes.properties.name.length === 0) {
+            delete geoRes.properties.name;
         }
-        return result as Item;
+        return geoRes as Item;
     }
-
+    async getElevation(pos: MapPos<LatLonKeys>): Promise<number> {
+        if (this.hillshadeLayer) {
+            return new Promise((resolve, reject)=> {
+                this.hillshadeLayer.getElevationAsync(pos, (err, result) => {
+                    // this.log('searchInGeocodingService done', err, result && result.size());
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    resolve(result);
+                });
+            })
+        }
+        return null;
+    }
+    async getElevations(pos: MapPos<LatLonKeys>[]): Promise<IntVector> {
+        if (this.hillshadeLayer) {
+            return new Promise((resolve, reject)=> {
+                this.hillshadeLayer.getElevationsAsync(pos, (err, result) => {
+                    // this.log('searchInGeocodingService done', err, result && result.size());
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    resolve(result);
+                });
+            })
+        }
+        return null;
+    }
     // _elevationDb: SQLiteDatabase;
     // hasElevationDB = true;
     // getElevationDB() {
@@ -792,9 +888,10 @@ export default class PackageService extends Observable {
 
     async getElevationProfile(_points: MapPos<LatLonKeys>[]) {
         if (this.hillshadeLayer) {
+            const elevations = await this.getElevations(_points);
             // console.log('getElevations', JSON.stringify(_points.map(p=>[p.lat, p.lon])));
-            const elevations = this.hillshadeLayer.getElevations(_points);
-            _points.forEach((p, index)=>p.altitude = elevations.get(index))
+            // const elevati .ons = this.hillshadeLayer.getElevations(_points);
+            _points.forEach((p, index) => (p.altitude = elevations.get(index)));
             // transform the result into a profile we can use
             return this.computeProfileFromHeights(_points);
         }

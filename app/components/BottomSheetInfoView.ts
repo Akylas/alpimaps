@@ -103,4 +103,9 @@ export default class BottomSheetInfoView extends BaseVueComponent {
     //         this.updateRouteItemWithPosition(this.currentLocation);
     //     }
     // }
+
+    showRawData() {
+        const { zoomBounds, route, styleOptions, vectorElement, ...others } = this.item;
+        this.$alert(JSON.stringify(others, null, 2));
+    }
 }

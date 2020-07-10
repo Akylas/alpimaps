@@ -151,10 +151,6 @@ export default class App extends BgServiceComponent {
             // this.log('registerLicense done', gVars.CARTO_TOKEN, result, Date.now() - startTime, 'ms');
             // this.$getAppComponent().setCartoLicenseRegistered(result);
 
-            // setShowDebug(DEV_LOG);
-            // setShowInfo(DEV_LOG);
-            // setShowWarn(DEV_LOG);
-            // setShowError(true);
         }
         if (isIOS && app.ios.window.safeAreaInsets) {
             const bottomSafeArea: number = app.ios.window.safeAreaInsets.bottom;

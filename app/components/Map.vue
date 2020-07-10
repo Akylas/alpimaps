@@ -2,8 +2,8 @@
     <AlpiMapsPage actionBarHidden>
         <CartoMap ref="mapView" zoom="16" @mapReady="onMapReady" @mapMoved="onMapMove" @mapStable="onMapStable" @mapClicked="onMapClicked"/>
 
-        <Search ref="searchView" verticalAlignment="top" :text="searchText" :projection="mapProjection" :opacity="scrollingWidgetsOpacity" :defaultElevation="topSheetTranslation === 0 ? 1 : 0" />
-        <LocationInfoPanel horizontalAlignment="left" verticalAlignment="top" marginLeeft="20" marginTop="90" ref="locationInfo" :opacity="scrollingWidgetsOpacity"/>
+        <Search ref="searchView" verticalAlignment="top" :text="searchText" :projection="mapProjection" :opacity="scrollingWidgetsOpacity" :defaultElevation="topSheetTranslation === 0 ? 1 : 0" :isUserInteractionEnabled="scrollingWidgetsOpacity > 0.3"/>
+        <LocationInfoPanel horizontalAlignment="left" verticalAlignment="top" marginLeeft="20" marginTop="90" ref="locationInfo" :opacity="scrollingWidgetsOpacity"  :isUserInteractionEnabled="scrollingWidgetsOpacity > 0.3"/>
         <TopSheetHolder ref="topSheetHolder" @shouldClose="cancelDirections" @scroll="onTopSheetScroll" />
 
         <StackLayout orientation="vertical" verticalAlignment="middle" horizontalAlignment="right" isUserInteractionEnabled="false">
@@ -12,7 +12,7 @@
         </StackLayout>
 
         <BottomSheetHolder id="itemBSHolder" ref="bottomSheetHolder" :marginBottom="navigationBarHeight" isPassThroughParentEnabled @close="unselectItem" @scroll="onBottomSheetScroll">
-            <BottomSheet ref="bottomSheet" slot="bottomSheet" :item="selectedItem" />
+            <BottomSheet ref="bottomSheet" slot="bottomSheet" :item="selectedItem"  :updating="itemLoading" />
         </BottomSheetHolder>
 
         <!-- <transition name="scale"> -->
@@ -29,8 +29,8 @@
         />
         <!-- </transition> -->
 
-        <MapScrollingWidgets ref="mapScrollingWidgets" :paddingTop="mapWidgetsTopPadding" :translateY="-bottomSheetTranslation" :opacity="scrollingWidgetsOpacity" />
-        <Fab position="left" iconClass="mdi" icon="mdi-plus" iconOn="mdi-close" :translateY="-bottomSheetTranslation" :opacity="scrollingWidgetsOpacity" :backgroundColor="accentColor" color="white">
+        <MapScrollingWidgets ref="mapScrollingWidgets" :paddingTop="mapWidgetsTopPadding" :translateY="-bottomSheetTranslation" :opacity="scrollingWidgetsOpacity"  :userInteractionEnabled="scrollingWidgetsOpacity > 0.3"/>
+        <Fab position="left" iconClass="mdi" icon="mdi-plus" iconOn="mdi-close" :translateY="-bottomSheetTranslation" :opacity="scrollingWidgetsOpacity" :backgroundColor="accentColor" color="white"  :isUserInteractionEnabled="scrollingWidgetsOpacity > 0.3">
             <FabItem v-if="packageServiceEnabled" :title="$t('offline_packages') | titlecase" iconClass="mdi" icon="mdi-earth" @tap="downloadPackages" />
             <FabItem :title="$t('select_style') | titlecase" iconClass="mdi" icon="mdi-layers" @tap="selectStyle" />
             <FabItem :title="$t('select_language') | titlecase" iconClass="mdi" icon="mdi-translate" @tap="selectLanguage" />

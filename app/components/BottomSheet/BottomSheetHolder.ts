@@ -76,6 +76,7 @@ export default class BottomSheetHolder extends BaseVueComponent {
 
         //
         this.isAtTop = this.peekerSteps.some(s => this.currentViewHeight + s === this.viewHeight + this.bottomDecale);
+        // console.log('isAtTop',this.viewHeight + this.bottomDecale, this.peekerSteps , this.currentViewHeight);
         const eventData = {
             top: value,
             percentage: delta / this.viewHeight,
@@ -223,7 +224,16 @@ export default class BottomSheetHolder extends BaseVueComponent {
         if (comp.listView) {
             comp.scrollEnabled = comp.listViewVisible && (!comp.listViewAtTop || (this.isAtTop && y < 0));
         }
-        // console.log('onGestureTouch', comp.listViewVisible, comp.listViewAtTop,this.isAtTop, comp.scrollEnabled, y,posY, comp.listViewLocationY);
+        // console.log(
+        //     'onGestureTouch',
+        //     comp.listViewVisible,
+        //     comp.listViewAtTop,
+        //     this.isAtTop,
+        //     comp.scrollEnabled,
+        //     y,
+        //     posY,
+        //     comp.listViewLocationY
+        // );
         if (comp.listViewVisible && comp.scrollEnabled && posY >= comp.listViewLocationY) {
             // if (this.isAnimating || !this._isPanning || !this.panEnabled) {
             this.prevDeltaY = deltaY;
@@ -289,7 +299,7 @@ export default class BottomSheetHolder extends BaseVueComponent {
         // console.log('onPeekerStepsChanged', this.peekerSteps, this.currentStep);
         if (this.currentStep >= this.peekerSteps.length) {
             this.scrollSheetToPosition(this.peekerSteps[this.peekerSteps.length - 1]);
-        } else if(this.currentStep > 0){
+        } else if (this.currentStep > 0) {
             this.scrollSheetToPosition(this.peekerSteps[this.currentStep]);
         }
     }

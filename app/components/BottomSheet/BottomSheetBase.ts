@@ -129,15 +129,14 @@ export default class BottomSheetBase extends BaseVueComponent {
 
     
     onListViewScroll(args) {
-        this.log('onListViewScroll', args);
         if (!this.isScrollEnabled) {
             return;
         }
         // we use this to know with the listView is at top
         // important for the dragging behavior
-        if (!this.listViewAtTop && args.scrollOffset <= 2) {
+        if (!this.listViewAtTop && args.scrollOffset <= 10) {
             this.listViewAtTop = true;
-        } else if (this.listViewAtTop && args.scrollOffset > 2) {
+        } else if (this.listViewAtTop && args.scrollOffset > 10) {
             this.listViewAtTop = false;
         }
     }
