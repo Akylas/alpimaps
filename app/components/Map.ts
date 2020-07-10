@@ -181,6 +181,7 @@ export default class Map extends BgServicePageComponent {
     selectedPosMarker: Marker<LatLonKeys>;
     selectedRouteLine: Line<LatLonKeys>;
     mSelectedItem: Item = null;
+    itemLoading = false;
     mapProjection: Projection = null;
     currentLanguage = appSettings.getString('language', 'en');
     addedLayers: string[] = [];
@@ -220,7 +221,7 @@ export default class Map extends BgServicePageComponent {
     }
 
     get bottomSheet() {
-        return this.$refs['bottomSheet'] as BottomSheet || null;
+        return (this.$refs['bottomSheet'] as BottomSheet) || null;
     }
     get topSheetHolder() {
         return this.$refs['topSheetHolder'] as TopSheetHolder;
@@ -293,7 +294,7 @@ export default class Map extends BgServicePageComponent {
                             query: actualQuery.replace(/[,]/g, ' ')
                         })
                         .then(result => {
-                            if (result.length > 0) {
+                            if (result.size() > 0) {
                                 // console.log('found it!', this.$packageService.prepareGeoCodingResult(result[0]));
                                 this.selectItem({
                                     item: this.$packageService.prepareGeoCodingResult(result[0]),
@@ -638,6 +639,16 @@ export default class Map extends BgServicePageComponent {
             if (setSelected) {
                 this.selectedItem = item;
             }
+
+            if (!item.route && !item.properties.hasOwnProperty('ele') && this.$packageService.hillshadeLayer) {
+                this.$packageService.getElevation(item.position).then(result => {
+                    if (this.selectedItem.position === item.position) {
+                        this.selectedItem.properties['ele'] = result;
+                        this.selectedItem = { ...this.selectedItem };
+                    }
+                });
+                // console.log('get elevation done ', item);
+            }
             // console.log('selectedItem', item);
             // const vectorTileDecoder = this.getVectorTileDecoder();
             // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
@@ -686,25 +697,16 @@ export default class Map extends BgServicePageComponent {
         // this.log('onMapClicked', clickType, position);
         const handledByModules = this.runOnModules('onMapClicked', e);
         if (!handledByModules && clickType === ClickType.SINGLE) {
-            this.selectItem({ item: { position }, isFeatureInteresting: false });
+            this.selectItem({ item: { position, properties: {} }, isFeatureInteresting: !this.selectedItem });
             this.runOnModules('onMapClicked', e);
         }
         this.unFocusSearch();
     }
     onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureLayerName, featureData, featurePosition } = data;
-        // const featureDataWithoutName = JSON.parse(JSON.stringify(featureData));
-        // Object.keys(featureDataWithoutName).forEach(k => {
-        //     if (k.startsWith('name:') || k.startsWith('name_')) {
-        //         delete featureDataWithoutName[k];
-        //     }
-        // });
         this.log('onVectorTileClicked', featureLayerName, featureData.class, featureData.subclass, featureData);
-        // return false;
         const handledByModules = this.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
-            
-            // this.log('onVectorTileClicked test', featureLayerName, featureData);
             if (
                 featureLayerName === 'transportation' ||
                 featureLayerName === 'route' ||
@@ -720,22 +722,6 @@ export default class Map extends BgServicePageComponent {
                 return false;
             }
             featureData.layer = featureLayerName;
-            
-            // const distanceFromClick = distance(map.mapToScreen(position), map.mapToScreen(featurePosition));
-
-            // console.log(
-            //     `onVectorTileClicked distanceFromClick:${distanceFromClick}, elevation:${featureData.ele}, name:${featureData.name} layer: ${featureLayerName} class: ${featureData.class}`,
-            //     actionBarHeight,
-            //     this.bShow3DBuildings
-            // );
-
-            // const languages = [];
-            // Object.keys(featureData).forEach(k => {
-            //     if (/name:/.test(k)) {
-            //         languages.push(k.replace('name:', ''));
-            //     }
-            // });
-            // console.log(JSON.stringify(languages));
 
             const isFeatureInteresting =
                 !!featureData.name ||
@@ -743,49 +729,47 @@ export default class Map extends BgServicePageComponent {
                 featureLayerName === 'mountain_peak' ||
                 featureLayerName === 'housenumber';
             if (isFeatureInteresting) {
-                if (!featureData.hasOwnProperty('ele') && this.$packageService.hillshadeLayer) {
-                    console.log('get elevation ', position)
-                    featureData['ele'] = this.$packageService.hillshadeLayer.getElevation(position) as any;
-                }
-            // this.log('onVectorTileClicked', featureLayerName, featureData);
-            let result: Item = {
+                let result: Item = {
                     properties: featureData,
                     position: isFeatureInteresting ? featurePosition : position
                 };
-                // if (featureLayerName === 'poi' || featureLayerName === 'housenumber') {
-                const radius = 10;
-                this.$packageService
-                    .searchInPackageReverseGeocodingService({
-                        projection: this.mapProjection,
-                        location: featurePosition,
-                        searchRadius: radius
-                    })
-                    .then(res => {
-                        // let foundBetterRes = false;
-                        res &&
-                            res.some(r => {
-                                // console.log('found item search item', r, computeDistanceBetween(result.position, r.position));
-                                if (computeDistanceBetween(result.position, r.position) <= radius && r.rank > 0.9) {
-                                    result = this.$packageService.prepareGeoCodingResult({
-                                        address: r.address as any,
-                                        ...result
-                                    });
-                                    console.log('search item', r.address, result);
-                                    return true;
+                this.selectItem({ item: result, isFeatureInteresting });
+
+                const service = this.$packageService.localOSMOfflineReverseGeocodingService;
+                if (service) {
+                    this.itemLoading = true;
+                    const radius = 100;
+                    this.$packageService
+                        .searchInGeocodingService(service, {
+                            projection: this.mapProjection,
+                            location: featurePosition,
+                            searchRadius: radius
+                        })
+                        .then(res => {
+                            if (res) {
+                                for (let index = 0; index < res.size(); index++) {
+                                    const r = this.$packageService.convertGeoCodingResult(res.get(index));
+                                    if (computeDistanceBetween(result.position, r.position) <= radius && r.rank > 0.9) {
+                                        result;
+                                        if (this.selectedItem.position === result.position) {
+                                            this.selectedItem = this.$packageService.prepareGeoCodingResult({
+                                                address: r.address as any,
+                                                ...this.selectedItem
+                                            });
+                                        }
+                                        break;
+                                    }
                                 }
-                            });
-                        // return foundBetterRes;
-                    })
-                    .then(() => {
-                        this.selectItem({ item: result, isFeatureInteresting });
-                    })
-                    .catch(err => {
-                        console.error(err);
-                    });
-                // }
-                // try {
-                //     this.selectItem(result, isFeatureInteresting);
-                // } catch (err) {}
+                            }
+                        })
+                        // .then(() => {
+                        //     console.log('test about to select item', result);
+                        //     this.selectItem({ item: result, isFeatureInteresting });
+                        // })
+                        .catch(err => {
+                            console.error(err);
+                        });
+                }
             }
             this.unFocusSearch();
 

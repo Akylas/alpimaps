@@ -14,7 +14,7 @@ dependencies:
   moment: 2.27.0
   moment-duration-format: 2.3.2
   nativescript-akylas-fonticon: 2.0.7
-  nativescript-akylas-preferences: 1.1.10
+  nativescript-akylas-preferences: 1.1.11
   nativescript-akylas-sentry: 0.0.8
   nativescript-akylas-share-file: 1.1.4
   nativescript-akylas-sqlite: 'link:../../../../usr/local/pnpm-global/node_modules/nativescript-akylas-sqlite'
@@ -23,7 +23,7 @@ dependencies:
   nativescript-canvaslabel: 1.0.9
   nativescript-carto: 'link:../../../../usr/local/pnpm-global/node_modules/nativescript-carto'
   nativescript-chart: 'link:../../../../usr/local/pnpm-global/node_modules/nativescript-chart'
-  nativescript-collectionview: 2.0.31
+  nativescript-collectionview: 2.0.35
   nativescript-document-picker: 1.0.7
   nativescript-email: 1.6.0
   nativescript-extendedinfo: 1.0.11
@@ -33,15 +33,15 @@ dependencies:
   nativescript-image: 3.0.11
   nativescript-insomnia: 1.2.3
   nativescript-l: 4.2.3
-  nativescript-material-activityindicator: 3.2.9
-  nativescript-material-bottomsheet: 3.2.9
-  nativescript-material-button: 3.2.9
-  nativescript-material-cardview: 3.2.9
-  nativescript-material-dialogs: 3.2.9
-  nativescript-material-progress: 3.2.9
-  nativescript-material-ripple: 3.2.9
-  nativescript-material-slider: 3.2.9
-  nativescript-material-snackbar: 3.2.9
+  nativescript-material-activityindicator: 3.2.10
+  nativescript-material-bottomsheet: 3.2.10
+  nativescript-material-button: 3.2.10
+  nativescript-material-cardview: 3.2.10
+  nativescript-material-dialogs: 3.2.10
+  nativescript-material-progress: 3.2.10
+  nativescript-material-ripple: 3.2.10
+  nativescript-material-slider: 3.2.10
+  nativescript-material-snackbar: 3.2.10
   nativescript-observable: 2.0.7
   nativescript-perms: 2.0.11
   nativescript-photoviewer: 2.1.5
@@ -53,7 +53,7 @@ dependencies:
   nativescript-urlhandler: 1.3.0
   nativescript-vue: 'link:../../../../usr/local/pnpm-global/node_modules/nativescript-vue'
   nativescript-vue-fab: 1.0.23_vue@2.6.11
-  nativescript-webview-ext: 'link:../nativescript-webview-ext/plugin'
+  nativescript-webview-plus: 1.0.13
   simplify-js: github.com/farfromrefug/simplify-js/0b1893b0ac1b0277e3d1b0d050bce2310dcd1d63
   tinycolor2: 1.4.1
   vue-string-filter: 2.1.0
@@ -76,6 +76,7 @@ devDependencies:
   scss-symbols-parser: 2.0.1
   semver: 7.3.2
   string-replace-loader: 2.3.0_webpack@4.43.0
+  svg-slimming: 1.5.3
   tns-platform-declarations: 6.5.8
   tslib: 2.0.0
   typescript: 3.9.6
@@ -747,6 +748,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==
+  /abs-svg-path/0.1.1:
+    dev: true
+    resolution:
+      integrity: sha1-32Acjo0roQ1KdtYl4japo5wnI78=
   /accepts/1.3.7:
     dependencies:
       mime-types: 2.1.27
@@ -797,6 +802,10 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-apwXVmYVpQ34m/i71vrApRrRKCWQnZZF1+npOD0WV5xZFfwWOmKGQ2RWlfdy9vWITsenisM8M0Qeq8agcFHNiQ==
+  /adaptive-bezier-curve/1.0.3:
+    dev: true
+    resolution:
+      integrity: sha1-R3V3q+h9coDUbKQWSfbCJkb+gic=
   /adjust-sourcemap-loader/2.0.0:
     dependencies:
       assert: 1.4.1
@@ -4922,12 +4931,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-SM+QgJGKG2kqFjdNS8Rknq6Z7Ac6ktIPNMim06M1J2BCoOk/cmzDUw11AqVVrmty6+ztgi8q2q9YXIeB1JAC7Q==
-  /nativescript-akylas-preferences/1.1.10:
+  /nativescript-akylas-preferences/1.1.11:
     dependencies:
       nativescript-observable: 2.0.7
     dev: false
     resolution:
-      integrity: sha512-u83tM5RSx0foimluVIfcP+LNGGcDpL9vcQPsVcaDiCi5wEBb00xrvvZwNlIMbdYcGo38CPhRpeUsa9nIlTJiXA==
+      integrity: sha512-wa9CJeJYogXUG8tx+M2E/M9k5+sAmowtsob8Wq2CuWsniELJXhhay59PH1XjLFvKOP67ess9TysvByp4njccSw==
   /nativescript-akylas-sentry/0.0.8:
     dependencies:
       '@sentry/browser': 5.15.5
@@ -4960,10 +4969,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-aqk64x/lktI3bY15aMdJkZyTiNspZM/5Gxl8tuPjh+rluPi9XtUHPycek9GGa+u0W6Xn1VnZ9DzV5pwCtj4FUQ==
-  /nativescript-collectionview/2.0.31:
+  /nativescript-collectionview/2.0.35:
     dev: false
     resolution:
-      integrity: sha512-Hl/lOM0clq8u/77YH+jgwuSMcRjGA8yWN0dCNMqsq3L8E9aW+dex0QPl7TIafVltL65+/+fK+BiUzd+hO4513w==
+      integrity: sha512-pB4MxyGrHMQaStkFuPmmyMaP79iehkUXgGmNN36AEgetlF+ynxIpEFq+7gLQ3kbE7KnrcmGakulh9DYPKJxEAQ==
   /nativescript-dev-webpack/1.5.1_typescript@3.9.6:
     dependencies:
       '@angular-devkit/core': 8.2.0
@@ -5067,81 +5076,81 @@ packages:
     requiresBuild: true
     resolution:
       integrity: sha512-zC/d3WILF+obTJ88hameoOQK4Pg/+GoXjTXJTHUIjevt2L4k8q3p09oRmOezqzdlKGMWLtfl1xr9oyzRcf//eQ==
-  /nativescript-material-activityindicator/3.2.9:
+  /nativescript-material-activityindicator/3.2.10:
     dependencies:
-      nativescript-material-core: 3.2.9
+      nativescript-material-core: 3.2.10
     dev: false
     resolution:
-      integrity: sha512-JWJ/WlhEawa92nvpgsRmKkQKC/58wUS6HbmOziBf00KgrVAMPiRH4a65c3EUYXd/hsL0nKi7rPvXHRwCd3f+Gg==
-  /nativescript-material-bottomsheet/3.2.9:
+      integrity: sha512-18CIhMN4uh27NLqEI24AW9WywusqIhA7tDSOhPOkEzBnqH0JKQ5glHycO5AnfIGvexZAQch837AtSlhEt19YRw==
+  /nativescript-material-bottomsheet/3.2.10:
     dependencies:
-      nativescript-material-core: 3.2.9
+      nativescript-material-core: 3.2.10
     dev: false
     resolution:
-      integrity: sha512-3j0nIgzuoaik7o/KtoQoLz3VNfJ0CKst7rZTSOierv9ZByUdAvm0BBkgS4ZKhzXKFi1XW9SIUMGDWxjV85n/KQ==
+      integrity: sha512-6Qr8BumUMKR0fFsmg+jxSwDsUSYOQ5MqI0SCcdxwpfVP7v3w2S1MHeYWXa1/irdw6H1i+nA+aWayWhQhzzEt4A==
+  /nativescript-material-button/3.2.10:
+    dependencies:
+      nativescript-material-core: 3.2.10
+    dev: false
+    resolution:
+      integrity: sha512-A3Bh9LXnylMNBxuO1xHvvbUgepAyH6xwuGbJrcJa/a2tB90KSSu2QsyAmlI9QnFKCx+DusqsGiovfjUQdbCbqg==
   /nativescript-material-button/3.2.8:
     dependencies:
       nativescript-material-core: 3.2.8
     dev: false
     resolution:
       integrity: sha512-5X1zqvWjCCK2W6geooQXk7m56L/QqwVpjubtMoql0BZsF12lyiF+FAB1yOA6ZQ3YBmOpEe1Irtj9wMazdphaDQ==
-  /nativescript-material-button/3.2.9:
+  /nativescript-material-cardview/3.2.10:
     dependencies:
-      nativescript-material-core: 3.2.9
+      nativescript-material-core: 3.2.10
     dev: false
     resolution:
-      integrity: sha512-mKEKITc8oih2xni0F16FJWlPhJCaudfJaGsUZWadq93WTno27KJbr68cQaYH8sJcRUj1VGvcao0qgaYsrKRuOQ==
-  /nativescript-material-cardview/3.2.9:
-    dependencies:
-      nativescript-material-core: 3.2.9
+      integrity: sha512-sQKrAu1s2hy9FtH2f9n4JYOzdpWyBf4qDizikmMCebdFDjEyfSijWiC9rLs0OEdGoNrUd9MVMYylKo/eUxRhOA==
+  /nativescript-material-core/3.2.10:
     dev: false
     resolution:
-      integrity: sha512-xCnFbl3bl7ojrzKVe7sXllnjFQjSKlfm8tMPW2O8860hG+tAxVacS1nEe5fD5I9BT4I63qPScfgpBvzWpP5xkg==
+      integrity: sha512-/a8apyScxAHNwvxsj5xlOhyNzh52hlilS3x79LQNdJKlRwqqwNiuPOGsGd0c/B5oyk6wL5wxqODaXUkR1pPavw==
   /nativescript-material-core/3.2.8:
     dev: false
     resolution:
       integrity: sha512-QA+TuWCr1k5ZtVw1gtJMHibqS9pnbL8PIYbw9Nhyj85MkSXpQVbSiwGokSo5VFLf61YsUZseB0r6Om3FwEPuAQ==
-  /nativescript-material-core/3.2.9:
-    dev: false
-    resolution:
-      integrity: sha512-XFRB6sJErDwPr1zIg2p+rlJQApXCqFATMdFUl26TDVFf4Kf4Zr4d0FoDDIG/AfnK7bFkYRSlsDy10iFMusgzPg==
-  /nativescript-material-dialogs/3.2.9:
+  /nativescript-material-dialogs/3.2.10:
     dependencies:
-      nativescript-material-core: 3.2.9
-      nativescript-material-textfield: 3.2.9
+      nativescript-material-core: 3.2.10
+      nativescript-material-textfield: 3.2.10
     dev: false
     resolution:
-      integrity: sha512-PA+n6hr1NRT13MH0W34c5L9lbdI0Cl+E427vf7sttGOJ4XX7C9qzTbiu3vt2TKMATa5fBxNag9RmcSHyurGb5Q==
-  /nativescript-material-progress/3.2.9:
+      integrity: sha512-EqrUKaOBQtPDn4Nt63rPs3BML0sJmI0u3Sm66sJIpAPDmzxFV5faXBZnSte0Mdfyq+n4Vu8gdl3ngnpJAO8L6Q==
+  /nativescript-material-progress/3.2.10:
     dependencies:
-      nativescript-material-core: 3.2.9
+      nativescript-material-core: 3.2.10
     dev: false
     resolution:
-      integrity: sha512-KB/SXb6JfjIKY7e0+HvV5MtbyPA9tO81mOJvjXm12nU/oV+x0abS4OauxHbrzt7zs+U65OQWgd3khgToGOX6xQ==
-  /nativescript-material-ripple/3.2.9:
+      integrity: sha512-wV8goXr5gKL8XJ/cwJ0fj8vlDXp5so/i9uREmi5mm3wlrPXVObpRdqRbt/z/TeaPf1L4dcwFfKudRO/nNHRNFA==
+  /nativescript-material-ripple/3.2.10:
     dependencies:
-      nativescript-material-core: 3.2.9
+      nativescript-material-core: 3.2.10
     dev: false
     resolution:
-      integrity: sha512-AoOB9+66rgNzgUFLiNazosWIYdJoEd2mMaVVGJqoTau3Rb1DdegdgYcKSKRYlvoStAOtsflWoe4VUeRZNqWXuA==
-  /nativescript-material-slider/3.2.9:
+      integrity: sha512-s85oHKacF2MehTTq9eaJufb3/R4r+HG+sl9clTdtJXVNzNor6Jm5sUVAr4fUddZgt73dpNs7LeJSlRPXadF/FA==
+  /nativescript-material-slider/3.2.10:
     dependencies:
-      nativescript-material-core: 3.2.9
+      nativescript-material-core: 3.2.10
     dev: false
     resolution:
-      integrity: sha512-MA0q7aw9lhGIvkhft2j6DRIJFXqLYQzpmWdIDOL74dvD+oWLedUKdOivQAqf5DYBWjaSALyvb73nTHShOqX52g==
-  /nativescript-material-snackbar/3.2.9:
+      integrity: sha512-2uAGywR16mea1oKzwsbRUzH2igARaLYSEB3b8WWzeLRj2Qc+J55UoQLSptLcehUI6iMRTYRSvnEsEuYhvMMh7g==
+  /nativescript-material-snackbar/3.2.10:
     dependencies:
-      nativescript-material-core: 3.2.9
+      nativescript-material-core: 3.2.10
     dev: false
     resolution:
-      integrity: sha512-hlPCQss72NtEvLwcenGMd9DwssEwHhAKivNg3dcyMS/EejvRBDQmufsKBInptRnLJwyBQ+OqoO2ntn2X+aQx9g==
-  /nativescript-material-textfield/3.2.9:
+      integrity: sha512-lcp5+l3oqTmLs5YDUu/TNG1feBX5jC3h0SNtWc5okItHeGJPVo34a5BwS45v55Iiyn+zoWvKhWMEv70OWY7EUg==
+  /nativescript-material-textfield/3.2.10:
     dependencies:
-      nativescript-material-core: 3.2.9
+      nativescript-material-core: 3.2.10
     dev: false
     resolution:
-      integrity: sha512-JqbVdSRWg+ciUMr3NZhTAMVcwfJJ4Bb2b5JuhDUHSE5u+dI+qYXeqZyYVojKf+uqEeg9+rG4hz/dEMmBnO4o3Q==
+      integrity: sha512-NC7IvCSZtaL/1oJn8e96Ba7spadSwZgsVh8tF2C5yl1mar+eSdrSXJpEUpfpdRoOLCmYfnpcyu3gwn4kvwtlNQ==
   /nativescript-observable/2.0.7:
     dev: false
     resolution:
@@ -5204,6 +5213,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-apzMGTOSc/M2dAEOTQFXm2aCmYtaFA18mIER561GBfLgI+Ki1C1E4FnxFEqsN6iZjmQUxihBbKMwiIPtfj6uIw==
+  /nativescript-webview-plus/1.0.13:
+    dev: false
+    resolution:
+      integrity: sha512-FrBiUJZ/epSui2cRxHBxEDluuCzQxDReKiFL3lMps5x0s7eLgMLMqRJQQwq04m54rNx2J+IiShieG0asR5H8ig==
   /nativescript-worker-loader/0.11.0:
     dependencies:
       loader-utils: 1.4.0
@@ -5340,6 +5353,10 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==
+  /normalize-svg-path/0.1.0:
+    dev: true
+    resolution:
+      integrity: sha1-RWNg5g7Odfvve11+FgSA5//Rb+U=
   /npm-run-path/2.0.2:
     dependencies:
       path-key: 2.0.1
@@ -6004,6 +6021,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-EEmxoxYCe3LHzAUhRIRxdCKERpeRNmlLj6KLUSORqnK6dWl/K5ShmDGZqM2lRZQeqJgF+wyqk0s1M7SWUveNOQ==
+  /ramda/0.25.0:
+    dev: true
+    resolution:
+      integrity: sha512-GXpfrYVPwx3K7RQ6aYT8KPS8XViSXUVJT1ONhoKPE9VAleW42YE+U+8VEyGWt41EnEQW7gwecYJriTI0pKoecQ==
   /randombytes/2.1.0:
     dependencies:
       safe-buffer: 5.2.1
@@ -7116,6 +7137,25 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-oRSIpR8pxT1Wr2FquTNnGet79b3BWljqOuoW/h4oBhxJ/HUbX5nX6JSruTkvXDCFMwDPvsaTTbvMLKZWSy0R5g==
+  /svg-path-contours/2.0.0:
+    dependencies:
+      abs-svg-path: 0.1.1
+      adaptive-bezier-curve: 1.0.3
+      normalize-svg-path: 0.1.0
+      vec2-copy: 1.0.0
+    dev: true
+    resolution:
+      integrity: sha1-x2oSlCnbBette2Hk0cWNEUqJOKI=
+  /svg-slimming/1.5.3:
+    dependencies:
+      css: 2.2.4
+      he: 1.2.0
+      ramda: 0.25.0
+      svg-path-contours: 2.0.0
+      triangulate-contours: 1.0.2
+    dev: true
+    resolution:
+      integrity: sha512-noqnNSVuBFizrV18SuiV4B8mdKniiw+yFzrodMO459xkGsXZpYBBxLuYXC1zThGi6/98umUz1qQtlRHlfNMxNw==
   /table/5.4.6:
     dependencies:
       ajv: 6.12.2
@@ -7206,6 +7246,10 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-Lfb0RiZcjRDXCC3OSHJpEkxJ9Qeqs6mp2v4jf2MHfy8vGERmVDuvjXdd/EnP5Deme5F2yBRBymKmKHCBg2echw==
+  /tess2/1.0.0:
+    dev: true
+    resolution:
+      integrity: sha1-Li6yGCIpQGG4PUbLrv3QnYbd9ZM=
   /text-table/0.2.0:
     dev: true
     resolution:
@@ -7314,6 +7358,13 @@ packages:
       node: '>=0.8'
     resolution:
       integrity: sha512-nlLsUzgm1kfLXSXfRZMc1KLAugd4hqJHDTvc2hDIwS3mZAfMEuMbc03SujMF+GEcpaX/qboeycw6iO8JwVv2+g==
+  /triangulate-contours/1.0.2:
+    dependencies:
+      tess2: 1.0.0
+      xtend: 4.0.2
+    dev: true
+    resolution:
+      integrity: sha1-wl3cnw4AMfORB2TPF/aELS+PwnQ=
   /trim-newlines/1.0.0:
     dev: true
     engines:
@@ -7563,6 +7614,10 @@ packages:
       node: '>= 0.8'
     resolution:
       integrity: sha1-IpnwLG3tMNSllhsLn3RSShj2NPw=
+  /vec2-copy/1.0.0:
+    dev: true
+    resolution:
+      integrity: sha1-xu7B2NrVRiUZTl9x+EM7YtLyCno=
   /verror/1.10.0:
     dependencies:
       assert-plus: 1.0.0
@@ -8030,7 +8085,7 @@ specifiers:
   moment: ^2.27.0
   moment-duration-format: 2.3.2
   nativescript-akylas-fonticon: 2.0.7
-  nativescript-akylas-preferences: 1.1.10
+  nativescript-akylas-preferences: 1.1.11
   nativescript-akylas-sentry: 0.0.8
   nativescript-akylas-share-file: 1.1.4
   nativescript-akylas-sqlite: 3.0.4
@@ -8039,7 +8094,7 @@ specifiers:
   nativescript-canvaslabel: 1.0.9
   nativescript-carto: 1.3.1
   nativescript-chart: 0.0.22
-  nativescript-collectionview: 2.0.31
+  nativescript-collectionview: 2.0.35
   nativescript-dev-webpack: 1.5.1
   nativescript-document-picker: 1.0.7
   nativescript-email: 1.6.0
@@ -8050,15 +8105,15 @@ specifiers:
   nativescript-image: 3.0.11
   nativescript-insomnia: 1.2.3
   nativescript-l: 4.2.3
-  nativescript-material-activityindicator: 3.2.9
-  nativescript-material-bottomsheet: 3.2.9
-  nativescript-material-button: 3.2.9
-  nativescript-material-cardview: 3.2.9
-  nativescript-material-dialogs: 3.2.9
-  nativescript-material-progress: 3.2.9
-  nativescript-material-ripple: 3.2.9
-  nativescript-material-slider: 3.2.9
-  nativescript-material-snackbar: 3.2.9
+  nativescript-material-activityindicator: 3.2.10
+  nativescript-material-bottomsheet: 3.2.10
+  nativescript-material-button: 3.2.10
+  nativescript-material-cardview: 3.2.10
+  nativescript-material-dialogs: 3.2.10
+  nativescript-material-progress: 3.2.10
+  nativescript-material-ripple: 3.2.10
+  nativescript-material-slider: 3.2.10
+  nativescript-material-snackbar: 3.2.10
   nativescript-observable: 2.0.7
   nativescript-perms: 2.0.11
   nativescript-photoviewer: 2.1.5
@@ -8071,13 +8126,14 @@ specifiers:
   nativescript-vue: 2.6.4
   nativescript-vue-fab: ^1.0.23
   nativescript-vue-template-compiler: 2.6.4
-  nativescript-webview-ext: 'file:../nativescript-webview-ext/plugin'
+  nativescript-webview-plus: 1.0.13
   node-sass: ^4.14.1
   sass-loader: 8.0.2
   scss-symbols-parser: ^2.0.1
   semver: 7.3.2
   simplify-js: 'github:farfromrefug/simplify-js'
   string-replace-loader: ^2.3.0
+  svg-slimming: 1.5.3
   tinycolor2: ^1.4.1
   tns-platform-declarations: 6.5.8
   tslib: 2.0.0
