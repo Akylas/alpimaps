@@ -103,7 +103,7 @@ export default class CustomLayersModule extends MapModule {
         // Apply zoom level bias to the raster layer.
         // By default, bitmaps are upsampled on high-DPI screens.
         // We will correct this by applying appropriate bias
-        const zoomLevelBias = Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2);
+        const zoomLevelBias = appSettings.getNumber(`${id}_zoomLevelBias`, Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2) * 0.75);
         // console.log('createRasterLayer', id, opacity, provider.url, databasePath, zoomLevelBias);
 
         const dataSource = new HTTPTileDataSource({
@@ -129,7 +129,7 @@ export default class CustomLayersModule extends MapModule {
                               databasePath
                           })
                         : dataSource,
-                zoomLevelBias: zoomLevelBias * 0.75,
+                zoomLevelBias,
                 opacity,
                 // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                 visible: opacity !== 0,
@@ -344,8 +344,16 @@ export default class CustomLayersModule extends MapModule {
 
     async getElevation(pos: MapPos<LatLonKeys>) {
         if (this.hillshadeLayer) {
-            return this.hillshadeLayer.getElevation(pos);
-            // return result ? result[0].altitude : null;
+            return new Promise((resolve, reject)=> {
+                this.hillshadeLayer.getElevationAsync(pos, (err, result) => {
+                    // this.log('searchInGeocodingService done', err, result && result.size());
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    resolve(result);
+                });
+            })
         }
         return null;
     }
@@ -398,9 +406,10 @@ export default class CustomLayersModule extends MapModule {
                                 });
                         } else if (e.name.endsWith('.etiles')) {
                             return Promise.resolve().then(() => {
+                                this.log('loading etiles', e.name);
                                 const dataSource = new MBTilesTileDataSource({
-                                    minZoom: 5,
-                                    maxZoom: 12,
+                                    // minZoom: 5,
+                                    // maxZoom: 12,
                                     databasePath: e.path
                                 });
                                 const name = e.name;

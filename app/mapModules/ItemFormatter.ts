@@ -98,7 +98,7 @@ export default class ItemFormatter extends MapModule {
             //     const dataD = convertDistance(route.totalDistance);
             //     return `<>${dataT} ${dataD.value.toFixed(1)} ${dataD.unit}`;
             // }
-            return this.getItemName(item) || this.getItemAddress(item, 1);
+            return this.getItemName(item) || this.getItemAddress(item, 1) || `${item.position.lat.toFixed(4)}, ${item.position.lon.toFixed(4)}`;
         }
         return '';
     }

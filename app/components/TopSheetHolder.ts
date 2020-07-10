@@ -77,7 +77,7 @@ export default class TopSheetHolder extends BaseVueComponent {
         //
         const view = this.$refs['topSheet'].nativeView;
         this.translationMaxOffset = Math.round(layout.toDeviceIndependentPixels(view.getMeasuredHeight()));
-        console.log('onLayoutChange', view, this.viewHeight, this.translationMaxOffset);
+        // console.log('onLayoutChange', view, this.viewHeight, this.translationMaxOffset);
         if (this.currentViewTop === null) {
             this.currentViewTop = -this.translationMaxOffset;
         }

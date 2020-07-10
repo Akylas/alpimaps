@@ -78,10 +78,14 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
 
     get webViewSrc() {
         if (this.listViewAvailable && this.item?.properties) {
-            const props = this.item.properties;
+            const item = this.item;
+            const props = item.properties;
             let name = props.name;
             if (props.wikipedia) {
                 name = props.wikipedia.split(':')[1];
+            }
+            if (item.address ) {
+                name += ' ' + item.address.county
             }
             let url = `https://duckduckgo.com/?kae=d&ks=s&ko=-2&kaj=m&k1=-1&q=${encodeURIComponent(name)
                 .toLowerCase()
@@ -180,6 +184,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         this.listViewAvailable = !this.listViewAvailable;
     }
     stepToScrollTo = -1;
+    webViewHeight = 0
     get steps() {
         let total = 70;
         const result = [total];
@@ -192,7 +197,9 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         if (this.mListViewAvailable) {
             total += WEB_HEIGHT;
             result.push(total);
-            total += screenHeightDips - total;
+            const delta = Math.floor(screenHeightDips - this.statusBarHeight - total);
+            this.webViewHeight = WEB_HEIGHT + delta;
+            total += delta;
             result.push(total);
         }
         if (this.stepToScrollTo >= 0) {

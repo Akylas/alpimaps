@@ -44,6 +44,7 @@
 		text-face-name: @mont;
 		text-halo-radius: @standard-halo-radius;
 		text-halo-fill: @standard-halo-fill;
+		text-halo-opacity:0.5;
 		[class = 'aboriginal_lands'] {
 		  text-fill: @aboriginal;
 		}
@@ -81,6 +82,7 @@
 		}
 		// text-allow-overlap: true;
 		text-halo-radius: @standard-halo-radius;
+		text-halo-opacity:0.5;
 		text-halo-fill: @standard-halo-fill;
 		// text-largest-bbox-only: false;
 		text-placement: line;

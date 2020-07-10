@@ -2,9 +2,9 @@
 @import './animations';
 @import '~nativescript-vue-fab/style';
 
-// .lato {
-//     font-family: 'Lato Regular', 'res/lato';
-// }
+.lato {
+    font-family: 'Lato Regular', 'res/lato';
+}
 
 .mdi {
     font-family: $mdi-fontFamily;
@@ -12,6 +12,7 @@
 
 // label,
 // htmllabel,
+// canvaslabel,
 // button,
 // mdtextfield,
 // mdbutton {
