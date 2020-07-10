@@ -505,12 +505,13 @@
 		[class=lodging][subclass='wilderness_hut'],
 		[class=spring],
 		// [class=lodging][subclass='wilderness_hut'][rank<=10][zoom>=11],
-		[class=campsite][rank<=10],
+		[class=campsite][rank<=15],
 		// [zoom>=14][rank<=1][class!='information'][class!='toilets'][class!='bus'][subclass!='tram_stop'][subclass!='station'][class!='picnic_site'][subclass!='viewpoint'],
 		// [zoom>=15][rank<=2][class!='toilets'][class!='information'][class!='bus'][subclass!='tram_stop'][subclass!='station'][subclass!='viewpoint'],
 		// [class=park][zoom>=15][rank<=10],
-		[zoom>=16][rank<=10],
+		[zoom>=15][rank<=15][subclass!=hotel][class!='bus'][class!='restaurant'][class!='bar'][class!='school'][class!='college'][subclass!='tram_stop'][subclass!='community_centre'][subclass!='station'],
 		// [class=park][zoom>=16][rank<=20],
+		[zoom>=16][rank<=35][subclass!='hotel'],
 		[zoom>=17][rank<=50],
 		// [class=park][zoom>=17][rank<=30],
 		[zoom>=18] {
@@ -561,8 +562,12 @@
 				}
 				[class='fountain'],[class='drinking_water'],[class='bassin'],[class='spring'] {
 					text-placement: point;
-					text-allow-overlap: true;
+					// text-allow-overlap: true;
 					text-fill: #4AA0E7;
+				}
+				[class='spring'] {
+					text-size: linear([view::zoom], (14, 6), (16, 10));
+					text-halo-radius: 0;
 				}
 				[class='bakery'], [class='restaurant'] {
 					text-fill: #EF8000; 
@@ -584,7 +589,7 @@
 					text-halo-rasterizer: fast;
 					text-halo-radius: linear([view::zoom], (14, 1), (18, 0.5));
 					text-size: linear([view::zoom], (14, 7), (18, 10)) - 0.000001 * [rank];
-					text-wrap-width: step([zoom], (14, 10), (15, 20), (16, 30), (19, 50));
+					text-wrap-width: step([zoom], (14, 40), (15, 50), (16, 60), (18, 70), (19, 100));
 					// text-feature-id: @featureId;
 					// text-min-distance: 500;
 					text-dy: 10;
@@ -637,6 +642,7 @@
 		text-feature-id: @featureId;
 		text-wrap-width: step([zoom], (7, 40), (12, 100), (18, 150));
 		text-halo-fill: @halo_park_label;
+		text-halo-opacity:0.5;
 		text-halo-rasterizer: fast;
 		text-halo-radius: 1;
 		// text-dy: 10;

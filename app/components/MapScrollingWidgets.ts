@@ -1,7 +1,7 @@
 import { Item } from '~/mapModules/ItemsModule';
 import { debounce } from 'helpful-decorators';
 import { CartoMap } from 'nativescript-carto/ui';
-import { Component } from 'vue-property-decorator';
+import { Component, Prop, Watch } from 'vue-property-decorator';
 import Map from '~/components/Map';
 import { GeoHandler } from '~/handlers/GeoHandler';
 import { PackageAction, PackageStatus } from 'nativescript-carto/packagemanager';
@@ -29,7 +29,8 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
 
     selectedItem: Item = null;
 
-    
+    @Prop({default:true, type: Boolean})
+    userInteractionEnabled:boolean
 
     
     suggestionPackage: { id: string; name: string; status: PackageStatus } = null;

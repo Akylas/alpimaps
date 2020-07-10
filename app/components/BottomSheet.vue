@@ -1,5 +1,5 @@
 <template>
-    <GridLayout ref="bottomSheet" width="100%" :rows="rows" @tap="noop"  @layoutChanged="onLayoutChange">
+    <GridLayout ref="bottomSheet" width="100%" rows="70,50,auto,auto" @tap="noop"  @layoutChanged="onLayoutChange">
         <BottomSheetInfoView ref="infoView" row="0" :visibility="itemIsRoute ? 'collapsed' : 'visible'" :item="itemIsRoute ? null : item" />
         <BottomSheetRouteInfoView ref="routeView" row="0" :visibility="itemIsRoute ? 'visible' : 'collapsed'" :routeItem="itemIsRoute ? item : null" />
 
@@ -14,7 +14,7 @@
             <MDButton variant="text" padding="4" fontSize="10" @tap="shareItem" text="share item" v-show="item && item.id" />
         </StackLayout>
         <LineChart ref="graphView" row="2" :height="profileHeight" :visibility="showGraph ? 'visible' : 'collapsed'"  @tap="onChartTap"/>
-        <WebViewExt row="3" displayZoomControls="false" ref="listView" :visibility="listViewVisible ? 'visible' : 'collapsed'" @scroll="onListViewScroll" :isScrollEnabled="scrollEnabled" :src="webViewSrc" :headers="{'User-Agent':'Mozilla/5.0 (iPhone; CPU iPhone OS 12_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/12.0 Mobile/15A372 Safari/604.1'}"/>
+        <AWebView row="3" :height="webViewHeight" displayZoomControls="false" ref="listView" :visibility="listViewVisible ? 'visible' : 'collapsed'" @scroll="onListViewScroll" :isScrollEnabled="scrollEnabled" :src="webViewSrc"/>
         <!-- <CollectionView id="bottomsheetListView" row="3" ref="listView" rowHeight="40" :items="routeInstructions" :visibility="showListView ? 'visible' : 'hidden'" isBounceEnabled="false" @scroll="onListViewScroll" :isScrollEnabled="scrollEnabled">
             <v-template>
                 <GridLayout columns="30,*" rows="*,auto,auto,*" rippleColor="white"  @tap="onInstructionTap(item)">

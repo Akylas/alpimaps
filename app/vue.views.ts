@@ -43,7 +43,7 @@ const Plugin = {
 
         Vue.registerElement('LineChart', () => require('nativescript-chart/charts/LineChart').default);
         Vue.registerElement('Label', () => HTMLLabel);
-        Vue.registerElement('WebViewExt', () => require('nativescript-webview-ext').WebViewExt);
+        Vue.registerElement('AWebView', () => require('nativescript-webview-plus').AWebView);
 
         // registerElement('SVGImage', () => require('@teammaestro/nativescript-svg').SVGImage);
     }

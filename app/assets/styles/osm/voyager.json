@@ -265,6 +265,12 @@
         "osm-coffee": {
             "default": "\ue935"
         },
+        "osm-college": {
+            "default": "\ue9dc"
+        },
+        "osm-school": {
+            "default": "\ue9dd"
+        },
         "osm-communications_tower": {
             "default": "\ue936"
         },
