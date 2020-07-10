@@ -27,6 +27,7 @@ import { showSnack } from 'nativescript-material-snackbar';
 import { File, Folder, path } from '@nativescript/core/file-system';
 import { device } from '@nativescript/core/platform';
 import { layout } from '@nativescript/core/utils/utils';
+import { OSMOfflineGeocodingService, OSMOfflineReverseGeocodingService } from 'nativescript-carto/geocoding/service';
 
 export interface RouteInstruction {
     position: MapPos<LatLonKeys>;
@@ -230,9 +231,8 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             position,
             metaData,
             marker: null,
-            text: metaData ? metaData.name : `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`
+            text: metaData?.name || `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`
         };
-        // this.log('addStopPoint', this.waypoints.length,  this.waypoints);
         if (this.waypoints.length > 0 && this.waypoints[this.waypoints.length - 1].isStop === true) {
             this.waypoints[this.waypoints.length - 1].isStop = false;
             (this.waypoints[this.waypoints.length - 1].marker.elements[0] as Point).styleBuilder = {
@@ -356,52 +356,6 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             return true;
         }
     }
-
-    // setStartPosition(position: MapPos) {
-    //     this.log('setStartPosition', position, !!this.startMarker);
-    //     if (!this.startMarker) {
-    //         // Create markers for start & end, and a layer for them
-    //         const styleBuilder = new MarkerStyleBuilder({
-    //             hideIfOverlapped: false,
-    //             size: 30,
-    //             color: 'green'
-    //         });
-
-    //         this.startMarker = new Marker({
-    //             position,
-    //             styleBuilder
-    //         });
-    //         this.routeDataSource.add(this.startMarker);
-    //         this.ensureRouteLayer();
-    //     } else {
-    //         this.startMarker.position = position;
-    //         this.startMarker.visible = true;
-    //     }
-    //     this.mapComp.topSheetHolder.peekSheet();
-    // }
-    // setStopPosition(position: MapPos) {
-    //     this.log('setStopPosition', position, !!this.stopMarker);
-    //     if (!this.stopMarker) {
-    //         // Create markers for start & end, and a layer for them
-    //         const styleBuilder = new MarkerStyleBuilder({
-    //             hideIfOverlapped: false,
-    //             size: 30,
-    //             color: 'red'
-    //         });
-
-    //         this.stopMarker = new Marker({
-    //             position,
-    //             styleBuilder
-    //         });
-    //         this.routeDataSource.add(this.stopMarker);
-    //         this.ensureRouteLayer();
-    //     } else {
-    //         this.stopMarker.position = position;
-    //         this.stopMarker.visible = true;
-    //     }
-    //     this.mapComp.topSheetHolder.peekSheet();
-    // }
-
     cancel() {
         // this.log('cancel');
         this.waypoints = [];
@@ -442,6 +396,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         }
         return this._localOfflineRoutingSearchService;
     }
+
     _onlineRoutingSearchService: ValhallaOnlineRoutingService;
     get onlineRoutingSearchService() {
         if (!this._onlineRoutingSearchService) {
@@ -583,32 +538,13 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         })
             .then(route => {
                 this.currentRoute = route;
-                // const distance = route.totalDistance / 1000;
-                // const time = this.secondsToHours(route.totalTime);
-                // const text = 'Your route is ' + distance + 'km (' + time + ')';
-
-                // alert(text);
                 this.clearCurrentLine();
-
-                // this.routeDataSource.clear();
                 this.currentLine = this.createPolyline(route, route.positions);
                 this.routeDataSource.clear();
                 this.line = null;
                 this.waypoints = [];
                 this.routeDataSource.add(this.currentLine);
                 this.ensureRouteLayer();
-                // Add instruction markers
-                // const instructions = result.getInstructions();
-                // let first = true;
-
-                // route.instructions.forEach(i => {
-                //     if (first) {
-                //         // Set car to first instruction position
-                //         first = false;
-                //     } else {
-                //         this.createRoutePoint(i, this.routeDataSource);
-                //     }
-                // });
                 this.mapComp.selectItem({
                     item: { position: fromNativeMapPos(this.currentLine.getGeometry().getCenterPos()), route },
                     isFeatureInteresting: true,
@@ -643,29 +579,22 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     }
     onUnselectedItem(item: Item) {
         if (!!item.route && item.route === this.currentRoute) {
-            // this.routeDataSource.clear();
             this.currentRoute = null;
             this.clearCurrentLine();
         }
     }
     onSelectedItem(item: Item, oldItem: Item) {
         if (!!oldItem && !!oldItem.route && oldItem.route === this.currentRoute) {
-            // this.routeDataSource.clear();
             this.currentRoute = null;
             this.clearCurrentLine();
         }
         if (!!item && !!item.route && item.route !== this.currentRoute) {
-            // this.routeDataSource.clear();
             this.currentRoute = null;
             this.clearCurrentLine();
         }
     }
 
     unfocus(textField: TextField) {
-        // if (this.searchAsTypeTimer) {
-        //     clearTimeout(this.searchAsTypeTimer);
-        //     this.searchAsTypeTimer = null;
-        // }
         if (gVars.isAndroid) {
             (textField.nativeViewProtected as android.view.View).clearFocus();
         }
@@ -674,12 +603,12 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
 
     currentStartSearchText = null;
     currentStopSearchText = null;
-    onStartTextChange(e) {
-        this.currentStartSearchText = e.value;
-    }
-    onStopTextChange(e) {
-        this.currentStopSearchText = e.value;
-    }
+    // onStartTextChange(e) {
+    //     this.currentStartSearchText = e.value;
+    // }
+    // onStopTextChange(e) {
+    //     this.currentStopSearchText = e.value;
+    // }
     get startTF() {
         return this.$refs.startTF && (this.$refs.startTF.nativeView as TextField);
     }
@@ -687,11 +616,6 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         return this.$refs.stopTF && (this.$refs.stopTF.nativeView as TextField);
     }
     clearStartSearch() {
-        // if (this.searchAsTypeTimer) {
-        //     clearTimeout(this.searchAsTypeTimer);
-        //     this.searchAsTypeTimer = null;
-        // }
-        // this.dataItems = [] as any;
         if (this.waypoints.length >= 1 && this.waypoints[0].isStart === true) {
             const toRemove = this.waypoints.splice(0, 1)[0];
             this.routeDataSource.remove(toRemove.marker);

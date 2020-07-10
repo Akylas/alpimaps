@@ -417,7 +417,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
     searchInGeocodingService(options) {
         return this.$packageService.searchInPackageGeocodingService(options).then(result => {
             // this.log('searchInGeocodingService', result.length);
-            return result.map(this.$packageService.prepareGeoCodingResult);
+            return this.$packageService.convertGeoCodingResults(result).map(this.$packageService.prepareGeoCodingResult);
         });
     }
 
