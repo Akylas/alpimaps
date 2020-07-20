@@ -1,7 +1,7 @@
 dependencies:
   '@mdi/font': 4.9.95
   '@nano-sql/core': 2.3.7
-  '@nativescript/core': 'link:../../../../usr/local/pnpm-global/node_modules/@nativescript/core'
+  '@nativescript/core': 6.5.8
   dayjs: 1.8.29
   deburr: 0.0.3
   downsample: 1.3.0
@@ -17,12 +17,12 @@ dependencies:
   nativescript-akylas-preferences: 1.1.11
   nativescript-akylas-sentry: 0.0.8
   nativescript-akylas-share-file: 1.1.4
-  nativescript-akylas-sqlite: 'link:../../../../usr/local/pnpm-global/node_modules/nativescript-akylas-sqlite'
+  nativescript-akylas-sqlite: 3.0.5
   nativescript-brightness: 1.0.1
-  nativescript-canvas: 'link:../../../../usr/local/pnpm-global/node_modules/nativescript-canvas'
+  nativescript-canvas: 3.0.8
   nativescript-canvaslabel: 1.0.9
   nativescript-carto: 'link:../../../../usr/local/pnpm-global/node_modules/nativescript-carto'
-  nativescript-chart: 'link:../../../../usr/local/pnpm-global/node_modules/nativescript-chart'
+  nativescript-chart: 0.0.25
   nativescript-collectionview: 2.0.35
   nativescript-document-picker: 1.0.7
   nativescript-email: 1.6.0
@@ -51,7 +51,7 @@ dependencies:
   nativescript-toasty: 2.0.1
   nativescript-tween: 0.0.10
   nativescript-urlhandler: 1.3.0
-  nativescript-vue: 'link:../../../../usr/local/pnpm-global/node_modules/nativescript-vue'
+  nativescript-vue: 2.6.4
   nativescript-vue-fab: 1.0.23_vue@2.6.11
   nativescript-webview-plus: 1.0.13
   simplify-js: github.com/farfromrefug/simplify-js/0b1893b0ac1b0277e3d1b0d050bce2310dcd1d63
@@ -61,13 +61,13 @@ devDependencies:
   '@sentry/webpack-plugin': 1.12.0
   '@types/tinycolor2': 1.4.2
   '@types/tween.js': 18.5.1
-  '@typescript-eslint/eslint-plugin': 3.5.0_d0a67a33197bc1a6de8c932c38fa9079
-  '@typescript-eslint/parser': 3.5.0_eslint@7.3.1+typescript@3.9.6
+  '@typescript-eslint/eslint-plugin': 3.6.0_1c51ade106368f8db1c65fa08c9a96ed
+  '@typescript-eslint/parser': 3.6.0_eslint@7.4.0+typescript@3.9.6
   ansi-styles: 4.2.1
   clean-webpack-plugin: 3.0.0_webpack@4.43.0
   cross-var: 1.1.0
   del: 5.1.0
-  eslint: 7.3.1
+  eslint: 7.4.0
   fsevents: 2.1.3
   nativescript-dev-webpack: 1.5.1_typescript@3.9.6
   nativescript-vue-template-compiler: 2.6.4
@@ -77,7 +77,7 @@ devDependencies:
   semver: 7.3.2
   string-replace-loader: 2.3.0_webpack@4.43.0
   svg-slimming: 1.5.3
-  tns-platform-declarations: 6.5.8
+  tns-platform-declarations: 6.5.9
   tslib: 2.0.0
   typescript: 3.9.6
   vue: 2.6.11
@@ -137,6 +137,18 @@ packages:
       command-line-args: 5.1.1
     resolution:
       integrity: sha512-B9nniPPRhPf5Hf2cyvy72SNEg4iKQEW6pig9nwrM4DJlmOMZudifOMPBoJuK6JcTaLATIOGRPkclfosNUALnLQ==
+  /@nativescript/core/6.5.8:
+    dependencies:
+      css-tree: 1.0.0-alpha.39
+      nativescript-hook: 0.2.5
+      reduce-css-calc: 2.1.7
+      semver: 6.3.0
+      tns-core-modules-widgets: 6.6.0-next-2020-05-08-112112-01
+      tslib: 1.10.0
+    dev: false
+    requiresBuild: true
+    resolution:
+      integrity: sha512-zxghkuVIXuWCtrPCnlq4eKbM2xNUPMxl+3NHu3gIE7eIcUVVZyoIbUdIEWfIYtt+Q7plHZ93xT/haJHWvsVMWg==
   /@nodelib/fs.scandir/2.1.3:
     dependencies:
       '@nodelib/fs.stat': 2.0.3
@@ -371,12 +383,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-yohU3zMn0fkhlape1nxXG2bLEGZRc1FeqF80RoHaYXJN7uibaauXfhzhOJr1Xh36sn+/tx21QAOf07b/xYVk1w==
-  /@typescript-eslint/eslint-plugin/3.5.0_d0a67a33197bc1a6de8c932c38fa9079:
+  /@typescript-eslint/eslint-plugin/3.6.0_1c51ade106368f8db1c65fa08c9a96ed:
     dependencies:
-      '@typescript-eslint/experimental-utils': 3.5.0_eslint@7.3.1+typescript@3.9.6
-      '@typescript-eslint/parser': 3.5.0_eslint@7.3.1+typescript@3.9.6
+      '@typescript-eslint/experimental-utils': 3.6.0_eslint@7.4.0+typescript@3.9.6
+      '@typescript-eslint/parser': 3.6.0_eslint@7.4.0+typescript@3.9.6
       debug: 4.1.1
-      eslint: 7.3.1
+      eslint: 7.4.0
       functional-red-black-tree: 1.0.1
       regexpp: 3.1.0
       semver: 7.3.2
@@ -393,13 +405,13 @@ packages:
       typescript:
         optional: true
     resolution:
-      integrity: sha512-m4erZ8AkSjoIUOf8s4k2V1xdL2c1Vy0D3dN6/jC9d7+nEqjY3gxXCkgi3gW/GAxPaA4hV8biaCoTVdQmfAeTCQ==
-  /@typescript-eslint/experimental-utils/3.5.0_eslint@7.3.1+typescript@3.9.6:
+      integrity: sha512-ubHlHVt1lsPQB/CZdEov9XuOFhNG9YRC//kuiS1cMQI6Bs1SsqKrEmZnpgRwthGR09/kEDtr9MywlqXyyYd8GA==
+  /@typescript-eslint/experimental-utils/3.6.0_eslint@7.4.0+typescript@3.9.6:
     dependencies:
       '@types/json-schema': 7.0.4
-      '@typescript-eslint/types': 3.5.0
-      '@typescript-eslint/typescript-estree': 3.5.0_typescript@3.9.6
-      eslint: 7.3.1
+      '@typescript-eslint/types': 3.6.0
+      '@typescript-eslint/typescript-estree': 3.6.0_typescript@3.9.6
+      eslint: 7.4.0
       eslint-scope: 5.1.0
       eslint-utils: 2.0.0
     dev: true
@@ -409,14 +421,14 @@ packages:
       eslint: '*'
       typescript: '*'
     resolution:
-      integrity: sha512-zGNOrVi5Wz0jcjUnFZ6QUD0MCox5hBuVwemGCew2qJzUX5xPoyR+0EzS5qD5qQXL/vnQ8Eu+nv03tpeFRwLrDg==
-  /@typescript-eslint/parser/3.5.0_eslint@7.3.1+typescript@3.9.6:
+      integrity: sha512-4Vdf2hvYMUnTdkCNZu+yYlFtL2v+N2R7JOynIOkFbPjf9o9wQvRwRkzUdWlFd2YiiUwJLbuuLnl5civNg5ykOQ==
+  /@typescript-eslint/parser/3.6.0_eslint@7.4.0+typescript@3.9.6:
     dependencies:
       '@types/eslint-visitor-keys': 1.0.0
-      '@typescript-eslint/experimental-utils': 3.5.0_eslint@7.3.1+typescript@3.9.6
-      '@typescript-eslint/types': 3.5.0
-      '@typescript-eslint/typescript-estree': 3.5.0_typescript@3.9.6
-      eslint: 7.3.1
+      '@typescript-eslint/experimental-utils': 3.6.0_eslint@7.4.0+typescript@3.9.6
+      '@typescript-eslint/types': 3.6.0
+      '@typescript-eslint/typescript-estree': 3.6.0_typescript@3.9.6
+      eslint: 7.4.0
       eslint-visitor-keys: 1.2.0
       typescript: 3.9.6
     dev: true
@@ -429,17 +441,17 @@ packages:
       typescript:
         optional: true
     resolution:
-      integrity: sha512-sU07VbYB70WZHtgOjH/qfAp1+OwaWgrvD1Km1VXqRpcVxt971PMTU7gJtlrCje0M+Sdz7xKAbtiyIu+Y6QdnVA==
-  /@typescript-eslint/types/3.5.0:
+      integrity: sha512-taghDxuLhbDAD1U5Fk8vF+MnR0yiFE9Z3v2/bYScFb0N1I9SK8eKHkdJl1DAD48OGFDMFTeOTX0z7g0W6SYUXw==
+  /@typescript-eslint/types/3.6.0:
     dev: true
     engines:
       node: ^8.10.0 || ^10.13.0 || >=11.10.1
     resolution:
-      integrity: sha512-Dreqb5idi66VVs1QkbAwVeDmdJG+sDtofJtKwKCZXIaBsINuCN7Jv5eDIHrS0hFMMiOvPH9UuOs4splW0iZe4Q==
-  /@typescript-eslint/typescript-estree/3.5.0_typescript@3.9.6:
+      integrity: sha512-JwVj74ohUSt0ZPG+LZ7hb95fW8DFOqBuR6gE7qzq55KDI3BepqsCtHfBIoa0+Xi1AI7fq5nCu2VQL8z4eYftqg==
+  /@typescript-eslint/typescript-estree/3.6.0_typescript@3.9.6:
     dependencies:
-      '@typescript-eslint/types': 3.5.0
-      '@typescript-eslint/visitor-keys': 3.5.0
+      '@typescript-eslint/types': 3.6.0
+      '@typescript-eslint/visitor-keys': 3.6.0
       debug: 4.1.1
       glob: 7.1.6
       is-glob: 4.0.1
@@ -456,15 +468,15 @@ packages:
       typescript:
         optional: true
     resolution:
-      integrity: sha512-Na71ezI6QP5WVR4EHxwcBJgYiD+Sre9BZO5iJK2QhrmRPo/42+b0no/HZIrdD1sjghzlYv7t+7Jis05M1uMxQg==
-  /@typescript-eslint/visitor-keys/3.5.0:
+      integrity: sha512-G57NDSABHjvob7zVV09ehWyD1K6/YUKjz5+AufObFyjNO4DVmKejj47MHjVHHlZZKgmpJD2yyH9lfCXHrPITFg==
+  /@typescript-eslint/visitor-keys/3.6.0:
     dependencies:
       eslint-visitor-keys: 1.2.0
     dev: true
     engines:
       node: ^8.10.0 || ^10.13.0 || >=11.10.1
     resolution:
-      integrity: sha512-7cTp9rcX2sz9Z+zua9MCOX4cqp5rYyFD5o8LlbSpXrMTXoRdngTtotRZEkm8+FNMHPWYFhitFK+qt/brK8BVJQ==
+      integrity: sha512-p1izllL2Ubwunite0ITjubuMQRBGgjdVYwyG7lXPX8GbrA6qF0uwSRz9MnXZaHMxID4948gX0Ez8v9tUDi/KfQ==
   /@vue/component-compiler-utils/3.1.2:
     dependencies:
       consolidate: 0.15.1
@@ -2559,6 +2571,19 @@ packages:
       webpack: ^4.0.0
     resolution:
       integrity: sha512-OcKJU/lt232vl1P9EEDamhoO9iKY3tIjY5GU+XDLblAykTdgs6Ux9P1hTHve8nFKy5KPpOXOsVI/hIwi3841+w==
+  /css-tree/1.0.0-alpha.39:
+    dependencies:
+      mdn-data: 2.0.6
+      source-map: 0.6.1
+    dev: false
+    engines:
+      node: '>=8.0.0'
+    resolution:
+      integrity: sha512-7UvkEYgBAHRG9Nt980lYxjsTrCyHFN53ky3wVsDkiMdVqylqRt+Zc+jm5qw7/qyOvN2dHSYtX0e4MbCCExSvnA==
+  /css-unit-converter/1.1.2:
+    dev: false
+    resolution:
+      integrity: sha512-IiJwMC8rdZE0+xiEZHeru6YoONC4rfPMqGm2W85jMIbkFvv5nFTwJVFHam2eFrN6txmoUYFAFXiv8ICVeTO0MA==
   /css/2.2.1:
     dependencies:
       inherits: 2.0.4
@@ -2952,7 +2977,7 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha512-WFb4ihckKil6hu3Dp798xdzSfddwKKU3+nGniKF6HfeW6OLd2OUDEPP7TcHtB5+QXOKg2s6B2DaMPE1Nn/kxKQ==
-  /eslint/7.3.1:
+  /eslint/7.4.0:
     dependencies:
       '@babel/code-frame': 7.10.1
       ajv: 6.12.2
@@ -2995,7 +3020,7 @@ packages:
       node: ^10.12.0 || >=12.0.0
     hasBin: true
     resolution:
-      integrity: sha512-cQC/xj9bhWUcyi/RuMbRtC3I0eW8MH0jhRELSvpKYkWep3C6YZ2OkvcvJVUeO6gcunABmzptbXBuDoXsjHmfTA==
+      integrity: sha512-gU+lxhlPHu45H3JkEGgYhWhkR9wLHHEXC9FbWFnTlEkbKyZKWgWRLgf61E8zWmBuI6g5xKBph9ltg3NtZMVF8g==
   /espree/7.1.0:
     dependencies:
       acorn: 7.2.0
@@ -4646,6 +4671,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-xitP+WxNPcTTOgnTJcrhM0xvdPepipPSf3I8EIpGKeFLjt3PlJLIDG3u8EX53ZIubkb+5U2+3rELYpEhHhzdkg==
+  /mdn-data/2.0.6:
+    dev: false
+    resolution:
+      integrity: sha512-rQvjv71olwNHgiTbfPZFkJtjNMciWgswYeciZhtvWLO8bmX3TnhyA62I6sTWOyZssWHJJjY6/KiWwqQsWWsqOA==
   /media-typer/0.3.0:
     dev: true
     engines:
@@ -4955,6 +4984,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-NpUYySVqIymEA0tUfe5/q/IuIFX0GpEyhRkCiK2gBLueZv95XBlm8kioyrWkeFnDD7ao+hiNpJnRf9EgUi3jEw==
+  /nativescript-akylas-sqlite/3.0.5:
+    dev: false
+    resolution:
+      integrity: sha512-viZtvhM/pHRyaOYKrDLPTfY7sMpdc0OA4E88NgUgOLHXoq0JZmLUUpsZ69RgG3NakSZ4KFMytk19fSqELMDOZA==
   /nativescript-brightness/1.0.1:
     dev: false
     resolution:
@@ -4963,12 +4996,26 @@ packages:
     dev: false
     resolution:
       integrity: sha512-BHNow06Ms8xC/yPmdUB3hzRvVrQgUKBmJmGoZjrOzLWNw5KbXXuPHZtq96IyjqIsa1c+UZ3xWNvmg+WDkBLJJg==
+  /nativescript-canvas/3.0.8:
+    dev: false
+    resolution:
+      integrity: sha512-XbaKAvPdzZpyGEd/LUMlNYVQ7P/8fJKzygrpVsaxr8xbnJGwo5YNNC+Hj3KJ9WKOWC05d9tyYHIUGIjUSk/nhA==
   /nativescript-canvaslabel/1.0.9:
     dependencies:
       nativescript-canvas: 3.0.7
     dev: false
     resolution:
       integrity: sha512-aqk64x/lktI3bY15aMdJkZyTiNspZM/5Gxl8tuPjh+rluPi9XtUHPycek9GGa+u0W6Xn1VnZ9DzV5pwCtj4FUQ==
+  /nativescript-chart/0.0.25:
+    dependencies:
+      downsample: 1.3.0
+      nativescript-canvas: 3.0.8
+      nativescript-gesturehandler: 0.1.16
+      nativescript-tween: 0.0.10
+      number-format.js: 2.0.9
+    dev: false
+    resolution:
+      integrity: sha512-K7tnqpEkDhIlb4kXoL1ITIZxk46PFF3SHUrONxybxcUYFEJuS379GUXiu7GzIHAuMibhncgVXd4ReNEr4FAp5g==
   /nativescript-collectionview/2.0.35:
     dev: false
     resolution:
@@ -5213,6 +5260,13 @@ packages:
     dev: true
     resolution:
       integrity: sha512-apzMGTOSc/M2dAEOTQFXm2aCmYtaFA18mIER561GBfLgI+Ki1C1E4FnxFEqsN6iZjmQUxihBbKMwiIPtfj6uIw==
+  /nativescript-vue/2.6.4:
+    dependencies:
+      nativescript-hook: 0.2.5
+    dev: false
+    requiresBuild: true
+    resolution:
+      integrity: sha512-5ak11UEdJ0jo8G0HnjXICh/QEywkaVKViV72x70V1wMkQGszORhWHwTg4tKDcRZXKh15MTioKQfDL4VStYT7Yg==
   /nativescript-webview-plus/1.0.13:
     dev: false
     resolution:
@@ -5373,6 +5427,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-2uUqazuKlTaSI/dC8AzicUck7+IrEaOnN/e0jd3Xtt1KcGpwx30v50mL7oPyr/h9bL3E4aZccVwpwP+5W9Vjkg==
+  /number-format.js/2.0.9:
+    dev: false
+    engines:
+      node: '>=8'
+    resolution:
+      integrity: sha512-VMDspFTTDRgWopKSYsIUGZKcjuL39zQw3cDG20fKxVroqSRI6OofHlWCRwUimNvOpDuLIL92L1K8NVHCRAbF1A==
   /number-is-nan/1.0.1:
     engines:
       node: '>=0.10.0'
@@ -5843,7 +5903,6 @@ packages:
     resolution:
       integrity: sha512-36P2QR59jDTOAiIkqEprfJDsoNrvwFei3eCqKd1Y0tUsBimsq39BLp7RD+JWny3WgB1zGhJX8XVePwm9k4wdBg==
   /postcss-value-parser/3.3.1:
-    dev: true
     resolution:
       integrity: sha512-pISE66AbVkp4fDQ7VHBwRNXzAAKJjw4Vw7nWI/+Q3vuly7SNfgYXvm6i5IgFylHGK5sP/xHAbB7N49OS4gWNyQ==
   /postcss/7.0.14:
@@ -6137,6 +6196,13 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-z5Fqsf1fHxbfsggi3W7H9zDCr94=
+  /reduce-css-calc/2.1.7:
+    dependencies:
+      css-unit-converter: 1.1.2
+      postcss-value-parser: 3.3.1
+    dev: false
+    resolution:
+      integrity: sha512-fDnlZ+AybAS3C7Q9xDq5y8A2z+lT63zLbynew/lur/IR24OQF5x98tfNwf79mzEdfywZ0a2wpM860FhFfMxZlA==
   /regenerate/1.4.0:
     dev: true
     resolution:
@@ -6577,7 +6643,6 @@ packages:
     resolution:
       integrity: sha512-sauaDf/PZdVgrLTNYHRtpXa1iRiKcaebiKQ1BJdpQlWH2lCvexQdX55snPFyK7QzpudqbCI0qXFfOasHdyNDGQ==
   /semver/6.3.0:
-    dev: true
     hasBin: true
     resolution:
       integrity: sha512-b39TBaTSfV6yBrapU89p5fKekE2m/NwnDocOVruQFS1/veMgdzuPcnOM34M6CwxW8jH/lxEa5rBoDeUwu5HHTw==
@@ -6857,7 +6922,6 @@ packages:
     resolution:
       integrity: sha1-igOdLRAh0i0eoUyA2OpGi6LvP8w=
   /source-map/0.6.1:
-    dev: true
     engines:
       node: '>=0.10.0'
     resolution:
@@ -7285,10 +7349,14 @@ packages:
       node: '>=0.6.0'
     resolution:
       integrity: sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==
-  /tns-platform-declarations/6.5.8:
+  /tns-core-modules-widgets/6.6.0-next-2020-05-08-112112-01:
+    dev: false
+    resolution:
+      integrity: sha512-aW30j6gKiXP48XOs6qdO2SiPx61pUYOlMmQVovQbG6vBB8WbUR9k9UviY1cY/DExNUBOSh3cMe8uLOpDWiR49A==
+  /tns-platform-declarations/6.5.9:
     dev: true
     resolution:
-      integrity: sha512-QNgRlNO9gsEnq4PHYhT/zqo6sES4Vcd1yE5Oc6NxG0Jiz6lbMv3UKdtmSsGNJxxBeRdWlNj/jrAWq58Nz2GU9w==
+      integrity: sha512-Q0h7VLVKSHzzam0yedUTH58IFzgNZd+EM+h1yuWdZoIzq1WYaVk5FyIYge/lI8QZ2iHZCS3xwVanArSJ3Z1t+A==
   /to-arraybuffer/1.0.1:
     dev: true
     resolution:
@@ -7402,6 +7470,10 @@ packages:
       typescript: '*'
     resolution:
       integrity: sha512-XYsjfnRQCBum9AMRZpk2rTYSVpdZBpZK+kDh0TeT3kxmQNBDVIeUjdPjY5RZry4eIAb8XHc4gYSUiUWPYvzSRw==
+  /tslib/1.10.0:
+    dev: false
+    resolution:
+      integrity: sha512-qOebF53frne81cf0S9B41ByenJ3/IuH8yJKngAX35CmiZySA0khhkovshKK+jGCaMnVomla7gVlIcc3EvKPbTQ==
   /tslib/1.13.0:
     resolution:
       integrity: sha512-i/6DQjL8Xf3be4K/E6Wgpekn5Qasl1usyw++dAA35Ue5orEn65VIxOA+YvNNl9HV3qv70T7CNwjODHZrLwvd1Q==
@@ -8061,12 +8133,12 @@ packages:
 specifiers:
   '@mdi/font': 4.9.95
   '@nano-sql/core': 2.3.7
-  '@nativescript/core': 6.5.2
+  '@nativescript/core': 6.5.8
   '@sentry/webpack-plugin': ^1.12.0
   '@types/tinycolor2': ^1.4.2
   '@types/tween.js': ^18.5.1
-  '@typescript-eslint/eslint-plugin': 3.5.0
-  '@typescript-eslint/parser': 3.5.0
+  '@typescript-eslint/eslint-plugin': 3.6.0
+  '@typescript-eslint/parser': 3.6.0
   ansi-styles: ^4.2.1
   clean-webpack-plugin: 3.0.0
   cross-var: ^1.1.0
@@ -8074,7 +8146,7 @@ specifiers:
   deburr: 0.0.3
   del: 5.1.0
   downsample: 1.3.0
-  eslint: 7.3.1
+  eslint: 7.4.0
   fsevents: 2.1.3
   gpx-parser-builder: ^1.0.2
   helpful-decorators: ^2.1.0
@@ -8088,12 +8160,12 @@ specifiers:
   nativescript-akylas-preferences: 1.1.11
   nativescript-akylas-sentry: 0.0.8
   nativescript-akylas-share-file: 1.1.4
-  nativescript-akylas-sqlite: 3.0.4
+  nativescript-akylas-sqlite: 3.0.5
   nativescript-brightness: 1.0.1
-  nativescript-canvas: 3.0.7
+  nativescript-canvas: 3.0.8
   nativescript-canvaslabel: 1.0.9
   nativescript-carto: 1.3.1
-  nativescript-chart: 0.0.22
+  nativescript-chart: 0.0.25
   nativescript-collectionview: 2.0.35
   nativescript-dev-webpack: 1.5.1
   nativescript-document-picker: 1.0.7
@@ -8135,7 +8207,7 @@ specifiers:
   string-replace-loader: ^2.3.0
   svg-slimming: 1.5.3
   tinycolor2: ^1.4.1
-  tns-platform-declarations: 6.5.8
+  tns-platform-declarations: 6.5.9
   tslib: 2.0.0
   typescript: ^3.9.6
   vue: ^2.6.11

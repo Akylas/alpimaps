@@ -109,7 +109,7 @@ export const data: { [k: string]: DataProvider } = {
         },
         sourceOptions: {
             httpHeaders: {
-                'User-Agent': 'AlpiMaps2'
+                'User-Agent': 'AlpiMaps'
             },
             maxZoom: 18
         },
@@ -147,8 +147,11 @@ export const data: { [k: string]: DataProvider } = {
             },
             Scan25: {
                 urlOptions: {
-                    variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN25TOUR'
+                    variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN25TOPO'
                     // format: 'image/png',
+                },
+                sourceOptions:{
+                    // TMSScheme:true
                 }
             },
             Slopes: {

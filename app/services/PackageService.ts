@@ -1,4 +1,4 @@
-import { CartoOnlineVectorTileLayer } from 'nativescript-carto/layers/vector';
+import { CartoOnlineVectorTileLayer, VectorTileLayer } from 'nativescript-carto/layers/vector';
 import { CartoMapStyle, fromNativeMapPos, MapPos, nativeVectorToArray, IntVector } from 'nativescript-carto/core';
 import { MergedMBVTTileDataSource, OrderedTileDataSource, TileDataSource } from 'nativescript-carto/datasources';
 import { HTTPTileDataSource } from 'nativescript-carto/datasources/http';
@@ -15,7 +15,8 @@ import {
     OSMOfflineReverseGeocodingService,
     OSMOfflineGeocodingService
 } from 'nativescript-carto/geocoding/service';
-import { Feature, FeatureCollection } from 'nativescript-carto/geometry/feature';
+import { Feature, FeatureCollection, VectorTileFeatureCollection } from 'nativescript-carto/geometry/feature';
+import { VectorTileSearchService, SearchRequest } from 'nativescript-carto/search';
 import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
 import {
     CartoPackageManager,
@@ -127,6 +128,7 @@ export default class PackageService extends Observable {
     vectorTileDecoder: MBVectorTileDecoder;
     downloadingPackages: { [k: string]: number } = {};
     hillshadeLayer?: HillshadeRasterTileLayer;
+    localVectorTileLayer?: VectorTileLayer;
     constructor() {
         super();
 
@@ -456,19 +458,29 @@ export default class PackageService extends Observable {
         }
         return this._offlineReverseSearchService;
     }
-    convertGeoCodingResults(result: GeocodingResultVector) {
+    convertGeoCodingResults(result: GeocodingResultVector, full = false) {
         const items = [];
         // this.dataItems = new GeocodingResultArray(result);
-        let geoRes: GeoResult, features: FeatureCollection, feature: Feature;
         const size = result.size();
         for (let i = 0; i < size; i++) {
-            if (geoRes) {
-                items.push(geoRes);
-            }
+            items.push(this.convertGeoCodingResult(result.get(i), full));
         }
         return items;
     }
-    convertGeoCodingResult(result: GeocodingResult) {
+
+    convertFeatureCollection(features: FeatureCollection) {
+        let feature: Feature;
+        if (features.getFeatureCount() > 0) {
+            feature = features.getFeature(0);
+            const r = {
+                properties: feature.properties,
+                position: feature.geometry ? fromNativeMapPos(feature.geometry.getCenterPos()) : undefined
+            } as GeoResult;
+
+            return r;
+        }
+    }
+    convertGeoCodingResult(result: GeocodingResult, full = false) {
         // this.dataItems = new GeocodingResultArray(result);
         let features: FeatureCollection, feature: Feature;
         const rank = result.getRank();
@@ -477,13 +489,17 @@ export default class PackageService extends Observable {
             // geoRes = result.get(j);
             feature = features.getFeature(0);
             // console.log('convertGeoCodingResult', feature.properties, address, feature.geometry, rank);
-            return {
+            const r = {
                 rank,
                 // categories: nativeVectorToArray(address.getCategories()),
                 properties: feature.properties,
                 address: result.getAddress(),
                 position: feature.geometry ? fromNativeMapPos(feature.geometry.getCenterPos()) : undefined
             } as GeoResult;
+            if (full) {
+                this.prepareGeoCodingResult(r);
+            }
+            return r;
         }
         // for (let j = 0; j < features.getFeatureCount(); j++) {
 
@@ -517,6 +533,7 @@ export default class PackageService extends Observable {
                         this.log('localOSMOfflineGeocodingService', s.name);
                         this._localOSMOfflineGeocodingService = new OSMOfflineGeocodingService({
                             language: this.currentLanguage,
+                            maxResults: 100,
                             path: s.path
                         });
                         this.log('localOSMOfflineGeocodingService done');
@@ -548,6 +565,19 @@ export default class PackageService extends Observable {
         }
         return this._localOSMOfflineReverseGeocodingService;
     }
+    _vectorTileSearchService: VectorTileSearchService;
+    get vectorTileSearchService() {
+        if (!this._vectorTileSearchService) {
+            if (this.localVectorTileLayer) {
+                this._vectorTileSearchService = new VectorTileSearchService({
+                    minZoom: 10,
+                    maxZoom: 10,
+                    layer: this.localVectorTileLayer
+                });
+            }
+        }
+        return this._vectorTileSearchService;
+    }
     searchInPackageGeocodingService(options: GeocodingRequest<LatLonKeys>): Promise<GeocodingResultVector> {
         if (!this.started) {
             return Promise.resolve(null);
@@ -560,6 +590,13 @@ export default class PackageService extends Observable {
         }
         return this.searchInGeocodingService(this.offlineReverseSearchService, options);
     }
+    searchInLocalGeocodingService(options: GeocodingRequest<LatLonKeys>): Promise<GeocodingResultVector> {
+        const service = this.localOSMOfflineGeocodingService;
+        if (!service) {
+            return Promise.resolve(null);
+        }
+        return this.searchInGeocodingService(service, options);
+    }
     searchInLocalReverseGeocodingService(options: ReverseGeocodingRequest<LatLonKeys>): Promise<GeocodingResultVector> {
         const service = this.localOSMOfflineReverseGeocodingService;
         if (!service) {
@@ -567,8 +604,14 @@ export default class PackageService extends Observable {
         }
         return this.searchInGeocodingService(service, options);
     }
+    searchInVectorTiles(options: SearchRequest): Promise<VectorTileFeatureCollection> {
+        const service = this.vectorTileSearchService;
+        if (!service) {
+            return Promise.resolve(null);
+        }
+        return new Promise(resolve => service.findFeatures(options, result => resolve(result)));
+    }
     prepareGeoCodingResult(geoRes: GeoResult) {
-        // const geoRes = this.convertGeoCodingResult(result);
         const address: any = {};
 
         [
@@ -582,7 +625,6 @@ export default class PackageService extends Observable {
             ['county', 'getCounty']
         ].forEach(d => {
             if (!address[d[0]]) {
-                // console.log('test', d[1], geoRes, geoRes.address[d[1]]);
                 const value = geoRes.address[d[1]]();
                 if (value.length > 0) {
                     address[d[0]] = value;
@@ -604,7 +646,7 @@ export default class PackageService extends Observable {
     }
     async getElevation(pos: MapPos<LatLonKeys>): Promise<number> {
         if (this.hillshadeLayer) {
-            return new Promise((resolve, reject)=> {
+            return new Promise((resolve, reject) => {
                 this.hillshadeLayer.getElevationAsync(pos, (err, result) => {
                     // this.log('searchInGeocodingService done', err, result && result.size());
                     if (err) {
@@ -613,13 +655,13 @@ export default class PackageService extends Observable {
                     }
                     resolve(result);
                 });
-            })
+            });
         }
         return null;
     }
     async getElevations(pos: MapPos<LatLonKeys>[]): Promise<IntVector> {
         if (this.hillshadeLayer) {
-            return new Promise((resolve, reject)=> {
+            return new Promise((resolve, reject) => {
                 this.hillshadeLayer.getElevationsAsync(pos, (err, result) => {
                     // this.log('searchInGeocodingService done', err, result && result.size());
                     if (err) {
@@ -628,7 +670,7 @@ export default class PackageService extends Observable {
                     }
                     resolve(result);
                 });
-            })
+            });
         }
         return null;
     }

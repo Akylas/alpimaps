@@ -829,12 +829,7 @@ export default class Map extends BgServicePageComponent {
         return this.bShowContourLines;
     }
     set showContourLines(value: boolean) {
-        this.log('set showContourLines', value, !!this.currentLayer);
         this.bShowContourLines = value;
-        // this.getVectorTileDecoder().setStyleParameter('buildings', !!value ? '2' : '1');
-        // if (this.currentLayer) {
-        //     this.reloadMapStyle();
-        // }
         this.getVectorTileDecoder().setStyleParameter('contours', value ? '1' : '0');
     }
     _contourLinesOpacity = 1;

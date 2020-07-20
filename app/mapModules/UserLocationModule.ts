@@ -6,7 +6,7 @@ import { LineStyleBuilder } from 'nativescript-carto/vectorelements/line';
 import { Point, PointStyleBuilder } from 'nativescript-carto/vectorelements/point';
 import { Polygon, PolygonStyleBuilder } from 'nativescript-carto/vectorelements/polygon';
 import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
-import { Color } from '@nativescript/core/color/color';
+import { Color } from '@nativescript/core/color';
 import { TWEEN } from 'nativescript-tween';
 import Map from '~/components/Map';
 import { GeoHandler, UserLocationdEvent, UserLocationdEventData } from '~/handlers/GeoHandler';

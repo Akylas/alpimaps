@@ -50,12 +50,16 @@ export default class CustomLayersModule extends MapModule {
         // this.customSources = new ObservableArray([]) as any;
     }
     createMergeMBtiles({ name, sources, legend }: { name: string; sources: string[]; legend?: string }) {
+        this.log('createMergeMBtiles', sources);
         let dataSource;
         if (sources.length === 1) {
             dataSource = new MBTilesTileDataSource({
                 databasePath: sources[0]
             });
         } else {
+            // dataSource = new MBTilesTileDataSource({
+            //     databasePath: sources[0]
+            // });
             dataSource = new MergedMBVTTileDataSource({
                 dataSources: sources.map(
                     s =>
@@ -103,7 +107,10 @@ export default class CustomLayersModule extends MapModule {
         // Apply zoom level bias to the raster layer.
         // By default, bitmaps are upsampled on high-DPI screens.
         // We will correct this by applying appropriate bias
-        const zoomLevelBias = appSettings.getNumber(`${id}_zoomLevelBias`, Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2) * 0.75);
+        const zoomLevelBias = appSettings.getNumber(
+            `${id}_zoomLevelBias`,
+            (Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2)) * 0.75
+        );
         // console.log('createRasterLayer', id, opacity, provider.url, databasePath, zoomLevelBias);
 
         const dataSource = new HTTPTileDataSource({
@@ -344,7 +351,7 @@ export default class CustomLayersModule extends MapModule {
 
     async getElevation(pos: MapPos<LatLonKeys>) {
         if (this.hillshadeLayer) {
-            return new Promise((resolve, reject)=> {
+            return new Promise((resolve, reject) => {
                 this.hillshadeLayer.getElevationAsync(pos, (err, result) => {
                     // this.log('searchInGeocodingService done', err, result && result.size());
                     if (err) {
@@ -353,132 +360,109 @@ export default class CustomLayersModule extends MapModule {
                     }
                     resolve(result);
                 });
-            })
+            });
         }
         return null;
     }
-    loadLocalMbtiles(directory: string) {
+    async loadLocalMbtiles(directory: string) {
         // console.log('loadLocalMbtiles',directory , Folder.exists(directory));
         if (!Folder.exists(directory)) {
             return;
         }
-        const folder = Folder.fromPath(directory);
-
-        const mapComp = this.mapComp;
-        let index = this.customSources.length;
-        folder
-            .getEntities()
-            .then(entities => {
-                // console.log('loadLocalMbtiles', folder, entities);
-                // if (entities.length > 0) {
-                //     const e = entities[0];
-                //     console.log('handling folder', e.path);
-                //     if (Folder.exists(e.path)) {
-                //         return Folder.fromPath(e.path)
-                //             .getEntities()
-                //             .then(subentities => {
-                //                 const data = this.createMergeMBtiles({
-                //                     legend: 'https://www.openstreetmap.org/key.html',
-                //                     name: e.name,
-                //                     sources: subentities.map(e2 => e2.path).filter(s => s.endsWith('.mbtiles'))
-                //                 });
-                //                 (data.index = index++), console.log('created mbtiles layer', data);
-                //                 this.customSources.push(data);
-                //                 mapComp.addLayer(data.layer, 'customLayers', data.index);
-                //             });
-                //     }
-                // }
-                return Promise.all(
-                    entities.map(e => {
-                        if (Folder.exists(e.path)) {
-                            return Folder.fromPath(e.path)
-                                .getEntities()
-                                .then(subentities => {
-                                    const data = this.createMergeMBtiles({
-                                        legend: 'https://www.openstreetmap.org/key.html',
-                                        name: e.name,
-                                        sources: subentities.map(e2 => e2.path).filter(s => s.endsWith('.mbtiles'))
-                                    });
-                                    data.index = index++;
-                                    // console.log('created mbtiles layer', data);
-                                    this.customSources.push(data);
-                                    mapComp.addLayer(data.layer, 'customLayers', data.index);
-                                });
-                        } else if (e.name.endsWith('.etiles')) {
-                            return Promise.resolve().then(() => {
-                                this.log('loading etiles', e.name);
-                                const dataSource = new MBTilesTileDataSource({
-                                    // minZoom: 5,
-                                    // maxZoom: 12,
-                                    databasePath: e.path
-                                });
-                                const name = e.name;
-                                const contrast = appSettings.getNumber(`${name}_contrast`, 0.30);
-                                const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.23);
-                                const illuminationDirection = appSettings.getNumber(`${name}_illuminationDirection`, 207);
-                                const opacity = appSettings.getNumber(`${name}_opacity`, 1);
-                                const decoder = new MapBoxElevationDataDecoder();
-                                const layer = (this.hillshadeLayer = (Vue.prototype
-                                    .$packageService as PackageService).hillshadeLayer = new HillshadeRasterTileLayer({
-                                    decoder,
-                                    tileFilterMode: RasterTileFilterMode.RASTER_TILE_FILTER_MODE_NEAREST,
-                                    visibleZoomRange: [0, 13],
-                                    contrast,
-                                    illuminationDirection,
-                                    highlightColor: new Color(255, 141, 141, 141),
-                                    heightScale,
-                                    dataSource,
-                                    opacity,
-                                    visible: opacity !== 0
-                                }));
-                                const tileFilterMode = appSettings.getString(`${name}_tileFilterMode`, 'bilinear');
-                                switch (tileFilterMode) {
-                                    case 'bicubic':
-                                        layer.getNative().setTileFilterMode(RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BICUBIC);
-                                        break;
-                                    case 'bilinear':
-                                        layer
-                                            .getNative()
-                                            .setTileFilterMode(RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BILINEAR);
-                                        break;
-                                    case 'nearest':
-                                        layer.getNative().setTileFilterMode(RasterTileFilterMode.RASTER_TILE_FILTER_MODE_NEAREST);
-                                        break;
-                                }
-                                const data = {
-                                    index: index++,
-                                    name,
-                                    opacity,
-                                    layer,
-                                    options: {
-                                        contrast: {
-                                            min: 0,
-                                            max: 1
-                                        },
-                                        heightScale: {
-                                            min: 0,
-                                            max: 2
-                                        },
-                                        zoomLevelBias: {
-                                            min: 0,
-                                            max: 5
-                                        }
-                                    },
-                                    provider: { name }
-                                };
-                                this.customSources.push(data);
-                                mapComp.addLayer(data.layer, 'customLayers', data.index);
-                            });
+        try {
+            const folder = Folder.fromPath(directory);
+            const mapComp = this.mapComp;
+            let index = this.customSources.length;
+            const entities = await folder.getEntities();
+            const folders = entities.filter(e => Folder.exists(e.path));
+            for (let i = 0; i < folders.length; i++) {
+                let f = folders[i];
+                const subentities = await Folder.fromPath(f.path).getEntities();
+                const data = this.createMergeMBtiles({
+                    legend: 'https://www.openstreetmap.org/key.html',
+                    name: f.name,
+                    sources: subentities.map(e2 => e2.path).filter(s => s.endsWith('.mbtiles'))
+                });
+                data.index = index++;
+                // console.log('created mbtiles layer', data);
+                this.customSources.push(data);
+                (Vue.prototype.$packageService as PackageService).localVectorTileLayer = data.layer;
+                mapComp.addLayer(data.layer, 'customLayers', data.index);
+            }
+            const etiles = entities.filter(e => e.name.endsWith('.etiles'));
+            etiles.forEach(e => {
+                this.log('loading etiles', e.name);
+                const dataSource = new MBTilesTileDataSource({
+                    // minZoom: 5,
+                    // maxZoom: 12,
+                    databasePath: e.path
+                });
+                const name = e.name;
+                const contrast = appSettings.getNumber(`${name}_contrast`, 0.58);
+                const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.14);
+                const illuminationDirection = appSettings.getNumber(`${name}_illuminationDirection`, 207);
+                const opacity = appSettings.getNumber(`${name}_opacity`, 1);
+                const decoder = new MapBoxElevationDataDecoder();
+                const layer = (this.hillshadeLayer = (Vue.prototype
+                    .$packageService as PackageService).hillshadeLayer = new HillshadeRasterTileLayer({
+                    decoder,
+                    tileFilterMode: RasterTileFilterMode.RASTER_TILE_FILTER_MODE_NEAREST,
+                    visibleZoomRange: [5, 16],
+                    contrast,
+                    illuminationDirection,
+                    highlightColor: new Color(255, 141, 141, 141),
+                    heightScale,
+                    dataSource,
+                    opacity,
+                    visible: opacity !== 0
+                }));
+                const tileFilterMode = appSettings.getString(`${name}_tileFilterMode`, 'bilinear');
+                switch (tileFilterMode) {
+                    case 'bicubic':
+                        layer.getNative().setTileFilterMode(RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BICUBIC);
+                        break;
+                    case 'bilinear':
+                        layer.getNative().setTileFilterMode(RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BILINEAR);
+                        break;
+                    case 'nearest':
+                        layer.getNative().setTileFilterMode(RasterTileFilterMode.RASTER_TILE_FILTER_MODE_NEAREST);
+                        break;
+                }
+                const data = {
+                    index: index++,
+                    name,
+                    opacity,
+                    layer,
+                    options: {
+                        contrast: {
+                            min: 0,
+                            max: 1
+                        },
+                        heightScale: {
+                            min: 0,
+                            max: 2
+                        },
+                        zoomLevelBias: {
+                            min: 0,
+                            max: 5
+                        },
+                        illuminationDirection: {
+                            min: 0,
+                            max: 359
                         }
-                    })
-                );
-            })
-            .catch(err => {
-                cerror(err);
-                setTimeout(() => {
-                    throw err;
-                }, 0);
+                    },
+                    provider: { name }
+                };
+                this.customSources.push(data);
+                mapComp.addLayer(data.layer, 'customLayers', data.index);
             });
+            // return Promise.all(
+        } catch (err) {
+            cerror(err);
+            setTimeout(() => {
+                throw err;
+            }, 0);
+        }
     }
 
     selectLocalMbtilesFolder() {
