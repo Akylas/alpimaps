@@ -43,7 +43,7 @@ module.exports = (env, params = {}) => {
 
     // Add your custom Activities, Services and other android app components here.
     let appComponents = env.appComponents || [];
-    // appComponents.push(...['tns-core-modules/ui/frame', 'tns-core-modules/ui/frame/activity']);
+    appComponents.push(...['tns-core-modules/ui/frame', 'tns-core-modules/ui/frame/activity']);
 
     // if (platform === 'android') {
     // appComponents.push(...[resolve(__dirname, 'app/services/android/BgService.ts'), resolve(__dirname, 'app/services/android/BgServiceBinder.ts')]);

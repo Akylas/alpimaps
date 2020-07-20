@@ -587,7 +587,7 @@
 					text-fill: @poi_dark;
 					text-halo-fill: @peak_halo;
 					text-halo-rasterizer: fast;
-					text-halo-radius: linear([view::zoom], (14, 1), (18, 0.5));
+					text-halo-radius: 1;
 					text-size: linear([view::zoom], (14, 7), (18, 10)) - 0.000001 * [rank];
 					text-wrap-width: step([zoom], (14, 40), (15, 50), (16, 60), (18, 70), (19, 100));
 					// text-feature-id: @featureId;
