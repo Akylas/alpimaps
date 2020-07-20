@@ -23,6 +23,12 @@ import { statusBarHeight } from '~/variables';
 import { layout } from '@nativescript/core/utils/utils';
 import { enumerable } from '~/utils';
 // const addressFormatter = require('@fragaria/address-formatter'); // const OPEN_DURATION = 200;
+
+const providerColors = {
+    here: 'blue',
+    carto: 'orange',
+    photon: 'red'
+};
 const deburr = require('deburr');
 function cleanUpString(s) {
     return new deburr.Deburr(s)
@@ -300,7 +306,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
                 hideIfOverlapped: false,
                 size: 10,
                 scaleWithDPI: true,
-                color: item.provider === 'here' ? 'blue' : 'red'
+                color: providerColors[item.provider]
             },
             metaData
         });
@@ -314,7 +320,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
                 builder: new ClusterElementBuilder({
                     color: 'red',
                     size: 15,
-                    shape:"point"
+                    shape: 'point'
                     // buildClusterElement: this.buildClusterElement.bind(this)
                 }),
                 animatedClusters: true
@@ -337,14 +343,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
         return this.formatter.geItemIcon(item);
     }
     getItemIconColor(item: SearchItem) {
-        switch (item.provider) {
-            case 'here':
-                return 'blue';
-            case 'photon':
-                return 'red';
-            default:
-                return 'black';
-        }
+        return providerColors[item.provider];
     }
     getItemTitle(item: SearchItem) {
         return this.formatter.getItemTitle(item);
@@ -415,9 +414,13 @@ export default class Search extends BaseVueComponent implements IMapModule {
     }
 
     searchInGeocodingService(options) {
-        return this.$packageService.searchInPackageGeocodingService(options).then(result => {
-            // this.log('searchInGeocodingService', result.length);
-            return this.$packageService.convertGeoCodingResults(result).map(this.$packageService.prepareGeoCodingResult);
+        return this.$packageService.searchInLocalGeocodingService(options).then(result => {
+            return this.$packageService.convertGeoCodingResults(result, true);
+        });
+    }
+    searchInVectorTiles(options) {
+        return this.$packageService.searchInVectorTiles(options).then(result => {
+            return this.$packageService.convertFeatureCollection(result);
         });
     }
 
@@ -499,8 +502,8 @@ export default class Search extends BaseVueComponent implements IMapModule {
             // filterExpression: `layer::name='transportation_name'`,
             // filterExpression: "layer::name='place' OR layer::name='poi'",
             // `REGEXP_LIKE(name, '${_query}')`
-            location: this.$getMapComponent().cartoMap.focusPos
-            // locationRadius: 1000
+            location: this.$getMapComponent().cartoMap.focusPos,
+            // locationRadius: 1000,
         };
         // console.log('instantSearch', _query, options);
 
@@ -508,11 +511,14 @@ export default class Search extends BaseVueComponent implements IMapModule {
         this.dataItems = new ObservableArray([] as any);
         return Promise.all([
             this.searchInGeocodingService(options).then(r => {
-                // this.log('found geocoding result', JSON.stringify(r));
+                // this.log('found local result', JSON.stringify(r));
                 this.dataItems.push(r);
             }),
+            // this.searchInVectorTiles(options).then(r => {
+            //     this.log('found tile results', JSON.stringify(r));
+            //     r && this.dataItems.push(r);
+            // }),
             this.herePlaceSearch(options).then(r => {
-                // this.log('found here result', JSON.stringify(r));
                 this.dataItems.push(r);
             }),
             this.photonSearch(options).then(r => {
@@ -606,7 +612,6 @@ export default class Search extends BaseVueComponent implements IMapModule {
     }
     toggleFilterOSMKey() {
         this.filteringOSMKey = !this.filteringOSMKey;
-        console.log('toggleFilterOSMKey', this.currentQuery);
         if (this.showingOnMap) {
             this.showResultsOnMap();
         }
