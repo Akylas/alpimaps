@@ -43,7 +43,7 @@ export default class ItemFormatter extends MapModule {
             result.push(item.address.houseNumber);
         }
         result.push('osm-office');
-        // console.log('itemIcon', item, result);
+        console.log('itemIcon', item, result);
         return result;
     }
 

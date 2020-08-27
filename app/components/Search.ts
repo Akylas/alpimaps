@@ -385,19 +385,29 @@ export default class Search extends BaseVueComponent implements IMapModule {
     onLoaded() {}
     hasFocus = false;
     onFocus(e) {
-        // clog('onFocus');
+        this.log('onFocus');
         this.hasFocus = true;
         if (this.currentSearchText && this.searchResultsCount === 0) {
             this.instantSearch(this.currentSearchText);
         }
     }
     onBlur(e) {
-        // clog('onBlur');
+        this.log('onBlur');
         this.hasFocus = false;
+    }
+
+    searchForQuery(query) {
+        this.textField.text = query;
+        setTimeout(() => {
+            this.textField.requestFocus();
+        }, 100);
+
+        // this.currentSearchText = query;
+        // return this.instantSearch(this.currentSearchText);
     }
     onTextChange(e) {
         const query = e.value;
-        // console.log('onTextChange', query);
+        console.log('onTextChange', query);
         if (this.searchAsTypeTimer) {
             clearTimeout(this.searchAsTypeTimer);
             this.searchAsTypeTimer = null;
@@ -502,7 +512,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
             // filterExpression: `layer::name='transportation_name'`,
             // filterExpression: "layer::name='place' OR layer::name='poi'",
             // `REGEXP_LIKE(name, '${_query}')`
-            location: this.$getMapComponent().cartoMap.focusPos,
+            location: this.$getMapComponent().cartoMap.focusPos
             // locationRadius: 1000,
         };
         // console.log('instantSearch', _query, options);
@@ -568,6 +578,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
         // this.unfocus();
     }
     unfocus() {
+        console.log('unfocus');
         if (this.searchAsTypeTimer) {
             clearTimeout(this.searchAsTypeTimer);
             this.searchAsTypeTimer = null;
@@ -598,8 +609,8 @@ export default class Search extends BaseVueComponent implements IMapModule {
             return;
         }
         // const extent = item.properties.extent;
-        // clog('Item Tapped', item.position, extent, item);
-        this.mapComp.selectItem({ item, isFeatureInteresting: true });
+        console.log('Item Tapped', item);
+        this.mapComp.selectItem({ item, isFeatureInteresting: true, zoom: 14 });
         this.unfocus();
     }
 

@@ -25,16 +25,21 @@
 		line-width: 0.68;
 		line-color: @contour;
 		line-opacity: linear([view::zoom], (12, 0), (12.1, 0.1))
-		[zoom<13],
-		[zoom>=13][div>=100],
-		[zoom>=14][div>=50],
-		[zoom>=15][div>=20]{
+		// [zoom<13],
+		[zoom>=13][div>=200],
+		[zoom>=14][div>=50]{
 			line-opacity: linear([view::zoom], (12, 0), (12.1, 0.2), (16, 0.3))
 		}
-		[div>=100][zoom>=15],
+		[div>=50][zoom>=15],
+		[div>=100][zoom>=13],
 		[div>=200] {
 			line-opacity: linear([view::zoom], (12, 0), (12.1, 0.3), (16, 0.4))
-			line-width: 0.96;
+			line-width: 0.86;
+			line-color:#947d33;
+			[div>=100] {
+				line-color:#944a33;
+				// line-width: 0.93;
+			}
 		}
 		[div>=200][zoom>=13],
 		[div>=100][zoom>=14] {

@@ -1,3 +1,7 @@
+import { Folder } from '@nativescript/core/file-system';
+import { device } from '@nativescript/core/platform';
+import { TextField } from '@nativescript/core/ui/text-field';
+import { layout } from '@nativescript/core/utils/utils';
 import { ClickType, fromNativeMapPos, MapPos } from 'nativescript-carto/core';
 import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
 import { VectorElementEventData, VectorLayer, VectorTileEventData } from 'nativescript-carto/layers/vector';
@@ -5,29 +9,20 @@ import {
     PackageManagerValhallaRoutingService,
     RoutingAction,
     RoutingResult,
+    ValhallaOfflineRoutingService,
     ValhallaOnlineRoutingService,
-    ValhallaProfile,
-    ValhallaOfflineRoutingService
+    ValhallaProfile
 } from 'nativescript-carto/routing';
 import { CartoMap } from 'nativescript-carto/ui';
+import { Group } from 'nativescript-carto/vectorelements/group';
 import { Line, LineEndType, LineJointType, LineStyleBuilder } from 'nativescript-carto/vectorelements/line';
 import { Marker, MarkerStyleBuilder } from 'nativescript-carto/vectorelements/marker';
-import { Point, PointStyleBuilder } from 'nativescript-carto/vectorelements/point';
-import { Text, TextStyleBuilder } from 'nativescript-carto/vectorelements/text';
-import { Group, GroupOptions } from 'nativescript-carto/vectorelements/group';
-import { confirm } from 'nativescript-material-dialogs';
-import { TextField } from '@nativescript/core/ui/text-field/text-field';
+import { Point } from 'nativescript-carto/vectorelements/point';
 import { Component } from 'vue-property-decorator';
-// import { layout } from '@nativescript/core/utils/utils';
 import { Item } from '~/mapModules/ItemsModule';
 import { IMapModule } from '~/mapModules/MapModule';
 import BaseVueComponent from './BaseVueComponent';
 import Map from './Map';
-import { showSnack } from 'nativescript-material-snackbar';
-import { File, Folder, path } from '@nativescript/core/file-system';
-import { device } from '@nativescript/core/platform';
-import { layout } from '@nativescript/core/utils/utils';
-import { OSMOfflineGeocodingService, OSMOfflineReverseGeocodingService } from 'nativescript-carto/geocoding/service';
 
 export interface RouteInstruction {
     position: MapPos<LatLonKeys>;
@@ -102,13 +97,9 @@ function routingResultToJSON(result: RoutingResult<LatLonKeys>) {
 export default class DirectionsPanel extends BaseVueComponent implements IMapModule {
     mapView: CartoMap<LatLonKeys>;
     mapComp: Map;
-
     opened = false;
-
     _routeDataSource: LocalVectorDataSource;
     _routeLayer: VectorLayer;
-    // startMarker: Marker = null;
-    // stopMarker: Marker = null;
     waypoints: Array<{
         marker: Group;
         position: MapPos<LatLonKeys>;
@@ -117,10 +108,8 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         metaData: any;
         text: string;
     }> = [];
-    // waypoints: MapPos[] = [];
-    // stopPos: MapwaypointsPos = null;
     profile: ValhallaProfile = 'pedestrian';
-    showOptions = false;
+    showOptions = true;
     loading = false;
     currentRoute: Route;
     currentLine: Line;
@@ -138,7 +127,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     }
 
     get peekHeight() {
-        return Math.round(layout.toDeviceIndependentPixels(this.nativeView.getMeasuredHeight()))
+        return Math.round(layout.toDeviceIndependentPixels(this.nativeView.getMeasuredHeight()));
     }
     get fullHeight() {
         return this.peekHeight;
@@ -381,8 +370,9 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     _localOfflineRoutingSearchService: ValhallaOfflineRoutingService;
     get localOfflineRoutingSearchService() {
         if (!this._localOfflineRoutingSearchService) {
-            if (Folder.exists(LOCAL_MBTILES)) {
-                const folder = Folder.fromPath(LOCAL_MBTILES);
+            const folderPath = this.$packageService.getDefaultMBTilesDir();
+            if (Folder.exists(folderPath)) {
+                const folder = Folder.fromPath(folderPath);
                 const entities = folder.getEntitiesSync();
                 entities.some(s => {
                     if (s.name.endsWith('.vtiles')) {
@@ -553,15 +543,17 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             })
             .catch(error => {
                 if (!online) {
-                    return confirm({
-                        message: this.$t('try_online'),
-                        okButtonText: this.$t('ok'),
-                        cancelButtonText: this.$t('cancel')
-                    }).then(result => {
-                        if (result) {
-                            this.showRoute(true);
-                        }
-                    });
+                    // return confirm({
+                    //     message: this.$t('try_online'),
+                    //     okButtonText: this.$t('ok'),
+                    //     cancelButtonText: this.$t('cancel')
+                    // }).then(result => {
+                    // if (result) {
+                    this.showRoute(true);
+                    //     } else {
+                    //         this.cancel();
+                    //     }
+                    // });
                 } else {
                     this.cancel();
                     return Promise.reject(error || 'failed to compute route');
