@@ -53,6 +53,8 @@
 		line-width:0.5;
 	}
 }
+
+
 #transportation['mapnik::geometry_type'=2] {
 		/* Data on z<10 comes from osm_planet_roads, data on z>=10 comes from
 	osm_planet_line. This is for performance reasons: osm_planet_roads contains less
@@ -1752,81 +1754,6 @@
 }
 
 
-#transportation[oneway!=0][zoom>=16] {
-	// intentionally omitting highway_platform, highway_construction
-	[class=motorway],
-	[class=trunk],
-	[class=primary],
-	[class=secondary],
-	[class=tertiary],
-	[class=residential],
-	[class=minor],
-	[class=road],
-	[class=service],
-	// [class=path][subclass=pedestrian],
-	[class=raceway] {
-		// text-placement: line;
-		// text-face-name: @osm;
-		// text-name: [oneway] = 1 ? [nuti::osm-oneway] : [nuti::osm-oneway-reverse];
-		// text-size: linear([view::zoom], (15, 6), (18, 20.0));
-		// marker-spacing: 400;
-		marker-placement: line;
-		// marker-file: [oneway]=1 ? url('symbols/oneway.svg') : url('symbols/oneway-reverse.svg');
-		// marker-size: linear([view::zoom], (15, 6), (18, 20.0));
-		// [zoom>=15] { marker-transform: scale(0.9, 0.9); }
-		marker-type:arrow;
-		// marker-fill-opacity:0.9;marker-line-color:#FFF;
-		marker-line-width:0;
-		marker-opacity:0.6;
-		marker-width: 6;
-		marker-height: 5;
-		// marker-transform: scale(0.8,1.3);
-		// [zoom>=16] { marker-transform: scale(1.0, 1.0); }
-		// [zoom>=17] { marker-transform: scale(1.2, 1.2); }
-		// [zoom>=18] { marker-transform: scale(1.4,1.4); } 
-		// marker-fill: #ff0000;
-
-		[class=motorway] {
-			marker-fill: @motorway-oneway-arrow-color;
-			// text-fill: @motorway-oneway-arrow-color;
-		}
-		[class=trunk] {
-			marker-fill: @trunk-oneway-arrow-color;
-			// text-fill: @trunk-oneway-arrow-color;
-		}
-		[class=primary] {
-			marker-fill: @primary-oneway-arrow-color;
-			// text-fill: @primary-oneway-arrow-color;
-		}
-		[class=secondary] {
-			marker-fill: @secondary-oneway-arrow-color;
-			// text-fill: @secondary-oneway-arrow-color;
-		}
-		[class=tertiary] {
-			marker-fill: @tertiary-oneway-arrow-color;
-			// text-fill: @tertiary-oneway-arrow-color;
-		}
-		[class=residential],
-		[class=unclassified],
-		[class=minor],
-		[class=road],
-		[class=service] {
-			marker-fill: @residential-oneway-arrow-color;
-			// text-fill: @residential-oneway-arrow-color;
-		}
-		[class=living_street] {
-			marker-fill: @living-street-oneway-arrow-color;
-			// text-fill: @living-street-oneway-arrow-color;
-		}
-		// [class=path][subclass=pedestrian] {
-		// 	text-fill: @pedestrian-oneway-arrow-color;
-		// }
-		[class=raceway] {
-			marker-fill: @raceway-oneway-arrow-color;
-			// text-fill: @raceway-oneway-arrow-color;
-		}
-	}
-}
 
 // 	[class=path][zoom>=17] {
 // 		[subclass=steps],

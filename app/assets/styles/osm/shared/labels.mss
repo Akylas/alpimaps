@@ -363,6 +363,57 @@
 }
 
 
+#transportation[oneway!=0][zoom>=16] {
+	// intentionally omitting highway_platform, highway_construction
+	[class=motorway],
+	[class=trunk],
+	[class=primary],
+	[class=secondary],
+	[class=tertiary],
+	[class=residential],
+	[class=minor],
+	[class=road],
+	[class=service],
+	// [class=path][subclass=pedestrian],
+	[class=raceway] {
+		marker-placement: line;
+		marker-type:arrow;
+		// marker-allow-overlap: true;
+		marker-line-width:0;
+		marker-opacity:0.6;
+		marker-width: 6;
+		marker-height: 5;
+
+		[class=motorway] {
+			marker-fill: @motorway-oneway-arrow-color;
+		}
+		[class=trunk] {
+			marker-fill: @trunk-oneway-arrow-color;
+		}
+		[class=primary] {
+			marker-fill: @primary-oneway-arrow-color;
+		}
+		[class=secondary] {
+			marker-fill: @secondary-oneway-arrow-color;
+		}
+		[class=tertiary] {
+			marker-fill: @tertiary-oneway-arrow-color;
+		}
+		[class=residential],
+		[class=unclassified],
+		[class=minor],
+		[class=road],
+		[class=service] {
+			marker-fill: @residential-oneway-arrow-color;
+		}
+		[class=living_street] {
+			marker-fill: @living-street-oneway-arrow-color;
+		}
+		[class=raceway] {
+			marker-fill: @raceway-oneway-arrow-color;
+		}
+	}
+}
 #transportation_name['mapnik::geometry_type'=2]{
 	[class=track][zoom>=13],
 	[class=path][subclass=path][zoom>=14],

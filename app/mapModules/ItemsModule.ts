@@ -1,20 +1,28 @@
+// MUST include nSQL from the lib path.
+import { nSQL } from '@nano-sql/core/lib';
+import { InanoSQLTableConfig } from '@nano-sql/core/lib/interfaces';
+import { Color } from '@nativescript/core';
+import { NativeSQLite } from 'nativescript-akylas-sqlite/nanosql';
 import { MapBounds, MapPos } from 'nativescript-carto/core';
 import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
 import { VectorLayer } from 'nativescript-carto/layers/vector';
 import { CartoMap } from 'nativescript-carto/ui';
+import { VectorElement } from 'nativescript-carto/vectorelements';
+import {
+    Line,
+    LineEndType,
+    LineJointType,
+    LineStyleBuilder,
+    LineStyleBuilderOptions
+} from 'nativescript-carto/vectorelements/line';
+import { Marker, MarkerStyleBuilder, MarkerStyleBuilderOptions } from 'nativescript-carto/vectorelements/marker';
+import { Point, PointStyleBuilder, PointStyleBuilderOptions } from 'nativescript-carto/vectorelements/point';
+import Vue from 'nativescript-vue';
+import tinycolor from 'tinycolor2';
 import { Route } from '~/components/DirectionsPanel';
 import Map from '~/components/Map';
+import { darkColor } from '~/variables';
 import MapModule from './MapModule';
-import Vue from 'nativescript-vue';
-
-import { NativeSQLite } from 'nativescript-akylas-sqlite/nanosql';
-// MUST include nSQL from the lib path.
-import { nSQL } from '@nano-sql/core/lib';
-import { InanoSQLTableConfig } from '@nano-sql/core/lib/interfaces';
-import { Line, LineEndType, LineJointType, LineStyleBuilder, LineStyleBuilderOptions } from 'nativescript-carto/vectorelements/line';
-import { Point, PointStyleBuilder, PointStyleBuilderOptions } from 'nativescript-carto/vectorelements/point';
-import { Marker, MarkerStyleBuilder, MarkerStyleBuilderOptions } from 'nativescript-carto/vectorelements/marker';
-import { VectorElement } from 'nativescript-carto/vectorelements';
 
 export const tables: InanoSQLTableConfig[] = [
     {
@@ -295,11 +303,13 @@ export default class ItemsModule extends MapModule {
     }
     itemToMetaData(item: Item) {
         const result = {};
-        Object.keys(item).filter(k=>k!== 'vectorElement').forEach(k => {
-            if (item[k] !== null && item[k] !== undefined) {
-                result[k] = JSON.stringify(item[k]);
-            }
-        });
+        Object.keys(item)
+            .filter(k => k !== 'vectorElement')
+            .forEach(k => {
+                if (item[k] !== null && item[k] !== undefined) {
+                    result[k] = JSON.stringify(item[k]);
+                }
+            });
         return result;
     }
     createLocalLine(item: Item, options: LineStyleBuilderOptions) {
@@ -310,7 +320,7 @@ export default class ItemsModule extends MapModule {
             }
         });
         this.getOrCreateLocalVectorLayer();
-        const styleBuilder = new LineStyleBuilder({ clickWidth: 10, ...options, width: 3 });
+        const styleBuilder = new LineStyleBuilder(options);
 
         const metaData = this.itemToMetaData(item);
         // console.log('metaData', metaData);
@@ -320,15 +330,16 @@ export default class ItemsModule extends MapModule {
         if (item.route) {
             const line = this.createLocalLine(item, item.styleOptions);
             this.localVectorDataSource.add(line);
+            item.vectorElement = line;
             return line;
         } else {
             const marker = this.createLocalMarker(item, item.styleOptions);
             this.localVectorDataSource.add(marker);
+            item.vectorElement = marker;
             return marker;
         }
     }
     addItemsToLayer(items: Item[]) {
-        // this.log('addItemsToLayer', items);
         items.forEach(this.addItemToLayer, this);
     }
     updateItem(item: Item) {
@@ -353,12 +364,13 @@ export default class ItemsModule extends MapModule {
     }
     saveItem(item: Item, styleOptions?: MarkerStyleBuilderOptions | PointStyleBuilderOptions | LineStyleBuilderOptions) {
         if (item.route) {
+            const color = new Color(darkColor);
             item.styleOptions = {
-                color: 'red',
+                color: new Color(150, color.r, color.g, color.b),
                 joinType: LineJointType.ROUND,
                 endType: LineEndType.ROUND,
-                width: 6,
-                clickWidth: 30,
+                width: 4,
+                clickWidth: 10,
                 ...item.styleOptions
             };
         } else {
