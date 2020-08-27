@@ -2,8 +2,8 @@
     "layers": [
         "housenumber",
         "water_name",
-        "transportation_name",
         "transportation",
+        "transportation_name",
         "building",
         "contour",
         "mountain_peak",

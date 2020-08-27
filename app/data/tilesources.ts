@@ -29,6 +29,7 @@ export interface Provider {
     id?: string;
     cacheable?: boolean;
     downloadable?: boolean;
+    devHidden?: boolean;
     isOverlay?: boolean;
     category?: string;
     attribution?: string;
@@ -101,7 +102,8 @@ export const data: { [k: string]: DataProvider } = {
         legend: 'https://www.geoportail.gouv.fr/depot/layers/{variant}/legendes/{variant}-legend.png',
         url:
             `http://wxs.ign.fr/${gVars.IGN_TOKEN}/geoportail/wmts?LAYER={variant}&EXCEPTIONS=text/xml&FORMAT={format}&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&STYLE={style}&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}`,
-        cacheable: TNS_ENV !== 'production',
+        cacheable: true,
+        downloadable: true,
         urlOptions: {
             variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS',
             format: 'image/jpeg',
@@ -111,7 +113,7 @@ export const data: { [k: string]: DataProvider } = {
             httpHeaders: {
                 'User-Agent': 'AlpiMaps'
             },
-            maxZoom: 18
+            maxZoom: 16
         },
         variants: {
             Plan: {
@@ -147,12 +149,12 @@ export const data: { [k: string]: DataProvider } = {
             },
             Scan25: {
                 urlOptions: {
-                    variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN25TOPO'
+                    variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN25TOUR',
                     // format: 'image/png',
                 },
-                sourceOptions:{
+                // sourceOptions:{
                     // TMSScheme:true
-                }
+                // }
             },
             Slopes: {
                 urlOptions: {

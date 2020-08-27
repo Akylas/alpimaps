@@ -1,15 +1,9 @@
 <template>
     <CanvasLabel fontSize="16" color="white" padding="5 5 5 5" @longPress="showRawData">
-        <CSpan
-            paddingLeft="10"
-            width="40"
-            v-if="!!itemIcon"
-            :text="itemIcon | fonticon"
-            fontFamily="osm"
-            fontSize="24"
-            verticalAlignment="middle"
-            :paddingBottom="itemSubtitle ? 10 : 0 + propsToDraw.length > 0 ? 5 : 0"
-        />
+        <!-- temporary fix -->
+        <CGroup verticalAlignment="middle" :paddingBottom="itemSubtitle ? 10 : 0 + propsToDraw.length > 0 ? 5 : 0">
+            <CSpan paddingLeft="10" width="40" v-if="!!itemIcon" :text="itemIcon | fonticon" fontFamily="osm" fontSize="24" />
+        </CGroup>
         <CGroup
             paddingLeft="40"
             :paddingBottom="itemSubtitle ? 10 : 0 + propsToDraw.length > 0 ? 5 : 0"
@@ -23,12 +17,11 @@
             fontSize="14"
             v-for="(prop, index) in propsToDraw"
             :paddingLeft="5 + index * 60"
-            
             verticalAlignment="bottom"
             textAlignment="left"
         >
             <CSpan :fontFamily="mdiFontFamily" color="gray" :text="propIcon(prop)" />
-            <CSpan :text="propValue(prop)"/>
+            <CSpan :text="propValue(prop)" />
         </CGroup>
     </CanvasLabel>
 </template>
