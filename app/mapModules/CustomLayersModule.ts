@@ -22,6 +22,7 @@ import { openFilePicker } from 'nativescript-document-picker';
 import { Color } from '@nativescript/core/color';
 import { MapPos } from 'nativescript-carto/core';
 import PackageService from '~/services/PackageService';
+import * as app from '@nativescript/core/application';
 
 function templateString(str: string, data) {
     return str.replace(
@@ -99,9 +100,9 @@ export default class CustomLayersModule extends MapModule {
         };
     }
     createRasterLayer(id: string, provider: Provider) {
-        const rasterCachePath = path.join(getDataFolder(), 'rastercache');
 
         const opacity = appSettings.getNumber(`${id}_opacity`, 1);
+        const rasterCachePath = path.join(getDataFolder(), 'rastercache');
         const databasePath = File.fromPath(path.join(rasterCachePath, id)).path;
 
         // Apply zoom level bias to the raster layer.
@@ -111,12 +112,12 @@ export default class CustomLayersModule extends MapModule {
             `${id}_zoomLevelBias`,
             (Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2)) * 0.75
         );
-        // console.log('createRasterLayer', id, opacity, provider.url, databasePath, zoomLevelBias);
 
         const dataSource = new HTTPTileDataSource({
             url: provider.url as string,
             ...provider.sourceOptions
         });
+        // console.log('createRasterLayer', id, opacity, provider.url, provider.sourceOptions, dataSource, dataSource.maxZoom, dataSource.minZoom);
         return {
             name: id,
             legend: provider.legend,
@@ -200,6 +201,15 @@ export default class CustomLayersModule extends MapModule {
 
         if (data.legend) {
             provider.legend = templateString(data.legend, provider.urlOptions);
+        }
+        if (data.cacheable !== undefined) {
+            provider.cacheable = data.cacheable;
+        }
+        if (data.downloadable !== undefined) {
+            provider.downloadable = data.downloadable;
+        }
+        if (data.devHidden !== undefined) {
+            provider.devHidden = data.devHidden;
         }
 
         // overwrite values in provider from variant.
@@ -316,14 +326,26 @@ export default class CustomLayersModule extends MapModule {
                 });
             });
         }
-
-        // const localMbtilesSource = appSettings.getString('local_mbtiles_directory', path.join(getDataFolder(), 'alpimaps_mbtiles'));
-        // const localMbtilesSource = appSettings.getString('local_mbtiles_directory', '/sdcard/Download/alpimaps_mbtiles');
-        const localMbtilesSource = appSettings.getString('local_mbtiles_directory', LOCAL_MBTILES);
-        console.log('localMbtilesSource', localMbtilesSource);
-        if (localMbtilesSource) {
-            this.loadLocalMbtiles(localMbtilesSource);
+        
+        const folderPath = (Vue.prototype.$packageService as PackageService).getDefaultMBTilesDir();
+        console.log('localMbtilesSource', folderPath);
+        if (folderPath) {
+            this.loadLocalMbtiles(folderPath);
         }
+    }
+
+    getDefaultMBTilesDir() {
+        let localMbtilesSource = appSettings.getString('local_mbtiles_directory');
+        if (!localMbtilesSource) {
+            let defaultPath = path.join(getDataFolder(), 'alpimaps_mbtiles');
+            if (gVars.isAndroid) {
+                const dirs = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
+                const sdcardFolder = dirs[dirs.length - 1].getAbsolutePath();
+                defaultPath = path.join(sdcardFolder, '../../../..','alpimaps_mbtiles');
+            }
+             localMbtilesSource = appSettings.getString('local_mbtiles_directory', defaultPath);
+        }
+        return localMbtilesSource;
     }
     vectorTileDecoderChanged(oldVectorTileDecoder, newVectorTileDecoder) {
         this.customSources.forEach(s => {
@@ -389,7 +411,7 @@ export default class CustomLayersModule extends MapModule {
                 (Vue.prototype.$packageService as PackageService).localVectorTileLayer = data.layer;
                 mapComp.addLayer(data.layer, 'customLayers', data.index);
             }
-            const etiles = entities.filter(e => e.name.endsWith('.etiles'));
+            const etiles = entities.filter(e => e.name.endsWith('.etiles')).slice(-1);
             etiles.forEach(e => {
                 this.log('loading etiles', e.name);
                 const dataSource = new MBTilesTileDataSource({
@@ -398,8 +420,8 @@ export default class CustomLayersModule extends MapModule {
                     databasePath: e.path
                 });
                 const name = e.name;
-                const contrast = appSettings.getNumber(`${name}_contrast`, 0.58);
-                const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.14);
+                const contrast = appSettings.getNumber(`${name}_contrast`, 0.39);
+                const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.29);
                 const illuminationDirection = appSettings.getNumber(`${name}_illuminationDirection`, 207);
                 const opacity = appSettings.getNumber(`${name}_opacity`, 1);
                 const decoder = new MapBoxElevationDataDecoder();
@@ -513,7 +535,6 @@ export default class CustomLayersModule extends MapModule {
                     const result = Array.isArray(results) ? results[0] : results;
                     if (result) {
                         const data = this.createRasterLayer(result.name, result.provider);
-                        this.log('about to add', result, data);
                         this.mapComp.addLayer(data.layer, 'customLayers', this.customSources.length);
                         this.customSources.push(data);
                         this.log('layer added', data.provider);

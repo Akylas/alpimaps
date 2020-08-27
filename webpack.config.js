@@ -117,6 +117,7 @@ module.exports = (env, params = {}) => {
     alias['~'] = appFullPath;
     alias['@'] = appFullPath;
     alias['vue'] = 'nativescript-vue';
+    alias['@nativescript/core'] = '@akylas/nativescript';
 
     if (hasRootLevelScopedModules) {
         coreModulesPackageName = '@nativescript/core';
@@ -185,6 +186,7 @@ module.exports = (env, params = {}) => {
             'gVars.isAndroid': platform === 'android',
             TNS_ENV: JSON.stringify(mode),
             'gVars.sentry': !!sentry,
+            MAGICK_MODE:true, 
             SENTRY_DSN: `"${process.env.SENTRY_DSN}"`,
             SENTRY_PREFIX: `"${!!sentry ? process.env.SENTRY_PREFIX : ''}"`,
             LOCAL_MBTILES: `"${!!emulator ? '/storage/100F-3415/alpimaps_mbtiles' : '/storage/C0E5-1DEA/alpimaps_mbtiles'}"`,
