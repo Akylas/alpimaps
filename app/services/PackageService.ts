@@ -40,6 +40,7 @@ import tinycolor from 'tinycolor2';
 // const tinycolor = require('tinycolor2');
 import KalmanFilter from 'kalmanjs';
 import { HillshadeRasterTileLayer } from 'nativescript-carto/layers/raster';
+import * as app from '@nativescript/core/application';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
@@ -521,12 +522,25 @@ export default class PackageService extends Observable {
             });
         });
     }
-
+    getDefaultMBTilesDir() {
+        let localMbtilesSource = appSettings.getString('local_mbtiles_directory');
+        if (!localMbtilesSource) {
+            let defaultPath = path.join(getDataFolder(), 'alpimaps_mbtiles');
+            if (gVars.isAndroid) {
+                const dirs = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
+                const sdcardFolder = dirs[dirs.length - 1].getAbsolutePath();
+                defaultPath = path.join(sdcardFolder, '../../../..','alpimaps_mbtiles');
+            }
+             localMbtilesSource = appSettings.getString('local_mbtiles_directory', defaultPath);
+        }
+        return localMbtilesSource;
+    }
     _localOSMOfflineGeocodingService: OSMOfflineGeocodingService;
     get localOSMOfflineGeocodingService() {
         if (!this._localOSMOfflineGeocodingService) {
-            if (Folder.exists(LOCAL_MBTILES)) {
-                const folder = Folder.fromPath(LOCAL_MBTILES);
+            const folderPath = this.getDefaultMBTilesDir();
+            if (Folder.exists(folderPath)) {
+                const folder = Folder.fromPath(folderPath);
                 const entities = folder.getEntitiesSync();
                 entities.some(s => {
                     if (s.name.endsWith('.nutigeodb')) {
@@ -547,8 +561,9 @@ export default class PackageService extends Observable {
     _localOSMOfflineReverseGeocodingService: OSMOfflineReverseGeocodingService;
     get localOSMOfflineReverseGeocodingService() {
         if (!this._localOSMOfflineReverseGeocodingService) {
-            if (Folder.exists(LOCAL_MBTILES)) {
-                const folder = Folder.fromPath(LOCAL_MBTILES);
+            const folderPath = this.getDefaultMBTilesDir();
+            if (Folder.exists(folderPath)) {
+                const folder = Folder.fromPath(folderPath);
                 const entities = folder.getEntitiesSync();
                 entities.some(s => {
                     if (s.name.endsWith('.nutigeodb')) {
