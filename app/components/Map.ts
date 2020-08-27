@@ -1,9 +1,13 @@
+import { Color } from '@nativescript/core';
+import { android as androidApp, AndroidApplication } from '@nativescript/core/application';
 import * as appSettings from '@nativescript/core/application-settings';
 import { Folder, knownFolders, path } from '@nativescript/core/file-system';
 import { screen } from '@nativescript/core/platform';
 import { profile } from '@nativescript/core/profiling';
 import { ad } from '@nativescript/core/utils/utils';
 import { throttle } from 'helpful-decorators';
+import { AppURL, handleOpenURL } from 'nativescript-appurl';
+import { Brightness } from 'nativescript-brightness';
 import { CartoMapStyle, ClickType, MapPos, ScreenPos, toNativeScreenPos } from 'nativescript-carto/core';
 import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
 import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
@@ -18,13 +22,8 @@ import {
 } from 'nativescript-carto/layers/vector';
 import { Projection } from 'nativescript-carto/projections';
 import { CartoMap, PanningMode, RenderProjectionMode } from 'nativescript-carto/ui';
-import {
-    Line,
-    LineEndType,
-    LineJointType,
-    LineStyleBuilder,
-    LineStyleBuilderOptions
-} from 'nativescript-carto/vectorelements/line';
+import { setShowDebug, setShowError, setShowInfo, setShowWarn } from 'nativescript-carto/utils';
+import { Line, LineStyleBuilder, LineStyleBuilderOptions } from 'nativescript-carto/vectorelements/line';
 import { Marker, MarkerStyleBuilder, MarkerStyleBuilderOptions } from 'nativescript-carto/vectorelements/marker';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from 'nativescript-carto/vectorelements/point';
 import { MBVectorTileDecoder } from 'nativescript-carto/vectortiles';
@@ -32,7 +31,7 @@ import { allowSleepAgain, keepAwake } from 'nativescript-insomnia';
 import { action } from 'nativescript-material-dialogs';
 import * as perms from 'nativescript-perms';
 import * as SocialShare from 'nativescript-social-share';
-import { AppURL, handleOpenURL } from 'nativescript-urlhandler';
+import tinycolor from 'tinycolor2';
 import { Component, Prop } from 'vue-property-decorator';
 import { GeoHandler } from '~/handlers/GeoHandler';
 import { $t } from '~/helpers/locale';
@@ -43,22 +42,18 @@ import MapModule from '~/mapModules/MapModule';
 import UserLocationModule from '~/mapModules/UserLocationModule';
 import { NotificationHelper, NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL } from '~/services/android/NotifcationHelper';
 import { computeDistanceBetween, getBoundsZoomLevel, getCenter } from '~/utils/geo';
-import { actionBarButtonHeight, actionBarHeight, navigationBarHeight, primaryColor } from '../variables';
+import { actionBarButtonHeight, navigationBarHeight, primaryColor } from '../variables';
 import BgServicePageComponent from './BgServicePageComponent';
-import BottomSheet, { LISTVIEW_HEIGHT, PROFILE_HEIGHT } from './BottomSheet';
+import BottomSheet from './BottomSheet';
 import BottomSheetHolder, { BottomSheetHolderScrollEventData } from './BottomSheet/BottomSheetHolder';
 import DirectionsPanel from './DirectionsPanel';
+import LocationInfoPanel from './LocationInfoPanel';
 import MapRightMenu from './MapRightMenu';
 import MapScrollingWidgets from './MapScrollingWidgets';
-import LocationInfoPanel from './LocationInfoPanel';
 import PackagesDownloadComponent from './PackagesDownloadComponent';
 import Search from './Search';
 import TopSheetHolder, { DEFAULT_TOP, TopSheetHolderScrollEventData } from './TopSheetHolder';
-import { setShowDebug, setShowError, setShowInfo, setShowWarn } from 'nativescript-carto/utils';
-import { Brightness } from 'nativescript-brightness';
 const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
-
-const tinycolor = require('tinycolor2');
 
 function distance(pos1: ScreenPos, pos2: ScreenPos) {
     return Math.sqrt(Math.pow(pos1.x - pos2.x, 2) + Math.pow(pos1.y - pos2.y, 2));
@@ -179,7 +174,7 @@ export default class Map extends BgServicePageComponent {
     vectorTileDecoder: MBVectorTileDecoder;
 
     selectedPosMarker: Marker<LatLonKeys>;
-    selectedRouteLine: Line<LatLonKeys>;
+    // selectedRouteLine: Line<LatLonKeys>;
     mSelectedItem: Item = null;
     itemLoading = false;
     mapProjection: Projection = null;
@@ -244,7 +239,7 @@ export default class Map extends BgServicePageComponent {
         }
     }
     searchText: string = null;
-    onAppUrl(appURL: AppURL) {
+    handleReceivedAppUrl(appURL: AppURL) {
         console.log('Got the following appURL', appURL.path, Array.from(appURL.params.entries()));
         if (appURL.path.startsWith('eo')) {
             const latlong = appURL.path
@@ -287,31 +282,35 @@ export default class Map extends BgServicePageComponent {
                         isFeatureInteresting: true
                     });
                 } else {
-                    this.showLoading(this.$tc(`searching_for:${actualQuery}`));
-                    this.$packageService
-                        .searchInPackageGeocodingService({
-                            projection: this.mapProjection,
-                            query: actualQuery.replace(/[,]/g, ' ')
-                        })
-                        .then(result => {
-                            if (result.size() > 0) {
-                                // console.log('found it!', this.$packageService.prepareGeoCodingResult(result[0]));
-                                this.selectItem({
-                                    item: this.$packageService.prepareGeoCodingResult(result[0]),
-                                    isFeatureInteresting: true,
-                                    peek: true,
-                                    zoom: 16
-                                });
-                            } else {
-                                this.searchText = actualQuery.replace(/[,]/g, ' ');
-                            }
-                        })
-                        .catch(err => this.showError(err))
-                        .then(() => this.hideLoading());
+                    this.searchView.searchForQuery(actualQuery);
                 }
             }
         } else if (appURL.path && appURL.path.endsWith('.gpx')) {
             console.log('importing GPX', appURL.path);
+        }
+    }
+    onAppUrl(appURL: AppURL, args) {
+        if (gVars.isAndroid) {
+            const activity = androidApp.startActivity;
+            const visible =
+                activity &&
+                activity
+                    .getWindow()
+                    .getDecorView()
+                    .getRootView()
+                    .isShown();
+            if (!visible) {
+                if (args && args.eventName === AndroidApplication.activityStartedEvent) {
+                    //ignoring newIntent in background as we already received start activity event with intent
+                    return;
+                } else {
+                }
+            }
+        }
+        try {
+            this.handleReceivedAppUrl(appURL);
+        } catch (err) {
+            console.log(err);
         }
     }
 
@@ -404,7 +403,7 @@ export default class Map extends BgServicePageComponent {
         }
         global.__onLiveSync = defaultLiveSync;
         this.selectedPosMarker = null;
-        this.selectedRouteLine = null;
+        // this.selectedRouteLine = null;
         super.destroyed();
     }
 
@@ -504,9 +503,9 @@ export default class Map extends BgServicePageComponent {
 
     onMapReady(e) {
         const cartoMap = (this._cartoMap = e.object as CartoMap<LatLonKeys>);
-        setShowDebug(DEV_LOG);
-        setShowInfo(DEV_LOG);
-        setShowWarn(DEV_LOG);
+        setShowDebug(true);
+        setShowInfo(true);
+        setShowWarn(true);
         setShowError(true);
         this.mapProjection = cartoMap.projection;
         if (gVars.isAndroid) {
@@ -583,24 +582,32 @@ export default class Map extends BgServicePageComponent {
     }) {
         if (isFeatureInteresting) {
             if (item.route) {
-                if (!this.selectedRouteLine) {
-                    this.selectedRouteLine = this.createLocalLine(item.route.positions, {
-                        // color: '#55ff0000',
-                        color: 'white',
-                        // visible: false,
-                        joinType: LineJointType.ROUND,
-                        endType: LineEndType.ROUND,
-                        width: (item.styleOptions ? item.styleOptions.width : 6) + 2,
-                        clickWidth: 0
-
-                        // orientationMode: BillboardOrientation.GROUND,
-                        // scalingMode: BillboardScaling.SCREEN_SIZE
-                    });
-                    this.localVectorDataSource.add(this.selectedRouteLine);
-                } else {
-                    this.selectedRouteLine.positions = item.route.positions;
-                    this.selectedRouteLine.visible = true;
+                const vectorElement = item.vectorElement as Line;
+                if (vectorElement) {
+                    const color = new Color(vectorElement.color as string);
+                    vectorElement.color = new tinycolor({ r: color.r, g: color.g, b: color.b, a: color.a / 255 })
+                        .darken(10)
+                        .toRgbString();
+                    vectorElement.width += 2;
                 }
+                // if (!this.selectedRouteLine) {
+                //     this.selectedRouteLine = this.createLocalLine(item.route.positions, {
+                //         // color: '#55ff0000',
+                //         color: '#99ffffff',
+                //         // visible: false,
+                //         joinType: LineJointType.ROUND,
+                //         endType: LineEndType.ROUND,
+                //         width: (item.styleOptions ? item.styleOptions.width : 6) + 2,
+                //         clickWidth: 0
+
+                //         // orientationMode: BillboardOrientation.GROUND,
+                //         // scalingMode: BillboardScaling.SCREEN_SIZE
+                //     });
+                //     this.localVectorDataSource.add(this.selectedRouteLine);
+                // } else {
+                //     this.selectedRouteLine.positions = item.route.positions;
+                //     this.selectedRouteLine.visible = true;
+                // }
                 if (this.selectedPosMarker) {
                     this.selectedPosMarker.visible = false;
                 }
@@ -621,9 +628,9 @@ export default class Map extends BgServicePageComponent {
                     this.selectedPosMarker.position = item.position;
                     this.selectedPosMarker.visible = true;
                 }
-                if (this.selectedRouteLine) {
-                    this.selectedRouteLine.visible = false;
-                }
+                // if (this.selectedRouteLine) {
+                //     this.selectedRouteLine.visible = false;
+                // }
             }
             // item.route = {
             //     instructions: Array.from({length: 40}, () => ({
@@ -640,9 +647,14 @@ export default class Map extends BgServicePageComponent {
                 this.selectedItem = item;
             }
 
-            if (!item.route && !item.properties.hasOwnProperty('ele') && this.$packageService.hillshadeLayer) {
+            if (
+                !item.route &&
+                (!item.properties || !item.properties.hasOwnProperty('ele')) &&
+                this.$packageService.hillshadeLayer
+            ) {
                 this.$packageService.getElevation(item.position).then(result => {
                     if (this.selectedItem.position === item.position) {
+                        this.selectedItem.properties = this.selectedItem.properties || {};
                         this.selectedItem.properties['ele'] = result;
                         this.selectedItem = { ...this.selectedItem };
                     }
@@ -674,15 +686,25 @@ export default class Map extends BgServicePageComponent {
         }
     }
     unselectItem() {
-        // this.log('unselectItem', !!this._selectedItem);
+        // this.log('unselectItem', !!this.mSelectedItem);
         if (!!this.mSelectedItem) {
+            const item = this.selectedItem;
             this.selectedItem = null;
             if (this.selectedPosMarker) {
                 this.selectedPosMarker.visible = false;
             }
-            if (this.selectedRouteLine) {
-                this.selectedRouteLine.visible = false;
+            if (item.route) {
+                const vectorElement = item.vectorElement as Line;
+                const color = new Color(vectorElement.color as string);
+
+                vectorElement.color = new tinycolor({ r: color.r, g: color.g, b: color.b, a: color.a / 255 })
+                    .lighten(10)
+                    .toRgbString();
+                vectorElement.width -= 2;
             }
+            // if (this.selectedRouteLine) {
+            //     this.selectedRouteLine.visible = false;
+            // }
             this.bottomSheetHolder.close();
             // const vectorTileDecoder = this.getVectorTileDecoder();
             // vectorTileDecoder.setStyleParameter('selected_id', '0');
@@ -783,7 +805,6 @@ export default class Map extends BgServicePageComponent {
         Object.keys(metaData).forEach(k => {
             metaData[k] = JSON.parse(metaData[k]);
         });
-        // this.log('onVectorElementClicked', clickType, position, elementPos);
         const handledByModules = this.runOnModules('onVectorElementClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             const item: Item = { position, vectorElement: element, ...metaData };

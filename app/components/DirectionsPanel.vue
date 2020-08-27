@@ -36,13 +36,13 @@
                 @tap="setProfile('auto_shorter')"
                 :color="profileColor('auto_shorter')"
             />
-            <MDButton
+            <!-- <MDButton
                 variant="flat"
                 class="icon-btn-white"
                 :text="showOptions ? 'mdi-chevron-up' : 'mdi-chevron-down'"
                 @tap="showOptions = !showOptions"
                 color="white"
-            />
+            /> -->
         </StackLayout>
         <MDButton
             horizontalAlignment="right"
