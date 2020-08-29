@@ -8,7 +8,6 @@ import { AlertDialog } from 'nativescript-material-dialogs';
 import Vue, { NativeScriptVue } from 'nativescript-vue';
 import { VueConstructor } from 'vue';
 import { Prop } from 'vue-property-decorator';
-import { clog } from '~/utils/logging';
 import { accentColor, actionBarHeight, darkColor, mdiFontFamily, navigationBarHeight, primaryColor, statusBarHeight } from '../variables';
 
 export interface BaseVueComponentRefs {
@@ -116,7 +115,7 @@ export default class BaseVueComponent extends Vue {
     }
 
     log(...args) {
-        clog(`[${this.constructor.name}]`, ...args);
+        console.log(`[${this.constructor.name}]`, ...args);
     }
 
     goBack() {

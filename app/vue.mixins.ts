@@ -1,7 +1,5 @@
-import { clog } from '~/utils/logging';
 import { BackstackEntry, Frame as NSFrame } from '@nativescript/core/ui/frame';
 import { Page as NSPage } from '@nativescript/core/ui/page';
-import { navigateUrlProperty } from './components/App';
 
 declare module '@nativescript/core/ui/frame' {
     interface Frame {
@@ -57,7 +55,6 @@ class FrameWithEvents extends NSFrame {
 
 const Plugin = {
     install(Vue) {
-        // clog('installing view mixins');
         const NSFrame = require('@nativescript/core/ui/frame').Frame;
         applyMixins(NSFrame, [FrameWithEvents]);
     }

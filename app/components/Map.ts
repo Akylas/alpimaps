@@ -154,7 +154,7 @@ export default class Map extends BgServicePageComponent {
     @Prop({ default: false }) readonly licenseRegistered!: boolean;
     // @Watch('licenseRegistered')
     // onLicenseRegisteredChanged(value) {
-    // clog('onLicenseRegisteredChanged', value);
+    // console.log('onLicenseRegisteredChanged', value);
     // }
 
     mapModule<T extends keyof MapModules>(id: T) {
@@ -906,7 +906,7 @@ export default class Map extends BgServicePageComponent {
             decoder: vectorTileDecoder
         });
         this.updateLanguage(this.currentLanguage);
-        // clog('currentLayer', !!this.currentLayer);
+        // console.log('currentLayer', !!this.currentLayer);
         this.currentLayer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
         this.currentLayer.setVectorTileEventListener(this, this.mapProjection);
         try {
@@ -915,7 +915,7 @@ export default class Map extends BgServicePageComponent {
             this.showError(err);
             this.vectorTileDecoder = null;
         }
-        // clog('setCurrentLayer', 'done');
+        // console.log('setCurrentLayer', 'done');
     }
 
     clearCache() {

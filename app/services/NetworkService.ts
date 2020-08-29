@@ -496,7 +496,7 @@ export class NetworkService extends Observable {
     }
     constructor() {
         super();
-        // clog('creating NetworkHandler Handler');
+        // console.log('creating NetworkHandler Handler');
     }
     monitoring = false;
     start() {

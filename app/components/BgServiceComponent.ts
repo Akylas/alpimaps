@@ -19,7 +19,6 @@ export default abstract class BgServiceComponent extends BaseVueComponent {
     }
     destroyed() {
         super.destroyed();
-        // clog('BgServiceComponent', 'destroyed');
         this.unloadService();
     }
     callOnServiceLoaded = () => {
