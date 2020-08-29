@@ -3,7 +3,8 @@
         "maxLogcatObjectSize": 2048,
         "markingMode": "none",
         "v8Flags": "--expose_gc",
-        "codeCache" : "false"
+        "codeCache" : "true",
+        "forceLog": true
     },
     "main": "main.js",
     "profiling": "none"

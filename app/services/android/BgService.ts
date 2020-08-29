@@ -33,7 +33,7 @@ export class BgService extends android.app.Service {
         super();
     }
     log(...args) {
-        clog(`[BgService]`, ...args);
+        console.log(`[BgService]`, ...args);
     }
     onStartCommand(intent: android.content.Intent, flags: number, startId: number) {
         super.onStartCommand(intent, flags, startId);
