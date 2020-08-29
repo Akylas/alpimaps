@@ -20,7 +20,6 @@ export default abstract class BgServicePageComponent extends PageComponent {
     }
     destroyed() {
         super.destroyed();
-        // clog('BgServiceComponent', 'destroyed');
         this.unloadService();
     }
     callOnServiceLoaded = () => {

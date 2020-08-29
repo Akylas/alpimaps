@@ -30,7 +30,7 @@ export default abstract class MapModule extends Observable implements IMapModule
         this.mapComp = null;
     }
     log(...args) {
-        clog(`[${this.constructor.name}]`, ...args);
+        console.log(`[${this.constructor.name}]`, ...args);
     }
     onServiceLoaded?(geoHandler: GeoHandler);
     onServiceUnloaded?(geoHandler: GeoHandler);
