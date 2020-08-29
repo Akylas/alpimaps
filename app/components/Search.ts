@@ -113,7 +113,7 @@ class PhotonFeature {
     provider = 'photon';
     // @enumerable(false) private data;
     constructor(data) {
-        // clog('PhotonFeature', data);
+        // console.log('PhotonFeature', data);
         // this.data = data;
         const properties = data.properties || {};
 
@@ -161,7 +161,7 @@ class PhotonFeature {
 //         //                     vicinity: value.vicinity,
 //         //                     placeid: value.place_id,
 //         //                     types: value.types
-//         clog('GoogleFeature', data);
+//         console.log('GoogleFeature', data);
 //         this.properties = {
 //             id: data.place_id,
 //             name: data.name,
@@ -189,7 +189,7 @@ class HereFeature {
         //                     vicinity: value.vicinity,
         //                     placeid: value.place_id,
         //                     types: value.types
-        // clog('HereFeature', data);
+        // console.log('HereFeature', data);
         // this.data = data;
         this.properties = {
             id: data.id,

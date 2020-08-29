@@ -43,7 +43,7 @@ module.exports = (env, params = {}) => {
 
     // Add your custom Activities, Services and other android app components here.
     let appComponents = env.appComponents || [];
-    appComponents.push(...['tns-core-modules/ui/frame', 'tns-core-modules/ui/frame/activity']);
+    appComponents.push(...['@nativescript/core/ui/frame', '@nativescript/core/ui/frame/activity']);
 
     // if (platform === 'android') {
     // appComponents.push(...[resolve(__dirname, 'app/services/android/BgService.ts'), resolve(__dirname, 'app/services/android/BgServiceBinder.ts')]);
@@ -90,6 +90,7 @@ module.exports = (env, params = {}) => {
         compileSnapshot, // --env.compileSnapshot
         uglify, // --env.uglify
         devlog, // --env.devlog
+        noconsole, // --env.noconsole
         sentry, // --env.sentry
         adhoc, // --env.adhoc
         es5 // --env.es5
@@ -98,9 +99,6 @@ module.exports = (env, params = {}) => {
     let tsconfig = params.tsconfig;
     if (!tsconfig) {
         tsconfig = 'tsconfig.json';
-        if (es5) {
-            tsconfig = 'tsconfig.es5.json';
-        }
     }
     console.log('tsconfig', tsconfig);
 
@@ -111,18 +109,18 @@ module.exports = (env, params = {}) => {
     const mode = production ? 'production' : 'development';
 
     const appFullPath = resolve(projectRoot, appPath);
-    const hasRootLevelScopedModules = nsWebpack.hasRootLevelScopedModules({ projectDir: projectRoot });
-    let coreModulesPackageName = 'tns-core-modules';
+    // const hasRootLevelScopedModules = nsWebpack.hasRootLevelScopedModules({ projectDir: projectRoot });
+    let coreModulesPackageName = '@akylas/nativescript';
     const alias = env.alias || {};
     alias['~'] = appFullPath;
     alias['@'] = appFullPath;
     alias['vue'] = 'nativescript-vue';
     alias['@nativescript/core'] = '@akylas/nativescript';
 
-    if (hasRootLevelScopedModules) {
-        coreModulesPackageName = '@nativescript/core';
+    // if (hasRootLevelScopedModules) {
+        // coreModulesPackageName = '@nativescript/core';
         alias['tns-core-modules'] = coreModulesPackageName;
-    }
+    // }
 
     Object.assign(alias, {
         '../adapters/webSQL': 'nativescript-akylas-sqlite/typeorm/NativescriptDriver',
@@ -162,7 +160,7 @@ module.exports = (env, params = {}) => {
 
     const areCoreModulesExternal = Array.isArray(env.externals) && env.externals.some(e => e.indexOf('tns-core-modules') > -1);
     if (platform === 'ios' && !areCoreModulesExternal) {
-        entries['tns_modules/tns-core-modules/inspector_modules'] = 'inspector_modules';
+        entries['@nativescript/core/inspector_modules'] = 'inspector_modules';
     }
     console.log(`Bundling application for entryPath ${entryPath}...`);
 
@@ -186,10 +184,8 @@ module.exports = (env, params = {}) => {
             'gVars.isAndroid': platform === 'android',
             TNS_ENV: JSON.stringify(mode),
             'gVars.sentry': !!sentry,
-            MAGICK_MODE:true, 
             SENTRY_DSN: `"${process.env.SENTRY_DSN}"`,
             SENTRY_PREFIX: `"${!!sentry ? process.env.SENTRY_PREFIX : ''}"`,
-            LOCAL_MBTILES: `"${!!emulator ? '/storage/100F-3415/alpimaps_mbtiles' : '/storage/C0E5-1DEA/alpimaps_mbtiles'}"`,
             LOG_LEVEL: devlog ? '"full"' : '""',
             DEV_LOG: devlog && !production,
             TEST_LOGS: adhoc || !production
@@ -317,7 +313,8 @@ module.exports = (env, params = {}) => {
                                     // when these options are enabled
                                     collapse_vars: platform !== 'android',
                                     sequences: platform !== 'android',
-                                    passes: 2
+                                    passes: 2,
+                                    drop_console: noconsole || (production && adhoc !== true)
                                 }
                                 // keep_fnames: true
                             }

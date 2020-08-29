@@ -86,16 +86,16 @@ Vue.use(PrototypePlugin);
 // application.on(application.uncaughtErrorEvent, args => {
 //     const error = args.error;
 //     // const nErrror = args.android as java.lang.Exception;
-//     // clog('onNativeError', error, Object.keys(args), Object.keys(error), error.message, error.stackTrace);
-//     // clog('nErrror', nErrror);
-//     clog('uncaughtErrorEvent', error);
+//     // console.log('onNativeError', error, Object.keys(args), Object.keys(error), error.message, error.stackTrace);
+//     // console.log('nErrror', nErrror);
+//     console.log('uncaughtErrorEvent', error);
 // });
 // application.on(application.discardedErrorEvent, args => {
 //     const error = args.error;
 //     // const nErrror = args.android as java.lang.Exception;
-//     // clog('onNativeError', error, Object.keys(args), Object.keys(error), error.message, error.stackTrace);
-//     // clog('nErrror', nErrror);
-//     clog('discardedErrorEvent', error);
+//     // console.log('onNativeError', error, Object.keys(args), Object.keys(error), error.message, error.stackTrace);
+//     // console.log('nErrror', nErrror);
+//     console.log('discardedErrorEvent', error);
 // });
 
 // import './app.scss'

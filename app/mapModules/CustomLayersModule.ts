@@ -273,11 +273,11 @@ export default class CustomLayersModule extends MapModule {
         }
     }
     getSourcesLibrary() {
-        // clog('getSourcesLibrary', this.sourcesLoaded);
+        // console.log('getSourcesLibrary', this.sourcesLoaded);
         if (this.sourcesLoaded) {
             return Promise.resolve();
         }
-        // clog('loading source library');
+        // console.log('loading source library');
         // // return Promise.resolve()
         // //     .then(function() {
         // //         try {
@@ -540,7 +540,7 @@ export default class CustomLayersModule extends MapModule {
                         this.log('layer added', data.provider);
                         const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
                         savedSources.push(result.name);
-                        // clog('saving added_providers', savedSources);
+                        // console.log('saving added_providers', savedSources);
                         appSettings.setString('added_providers', JSON.stringify(savedSources));
                     }
                 }
@@ -562,7 +562,7 @@ export default class CustomLayersModule extends MapModule {
             //         this.log('layer added', data.provider);
             //         const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
             //         savedSources.push(result.name);
-            //         // clog('saving added_providers', savedSources);
+            //         // console.log('saving added_providers', savedSources);
             //         appSettings.setString('added_providers', JSON.stringify(savedSources));
             //     }
         });

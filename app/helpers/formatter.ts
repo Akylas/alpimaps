@@ -36,7 +36,7 @@ export function getCurrentDateLanguage() {
 }
 
 export function convertTime(date, formatStr: string) {
-    // clog('convertTime', date, formatStr);
+    // console.log('convertTime', date, formatStr);
     return moment(date).format(formatStr);
 }
 
@@ -45,15 +45,15 @@ export function convertTime(date, formatStr: string) {
 // }
 
 export function convertDuration(milliseconds) {
-    // clog('convertDuration', date, formatStr, test, result);
+    // console.log('convertDuration', date, formatStr, test, result);
     return formatDuration(milliseconds);
 }
 export function convertDistance(meters) {
-    // clog('convertDuration', date, formatStr, test, result);
+    // console.log('convertDuration', date, formatStr, test, result);
     return humanUnit(meters, distancePreset);
 }
 export function convertElevation(meters) {
-    // clog('convertDuration', date, formatStr, test, result);
+    // console.log('convertDuration', date, formatStr, test, result);
     return convertValueToUnit(meters, 'm').join(' ');
 }
 
@@ -71,7 +71,7 @@ export function convertValueToUnit(value: any, unit, otherParam?) {
         return ['', ''];
     }
     const isString = typeof value === 'string';
-    // clog('convertValueToUnit', value, unit, otherParam);
+    // console.log('convertValueToUnit', value, unit, otherParam);
     switch (unit) {
         case 'duration':
             return [convertDuration(value), ''];
