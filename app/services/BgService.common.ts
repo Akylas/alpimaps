@@ -17,7 +17,7 @@ export abstract class BgServiceCommon extends Observable {
         return this._loaded;
     }
     protected _handlerLoaded() {
-        // clog('_handlerLoaded');
+        // console.log('_handlerLoaded');
         if (!this._loaded) {
             this._loaded = true;
             this.notify({
@@ -27,7 +27,7 @@ export abstract class BgServiceCommon extends Observable {
         }
     }
     log(...args) {
-        clog(`[${this.constructor.name}]`, ...args);
+        console.log(`[${this.constructor.name}]`, ...args);
     }
 
     abstract stop();

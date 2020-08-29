@@ -137,7 +137,7 @@ export default class PackageService extends Observable {
     }
 
     log(...args) {
-        clog(`[${this.constructor.name}]`, ...args);
+        console.log(`[${this.constructor.name}]`, ...args);
     }
     _docPath;
     get docPath() {

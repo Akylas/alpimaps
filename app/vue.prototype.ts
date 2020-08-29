@@ -5,7 +5,6 @@ import App from '~/components/App';
 import Map from '~/components/Map';
 import PackageService from '~/services/PackageService';
 import { BgService } from './services/BgService';
-import { clog } from './utils/logging';
 import { NetworkService } from './services/NetworkService';
 import { ToastDuration, ToastPosition, Toasty } from 'nativescript-toasty';
 import * as imageModule from 'nativescript-image';
@@ -101,17 +100,17 @@ const Plugin = {
         };
 
         /* DEV-START */
-        clog('model', device.model);
-        clog('os', device.os);
-        clog('osVersion', device.osVersion);
-        clog('manufacturer', device.manufacturer);
-        clog('deviceType', device.deviceType);
-        clog('widthPixels', screen.mainScreen.widthPixels);
-        clog('heightPixels', screen.mainScreen.heightPixels);
-        clog('widthDIPs', screen.mainScreen.widthDIPs);
-        clog('heightDIPs', screen.mainScreen.heightDIPs);
-        clog('scale', screen.mainScreen.scale);
-        clog('ratio', screen.mainScreen.heightDIPs / screen.mainScreen.widthDIPs);
+        console.log('model', device.model);
+        console.log('os', device.os);
+        console.log('osVersion', device.osVersion);
+        console.log('manufacturer', device.manufacturer);
+        console.log('deviceType', device.deviceType);
+        console.log('widthPixels', screen.mainScreen.widthPixels);
+        console.log('heightPixels', screen.mainScreen.heightPixels);
+        console.log('widthDIPs', screen.mainScreen.widthDIPs);
+        console.log('heightDIPs', screen.mainScreen.heightDIPs);
+        console.log('scale', screen.mainScreen.scale);
+        console.log('ratio', screen.mainScreen.heightDIPs / screen.mainScreen.widthDIPs);
         /* DEV-END */
     }
 };
