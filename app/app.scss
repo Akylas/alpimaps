@@ -19,7 +19,6 @@
 //     @extend .lato;
 // }
 
-
 page {
     // .ns-light & {
     status-bar-style: dark;
@@ -77,7 +76,6 @@ mdbutton {
     font-family: 'maki';
 }
 
-
 .osm {
     font-family: 'osm';
 }
@@ -88,7 +86,6 @@ mdbutton {
 
 .icon-btn {
     @extend .mdi;
-    background-color: transparent;
     color: $text-color;
     ripple-color: $text-color;
     width: 44;
@@ -100,7 +97,6 @@ mdbutton {
 }
 .small-icon-btn {
     @extend .icon-btn;
-    background-color: transparent;
     width: 30;
     height: 30;
     border-radius: 15;
@@ -117,7 +113,6 @@ mdbutton {
 
 .icon-btn-white {
     @extend .icon-btn;
-    background-color: transparent;
     color: white;
     ripple-color: white;
 }
@@ -184,7 +179,7 @@ mdbutton {
         border-radius: 6;
         color: white;
     }
-    
+
     .fab-button,
     .fab-item {
         background-color: $primary-color;
@@ -198,7 +193,6 @@ mdbutton {
         background-color: rgba(0, 0, 0, 0.4);
     }
 }
-
 
 .menuButtons {
     padding-left: 12;
@@ -232,7 +226,6 @@ mdbutton {
     margin-right: 10;
     color: gray;
 }
-
 
 // .android .overMapWidgets {
 //     padding: 0 0 $navigation-bar-height 0;
