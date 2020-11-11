@@ -116,7 +116,7 @@ export default class Map extends BgServiceComponent {
     isSentryEnabled = isSentryEnabled;
     appVersion = EInfo.getVersionNameSync() + '.' + EInfo.getBuildNumberSync();
     bottomSheetStepIndex = 0;
-    packageServiceEnabled = gVars.packageServiceEnabled
+    packageServiceEnabled = gVars.packageServiceEnabled;
     @Prop({ default: false }) readonly licenseRegistered!: boolean;
     // @Watch('licenseRegistered')
     // onLicenseRegisteredChanged(value) {
@@ -341,12 +341,10 @@ export default class Map extends BgServiceComponent {
         this.log('onDeviceScreen', isScreenOn);
     }
     onLoaded() {
-        this.$getAppComponent().drawer = this.getRef<Drawer>('drawer');
     }
     destroyed() {
         this.log('onMapDestroyed');
         this.runOnModules('onMapDestroyed');
-        // this.$getAppComponent().$off('screen', this.onDeviceScreen);
         this.$setMapComponent(null);
         // this.mapModules.userLocation.off('location', this.onNewLocation, this);
         this.mapModules = null;
