@@ -1,9 +1,12 @@
 <template>
     <ScrollView>
         <StackLayout>
-            <MDButton v-for="(action, index) in actions" variant="text" :text="$t(action)" @tap="handleAction(action)"/>
-            <GridLayout v-for="(option, name) in options" height="50" columns="auto,*,auto">
-                <Label col="0" width="100" :text="name" color="white" fontSize="13" verticalTextAlignment="center" textAlignment="right"/>
+            <MDButton v-for="(action, index) in actions" variant="text" :text="$t(action)" @tap="handleAction(action)" />
+            <GridLayout v-for="(option, name) in options" height="50" columns="100,*,50">
+                <CanvasLabel colSpan="3" fontSize="13" color="white">
+                    <CSpan width="100" :text="name" verticalTextAlignment="center" textAlignment="right" />
+                    <CSpan width="50" :text="optionValue(name) / 100" verticalTextAlignment="center" horizontalAligment="right" />
+                </CanvasLabel>
                 <MDSlider
                     col="1"
                     marginLeft="10"
@@ -15,10 +18,8 @@
                     verticalAlignment="center"
                     @tap="noop"
                 />
-                <Label col="2" width="50" :text="optionValue(name) /100" color="white" fontSize="13" verticalTextAlignment="center" />
             </GridLayout>
         </StackLayout>
     </ScrollView>
 </template>
 <script lang="ts" src="./LayerOptionsBottomSheet.ts" />
- 

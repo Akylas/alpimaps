@@ -6,7 +6,7 @@ import { actionBarHeight } from '~/variables';
 export default class ActionBar extends BaseVueComponent {
     @Prop({
         default: null,
-        type: String
+        type: String,
     })
     public title: string;
 
@@ -33,7 +33,7 @@ export default class ActionBar extends BaseVueComponent {
             return 'mdi-close';
         }
         if (this.canGoBack) {
-            return gVars.isIOS ? 'mdi-chevron-left' : 'mdi-arrow-left';
+            return global.isIOS ? 'mdi-chevron-left' : 'mdi-arrow-left';
         }
         return 'mdi-menu';
     }

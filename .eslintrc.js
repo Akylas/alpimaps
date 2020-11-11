@@ -1,13 +1,16 @@
 module.exports = {
-    extends: ['plugin:prettier/recommended'],
-    plugins: ['prettier', '@typescript-eslint'],
-    parser: '@typescript-eslint/parser',
+    extends: ['plugin:prettier/recommended', 'plugin:vue/essential'],
+
+    parser: 'vue-eslint-parser',
     parserOptions: {
+        parser: '@typescript-eslint/parser',
         createDefaultProgram: true,
-        project: './tsconfig.json',
+        project: 'tsconfig.json',
     },
+    plugins: ['prettier', '@typescript-eslint'],
     rules: {
         'prettier/prettier': 'warn',
+        'vue/custom-event-name-casing': 'off',
         '@typescript-eslint/adjacent-overload-signatures': 'error',
         '@typescript-eslint/array-type': 'error',
         '@typescript-eslint/await-thenable': 'error',
@@ -119,7 +122,7 @@ module.exports = {
         'no-constant-condition': 'error',
         'no-control-regex': 'off',
         'no-debugger': 'error',
-        'no-duplicate-imports': ['error', { includeExports: true }],
+        'no-duplicate-imports': 'error',
         'no-empty': 'off',
         'no-eval': 'off',
         'no-extra-semi': 'off',

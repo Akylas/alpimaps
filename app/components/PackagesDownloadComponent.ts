@@ -1,9 +1,14 @@
 import BaseVueComponent from './BaseVueComponent';
 import { Component } from 'vue-property-decorator';
-import { CartoPackageManager, PackageAction, PackageInfo, PackageInfoVector, PackageStatus } from 'nativescript-carto/packagemanager';
+import {
+    CartoPackageManager,
+    PackageAction,
+    PackageInfo,
+    PackageInfoVector,
+    PackageStatus,
+} from '@nativescript-community/ui-carto/packagemanager';
 import { ObservableArray } from '@nativescript/core/data/observable-array';
 import { ItemEventData } from '@nativescript/core/ui/list-view';
-import { isAndroid } from '@nativescript/core/platform';
 import { PackageType } from '~/services/PackageService';
 
 const mapLanguages = ['en', 'de', 'es', 'it', 'fr', 'ru'];
@@ -18,7 +23,15 @@ class Package {
     public geoInfo?: PackageInfo;
     public routingInfo?: PackageInfo;
 
-    constructor(options: { name: string; info?: PackageInfo; status?: PackageStatus; geoStatus?: PackageStatus; routingStatus?: PackageStatus; geoInfo?: PackageInfo; routingInfo?: PackageInfo }) {
+    constructor(options: {
+        name: string;
+        info?: PackageInfo;
+        status?: PackageStatus;
+        geoStatus?: PackageStatus;
+        routingStatus?: PackageStatus;
+        geoInfo?: PackageInfo;
+        routingInfo?: PackageInfo;
+    }) {
         this.name = options.name;
         this.info = options.info;
         this.status = options.status;
@@ -131,7 +144,11 @@ class Package {
         return status.getCurrentAction() === PackageAction.DOWNLOADING && !status.isPaused();
     }
     isDownloading() {
-        return Package.isDownloading(this.routingStatus) || Package.isDownloading(this.geoStatus) || Package.isDownloading(this.status);
+        return (
+            Package.isDownloading(this.routingStatus) ||
+            Package.isDownloading(this.geoStatus) ||
+            Package.isDownloading(this.status)
+        );
     }
     static getDownloadProgress(status: PackageStatus) {
         if (!status) {
@@ -270,7 +287,7 @@ export default class PackagesDownloadComponent extends BaseVueComponent {
         }, 800);
     }
     onLoaded() {
-        if (gVars.isAndroid) {
+        if (global.isAndroid) {
             (this.$refs.listView.nativeView.nativeViewProtected as android.widget.ListView).setNestedScrollingEnabled(true);
         }
     }
@@ -285,7 +302,6 @@ export default class PackagesDownloadComponent extends BaseVueComponent {
             packageService.off('onPackageCancelled', this.onPackageCancelled, this);
             packageService.off('onPackageFailed', this.onPackageFailed, this);
         }
-        
     }
 
     downloadComplete() {
@@ -381,12 +397,14 @@ export default class PackagesDownloadComponent extends BaseVueComponent {
                 if (this.currentServerPackages) {
                     return Promise.resolve(this.currentServerPackages);
                 }
-                return new Promise((resolve: (res: PackageInfoVector) => void) => manager.getServerPackages(resolve)).then(res => {
-                    this.currentServerPackages = res;
-                    return res;
-                });
+                return new Promise((resolve: (res: PackageInfoVector) => void) => manager.getServerPackages(resolve)).then(
+                    (res) => {
+                        this.currentServerPackages = res;
+                        return res;
+                    }
+                );
             })
-            .then(packages => {
+            .then((packages) => {
                 // const packages = this.currentServerPackages;
                 const list = [];
                 const count = packages.size();
@@ -421,7 +439,7 @@ export default class PackagesDownloadComponent extends BaseVueComponent {
                         name = name.substring(0, index);
 
                         // Try n' find an existing package from the list.
-                        const existingPackages = list.filter(info => info.name === name) as any;
+                        const existingPackages = list.filter((info) => info.name === name) as any;
 
                         if (existingPackages.length === 0) {
                             // If there are none, add a package group if we don't have an existing list item

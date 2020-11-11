@@ -1,6 +1,6 @@
 import { Component, Prop } from 'vue-property-decorator';
 import BaseVueComponent from './BaseVueComponent';
-import { NavigationEntry, Page, topmost } from '@nativescript/core/ui/frame/frame';
+import { Color, NavigationEntry, Page } from '@nativescript/core';
 import { VueConstructor } from 'vue';
 import { primaryColor } from '~/variables';
 
@@ -18,14 +18,12 @@ export default class AlpiMapsPage extends BaseVueComponent {
     @Prop({ default: false, type: Boolean })
     public modal: boolean;
 
-    @Prop({ default: false, type: Boolean })
-    public actionBarHidden: boolean;
 
     @Prop({ default: true, type: Boolean })
     public actionBarShowLogo: boolean;
 
-    @Prop({ default: primaryColor, type: String })
-    public actionBarBackroundColor: string;
+    @Prop({ default: () => primaryColor, type: Color })
+    public actionBarBackroundColor: Color;
 
     @Prop({ type: Number })
     public actionBarHeight: number;
@@ -38,7 +36,7 @@ export default class AlpiMapsPage extends BaseVueComponent {
     public loading = false;
 
     get page() {
-        return this.getRef('page') as Page;
+        return this.getRef<Page>('page');
     }
     destroyed() {
         super.destroyed();
@@ -49,18 +47,18 @@ export default class AlpiMapsPage extends BaseVueComponent {
         }
         const page = this.page;
         if (page) {
-            page.actionBarHidden = true;
-            // if (gVars.isIOS) {
-            page.backgroundSpanUnderStatusBar = true;
-            //     page.statusBarStyle = 'light';
-            //     page.eachChildView(view => {
-            //         view.style.paddingTop = 0.00001;
-            //         return false;
-            //     });
-            // } else {
-            //     page.androidStatusBarBackground = null;
-            //     page.androidStatusBarBackground = new Color(this.darkColor);
-            // }
+            // page.actionBarHidden = true;
+            if (global.isIOS) {
+                page.backgroundSpanUnderStatusBar = true;
+                //     page.statusBarStyle = 'light';
+                //     page.eachChildView(view => {
+                //         view.style.paddingTop = 0.00001;
+                //         return false;
+                //     });
+                // } else {
+                //     page.androidStatusBarBackground = null;
+                //     page.androidStatusBarBackground = new Color(this.darkColor);
+            }
             // page.backgroundColor = this.darkColor;
             // page.backgroundColor = this.themeColor;
             // page.on(Page.navigatingToEvent, () => {

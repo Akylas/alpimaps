@@ -1,6 +1,5 @@
 @import './variables';
 @import './animations';
-@import '~nativescript-vue-fab/style';
 
 .lato {
     font-family: 'Lato Regular', 'res/lato';
@@ -19,19 +18,11 @@
 //     @extend .lato;
 // }
 
-page {
-    // .ns-light & {
+Page {
     status-bar-style: dark;
-    // navigation-bar-color: #ddd;
     navigation-bar-color: $primary-color;
     status-bar-color: $dark-color;
 }
-
-button {
-    background-color: transparent;
-    color: $primary-color;
-}
-// label,
 canvaslabel,
 htmllabel {
     color: $text-color;
@@ -40,12 +31,6 @@ htmllabel {
 mdactivityindicator {
     width: 50;
     height: 50;
-}
-
-mdbutton {
-    background-color: transparent;
-    color: $primary-color;
-    ripple-color: $dark-color;
 }
 
 .cardView {
@@ -61,11 +46,11 @@ mdbutton {
     color: white;
     ripple-color: white;
 }
-.buttonthemed {
-    background-color: $primary-color;
-    color: white;
-    ripple-color: $dark-color;
-}
+// .buttonthemed {
+//     background-color: $primary-color;
+//     color: white;
+//     ripple-color: $dark-color;
+// }
 .buttontext {
     background-color: white;
     color: $primary-color;
@@ -127,7 +112,7 @@ mdbutton {
 }
 
 .floating-btn {
-    @extend .mdi, .buttonthemed;
+    @extend .mdi;
     elevation: 6;
     dynamicelevationoffset: 6;
     font-size: 24;
@@ -139,7 +124,6 @@ mdbutton {
 }
 .small-floating-btn {
     @extend .mdi, .buttontext;
-    color: $primary-color;
     elevation: 3;
     dynamicelevationoffset: 3;
     font-size: 24;
@@ -153,88 +137,43 @@ mdbutton {
     font-size: 10;
 }
 
-.borderBottom {
-    border-bottom-color: #eeeeee;
-    border-bottom-width: 1;
+
+MDSpeedDialButton, MDSpeedDialItemButton {
+    @extend .mdi ;
+    // color: white;
+}
+MDSpeedDialButton {
+    // background-color: $primary-color;
+}
+MDSpeedDialItemTitle {
+    background-color: #444;
+    vertical-text-alignment: middle;
+    border-radius: 6;
+    font-size:11;
+    color: white;
+    padding:6;
 }
 
-.borderTop {
-    border-top-color: #eeeeee;
-    border-top-width: 1;
-}
-
-.borderRight {
-    border-right-color: #eeeeee;
-    border-right-width: 1;
-}
-.borderLeft {
-    border-left-color: #eeeeee;
-    border-left-width: 1;
-}
-
-.fab {
-    .fab-item-title {
-        background-color: #444;
-        vertical-text-alignment: middle;
-        border-radius: 6;
-        color: white;
-    }
-
-    .fab-button,
-    .fab-item {
-        background-color: $primary-color;
-        ripple-color: $dark-color;
-    }
-    .fab-icon,
-    .fab-item {
-        color: white;
-    }
-    .fab-backdrop {
-        background-color: rgba(0, 0, 0, 0.4);
-    }
-}
-
-.menuButtons {
-    padding-left: 12;
-    padding-right: 12;
-    margin-bottom: 10;
-}
+// .menuButtons {
+//     padding-left: 12;
+//     padding-right: 12;
+//     margin-bottom: 10;
+// }
 
 .menu-btn {
     @extend .icon-btn;
     border-radius: 22;
-    ripple-color: #b8b7b7;
-    color: $accent-color;
+    // ripple-color: #b8b7b7;
+    // color: $accent-color;
 }
 .menuButtons mdbutton {
     @extend .menu-btn;
 }
 
-.details {
-    padding: 10;
-}
-
-.details-label {
-    font-size: 14;
-    horizontal-alignment: left;
-    vertical-alignment: center;
-    text-alignment: left;
-    color: white;
-}
-.details-icon {
-    @extend .mdi;
-    margin-right: 10;
-    color: gray;
-}
-
-// .android .overMapWidgets {
-//     padding: 0 0 $navigation-bar-height 0;
-// }
-
 .navigationBarOverlay {
     height: $navigation-bar-height;
     width: 100%;
-    background-color: #88000000;
+    background-color: #aa000000;
     vertical-alignment: bottom;
 }
 

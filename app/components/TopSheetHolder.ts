@@ -1,7 +1,7 @@
 import { View } from '@nativescript/core/ui/core/view';
 import { layout } from '@nativescript/core/utils/utils';
 import { Component } from 'vue-property-decorator';
-import { TWEEN } from 'nativescript-tween';
+import { TWEEN } from '@nativescript-community/tween';
 import BaseVueComponent from './BaseVueComponent';
 import DirectionsPanel from './DirectionsPanel';
 
@@ -15,15 +15,15 @@ export interface TopSheetHolderScrollEventData {
 }
 
 function getClosestValue(array, goal) {
-    return array.reduce(function(prev, curr) {
+    return array.reduce(function (prev, curr) {
         return Math.abs(curr - goal) < Math.abs(prev - goal) ? curr : prev;
     });
 }
 
 @Component({
     components: {
-        DirectionsPanel
-    }
+        DirectionsPanel,
+    },
 })
 export default class TopSheetHolder extends BaseVueComponent {
     opened = false;
@@ -35,7 +35,7 @@ export default class TopSheetHolder extends BaseVueComponent {
     }
     get computedStyle() {
         return {
-            ...{ transform: `translateY(${this.translationMaxOffset})` }
+            ...{ transform: `translateY(${this.translationMaxOffset})` },
         };
     }
     get topSheet() {
@@ -64,7 +64,7 @@ export default class TopSheetHolder extends BaseVueComponent {
         this.$emit('scroll', {
             bottom: this.currentSlotTop,
             percentage: slotTopOnScreen / this.translationMaxOffset,
-            height: slotTopOnScreen
+            height: slotTopOnScreen,
         } as TopSheetHolderScrollEventData);
     }
     get currentViewTop() {
@@ -142,17 +142,17 @@ export default class TopSheetHolder extends BaseVueComponent {
         if (view) {
             const viewTop = this.currentViewTop;
             // this.log('scrollSheetToPosition', viewTop, position);
-            return new Promise(resolve => {
+            return new Promise((resolve) => {
                 // this.log('scrollSheetToPosition2', viewTop, position);
                 new TWEEN.Tween({ value: viewTop })
                     .to({ value: -position }, duration)
                     .easing(TWEEN.Easing.Quadratic.Out)
-                    .onUpdate(obj => {
+                    .onUpdate((obj) => {
                         this.currentViewTop = obj.value;
                     })
                     .onComplete(resolve)
                     .onStop(resolve)
-                    .start();
+                    .start(0);
             });
         }
         return Promise.resolve();

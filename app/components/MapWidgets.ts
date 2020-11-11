@@ -1,16 +1,16 @@
-import { CartoMap } from 'nativescript-carto/ui';
+import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { Component } from 'vue-property-decorator';
 import Map from '~/components/Map';
 import { GeoHandler } from '~/handlers/GeoHandler';
-import { Item } from '~/mapModules/ItemsModule';
 import { IMapModule } from '~/mapModules/MapModule';
+import { IItem } from '~/models/Item';
 import BgServiceComponent from './BgServiceComponent';
 import LocationInfoPanel from './LocationInfoPanel';
 
 @Component({
     components: {
-        LocationInfoPanel
-    }
+        LocationInfoPanel,
+    },
 })
 export default class MapWidgets extends BgServiceComponent implements IMapModule {
     mapView: CartoMap<LatLonKeys>;
@@ -18,8 +18,8 @@ export default class MapWidgets extends BgServiceComponent implements IMapModule
 
     currentMapRotation = 0;
 
-    selectedItem: Item = null;
-    onSelectedItem(selectedItem: Item, oldItem: Item) {
+    selectedItem: IItem = null;
+    onSelectedItem(selectedItem: IItem, oldItem: IItem) {
         this.selectedItem = selectedItem;
     }
 

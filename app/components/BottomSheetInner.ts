@@ -1,30 +1,30 @@
+import { Align, Canvas, Paint } from '@nativescript-community/ui-canvas';
+import { CartoMap } from '@nativescript-community/ui-carto/ui';
+import { LineChart } from '@nativescript-community/ui-chart/charts';
+import { HighlightEventData } from '@nativescript-community/ui-chart/charts/Chart';
+import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
+import { Rounding } from '@nativescript-community/ui-chart/data/DataSet';
+import { Entry } from '@nativescript-community/ui-chart/data/Entry';
+import { LineData } from '@nativescript-community/ui-chart/data/LineData';
+import { LineDataSet } from '@nativescript-community/ui-chart/data/LineDataSet';
+import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
+import { LineDataProvider } from '@nativescript-community/ui-chart/interfaces/dataprovider/LineDataProvider';
+import { ShareFile } from '@nativescript-community/ui-share-file';
+import { Color, GridLayout, knownFolders } from '@nativescript/core';
 import * as app from '@nativescript/core/application';
-import { CartoMap } from 'nativescript-carto/ui';
-import { Color } from '@nativescript/core/ui/core/view';
-import { GridLayout } from '@nativescript/core/ui/layouts/grid-layout/grid-layout';
+import { openUrl } from '@nativescript/core/utils';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import { convertValueToUnit } from '~/helpers/formatter';
-import { Item } from '~/mapModules/ItemsModule';
 import { IMapModule } from '~/mapModules/MapModule';
-import { actionBarHeight, screenHeightDips } from '~/variables';
+import { IItem as Item } from '~/models/Item';
+import { omit } from '~/utils';
+import { screenHeightDips, textColor } from '~/variables';
+import BaseVueComponent from './BaseVueComponent';
 import BottomSheetBase from './BottomSheet/BottomSheetBase';
 import BottomSheetInfoView from './BottomSheetInfoView';
 import BottomSheetRouteInfoView from './BottomSheetRouteInfoView';
 import { RouteInstruction } from './DirectionsPanel';
 import Map from './Map';
-import LineChart from 'nativescript-chart/charts/LineChart';
-import { LineDataSet } from 'nativescript-chart/data/LineDataSet';
-import { LineData } from 'nativescript-chart/data/LineData';
-import { XAxisPosition } from 'nativescript-chart/components/XAxis';
-import { omit } from '~/utils';
-import { knownFolders } from '@nativescript/core/file-system/file-system';
-import { ShareFile } from 'nativescript-akylas-share-file';
-import { Rounding } from 'nativescript-chart/data/DataSet';
-// import InAppBrowser from 'nativescript-inappbrowser';
-import { openUrl } from '@nativescript/core/utils/utils';
-import { Entry } from 'nativescript-chart/data/Entry';
-import { Canvas, Paint, Align } from 'nativescript-canvas';
-import { Highlight } from 'nativescript-chart/highlight/Highlight';
 
 export const LISTVIEW_HEIGHT = 200;
 export const PROFILE_HEIGHT = 150;
@@ -33,22 +33,22 @@ export const WEB_HEIGHT = 400;
 @Component({
     components: {
         BottomSheetRouteInfoView,
-        BottomSheetInfoView
-    }
+        BottomSheetInfoView,
+    },
 })
-export default class BottomSheet extends BottomSheetBase implements IMapModule {
+export default class BottomSheetInner extends BaseVueComponent implements IMapModule {
     mapView: CartoMap<LatLonKeys>;
     mapComp: Map;
-    // @Prop({
-    //     default: () => [50]
-    // })
-    // steps;
-    @Prop() item: Item;
-
+    
+    currentItem: Item = null;
+    get item() {
+        return this.currentItem;
+    }
     profileHeight = PROFILE_HEIGHT;
     graphAvailable = false;
 
     mounted() {
+        this.updateSteps();
         super.mounted();
     }
     destroyed() {
@@ -66,45 +66,44 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     }
 
     get bottomSheet() {
-        return this.$refs['bottomSheet'] && (this.$refs['bottomSheet'].nativeView as GridLayout);
+        return this.getRef<GridLayout>('bottomSheet');
     }
     get routeView() {
         return this.$refs['routeView'] as BottomSheetRouteInfoView;
     }
 
     get chart() {
-        return this.$refs.graphView.nativeView as LineChart;
+        return this.getRef<LineChart>('graphView');
     }
 
     get webViewSrc() {
-        if (this.listViewAvailable && this.item?.properties) {
+        // if (this.listViewAvailable && this.item?.properties) {
+        if (this.item?.properties) {
             const item = this.item;
             const props = item.properties;
             let name = props.name;
             if (props.wikipedia) {
                 name = props.wikipedia.split(':')[1];
             }
-            if (item.address ) {
-                name += ' ' + item.address.county
+            if (item.address) {
+                name += ' ' + item.address.county;
             }
-            let url = `https://duckduckgo.com/?kae=d&ks=s&ko=-2&kaj=m&k1=-1&q=${encodeURIComponent(name)
+            const url = `https://duckduckgo.com/?kae=d&ks=s&ko=-2&kaj=m&k1=-1&q=${encodeURIComponent(name)
                 .toLowerCase()
                 .replace('/s+/g', '+')}`;
             // this.log('webViewSrc', url);
             return url;
         }
-        encodeURIComponent;
     }
 
     get rows() {
-        const result = `70,50,auto,auto`;
+        const result = '70,50,auto,auto';
         return result;
     }
     get showListView() {
         return this.listViewAvailable && this.listViewVisible;
     }
     get showGraph() {
-        // return this.graphAvailable && this.graphViewVisible;
         return this.graphAvailable;
     }
     get itemRouteNoProfile() {
@@ -114,18 +113,18 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     get itemIsRoute() {
         return this.item && !!this.item.route;
     }
-    @Watch('item')
-    onSelectedItemChange(item: Item) {
-        this.reset();
-        // this.listViewVisible = false;
-        // this.listViewAvailable =
-        //     !!this.item && !!this.item.route && !!this.item.route.instructions && this.item.route.instructions.length > 0;
 
+    updateGraphAvailable() {
         this.graphAvailable =
             this.itemIsRoute &&
             !!this.item.route.profile &&
             !!this.item.route.profile.data &&
             this.item.route.profile.data.length > 0;
+    }
+    onSelectedItemChange(item: Item) {
+        this.currentItem = item;
+        this.updateGraphAvailable();
+        this.updateSteps();
         if (this.graphAvailable) {
             this.updateChartData();
         }
@@ -146,55 +145,55 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
                 this.chart.highlightValues([
                     {
                         dataSetIndex: 0,
-                        x: item.x,
-                        entry: item
-                    } as any
+                        x: index,
+                        entry: item,
+                    } as any,
                 ]);
             }
         }
     }
-    onChartTap(event) {
-        const chart = this.chart;
-        const dataSet = chart.getData().getDataSetByIndex(0);
-        dataSet.setIgnoreFiltered(true);
-        const x = dataSet.getEntryIndexForXValue(event.highlight.x, NaN, Rounding.CLOSEST);
-        dataSet.setIgnoreFiltered(false);
-
-        const position = this.item.route.positions[x];
+    onChartHighlight(event: HighlightEventData) {
+        const x = event.highlight.entryIndex;
+        const positions = this.item.route.positions;
+        const position = positions.getPos(Math.max(0, Math.min(x, positions.size() - 1)));
         if (position) {
             const mapComp = this.$getMapComponent();
             mapComp.selectItem({ item: { position }, isFeatureInteresting: true, setSelected: false, peek: false });
         }
     }
     searchItemWeb() {
-        if (gVars.isAndroid) {
-            const query = this.$getMapComponent()
-                .mapModule('formatter')
-                .getItemName(this.item);
-            if (gVars.isAndroid) {
+        if (global.isAndroid) {
+            const query = this.$getMapComponent().mapModule('formatter').getItemName(this.item);
+            if (global.isAndroid) {
                 const intent = new android.content.Intent(android.content.Intent.ACTION_WEB_SEARCH);
                 intent.putExtra(android.app.SearchManager.QUERY, query); // query contains search string
                 (app.android.foregroundActivity as android.app.Activity).startActivity(intent);
             }
         }
     }
-
+    openWebView() {
+        openUrl(this.webViewSrc);
+    }
+    listViewAvailable = false;
+    listViewVisible = false;
     toggleWebView() {
-        this.stepToScrollTo = !this.listViewAvailable ? this.steps.length : -1;
+        // this.stepToScrollTo = !this.listViewAvailable ? this.steps.length : -1;
         this.listViewAvailable = !this.listViewAvailable;
     }
-    stepToScrollTo = -1;
-    webViewHeight = 0
-    get steps() {
+    // stepToScrollTo = -1;
+    webViewHeight = 0;
+    steps = [0];
+
+    updateSteps() {
         let total = 70;
-        const result = [total];
+        const result = [0, total];
         total += 50;
         result.push(total);
         if (this.graphAvailable) {
             total += PROFILE_HEIGHT;
             result.push(total);
         }
-        if (this.mListViewAvailable) {
+        if (this.listViewAvailable) {
             total += WEB_HEIGHT;
             result.push(total);
             const delta = Math.floor(screenHeightDips - this.statusBarHeight - total);
@@ -202,24 +201,21 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
             total += delta;
             result.push(total);
         }
-        if (this.stepToScrollTo >= 0) {
-            const index = this.stepToScrollTo;
-            this.stepToScrollTo = -1;
-            setTimeout(() => {
-                this.holder.scrollSheetToPosition(this.steps[index]);
-            }, 0);
-        }
-        return result;
+        this.steps = this.nativeView['steps'] = result;
     }
 
     updatingItem = false;
     async getProfile() {
         this.updatingItem = true;
-        const positions = this.item.route.positions;
-        const profile = await this.$packageService.getElevationProfile(positions);
+        const profile = await this.$packageService.getElevationProfile(this.item);
         this.item.route.profile = profile;
-        (await this.item.id) !== undefined ? this.updateItem(false) : this.saveItem(false);
-        this.stepToScrollTo = 2;
+        await (this.item.id !== undefined ? this.updateItem(false) : this.saveItem(false));
+        this.updateGraphAvailable();
+        this.updateSteps();
+        if (this.graphAvailable) {
+            this.updateChartData();
+        }
+        this.$getMapComponent().bottomSheetStepIndex = 3;
         this.updatingItem = false;
     }
     saveItem(peek = true) {
@@ -227,10 +223,10 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         mapComp
             .mapModule('items')
             .saveItem(mapComp.selectedItem)
-            .then(item => {
+            .then((item) => {
                 mapComp.selectItem({ item, isFeatureInteresting: true, peek });
             })
-            .catch(err => {
+            .catch((err) => {
                 this.showError(err);
             });
     }
@@ -239,10 +235,10 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         return mapComp
             .mapModule('items')
             .updateItem(mapComp.selectedItem)
-            .then(item => {
+            .then((item) => {
                 mapComp.selectItem({ item, isFeatureInteresting: true, peek });
             })
-            .catch(err => {
+            .catch((err) => {
                 this.showError(err);
             });
     }
@@ -252,7 +248,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
     }
     shareItem() {
         const itemToShare = omit(this.item, 'vectorElement');
-        this.shareFile(JSON.stringify(itemToShare), `sharedItem.json`);
+        this.shareFile(JSON.stringify(itemToShare), 'sharedItem.json');
     }
     async shareFile(content: string, fileName: string) {
         const file = knownFolders.temp().getFile(fileName);
@@ -265,7 +261,7 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
             path: file.path,
             title: fileName,
             options: true, // optional iOS
-            animated: true // optional iOS
+            animated: true, // optional iOS
         });
     }
     getRouteInstructionTitle(item: RouteInstruction) {
@@ -281,35 +277,31 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         const profile = this.item.route.profile;
         const profileData = profile?.data;
         if (profileData) {
-            const textColor = new Color('white');
             if (!this.chartInitialized) {
                 this.chartInitialized = true;
-                chart.setDoubleTapToZoomEnabled(true);
-                chart.setScaleEnabled(true);
-                chart.setDragEnabled(true);
+                chart.setHighlightPerDragEnabled(true);
                 chart.setHighlightPerTapEnabled(true);
-                chart.setDrawHighlight(false);
-
-                chart.getLegend().setEnabled(false);
-                // chart.setLogEnabled(true);
-                chart.getAxisLeft().setTextColor(textColor);
-                chart.getXAxis().setPosition(XAxisPosition.BOTTOM);
-                chart.getXAxis().setTextColor(textColor);
-                chart.getXAxis().setValueFormatter({
-                    getAxisLabel: (value, axis) => convertValueToUnit(value, 'km')[0]
-                });
-                chart.getAxisLeft().setLabelCount(3);
-                chart.getXAxis().setDrawLabels(true);
-                chart.getXAxis().setDrawGridLines(true);
-
+                // chart.setScaleXEnabled(true);
+                // chart.setDragEnabled(true);
                 chart.getAxisRight().setEnabled(false);
-                chart.getAxisRight().setTextColor(textColor);
+                chart.getLegend().setEnabled(false);
+                chart.setDrawHighlight(false);
+                const leftAxis = chart.getAxisLeft();
+                leftAxis.setTextColor(textColor);
+                leftAxis.setLabelCount(3);
+
+                const xAxis = chart.getXAxis();
+                xAxis.setPosition(XAxisPosition.BOTTOM);
+                xAxis.setTextColor(textColor);
+                xAxis.setValueFormatter({
+                    getAxisLabel: (value, axis) => convertValueToUnit(value, 'km').join(' '),
+                });
 
                 chart.setMaxVisibleValueCount(300);
                 chart.setMarker({
                     paint: new Paint(),
                     refreshContent(e: Entry, highlight: Highlight) {
-                        this.highlight = highlight;
+                        this.entry = e;
                     },
                     draw(canvas: Canvas, posX: any, posY: any) {
                         const canvasHeight = canvas.getHeight();
@@ -328,45 +320,54 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
                         } else {
                             canvas.translate(0, 10);
                         }
-                        canvas.drawText(this.highlight.entry.altitude.toFixed(), 0, 5, paint);
+                        canvas.drawText(this.entry.altitude.toFixed(), 0, 5, paint);
                         canvas.restore();
-                    }
+                    },
                 } as any);
             } else {
                 chart.highlightValues(null);
                 chart.resetZoom();
             }
-            let set = new LineDataSet(profileData, 'altitude', 'x', 'altAvg');
-            set.setDrawValues(true);
-            set.setValueTextColor(textColor);
-            set.setValueTextSize(10);
-            set.setMaxFilterNumber(200);
-            set.setUseColorsForFill(true);
-            set.setValueFormatter({
-                getFormattedValue(value: number, entry: Entry, index, count, dataSetIndex: any, viewPortHandler: any) {
-                    if (index === 0 || index === count - 1 || value === profile.max[1]) {
-                        return value.toFixed();
-                    }
+            const chartData = chart.getData();
+            if (!chartData) {
+                const set = new LineDataSet(profileData, 'altitude', 'distance', 'altAvg');
+                set.setDrawValues(true);
+                set.setValueTextColor(textColor);
+                set.setValueTextSize(10);
+                set.setMaxFilterNumber(200);
+                set.setUseColorsForFill(true);
+                set.setFillFormatter({
+                    getFillLinePosition(dataSet: LineDataSet, dataProvider: LineDataProvider) {
+                        return dataProvider.getYChartMin();
+                    },
+                });
+                set.setValueFormatter({
+                    getFormattedValue(value: number, entry: Entry, index, count, dataSetIndex: any, viewPortHandler: any) {
+                        if (index === 0 || index === count - 1 || value === profile.max[1]) {
+                            return value.toFixed();
+                        }
+                    },
+                } as any);
+                set.setDrawFilled(true);
+                if (profile.colors && profile.colors.length > 0) {
+                    set.setLineWidth(2);
+                    set.setColors(profile.colors);
+                } else {
+                    set.setColor('#60B3FC');
                 }
-            });
-            set.setDrawFilled(true);
-            if (profile.colors && profile.colors.length > 0) {
-                set.setLineWidth(2);
-                set.setColors(profile.colors);
+                // set.setMode(Mode.CUBIC_BEZIER);
+                set.setFillColor('#8060B3FC');
+                sets.push(set);
+                const lineData = new LineData(sets);
+                chart.setData(lineData);
             } else {
-                set.setColor('#60B3FC');
+                chart.highlightValues(null);
+                const dataSet = chartData.getDataSetByIndex(0);
+                dataSet.setValues(profileData);
+                chart.getData().notifyDataChanged();
+                chart.notifyDataSetChanged();
             }
-            // set.setMode(Mode.CUBIC_BEZIER);
-            set.setFillColor('#8060B3FC');
-            sets.push(set);
-            // set = new LineDataSet(profileData, 'grade', 'x', 'grade');
-            // set.setAxisDependency(AxisDependency.RIGHT);
-            // set.setColor('red');
-            // sets.push(set);
         }
-
-        const linedata = new LineData(sets);
-        chart.setData(linedata);
     }
     get routeInstructions() {
         if (this.listViewAvailable) {
@@ -378,25 +379,25 @@ export default class BottomSheet extends BottomSheetBase implements IMapModule {
         // this.log('onInstructionTap', instruction);
 
         const mapComp = this.$getMapComponent();
-        mapComp.selectItem({
-            item: { position: instruction.position },
-            isFeatureInteresting: true,
-            setSelected: false,
-            peek: false
-        });
-        if (this.graphAvailable) {
-            const dataSet = this.chart.getData().getDataSetByIndex(0);
-            dataSet.setIgnoreFiltered(true);
-            const item = dataSet.getEntryForIndex(instruction.pointIndex);
-            dataSet.setIgnoreFiltered(false);
-            // console.log('highlight item', item);
-            this.chart.highlightValues([
-                {
-                    dataSetIndex: 0,
-                    x: item.x,
-                    entry: item
-                } as Highlight
-            ]);
-        }
+        // mapComp.selectItem({
+        //     item: { position: instruction.position },
+        //     isFeatureInteresting: true,
+        //     setSelected: false,
+        //     peek: false
+        // });
+        // if (this.graphAvailable) {
+        //     const dataSet = this.chart.getData().getDataSetByIndex(0);
+        //     dataSet.setIgnoreFiltered(true);
+        //     const item = dataSet.getEntryForIndex(instruction.pointIndex);
+        //     dataSet.setIgnoreFiltered(false);
+        //     // console.log('highlight item', item);
+        //     this.chart.highlightValues([
+        //         {
+        //             dataSetIndex: 0,
+        //             x: item.x,
+        //             entry: item
+        //         } as Highlight
+        //     ]);
+        // }
     }
 }

@@ -1,35 +1,38 @@
-import { Color } from '@nativescript/core';
-import { android as androidApp, AndroidApplication } from '@nativescript/core/application';
-import * as appSettings from '@nativescript/core/application-settings';
-import { Folder, knownFolders, path } from '@nativescript/core/file-system';
-import { screen } from '@nativescript/core/platform';
-import { profile } from '@nativescript/core/profiling';
-import { ad } from '@nativescript/core/utils/utils';
-import { throttle } from 'helpful-decorators';
-import { AppURL, handleOpenURL } from 'nativescript-appurl';
-import { Brightness } from 'nativescript-brightness';
-import { CartoMapStyle, ClickType, MapPos, ScreenPos, toNativeScreenPos } from 'nativescript-carto/core';
-import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
-import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
-import { Layer } from 'nativescript-carto/layers';
+import { AppURL, handleOpenURL } from '@nativescript-community/appurl';
+import * as EInfo from '@nativescript-community/extendedinfo';
+import * as perms from '@nativescript-community/perms';
+import { CartoMapStyle, ClickType, MapPos, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
+import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
+import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
+import { Layer } from '@nativescript-community/ui-carto/layers';
 import {
     CartoOnlineVectorTileLayer,
     VectorElementEventData,
     VectorLayer,
     VectorTileEventData,
     VectorTileLayer,
-    VectorTileRenderOrder
-} from 'nativescript-carto/layers/vector';
-import { Projection } from 'nativescript-carto/projections';
-import { CartoMap, PanningMode, RenderProjectionMode } from 'nativescript-carto/ui';
-import { setShowDebug, setShowError, setShowInfo, setShowWarn } from 'nativescript-carto/utils';
-import { Line, LineStyleBuilder, LineStyleBuilderOptions } from 'nativescript-carto/vectorelements/line';
-import { Marker, MarkerStyleBuilder, MarkerStyleBuilderOptions } from 'nativescript-carto/vectorelements/marker';
-import { Point, PointStyleBuilder, PointStyleBuilderOptions } from 'nativescript-carto/vectorelements/point';
-import { MBVectorTileDecoder } from 'nativescript-carto/vectortiles';
+    VectorTileRenderOrder,
+} from '@nativescript-community/ui-carto/layers/vector';
+import { Projection } from '@nativescript-community/ui-carto/projections';
+import { CartoMap, PanningMode, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
+import { setShowDebug, setShowError, setShowInfo, setShowWarn } from '@nativescript-community/ui-carto/utils';
+import { Line, LineStyleBuilder, LineStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/line';
+import { Marker, MarkerStyleBuilder, MarkerStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/marker';
+import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/point';
+import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
+import { Drawer } from '@nativescript-community/ui-drawer';
+import { action, login } from '@nativescript-community/ui-material-dialogs';
+import { TextField } from '@nativescript-community/ui-material-textfield';
+import { Brightness } from '@nativescript/brightness';
+import { AndroidApplication, Application, Color } from '@nativescript/core';
+import * as appSettings from '@nativescript/core/application-settings';
+import { Folder, knownFolders, path } from '@nativescript/core/file-system';
+import { Device, Screen } from '@nativescript/core/platform';
+import { profile } from '@nativescript/core/profiling';
+import { ad } from '@nativescript/core/utils/utils';
+import { compose } from '@nativescript/email';
+import { throttle } from 'helpful-decorators';
 import { allowSleepAgain, keepAwake } from 'nativescript-insomnia';
-import { action } from 'nativescript-material-dialogs';
-import * as perms from 'nativescript-perms';
 import * as SocialShare from 'nativescript-social-share';
 import tinycolor from 'tinycolor2';
 import { Component, Prop } from 'vue-property-decorator';
@@ -37,15 +40,19 @@ import { GeoHandler } from '~/handlers/GeoHandler';
 import { $t } from '~/helpers/locale';
 import CustomLayersModule, { SourceItem } from '~/mapModules/CustomLayersModule';
 import ItemFormatter from '~/mapModules/ItemFormatter';
-import ItemsModule, { Item } from '~/mapModules/ItemsModule';
+import ItemsModule from '~/mapModules/ItemsModule';
 import MapModule from '~/mapModules/MapModule';
 import UserLocationModule from '~/mapModules/UserLocationModule';
-import { NotificationHelper, NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL } from '~/services/android/NotifcationHelper';
+import { IItem } from '~/models/Item';
+import { NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
 import { computeDistanceBetween, getBoundsZoomLevel, getCenter } from '~/utils/geo';
+import { DEV_LOG } from '~/utils/logging';
+import { Sentry, isSentryEnabled } from '~/utils/sentry';
+import { screenHeightDips, screenWidthDips } from '~/variables';
 import { actionBarButtonHeight, navigationBarHeight, primaryColor } from '../variables';
-import BgServicePageComponent from './BgServicePageComponent';
-import BottomSheet from './BottomSheet';
+import BgServiceComponent from './BgServiceComponent';
 import BottomSheetHolder, { BottomSheetHolderScrollEventData } from './BottomSheet/BottomSheetHolder';
+import BottomSheetInner from './BottomSheetInner';
 import DirectionsPanel from './DirectionsPanel';
 import LocationInfoPanel from './LocationInfoPanel';
 import MapRightMenu from './MapRightMenu';
@@ -55,69 +62,26 @@ import Search from './Search';
 import TopSheetHolder, { DEFAULT_TOP, TopSheetHolderScrollEventData } from './TopSheetHolder';
 const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
-function distance(pos1: ScreenPos, pos2: ScreenPos) {
-    return Math.sqrt(Math.pow(pos1.x - pos2.x, 2) + Math.pow(pos1.y - pos2.y, 2));
-}
+// function distance(pos1: ScreenPos, pos2: ScreenPos) {
+//     return Math.sqrt(Math.pow(pos1.x - pos2.x, 2) + Math.pow(pos1.y - pos2.y, 2));
+// }
+const mailRegexp = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
 
+function base64Encode(value) {
+    if (global.isIOS) {
+        const text = NSString.stringWithString(value);
+        const data = text.dataUsingEncoding(NSUTF8StringEncoding);
+        return data.base64EncodedStringWithOptions(0);
+    }
+    if (global.isAndroid) {
+        const text = new java.lang.String(value);
+        const data = text.getBytes('UTF-8');
+        return android.util.Base64.encodeToString(data, android.util.Base64.DEFAULT);
+    }
+}
 export type LayerType = 'map' | 'customLayers' | 'selection' | 'items' | 'directions' | 'userLocation' | 'search';
 
 const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'selection', 'items', 'directions', 'search', 'userLocation'];
-const mapLanguages = [
-    // 'ar',
-    // 'az',
-    // 'be',
-    // 'bg',
-    // 'br',
-    // 'bs',
-    // 'ca',
-    // 'cs',
-    // 'cy',
-    // 'da',
-    // 'de',
-    // 'el',
-    'en',
-    // 'eo',
-    // 'es',
-    // 'et',
-    // 'fi',
-    'fr'
-    // 'fy',
-    // 'ga',
-    // 'gd',
-    // 'he',
-    // 'hr',
-    // 'hu',
-    // 'hy',
-    // 'is',
-    // 'it',
-    // 'ja',
-    // 'ka',
-    // 'kk',
-    // 'kn',
-    // 'ko',
-    // 'la',
-    // 'lb',
-    // 'lt',
-    // 'lv',
-    // 'mk',
-    // 'mt',
-    // 'nl',
-    // 'no',
-    // 'pl',
-    // 'pt',
-    // 'rm',
-    // 'ro',
-    // 'ru',
-    // 'sk',
-    // 'sl',
-    // 'sq',
-    // 'sr',
-    // 'sv',
-    // 'th',
-    // 'tr',
-    // 'uk',
-    // 'zh'
-];
 
 const brightness = new Brightness();
 
@@ -132,25 +96,27 @@ export interface MapModules {
     items: ItemsModule;
     formatter: ItemFormatter;
     rightMenu: MapRightMenu;
-    bottomSheet: BottomSheet;
+    bottomSheet: BottomSheetInner;
 }
 
 let defaultLiveSync = global.__onLiveSync;
 @Component({
     components: {
-        BottomSheet,
-        BottomSheetHolder,
+        BottomSheetInner,
         TopSheetHolder,
         Search,
         // MapWidgets,
         LocationInfoPanel,
         MapRightMenu,
-        MapScrollingWidgets
-    }
+        MapScrollingWidgets,
+    },
 })
-export default class Map extends BgServicePageComponent {
+export default class Map extends BgServiceComponent {
     mapModules: MapModules = null;
-
+    isSentryEnabled = isSentryEnabled;
+    appVersion = EInfo.getVersionNameSync() + '.' + EInfo.getBuildNumberSync();
+    bottomSheetStepIndex = 0;
+    packageServiceEnabled = gVars.packageServiceEnabled
     @Prop({ default: false }) readonly licenseRegistered!: boolean;
     // @Watch('licenseRegistered')
     // onLicenseRegisteredChanged(value) {
@@ -175,7 +141,7 @@ export default class Map extends BgServicePageComponent {
 
     selectedPosMarker: Marker<LatLonKeys>;
     // selectedRouteLine: Line<LatLonKeys>;
-    mSelectedItem: Item = null;
+    mSelectedItem: IItem = null;
     itemLoading = false;
     mapProjection: Projection = null;
     currentLanguage = appSettings.getString('language', 'en');
@@ -185,11 +151,11 @@ export default class Map extends BgServicePageComponent {
 
     currentMapRotation = 0;
 
-    packageServiceEnabled = false;
 
     set selectedItem(value) {
         this.runOnModules('onSelectedItem', value, this.mSelectedItem);
         this.mSelectedItem = value;
+        this.bottomSheet.onSelectedItemChange(value);
     }
     get selectedItem() {
         return this.mSelectedItem;
@@ -208,15 +174,14 @@ export default class Map extends BgServicePageComponent {
     }
     navigationBarHeight = navigationBarHeight;
 
-    get bottomSheetHolder() {
-        return this.$refs['bottomSheetHolder'] as BottomSheetHolder;
+    get rightMenu() {
+        return this.$refs['rightMenu'] as MapRightMenu;
     }
-    get bottomSheetHolder2() {
-        return this.$refs['bottomSheetHolder2'] as BottomSheetHolder;
-    }
-
     get bottomSheet() {
-        return (this.$refs['bottomSheet'] as BottomSheet) || null;
+        return (this.$refs['bottomSheet'] as BottomSheetInner) || null;
+    }
+    get drawer() {
+        return (this.$refs['drawer'] as Drawer) || null;
     }
     get topSheetHolder() {
         return this.$refs['topSheetHolder'] as TopSheetHolder;
@@ -242,10 +207,7 @@ export default class Map extends BgServicePageComponent {
     handleReceivedAppUrl(appURL: AppURL) {
         console.log('Got the following appURL', appURL.path, Array.from(appURL.params.entries()));
         if (appURL.path.startsWith('eo')) {
-            const latlong = appURL.path
-                .split(':')[1]
-                .split(',')
-                .map(parseFloat) as [number, number];
+            const latlong = appURL.path.split(':')[1].split(',').map(parseFloat) as [number, number];
             const loaded = !!this._cartoMap;
             if (latlong[0] !== 0 || latlong[1] !== 0) {
                 if (loaded) {
@@ -272,14 +234,14 @@ export default class Map extends BgServicePageComponent {
                     this.selectItem({
                         item: {
                             properties: {
-                                name: actualQuery
+                                name: actualQuery,
                             },
                             position: {
                                 lat: parseFloat(match[1]),
-                                lon: parseFloat(match[2])
-                            }
+                                lon: parseFloat(match[2]),
+                            },
                         },
-                        isFeatureInteresting: true
+                        isFeatureInteresting: true,
                     });
                 } else {
                     this.searchView.searchForQuery(actualQuery);
@@ -290,15 +252,9 @@ export default class Map extends BgServicePageComponent {
         }
     }
     onAppUrl(appURL: AppURL, args) {
-        if (gVars.isAndroid) {
-            const activity = androidApp.startActivity;
-            const visible =
-                activity &&
-                activity
-                    .getWindow()
-                    .getDecorView()
-                    .getRootView()
-                    .isShown();
+        if (global.isAndroid) {
+            const activity = Application.android.startActivity;
+            const visible = activity && activity.getWindow().getDecorView().getRootView().isShown();
             if (!visible) {
                 if (args && args.eventName === AndroidApplication.activityStartedEvent) {
                     //ignoring newIntent in background as we already received start activity event with intent
@@ -323,7 +279,7 @@ export default class Map extends BgServicePageComponent {
     }
 
     get shouldShowNavigationBarOverlay() {
-        return gVars.isAndroid && navigationBarHeight !== 0 && !!this.mSelectedItem;
+        return global.isAndroid && navigationBarHeight !== 0 && !!this.mSelectedItem;
     }
     get bottomSheetDecale() {
         return navigationBarHeight;
@@ -339,12 +295,19 @@ export default class Map extends BgServicePageComponent {
     mounted() {
         super.mounted();
 
-        // if (gVars.isAndroid) {
+        // if (global.isAndroid) {
         // (this.$refs.fab.nativeView as GridLayout).getChildAt(0).marginBottom = -navigationBarHeight;
         // this.nativeView.marginBottom = navigationBarHeight;
         // this.overMapWidgets.nativeView.marginBottom = layout.toDevicePixels(navigationBarHeight);
         // }
         this.searchView = this.$refs.searchView;
+        // console.log(
+        //     'mounted',
+        //     !!this.$refs.mapView,
+        //     !!this.$refs.searchView,
+        //     !!this.$refs.rightMenu,
+        //     !!this.$refs.bottomsheetest
+        // );
         this.$setMapComponent(this);
         this.mapModules = {
             items: new ItemsModule(),
@@ -353,9 +316,9 @@ export default class Map extends BgServicePageComponent {
             formatter: new ItemFormatter(),
             directionsPanel: this.topSheet,
             search: this.searchView,
-            rightMenu: this.$refs.mapMenu,
+            rightMenu: this.$refs.rightMenu,
             mapScrollingWidgets: this.$refs.mapScrollingWidgets,
-            bottomSheet: this.bottomSheet
+            bottomSheet: this.bottomSheet,
         };
 
         if (!!this.geoHandler) {
@@ -378,8 +341,7 @@ export default class Map extends BgServicePageComponent {
         this.log('onDeviceScreen', isScreenOn);
     }
     onLoaded() {
-        // this.$getAppComponent().$on('screen', this.onDeviceScreen);
-        // }, 0);
+        this.$getAppComponent().drawer = this.getRef<Drawer>('drawer');
     }
     destroyed() {
         this.log('onMapDestroyed');
@@ -408,7 +370,7 @@ export default class Map extends BgServicePageComponent {
     }
 
     showMapMenu() {
-        this.bottomSheetHolder2.peek();
+        this.drawer.open('right');
     }
     reloadMapStyle() {
         this.setMapStyle(this.currentLayerStyle, true);
@@ -431,7 +393,7 @@ export default class Map extends BgServicePageComponent {
             return;
         }
         let m: MapModule;
-        return Object.keys(this.mapModules).some(k => {
+        return Object.keys(this.mapModules).some((k) => {
             m = this.mapModules[k];
             // this.log('call module', k, functionName, m && m.constructor.name, m && !!m[functionName]);
             if (m && m[functionName]) {
@@ -503,20 +465,21 @@ export default class Map extends BgServicePageComponent {
 
     onMapReady(e) {
         const cartoMap = (this._cartoMap = e.object as CartoMap<LatLonKeys>);
-        setShowDebug(true);
-        setShowInfo(true);
-        setShowWarn(true);
+        // CartoMap.setRunOnMainThread(false);
+        setShowDebug(DEV_LOG);
+        setShowInfo(DEV_LOG);
+        setShowWarn(DEV_LOG);
         setShowError(true);
         this.mapProjection = cartoMap.projection;
-        if (gVars.isAndroid) {
+        if (global.isAndroid) {
             this.log('onMapReady', com.carto.ui.BaseMapView.getSDKVersion());
         } else {
             this.log('onMapReady');
         }
 
         const options = cartoMap.getOptions();
-        options.setWatermarkScale(0.5);
-        options.setWatermarkPadding(toNativeScreenPos({ x: 80, y: navigationBarHeight }));
+        options.setWatermarkScale(0);
+        // options.setWatermarkPadding(toNativeScreenPos({ x: 80, y: navigationBarHeight }));
         options.setRestrictedPanning(true);
         options.setPanningMode(PanningMode.PANNING_MODE_STICKY);
         options.setSeamlessPanning(true);
@@ -535,18 +498,20 @@ export default class Map extends BgServicePageComponent {
         // setTimeout(() => {
         perms
             .request('storage')
-            .then(status => {
-                if (this.packageServiceEnabled) {
+            .then((status) => {
+                if (gVars.packageServiceEnabled) {
                     this.$packageService.start();
                 }
                 setTimeout(() => {
                     this.runOnModules('onMapReady', this, cartoMap);
                 }, 100);
+                // TODO: remove
+                appSettings.remove('mapStyle');
                 this.setMapStyle(appSettings.getString('mapStyle', 'osmxml'), true);
-                this.show3DBuildings = this.mapModules.rightMenu.show3DBuildings;
-                this.showContourLines = this.mapModules.rightMenu.showContourLines;
+                this.show3DBuildings = this.rightMenu.show3DBuildings;
+                this.showContourLines = this.rightMenu.showContourLines;
             })
-            .catch(err => this.showError(err));
+            .catch((err) => this.showError(err));
         // }, 0);
     }
 
@@ -571,9 +536,9 @@ export default class Map extends BgServicePageComponent {
         peek = true,
         setSelected = true,
         showButtons = false,
-        zoom
+        zoom,
     }: {
-        item: Item;
+        item: IItem;
         showButtons?: boolean;
         isFeatureInteresting: boolean;
         peek?: boolean;
@@ -615,11 +580,9 @@ export default class Map extends BgServicePageComponent {
                 if (!this.selectedPosMarker) {
                     this.selectedPosMarker = this.createLocalPoint(item.position, {
                         // color: '#55ff0000',
-                        color: tinycolor(primaryColor)
-                            .setAlpha(0.7)
-                            .toRgbString(),
+                        color: tinycolor(primaryColor).setAlpha(0.7).toRgbString(),
                         scaleWithDPI: true,
-                        size: 30
+                        size: 30,
                         // orientationMode: BillboardOrientation.GROUND,
                         // scalingMode: BillboardScaling.SCREEN_SIZE
                     });
@@ -652,7 +615,7 @@ export default class Map extends BgServicePageComponent {
                 (!item.properties || !item.properties.hasOwnProperty('ele')) &&
                 this.$packageService.hillshadeLayer
             ) {
-                this.$packageService.getElevation(item.position).then(result => {
+                this.$packageService.getElevation(item.position).then((result) => {
                     if (this.selectedItem.position === item.position) {
                         this.selectedItem.properties = this.selectedItem.properties || {};
                         this.selectedItem.properties['ele'] = result;
@@ -666,15 +629,16 @@ export default class Map extends BgServicePageComponent {
             // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
             // vectorTileDecoder.setStyleParameter('selected_name', (item.properties && item.properties.name) || '');
             if (peek) {
-                this.bottomSheetHolder.peek(showButtons ? 1 : 0);
+                this.bottomSheetStepIndex = showButtons ? 2 : 1;
             }
             if (item.zoomBounds) {
                 const zoomLevel = getBoundsZoomLevel(item.zoomBounds, {
-                    width: screen.mainScreen.widthPixels,
-                    height: screen.mainScreen.heightPixels
+                    width: Screen.mainScreen.widthPixels,
+                    height: Screen.mainScreen.heightPixels,
                 });
-                this.cartoMap.setZoom(zoomLevel, 200);
-                this.cartoMap.setFocusPos(getCenter(item.zoomBounds.northeast, item.zoomBounds.southwest), 200);
+                this.cartoMap.moveToFitBounds(item.zoomBounds, undefined, true, true, false, 200);
+                // this.cartoMap.setZoom(zoomLevel, 200);
+                // this.cartoMap.setFocusPos(getCenter(item.zoomBounds.northeast, item.zoomBounds.southwest), 200);
             } else {
                 if (zoom) {
                     this.cartoMap.setZoom(zoom, 200);
@@ -695,20 +659,27 @@ export default class Map extends BgServicePageComponent {
             }
             if (item.route) {
                 const vectorElement = item.vectorElement as Line;
-                const color = new Color(vectorElement.color as string);
+                if (vectorElement) {
+                    const color = new Color(vectorElement.color as string);
 
-                vectorElement.color = new tinycolor({ r: color.r, g: color.g, b: color.b, a: color.a / 255 })
-                    .lighten(10)
-                    .toRgbString();
-                vectorElement.width -= 2;
+                    vectorElement.color = new tinycolor({ r: color.r, g: color.g, b: color.b, a: color.a / 255 })
+                        .lighten(10)
+                        .toRgbString();
+                    vectorElement.width -= 2;
+                }
             }
             // if (this.selectedRouteLine) {
             //     this.selectedRouteLine.visible = false;
             // }
-            this.bottomSheetHolder.close();
+            this.bottomSheetStepIndex = 0;
             // const vectorTileDecoder = this.getVectorTileDecoder();
             // vectorTileDecoder.setStyleParameter('selected_id', '0');
             // vectorTileDecoder.setStyleParameter('selected_name', '');
+        }
+    }
+    onStepIndexChanged() {
+        if (this.bottomSheetStepIndex === 0) {
+            this.unselectItem();
         }
     }
     cancelDirections() {
@@ -726,7 +697,7 @@ export default class Map extends BgServicePageComponent {
     }
     onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureLayerName, featureData, featurePosition } = data;
-        this.log('onVectorTileClicked', featureLayerName, featureData.class, featureData.subclass, featureData);
+        // this.log('onVectorTileClicked', featureLayerName, featureData.class, featureData.subclass, featureData);
         const handledByModules = this.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             if (
@@ -751,9 +722,9 @@ export default class Map extends BgServicePageComponent {
                 featureLayerName === 'mountain_peak' ||
                 featureLayerName === 'housenumber';
             if (isFeatureInteresting) {
-                let result: Item = {
+                const result: IItem = {
                     properties: featureData,
-                    position: isFeatureInteresting ? featurePosition : position
+                    position: isFeatureInteresting ? featurePosition : position,
                 };
                 this.selectItem({ item: result, isFeatureInteresting });
 
@@ -765,18 +736,17 @@ export default class Map extends BgServicePageComponent {
                         .searchInGeocodingService(service, {
                             projection: this.mapProjection,
                             location: featurePosition,
-                            searchRadius: radius
+                            searchRadius: radius,
                         })
-                        .then(res => {
+                        .then((res) => {
                             if (res) {
                                 for (let index = 0; index < res.size(); index++) {
                                     const r = this.$packageService.convertGeoCodingResult(res.get(index));
                                     if (computeDistanceBetween(result.position, r.position) <= radius && r.rank > 0.9) {
-                                        result;
                                         if (this.selectedItem.position === result.position) {
                                             this.selectedItem = this.$packageService.prepareGeoCodingResult({
                                                 address: r.address as any,
-                                                ...this.selectedItem
+                                                ...this.selectedItem,
                                             });
                                         }
                                         break;
@@ -788,7 +758,7 @@ export default class Map extends BgServicePageComponent {
                         //     console.log('test about to select item', result);
                         //     this.selectItem({ item: result, isFeatureInteresting });
                         // })
-                        .catch(err => {
+                        .catch((err) => {
                             console.error(err);
                         });
                 }
@@ -802,12 +772,17 @@ export default class Map extends BgServicePageComponent {
     }
     onVectorElementClicked(data: VectorElementEventData<LatLonKeys>) {
         const { clickType, position, elementPos, metaData, element } = data;
-        Object.keys(metaData).forEach(k => {
+        Object.keys(metaData).forEach((k) => {
             metaData[k] = JSON.parse(metaData[k]);
         });
+        // console.log('metaData', metaData);
         const handledByModules = this.runOnModules('onVectorElementClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
-            const item: Item = { position, vectorElement: element, ...metaData };
+            const item: IItem = { position, vectorElement: element, ...metaData };
+            // }
+            if (item.route) {
+                item.route.positions = (element as Line<LatLonKeys>).getPoses() as any;
+            }
             this.selectItem({ item, isFeatureInteresting: true });
             this.unFocusSearch();
             return true;
@@ -903,12 +878,17 @@ export default class Map extends BgServicePageComponent {
             preloading: this.preloading,
             zoomLevelBias: parseFloat(this.zoomBiais),
             dataSource: this.$packageService.getDataSource(this.showContourLines),
-            decoder: vectorTileDecoder
+            decoder: vectorTileDecoder,
         });
         this.updateLanguage(this.currentLanguage);
         // console.log('currentLayer', !!this.currentLayer);
         this.currentLayer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
-        this.currentLayer.setVectorTileEventListener(this, this.mapProjection);
+        this.currentLayer.setVectorTileEventListener<LatLonKeys>(
+            {
+                onVectorTileClicked: (data) => this.onVectorTileClicked(data),
+            },
+            this.mapProjection
+        );
         try {
             this.addLayer(this.currentLayer, 'map');
         } catch (err) {
@@ -966,26 +946,16 @@ export default class Map extends BgServicePageComponent {
                 return CartoMapStyle.VOYAGER;
         }
     }
-    // setCurrentLayerStyle(style: CartoMapStyle) {
-    //     this.currentLayerStyle = style;
-    //     if (this.vectorTileDecoder instanceof CartoOnlineVectorTileLayer) {
-    //         // this.vectorTileDecoder.style = this.getStyleFromCartoMapStyle(this.currentLayerStyle);
-    //     }
-    // }
+    @profile
     setMapStyle(layerStyle: string, force = false) {
-        // return;
-        // if (!layerStyle) {
-        //     return;
-        // }
         layerStyle = layerStyle.toLowerCase();
-        // console.log('setMapStyle', layerStyle, layerStyle !== this.currentLayerStyle || !!force);
         if (layerStyle !== this.currentLayerStyle || !!force) {
             this.currentLayerStyle = layerStyle;
             appSettings.setString('mapStyle', layerStyle);
             const oldVectorTileDecoder = this.vectorTileDecoder;
             if (layerStyle === 'default' || layerStyle === 'voyager' || layerStyle === 'positron') {
                 this.vectorTileDecoder = new CartoOnlineVectorTileLayer({
-                    style: this.geteCartoMapStyleFromStyle(layerStyle)
+                    style: this.geteCartoMapStyleFromStyle(layerStyle),
                 }).getTileDecoder();
             } else {
                 try {
@@ -994,7 +964,7 @@ export default class Map extends BgServicePageComponent {
                         liveReload: TNS_ENV !== 'production',
                         ...(layerStyle.endsWith('.zip')
                             ? { zipPath: `~/assets/styles/${layerStyle}` }
-                            : { dirPath: `~/assets/styles/${layerStyle}` })
+                            : { dirPath: `~/assets/styles/${layerStyle}` }),
                     });
                     this.runOnModules('vectorTileDecoderChanged', oldVectorTileDecoder, this.vectorTileDecoder);
                 } catch (err) {
@@ -1003,33 +973,11 @@ export default class Map extends BgServicePageComponent {
                 }
             }
             this.updateLanguage(this.currentLanguage);
-            if (this.packageServiceEnabled) {
+            if (gVars.packageServiceEnabled) {
                 this.setCurrentLayer(this.currentLayerStyle);
             }
         }
     }
-
-    // openSearch() {
-    //     import('~/components/Search.vue').then(Search => {
-    //         this.$navigateTo(Search.default, {
-    //             animated: true,
-    //             transitionAndroid: {
-    //                 name: 'fade',
-    //                 duration: 200,
-    //                 curve: 'linear'
-    //             },
-    //             transitioniOS: {
-    //                 name: 'fade',
-    //                 duration: 200,
-    //                 curve: 'linear'
-    //             },
-    //             props: {
-    //                 searchLayer: this.currentLayer,
-    //                 projection: this.mapProjection
-    //             }
-    //         } as any);
-    //     });
-    // }
 
     onLayerOpacityChanged(item, event) {
         const opacity = event.value / 100;
@@ -1037,8 +985,6 @@ export default class Map extends BgServicePageComponent {
         appSettings.setNumber(item.name + '_opacity', opacity);
         item.layer.visible = opacity !== 0;
         this.cartoMap.requestRedraw();
-        // item.layer.refresh();
-        // console.log('onLayerOpacityChanged', item.name, event.value, item.opacity);
     }
 
     onSourceLongPress(item: SourceItem) {
@@ -1052,8 +998,8 @@ export default class Map extends BgServicePageComponent {
         action({
             title: `${item.name} Source`,
             message: 'Pick Action',
-            actions: [$t('delete'), $t('clear_cache')]
-        }).then(result => {
+            actions: [$t('delete'), $t('clear_cache')],
+        }).then((result) => {
             switch (result) {
                 case 'delete': {
                     this.mapModules.customLayers.deleteSource(item.name);
@@ -1065,21 +1011,21 @@ export default class Map extends BgServicePageComponent {
                     break;
                 }
                 case 'legend':
-                    const PhotoViewer = require('nativescript-photoviewer');
-                    new PhotoViewer().showGallery([item.legend]);
+                    // const PhotoViewer = require('nativescript-photoviewer');
+                    // new PhotoViewer().showGallery([item.legend]);
                     break;
             }
         });
     }
 
     selectStyle() {
+        console.log('selectStyle');
         const assetsFolder = Folder.fromPath(path.join(knownFolders.currentApp().path, 'assets', 'styles'));
-        assetsFolder.getEntities().then(files => {
-            // files = files.filter(e => e.name.endsWith('.zip'));
+        assetsFolder.getEntities().then((files) => {
             action({
                 title: this.$tc('select_style'),
-                actions: files.map(e => e.name).concat(this.$tc('default'))
-            }).then(result => {
+                actions: files.map((e) => e.name).concat(this.$tc('default')),
+            }).then((result) => {
                 if (result) {
                     this.setMapStyle(result);
                 }
@@ -1090,8 +1036,9 @@ export default class Map extends BgServicePageComponent {
         action({
             title: 'Language',
             message: 'Select Language',
-            actions: mapLanguages
-        }).then(result => {
+            actions: SUPPORTED_LOCALES,
+        }).then((result) => {
+            console.log('result', result);
             result && this.updateLanguage(result);
         });
     }
@@ -1102,7 +1049,6 @@ export default class Map extends BgServicePageComponent {
     removeLayer(layer: Layer<any, any>, layerId: LayerType, offset?: number) {
         const realLayerId = offset ? layerId + offset : layerId;
         const index = this.addedLayers.indexOf(realLayerId);
-        // this.log('removeLayer', layerId, realLayerId, this.addedLayers, index);
         if (index !== -1) {
             this.addedLayers.splice(index, 1);
         }
@@ -1110,27 +1056,19 @@ export default class Map extends BgServicePageComponent {
     }
     addLayer(layer: Layer<any, any>, layerId: LayerType, offset?: number) {
         const realLayerId = offset ? layerId + offset : layerId;
-        // this.log('addLayer', layerId, realLayerId, offset, !!this._cartoMap, this.addedLayers.indexOf(layerId), this.addedLayers);
         if (this._cartoMap) {
             if (this.addedLayers.indexOf(realLayerId) !== -1) {
                 return;
             }
             const layerIndex = LAYERS_ORDER.indexOf(layerId);
-            // this.log('layerIndex', layerIndex);
             let realIndex = 0;
-            this.addedLayers.some(s => {
+            this.addedLayers.some((s) => {
                 if (LAYERS_ORDER.indexOf(s as any) < layerIndex) {
                     realIndex++;
                     return false;
                 }
                 return true;
             });
-            // for (let i = 0; i < index; i++) {
-            //     if (this.addedLayers.indexOf(LAYERS_ORDER[i]) !== -1) {
-            //         realIndex++;
-            //     }
-            // }
-            // this.log('addedLayer about to add layer', layerId, realIndex, this.addedLayers.length);
             if (realIndex >= 0 && realIndex < this.addedLayers.length) {
                 const index = realIndex + (offset || 0);
                 this._cartoMap.addLayer(layer, index);
@@ -1139,49 +1077,73 @@ export default class Map extends BgServicePageComponent {
                 this._cartoMap.addLayer(layer);
                 this.addedLayers.push(realLayerId);
             }
-            // this.log('addedLayer', layerId, realIndex, offset, this.addedLayers);
             this._cartoMap.requestRedraw();
         }
     }
     mBottomSheetTranslation = 0;
     get bottomSheetTranslation() {
         const result = this.mBottomSheetTranslation + navigationBarHeight;
-        // if (gVars.isAndroid) {
-        //     result += 48;
-        // }
         return result;
     }
     topSheetTranslation = DEFAULT_TOP;
-    bottomSheetPercentage = 0;
-    get scrollingWidgetsOpacity() {
-        if (this.bottomSheetPercentage <= 0.5) {
-            return 1;
-        }
-        return 4 * (2 - 2 * this.bottomSheetPercentage) - 3;
-    }
-    onBottomSheetScroll(e: BottomSheetHolderScrollEventData) {
-        // console.log('onBottomSheetScroll', e);
-        this.mBottomSheetTranslation = e.height;
-        this.bottomSheetPercentage = e.percentage;
-    }
+    scrollingWidgetsOpacity = 1;
+    // onBottomSheetScroll(e: BottomSheetHolderScrollEventData) {
+    //     // console.log('onBottomSheetScroll', e);
+    //     this.mBottomSheetTranslation = e.height;
+    //     this.bottomSheetPercentage = e.percentage;
+    // }
     onTopSheetScroll(e: TopSheetHolderScrollEventData) {
         // console.log('onTopSheetScroll', e.height, e.bottom);
         this.topSheetTranslation = e.bottom;
         // this.bottomSheetPercentage = e.percentage;
     }
 
+    bottomSheetTranslationFunction(maxTranslation, translation, progress) {
+        if (translation < 300) {
+            this.scrollingWidgetsOpacity = 1;
+        } else {
+            this.scrollingWidgetsOpacity = 4 * (2 - 2 * progress) - 3;
+        }
+        const maptranslation = -(maxTranslation - translation);
+        const result = {
+            bottomSheet: {
+                translateY: translation,
+            },
+            searchView: {
+                target: this.searchView.nativeView,
+                opacity: this.scrollingWidgetsOpacity,
+            },
+            locationInfo: {
+                target: this.$refs.locationInfo.nativeView,
+                opacity: this.scrollingWidgetsOpacity,
+            },
+            mapScrollingWidgets: {
+                target: this.$refs.mapScrollingWidgets.nativeView,
+                translateY: maptranslation,
+                opacity: this.scrollingWidgetsOpacity,
+            },
+            speeddial: {
+                target: this.$refs.speeddial.nativeView,
+                translateY: maptranslation,
+                opacity: this.scrollingWidgetsOpacity,
+            },
+        };
+        // console.log('bottomSheetTranslationFunction', translation, progress, this.scrollingWidgetsOpacity);
+        return result;
+    }
+
     lastBrightness;
     public showKeepAwakeNotification() {
         this.lastBrightness = brightness.get();
         brightness.set({
-            intensity: 100
+            intensity: 100,
         });
-        if (gVars.isAndroid) {
+        if (global.isAndroid) {
             const context: android.content.Context = ad.getApplicationContext();
             const builder = new androidx.core.app.NotificationCompat.Builder(context, NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL);
 
             // create notification channel
-            const color = android.graphics.Color.parseColor(this.accentColor);
+            const color = this.accentColor.android;
             NotificationHelper.createNotificationChannel(context);
 
             const activityClass = (com as any).tns.NativeScriptActivity.class;
@@ -1211,9 +1173,9 @@ export default class Map extends BgServicePageComponent {
 
     public hideKeepAwakeNotification() {
         brightness.set({
-            intensity: this.lastBrightness
+            intensity: this.lastBrightness,
         });
-        if (gVars.isAndroid) {
+        if (global.isAndroid) {
             const context: android.content.Context = ad.getApplicationContext();
             const service = context.getSystemService(
                 android.content.Context.NOTIFICATION_SERVICE
@@ -1223,7 +1185,7 @@ export default class Map extends BgServicePageComponent {
     }
 
     switchKeepAwake() {
-        // this.log('switchKeepAwake', this.keepAwake);
+        this.log('switchKeepAwake', this.keepAwake);
         if (this.keepAwake) {
             allowSleepAgain()
                 .then(() => {
@@ -1232,7 +1194,7 @@ export default class Map extends BgServicePageComponent {
                     this.hideKeepAwakeNotification();
                     // this.log('allowSleepAgain done', this.keepAwake);
                 })
-                .catch(err => this.showError(err));
+                .catch((err) => this.showError(err));
         } else {
             keepAwake()
                 .then(() => {
@@ -1241,7 +1203,7 @@ export default class Map extends BgServicePageComponent {
                     this.showKeepAwakeNotification();
                     // this.log('keepAwake done', this.keepAwake);
                 })
-                .catch(err => this.showError(err));
+                .catch((err) => this.showError(err));
         }
     }
 
@@ -1250,8 +1212,111 @@ export default class Map extends BgServicePageComponent {
     }
 
     shareScreenshot() {
-        this.cartoMap.captureRendering(true).then(result => {
-            SocialShare.shareImage(result);
+        this.cartoMap.captureRendering(true).then((result) => {
+            SocialShare.shareImage(result as any);
         });
+    }
+    onTap(command: string) {
+        switch (command) {
+            case 'sendFeedback':
+                compose({
+                    subject: `[${EInfo.getAppNameSync()}(${this.appVersion})] Feedback`,
+                    to: ['martin@akylas.fr'],
+                    attachments: [
+                        {
+                            fileName: 'report.json',
+                            path: `base64://${base64Encode(
+                                JSON.stringify(
+                                    {
+                                        device: {
+                                            model: Device.model,
+                                            DeviceType: Device.deviceType,
+                                            language: Device.language,
+                                            manufacturer: Device.manufacturer,
+                                            os: Device.os,
+                                            osVersion: Device.osVersion,
+                                            region: Device.region,
+                                            sdkVersion: Device.sdkVersion,
+                                            uuid: Device.uuid,
+                                        },
+                                        screen: {
+                                            widthDIPs: screenWidthDips,
+                                            heightDIPs: screenHeightDips,
+                                            widthPixels: Screen.mainScreen.widthPixels,
+                                            heightPixels: Screen.mainScreen.heightPixels,
+                                            scale: Screen.mainScreen.scale,
+                                        },
+                                    },
+                                    null,
+                                    4
+                                )
+                            )}`,
+                            mimeType: 'application/json',
+                        },
+                    ],
+                }).catch((err) => this.showError(err));
+                break;
+            case 'sendBugReport':
+                login({
+                    title: this.$tc('send_bug_report'),
+                    message: this.$tc('send_bug_report_desc'),
+                    okButtonText: this.$t('send'),
+                    cancelButtonText: this.$t('cancel'),
+                    autoFocus: true,
+                    usernameTextFieldProperties: {
+                        marginLeft: 10,
+                        marginRight: 10,
+                        autocapitalizationType: 'none',
+                        keyboardType: 'email',
+                        autocorrect: false,
+                        error: this.$tc('email_required'),
+                        hint: this.$tc('email'),
+                    },
+                    passwordTextFieldProperties: {
+                        marginLeft: 10,
+                        marginRight: 10,
+                        error: this.$tc('please_describe_error'),
+                        secure: false,
+                        hint: this.$tc('description'),
+                    },
+                    beforeShow: (options, usernameTextField: TextField, passwordTextField: TextField) => {
+                        usernameTextField.on('textChange', (e: any) => {
+                            const text = e.value;
+                            if (!text) {
+                                usernameTextField.error = this.$tc('email_required');
+                            } else if (!mailRegexp.test(text)) {
+                                usernameTextField.error = this.$tc('non_valid_email');
+                            } else {
+                                usernameTextField.error = null;
+                            }
+                        });
+                        passwordTextField.on('textChange', (e: any) => {
+                            const text = e.value;
+                            if (!text) {
+                                passwordTextField.error = this.$tc('description_required');
+                            } else {
+                                passwordTextField.error = null;
+                            }
+                        });
+                    },
+                }).then((result) => {
+                    if (result.result) {
+                        if (!result.userName || !mailRegexp.test(result.userName)) {
+                            this.showError(new Error(this.$tc('email_required')));
+                            return;
+                        }
+                        if (!result.password || result.password.length === 0) {
+                            this.showError(new Error(this.$tc('description_required')));
+                            return;
+                        }
+                        Sentry.withScope((scope) => {
+                            scope.setUser({ email: result.userName });
+                            Sentry.captureMessage(result.password);
+                            this.$alert(this.$t('bug_report_sent'));
+                        });
+                    }
+                });
+                break;
+        }
     }
 }

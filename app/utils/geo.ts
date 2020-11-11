@@ -1,5 +1,4 @@
-import { MapBounds, MapPos, ScreenBounds } from 'nativescript-carto/core';
-import { ScreenMetrics } from '@nativescript/core/platform/platform';
+import { MapBounds, MapPos, MapPosVector, ScreenBounds, fromNativeMapPos } from '@nativescript-community/ui-carto/core';
 
 const PI = Math.PI;
 const TO_RAD = PI / 180;
@@ -48,7 +47,7 @@ export function getCenter(...coords: MapPos<LatLonKeys>[]) {
 
     return {
         lat: lat * TO_DEG,
-        lon: lon * TO_DEG
+        lon: lon * TO_DEG,
     } as MapPos<LatLonKeys>;
 }
 
@@ -168,13 +167,13 @@ function isOnSegmentGC(lat1, lng1, lat2, lng2, lat3, lng3, havTolerance) {
 
 export function isLocationOnPath(
     point: MapPos<LatLonKeys>,
-    poly: MapPos<LatLonKeys>[],
+    poly: MapPosVector<LatLonKeys>,
     closed = false,
     geodesic = true,
     toleranceEarth: number = DEFAULT_TOLERANCE
 ) {
     // console.log('isLocationOnPath', point, poly, closed, geodesic, toleranceEarth);
-    const size = poly.length;
+    const size = poly.size();
     if (size === 0) {
         return -1;
     }
@@ -182,15 +181,15 @@ export function isLocationOnPath(
     const havTolerance = hav(tolerance);
     const lat3 = toRadians(point.lat);
     const lng3 = toRadians(point.lon);
-    const prev = poly[closed ? size - 1 : 0];
-    let lat1 = toRadians(prev.lat);
-    let lng1 = toRadians(prev.lon);
+    const prev = poly.get(closed ? size - 1 : 0);
+    let lat1 = toRadians(prev.getY());
+    let lng1 = toRadians(prev.getX());
     if (geodesic) {
         for (let index = 0; index < size; index++) {
-            const point2 = poly[index];
+            const point2 = poly.get(index);
 
-            const lat2 = toRadians(point2.lat);
-            const lng2 = toRadians(point2.lon);
+            const lat2 = toRadians(point2.getY());
+            const lng2 = toRadians(point2.getX());
             if (isOnSegmentGC(lat1, lng1, lat2, lng2, lat3, lng3, havTolerance)) {
                 return index;
             }
@@ -261,12 +260,12 @@ function computeAngleBetween(from: MapPos<LatLonKeys>, to: MapPos<LatLonKeys>) {
 export function computeDistanceBetween(from: MapPos<LatLonKeys>, to: MapPos<LatLonKeys>) {
     return computeAngleBetween(from, to) * EARTH_RADIUS;
 }
-export function distanceToEnd(index: number, poly: MapPos<LatLonKeys>[]) {
+export function distanceToEnd(index: number, poly: MapPosVector<LatLonKeys>) {
     let result = 0;
-    const size = poly.length;
+    const size = poly.size();
     let last: MapPos<LatLonKeys>;
     for (let i = index; i < size; i++) {
-        const element = poly[i];
+        const element = fromNativeMapPos<LatLonKeys>(poly.get(i));
         if (last) {
             result += computeDistanceBetween(last, element);
         }
@@ -283,7 +282,7 @@ function clip(n, minValue, maxValue) {
     return Math.min(Math.max(n, minValue), maxValue);
 }
 export function latLngToTileXY(lat, lng, zoom, tileSize = 256) {
-    var MinLatitude = -85.05112878,
+    const MinLatitude = -85.05112878,
         MaxLatitude = 85.05112878,
         MinLongitude = -180,
         MaxLongitude = 180,
@@ -294,22 +293,19 @@ export function latLngToTileXY(lat, lng, zoom, tileSize = 256) {
 
     const p: { x?: number; y?: number } = {};
     p.x = ((longitude + 180.0) / 360.0) * (1 << zoom);
-    p.y = ((1.0 - Math.log(Math.tan((latitude * Math.PI) / 180.0) + 1.0 / Math.cos(toRadians(lat))) / Math.PI) / 2.0) * (1 << zoom);
+    p.y =
+        ((1.0 - Math.log(Math.tan((latitude * Math.PI) / 180.0) + 1.0 / Math.cos(toRadians(lat))) / Math.PI) / 2.0) * (1 << zoom);
 
-    var tilex = Math.trunc(p.x);
-    var tiley = Math.trunc(p.y);
-    // var pixelX = clipByRange(tilex * tileSize + (p.x - tilex) * tileSize, mapSize - 1);
-    var pixelX = Math.trunc(clipByRange((p.x - tilex)* tileSize, tileSize));
-    var pixelY = Math.trunc(clipByRange((p.y - tiley)* tileSize, tileSize));
-    // var pixelY = tileSize - clipByRange(tiley * tileSize + (p.y - tiley) * tileSize, mapSize - 1);
-    // var pixelY = tileSize - clipByRange(tiley * tileSize + (p.y - tiley) * tileSize, mapSize - 1);
+    const tilex = Math.trunc(p.x);
+    const tiley = Math.trunc(p.y);
+    const pixelX = Math.trunc(clipByRange((p.x - tilex) * tileSize, tileSize));
+    const pixelY = Math.trunc(clipByRange((p.y - tiley) * tileSize, tileSize));
 
-    var result = {
-        x:tilex,
+    const result = {
+        x: tilex,
         y: tiley,
-        pixelX: pixelX,
-        pixelY: pixelY
+        pixelX,
+        pixelY,
     };
     return result;
-
 }

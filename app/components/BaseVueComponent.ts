@@ -1,14 +1,19 @@
-import { View } from '@nativescript/core/ui/core/view';
-import { Frame, NavigationEntry } from '@nativescript/core/ui/frame';
-import { Label } from '@nativescript/core/ui/label/label';
-import { StackLayout } from '@nativescript/core/ui/layouts/stack-layout';
-import { Page } from '@nativescript/core/ui/page';
-import { ActivityIndicator } from 'nativescript-material-activityindicator';
-import { AlertDialog } from 'nativescript-material-dialogs';
-import Vue, { NativeScriptVue } from 'nativescript-vue';
+import { ActivityIndicator } from '@nativescript-community/ui-material-activityindicator';
+import { AlertDialog } from '@nativescript-community/ui-material-dialogs';
+import { Color, Frame, Label, Page, StackLayout, View } from '@nativescript/core';
+import { bind } from 'helpful-decorators';
+import Vue, { NativeScriptVue, NavigationEntryVue } from 'nativescript-vue';
 import { VueConstructor } from 'vue';
 import { Prop } from 'vue-property-decorator';
-import { accentColor, actionBarHeight, darkColor, mdiFontFamily, navigationBarHeight, primaryColor, statusBarHeight } from '../variables';
+import {
+    accentColor,
+    actionBarHeight,
+    darkColor,
+    mdiFontFamily,
+    navigationBarHeight,
+    primaryColor,
+    statusBarHeight,
+} from '../variables';
 
 export interface BaseVueComponentRefs {
     [key: string]: any;
@@ -18,26 +23,30 @@ export interface BaseVueComponentRefs {
 export default class BaseVueComponent extends Vue {
     protected loadingIndicator: AlertDialog & { label?: Label };
     $refs: BaseVueComponentRefs;
-    @Prop({ type: String, default: primaryColor })
-    public themeColor;
-    @Prop({ type: String, default: darkColor })
-    public darkColor;
-    @Prop({ type: String, default: accentColor })
-    public accentColor;
+    @Prop({ type: Color, default: () => primaryColor })
+    public themeColor: Color;
+    @Prop({ type: Color, default: () => darkColor })
+    public darkColor: Color;
+    @Prop({ type: Color, default: () => accentColor })
+    public accentColor: Color;
     @Prop({ type: Number, default: actionBarHeight })
     public actionBarHeight;
     needsRoundedWatchesHandle = false;
     debug = false;
+    public navigateUrl = null;
 
     navigationBarHeight = navigationBarHeight;
     statusBarHeight = statusBarHeight;
     public mdiFontFamily = mdiFontFamily;
-    // isAndroid = gVars.isAndroid;
-    // isIOS = gVars.isIOS;
-    getRef(key: string) {
+    // isAndroid = global.isAndroid;
+    // isIOS = global.isIOS;
+    getRef<T extends View = View>(key: string) {
         if (this.$refs[key]) {
-            return this.$refs[key].nativeView as View;
+            return (this.$refs[key] as NativeScriptVue<T>).nativeView;
         }
+    }
+    get page() {
+        return this.getRef<Page>('page');
     }
     noop() {}
     getLoadingIndicator() {
@@ -57,7 +66,7 @@ export default class BaseVueComponent extends Vue {
             stack.addChild(label);
             this.loadingIndicator = new AlertDialog({
                 view: stack,
-                cancelable: false
+                cancelable: false,
             });
             this.loadingIndicator.label = label;
         }
@@ -83,7 +92,13 @@ export default class BaseVueComponent extends Vue {
         }
     }
     mounted() {
-        // if (gVars.isAndroid) {
+        if (global.isIOS) {
+            const page = this.page;
+            if (page) {
+                page.backgroundSpanUnderStatusBar = true;
+            }
+        }
+        // if (global.isAndroid) {
         //     const nativeView = this.nativeView;
         //     this.log('android test', nativeView.isLoaded, !!nativeView.nativeViewProtected);
         //     if (!!nativeView.nativeViewProtected) {
@@ -99,19 +114,24 @@ export default class BaseVueComponent extends Vue {
     }
     destroyed() {}
 
-    navigateTo(component: VueConstructor, options?: NavigationEntry & { props?: any }, cb?: () => Page) {
+    navigateTo(component: VueConstructor, options?: NavigationEntryVue, cb?: () => Page) {
         options = options || {};
         (options as any).frame = options['frame'] || Frame.topmost().id;
         return this.$navigateTo(component, options, cb);
     }
+
+    @bind
     showError(err: Error | string) {
+        this.showErrorInternal(err);
+    }
+    showErrorInternal(err: Error | string) {
         const delta = this.showLoadingStartTime ? Date.now() - this.showLoadingStartTime : -1;
         if (delta >= 0 && delta < 1000) {
-            setTimeout(() => this.showError(err), 1000 - delta);
+            setTimeout(() => this.showErrorInternal(err), 1000 - delta);
             return;
         }
         this.hideLoading();
-        this.$showError(err);
+        this.$crashReportService.showError(err);
     }
 
     log(...args) {
@@ -119,6 +139,10 @@ export default class BaseVueComponent extends Vue {
     }
 
     goBack() {
-        this.$getAppComponent().goBack();
+        if (this.navigateUrl) {
+            this.$getAppComponent().navigateBackIfUrl(this.navigateUrl);
+        } else {
+            this.$getAppComponent().goBack();
+        }
     }
 }

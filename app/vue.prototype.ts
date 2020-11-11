@@ -1,13 +1,12 @@
 import * as application from '@nativescript/core/application';
 import { $t, $tc, $tt, $tu } from '~/helpers/locale';
-import { device, screen } from '@nativescript/core/platform';
+import { Device, Screen } from '@nativescript/core/platform';
 import App from '~/components/App';
 import Map from '~/components/Map';
 import PackageService from '~/services/PackageService';
 import { BgService } from './services/BgService';
 import { NetworkService } from './services/NetworkService';
-import { ToastDuration, ToastPosition, Toasty } from 'nativescript-toasty';
-import * as imageModule from 'nativescript-image';
+import * as imageModule from '@nativescript-community/ui-image';
 
 const Plugin = {
     install(Vue) {
@@ -22,7 +21,7 @@ const Plugin = {
             console.log('App Launched');
             imageModule.initialize({ isDownsampleEnabled: true });
 
-            if (gVars.isAndroid) {
+            if (global.isAndroid) {
                 bgService.start();
                 networkService.start();
                 // const receiverCallback = (androidContext, intent: android.content.Intent) => {
@@ -37,45 +36,38 @@ const Plugin = {
             console.log('App Exited');
             imageModule.shutDown();
             networkService.stop();
-            // if (gVars.isAndroid) {
-                // application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_ON);
-                // application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_OFF);
+            // if (global.isAndroid) {
+            // application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_ON);
+            // application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_OFF);
             // }
         });
-        if (gVars.isIOS) {
+        if (global.isIOS) {
             bgService.start();
             networkService.start();
         }
         let appComponent: App;
-        Vue.prototype.$setAppComponent = function(comp: App) {
+        Vue.prototype.$setAppComponent = function (comp: App) {
             appComponent = comp;
         };
-        Vue.prototype.$getAppComponent = function() {
+        Vue.prototype.$getAppComponent = function () {
             return appComponent;
         };
         let mapComponent: Map;
-        Vue.prototype.$setMapComponent = function(comp: Map) {
+        Vue.prototype.$setMapComponent = function (comp: Map) {
             mapComponent = comp;
             appComponent.setMapMounted(true);
         };
-        Vue.prototype.$getMapComponent = function() {
+        Vue.prototype.$getMapComponent = function () {
             return mapComponent;
         };
 
-        // Vue.prototype.__defineGetter__('isSimulator', () => false);
-        // Vue.prototype.__defineGetter__('isAndroid', () => gVars.isAndroid);
-        // Vue.prototype.__defineGetter__('isIOS', () => gVars.isIOS);
-
-        Vue.prototype.isSimulator = false;
-        Vue.prototype.isAndroid = gVars.isAndroid;
-        Vue.prototype.isIOS = gVars.isIOS;
         const filters = (Vue.prototype.$filters = Vue['options'].filters);
         Vue.prototype.$t = $t;
 
         Vue.prototype.$tc = $tc;
         Vue.prototype.$tt = $tt;
         Vue.prototype.$tu = $tu;
-        Vue.prototype.$showError = function(err: Error) {
+        Vue.prototype.$showError = function (err: Error) {
             if (!err) {
                 return;
             }
@@ -84,35 +76,30 @@ const Plugin = {
             return alert({
                 title: Vue.prototype.$tc('error'),
                 okButtonText: Vue.prototype.$tc('ok'),
-                message
+                message,
             });
         };
-        Vue.prototype.$showToast = function(text: string, duration?: ToastDuration, position?: ToastPosition) {
-            const toasty = new Toasty({ text, duration, position });
-            toasty.show();
-            return toasty;
-        };
-        Vue.prototype.$alert = function(message) {
+        Vue.prototype.$alert = function (message) {
             return alert({
                 okButtonText: Vue.prototype.$tc('ok'),
-                message
+                message,
             });
         };
 
-        /* DEV-START */
-        console.log('model', device.model);
-        console.log('os', device.os);
-        console.log('osVersion', device.osVersion);
-        console.log('manufacturer', device.manufacturer);
-        console.log('deviceType', device.deviceType);
-        console.log('widthPixels', screen.mainScreen.widthPixels);
-        console.log('heightPixels', screen.mainScreen.heightPixels);
-        console.log('widthDIPs', screen.mainScreen.widthDIPs);
-        console.log('heightDIPs', screen.mainScreen.heightDIPs);
-        console.log('scale', screen.mainScreen.scale);
-        console.log('ratio', screen.mainScreen.heightDIPs / screen.mainScreen.widthDIPs);
-        /* DEV-END */
-    }
+        if (!PRODUCTION) {
+            console.log('model', Device.model);
+            console.log('os', Device.os);
+            console.log('osVersion', Device.osVersion);
+            console.log('manufacturer', Device.manufacturer);
+            console.log('deviceType', Device.deviceType);
+            console.log('widthPixels', Screen.mainScreen.widthPixels);
+            console.log('heightPixels', Screen.mainScreen.heightPixels);
+            console.log('widthDIPs', Screen.mainScreen.widthDIPs);
+            console.log('heightDIPs', Screen.mainScreen.heightDIPs);
+            console.log('scale', Screen.mainScreen.scale);
+            console.log('ratio', Screen.mainScreen.heightDIPs / Screen.mainScreen.widthDIPs);
+        }
+    },
 };
 
 export default Plugin;

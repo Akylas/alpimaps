@@ -1,21 +1,22 @@
 import { Component, Prop, Watch } from 'vue-property-decorator';
-import { Item } from '~/mapModules/ItemsModule';
+import { Address, IItem as Item } from '~/models/Item';
 import BaseVueComponent from './BaseVueComponent';
 import { convertDistance, convertDuration, convertElevation, convertValueToUnit } from '~/helpers/formatter';
-import { distanceToEnd, isLocationOnPath } from '~/utils/geo';
-import { MapPos } from 'nativescript-carto/core';
+// import { distanceToEnd, isLocationOnPath } from '~/utils/geo';
+import { MapPos } from '@nativescript-community/ui-carto/core';
+import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
 import { RouteInstruction } from './DirectionsPanel';
 
 function pick<T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
     const ret: any = {};
-    keys.forEach(key => {
+    keys.forEach((key) => {
         ret[key] = obj[key];
     });
     return ret;
 }
 function omit<T, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> {
     const ret: any = {};
-    Object.keys(obj).forEach(key => {
+    Object.keys(obj).forEach((key) => {
         if (keys.indexOf(key as any) === -1) {
             ret[key] = obj[key];
         }

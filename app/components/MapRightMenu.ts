@@ -1,31 +1,27 @@
-import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
-import { $t } from '~/helpers/locale';
-import * as appSettings from '@nativescript/core/application-settings/application-settings';
-import { profile } from '@nativescript/core/profiling';
-import { action } from 'nativescript-material-dialogs';
+/* eslint-disable no-redeclare */
+import { CartoMap } from '@nativescript-community/ui-carto/ui';
+import { TextField } from '@nativescript-community/ui-material-textfield';
+import { getBoolean, getNumber, getString, setBoolean, setNumber, setString } from '@nativescript/core/application-settings';
+import { ObservableArray } from '@nativescript/core/data/observable-array';
 import { Component } from 'vue-property-decorator';
 import CustomLayersModule, { SourceItem } from '~/mapModules/CustomLayersModule';
-import BottomSheetBase from './BottomSheet/BottomSheetBase';
-import BaseVueComponent from './BaseVueComponent';
-import Map, { MapModules } from './Map';
-import { CartoMap } from 'nativescript-carto/ui';
 import { IMapModule } from '~/mapModules/MapModule';
-import { ObservableArray } from '@nativescript/core/data/observable-array';
-import { TextField } from 'nativescript-material-textfield';
+import BaseVueComponent from './BaseVueComponent';
 import LayerOptionsBottomSheet from './LayerOptionsBottomSheet';
+import Map, { MapModules } from './Map';
 
 function createGetter(target: Object, key, type: string, options?: { defaultValue?: any }) {
     // console.log('calling getter', key, target.hasOwnProperty('m' + key), target['m' + key]);
     if (!target.hasOwnProperty('m' + key) || target['m' + key] === undefined) {
         if (type === 'boolean') {
-            target['m' + key] = appSettings.getBoolean(key, options.defaultValue || false);
+            target['m' + key] = getBoolean(key, options.defaultValue || false);
         } else if (type === 'number') {
-            target['m' + key] = appSettings.getNumber(key, options.defaultValue || 0);
+            target['m' + key] = getNumber(key, options.defaultValue || 0);
         } else {
-            target['m' + key] = appSettings.getString(key, options.defaultValue || '');
+            target['m' + key] = getString(key, options.defaultValue || '');
         }
     }
-    return function() {
+    return function () {
         let result = this['m' + key];
         if (type === 'number' && typeof result !== 'number') {
             result = parseFloat(result);
@@ -37,7 +33,7 @@ function createGetter(target: Object, key, type: string, options?: { defaultValu
     };
 }
 function createSetter(target: Object, key, type: string, options?: { defaultValue?: any }) {
-    return function(newVal) {
+    return function (newVal) {
         // console.log('calling setter', key, this.hasOwnProperty('m' + key), this['m' + key], newVal, type);
         if (type === 'number') {
             if (typeof newVal === 'string') {
@@ -50,11 +46,11 @@ function createSetter(target: Object, key, type: string, options?: { defaultValu
         this['m' + key] = newVal;
         // console.log('calling setter done', key, this.hasOwnProperty('m' + key), this['m' + key], newVal, type);
         if (type === 'boolean') {
-            appSettings.setBoolean(key, newVal);
+            setBoolean(key, newVal);
         } else if (type === 'number') {
-            appSettings.setNumber(key, newVal);
+            setNumber(key, newVal);
         } else {
-            appSettings.setString(key, newVal);
+            setString(key, newVal);
         }
         if (this.mapComp) {
             this.mapComp[key] = newVal;
@@ -68,7 +64,7 @@ function propertyGenerator(target: Object, key: string, type: string, options?: 
         get: createGetter(target, key, type, options),
         set: createSetter(target, key, type, options),
         enumerable: true,
-        configurable: true
+        configurable: true,
     });
 }
 export function numberProperty(target: any, k?, desc?: PropertyDescriptor): any;
@@ -76,7 +72,7 @@ export function numberProperty(options: { defaultValue?: any }): (target: any, k
 export function numberProperty(...args) {
     const options = args[0];
     if (args[1] === undefined) {
-        return function(target: any, key?: string, descriptor?: PropertyDescriptor) {
+        return function (target: any, key?: string, descriptor?: PropertyDescriptor) {
             return propertyGenerator(target, key, 'number', options);
         };
     } else {
@@ -88,7 +84,7 @@ export function stringProperty(options: { defaultValue?: any }): (target: any, k
 export function stringProperty(...args) {
     const options = args[0];
     if (args[1] === undefined) {
-        return function(target: any, key?: string, descriptor?: PropertyDescriptor) {
+        return function (target: any, key?: string, descriptor?: PropertyDescriptor) {
             return propertyGenerator(target, key, 'string', options);
         };
     } else {
@@ -100,7 +96,7 @@ export function booleanProperty(options: { defaultValue?: any }): (target: any, 
 export function booleanProperty(...args) {
     const options = args[0];
     if (args[1] === undefined) {
-        return function(target: any, key?: string, descriptor?: PropertyDescriptor) {
+        return function (target: any, key?: string, descriptor?: PropertyDescriptor) {
             return propertyGenerator(target, key, 'boolean', options);
         };
     } else {
@@ -109,18 +105,14 @@ export function booleanProperty(...args) {
 }
 
 @Component({
-    components: {}
+    components: {},
 })
-export default class MapRightMenu extends BottomSheetBase implements IMapModule {
+export default class MapRightMenu extends BaseVueComponent implements IMapModule {
     mapView: CartoMap<LatLonKeys>;
     mapComp: Map;
     customLayers: CustomLayersModule = null;
     customSources: ObservableArray<SourceItem> = [] as any;
     currentLegend: string = null;
-
-    get steps() {
-        return [210];
-    }
 
     @booleanProperty({ defaultValue: false }) showGlobe: boolean;
     @booleanProperty({ defaultValue: false }) show3DBuildings: boolean;
@@ -174,10 +166,7 @@ export default class MapRightMenu extends BottomSheetBase implements IMapModule 
     //     }
     //     return this.mMapComp;
     // }
-
-    get packageServiceEnabled() {
-        return this.mapComp && this.mapComp.packageServiceEnabled;
-    }
+    packageServiceEnabled = gVars.packageServiceEnabled;
 
     mounted() {
         super.mounted();
@@ -188,7 +177,7 @@ export default class MapRightMenu extends BottomSheetBase implements IMapModule 
         const opacity = event.value / 100;
         // this.log('onLayerOpacityChanged', item.name, event.value, opacity);
         item.layer.opacity = opacity;
-        appSettings.setNumber(item.name + '_opacity', opacity);
+        setNumber(item.name + '_opacity', opacity);
         item.layer.visible = opacity !== 0;
         this.mapView.requestRedraw();
         // item.layer.refresh();
@@ -197,10 +186,10 @@ export default class MapRightMenu extends BottomSheetBase implements IMapModule 
     showSourceOptions(item: SourceItem) {
         this.$showBottomSheet(LayerOptionsBottomSheet, {
             props: {
-                item
-            }
+                item,
+            },
         });
-        this.holder.close();
+        // this.holder.close();
         // const actions = [$t('delete')];
         // if (item.provider.cacheable !== false) {
         //     actions.push($t('clear_cache'));
