@@ -41,6 +41,8 @@ export default class ItemsModule extends MapModule {
                 entities: [Item, Route],
                 // logging:true,
                 extra: {
+
+                    // for now it breaks
                     // threading: true,
                 },
             });
