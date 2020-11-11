@@ -6,6 +6,7 @@ import PackageService from '~/services/PackageService';
 import { NetworkService } from '~/services/NetworkService';
 import { ToastDuration, ToastPosition } from 'nativescript-toasty';
 import * as Sentry from 'nativescript-akylas-sentry';
+import CrashReportService from '~/services/CrashReportService';
 
 declare module 'vue/types/vue' {
     // 3. Declare augmentation for Vue
@@ -13,12 +14,7 @@ declare module 'vue/types/vue' {
         $bgService: BgService;
         $packageService: PackageService;
         $networkService: NetworkService;
-        $sentry: typeof Sentry;
-
-        isAndroid: boolean;
-        isIOS: boolean;
-        isSimulator: boolean;
-        // $cartoLicenseRegistered: boolean;
+        $crashReportService: CrashReportService;
         $t: (s: string, ...args) => string;
         $tc: (s: string, ...args) => string;
         $tt: (s: string, ...args) => string;
@@ -34,6 +30,5 @@ declare module 'vue/types/vue' {
         $getAppComponent(): App;
         $setMapComponent(comp: Map);
         $getMapComponent(): Map;
-        $showToast(message: string, duration?: ToastDuration, position?: ToastPosition);
     }
 }

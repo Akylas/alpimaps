@@ -1,7 +1,12 @@
 import { GeoHandler } from '~/handlers/GeoHandler';
 import { Observable } from '@nativescript/core/data/observable';
-import { ApplicationEventData, exitEvent, launchEvent, off as applicationOff, on as applicationOn } from '@nativescript/core/application';
-import { clog } from '~/utils/logging';
+import {
+    ApplicationEventData,
+    off as applicationOff,
+    on as applicationOn,
+    exitEvent,
+    launchEvent,
+} from '@nativescript/core/application';
 
 export const BgServiceLoadedEvent = 'BgServiceLoadedEvent';
 export abstract class BgServiceCommon extends Observable {
@@ -22,7 +27,7 @@ export abstract class BgServiceCommon extends Observable {
             this._loaded = true;
             this.notify({
                 eventName: BgServiceLoadedEvent,
-                object: this
+                object: this,
             });
         }
     }
@@ -38,7 +43,6 @@ export abstract class BgServiceCommon extends Observable {
     onAppExit(args: ApplicationEventData) {
         // applicationOff(exitEvent, this.onAppExit, this);
         this.geoHandler.onAppExit(args);
-
     }
     // updateNotifText(text: string) {}
 }

@@ -1,26 +1,36 @@
-import { locals } from '~/variables.module.scss';
-import { screen } from '@nativescript/core/platform';
+import { isSimulator } from '@nativescript-community/extendedinfo';
+import { Application, Color, Screen, Utils } from '@nativescript/core';
 import { ad } from '@nativescript/core/utils/utils';
+import CSSModule from '~/variables.module.scss';
+const locals = CSSModule.locals;
 
-export const primaryColor: string = locals.primaryColor;
-export const accentColor: string = locals.accentColor;
-export const darkColor: string = locals.darkColor;
-export const backgroundColor: string = locals.backgroundColor;
+export const primaryColor = new Color(locals.primaryColor);
+export const accentColor = new Color(locals.accentColor);
+export const darkColor = new Color(locals.darkColor);
+export const backgroundColor = new Color(locals.backgroundColor);
+export const textColor = new Color(locals.textColor);
 export const mdiFontFamily: string = locals.mdiFontFamily;
 export const actionBarHeight: number = parseFloat(locals.actionBarHeight);
 export const statusBarHeight: number = parseFloat(locals.statusBarHeight);
 export const actionBarButtonHeight: number = parseFloat(locals.actionBarButtonHeight);
-export const screenHeightDips = screen.mainScreen.heightDIPs;
-export const screenWidthDips = screen.mainScreen.widthDIPs;
+export const screenHeightDips = Screen.mainScreen.heightDIPs;
+export const screenWidthDips = Screen.mainScreen.widthDIPs;
 export let navigationBarHeight: number = parseFloat(locals.navigationBarHeight);
 
-if (gVars.isAndroid) {
-    const context: android.content.Context = ad.getApplicationContext();
-    const id = context.getResources().getIdentifier("config_showNavigationBar", "bool", "android");
+if (global.isAndroid) {
+    const resources = (ad.getApplicationContext() as android.content.Context).getResources();
+    const id = resources.getIdentifier('config_showNavigationBar', 'bool', 'android');
+    const resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
     // wont work on emulator though!
-    if( id > 0 && context.getResources().getBoolean(id)) {
-        navigationBarHeight = 48;
+    if (id > 0 && resourceId > 0 && (resources.getBoolean(id) || isSimulator())) {
+        navigationBarHeight = Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId));
+        // navigationBarHeight/ = Utils.layout.toDeviceIndependentPixels(48);
     }
 } else {
     navigationBarHeight = 0;
+    const onAppLaunch = function () {
+        navigationBarHeight = Application.ios.window.safeAreaInsets.bottom;
+        Application.off(Application.launchEvent, onAppLaunch);
+    };
+    Application.on(Application.launchEvent, onAppLaunch);
 }

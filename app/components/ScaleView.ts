@@ -1,10 +1,10 @@
 import BaseVueComponent from './BaseVueComponent';
 import { Component } from 'vue-property-decorator';
-import { CartoMap } from 'nativescript-carto/ui';
+import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { IMapModule } from '~/mapModules/MapModule';
 import Map from '~/components/Map';
-import { MapPos } from 'nativescript-carto/core';
-import { screen } from '@nativescript/core/platform';
+import { MapPos } from '@nativescript-community/ui-carto/core';
+import { Screen } from '@nativescript/core/platform';
 import { convertDistance } from '~/helpers/formatter';
 
 function getMetersPerPixel(pos: MapPos<LatLonKeys>, zoom: number) {
@@ -13,8 +13,8 @@ function getMetersPerPixel(pos: MapPos<LatLonKeys>, zoom: number) {
     return (156543.03392804097 * Math.cos((pos.lat * Math.PI) / 180)) / Math.pow(2, zoom);
 }
 
-const DPI = screen.mainScreen.widthDIPs;
-const XDPI = DPI / screen.mainScreen.scale;
+const DPI = Screen.mainScreen.widthDIPs;
+const XDPI = DPI / Screen.mainScreen.scale;
 const PX_PER_CM = XDPI / 2.54;
 const INCH_IN_CM = 2.54;
 

@@ -1,5 +1,5 @@
 <template>
-    <Page ref="page" :navigateUrl="navigateUrl" @navigatedTo="$emit('navigatedTo', $event)" backgroundColor="transparent">
+    <Page ref="page" :navigateUrl="navigateUrl" @navigatedTo="$emit('navigatedTo', $event)" backgroundColor="transparent" actionBarHidden="true">
         <!-- <GridLayout rows="auto,*"> -->
 
             <GridLayout>
