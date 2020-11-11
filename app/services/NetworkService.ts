@@ -3,18 +3,17 @@ import { EventData, Observable } from '@nativescript/core/data/observable';
 import * as http from '@nativescript/core/http';
 import { BaseError } from 'make-error';
 import mergeOptions from 'merge-options';
-import { MapBounds, MapPos } from 'nativescript-carto/core';
+import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
 import { $t } from '~/helpers/locale';
 import { RouteProfile } from '~/components/DirectionsPanel';
-import geolib from '~/helpers/geolib';
-import { clog } from '~/utils/logging';
 import {
     ApplicationEventData,
     off as applicationOff,
     on as applicationOn,
     resumeEvent,
-    suspendEvent
+    suspendEvent,
 } from '@nativescript/core/application';
+import { getBounds, getPathLength } from '~/helpers/geolib';
 
 type HTTPOptions = http.HttpRequestOptions;
 
@@ -23,20 +22,36 @@ const contactEmail = 'contact%40akylas.fr';
 const osmOverpassUrl = 'http://overpass-api.de/api/';
 const OSMReplaceKeys = {
     'contact:phone': 'phone',
-    via_ferrata_scale: 'difficulty'
+    via_ferrata_scale: 'difficulty',
 };
 const OSMIgnoredSubtypes = ['parking_entrance', 'tram_stop', 'platform', 'bus_stop', 'tram', 'track'];
-const OSMClassProps = ['amenity', 'natural', 'leisure', 'shop', 'sport', 'place', 'highway', 'waterway', 'historic', 'railway', 'landuse', 'aeroway', 'boundary', 'office', 'tourism'];
-function prepareOSMWay(way, nodes, geolib) {
+const OSMClassProps = [
+    'amenity',
+    'natural',
+    'leisure',
+    'shop',
+    'sport',
+    'place',
+    'highway',
+    'waterway',
+    'historic',
+    'railway',
+    'landuse',
+    'aeroway',
+    'boundary',
+    'office',
+    'tourism',
+];
+function prepareOSMWay(way, nodes) {
     const points = [];
     if (Object.keys(nodes).length > 0) {
-        way.nodes.forEach(function(node) {
+        way.nodes.forEach(function (node) {
             // console.debug('handling', node);
             node = nodes[node + ''][0];
             points.push([node.lat, node.lon]);
         });
     } else {
-        way.geometry.forEach(function(node) {
+        way.geometry.forEach(function (node) {
             // console.debug('handling', node);
             // node = nodes[node +
             //     ''][0];
@@ -44,34 +59,34 @@ function prepareOSMWay(way, nodes, geolib) {
         });
     }
 
-    const region = geolib.getBounds(points);
+    const region = getBounds(points);
     const result: any = {
         route: {
-            distance: geolib.getPathLength(points),
+            distance: getPathLength(points),
             region: {
                 northeast: {
                     lat: region.maxLat,
-                    lon: region.maxLng
+                    lon: region.maxLng,
                 },
                 southwest: {
                     lat: region.minLat,
-                    lon: region.minLng
-                }
+                    lon: region.minLng,
+                },
             },
-            points
+            points,
         },
         id: way.id,
         osm: {
             id: way.id,
-            type: way.type
+            type: way.type,
         },
         tags: way.tags,
         start: points[0],
         startOnRoute: true,
         endOnRoute: true,
-        end: points[points.length - 1]
+        end: points[points.length - 1],
     };
-    Object.keys(OSMReplaceKeys).forEach(function(key) {
+    Object.keys(OSMReplaceKeys).forEach(function (key) {
         if (way.tags[key]) {
             way.tags[OSMReplaceKeys[key]] = way.tags[key];
             delete way.tags[key];
@@ -85,8 +100,8 @@ function prepareOSMWay(way, nodes, geolib) {
                 result.notes = [
                     {
                         title: 'note',
-                        text: way.tags.note
-                    }
+                        text: way.tags.note,
+                    },
                 ];
             } else {
                 result.description = way.tags.note;
@@ -95,7 +110,7 @@ function prepareOSMWay(way, nodes, geolib) {
             result.description = way.tags.description;
         }
         result.tags = {};
-        Object.keys(way.tags).forEach(function(k) {
+        Object.keys(way.tags).forEach(function (k) {
             if (k !== 'source' && !k.startsWith('addr:')) {
                 result.tags[k] = way.tags[k];
             }
@@ -123,12 +138,12 @@ function prepareOSMObject(ele, _withIcon?, _testForGeoFeature?) {
     const result = {
         osm: {
             id: ele.id,
-            type: ele.type
+            type: ele.type,
         } as any,
         id,
-        tags: ele.tags
+        tags: ele.tags,
     } as any;
-    OSMClassProps.forEach(function(key) {
+    OSMClassProps.forEach(function (key) {
         if (ele.tags[key]) {
             result.osm.class = key;
             result.osm.subtype = ele.tags[key];
@@ -146,7 +161,7 @@ function prepareOSMObject(ele, _withIcon?, _testForGeoFeature?) {
         result.lat = ele.lat;
         result.lon = ele.lon;
     } else if (ele.type === 'relation' && ele.members) {
-        const index = ele.members.findIndex(function(member: any) {
+        const index = ele.members.findIndex(function (member: any) {
             return /centre/.test(member.role);
         });
         if (index !== -1) {
@@ -172,8 +187,8 @@ function prepareOSMObject(ele, _withIcon?, _testForGeoFeature?) {
                 result.notes = [
                     {
                         title: 'note',
-                        text: ele.tags.note
-                    }
+                        text: ele.tags.note,
+                    },
                 ];
             } else {
                 result.description = ele.tags.note;
@@ -202,7 +217,7 @@ export interface HttpRequestOptions extends HTTPOptions {
 
 export function queryString(params, location) {
     const obj = {};
-    let i, parts, len, key, value;
+    let i, len, key, value;
 
     if (typeof params === 'string') {
         value = location.match(new RegExp('[?&]' + params + '=?([^&]*)[&#$]?'));
@@ -212,7 +227,7 @@ export function queryString(params, location) {
     const locSplit = location.split(/[?&]/);
     // _params[0] is the url
 
-    parts = [];
+    const parts = [];
     for (i = 0, len = locSplit.length; i < len; i++) {
         const theParts = locSplit[i].split('=');
         if (!theParts[0]) {
@@ -343,7 +358,7 @@ function regionToOSMString(_region: MapBounds<LatLonKeys>) {
 
 function evalTemplateString(resource: string, obj: {}) {
     const names = Object.keys(obj);
-    const vals = Object.keys(obj).map(key => obj[key]);
+    const vals = Object.keys(obj).map((key) => obj[key]);
     return new Function(...names, `return \`${resource}\`;`)(...vals);
 }
 export class CustomError extends BaseError {
@@ -397,9 +412,9 @@ export class CustomError extends BaseError {
 
     toJSON() {
         const error = {
-            message: this.message
+            message: this.message,
         };
-        Object.getOwnPropertyNames(this).forEach(key => {
+        Object.getOwnPropertyNames(this).forEach((key) => {
             if (typeof this[key] !== 'function') {
                 error[key] = this[key];
             }
@@ -411,7 +426,7 @@ export class CustomError extends BaseError {
     }
     toString() {
         // console.log('customError to string');
-        return evalTemplateString($t(this.message), Object.assign({ localize:$t }, this.assignedLocalData));
+        return evalTemplateString($t(this.message), Object.assign({ localize: $t }, this.assignedLocalData));
         // return evalMessageInContext.call(Object.assign({localize}, this.assignedLocalData), localize(this.message))
         // return this.message || this.stack;
     }
@@ -423,7 +438,7 @@ export class TimeoutError extends CustomError {
         super(
             Object.assign(
                 {
-                    message: 'timeout_error'
+                    message: 'timeout_error',
                 },
                 props
             ),
@@ -437,7 +452,7 @@ export class NoNetworkError extends CustomError {
         super(
             Object.assign(
                 {
-                    message: 'no_network'
+                    message: 'no_network',
                 },
                 props
             ),
@@ -457,7 +472,7 @@ export class HTTPError extends CustomError {
         super(
             Object.assign(
                 {
-                    message: 'httpError'
+                    message: 'httpError',
                 },
                 props
             ),
@@ -480,8 +495,8 @@ export class NetworkService extends Observable {
                 object: this,
                 data: {
                     connected: value,
-                    connectionType: this._connectionType
-                }
+                    connectionType: this._connectionType,
+                },
             } as NetworkConnectionStateEventData);
         }
     }
@@ -539,7 +554,7 @@ export class NetworkService extends Observable {
         // }
         // console.log('request', requestParams);
 
-        return http.request(requestParams).then(response => {
+        return http.request(requestParams).then((response) => {
             // console.log('request response', response);
             if (response.statusCode !== 200) {
                 try {
@@ -558,7 +573,7 @@ export class NetworkService extends Observable {
                         new HTTPError({
                             statusCode: response.statusCode,
                             message: error.error_description || error.message || error.error || error,
-                            requestParams
+                            requestParams,
                         })
                     );
                 } catch (e) {
@@ -576,7 +591,7 @@ export class NetworkService extends Observable {
                             new HTTPError({
                                 statusCode: response.statusCode,
                                 message: match[1],
-                                requestParams
+                                requestParams,
                             })
                         );
                     }
@@ -584,7 +599,7 @@ export class NetworkService extends Observable {
                         new HTTPError({
                             statusCode: response.statusCode,
                             message: 'HTTP error',
-                            requestParams
+                            requestParams,
                         })
                     );
                 }
@@ -594,13 +609,13 @@ export class NetworkService extends Observable {
     }
 
     queryGeoFeatures(
-        query: Array<{
+        query: {
             type: 'node' | 'way';
             recurse?: string;
             features: string;
             outType?: string;
             options?: string[];
-        }>,
+        }[],
         region: MapBounds<LatLonKeys>,
         feature: {
             outType?: string;
@@ -614,12 +629,12 @@ export class NetworkService extends Observable {
         }
         data +=
             '[out:json];(' +
-            query.reduce(function(result, value, index) {
+            query.reduce(function (result, value, index) {
                 // array
                 const type = value.type;
                 result += type;
                 if (value.options) {
-                    const options = value.options.reduce(function(result2, value2, key2) {
+                    const options = value.options.reduce(function (result2, value2, key2) {
                         result2 += '(' + key2 + ':' + value2 + ')';
                         return result2;
                     }, '');
@@ -643,25 +658,25 @@ export class NetworkService extends Observable {
             url: osmOverpassUrl,
             queryParams: {
                 data: escape(data),
-                contact: contactEmail
+                contact: contactEmail,
             },
             method: 'GET',
-            timeout: 60000
-        }).then(result => {
+            timeout: 60000,
+        }).then((result) => {
             let results;
             if (feature.usingWays) {
                 const nodes = result.elements
-                    .filter(function(el) {
+                    .filter(function (el) {
                         return el.type === 'node';
                     })
                     .reduce((r, v, i, a, k = v.id) => ((r[k] || (r[k] = [])).push(v), r), {});
                 // var nodes = _.filter(result.elements, 'type', 'node');
-                const ways: any = result.elements.filter(function(el) {
+                const ways: any = result.elements.filter(function (el) {
                     return el.type === 'way';
                 });
                 const resultingWays = ways.reduce((r, v, i, a, k = v.id) => ((r[k] || (r[k] = [])).push(v), r), {});
                 console.debug('ways', resultingWays);
-                const canMerge = function(way1, way2) {
+                const canMerge = function (way1, way2) {
                     if (way1.id === way2.id) {
                         return false;
                     }
@@ -703,14 +718,9 @@ export class NetworkService extends Observable {
                         }
                     }
                 }
-                results = resultingWays.map((way, key) => {
-                    return prepareOSMWay(way, nodes, geolib);
-                    // if (item) {
-                    //     return _itemHandler.createRouteItem(feature, item);
-                    // }
-                });
+                results = resultingWays.map((way) => prepareOSMWay(way, nodes));
             } else {
-                results = result.elements.map(function(ele) {
+                results = result.elements.map(function (ele) {
                     if (feature.filterFunc && !feature.filterFunc(ele)) {
                         return;
                     }
@@ -730,7 +740,7 @@ export class NetworkService extends Observable {
         const params = {
             key: gVars.MAPQUEST_TOKEN,
             inFormat: 'json',
-            outFormat: 'json'
+            outFormat: 'json',
         };
         // const postParams = {
         //     json: JSON.stringify({
@@ -751,17 +761,17 @@ export class NetworkService extends Observable {
                 useFilter: true,
                 // cyclingRoadFactor:0.1,
                 shapeFormat: 'cmp6',
-                latLngCollection: compress(_points, 6)
+                latLngCollection: compress(_points, 6),
             }),
             // silent:_params.silent,
             method: 'POST',
-            timeout: 60000
-        }).then(e => {
+            timeout: 60000,
+        }).then((e) => {
             // console.debug('test', e);
             if (e.info.statuscode > 300 && e.info.statuscode < 600) {
                 return Promise.reject({
                     code: e.info.statuscode,
-                    error: e.info.messages.join(', ')
+                    error: e.info.messages.join(', '),
                 });
             } else {
                 return e;
@@ -769,7 +779,7 @@ export class NetworkService extends Observable {
         });
     }
     mapquestElevationProfile(_points: MapPos<LatLonKeys>[]) {
-        const distance = geolib.getPathLength(_points);
+        const distance = getPathLength(_points);
         // console.log('mapquestElevationProfile', distance);
         let promise = Promise.resolve(undefined);
         if (distance > 300000) {
@@ -778,24 +788,24 @@ export class NetworkService extends Observable {
             // console.debug('semi', semi);
             promise = promise
                 .then(() => this.actualMapquestElevationProfile(_points.slice(0, semi)))
-                .then(r =>
-                    this.actualMapquestElevationProfile(_points.slice(semi)).then(r2 => {
+                .then((r) =>
+                    this.actualMapquestElevationProfile(_points.slice(semi)).then((r2) => {
                         const firstDistanceTotal = r.elevationProfile[r.elevationProfile.length - 1].distance;
                         return {
                             elevationProfile: r.elevationProfile.concat(
-                                r2.elevationProfile.map(e => {
+                                r2.elevationProfile.map((e) => {
                                     e.distance += firstDistanceTotal;
                                     return e;
                                 })
                             ),
-                            shapePoints: r.shapePoints.concat(r2.shapePoints)
+                            shapePoints: r.shapePoints.concat(r2.shapePoints),
                         };
                     })
                 );
         } else {
             promise = promise.then(() => this.actualMapquestElevationProfile(_points));
         }
-        return promise.then(e => {
+        return promise.then((e) => {
             let last, currentHeight, coordIndex, currentDistance;
             const profile = e.elevationProfile;
             const coords = e.shapePoints;
@@ -805,10 +815,9 @@ export class NetworkService extends Observable {
                 min: [100000, 100000],
                 dplus: 0,
                 dmin: 0,
-                points: [],
-                data: []
+                data: [],
             };
-            profile.forEach(function(value, index) {
+            profile.forEach(function (value, index) {
                 // console.log('test', index, value, last ? last.height : undefined, result.dplus, result.dmin);
                 currentHeight = value.height;
                 if (currentHeight === -32768) {
@@ -841,9 +850,9 @@ export class NetworkService extends Observable {
                     result.min[1] = currentHeight;
                 }
 
-                result.data.push({ x: currentDistance, altitude: currentHeight, altAvg: currentHeight, grade:0 });
+                result.data.push({ x: currentDistance, altitude: currentHeight, altAvg: currentHeight, grade: 0 });
                 coordIndex = index * 2;
-                result.points.push({ lat: coords[coordIndex], lon: coords[coordIndex + 1] });
+                // result.points.push({ lat: coords[coordIndex], lon: coords[coordIndex + 1] });
                 last = value;
                 // console.log('setting last', last, result.dplus, result.dmin);
                 // return memo;

@@ -1,11 +1,8 @@
-import { CartoMap } from 'nativescript-carto/ui';
-
+import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import Map from '~/components/Map';
+import { formatAddress } from '~/helpers/formatter';
+import { IItem as Item } from '~/models/Item';
 import MapModule from './MapModule';
-import { Item } from './ItemsModule';
-import { convertDistance, convertDuration, formatAddress } from '~/helpers/formatter';
-
-// const addressFormatter = require('@fragaria/address-formatter'); // const OPEN_DURATION = 200;
 
 export default class ItemFormatter extends MapModule {
     onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
@@ -43,13 +40,17 @@ export default class ItemFormatter extends MapModule {
             result.push(item.address.houseNumber);
         }
         result.push('osm-office');
-        console.log('itemIcon', item, result);
         return result;
     }
 
     getItemName(item: Item) {
         const properties = item.properties || {};
-        return (this.mapComp && properties[`name_${this.mapComp.currentLanguage}`]) || properties.name || properties.name_int || (item.address && item.address.name);
+        return (
+            (this.mapComp && properties[`name_${this.mapComp.currentLanguage}`]) ||
+            properties.name ||
+            properties.name_int ||
+            (item.address && item.address.name)
+        );
     }
     getItemPositionToString(item: Item) {
         const position = item.position;
@@ -98,7 +99,11 @@ export default class ItemFormatter extends MapModule {
             //     const dataD = convertDistance(route.totalDistance);
             //     return `<>${dataT} ${dataD.value.toFixed(1)} ${dataD.unit}`;
             // }
-            return this.getItemName(item) || this.getItemAddress(item, 1) || `${item.position.lat.toFixed(4)}, ${item.position.lon.toFixed(4)}`;
+            return (
+                this.getItemName(item) ||
+                this.getItemAddress(item, 1) ||
+                `${item.position.lat.toFixed(4)}, ${item.position.lon.toFixed(4)}`
+            );
         }
         return '';
     }
@@ -107,7 +112,7 @@ export default class ItemFormatter extends MapModule {
         if (item) {
             // this.log('getItemSubtitle', item);
             if (this.getItemName(item)) {
-                return this.getItemAddress(item) ;
+                return this.getItemAddress(item);
             } else {
                 return this.getItemAddress(item, 2);
             }

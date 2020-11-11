@@ -1,11 +1,11 @@
-import { device } from '@nativescript/core/platform';
-import { loadLocaleJSON } from 'nativescript-l';
-import { prefs } from '~/services/preferences';
-export { l as $t, lt as $tt, lu as $tu, lc as $tc } from 'nativescript-l';
-import dayjs from 'dayjs';
-const supportedLanguages = ['en', 'fr'];
+import { loadLocaleJSON } from '@nativescript-community/l';
 import { getString, setString } from '@nativescript/core/application-settings';
+import { Device } from '@nativescript/core/platform';
+import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
+import { prefs } from '~/services/preferences';
+export { l as $t, lc as $tc, lt as $tt, lu as $tu } from '@nativescript-community/l';
+const supportedLanguages = SUPPORTED_LOCALES;
 
 dayjs.extend(updateLocale);
 
@@ -15,7 +15,7 @@ function setLang(newLang) {
         newLang = 'en';
     }
     lang = newLang;
-    console.log('changed lang', lang, device.region);
+    console.log('changed lang', lang, Device.region);
     try {
         require(`dayjs/locale/${newLang}`);
     } catch (err) {
@@ -30,8 +30,8 @@ function setLang(newLang) {
                 nextDay: '[Demain à] LT',
                 lastWeek: 'dddd [dernier] [à] LT',
                 nextWeek: 'dddd [à] LT',
-                sameElse: 'L'
-            }
+                sameElse: 'L',
+            },
         });
     }
 
@@ -41,7 +41,7 @@ function setLang(newLang) {
     } catch (err) {
         console.log('failed to load lang json', lang, `~/i18n/${lang}.json`, err);
     }
-    onLanguageChangedCallbacks.forEach(c => c(lang));
+    onLanguageChangedCallbacks.forEach((c) => c(lang));
 }
 const onLanguageChangedCallbacks = [];
 export function onLanguageChanged(callback) {
@@ -50,9 +50,9 @@ export function onLanguageChanged(callback) {
 
 let deviceLanguage = getString('language');
 if (!deviceLanguage) {
-    deviceLanguage = device.language.split('-')[0].toLowerCase();
+    deviceLanguage = Device.language.split('-')[0].toLowerCase();
     setString('language', deviceLanguage);
-    // console.log('prefs language not set', deviceLanguage, getString('language'));
+    console.log('prefs language not set', deviceLanguage, getString('language'));
 }
 // console.log('deviceLanguage', deviceLanguage);
 function getOwmLanguage(language) {
@@ -70,6 +70,19 @@ function getOwmLanguage(language) {
     }
 }
 export let lang;
+
+export function convertTime(date, formatStr: string) {
+    // console.log('convertTime', date, formatStr);
+    return dayjs(date).format(formatStr);
+}
+
+export function convertDuration(date, formatStr: string = 'H [hrs], m [min]') {
+    const test = new Date(date);
+    test.setTime(test.getTime() + test.getTimezoneOffset() * 60 * 1000);
+    const result = dayjs(test).format(formatStr);
+    // console.log('convertDuration', date, formatStr, test, result);
+    return result;
+}
 
 // const rtf = new Intl.RelativeTimeFormat('es');
 

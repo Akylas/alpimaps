@@ -1,24 +1,25 @@
-import { Item } from '~/mapModules/ItemsModule';
 import { debounce } from 'helpful-decorators';
-import { CartoMap } from 'nativescript-carto/ui';
+import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import Map from '~/components/Map';
 import { GeoHandler } from '~/handlers/GeoHandler';
-import { PackageAction, PackageStatus } from 'nativescript-carto/packagemanager';
+import { PackageAction, PackageStatus } from '@nativescript-community/ui-carto/packagemanager';
 import { IMapModule } from '~/mapModules/MapModule';
 import BgServiceComponent from './BgServiceComponent';
 import ScaleView from './ScaleView';
-import { alert, confirm } from 'nativescript-material-dialogs';
+import { alert, confirm } from '@nativescript-community/ui-material-dialogs';
 import OptionPicker from './OptionPicker';
 import UserLocationModule from '~/mapModules/UserLocationModule';
-import { MapPos } from 'nativescript-carto/core';
+import { MapPos } from '@nativescript-community/ui-carto/core';
 import { statusBarHeight } from '~/variables';
 import { layout } from '@nativescript/core/utils/utils';
+import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { IItem } from '~/models/Item';
 
 @Component({
     components: {
-        ScaleView
-    }
+        ScaleView,
+    },
 })
 export default class MapScrollingWidgets extends BgServiceComponent implements IMapModule {
     mapView: CartoMap<LatLonKeys>;
@@ -27,16 +28,14 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
     currentMapZoom = 0;
     totalDownloadProgress = 0;
 
-    selectedItem: Item = null;
+    selectedItem: IItem = null;
 
-    @Prop({default:true, type: Boolean})
-    userInteractionEnabled:boolean
+    @Prop({ default: true, type: Boolean })
+    userInteractionEnabled: boolean;
 
-    
     suggestionPackage: { id: string; name: string; status: PackageStatus } = null;
     suggestionPackageName: string = null;
 
-    
     get scaleView() {
         return this.$refs.scaleView as ScaleView;
     }
@@ -62,7 +61,7 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
 
     get locationButtonClass() {
         // this.log('locationButtonClass', this.watchingLocation, this.queryingLocation);
-        return this.watchingLocation ? 'buttonthemed' : 'buttontext';
+        return this.watchingLocation ? null : 'buttontext';
     }
 
     get locationButtonLabelClass() {
@@ -75,12 +74,12 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
         return this.selectedItem && !this.selectedItem.route && this.selectedItem.position;
     }
 
-    onSelectedItem(selectedItem: Item, oldItem: Item) {
+    onSelectedItem(selectedItem: IItem, oldItem: IItem) {
         this.selectedItem = selectedItem;
     }
     mounted() {
         super.mounted();
-        if (gVars.isAndroid) {
+        if (global.isAndroid) {
             this.nativeView.marginTop = layout.toDevicePixels(statusBarHeight);
         }
         if (this.$packageService) {
@@ -151,7 +150,7 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
                 this.suggestionPackage = {
                     id: suggestionPackage.getPackageId(),
                     name: suggestionPackage.getName(),
-                    status
+                    status,
                 };
                 this.suggestionPackageName = this.suggestionPackage.name.split('/').slice(-1)[0];
             } else {
@@ -168,8 +167,7 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
     lastSuggestionKey: string;
     onMapStable(e) {
         const cartoMap = this.mapView;
-        const packageServiceEnabled = this.mapComp && this.mapComp.packageServiceEnabled;
-        if (!cartoMap || !packageServiceEnabled) {
+        if (!cartoMap || !gVars.packageServiceEnabled) {
             return;
         }
         const zoom = Math.round(cartoMap.zoom);
@@ -196,7 +194,7 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
         if (this.suggestionPackage) {
             this.$packageService.packageManager.startPackageDownload(this.suggestionPackage.id);
         }
-        this.$showToast(`${this.$t('downloading')}  ${this.suggestionPackageName}`);
+        showSnack({ message: `${this.$t('downloading')}  ${this.suggestionPackageName}` });
     }
     customDownloadSuggestion() {
         if (!this.suggestionPackage) {
@@ -207,7 +205,7 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
         instance.options = [
             { name: this.$tc('map_package'), checked: true },
             { name: this.$tc('search_package'), checked: false },
-            { name: this.$tc('routing_package'), checked: false }
+            { name: this.$tc('routing_package'), checked: false },
         ];
         instance.$mount();
         // this.nativeView._addViewCore(instance.nativeView);
@@ -217,12 +215,12 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
             title: `${this.$tc('download_suggestion')}: ${this.suggestionPackageName}`,
             okButtonText: this.$t('download'),
             cancelButtonText: this.$t('cancel'),
-            view: instance.nativeView
+            view: instance.nativeView,
             // context: {
             //     options: [{ map: true }, { geo: false }, { routing: false }]
             // }
         })
-            .then(result => {
+            .then((result) => {
                 // console.log('result', result, instance.options);
                 if (result) {
                     const options = instance.options;
@@ -316,5 +314,4 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
             module.addStopPoint(this.selectedItem.position, this.selectedItem.properties);
         }
     }
-    
 }

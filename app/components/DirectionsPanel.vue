@@ -1,53 +1,40 @@
 <template>
-    <GridLayout
-        @pan="$emit('pan', $event)"
-        android:paddingTop="28"
-        :backgroundColor="themeColor"
-        rows="50,60,60,50"
-        columns="*"
-    >
-        <MDButton horizontalAlignment="left" variant="flat" class="icon-btn-white" text="mdi-arrow-left" @tap="cancel" />
+    <GridLayout @pan="$emit('pan', $event)" android:paddingTop="28" :backgroundColor="themeColor" rows="50,60,60,50" columns="*">
+        <MDButton horizontalAlignment="left" variant="text" class="icon-btn-white" text="mdi-arrow-left" @tap="cancel" />
         <StackLayout orientation="horizontal" horizontalAlignment="center">
             <MDButton
-                variant="flat"
+                variant="text"
                 class="icon-btn-white"
                 text="mdi-car"
                 @tap="setProfile('car')"
                 :color="profileColor('car')"
             />
             <MDButton
-                variant="flat"
+                variant="text"
                 class="icon-btn-white"
                 text="mdi-walk"
                 @tap="setProfile('pedestrian')"
                 :color="profileColor('pedestrian')"
             />
             <MDButton
-                variant="flat"
+                variant="text"
                 class="icon-btn-white"
                 text="mdi-bike"
                 @tap="setProfile('bicycle')"
                 :color="profileColor('bicycle')"
             />
             <MDButton
-                variant="flat"
+                variant="text"
                 class="icon-btn-white"
                 text="mdi-auto-fix"
                 @tap="setProfile('auto_shorter')"
                 :color="profileColor('auto_shorter')"
             />
-            <!-- <MDButton
-                variant="flat"
-                class="icon-btn-white"
-                :text="showOptions ? 'mdi-chevron-up' : 'mdi-chevron-down'"
-                @tap="showOptions = !showOptions"
-                color="white"
-            /> -->
         </StackLayout>
         <MDButton
             horizontalAlignment="right"
-            variant="flat"
-            class="icon-btn-text icon-btn-rounded "
+            variant="text"
+            class="icon-btn-text icon-btn-rounded"
             text="mdi-magnify"
             @tap="showRoute(false)"
             @LongPress="showRoute(true)"
@@ -55,7 +42,15 @@
             margin="4 10 4 10"
             :visibility="loading ? 'hidden' : 'visible'"
         />
-        <MDActivityIndicator v-show="loading" col="2" busy class="activity-indicator" width="44" height="44" color="white" />
+        <MDActivityIndicator
+            v-show="loading"
+            horizontalAligment="right"
+            busy
+            class="activity-indicator"
+            width="44"
+            height="44"
+            color="white"
+        />
         <GridLayout
             row="1"
             colSpan="3"
@@ -120,24 +115,24 @@
                 color="gray"
             />
         </GridLayout>
-        <StackLayout orientation="horizontal" row="3" :visibility="showOptions?'visible':'hidden'">
+        <StackLayout orientation="horizontal" row="3" :visibility="showOptions ? 'visible' : 'hidden'">
             <MDButton
-                variant="flat"
+                variant="text"
                 class="icon-btn-white"
                 text="mdi-ferry"
                 :color="valhallaSettingColor('use_ferry')"
                 @tap="switchValhallaSetting('use_ferry')"
             />
             <MDButton
-                variant="flat"
+                variant="text"
                 class="icon-btn-white"
                 text="mdi-road"
-                v-show="profile === 'bicycle'"
+                v-show="profile === 'bicycle' || profile === 'pedestrian'"
                 :color="valhallaSettingColor('use_roads')"
                 @tap="switchValhallaSetting('use_roads')"
             />
             <MDButton
-                variant="flat"
+                variant="text"
                 class="icon-btn-white"
                 text="mdi-chart-areaspline"
                 v-show="profile === 'bicycle'"
@@ -145,7 +140,7 @@
                 @tap="switchValhallaSetting('use_hills')"
             />
             <MDButton
-                variant="flat"
+                variant="text"
                 class="icon-btn-white"
                 text="mdi-texture-box"
                 v-show="profile === 'bicycle'"
