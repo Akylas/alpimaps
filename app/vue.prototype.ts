@@ -1,7 +1,7 @@
 import * as application from '@nativescript/core/application';
 import { $t, $tc, $tt, $tu } from '~/helpers/locale';
 import { Device, Screen } from '@nativescript/core/platform';
-import App from '~/components/App';
+// import App from '~/components/App';
 import Map from '~/components/Map';
 import PackageService from '~/services/PackageService';
 import { BgService } from './services/BgService';
@@ -45,17 +45,9 @@ const Plugin = {
             bgService.start();
             networkService.start();
         }
-        let appComponent: App;
-        Vue.prototype.$setAppComponent = function (comp: App) {
-            appComponent = comp;
-        };
-        Vue.prototype.$getAppComponent = function () {
-            return appComponent;
-        };
         let mapComponent: Map;
         Vue.prototype.$setMapComponent = function (comp: Map) {
             mapComponent = comp;
-            appComponent.setMapMounted(true);
         };
         Vue.prototype.$getMapComponent = function () {
             return mapComponent;

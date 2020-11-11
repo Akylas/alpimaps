@@ -139,10 +139,6 @@ export default class BaseVueComponent extends Vue {
     }
 
     goBack() {
-        if (this.navigateUrl) {
-            this.$getAppComponent().navigateBackIfUrl(this.navigateUrl);
-        } else {
-            this.$getAppComponent().goBack();
-        }
+        this.$navigateBack();
     }
 }
