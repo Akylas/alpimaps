@@ -1,16 +1,16 @@
 import BaseVueComponent from './BaseVueComponent';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import CustomLayersModule, { SourceItem } from '~/mapModules/CustomLayersModule';
-import { PersistentCacheTileDataSource } from 'nativescript-carto/datasources/cache';
+import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
 import { $t } from '~/helpers/locale';
-import * as appSettings from '@nativescript/core/application-settings/application-settings';
-import { RasterTileLayer, RasterTileFilterMode, HillshadeRasterTileLayer } from 'nativescript-carto/layers/raster';
-import { action } from 'nativescript-material-dialogs';
-import { TileLayer } from 'nativescript-carto/layers';
+import { HillshadeRasterTileLayer, RasterTileFilterMode, RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
+import { action } from '@nativescript-community/ui-material-dialogs';
+import { TileLayer } from '@nativescript-community/ui-carto/layers';
 import { getDataFolder } from '~/utils';
 import { File, Folder, path } from '@nativescript/core/file-system';
-import { openOrCreate, SQLiteDatabase } from 'nativescript-akylas-sqlite';
-import { toNativeScreenBounds, fromNativeMapPos, MapBounds } from 'nativescript-carto/core';
+import { SQLiteDatabase, openOrCreate } from '@akylas/nativescript-sqlite';
+import { MapBounds, fromNativeMapPos, toNativeScreenBounds } from '@nativescript-community/ui-carto/core';
+import { setNumber, setString } from '@nativescript/core/application-settings';
 
 @Component({})
 export default class LayerOptionsBottomSheet extends BaseVueComponent {
@@ -39,7 +39,7 @@ export default class LayerOptionsBottomSheet extends BaseVueComponent {
         if (!options) {
             return options;
         }
-        Object.keys(options).forEach(k => {
+        Object.keys(options).forEach((k) => {
             options[k].value = layer[k];
         });
         return options;
@@ -52,15 +52,13 @@ export default class LayerOptionsBottomSheet extends BaseVueComponent {
         // }))
     }
     get optionValue() {
-        return name => {
-            return Math.round(this.options[name].value * 100);
-            // return Math.round(options * 100);
-        };
+        return (name) => Math.round(this.options[name].value * 100);
+        // return Math.round(options * 100);
     }
     onOptionChanged(name, event) {
         const newValue = event.value / 100;
         this.item.layer[name] = this.options[name].value = newValue;
-        appSettings.setNumber(`${this.item.name}_${name}`, newValue);
+        setNumber(`${this.item.name}_${name}`, newValue);
     }
     handleAction(act: string) {
         const mapComp = this.$getMapComponent();
@@ -80,7 +78,7 @@ export default class LayerOptionsBottomSheet extends BaseVueComponent {
                 break;
             }
             case 'download': {
-                const layer = this.item.layer as TileLayer<any, any>;
+                const layer = this.item.layer;
                 const dataSource = layer.dataSource;
                 if (dataSource instanceof PersistentCacheTileDataSource) {
                     // const mbtilesPath = path.join(getDataFolder(), 'mbtiles');
@@ -96,7 +94,7 @@ export default class LayerOptionsBottomSheet extends BaseVueComponent {
                     const projection = dataSource.getProjection();
                     const screenBounds = toNativeScreenBounds({
                         min: { x: cartoMap.getMeasuredWidth(), y: 0 },
-                        max: { x: 0, y: cartoMap.getMeasuredHeight() }
+                        max: { x: 0, y: cartoMap.getMeasuredHeight() },
                     });
                     const bounds = new MapBounds(
                         projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMin()) as any),
@@ -123,7 +121,7 @@ export default class LayerOptionsBottomSheet extends BaseVueComponent {
                         },
                         onDownloadStarting(tileCount: number) {
                             console.log('onDownloadStarting', tileCount);
-                        }
+                        },
                     });
                 }
                 break;
@@ -131,14 +129,14 @@ export default class LayerOptionsBottomSheet extends BaseVueComponent {
             case 'tile_filter_mode':
                 if (this.item.layer instanceof RasterTileLayer || this.item.layer instanceof HillshadeRasterTileLayer) {
                     action({
-                        title: `Tile Filter Mode`,
+                        title: 'Tile Filter Mode',
                         message: 'Pick Action',
-                        actions: ['bicubic', 'bilinear', 'nearest']
-                    }).then(result => {
+                        actions: ['bicubic', 'bilinear', 'nearest'],
+                    }).then((result) => {
                         if (!result) {
                             return;
                         }
-                        appSettings.setString(`${this.item.name}_tileFilterMode`, result);
+                        setString(`${this.item.name}_tileFilterMode`, result);
                         // use native for now
                         switch (result) {
                             case 'bicubic':

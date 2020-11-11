@@ -1,7 +1,10 @@
-/// <reference path="./node_modules/tns-platform-declarations/ios.d.ts" />
-/// <reference path="./node_modules/tns-platform-declarations/android-26.d.ts" />
-/// <reference path="./node_modules/nativescript-carto/typings/carto.android.d.ts" />
+/// <reference path="./node_modules/@nativescript/types-ios/lib/ios.d.ts" />
+/// <reference path="./node_modules/@nativescript/types-android/lib/android-28.d.ts" />
+/// <reference path="./node_modules/@nativescript/core/global-types.d.ts" />
 /// <reference path="./vue.shim.d.ts" />
+
+/// <reference path="./node_modules/@nativescript-community/ui-carto/typings/ak.carto.android.d.ts" />
+/// <reference path="./node_modules/@nativescript-community/ui-carto/typings/carto.android.d.ts" />
 
 // declare module '*.vue' {
 //     import Vue from 'nativescript-vue';
@@ -17,11 +20,9 @@ declare module '*.scss' {
 }
 
 declare const gVars: {
-    SENTRY_DSN: string;
-    SENTRY_PREFIX: string;
     sentry: boolean;
-    isIOS: boolean;
-    isAndroid: boolean;
+    platform: string;
+    packageServiceEnabled: string;
     CARTO_TOKEN: string;
     IGN_TOKEN: string;
     THUNDERFOREST_TOKEN: string;
@@ -33,17 +34,18 @@ declare const gVars: {
     BUGNSAG: string;
     GOOGLE_TOKEN: string;
     AVWX_API_KEY: string;
-}
+};
 
 declare const TNS_ENV: string;
 declare const LOG_LEVEL: string;
-declare const DEV_LOG: boolean;
+declare const NO_CONSOLE: boolean;
 declare const TEST_LOGS: boolean;
 declare const PRODUCTION: boolean;
 declare const LOCAL_MBTILES: string;
+declare const SENTRY_DSN: string;
+declare const SENTRY_PREFIX: string;
+declare const SUPPORTED_LOCALES: string[];
 // declare const process: { env: any };
-
-
 
 declare namespace akylas {
     export namespace alpi {
@@ -54,8 +56,8 @@ declare namespace akylas {
     }
 }
 
-type LatLonKeys = {
+interface LatLonKeys {
     lat: number;
     lon: number;
     altitude?: number;
-};
+}

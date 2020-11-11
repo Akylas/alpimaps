@@ -23,13 +23,13 @@ export default abstract class BgServiceComponent extends BaseVueComponent {
     }
     callOnServiceLoaded = () => {
         this.onServiceLoaded.call(this, this.$bgService.geoHandler);
-    }
+    };
     unloadService() {
         if (!this.$bgService) {
             return;
         }
         const geoHandler = this.$bgService.geoHandler;
-        this.geoHandlerListeners.forEach(r => {
+        this.geoHandlerListeners.forEach((r) => {
             geoHandler.off(r[0], r[1], r[2] || this);
         });
         this.geoHandlerListeners = [];

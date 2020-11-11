@@ -1,21 +1,30 @@
-import { GeoLocation, GPS, Options as GeolocationOptions, setMockEnabled } from 'nativescript-gps';
-import {$t} from '~/helpers/locale';
-import { confirm } from 'nativescript-material-dialogs';
+import { GPS, GenericGeoLocation, Options as GeolocationOptions, setMockEnabled } from '@nativescript-community/gps';
+import { $t } from '~/helpers/locale';
+import { confirm } from '@nativescript-community/ui-material-dialogs';
 import Vue from 'nativescript-vue';
-import { android as androidApp, ApplicationEventData, launchEvent, off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
-import * as appSettings from '@nativescript/core/application-settings';
-import { EventData, Observable } from '@nativescript/core/data/observable';
-import { Accuracy } from '@nativescript/core/ui/enums/enums';
+import {
+    ApplicationEventData,
+    android as androidApp,
+    off as applicationOff,
+    on as applicationOn,
+    launchEvent,
+    resumeEvent,
+    suspendEvent,
+} from '@nativescript/core/application';
+import { Enums } from '@nativescript/core';
 import { BgService } from '~/services/BgService';
-import { clog } from '~/utils/logging';
+import { getString, remove, setString } from '@nativescript/core/application-settings';
+import { EventData, Observable } from '@nativescript/core/data/observable';
+import { DEV_LOG } from '~/utils/logging';
 
 let geolocation: GPS;
 
-export let desiredAccuracy = gVars.isAndroid ? Accuracy.high : kCLLocationAccuracyBestForNavigation;
-export let updateDistance = 1;
-export let maximumAge = 3000;
-export let timeout = 20000;
-export let minimumUpdateTime = 1000; // Should update every 1 second according ;
+export const desiredAccuracy = global.isAndroid ? Enums.Accuracy.high : kCLLocationAccuracyBestForNavigation;
+export const updateDistance = 1;
+export const maximumAge = 3000;
+export const timeout = 20000;
+export const minimumUpdateTime = 1000; // Should update every 1 second according ;
+export type GeoLocation = GenericGeoLocation<LatLonKeys>;
 
 setMockEnabled(true);
 
@@ -37,7 +46,7 @@ export interface Session {
 export enum SessionState {
     STOPPED = 'stopped',
     RUNNING = 'running',
-    PAUSED = 'paused'
+    PAUSED = 'paused',
 }
 
 // export type GeoLocation = GeoLocation;
@@ -79,7 +88,7 @@ export class GeoHandler extends Observable {
     lastAlt: number;
     // lastSpeeds: number[];
 
-    sessionsHistory: Session[] = JSON.parse(appSettings.getString('sessionsHistory', '[]'));
+    sessionsHistory: Session[] = JSON.parse(getString('sessionsHistory', '[]'));
     // deltaDistance: number;
     launched = false;
 
@@ -92,14 +101,14 @@ export class GeoHandler extends Observable {
             geolocation = new GPS();
             geolocation.debug = DEV_LOG;
         }
-        if (gVars.isAndroid) {
+        if (global.isAndroid) {
             if (androidApp.nativeApp) {
                 this.appOnLaunch();
             } else {
                 applicationOn(launchEvent, this.appOnLaunch, this);
             }
         }
-        if (gVars.isIOS) {
+        if (global.isIOS) {
             // if (androidApp.nativeApp) {
             // this.appOnLaunch();
             // } else {
@@ -115,7 +124,7 @@ export class GeoHandler extends Observable {
             return;
         }
         // this.log('appOnLaunch');
-        this.currentSession = JSON.parse(appSettings.getString('pausedSession', null));
+        this.currentSession = JSON.parse(getString('pausedSession', null));
         if (this.currentSession) {
             // this.log('restore paused session', this.currentSession);
             this.currentSession.startTime = new Date(this.currentSession.startTime);
@@ -133,7 +142,7 @@ export class GeoHandler extends Observable {
     watcherBeforePause;
     dontWatchWhilePaused = true;
     onAppResume(args: ApplicationEventData) {
-        if (gVars.isIOS) {
+        if (global.isIOS) {
             this._isIOSBackgroundMode = false;
             // For iOS applications, args.ios is UIApplication.
             if (DEV_LOG) {
@@ -153,14 +162,14 @@ export class GeoHandler extends Observable {
                 this.watcherBeforePause = null;
                 this.wasWatchingBeforePause = false;
             } else if (this.isWatching()) {
-                if (gVars.isAndroid) {
+                if (global.isAndroid) {
                     (Vue.prototype.$bgService as BgService).bgService.get().removeForeground();
                 }
             }
         }
     }
     onAppPause(args: ApplicationEventData) {
-        if (gVars.isIOS) {
+        if (global.isIOS) {
             this._isIOSBackgroundMode = true;
             // For iOS applications, args.ios is UIApplication.
             if (DEV_LOG) {
@@ -179,7 +188,7 @@ export class GeoHandler extends Observable {
                 this.wasWatchingBeforePause = true;
                 this.stopWatch();
             } else {
-                if (gVars.isAndroid) {
+                if (global.isAndroid) {
                     (Vue.prototype.$bgService as BgService).bgService.get().showForeground();
                 }
             }
@@ -189,9 +198,13 @@ export class GeoHandler extends Observable {
         if (!this.launched) {
             return;
         }
-        if (this.currentSession && this.currentSession.state !== SessionState.STOPPED && this.currentSession.currentDistance > 0) {
+        if (
+            this.currentSession &&
+            this.currentSession.state !== SessionState.STOPPED &&
+            this.currentSession.currentDistance > 0
+        ) {
             this.pauseSession();
-            appSettings.setString('pausedSession', JSON.stringify(this.currentSession));
+            setString('pausedSession', JSON.stringify(this.currentSession));
             this.currentSession = null; // to prevent storing in history
 
             // store paused session to start it again after
@@ -213,7 +226,7 @@ export class GeoHandler extends Observable {
         this.notify({
             eventName: GPSStatusChangedEvent,
             object: this,
-            data: e.data
+            data: e.data,
         });
         // this.log('GPS state change done', enabled);
     }
@@ -226,8 +239,8 @@ export class GeoHandler extends Observable {
                 // title: localize('stop_session'),
                 message: $t('gps_not_enabled'),
                 okButtonText: $t('settings'),
-                cancelButtonText: $t('cancel')
-            }).then(result => {
+                cancelButtonText: $t('cancel'),
+            }).then((result) => {
                 if (DEV_LOG) {
                     this.log('askToEnableIfNotEnabled, confirmed', result);
                 }
@@ -241,7 +254,7 @@ export class GeoHandler extends Observable {
     checkEnabledAndAuthorized(always = true) {
         return Promise.resolve()
             .then(() =>
-                geolocation.isAuthorized().then(r => {
+                geolocation.isAuthorized().then((r) => {
                     if (!r) {
                         return geolocation.authorize(always);
                     } else {
@@ -249,17 +262,15 @@ export class GeoHandler extends Observable {
                     }
                 })
             )
-            .then(() => {
-                return this.askToEnableIfNotEnabled();
-            })
-            .catch(err => {
+            .then(() => this.askToEnableIfNotEnabled())
+            .catch((err) => {
                 if (err && /denied/i.test(err.message)) {
                     confirm({
                         // title: localize('stop_session'),
                         message: $t('gps_not_authorized'),
                         okButtonText: $t('settings'),
-                        cancelButtonText: $t('cancel')
-                    }).then(result => {
+                        cancelButtonText: $t('cancel'),
+                    }).then((result) => {
                         // this.log('stop_session, confirmed', result);
                         if (result) {
                             geolocation.openGPSSettings().catch(() => {});
@@ -296,21 +307,21 @@ export class GeoHandler extends Observable {
 
     getLocation(options?) {
         return geolocation
-            .getCurrentLocation(options || { desiredAccuracy, minimumUpdateTime, timeout, onDeferred: this.onDeferred })
-            .then(r => {
+            .getCurrentLocation<LatLonKeys>(options || { desiredAccuracy, minimumUpdateTime, timeout, onDeferred: this.onDeferred })
+            .then((r) => {
                 this.log('getLocation result', r);
                 this.notify({
                     eventName: UserLocationdEvent,
                     object: this,
-                    location: r
+                    location: r,
                 } as UserLocationdEventData);
                 return r;
             })
-            .catch(err => {
+            .catch((err) => {
                 this.notify({
                     eventName: UserLocationdEvent,
                     object: this,
-                    error: err
+                    error: err,
                 } as UserLocationdEventData);
                 return Promise.reject(err);
             });
@@ -326,7 +337,7 @@ export class GeoHandler extends Observable {
             this.notify({
                 eventName: UserLocationdEvent,
                 object: this,
-                location: loc
+                location: loc,
             } as UserLocationdEventData);
         }
         if (manager && this._isIOSBackgroundMode && !this._deferringUpdates) {
@@ -346,7 +357,7 @@ export class GeoHandler extends Observable {
         // if (DEV_LOG) {
         // this.log('startWatch', options);
         // }
-        if (gVars.isIOS) {
+        if (global.isIOS) {
             if (this._isIOSBackgroundMode) {
                 options.pausesLocationUpdatesAutomatically = false;
                 options.allowsBackgroundLocationUpdates = true;
@@ -356,7 +367,7 @@ export class GeoHandler extends Observable {
             }
         }
 
-        geolocation.watchLocation(this.onLocation, this.onLocationError, options).then(r => (this.watchId = r));
+        geolocation.watchLocation(this.onLocation, this.onLocationError, options).then((r) => (this.watchId = r));
     }
 
     stopWatch() {
@@ -382,7 +393,7 @@ export class GeoHandler extends Observable {
             this.notify({
                 eventName: SessionFirstPositionEvent,
                 object: this,
-                data: loc
+                data: loc,
             } as GPSEvent);
         }
         this.lastLoc = loc;
@@ -396,7 +407,7 @@ export class GeoHandler extends Observable {
         this.notify({
             eventName: SessionUpdatedEvent,
             object: this,
-            data: this.currentSession
+            data: this.currentSession,
         } as SessionEventData);
         if (this.onUpdatedSession) {
             this.onUpdatedSession(this.currentSession);
@@ -414,7 +425,9 @@ export class GeoHandler extends Observable {
         if (
             err ||
             loc.horizontalAccuracy >= 40 ||
-            (this.lastLoc && ((this.lastLoc.latitude === loc.latitude && this.lastLoc.longitude === loc.longitude) || this.lastLoc.timestamp === loc.timestamp))
+            (this.lastLoc &&
+                ((this.lastLoc.lat === loc.lat && this.lastLoc.lon === loc.lon) ||
+                    this.lastLoc.timestamp === loc.timestamp))
         ) {
             return;
         }
@@ -485,7 +498,8 @@ export class GeoHandler extends Observable {
             }
 
             // wait to have a little more data to compugte / show average speed
-            const sessionDuration = loc.timestamp.valueOf() - this.currentSession.startTime.valueOf() - this.currentSession.pauseDuration;
+            const sessionDuration =
+                loc.timestamp.valueOf() - this.currentSession.startTime.valueOf() - this.currentSession.pauseDuration;
             if (DEV_LOG) {
                 this.log('sessionDuration', sessionDuration);
             }
@@ -506,8 +520,11 @@ export class GeoHandler extends Observable {
             if (DEV_LOG) {
                 this.log(
                     'onNewLoc',
-                    `speed: ${loc.speed && loc.speed.toFixed(1)}, loc:${loc.latitude.toFixed(2)},${loc.longitude.toFixed(2)}, ${new Date(loc.timestamp).toLocaleTimeString()}, ${shouldNotif}, ${this
-                        .currentSession.currentSpeed && this.currentSession.currentSpeed.toFixed(1)}, ${deltaDistance}, ${deltaTime}, ${deltaAlt}`
+                    `speed: ${loc.speed && loc.speed.toFixed(1)}, loc:${loc.lat.toFixed(2)},${loc.lon.toFixed(
+                        2
+                    )}, ${new Date(loc.timestamp).toLocaleTimeString()}, ${shouldNotif}, ${
+                        this.currentSession.currentSpeed && this.currentSession.currentSpeed.toFixed(1)
+                    }, ${deltaDistance}, ${deltaTime}, ${deltaAlt}`
                 );
             }
 
@@ -528,11 +545,11 @@ export class GeoHandler extends Observable {
         return this.currentSession && this.currentSession.lastLoc === null;
     }
     startSession(onUpdate?: Function) {
-        appSettings.remove('pausedSession');
+        remove('pausedSession');
         if (this.currentSession) {
             return Promise.reject('already_running');
         }
-        return this.enableLocation().then(r => {
+        return this.enableLocation().then((r) => {
             this.currentSession = {
                 lastLoc: null,
                 state: SessionState.RUNNING,
@@ -545,7 +562,7 @@ export class GeoHandler extends Observable {
                 lastPauseTime: null,
                 endTime: null,
                 pauseDuration: 0,
-                locs: []
+                locs: [],
             };
             // /* DEV-START */
             // this.currentSession.currentSpeed = 1.1;
@@ -576,7 +593,7 @@ export class GeoHandler extends Observable {
         this.notify({
             eventName: SessionStateEvent,
             object: this,
-            data: this.currentSession
+            data: this.currentSession,
         } as SessionEventData);
     }
 
@@ -587,17 +604,19 @@ export class GeoHandler extends Observable {
             session.pauseDuration += session.endTime.valueOf() - session.lastPauseTime.valueOf();
             session.lastPauseTime = null;
         }
-        session.averageSpeed = Math.round((session.currentDistance / (session.endTime.valueOf() - session.startTime.valueOf() - session.pauseDuration)) * 3600);
+        session.averageSpeed = Math.round(
+            (session.currentDistance / (session.endTime.valueOf() - session.startTime.valueOf() - session.pauseDuration)) * 3600
+        );
     }
     stopSession() {
         if (this.currentSession) {
-            appSettings.remove('pausedSession');
+            remove('pausedSession');
             this.stopWatch();
 
             if (this.currentSession.currentDistance > 0) {
                 this.prepareSessionForStoring(this.currentSession);
                 this.sessionsHistory.push(this.currentSession);
-                appSettings.setString('sessionsHistory', JSON.stringify(this.sessionsHistory));
+                setString('sessionsHistory', JSON.stringify(this.sessionsHistory));
             }
             this.setSessionState(SessionState.STOPPED);
 
@@ -631,7 +650,11 @@ export class GeoHandler extends Observable {
     getCurrentSessionChrono() {
         if (this.currentSession) {
             if (this.currentSession.state === SessionState.PAUSED) {
-                return this.currentSession.lastPauseTime.valueOf() - this.currentSession.startTime.valueOf() - this.currentSession.pauseDuration;
+                return (
+                    this.currentSession.lastPauseTime.valueOf() -
+                    this.currentSession.startTime.valueOf() -
+                    this.currentSession.pauseDuration
+                );
             }
             return Date.now() - this.currentSession.startTime.valueOf() - this.currentSession.pauseDuration;
         }
@@ -641,7 +664,7 @@ export class GeoHandler extends Observable {
         this.notify({
             eventName: SessionChronoEvent,
             object: this,
-            data: this.getCurrentSessionChrono()
+            data: this.getCurrentSessionChrono(),
         } as SessionChronoEventData);
     }
     private sessionChronoTimer;

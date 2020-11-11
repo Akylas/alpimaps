@@ -1,59 +1,25 @@
-import * as Platform from '@nativescript/core/platform';
-// import dayjs from 'dayjs';
-// import LocalizedFormat from 'dayjs/plugin/localizedFormat';
-// dayjs.extend(LocalizedFormat);
-// const dayjs: (...args) => Dayjs = require('dayjs');
-import moment from 'moment';
-import * as momentDurationFormatSetup from 'moment-duration-format';
-momentDurationFormatSetup(moment);
-// var moment = require("moment");
-// var momentDurationFormatSetup = require("moment-duration-format");
-
 import humanUnit from 'human-unit';
-import { Address, Item } from '~/mapModules/ItemsModule';
+import { IItem } from '~/models/Item';
+import { convertDuration, convertTime } from './locale';
+export { convertDuration, convertTime } from './locale';
 const timePreset = {
     factors: [1000, 60, 60, 24],
-    units: ['ms', 's', 'min', 'hour', 'day']
+    units: ['ms', 's', 'min', 'hour', 'day'],
 };
 const distancePreset = {
     factors: [1000],
-    units: ['m', 'km']
+    units: ['m', 'km'],
 };
 
 const elevationPreset = {
     factors: [],
-    units: ['m']
+    units: ['m'],
 };
 
-const supportedLanguages = ['en', 'fr'];
-
-export function getCurrentDateLanguage() {
-    const deviceLang = Platform.device.language;
-    if (supportedLanguages.indexOf(deviceLang) !== -1) {
-        return deviceLang;
-    }
-    return 'en-US';
-}
-
-export function convertTime(date, formatStr: string) {
-    // console.log('convertTime', date, formatStr);
-    return moment(date).format(formatStr);
-}
-
-// function createDateAsUTC(date) {
-//     return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds());
-// }
-
-export function convertDuration(milliseconds) {
-    // console.log('convertDuration', date, formatStr, test, result);
-    return formatDuration(milliseconds);
-}
 export function convertDistance(meters) {
-    // console.log('convertDuration', date, formatStr, test, result);
     return humanUnit(meters, distancePreset);
 }
 export function convertElevation(meters) {
-    // console.log('convertDuration', date, formatStr, test, result);
     return convertValueToUnit(meters, 'm').join(' ');
 }
 
@@ -61,9 +27,7 @@ export function formatDuration(_time): string {
     if (_time < 0) {
         return '';
     }
-    return (moment.duration(_time) as any).format('h [hrs], m [min]', {
-        trim: false
-    });
+    return convertDuration(_time);
 }
 
 export function convertValueToUnit(value: any, unit, otherParam?) {
@@ -118,11 +82,11 @@ export function formatValueToUnit(value: any, unit, options?: { prefix?: string;
     return result;
 }
 
-export function formatAddress(item: Item, part = 0) {
+export function formatAddress(item: IItem, part = 0) {
     const address = item.address;
     const properties = item.properties;
     let result = '';
-    if ((properties.osm_value || properties.osm_key || properties.class ) && address && address.houseNumber) {
+    if ((properties.osm_value || properties.osm_key || properties.class) && address && address.houseNumber) {
         result += address.houseNumber + ' ';
     }
     if (address.road) {
@@ -133,7 +97,7 @@ export function formatAddress(item: Item, part = 0) {
         return result;
     }
     if (part === 2) {
-        if ( result.length === 0) {
+        if (result.length === 0) {
             return undefined;
         } else {
             result = '';

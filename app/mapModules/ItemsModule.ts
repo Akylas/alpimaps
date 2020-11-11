@@ -1,266 +1,67 @@
 // MUST include nSQL from the lib path.
-import { nSQL } from '@nano-sql/core/lib';
-import { InanoSQLTableConfig } from '@nano-sql/core/lib/interfaces';
-import { Color } from '@nativescript/core';
-import { NativeSQLite } from 'nativescript-akylas-sqlite/nanosql';
-import { MapBounds, MapPos } from 'nativescript-carto/core';
-import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
-import { VectorLayer } from 'nativescript-carto/layers/vector';
-import { CartoMap } from 'nativescript-carto/ui';
-import { VectorElement } from 'nativescript-carto/vectorelements';
+import { installMixins } from '@akylas/nativescript-sqlite/typeorm';
+import { Connection, createConnection } from '@nativescript-community/typeorm';
+import { MapPos } from '@nativescript-community/ui-carto/core';
+import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
+import { VectorLayer } from '@nativescript-community/ui-carto/layers/vector';
+import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import {
     Line,
     LineEndType,
     LineJointType,
     LineStyleBuilder,
-    LineStyleBuilderOptions
-} from 'nativescript-carto/vectorelements/line';
-import { Marker, MarkerStyleBuilder, MarkerStyleBuilderOptions } from 'nativescript-carto/vectorelements/marker';
-import { Point, PointStyleBuilder, PointStyleBuilderOptions } from 'nativescript-carto/vectorelements/point';
+    LineStyleBuilderOptions,
+} from '@nativescript-community/ui-carto/vectorelements/line';
+import { Marker, MarkerStyleBuilder, MarkerStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/marker';
+import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/point';
+import { Color, knownFolders, path } from '@nativescript/core';
 import Vue from 'nativescript-vue';
-import tinycolor from 'tinycolor2';
-import { Route } from '~/components/DirectionsPanel';
 import Map from '~/components/Map';
+import Item, { IItem } from '~/models/Item';
+import Route from '~/models/Route';
 import { darkColor } from '~/variables';
 import MapModule from './MapModule';
 
-export const tables: InanoSQLTableConfig[] = [
-    {
-        name: 'items',
-        model: {
-            'id:int': { pk: true, ai: true },
-            'provider:string': {},
-            'properties:obj': {
-                default: () => undefined,
-                model: {
-                    'name:string': {},
-                    'osm_value:string': {},
-                    'osm_key:string': {},
-                    'class:string': {},
-                    'layer:string': {},
-                    '*:any': {}
-                }
-            },
-            'address:obj': {
-                default: () => undefined,
-                model: {
-                    'country:string': {},
-                    'name:string': {},
-                    'county:string': {},
-                    'neighbourhood:string': {},
-                    'postcode:string': {},
-                    'region:string': {},
-                    'road:string': {},
-                    'houseNumber:string': {}
-                }
-            },
-            'styleOptions:obj': {
-                default: () => undefined,
-                model: {
-                    'color:string': {},
-                    'size:number': {},
-                    'scalingMode:number': {},
-                    'orientationMode:number': {}
-                }
-            },
-            'position:geo': {},
-            'zoomBounds:obj': {
-                default: () => undefined,
-                model: {
-                    'northeast:geo': {},
-                    'southwest:geo': {}
-                }
-            }
-        }
-    },
-    {
-        name: 'routes',
-        model: {
-            'id:int': { pk: true, ai: true },
-            'provider:string': {},
-            'properties:obj': {
-                default: () => undefined,
-                model: {
-                    'name:string': {},
-                    'osm_value:string': {},
-                    'osm_key:string': {},
-                    'class:string': {},
-                    'layer:string': {},
-                    '*:any': {}
-                }
-            },
-            'address:obj': {
-                default: () => undefined,
-                model: {
-                    'country:string': {},
-                    'name:string': {},
-                    'county:string': {},
-                    'neighbourhood:string': {},
-                    'postcode:string': {},
-                    'region:string': {},
-                    'road:string': {},
-                    'houseNumber:string': {}
-                }
-            },
-            'styleOptions:obj': {
-                default: () => undefined,
-                model: {
-                    'color:string': {},
-                    'width:number': {},
-                    'joinType:number': {},
-                    'endType:number': {},
-                    'clickWidth:number': {},
-                    'stretchFactor:number': {}
-                }
-            },
-
-            'route:obj': {
-                model: {
-                    'totalTime:number': {},
-                    'totalDistance:number': {},
-                    'positions:geo[]': {},
-                    'instructions:obj[]': {
-                        model: {
-                            'position:geo': {},
-                            'action:string': {},
-                            'azimuth:number': {},
-                            'pointIndex:number': {},
-                            'distance:number': {},
-                            'time:number': {},
-                            'turnAngle:number': {},
-                            'streetName:string': {},
-                            'instruction:string': {}
-                        }
-                    },
-                    'profile:obj': {
-                        default: () => undefined,
-                        model: {
-                            'min:number[]': {},
-                            'max:number[]': {},
-                            'dplus:number': {},
-                            'dmin:number': {},
-                            'points:geo[]': {
-                                default: () => undefined
-                            },
-                            'colors:any[]': {
-                                default: () => undefined,
-                                model: {
-                                    'x:number': {},
-                                    'color:string': {}
-                                }
-                            },
-                            'data:obj[]': {
-                                default: () => undefined,
-                                model: {
-                                    'x:number': {},
-                                    'altitude:number': {},
-                                    'altAvg:number': {},
-                                    'grade:number': {}
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-
-            'zoomBounds:obj': {
-                default: () => undefined,
-                model: {
-                    'northeast:geo': {},
-                    'southwest:geo': {}
-                }
-            }
-        }
-    }
-];
-
-export const types = {
-    meta: {
-        'key:string': { notNull: true },
-        'value:any': { notNull: true }
-    }
-};
-
-export interface Address {
-    country?: string;
-    name?: string;
-    county?: string;
-    state?: string;
-    // locality: r.address.getLocality(),
-    neighbourhood?: string;
-    postcode?: string;
-    region?: string;
-    road?: string;
-    houseNumber?: string;
-}
-export interface Item {
-    id?: number;
-    properties?: {
-        [k: string]: any;
-        name?: string;
-        osm_value?: string;
-        osm_key?: string;
-        class?: string;
-        layer?: string;
-    };
-    provider?: 'photon' | 'here' | 'carto';
-    categories?: string[];
-    address?: Address;
-    zoomBounds?: MapBounds<LatLonKeys>;
-    route?: Route;
-    position?: MapPos<LatLonKeys>;
-    styleOptions?: any;
-    vectorElement?: VectorElement<any, any>;
-}
+const filePath = path.join(knownFolders.documents().getFolder('db').path, 'db.sqlite');
 
 export default class ItemsModule extends MapModule {
     localVectorDataSource: LocalVectorDataSource;
     localVectorLayer: VectorLayer;
+    connection: Connection;
 
+    async initDb() {
+        installMixins();
+        this.log('start');
+
+        try {
+            // console.log('database', filePath);
+            this.connection = await createConnection({
+                database: filePath,
+                type: '@akylas/nativescript-sqlite' as any,
+                entities: [Item, Route],
+                // logging:true,
+                extra: {
+                    // threading: true,
+                },
+            });
+            await this.connection.synchronize(false);
+            const items = await Item.find();
+            this.addItemsToLayer(items);
+        } catch (err) {
+            console.log('err', err);
+
+            Vue.prototype.$showError(err);
+        }
+    }
     onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
         // this.log('onMapReady');
         super.onMapReady(mapComp, mapView);
-        Promise.resolve()
-            .then(() => {
-                return nSQL().createDatabase({
-                    id: 'alpimaps',
-                    mode: new NativeSQLite(null),
-                    tables
-                    // types
-                });
-            })
-            .catch(err => {
-                this.log('catching error', err); // TODO: catch already created for now. need to look at how to do it
-            })
-            .then(() => {
-                // this.log('database created', nSQL().listDatabases());
-                // return nSQL().transaction([
-                return Promise.all([
-                    nSQL('routes')
-                        .query('select')
-                        .exec(),
-                    // .then(this.addItemsToLayer),
-                    nSQL('items')
-                        .query('select')
-                        .exec()
-                    // .exec()
-                    // .then(this.addItemsToLayer)
-                ]);
-            })
-            .then(r => {
-                r.forEach(items => {
-                    // console.log('got result', items.length);
-                    this.addItemsToLayer(items);
-                });
-            })
-            .catch(err => {
-                Vue.prototype.$showError(err);
-            });
+        this.initDb();
     }
     onMapDestroyed() {
         // this.log('onMapDestroyed');
         super.onMapDestroyed();
-        nSQL().disconnect();
+        this.connection && this.connection.close();
 
         if (this.localVectorDataSource) {
             this.localVectorDataSource.clear();
@@ -278,14 +79,16 @@ export default class ItemsModule extends MapModule {
             this.localVectorDataSource = new LocalVectorDataSource({ projection });
 
             this.localVectorLayer = new VectorLayer({ visibleZoomRange: [0, 24], dataSource: this.localVectorDataSource });
-            this.localVectorLayer.setVectorElementEventListener(this.mapComp);
+            this.localVectorLayer.setVectorElementEventListener<LatLonKeys>({
+                onVectorElementClicked: (data) => this.mapComp.onVectorElementClicked(data),
+            });
 
             this.mapComp.addLayer(this.localVectorLayer, 'items');
         }
     }
-    createLocalMarker(item: Item, options: MarkerStyleBuilderOptions) {
+    createLocalMarker(item: IItem, options: MarkerStyleBuilderOptions) {
         // console.log('createLocalMarker', options);
-        Object.keys(options).forEach(k => {
+        Object.keys(options).forEach((k) => {
             if (options[k] === undefined) {
                 delete options[k];
             }
@@ -301,20 +104,27 @@ export default class ItemsModule extends MapModule {
         const styleBuilder = new PointStyleBuilder(options);
         return new Point({ position, projection: this.mapComp.mapProjection, styleBuilder });
     }
-    itemToMetaData(item: Item) {
+    itemToMetaData(item: IItem) {
         const result = {};
         Object.keys(item)
-            .filter(k => k !== 'vectorElement')
-            .forEach(k => {
+            .filter((k) => k !== 'vectorElement')
+            .forEach((k) => {
                 if (item[k] !== null && item[k] !== undefined) {
-                    result[k] = JSON.stringify(item[k]);
+                    if (k === 'route') {
+                        // ignore positions as it is native object.
+                        // we will get it back from the vectorElement
+                        const { positions, ...others } = item[k];
+                        result[k] = JSON.stringify(others);
+                    } else {
+                        result[k] = JSON.stringify(item[k]);
+                    }
                 }
             });
         return result;
     }
-    createLocalLine(item: Item, options: LineStyleBuilderOptions) {
+    createLocalLine(item: IItem, options: LineStyleBuilderOptions) {
         // console.log('createLocalLine', options);
-        Object.keys(options).forEach(k => {
+        Object.keys(options).forEach((k) => {
             if (options[k] === undefined) {
                 delete options[k];
             }
@@ -326,7 +136,7 @@ export default class ItemsModule extends MapModule {
         // console.log('metaData', metaData);
         return new Line({ positions: item.route.positions, projection: this.mapComp.mapProjection, styleBuilder, metaData });
     }
-    addItemToLayer(item: Item) {
+    addItemToLayer(item: IItem) {
         if (item.route) {
             const line = this.createLocalLine(item, item.styleOptions);
             this.localVectorDataSource.add(line);
@@ -342,64 +152,114 @@ export default class ItemsModule extends MapModule {
     addItemsToLayer(items: Item[]) {
         items.forEach(this.addItemToLayer, this);
     }
-    updateItem(item: Item) {
-        const tableId = item.route ? 'routes' : 'items';
-        // console.log('saveItem', !!item.route, !!item.vectorElement, item.route);
-        return nSQL(tableId)
-            .query('upsert', item)
-            .exec()
-            .then(r => {
-                const rItem = r[0] as Item;
-                const selectedElement = item.vectorElement;
-                if (selectedElement) {
-                    selectedElement.metaData = this.itemToMetaData(item);
-                    Object.assign(selectedElement, item.styleOptions);
-                    // this.localVectorDataSource.add(selectedElement);
-                    rItem.vectorElement = selectedElement;
-                } else {
-                    rItem.vectorElement = this.addItemToLayer(rItem);
+    async updateItem(item: Item | IItem) {
+        console.log('updateItem', item.id, item instanceof Item);
+        if (!(item instanceof Item)) {
+            if (item.id) {
+                if (item.route && !(item.route instanceof Route) && (item.route as any).id) {
+                    const routeToUpdate = await Route.findOne((item.route as any).id);
+                    Object.keys(item.route).forEach((k) => {
+                        routeToUpdate[k] = item.route[k];
+                    });
+                    item.route = routeToUpdate;
                 }
-                return rItem; // return the first one
-            });
+                const toUpdate = await Item.findOne(item.id);
+                Object.keys(item).forEach((k) => {
+                    toUpdate[k] = item[k];
+                });
+                item = toUpdate as any;
+            } else {
+                return item;
+            }
+        }
+        await item.save();
+        // console.log('updateItem', !!item.route, !!item.vectorElement, item.id);
+
+        // const tableId = item.route ? 'routes' : 'items';
+        // // console.log('saveItem', !!item.route, !!item.vectorElement, item.route);
+        // return nSQL(tableId)
+        //     .query('upsert', item)
+        //     .exec()
+        //     .then(r => {
+        // const rItem = r[0] as Item;
+        const selectedElement = item.vectorElement;
+        if (selectedElement) {
+            selectedElement.metaData = this.itemToMetaData(item);
+            Object.assign(selectedElement, item.styleOptions);
+            // this.localVectorDataSource.add(selectedElement);
+            item.vectorElement = selectedElement;
+        } else {
+            item.vectorElement = this.addItemToLayer(item);
+        }
+        return item; // return the first one
+        // });
     }
-    saveItem(item: Item, styleOptions?: MarkerStyleBuilderOptions | PointStyleBuilderOptions | LineStyleBuilderOptions) {
+    async saveItem(
+        item: IItem | Item,
+        styleOptions?: MarkerStyleBuilderOptions | PointStyleBuilderOptions | LineStyleBuilderOptions
+    ) {
+        // console.log('saveItem', !!item.route , item.route instanceof Route)
         if (item.route) {
-            const color = new Color(darkColor);
+            if (!(item.route instanceof Route)) {
+                const route = new Route();
+                route.id = Date.now();
+                // we need to save route first for it get an id
+                Object.keys(item.route).forEach((k) => (route[k] = item.route[k]));
+                // await route.save();
+                item.route = route;
+            }
+            const color = darkColor;
             item.styleOptions = {
                 color: new Color(150, color.r, color.g, color.b),
                 joinType: LineJointType.ROUND,
                 endType: LineEndType.ROUND,
-                width: 4,
+                width: 3,
                 clickWidth: 10,
-                ...item.styleOptions
+                ...item.styleOptions,
             };
         } else {
             item.styleOptions = {
                 color: 'yellow',
                 size: 20,
-                ...item.styleOptions
+                ...item.styleOptions,
             };
         }
-        const tableId = item.route ? 'routes' : 'items';
-        // console.log('saveItem', !!item.route, !!item.vectorElement, item.route);
-        return nSQL(tableId)
-            .query('upsert', item)
-            .exec()
-            .then(r => {
-                // this.log('upsert done', tableId, r);
-                const rItem = r[0] as Item;
-                const selectedElement = item.vectorElement;
-                if (selectedElement) {
-                    Object.assign(selectedElement, item.styleOptions);
-                    this.localVectorDataSource.add(selectedElement);
-                    rItem.vectorElement = selectedElement;
-                } else {
-                    rItem.vectorElement = this.addItemToLayer(rItem);
-                }
-                return rItem; // return the first one
-            });
+        if (!(item instanceof Item)) {
+            const data = item;
+            item = new Item();
+            item.id = Date.now();
+            Object.keys(data).forEach((k) => (item[k] = data[k]));
+        }
+        // console.log('saving item', item, item.route instanceof Route, item.route )
+        await item.save();
+        console.log('item saved', item.id);
+        // const test = await Item.findOne(item.id);
+        // const tableId = item.route ? 'routes' : 'items';
+        // console.log('saveItem', !!item.route, !!item.vectorElement);
+        // return nSQL(tableId)
+        //     .query('upsert', item)
+        //     .exec()
+        //     .then(r => {
+        //         this.log('upsert done', tableId, r.length);
+        //         nSQL('routes')
+        //             .query('select')
+        //             .exec().then(t=>{
+        //                 console.log('test', t.length);
+        //             });
+        // const rItem = r[0] as Item;
+        const selectedElement = item.vectorElement;
+        if (selectedElement) {
+            Object.assign(selectedElement, item.styleOptions);
+            this.localVectorDataSource.add(selectedElement);
+            item.vectorElement = selectedElement;
+        } else {
+            item.vectorElement = this.addItemToLayer(item as Item);
+        }
+        return item; // return the first one
+        // });
     }
-    deleteItem(item: Item) {
+    async deleteItem(item: Item | IItem) {
+
         if (item === this.mapComp.selectedItem) {
             this.mapComp.unselectItem();
         }
@@ -407,9 +267,17 @@ export default class ItemsModule extends MapModule {
             this.localVectorDataSource.remove(item.vectorElement);
             item.vectorElement = null;
         }
-        return nSQL(item.route ? 'routes' : 'items')
-            .query('delete')
-            .where(['id', '=', item.id])
-            .exec();
+        if (item instanceof Item) {
+            await item.remove();
+        } else if (item.id) {
+            const toRemove = await Item.findOne(item.id);
+            if (toRemove) {
+                await toRemove.remove();
+            }
+        }
+        // return nSQL(item.route ? 'routes' : 'items')
+        //     .query('delete')
+        //     .where(['id', '=', item.id])
+        //     .exec();
     }
 }

@@ -1,32 +1,34 @@
-import { Folder } from '@nativescript/core/file-system';
-import { device } from '@nativescript/core/platform';
-import { TextField } from '@nativescript/core/ui/text-field';
-import { layout } from '@nativescript/core/utils/utils';
-import { ClickType, fromNativeMapPos, MapPos } from 'nativescript-carto/core';
-import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
-import { VectorElementEventData, VectorLayer, VectorTileEventData } from 'nativescript-carto/layers/vector';
+import { ClickType, MapPos, NMapPos, fromNativeMapBounds, fromNativeMapPos } from '@nativescript-community/ui-carto/core';
+import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
+import { VectorElementEventData, VectorLayer, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
 import {
     PackageManagerValhallaRoutingService,
-    RoutingAction,
+    RouteMatchingResult,
     RoutingResult,
     ValhallaOfflineRoutingService,
     ValhallaOnlineRoutingService,
-    ValhallaProfile
-} from 'nativescript-carto/routing';
-import { CartoMap } from 'nativescript-carto/ui';
-import { Group } from 'nativescript-carto/vectorelements/group';
-import { Line, LineEndType, LineJointType, LineStyleBuilder } from 'nativescript-carto/vectorelements/line';
-import { Marker, MarkerStyleBuilder } from 'nativescript-carto/vectorelements/marker';
-import { Point } from 'nativescript-carto/vectorelements/point';
+    ValhallaProfile,
+} from '@nativescript-community/ui-carto/routing';
+import { CartoMap } from '@nativescript-community/ui-carto/ui';
+import { Group } from '@nativescript-community/ui-carto/vectorelements/group';
+import { Line, LineEndType, LineJointType, LineStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/line';
+import { Marker, MarkerStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/marker';
+import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
+import { TextField } from '@nativescript-community/ui-material-textfield';
+import { Device } from '@nativescript/core';
+import { Folder } from '@nativescript/core/file-system';
+import { layout } from '@nativescript/core/utils/utils';
 import { Component } from 'vue-property-decorator';
-import { Item } from '~/mapModules/ItemsModule';
 import { IMapModule } from '~/mapModules/MapModule';
+import { Address, IItem as Item } from '~/models/Item';
+import Route, { RoutingAction } from '~/models/Route';
+import { omit } from '~/utils';
 import BaseVueComponent from './BaseVueComponent';
 import Map from './Map';
 
 export interface RouteInstruction {
-    position: MapPos<LatLonKeys>;
-    action: string;
+    // position: MapPos<LatLonKeys>;
+    action: RoutingAction;
     azimuth: number;
     distance: number;
     pointIndex: number;
@@ -41,52 +43,53 @@ export interface RouteProfile {
     min: [number, number];
     dplus?: any;
     dmin?: any;
-    points: MapPos<LatLonKeys>[];
-    data: Array<{ x: number; altitude: number; altAvg: number; grade }>;
-    colors?: Array<{ x: number; color: string }>;
+    // points: MapPos<LatLonKeys>[];
+    data: { x: number; altitude: number; altAvg: number; grade }[];
+    colors?: { x: number; color: string }[];
 }
-export interface Route {
-    profile?: RouteProfile;
-    positions: MapPos<LatLonKeys>[];
-    totalTime: number;
-    totalDistance: number;
-    instructions: RouteInstruction[];
-}
+
+// function getPointsFromResult(result: RoutingResult<LatLonKeys> | RouteMatchingResult<LatLonKeys>) {
+//     let startTime = Date.now();
+//     const points = result.getPoints();
+//     const positions = [];
+//     let lastLon, lastLat, lat, lon, p: NMapPos;
+//     for (let i = 0; i < points.size(); i++) {
+//         p = points.get(i);
+//         lat = p.getY();
+//         lon = p.getX();
+//         // if (!lastLon || lastLat !== lat || lastLon !== lon) {
+//         positions.push({ lat: Math.round(lat * 1000000) / 1000000, lon: Math.round(lon * 1000000) / 1000000});
+//         // }
+//         // lastLon = lon;
+//         // lastLat = lat;
+//     }
+//     console.log('getPointsFromResult', points.size(), Date.now() - startTime, 'ms');
+//     return positions;
+// }
 
 function routingResultToJSON(result: RoutingResult<LatLonKeys>) {
     const rInstructions = result.getInstructions();
     const instructions: RouteInstruction[] = [];
-    const points = result.getPoints().toArray();
-    const positions = [];
-    let lastP;
-    points.forEach(p => {
-        if (!lastP || lastP.lat !== p.lat || lastP.lon !== p.lon) {
-            positions.push(p);
-        }
-        lastP = p;
-    });
+    // const positions = getPointsFromResult(result);
     for (let i = 0; i < rInstructions.size(); i++) {
         const instruction = rInstructions.get(i);
-
-        const position = points[instruction.getPointIndex()];
-        // console.log('instruction', i, JSON.stringify(position), (instruction as any).getInstruction());
+        const pointIndex = instruction.getPointIndex();
         instructions.push({
-            position,
-            action: instruction.getAction().toString(),
-            azimuth: instruction.getAzimuth(),
+            action: RoutingAction[instruction.getAction().toString().replace('ROUTING_ACTION_', '')],
+            azimuth: Math.round(instruction.getAzimuth()),
             distance: instruction.getDistance(),
             time: instruction.getTime(),
-            pointIndex: instruction.getPointIndex(),
+            pointIndex,
             turnAngle: instruction.getTurnAngle(),
             streetName: instruction.getStreetName(),
-            instruction: (instruction as any).getInstruction()
+            instruction: (instruction as any).getInstruction(),
         });
     }
     const res = {
-        positions,
+        positions: result.getPoints(),
         totalTime: result.getTotalTime(),
         totalDistance: result.getTotalDistance(),
-        instructions
+        instructions,
     } as Route;
 
     return res;
@@ -100,26 +103,24 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     opened = false;
     _routeDataSource: LocalVectorDataSource;
     _routeLayer: VectorLayer;
-    waypoints: Array<{
+    waypoints: {
         marker: Group;
         position: MapPos<LatLonKeys>;
         isStart: boolean;
         isStop: boolean;
         metaData: any;
         text: string;
-    }> = [];
+    }[] = [];
     profile: ValhallaProfile = 'pedestrian';
     showOptions = true;
     loading = false;
     currentRoute: Route;
     currentLine: Line;
 
-    valhallaCostingOptions = { use_hills: 0, use_roads: 0, use_ferry: 1, max_hiking_difficulty: 6 };
+    valhallaCostingOptions = { use_hills: 0, use_roads: 0, use_ferry: 0, max_hiking_difficulty: 6 };
 
     get profileColor() {
-        return p => {
-            return this.profile === p ? '#fff' : '#55ffffff';
-        };
+        return (p) => (this.profile === p ? '#fff' : '#55ffffff');
     }
 
     setProfile(p: ValhallaProfile) {
@@ -166,7 +167,9 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     get routeLayer() {
         if (!this._routeLayer) {
             this._routeLayer = new VectorLayer({ visibleZoomRange: [0, 24], dataSource: this.routeDataSource, opacity: 0.7 });
-            this._routeLayer.setVectorElementEventListener(this.mapComp);
+            this._routeLayer.setVectorElementEventListener<LatLonKeys>({
+                onVectorElementClicked: (data) => this.mapComp.onVectorElementClicked(data),
+            });
             this.mapComp.addLayer(this._routeLayer, 'directions');
         }
         return this._routeLayer;
@@ -180,7 +183,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             position,
             metaData,
             marker: null,
-            text: metaData ? metaData.name : `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`
+            text: metaData ? metaData.name : `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`,
         };
         const group = new Group();
         group.elements = [
@@ -190,9 +193,9 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
                     size: 15,
                     hideIfOverlapped: false,
                     scaleWithDPI: true,
-                    color: 'green'
-                }
-            })
+                    color: 'green',
+                },
+            }),
             // new Text({
             //     position,
             //     text: '0',
@@ -220,7 +223,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             position,
             metaData,
             marker: null,
-            text: metaData?.name || `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`
+            text: metaData?.name || `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`,
         };
         if (this.waypoints.length > 0 && this.waypoints[this.waypoints.length - 1].isStop === true) {
             this.waypoints[this.waypoints.length - 1].isStop = false;
@@ -228,7 +231,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
                 size: 15,
                 hideIfOverlapped: false,
                 scaleWithDPI: true,
-                color: 'blue'
+                color: 'blue',
             };
             this.addStopPoint(position, metaData);
             return;
@@ -241,21 +244,9 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
                     size: 15,
                     hideIfOverlapped: false,
                     scaleWithDPI: true,
-                    color: 'red'
-                }
-            })
-            // new Text({
-            //     position,
-            //     text: this.waypoints.length + '',
-            //     styleBuilder: {
-            //         fontSize: 5,
-            //         hideIfOverlapped: false,
-            //         anchorPointY: 1,
-            //         // scaleWithDPI: true,
-            //         color: 'white',
-            //         // backgroundColor: 'red'
-            //     }
-            // })
+                    color: 'red',
+                },
+            }),
         ];
         toAdd.marker = group;
         this.routeDataSource.add(group);
@@ -269,13 +260,13 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             this.line = new Line<LatLonKeys>({
                 styleBuilder: {
                     color: 'gray',
-                    width: 4
+                    width: 4,
                 },
-                positions: this.waypoints.map(w => w.position)
+                positions: this.waypoints.map((w) => w.position),
             });
             this.routeDataSource.add(this.line);
         } else {
-            this.line.positions = this.waypoints.map(w => w.position);
+            this.line.positions = this.waypoints.map((w) => w.position);
         }
         this.mapComp.topSheetHolder.peekSheet();
     }
@@ -286,31 +277,16 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             position,
             metaData,
             marker: null,
-            text: metaData ? metaData.name : `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`
+            text: metaData ? metaData.name : `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`,
         };
-        // this.log('addWayPoint', toAdd);
         if (this.waypoints.length === 0 || this.waypoints[0].isStart === false) {
             this.addStartPoint(position, metaData);
         } else {
             this.addStopPoint(position, metaData);
-            // this.log('addWayPoint stop', this.waypoints[this.waypoints.length - 1]);
         }
     }
 
     handleClickOnPos(position: MapPos<LatLonKeys>, metaData?) {
-        // this.log('onMapClicked', position, this.startPos, this.stopPos);
-        // const text = metaData ? metaData.name : `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`;
-        // // console.log('handleClickOnPos', position, text);
-        // if (this.waypoints.length === 0) {
-        //     // set start, or start =again
-        //     this.startTF.text = this.currentStartSearchText = text;
-        //     // this.setStartPosition(position);
-        // } else if (this.waypoints.length === 1) {
-        //     // set stop and calculate
-        //     // this.setStopPosition(position);
-        //     this.stopTF.text = this.currentStopSearchText = text;
-        //     // this.showRoute(this.startPos, this.stopPos);
-        // }
         this.addWayPoint(position);
     }
     handleClickOnItem(item: Item) {
@@ -362,7 +338,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     get offlineRoutingSearchService() {
         if (!this._offlineRoutingSearchService) {
             this._offlineRoutingSearchService = new PackageManagerValhallaRoutingService({
-                packageManager: this.mapComp.$packageService.routingPackageManager
+                packageManager: this.mapComp.$packageService.routingPackageManager,
             });
         }
         return this._offlineRoutingSearchService;
@@ -374,10 +350,10 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             if (Folder.exists(folderPath)) {
                 const folder = Folder.fromPath(folderPath);
                 const entities = folder.getEntitiesSync();
-                entities.some(s => {
+                entities.some((s) => {
                     if (s.name.endsWith('.vtiles')) {
                         this._localOfflineRoutingSearchService = new ValhallaOfflineRoutingService({
-                            path: s.path
+                            path: s.path,
                         });
                         return true;
                     }
@@ -391,7 +367,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     get onlineRoutingSearchService() {
         if (!this._onlineRoutingSearchService) {
             this._onlineRoutingSearchService = new ValhallaOnlineRoutingService({
-                apiKey: gVars.MAPBOX_TOKEN
+                apiKey: gVars.MAPBOX_TOKEN,
             });
         }
         return this._onlineRoutingSearchService;
@@ -404,7 +380,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             this._routePointStyle = new MarkerStyleBuilder({
                 hideIfOverlapped: false,
                 size: 10,
-                color: 'white'
+                color: 'white',
             }).buildStyle();
         }
         return this._routePointStyle;
@@ -415,7 +391,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             this._routeLeftPointStyle = new MarkerStyleBuilder({
                 hideIfOverlapped: false,
                 size: 10,
-                color: 'yellow'
+                color: 'yellow',
             }).buildStyle();
         }
         return this._routeLeftPointStyle;
@@ -426,31 +402,10 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             this._routeRightPointStyle = new MarkerStyleBuilder({
                 hideIfOverlapped: false,
                 size: 10,
-                color: 'purple'
+                color: 'purple',
             }).buildStyle();
         }
         return this._routeRightPointStyle;
-    }
-    createRoutePoint(instruction: RouteInstruction, ds: LocalVectorDataSource) {
-        let style;
-
-        const action = instruction.action;
-
-        if (action === RoutingAction.TURN_LEFT.toString()) {
-            style = this.routeLeftPointStyle;
-        } else if (action === RoutingAction.TURN_RIGHT.toString()) {
-            style = this.routeRightPointStyle;
-        } else {
-            style = this.routePointStyle;
-        }
-
-        const marker = new Marker({
-            position: instruction.position,
-            style,
-            metaData: { instruction: JSON.stringify(instruction) }
-        });
-
-        ds.add(marker);
     }
     createPolyline(result: Route, positions) {
         const styleBuilder = new LineStyleBuilder({
@@ -458,13 +413,12 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             joinType: LineJointType.ROUND,
             endType: LineEndType.ROUND,
             clickWidth: 20,
-            width: 6
+            width: 6,
         });
-        // this.log('createPolyline', JSON.stringify(result));
         return new Line({
             positions,
-            metaData: { route: JSON.stringify(result) },
-            styleBuilder
+            metaData: { route: JSON.stringify(omit(result, 'positions')) },
+            styleBuilder,
         });
     }
     secondsToHours(sec: number) {
@@ -493,72 +447,78 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     valhallaSettingColor(key: string) {
         return this.valhallaCostingOptions[key] ? 'white' : '#55ffffff';
     }
-    showRoute(online = false) {
-        return new Promise<Route>((resolve, reject) => {
+    async showRoute(online = false) {
+        try {
+            let startTime = Date.now();
             this.loading = true;
-
+            console.log(
+                'showRoute',
+                this.waypoints.map((r) => r.position),
+                online,
+                this.profile,
+                this.valhallaCostingOptions
+            );
             const service = online
                 ? this.onlineRoutingSearchService
                 : this.localOfflineRoutingSearchService || this.offlineRoutingSearchService;
             service.profile = this.profile;
-            service.calculateRoute(
-                {
-                    projection: this.mapView.projection,
-                    points: this.waypoints.map(r => r.position),
-                    customOptions: {
-                        directions_options: { language: device.language },
-                        costing_options: {
-                            car: this.valhallaCostingOptions,
-                            pedestrian: this.valhallaCostingOptions,
-                            bicycle: this.valhallaCostingOptions
-                        }
-                    } as any
-                },
-                (error, result) => {
-                    this.loading = false;
-                    if (error || result === null) {
-                        return reject(error);
-                    }
-                    this.cancel();
-                    const route = routingResultToJSON(result);
-
-                    resolve(route);
-                }
-            );
-        })
-            .then(route => {
-                this.currentRoute = route;
-                this.clearCurrentLine();
-                this.currentLine = this.createPolyline(route, route.positions);
-                this.routeDataSource.clear();
-                this.line = null;
-                this.waypoints = [];
-                this.routeDataSource.add(this.currentLine);
-                this.ensureRouteLayer();
-                this.mapComp.selectItem({
-                    item: { position: fromNativeMapPos(this.currentLine.getGeometry().getCenterPos()), route },
-                    isFeatureInteresting: true,
-                    showButtons: true
-                });
-            })
-            .catch(error => {
-                if (!online) {
-                    // return confirm({
-                    //     message: this.$t('try_online'),
-                    //     okButtonText: this.$t('ok'),
-                    //     cancelButtonText: this.$t('cancel')
-                    // }).then(result => {
-                    // if (result) {
-                    this.showRoute(true);
-                    //     } else {
-                    //         this.cancel();
-                    //     }
-                    // });
-                } else {
-                    this.cancel();
-                    return Promise.reject(error || 'failed to compute route');
-                }
+            const result = await service.calculateRoute<LatLonKeys>({
+                projection: this.mapView.projection,
+                points: this.waypoints.map((r) => r.position),
+                customOptions: {
+                    directions_options: { language: Device.language },
+                    costing_options: {
+                        car: this.valhallaCostingOptions,
+                        pedestrian: this.valhallaCostingOptions,
+                        bicycle: this.valhallaCostingOptions,
+                    },
+                } as any,
             });
+            this.loading = false;
+            console.log('got  route', Date.now() - startTime, 'ms');
+
+            this.cancel();
+            startTime = Date.now();
+            const route = routingResultToJSON(result);
+            console.log('routingResultToJSON', Date.now() - startTime, 'ms');
+
+            this.currentRoute = route;
+            this.clearCurrentLine();
+            this.currentLine = this.createPolyline(route, route.positions);
+            this.routeDataSource.clear();
+            this.line = null;
+            this.waypoints = [];
+            this.routeDataSource.add(this.currentLine);
+            this.ensureRouteLayer();
+            const geometry = this.currentLine.getGeometry();
+            this.mapComp.selectItem({
+                item: {
+                    position: fromNativeMapPos(geometry.getCenterPos()),
+                    route,
+                    zoomBounds: fromNativeMapBounds(geometry.getBounds()),
+                },
+                isFeatureInteresting: true,
+                showButtons: true,
+            });
+        } catch (error) {
+            this.loading = false;
+            if (!online) {
+                // return confirm({
+                //     message: this.$t('try_online'),
+                //     okButtonText: this.$t('ok'),
+                //     cancelButtonText: this.$t('cancel')
+                // }).then(result => {
+                // if (result) {
+                this.showRoute(true);
+                //     } else {
+                //         this.cancel();
+                //     }
+                // });
+            } else {
+                this.cancel();
+                throw error || 'failed to compute route';
+            }
+        }
     }
     ensureRouteLayer() {
         return this.routeLayer !== null;
@@ -587,10 +547,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     }
 
     unfocus(textField: TextField) {
-        if (gVars.isAndroid) {
-            (textField.nativeViewProtected as android.view.View).clearFocus();
-        }
-        textField.dismissSoftInput();
+        textField.clearFocus();
     }
 
     currentStartSearchText = null;
@@ -612,7 +569,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             const toRemove = this.waypoints.splice(0, 1)[0];
             this.routeDataSource.remove(toRemove.marker);
             if (this.line) {
-                this.line.positions = this.waypoints.map(w => w.position);
+                this.line.positions = this.waypoints.map((w) => w.position);
             }
         }
         this.currentStartSearchText = null;
@@ -624,7 +581,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
             const toRemove = this.waypoints.splice(this.waypoints.length - 1, 1)[0];
             this.routeDataSource.remove(toRemove.marker);
             if (this.line) {
-                this.line.positions = this.waypoints.map(w => w.position);
+                this.line.positions = this.waypoints.map((w) => w.position);
             }
         }
         this.currentStopSearchText = null;

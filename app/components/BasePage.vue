@@ -1,5 +1,5 @@
 <template>
-    <Page ref="page" class="page">
+    <Page ref="page">
         <StackLayout>
             <CActionBar :title="title" :showMenuIcon="showMenuIcon" :showGlassesIcon="showGlassesIcon" :connectedGlasses="connectedGlasses" :glassesBattery="glassesBattery" />
             <slot />

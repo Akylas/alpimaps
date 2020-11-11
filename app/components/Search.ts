@@ -1,33 +1,31 @@
-import { Address, Item } from '~/mapModules/ItemsModule';
-import Map from '~/components/Map';
-import { Projection } from 'nativescript-carto/projections';
-import { CartoMap } from 'nativescript-carto/ui';
+import { MapPos } from '@nativescript-community/ui-carto/core';
+import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
+import { ClusterElementBuilder } from '@nativescript-community/ui-carto/layers/cluster';
+import { ClusteredVectorLayer } from '@nativescript-community/ui-carto/layers/vector';
+import { Projection } from '@nativescript-community/ui-carto/projections';
+import { CartoMap } from '@nativescript-community/ui-carto/ui';
+import { VectorElementVector } from '@nativescript-community/ui-carto/vectorelements';
+import { Marker } from '@nativescript-community/ui-carto/vectorelements/marker';
+import { Point, PointStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/point';
+import { Side } from '@nativescript-community/ui-drawer';
+import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { TextField } from '@nativescript-community/ui-material-textfield';
+import { ObservableArray } from '@nativescript/core';
 import { getJSON } from '@nativescript/core/http';
-import { ItemEventData } from '@nativescript/core/ui/list-view/list-view';
-import { TextField } from 'nativescript-material-textfield';
 import { Component, Prop, Watch } from 'vue-property-decorator';
-import { ClusteredVectorLayer, VectorTileLayer } from 'nativescript-carto/layers/vector';
-import { MapPos, MapBounds } from 'nativescript-carto/core';
+import Map from '~/components/Map';
+import ItemFormatter from '~/mapModules/ItemFormatter';
 import { IMapModule } from '~/mapModules/MapModule';
-import { clog } from '~/utils/logging';
+import { Address, IItem as Item } from '~/models/Item';
+import { statusBarHeight } from '~/variables';
 import { queryString } from '../utils/http';
 import BaseVueComponent from './BaseVueComponent';
-import ItemFormatter from '~/mapModules/ItemFormatter';
-import { LocalVectorDataSource } from 'nativescript-carto/datasources/vector';
-import { ClusterElementBuilder } from 'nativescript-carto/layers/cluster';
-import { VectorElementVector } from 'nativescript-carto/vectorelements';
-import { Marker, MarkerStyleBuilder } from 'nativescript-carto/vectorelements/marker';
-import { Point, PointStyleBuilder } from 'nativescript-carto/vectorelements/point';
-import { ObservableArray } from '@nativescript/core/data/observable-array/observable-array';
-import { statusBarHeight } from '~/variables';
-import { layout } from '@nativescript/core/utils/utils';
-import { enumerable } from '~/utils';
 // const addressFormatter = require('@fragaria/address-formatter'); // const OPEN_DURATION = 200;
 
 const providerColors = {
     here: 'blue',
     carto: 'orange',
-    photon: 'red'
+    photon: 'red',
 };
 const deburr = require('deburr');
 function cleanUpString(s) {
@@ -142,7 +140,7 @@ class PhotonFeature {
             country,
             state,
             road: properties['osm_key'] === 'highway' ? name : street,
-            neighbourhood
+            neighbourhood,
         };
         this.properties = actualProperties;
         this.properties.name = actualName;
@@ -197,7 +195,7 @@ class HereFeature {
             osm_key: data.category.id ? data.category.id.split('-')[0] : undefined,
             vicinity: data.vicinity,
             // url: data.href,
-            averageRating: data.averageRating
+            averageRating: data.averageRating,
         };
         this.categories = [data.category.id];
         this.position = { lat: data.position[0], lon: data.position[1] };
@@ -240,7 +238,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
         if (this.textField) {
             this.textField.text = value;
             this.onTextChange({
-                value
+                value,
             });
             setTimeout(() => {
                 this.textField.requestFocus();
@@ -256,7 +254,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
     }
 
     get textField() {
-        return this.$refs.textField.nativeView as TextField;
+        return this.getRef<TextField>('textField');
     }
 
     get searchDataSource() {
@@ -272,18 +270,18 @@ export default class Search extends BaseVueComponent implements IMapModule {
             this.searchClusterStyle = new PointStyleBuilder({
                 // hideIfOverlapped: false,
                 size: 12,
-                color: 'red'
+                color: 'red',
             }).buildStyle();
         }
 
         return new Point({
             position,
-            styleBuilder: this.searchClusterStyle
+            styleBuilder: this.searchClusterStyle,
         });
     }
     itemToMetaData(item: Item) {
         const result = {};
-        Object.keys(item).forEach(k => {
+        Object.keys(item).forEach((k) => {
             if (item[k] !== null && item[k] !== undefined && k !== 'data') {
                 result[k] = JSON.stringify(item[k]);
             }
@@ -306,9 +304,9 @@ export default class Search extends BaseVueComponent implements IMapModule {
                 hideIfOverlapped: false,
                 size: 10,
                 scaleWithDPI: true,
-                color: providerColors[item.provider]
+                color: providerColors[item.provider],
             },
-            metaData
+            metaData,
         });
     }
     get searchLayer() {
@@ -320,12 +318,14 @@ export default class Search extends BaseVueComponent implements IMapModule {
                 builder: new ClusterElementBuilder({
                     color: 'red',
                     size: 15,
-                    shape: 'point'
+                    shape: 'point',
                     // buildClusterElement: this.buildClusterElement.bind(this)
                 }),
-                animatedClusters: true
+                animatedClusters: true,
             });
-            this._searchLayer.setVectorElementEventListener(this.mapComp);
+            this._searchLayer.setVectorElementEventListener<LatLonKeys>({
+                onVectorElementClicked: (data) => this.mapComp.onVectorElementClicked(data),
+            });
             console.log('creating searchLayer');
             this.mapComp.addLayer(this._searchLayer, 'search');
         }
@@ -375,7 +375,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
     }
     mounted() {
         super.mounted();
-        if (gVars.isAndroid) {
+        if (global.isAndroid) {
             this.nativeView.marginTop = statusBarHeight + 10;
         }
         if (this.text) {
@@ -424,14 +424,14 @@ export default class Search extends BaseVueComponent implements IMapModule {
     }
 
     searchInGeocodingService(options) {
-        return this.$packageService.searchInLocalGeocodingService(options).then(result => {
-            return this.$packageService.convertGeoCodingResults(result, true);
-        });
+        return this.$packageService
+            .searchInLocalGeocodingService(options)
+            .then((result) => this.$packageService.convertGeoCodingResults(result, true));
     }
     searchInVectorTiles(options) {
-        return this.$packageService.searchInVectorTiles(options).then(result => {
-            return this.$packageService.convertFeatureCollection(result);
-        });
+        return this.$packageService
+            .searchInVectorTiles(options)
+            .then((result) => this.$packageService.convertFeatureCollection(result));
     }
 
     // googlePlaceSearch(options: { query: string; language?: string; location?: MapPos; locationRadius?: number }) {
@@ -471,14 +471,14 @@ export default class Search extends BaseVueComponent implements IMapModule {
                         : undefined,
                     in: options.locationRadius
                         ? options.location.lat + ',' + options.location.lon + ';' + options.locationRadius
-                        : undefined
+                        : undefined,
                 },
                 'https://places.cit.api.here.com/places/v1/discover/search'
             )
-        ).then((result: any) => {
+        ).then((result: any) =>
             // this.log('herePlaceSearch', result.results.items.length);
-            return result.results.items.map(f => new HereFeature(f));
-        });
+            result.results.items.map((f) => new HereFeature(f))
+        );
     }
     photonSearch(options: { query: string; language?: string; location?: MapPos<LatLonKeys>; locationRadius?: number }) {
         if (!this.$networkService.connected) {
@@ -492,12 +492,12 @@ export default class Search extends BaseVueComponent implements IMapModule {
                     lat: options.location && options.location.lat,
                     lon: options.location && options.location.lon,
                     lang: options.language,
-                    limit: 40
+                    limit: 40,
                 },
                 'http://photon.komoot.de/api'
             )
-        ).then(function(results: any) {
-            return results.features.filter(r => r.properties.osm_type !== 'R').map(f => new PhotonFeature(f));
+        ).then(function (results: any) {
+            return results.features.filter((r) => r.properties.osm_type !== 'R').map((f) => new PhotonFeature(f));
         });
     }
     currentQuery;
@@ -512,7 +512,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
             // filterExpression: `layer::name='transportation_name'`,
             // filterExpression: "layer::name='place' OR layer::name='poi'",
             // `REGEXP_LIKE(name, '${_query}')`
-            location: this.$getMapComponent().cartoMap.focusPos
+            location: this.$getMapComponent().cartoMap.focusPos,
             // locationRadius: 1000,
         };
         // console.log('instantSearch', _query, options);
@@ -520,7 +520,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
         // TODO: dont fail when offline!!!
         this.dataItems = new ObservableArray([] as any);
         return Promise.all([
-            this.searchInGeocodingService(options).then(r => {
+            this.searchInGeocodingService(options).then((r) => {
                 // this.log('found local result', JSON.stringify(r));
                 this.dataItems.push(r);
             }),
@@ -528,26 +528,26 @@ export default class Search extends BaseVueComponent implements IMapModule {
             //     this.log('found tile results', JSON.stringify(r));
             //     r && this.dataItems.push(r);
             // }),
-            this.herePlaceSearch(options).then(r => {
+            this.herePlaceSearch(options).then((r) => {
                 this.dataItems.push(r);
             }),
-            this.photonSearch(options).then(r => {
+            this.photonSearch(options).then((r) => {
                 // this.log('found photon result', JSON.stringify(r));
                 this.dataItems.push(r);
-            })
+            }),
         ])
-            .then(results => {
+            .then((results) => {
                 // const items = [].concat.apply([], results);
                 // console.log('instantSearch done', this.dataItems.length);
                 if (this.dataItems.length === 0) {
-                    this.$showToast(this.$t('no_result_found'));
+                    showSnack({ message: this.$t('no_result_found') });
                 }
                 if (this.hasFocus) {
                     // this.dataItems = items;
                     // console.log('instantSearch done', this.dataItems.length);
                 }
             })
-            .catch(err => {
+            .catch((err) => {
                 // console.log('instantSearch error', err);
                 // this.dataItems = [];
             })
@@ -578,22 +578,21 @@ export default class Search extends BaseVueComponent implements IMapModule {
         // this.unfocus();
     }
     unfocus() {
-        console.log('unfocus');
         if (this.searchAsTypeTimer) {
             clearTimeout(this.searchAsTypeTimer);
             this.searchAsTypeTimer = null;
         }
-        if (gVars.isAndroid) {
-            (this.textField.nativeViewProtected as android.view.View).clearFocus();
-        }
-        this.textField.dismissSoftInput();
+        // if (global.isAndroid) {
+        //     (this.textField.nativeViewProtected as android.view.View).clearFocus();
+        // }
+        this.textField.clearFocus();
     }
 
     focus() {
         this.textField.focus();
     }
 
-    showMenu(side = 'left') {
+    showMenu(side: Side = 'left') {
         // this.log('showMenu', side);
         this.unfocus();
         this.$getAppComponent().drawer.open(side);
@@ -616,7 +615,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
 
     get listItems() {
         if (this.filteringOSMKey) {
-            return this.dataItems.filter(d => d.properties.osm_key === this.currentQuery);
+            return this.dataItems.filter((d) => d.properties.osm_key === this.currentQuery);
         } else {
             return this.dataItems;
         }
@@ -633,9 +632,9 @@ export default class Search extends BaseVueComponent implements IMapModule {
         dataSource.clear();
         this.showingOnMap = true;
         const items = this.listItems.filter(
-            d => !!d && (d.provider === 'here' || (d.provider === 'carto' && d.properties.layer === 'poi'))
+            (d) => !!d && (d.provider === 'here' || (d.provider === 'carto' && d.properties.layer === 'poi'))
         );
-        items.forEach(d => {
+        items.forEach((d) => {
             dataSource.add(this.createSearchMarker(d));
         });
         this.ensureSearchLayer();

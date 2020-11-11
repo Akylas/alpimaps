@@ -14,15 +14,19 @@ export const NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL = 'alpimaps_screenshot';
 import { primaryColor } from '~/variables';
 
 function titlecase(value) {
-    return value.replace(/\w\S*/g, function(txt) {
+    return value.replace(/\w\S*/g, function (txt) {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
 }
 export class NotificationHelper {
     /* Creates a notification builder */
-    public static getNotification(context: android.content.Context, builder: androidx.core.app.NotificationCompat.Builder, session: Session) {
+    public static getNotification(
+        context: android.content.Context,
+        builder: androidx.core.app.NotificationCompat.Builder,
+        session: Session
+    ) {
         // create notification channel
-        const color = android.graphics.Color.parseColor(primaryColor);
+        const color = primaryColor.android;
         NotificationHelper.createNotificationChannel(context);
 
         const activityClass = (com as any).tns.NativeScriptActivity.class;
@@ -81,23 +85,37 @@ export class NotificationHelper {
 
     /* Create a notification channel */
     public static createNotificationChannel(context) {
-        const color = android.graphics.Color.parseColor(primaryColor);
+        const color = primaryColor.android;
         if (android.os.Build.VERSION.SDK_INT >= 26) {
             // API level 26 ("Android O") supports notification channels.
 
-            const service = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
+            const service = context.getSystemService(
+                android.content.Context.NOTIFICATION_SERVICE
+            ) as android.app.NotificationManager;
             // create channel
-            let channel = new android.app.NotificationChannel(NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL, 'Alpi Maps Record Session', android.app.NotificationManager.IMPORTANCE_LOW);
+            let channel = new android.app.NotificationChannel(
+                NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL,
+                'Alpi Maps Record Session',
+                android.app.NotificationManager.IMPORTANCE_LOW
+            );
             channel.setDescription('Display current Map');
             channel.setLightColor(color);
             service.createNotificationChannel(channel);
 
-            channel = new android.app.NotificationChannel(NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, 'Alpi Maps Keep Awake', android.app.NotificationManager.IMPORTANCE_LOW);
+            channel = new android.app.NotificationChannel(
+                NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL,
+                'Alpi Maps Keep Awake',
+                android.app.NotificationManager.IMPORTANCE_LOW
+            );
             channel.setDescription('Notify when Alpi Maps is keeping screen awake');
             channel.setLightColor(color);
             service.createNotificationChannel(channel);
 
-            channel = new android.app.NotificationChannel(NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL, 'Alpi Maps Map Notification', android.app.NotificationManager.IMPORTANCE_HIGH);
+            channel = new android.app.NotificationChannel(
+                NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL,
+                'Alpi Maps Map Notification',
+                android.app.NotificationManager.IMPORTANCE_HIGH
+            );
             channel.setDescription('Show Notification on LockScreen');
             channel.setLightColor(color);
             service.createNotificationChannel(channel);
