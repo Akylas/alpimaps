@@ -1,6 +1,7 @@
 import { Component, Prop } from 'vue-property-decorator';
 import BaseVueComponent from './BaseVueComponent';
 import { actionBarHeight } from '~/variables';
+import { Frame } from '@akylas/nativescript';
 
 @Component({})
 export default class ActionBar extends BaseVueComponent {
@@ -43,10 +44,18 @@ export default class ActionBar extends BaseVueComponent {
 
     mounted() {
         setTimeout(() => {
-            this.canGoBack = this.$getAppComponent().canGoBack();
+            this.canGoBack = Frame.topmost() && Frame.topmost().canGoBack();
         }, 0);
     }
     onMenuIcon() {
-        this.$getAppComponent().onMenuIcon();
+        const canGoBack = this.canGoBack;
+        // const canGoBack = this.innerFrame && this.innerFrame.canGoBack();
+
+        if (canGoBack) {
+            return this.$navigateBack();
+        } else {
+            this.$emit('tapMenuIcon');
+            // this.drawer.toggle();
+        }
     }
 }

@@ -4,7 +4,7 @@ import { themer } from '@nativescript-community/ui-material-core';
 import * as application from '@nativescript/core/application';
 import { TNSFontIcon } from 'nativescript-akylas-fonticon';
 import Vue from 'nativescript-vue';
-import App from '~/components/App';
+import Map from '~/components/Map';
 import CrashReportService from './services/CrashReportService';
 import { primaryColor } from './variables';
 // importing filters
@@ -119,5 +119,5 @@ Vue.config.warnHandler = function (msg, vm, trace) {
 };
 
 new Vue({
-    render: (h) => h(App),
+    render: (h) => h(Map),
 }).$start();
