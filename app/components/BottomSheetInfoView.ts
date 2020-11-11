@@ -1,19 +1,19 @@
 import { Component, Prop } from 'vue-property-decorator';
-import { Item } from '~/mapModules/ItemsModule';
 import BaseVueComponent from './BaseVueComponent';
 import ItemFormatter from '~/mapModules/ItemFormatter';
 import { convertElevation } from '~/helpers/formatter';
+import { IItem } from '~/models/Item';
 
 function pick<T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
     const ret: any = {};
-    keys.forEach(key => {
+    keys.forEach((key) => {
         ret[key] = obj[key];
     });
     return ret;
 }
 function omit<T, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> {
     const ret: any = {};
-    Object.keys(obj).forEach(key => {
+    Object.keys(obj).forEach((key) => {
         if (keys.indexOf(key as any) === -1) {
             ret[key] = obj[key];
         }
@@ -26,7 +26,7 @@ const PROPS_TO_SHOW = ['ele'];
 @Component({})
 export default class BottomSheetInfoView extends BaseVueComponent {
     @Prop()
-    item: Item;
+    item: IItem;
     @Prop({ default: false })
     updating: boolean;
     _formatter: ItemFormatter;
@@ -46,13 +46,13 @@ export default class BottomSheetInfoView extends BaseVueComponent {
         if (this.item) {
             const props = this.item.properties;
             if (props) {
-                return PROPS_TO_SHOW.filter(k => props.hasOwnProperty(k));
+                return PROPS_TO_SHOW.filter((k) => props.hasOwnProperty(k));
             }
         }
         return [];
     }
     get propValue() {
-        return prop => {
+        return (prop) => {
             switch (prop) {
                 case 'ele':
                     return convertElevation(this.item.properties[prop]);
@@ -61,7 +61,7 @@ export default class BottomSheetInfoView extends BaseVueComponent {
         };
     }
     get propIcon() {
-        return prop => {
+        return (prop) => {
             // console.log('propIcon', prop);
             switch (prop) {
                 case 'ele':

@@ -7,7 +7,7 @@
         :borderRadius="searchResultsVisible ? 10 : 25"
         margin="10"
     >
-        <MDButton variant="flat" class="icon-btn" text="mdi-menu" @tap="showMenu('left')" color="white" />
+        <MDButton variant="text" class="icon-btn-white" text="mdi-menu" @tap="showMenu('left')" />
         <MDTextField
             ref="textField"
             variant="none"
@@ -36,7 +36,7 @@
             col="3"
             text="mdi-shape"
             @tap="toggleFilterOSMKey"
-            :color="filteringOSMKey? themeColor: 'lightgray'"
+            :color="filteringOSMKey ? themeColor : 'lightgray'"
         />
         <MDButton
             variant="text"
@@ -59,7 +59,7 @@
             color="lightgray"
         />
 
-        <MDButton col="6" variant="flat" class="icon-btn" text="mdi-layers" @tap="showMapMenu" color="white" />
+        <MDButton col="6" variant="text" class="icon-btn-white" text="mdi-layers" @tap="showMapMenu" />
 
         <CollectionView
             col="0"
@@ -77,7 +77,7 @@
                         rowSpan="4"
                         :text="getItemIcon(item) | fonticon"
                         :color="getItemIconColor(item)"
-                        class="maki"
+                        class="osm"
                         fontSize="20"
                         verticalAlignment="center"
                         textAlignment="center"

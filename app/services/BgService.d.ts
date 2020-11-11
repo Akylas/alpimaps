@@ -8,6 +8,6 @@ export class BgService extends Observable {
     readonly geoHandler: GeoHandler;
     readonly loaded: boolean;
     updateNotifText(text: string);
-    start()
+    start();
     bgService: WeakRef<AndroidBgService>;
 }
