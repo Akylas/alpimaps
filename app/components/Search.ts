@@ -595,7 +595,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
     showMenu(side: Side = 'left') {
         // this.log('showMenu', side);
         this.unfocus();
-        this.$getAppComponent().drawer.open(side);
+        this.$getMapComponent().drawer.open(side);
     }
 
     showMapMenu() {
