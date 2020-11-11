@@ -1,9 +1,10 @@
-import { getAppId } from 'nativescript-extendedinfo';
+/* eslint-disable no-redeclare */
+import { getAppId } from '@nativescript-community/extendedinfo';
 // import { crashlytics } from 'nativescript-plugin-firebase'; // and do: firebaseCrashlytics.sendCrashLogexport const DEV_LOG = TNS_ENV === 'development';
-// export const DEV_LOG = TNS_ENV === 'development' && LOG_LEVEL === 'full';
+export const DEV_LOG = LOG_LEVEL === 'full';
 
 let appId: string;
-getAppId().then(r => (appId = r));
+getAppId().then((r) => (appId = r));
 // let chalk: Chalk;
 
 // function getChalk() {
@@ -18,12 +19,12 @@ export function log(always: boolean): (target: any, k?, desc?: PropertyDescripto
 export function log(alwaysOrTarget: boolean | any, k?, desc?: PropertyDescriptor) {
     // console.log('test log dec', alwaysOrTarget, typeof alwaysOrTarget, k, desc, Object.getOwnPropertyNames(alwaysOrTarget));
     if (typeof alwaysOrTarget !== 'boolean') {
-        // console.log(alwaysOrTarget.name, ' is now decorated');
-        return timelineProfileFunctionFactory(alwaysOrTarget, false, k, desc);
+        // console.log(nameOrTarget.name, ' is now decorated');
+        return timelineProfileFunctionFactory(alwaysOrTarget, true, k, desc);
     } else {
         // factory
-        return function(target: any, key?: string, descriptor?: PropertyDescriptor) {
-            // const name = alwaysOrTarget || target.name;
+        return function (target: any, key?: string, descriptor?: PropertyDescriptor) {
+            // const name = nameOrTarget || target.name;
             return timelineProfileFunctionFactory(target, alwaysOrTarget, key, descriptor);
             // console.log(name, ' is now decorated');
         };
@@ -54,9 +55,9 @@ function timelineProfileFunctionFactory(target: any, always: boolean, key?, desc
     const name = className + key;
 
     // editing the descriptor/value parameter
-    descriptor.value = function() {
+    descriptor.value = function () {
         // const start = time();
-        // console.log(name);
+        console.log(name);
         try {
             return originalMethod.apply(this, arguments);
         } finally {
@@ -77,15 +78,60 @@ function timelineProfileFunctionFactory(target: any, always: boolean, key?, desc
 //     error: console.error,
 //     warn: console.warn
 // };
+import * as SentryType from '@nativescript-community/sentry';
 
+let Sentry: typeof SentryType;
+if (gVars.sentry) {
+    Sentry = require('@nativescript-community/sentry');
+}
+const originalConsole = {
+    log: console.log,
+    error: console.error,
+    warn: console.warn,
+};
 
-
-function actualLog(level: string, ...args) {
-    if (TEST_LOGS) {
-        console[level].apply(this, ...args);
+function convertArg(arg) {
+    const type = typeof arg;
+    if (!arg) {
+        return;
+    }
+    if (type === 'function' || typeof arg.getClass === 'function' || typeof arg.class === 'function') {
+        return (arg as Function).toString();
+    } else if (Array.isArray(arg)) {
+        return arg.map(convertArg);
+    } else if (type === 'object') {
+        const str = arg.toString();
+        if (str === '[object Object]') {
+            return JSON.stringify(arg);
+        } else {
+            return str;
+        }
+    } else {
+        return arg.toString();
     }
 }
-
-export const clog = (...args) => actualLog('log', args);
-export const cerror = (...args) => actualLog('error', args);
-export const cwarn = (...args) => actualLog('warn', args);
+function actualLog(level: 'info' | 'log' | 'error' | 'warn' | 'debug', ...args) {
+    if (gVars.sentry) {
+        Sentry.addBreadcrumb({
+            category: 'console',
+            message: args.map(convertArg).join(' '),
+            level: level as any,
+        });
+    }
+    // we do it this way allow terser to "drop" it
+    if (NO_CONSOLE !== true) {
+        originalConsole[level](...args);
+    }
+}
+let installed = false;
+export function install() {
+    if (installed) {
+        return;
+    }
+    installed = true;
+    console.log = (...args) => actualLog('log', ...args);
+    console.info = (...args) => actualLog('info', ...args);
+    console.error = (...args) => actualLog('error', ...args);
+    console.warn = (...args) => actualLog('warn', ...args);
+    console.debug = (...args) => actualLog('debug', ...args);
+}

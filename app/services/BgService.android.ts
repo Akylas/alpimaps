@@ -5,7 +5,6 @@ import { BgService as AndroidBgService } from '~/services/android/BgService';
 import { BgServiceBinder } from '~/services/android/BgServiceBinder';
 
 export { BgServiceLoadedEvent };
-import { clog } from '~/utils/logging';
 import { GeoHandler } from '~/handlers/GeoHandler';
 
 // export class BgService extends BgServiceCommon {

@@ -1,15 +1,24 @@
 import { $t } from '~/helpers/locale';
-import { ApplicationEventData, off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
-import { GeoHandler, SessionChronoEvent, SessionChronoEventData, SessionEventData, SessionState, SessionStateEvent } from '~/handlers/GeoHandler';
+import {
+    ApplicationEventData,
+    off as applicationOff,
+    on as applicationOn,
+    resumeEvent,
+    suspendEvent,
+} from '@nativescript/core/application';
+import {
+    GeoHandler,
+    SessionChronoEvent,
+    SessionChronoEventData,
+    SessionEventData,
+    SessionState,
+    SessionStateEvent,
+} from '~/handlers/GeoHandler';
 import { BgServiceBinder } from '~/services/android/BgServiceBinder';
-import { clog } from '~/utils/logging';
 import { ACTION_PAUSE, ACTION_RESUME, NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL, NotificationHelper } from './NotifcationHelper';
-// function getSystemResourceId(systemIcon: string): number {
-//     return android.content.res.Resources.getSystem().getIdentifier(systemIcon, 'drawable', 'android');
-// }
 
 function titlecase(value) {
-    return value.replace(/\w\S*/g, function(txt) {
+    return value.replace(/\w\S*/g, function (txt) {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
 }
@@ -33,7 +42,7 @@ export class BgService extends android.app.Service {
         super();
     }
     log(...args) {
-        console.log(`[BgService]`, ...args);
+        console.log('[BgService]', ...args);
     }
     onStartCommand(intent: android.content.Intent, flags: number, startId: number) {
         super.onStartCommand(intent, flags, startId);
@@ -89,7 +98,10 @@ export class BgService extends android.app.Service {
     private mNotification: android.app.Notification;
     private mNotificationBuilder: androidx.core.app.NotificationCompat.Builder;
     displayNotification(sessionRunning) {
-        this.mNotificationBuilder = new androidx.core.app.NotificationCompat.Builder(this, NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL);
+        this.mNotificationBuilder = new androidx.core.app.NotificationCompat.Builder(
+            this,
+            NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL
+        );
 
         this.mNotification = NotificationHelper.getNotification(this, this.mNotificationBuilder, this.geoHandler.currentSession);
         this.notificationManager.notify(NOTIFICATION_ID, this.mNotification); // todo check if necessary in pre Android O
@@ -116,7 +128,11 @@ export class BgService extends android.app.Service {
         if (!this.mNotificationBuilder) {
             this.displayNotification(this.recording);
         } else {
-            this.mNotification = NotificationHelper.getUpdatedNotification(this, this.mNotificationBuilder, this.geoHandler.currentSession);
+            this.mNotification = NotificationHelper.getUpdatedNotification(
+                this,
+                this.mNotificationBuilder,
+                this.geoHandler.currentSession
+            );
             this.notificationManager.notify(NOTIFICATION_ID, this.mNotification);
         }
     }
@@ -155,7 +171,7 @@ export class BgService extends android.app.Service {
             if (this.inBackground) {
                 this.inBackground = false;
                 // if (!this.alwaysShowNotification) {
-                    // this.removeForeground();
+                // this.removeForeground();
                 // }
             }
         }

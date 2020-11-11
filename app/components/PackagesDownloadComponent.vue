@@ -17,7 +17,7 @@
                     <MDButton col="1" row="0" rowSpan="3" variant="text" margin="0" padding="0" :text="item.getActionText('map')" verticalAlignment="center"  horizontalAlignment="center" v-show="!item.isGroup()" fontSize="12" @tap="handlePackageAction('map', item)" />
                     <MDButton col="2" row="0" rowSpan="3" variant="text" margin="0" padding="0" :text="item.getGeoActionText()" verticalAlignment="center" v-show="item.hasGeo()" fontSize="12" @tap="handlePackageAction('geo', item)" />
                     <MDButton col="3" row="0" rowSpan="3" variant="text" margin="0" padding="0" :text="item.getRoutingActionText()" verticalAlignment="center" v-show="item.hasRouting()" fontSize="12" @tap="handlePackageAction('routing', item)" />
-                    <Progress row="2" col="0" colSpan="4" height="3" :value="item.getDownloadProgress()" v-show="!item.isGroup()" :visibility="item.isDownloading()?'visible':'hidden'" />
+                    <MDProgress row="2" col="0" colSpan="4" height="3" :value="item.getDownloadProgress()" v-show="!item.isGroup()" :visibility="item.isDownloading()?'visible':'hidden'" />
                 </GridLayout>
             </v-template>
         </CollectionView>

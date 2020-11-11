@@ -1,86 +1,83 @@
-import Vue from 'nativescript-vue';
-
-import { cwarn } from '~/utils/logging';
-import { setMapPosKeys } from 'nativescript-carto/core';
+import { setGeoLocationKeys } from '@nativescript-community/gps';
+import { setMapPosKeys } from '@nativescript-community/ui-carto/core';
+import { themer } from '@nativescript-community/ui-material-core';
 import * as application from '@nativescript/core/application';
+import { TNSFontIcon } from 'nativescript-akylas-fonticon';
+import Vue from 'nativescript-vue';
+import App from '~/components/App';
+import CrashReportService from './services/CrashReportService';
+import { primaryColor } from './variables';
+// importing filters
+import FiltersPlugin from './vue.filters';
+import MixinsPlugin from './vue.mixins';
+// adding to Vue prototype
+import PrototypePlugin from './vue.prototype';
+import ViewsPlugin from './vue.views';
+const crashReportService = new CrashReportService();
+// start it as soon as possible
+crashReportService.start();
 
-// import * as trace from '@nativescript/core/trace';
+Vue.registerElement('GridLayout', function () {
+    return require('@nativescript/core').GridLayout;
+});
+Vue.registerElement('StackLayout', function () {
+    return require('@nativescript/core').StackLayout;
+});
+Vue.registerElement('AbsoluteLayout', function () {
+    return require('@nativescript/core').AbsoluteLayout;
+});
+Vue.registerElement('FlexboxLayout', function () {
+    return require('@nativescript/core').FlexboxLayout;
+});
+Vue.registerElement('ScrollView', function () {
+    return require('@nativescript/core').ScrollView;
+});
+Vue.registerElement(
+    'Switch',
+    function () {
+        return require('@nativescript/core').Switch;
+    },
+    {
+        model: {
+            prop: 'checked',
+            event: 'checkedChange',
+        },
+    }
+);
+Vue.prototype.$crashReportService = crashReportService;
+
+// import {Trace} from '@nativescript/core/trace';
 // trace.addCategories(trace.categories.ViewHierarchy);
 // trace.addCategories(trace.categories.Navigation);
 // trace.addCategories(trace.categories.Layout);
 // trace.addCategories(trace.categories.Animation);
 // trace.addCategories(trace.categories.Style);
 // trace.addCategories(trace.categories.Style);
-// trace.addCategories(trace.categories.VisualTreeEvents);
-// trace.enable();
+// Trace.addCategories(Trace.categories.VisualTreeEvents);
+// Trace.enable();
 
 setMapPosKeys('lat', 'lon');
-function CustomError(error) {
-    this.name = 'CustomError';
-    this.message = error.message || '';
-    error.name = this.name;
-    this.stack = error['stackTrace'];
-}
-CustomError.prototype = Object.create(Error.prototype);
+setGeoLocationKeys('lat', 'lon');
 
-
-
-application.on(application.discardedErrorEvent, args => {
+application.on(application.discardedErrorEvent, (args) => {
     const error = args.error;
     error.stack = error.stackTrace;
     console.log('discardedErrorEvent', error);
 });
 
-import { device } from '@nativescript/core/platform';
-import { getBuildNumber, getVersionName } from 'nativescript-extendedinfo';
-if (PRODUCTION || gVars.sentry) {
-    import('nativescript-akylas-sentry').then(Sentry => {
-        Vue.prototype.$sentry = Sentry;
-        Promise.all([getVersionName(), getBuildNumber()]).then(res => {
-            Sentry.init({
-                dsn: gVars.SENTRY_DSN,
-                appPrefix: gVars.SENTRY_PREFIX,
-                release: `${res[0]}`,
-                dist: `${res[1]}.${gVars.isAndroid ? 'android' : 'ios'}`
-            });
-            Sentry.setTag('locale', device.language);
-        });
-    });
-} else {
-    Vue.prototype.$sentry = null;
-}
-
-import { primaryColor } from './variables';
-import { install, themer } from 'nativescript-material-core';
-import { install as installBottomSheets } from 'nativescript-material-bottomsheet';
-import { install as installGestures } from 'nativescript-gesturehandler';
-if (gVars.isIOS) {
+if (global.isIOS) {
     themer.setPrimaryColor(primaryColor);
 }
-install();
-installBottomSheets();
-installGestures();
 
-import MixinsPlugin from './vue.mixins';
 Vue.use(MixinsPlugin);
-
-import ViewsPlugin from './vue.views';
 Vue.use(ViewsPlugin);
-
-// importing filters
-import FiltersPlugin from './vue.filters';
 Vue.use(FiltersPlugin);
 
-import { TNSFontIcon } from 'nativescript-akylas-fonticon';
-// TNSFontIcon.debug = true;
 TNSFontIcon.paths = {
-    maki: './assets/maki.css',
-    osm: './assets/osm.css'
+    osm: './assets/osm.css',
 };
 TNSFontIcon.loadCssSync();
 
-// adding to Vue prototype
-import PrototypePlugin from './vue.prototype';
 Vue.use(PrototypePlugin);
 
 // application.on(application.uncaughtErrorEvent, args => {
@@ -107,24 +104,20 @@ Vue.config.silent = true;
 Vue.config['debug'] = false;
 
 function throwVueError(err) {
-    Vue.prototype.$showError(err);
-    // throw err;
+    crashReportService.showError(err);
 }
 
 Vue.config.errorHandler = (e, vm, info) => {
     if (e) {
-        console.log('[Vue]', `[${info}]`, e);
+        console.log('[Vue]', `[${info}]`, e, info, e.stack);
         setTimeout(() => throwVueError(e), 0);
     }
 };
 
-Vue.config.warnHandler = function(msg, vm, trace) {
-    cwarn(msg, trace);
+Vue.config.warnHandler = function (msg, vm, trace) {
+    console.warn(msg, trace);
 };
 
-import App from '~/components/App';
 new Vue({
-    render: h => {
-        return h(App);
-    }
+    render: (h) => h(App),
 }).$start();

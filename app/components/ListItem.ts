@@ -2,7 +2,7 @@ import { Component, Prop, Watch } from 'vue-property-decorator';
 import BaseVueComponent from '~/components/BaseVueComponent';
 
 @Component({
-    inheritAttrs: false
+    inheritAttrs: false,
 })
 export default class ListItem extends BaseVueComponent {
     @Prop({ type: String })
