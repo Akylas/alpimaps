@@ -288,7 +288,7 @@ export default class CustomLayersModule extends MapModule {
     onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
         super.onMapReady(mapComp, mapView);
         const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
-        // this.log('onMapReady', savedSources, this.customSources);
+        // console.log('onMapReady', savedSources, this.customSources);
         if (savedSources.length > 0) {
             this.getSourcesLibrary().then(() => {
                 savedSources.forEach((s) => {
@@ -354,7 +354,7 @@ export default class CustomLayersModule extends MapModule {
         if (this.hillshadeLayer) {
             return new Promise((resolve, reject) => {
                 this.hillshadeLayer.getElevationAsync(pos, (err, result) => {
-                    // this.log('searchInGeocodingService done', err, result && result.size());
+                    // console.log('searchInGeocodingService done', err, result && result.size());
                     if (err) {
                         reject(err);
                         return;
@@ -391,7 +391,7 @@ export default class CustomLayersModule extends MapModule {
             }
             const etiles = entities.filter((e) => e.name.endsWith('.etiles')).slice(-1);
             etiles.forEach((e) => {
-                // this.log('loading etiles', e.name);
+                // console.log('loading etiles', e.name);
                 const dataSource = new MBTilesTileDataSource({
                     // minZoom: 5,
                     // maxZoom: 12,
@@ -517,7 +517,7 @@ export default class CustomLayersModule extends MapModule {
                         const data = this.createRasterLayer(result.name, result.provider);
                         this.mapComp.addLayer(data.layer, 'customLayers', this.customSources.length);
                         this.customSources.push(data);
-                        // this.log('layer added', data.provider);
+                        // console.log('layer added', data.provider);
                         const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
                         savedSources.push(result.name);
                         // console.log('saving added_providers', savedSources);
@@ -536,10 +536,10 @@ export default class CustomLayersModule extends MapModule {
             //     const result = Array.isArray(results) ? results[0] : results;
             //     if (result) {
             //         const data = this.createRasterLayer(result.name, result.provider);
-            //         // this.log('about to add', result, data);
+            //         // console.log('about to add', result, data);
             //         this.mapComp.addLayer(data.layer, 'customLayers', this.customSources.length);
             //         this.customSources.push(data);
-            //         this.log('layer added', data.provider);
+            //         console.log('layer added', data.provider);
             //         const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
             //         savedSources.push(result.name);
             //         // console.log('saving added_providers', savedSources);
@@ -561,7 +561,7 @@ export default class CustomLayersModule extends MapModule {
             }
             return false;
         });
-        // this.log('deleteSource', name, index);
+        // console.log('deleteSource', name, index);
         if (index !== -1) {
             this.mapComp.removeLayer(this.customSources.getItem(index).layer, 'customLayers', index);
             this.customSources.splice(index, 1);

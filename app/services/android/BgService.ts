@@ -47,7 +47,7 @@ export class BgService extends android.app.Service {
     onStartCommand(intent: android.content.Intent, flags: number, startId: number) {
         super.onStartCommand(intent, flags, startId);
         const action = intent ? intent.getAction() : null;
-        // this.log('onStartCommand', this.inBackground, this.recording, this.alwaysShowNotification, action);
+        // console.log('onStartCommand', this.inBackground, this.recording, this.alwaysShowNotification, action);
         if (action === ACTION_RESUME) {
             this.geoHandler.resumeSession();
         } else if (action === ACTION_PAUSE) {
@@ -63,10 +63,10 @@ export class BgService extends android.app.Service {
         // this.alwaysShowNotification = android.os.Build.VERSION.SDK_INT >= 26; // oreo
         this.notificationManager = this.getSystemService(android.content.Context.NOTIFICATION_SERVICE);
         NotificationHelper.createNotificationChannel(this);
-        // this.log('onCreate', this.inBackground, this.recording, this.alwaysShowNotification);
+        // console.log('onCreate', this.inBackground, this.recording, this.alwaysShowNotification);
     }
     onDestroy() {
-        // this.log('onDestroy');
+        // console.log('onDestroy');
         if (this.geoHandler) {
             this.geoHandler.off(SessionStateEvent, this.onSessionStateEvent, this);
             this.geoHandler.off(SessionChronoEvent, this.onSessionChronoEvent, this);
@@ -81,12 +81,12 @@ export class BgService extends android.app.Service {
         this.bounded = true;
         const result = new BgServiceBinder();
         result.setService(this);
-        // this.log('onBind', intent, result);
+        // console.log('onBind', intent, result);
         return result;
     }
     onUnbind(intent: android.content.Intent) {
         this.bounded = false;
-        // this.log('onUnbind', intent);
+        // console.log('onUnbind', intent);
         this.removeForeground();
         // return true if you would like to have the service's onRebind(Intent) method later called when new clients bind to it.
         return true;
@@ -113,7 +113,7 @@ export class BgService extends android.app.Service {
         this.mNotification = null;
     }
     private onSessionStateEvent(e: SessionEventData) {
-        // this.log('onSessionStateEvent', e.data.state);
+        // console.log('onSessionStateEvent', e.data.state);
         switch (e.data.state) {
             case SessionState.RUNNING:
                 this.recording = true;
@@ -144,7 +144,7 @@ export class BgService extends android.app.Service {
         if (!this.bounded) {
             return;
         }
-        this.log('showForeground', this.inBackground, this.recording, this.alwaysShowNotification, new Error().stack);
+        console.log('showForeground', this.inBackground, this.recording, this.alwaysShowNotification, new Error().stack);
         if (this.inBackground || this.recording || this.alwaysShowNotification) {
             try {
                 if (!this.mNotification) {
@@ -158,7 +158,7 @@ export class BgService extends android.app.Service {
     }
 
     removeForeground() {
-        // this.log('removeForeground', this.inBackground, this.recording, this.alwaysShowNotification);
+        // console.log('removeForeground', this.inBackground, this.recording, this.alwaysShowNotification);
         this.stopForeground(android.app.Service.STOP_FOREGROUND_DETACH);
         this.notificationManager.cancel(NOTIFICATION_ID);
     }
@@ -177,7 +177,7 @@ export class BgService extends android.app.Service {
         }
     }
     onBounded() {
-        // this.log('onBounded');
+        // console.log('onBounded');
         this.geoHandler = new GeoHandler();
         this.geoHandler.on(SessionStateEvent, this.onSessionStateEvent, this);
         this.geoHandler.on(SessionChronoEvent, this.onSessionChronoEvent, this);
