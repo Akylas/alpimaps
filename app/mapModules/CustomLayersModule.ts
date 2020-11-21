@@ -23,6 +23,7 @@ import { $t } from '~/helpers/locale';
 import PackageService from '~/services/PackageService';
 import { getDataFolder } from '~/utils';
 import MapModule from './MapModule';
+import { bind } from 'helpful-decorators';
 
 function templateString(str: string, data) {
     return str.replace(
@@ -322,7 +323,6 @@ export default class CustomLayersModule extends MapModule {
         return localMbtilesSource;
     }
 
-    @profile
     vectorTileDecoderChanged(oldVectorTileDecoder, newVectorTileDecoder) {
         this.customSources.forEach((s) => {
             if (s.layer instanceof VectorTileLayer && s.layer.getTileDecoder() === oldVectorTileDecoder) {
@@ -338,7 +338,7 @@ export default class CustomLayersModule extends MapModule {
                 // layer.setBuildingRenderOrder(VectorTileRenderOrder.LAYER);
                 layer.setVectorTileEventListener<LatLonKeys>(
                     {
-                        onVectorTileClicked: (data) => this.onVectorTileClicked(data),
+                        onVectorTileClicked: this.mapComp.onVectorTileClicked.bind(this.mapComp),
                     },
                     this.mapComp.mapProjection
                 );

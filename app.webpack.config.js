@@ -212,7 +212,7 @@ module.exports = (env, params = {}) => {
                 ? ` itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=${APP_STORE_ID}&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+Software`
                 : `market://details?id=${nsconfig.id}`
         }"`,
-        LOG_LEVEL: devlog ? '"full"' : '""',
+        DEV_LOG: devlog,
         TEST_LOGS: adhoc || !production,
     };
     const keys = require(resolve(__dirname, 'API_KEYS')).keys;

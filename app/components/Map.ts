@@ -1,3 +1,4 @@
+import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
 import { AppURL, handleOpenURL } from '@nativescript-community/appurl';
 import * as EInfo from '@nativescript-community/extendedinfo';
 import * as perms from '@nativescript-community/perms';
@@ -46,7 +47,6 @@ import UserLocationModule from '~/mapModules/UserLocationModule';
 import { IItem } from '~/models/Item';
 import { NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
 import { computeDistanceBetween, getBoundsZoomLevel, getCenter } from '~/utils/geo';
-import { DEV_LOG } from '~/utils/logging';
 import { Sentry, isSentryEnabled } from '~/utils/sentry';
 import { screenHeightDips, screenWidthDips } from '~/variables';
 import { actionBarButtonHeight, navigationBarHeight, primaryColor } from '../variables';
@@ -150,7 +150,6 @@ export default class Map extends BgServiceComponent {
     keepAwake = false;
 
     currentMapRotation = 0;
-
 
     set selectedItem(value) {
         this.runOnModules('onSelectedItem', value, this.mSelectedItem);
@@ -294,6 +293,9 @@ export default class Map extends BgServiceComponent {
     @profile
     mounted() {
         super.mounted();
+        if (global.isAndroid) {
+            Application.android.on(AndroidApplication.activityBackPressedEvent, this.onAndroidBackButton);
+        }
 
         // if (global.isAndroid) {
         // (this.$refs.fab.nativeView as GridLayout).getChildAt(0).marginBottom = -navigationBarHeight;
@@ -301,13 +303,6 @@ export default class Map extends BgServiceComponent {
         // this.overMapWidgets.nativeView.marginBottom = layout.toDevicePixels(navigationBarHeight);
         // }
         this.searchView = this.$refs.searchView;
-        // console.log(
-        //     'mounted',
-        //     !!this.$refs.mapView,
-        //     !!this.$refs.searchView,
-        //     !!this.$refs.rightMenu,
-        //     !!this.$refs.bottomsheetest
-        // );
         this.$setMapComponent(this);
         this.mapModules = {
             items: new ItemsModule(),
@@ -327,21 +322,22 @@ export default class Map extends BgServiceComponent {
         // this.log('mounted', App.cartoLicenseRegistered, Object.keys(this.mapModules), !!this.searchView);
         // this.mapModules.userLocation.on('location', this.onNewLocation, this);
 
-        defaultLiveSync = global.__onLiveSync.bind(global);
-        global.__onLiveSync = (...args) => {
-            this.log('__onLiveSync', args);
-            const context = args[0];
-            if (!context && !!this.currentLayerStyle && !this.currentLayerStyle.endsWith('.zip')) {
-                this.reloadMapStyle && this.reloadMapStyle();
-            }
-            defaultLiveSync.apply(global, args);
-        };
+        if (DEV_LOG) {
+            defaultLiveSync = global.__onLiveSync.bind(global);
+            global.__onLiveSync = (...args) => {
+                this.log('__onLiveSync', args);
+                const context = args[0];
+                if (!context && !!this.currentLayerStyle && !this.currentLayerStyle.endsWith('.zip')) {
+                    this.reloadMapStyle && this.reloadMapStyle();
+                }
+                defaultLiveSync.apply(global, args);
+            };
+        }
     }
     onDeviceScreen(isScreenOn: boolean) {
         this.log('onDeviceScreen', isScreenOn);
     }
-    onLoaded() {
-    }
+    onLoaded() {}
     destroyed() {
         this.log('onMapDestroyed');
         this.runOnModules('onMapDestroyed');
@@ -366,7 +362,10 @@ export default class Map extends BgServiceComponent {
         // this.selectedRouteLine = null;
         super.destroyed();
     }
-
+    onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
+        data.cancel = true;
+        Application.android.foregroundActivity.moveTaskToBack(true);
+    }
     showMapMenu() {
         this.drawer.open('right');
     }
@@ -461,8 +460,9 @@ export default class Map extends BgServiceComponent {
         // this.log('onMapStable', zoom);
     }
 
-    onMapReady(e) {
+    async onMapReady(e) {
         const cartoMap = (this._cartoMap = e.object as CartoMap<LatLonKeys>);
+        console.log('onMapReady', cartoMap);
         // CartoMap.setRunOnMainThread(false);
         setShowDebug(DEV_LOG);
         setShowInfo(DEV_LOG);
@@ -472,7 +472,7 @@ export default class Map extends BgServiceComponent {
         if (global.isAndroid) {
             this.log('onMapReady', com.carto.ui.BaseMapView.getSDKVersion());
         } else {
-            this.log('onMapReady');
+            this.log('onMapReady', cartoMap.nativeViewProtected as NTMapView);
         }
 
         const options = cartoMap.getOptions();
@@ -486,7 +486,12 @@ export default class Map extends BgServiceComponent {
         options.setZoomGestures(true);
         options.setRotatable(true);
         // options.setDrawDistance(8);
-        this.showGlobe = appSettings.getBoolean('showGlobe', false);
+        this.bShowGlobe = appSettings.getBoolean('showGlobe', false);
+        options.setRenderProjectionMode(
+            this.bShowGlobe
+                ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL
+                : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR
+        );
         // console.log('test', JSON.parse('{"lat":45.2002,"lon":5.7222}'));
         const pos = JSON.parse(appSettings.getString('mapFocusPos', '{"lat":45.2002,"lon":5.7222}')) as MapPos<LatLonKeys>;
         const zoom = appSettings.getNumber('mapZoom', 10);
@@ -494,23 +499,21 @@ export default class Map extends BgServiceComponent {
         cartoMap.setFocusPos(pos, 0);
         cartoMap.setZoom(zoom, 0);
         // setTimeout(() => {
-        perms
-            .request('storage')
-            .then((status) => {
-                if (gVars.packageServiceEnabled) {
-                    this.$packageService.start();
-                }
-                setTimeout(() => {
-                    this.runOnModules('onMapReady', this, cartoMap);
-                }, 100);
-                // TODO: remove
-                appSettings.remove('mapStyle');
-                this.setMapStyle(appSettings.getString('mapStyle', 'osmxml'), true);
-                this.show3DBuildings = this.rightMenu.show3DBuildings;
-                this.showContourLines = this.rightMenu.showContourLines;
-            })
-            .catch((err) => this.showError(err));
-        // }, 0);
+        try {
+            const status = await perms.request('storage');
+            if (gVars.packageServiceEnabled) {
+                this.$packageService.start();
+            }
+            // setTimeout(() => {
+            // }, 100);
+            // appSettings.remove('mapStyle');
+            this.setMapStyle(appSettings.getString('mapStyle', 'osmxml'), true);
+            this.show3DBuildings = this.rightMenu.show3DBuildings;
+            this.showContourLines = this.rightMenu.showContourLines;
+            this.runOnModules('onMapReady', this, cartoMap);
+        } catch (err) {
+            this.showError(err);
+        }
     }
 
     createLocalMarker(position: MapPos<LatLonKeys>, options: MarkerStyleBuilderOptions) {
@@ -695,20 +698,21 @@ export default class Map extends BgServiceComponent {
     }
     onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureLayerName, featureData, featurePosition } = data;
-        // this.log('onVectorTileClicked', featureLayerName, featureData.class, featureData.subclass, featureData);
+        this.log('onVectorTileClicked', featureLayerName, featureData.class, featureData.subclass, featureData);
         const handledByModules = this.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             if (
                 featureLayerName === 'transportation' ||
-                featureLayerName === 'route' ||
-                featureLayerName === 'waterway' ||
-                featureLayerName === 'hillshade' ||
                 featureLayerName === 'transportation_name' ||
+                featureLayerName === 'route' ||
                 featureLayerName === 'contour' ||
-                featureLayerName === 'building' ||
-                featureLayerName === 'park' ||
-                featureLayerName === 'landcover' ||
-                featureLayerName === 'landuse'
+                featureLayerName === 'hillshade' ||
+                ((featureLayerName === 'waterway' ||
+                    featureLayerName === 'building' ||
+                    featureLayerName === 'park' ||
+                    featureLayerName === 'landcover' ||
+                    featureLayerName === 'landuse') &&
+                    !featureData.name)
             ) {
                 return false;
             }
