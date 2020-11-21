@@ -563,10 +563,10 @@ export class NetworkService extends Observable {
                     // if (response.statusCode === 401 && jsonReturn.error === 'invalid_grant') {
                     //     // refresh token
                     //     if (retry === 2) {
-                    //         this.logout();
+                    //         console.logout();
                     //         return Promise.reject('invalid_grant');
                     //     }
-                    //     return this.getToken(this.loginParams).then(() => this.request(requestParams, retry++));
+                    //     return this.getToken(console.loginParams).then(() => this.request(requestParams, retry++));
                     // }
                     const error = jsonReturn.error_description || jsonReturn.error || jsonReturn;
                     return Promise.reject(

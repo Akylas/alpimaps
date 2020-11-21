@@ -59,7 +59,6 @@ import MapRightMenu from './MapRightMenu';
 import MapScrollingWidgets from './MapScrollingWidgets';
 import PackagesDownloadComponent from './PackagesDownloadComponent';
 import Search from './Search';
-import TopSheetHolder, { DEFAULT_TOP, TopSheetHolderScrollEventData } from './TopSheetHolder';
 const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
 // function distance(pos1: ScreenPos, pos2: ScreenPos) {
@@ -103,9 +102,8 @@ let defaultLiveSync = global.__onLiveSync;
 @Component({
     components: {
         BottomSheetInner,
-        TopSheetHolder,
         Search,
-        // MapWidgets,
+        DirectionsPanel,
         LocationInfoPanel,
         MapRightMenu,
         MapScrollingWidgets,
@@ -182,14 +180,11 @@ export default class Map extends BgServiceComponent {
     get drawer() {
         return (this.$refs['drawer'] as Drawer) || null;
     }
-    get topSheetHolder() {
-        return this.$refs['topSheetHolder'] as TopSheetHolder;
+    get directionsPanel() {
+        return this.$refs['directionsPanel'] as DirectionsPanel;
     }
     get locationInfoPanel() {
         return this.$refs['locationInfo'] as LocationInfoPanel;
-    }
-    get topSheet() {
-        return this.topSheetHolder.topSheet;
     }
     get shouldShowFullHeight() {
         return !!this.mSelectedItem && !!this.mSelectedItem.route;
@@ -309,7 +304,7 @@ export default class Map extends BgServiceComponent {
             userLocation: new UserLocationModule(),
             customLayers: new CustomLayersModule(),
             formatter: new ItemFormatter(),
-            directionsPanel: this.topSheet,
+            directionsPanel: this.directionsPanel,
             search: this.searchView,
             rightMenu: this.$refs.rightMenu,
             mapScrollingWidgets: this.$refs.mapScrollingWidgets,
@@ -319,13 +314,13 @@ export default class Map extends BgServiceComponent {
         if (!!this.geoHandler) {
             this.runOnModules('onServiceLoaded', this.geoHandler);
         }
-        // this.log('mounted', App.cartoLicenseRegistered, Object.keys(this.mapModules), !!this.searchView);
+        // console.log('mounted', App.cartoLicenseRegistered, Object.keys(this.mapModules), !!this.searchView);
         // this.mapModules.userLocation.on('location', this.onNewLocation, this);
 
         if (DEV_LOG) {
             defaultLiveSync = global.__onLiveSync.bind(global);
             global.__onLiveSync = (...args) => {
-                this.log('__onLiveSync', args);
+                console.log('__onLiveSync', args);
                 const context = args[0];
                 if (!context && !!this.currentLayerStyle && !this.currentLayerStyle.endsWith('.zip')) {
                     this.reloadMapStyle && this.reloadMapStyle();
@@ -335,11 +330,11 @@ export default class Map extends BgServiceComponent {
         }
     }
     onDeviceScreen(isScreenOn: boolean) {
-        this.log('onDeviceScreen', isScreenOn);
+        console.log('onDeviceScreen', isScreenOn);
     }
     onLoaded() {}
     destroyed() {
-        this.log('onMapDestroyed');
+        console.log('onMapDestroyed');
         this.runOnModules('onMapDestroyed');
         this.$setMapComponent(null);
         // this.mapModules.userLocation.off('location', this.onNewLocation, this);
@@ -385,14 +380,14 @@ export default class Map extends BgServiceComponent {
     }
 
     runOnModules(functionName: string, ...args) {
-        // this.log('runOnModules', Object.keys(this.mapModules));
+        // console.log('runOnModules', Object.keys(this.mapModules));
         if (!this.mapModules) {
             return;
         }
         let m: MapModule;
         return Object.keys(this.mapModules).some((k) => {
             m = this.mapModules[k];
-            // this.log('call module', k, functionName, m && m.constructor.name, m && !!m[functionName]);
+            // console.log('call module', k, functionName, m && m.constructor.name, m && !!m[functionName]);
             if (m && m[functionName]) {
                 const result = (m[functionName] as Function).call(m, ...args);
                 if (result) {
@@ -420,9 +415,9 @@ export default class Map extends BgServiceComponent {
         }
         const bearing = cartoMap.bearing;
         this.currentMapRotation = Math.round(bearing * 100) / 100;
-        // this.log('onMapMove');
+        // console.log('onMapMove');
         // const bearing = cartoMap.bearing;
-        // this.log('onMapMove', bearing);
+        // console.log('onMapMove', bearing);
         // this.currentMapRotation = Math.round(bearing * 100) / 100;
         this.runOnModules('onMapMove', e);
         this.unFocusSearch();
@@ -438,7 +433,7 @@ export default class Map extends BgServiceComponent {
         }
         this.runOnModules('onMapIdle', e);
         const zoom = cartoMap.zoom;
-        // this.log('onMapIdle', zoom);
+        // console.log('onMapIdle', zoom);
     }
     @throttle(100)
     saveSettings() {
@@ -457,7 +452,7 @@ export default class Map extends BgServiceComponent {
         this.saveSettings();
         this.runOnModules('onMapStable', e);
         const zoom = cartoMap.zoom;
-        // this.log('onMapStable', zoom);
+        // console.log('onMapStable', zoom);
     }
 
     async onMapReady(e) {
@@ -470,9 +465,9 @@ export default class Map extends BgServiceComponent {
         setShowError(true);
         this.mapProjection = cartoMap.projection;
         if (global.isAndroid) {
-            this.log('onMapReady', com.carto.ui.BaseMapView.getSDKVersion());
+            console.log('onMapReady', com.carto.ui.BaseMapView.getSDKVersion());
         } else {
-            this.log('onMapReady', cartoMap.nativeViewProtected as NTMapView);
+            console.log('onMapReady', cartoMap.nativeViewProtected as NTMapView);
         }
 
         const options = cartoMap.getOptions();
@@ -651,7 +646,7 @@ export default class Map extends BgServiceComponent {
         }
     }
     unselectItem() {
-        // this.log('unselectItem', !!this.mSelectedItem);
+        // console.log('unselectItem', !!this.mSelectedItem);
         if (!!this.mSelectedItem) {
             const item = this.selectedItem;
             this.selectedItem = null;
@@ -688,7 +683,7 @@ export default class Map extends BgServiceComponent {
     }
     onMapClicked(e) {
         const { clickType, position } = e.data;
-        // this.log('onMapClicked', clickType, position);
+        // console.log('onMapClicked', clickType, position);
         const handledByModules = this.runOnModules('onMapClicked', e);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             this.selectItem({ item: { position, properties: {} }, isFeatureInteresting: !this.selectedItem });
@@ -698,7 +693,7 @@ export default class Map extends BgServiceComponent {
     }
     onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureLayerName, featureData, featurePosition } = data;
-        this.log('onVectorTileClicked', featureLayerName, featureData.class, featureData.subclass, featureData);
+        console.log('onVectorTileClicked', featureLayerName, featureData.class, featureData.subclass, featureData);
         const handledByModules = this.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             if (
@@ -796,7 +791,7 @@ export default class Map extends BgServiceComponent {
     // }
     searchView: Search;
     unFocusSearch() {
-        // this.log('unFocusSearch', !!this.searchView, !!this.searchView && this.searchView.hasFocus);
+        // console.log('unFocusSearch', !!this.searchView, !!this.searchView && this.searchView.hasFocus);
         if (this.searchView && this.searchView.hasFocus) {
             this.searchView.unfocus();
         }
@@ -847,7 +842,7 @@ export default class Map extends BgServiceComponent {
         return this._zoomBiais;
     }
     set zoomBiais(value: string) {
-        // this.log('setting zoomBiais', value);
+        // console.log('setting zoomBiais', value);
         this._zoomBiais = value;
         if (this.currentLayer) {
             this.currentLayer.zoomLevelBias = parseFloat(value);
@@ -866,7 +861,7 @@ export default class Map extends BgServiceComponent {
         }
     }
     setCurrentLayer(id: string) {
-        this.log('setCurrentLayer', id, this.zoomBiais, this.preloading);
+        console.log('setCurrentLayer', id, this.zoomBiais, this.preloading);
         // const cartoMap = this._cartoMap;
         if (this.currentLayer) {
             this.removeLayer(this.currentLayer, 'map');
@@ -917,7 +912,7 @@ export default class Map extends BgServiceComponent {
         if (!decoder) {
             return;
         }
-        // this.log('updateLanguage', code, decoder);
+        // console.log('updateLanguage', code, decoder);
         decoder.setStyleParameter('lang', code);
         decoder.setStyleParameter('fallback_lang', 'latin');
     }
@@ -1087,17 +1082,16 @@ export default class Map extends BgServiceComponent {
         const result = this.mBottomSheetTranslation + navigationBarHeight;
         return result;
     }
-    topSheetTranslation = DEFAULT_TOP;
     scrollingWidgetsOpacity = 1;
-    // onBottomSheetScroll(e: BottomSheetHolderScrollEventData) {
-    //     // console.log('onBottomSheetScroll', e);
-    //     this.mBottomSheetTranslation = e.height;
-    //     this.bottomSheetPercentage = e.percentage;
-    // }
-    onTopSheetScroll(e: TopSheetHolderScrollEventData) {
-        // console.log('onTopSheetScroll', e.height, e.bottom);
-        this.topSheetTranslation = e.bottom;
-        // this.bottomSheetPercentage = e.percentage;
+    topSheetTranslationFunction(maxTranslation, translation, progress) {
+        return {
+            topSheet: {
+                translateY: translation,
+            },
+            search: {
+                translateY: maxTranslation - translation,
+            },
+        };
     }
 
     bottomSheetTranslationFunction(maxTranslation, translation, progress) {
@@ -1187,14 +1181,14 @@ export default class Map extends BgServiceComponent {
     }
 
     switchKeepAwake() {
-        this.log('switchKeepAwake', this.keepAwake);
+        console.log('switchKeepAwake', this.keepAwake);
         if (this.keepAwake) {
             allowSleepAgain()
                 .then(() => {
                     this.keepAwake = false;
                     appSettings.setBoolean('keepAwake', false);
                     this.hideKeepAwakeNotification();
-                    // this.log('allowSleepAgain done', this.keepAwake);
+                    // console.log('allowSleepAgain done', this.keepAwake);
                 })
                 .catch((err) => this.showError(err));
         } else {
@@ -1203,7 +1197,7 @@ export default class Map extends BgServiceComponent {
                     this.keepAwake = true;
                     appSettings.setBoolean('keepAwake', true);
                     this.showKeepAwakeNotification();
-                    // this.log('keepAwake done', this.keepAwake);
+                    // console.log('keepAwake done', this.keepAwake);
                 })
                 .catch((err) => this.showError(err));
         }

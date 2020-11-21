@@ -1,5 +1,14 @@
 <template>
-    <GridLayout @pan="$emit('pan', $event)" android:paddingTop="28" :backgroundColor="themeColor" rows="50,60,60,50" columns="*">
+    <GridLayout
+        id="directionPanel"
+        @pan="$emit('pan', $event)"
+        android:paddingTop="28"
+        :backgroundColor="themeColor"
+        rows="50,60,60,50"
+        columns="*"
+        height="220"
+        translateY="-440"
+    >
         <MDButton horizontalAlignment="left" variant="text" class="icon-btn-white" text="mdi-arrow-left" @tap="cancel" />
         <StackLayout orientation="horizontal" horizontalAlignment="center">
             <MDButton
