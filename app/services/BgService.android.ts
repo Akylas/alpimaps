@@ -16,33 +16,33 @@ import { GeoHandler } from '~/handlers/GeoHandler';
 //         // initServiceConnection();
 //         this.serviceConnection = new android.content.ServiceConnection({
 //             onServiceDisconnected: (name: android.content.ComponentName) => {
-//                 // this.log('android service disconnected');
+//                 // console.log('android service disconnected');
 //                 this.unbindService();
 //             },
 
 //             onServiceConnected: (name: android.content.ComponentName, binder: android.os.IBinder) => {
-//                 // this.log('BgServiceProvider', 'onServiceConnected', name, binder);
+//                 // console.log('BgServiceProvider', 'onServiceConnected', name, binder);
 //                 this.handleBinder(binder);
 //             },
 //             // onNullBinding(param0: globalAndroid.content.ComponentName) {
-//             //     this.log('BgServiceProvider', 'onNullBinding', param0);
+//             //     console.log('BgServiceProvider', 'onNullBinding', param0);
 //             // },
 //             onBindingDied(param0: globalAndroid.content.ComponentName) {
-//                 // this.log('BgServiceProvider', 'onBindingDied', param0);
+//                 // console.log('BgServiceProvider', 'onBindingDied', param0);
 //             }
 //         });
 //         this.context = utils.ad.getApplicationContext();
 //     }
 
 //     bindService(context: android.content.Context, intent) {
-//         // this.log('bindService');
+//         // console.log('bindService');
 //         const result = context.bindService(intent, this.serviceConnection, android.content.Context.BIND_AUTO_CREATE);
 //         if (!result) {
 //             console.error('could not bind service');
 //         }
 //     }
 //     unbindService() {
-//         // this.log('unbindService');
+//         // console.log('unbindService');
 //         this.bgService = null;
 //         this._loaded = false;
 //     }
@@ -50,7 +50,7 @@ import { GeoHandler } from '~/handlers/GeoHandler';
 //     start() {
 //         const intent = new android.content.Intent(this.context, akylas.alpi.maps.BgService.class);
 
-//         // this.log('BgService start', android.os.Build.VERSION.SDK_INT >= 26); // oreo
+//         // console.log('BgService start', android.os.Build.VERSION.SDK_INT >= 26); // oreo
 //         // if (android.os.Build.VERSION.SDK_INT >= 26) {
 //         //     // ... start service in foreground to prevent it being killed on Oreo
 //         //     this.context.startForegroundService(intent);
@@ -61,7 +61,7 @@ import { GeoHandler } from '~/handlers/GeoHandler';
 //     }
 
 //     stop() {
-//         // this.log('stopping background service');
+//         // console.log('stopping background service');
 //         if (this.bgService) {
 //             this.bgService.get().dismissNotification();
 //             // if (this.bgService) {
@@ -75,7 +75,7 @@ import { GeoHandler } from '~/handlers/GeoHandler';
 //         const bgBinder = binder as BgServiceBinder;
 //         const localservice = bgBinder.getService();
 //         bgBinder.setService(null);
-//         // this.log('handleBinder', binder, localservice, localservice instanceof AndroidBgService);
+//         // console.log('handleBinder', binder, localservice, localservice instanceof AndroidBgService);
 //         if (localservice instanceof AndroidBgService) {
 //             this.bgService = new WeakRef(localservice);
 //             localservice.onBounded();

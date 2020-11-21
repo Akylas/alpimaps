@@ -7,7 +7,7 @@ import MapModule from './MapModule';
 export default class ItemFormatter extends MapModule {
     onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
         super.onMapReady(mapComp, mapView);
-        // this.log('onMapReady');
+        // console.log('onMapReady');
     }
 
     geItemIcon(item: Item) {
@@ -91,7 +91,7 @@ export default class ItemFormatter extends MapModule {
         }
     }
     getItemTitle(item: Item) {
-        // this.log('getItemTitle', item);
+        // console.log('getItemTitle', item);
         if (item) {
             // if (item.route) {
             //     const route = item.route;
@@ -108,9 +108,9 @@ export default class ItemFormatter extends MapModule {
         return '';
     }
     getItemSubtitle(item: Item) {
-        // this.log('getItemSubtitle', item);
+        // console.log('getItemSubtitle', item);
         if (item) {
-            // this.log('getItemSubtitle', item);
+            // console.log('getItemSubtitle', item);
             if (this.getItemName(item)) {
                 return this.getItemAddress(item);
             } else {

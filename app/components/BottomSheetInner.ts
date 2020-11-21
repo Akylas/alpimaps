@@ -91,7 +91,7 @@ export default class BottomSheetInner extends BaseVueComponent implements IMapMo
             const url = `https://duckduckgo.com/?kae=d&ks=s&ko=-2&kaj=m&k1=-1&q=${encodeURIComponent(name)
                 .toLowerCase()
                 .replace('/s+/g', '+')}`;
-            // this.log('webViewSrc', url);
+            // console.log('webViewSrc', url);
             return url;
         }
     }
@@ -132,7 +132,7 @@ export default class BottomSheetInner extends BaseVueComponent implements IMapMo
 
     onNewLocation(e: any) {
         const index = this.routeView.onNewLocation(e);
-        this.log('onNewLocation', index);
+        console.log('onNewLocation', index);
         if (index !== -1 && this.graphAvailable) {
             const profile = this.item.route.profile;
             const profileData = profile?.data;
@@ -376,7 +376,7 @@ export default class BottomSheetInner extends BaseVueComponent implements IMapMo
         return [];
     }
     public onInstructionTap(instruction: RouteInstruction) {
-        // this.log('onInstructionTap', instruction);
+        // console.log('onInstructionTap', instruction);
 
         const mapComp = this.$getMapComponent();
         // mapComp.selectItem({

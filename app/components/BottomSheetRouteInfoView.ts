@@ -49,7 +49,7 @@ export default class BottomSheetRouteInfoView extends BaseVueComponent {
     currentLocation: MapPos<LatLonKeys> = null;
     onNewLocation(e: any) {
         this.currentLocation = e.data;
-        // this.log('onNewLocation', location);
+        // console.log('onNewLocation', location);
         return this.updateRouteItemWithPosition(this.currentLocation);
     }
 
@@ -59,7 +59,7 @@ export default class BottomSheetRouteInfoView extends BaseVueComponent {
             const route = routeItem.route;
             const positions = route.positions;
             const onPathIndex = isLocationOnPath(location, positions, false, true, 10);
-            this.log('onPathIndex', onPathIndex);
+            console.log('onPathIndex', onPathIndex);
             if (onPathIndex >= 0) {
                 const distance = distanceToEnd(onPathIndex, positions);
                 this.remainingDistanceOnCurrentRoute = distance;
@@ -71,7 +71,7 @@ export default class BottomSheetRouteInfoView extends BaseVueComponent {
                         break;
                     }
                 }
-                this.log('instruction', this.routeInstruction);
+                console.log('instruction', this.routeInstruction);
             } else {
                 this.routeInstruction = null;
                 this.remainingDistanceOnCurrentRoute = null;
