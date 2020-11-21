@@ -234,7 +234,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
 
     @Watch('text')
     onTextPropChange(value) {
-        // this.log('onTextPropChange', value, !!this.textField);
+        // console.log('onTextPropChange', value, !!this.textField);
         if (this.textField) {
             this.textField.text = value;
             this.onTextChange({
@@ -297,7 +297,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
         //     });
         // }
         const metaData = this.itemToMetaData(item);
-        // this.log('createSearchMarker', item.provider, metaData);
+        // console.log('createSearchMarker', item.provider, metaData);
         return new Marker({
             position: item.position,
             styleBuilder: {
@@ -353,7 +353,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
     }
 
     onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
-        // this.log('onMapReady');
+        // console.log('onMapReady');
         this.mapView = mapView;
         this.mapComp = mapComp;
         this._formatter = this.mapComp.mapModule('formatter');
@@ -385,14 +385,14 @@ export default class Search extends BaseVueComponent implements IMapModule {
     onLoaded() {}
     hasFocus = false;
     onFocus(e) {
-        this.log('onFocus');
+        console.log('onFocus');
         this.hasFocus = true;
         if (this.currentSearchText && this.searchResultsCount === 0) {
             this.instantSearch(this.currentSearchText);
         }
     }
     onBlur(e) {
-        this.log('onBlur');
+        console.log('onBlur');
         this.hasFocus = false;
     }
 
@@ -476,7 +476,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
                 'https://places.cit.api.here.com/places/v1/discover/search'
             )
         ).then((result: any) =>
-            // this.log('herePlaceSearch', result.results.items.length);
+            // console.log('herePlaceSearch', result.results.items.length);
             result.results.items.map((f) => new HereFeature(f))
         );
     }
@@ -521,18 +521,18 @@ export default class Search extends BaseVueComponent implements IMapModule {
         this.dataItems = new ObservableArray([] as any);
         return Promise.all([
             this.searchInGeocodingService(options).then((r) => {
-                // this.log('found local result', JSON.stringify(r));
+                // console.log('found local result', JSON.stringify(r));
                 this.dataItems.push(r);
             }),
             // this.searchInVectorTiles(options).then(r => {
-            //     this.log('found tile results', JSON.stringify(r));
+            //     console.log('found tile results', JSON.stringify(r));
             //     r && this.dataItems.push(r);
             // }),
             this.herePlaceSearch(options).then((r) => {
                 this.dataItems.push(r);
             }),
             this.photonSearch(options).then((r) => {
-                // this.log('found photon result', JSON.stringify(r));
+                // console.log('found photon result', JSON.stringify(r));
                 this.dataItems.push(r);
             }),
         ])
@@ -593,7 +593,7 @@ export default class Search extends BaseVueComponent implements IMapModule {
     }
 
     showMenu(side: Side = 'left') {
-        // this.log('showMenu', side);
+        // console.log('showMenu', side);
         this.unfocus();
         this.$getMapComponent().drawer.open(side);
     }

@@ -18,7 +18,7 @@ import { TextField } from '@nativescript-community/ui-material-textfield';
 import { Device } from '@nativescript/core';
 import { Folder } from '@nativescript/core/file-system';
 import { layout } from '@nativescript/core/utils/utils';
-import { Component } from 'vue-property-decorator';
+import { Component, Prop } from 'vue-property-decorator';
 import { IMapModule } from '~/mapModules/MapModule';
 import { Address, IItem as Item } from '~/models/Item';
 import Route, { RoutingAction } from '~/models/Route';
@@ -268,7 +268,36 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         } else {
             this.line.positions = this.waypoints.map((w) => w.position);
         }
-        this.mapComp.topSheetHolder.peekSheet();
+        this.show();
+    }
+
+    @Prop() translationFunction?: Function;
+
+    async show() {
+        const height = this.nativeView.getMeasuredHeight();
+        const superParams = {
+            target: this.nativeView,
+            translate: {
+                x: 0,
+                y: 0,
+            },
+            duration: 200,
+        };
+        const params = this.translationFunction ? this.translationFunction(height, 0, 1, superParams) : superParams;
+        await this.nativeView.animate(params);
+    }
+    async hide() {
+        const height = this.nativeView.getMeasuredHeight();
+        const superParams = {
+            target: this.nativeView,
+            translate: {
+                x: 0,
+                y: -height,
+            },
+            duration: 200,
+        };
+        const params = this.translationFunction ? this.translationFunction(height, -height, 0, superParams) : superParams;
+        await this.nativeView.animate(params);
     }
     addWayPoint(position: MapPos<LatLonKeys>, metaData?, index = -1) {
         const toAdd = {
@@ -296,7 +325,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         const { clickType, position, featurePosition, featureData } = data;
         // console.log('onVectorTileClicked', clickType, ClickType.LONG);
         if (clickType === ClickType.LONG) {
-            // this.log('onVectorTileClicked', data.featureLayerName);
+            // console.log('onVectorTileClicked', data.featureLayerName);
             if (data.featureLayerName === 'poi' || data.featureLayerName === 'mountain_peak') {
                 this.handleClickOnPos(featurePosition, featureData);
                 return true;
@@ -314,7 +343,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
     }
     onMapClicked(e) {
         const { clickType, position } = e.data;
-        // this.log('onMapClicked', clickType, ClickType.LONG);
+        // console.log('onMapClicked', clickType, ClickType.LONG);
 
         if (clickType === ClickType.LONG) {
             this.handleClickOnPos(position);
@@ -322,7 +351,7 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         }
     }
     cancel() {
-        // this.log('cancel');
+        // console.log('cancel');
         this.waypoints = [];
         if (this.line) {
             this.line = null;
@@ -330,9 +359,11 @@ export default class DirectionsPanel extends BaseVueComponent implements IMapMod
         if (this._routeDataSource) {
             this._routeDataSource.clear();
         }
+        this.unfocus(this.startTF);
+        this.unfocus(this.stopTF);
         this.startTF.text = null;
         this.stopTF.text = null;
-        this.mapComp.topSheetHolder.closeSheet();
+        this.hide();
     }
     _offlineRoutingSearchService: PackageManagerValhallaRoutingService;
     get offlineRoutingSearchService() {

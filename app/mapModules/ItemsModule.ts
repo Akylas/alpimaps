@@ -31,7 +31,7 @@ export default class ItemsModule extends MapModule {
 
     async initDb() {
         installMixins();
-        this.log('start');
+        console.log('ItemsModule', 'start');
 
         try {
             // console.log('database', filePath);
@@ -56,12 +56,12 @@ export default class ItemsModule extends MapModule {
         }
     }
     onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
-        // this.log('onMapReady');
+        // console.log('onMapReady');
         super.onMapReady(mapComp, mapView);
         this.initDb();
     }
     onMapDestroyed() {
-        // this.log('onMapDestroyed');
+        // console.log('onMapDestroyed');
         super.onMapDestroyed();
         this.connection && this.connection.close();
 
@@ -242,7 +242,7 @@ export default class ItemsModule extends MapModule {
         //     .query('upsert', item)
         //     .exec()
         //     .then(r => {
-        //         this.log('upsert done', tableId, r.length);
+        //         console.log('upsert done', tableId, r.length);
         //         nSQL('routes')
         //             .query('select')
         //             .exec().then(t=>{

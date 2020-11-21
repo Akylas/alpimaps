@@ -1,5 +1,5 @@
 <template>
-    <GridLayout columns="*,auto" @tap="noop" width="70%" verticalAlignment="bottom">
+    <GridLayout columns="*,auto" @tap="noop" width="70%" verticalAlignment="bottom" backgroundColor="#44000000">
         <CollectionView col="0" rowHeight="49" :items="customSources" @tap="noop">
             <v-template>
                 <GridLayout paddingLeft="15" paddingRight="5" rows="*,auto" columns="*,auto" @longPress="showSourceOptions(item)">

@@ -83,7 +83,7 @@ export default class LocationInfoPanel extends BgServiceComponent {
         if (altitude !== null) {
             this.mCurrentAltitude = altitude;
         }
-        // this.log('onNewLocation', this.currentLocation);
+        // console.log('onNewLocation', this.currentLocation);
     }
     startBarometer() {
         if (this.listeningForBarometer) {
@@ -96,7 +96,7 @@ export default class LocationInfoPanel extends BgServiceComponent {
         }
     }
     startBarometerAltitudeUpdate() {
-        this.log('startBarometerAltitudeUpdate');
+        console.log('startBarometerAltitudeUpdate');
         if (!this.listeningForBarometer) {
             this.listeningForBarometer = true;
             this.startBarometer();
@@ -136,7 +136,7 @@ export default class LocationInfoPanel extends BgServiceComponent {
         if (sensor === 'barometer' && this.airportPressure != null) {
             // we can compute altitude
             if (this.airportPressure) {
-                // this.log('barometer', data.timestamp, data.pressure, this.airportPressure);
+                // console.log('barometer', data.timestamp, data.pressure, this.airportPressure);
                 this.mCurrentAltitude = Math.round(sensors.getAltitude(data.pressure, this.airportPressure));
                 this.stopBarometer();
                 if (this.listeningForBarometer) {

@@ -60,12 +60,12 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
     }
 
     get locationButtonClass() {
-        // this.log('locationButtonClass', this.watchingLocation, this.queryingLocation);
+        // console.log('locationButtonClass', this.watchingLocation, this.queryingLocation);
         return this.watchingLocation ? null : 'buttontext';
     }
 
     get locationButtonLabelClass() {
-        // this.log('locationButtonClass', this.watchingLocation, this.queryingLocation);
+        // console.log('locationButtonClass', this.watchingLocation, this.queryingLocation);
         return this.queryingLocation ? 'fade-blink' : '';
     }
 
@@ -131,7 +131,7 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
 
     @debounce(2000)
     updateSuggestion(focusPos) {
-        // this.log('updateSuggestion', focusPos);
+        // console.log('updateSuggestion', focusPos);
         if (!this.mapView) {
             return;
         }
@@ -142,10 +142,10 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
         // }
         const suggestions = this.$packageService.packageManager.suggestPackages(focusPos, this.mapComp.mapProjection);
         const suggestionPackage = suggestions[0];
-        // this.log('test suggestion', focusPos, suggestionPackage && suggestionPackage.getPackageId(), suggestionPackage && suggestionPackage.getName());
+        // console.log('test suggestion', focusPos, suggestionPackage && suggestionPackage.getPackageId(), suggestionPackage && suggestionPackage.getName());
         if (suggestionPackage) {
             const status = this.$packageService.packageManager.getLocalPackageStatus(suggestionPackage.getPackageId(), -1);
-            // this.log('test suggestion status', status, status && status.getCurrentAction());
+            // console.log('test suggestion status', status, status && status.getCurrentAction());
             if (!status || status.getCurrentAction() !== PackageAction.READY) {
                 this.suggestionPackage = {
                     id: suggestionPackage.getPackageId(),
@@ -171,7 +171,7 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
             return;
         }
         const zoom = Math.round(cartoMap.zoom);
-        // this.log('onMapStable', zoom);
+        // console.log('onMapStable', zoom);
         // this.currentMapRotation = Math.round(bearing * 100) / 100;
         // if (zoom < 10) {
         //     this.suggestionPackage = undefined;
@@ -190,7 +190,7 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
         }
     }
     downloadSuggestion() {
-        // this.log('downloadSuggestion', this.suggestionPackage.id);
+        // console.log('downloadSuggestion', this.suggestionPackage.id);
         if (this.suggestionPackage) {
             this.$packageService.packageManager.startPackageDownload(this.suggestionPackage.id);
         }
@@ -245,7 +245,7 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
     currentLocation: MapPos = null;
     onNewLocation(e: any) {
         this.currentLocation = e.data;
-        // this.log('onNewLocation', this.currentLocation);
+        // console.log('onNewLocation', this.currentLocation);
     }
     userLocationModule: UserLocationModule = null;
     onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
@@ -262,7 +262,7 @@ export default class MapScrollingWidgets extends BgServiceComponent implements I
         this.userLocationModule = null;
     }
     onTotalDownloadProgress(e) {
-        // this.log('onTotalDownloadProgress', e.data);
+        // console.log('onTotalDownloadProgress', e.data);
         if (e.data === 100) {
             this.totalDownloadProgress = 0;
         } else {
