@@ -28,24 +28,23 @@
 		// [zoom<13],
 		[zoom>=13][div>=200],
 		[zoom>=14][div>=50]{
-			line-opacity: linear([view::zoom], (12, 0), (12.1, 0.2), (16, 0.3))
+			line-opacity: linear([view::zoom], (12, 0), (12.1, 0.2), (15, 0.2), (16, 0.6))
 		}
 		[div>=50][zoom>=15],
 		[div>=100][zoom>=13],
 		[div>=200] {
-			line-opacity: linear([view::zoom], (12, 0), (12.1, 0.3), (16, 0.4))
-			line-width: 0.86;
-			line-color:#947d33;
-			[div>=100] {
-				line-color:#944a33;
+			line-opacity: linear([view::zoom], (12, 0), (12.1, 0.3), (13, 0.5), (16, 0.6))
+			line-width: 1;
+			line-color:@contour;
+			// [div>=100] {
 				// line-width: 0.93;
-			}
+			// }
 		}
 		[div>=200][zoom>=13],
 		[div>=100][zoom>=14] {
 			text-face-name: @mont;
 			text-name: [ele]+' m';
-			text-fill: @contour;
+			text-fill: @contour_label;
 			text-min-distance: 20;
 			text-avoid-edges: false;
 			text-placement: line;

@@ -44,7 +44,7 @@ Map {
 /* 1.BASEMAP */
 
 @white: #ffffff;
-@background: #E8E6DF;
+@background: #e4e1dc;
 
 /* 2.BOUNDARY */
 
@@ -53,50 +53,51 @@ Map {
 
 /* 3.NATURAL */
 /* 3.1 Main natural */
-@contour: #B58164;
-@contour_label: #AB8267;
 
-@glacier:#ffffff;
-@water: #74A4C1;
-@river: #67A6C4;
+@glacier: rgba(236, 252, 251, 0.8);
+@water: #8BD3E0;
+@river: #36B0BF;
+// @wetland: #c9ddd6;
+// @beach: #FCEC7E;
 
+/*3.2 Vegeration*/
 
-@aboriginal: #82643a;
-@national_park: rgb(99, 150, 65);
+// @forest: #93AE5E;
+// @green0: #CFD5A8;
+// @green1: #C6CF93;
+// @green2: #BCC87E;
+// @green3: #B3C471;
+// @green4: #AEC26B;
+// @green5: #B0C270;
+// @green6: #9EB360;
 
-@protected-area: #008000;
-@aboriginal: #82643a;
+// @park: #82bf5a;
 
-// --- Parks, woods, other green things ---
-@grass: #DEE2BF;        // Lch(90,32,128) also grassland, meadow, village_green, garden, allotments
-@scrub: #CAD6A6;        // Lch(84,24,122)
-@forest: #BFCA9B;       // Lch(80,30,135)
-@heath: #d6d99f;
-@park: #cbd487;         // Lch(94,30,145)
-@allotments: #c9e1bf;   // Lch(87,20,135)
-@orchard: #aedfa3; // also vineyard, plant_nursery
-@rock: #DCD7D1;
-@fell: #F2EFE9;
+// @rock: #707070;
 
 
 /* 4.LANDUSE */
+/*4.1 Main landuse*/
 
+// @residential_area: rgb(207, 206, 197);
+// @pedestrian_area: #b6b3ab;
+// @pedestrian_area_light: #dbd9cb;
+// @university: #F8E4BA;
+// @hospital: #F8D9D9;
+// @industrial: #E4E2EB;
+// @sport: #D1CDA7;
+// @parking: #F2F2CE;
+// @military: #E53935;
+// @playground: rgb(229, 147, 53);
 
-@built-up-z11: #c0c0c0;
-@built-up-z12: #d0d0d0;
-@residential: rgba(191, 186, 171, 0.4);      // Lch(89,0,0)
-// @residential-line: #b9b9b9; // Lch(75,0,0)
-@retail: #ffd6d1;           // Lch(89,16,30)
-@retail-line: #d99c95;      // Lch(70,25,30)
-@commercial: #f2dad9;       // Lch(89,8.5,25)
-@commercial-line: #d1b2b0;  // Lch(75,12,25)
-@industrial: rgba(179, 179, 179, 0.5);       // Lch(89,9,330) (Also used for railway, wastewater_plant)
-@industrial-line: #B3B3B3;  // Lch(75,11,330) (Also used for railway-line, wastewater_plant-line)
-@farmland: #eef0d5;         // Lch(94,14,112)
-@farmland-line: #c7c9ae;    // Lch(80,14,112)
-@farmyard: #f5dcba;         // Lch(89,20,80)
-@farmyard-line: #d1b48c;    // Lch(75,25,80)
 /*4.2 Aerodrome*/
+
+// @aerodrome0: #D4BFF2;
+// @aerodrome1: #D4BFF2;
+// @aerodrome2: #D1C0EB;
+// @aerodrome3: #CFC1E8;
+// @aerodrome4: #CDC0E3;
+// @aerodrome5: #C8BCDE;
 
 /* 4.3 Barriers */
 @fence: #999999;
@@ -104,185 +105,57 @@ Map {
 /* 4.4 Buildings */
 
 @building-fill: rgb(219, 217, 203);
+// @building_dark: #C2C0B3;
+// @building_border: #A1A096;
+// @building_dark_border: #9B9A8F;
 
+/* 5.ROADS */
+/* 5.1 All roads */
 
-// --- Other ----
-
-@bare_ground: #eee5dc;
-@campsite: #def6c0; // also caravan_site, picnic_site
-@cemetery: rgba(175, 169, 157, 0.5); // also grave_yard
-@construction: #c7c7b4; // also brownfield
-@mud: rgba(203,177,154,0.3); // produces #e6dcd1 over @land
-@place_of_worship: #d0d0d0; // also religious
-@place_of_worship_outline: darken(@place_of_worship, 30%);
-@leisure: lighten(@park, 5%);
-@power: darken(@industrial, 5%);
-@power-line: darken(@industrial-line, 5%);
-@sand: #E8D626;
-@societal_amenities: #ffffe5;   // Lch(99,13,109)
-@tourism: #660033;
-@quarry: #c5c3c3;
-@military: #f55;
-// @beach: #fff1ba;
-@beach: #FDF1C0;
-@wastewater_plant: @industrial;
-@wastewater_plant-line: @industrial-line;
-@water_works: @industrial;
-@water_works-line: @industrial-line;
-
-// --- Sports ---
-
-@pitch: #aae0cb;           // Lch(85,22,168) also track
-@track: @pitch;
-@stadium: @leisure; // also sports_centre
-@golf_course: #b5e3b5;
-
-@marine_labels:       #fff;
-@marine_labels_halo:  #98c2ca;
-
-@road_text_light:     #87919e;
-@road_text_med:       rgb(89, 105, 63);
-@road_text:           #000;
-@motorway_halo:       #fff0c4;
-@primary_halo:        #fefde1;
-@minor_halo:          #fff;
-@tunnel_halo:         #faf9f7;
-@peak_halo: rgba(255,255,255,1);
-@poi_light:           #666;
-@poi_dark:            #000;
-@poi_halo:            rgba(255,255,255,0.15); 
-
-@housenumber:         rgb(77, 76, 76);
-@place_text:         #333;
-@place_halo:         #f2f5f8;
-
-
-@country_text_dark:  #6b7d91;
-@country_text_med:   #8894a3;
-@country_text_light: #a3abb5;
-@country_halo:       #fbf8f3;
-
-@state_text:         #7c8a9b;
-@state_text_light:   #959eaa;
-@state_halo:         #fbf8f3;
-
-@route:            #0000ff; 
-@continent_text:     #405c78; 
-@continent_halo:     #fbf8f3;
-
-@motorway-oneway-arrow-color:     darken(@motorway-casing, 25%);
-@trunk-oneway-arrow-color:        darken(@trunk-casing, 25%);
-@primary-oneway-arrow-color:      darken(@primary-casing, 15%);
-@secondary-oneway-arrow-color:    darken(@secondary-casing, 10%);
-@tertiary-oneway-arrow-color:     darken(@tertiary-casing, 30%);
-@residential-oneway-arrow-color:  darken(@residential-casing, 40%);
-@living-street-oneway-arrow-color: darken(@residential-casing, 30%);
-@pedestrian-oneway-arrow-color:   darken(@pedestrian-casing, 25%);
-@raceway-oneway-arrow-color:      darken(@raceway-fill, 50%);
-@footway-oneway-arrow-color:      darken(@footway-fill, 35%);
-@steps-oneway-arrow-color:        darken(@steps-fill, 35%);
-@cycleway-oneway-arrow-color:     darken(@cycleway-fill, 25%);
-@track-oneway-arrow-color:        darken(@track-fill, 10%);
-@bridleway-oneway-arrow-color:    darken(@bridleway-fill, 15%);
-
-
-
-
-@motorway-low-zoom-casing: #F2934A;
-@trunk-low-zoom-casing: #FFEEAA;
-@primary-low-zoom-casing: #c38a27;
-@secondary-low-zoom-casing: #9eae23;
-@motorway-casing: #FFCC88;
-@trunk-casing: #e9ac77;
-@primary-casing:#e9ac77;
-@secondary-casing: #E9AC77;
-@tertiary-casing: #E9AC77;
-
-
-@default-casing: white;
-@residential-casing: #bbb;
-@road-casing: @residential-casing;
-@service-casing: @residential-casing;
-@living-street-casing: @residential-casing;
-@pedestrian-casing: #999;
-@path-casing: @default-casing;
-@footway-casing: @default-casing;
-@steps-casing: @default-casing;
-@cycleway-casing: @default-casing;
-@bridleway-casing: @default-casing;
-@track-casing: @default-casing;
-
-
-
-@motorway-shield: #620728;
-@trunk-shield: #5d1b0b;
-@primary-shield: #4c2e00;
-@secondary-shield: #323b00;
-@motorway-low-zoom: #FBB764;
-@trunk-low-zoom: #FFEEAA;
-@primary-low-zoom: #f3c380;
-@secondary-low-zoom: #e8eda0;
-
-@motorway-fill: #FFCC88;
-@trunk-fill: #FFEEAA;
-@primary-fill: #FFEEAA;
-@secondary-fill: #FFEEAA;
-@tertiary-fill: #FFEEAA;
-@residential-fill: #ffffff;
-@service-fill: @residential-fill;
-@living-street-fill: #ededed;
-@pedestrian-fill: #dddde8;
-@raceway-fill: pink;
-@road-fill: #ddd;
-
-@standard-halo-radius: 1;
-@standard-halo-fill: rgba(255,255,255,0.6);
-
-// @footway-fill: salmon;
-@path: #e4e4e4;
-@footway-fill: #a9a9a9;
-@footway-fill-noaccess: #bbbbbb;
-@steps-fill: @footway-fill;
-@steps-fill-noaccess: #bbbbbb;
-@cycleway-fill: blue;
-@cycleway-fill-noaccess: #9999ff;
-@bridleway-fill: green;
-@bridleway-fill-noaccess: #aaddaa;
-@track-fill: #ffffff;
-@track-fill-noaccess: #e2c5bb;
-@aeroway-fill: #bbc;
-@runway-fill: @aeroway-fill;
-@taxiway-fill: @aeroway-fill;
-@helipad-fill: @aeroway-fill;
-@access-marking: #eaeaea;
-@access-marking-living-street: #cccccc;
-
-
-@tertiary-shield: #3b3b3b;
-
-@unimportant-road: @residential-casing;
-
-@minor-construction: #aaa;
-@service-construction: #aaa;
-
-@destination-marking: #c2e0ff;
-@private-marking: #efa9a9;
-@private-marking-for-red: #C26363;
-
-@tunnel-casing: #808080;
-
-@motorway-tunnel-fill: lighten(@motorway-fill, 10%);
-@trunk-tunnel-fill: lighten(@trunk-fill, 10%);
-@primary-tunnel-fill: lighten(@primary-fill, 10%);
-@secondary-tunnel-fill: lighten(@secondary-fill, 5%);
-@tertiary-tunnel-fill: lighten(@tertiary-fill, 5%);
-@residential-tunnel-fill: darken(@residential-fill, 5%);
-@living-street-tunnel-fill: lighten(@living-street-fill, 3%);
+// @trunk: #f9b29c;
+// @motorway: #f9b29c;
+// @motorway_light: #f5977a;
+// @trunk: #f9b29c;
+// @trunk_light: #f5977a;
+// @primary:  #fcd6a4;
+// @primary_light: #f3c380;
+// @secondary: #f7fabf;
+// @tertiary: #ffffff;
+// @minor: #ffffff;
+// @residential: #ffffff;
+// @service: #ffffff;
+// @unclassified: #F8F8F8;
+// @pedestrian: #F8F8F8;
+// @footway: #fa8072;
+// @cycleway: #0000ff;
+// @construction: #BBBBAA;
+// @track: #996600;
+// @path: #635730;
+// @steps: #bbbbbb;
+// @bridleway: #008000;
+// @raceway: #bbc;
+// @aeroway: #ffc0cb;
+// @helipad: @aeroway;
+// @taxiway: @aeroway;
+// @runway: @aeroway;
 
 /* 5.2 Bridges */
 
+// @bridge_background: #EDEBDB;
 @bridge_casing: black;
-@bridge-casing: #000000;
+
+/* 5.3 Tunnels */
+
+// @trunk_tunnel_orange: #FCA462;
+// @trunk_tunnel_casing: #808080;
+// @primary_tunnel_orange: #FCA462;
+// @primary_tunnel_casing: #808080;
+// @secondary_tunnel: #FFFFFF;
+// @secondary_tunnel_casing:  #808080;
+// @tertiary_tunnel: #FFFFFF;
+// @tertiary_tunnel_casing:  #808080;
+// @unclassified_tunnel: #FFFFFF;
+// @unclassified_tunnel_casing: #808080;
 
 /* 5.4 Piste */
 
@@ -295,16 +168,14 @@ Map {
 
 /* 5.5 Transport */
 
-@ferry: #2F88B7;
+// @railway_light: #B2B1A2;
+// @railway: #969586;
+// @railway_dash: #EEEEEE;
+// @railway_tunnel: #808080;
+// @aerialway: #444444;
+// @tram: #7A7A7A;
+@ferry: #4499Bb;
 @cable_car: #444;
-@transportation-area: #e9e7e2;
-@apron: #dadae0;
-// @garages: #dfddce;
-@parking: #eeeeee;
-@parking-outline: saturate(darken(@parking, 40%), 20%);
-@railway: @industrial;
-@railway-line: @industrial-line;
-@rest_area: #efc8c8; // also services
 
 /* 6.LABELS COLORS */
 /* 6.1 Main labels */
@@ -316,12 +187,12 @@ Map {
 
 /* 6.2 Natural labels */
 
-@water_label: #08567d;
-@water_halo: rgba(255, 255, 255, 0.45);
+@water_label: #4499Bb;
 @park_label: #3A7921;
-@halo_park_label: rgba(255, 255, 255, 0.45);
+@halo_park_label: #FFFFFF;
 
 @peak_label: #9b7057;
+
 
 /* 6.3 Place labels */
 
@@ -336,7 +207,6 @@ Map {
 
 /* 6.4 Road labels */
 
-@road_label: #635e54;
 @road_label_halo: #FFFFFF;
 @shield_text: #000000;
 @shield_text_halo: #000000;
@@ -345,9 +215,79 @@ Map {
 /* blue - #2E89B0; #687E94; #598DBE; */
 
 
+@contour: #946233;
 
 
 
+
+
+
+
+
+@standard-halo-radius: 1;
+@standard-halo-fill: rgba(255,255,255,0.6);
+
+@tertiary-fill: #ffffff;
+@residential-fill: #ffffff;
+@service-fill: @residential-fill;
+@living-street-fill: #ededed;
+@pedestrian-fill: #dddde8;
+@raceway-fill: pink;
+@road-fill: #ddd;
+// @footway-fill: salmon;
+@path: #bb7979;
+@footway-fill: #ffffff;
+@footway-fill-noaccess: #bbbbbb;
+@steps-fill: @footway-fill;
+@steps-fill-noaccess: #bbbbbb;
+@cycleway-fill: blue;
+@cycleway-fill-noaccess: #9999ff;
+@bridleway-fill: green;
+@bridleway-fill-noaccess: #aaddaa;
+@track-fill: #744e04;
+@track-fill-noaccess: #e2c5bb;
+@aeroway-fill: #bbc;
+@runway-fill: @aeroway-fill;
+@taxiway-fill: @aeroway-fill;
+@helipad-fill: @aeroway-fill;
+@access-marking: #eaeaea;
+@access-marking-living-street: #cccccc;
+
+@default-casing: white;
+@tertiary-casing: #bdbdbd;
+@residential-casing: #bbb;
+@road-casing: @residential-casing;
+@service-casing: @residential-casing;
+@living-street-casing: @residential-casing;
+@pedestrian-casing: #999;
+@path-casing: @default-casing;
+@footway-casing: @default-casing;
+@steps-casing: @default-casing;
+@cycleway-casing: @default-casing;
+@bridleway-casing: @default-casing;
+@track-casing: @default-casing;
+
+@tertiary-shield: #3b3b3b;
+
+@unimportant-road: @residential-casing;
+
+@minor-construction: #aaa;
+@service-construction: #aaa;
+
+@destination-marking: #c2e0ff;
+@private-marking: #efa9a9;
+@private-marking-for-red: #C26363;
+
+@tunnel-casing: #808080;
+@bridge-casing: #000000;
+
+@motorway-tunnel-fill: lighten(@motorway-fill, 10%);
+@trunk-tunnel-fill: lighten(@trunk-fill, 10%);
+@primary-tunnel-fill: lighten(@primary-fill, 10%);
+@secondary-tunnel-fill: lighten(@secondary-fill, 5%);
+@tertiary-tunnel-fill: lighten(@tertiary-fill, 5%);
+@residential-tunnel-fill: darken(@residential-fill, 5%);
+@living-street-tunnel-fill: lighten(@living-street-fill, 3%);
 
 @motorway-width-z6:               0.4;
 @trunk-width-z6:                  0.4;
@@ -400,12 +340,12 @@ Map {
 @secondary-link-width-z13:        1.5; //4
 @tertiary-width-z13:              2.5; //4
 @tertiary-link-width-z13:         1.5;//3
-@residential-width-z13:           2;//2.5
+@residential-width-z13:           2.5;//2.5
 @living-street-width-z13:         2;
 @bridleway-width-z13:             0.3;
 @footway-width-z14:               1; // 0.7
 @cycleway-width-z13:              1; // 0.7
-@track-width-z13:                 1.3; // 0.5
+@track-width-z13:                 1; // 0.5
 @track-grade1-width-z13:          1; // 0.5
 @track-grade2-width-z13:          1; // 0.5
 @steps-width-z13:                 1.5;// 0.7
@@ -428,20 +368,20 @@ Map {
 @secondary-link-width-z15:        4;//7
 @tertiary-width-z15:              4;//9
 @tertiary-link-width-z15:         3;//7
-@residential-width-z15:           5;//5
+@residential-width-z15:           4;//5
 @living-street-width-z15:         5;
 @pedestrian-width-z15:            4;//5
 @bridleway-width-z15:             1.2;
 @footway-width-z15:               1.5;  //1
 @cycleway-width-z15:              0.9;
-@track-width-z15:                 2; // 1.5
+@track-width-z15:                 1.5; // 1.5
 @track-grade1-width-z15:          1.5;
 @track-grade2-width-z15:          1.5;
 @steps-width-z15:                 3;
 
 @secondary-width-z16:            9; //10
 @tertiary-width-z16:             9; //10
-@residential-width-z16:           6;//6
+@residential-width-z16:           5;//6
 @living-street-width-z16:         6;
 @pedestrian-width-z16:            5;//6
 @road-width-z16:                  3.5;
@@ -460,7 +400,7 @@ Map {
 @secondary-link-width-z17:       7;//12
 @tertiary-width-z17:             9;//18
 @tertiary-link-width-z17:        7;//12
-@residential-width-z17:          12;//12
+@residential-width-z17:          6;//12
 @living-street-width-z17:        12;
 @pedestrian-width-z17:           6;//12
 @road-width-z17:                  7;
@@ -515,7 +455,7 @@ Map {
 @major-casing-width-z12:          0.5;
 
 @casing-width-z13:                0.3;
-@residential-casing-width-z13:    0.5;
+@residential-casing-width-z13:    0.4;
 @secondary-casing-width-z13:      0.35;
 @major-casing-width-z13:          0.5;
 
@@ -609,12 +549,155 @@ Map {
 
 @railway-text-repeat-distance: 200;
 
+@motorway-low-zoom-casing: #c24e6b;
+@trunk-low-zoom-casing: #cf6649;
+@primary-low-zoom-casing: #c38a27;
+@secondary-low-zoom-casing: #9eae23;
+@motorway-casing: #dc2a67;
+@trunk-casing: #c84e2f;
+@primary-casing: #a06b00;
+@secondary-casing: #707d05;
+@motorway-shield: #620728;
+@trunk-shield: #5d1b0b;
+@primary-shield: #4c2e00;
+@secondary-shield: #323b00;
+@motorway-low-zoom: #e66e89;
+@trunk-low-zoom: #f5977a;
+@primary-low-zoom: #f3c380;
+@secondary-low-zoom: #e8eda0;
+@motorway-fill: #e892a2;
+@trunk-fill: #f9b29c;
+@primary-fill: #fcd6a4;
+@secondary-fill: #f7fabf;
 
 
+@aboriginal: #82643a;
+@national_park: rgb(99, 150, 65);
+
+@protected-area: #008000;
+@aboriginal: #82643a;
+
+// --- Parks, woods, other green things ---
+// @grass: #CDEBB0;
+@grass: #D3EAB6;        // Lch(90,32,128) also grassland, meadow, village_green, garden, allotments
+@scrub: #c8d7ab;        // Lch(84,24,122)
+// @forest: #add19e;       // Lch(80,30,135)
+@forest: #B3D0A1;       // Lch(80,30,135)
+@heath: #d6d99f;
+// @forest-text: #46673b;  // Lch(40,30,135)
+@park: #c8facc;         // Lch(94,30,145)
+@allotments: #c9e1bf;   // Lch(87,20,135)
+@orchard: #aedfa3; // also vineyard, plant_nursery
+@rock: #DCD7D1;
+@fell: #F2EFE9;
 
 // --- "Base" landuses ---
 
+// @built-up-lowzoom: #aaaaaa;
+@built-up-z11: #c0c0c0;
+@built-up-z12: #d0d0d0;
+@residential: #e0dfdf;      // Lch(89,0,0)
+@residential-line: #b9b9b9; // Lch(75,0,0)
+@retail: #ffd6d1;           // Lch(89,16,30)
+@retail-line: #d99c95;      // Lch(70,25,30)
+@commercial: #f2dad9;       // Lch(89,8.5,25)
+@commercial-line: #d1b2b0;  // Lch(75,12,25)
+@industrial: #ebdbe8;       // Lch(89,9,330) (Also used for railway, wastewater_plant)
+@industrial-line: #c6b3c3;  // Lch(75,11,330) (Also used for railway-line, wastewater_plant-line)
+@farmland: #eef0d5;         // Lch(94,14,112)
+@farmland-line: #c7c9ae;    // Lch(80,14,112)
+@farmyard: #f5dcba;         // Lch(89,20,80)
+@farmyard-line: #d1b48c;    // Lch(75,25,80)
+
 // --- Transport ----
+
+@transportation-area: #e9e7e2;
+@apron: #dadae0;
+// @garages: #dfddce;
+@parking: #eeeeee;
+@parking-outline: saturate(darken(@parking, 40%), 20%);
+@railway: @industrial;
+@railway-line: @industrial-line;
+@rest_area: #efc8c8; // also services
+
+// --- Other ----
+
+@bare_ground: #eee5dc;
+@campsite: #def6c0; // also caravan_site, picnic_site
+@cemetery: #aacbaf; // also grave_yard
+@construction: #c7c7b4; // also brownfield
+@mud: rgba(203,177,154,0.3); // produces #e6dcd1 over @land
+@place_of_worship: #d0d0d0; // also religious
+@place_of_worship_outline: darken(@place_of_worship, 30%);
+@leisure: lighten(@park, 5%);
+@power: darken(@industrial, 5%);
+@power-line: darken(@industrial-line, 5%);
+@sand: #f5e9c6;
+@societal_amenities: #ffffe5;   // Lch(99,13,109)
+@tourism: #660033;
+@quarry: #c5c3c3;
+@military: #f55;
+// @beach: #fff1ba;
+@beach: #FDF1C0;
+@wastewater_plant: @industrial;
+@wastewater_plant-line: @industrial-line;
+@water_works: @industrial;
+@water_works-line: @industrial-line;
+
+// --- Sports ---
+
+@pitch: #aae0cb;           // Lch(85,22,168) also track
+@track: @pitch;
+@stadium: @leisure; // also sports_centre
+@golf_course: #b5e3b5;
+
+@marine_labels:       #fff;
+@marine_labels_halo:  #98c2ca;
+
+@road_text_light:     #87919e;
+@road_text_med:       rgb(89, 105, 63);
+@road_text:           #000;
+@motorway_halo:       #fff0c4;
+@primary_halo:        #fefde1;
+@minor_halo:          #fff;
+@tunnel_halo:         #faf9f7;
+@peak_halo: rgba(255,255,255,1);
+@poi_light:           #666;
+@poi_dark:            #000;
+@poi_halo:            rgba(255,255,255,0.15); 
+
+@housenumber:         rgb(77, 76, 76);
+@place_text:         #333;
+@place_halo:         #f2f5f8;
+
+
+@country_text_dark:  #6b7d91;
+@country_text_med:   #8894a3;
+@country_text_light: #a3abb5;
+@country_halo:       #fbf8f3;
+
+@state_text:         #7c8a9b;
+@state_text_light:   #959eaa;
+@state_halo:         #fbf8f3;
+
+@route:            #0000ff; 
+@continent_text:     #405c78; 
+@continent_halo:     #fbf8f3;
+
+@motorway-oneway-arrow-color:     darken(@motorway-casing, 25%);
+@trunk-oneway-arrow-color:        darken(@trunk-casing, 25%);
+@primary-oneway-arrow-color:      darken(@primary-casing, 15%);
+@secondary-oneway-arrow-color:    darken(@secondary-casing, 10%);
+@tertiary-oneway-arrow-color:     darken(@tertiary-casing, 30%);
+@residential-oneway-arrow-color:  darken(@residential-casing, 40%);
+@living-street-oneway-arrow-color: darken(@residential-casing, 30%);
+@pedestrian-oneway-arrow-color:   darken(@pedestrian-casing, 25%);
+@raceway-oneway-arrow-color:      darken(@raceway-fill, 50%);
+@footway-oneway-arrow-color:      darken(@footway-fill, 35%);
+@steps-oneway-arrow-color:        darken(@steps-fill, 35%);
+@cycleway-oneway-arrow-color:     darken(@cycleway-fill, 25%);
+@track-oneway-arrow-color:        darken(@track-fill, 10%);
+@bridleway-oneway-arrow-color:    darken(@bridleway-fill, 15%);
 
 
 
