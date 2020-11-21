@@ -6,6 +6,47 @@
 // @id_test: (([osm_id]) = [nuti::selected_id]) ? #f00 : #fff;
 // @name_test: (([name]) = [nuti::selected_name]) ? #0f0 : #fff;
 
+#mountain_peak {
+	// order is important for icon to take precedence over label and respect rank
+	::icon {
+		text-face-name: @osm;
+		text-size: linear([view::zoom], (7, 7), (13, 8), (18, 12))- 0.000001 * [rank]; 
+		text-placement: [nuti::markers3d];
+		text-name: @osm_icon;
+		text-fill: @peak_label;
+		// text-dy: linear([view::zoom], (7, 15), (13, 16), (18, 20)); 
+		text-feature-id: @featureId;
+	}
+	// ::label {
+		text-name: @name;
+		[zoom>=10] {
+			text-name: @name ?  ( [ele] ? [ele] + 'm' + '\n ' + @name : @name): '';
+		}
+		text-face-name: @mont_md;
+		text-size: linear([view::zoom], (7, 7), (13, 8), (18, 11))- 0.000001 * [rank]; 
+		text-line-spacing: -1;
+		text-placement: [nuti::texts3d];
+		text-fill: @peak_label;
+		text-dy: linear([view::zoom], (7, 7), (13, 8), (18, 12)); 
+		text-feature-id: @featureId;
+		text-wrap-width: step([zoom], (7, 40), (12, 100), (18, 150));
+		text-halo-fill: @halo_park_label;
+		text-halo-rasterizer: fast;
+		text-halo-radius: 2;
+		// text-dy: 10;
+	// }
+	// shield-name: @name ?  ( [ele] ? [ele] + 'm' + '\n ' + @name : @name): '';
+	// shield-face-name: @mont_md;
+	// shield-size: linear([view::zoom], (7, 7), (13, 8), (18, 12))- 0.000001 * [rank]; 
+	// shield-line-spacing: -1;
+	// shield-placement: [nuti::markers3d];
+	// shield-file: url(symbols/[class].svg);
+	// shield-fill: darken(@peak_label, 10%);
+	// shield-dy: linear([view::zoom], (7, 15), (13, 16), (18, 20)); 
+	// shield-feature-id: @featureId;
+	
+}
+
 
 #water_name[class=ocean][zoom>=3][zoom<=9],
 #water_name[class=sea][zoom>=6] {
@@ -320,15 +361,16 @@
 	}
 }
 
-#water_name [class=lake][zoom>=13],
+#water_name [class=lake][zoom>=10][way_pixels>500],
+#water_name [class=lake][zoom>=13][way_pixels>0],
 #landcover[class=ice][subclass=glacier][name!=null][zoom>=13]{
 	text-name: @name;
-	text-face-name: @mont_it;
+	text-face-name: @mont_md;
 	text-placement: [nuti::texts3d];
 	text-fill: @water_label;
 	text-wrap-before: true;
-	text-halo-fill: @place_halo;
-	text-halo-radius: 1;
+	text-halo-fill: @water_halo;
+	text-halo-radius: 2;
 	text-halo-rasterizer: fast;
 	text-min-distance:30;
 	text-size: linear([view::zoom], (12, 8.0), (18, 12.0));
@@ -419,7 +461,7 @@
 	[class=path][subclass=path][zoom>=14],
 	[class=path][subclass!=track][subclass!=footway][zoom>=15] {
 			text-name: @name;
-			text-fill: #222;
+			text-fill: @road_label;
 			text-size:linear([view::zoom], (13, 7), (16, 8), (17, 9));
 			text-halo-radius: @standard-halo-radius;
 			text-halo-fill: @standard-halo-fill;
@@ -666,48 +708,6 @@
 		}
 		
 	}
-}
-
-#mountain_peak {
-	// order is important for icon to take precedence over label and respect rank
-	::icon {
-		text-face-name: @osm;
-		text-size: linear([view::zoom], (7, 7), (13, 8), (18, 12))- 0.000001 * [rank]; 
-		text-placement: [nuti::markers3d];
-		text-name: @osm_icon;
-		text-fill: @peak_label;
-		// text-dy: linear([view::zoom], (7, 15), (13, 16), (18, 20)); 
-		text-feature-id: @featureId;
-	}
-	// ::label {
-		text-name: @name;
-		[zoom>=10] {
-			text-name: @name ?  ( [ele] ? [ele] + 'm' + '\n ' + @name : @name): '';
-		}
-		text-face-name: @mont_md;
-		text-size: linear([view::zoom], (7, 7), (13, 8), (18, 11))- 0.000001 * [rank]; 
-		text-line-spacing: -1;
-		text-placement: [nuti::texts3d];
-		text-fill: darken(@peak_label, 20%);
-		text-dy: linear([view::zoom], (7, 7), (13, 8), (18, 12)); 
-		text-feature-id: @featureId;
-		text-wrap-width: step([zoom], (7, 40), (12, 100), (18, 150));
-		text-halo-fill: @halo_park_label;
-		text-halo-opacity:0.5;
-		text-halo-rasterizer: fast;
-		text-halo-radius: 1;
-		// text-dy: 10;
-	// }
-	// shield-name: @name ?  ( [ele] ? [ele] + 'm' + '\n ' + @name : @name): '';
-	// shield-face-name: @mont_md;
-	// shield-size: linear([view::zoom], (7, 7), (13, 8), (18, 12))- 0.000001 * [rank]; 
-	// shield-line-spacing: -1;
-	// shield-placement: [nuti::markers3d];
-	// shield-file: url(symbols/[class].svg);
-	// shield-fill: darken(@peak_label, 10%);
-	// shield-dy: linear([view::zoom], (7, 15), (13, 16), (18, 20)); 
-	// shield-feature-id: @featureId;
-	
 }
 
 // #mountain_peak {

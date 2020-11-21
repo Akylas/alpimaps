@@ -15,7 +15,6 @@ import { Enums } from '@nativescript/core';
 import { BgService } from '~/services/BgService';
 import { getString, remove, setString } from '@nativescript/core/application-settings';
 import { EventData, Observable } from '@nativescript/core/data/observable';
-import { DEV_LOG } from '~/utils/logging';
 
 let geolocation: GPS;
 

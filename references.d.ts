@@ -5,6 +5,7 @@
 
 /// <reference path="./node_modules/@nativescript-community/ui-carto/typings/ak.carto.android.d.ts" />
 /// <reference path="./node_modules/@nativescript-community/ui-carto/typings/carto.android.d.ts" />
+/// <reference path="./node_modules/@nativescript-community/ui-carto/typings/carto.ios.d.ts" />
 
 // declare module '*.vue' {
 //     import Vue from 'nativescript-vue';
@@ -37,7 +38,7 @@ declare const gVars: {
 };
 
 declare const TNS_ENV: string;
-declare const LOG_LEVEL: string;
+declare const DEV_LOG: boolean;
 declare const NO_CONSOLE: boolean;
 declare const TEST_LOGS: boolean;
 declare const PRODUCTION: boolean;
