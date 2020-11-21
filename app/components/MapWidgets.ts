@@ -40,7 +40,7 @@ export default class MapWidgets extends BgServiceComponent implements IMapModule
             return;
         }
         const bearing = cartoMap.bearing;
-        // this.log('onMapMove', bearing);
+        // console.log('onMapMove', bearing);
         this.currentMapRotation = Math.round(bearing * 100) / 100;
         // if (zoom < 10) {
         //     this.suggestionPackage = undefined;

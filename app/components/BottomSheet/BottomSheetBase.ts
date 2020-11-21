@@ -41,7 +41,7 @@ export default class BottomSheetBase extends BaseVueComponent {
     }
     set scrollEnabled(value) {
         if (value !== this.isScrollEnabled) {
-            // this.log('set scrollEnabled', value);
+            // console.log('set scrollEnabled', value);
             this.isScrollEnabled = value;
         }
     }
@@ -54,7 +54,7 @@ export default class BottomSheetBase extends BaseVueComponent {
     set listViewAtTop(value) {
         if (value !== this.isListViewAtTop) {
             this.isListViewAtTop = value;
-            // this.log('set listViewAtTop ', value);
+            // console.log('set listViewAtTop ', value);
             this.$emit('listViewAtTop', value);
         }
     }
@@ -72,17 +72,17 @@ export default class BottomSheetBase extends BaseVueComponent {
         this.mListViewAvailable = value;
         if (this.listView) {
             this.listViewLocationY = getViewTop(this.listView);
-            // this.log('listViewLocationY', this.listViewLocationY);
+            // console.log('listViewLocationY', this.listViewLocationY);
         }
     }
     onLayoutChange() {
         if (this.listViewAvailable) {
             this.listViewLocationY = getViewTop(this.listView);
-            // this.log('onLayoutChange', this.listViewAvailable, this.listViewLocationY);
+            // console.log('onLayoutChange', this.listViewAvailable, this.listViewLocationY);
         }
     }
     handleScroll(e: BottomSheetHolderScrollEventData) {
-        // this.log('handleScroll', this.listViewAvailable);
+        // console.log('handleScroll', this.listViewAvailable);
         if (this.listViewAvailable) {
             // we use this to track if listview is visible or not.
             // this is important to know we can drag or not
@@ -105,7 +105,7 @@ export default class BottomSheetBase extends BaseVueComponent {
             parent = parent.$parent as any;
         }
         const listView = this.listView;
-        // this.log('mounted', !!parent, !!listView);
+        // console.log('mounted', !!parent, !!listView);
         if (parent instanceof BottomSheetHolder) {
             this.holder = parent;
             parent.setBottomSheet(this);

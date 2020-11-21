@@ -75,7 +75,7 @@ export default class BaseVueComponent extends Vue {
     showLoadingStartTime: number = null;
     showLoading(msg: string) {
         const loadingIndicator = this.getLoadingIndicator();
-        // this.log('showLoading', msg, !!this.loadingIndicator);
+        // console.log('showLoading', msg, !!this.loadingIndicator);
         loadingIndicator.label.text = msg + '...';
         this.showLoadingStartTime = Date.now();
         loadingIndicator.show();
@@ -86,7 +86,7 @@ export default class BaseVueComponent extends Vue {
             setTimeout(() => this.hideLoading(), 1000 - delta);
             return;
         }
-        // this.log('hideLoading', !!this.loadingIndicator);
+        // console.log('hideLoading', !!this.loadingIndicator);
         if (this.loadingIndicator) {
             this.loadingIndicator.hide();
         }
@@ -100,7 +100,7 @@ export default class BaseVueComponent extends Vue {
         }
         // if (global.isAndroid) {
         //     const nativeView = this.nativeView;
-        //     this.log('android test', nativeView.isLoaded, !!nativeView.nativeViewProtected);
+        //     console.log('android test', nativeView.isLoaded, !!nativeView.nativeViewProtected);
         //     if (!!nativeView.nativeViewProtected) {
         //         (nativeView.nativeViewProtected as android.view.View).setTag(this.constructor.name);
         //     } else {

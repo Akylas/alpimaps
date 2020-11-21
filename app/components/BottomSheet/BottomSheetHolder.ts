@@ -33,7 +33,7 @@ export default class BottomSheetHolder extends BaseVueComponent {
         this.bottomSheet = comp;
         if (comp) {
             // comp.$on('listViewAtTop', value => {
-            //     // this.log('listViewAtTop changed', value);
+            //     // console.log('listViewAtTop changed', value);
             //     this.panEnabled = value;
             //     // if (value && this._isPanning) {
             //     // if (this.bottomSheet) {
@@ -206,7 +206,7 @@ export default class BottomSheetHolder extends BaseVueComponent {
     lastDraggingY = 0;
     onGestureTouch(args: GestureTouchEventData) {
         const data = args.data;
-        // this.log('onGestureTouch', data.state);
+        // console.log('onGestureTouch', data.state);
 
         if (data.state !== GestureState.ACTIVE) {
             return;
@@ -215,7 +215,7 @@ export default class BottomSheetHolder extends BaseVueComponent {
         const posY = data.extraData.y;
         const comp = this.bottomSheet;
         const y = (this.lastDraggingY = deltaY - this.prevDeltaY);
-        // this.log(
+        // console.log(
         //     'onGestureTouch',
         //     posY,
         //     comp.listViewVisible, comp.scrollEnabled , comp.listViewLocationY
@@ -270,9 +270,9 @@ export default class BottomSheetHolder extends BaseVueComponent {
         }
 
         this.currentStep = this.peekerSteps.indexOf(position);
-        // this.log('scrollSheetToPosition', position, this.currentViewHeight, this.viewHeight);
+        // console.log('scrollSheetToPosition', position, this.currentViewHeight, this.viewHeight);
         return new Promise((resolve) => {
-            // this.log('scrollSheetToPosition2', position, viewTop);
+            // console.log('scrollSheetToPosition2', position, viewTop);
             new TWEEN.Tween({ value: viewTop })
                 .to({ value: -position }, duration)
                 .easing(TWEEN.Easing.Quadratic.Out)
@@ -316,7 +316,7 @@ export default class BottomSheetHolder extends BaseVueComponent {
         this.scrollSheetToPosition(dest);
     }
     close() {
-        // this.log('close', this.opened);
+        // console.log('close', this.opened);
         if (!this.opened) {
             return Promise.resolve();
         }

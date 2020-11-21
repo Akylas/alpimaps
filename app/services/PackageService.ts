@@ -144,7 +144,7 @@ export default class PackageService extends Observable {
     get docPath() {
         if (!this._docPath) {
             this._docPath = getDataFolder();
-            this.log('docPath', this._docPath);
+            console.log('docPath', this._docPath);
         }
         return this._docPath;
     }
@@ -205,21 +205,21 @@ export default class PackageService extends Observable {
             }
             this.started = true;
             if (!Folder.exists(this.docPath)) {
-                this.log('creating doc folder', Folder.fromPath(this.docPath).path);
+                console.log('creating doc folder', Folder.fromPath(this.docPath).path);
             }
             const managerStarted = this.packageManager.start();
             const geoManagerStarted = this.geoPackageManager.start();
             const routingManagerStarted = this.routingPackageManager.start();
             const packages = this._packageManager.getLocalPackages();
-            this.log('start packageManager', managerStarted, packages.size());
+            console.log('start packageManager', managerStarted, packages.size());
             const geoPackages = this._geoPackageManager.getLocalPackages();
-            // this.log('start geoPackageManager', geoManagerStarted, geoPackages.size());
+            // console.log('start geoPackageManager', geoManagerStarted, geoPackages.size());
 
             const routingPackages = this._routingPackageManager.getLocalPackages();
             if (routingPackages.size() > 0) {
-                this.log('test routingPackageManager', routingPackages.get(0).getName(), routingPackages.get(0).getPackageType());
+                console.log('test routingPackageManager', routingPackages.get(0).getName(), routingPackages.get(0).getPackageType());
             }
-            // this.log('start routingPackageManager', routingManagerStarted, routingPackages.size());
+            // console.log('start routingPackageManager', routingManagerStarted, routingPackages.size());
             this.updatePackagesLists();
         }
     }
@@ -431,7 +431,7 @@ export default class PackageService extends Observable {
     set currentLanguage(value) {
         if (this._currentLanguage === value) {
             this._currentLanguage = value;
-            // this.log('set currentLanguage', value, !!this._offlineSearchService, !!this._offlineReverseSearchService);
+            // console.log('set currentLanguage', value, !!this._offlineSearchService, !!this._offlineReverseSearchService);
             if (this._offlineSearchService) {
                 this._offlineSearchService.language = value;
             }
@@ -517,10 +517,10 @@ export default class PackageService extends Observable {
         service: ReverseGeocodingService<any, any> | GeocodingService<any, any>,
         options
     ): Promise<GeocodingResultVector> {
-        // this.log('searchInGeocodingService', service['language'], options);
+        // console.log('searchInGeocodingService', service['language'], options);
         return new Promise((resolve, reject) => {
             service.calculateAddresses(options, (err, result) => {
-                // this.log('searchInGeocodingService done', err, result && result.size());
+                // console.log('searchInGeocodingService done', err, result && result.size());
                 if (err) {
                     reject(err);
                     return;
@@ -551,13 +551,13 @@ export default class PackageService extends Observable {
                 const entities = folder.getEntitiesSync();
                 entities.some((s) => {
                     if (s.name.endsWith('.nutigeodb')) {
-                        this.log('localOSMOfflineGeocodingService', s.name);
+                        console.log('localOSMOfflineGeocodingService', s.name);
                         this._localOSMOfflineGeocodingService = new OSMOfflineGeocodingService({
                             language: this.currentLanguage,
                             maxResults: 100,
                             path: s.path,
                         });
-                        this.log('localOSMOfflineGeocodingService done');
+                        console.log('localOSMOfflineGeocodingService done');
                         return true;
                     }
                 });
@@ -668,7 +668,7 @@ export default class PackageService extends Observable {
         if (this.hillshadeLayer) {
             return new Promise((resolve, reject) => {
                 this.hillshadeLayer.getElevationAsync(pos, (err, result) => {
-                    // this.log('searchInGeocodingService done', err, result && result.size());
+                    // console.log('searchInGeocodingService done', err, result && result.size());
                     if (err) {
                         reject(err);
                         return;
