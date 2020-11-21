@@ -151,7 +151,7 @@ export default class MapRightMenu extends BaseVueComponent implements IMapModule
         this.customLayers.selectLocalMbtilesFolder();
     }
     // get customSources() {
-    //     this.log('get customSources', !!this.mapComp);
+    //     console.log('get customSources', !!this.mapComp);
     //     if (this.mapComp) {
     //         return this.customLayers.customSources;
     //     }
@@ -159,10 +159,10 @@ export default class MapRightMenu extends BaseVueComponent implements IMapModule
     // }
 
     // get mapComp() {
-    //     this.log('get mapComp1', !!this.mMapComp);
+    //     console.log('get mapComp1', !!this.mMapComp);
     //     if (!this.mMapComp) {
     //         this.mMapComp = this.$getMapComponent();
-    //         this.log('get mapComp', this.mMapComp);
+    //         console.log('get mapComp', this.mMapComp);
     //     }
     //     return this.mMapComp;
     // }
@@ -171,11 +171,11 @@ export default class MapRightMenu extends BaseVueComponent implements IMapModule
     mounted() {
         super.mounted();
         // this.$getMapComponent().mapModules.rightMenu = this;
-        // this.log('mounted', !!this.mapComp);
+        // console.log('mounted', !!this.mapComp);
     }
     onLayerOpacityChanged(item, event) {
         const opacity = event.value / 100;
-        // this.log('onLayerOpacityChanged', item.name, event.value, opacity);
+        // console.log('onLayerOpacityChanged', item.name, event.value, opacity);
         item.layer.opacity = opacity;
         setNumber(item.name + '_opacity', opacity);
         item.layer.visible = opacity !== 0;
@@ -213,7 +213,7 @@ export default class MapRightMenu extends BaseVueComponent implements IMapModule
         //             break;
         //         }
         //         case 'legend':
-        //             // this.log('showing legend', item.legend);
+        //             // console.log('showing legend', item.legend);
         //             this.currentLegend = item.legend;
         //             // if (item.legend.endsWith('.html')) {
 

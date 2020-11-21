@@ -42,7 +42,7 @@ export default class UserLocationModule extends MapModule {
 
     onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
         super.onMapReady(mapComp, mapView);
-        // this.log('onMapReady', this._userFollow);
+        // console.log('onMapReady', this._userFollow);
     }
     onMapDestroyed() {
         super.onMapDestroyed();
@@ -98,7 +98,7 @@ export default class UserLocationModule extends MapModule {
         return this.mLastUserLocation;
     }
     set lastUserLocation(value) {
-        // this.log('set lastUserLocation', value);
+        // console.log('set lastUserLocation', value);
         this.mLastUserLocation = value;
         this.notify({
             eventName: 'location',
@@ -109,7 +109,7 @@ export default class UserLocationModule extends MapModule {
             const context: android.content.Context = ad.getApplicationContext();
             const myKM = context.getSystemService(android.content.Context.KEYGUARD_SERVICE) as android.app.KeyguardManager;
             const locked = myKM.inKeyguardRestrictedInputMode();
-            // this.log('onNewLocation', locked);
+            // console.log('onNewLocation', locked);
             if (locked) {
                 // it is locked
                 this.showMapAsAlbumArt();
@@ -155,7 +155,7 @@ export default class UserLocationModule extends MapModule {
                 accuracyColor = 'orange';
             }
         }
-        // this.log(
+        // console.log(
         //     'updateUserLocation',
         //     position,
         //     this.userFollow,
@@ -238,9 +238,9 @@ export default class UserLocationModule extends MapModule {
     onLocation(event: UserLocationdEventData) {
         this.queryingLocation = false;
         // const { android, ios, ...toPrint } = data.location;
-        // this.log('onLocation', this._userFollow, event.location, this.userFollow);
+        // console.log('onLocation', this._userFollow, event.location, this.userFollow);
         if (event.error) {
-            this.log(event.error);
+            console.log(event.error);
             return;
         } else if (event.location) {
             this.updateUserLocation(event.location);
@@ -316,10 +316,10 @@ export default class UserLocationModule extends MapModule {
     }
     public showMapAsAlbumArt() {
         if (global.isAndroid) {
-            // this.log('showMapAsAlbumArt');
+            // console.log('showMapAsAlbumArt');
             // (this.mapView.android as com.carto.ui.MapView).onResume();
             this.mapView.captureRendering(false).then((result) => {
-                // this.log('showMapAsAlbumArt0', result, result.android);
+                // console.log('showMapAsAlbumArt0', result, result.android);
                 const color = this.mapComp.accentColor.android;
                 // NotificationHelper.createNotificationChannel(context);
                 this.initMediaSession();
@@ -341,7 +341,7 @@ export default class UserLocationModule extends MapModule {
 
                 // }));
 
-                // this.log('showMapAsAlbumArt1', mediaSession, mediaSession.getSessionToken());
+                // console.log('showMapAsAlbumArt1', mediaSession, mediaSession.getSessionToken());
                 // const activityClass = (com as any).tns.NativeScriptActivity.class;
                 // const tapActionIntent = new android.content.Intent(context, activityClass);
                 // tapActionIntent.setAction(android.content.Intent.ACTION_MAIN);
@@ -363,11 +363,11 @@ export default class UserLocationModule extends MapModule {
                 // builder.setContentIntent(tapActionPendingIntent);
                 builder.setSmallIcon(ad.resources.getDrawableId('ic_stat_logo'));
                 builder.setContentTitle('Alpi Maps Song test!');
-                // this.log('showMapAsAlbumArt2');
+                // console.log('showMapAsAlbumArt2');
                 builder.setStyle(
                     new androidx.media.app.NotificationCompat.MediaStyle().setMediaSession(mediaSession.getSessionToken())
                 );
-                // this.log('showMapAsAlbumArt3');
+                // console.log('showMapAsAlbumArt3');
                 const notifiction = builder.build();
                 const service = context.getSystemService(
                     android.content.Context.NOTIFICATION_SERVICE
