@@ -1,19 +1,11 @@
-import {
-    BaseEntity,
-    Column,
-    Entity,
-    OneToOne,
-    PrimaryColumn,
-    PrimaryGeneratedColumn,
-    ValueTransformer,
-} from '@nativescript-community/typeorm';
-import { MapBounds, MapPos, MapPosVector } from '@nativescript-community/ui-carto/core';
-import { decodeMapPosVector, encodeMapPosVector } from '@nativescript-community/ui-carto/utils';
-import { VectorElement } from '@nativescript-community/ui-carto/vectorelements';
+import { MapPos, MapPosVector } from '@nativescript-community/ui-carto/core';
 import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
-import { WKBGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
 import { WKBGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
-import Item from './Item';
+import { WKBGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
+import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
+import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
+const sql = SqlQuery.createFromTemplateString;
+import NSQLDatabase from '../mapModules/NSQLDatabase';
 
 export enum RoutingAction {
     HEAD_ON,
@@ -32,19 +24,19 @@ export enum RoutingAction {
     LEAVE_AGAINST_ALLOWED_DIRECTION,
     GO_UP,
     GO_DOWN,
-    WAIT,
+    WAIT
 }
 
 export interface RouteInstruction {
-    position: MapPos<LatLonKeys>;
-    action: RoutingAction;
-    azimuth: number;
-    distance: number;
-    pointIndex: number;
+    // position: MapPos<LatLonKeys>;
+    a: RoutingAction;
+    az: number;
+    dist: number;
+    index: number;
     time: number;
-    turnAngle: number;
-    streetName: string;
-    instruction: string;
+    angle: number;
+    name: string;
+    inst: string;
 }
 
 export interface RouteProfile {
@@ -63,7 +55,7 @@ namespace GeometryTransformer {
     export function to(value: MapPosVector<LatLonKeys>): any {
         const result = writer.writeGeometry(
             new LineGeometry<LatLonKeys>({
-                poses: value,
+                poses: value
             })
         );
         if (global.isAndroid) {
@@ -80,21 +72,104 @@ namespace GeometryTransformer {
     }
 }
 
-@Entity()
-export default class Route extends BaseEntity {
-    @PrimaryColumn()
-    id: number;
+export class Route {
+    public readonly id!: number;
 
-    @Column('simple-json', { nullable: true })
-    profile?: RouteProfile;
+    public readonly profile!: RouteProfile | null;
 
-    @Column('blob', { transformer: GeometryTransformer })
-    positions: MapPosVector<LatLonKeys>;
+    public readonly positions!: MapPosVector<LatLonKeys>;
 
-    @Column()
-    totalTime: number;
-    @Column()
-    totalDistance: number;
-    @Column('simple-json', { nullable: true })
-    instructions?: RouteInstruction[];
+    public readonly totalTime!: number;
+    public readonly totalDistance!: number;
+    public readonly instructions?: RouteInstruction[] | null;
 }
+
+export type IRoute = Partial<Route> & {
+    // vectorElement?: VectorElement<any, any>;
+};
+
+export class RouteRepository extends CrudRepository<Route> {
+    constructor(database: NSQLDatabase) {
+        super({
+            database,
+            table: 'Routes',
+            primaryKey: 'id',
+            model: Route
+        });
+    }
+
+    async createTables() {
+        return this.database.query(sql`
+			CREATE TABLE IF NOT EXISTS "Routes"  (
+				id INTEGER PRIMARY KEY NOT NULL,
+				profile TEXT,
+				positions blob NOT NULL,
+				instructions TEXT,
+				totalTime INTEGER,
+				totalDistance INTEGER 
+			);
+		`);
+    }
+
+    async createRoute(item: IRoute) {
+        const toSave = {};
+        Object.keys(item).forEach((k) => {
+            const data = item[k];
+            if (typeof data === 'string') {
+                toSave[k] = data;
+            } else {
+                if (k === 'positions') {
+                    toSave[k] = GeometryTransformer.to(data);
+                } else {
+                    toSave[k] = JSON.stringify(data);
+                }
+            }
+        });
+        await this.create(toSave);
+        return item as Route;
+    }
+
+    prepareGetRoute(item) {
+        Object.keys(item).forEach((k) => {
+            if (k === 'positions') {
+                item[k] = GeometryTransformer.from(item[k]);
+            } else if (k !== 'id' && k !== 'routeId') {
+                item[k] = JSON.parse(item[k]);
+            }
+        });
+        return item;
+    }
+    async getRoute(itemId: number) {
+        let result = await this.get(itemId);
+        result = this.prepareGetRoute(result);
+        return result;
+    }
+    async searchRoute(where?: SqlQuery | null, orderBy?: SqlQuery | null) {
+        const result = (await this.search(where, orderBy)).slice();
+        for (let index = 0; index < result.length; index++) {
+            let element = result[index];
+            element = this.prepareGetRoute(element);
+            result[index] = element;
+        }
+        return result;
+    }
+}
+
+// @Entity()
+// export default class Route extends BaseEntity {
+//     @PrimaryColumn()
+//     id: number;
+
+//     @Column('simple-json', { nullable: true })
+//     profile?: RouteProfile;
+
+//     @Column('blob', { transformer: GeometryTransformer })
+//     positions: MapPosVector<LatLonKeys>;
+
+//     @Column()
+//     totalTime: number;
+//     @Column()
+//     totalDistance: number;
+//     @Column('simple-json', { nullable: true })
+//     instructions?: RouteInstruction[];
+// }

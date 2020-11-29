@@ -1,17 +1,32 @@
 module.exports = {
-    extends: ['plugin:prettier/recommended', 'plugin:vue/essential'],
-
-    parser: 'vue-eslint-parser',
+    extends: ['plugin:prettier/recommended'],
+    env: {
+        es6: true,
+        node: true
+    },
+    parser: '@typescript-eslint/parser',
     parserOptions: {
-        parser: '@typescript-eslint/parser',
+        ecmaVersion: 2019,
         createDefaultProgram: true,
         project: 'tsconfig.json',
+        sourceType: 'module'
     },
-    plugins: ['prettier', '@typescript-eslint'],
+    globals: { gVars: true, SENTRY_DSN: true, SENTRY_PREFIX: true, PRODUCTION: true, OWM_KEY: true },
+    plugins: ['prettier', 'svelte3', '@typescript-eslint'],
+    overrides: [
+        { files: '*.svelte', processor: 'svelte3/svelte3' },
+        {
+            files: '*.ts',
+            rules: {
+                'eslint-plugin-svelte3/parse-error': 'off',
+                'no-undef': 'off',
+            }
+        }
+    ],
     rules: {
         'prettier/prettier': 'warn',
-        'vue/custom-event-name-casing': 'off',
-        '@typescript-eslint/adjacent-overload-signatures': 'error',
+        'eslint-plugin-svelte3/invalid-binding': 'off',
+        '@typescript-eslint/adjacent-overload-signatures': 'off',
         '@typescript-eslint/array-type': 'error',
         '@typescript-eslint/await-thenable': 'error',
         '@typescript-eslint/ban-types': 'off',
@@ -21,8 +36,8 @@ module.exports = {
         '@typescript-eslint/explicit-member-accessibility': [
             'off',
             {
-                accessibility: 'explicit',
-            },
+                accessibility: 'explicit'
+            }
         ],
         '@typescript-eslint/indent': 'off',
         '@typescript-eslint/interface-name-prefix': 'off',
@@ -48,14 +63,14 @@ module.exports = {
             'error',
             'single',
             {
-                avoidEscape: true,
-            },
+                avoidEscape: true
+            }
         ],
         '@typescript-eslint/semi': ['error'],
         '@typescript-eslint/space-within-parens': ['off', 'never'],
         '@typescript-eslint/triple-slash-reference': 'off',
         '@typescript-eslint/type-annotation-spacing': 'error',
-        '@typescript-eslint/unified-signatures': 'error',
+        '@typescript-eslint/unified-signatures': 'off',
         'arrow-body-style': 'error',
         'arrow-parens': ['off', 'as-needed'],
         camelcase: 'off',
@@ -67,7 +82,7 @@ module.exports = {
         'eol-last': 'error',
         eqeqeq: ['error', 'smart'],
         'guard-for-in': 'off',
-        'id-blacklist': ['error', 'any', 'string', 'boolean', 'Undefined'],
+        'id-blacklist': 'off',
         'id-match': 'error',
         'sort-imports': [
             'error',
@@ -75,8 +90,8 @@ module.exports = {
                 ignoreCase: false,
                 ignoreDeclarationSort: true,
                 ignoreMemberSort: false,
-                memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
-            },
+                memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single']
+            }
         ],
         'linebreak-style': 'off',
         'max-classes-per-file': 'off',
@@ -84,8 +99,8 @@ module.exports = {
             'off',
             {
                 ignorePattern: '^import |^export {(.*?)}',
-                code: 200,
-            },
+                code: 200
+            }
         ],
         'new-parens': 'off',
         'newline-per-chained-call': 'off',
@@ -115,9 +130,9 @@ module.exports = {
                     'profile',
                     'profileEnd',
                     'timeStamp',
-                    'context',
-                ],
-            },
+                    'context'
+                ]
+            }
         ],
         'no-constant-condition': 'error',
         'no-control-regex': 'off',
@@ -132,26 +147,27 @@ module.exports = {
         'no-irregular-whitespace': 'off',
         'no-multiple-empty-lines': 'off',
         'no-new-wrappers': 'error',
-        'no-redeclare': ['error', { builtinGlobals: false }],
+        'no-redeclare': 'off',
         'no-regex-spaces': 'error',
         'no-return-await': 'error',
         'no-shadow': [
             'off',
             {
-                hoist: 'all',
-            },
+                hoist: 'all'
+            }
         ],
         'no-throw-literal': 'error',
         'no-trailing-spaces': 'error',
         'no-undef-init': 'error',
+        'no-undef': 'error',
         'no-underscore-dangle': 'off',
         'no-unsafe-finally': 'error',
         'no-unused-expressions': [
             'error',
             {
                 allowTaggedTemplates: true,
-                allowShortCircuit: true,
-            },
+                allowShortCircuit: true
+            }
         ],
         'no-unused-labels': 'error',
         'no-var': 'error',
@@ -162,7 +178,8 @@ module.exports = {
         'quote-props': 'off',
         radix: 'error',
         'space-before-function-paren': 'off',
+        'spaced-comment': 'off',
         'use-isnan': 'error',
-        'valid-typeof': 'off',
-    },
+        'valid-typeof': 'off'
+    }
 };

@@ -55,6 +55,7 @@ Map {
 /* 3.1 Main natural */
 @contour: #B58164;
 @contour_label: #AB8267;
+@contour_halo: rgb(158, 158, 158);
 
 @glacier:#ffffff;
 @water: #74A4C1;
@@ -147,7 +148,6 @@ Map {
 @primary_halo:        #fefde1;
 @minor_halo:          #fff;
 @tunnel_halo:         #faf9f7;
-@peak_halo: rgba(255,255,255,1);
 @poi_light:           #666;
 @poi_dark:            #000;
 @poi_halo:            rgba(255,255,255,0.15); 
@@ -210,7 +210,7 @@ Map {
 @steps-casing: @default-casing;
 @cycleway-casing: @default-casing;
 @bridleway-casing: @default-casing;
-@track-casing: @default-casing;
+@track-casing: #A5A5A5;
 
 
 
@@ -239,7 +239,7 @@ Map {
 @standard-halo-fill: rgba(255,255,255,0.6);
 
 // @footway-fill: salmon;
-@path: #e4e4e4;
+@path: rgb(131, 131, 131);
 @footway-fill: #a9a9a9;
 @footway-fill-noaccess: #bbbbbb;
 @steps-fill: @footway-fill;
@@ -281,6 +281,7 @@ Map {
 
 /* 5.2 Bridges */
 
+@bridge_fill:  rgba(255,255,255,0.4) ;
 @bridge_casing: black;
 @bridge-casing: #000000;
 
@@ -322,6 +323,7 @@ Map {
 @halo_park_label: rgba(255, 255, 255, 0.45);
 
 @peak_label: #9b7057;
+@peak_halo:   rgba(255, 255, 255, 0.65);
 
 /* 6.3 Place labels */
 
@@ -405,7 +407,7 @@ Map {
 @bridleway-width-z13:             0.3;
 @footway-width-z14:               1; // 0.7
 @cycleway-width-z13:              1; // 0.7
-@track-width-z13:                 1.3; // 0.5
+@track-width-z13:                 0.2; // 0.5
 @track-grade1-width-z13:          1; // 0.5
 @track-grade2-width-z13:          1; // 0.5
 @steps-width-z13:                 1.5;// 0.7
@@ -434,10 +436,10 @@ Map {
 @bridleway-width-z15:             1.2;
 @footway-width-z15:               1.5;  //1
 @cycleway-width-z15:              0.9;
-@track-width-z15:                 2; // 1.5
 @track-grade1-width-z15:          1.5;
 @track-grade2-width-z15:          1.5;
 @steps-width-z15:                 3;
+@track-width-z15:                 2; // 1.5
 
 @secondary-width-z16:            9; //10
 @tertiary-width-z16:             9; //10
@@ -449,6 +451,7 @@ Map {
 @minor-service-width-z16:         2;
 @footway-width-z16:               1.6;
 @cycleway-width-z16:              0.9;
+@track-width-z16:                 2; // 1.5
 
 @motorway-width-z17:             10;//18
 @motorway-link-width-z17:        7.8;//12
@@ -460,8 +463,8 @@ Map {
 @secondary-link-width-z17:       7;//12
 @tertiary-width-z17:             9;//18
 @tertiary-link-width-z17:        7;//12
-@residential-width-z17:          12;//12
-@living-street-width-z17:        12;
+@residential-width-z17:          10;//12
+@living-street-width-z17:        10;
 @pedestrian-width-z17:           6;//12
 @road-width-z17:                  7;
 @service-width-z17:               7;
@@ -477,8 +480,8 @@ Map {
 @secondary-link-width-z18:       12;//13
 @tertiary-width-z18:             18;//21
 @tertiary-link-width-z18:        12;//13
-@residential-width-z18:          12;//13
-@living-street-width-z18:        13;
+@residential-width-z18:          10;//13
+@living-street-width-z18:        11;
 @pedestrian-width-z18:           10;//13
 @road-width-z18:                  8.5;
 @service-width-z18:               8.5;
@@ -494,7 +497,7 @@ Map {
 @secondary-link-width-z19:       13;//16
 @tertiary-width-z19:             21;//27
 @tertiary-link-width-z19:        13;//16
-@residential-width-z19:          17;
+@residential-width-z19:          15;
 @living-street-width-z19:        17;
 @pedestrian-width-z19:           13;//17
 @road-width-z19:                 11;
@@ -506,6 +509,7 @@ Map {
 
 @footway-width-z19:               2;
 @cycleway-width-z19:              1.3;
+@track-width-z19:                 9; // 1.5
 
 
 @major-casing-width-z11:          0.3;
@@ -528,11 +532,13 @@ Map {
 @residential-casing-width-z15:    0.5;
 @secondary-casing-width-z15:      0.7;
 @major-casing-width-z15:          0.7;
+@track-casing-width-z15:          0.7;
 
 @casing-width-z16:                0.6;
 @residential-casing-width-z16:    0.6;
 @secondary-casing-width-z16:      0.7;
 @major-casing-width-z16:          0.7;
+@track-casing-width-z16:          0.7;
 
 @casing-width-z17:                0.7;
 @residential-casing-width-z17:    0.7;
@@ -548,6 +554,7 @@ Map {
 @residential-casing-width-z19:    0.8;
 @secondary-casing-width-z19:      1;
 @major-casing-width-z19:          1;
+@track-casing-width-z19:          1;
 
 @bridge-casing-width-z12:         0.1;
 @major-bridge-casing-width-z12:   0.5;

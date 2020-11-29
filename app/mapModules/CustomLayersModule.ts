@@ -1,4 +1,3 @@
-import { profile } from '@nativescript/core';
 import { MapPos } from '@nativescript-community/ui-carto/core';
 import { MergedMBVTTileDataSource } from '@nativescript-community/ui-carto/datasources';
 import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
@@ -10,20 +9,20 @@ import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/
 import { MapBoxElevationDataDecoder } from '@nativescript-community/ui-carto/rastertiles';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { openFilePicker } from '@nativescript-community/ui-document-picker';
+import { profile } from '@nativescript/core';
 import * as app from '@nativescript/core/application';
 import * as appSettings from '@nativescript/core/application-settings';
 import { Color } from '@nativescript/core/color';
 import { ObservableArray } from '@nativescript/core/data/observable-array';
 import { File, Folder, path } from '@nativescript/core/file-system';
-import Vue from 'nativescript-vue';
-import Map from '~/components/Map';
-import OptionSelect from '~/components/OptionSelect';
+import { showBottomSheet } from '~/components/bottomsheet';
+import OptionSelect from '~/components/OptionSelect.svelte';
 import { DataProvider, Provider } from '~/data/tilesources';
 import { $t } from '~/helpers/locale';
-import PackageService from '~/services/PackageService';
-import { getDataFolder } from '~/utils';
-import MapModule from './MapModule';
-import { bind } from 'helpful-decorators';
+import { packageService } from '~/services/PackageService';
+import { getDataFolder } from '~/utils/utils';
+import MapModule, { getMapContext } from './MapModule';
+const mapContext = getMapContext();
 
 function templateString(str: string, data) {
     return str.replace(
@@ -51,36 +50,39 @@ export default class CustomLayersModule extends MapModule {
         super();
         // this.customSources = new ObservableArray([]) as any;
     }
-    @profile
     createMergeMBtiles({ name, sources, legend }: { name: string; sources: string[]; legend?: string }) {
         let dataSource;
         if (sources.length === 1) {
             dataSource = new MBTilesTileDataSource({
-                databasePath: sources[0],
+                databasePath: sources[0]
             });
         } else {
             dataSource = new MergedMBVTTileDataSource({
                 dataSources: sources.map(
                     (s) =>
                         new MBTilesTileDataSource({
-                            databasePath: s,
+                            databasePath: s
                         })
-                ),
+                )
             });
         }
-        const mapComp = this.mapComp;
         const opacity = appSettings.getNumber(`${name}_opacity`, 1);
         // const zoomLevelBias = Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2);
         const layer = new VectorTileLayer({
             dataSource,
             // zoomLevelBias: zoomLevelBias * 0.75,
             opacity,
-            decoder: mapComp.getVectorTileDecoder(),
+            decoder: mapContext.getVectorTileDecoder(),
             // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
-            visible: opacity !== 0,
+            visible: opacity !== 0
         });
         layer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
-        layer.setVectorTileEventListener(mapComp, mapComp.mapProjection);
+        layer.setVectorTileEventListener<LatLonKeys>(
+            {
+                onVectorTileClicked: (e) => mapContext.onVectorTileClicked(e)
+            },
+            mapContext.getProjection()
+        );
         return {
             name,
             opacity,
@@ -90,10 +92,10 @@ export default class CustomLayersModule extends MapModule {
             options: {
                 zoomLevelBias: {
                     min: 0,
-                    max: 5,
-                },
+                    max: 5
+                }
             },
-            provider: { name, sources, legend },
+            provider: { name, sources, legend }
         };
     }
     createRasterLayer(id: string, provider: Provider) {
@@ -111,7 +113,7 @@ export default class CustomLayersModule extends MapModule {
 
         const dataSource = new HTTPTileDataSource({
             url: provider.url as string,
-            ...provider.sourceOptions,
+            ...provider.sourceOptions
         });
         // console.log('createRasterLayer', id, opacity, provider.url, provider.sourceOptions, dataSource, dataSource.maxZoom, dataSource.minZoom);
         return {
@@ -121,25 +123,25 @@ export default class CustomLayersModule extends MapModule {
             options: {
                 zoomLevelBias: {
                     min: 0,
-                    max: 5,
-                },
+                    max: 5
+                }
             },
             layer: new RasterTileLayer({
                 dataSource:
                     provider.cacheable !== false
                         ? new PersistentCacheTileDataSource({
-                              dataSource,
-                              capacity: 300 * 1024 * 1024,
-                              databasePath,
-                          })
+                            dataSource,
+                            capacity: 300 * 1024 * 1024,
+                            databasePath
+                        })
                         : dataSource,
                 zoomLevelBias,
                 opacity,
                 // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                 visible: opacity !== 0,
-                ...provider.layerOptions,
+                ...provider.layerOptions
             }),
-            provider,
+            provider
         };
     }
 
@@ -189,10 +191,10 @@ export default class CustomLayersModule extends MapModule {
             sourceOptions: {
                 minZoom: 0,
                 maxZoom: 22,
-                ...data.sourceOptions,
+                ...data.sourceOptions
             },
             urlOptions: data.urlOptions,
-            layerOptions: data.layerOptions,
+            layerOptions: data.layerOptions
         };
 
         if (data.legend) {
@@ -216,7 +218,7 @@ export default class CustomLayersModule extends MapModule {
             }
             if (typeof variant === 'string') {
                 provider.urlOptions = {
-                    variant,
+                    variant
                 };
             } else {
                 provider.url = variant.url || provider.url;
@@ -265,7 +267,6 @@ export default class CustomLayersModule extends MapModule {
             this.baseProviders[id] = provider;
         }
     }
-    @profile
     async getSourcesLibrary() {
         if (this.sourcesLoaded) {
             return;
@@ -284,11 +285,10 @@ export default class CustomLayersModule extends MapModule {
         this.sourcesLoaded = true;
     }
 
-    @profile
-    onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
-        super.onMapReady(mapComp, mapView);
+    onMapReady(mapView: CartoMap<LatLonKeys>) {
+        super.onMapReady(mapView);
         const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
-        // console.log('onMapReady', savedSources, this.customSources);
+        console.log('onMapReady', savedSources, this.customSources);
         if (savedSources.length > 0) {
             this.getSourcesLibrary().then(() => {
                 savedSources.forEach((s) => {
@@ -297,13 +297,13 @@ export default class CustomLayersModule extends MapModule {
                     this.customSources.push(data);
                 });
                 this.customSources.forEach((data, index) => {
-                    mapComp.addLayer(data.layer, 'customLayers', index);
+                    mapContext.addLayer(data.layer, 'customLayers', index);
                 });
             });
         }
 
-        const folderPath = (Vue.prototype.$packageService as PackageService).getDefaultMBTilesDir();
-        // console.log('localMbtilesSource', folderPath);
+        const folderPath = packageService.getDefaultMBTilesDir();
+        console.log('localMbtilesSource', folderPath);
         if (folderPath) {
             this.loadLocalMbtiles(folderPath);
         }
@@ -332,18 +332,18 @@ export default class CustomLayersModule extends MapModule {
                     opacity: s.layer.opacity,
                     decoder: newVectorTileDecoder,
                     // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
-                    visible: s.layer.opacity !== 0,
+                    visible: s.layer.opacity !== 0
                 });
                 layer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
                 // layer.setBuildingRenderOrder(VectorTileRenderOrder.LAYER);
                 layer.setVectorTileEventListener<LatLonKeys>(
                     {
-                        onVectorTileClicked: this.mapComp.onVectorTileClicked.bind(this.mapComp),
+                        onVectorTileClicked: mapContext.onVectorTileClicked
                     },
-                    this.mapComp.mapProjection
+                    mapContext.getProjection()
                 );
-                this.mapComp.removeLayer(s.layer, 'customLayers');
-                this.mapComp.addLayer(layer, 'customLayers', s.index);
+                mapContext.removeLayer(s.layer, 'customLayers');
+                mapContext.addLayer(layer, 'customLayers', s.index);
                 s.layer = layer;
             }
         });
@@ -365,14 +365,12 @@ export default class CustomLayersModule extends MapModule {
         }
         return null;
     }
-    @profile
     async loadLocalMbtiles(directory: string) {
         if (!Folder.exists(directory)) {
             return;
         }
         try {
             const folder = Folder.fromPath(directory);
-            const mapComp = this.mapComp;
             let index = this.customSources.length;
             const entities = await folder.getEntities();
             const folders = entities.filter((e) => Folder.exists(e.path));
@@ -382,12 +380,12 @@ export default class CustomLayersModule extends MapModule {
                 const data = this.createMergeMBtiles({
                     legend: 'https://www.openstreetmap.org/key.html',
                     name: f.name,
-                    sources: subentities.map((e2) => e2.path).filter((s) => s.endsWith('.mbtiles')),
+                    sources: subentities.map((e2) => e2.path).filter((s) => s.endsWith('.mbtiles'))
                 });
                 data.index = index++;
                 this.customSources.push(data);
-                (Vue.prototype.$packageService as PackageService).localVectorTileLayer = data.layer;
-                mapComp.addLayer(data.layer, 'customLayers', data.index);
+                packageService.localVectorTileLayer = data.layer;
+                mapContext.addLayer(data.layer, 'customLayers', data.index);
             }
             const etiles = entities.filter((e) => e.name.endsWith('.etiles')).slice(-1);
             etiles.forEach((e) => {
@@ -395,10 +393,10 @@ export default class CustomLayersModule extends MapModule {
                 const dataSource = new MBTilesTileDataSource({
                     // minZoom: 5,
                     // maxZoom: 12,
-                    databasePath: e.path,
+                    databasePath: e.path
                 });
                 const name = e.name;
-                const contrast = appSettings.getNumber(`${name}_contrast`, 0.39);
+                const contrast = appSettings.getNumber(`${name}_contrast`, 0.29);
                 const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.29);
                 const illuminationDirection = appSettings.getNumber(`${name}_illuminationDirection`, 207);
                 const opacity = appSettings.getNumber(`${name}_opacity`, 1);
@@ -416,8 +414,7 @@ export default class CustomLayersModule extends MapModule {
                         tileFilterMode = RasterTileFilterMode.RASTER_TILE_FILTER_MODE_NEAREST;
                         break;
                 }
-                const layer = (this.hillshadeLayer = (Vue.prototype
-                    .$packageService as PackageService).hillshadeLayer = new HillshadeRasterTileLayer({
+                const layer = (this.hillshadeLayer = packageService.hillshadeLayer = new HillshadeRasterTileLayer({
                     decoder,
                     tileFilterMode,
                     visibleZoomRange: [5, 16],
@@ -427,7 +424,7 @@ export default class CustomLayersModule extends MapModule {
                     heightScale,
                     dataSource,
                     opacity,
-                    visible: opacity !== 0,
+                    visible: opacity !== 0
                 }));
 
                 const data = {
@@ -438,25 +435,25 @@ export default class CustomLayersModule extends MapModule {
                     options: {
                         contrast: {
                             min: 0,
-                            max: 1,
+                            max: 1
                         },
                         heightScale: {
                             min: 0,
-                            max: 2,
+                            max: 2
                         },
                         zoomLevelBias: {
                             min: 0,
-                            max: 5,
+                            max: 5
                         },
                         illuminationDirection: {
                             min: 0,
-                            max: 359,
-                        },
+                            max: 359
+                        }
                     },
-                    provider: { name },
+                    provider: { name }
                 };
                 this.customSources.push(data);
-                mapComp.addLayer(data.layer, 'customLayers', data.index);
+                mapContext.addLayer(data.layer, 'customLayers', data.index);
             });
             // return Promise.all(
         } catch (err) {
@@ -471,7 +468,7 @@ export default class CustomLayersModule extends MapModule {
         return openFilePicker({
             extensions: ['file/*'],
             multipleSelection: false,
-            pickerMode: 0,
+            pickerMode: 0
         })
             .then((result) => {
                 if (Folder.exists(result.files[0])) {
@@ -495,27 +492,27 @@ export default class CustomLayersModule extends MapModule {
         this.customSources.splice(0, this.customSources.length);
     }
 
-    @profile
     addSource() {
         this.getSourcesLibrary().then(() => {
             const options = {
                 props: {
                     title: $t('pick_source'),
-                    options: Object.keys(this.baseProviders).map((s) => ({ name: s, provider: this.baseProviders[s] })),
+                    options: Object.keys(this.baseProviders).map((s) => ({ name: s, provider: this.baseProviders[s] }))
                 },
-                fullscreen: false,
+                fullscreen: false
             };
-            this.mapComp.$showBottomSheet(OptionSelect, {
+            showBottomSheet({
+                view: OptionSelect,
                 props: {
                     title: $t('pick_source'),
-                    options: Object.keys(this.baseProviders).map((s) => ({ name: s, provider: this.baseProviders[s] })),
+                    options: Object.keys(this.baseProviders).map((s) => ({ name: s, provider: this.baseProviders[s] }))
                 },
                 closeCallback: (results) => {
                     // console.log('closeCallback', results);
                     const result = Array.isArray(results) ? results[0] : results;
                     if (result) {
                         const data = this.createRasterLayer(result.name, result.provider);
-                        this.mapComp.addLayer(data.layer, 'customLayers', this.customSources.length);
+                        mapContext.addLayer(data.layer, 'customLayers', this.customSources.length);
                         this.customSources.push(data);
                         // console.log('layer added', data.provider);
                         const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
@@ -523,7 +520,7 @@ export default class CustomLayersModule extends MapModule {
                         // console.log('saving added_providers', savedSources);
                         appSettings.setString('added_providers', JSON.stringify(savedSources));
                     }
-                },
+                }
             });
             // const instance = new OptionSelect();
             // instance.options = Object.keys(this.baseProviders).map(s => ({ name: s, provider: this.baseProviders[s] }));
@@ -563,7 +560,7 @@ export default class CustomLayersModule extends MapModule {
         });
         // console.log('deleteSource', name, index);
         if (index !== -1) {
-            this.mapComp.removeLayer(this.customSources.getItem(index).layer, 'customLayers', index);
+            mapContext.removeLayer(this.customSources.getItem(index).layer, 'customLayers', index);
             this.customSources.splice(index, 1);
         }
         const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
