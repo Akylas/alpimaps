@@ -4,16 +4,16 @@ import { convertDuration, convertTime } from './locale';
 export { convertDuration, convertTime } from './locale';
 const timePreset = {
     factors: [1000, 60, 60, 24],
-    units: ['ms', 's', 'min', 'hour', 'day'],
+    units: ['ms', 's', 'min', 'hour', 'day']
 };
 const distancePreset = {
     factors: [1000],
-    units: ['m', 'km'],
+    units: ['m', 'km']
 };
 
 const elevationPreset = {
     factors: [],
-    units: ['m'],
+    units: ['m']
 };
 
 export function convertDistance(meters) {
@@ -35,7 +35,6 @@ export function convertValueToUnit(value: any, unit, otherParam?) {
         return ['', ''];
     }
     const isString = typeof value === 'string';
-    // console.log('convertValueToUnit', value, unit, otherParam);
     switch (unit) {
         case 'duration':
             return [convertDuration(value), ''];

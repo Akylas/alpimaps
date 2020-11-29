@@ -5,7 +5,6 @@ import { BaseError } from 'make-error';
 import mergeOptions from 'merge-options';
 import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
 import { $t } from '~/helpers/locale';
-import { RouteProfile } from '~/components/DirectionsPanel';
 import {
     ApplicationEventData,
     off as applicationOff,
@@ -14,6 +13,7 @@ import {
     suspendEvent,
 } from '@nativescript/core/application';
 import { getBounds, getPathLength } from '~/helpers/geolib';
+import { RouteProfile } from '~/models/Route';
 
 type HTTPOptions = http.HttpRequestOptions;
 
@@ -778,143 +778,141 @@ export class NetworkService extends Observable {
             }
         });
     }
-    mapquestElevationProfile(_points: MapPos<LatLonKeys>[]) {
+    async mapquestElevationProfile(_points: MapPos<LatLonKeys>[]) {
         const distance = getPathLength(_points);
+        let res: {
+            elevationProfile;
+            shapePoints;
+        };
         // console.log('mapquestElevationProfile', distance);
-        let promise = Promise.resolve(undefined);
         if (distance > 300000) {
             const totalPoints = _points.length;
             const semi = Math.floor(totalPoints / 2);
             // console.debug('semi', semi);
-            promise = promise
-                .then(() => this.actualMapquestElevationProfile(_points.slice(0, semi)))
-                .then((r) =>
-                    this.actualMapquestElevationProfile(_points.slice(semi)).then((r2) => {
-                        const firstDistanceTotal = r.elevationProfile[r.elevationProfile.length - 1].distance;
-                        return {
-                            elevationProfile: r.elevationProfile.concat(
-                                r2.elevationProfile.map((e) => {
-                                    e.distance += firstDistanceTotal;
-                                    return e;
-                                })
-                            ),
-                            shapePoints: r.shapePoints.concat(r2.shapePoints),
-                        };
+            const r = await this.actualMapquestElevationProfile(_points.slice(0, semi));
+            const r2 = await this.actualMapquestElevationProfile(_points.slice(semi));
+            const firstDistanceTotal = r.elevationProfile[r.elevationProfile.length - 1].distance;
+            res= {
+                elevationProfile: r.elevationProfile.concat(
+                    r2.elevationProfile.map((e) => {
+                        e.distance += firstDistanceTotal;
+                        return e;
                     })
-                );
-        } else {
-            promise = promise.then(() => this.actualMapquestElevationProfile(_points));
-        }
-        return promise.then((e) => {
-            let last, currentHeight, coordIndex, currentDistance;
-            const profile = e.elevationProfile;
-            const coords = e.shapePoints;
-
-            const result: RouteProfile = {
-                max: [-1000, -1000],
-                min: [100000, 100000],
-                dplus: 0,
-                dmin: 0,
-                data: [],
+                ),
+                shapePoints: r.shapePoints.concat(r2.shapePoints),
             };
-            profile.forEach(function (value, index) {
-                // console.log('test', index, value, last ? last.height : undefined, result.dplus, result.dmin);
-                currentHeight = value.height;
-                if (currentHeight === -32768) {
-                    return;
-                }
-                currentDistance = value.distance = Math.floor(value.distance * 1000);
+        } else {
+            res = await this.actualMapquestElevationProfile(_points);
+        }
+        let last, currentHeight: number, coordIndex: number, currentDistance: number;
+        const profile = res.elevationProfile;
+        const coords = res.shapePoints;
 
-                if (last) {
-                    // if (currentDistance - last.distance < 100) {
-                    //     console.log('ignore point as too close');
-                    //     return;
-                    // }
-                    const deltaz = currentHeight - last.height;
-                    if (deltaz > 0) {
-                        result.dplus += deltaz;
-                    } else if (deltaz < 0) {
-                        result.dmin += deltaz;
-                    }
-                }
-                if (currentDistance > result.max[0]) {
-                    result.max[0] = currentDistance;
-                }
-                if (currentDistance < result.min[0]) {
-                    result.min[0] = currentDistance;
-                }
-                if (currentHeight > result.max[1]) {
-                    result.max[1] = currentHeight;
-                }
-                if (currentHeight < result.min[1]) {
-                    result.min[1] = currentHeight;
-                }
+        const result: RouteProfile = {
+            max: [-1000, -1000],
+            min: [100000, 100000],
+            dplus: 0,
+            dmin: 0,
+            data: [],
+        };
+        profile.forEach(function (value, index) {
+            // console.log('test', index, value, last ? last.height : undefined, result.dplus, result.dmin);
+            currentHeight = value.height;
+            if (currentHeight === -32768) {
+                return;
+            }
+            currentDistance = value.distance = Math.floor(value.distance * 1000);
 
-                result.data.push({ x: currentDistance, altitude: currentHeight, altAvg: currentHeight, grade: 0 });
-                coordIndex = index * 2;
-                // result.points.push({ lat: coords[coordIndex], lon: coords[coordIndex + 1] });
-                last = value;
-                // console.log('setting last', last, result.dplus, result.dmin);
-                // return memo;
-            });
-            // var result = {
-            //     profile: _.reduce(
-            //         profile,
-            //         function(memo, value, index: number) {
-            //             console.log('test', index, value, last?last.height:undefined, memo.dplus);
-            //             currentHeight = value.height;
-            //             if (currentHeight === -32768) {
-            //                 return memo;
-            //             }
-            //             currentDistance = value.distance = value.distance * 1000;
+            if (last) {
+                // if (currentDistance - last.distance < 100) {
+                //     console.log('ignore point as too close');
+                //     return;
+                // }
+                const deltaz = currentHeight - last.height;
+                if (deltaz > 0) {
+                    result.dplus += deltaz;
+                } else if (deltaz < 0) {
+                    result.dmin += deltaz;
+                }
+            }
+            if (currentDistance > result.max[0]) {
+                result.max[0] = currentDistance;
+            }
+            if (currentDistance < result.min[0]) {
+                result.min[0] = currentDistance;
+            }
+            if (currentHeight > result.max[1]) {
+                result.max[1] = currentHeight;
+            }
+            if (currentHeight < result.min[1]) {
+                result.min[1] = currentHeight;
+            }
 
-            //             if (last) {
-            //                 if (currentDistance - last.distance < 100 ) {
-            //                     console.log('ignore point as too close');
-            //                     return memo;
-            //                 }
-            //                 const deltaz = currentHeight - last.height;
-            //                 if (deltaz > 0) {
-            //                     memo.dplus += deltaz;
-            //                 } else if (distance < 0) {
-            //                     memo.dmin += deltaz;
-            //                 }
-            //             }
-            //             if (currentDistance > memo.max[0]) {
-            //                 memo.max[0] = currentDistance;
-            //             }
-            //             if (currentDistance < memo.min[0]) {
-            //                 memo.min[0] = currentDistance;
-            //             }
-            //             if (currentHeight > memo.max[1]) {
-            //                 memo.max[1] = currentHeight;
-            //             }
-            //             if (currentHeight < memo.min[1]) {
-            //                 memo.min[1] = currentHeight;
-            //             }
-
-            //             memo.data[0].push(currentDistance);
-            //             memo.data[1].push(currentHeight);
-            //             coordIndex = index * 2;
-            //             memo.points.push([coords[coordIndex], coords[coordIndex + 1]]);
-            //             last = value;
-            //             console.log('setting last', last);
-            //             return memo;
-            //         },
-            //         {
-            //             max: [-1000, -1000],
-            //             min: [100000, 100000],
-            //             dplus: 0,
-            //             dmin: 0,
-            //             points: [],
-            //             data: [[], []]
-            //         }
-            //     )
-            // };
-            result.dmin = Math.round(result.dmin);
-            result.dplus = Math.round(result.dplus);
-            // console.log('got profile', result);
-            return result;
+            result.data.push({ distance: currentDistance, altitude: currentHeight, altAvg: currentHeight, grade: 0 });
+            coordIndex = index * 2;
+            // result.points.push({ lat: coords[coordIndex], lon: coords[coordIndex + 1] });
+            last = value;
+            // console.log('setting last', last, result.dplus, result.dmin);
+            // return memo;
         });
+        // var result = {
+        //     profile: _.reduce(
+        //         profile,
+        //         function(memo, value, index: number) {
+        //             console.log('test', index, value, last?last.height:undefined, memo.dplus);
+        //             currentHeight = value.height;
+        //             if (currentHeight === -32768) {
+        //                 return memo;
+        //             }
+        //             currentDistance = value.distance = value.distance * 1000;
+
+        //             if (last) {
+        //                 if (currentDistance - last.distance < 100 ) {
+        //                     console.log('ignore point as too close');
+        //                     return memo;
+        //                 }
+        //                 const deltaz = currentHeight - last.height;
+        //                 if (deltaz > 0) {
+        //                     memo.dplus += deltaz;
+        //                 } else if (distance < 0) {
+        //                     memo.dmin += deltaz;
+        //                 }
+        //             }
+        //             if (currentDistance > memo.max[0]) {
+        //                 memo.max[0] = currentDistance;
+        //             }
+        //             if (currentDistance < memo.min[0]) {
+        //                 memo.min[0] = currentDistance;
+        //             }
+        //             if (currentHeight > memo.max[1]) {
+        //                 memo.max[1] = currentHeight;
+        //             }
+        //             if (currentHeight < memo.min[1]) {
+        //                 memo.min[1] = currentHeight;
+        //             }
+
+        //             memo.data[0].push(currentDistance);
+        //             memo.data[1].push(currentHeight);
+        //             coordIndex = index * 2;
+        //             memo.points.push([coords[coordIndex], coords[coordIndex + 1]]);
+        //             last = value;
+        //             console.log('setting last', last);
+        //             return memo;
+        //         },
+        //         {
+        //             max: [-1000, -1000],
+        //             min: [100000, 100000],
+        //             dplus: 0,
+        //             dmin: 0,
+        //             points: [],
+        //             data: [[], []]
+        //         }
+        //     )
+        // };
+        result.dmin = Math.round(result.dmin);
+        result.dplus = Math.round(result.dplus);
+        // console.log('got profile', result);
+        return result;
     }
 }
+export const networkService = new NetworkService();

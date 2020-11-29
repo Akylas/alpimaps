@@ -22,17 +22,17 @@
 		[zoom>=10] {
 			text-name: @name ?  ( [ele] ? [ele] + 'm' + '\n ' + @name : @name): '';
 		}
-		text-face-name: @mont_md;
-		text-size: linear([view::zoom], (7, 7), (13, 8), (18, 11))- 0.000001 * [rank]; 
+		text-face-name: @mont_bd;
+		text-size: linear([view::zoom], (7, 7), (13, 10), (18, 14))- 0.000001 * [rank]; 
 		text-line-spacing: -1;
 		text-placement: [nuti::texts3d];
 		text-fill: @peak_label;
-		text-dy: linear([view::zoom], (7, 7), (13, 8), (18, 12)); 
+		text-dy: linear([view::zoom], (7, 7), (13, 10), (18, 14)); 
 		text-feature-id: @featureId;
-		text-wrap-width: step([zoom], (7, 40), (12, 100), (18, 150));
-		text-halo-fill: @halo_park_label;
+		text-wrap-width: step([zoom], (7, 40), (12, 150), (18, 200));
+		text-halo-fill: @peak_halo;
 		text-halo-rasterizer: fast;
-		text-halo-radius: 2;
+		text-halo-radius: 1;
 		// text-dy: 10;
 	// }
 	// shield-name: @name ?  ( [ele] ? [ele] + 'm' + '\n ' + @name : @name): '';
@@ -462,15 +462,15 @@
 	[class=path][subclass!=track][subclass!=footway][zoom>=15] {
 			text-name: @name;
 			text-fill: @road_label;
-			text-size:linear([view::zoom], (13, 7), (16, 8), (17, 9));
+			text-size:linear([view::zoom], (13, 9), (16, 10), (17, 12));
 			text-halo-radius: @standard-halo-radius;
 			text-halo-fill: @standard-halo-fill;
 			text-spacing: 300;
 			// text-clip: false;
 			text-placement: line;
-			text-face-name: @mont;
+			text-face-name: @mont_md;
 			// text-vertical-alignment: middle;
-			text-dy: 5;
+			text-dy:linear([view::zoom], (13, 5), (16, 5), (17, 6));
 			text-min-distance: @major-highway-text-repeat-distance;
 			[subclass=steps] { 
 				text-min-distance: @minor-highway-text-repeat-distance;
@@ -545,7 +545,6 @@
 	[class=motorway][zoom>=9],
 	[class=trunk][zoom>=10],
 	[class=primary][zoom>=14],
-	[class=track][zoom>=15],
 	[class=tertiary][zoom>=15],
 	[class=secondary][zoom>=15],
 	[class=minor][zoom>=16],
@@ -561,7 +560,7 @@
 		text-halo-radius: 1;
 		text-halo-rasterizer: fast;
 		text-min-distance: 5;
-		text-size: linear([view::zoom], (13, 6.0), (18, 8.0));
+		text-size: linear([view::zoom], (13, 7), (18, 10));
 		text-vertical-alignment: middle;
 		
 		[class=motorway],
