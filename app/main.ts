@@ -1,123 +1,107 @@
+import { startSentry } from '~/utils/sentry';
+import { install as installLogging } from '~/utils/logging';
+startSentry();
+installLogging();
 import { setGeoLocationKeys } from '@nativescript-community/gps';
+import { installMixins as installUIMixins } from '@nativescript-community/systemui';
+import { overrideSpanAndFormattedString } from '@nativescript-community/text';
 import { setMapPosKeys } from '@nativescript-community/ui-carto/core';
-import { themer } from '@nativescript-community/ui-material-core';
-import * as application from '@nativescript/core/application';
+import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
+import DrawerElement from '@nativescript-community/ui-drawer/svelte';
+import { Label } from '@nativescript-community/ui-label';
+import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
+import { SpeedDial, SpeedDialItem } from '@nativescript-community/ui-material-speeddial';
+import { installMixins, themer } from '@nativescript-community/ui-material-core';
+import { svelteNative } from 'svelte-native';
+import { DomTraceCategory, registerNativeViewElement } from 'svelte-native/dom';
 import { TNSFontIcon } from 'nativescript-akylas-fonticon';
-import Vue from 'nativescript-vue';
-import Map from '~/components/Map';
-import CrashReportService from './services/CrashReportService';
-import { primaryColor } from './variables';
-// importing filters
-import FiltersPlugin from './vue.filters';
-import MixinsPlugin from './vue.mixins';
-// adding to Vue prototype
-import PrototypePlugin from './vue.prototype';
-import ViewsPlugin from './vue.views';
-const crashReportService = new CrashReportService();
-// start it as soon as possible
-crashReportService.start();
+import { CanvasLabel, Group, Span } from '@nativescript-community/ui-canvaslabel';
+import { Img, initialize, shutDown } from '@nativescript-community/ui-image';
+import { CanvasView } from '@nativescript-community/ui-canvas';
+import { CartoMap } from '@nativescript-community/ui-carto/ui';
+import { LineChart } from '@nativescript-community/ui-chart';
+import { Slider } from '@nativescript-community/ui-material-slider';
+import { Progress } from '@nativescript-community/ui-material-progress';
+import { ActivityIndicator } from '@nativescript-community/ui-material-activityindicator';
+import { Button } from '@nativescript-community/ui-material-button';
+import { TextField } from '@nativescript-community/ui-material-textfield';
+import { PersistentBottomSheet } from '@nativescript-community/ui-persistent-bottomsheet';
+import { BgService } from './services/BgService';
+import { Application, Trace } from '@nativescript/core';
+import { networkService } from './services/NetworkService';
+installMixins();
+installBottomSheets();
+installUIMixins();
+overrideSpanAndFormattedString();
 
-Vue.registerElement('GridLayout', function () {
-    return require('@nativescript/core').GridLayout;
-});
-Vue.registerElement('StackLayout', function () {
-    return require('@nativescript/core').StackLayout;
-});
-Vue.registerElement('AbsoluteLayout', function () {
-    return require('@nativescript/core').AbsoluteLayout;
-});
-Vue.registerElement('FlexboxLayout', function () {
-    return require('@nativescript/core').FlexboxLayout;
-});
-Vue.registerElement('ScrollView', function () {
-    return require('@nativescript/core').ScrollView;
-});
-Vue.registerElement(
-    'Switch',
-    function () {
-        return require('@nativescript/core').Switch;
-    },
-    {
-        model: {
-            prop: 'checked',
-            event: 'checkedChange',
-        },
-    }
-);
-Vue.prototype.$crashReportService = crashReportService;
-
-// import {Trace} from '@nativescript/core/trace';
-// trace.addCategories(trace.categories.ViewHierarchy);
-// trace.addCategories(trace.categories.Navigation);
-// trace.addCategories(trace.categories.Layout);
-// trace.addCategories(trace.categories.Animation);
-// trace.addCategories(trace.categories.Style);
-// trace.addCategories(trace.categories.Style);
-// Trace.addCategories(Trace.categories.VisualTreeEvents);
-// Trace.enable();
-
+// we need to use lat lon
 setMapPosKeys('lat', 'lon');
 setGeoLocationKeys('lat', 'lon');
 
-application.on(application.discardedErrorEvent, (args) => {
-    const error = args.error;
-    error.stack = error.stackTrace;
-    console.log('discardedErrorEvent', error);
-});
+registerNativeViewElement('mdtextfield', () => TextField, null, {}, { override: true });
+registerNativeViewElement('mdbutton', () => Button);
+registerNativeViewElement('label', () => Label, null, {}, { override: true });
+registerNativeViewElement('mdactivityindicator', () => ActivityIndicator);
+registerNativeViewElement('mdprogress', () => Progress);
+registerNativeViewElement('mdslider', () => Slider);
+registerNativeViewElement('lineChart', () => LineChart);
+registerNativeViewElement('cartomap', () => CartoMap);
+registerNativeViewElement('canvas', () => CanvasView);
+registerNativeViewElement('image', () => Img, null, {}, { override: true });
+registerNativeViewElement('canvaslabel', () => CanvasLabel);
+registerNativeViewElement('cspan', () => Span as any);
+registerNativeViewElement('cgroup', () => Group as any);
+registerNativeViewElement('mdspeeddial', () => SpeedDial);
+registerNativeViewElement('mdspeeddialitem', () => SpeedDialItem);
+registerNativeViewElement('bottomsheet', () => PersistentBottomSheet);
+CollectionViewElement.register();
+DrawerElement.register();
 
 if (global.isIOS) {
+    const variables = require('~/variables');
+    const primaryColor = variables.primaryColor;
     themer.setPrimaryColor(primaryColor);
+    themer.setAccentColor(primaryColor);
 }
 
-Vue.use(MixinsPlugin);
-Vue.use(ViewsPlugin);
-Vue.use(FiltersPlugin);
+if (DEV_LOG) {
+    Trace.addCategories(DomTraceCategory);
+    // Trace.addCategories(CollectionViewTraceCategory);
+    Trace.enable();
+}
+
+const bgService = new BgService();
+Application.on(Application.launchEvent, () => {
+    initialize({ isDownsampleEnabled: true });
+
+    if (global.isAndroid) {
+        bgService.start();
+        networkService.start();
+        // const receiverCallback = (androidContext, intent: android.content.Intent) => {
+        //     console.log('receiverCallback', intent.getAction(), intent.getAction() === android.content.Intent.ACTION_SCREEN_ON);
+        // (Vue.prototype.$getAppComponent() as App).$emit('screen', intent.getAction() === android.content.Intent.ACTION_SCREEN_ON);
+        // };
+        // application.android.registerBroadcastReceiver(android.content.Intent.ACTION_SCREEN_ON, receiverCallback);
+        // application.android.registerBroadcastReceiver(android.content.Intent.ACTION_SCREEN_OFF, receiverCallback);
+    }
+});
+Application.on(Application.exitEvent, () => {
+    shutDown();
+    networkService.stop();
+    // if (global.isAndroid) {
+    // application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_ON);
+    // application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_OFF);
+    // }
+});
+if (global.isIOS) {
+    bgService.start();
+    networkService.start();
+}
 
 TNSFontIcon.paths = {
-    osm: './assets/osm.css',
+    osm: './assets/osm.css'
 };
 TNSFontIcon.loadCssSync();
 
-Vue.use(PrototypePlugin);
-
-// application.on(application.uncaughtErrorEvent, args => {
-//     const error = args.error;
-//     // const nErrror = args.android as java.lang.Exception;
-//     // console.log('onNativeError', error, Object.keys(args), Object.keys(error), error.message, error.stackTrace);
-//     // console.log('nErrror', nErrror);
-//     console.log('uncaughtErrorEvent', error);
-// });
-// application.on(application.discardedErrorEvent, args => {
-//     const error = args.error;
-//     // const nErrror = args.android as java.lang.Exception;
-//     // console.log('onNativeError', error, Object.keys(args), Object.keys(error), error.message, error.stackTrace);
-//     // console.log('nErrror', nErrror);
-//     console.log('discardedErrorEvent', error);
-// });
-
-// import './app.scss'
-
-// Prints Vue logs when --env.production is *NOT* set while building
-// Vue.config.silent = !DEV_LOG;
-// Vue.config['debug'] = DEV_LOG;
-Vue.config.silent = true;
-Vue.config['debug'] = false;
-
-function throwVueError(err) {
-    crashReportService.showError(err);
-}
-
-Vue.config.errorHandler = (e, vm, info) => {
-    if (e) {
-        console.log('[Vue]', `[${info}]`, e, info, e.stack);
-        setTimeout(() => throwVueError(e), 0);
-    }
-};
-
-Vue.config.warnHandler = function (msg, vm, trace) {
-    console.warn(msg, trace);
-};
-
-new Vue({
-    render: (h) => h(Map),
-}).$start();
+import Map from '~/components/Map.svelte';
+svelteNative(Map, {});

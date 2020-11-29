@@ -8,6 +8,7 @@ export class BgService extends BgServiceCommon {
     constructor() {
         super();
         this.geoHandler = new GeoHandler();
+        this.geoHandler.bgService = new WeakRef(this as any);
         this._handlerLoaded();
     }
     // updateNotifText(text: string) {}
