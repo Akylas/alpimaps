@@ -5,7 +5,7 @@ import {
     MapPos,
     MapPosVector,
     fromNativeMapPos,
-    nativeVectorToArray,
+    nativeVectorToArray
 } from '@nativescript-community/ui-carto/core';
 import { MergedMBVTTileDataSource, OrderedTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
 import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
@@ -21,7 +21,7 @@ import {
     PackageManagerGeocodingService,
     PackageManagerReverseGeocodingService,
     ReverseGeocodingRequest,
-    ReverseGeocodingService,
+    ReverseGeocodingService
 } from '@nativescript-community/ui-carto/geocoding/service';
 import { Feature, FeatureCollection, VectorTileFeatureCollection } from '@nativescript-community/ui-carto/geometry/feature';
 import { HillshadeRasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
@@ -31,8 +31,13 @@ import {
     CartoPackageManagerListener,
     PackageErrorType,
     PackageManagerTileDataSource,
-    PackageStatus,
+    PackageStatus
 } from '@nativescript-community/ui-carto/packagemanager';
+import {
+    PackageManagerValhallaRoutingService,
+    ValhallaOfflineRoutingService,
+    ValhallaOnlineRoutingService
+} from '@nativescript-community/ui-carto/routing';
 import { SearchRequest, VectorTileSearchService } from '@nativescript-community/ui-carto/search';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import * as app from '@nativescript/core/application';
@@ -42,8 +47,7 @@ import KalmanFilter from 'kalmanjs';
 import { getDistanceSimple } from '~/helpers/geolib';
 import { IItem as Item } from '~/models/Item';
 import { RouteProfile } from '~/models/Route';
-import { getDataFolder } from '~/utils';
-import { log } from '~/utils/logging';
+import { getDataFolder } from '~/utils/utils';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
@@ -122,7 +126,7 @@ if (gVars.packageServiceEnabled) {
     };
 }
 
-export default class PackageService extends Observable {
+class PackageService extends Observable {
     _packageManager: CartoPackageManager;
     _geoPackageManager: CartoPackageManager;
     _routingPackageManager: CartoPackageManager;
@@ -131,11 +135,10 @@ export default class PackageService extends Observable {
     downloadingPackages: { [k: string]: number } = {};
     hillshadeLayer?: HillshadeRasterTileLayer;
     localVectorTileLayer?: VectorTileLayer;
-    constructor() {
-        super();
 
-        // this.packageManager.start();
-    }
+    _offlineRoutingSearchService: PackageManagerValhallaRoutingService;
+    _localOfflineRoutingSearchService: ValhallaOfflineRoutingService;
+    _onlineRoutingSearchService: ValhallaOnlineRoutingService;
 
     log(...args) {
         console.log(`[${this.constructor.name}]`, ...args);
@@ -144,7 +147,6 @@ export default class PackageService extends Observable {
     get docPath() {
         if (!this._docPath) {
             this._docPath = getDataFolder();
-            console.log('docPath', this._docPath);
         }
         return this._docPath;
     }
@@ -159,40 +161,30 @@ export default class PackageService extends Observable {
     }
     get packageManager() {
         if (gVars.packageServiceEnabled && !this._packageManager) {
-            // console.log('creating package manager', this.dataFolder.path);
-            // try {
             this._packageManager = new CartoPackageManager({
                 source: 'carto.streets',
                 dataFolder: this.dataFolder.path,
-                listener: new PackageManagerListener('map', this),
+                listener: new PackageManagerListener('map', this)
             });
-            // this._packageManager.getNative(); // to ensure we catch the error right away
-            // } catch (error) {
-            //     console.log('test', Object.keys(error), Object.keys(error.nativeException), typeof error, error.nativeException);
-            //     // Vue.prototype.$showError(error);
-            // }
         }
         return this._packageManager;
     }
     get geoPackageManager() {
         if (gVars.packageServiceEnabled && !this._geoPackageManager) {
-            // console.log('creating geo package manager', this.geoDataFolder.path);
             this._geoPackageManager = new CartoPackageManager({
                 source: 'geocoding:carto.streets',
                 dataFolder: this.geoDataFolder.path,
-                listener: new PackageManagerListener('geo', this),
+                listener: new PackageManagerListener('geo', this)
             });
         }
         return this._geoPackageManager;
     }
     get routingPackageManager() {
         if (gVars.packageServiceEnabled && !this._routingPackageManager) {
-            // console.log('creating routing package manager', this.routingDataFolder.path);
             this._routingPackageManager = new CartoPackageManager({
-                // source: 'routing:nutiteq.osm.car',
                 source: 'routing:carto.streets',
                 dataFolder: this.routingDataFolder.path,
-                listener: new PackageManagerListener('routing', this),
+                listener: new PackageManagerListener('routing', this)
             });
         }
         return this._routingPackageManager;
@@ -211,22 +203,14 @@ export default class PackageService extends Observable {
             const geoManagerStarted = this.geoPackageManager.start();
             const routingManagerStarted = this.routingPackageManager.start();
             const packages = this._packageManager.getLocalPackages();
-            console.log('start packageManager', managerStarted, packages.size());
             const geoPackages = this._geoPackageManager.getLocalPackages();
-            // console.log('start geoPackageManager', geoManagerStarted, geoPackages.size());
-
             const routingPackages = this._routingPackageManager.getLocalPackages();
-            if (routingPackages.size() > 0) {
-                console.log('test routingPackageManager', routingPackages.get(0).getName(), routingPackages.get(0).getPackageType());
-            }
-            // console.log('start routingPackageManager', routingManagerStarted, routingPackages.size());
             this.updatePackagesLists();
         }
     }
     updatePackagesList(manager: CartoPackageManager) {
         if (gVars.packageServiceEnabled) {
             const age = manager.getServerPackageListAge();
-            // console.log('getServerPackageListAge', age);
             if (age <= 0 || age > 3600 * 24 * 30) {
                 return manager.startPackageListDownload();
             }
@@ -242,12 +226,9 @@ export default class PackageService extends Observable {
             );
         }
     }
-    @log
     onPackageListUpdated(type: PackageType) {
         this.notify({ eventName: 'onPackageListUpdated', type, object: this });
-        // console.log('onPackageListUpdated', type);
     }
-    @log
     onPackageStatusChanged(type: PackageType, id: string, version: number, status: PackageStatus) {
         const key = type + '_' + id;
         this.downloadingPackages[key] = status.getProgress();
@@ -259,10 +240,9 @@ export default class PackageService extends Observable {
             data: {
                 id,
                 version,
-                status,
-            },
+                status
+            }
         });
-        // console.log('onPackageStatusChanged', id, version, status.getProgress());
     }
     updateTotalProgress() {
         const keys = Object.keys(this.downloadingPackages);
@@ -272,26 +252,24 @@ export default class PackageService extends Observable {
         } else {
             totalProgress = 100;
         }
-        // console.log('updateTotalProgress', keys, totalProgress);
         this.notify({
             eventName: 'onProgress',
             object: this,
-            data: totalProgress,
+            data: totalProgress
         });
     }
     onPackageCancelled(type: PackageType, id: string, version: number) {
         const key = type + '_' + id;
         delete this.downloadingPackages[key];
         this.updateTotalProgress();
-        // console.log('onPackageCancelled', id, version);
         this.notify({
             eventName: 'onPackageCancelled',
             object: this,
             type,
             data: {
                 id,
-                version,
-            },
+                version
+            }
         });
     }
 
@@ -306,19 +284,16 @@ export default class PackageService extends Observable {
             data: {
                 id,
                 version,
-                errorType,
-            },
+                errorType
+            }
         });
-        // console.log('onPackageFailed', id, version, errorType);
     }
 
-    @log
     onPackageListFailed(type: PackageType) {
         // console.log('onPackageListFailed');
         this.notify({ eventName: 'onPackageListFailed', type, object: this });
     }
 
-    @log
     onPackageUpdated(type: PackageType, id: string, version: number) {
         const key = type + '_' + id;
         delete this.downloadingPackages[key];
@@ -330,8 +305,8 @@ export default class PackageService extends Observable {
             type,
             data: {
                 id,
-                version,
-            },
+                version
+            }
         });
     }
     clearCacheOnDataSource(dataSource: TileDataSource<any, any> & { dataSources?: TileDataSource<any, any>[] }) {
@@ -357,7 +332,6 @@ export default class PackageService extends Observable {
                 // const tilezenCacheFolder = File.fromPath(path.join(this.docPath, 'tilezen.db'));
                 // const cacheFolder = File.fromPath(path.join(this.docPath, 'carto.db'));
                 const terrainCacheFolder = File.fromPath(path.join(this.docPath, 'terrain.db'));
-                // console.log('create main vector datasource', cacheFolder.path);
 
                 // const realSource =new HTTPTileDataSource({
                 //     url: 'https://tile.nextzen.org/tilezen/vector/v1/all/{z}/{x}/{y}.mvt?api_key=O5iag8fiQIeqwgPFKMsrhA',
@@ -367,7 +341,7 @@ export default class PackageService extends Observable {
                 const realSource = new OrderedTileDataSource({
                     dataSources: [
                         new PackageManagerTileDataSource({
-                            packageManager: this.packageManager,
+                            packageManager: this.packageManager
                         }),
                         new PersistentCacheTileDataSource({
                             // dataSource: new CartoOnlineTileDataSource({
@@ -376,12 +350,12 @@ export default class PackageService extends Observable {
                             dataSource: new HTTPTileDataSource({
                                 url: `https://api.maptiler.com/tiles/v3/{z}/{x}/{y}.pbf?key=${gVars.MAPTILER_TOKEN}`,
                                 minZoom: 0,
-                                maxZoom: 14,
+                                maxZoom: 14
                             }),
                             capacity: 100 * 1024 * 1024,
-                            databasePath: maptileCacheFolder.path,
-                        }),
-                    ],
+                            databasePath: maptileCacheFolder.path
+                        })
+                    ]
                 });
                 if (withContour) {
                     this.dataSource = new MergedMBVTTileDataSource({
@@ -391,13 +365,13 @@ export default class PackageService extends Observable {
                                 dataSource: new HTTPTileDataSource({
                                     minZoom: 9,
                                     maxZoom: 14,
-                                    url: `https://api.maptiler.com/tiles/contours/tiles.json?key=${gVars.MAPTILER_TOKEN}`,
+                                    url: `https://api.maptiler.com/tiles/contours/tiles.json?key=${gVars.MAPTILER_TOKEN}`
                                     // url: `https://a.tiles.mapbox.com/v4/mapbox.mapbox-terrain-v2/{zoom}/{x}/{y}.vector.pbf?access_token=${gVars.MAPBOX_TOKEN}`
                                 }),
                                 capacity: 100 * 1024 * 1024,
-                                databasePath: terrainCacheFolder.path,
-                            }),
-                        ],
+                                databasePath: terrainCacheFolder.path
+                            })
+                        ]
                     });
                 } else {
                     this.dataSource = realSource;
@@ -413,13 +387,6 @@ export default class PackageService extends Observable {
     // }
     getVectorTileDecoder(style: string = 'voyager') {
         if (gVars.packageServiceEnabled && !this.vectorTileDecoder) {
-            // console.log('cartoCss', cartoCss);
-            // this.vectorTileDecoder = new MBVectorTileDecoder({
-            //     style,
-            //     dirPath: '~/assets/styles/walkaholic',
-            //     liveReload: TNS_ENV !== 'production',
-            //     // zipPath: '~/assets/styles/walkaholic.zip'
-            // });
             this.vectorTileDecoder = new CartoOnlineVectorTileLayer({ style: CartoMapStyle.VOYAGER }).getTileDecoder();
         }
         return this.vectorTileDecoder;
@@ -431,7 +398,6 @@ export default class PackageService extends Observable {
     set currentLanguage(value) {
         if (this._currentLanguage === value) {
             this._currentLanguage = value;
-            // console.log('set currentLanguage', value, !!this._offlineSearchService, !!this._offlineReverseSearchService);
             if (this._offlineSearchService) {
                 this._offlineSearchService.language = value;
             }
@@ -451,7 +417,7 @@ export default class PackageService extends Observable {
         if (!this._offlineSearchService) {
             this._offlineSearchService = new PackageManagerGeocodingService({
                 packageManager: this.geoPackageManager,
-                language: this.currentLanguage,
+                language: this.currentLanguage
             });
         }
         return this._offlineSearchService;
@@ -461,7 +427,7 @@ export default class PackageService extends Observable {
         if (!this._offlineReverseSearchService) {
             this._offlineReverseSearchService = new PackageManagerReverseGeocodingService({
                 packageManager: this.geoPackageManager,
-                language: this.currentLanguage,
+                language: this.currentLanguage
             });
         }
         return this._offlineReverseSearchService;
@@ -482,45 +448,36 @@ export default class PackageService extends Observable {
             feature = features.getFeature(0);
             const r = {
                 properties: feature.properties,
-                position: feature.geometry ? fromNativeMapPos(feature.geometry.getCenterPos()) : undefined,
+                position: feature.geometry ? fromNativeMapPos(feature.geometry.getCenterPos()) : undefined
             } as GeoResult;
 
             return r;
         }
     }
     convertGeoCodingResult(result: GeocodingResult, full = false) {
-        // this.dataItems = new GeocodingResultArray(result);
         let feature: Feature;
         const rank = result.getRank();
         const features = result.getFeatureCollection();
         if (features.getFeatureCount() > 0) {
-            // geoRes = result.get(j);
             feature = features.getFeature(0);
-            // console.log('convertGeoCodingResult', feature.properties, address, feature.geometry, rank);
             const r = {
                 rank,
-                // categories: nativeVectorToArray(address.getCategories()),
                 properties: feature.properties,
                 address: result.getAddress(),
-                position: feature.geometry ? fromNativeMapPos(feature.geometry.getCenterPos()) : undefined,
+                position: feature.geometry ? fromNativeMapPos(feature.geometry.getCenterPos()) : undefined
             } as GeoResult;
             if (full) {
                 this.prepareGeoCodingResult(r);
             }
             return r;
         }
-        // for (let j = 0; j < features.getFeatureCount(); j++) {
-
-        // }
     }
     searchInGeocodingService(
         service: ReverseGeocodingService<any, any> | GeocodingService<any, any>,
         options
     ): Promise<GeocodingResultVector> {
-        // console.log('searchInGeocodingService', service['language'], options);
         return new Promise((resolve, reject) => {
             service.calculateAddresses(options, (err, result) => {
-                // console.log('searchInGeocodingService done', err, result && result.size());
                 if (err) {
                     reject(err);
                     return;
@@ -551,13 +508,11 @@ export default class PackageService extends Observable {
                 const entities = folder.getEntitiesSync();
                 entities.some((s) => {
                     if (s.name.endsWith('.nutigeodb')) {
-                        console.log('localOSMOfflineGeocodingService', s.name);
                         this._localOSMOfflineGeocodingService = new OSMOfflineGeocodingService({
                             language: this.currentLanguage,
                             maxResults: 100,
-                            path: s.path,
+                            path: s.path
                         });
-                        console.log('localOSMOfflineGeocodingService done');
                         return true;
                     }
                 });
@@ -576,7 +531,7 @@ export default class PackageService extends Observable {
                     if (s.name.endsWith('.nutigeodb')) {
                         this._localOSMOfflineReverseGeocodingService = new OSMOfflineReverseGeocodingService({
                             language: this.currentLanguage,
-                            path: s.path,
+                            path: s.path
                         });
                         return true;
                     }
@@ -592,7 +547,7 @@ export default class PackageService extends Observable {
                 this._vectorTileSearchService = new VectorTileSearchService({
                     minZoom: 10,
                     maxZoom: 10,
-                    layer: this.localVectorTileLayer,
+                    layer: this.localVectorTileLayer
                 });
             }
         }
@@ -642,7 +597,7 @@ export default class PackageService extends Observable {
             ['postcode', 'getPostcode'],
             ['road', 'getStreet'],
             ['houseNumber', 'getHouseNumber'],
-            ['county', 'getCounty'],
+            ['county', 'getCounty']
         ].forEach((d) => {
             if (!address[d[0]]) {
                 const value = geoRes.address[d[1]]();
@@ -668,7 +623,6 @@ export default class PackageService extends Observable {
         if (this.hillshadeLayer) {
             return new Promise((resolve, reject) => {
                 this.hillshadeLayer.getElevationAsync(pos, (err, result) => {
-                    // console.log('searchInGeocodingService done', err, result && result.size());
                     if (err) {
                         reject(err);
                         return;
@@ -693,33 +647,6 @@ export default class PackageService extends Observable {
         }
         return null;
     }
-    // _elevationDb: SQLiteDatabase;
-    // hasElevationDB = true;
-    // getElevationDB() {
-    //     if (!this._elevationDb && this.hasElevationDB) {
-    //         if (Folder.exists(LOCAL_MBTILES)) {
-    //             const folder = Folder.fromPath(LOCAL_MBTILES);
-    //             const entities = folder.getEntitiesSync();
-    //             this.hasElevationDB = entities.some(s => {
-    //                 if (s.name.endsWith('.etiles')) {
-    //                     // console.log('loading etiles', s.path);
-    //                     this._elevationDb = openOrCreate(s.path, android.database.sqlite.SQLiteDatabase.OPEN_READONLY);
-    //                     return true;
-    //                 }
-    //             });
-    //         }
-    //     }
-    //     return this._elevationDb;
-    // }
-
-    // async getElevation(pos: MapPos<LatLonKeys>) {
-    //     if (this.hasElevationDB) {
-    //         const result = await this.getElevations([pos]);
-    //         return result ? result[0].altitude : null;
-    //     }
-    //     return null;
-    // }
-
     getSmoothedGradient(points: { distance: number; altitude: number; altAvg: number; grade }[]) {
         const finalGrades = [];
         const grades: { grad: number; dist: number }[] = [null];
@@ -730,7 +657,7 @@ export default class PackageService extends Observable {
                 const grad = Math.max(Math.min((100 * (points[index + 1].altAvg - points[index - 1].altAvg)) / dist, 30), -30);
                 grades[index] = {
                     grad,
-                    dist: points[index].distance,
+                    dist: points[index].distance
                 };
             } else {
                 grades[index] = grades[index - 1];
@@ -740,7 +667,7 @@ export default class PackageService extends Observable {
             if (null === grades[index] && null !== grades[index + 1]) {
                 grades[index] = {
                     grad: grades[index + 1].grad,
-                    dist: points[index].distance,
+                    dist: points[index].distance
                 };
             }
         }
@@ -748,7 +675,7 @@ export default class PackageService extends Observable {
             if (null === grades[index] && null !== grades[index - 1]) {
                 grades[index] = {
                     grad: grades[index - 1].grad,
-                    dist: points[index].distance,
+                    dist: points[index].distance
                 };
             }
         }
@@ -772,7 +699,6 @@ export default class PackageService extends Observable {
                 }
             }
             finalGrades[index] = points[index].grade = Math.round(f / d);
-            // finalGrades[index] = points[index].grade = grades[index].grad;
         }
         return finalGrades;
     }
@@ -781,16 +707,14 @@ export default class PackageService extends Observable {
         let last: { lat: number; lon: number; altitude: number; tmpElevation: number },
             currentHeight,
             currentDistance = 0;
-        // console.log('computeProfileFromHeights', JSON.stringify(profile));
         const result: RouteProfile = {
             max: [-1000, -1000],
             min: [100000, 100000],
             dplus: 0,
             dmin: 0,
-            data: [],
+            data: []
         };
 
-        // let range = 5;
         const profile: { lat: number; lon: number; altitude: number; tmpElevation: number }[] = [];
         const altitudeFilter = new WindowKalmanFilter({ windowLength: 5, kalman: { R: 0.2, Q: 1 } });
         for (let i = 0; i < positions.size(); i++) {
@@ -800,7 +724,7 @@ export default class PackageService extends Observable {
                 lat: pos.getY(),
                 lon: pos.getX(),
                 altitude,
-                tmpElevation: altitudeFilter.filter(elevations.get(i)),
+                tmpElevation: altitudeFilter.filter(elevations.get(i))
             });
         }
         let ascent = 0;
@@ -830,7 +754,6 @@ export default class PackageService extends Observable {
                     lastAlt = (sample as any).tmpElevation;
                 }
                 // grade = (deltaDistance === 0) ? 0 : Math.round(((sample.altitude - last.altitude) / deltaDistance) * 100);
-                // console.log('test grade1', i, !!last, diff, deltaDistance, grade);
                 // grades.push(grade);
             } else {
                 lastAlt = (sample as any).tmpElevation;
@@ -841,7 +764,7 @@ export default class PackageService extends Observable {
                 distance: Math.round(currentDistance),
                 altitude: currentHeight,
                 grade,
-                altAvg: (sample as any).tmpElevation,
+                altAvg: (sample as any).tmpElevation
             });
             if ((sample as any).tmpElevation > result.max[1]) {
                 result.max[1] = (sample as any).tmpElevation;
@@ -871,15 +794,13 @@ export default class PackageService extends Observable {
             lastGrade = grades[0];
         for (let i = 1; i < grades.length; i++) {
             grade = grades[i];
-            // console.log('test grade', i, grade, lastGrade);
             if (
                 lastGrade === undefined ||
                 (Math.floor(lastGrade / 10) !== Math.floor(grade / 10) && (lastGrade * grade <= 0 || lastGrade > 0))
             ) {
-                // console.log('adding grade color', i, grade, lastGrade, lastGrade);
                 colors.push({
                     distance: i,
-                    color: getGradeColor(Math.floor(lastGrade !== undefined ? lastGrade : grade)),
+                    color: getGradeColor(Math.floor(lastGrade !== undefined ? lastGrade : grade))
                 });
             }
             lastGrade = grade;
@@ -887,105 +808,62 @@ export default class PackageService extends Observable {
         if (colors[colors.length - 1].distance < grades.length - 1) {
             colors.push({
                 distance: grades.length - 1,
-                color: getGradeColor(lastGrade),
+                color: getGradeColor(lastGrade)
             });
         }
 
         result.dmin = Math.round(-descent);
         result.dplus = Math.round(ascent);
         result.colors = colors;
-        // console.log('altitude', JSON.stringify(result.data.map(s => s.altitude)));
-        // console.log('grades', grades.length, JSON.stringify(grades));
-        // console.log('colors', result.data.length, colors.length, JSON.stringify(colors));
         return result;
     }
-
-    // async getElevations(_points: MapPos<LatLonKeys>[]) {
-    //     const db = this.getElevationDB();
-    //     if (!db) {
-    //         return null;
-    //     }
-
-    //     const zoom_level = 11;
-    //     const tilesIndexed = {};
-
-    //     // sort the points per tile
-    //     _points.forEach((p, index) => {
-    //         const tile = latLngToTileXY(p.lat, p.lon, zoom_level, 512);
-    //         const key = tile.x + '' + tile.y;
-    //         if (!tilesIndexed[key]) {
-    //             tilesIndexed[key] = { x: tile.x, y: tile.y, poses: [] };
-    //         }
-    //         tilesIndexed[key].poses.push({ index, pixelX: tile.pixelX, pixelY: tile.pixelY, ...p });
-    //     });
-    //     const result: MapPos<LatLonKeys>[] = [];
-    //     // request all the necessary tiles from db
-    //     await Promise.all(
-    //         Object.keys(tilesIndexed).map(k => {
-    //             const t = tilesIndexed[k];
-    //             return db
-    //                 .get(
-    //                     `SELECT tile_data FROM tiles WHERE zoom_level=${zoom_level} AND tile_row=${(1 << zoom_level) -
-    //                         1 -
-    //                         t.y} and tile_column=${t.x}`
-    //                 )
-    //                 .then(row => {
-    //                     if (row && row.tile_data) {
-    //                         const data = row.tile_data as any;
-
-    //                         // decode into android bitmap to get access to the pixels
-    //                         const bmp = android.graphics.BitmapFactory.decodeByteArray(data, 0, data.length);
-    //                         t.poses.forEach(p => {
-    //                             const pixel = bmp.getPixel(p.pixelX, p.pixelY);
-    //                             const R = (pixel >> 16) & 0xff;
-    //                             const G = (pixel >> 8) & 0xff;
-    //                             const B = pixel & 0xff;
-    //                             result[p.index] = {
-    //                                 lat: p.lat,
-    //                                 lon: p.lon,
-    //                                 altitude: Math.round(-10000 + (R * 256 * 256 + G * 256 + B) * 0.1)
-    //                             };
-    //                         });
-    //                         bmp.recycle();
-    //                     }
-    //                 });
-    //         })
-    //     );
-    //     return result;
-    // }
-
     async getElevationProfile(item: Item) {
         if (this.hillshadeLayer && item.route) {
             const elevations = await this.getElevations(item.route.positions);
-            // const elevati .ons = this.hillshadeLayer.getElevations(_points);
-            // let el:number, lastEl:number, lastPointWrong = false, lastCorrectIndex:number;
-            // _points.forEach((p, index) => {
-            //     el = elevations.get(index);
-            //     // if (el > -5000) {
-            //     //     p.altitude = el;
-            //     //     lastEl = el;
-            //     //     lastPointWrong = true;
-            //     // } else {
-            //         p.altitude = el;
-            //         // lastPointWrong = false;
-            //         // lastCorrectIndex = index;
-            //     // }
-            // });
-            // const firstIndex = _points.findIndex(p=>p.altitude !==undefined)
-            // if(firstIndex > 0) {
-            //     for (let index = 0; index < firstIndex; index++) {
-            //         _points[index].altitude = _points[firstIndex].altitude;
-            //     }
-            // }
-            // if (lastPointWrong) {
-            //     for (let index = lastCorrectIndex + 1; index < _points.length; index++) {
-            //         _points[index].altitude = _points[lastCorrectIndex].altitude;
-            //     }
-            // }
-            console.log('getElevations done', elevations.size());
-            // transform the result into a profile we can use
+            if (DEV_LOG) {
+                console.log('getElevations done', elevations.size());
+            }
             return this.computeProfileFromHeights(item.route.positions, elevations);
         }
         return null;
     }
+
+    offlineRoutingSearchService() {
+        if (gVars.packageServiceEnabled) {
+            if (!this._offlineRoutingSearchService) {
+                this._offlineRoutingSearchService = new PackageManagerValhallaRoutingService({
+                    packageManager: packageService.routingPackageManager
+                });
+            }
+            return this._offlineRoutingSearchService;
+        } else {
+            console.log('offlineRoutingSearchService', !!this._localOfflineRoutingSearchService);
+            if (!this._localOfflineRoutingSearchService) {
+                const folderPath = packageService.getDefaultMBTilesDir();
+                if (Folder.exists(folderPath)) {
+                    const folder = Folder.fromPath(folderPath);
+                    const entities = folder.getEntitiesSync();
+                    entities.some((s) => {
+                        if (s.name.endsWith('.vtiles')) {
+                            this._localOfflineRoutingSearchService = new ValhallaOfflineRoutingService({
+                                path: s.path
+                            });
+                            return true;
+                        }
+                    });
+                }
+            }
+            return this._localOfflineRoutingSearchService;
+        }
+    }
+
+    onlineRoutingSearchService() {
+        if (!this._onlineRoutingSearchService) {
+            this._onlineRoutingSearchService = new ValhallaOnlineRoutingService({
+                apiKey: gVars.MAPBOX_TOKEN
+            });
+        }
+        return this._onlineRoutingSearchService;
+    }
 }
+export const packageService = new PackageService();

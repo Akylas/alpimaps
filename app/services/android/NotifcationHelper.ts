@@ -87,8 +87,7 @@ export class NotificationHelper {
     public static createNotificationChannel(context) {
         const color = primaryColor.android;
         if (android.os.Build.VERSION.SDK_INT >= 26) {
-            // API level 26 ("Android O") supports notification channels.
-
+            const NotificationManager =android.app.NotificationManager ;
             const service = context.getSystemService(
                 android.content.Context.NOTIFICATION_SERVICE
             ) as android.app.NotificationManager;
@@ -96,7 +95,7 @@ export class NotificationHelper {
             let channel = new android.app.NotificationChannel(
                 NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL,
                 'Alpi Maps Record Session',
-                android.app.NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_LOW
             );
             channel.setDescription('Display current Map');
             channel.setLightColor(color);
@@ -105,7 +104,7 @@ export class NotificationHelper {
             channel = new android.app.NotificationChannel(
                 NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL,
                 'Alpi Maps Keep Awake',
-                android.app.NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_LOW
             );
             channel.setDescription('Notify when Alpi Maps is keeping screen awake');
             channel.setLightColor(color);
@@ -114,7 +113,7 @@ export class NotificationHelper {
             channel = new android.app.NotificationChannel(
                 NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL,
                 'Alpi Maps Map Notification',
-                android.app.NotificationManager.IMPORTANCE_HIGH
+                NotificationManager.IMPORTANCE_HIGH
             );
             channel.setDescription('Show Notification on LockScreen');
             channel.setLightColor(color);

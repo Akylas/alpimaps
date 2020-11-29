@@ -10,13 +10,12 @@ export async function startSentry() {
         if (PRODUCTION || gVars.sentry) {
             const version = await getVersionName();
             const versionCode = await getBuildNumber();
-            console.log('init sentry', SENTRY_DSN, SENTRY_PREFIX, version, versionCode);
             Sentry = require('@nativescript-community/sentry');
             Sentry.init({
                 dsn: SENTRY_DSN,
                 appPrefix: SENTRY_PREFIX,
                 release: `${version}`,
-                dist: `${versionCode}.${gVars.platform}`,
+                dist: `${versionCode}.${gVars.platform}`
             });
             Sentry.setTag('locale', Device.language);
             isSentryEnabled = true;

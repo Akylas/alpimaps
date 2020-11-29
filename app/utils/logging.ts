@@ -1,47 +1,3 @@
-/* eslint-disable no-redeclare */
-
-export function log(target: any, k?, desc?: PropertyDescriptor): any;
-export function log(always: boolean): (target: any, k?, desc?: PropertyDescriptor) => any;
-export function log(alwaysOrTarget: boolean | any, k?, desc?: PropertyDescriptor) {
-    if (typeof alwaysOrTarget !== 'boolean') {
-        return timelineProfileFunctionFactory(alwaysOrTarget, true, k, desc);
-    } else {
-        return function (target: any, key?: string, descriptor?: PropertyDescriptor) {
-            return timelineProfileFunctionFactory(target, alwaysOrTarget, key, descriptor);
-        };
-    }
-}
-function timelineProfileFunctionFactory(target: any, always: boolean, key?, descriptor?: PropertyDescriptor) {
-    // save a reference to the original method this way we keep the values currently in the
-    // descriptor and don't overwrite what another decorator might have done to the descriptor.
-    if (descriptor === undefined) {
-        descriptor = Object.getOwnPropertyDescriptor(target, key);
-    }
-    if (!always && !DEV_LOG) {
-        return descriptor;
-    }
-    const originalMethod = descriptor.value;
-
-    let className = '';
-    if (target && target.constructor && target.constructor.name) {
-        className = target.constructor.name + '.';
-    }
-
-    const name = className + key;
-
-    // editing the descriptor/value parameter
-    descriptor.value = function () {
-        // const start = time();
-        console.log(name);
-        try {
-            return originalMethod.apply(this, arguments);
-        } finally {
-            // const end = time();
-            // console.log(`Timeline: Modules: ${name}  (${start}ms. - ${end}ms.)`);
-        }
-    };
-    return descriptor;
-}
 import * as SentryType from '@nativescript-community/sentry';
 
 let Sentry: typeof SentryType;
@@ -55,7 +11,6 @@ const originalConsole = {
     warn: console.warn,
     debug: console.debug
 };
-
 
 function convertArg(arg) {
     const type = typeof arg;
@@ -82,7 +37,7 @@ function actualLog(level: 'info' | 'log' | 'error' | 'warn' | 'debug', ...args) 
         Sentry.addBreadcrumb({
             category: 'console',
             message: args.map(convertArg).join(' '),
-            level: level as any,
+            level: level as any
         });
     }
     // we do it this way allow terser to "drop" it

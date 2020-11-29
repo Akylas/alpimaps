@@ -5,10 +5,10 @@ import { getBuildNumber, getVersionName } from '@nativescript-community/extended
 import { Device } from '@nativescript/core/platform';
 import { alert, confirm } from '@nativescript-community/ui-material-dialogs';
 import { Label as HTMLLabel } from '@nativescript-community/ui-label';
-import { $t, $tc, $tt, $tu } from '~/helpers/locale';
 import { Color } from '@nativescript/core/color';
 import { BaseError } from 'make-error';
 import { install } from '~/utils/logging';
+import { l, lc } from '@nativescript-community/l';
 
 function evalTemplateString(resource: string, obj: {}) {
     if (!obj) {
@@ -74,7 +74,7 @@ export class CustomError extends BaseError {
         return JSON.stringify(this.toJSON());
     }
     toString() {
-        return evalTemplateString($t(this.message), Object.assign({ localize: $t }, this.assignedLocalData));
+        return evalTemplateString(l(this.message), Object.assign({ localize: l }, this.assignedLocalData));
     }
 
     getMessage() {}
@@ -148,7 +148,6 @@ export default class CrashReportService extends Observable {
     sentry: typeof Sentry;
     async start() {
         install();
-        console.log('CrashReportService', 'start', gVars.sentry, this.sentryEnabled);
         if (gVars.sentry && this.sentryEnabled) {
             const Sentry = await import('@nativescript-community/sentry');
             this.sentry = Sentry;
@@ -208,7 +207,7 @@ export default class CrashReportService extends Observable {
         const realError = typeof err === 'string' ? null : err;
         const isString = realError === null;
         const message = isString ? (err as string) : realError.message || realError.toString();
-        const title = $tc('error');
+        const title = lc('error');
         const reporterEnabled = this.sentryEnabled;
         let showSendBugReport = reporterEnabled && !isString && !!realError.stack;
         // if (realError instanceof HTTPError) {
@@ -223,16 +222,16 @@ export default class CrashReportService extends Observable {
         // label.style.backgroundColor = new Color(255, 255,0,0);
         label.style.fontSize = 16;
         label.style.color = new Color(255, 138, 138, 138);
-        label.html = $tc(message.trim());
+        label.html = lc(message.trim());
         return confirm({
             title,
             view: label,
-            okButtonText: showSendBugReport ? $tc('send_bug_report') : undefined,
-            cancelButtonText: showSendBugReport ? $tc('cancel') : $tc('ok'),
+            okButtonText: showSendBugReport ? lc('send_bug_report') : undefined,
+            cancelButtonText: showSendBugReport ? lc('cancel') : lc('ok'),
         }).then((result) => {
             if (result && showSendBugReport) {
                 this.captureException(realError);
-                alert($t('bug_report_sent'));
+                alert(l('bug_report_sent'));
             }
         });
     }

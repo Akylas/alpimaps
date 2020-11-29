@@ -4,7 +4,7 @@ import { Device } from '@nativescript/core/platform';
 import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
 import { prefs } from '~/services/preferences';
-export { l as $t, lc as $tc, lt as $tt, lu as $tu } from '@nativescript-community/l';
+export { l, lc, lt, lu, l as $t, lc as $tc, lt as $tt, lu as $tu } from '@nativescript-community/l';
 const supportedLanguages = SUPPORTED_LOCALES;
 
 dayjs.extend(updateLocale);

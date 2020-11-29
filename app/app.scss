@@ -46,11 +46,11 @@ mdactivityindicator {
     color: white;
     ripple-color: white;
 }
-// .buttonthemed {
-//     background-color: $primary-color;
-//     color: white;
-//     ripple-color: $dark-color;
-// }
+.buttonthemed {
+    background-color: $primary-color;
+    color: white;
+    ripple-color: $dark-color;
+}
 .buttontext {
     background-color: white;
     color: $primary-color;

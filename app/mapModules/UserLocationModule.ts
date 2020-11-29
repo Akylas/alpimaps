@@ -1,22 +1,28 @@
+import { lc } from '@nativescript-community/l';
 import { TWEEN } from '@nativescript-community/tween';
 import { MapPos, MapPosVector } from '@nativescript-community/ui-carto/core';
 import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
 import { VectorLayer } from '@nativescript-community/ui-carto/layers/vector';
-import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
 import { Polygon } from '@nativescript-community/ui-carto/vectorelements/polygon';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { Color } from '@nativescript/core/color';
 import { ad } from '@nativescript/core/utils/utils';
 import dayjs from 'dayjs';
-import Map from '~/components/Map';
+import { get, writable } from 'svelte/store';
 import { GeoHandler, GeoLocation, UserLocationdEvent, UserLocationdEventData } from '~/handlers/GeoHandler';
 import { NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL } from '~/services/android/NotifcationHelper';
 import { EARTH_RADIUS } from '~/utils/geo';
-import MapModule from './MapModule';
+import { accentColor } from '~/variables';
+import MapModule, { getMapContext } from './MapModule';
+import mapStore from '~/stores/mapStore';
 
 const LOCATION_ANIMATION_DURATION = 300;
 const SCREENSHOT_NOTIFICATION_ID = 23466571;
+
+const NOTIFICATION_SERVICE = android.content.Context.NOTIFICATION_SERVICE;
+
+const mapContext = getMapContext();
 
 export default class UserLocationModule extends MapModule {
     localBackVectorDataSource: LocalVectorDataSource;
@@ -40,10 +46,6 @@ export default class UserLocationModule extends MapModule {
         }
     }
 
-    onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
-        super.onMapReady(mapComp, mapView);
-        // console.log('onMapReady', this._userFollow);
-    }
     onMapDestroyed() {
         super.onMapDestroyed();
         this.localVectorLayer = null;
@@ -82,12 +84,12 @@ export default class UserLocationModule extends MapModule {
 
             this.localBackVectorLayer = new VectorLayer({
                 visibleZoomRange: [0, 24],
-                dataSource: this.localBackVectorDataSource,
+                dataSource: this.localBackVectorDataSource
             });
 
             // always add it at 1 to respect local order
-            this.mapComp.addLayer(this.localBackVectorLayer, 'userLocation');
-            this.mapComp.addLayer(this.localVectorLayer, 'userLocation', 1);
+            mapContext.addLayer(this.localBackVectorLayer, 'userLocation');
+            mapContext.addLayer(this.localVectorLayer, 'userLocation', 1);
         }
     }
     onMapMove(e) {
@@ -103,7 +105,7 @@ export default class UserLocationModule extends MapModule {
         this.notify({
             eventName: 'location',
             object: this,
-            data: value,
+            data: value
         });
         if (global.isAndroid) {
             const context: android.content.Context = ad.getApplicationContext();
@@ -127,7 +129,7 @@ export default class UserLocationModule extends MapModule {
             altitude: geoPos.altitude,
             horizontalAccuracy: geoPos.horizontalAccuracy,
             verticalAccuracy: geoPos.verticalAccuracy,
-            speed: geoPos.speed,
+            speed: geoPos.speed
         };
         if (
             !this.mapView ||
@@ -183,24 +185,24 @@ export default class UserLocationModule extends MapModule {
                     color: new Color(70, 14, 122, 254),
                     lineStyleBuilder: {
                         color: new Color(150, 14, 122, 254),
-                        width: 1,
-                    },
-                },
+                        width: 1
+                    }
+                }
             });
 
             this.userBackMarker = new Point<LatLonKeys>({
                 position: posWithoutAltitude,
                 styleBuilder: {
                     size: 17,
-                    color: '#ffffff',
-                },
+                    color: '#ffffff'
+                }
             });
             this.userMarker = new Point<LatLonKeys>({
                 position: posWithoutAltitude,
                 styleBuilder: {
                     size: 14,
-                    color: accuracyColor,
-                },
+                    color: accuracyColor
+                }
             });
             this.localBackVectorDataSource.add(this.accuracyMarker);
             this.localVectorDataSource.add(this.userBackMarker);
@@ -236,7 +238,7 @@ export default class UserLocationModule extends MapModule {
         this.lastUserLocation = position;
     }
     onLocation(event: UserLocationdEventData) {
-        this.queryingLocation = false;
+        mapStore.queryingLocation = false;
         // const { android, ios, ...toPrint } = data.location;
         // console.log('onLocation', this._userFollow, event.location, this.userFollow);
         if (event.error) {
@@ -257,8 +259,8 @@ export default class UserLocationModule extends MapModule {
     }
 
     startWatchLocation() {
-        console.log('startWatchLocation', this.watchingLocation, !!this.geoHandler);
-        if (this.watchingLocation || !this.geoHandler) {
+        console.log('startWatchLocation', mapStore.watchingLocation, !!this.geoHandler);
+        if (mapStore.watchingLocation || !this.geoHandler) {
             return;
         }
         this.userFollow = true;
@@ -266,9 +268,9 @@ export default class UserLocationModule extends MapModule {
             .enableLocation()
             .then((r) => this.geoHandler.startWatch())
             .then(() => {
-                this.watchingLocation = true;
+                mapStore.watchingLocation = true;
                 showSnack({
-                    message: this.mapComp.$tc('watching_location'),
+                    message: lc('watching_location')
                 });
                 // console.log('started watching location');
             });
@@ -276,23 +278,21 @@ export default class UserLocationModule extends MapModule {
     stopWatchLocation() {
         // console.log('stopWatchLocation');
         this.geoHandler.stopWatch();
-        this.watchingLocation = false;
+        mapStore.watchingLocation = false;
         showSnack({
-            message: this.mapComp.$tc('stopped_watching_location'),
+            message: lc('stopped_watching_location')
         });
     }
     askUserLocation() {
         this.userFollow = true;
 
         return this.geoHandler.enableLocation().then(() => {
-            this.queryingLocation = true;
+            mapStore.queryingLocation = true;
             this.geoHandler.getLocation();
         });
     }
-    watchingLocation = false;
-    queryingLocation = false;
     onWatchLocation() {
-        if (!this.watchingLocation) {
+        if (!mapStore.watchingLocation) {
             this.startWatchLocation();
         } else {
             this.stopWatchLocation();
@@ -320,7 +320,7 @@ export default class UserLocationModule extends MapModule {
             // (this.mapView.android as com.carto.ui.MapView).onResume();
             this.mapView.captureRendering(false).then((result) => {
                 // console.log('showMapAsAlbumArt0', result, result.android);
-                const color = this.mapComp.accentColor.android;
+                const color = accentColor.android;
                 // NotificationHelper.createNotificationChannel(context);
                 this.initMediaSession();
                 const mediaSession = this.mediaSession;
@@ -369,9 +369,7 @@ export default class UserLocationModule extends MapModule {
                 );
                 // console.log('showMapAsAlbumArt3');
                 const notifiction = builder.build();
-                const service = context.getSystemService(
-                    android.content.Context.NOTIFICATION_SERVICE
-                ) as android.app.NotificationManager;
+                const service = context.getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager;
                 service.notify(SCREENSHOT_NOTIFICATION_ID, notifiction);
             });
         }
@@ -380,9 +378,7 @@ export default class UserLocationModule extends MapModule {
     public hideScreenshotNotification() {
         if (global.isAndroid) {
             const context: android.content.Context = ad.getApplicationContext();
-            const service = context.getSystemService(
-                android.content.Context.NOTIFICATION_SERVICE
-            ) as android.app.NotificationManager;
+            const service = context.getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager;
             service.cancel(SCREENSHOT_NOTIFICATION_ID);
         }
     }

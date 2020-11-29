@@ -17,6 +17,8 @@ export const screenHeightDips = Screen.mainScreen.heightDIPs;
 export const screenWidthDips = Screen.mainScreen.widthDIPs;
 export let navigationBarHeight: number = parseFloat(locals.navigationBarHeight);
 
+export let globalMarginTop = 0;
+
 if (global.isAndroid) {
     const resources = (ad.getApplicationContext() as android.content.Context).getResources();
     const id = resources.getIdentifier('config_showNavigationBar', 'bool', 'android');
@@ -26,6 +28,7 @@ if (global.isAndroid) {
         navigationBarHeight = Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId));
         // navigationBarHeight/ = Utils.layout.toDeviceIndependentPixels(48);
     }
+    globalMarginTop = statusBarHeight;
 } else {
     navigationBarHeight = 0;
     const onAppLaunch = function () {

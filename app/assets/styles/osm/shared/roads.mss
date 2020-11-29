@@ -13,8 +13,8 @@
 	[class=minor],
 	[class=service] {
 		[zoom>=14] {
-			polygon-fill: #fff;
-			line-color: #999;
+			polygon-fill: darken(@service-fill, 30%);
+			line-color: @service-casing;
 			line-width: 1;
 		}
 	}
@@ -22,16 +22,16 @@
 		[subclass=pedestrian],
 		[subclass=footway][zoom>=15],
 		[subclass=cycleway][zoom>=15] {
-			polygon-fill: @pedestrian-fill;
-			line-color: #808080;
+			polygon-fill: darken(@pedestrian-fill, 30%);
+			line-color: @pedestrian-casing;
 			line-width: 0.2;
 		}
 	}
 	
 
 	[class=track][zoom>=15] {
-		polygon-fill: #cdbea0;
-		line-color: @track-fill;
+		polygon-fill: darken(@track-fill, 30%);
+		line-color: @track-casing;
 		line-width: 1;
 		line-dasharray: 5,4,2,4;
 		line-cap: round;
@@ -41,15 +41,15 @@
 	[class=path],[class=transit],[class=rail]{
 		[subclass=platform][zoom>=17]  {
 			// {
-				polygon-fill: #bbbbbb;
-				line-color: #808080;
+				polygon-fill: @railway;
+				line-color: darken(@railway, 20%);
 				line-width: linear([view::zoom], (17, 0), (21, 2));
 			// }
 		}
 	}
 	[class=bridge] {
-		polygon-fill: rgba(255,255,255,0.4) ;
-		line-color: #B0B0A8;
+		polygon-fill: @bridge_fill ;
+		line-color: lighten(@bridge_casing, 40%);
 		line-width:0.5;
 	}
 }
@@ -342,9 +342,11 @@
 			}
 		}
 
-		[class=track] {
+		[class=track][zoom>=13] {
+			line-color:@track-casing;
+			line-width: linear([view::zoom], (13, @track-width-z13), (16, @track-width-z16), (19, @track-width-z19));
 			[brunnel=bridge] {
-				[zoom>=13][zoom<15] {
+				[zoom<15] {
 					line-color: @bridge-casing;
 					line-join: round;
 					line-width: @track-width-z13 + 2 * (@paths-background-width + @paths-bridge-casing-width);
@@ -367,7 +369,7 @@
 					}
 				}
 			}
-			[brunnel=tunnel][zoom>=13] {
+			[brunnel=tunnel] {
 				line-color: @tunnel-casing;
 				line-dasharray: 4,2;
 				line-width: @track-width-z13 + 2 * (@paths-background-width + @paths-tunnel-casing-width);
@@ -527,7 +529,7 @@
 				[zoom>=15] {
 					line-color: @track-casing;
 					line-join: round;
-						line-width: @track-width-z15 + 2 * @paths-background-width;
+					line-width: @track-width-z15 + 2 * @paths-background-width;
 					[tracktype=grade1] {
 						line-width: @track-grade1-width-z15 + 2 * @paths-background-width;
 					}
@@ -1104,7 +1106,7 @@
 		}
 		
 
-		[class=track][zoom>=12] {
+		[class=track][zoom>=16] {
 			/* The white casing that you mainly see against forests and other dark features */
 			// [zoom>=15] {
 			// background/line-opacity: 0.4;
@@ -1124,7 +1126,6 @@
 			/* Set the properties of the brown inside */
 			line-color: @track-fill;
 			[access=no] { line-color: @track-fill-noaccess; }
-			line-dasharray: 4,2,4,5;
 			line-cap: round;
 			line-join: round;
 			line-opacity: 0.8;
@@ -1132,42 +1133,44 @@
 
 			// line-width: @track-width-z13;
 			
-			line-width: linear([view::zoom], (13,	@track-width-z12), (13,	@track-width-z13), (15, @track-width-z15));
+			line-width: linear([view::zoom], (16,	@track-width-z16 - 2 * @track-casing-width-z16), (19, @track-width-z19 - 2 * @track-casing-width-z19));
 
-			[tracktype=grade1] {
-				line-dasharray: 0,100;
-			}
-			[tracktype=grade2] {
-				line-dasharray: 8.8,3.2;
-			}
-			[tracktype=grade3] {
-				line-dasharray: 5.6,4.0;
-			}
-			[tracktype=grade4] {
-				line-dasharray: 3.2,4.8;
-			}
-			[tracktype=grade5] {
-				line-dasharray: 4.,3.2;
-			}
-
-			[zoom>=15] {
-				// line-width: @track-width-z15;
-				[tracktype=grade1] {
-					line-dasharray: 100,0;
+			[zoom < 15] {
+					[tracktype=grade1] {
+					line-dasharray: 0,100;
 				}
 				[tracktype=grade2] {
-					line-dasharray: 11,4;
+					line-dasharray: 8.8,3.2;
 				}
 				[tracktype=grade3] {
-					line-dasharray: 7,5;
+					line-dasharray: 5.6,4.0;
 				}
 				[tracktype=grade4] {
-					line-dasharray: 4,4;
+					line-dasharray: 3.2,4.8;
 				}
 				[tracktype=grade5] {
-					line-dasharray: 2,6;
+					line-dasharray: 4.,3.2;
 				}
 			}
+
+			// [zoom>=15] {
+			// 	// line-width: @track-width-z15;
+			// 	[tracktype=grade1] {
+			// 		line-dasharray: 100,0;
+			// 	}
+			// 	[tracktype=grade2] {
+			// 		line-dasharray: 11,4;
+			// 	}
+			// 	[tracktype=grade3] {
+			// 		line-dasharray: 7,5;
+			// 	}
+			// 	[tracktype=grade4] {
+			// 		line-dasharray: 4,4;
+			// 	}
+			// 	[tracktype=grade5] {
+			// 		line-dasharray: 2,6;
+			// 	}
+			// }
 		}
 
 		// [class=rail][service!=null][zoom>=13],
