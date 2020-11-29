@@ -24,7 +24,7 @@ export function getCenter(...coords: MapPos<LatLonKeys>[]) {
     let X = 0.0;
     let Y = 0.0;
     let Z = 0.0;
-    let lat, lon, hyp, coord;
+    let lat, lon, coord;
 
     for (let i = 0, l = coords.length; i < l; ++i) {
         coord = coords[i];
@@ -42,12 +42,12 @@ export function getCenter(...coords: MapPos<LatLonKeys>[]) {
     Z = Z / nb_coords;
 
     lon = Math.atan2(Y, X);
-    hyp = Math.sqrt(X * X + Y * Y);
+    const hyp = Math.sqrt(X * X + Y * Y);
     lat = Math.atan2(Z, hyp);
 
     return {
         lat: lat * TO_DEG,
-        lon: lon * TO_DEG,
+        lon: lon * TO_DEG
     } as MapPos<LatLonKeys>;
 }
 
@@ -172,7 +172,6 @@ export function isLocationOnPath(
     geodesic = true,
     toleranceEarth: number = DEFAULT_TOLERANCE
 ) {
-    // console.log('isLocationOnPath', point, poly, closed, geodesic, toleranceEarth);
     const size = poly.size();
     if (size === 0) {
         return -1;
@@ -305,7 +304,7 @@ export function latLngToTileXY(lat, lng, zoom, tileSize = 256) {
         x: tilex,
         y: tiley,
         pixelX,
-        pixelY,
+        pixelY
     };
     return result;
 }

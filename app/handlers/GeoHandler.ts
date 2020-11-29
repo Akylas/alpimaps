@@ -1,7 +1,5 @@
 import { GPS, GenericGeoLocation, Options as GeolocationOptions, setMockEnabled } from '@nativescript-community/gps';
-import { $t } from '~/helpers/locale';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
-import Vue from 'nativescript-vue';
 import {
     ApplicationEventData,
     android as androidApp,
@@ -9,12 +7,13 @@ import {
     on as applicationOn,
     launchEvent,
     resumeEvent,
-    suspendEvent,
+    suspendEvent
 } from '@nativescript/core/application';
 import { Enums } from '@nativescript/core';
 import { BgService } from '~/services/BgService';
 import { getString, remove, setString } from '@nativescript/core/application-settings';
 import { EventData, Observable } from '@nativescript/core/data/observable';
+import { l } from '@nativescript-community/l';
 
 let geolocation: GPS;
 
@@ -45,7 +44,7 @@ export interface Session {
 export enum SessionState {
     STOPPED = 'stopped',
     RUNNING = 'running',
-    PAUSED = 'paused',
+    PAUSED = 'paused'
 }
 
 // export type GeoLocation = GeoLocation;
@@ -76,6 +75,7 @@ export interface SessionChronoEventData extends GPSEvent {
 
 export class GeoHandler extends Observable {
     watchId;
+    bgService: WeakRef<BgService>;
     currentWatcher: Function;
     _isIOSBackgroundMode = false;
     _deferringUpdates = false;
@@ -98,7 +98,6 @@ export class GeoHandler extends Observable {
         }
         if (!geolocation) {
             geolocation = new GPS();
-            geolocation.debug = DEV_LOG;
         }
         if (global.isAndroid) {
             if (androidApp.nativeApp) {
@@ -122,10 +121,8 @@ export class GeoHandler extends Observable {
         if (this.launched) {
             return;
         }
-        // console.log('appOnLaunch');
         this.currentSession = JSON.parse(getString('pausedSession', null));
         if (this.currentSession) {
-            // console.log('restore paused session', this.currentSession);
             this.currentSession.startTime = new Date(this.currentSession.startTime);
             this.currentSession.lastPauseTime = new Date(this.currentSession.lastPauseTime);
             this.sessionState = SessionState.PAUSED;
@@ -133,9 +130,6 @@ export class GeoHandler extends Observable {
         }
         this.launched = true;
         geolocation.on(GPS.gps_status_event, this.onGPSStateChange, this);
-    }
-    log(...args) {
-        console.log('[GeoHandler]', ...args);
     }
     wasWatchingBeforePause = false;
     watcherBeforePause;
@@ -161,9 +155,9 @@ export class GeoHandler extends Observable {
                 this.watcherBeforePause = null;
                 this.wasWatchingBeforePause = false;
             } else if (this.isWatching()) {
-                if (global.isAndroid) {
-                    (Vue.prototype.$bgService as BgService).bgService.get().removeForeground();
-                }
+                // if (global.isAndroid) {
+                //     this.bgService.get().removeForeground();
+                // }
             }
         }
     }
@@ -187,9 +181,9 @@ export class GeoHandler extends Observable {
                 this.wasWatchingBeforePause = true;
                 this.stopWatch();
             } else {
-                if (global.isAndroid) {
-                    (Vue.prototype.$bgService as BgService).bgService.get().showForeground();
-                }
+                // if (global.isAndroid) {
+                //     this.bgService.get().showForeground();
+                // }
             }
         }
     }
@@ -215,9 +209,9 @@ export class GeoHandler extends Observable {
         applicationOff(resumeEvent, this.onAppResume, this);
     }
     onGPSStateChange(e: GPSEvent) {
-        // if (DEV_LOG) {
-        console.log('GPS state change', e.data);
-        // }
+        if (DEV_LOG) {
+            console.log('GPS state change', e.data);
+        }
         const enabled = e.data.enabled;
         if (!enabled) {
             this.stopSession();
@@ -225,9 +219,8 @@ export class GeoHandler extends Observable {
         this.notify({
             eventName: GPSStatusChangedEvent,
             object: this,
-            data: e.data,
+            data: e.data
         });
-        // console.log('GPS state change done', enabled);
     }
 
     askToEnableIfNotEnabled() {
@@ -236,9 +229,9 @@ export class GeoHandler extends Observable {
         } else {
             return confirm({
                 // title: localize('stop_session'),
-                message: $t('gps_not_enabled'),
-                okButtonText: $t('settings'),
-                cancelButtonText: $t('cancel'),
+                message: l('gps_not_enabled'),
+                okButtonText: l('settings'),
+                cancelButtonText: l('cancel')
             }).then((result) => {
                 if (DEV_LOG) {
                     console.log('askToEnableIfNotEnabled, confirmed', result);
@@ -250,7 +243,7 @@ export class GeoHandler extends Observable {
             });
         }
     }
-    checkEnabledAndAuthorized(always = true) {
+    checkEnabledAndAuthorized(always = false) {
         return Promise.resolve()
             .then(() =>
                 geolocation.isAuthorized().then((r) => {
@@ -266,11 +259,10 @@ export class GeoHandler extends Observable {
                 if (err && /denied/i.test(err.message)) {
                     confirm({
                         // title: localize('stop_session'),
-                        message: $t('gps_not_authorized'),
-                        okButtonText: $t('settings'),
-                        cancelButtonText: $t('cancel'),
+                        message: l('gps_not_authorized'),
+                        okButtonText: l('settings'),
+                        cancelButtonText: l('cancel')
                     }).then((result) => {
-                        // console.log('stop_session, confirmed', result);
                         if (result) {
                             geolocation.openGPSSettings().catch(() => {});
                         }
@@ -283,36 +275,20 @@ export class GeoHandler extends Observable {
     }
 
     enableLocation() {
-        // if (!geolocation.isEnabled()) {
         return this.checkEnabledAndAuthorized();
-        // }
-        // return Promise.resolve();
-        // geolocation.isEnabled().then(
-        //     function(isEnabled) {
-        //         if (!isEnabled) {
-        //             geolocation.enableLocationRequest().then(
-        //                 function() {},
-        //                 function(e) {
-        //                     console.log('Error: ' + (e.message || e));
-        //                 }
-        //             );
-        //         }
-        //     },
-        //     function(e) {
-        //         console.log('Error: ' + (e.message || e));
-        //     }
-        // );
     }
 
     getLocation(options?) {
         return geolocation
-            .getCurrentLocation<LatLonKeys>(options || { desiredAccuracy, minimumUpdateTime, timeout, onDeferred: this.onDeferred })
+            .getCurrentLocation<LatLonKeys>(
+                options || { desiredAccuracy, minimumUpdateTime, timeout, onDeferred: this.onDeferred }
+            )
             .then((r) => {
                 console.log('getLocation result', r);
                 this.notify({
                     eventName: UserLocationdEvent,
                     object: this,
-                    location: r,
+                    location: r
                 } as UserLocationdEventData);
                 return r;
             })
@@ -320,7 +296,7 @@ export class GeoHandler extends Observable {
                 this.notify({
                     eventName: UserLocationdEvent,
                     object: this,
-                    error: err,
+                    error: err
                 } as UserLocationdEventData);
                 return Promise.reject(err);
             });
@@ -330,13 +306,12 @@ export class GeoHandler extends Observable {
         this._deferringUpdates = false;
     };
     onLocation = (loc: GeoLocation, manager?: any) => {
-        // console.log('Received location: ', loc);
         if (loc) {
             this.currentWatcher && this.currentWatcher(null, loc);
             this.notify({
                 eventName: UserLocationdEvent,
                 object: this,
-                location: loc,
+                location: loc
             } as UserLocationdEventData);
         }
         if (manager && this._isIOSBackgroundMode && !this._deferringUpdates) {
@@ -353,9 +328,9 @@ export class GeoHandler extends Observable {
     startWatch(onLoc?: Function) {
         this.currentWatcher = onLoc;
         const options: GeolocationOptions = { desiredAccuracy, minimumUpdateTime, onDeferred: this.onDeferred };
-        // if (DEV_LOG) {
-        // console.log('startWatch', options);
-        // }
+        if (DEV_LOG) {
+            console.log('startWatch', options);
+        }
         if (global.isIOS) {
             if (this._isIOSBackgroundMode) {
                 options.pausesLocationUpdatesAutomatically = false;
@@ -370,9 +345,9 @@ export class GeoHandler extends Observable {
     }
 
     stopWatch() {
-        // if (DEV_LOG) {
-        // console.log('stopWatch', this.watchId);
-        // }
+        if (DEV_LOG) {
+            console.log('stopWatch', this.watchId);
+        }
         if (this.watchId) {
             geolocation.clearWatch(this.watchId);
             this.watchId = null;
@@ -392,7 +367,7 @@ export class GeoHandler extends Observable {
             this.notify({
                 eventName: SessionFirstPositionEvent,
                 object: this,
-                data: loc,
+                data: loc
             } as GPSEvent);
         }
         this.lastLoc = loc;
@@ -402,31 +377,22 @@ export class GeoHandler extends Observable {
         this.currentSession.lastLoc = loc;
         const { android, ios, ...dataToStore } = loc;
         this.currentSession.locs.push(dataToStore);
-        // console.log('notifying session update', JSON.stringify(this.currentSession.lastLoc));
         this.notify({
             eventName: SessionUpdatedEvent,
             object: this,
-            data: this.currentSession,
+            data: this.currentSession
         } as SessionEventData);
         if (this.onUpdatedSession) {
             this.onUpdatedSession(this.currentSession);
         }
     }
     onNewLoc = (err, loc: GeoLocation) => {
-        // console.log(
-        //     'onNewLoc test',
-        //     `${loc.speed && loc.speed.toFixed(1)}, loc:${loc.latitude.toFixed(2)},${loc.longitude.toFixed(2)}, ${loc.timestamp.toLocaleTimeString()}, ${loc.horizontalAccuracy}, ${
-        //         loc.verticalAccuracy
-        //     }`
-        // );
-
         // ignore if we haven't moved or if same timestamp
         if (
             err ||
             loc.horizontalAccuracy >= 40 ||
             (this.lastLoc &&
-                ((this.lastLoc.lat === loc.lat && this.lastLoc.lon === loc.lon) ||
-                    this.lastLoc.timestamp === loc.timestamp))
+                ((this.lastLoc.lat === loc.lat && this.lastLoc.lon === loc.lon) || this.lastLoc.timestamp === loc.timestamp))
         ) {
             return;
         }
@@ -450,12 +416,11 @@ export class GeoHandler extends Observable {
                 const newAlt = Math.round(loc.altitude);
                 deltaAlt = newAlt - this.lastAlt;
                 if (DEV_LOG) {
-                    // console.log('deltaAlt', deltaAlt, this.lastAlt, newAlt);
+                    console.log('deltaAlt', deltaAlt, this.lastAlt, newAlt);
                 }
                 // we only look for positive altitude gain
                 // we ignore little variations as it might induce wrong readings
                 if (deltaAlt > 0) {
-                    // console.log('new loc based on altitude', deltaAlt, newAlt);
                     // filter not to constantly increase
                     this.currentSession.altitudeGain = Math.round(this.currentSession.altitudeGain + deltaAlt);
                     this.lastAlt = newAlt;
@@ -519,9 +484,9 @@ export class GeoHandler extends Observable {
             if (DEV_LOG) {
                 console.log(
                     'onNewLoc',
-                    `speed: ${loc.speed && loc.speed.toFixed(1)}, loc:${loc.lat.toFixed(2)},${loc.lon.toFixed(
-                        2
-                    )}, ${new Date(loc.timestamp).toLocaleTimeString()}, ${shouldNotif}, ${
+                    `speed: ${loc.speed && loc.speed.toFixed(1)}, loc:${loc.lat.toFixed(2)},${loc.lon.toFixed(2)}, ${new Date(
+                        loc.timestamp
+                    ).toLocaleTimeString()}, ${shouldNotif}, ${
                         this.currentSession.currentSpeed && this.currentSession.currentSpeed.toFixed(1)
                     }, ${deltaDistance}, ${deltaTime}, ${deltaAlt}`
                 );
@@ -561,7 +526,7 @@ export class GeoHandler extends Observable {
                 lastPauseTime: null,
                 endTime: null,
                 pauseDuration: 0,
-                locs: [],
+                locs: []
             };
             // /* DEV-START */
             // this.currentSession.currentSpeed = 1.1;
@@ -592,7 +557,7 @@ export class GeoHandler extends Observable {
         this.notify({
             eventName: SessionStateEvent,
             object: this,
-            data: this.currentSession,
+            data: this.currentSession
         } as SessionEventData);
     }
 
@@ -663,7 +628,7 @@ export class GeoHandler extends Observable {
         this.notify({
             eventName: SessionChronoEvent,
             object: this,
-            data: this.getCurrentSessionChrono(),
+            data: this.getCurrentSessionChrono()
         } as SessionChronoEventData);
     }
     private sessionChronoTimer;

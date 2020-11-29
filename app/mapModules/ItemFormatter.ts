@@ -1,15 +1,9 @@
-import { CartoMap } from '@nativescript-community/ui-carto/ui';
-import Map from '~/components/Map';
 import { formatAddress } from '~/helpers/formatter';
 import { IItem as Item } from '~/models/Item';
-import MapModule from './MapModule';
+import MapModule, { getMapContext } from './MapModule';
+const mapContext = getMapContext();
 
-export default class ItemFormatter extends MapModule {
-    onMapReady(mapComp: Map, mapView: CartoMap<LatLonKeys>) {
-        super.onMapReady(mapComp, mapView);
-        // console.log('onMapReady');
-    }
-
+export default class ItemFormatter {
     geItemIcon(item: Item) {
         const result: string[] = [];
         if (!item) {
@@ -46,7 +40,7 @@ export default class ItemFormatter extends MapModule {
     getItemName(item: Item) {
         const properties = item.properties || {};
         return (
-            (this.mapComp && properties[`name_${this.mapComp.currentLanguage}`]) ||
+            properties[`name_${mapContext.getCurrentLanguage()}`] ||
             properties.name ||
             properties.name_int ||
             (item.address && item.address.name)
@@ -119,3 +113,4 @@ export default class ItemFormatter extends MapModule {
         }
     }
 }
+export const formatter = new ItemFormatter();
