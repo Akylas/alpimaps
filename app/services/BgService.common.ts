@@ -5,10 +5,25 @@ import {
     off as applicationOff,
     on as applicationOn,
     exitEvent,
-    launchEvent,
+    launchEvent
 } from '@nativescript/core/application';
 
 export const BgServiceLoadedEvent = 'BgServiceLoadedEvent';
+
+let _sharedInstance: BgServiceCommon;
+const onServiceLoadedListeners = [];
+export function onServiceLoaded(callback: (geoHandler: GeoHandler) => void) {
+    if (_sharedInstance) {
+        callback(_sharedInstance.geoHandler);
+    } else {
+        onServiceLoadedListeners.push(callback);
+    }
+}
+const onServiceUnloadedListeners = [];
+export function onServiceUnloaded(callback: (geoHandler: GeoHandler) => void) {
+    onServiceUnloadedListeners.push(callback);
+}
+
 export abstract class BgServiceCommon extends Observable {
     readonly geoHandler: GeoHandler;
     protected _loaded = false;
@@ -22,12 +37,13 @@ export abstract class BgServiceCommon extends Observable {
         return this._loaded;
     }
     protected _handlerLoaded() {
-        // console.log('_handlerLoaded');
         if (!this._loaded) {
             this._loaded = true;
+            _sharedInstance = this;
+            onServiceLoadedListeners.forEach((l) => l(this.geoHandler));
             this.notify({
                 eventName: BgServiceLoadedEvent,
-                object: this,
+                object: this
             });
         }
     }
@@ -42,6 +58,7 @@ export abstract class BgServiceCommon extends Observable {
     }
     onAppExit(args: ApplicationEventData) {
         // applicationOff(exitEvent, this.onAppExit, this);
+        onServiceUnloadedListeners.forEach((l) => l(this.geoHandler));
         this.geoHandler.onAppExit(args);
     }
     // updateNotifText(text: string) {}
