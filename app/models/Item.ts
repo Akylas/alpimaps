@@ -1,4 +1,3 @@
-
 import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
 import { VectorElement } from '@nativescript-community/ui-carto/vectorelements';
 import { LineStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/line';
@@ -55,20 +54,20 @@ export class Item {
         layer?: string;
     } | null;
 
-    public readonly provider!: 'photon' | 'here' | 'carto' | null;
+    public provider!: 'photon' | 'here' | 'carto' | null;
 
-    public readonly categories!: string[] | null;
+    public categories!: string[] | null;
 
-    public readonly address!: Address | null;
+    public address!: Address | null;
 
-    public readonly zoomBounds!: MapBounds<LatLonKeys> | null;
+    public zoomBounds!: MapBounds<LatLonKeys> | null;
 
-    public readonly position!: MapPos<LatLonKeys> | null;
+    public position!: MapPos<LatLonKeys> | null;
 
-    public readonly styleOptions!: (MarkerStyleBuilderOptions & LineStyleBuilderOptions) | null;
+    public styleOptions!: (MarkerStyleBuilderOptions & LineStyleBuilderOptions) | null;
 
-    public readonly routeId!: number;
-    public readonly route?: Route;
+    public routeId!: string;
+    public route?: Route;
 }
 export type IItem = Partial<Item> & {
     vectorElement?: VectorElement<any, any>;
@@ -97,7 +96,7 @@ export class ItemRepository extends CrudRepository<Item> {
 				address TEXT,
 				zoomBounds TEXT,
 				position TEXT NOT NULL,
-				routeId INTEGER
+				routeId TEXT
 			);
 		`);
     }
@@ -122,28 +121,27 @@ export class ItemRepository extends CrudRepository<Item> {
                 toSave[k] = JSON.stringify(data);
             }
         });
-        console.log('createItem', toSave);
         await this.create(toSave);
         return item as Item;
     }
-    async updateItem(item: IItem, data: Partial<IItem>) {
+    async updateItem(item: Item, data: Partial<IItem>) {
         const toSave = {};
-        Object.keys(item).forEach((k) => {
-            if (typeof item[k] === 'string') {
-                toSave[k] = item[k];
+        Object.keys(data).forEach((k) => {
+            if (typeof data[k] === 'string') {
+                toSave[k] = data[k];
             } else {
-                const data = item[k];
+                const d = data[k];
                 if (k === 'styleOptions') {
-                    Object.keys(data).forEach((k2) => {
-                        if (data[k2] instanceof Color) {
-                            data[k2] = data[k2].hex;
+                    Object.keys(d).forEach((k2) => {
+                        if (d[k2] instanceof Color) {
+                            d[k2] = d[k2].hex;
                         }
                     });
                 }
-                toSave[k] = JSON.stringify(data);
+                toSave[k] = JSON.stringify(d);
             }
         });
-        return this.create(toSave);
+        return this.update(item, toSave);
     }
 
     prepareGetItem(item) {
@@ -163,8 +161,7 @@ export class ItemRepository extends CrudRepository<Item> {
     async searchItem(where?: SqlQuery | null, orderBy?: SqlQuery | null) {
         const result = (await this.search(where, orderBy)).slice();
         for (let index = 0; index < result.length; index++) {
-            let element = result[index];
-            element = this.prepareGetItem(element);
+            let element = this.prepareGetItem(result[index]);
             if (element.routeId) {
                 element = await this.loadRelationship(element, 'route');
             }

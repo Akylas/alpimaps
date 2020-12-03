@@ -130,10 +130,10 @@ export default class CustomLayersModule extends MapModule {
                 dataSource:
                     provider.cacheable !== false
                         ? new PersistentCacheTileDataSource({
-                            dataSource,
-                            capacity: 300 * 1024 * 1024,
-                            databasePath
-                        })
+                              dataSource,
+                              capacity: 300 * 1024 * 1024,
+                              databasePath
+                          })
                         : dataSource,
                 zoomLevelBias,
                 opacity,
@@ -396,9 +396,9 @@ export default class CustomLayersModule extends MapModule {
                     databasePath: e.path
                 });
                 const name = e.name;
-                const contrast = appSettings.getNumber(`${name}_contrast`, 0.29);
-                const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.29);
-                const illuminationDirection = appSettings.getNumber(`${name}_illuminationDirection`, 207);
+                const contrast = appSettings.getNumber(`${name}_contrast`, 0.78);
+                const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.16);
+                const illuminationDirection = appSettings.getNumber(`${name}_illuminationDirection`, 144);
                 const opacity = appSettings.getNumber(`${name}_opacity`, 1);
                 const decoder = new MapBoxElevationDataDecoder();
                 const tileFilterModeStr = appSettings.getString(`${name}_tileFilterMode`, 'bilinear');
@@ -420,7 +420,8 @@ export default class CustomLayersModule extends MapModule {
                     visibleZoomRange: [5, 16],
                     contrast,
                     illuminationDirection,
-                    highlightColor: new Color(255, 141, 141, 141),
+                    highlightColor: new Color(40, 0, 0, 0),
+                    shadowColor: new Color(100, 0, 0, 0),
                     heightScale,
                     dataSource,
                     opacity,

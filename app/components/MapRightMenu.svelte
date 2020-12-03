@@ -72,6 +72,8 @@
         showBottomSheet({
             parent: gridLayout,
             view: LayerOptionsBottomSheet,
+            disableDimBackground: true,
+            dismissOnBackgroundTap: false,
             props: {
                 item
             }
@@ -79,17 +81,20 @@
     }
 </script>
 
-<gridlayout {...$$restProps}  bind:this={gridLayout} columns="*,auto" width="100%" verticalAlignment="bottom" backgroundColor="#99000000">
+<gridlayout
+    {...$$restProps}
+    id="rightMenu"
+    bind:this={gridLayout}
+    columns="*,auto"
+    width="100%"
+    verticalAlignment="bottom"
+    backgroundColor="#99000000">
     <collectionview col="0" rowHeight="70" items={customSources}>
         <Template let:item>
             <gridlayout paddingLeft="15" paddingRight="5" rows="*,auto" columns="*,auto" on:longPress={showSourceOptions(item)}>
-                <label
-                    row="0"
-                    text={item.name.toUpperCase()}
-                    color={item.layer.opacity === 0 ? 'grey' : 'white'}
-                    fontSize="13"
-                    fontWeight="bold"
-                    verticalAlignment="bottom" />
+                <canvaslabel row="0" color={item.layer.opacity === 0 ? 'grey' : 'white'}>
+                    <cspan text={item.name.toUpperCase()} fontSize="13" fontWeight="bold" verticalTextAlignment="bottom" />
+                </canvaslabel>
                 <mdslider
                     row="1"
                     marginLeft="10"

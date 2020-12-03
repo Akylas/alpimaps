@@ -7,7 +7,7 @@
     import { Line, LineEndType, LineJointType, LineStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/line';
     import { Marker, MarkerStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/marker';
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
-    import { TextField } from '@nativescript-community/ui-material-textfield';
+    import { TextField } from '@nativescript/core';
     import { Device, GridLayout } from '@nativescript/core';
     import { createEventDispatcher, onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -559,6 +559,7 @@
 <gridlayout
     bind:this={gridLayout}
     {...$$restProps}
+    id="directions"
     paddingTop={globalMarginTop}
     backgroundColor={primaryColor}
     rows="50,60,60,50"
@@ -609,8 +610,8 @@
         width="44"
         height="44"
         color="white" />
-    <gridlayout row="1" colSpan="3" class="cardView" ripple-color="transparent" columns=" *,auto,auto" height="44" margin="10">
-        <mdtextfield
+    <gridlayout row="1" colSpan="3" borderRadius="2" backgroundColor="white" columns=" *,auto,auto" height="44" margin="10">
+        <textfield
             bind:this={startTF}
             col="0"
             marginLeft="15"
@@ -634,8 +635,8 @@
             on:tap={clearStartSearch}
             color="gray" />
     </gridlayout>
-    <gridlayout row="2" class="cardView" ripple-color="transparent" columns=" *,auto,auto" height="44" margin="0 10 10 10">
-        <mdtextfield
+    <gridlayout row="2" borderRadius="2" backgroundColor="white" columns=" *,auto,auto" height="44" margin="0 10 10 10">
+        <textfield
             bind:this={stopTF}
             variant="none"
             col="0"
@@ -649,7 +650,7 @@
             backgroundColor="transparent"
             floating="false"
             verticalAlignment="center" />
-        <mdactivityindicator visibility={false ? 'visible' : 'collapsed'} row="0" col="1" busy={true} width="20" height={20} />
+        <mdactivityindicator visibility={false ? 'visible' : 'collapsed'} row="0" col="1" busy={true} width="{20}" height={20} />
         <mdbutton
             variant="text"
             class="icon-btn"

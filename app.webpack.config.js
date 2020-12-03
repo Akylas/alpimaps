@@ -12,13 +12,17 @@ const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = (env, params = {}) => {
     if (env.adhoc) {
-        env = Object.assign({}, {
+        env = Object.assign(
+            {},
+            {
                 production: true,
                 sentry: true,
                 uploadSentry: true,
                 sourceMap: true,
                 uglify: true
-            }, env);
+            },
+            env
+        );
     }
     const nconfig = require('./nativescript.config');
     const {
@@ -159,12 +163,27 @@ module.exports = (env, params = {}) => {
         scssLoaderRuleIndex,
         1,
         {
-            test: /\.scss$/,
-            exclude: /\.module\.scss$/,
+            test: /app\.scss$/,
             use: [
                 {
                     loader: '@nativescript/webpack/helpers/css2json-loader',
                     options: { useForImports: true }
+                },
+                {
+                    loader: 'postcss-loader',
+                    options: {
+                        postcssOptions: {
+                            plugins: [
+                                [
+                                    'cssnano',
+                                    {
+                                        preset: 'advanced'
+                                    }
+                                ],
+                                ['postcss-combine-duplicated-selectors', { removeDuplicatedProperties: true }]
+                            ]
+                        }
+                    }
                 },
                 {
                     loader: 'sass-loader',
@@ -231,7 +250,7 @@ module.exports = (env, params = {}) => {
                 {
                     loader: 'string-replace-loader',
                     options: {
-                        search: '__decorate([((.|\n)*?)profile,((.|\n)*?)],.*?,.*,.*);?',
+                        search: '__decorate\\(\\[((.|\n)*?)profile,((.|\n)*?)\\],.*?,.*?,.*?\\);?',
                         replace: (match, p1, offset, string) => '',
                         flags: 'g'
                     }

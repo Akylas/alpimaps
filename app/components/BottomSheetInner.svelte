@@ -24,7 +24,7 @@
     import BottomSheetRouteInfoView from './BottomSheetRouteInfoView.svelte';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { writable } from 'svelte/store';
-import { RouteInstruction } from '~/models/Route';
+    import { RouteInstruction } from '~/models/Route';
 
     export const LISTVIEW_HEIGHT = 200;
     export const PROFILE_HEIGHT = 150;
@@ -170,7 +170,7 @@ import { RouteInstruction } from '~/models/Route';
         updatingItem = true;
         const profile = await packageService.getElevationProfile(item);
         // item.route.profile = profile;
-        await (item.id !== undefined ? updateItem(item, { route: { profile } } as any) : saveItem(false));
+        item.id !== undefined ? await updateItem(item, { route: { profile } } as any) : await saveItem(false);
         updateGraphAvailable(item);
         updateSteps();
         if (graphAvailable) {
@@ -180,7 +180,8 @@ import { RouteInstruction } from '~/models/Route';
         updatingItem = false;
     }
     function saveItem(peek = true) {
-        mapContext.mapModule('items')
+        mapContext
+            .mapModule('items')
             .saveItem(mapContext.getSelecetedItem())
             .then((item) => {
                 mapContext.selectItem({ item, isFeatureInteresting: true, peek });
@@ -189,8 +190,9 @@ import { RouteInstruction } from '~/models/Route';
                 showError(err);
             });
     }
-    async function updateItem(item:IItem, data: Partial<IItem>, peek = true) {
-        mapContext.mapModule('items')
+    async function updateItem(item: IItem, data: Partial<IItem>, peek = true) {
+        mapContext
+            .mapModule('items')
             .updateItem(item, data)
             .then((item) => {
                 mapContext.selectItem({ item, isFeatureInteresting: true, peek });
@@ -276,7 +278,7 @@ import { RouteInstruction } from '~/models/Route';
                         } else {
                             canvas.translate(0, 10);
                         }
-                        canvas.drawText(this.entry.altitude.toFixed(), 0, 5, paint);
+                        canvas.drawText(this.entry.a.toFixed(), 0, 5, paint);
                         canvas.restore();
                     }
                 } as any);
@@ -286,7 +288,7 @@ import { RouteInstruction } from '~/models/Route';
             }
             const chartData = chartView.getData();
             if (!chartData) {
-                const set = new LineDataSet(profileData, 'altitude', 'distance', 'altAvg');
+                const set = new LineDataSet(profileData, 'a', 'd', 'avg');
                 set.setDrawValues(true);
                 set.setValueTextColor(textColor);
                 set.setValueTextSize(10);
@@ -358,9 +360,11 @@ import { RouteInstruction } from '~/models/Route';
 
 <gridlayout
     {...$$restProps}
+    id="bottomsheetinner"
     width="100%"
     rows={`70,50,${profileHeight},auto`}
-    backgroundColor="#aa000000" on:tap={()=>{}}>
+    backgroundColor="#aa000000"
+    on:tap={() => {}}>
     <BottomSheetInfoView
         bind:this={infoView}
         row="0"
@@ -372,12 +376,17 @@ import { RouteInstruction } from '~/models/Route';
         visibility={itemIsRoute ? 'visible' : 'collapsed'}
         routeItem={itemIsRoute ? item : null} />
 
-    <mdactivityindicator visibility={updatingItem ? 'visible' : 'collapsed'} row="0" horizontalAligment="right" busy={true} />
+    <mdactivityindicator
+        visibility={updatingItem ? 'visible' : 'collapsed'}
+        row="0"
+        horizontalAligment="right"
+        busy={true}
+        width={20}
+        height={20} />
 
     <stacklayout row="1" orientation="horizontal" width="100%" borderTopWidth="1" borderBottomWidth="1" borderColor="#44ffffff">
         <mdbutton
             variant="text"
-            padding="4"
             fontSize="10"
             on:tap={searchItemWeb}
             text="search"
@@ -388,7 +397,7 @@ import { RouteInstruction } from '~/models/Route';
             on:tap={getProfile}
             text="profile"
             visibility={itemIsRoute ? 'visible' : 'collapsed'} />
-        <mdbutton variant="text" fontSize="10" on:tap={openWebView} text="web" />
+        <!-- <mdbutton variant="text" fontSize="10" on:tap={openWebView} text="web" /> -->
         <mdbutton
             variant="text"
             fontSize="10"
@@ -404,7 +413,6 @@ import { RouteInstruction } from '~/models/Route';
             color="red" />
         <mdbutton
             variant="text"
-            padding="4"
             fontSize="10"
             on:tap={shareItem}
             text="share item"
