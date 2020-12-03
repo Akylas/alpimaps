@@ -26,6 +26,7 @@
     let currentMapZoom = 0;
     let totalDownloadProgress = 0;
     const mapContext = getMapContext();
+    let packageServiceEnabled = gVars.packageServiceEnabled;
 
     let selectedItem: IItem = null;
 
@@ -260,31 +261,34 @@
 </script>
 
 <gridlayout
+    id="scrollingWidgets"
     bind:this={gridLayout}
     {...$$restProps}
     rows="auto,*,auto"
     columns="70,*,70"
     isPassThroughParentEnabled={true}
     marginTop={globalMarginTop}>
-    <label
-        borderRadius="6"
-        visibility={showSuggestionPackage ? 'visible' : 'collapsed'}
-        col="1"
-        row="2"
-        backgroundColor="#55000000"
-        verticalAlignment="bottom"
-        verticalTextAlignment="middle"
-        horizontalAlignment="center"
-        textWrap={true}
-        marginBottom="30"
-        fontSize="10"
-        padding="4 2 4 4"
-        on:tap={downloadSuggestion}
-        on:longPress={customDownloadSuggestion}
-        color="white"
-        :html={`<big
+    {#if packageServiceEnabled}
+        <label
+            borderRadius="6"
+            visibility={showSuggestionPackage ? 'visible' : 'collapsed'}
+            col="1"
+            row="2"
+            backgroundColor="#55000000"
+            verticalAlignment="bottom"
+            verticalTextAlignment="middle"
+            horizontalAlignment="center"
+            textWrap={true}
+            marginBottom="30"
+            fontSize="10"
+            padding="4 2 4 4"
+            on:tap={downloadSuggestion}
+            on:longPress={customDownloadSuggestion}
+            color="white"
+            :html={`<big
             ><big><font face="${mdiFontFamily}">mdi-download</font></big></big
         >${suggestionPackageName}`} />
+    {/if}
     <stacklayout col="2" row="2" verticalAlignment="bottom" padding="2">
         <mdbutton
             transition:scale={{ duration: 200 }}
@@ -301,21 +305,23 @@
             on:tap={askUserLocation}
             on:longPress={onWatchLocation}
             isUserInteractionEnabled={userInteractionEnabled}>
-            <label
-                textAlignment="center"
-                verticalTextAlignment="middle"
-                class={'mdi ' + locationButtonLabelClass}
-                text="mdi-crosshairs-gps"
-                color={$mapStore.watchingLocation ? 'white' : accentColor}
-                isUserInteractionEnabled="false" />
+            <canvaslabel class={'mdi ' + locationButtonLabelClass} isUserInteractionEnabled="false">
+                <cspan
+                    textAlignment="center"
+                    verticalAlignment="middle"
+                    text="mdi-crosshairs-gps"
+                    color={$mapStore.watchingLocation ? 'white' : accentColor} />
+            </canvaslabel>
         </gridlayout>
     </stacklayout>
     <ScaleView bind:this={scaleView} col="1" row="2" horizontalAlignment="right" verticalAlignment="bottom" marginBottom="8" />
-    <mdprogress
-        col="0"
-        colSpan="3"
-        row="2"
-        value={totalDownloadProgress}
-        visibility={totalDownloadProgress > 0 ? 'visible' : 'collapsed'}
-        verticalAlignment="bottom" />
+    {#if packageServiceEnabled}
+        <mdprogress
+            col="0"
+            colSpan="3"
+            row="2"
+            value={totalDownloadProgress}
+            visibility={totalDownloadProgress > 0 ? 'visible' : 'collapsed'}
+            verticalAlignment="bottom" />
+    {/if}
 </gridlayout>

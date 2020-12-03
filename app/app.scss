@@ -28,19 +28,6 @@ htmllabel {
     color: $text-color;
 }
 
-mdactivityindicator {
-    width: 50;
-    height: 50;
-}
-
-.cardView {
-    border-radius: 2;
-    elevation: 1;
-    dynamic-elevation-offset: 5;
-    ripple-color: $primary-color;
-    background-color: white;
-}
-
 .buttonwhite {
     background-color: transparent;
     color: white;
@@ -76,9 +63,7 @@ mdactivityindicator {
     width: 44;
     height: 44;
     border-radius: 22;
-    font-size: 24;
-    margin: 0;
-    padding: 0;
+    font-size: 24
 }
 .small-icon-btn {
     @extend .icon-btn;
@@ -92,8 +77,6 @@ mdactivityindicator {
     @extend .mdi;
     color: $text-color;
     font-size: 24;
-    margin: 0;
-    padding: 0 4 0 4;
 }
 
 .icon-btn-white {
@@ -114,7 +97,7 @@ mdactivityindicator {
 .floating-btn {
     @extend .mdi;
     elevation: 6;
-    dynamicelevationoffset: 6;
+    dynamic-elevation-offset: 6;
     font-size: 24;
     padding: 0;
     margin: 8;
@@ -125,7 +108,7 @@ mdactivityindicator {
 .small-floating-btn {
     @extend .mdi, .buttontext;
     elevation: 3;
-    dynamicelevationoffset: 3;
+    dynamic-elevation-offset: 3;
     font-size: 24;
     padding: 0;
     width: 40;
