@@ -29,7 +29,7 @@
     import { Drawer } from '@nativescript-community/ui-drawer';
     import { action, alert, login } from '@nativescript-community/ui-material-dialogs';
     import { SpeedDial } from '@nativescript-community/ui-material-speeddial';
-    import { TextField } from '@nativescript-community/ui-material-textfield';
+    import { TextField } from '@nativescript/core';
     import { Brightness } from '@nativescript/brightness';
     import { AndroidApplication, Application, Color, Page } from '@nativescript/core';
     import * as appSettings from '@nativescript/core/application-settings';
@@ -127,6 +127,7 @@
     let shouldShowNavigationBarOverlay = false;
     let geoHandler: GeoHandler;
     let steps;
+    let searchView: Search;
 
     handleOpenURL(onAppUrl);
     function onAppUrl(appURL: AppURL, args) {
@@ -213,7 +214,6 @@
             addLayer,
             removeLayer,
             setBottomSheetStepIndex: (index: number) => {
-                console.log('setBottomSheetStepIndex', index);
                 bottomSheetStepIndex = index;
             },
             mapModules: {
@@ -497,7 +497,7 @@
             // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
             // vectorTileDecoder.setStyleParameter('selected_name', (item.properties && item.properties.name) || '');
             if (peek) {
-                bottomSheetStepIndex = showButtons ? 2 : 1;
+                bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
             }
             if (item.zoomBounds) {
                 const zoomLevel = getBoundsZoomLevel(item.zoomBounds, {
@@ -661,12 +661,7 @@
         }
         return handledByModules;
     }
-    // get searchView() {
-    // return $refs[''] as Search;
-    // }
-    let searchView: Search;
     function unFocusSearch() {
-        // console.log('unFocusSearch', !!searchView, !!searchView && searchView.hasFocus);
         if (searchView && searchView.hasFocus()) {
             searchView.unfocus();
         }
@@ -845,24 +840,27 @@
         console.log('selectStyle');
         const assetsFolder = Folder.fromPath(path.join(knownFolders.currentApp().path, 'assets', 'styles'));
         assetsFolder.getEntities().then((files) => {
+            const actions = files.map((e) => e.name).concat(lc('default'));
             action({
                 title: lc('select_style'),
-                actions: files.map((e) => e.name).concat(lc('default'))
+                actions
             }).then((result) => {
-                if (result) {
+                if (actions.indexOf(result) !== -1) {
                     setMapStyle(result);
                 }
             });
         });
     }
     function selectLanguage() {
+        const actions = SUPPORTED_LOCALES;
         action({
             title: 'Language',
             message: 'Select Language',
-            actions: SUPPORTED_LOCALES
+            actions
         }).then((result) => {
-            console.log('result', result);
-            result && updateLanguage(result);
+            if (actions.indexOf(result) !== -1) {
+                result && updateLanguage(result);
+            }
         });
     }
 
@@ -1171,9 +1169,12 @@
             <stacklayout row="2" width="100%" padding="10">
                 <stacklayout class="menuButtons" orientation="horizontal">
                     <mdbutton col="0" variant="text" text="mdi-email" on:tap={() => onTap('sendFeedback')} />
-                        <mdbutton 
-                    visibility={isSentryEnabled ? 'visible' : 'collapsed'}
-                    col="1" variant="text" text="mdi-bug" on:tap={() => onTap('sendBugReport')} />
+                    <mdbutton
+                        visibility={isSentryEnabled ? 'visible' : 'collapsed'}
+                        col="1"
+                        variant="text"
+                        text="mdi-bug"
+                        on:tap={() => onTap('sendBugReport')} />
                 </stacklayout>
                 <stacklayout class="menuInfos"><label text={'App version: ' + (appVersion || '')} /></stacklayout>
             </stacklayout>
