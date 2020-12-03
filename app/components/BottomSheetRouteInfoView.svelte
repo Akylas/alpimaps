@@ -113,7 +113,7 @@
     <cspan
         horizontalAlignment="left"
         verticalAlignment="top"
-        text={routeInstruction && routeInstruction.instruction}
+        text={routeInstruction && routeInstruction.inst}
         fontSize={15} />
     <cspan
         horizontalAlignment="left"

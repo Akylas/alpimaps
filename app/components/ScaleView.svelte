@@ -41,16 +41,11 @@
     });
 </script>
 
-<label
+<canvaslabel
     {...$$restProps}
-    color="black"
-    text={scaleText}
-    paddingLeft="1"
-    paddingBottom="0"
-    paddingTop="-2"
-    fontSize="10"
-    fontWeight="bold"
-    borderColor="black"
-    borderBottomWidth="2"
-    :width="scaleWidth"
-    height="15" />
+    id="scale"
+    width={scaleWidth}
+    height="15">
+    <cspan fontSize="10" text={scaleText} fontWeight="bold" color="black" />
+    <line strokeWidth="3" color="black" startX="0" startY="100%" stopX="100%" stopY="100%" paddingBottom="3"/>
+</canvaslabel>

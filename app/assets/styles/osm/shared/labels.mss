@@ -23,13 +23,13 @@
 			text-name: @name ?  ( [ele] ? [ele] + 'm' + '\n ' + @name : @name): '';
 		}
 		text-face-name: @mont_bd;
-		text-size: linear([view::zoom], (7, 7), (13, 10), (18, 14))- 0.000001 * [rank]; 
+		text-size: linear([view::zoom], (7, 6), (13, 8), (18, 11))- 0.000001 * [rank]; 
 		text-line-spacing: -1;
 		text-placement: [nuti::texts3d];
 		text-fill: @peak_label;
-		text-dy: linear([view::zoom], (7, 7), (13, 10), (18, 14)); 
+		text-dy: linear([view::zoom], (7, 6), (13, 8), (18, 11)); 
 		text-feature-id: @featureId;
-		text-wrap-width: step([zoom], (7, 40), (12, 150), (18, 200));
+		text-wrap-width: step([zoom], (7, 40), (12, 100), (18, 150));
 		text-halo-fill: @peak_halo;
 		text-halo-rasterizer: fast;
 		text-halo-radius: 1;
@@ -365,7 +365,7 @@
 #water_name [class=lake][zoom>=13][way_pixels>0],
 #landcover[class=ice][subclass=glacier][name!=null][zoom>=13]{
 	text-name: @name;
-	text-face-name: @mont_md;
+	text-face-name: @mont_it_md;
 	text-placement: [nuti::texts3d];
 	text-fill: @water_label;
 	text-wrap-before: true;
@@ -390,16 +390,17 @@
 	[class=ditch][zoom>=15],
 	[class=drain][zoom>=15]{
 
-	text-min-distance: linear([view::zoom], (10, 10), (16, 50));
 	text-name: @name;
-	text-face-name: @mont;
+	text-face-name: @mont_it_md;
 	text-fill: @water_label;
-	// text-avoid-edges: true;
+	text-halo-fill: @water_halo;
+	text-halo-radius: 2;
 	text-halo-rasterizer: fast;
+	// text-avoid-edges: true;
 	text-placement: line;
 	text-dy:1;
 	// text-character-spacing: 1;
-	text-wrap-width: step([zoom], (13, 80), (17, 150));
+	text-wrap-width: step([zoom], (13, 80), (13, 150), (17, 250));
 	text-size: linear([view::zoom], (10, 7.0), (15, 8.0), (16, 10.0), (17, 11.0));
 }
 }
@@ -684,7 +685,7 @@
 					text-wrap-width: step([zoom], (14, 40), (15, 50), (16, 60), (18, 70), (19, 100));
 					// text-feature-id: @featureId;
 					// text-min-distance: 500;
-					text-dy: 10;
+					text-dy: 12;
 					// text-dy: 13;
 
 					[class='bus'][zoom<17],

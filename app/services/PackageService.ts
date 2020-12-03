@@ -647,17 +647,17 @@ class PackageService extends Observable {
         }
         return null;
     }
-    getSmoothedGradient(points: { distance: number; altitude: number; altAvg: number; grade }[]) {
+    getSmoothedGradient(points: { d: number; a: number; avg: number; g }[]) {
         const finalGrades = [];
         const grades: { grad: number; dist: number }[] = [null];
         grades[points.length - 1] = null;
         for (let index = 1; index < points.length - 1; index++) {
-            const dist = points[index + 1].distance - points[index - 1].distance;
+            const dist = points[index + 1].d - points[index - 1].d;
             if (dist > 0) {
-                const grad = Math.max(Math.min((100 * (points[index + 1].altAvg - points[index - 1].altAvg)) / dist, 30), -30);
+                const grad = Math.max(Math.min((100 * (points[index + 1].avg - points[index - 1].avg)) / dist, 30), -30);
                 grades[index] = {
                     grad,
-                    dist: points[index].distance
+                    dist: points[index].d
                 };
             } else {
                 grades[index] = grades[index - 1];
@@ -667,7 +667,7 @@ class PackageService extends Observable {
             if (null === grades[index] && null !== grades[index + 1]) {
                 grades[index] = {
                     grad: grades[index + 1].grad,
-                    dist: points[index].distance
+                    dist: points[index].d
                 };
             }
         }
@@ -675,7 +675,7 @@ class PackageService extends Observable {
             if (null === grades[index] && null !== grades[index - 1]) {
                 grades[index] = {
                     grad: grades[index - 1].grad,
-                    dist: points[index].distance
+                    dist: points[index].d
                 };
             }
         }
@@ -698,7 +698,7 @@ class PackageService extends Observable {
                     }
                 }
             }
-            finalGrades[index] = points[index].grade = Math.round(f / d);
+            finalGrades[index] = points[index].g = Math.round(f / d);
         }
         return finalGrades;
     }
@@ -761,18 +761,19 @@ class PackageService extends Observable {
             currentHeight = sample.altitude;
 
             result.data.push({
-                distance: Math.round(currentDistance),
-                altitude: currentHeight,
-                grade,
-                altAvg: (sample as any).tmpElevation
+                d: Math.round(currentDistance),
+                a: Math.round(currentHeight),
+                g: grade,
+                avg: Math.round((sample as any).tmpElevation)
             });
             if ((sample as any).tmpElevation > result.max[1]) {
-                result.max[1] = (sample as any).tmpElevation;
+                result.max[1] = Math.round((sample as any).tmpElevation);
             }
             if ((sample as any).tmpElevation < result.min[1]) {
-                result.min[1] = (sample as any).tmpElevation;
+                result.min[1] = Math.round((sample as any).tmpElevation);
             }
             // result.points.push({ lat: sample.lat, lon: sample.lon });
+
             last = sample;
 
             delete (sample as any).tmpElevation;
@@ -799,7 +800,7 @@ class PackageService extends Observable {
                 (Math.floor(lastGrade / 10) !== Math.floor(grade / 10) && (lastGrade * grade <= 0 || lastGrade > 0))
             ) {
                 colors.push({
-                    distance: i,
+                    d: i,
                     color: getGradeColor(Math.floor(lastGrade !== undefined ? lastGrade : grade))
                 });
             }
@@ -807,11 +808,11 @@ class PackageService extends Observable {
         }
         if (colors[colors.length - 1].distance < grades.length - 1) {
             colors.push({
-                distance: grades.length - 1,
+                d: grades.length - 1,
                 color: getGradeColor(lastGrade)
             });
         }
-
+        
         result.dmin = Math.round(-descent);
         result.dplus = Math.round(ascent);
         result.colors = colors;

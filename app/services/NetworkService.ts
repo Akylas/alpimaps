@@ -848,7 +848,7 @@ export class NetworkService extends Observable {
                 result.min[1] = currentHeight;
             }
 
-            result.data.push({ distance: currentDistance, altitude: currentHeight, altAvg: currentHeight, grade: 0 });
+            result.data.push({ d: currentDistance, a: currentHeight, avg: currentHeight, g: 0 });
             coordIndex = index * 2;
             // result.points.push({ lat: coords[coordIndex], lon: coords[coordIndex + 1] });
             last = value;

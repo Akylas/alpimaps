@@ -19,6 +19,7 @@ import { darkColor } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
 import NSQLDatabase from './NSQLDatabase';
 import { sql } from 'kiss-orm';
+import { DouglasPeuckerGeometrySimplifier } from '@nativescript-community/ui-carto/geometry/simplifier';
 const mapContext = getMapContext();
 const filePath = path.join(knownFolders.documents().getFolder('db').path, 'db.sqlite');
 
@@ -76,7 +77,7 @@ export default class ItemsModule extends MapModule {
         if (!this.localVectorLayer) {
             const projection = this.mapView.projection;
             this.localVectorDataSource = new LocalVectorDataSource({ projection });
-
+            this.localVectorDataSource.setGeometrySimplifier(new DouglasPeuckerGeometrySimplifier({ tolerance: 2 }));
             this.localVectorLayer = new VectorLayer({ visibleZoomRange: [0, 24], dataSource: this.localVectorDataSource });
             this.localVectorLayer.setVectorElementEventListener<LatLonKeys>({
                 onVectorElementClicked: (data) => mapContext.onVectorElementClicked(data)
@@ -115,7 +116,7 @@ export default class ItemsModule extends MapModule {
                         const { positions, ...others } = item[k];
                         result[k] = JSON.stringify(others);
                     } else {
-                        result[k] = JSON.stringify(item[k]);
+                        result[k] = typeof item[k] === 'string' ? item[k] : JSON.stringify(item[k]);
                     }
                 }
             });
@@ -152,36 +153,15 @@ export default class ItemsModule extends MapModule {
         items.forEach(this.addItemToLayer, this);
     }
     async updateItem(item: IItem, data: Partial<IItem>) {
-        console.log('updateItem', item.id, item instanceof Item);
-        await this.itemRepository.updateItem(item, data);
-        // if (!(item instanceof Item)) {
-        //     if (item.id) {
-        //         if (item.route && !(item.route instanceof Route) && (item.route as any).id) {
-        //             const routeToUpdate = await Route.findOne((item.route as any).id);
-        //             Object.keys(item.route).forEach((k) => {
-        //                 routeToUpdate[k] = item.route[k];
-        //             });
-        //             item.route = routeToUpdate;
-        //         }
-        //         const toUpdate = await this.itemRepository.findOne(item.id);
-        //         Object.keys(item).forEach((k) => {
-        //             toUpdate[k] = item[k];
-        //         });
-        //         item = toUpdate as any;
-        //     } else {
-        //         return item;
-        //     }
-        // }
-        // await item.save();
-        // console.log('updateItem', !!item.route, !!item.vectorElement, item.id);
-
-        // const tableId = item.route ? 'routes' : 'items';
-        // // console.log('saveItem', !!item.route, !!item.vectorElement, item.route);
-        // return nSQL(tableId)
-        //     .query('upsert', item)
-        //     .exec()
-        //     .then(r => {
-        // const rItem = r[0] as Item;
+        if (item.route && data.route) {
+            await this.routeRepository.updateRoute(item.route, data.route);
+            Object.assign(item.route, data.route);
+            delete data.route;
+        }
+        if (Object.keys(data).length > 0) {
+            await this.itemRepository.updateItem(item as Item, data);
+            Object.assign(item, data);
+        }
         const selectedElement = item.vectorElement;
         if (selectedElement) {
             selectedElement.metaData = this.itemToMetaData(item);
@@ -192,24 +172,14 @@ export default class ItemsModule extends MapModule {
             item.vectorElement = this.addItemToLayer(item);
         }
         return item; // return the first one
-        // });
     }
     async saveItem(
         item: Mutable<IItem>,
         styleOptions?: MarkerStyleBuilderOptions | PointStyleBuilderOptions | LineStyleBuilderOptions
     ) {
-        console.log('saveItem', !!item.route, !!item.route && !!item.route.id);
         if (item.route) {
             if (!item.route.id) {
-                // const route = new Route();
-                // route.id = Date.now();
-                // we need to save route first for it get an id
-                // Object.keys(item.route).forEach((k) => (route[k] = item.route[k]));
-                // await route.save();
-                const routeId = Date.now();
-                item.route = await this.routeRepository.createRoute({ ...item.route, id: routeId });
-                console.log('created route', item.route.id, item.route.positions);
-                // item.route = route;
+                item.route = await this.routeRepository.createRoute({ ...item.route, id: Date.now() + '' });
             }
             item.routeId = item.route.id;
             const color = darkColor;
@@ -229,29 +199,9 @@ export default class ItemsModule extends MapModule {
             };
         }
         if (!item.id) {
-            // const data: IItem = item;
-            // (data as any).id = Date.now();
             item = await this.itemRepository.createItem({ ...item, id: Date.now() + '' });
-            // item = new Item();
-            // Object.keys(data).forEach((k) => (item[k] = data[k]));
         }
-        // console.log('saving item', item, item.route instanceof Route, item.route )
-        // await item.save();
-        console.log('item saved', item.id);
-        // const test = await Item.findOne(item.id);
-        // const tableId = item.route ? 'routes' : 'items';
-        // console.log('saveItem', !!item.route, !!item.vectorElement);
-        // return nSQL(tableId)
-        //     .query('upsert', item)
-        //     .exec()
-        //     .then(r => {
-        //         console.log('upsert done', tableId, r.length);
-        //         nSQL('routes')
-        //             .query('select')
-        //             .exec().then(t=>{
-        //                 console.log('test', t.length);
-        //             });
-        // const rItem = r[0] as Item;
+
         const selectedElement = item.vectorElement;
         if (selectedElement) {
             Object.assign(selectedElement, item.styleOptions);
@@ -261,7 +211,6 @@ export default class ItemsModule extends MapModule {
             item.vectorElement = this.addItemToLayer(item as Item);
         }
         return item; // return the first one
-        // });
     }
     async deleteItem(item: IItem) {
         if (item === mapContext.getSelecetedItem()) {
@@ -276,14 +225,6 @@ export default class ItemsModule extends MapModule {
                 await this.routeRepository.delete(item.route);
             }
             await this.itemRepository.delete(item as Item);
-            // const toRemove = await Item.findOne(item.id);
-            // if (toRemove) {
-            // await toRemove.remove();
-            // }
         }
-        // return nSQL(item.route ? 'routes' : 'items')
-        //     .query('delete')
-        //     .where(['id', '=', item.id])
-        //     .exec();
     }
 }
