@@ -9,7 +9,7 @@
     import { Point, PointStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/point';
     import { Side } from '@nativescript-community/ui-drawer';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { TextField } from '@nativescript-community/ui-material-textfield';
+    import { TextField } from '@nativescript/core';
     import { GridLayout, ObservableArray } from '@nativescript/core';
     import { getJSON } from '@nativescript/core/http';
     import { fonticon } from 'nativescript-akylas-fonticon';
@@ -301,14 +301,12 @@
         return focused;
     }
     function onFocus(e) {
-        console.log('onFocus');
         focused = true;
         if (currentSearchText && searchResultsCount === 0) {
             instantSearch(currentSearchText);
         }
     }
     function onBlur(e) {
-        console.log('onBlur');
         focused = false;
     }
 
@@ -316,7 +314,7 @@
         console.log('search searchForQuery');
         textField.nativeView.text = query;
         setTimeout(() => {
-            textField.nativeView.requestFocus();
+            textField.nativeView.focus();
         }, 100);
 
         // currentSearchText = query;
@@ -325,7 +323,6 @@
     $: {
         const query = text;
         if (query) {
-            console.log('onTextChange', query);
             if (searchAsTypeTimer) {
                 clearTimeout(searchAsTypeTimer);
                 searchAsTypeTimer = null;
@@ -512,7 +509,7 @@
     }
 
     function focus() {
-        textField.nativeView.requestFocus();
+        textField.nativeView.focus();
     }
 
     function showMenu(side: Side = 'left') {
@@ -565,15 +562,16 @@
 </script>
 
 <gridlayout
+    id="search"
     bind:this={gridLayout}
     {...$$restProps}
     rows="44,auto"
-    columns="auto, *, auto, auto, auto, auto, auto"
+    columns="auto,*,auto,auto,auto,auto,auto"
     backgroundColor={focused ? '#99000000' : '#55000000'}
     borderRadius={searchResultsVisible ? 10 : 25}
     margin={`${globalMarginTop + 10} 10 10 10`}>
     <mdbutton variant="text" class="icon-btn-white" text="mdi-menu" on:tap={() => showMenu('left')} />
-    <mdtextfield
+    <textfield
         bind:this={textField}
         variant="none"
         col="1"
@@ -596,7 +594,7 @@
         row="0"
         col="2"
         busy={true}
-        width="20"
+        width={20}
         height={20} />
     <mdbutton
         variant="text"
@@ -646,7 +644,7 @@
                     verticalAlignment="center"
                     textAlignment="center" />
                 <label col="1" row="1" text="getItemTitle(item)" color="white" fontSize="14" fontWeight="bold" />
-                <label col="1" row="2" text="getItemSubtitle(item)" color="#D0D0D0" fontSize={12} />
+                <label col="1" row="2" text="getItemSubtitle(item)" color="#D0D0D0" fontSize="12" />
             </gridlayout>
         </Template>
     </collectionview>

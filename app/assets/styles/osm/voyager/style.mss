@@ -12,8 +12,6 @@ Map {
 @mont_it_md: "Montserrat Italic";
 @maki: "maki";
 @osm: "osm";
-@book-fonts:@mont;
-@test:"🠖";
 
 /* ~~~~ CONTENT OF COLORS-DAY ~~~~~
 
@@ -54,8 +52,8 @@ Map {
 /* 3.NATURAL */
 /* 3.1 Main natural */
 @contour: #B58164;
-@contour_label: #AB8267;
-@contour_halo: rgb(158, 158, 158);
+@contour_label: #B58164;
+@contour_halo: rgba(255, 255, 255, 0.65);
 
 @glacier:#ffffff;
 @water: #74A4C1;
@@ -71,7 +69,7 @@ Map {
 // --- Parks, woods, other green things ---
 @grass: #DEE2BF;        // Lch(90,32,128) also grassland, meadow, village_green, garden, allotments
 @scrub: #CAD6A6;        // Lch(84,24,122)
-@forest: #BFCA9B;       // Lch(80,30,135)
+@forest: #C1C9A0;       // Lch(80,30,135)
 @heath: #d6d99f;
 @park: #cbd487;         // Lch(94,30,145)
 @allotments: #c9e1bf;   // Lch(87,20,135)
@@ -89,8 +87,8 @@ Map {
 // @residential-line: #b9b9b9; // Lch(75,0,0)
 @retail: #ffd6d1;           // Lch(89,16,30)
 @retail-line: #d99c95;      // Lch(70,25,30)
-@commercial: #f2dad9;       // Lch(89,8.5,25)
-@commercial-line: #d1b2b0;  // Lch(75,12,25)
+@commercial: #e8e6df;       // Lch(89,8.5,25)
+@commercial-line: #cfcdc7;  // Lch(75,12,25)
 @industrial: rgba(179, 179, 179, 0.5);       // Lch(89,9,330) (Also used for railway, wastewater_plant)
 @industrial-line: #B3B3B3;  // Lch(75,11,330) (Also used for railway-line, wastewater_plant-line)
 @farmland: #eef0d5;         // Lch(94,14,112)
@@ -104,7 +102,7 @@ Map {
 
 /* 4.4 Buildings */
 
-@building-fill: rgb(219, 217, 203);
+@building-fill: #CAC5BD;
 
 
 // --- Other ----
@@ -191,8 +189,8 @@ Map {
 @motorway-low-zoom-casing: #F2934A;
 @trunk-low-zoom-casing: #FFEEAA;
 @primary-low-zoom-casing: #c38a27;
-@secondary-low-zoom-casing: #9eae23;
-@motorway-casing: #FFCC88;
+@secondary-low-zoom-casing: #e9ac77;
+@motorway-casing: #e69051;
 @trunk-casing: #e9ac77;
 @primary-casing:#e9ac77;
 @secondary-casing: #E9AC77;
@@ -239,10 +237,10 @@ Map {
 @standard-halo-fill: rgba(255,255,255,0.6);
 
 // @footway-fill: salmon;
-@path: rgb(131, 131, 131);
+@path: rgb(150, 150, 150);
 @footway-fill: #a9a9a9;
 @footway-fill-noaccess: #bbbbbb;
-@steps-fill: @footway-fill;
+@steps-fill: @path;
 @steps-fill-noaccess: #bbbbbb;
 @cycleway-fill: blue;
 @cycleway-fill-noaccess: #9999ff;
@@ -405,13 +403,14 @@ Map {
 @residential-width-z13:           2;//2.5
 @living-street-width-z13:         2;
 @bridleway-width-z13:             0.3;
-@footway-width-z14:               1; // 0.7
+@footway-width-z13:               0.5; // 0.7
 @cycleway-width-z13:              1; // 0.7
 @track-width-z13:                 0.2; // 0.5
 @track-grade1-width-z13:          1; // 0.5
 @track-grade2-width-z13:          1; // 0.5
 @steps-width-z13:                 1.5;// 0.7
 
+@footway-width-z14:               0.7; // 0.7
 @secondary-width-z14:             3.5; //5
 @tertiary-width-z14:              2.5; //5
 @residential-width-z14:           3;//3
@@ -434,7 +433,7 @@ Map {
 @living-street-width-z15:         5;
 @pedestrian-width-z15:            4;//5
 @bridleway-width-z15:             1.2;
-@footway-width-z15:               1.5;  //1
+@footway-width-z15:               1;  //1
 @cycleway-width-z15:              0.9;
 @track-grade1-width-z15:          1.5;
 @track-grade2-width-z15:          1.5;
@@ -449,7 +448,7 @@ Map {
 @road-width-z16:                  3.5;
 @service-width-z16:               3.5;
 @minor-service-width-z16:         2;
-@footway-width-z16:               1.6;
+@footway-width-z16:               1.2;
 @cycleway-width-z16:              0.9;
 @track-width-z16:                 2; // 1.5
 

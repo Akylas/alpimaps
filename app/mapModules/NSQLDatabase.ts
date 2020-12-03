@@ -32,7 +32,7 @@ export default class NSQLDatabase implements DatabaseInterface {
             : await this.db.select(sqlQuery, compiledQuery.params);
         if (isInsertQuery && !result) {
             // create await an array result.
-            result = [];
+            result = [{}];
         }
         return result as any[];
     }

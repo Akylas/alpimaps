@@ -39,8 +39,8 @@
         const layer = item.layer;
         const opts = item.options || {};
         // console.log('opts', opts)
-        let result = {...item.options};
-       
+        let result = { ...item.options };
+
         Object.keys(result).forEach((k) => {
             result[k].value = layer[k];
         });
@@ -159,14 +159,11 @@
 
 <scrollview>
     <stacklayout>
-        {#each actions as action}
-            <mdbutton variant="text" text={l(action)} on:tap={handleAction(action)} />
-        {/each}
         {#each Object.entries(options) as [name, option]}
             <gridlayout height="50" columns="100,*,50">
                 <canvaslabel colSpan="3" fontSize="13" color="white" padding="10">
-                    <cspan text="{name}" verticalAlignment="center" textAlignment="left" />
-                    <cspan text={(optionValue(name) / 100) + ''} verticalAlignment="center" textAlignment="right" />
+                    <cspan text={name} verticalAlignment="center" paddingLeft="10" horizontalAlignment="left" width="100" />
+                    <cspan text={optionValue(name) / 100 + ''} verticalAlignment="center" textAlignment="right" />
                 </canvaslabel>
                 <mdslider
                     col="1"
@@ -179,5 +176,10 @@
                     verticalAlignment="center" />
             </gridlayout>
         {/each}
+        <stacklayout orientation="horizontal">
+            {#each actions as action}
+                <mdbutton variant="text" text={l(action)} on:tap={handleAction(action)} />
+            {/each}
+        </stacklayout>
     </stacklayout>
 </scrollview>

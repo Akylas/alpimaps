@@ -44,8 +44,8 @@ export interface RouteProfile {
     min: [number, number];
     dplus?: any;
     dmin?: any;
-    data: { distance: number; altitude: number; altAvg: number; grade }[];
-    colors?: { distance: number; color: string }[];
+    data: { d: number; a: number; avg: number; g }[];
+    colors?: { d: number; color: string }[];
 }
 
 const writer = new WKBGeometryWriter();
@@ -73,7 +73,7 @@ namespace GeometryTransformer {
 }
 
 export class Route {
-    public readonly id!: number;
+    public readonly id!: string;
 
     public readonly profile!: RouteProfile | null;
 
@@ -101,7 +101,7 @@ export class RouteRepository extends CrudRepository<Route> {
     async createTables() {
         return this.database.query(sql`
 			CREATE TABLE IF NOT EXISTS "Routes"  (
-				id INTEGER PRIMARY KEY NOT NULL,
+				id TEXT PRIMARY KEY NOT NULL,
 				profile TEXT,
 				positions blob NOT NULL,
 				instructions TEXT,
@@ -128,6 +128,22 @@ export class RouteRepository extends CrudRepository<Route> {
         await this.create(toSave);
         return item as Route;
     }
+    async updateRoute(item: Route, data: Partial<IRoute>) {
+        const toSave = {};
+        Object.keys(data).forEach((k) => {
+            const d = data[k];
+            if (typeof d === 'string') {
+                toSave[k] = d;
+            } else {
+                if (k === 'positions') {
+                    toSave[k] = GeometryTransformer.to(d);
+                } else {
+                    toSave[k] = JSON.stringify(d);
+                }
+            }
+        });
+        return this.update(item, toSave);
+    }
 
     prepareGetRoute(item) {
         Object.keys(item).forEach((k) => {
@@ -139,7 +155,7 @@ export class RouteRepository extends CrudRepository<Route> {
         });
         return item;
     }
-    async getRoute(itemId: number) {
+    async getRoute(itemId: string) {
         let result = await this.get(itemId);
         result = this.prepareGetRoute(result);
         return result;

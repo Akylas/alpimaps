@@ -13,7 +13,7 @@
 	[class=minor],
 	[class=service] {
 		[zoom>=14] {
-			polygon-fill: darken(@service-fill, 30%);
+			polygon-fill: fadeout(@service-fill, 0.3);
 			line-color: @service-casing;
 			line-width: 1;
 		}
@@ -22,7 +22,7 @@
 		[subclass=pedestrian],
 		[subclass=footway][zoom>=15],
 		[subclass=cycleway][zoom>=15] {
-			polygon-fill: darken(@pedestrian-fill, 30%);
+			polygon-fill: fadeout(@pedestrian-fill, 0.3);
 			line-color: @pedestrian-casing;
 			line-width: 0.2;
 		}
@@ -30,7 +30,7 @@
 	
 
 	[class=track][zoom>=15] {
-		polygon-fill: darken(@track-fill, 30%);
+		polygon-fill: lighten(@track-fill, 0.3);
 		line-color: @track-casing;
 		line-width: 1;
 		line-dasharray: 5,4,2,4;
@@ -966,7 +966,7 @@
 					line-dasharray: 3,1;
 					// line-join: round;
 					// line-cap: round;
-					line-width: linear([view::zoom], (14,	@footway-width-z14), (15, @footway-width-z15), (16, @footway-width-z16), (18, @footway-width-z18), (19, @footway-width-z19));
+					line-width: linear([view::zoom], (13,	@footway-width-z13), (14,	@footway-width-z14), (15, @footway-width-z15), (16, @footway-width-z16), (18, @footway-width-z18), (19, @footway-width-z19));
 
 					// line-width: @footway-width-z14;
 					[zoom>=15][surface=paved] {
@@ -1530,10 +1530,9 @@
 			}
 		}
 		[ramp!=1],[zoom>=10]::fill {
-			line-color: @unimportant-road;
+			line-color: @secondary-fill;
 			line-width: linear([view::zoom], (9, @secondary-width-z9), (10, @secondary-width-z10), (11, @secondary-width-z11));
 			[zoom>=12] {
-				line-color: @secondary-fill;
 				line-width: linear([view::zoom], (12, @secondary-width-z12 - 2 * @secondary-casing-width-z12), (13, @secondary-width-z13 - 2 * @secondary-casing-width-z13), (15, @secondary-width-z15 - 2 * @secondary-casing-width-z15), (17, @secondary-width-z17 - 2 * @secondary-casing-width-z17), (18, @secondary-width-z18 - 2 * @secondary-casing-width-z18), (19, @secondary-width-z19 - 2 * @secondary-casing-width-z19));
 				line-cap: round;
 				line-join: round;
