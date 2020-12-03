@@ -28,7 +28,6 @@
 </script>
 
 <script lang="ts">
-
     let geoHandler: GeoHandler;
     let showLocationInfo = false;
     const mapContext = getMapContext();
@@ -182,6 +181,7 @@
 <gridlayout
     {...$$restProps}
     bind:this={gridLayout}
+    id="locationInfo"
     width="200"
     visibility={showLocationInfo ? 'visible' : 'collapsed'}
     height="70"
@@ -211,14 +211,9 @@
             <cspan text=" m" fontSize="12" />
         </cgroup>
     </canvaslabel>
-    <label
-        col="1"
-        visibility={listeningForBarometer && airportRefName ? 'visible' : 'collapsed'}
-        text={airportRefName}
-        verticalAlignment="bottom"
-        horizontalAlignment="right"
-        color="#fff"
-        fontSize="9" />
+    <canvaslabel col="1" visibility={listeningForBarometer && airportRefName ? 'visible' : 'collapsed'}>
+        <cspan text={airportRefName} verticalTextAlignment="bottom" textAlignment="right" color="#fff" fontSize="9" />
+    </canvaslabel>
     <stacklayout visibility={hasBarometer ? 'visible' : 'collapsed'} col="2" verticalAlignment="center">
         <mdbutton variant="text" class="small-icon-btn" text="mdi-gauge" on:tap={switchBarometer} color="white" />
         <mdbutton
