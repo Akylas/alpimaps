@@ -595,8 +595,7 @@
     </stacklayout>
     <mdbutton
         horizontalAlignment="right"
-        variant="text"
-        class="icon-btn-text icon-btn-rounded"
+        class="icon-btn-text"
         text="mdi-magnify"
         on:tap={() => showRoute(false)}
         on:LongPress={() => showRoute(true)}

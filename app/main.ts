@@ -26,6 +26,7 @@ import { Progress } from '@nativescript-community/ui-material-progress';
 import { ActivityIndicator } from '@nativescript-community/ui-material-activityindicator';
 import { Button } from '@nativescript-community/ui-material-button';
 import { TextField } from '@nativescript-community/ui-material-textfield';
+import { CardView } from '@nativescript-community/ui-material-cardview';
 import { PersistentBottomSheet } from '@nativescript-community/ui-persistent-bottomsheet';
 import { BgService } from './services/BgService';
 import { Application, Trace } from '@nativescript/core';
@@ -44,6 +45,7 @@ registerNativeViewElement('mdbutton', () => Button);
 registerNativeViewElement('label', () => Label, null, {}, { override: true });
 registerNativeViewElement('mdactivityindicator', () => ActivityIndicator);
 registerNativeViewElement('mdprogress', () => Progress);
+registerNativeViewElement('mdcardview', () => CardView);
 registerNativeViewElement('mdslider', () => Slider);
 registerNativeViewElement('lineChart', () => LineChart);
 registerNativeViewElement('cartomap', () => CartoMap);
@@ -65,6 +67,13 @@ if (global.isIOS) {
     themer.setPrimaryColor(primaryColor);
     themer.setAccentColor(primaryColor);
 }
+themer.createShape('round', {
+    cornerFamily: 'rounded' as any,
+    cornerSize: {
+        value: 0.5,
+        unit: '%'
+    }
+});
 
 if (DEV_LOG) {
     Trace.addCategories(DomTraceCategory);

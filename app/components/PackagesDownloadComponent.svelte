@@ -503,8 +503,9 @@
     <stacklayout row="0" colSpan="3" orientation="horizontal">
         <mdbutton
             class="mdi"
-            borderRadius="24"
+            shape="round"
             width="48"
+            height="48"
             variant="text"
             fontSize="20"
             text="mdi-arrow-left"

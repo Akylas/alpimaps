@@ -28,6 +28,10 @@ htmllabel {
     color: $text-color;
 }
 
+mdbutton, mdcardview {
+    shape: round;
+}
+
 .buttonwhite {
     background-color: transparent;
     color: white;
@@ -36,12 +40,12 @@ htmllabel {
 .buttonthemed {
     background-color: $primary-color;
     color: white;
-    ripple-color: $dark-color;
+    // ripple-color: $dark-color;
 }
 .buttontext {
     background-color: white;
     color: $primary-color;
-    ripple-color: $dark-color;
+    // ripple-color: $dark-color;
 }
 
 .maki {
@@ -59,17 +63,14 @@ htmllabel {
 .icon-btn {
     @extend .mdi;
     color: $text-color;
-    ripple-color: $text-color;
     width: 44;
     height: 44;
-    border-radius: 22;
     font-size: 24
 }
 .small-icon-btn {
     @extend .icon-btn;
     width: 30;
     height: 30;
-    border-radius: 15;
     font-size: 16;
 }
 
@@ -90,20 +91,15 @@ htmllabel {
     color: $primary-color;
     ripple-color: $dark-color;
 }
-.icon-btn-rounded {
-    border-radius: 22;
-}
 
 .floating-btn {
     @extend .mdi;
     elevation: 6;
-    dynamic-elevation-offset: 6;
     font-size: 24;
     padding: 0;
     margin: 8;
     width: 54;
     height: 54;
-    border-radius: 27;
 }
 .small-floating-btn {
     @extend .mdi, .buttontext;
@@ -114,7 +110,6 @@ htmllabel {
     width: 40;
     height: 40;
     margin: 8;
-    border-radius: 20;
 }
 .section-title {
     font-size: 10;
@@ -123,15 +118,15 @@ htmllabel {
 
 MDSpeedDialButton, MDSpeedDialItemButton {
     @extend .mdi ;
+    shape: round;
+    border-radius: null;
     // color: white;
 }
-MDSpeedDialButton {
-    // background-color: $primary-color;
-}
 MDSpeedDialItemTitle {
+    shape: round;
+    border-radius: null;
     background-color: #444;
     vertical-text-alignment: middle;
-    border-radius: 6;
     font-size:11;
     color: white;
     padding:6;
@@ -145,7 +140,6 @@ MDSpeedDialItemTitle {
 
 .menu-btn {
     @extend .icon-btn;
-    border-radius: 22;
     // ripple-color: #b8b7b7;
     // color: $accent-color;
 }

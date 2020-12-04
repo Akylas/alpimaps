@@ -220,10 +220,10 @@
                 items: new ItemsModule(),
                 userLocation: new UserLocationModule(),
                 customLayers: new CustomLayersModule(),
-                directionsPanel: directionsPanel
+                directionsPanel: directionsPanel,
                 // search: searchView,
                 // rightMenu: rightMenu,
-                // mapScrollingWidgets: mapScrollingWidgets,
+                mapScrollingWidgets,
                 // bottomSheet: bottomSheet
             }
         });
@@ -1232,7 +1232,7 @@
             <BottomSheetInner bind:steps prop:bottomSheet updating={itemLoading} item={$selectedItem} />
 
             <mdbutton
-                transition="scale"
+                marginTop="80"
                 visibility={currentMapRotation !== 0 ? 'visible' : 'collapsed'}
                 on:tap={resetBearing}
                 class="small-floating-btn"
