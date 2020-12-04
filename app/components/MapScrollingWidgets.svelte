@@ -71,12 +71,11 @@
     }
 
     $: {
-        // console.log('selectedItemHasPosition', selectedItem);
         selectedItemHasPosition = selectedItem && !selectedItem.route && !!selectedItem.position;
     }
 
-    export function onSelectedItem(selectedItem: IItem, oldItem: IItem) {
-        selectedItem = selectedItem;
+    export function onSelectedItem(item: IItem, oldItem: IItem) {
+        selectedItem = item;
     }
     if (gVars.packageServiceEnabled) {
         onMount(() => {
@@ -300,7 +299,7 @@
             text="mdi-directions"
             visibility={selectedItemHasPosition ? 'visible' : 'collapsed'}
             isUserInteractionEnabled={userInteractionEnabled} />
-        <gridlayout
+        <mdcardview
             class={'floating-btn ' + locationButtonClass}
             on:tap={askUserLocation}
             on:longPress={onWatchLocation}
@@ -312,7 +311,7 @@
                     text="mdi-crosshairs-gps"
                     color={$mapStore.watchingLocation ? 'white' : accentColor} />
             </canvaslabel>
-        </gridlayout>
+        </mdcardview>
     </stacklayout>
     <ScaleView bind:this={scaleView} col="1" row="2" horizontalAlignment="right" verticalAlignment="bottom" marginBottom="8" />
     {#if packageServiceEnabled}
