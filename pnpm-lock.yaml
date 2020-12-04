@@ -20,21 +20,21 @@ dependencies:
   '@nativescript-community/ui-canvaslabel': 1.0.35
   '@nativescript-community/ui-carto': 'link:../nativescript-carto/plugin'
   '@nativescript-community/ui-chart': 1.1.18
-  '@nativescript-community/ui-collectionview': 4.0.13
+  '@nativescript-community/ui-collectionview': 4.0.15
   '@nativescript-community/ui-document-picker': 1.1.3
-  '@nativescript-community/ui-drawer': 0.0.18
+  '@nativescript-community/ui-drawer': 0.0.19
   '@nativescript-community/ui-image': 4.0.17
   '@nativescript-community/ui-label': 1.0.60
-  '@nativescript-community/ui-material-activityindicator': 5.1.9
-  '@nativescript-community/ui-material-bottomsheet': 5.1.9
-  '@nativescript-community/ui-material-button': 5.1.9
-  '@nativescript-community/ui-material-cardview': 5.1.9
-  '@nativescript-community/ui-material-dialogs': 5.1.9
-  '@nativescript-community/ui-material-progress': 5.1.9
-  '@nativescript-community/ui-material-ripple': 5.1.9
-  '@nativescript-community/ui-material-slider': 5.1.9
-  '@nativescript-community/ui-material-snackbar': 5.1.9
-  '@nativescript-community/ui-material-speeddial': 5.1.9
+  '@nativescript-community/ui-material-activityindicator': 5.1.12
+  '@nativescript-community/ui-material-bottomsheet': 5.1.12
+  '@nativescript-community/ui-material-button': 5.1.12
+  '@nativescript-community/ui-material-cardview': 5.1.12
+  '@nativescript-community/ui-material-dialogs': 5.1.12
+  '@nativescript-community/ui-material-progress': 5.1.12
+  '@nativescript-community/ui-material-ripple': 5.1.12
+  '@nativescript-community/ui-material-slider': 5.1.12
+  '@nativescript-community/ui-material-snackbar': 5.1.12
+  '@nativescript-community/ui-material-speeddial': 5.1.12
   '@nativescript-community/ui-persistent-bottomsheet': 0.0.14
   '@nativescript-community/ui-share-file': 1.2.1
   '@nativescript-community/ui-webview': 1.1.5
@@ -464,22 +464,22 @@ packages:
     dev: false
     resolution:
       integrity: sha512-6eNwD1MfoW7lle24IqpEe5YYGdpjZ7HHTh9aD/K5feteSK1RhJV/UmUP65YuH9Y8NhwvOMwAmQu/qNXZqSzKvA==
-  /@nativescript-community/ui-collectionview/4.0.13:
+  /@nativescript-community/ui-collectionview/4.0.15:
     dev: false
     resolution:
-      integrity: sha512-1iGK8FDydBOQb5HHTM9oFCuFpFrOxqxxu8B8nUv2qxwnMFUxkkhVYQNcqGsSfm0MQzEXQJlp6kTBkWay59Jp6g==
+      integrity: sha512-NZtXnMTCkOiHzDHnUAAAgdygE2Ri84jr2Awqpf9PufiW80/HorKAHA0Y0RBBSOV86KefCXY2DcxJ+nKBlqvRdQ==
   /@nativescript-community/ui-document-picker/1.1.3:
     dependencies:
       '@nativescript-community/perms': 2.1.4
     dev: false
     resolution:
       integrity: sha512-MFZ+/0O4mjsXQaX+HRmk5UDQHbJ3dESDoLEwML+EDH5dOrgHCIbyT8Y31JYRKCaXox0LpQjdglY/JtO+AXx0OA==
-  /@nativescript-community/ui-drawer/0.0.18:
+  /@nativescript-community/ui-drawer/0.0.19:
     dependencies:
       '@nativescript-community/gesturehandler': 0.1.35
     dev: false
     resolution:
-      integrity: sha512-ox7lvzI7s97l8MBjqROnZK4hkt9p664yisoWss8CJ9AcFv1xsiOVH8Lz0Ej6hwR7iSEPxN/+P7NSn5PfedgiZQ==
+      integrity: sha512-NrE/hPOuZzpVs5vCVM4wCcSp8JwxRU0FIE0T3ELWLqfIdBDm6KfCdsXScWPqMbP6l30iRXwUfx6xj+oElqRNcg==
   /@nativescript-community/ui-image/4.0.17:
     dev: false
     resolution:
@@ -490,82 +490,82 @@ packages:
     dev: false
     resolution:
       integrity: sha512-VRGpjLCEbhRTLJVicsT1cKN4TyM3xdLXptBdAL7bzsKCdONj1sQBrHROSf1f8oZR6RlLnosaaF1FC7E/NVZj0w==
-  /@nativescript-community/ui-material-activityindicator/5.1.9:
+  /@nativescript-community/ui-material-activityindicator/5.1.12:
     dependencies:
-      '@nativescript-community/ui-material-core': 5.1.9
+      '@nativescript-community/ui-material-core': 5.1.12
     dev: false
     resolution:
-      integrity: sha512-SGCeQgKBDqkZ5zsBCdRWydB9MFoH2wf1RxaBeoUp89a0qs12ztzVL1up+d6q65bREGkOGIkIpenDiv4iBVMkVw==
-  /@nativescript-community/ui-material-bottomsheet/5.1.9:
+      integrity: sha512-VCtIUXNDBzkB2WojLeiwFThsQ+YOxWeDlYRDE/m+UJWrIFOO9esWfN5WAVvVEI1heoXfdqppYxMdk1JyhRwOag==
+  /@nativescript-community/ui-material-bottomsheet/5.1.12:
     dependencies:
-      '@nativescript-community/ui-material-core': 5.1.9
+      '@nativescript-community/ui-material-core': 5.1.12
     dev: false
     resolution:
-      integrity: sha512-ZwKyy5+42LtPb1DK5Uu535ey0PqIYKadyIoYPlgr+zotLZUK59ndH+wYKLDmq+wljVIcPcXL8slU9dIQoLa7nw==
-  /@nativescript-community/ui-material-button/5.1.9:
+      integrity: sha512-Sh0wWaOswI4C/kIbV1ChUFp0SafE31oPba3F5IfDxKeHDM7Xa+4ZWwhuZQ5OzCmLDqn7bZsZzPJ+oQgsPaQ2Rw==
+  /@nativescript-community/ui-material-button/5.1.12:
     dependencies:
       '@nativescript-community/text': 1.3.10
-      '@nativescript-community/ui-material-core': 5.1.9
+      '@nativescript-community/ui-material-core': 5.1.12
     dev: false
     resolution:
-      integrity: sha512-zjfAVUxCez+Yb/Ptp2SQzu+w9PHZJX0uLJ2R8lylXo/Dn4lptxSTMqj4k2rODMKW2qsv+IOyoSwQ/+z38gfifg==
-  /@nativescript-community/ui-material-cardview/5.1.9:
+      integrity: sha512-U9OcHe66S2CoVC3bd26c0jo6NiLw4ddZW1WPyrCjG8P0wChKsjsogLURl9isPj3goy9KEj6DCJFdJQLTcg/y0g==
+  /@nativescript-community/ui-material-cardview/5.1.12:
     dependencies:
-      '@nativescript-community/ui-material-core': 5.1.9
+      '@nativescript-community/ui-material-core': 5.1.12
     dev: false
     resolution:
-      integrity: sha512-v2b75wj/0NpnO/yscGrEdOH3WmFsx0f2pw4yE/q8nc7LdV0mOi8YGqdTIFjF/DZwIVCkP1+Mk55Vwv9xv6uCeA==
-  /@nativescript-community/ui-material-core/5.1.9:
+      integrity: sha512-VjylvfrMW2dIS2sBvaDWrE94542P8rE/hsbAD59F96zrmlsl2IyQF8AoCBA43ZcVk5hkZ7dEWjVgA16XzgYNbA==
+  /@nativescript-community/ui-material-core/5.1.12:
     dependencies:
       '@nativescript/hook': 2.0.0
     dev: false
     requiresBuild: true
     resolution:
-      integrity: sha512-j/CW63Rf0WWd47MC9wVfoN03exyH7gAKPvTt5gutOwqbBxnvW7YQVgRT3+xGpjPIxh4nYrq7lPZmzoxyFjmxHQ==
-  /@nativescript-community/ui-material-dialogs/5.1.9:
+      integrity: sha512-4ek9DBzQ/X/G9rhqSnK0v0AFSVbiT9kn4o7ghE+TIaXxbK9g4siJ6kar6tFm/KKltGik6ksyRgZXIZHw8oaHQA==
+  /@nativescript-community/ui-material-dialogs/5.1.12:
     dependencies:
-      '@nativescript-community/ui-material-core': 5.1.9
-      '@nativescript-community/ui-material-textfield': 5.1.9
+      '@nativescript-community/ui-material-core': 5.1.12
+      '@nativescript-community/ui-material-textfield': 5.1.12
     dev: false
     resolution:
-      integrity: sha512-1OZakVIzo2wTBkGMQJRuQwrL7XmmfsoSev94ckzrqTBP+BQDjnQqudyXChzVEdUNs+S/MVmlCC/9OfkI/3SlaQ==
-  /@nativescript-community/ui-material-progress/5.1.9:
+      integrity: sha512-KaKcfPlvUFCo3XNyrB8TNoexwK5QzG1bRx7Wq0XaxOwnsocqU80Ex74rbQGxaeYCWW+wfSIRQiFnjRbqBaeKDg==
+  /@nativescript-community/ui-material-progress/5.1.12:
     dependencies:
-      '@nativescript-community/ui-material-core': 5.1.9
+      '@nativescript-community/ui-material-core': 5.1.12
     dev: false
     resolution:
-      integrity: sha512-1ErTq6TgXra0aWexAEs5HUWsubZ9hrz1v3Hi6St9MLjoeo62ffbDBDsMZSNteIxcn7ePzgxTyqjCUCdQBXNrfA==
-  /@nativescript-community/ui-material-ripple/5.1.9:
+      integrity: sha512-rs55WnDoJagSdclPu2TMiO62XJ7PdORp+CAnLI+uuaKqVnoQonGB7dxesNNq0Znht3WPSs46htHyOXgSYU2vCg==
+  /@nativescript-community/ui-material-ripple/5.1.12:
     dependencies:
-      '@nativescript-community/ui-material-core': 5.1.9
+      '@nativescript-community/ui-material-core': 5.1.12
     dev: false
     resolution:
-      integrity: sha512-voAvraJZeY7IDdyN0mUKkxUWm07zDCMTBpcKKYYmRfoJCGRQjPySn8eS7PG6inboYsbwLCnncjGgDu43ZDD/pg==
-  /@nativescript-community/ui-material-slider/5.1.9:
+      integrity: sha512-fVu2L59TyFoKZ9bacNTM9EsC0W8V2SSqzuaKmnqcvofeBfApjTPG6KYFSysaigIYbtV248dDmoRXXs7aixd30Q==
+  /@nativescript-community/ui-material-slider/5.1.12:
     dependencies:
-      '@nativescript-community/ui-material-core': 5.1.9
+      '@nativescript-community/ui-material-core': 5.1.12
     dev: false
     resolution:
-      integrity: sha512-nrYLyQfdMCJpd1GEkyuKYg4PHgYaMWm8Cm1ZYpClLKh+bdsQNeExPDZWrlECXlpUk1QJKi/gSXkhWZ9eq5wl9Q==
-  /@nativescript-community/ui-material-snackbar/5.1.9:
+      integrity: sha512-AGYl0rB7CJxjUS3IKQ91WqUR0A9VrNP579zQ697NCwOEEj8SaM4do1ueFyFyW3Onqp/D73wmu3ShXx8TUSJYQQ==
+  /@nativescript-community/ui-material-snackbar/5.1.12:
     dependencies:
-      '@nativescript-community/ui-material-core': 5.1.9
+      '@nativescript-community/ui-material-core': 5.1.12
     dev: false
     resolution:
-      integrity: sha512-r7+hFRbvN+TMCu6Fi61Ny1rdTtX5OQtmm/XQ1dey1/aln5O7e4VFp6vTYLuWy7z/Ms0gkfGIahvifUE94B5xDA==
-  /@nativescript-community/ui-material-speeddial/5.1.9:
+      integrity: sha512-bSMbeMb8WmRkIAcoH1nk/61l7sXZf2FTpLq7trpWvBhYlSYKq9134b7NoJUPnjm40NMl2a91wG0dailYLobSrQ==
+  /@nativescript-community/ui-material-speeddial/5.1.12:
     dependencies:
-      '@nativescript-community/ui-material-button': 5.1.9
-      '@nativescript-community/ui-material-core': 5.1.9
+      '@nativescript-community/ui-material-button': 5.1.12
+      '@nativescript-community/ui-material-core': 5.1.12
     dev: false
     resolution:
-      integrity: sha512-u+wo20lm30z4WBXKZFjx4ZPlqERLGV2036c+O3VueEGNqLEipzrmCejgTzjM58CFs2f92QroG89uXonwO+pKCw==
-  /@nativescript-community/ui-material-textfield/5.1.9:
+      integrity: sha512-GYPR+dRklebfPzY3cAgN4l2xtONf0OFw6wk82+2JvbyWwxGPO8e4XDUpqVpf5C3BkLl+0cBJ39QVNq84tY9xKw==
+  /@nativescript-community/ui-material-textfield/5.1.12:
     dependencies:
-      '@nativescript-community/ui-material-core': 5.1.9
+      '@nativescript-community/ui-material-core': 5.1.12
     dev: false
     resolution:
-      integrity: sha512-nM87b91MWTqafH0sRh0YBi9RVv6Wyt5YgiGGsxCLB7soIT1wzp73K3T9vf2Svy46Dzyod9EOW+T7szaPQICUKA==
+      integrity: sha512-J0lljSrOsvwbYKna+KkPm1cgrLyDi4hiSx2IBRPA+jMERrQW18MgG3IF2Rmuum+dOG4Lwg6QLFtOg1Gfr9ffSQ==
   /@nativescript-community/ui-persistent-bottomsheet/0.0.14:
     dependencies:
       '@nativescript-community/gesturehandler': 0.1.35
@@ -9099,21 +9099,21 @@ specifiers:
   '@nativescript-community/ui-canvaslabel': 1.0.35
   '@nativescript-community/ui-carto': 'file:../nativescript-carto/plugin'
   '@nativescript-community/ui-chart': 1.1.18
-  '@nativescript-community/ui-collectionview': 4.0.13
+  '@nativescript-community/ui-collectionview': 4.0.15
   '@nativescript-community/ui-document-picker': 1.1.3
-  '@nativescript-community/ui-drawer': 0.0.18
+  '@nativescript-community/ui-drawer': 0.0.19
   '@nativescript-community/ui-image': 4.0.17
   '@nativescript-community/ui-label': 1.0.60
-  '@nativescript-community/ui-material-activityindicator': 5.1.9
-  '@nativescript-community/ui-material-bottomsheet': 5.1.9
-  '@nativescript-community/ui-material-button': 5.1.9
-  '@nativescript-community/ui-material-cardview': 5.1.9
-  '@nativescript-community/ui-material-dialogs': 5.1.9
-  '@nativescript-community/ui-material-progress': 5.1.9
-  '@nativescript-community/ui-material-ripple': 5.1.9
-  '@nativescript-community/ui-material-slider': 5.1.9
-  '@nativescript-community/ui-material-snackbar': 5.1.9
-  '@nativescript-community/ui-material-speeddial': 5.1.9
+  '@nativescript-community/ui-material-activityindicator': 5.1.12
+  '@nativescript-community/ui-material-bottomsheet': 5.1.12
+  '@nativescript-community/ui-material-button': 5.1.12
+  '@nativescript-community/ui-material-cardview': 5.1.12
+  '@nativescript-community/ui-material-dialogs': 5.1.12
+  '@nativescript-community/ui-material-progress': 5.1.12
+  '@nativescript-community/ui-material-ripple': 5.1.12
+  '@nativescript-community/ui-material-slider': 5.1.12
+  '@nativescript-community/ui-material-snackbar': 5.1.12
+  '@nativescript-community/ui-material-speeddial': 5.1.12
   '@nativescript-community/ui-persistent-bottomsheet': 0.0.14
   '@nativescript-community/ui-share-file': 1.2.1
   '@nativescript-community/ui-webview': 1.1.5
