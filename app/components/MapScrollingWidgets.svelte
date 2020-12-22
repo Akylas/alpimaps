@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-    import { GridLayout, ViewBase } from '@akylas/nativescript';
+    import { GridLayout, ViewBase } from '@nativescript/core';
     import { l, lc } from '@nativescript-community/l';
     import { MapPos } from '@nativescript-community/ui-carto/core';
     import { PackageAction, PackageStatus } from '@nativescript-community/ui-carto/packagemanager';
@@ -52,32 +52,21 @@
         userLocationModule = mapContext.mapModule('userLocation');
         userLocationModule.on('location', onNewLocation, this);
     });
-    // get currentLocation() {
-    //     return userLocationModule && userLocationModule.lastUserLocation;
-    // }
-    $: {
-        showSuggestionPackage =
-            suggestionPackage &&
-            (!suggestionPackage.status ||
-                (suggestionPackage.status.getCurrentAction() !== PackageAction.READY &&
-                    suggestionPackage.status.getCurrentAction() !== PackageAction.DOWNLOADING));
-    }
-    $: {
-        locationButtonClass = $mapStore.watchingLocation ? 'buttonthemed' : 'buttontext';
-    }
-
-    $: {
-        locationButtonLabelClass = $mapStore.queryingLocation ? 'fade-blink' : '';
-    }
-
-    $: {
-        selectedItemHasPosition = selectedItem && !selectedItem.route && !!selectedItem.position;
-    }
+    $: locationButtonClass = $mapStore.watchingLocation ? 'buttonthemed' : 'buttontext';
+    $: locationButtonLabelClass = $mapStore.queryingLocation ? 'fade-blink' : '';
+    $: selectedItemHasPosition = selectedItem && !selectedItem.route && !!selectedItem.position;
 
     export function onSelectedItem(item: IItem, oldItem: IItem) {
         selectedItem = item;
     }
     if (gVars.packageServiceEnabled) {
+        $: {
+            showSuggestionPackage =
+                suggestionPackage &&
+                (!suggestionPackage.status ||
+                    (suggestionPackage.status.getCurrentAction() !== PackageAction.READY &&
+                        suggestionPackage.status.getCurrentAction() !== PackageAction.DOWNLOADING));
+        }
         onMount(() => {
             if (packageService) {
                 packageService.on('onProgress', onTotalDownloadProgress, this);
@@ -90,44 +79,38 @@
                 packageService.off('onPackageStatusChanged', onPackageStatusChanged, this);
             }
         });
-    }
+        const updateSuggestion = debounce((focusPos) => {
+            // console.log('updateSuggestion', focusPos);
 
-    function onServiceLoaded(geoHandler: GeoHandler) {}
-    function onServiceUnloaded(geoHandler: GeoHandler) {}
-
-    const updateSuggestion = debounce((focusPos) => {
-        // console.log('updateSuggestion', focusPos);
-
-        // if (zoom < 8) {
-        //     suggestionPackage = null;
-        //     suggestionPackageName = null;
-        //     return;
-        // }
-        const suggestions = packageService.packageManager.suggestPackages(focusPos, mapContext.getProjection());
-        const sPackage = suggestions[0];
-        // console.log('test suggestion', focusPos, suggestionPackage && suggestionPackage.getPackageId(), suggestionPackage && suggestionPackage.getName());
-        if (sPackage) {
-            const status = packageService.packageManager.getLocalPackageStatus(sPackage.getPackageId(), -1);
-            // console.log('test suggestion status', status, status && status.getCurrentAction());
-            if (!status || status.getCurrentAction() !== PackageAction.READY) {
-                suggestionPackage = {
-                    id: sPackage.getPackageId(),
-                    name: sPackage.getName(),
-                    status
-                };
-                suggestionPackageName = suggestionPackage.name.split('/').slice(-1)[0];
+            // if (zoom < 8) {
+            //     suggestionPackage = null;
+            //     suggestionPackageName = null;
+            //     return;
+            // }
+            const suggestions = packageService.packageManager.suggestPackages(focusPos, mapContext.getProjection());
+            const sPackage = suggestions[0];
+            // console.log('test suggestion', focusPos, suggestionPackage && suggestionPackage.getPackageId(), suggestionPackage && suggestionPackage.getName());
+            if (sPackage) {
+                const status = packageService.packageManager.getLocalPackageStatus(sPackage.getPackageId(), -1);
+                // console.log('test suggestion status', status, status && status.getCurrentAction());
+                if (!status || status.getCurrentAction() !== PackageAction.READY) {
+                    suggestionPackage = {
+                        id: sPackage.getPackageId(),
+                        name: sPackage.getName(),
+                        status
+                    };
+                    suggestionPackageName = suggestionPackage.name.split('/').slice(-1)[0];
+                } else {
+                    suggestionPackage = null;
+                    suggestionPackageName = null;
+                }
             } else {
                 suggestionPackage = null;
                 suggestionPackageName = null;
             }
-        } else {
-            suggestionPackage = null;
-            suggestionPackageName = null;
-        }
 
-        // console.log('onMapStable suggestions', !!suggestionPackage, suggestionPackageName, Date.now());
-    }, 2000);
-    if (gVars.packageServiceEnabled) {
+            // console.log('onMapStable suggestions', !!suggestionPackage, suggestionPackageName, Date.now());
+        }, 2000);
         mapContext.onMapStable((cartoMap) => {
             const zoom = Math.round(cartoMap.zoom);
             // console.log('onMapStable', zoom);
@@ -150,49 +133,52 @@
         });
     }
     function downloadSuggestion() {
-        // console.log('downloadSuggestion', suggestionPackage.id);
-        if (suggestionPackage) {
-            packageService.packageManager.startPackageDownload(suggestionPackage.id);
+        if (gVars.packageServiceEnabled) {
+            if (suggestionPackage) {
+                packageService.packageManager.startPackageDownload(suggestionPackage.id);
+            }
+            showSnack({ message: `${l('downloading')}  ${suggestionPackageName}` });
         }
-        showSnack({ message: `${l('downloading')}  ${suggestionPackageName}` });
     }
     async function customDownloadSuggestion() {
-        console.log('customDownloadSuggestion');
-        if (!suggestionPackage) {
-            return;
-        }
-        const options = [
-            { name: lc('map_package'), checked: true },
-            { name: lc('search_package'), checked: false },
-            { name: lc('routing_package'), checked: false }
-        ];
-        const componentInstanceInfo = resolveComponentElement(OptionPicker, {
-            options
-        });
-        try {
-            const nView: ViewBase = componentInstanceInfo.element.nativeView;
-            const result = await confirm({
-                title: `${lc('download_suggestion')}: ${suggestionPackageName}`,
-                okButtonText: l('download'),
-                cancelButtonText: l('cancel'),
-                view: nView
-            });
-            console.log('result', result, options);
-            if (result) {
-                if (options[0].checked) {
-                    packageService.packageManager.startPackageDownload(suggestionPackage.id);
-                }
-                if (options[1].checked) {
-                    packageService.geoPackageManager.startPackageDownload(suggestionPackage.id);
-                }
-                if (options[2].checked) {
-                    packageService.routingPackageManager.startPackageDownload(suggestionPackage.id);
-                }
+        if (gVars.packageServiceEnabled) {
+            console.log('customDownloadSuggestion');
+            if (!suggestionPackage) {
+                return;
             }
-        } catch (err) {
-            showError(err);
-        } finally {
-            componentInstanceInfo.viewInstance.$destroy(); // don't let an exception in destroy kill the promise callback
+            const options = [
+                { name: lc('map_package'), checked: true },
+                { name: lc('search_package'), checked: false },
+                { name: lc('routing_package'), checked: false }
+            ];
+            const componentInstanceInfo = resolveComponentElement(OptionPicker, {
+                options
+            });
+            try {
+                const nView: ViewBase = componentInstanceInfo.element.nativeView;
+                const result = await confirm({
+                    title: `${lc('download_suggestion')}: ${suggestionPackageName}`,
+                    okButtonText: l('download'),
+                    cancelButtonText: l('cancel'),
+                    view: nView
+                });
+                console.log('result', result, options);
+                if (result) {
+                    if (options[0].checked) {
+                        packageService.packageManager.startPackageDownload(suggestionPackage.id);
+                    }
+                    if (options[1].checked) {
+                        packageService.geoPackageManager.startPackageDownload(suggestionPackage.id);
+                    }
+                    if (options[2].checked) {
+                        packageService.routingPackageManager.startPackageDownload(suggestionPackage.id);
+                    }
+                }
+            } catch (err) {
+                showError(err);
+            } finally {
+                componentInstanceInfo.viewInstance.$destroy(); // don't let an exception in destroy kill the promise callback
+            }
         }
     }
     function onNewLocation(e: any) {
@@ -205,38 +191,41 @@
         userLocationModule = null;
     });
     function onTotalDownloadProgress(e) {
-        // console.log('onTotalDownloadProgress', e.data);
-        if (e.data === 100) {
-            totalDownloadProgress = 0;
-        } else {
-            totalDownloadProgress = e.data;
+        if (gVars.packageServiceEnabled) {
+            if (e.data === 100) {
+                totalDownloadProgress = 0;
+            } else {
+                totalDownloadProgress = e.data;
+            }
         }
     }
     function onPackageStatusChanged(e) {
-        const { id, status } = e.data;
-        if (suggestionPackage && id === suggestionPackage.id) {
-            suggestionPackage.status = status;
-        }
+        if (gVars.packageServiceEnabled) {
+            const { id, status } = e.data;
+            if (suggestionPackage && id === suggestionPackage.id) {
+                suggestionPackage.status = status;
+            }
 
-        // dataItems.some((d, index) => {
-        //     if (d.id === id) {
-        //         // console.log('updating item!', id, index);
-        //         switch (e.type as PackageType) {
-        //             case 'geo':
-        //                 d.geoStatus = status;
-        //                 break;
-        //             case 'routing':
-        //                 d.routingStatus = status;
-        //                 break;
-        //             default:
-        //                 d.status = status;
-        //         }
-        //         dataItems.setItem(index, d);
-        //         // d.status = status;
-        //         return true;
-        //     }
-        //     return false;
-        // });
+            // dataItems.some((d, index) => {
+            //     if (d.id === id) {
+            //         // console.log('updating item!', id, index);
+            //         switch (e.type as PackageType) {
+            //             case 'geo':
+            //                 d.geoStatus = status;
+            //                 break;
+            //             case 'routing':
+            //                 d.routingStatus = status;
+            //                 break;
+            //             default:
+            //                 d.status = status;
+            //         }
+            //         dataItems.setItem(index, d);
+            //         // d.status = status;
+            //         return true;
+            //     }
+            //     return false;
+            // });
+        }
     }
 
     // setCurrentLayerStyle(style: CartoMapStyle) {
@@ -289,7 +278,7 @@
         >${suggestionPackageName}`} />
     {/if}
     <stacklayout col="2" row="2" verticalAlignment="bottom" padding="2">
-        <mdbutton
+        <button
             transition:scale={{ duration: 200 }}
             on:tap={startDirections}
             row="0"
@@ -313,6 +302,14 @@
             </canvaslabel>
         </mdcardview>
     </stacklayout>
+    <button
+        marginTop="80"
+        on:tap={() => mapContext.toggleMenu('bottom')}
+        class="small-floating-btn"
+        text="mdi-layers"
+        row="2"
+        verticalAlignment="bottom"
+        horizontalAlignment="left" />
     <ScaleView bind:this={scaleView} col="1" row="2" horizontalAlignment="right" verticalAlignment="bottom" marginBottom="8" />
     {#if packageServiceEnabled}
         <mdprogress

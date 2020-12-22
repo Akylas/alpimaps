@@ -178,7 +178,7 @@
         {/each}
         <stacklayout orientation="horizontal">
             {#each actions as action}
-                <mdbutton variant="text" text={l(action)} on:tap={handleAction(action)} />
+                <button variant="text" text={l(action)} on:tap={handleAction(action)} />
             {/each}
         </stacklayout>
     </stacklayout>

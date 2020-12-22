@@ -2,7 +2,6 @@
     import { AppURL, handleOpenURL } from '@nativescript-community/appurl';
     import * as EInfo from '@nativescript-community/extendedinfo';
     import * as perms from '@nativescript-community/perms';
-    import { writable } from 'svelte/store';
     import { CartoMapStyle, ClickType, MapPos } from '@nativescript-community/ui-carto/core';
     import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
@@ -28,8 +27,7 @@
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
     import { Drawer } from '@nativescript-community/ui-drawer';
     import { action, alert, login } from '@nativescript-community/ui-material-dialogs';
-    import { SpeedDial } from '@nativescript-community/ui-material-speeddial';
-    import { TextField } from '@nativescript/core';
+    import { TextField } from '@nativescript-community/ui-material-textfield';
     import { Brightness } from '@nativescript/brightness';
     import { AndroidApplication, Application, Color, Page } from '@nativescript/core';
     import * as appSettings from '@nativescript/core/application-settings';
@@ -40,20 +38,21 @@
     import { compose } from '@nativescript/email';
     import { allowSleepAgain, keepAwake } from 'nativescript-insomnia';
     import * as SocialShare from 'nativescript-social-share';
+    import { debounce } from 'push-it-to-the-limit';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import tinycolor from 'tinycolor2';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { l, lc, lt } from '~/helpers/locale';
     import watcher from '~/helpers/watcher';
     import CustomLayersModule, { SourceItem } from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
-    import { LayerType, getMapContext, setMapContext } from '~/mapModules/MapModule';
+    import { getMapContext, LayerType, setMapContext } from '~/mapModules/MapModule';
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import { IItem } from '~/models/Item';
     import { NotificationHelper, NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL } from '~/services/android/NotifcationHelper';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
     import { packageService } from '~/services/PackageService';
+    import mapStore from '~/stores/mapStore';
     import { showError } from '~/utils/error';
     import { computeDistanceBetween, getBoundsZoomLevel } from '~/utils/geo';
     import { isSentryEnabled, Sentry } from '~/utils/sentry';
@@ -65,10 +64,7 @@
     import LocationInfoPanel from './LocationInfoPanel.svelte';
     import MapRightMenu from './MapRightMenu.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
-    import PackagesDownloadComponent from './PackagesDownloadComponent.svelte';
     import Search from './Search.svelte';
-    import mapStore from '~/stores/mapStore';
-    import { debounce } from 'push-it-to-the-limit';
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
     const mailRegexp = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
 
@@ -94,6 +90,13 @@
 <script lang="ts">
     let page: NativeViewElementNode<Page>;
     let cartoMap: CartoMap<LatLonKeys>;
+    let rightMenu: MapRightMenu;
+    let directionsPanel: DirectionsPanel;
+    let bottomSheetInner: BottomSheetInner;
+    let mapScrollingWidgets: MapScrollingWidgets;
+    let locationInfoPanel: LocationInfoPanel;
+    let drawer: NativeViewElementNode<Drawer>;
+    let searchView: Search;
     const mapContext = getMapContext();
 
     let selectedPosMarker: Marker<LatLonKeys>;
@@ -118,16 +121,9 @@
     let addedLayers: string[] = [];
     let keepAwakeEnabled = appSettings.getBoolean(KEEP_AWAKE_KEY, false);
     let currentMapRotation = 0;
-    let rightMenu: MapRightMenu;
-    let directionsPanel: DirectionsPanel;
-    let mapScrollingWidgets: MapScrollingWidgets;
-    let locationInfoPanel: LocationInfoPanel;
-    let speeddial: NativeViewElementNode<SpeedDial>;
-    let drawer: NativeViewElementNode<Drawer>;
     let shouldShowNavigationBarOverlay = false;
     let geoHandler: GeoHandler;
     let steps;
-    let searchView: Search;
 
     handleOpenURL(onAppUrl);
     function onAppUrl(appURL: AppURL, args) {
@@ -216,6 +212,13 @@
             setBottomSheetStepIndex: (index: number) => {
                 bottomSheetStepIndex = index;
             },
+            toggleMenu: async (side = 'left') => {
+                if (side === 'bottom') {
+                    await rightMenu.loadRightMenuView();
+                }
+                drawer.nativeView.toggle(side as any);
+            },
+            showOptions: showOptions,
             mapModules: {
                 items: new ItemsModule(),
                 userLocation: new UserLocationModule(),
@@ -223,7 +226,7 @@
                 directionsPanel: directionsPanel,
                 // search: searchView,
                 // rightMenu: rightMenu,
-                mapScrollingWidgets,
+                mapScrollingWidgets
                 // bottomSheet: bottomSheet
             }
         });
@@ -252,7 +255,7 @@
     function onDeviceScreen(isScreenOn: boolean) {
         console.log('onDeviceScreen', isScreenOn);
     }
-    function onLoaded() {}
+    // function onLoaded() {}
     onDestroy(() => {
         console.log('onMapDestroyed');
         mapContext.runOnModules('onMapDestroyed');
@@ -422,9 +425,7 @@
                 const vectorElement = item.vectorElement as Line;
                 if (vectorElement) {
                     const color = new Color(vectorElement.color as string);
-                    vectorElement.color = new tinycolor({ r: color.r, g: color.g, b: color.b, a: color.a / 255 })
-                        .darken(10)
-                        .toRgbString();
+                    vectorElement.color = color.darken(10);
                     vectorElement.width += 2;
                 }
                 // if (!selectedRouteLine) {
@@ -452,7 +453,7 @@
                 if (!selectedPosMarker) {
                     selectedPosMarker = createLocalPoint(item.position, {
                         // color: '#55ff0000',
-                        color: tinycolor(primaryColor).setAlpha(0.7).toRgbString(),
+                        color: primaryColor.setAlpha(0.7),
                         scaleWithDPI: true,
                         size: 30
                         // orientationMode: BillboardOrientation.GROUND,
@@ -483,6 +484,7 @@
             }
 
             if (!item.route && (!item.properties || !item.properties.hasOwnProperty('ele')) && packageService.hillshadeLayer) {
+                console.log('tet getElevation', item.position);
                 packageService.getElevation(item.position).then((result) => {
                     if ($selectedItem.position === item.position) {
                         $selectedItem.properties = $selectedItem.properties || {};
@@ -497,6 +499,7 @@
             // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
             // vectorTileDecoder.setStyleParameter('selected_name', (item.properties && item.properties.name) || '');
             if (peek) {
+                bottomSheetInner.loadView();
                 bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
             }
             if (item.zoomBounds) {
@@ -529,9 +532,7 @@
                 if (vectorElement) {
                     const color = new Color(vectorElement.color as string);
 
-                    vectorElement.color = new tinycolor({ r: color.r, g: color.g, b: color.b, a: color.a / 255 })
-                        .lighten(10)
-                        .toRgbString();
+                    vectorElement.color = color.lighten(10);
                     vectorElement.width -= 2;
                 }
             }
@@ -864,7 +865,8 @@
         });
     }
 
-    function downloadPackages() {
+    async function downloadPackages() {
+        const PackagesDownloadComponent = (await import('./PackagesDownloadComponent.svelte')).default;
         showBottomSheet({ parent: page, view: PackagesDownloadComponent });
     }
     function removeLayer(layer: Layer<any, any>, layerId: LayerType, offset?: number) {
@@ -941,36 +943,51 @@
                 target: mapScrollingWidgets.getNativeView(),
                 translateY: maptranslation,
                 opacity: scrollingWidgetsOpacity
-            },
-            speeddial: {
-                target: speeddial.nativeView,
-                translateY: maptranslation,
-                opacity: scrollingWidgetsOpacity
             }
         };
         return result;
     }
 
     function drawerTranslationFunction(side, width, value, delta, progress) {
-        const result = {
-            mainContent: {
-                translateX: 0
-            },
-            [side + 'Drawer']: {
-                translateX: side === 'left' ? -value : value
-            }
-            // backDrop: {
-            //     translateX: 0,
-            //     opacity: 0,
-            // },
-        } as any;
         if (side === 'left') {
+            const result = {
+                mainContent: {
+                    translateX: 0
+                },
+                [side + 'Drawer']: {
+                    translateX: side === 'left' ? -value : value
+                }
+                // backDrop: {
+                //     translateX: 0,
+                //     opacity: 0,
+                // },
+            } as any;
+            if (side === 'left') {
+                result.backDrop = {
+                    translateX: 0,
+                    opacity: progress
+                };
+            }
+            return result;
+        } else if (side === 'bottom') {
+            const result = {
+                mainContent: {
+                    translateY: 0
+                },
+                [side + 'Drawer']: {
+                    translateY: value
+                }
+                // backDrop: {
+                //     translateX: 0,
+                //     opacity: 0,
+                // },
+            } as any;
             result.backDrop = {
-                translateX: 0,
-                opacity: progress
+                translateY: 0,
+                opacity: 0
             };
+            return result;
         }
-        return result;
     }
 
     let lastBrightness;
@@ -1153,47 +1170,96 @@
                 break;
         }
     }
+
+    async function showOptions() {
+        const options = [
+            {
+                title: lt('select_style'),
+                id: 'select_style',
+                icon: 'mdi-layers'
+            },
+            {
+                title: lt('select_language'),
+                id: 'select_language',
+                icon: 'mdi-translate'
+            },
+            {
+                title: lt('location_info'),
+                id: 'location_info',
+                icon: 'mdi-speedometer'
+            },
+            {
+                title: lt('share_screenshot'),
+                id: 'share_screenshot',
+                icon: 'mdi-cellphone-screenshot'
+            },
+            {
+                title: lt('keep_awake'),
+                color: keepAwakeEnabled ? 'red' : 'green',
+                id: 'keep_awake',
+                icon: keepAwakeEnabled ? 'mdi-sleep' : 'mdi-sleep-off'
+            }
+        ];
+        if (packageServiceEnabled) {
+            options.unshift({
+                title: lt('offline_packages'),
+                id: 'offline_packages',
+                icon: 'mdi-earth'
+            });
+        }
+        const MapOptions = (await import('./MapOptions.svelte')).default;
+        const result = (await showBottomSheet({
+            parent: page,
+            view: MapOptions,
+            props: { options },
+            transparent: true,
+            disableDimBackground: true
+        })) as any;
+        if (result) {
+            switch (result.id) {
+                case 'select_style':
+                    selectStyle();
+                    break;
+                case 'select_language':
+                    selectLanguage();
+                    break;
+                case 'location_info':
+                    switchLocationInfo();
+                    break;
+                case 'share_screenshot':
+                    shareScreenshot();
+                    break;
+                case 'keep_awake':
+                    switchKeepAwake();
+                    break;
+                case 'offline_packages':
+                    downloadPackages();
+                    break;
+            }
+        }
+    }
 </script>
 
-<page bind:this={page} actionBarHidden="true" backgroundColor="#E3E1D3" on:loaded={onLoaded}>
-    <!-- <CanvasLabel>
-            <CSpan color="black" text="l('loading_map')" verticalTextAlignment="middle" textAlignment={center} />
-        </CanvasLabel> -->
+<page bind:this={page} actionBarHidden="true" backgroundColor="#E3E1D3">
     <drawer
         bind:this={drawer}
         translationFunction={drawerTranslationFunction}
-        android:marginBottom={navigationBarHeight}
-        rightOpenedDrawerAllowDraging={false}
+        bottomOpenedDrawerAllowDraging={true}
         backgroundColor="#E3E1D3">
-        <gridlayout prop:leftDrawer rows="auto, *, auto" height="100%" backgroundColor="#1E1E24" width="70%">
-            <stacklayout row="2" width="100%" padding="10">
-                <stacklayout class="menuButtons" orientation="horizontal">
-                    <mdbutton col="0" variant="text" text="mdi-email" on:tap={() => onTap('sendFeedback')} />
-                    <mdbutton
-                        visibility={isSentryEnabled ? 'visible' : 'collapsed'}
-                        col="1"
-                        variant="text"
-                        text="mdi-bug"
-                        on:tap={() => onTap('sendBugReport')} />
-                </stacklayout>
-                <stacklayout class="menuInfos"><label text={'App version: ' + (appVersion || '')} /></stacklayout>
-            </stacklayout>
-        </gridlayout>
-        <MapRightMenu prop:rightDrawer bind:this={rightMenu} />
-
+        <MapRightMenu prop:bottomDrawer bind:this={rightMenu} />
+        <cartomap
+            zoom="16"
+            on:mapReady={onMainMapReady}
+            on:mapMoved={onMainMapMove}
+            on:mapStable={onMainMapStable}
+            on:mapIdle={onMainMapIdle}
+            on:mapClicked={onMainMapClicked} />
         <bottomsheet
-            prop:mainContent
+            android:marginBottom={navigationBarHeight}
+            backgroundColor="#01550000"
             {steps}
             bind:stepIndex={bottomSheetStepIndex}
             translationFunction={bottomSheetTranslationFunction}>
-            <cartomap
-                zoom="16"
-                on:mapReady={onMainMapReady}
-                on:mapMoved={onMainMapMove}
-                on:mapStable={onMainMapStable}
-                on:mapIdle={onMainMapIdle}
-                on:mapClicked={onMainMapClicked} />
-
             <Search
                 bind:this={searchView}
                 verticalAlignment="top"
@@ -1206,7 +1272,7 @@
                 marginTop="90"
                 bind:this={locationInfoPanel}
                 isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
-            <DirectionsPanel translationFunction={null} bind:this={directionsPanel} width="100%" verticalAlignment="top" />
+            <DirectionsPanel bind:this={directionsPanel} width="100%" verticalAlignment="top" />
             <canvaslabel
                 orientation="vertical"
                 verticalAlignment="middle"
@@ -1228,10 +1294,13 @@
                     textAlignment="left"
                     verticalTextAlignement="bottom" />
             </canvaslabel>
-
-            <BottomSheetInner bind:steps prop:bottomSheet updating={itemLoading} item={$selectedItem} />
-
-            <mdbutton
+            <BottomSheetInner
+                bind:this={bottomSheetInner}
+                bind:steps
+                prop:bottomSheet
+                updating={itemLoading}
+                item={$selectedItem} />
+            <button
                 marginTop="80"
                 visibility={currentMapRotation !== 0 ? 'visible' : 'collapsed'}
                 on:tap={resetBearing}
@@ -1240,34 +1309,14 @@
                 rotate={currentMapRotation}
                 verticalAlignment="top"
                 horizontalAlignment="right" />
-
             <MapScrollingWidgets
                 bind:this={mapScrollingWidgets}
                 opacity={scrollingWidgetsOpacity}
                 userInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
-            <mdspeeddial
-                position="left"
-                bind:this={speeddial}
-                text="mdi-plus"
-                iconOn="mdi-close"
-                isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}>
-                {#if packageServiceEnabled}
-                    <mdspeeddialitem title={lt('offline_packages')} text="mdi-earth" on:tap={downloadPackages} />
-                {/if}
-                <mdspeeddialitem title={lt('select_style')} text="mdi-layers" on:tap={selectStyle} />
-                <mdspeeddialitem title={lt('select_language')} text="mdi-translate" on:tap={selectLanguage} />
-                <mdspeeddialitem title={lt('location_info')} text="mdi-speedometer" on:tap={switchLocationInfo} />
-                <mdspeeddialitem title={lt('share_screenshot')} text="mdi-cellphone-screenshot" on:tap={shareScreenshot} />
-                <mdspeeddialitem
-                    title={lt('keep_awake')}
-                    backgroundColor={keepAwakeEnabled ? 'red' : 'green'}
-                    text={keepAwakeEnabled ? 'mdi-sleep' : 'mdi-sleep-off'}
-                    on:tap={switchKeepAwake} />
-            </mdspeeddial>
-            <absolutelayout
+            <!-- <absolutelayout
                 transition:slide={{ duration: 100 }}
                 visibility={shouldShowNavigationBarOverlay ? 'visible' : 'collapsed'}
-                class="navigationBarOverlay" />
+                class="navigationBarOverlay" /> -->
         </bottomsheet>
     </drawer>
 </page>
