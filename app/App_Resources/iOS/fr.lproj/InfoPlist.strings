@@ -3,4 +3,3 @@
 "NSLocationAlwaysUsageDescription" = "«Alpi Maps» utilise le GPS pour l'afficher sur vos lunettes";
 "NSLocationWhenInUseUsageDescription" = "«Alpi Maps» utilise le GPS pour l'afficher sur vos lunettes";
 "CFBundleDisplayName" = "Alpi Maps";
-"CFBundleName" = "Alpi Maps";

@@ -3,17 +3,16 @@
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
     import { ClusterElementBuilder } from '@nativescript-community/ui-carto/layers/cluster';
     import { ClusteredVectorLayer } from '@nativescript-community/ui-carto/layers/vector';
-    import { Projection } from '@nativescript-community/ui-carto/projections';
     import { VectorElementVector } from '@nativescript-community/ui-carto/vectorelements';
     import { Marker } from '@nativescript-community/ui-carto/vectorelements/marker';
     import { Point, PointStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/point';
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Side } from '@nativescript-community/ui-drawer';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { TextField } from '@nativescript/core';
-    import { GridLayout, ObservableArray } from '@nativescript/core';
+    import { GridLayout, ObservableArray, TextField } from '@nativescript/core';
     import { getJSON } from '@nativescript/core/http';
     import { fonticon } from 'nativescript-akylas-fonticon';
-    import { onDestroy, onMount } from 'svelte';
+    import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { l } from '~/helpers/locale';
@@ -22,7 +21,7 @@
     import { Address, IItem as Item } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
-    import { globalMarginTop, primaryColor, statusBarHeight } from '~/variables';
+    import { globalMarginTop, primaryColor } from '~/variables';
     import { queryString } from '../utils/http';
 
     const providerColors = {
@@ -39,45 +38,45 @@
             .trim();
     }
 
-    class PhotonAddress {
-        constructor(private properties) {}
-        get road() {
-            if (this.properties['osm_key'] === 'highway') {
-                return this.properties.name;
-            }
-            return this.properties.street;
-        }
-        get country() {
-            return this.properties.country;
-        }
-        get county() {
-            return this.properties.county;
-        }
-        get name() {
-            if (this.properties.name === this.properties.city && !!this.properties.stret) {
-                return undefined;
-            }
-            return this.properties.name;
-        }
-        // get categories() {
-        //     return categories;
-        // }
-        get neighbourhood() {
-            return this.properties.neighbourhood;
-        }
-        get postcode() {
-            return this.properties.postcode;
-        }
-        get houseNumber() {
-            return this.properties.housenumber;
-        }
-        get region() {
-            return this.properties.region;
-        }
-        get locality() {
-            return this.properties.city;
-        }
-    }
+    // class PhotonAddress {
+    //     constructor(private properties) {}
+    //     get road() {
+    //         if (this.properties['osm_key'] === 'highway') {
+    //             return this.properties.name;
+    //         }
+    //         return this.properties.street;
+    //     }
+    //     get country() {
+    //         return this.properties.country;
+    //     }
+    //     get county() {
+    //         return this.properties.county;
+    //     }
+    //     get name() {
+    //         if (this.properties.name === this.properties.city && !!this.properties.stret) {
+    //             return undefined;
+    //         }
+    //         return this.properties.name;
+    //     }
+    //     // get categories() {
+    //     //     return categories;
+    //     // }
+    //     get neighbourhood() {
+    //         return this.properties.neighbourhood;
+    //     }
+    //     get postcode() {
+    //         return this.properties.postcode;
+    //     }
+    //     get houseNumber() {
+    //         return this.properties.housenumber;
+    //     }
+    //     get region() {
+    //         return this.properties.region;
+    //     }
+    //     get locality() {
+    //         return this.properties.city;
+    //     }
+    // }
     class PhotonFeature {
         properties: { [k: string]: any };
         position: MapPos<LatLonKeys>;
@@ -85,9 +84,6 @@
         provider = 'photon';
         constructor(data) {
             const properties = data.properties || {};
-
-            // TODO: extent to zoomBounds
-
             const actualName = properties.name === properties.city ? undefined : properties.name;
             const {
                 region,
@@ -143,41 +139,24 @@
 </script>
 
 <script lang="ts">
-    const mapContext = getMapContext();
-
+    let gridLayout: NativeViewElementNode<GridLayout>;
+    let textField: NativeViewElementNode<TextField>;
+    let collectionView: NativeViewElementNode<CollectionView>;
     let _searchDataSource: LocalVectorDataSource<LatLonKeys>;
     let _searchLayer: ClusteredVectorLayer;
-    let _formatter: ItemFormatter;
     let searchClusterStyle: PointStyleBuilder;
     let searchAsTypeTimer;
     let dataItems: ObservableArray<SearchItem> = new ObservableArray([] as any);
     let filteredDataItems: SearchItem[] = dataItems as any;
     let loading = false;
-
     let filteringOSMKey = false;
-    let gridLayout: NativeViewElementNode<GridLayout>;
-
     let text: string = null;
     let currentSearchText: string = null;
-    let textField: NativeViewElementNode<TextField>;
+    const mapContext = getMapContext();
 
     export function getNativeView() {
         return gridLayout && gridLayout.nativeView;
     }
-
-    // this was for text changed from outside
-    // $: {
-    //     // textChanged
-    //     if (textField) {
-    //         textField.nativeView.text = text;
-    //         onTextChange({
-    //             text,
-    //         });
-    //         setTimeout(() => {
-    //             textField.nativeView.requestFocus();
-    //         }, 100);
-    //     }
-    // }
 
     function getSearchDataSource() {
         if (!_searchDataSource) {
@@ -187,7 +166,6 @@
         return _searchDataSource;
     }
     function buildClusterElement(position: MapPos, elements: VectorElementVector) {
-        // console.log('buildClusterElement', position, elements.size());
         if (!searchClusterStyle) {
             searchClusterStyle = new PointStyleBuilder({
                 // hideIfOverlapped: false,
@@ -211,15 +189,7 @@
         return result;
     }
     function createSearchMarker(item: SearchItem) {
-        // if (!searchMarkerStyle) {
-        //     searchMarkerStyle = new MarkerStyleBuilder({
-        //         hideIfOverlapped: false,
-        //         size: 15,
-        //         color: item.provider === 'here' ? 'blue' : 'red'
-        //     });
-        // }
         const metaData = itemToMetaData(item);
-        // console.log('createSearchMarker', item.provider, metaData);
         return new Marker({
             position: item.position,
             styleBuilder: {
@@ -241,7 +211,6 @@
                     color: 'red',
                     size: 15,
                     shape: 'point'
-                    // buildClusterElement: buildClusterElement.bind(
                 }),
                 animatedClusters: true
             });
@@ -288,14 +257,6 @@
     $: {
         searchResultsCount = dataItems ? dataItems.length : 0;
     }
-    onMount(() => {
-        // if (global.isAndroid) {
-        //     getNativeView().marginTop = statusBarHeight + 10;
-        // }
-        // if (text) {
-        //     onTextChange(text);
-        // }
-    });
     let focused = false;
     export function hasFocus() {
         return focused;
@@ -311,29 +272,28 @@
     }
 
     export function searchForQuery(query) {
-        console.log('search searchForQuery');
         textField.nativeView.text = query;
         setTimeout(() => {
             textField.nativeView.focus();
         }, 100);
-
-        // currentSearchText = query;
-        // return instantSearch(currentSearchText);
     }
     $: {
         const query = text;
-        if (query) {
-            if (searchAsTypeTimer) {
-                clearTimeout(searchAsTypeTimer);
-                searchAsTypeTimer = null;
-            }
-            if (query && query.length > 2) {
-                searchAsTypeTimer = setTimeout(() => {
+        if (query !== currentSearchText) {
+            // console.log('text changed', query);
+            if (query) {
+                if (searchAsTypeTimer) {
+                    clearTimeout(searchAsTypeTimer);
                     searchAsTypeTimer = null;
-                    instantSearch(query);
-                }, 500);
-            } else if (currentSearchText && currentSearchText.length > 2) {
-                unfocus();
+                }
+                if (query && query.length > 2) {
+                    searchAsTypeTimer = setTimeout(() => {
+                        searchAsTypeTimer = null;
+                        instantSearch(query);
+                    }, 500);
+                } else if (query.length === 0 && currentSearchText && currentSearchText.length > 2) {
+                    unfocus();
+                }
             }
             currentSearchText = query;
         }
@@ -348,21 +308,6 @@
         return packageService.searchInVectorTiles(options).then((result) => packageService.convertFeatureCollection(result));
     }
 
-    // googlePlaceSearch(options: { query: string; language?: string; location?: MapPos; locationRadius?: number }) {
-    //     return getJSON(
-    //         queryString(
-    //             {
-    //                 key: gVars.GOOGLE_TOKEN,
-    //                 radius: options.locationRadius,
-    //                 // rankby: 'distance',
-    //                 location: options.location ? options.location.lat + ',' + options.location.lon : undefined
-    //             },
-    //             'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
-    //         )
-    //     ).then((result: any) => {
-    //         return result.results.filter(v => v.type[0] !== 'route' && v.type[0] !== 'neighborhood').map(f => new GoogleFeature(f));
-    //     });
-    // }
     function herePlaceSearch(options: {
         query: string;
         language?: string;
@@ -372,7 +317,6 @@
         if (networkService.connected) {
             return Promise.resolve([]);
         }
-        // console.log('herePlaceSearch', options);
         return getJSON(
             queryString(
                 {
@@ -394,16 +338,12 @@
                 },
                 'https://places.cit.api.here.com/places/v1/discover/search'
             )
-        ).then((result: any) =>
-            // console.log('herePlaceSearch', result.results.items.length);
-            result.results.items.map((f) => new HereFeature(f))
-        );
+        ).then((result: any) => result.results.items.map((f) => new HereFeature(f)));
     }
     function photonSearch(options: { query: string; language?: string; location?: MapPos<LatLonKeys>; locationRadius?: number }) {
         if (!networkService.connected) {
             return Promise.resolve([]);
         }
-        // console.log('photonSearch', options);
         return getJSON(
             queryString(
                 {
@@ -420,7 +360,7 @@
         });
     }
     let currentQuery;
-    function instantSearch(_query) {
+    async function instantSearch(_query) {
         loading = true;
         currentQuery = cleanUpString(_query);
         const options = {
@@ -434,48 +374,31 @@
             location: mapContext.getMap().focusPos
             // locationRadius: 1000,
         };
-        // console.log('instantSearch', _query, options);
 
         // TODO: dont fail when offline!!!
-        dataItems = new ObservableArray([] as any);
-        return Promise.all([
-            searchInGeocodingService(options).then((r) => {
-                // console.log('found local result', JSON.stringify(r));
-                dataItems.push(r);
-            }),
-            // searchInVectorTiles(options).then(r => {
-            //     console.log('found tile results', JSON.stringify(r));
-            //     r && dataItems.push(r);
-            // }),
-            herePlaceSearch(options).then((r) => {
-                dataItems.push(r);
-            }),
-            photonSearch(options).then((r) => {
-                // console.log('found photon result', JSON.stringify(r));
-                dataItems.push(r);
-            })
-        ])
-            .then((results) => {
-                // const items = [].concat.apply([], results);
-                // console.log('instantSearch done', dataItems.length);
-                if (dataItems.length === 0) {
-                    showSnack({ message: l('no_result_found') });
-                }
-                if (hasFocus) {
-                    // dataItems = items;
-                    // console.log('instantSearch done', dataItems.length);
-                }
-            })
-            .catch((err) => {
-                // console.log('instantSearch error', err);
-                // dataItems = [];
-            })
-            .then(() => {
-                loading = false;
-            });
+
+        let result = [];
+        await Promise.all([
+            searchInGeocodingService(options)
+                .then((r) => result.push(...r))
+                .catch((err) => {}),
+            herePlaceSearch(options)
+                .then((r) => result.push(...r))
+                .catch((err) => {}),
+            photonSearch(options)
+                .then((r) => result.push(...r))
+                .catch((err) => {})
+        ]);
+        if (result.length === 0) {
+            showSnack({ message: l('no_result_found') });
+        } else {
+            await loadView();
+        }
+        dataItems = new ObservableArray(result);
+        updateFilteredDataItems();
+        loading = false;
     }
     function clearSearch() {
-        console.log('clearSearch');
         if (searchAsTypeTimer) {
             clearTimeout(searchAsTypeTimer);
             searchAsTypeTimer = null;
@@ -495,16 +418,12 @@
             _searchLayer.setVectorElementEventListener(null);
             _searchLayer = null;
         }
-        // unfocus();
     }
     export function unfocus() {
         if (searchAsTypeTimer) {
             clearTimeout(searchAsTypeTimer);
             searchAsTypeTimer = null;
         }
-        // if (global.isAndroid) {
-        //     (textField.nativeViewProtected as android.view.View).clearFocus();
-        // }
         textField.nativeView.clearFocus();
     }
 
@@ -513,32 +432,30 @@
     }
 
     function showMenu(side: Side = 'left') {
-        // console.log('showMenu', side);
         unfocus();
-        mapContext.drawer.toggle(side);
+        mapContext.toggleMenu(side);
     }
 
     function showMapMenu() {
-        showMenu('right');
+        mapContext.showOptions();
     }
     function onItemTap(item: SearchItem) {
-        // const item = dataItems[args.index];
         if (!item) {
             return;
         }
-        // const extent = item.properties.extent;
-        console.log('Item Tapped', item);
         mapContext.selectItem({ item, isFeatureInteresting: true, zoom: 14 });
         unfocus();
     }
-
-    function toggleFilterOSMKey() {
-        filteringOSMKey = !filteringOSMKey;
+    function updateFilteredDataItems() {
         if (filteringOSMKey) {
             filteredDataItems = dataItems.filter((d) => d.properties.osm_key === currentQuery);
         } else {
             filteredDataItems = dataItems as any;
         }
+    }
+    function toggleFilterOSMKey() {
+        filteringOSMKey = !filteringOSMKey;
+        updateFilteredDataItems();
         if (showingOnMap) {
             showResultsOnMap();
         }
@@ -559,6 +476,22 @@
         const mapBounds = dataSource.getDataExtent();
         mapContext.getMap().moveToFitBounds(mapBounds, undefined, false, false, false, 100);
     }
+
+    let loaded = false;
+    let loadedListeners = [];
+    async function loadView() {
+        if (!loaded) {
+            await new Promise((resolve) => {
+                loadedListeners.push(resolve);
+                loaded = true;
+            });
+        }
+    }
+    $: {
+        if (collectionView) {
+            loadedListeners.forEach((l) => l());
+        }
+    }
 </script>
 
 <gridlayout
@@ -570,7 +503,7 @@
     backgroundColor={focused ? '#99000000' : '#55000000'}
     borderRadius={searchResultsVisible ? 10 : 25}
     margin={`${globalMarginTop + 10} 10 10 10`}>
-    <mdbutton variant="text" class="icon-btn-white" text="mdi-menu" on:tap={() => showMenu('left')} />
+    <button variant="text" class="icon-btn-white" text="mdi-menu" on:tap={() => showMenu('left')} />
     <textfield
         bind:this={textField}
         variant="none"
@@ -589,32 +522,28 @@
         floating="false"
         verticalAlignment="center"
         color="white" />
-    <mdactivityindicator
-        visibility={loading ? 'visible' : 'collapsed'}
-        row="0"
-        col="2"
-        busy={true}
-        width={20}
-        height={20} />
-    <mdbutton
-        variant="text"
-        class="icon-btn"
-        visibility={searchResultsVisible ? 'visible' : 'collapsed'}
-        row="0"
-        col="3"
-        text="mdi-shape"
-        on:tap={toggleFilterOSMKey}
-        color={filteringOSMKey ? primaryColor : 'lightgray'} />
-    <mdbutton
-        variant="text"
-        class="icon-btn"
-        visibility={searchResultsVisible ? 'visible' : 'collapsed'}
-        row="0"
-        col="4"
-        text="mdi-map"
-        on:tap={showResultsOnMap}
-        color="lightgray" />
-    <mdbutton
+    <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} row="0" col="2" busy={true} width={20} height={20} />
+    {#if loaded}
+        <button
+            variant="text"
+            class="icon-btn"
+            visibility={searchResultsVisible ? 'visible' : 'collapsed'}
+            row="0"
+            col="3"
+            text="mdi-shape"
+            on:tap={toggleFilterOSMKey}
+            color={filteringOSMKey ? primaryColor : 'lightgray'} />
+        <button
+            variant="text"
+            class="icon-btn"
+            visibility={searchResultsVisible ? 'visible' : 'collapsed'}
+            row="0"
+            col="4"
+            text="mdi-map"
+            on:tap={showResultsOnMap}
+            color="lightgray" />
+    {/if}
+    <button
         variant="text"
         class="icon-btn"
         visibility={currentSearchText && currentSearchText.length > 0 ? 'visible' : 'collapsed'}
@@ -623,29 +552,32 @@
         text="mdi-close"
         on:tap={clearSearch}
         color="lightgray" />
-    <mdbutton col="6" variant="text" class="icon-btn-white" text="mdi-layers" on:tap={showMapMenu} />
-    <collectionview
-        col="0"
-        row="1"
-        height="200"
-        colSpan="7"
-        rowHeight="49"
-        items={filteredDataItems}
-        visibility={searchResultsVisible ? 'visible' : 'collapsed'}>
-        <Template let:item>
-            <gridlayout columns="30,*" rows="*,auto,auto,*" rippleColor="white" on:tap={() => onItemTap(item)}>
-                <label
-                    col="0"
-                    rowSpan="4"
-                    text={getItemIcon(item)}
-                    color={getItemIconColor(item)}
-                    class="osm"
-                    fontSize="20"
-                    verticalAlignment="center"
-                    textAlignment="center" />
-                <label col="1" row="1" text="getItemTitle(item)" color="white" fontSize="14" fontWeight="bold" />
-                <label col="1" row="2" text="getItemSubtitle(item)" color="#D0D0D0" fontSize="12" />
-            </gridlayout>
-        </Template>
-    </collectionview>
+    <button col="6" variant="text" class="icon-btn-white" text="mdi-dots-vertical" on:tap={showMapMenu} />
+    {#if loaded}
+        <collectionview
+            bind:this={collectionView}
+            col="0"
+            row="1"
+            height="200"
+            colSpan="7"
+            rowHeight="49"
+            items={filteredDataItems}
+            visibility={searchResultsVisible ? 'visible' : 'collapsed'}>
+            <Template let:item>
+                <gridlayout columns="30,*" rows="*,auto,auto,*" rippleColor="white" on:tap={() => onItemTap(item)}>
+                    <label
+                        col="0"
+                        rowSpan="4"
+                        text={getItemIcon(item)}
+                        color={getItemIconColor(item)}
+                        class="osm"
+                        fontSize="20"
+                        verticalAlignment="center"
+                        textAlignment="center" />
+                    <label col="1" row="1" text={getItemTitle(item)} color="white" fontSize="14" fontWeight="bold" />
+                    <label col="1" row="2" text={getItemSubtitle(item)} color="#D0D0D0" fontSize="12" />
+                </gridlayout>
+            </Template>
+        </collectionview>
+    {/if}
 </gridlayout>
