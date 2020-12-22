@@ -92,7 +92,7 @@
         text={rightIcon}
         verticalAlignment="center" />
     <!-- <MDRipple rowSpan="5" colSpan="5" /> -->
-    <mdbutton
+    <button
         variant="flat"
         col="3"
         row="1"
