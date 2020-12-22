@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Frame } from '@akylas/nativescript';
+    import { Frame } from '@nativescript/core';
     import { createEventDispatcher, onMount } from 'svelte';
     import { goBack } from 'svelte-native';
     import { actionBarHeight } from '~/variables';
@@ -56,7 +56,7 @@
         <slot name="rightButtons" />
     </stacklayout>
     <contentview col="0" verticalAlignment="top" {height}>
-        <mdbutton
+        <button
             rippleColor="white"
             variant="text"
             visibility={menuIconVisible ? 'visible' : 'collapsed'}

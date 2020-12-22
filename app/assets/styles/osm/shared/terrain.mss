@@ -1,60 +1,68 @@
 #contour['nuti::contours'>0][zoom>=12][ele>0] {
-	[div< 100] {
+	// [div< 100] {
 
-		[div>=50][zoom>=14] {
+	// 	[div>=50][zoom>=14] {
 
-			line-color: @contour;
-			line-width: 0.8;
-			line-opacity: 0.3;
-		}
-		[div>=20][zoom>=15]{
+	// 		line-color: @contour;
+	// 		line-width: 0.8;
+	// 		line-opacity: 0.3;
+	// 	}
+	// 	[div>=20][zoom>=15]{
 			
-			line-color: @contour;
-			line-width: 0.6;
-			line-opacity: 0.3;
-		}
-		[zoom>=16] {
-			line-color: @contour;
-			line-width: 0.4;
-			line-opacity: 0.3;
-		}
-	}
-	[div>=10][zoom>=14],
-	[div>=20][zoom>=14]{
+	// 		line-color: @contour;
+	// 		line-width: 0.6;
+	// 		line-opacity: 0.3;
+	// 	}
+	// 	[zoom>=16] {
+	// 		line-color: @contour;
+	// 		line-width: 0.4;
+	// 		line-opacity: 0.3;
+	// 	}
+	// }
+	
+	[div=10][zoom>=14],
+	[div=20][zoom>=14]{
 		line-color: @contour;
 		line-width: 0.6;
-		line-opacity: 0.3;
+		line-opacity:0.3 ;
+		// line-opacity:step([view::zoom], (14, 0.2), (15, 0.3)) ;
 	}
-	[div>=50][zoom>=13] {
+	[div=50][zoom>=13] {
+		line-color: @contour;
+		line-width: step([view::zoom], (13, 0.6), (14, 1.3)) ;
+		line-opacity:0.3 ;
+		// line-opacity:step([view::zoom], (13, 0.3), (15, 0.4), (16, 0.5)) ;
+	}
+	[div=100][zoom>=12] {
 		line-color: @contour;
 		line-width: step([view::zoom], (12, 0.6), (14, 1.3)) ;
-		line-opacity:step([view::zoom], (12, 0.3), (16, 0.5)) ;
+		line-opacity:0.3 ;
+		// line-opacity:step([view::zoom], (12, 0.3), (14, 0.4), (15, 0.5)) ;
 	}
-	[div>=100][zoom>=12] {
-		line-color: @contour;
-		line-width: step([view::zoom], (12, 0.6), (14, 1.3)) ;
-		line-opacity:step([view::zoom], (12, 0.3), (15, 0.5)) ;
-	}
-	[div>=200][zoom>=12] {
+	[div=200][zoom>=12] {
 		line-color: @contour;
 		line-width: step([view::zoom], (12, 0.6), (13, 1.3)) ;
-		line-opacity:step([view::zoom], (12, 0.3), (15, 0.5)) ;
+		line-opacity:0.3 ;
+		// line-opacity:step([view::zoom], (12, 0.3), (13, 0.4), (14, 0.5)) ;
 	}
-	[div>=500] [zoom>=12] {
+	[div=500][zoom>=12],
+	[div=1000][zoom>=12] {
 		line-color: @contour;
 		line-width: 1.3;
-		line-opacity:step([view::zoom], (12, 0.3), (13, 0.5)) ;
+		line-opacity:0.5 ;
+		line-opacity:step([view::zoom], (12, 0.5), (13, 0.5)) ;
 	}
 	
-	[div>=500][zoom>=12],
-	[div>=200][zoom>=13],
-	[div>=100][zoom>=14] {
+	[div=1000][zoom>=12],
+	[div=500][zoom>=12],
+	[div=200][zoom>=13],
+	[div=100][zoom>=14] {
 		text-face-name: @mont;
 		text-name: [ele]+' m';
-		text-fill: darken(@contour_label, 20%);
+		text-fill: @contour_label;
 		text-avoid-edges: false;
 		text-placement: line;
-		text-size: linear([view::zoom], (12, 6), (20, 11)) + 0.00001 * [ele];
+		text-size: linear([view::zoom], (12, 5), (20, 9)) + 0.00001 * [ele];
 		// text-halo-fill: @contour_halo;
 		// text-halo-rasterizer: fast;
 		// text-halo-radius: 1;

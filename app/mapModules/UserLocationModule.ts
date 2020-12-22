@@ -20,7 +20,7 @@ import mapStore from '~/stores/mapStore';
 const LOCATION_ANIMATION_DURATION = 300;
 const SCREENSHOT_NOTIFICATION_ID = 23466571;
 
-const NOTIFICATION_SERVICE = android.content.Context.NOTIFICATION_SERVICE;
+// const NOTIFICATION_SERVICE = android.content.Context.NOTIFICATION_SERVICE;
 
 const mapContext = getMapContext();
 
@@ -369,7 +369,7 @@ export default class UserLocationModule extends MapModule {
                 );
                 // console.log('showMapAsAlbumArt3');
                 const notifiction = builder.build();
-                const service = context.getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager;
+                const service = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
                 service.notify(SCREENSHOT_NOTIFICATION_ID, notifiction);
             });
         }
@@ -378,7 +378,7 @@ export default class UserLocationModule extends MapModule {
     public hideScreenshotNotification() {
         if (global.isAndroid) {
             const context: android.content.Context = ad.getApplicationContext();
-            const service = context.getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager;
+            const service = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
             service.cancel(SCREENSHOT_NOTIFICATION_ID);
         }
     }

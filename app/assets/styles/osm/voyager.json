@@ -15,9 +15,8 @@
         "boundary",
         "park",
         "place",
-        "hillshade",
-        "landcover",
         "landuse",
+        "landcover",
         "aeroway"
     ],
     "styles": [

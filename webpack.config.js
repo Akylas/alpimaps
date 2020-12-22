@@ -166,6 +166,7 @@ module.exports = env => {
                             const moduleName = module.nameForCondition ? module.nameForCondition() : '';
                             return /[\\/]node_modules[\\/]/.test(moduleName) ||
                                 /[\\/]nativescript-carto[\\/]/.test(moduleName) ||
+                                /[\\/]NativeScript[\\/]dist[\\/]packages[\\/]core[\\/]/.test(moduleName) ||
 								appComponents.some(comp => comp === moduleName);
 
                         },

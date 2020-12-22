@@ -1,9 +1,5 @@
-import * as SentryType from '@nativescript-community/sentry';
+import { Sentry } from "./sentry";
 
-let Sentry: typeof SentryType;
-if (gVars.sentry) {
-    Sentry = require('@nativescript-community/sentry');
-}
 const originalConsole = {
     log: console.log,
     info: console.info,

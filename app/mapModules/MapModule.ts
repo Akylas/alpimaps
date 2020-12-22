@@ -29,6 +29,8 @@ export type LayerType = 'map' | 'customLayers' | 'selection' | 'items' | 'direct
 export interface MapContext {
     drawer: Drawer;
     mapModules: MapModules;
+    toggleMenu(side: string);
+    showOptions();
     mapModule<T extends keyof MapModules>(id: T);
     onMapReady(callback: (map: CartoMap<LatLonKeys>) => void);
     onMapMove(callback: (map: CartoMap<LatLonKeys>) => void);
