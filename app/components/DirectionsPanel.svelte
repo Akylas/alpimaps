@@ -8,8 +8,8 @@
     import { Marker, MarkerStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/marker';
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
     import { TextField } from '@nativescript/core';
-    import { Device, GridLayout } from '@nativescript/core';
-    import { createEventDispatcher, onDestroy } from 'svelte';
+    import { Device, GridLayout, StackLayout } from '@nativescript/core';
+    import {  onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { getMapContext } from '~/mapModules/MapModule';
     import { IItem as Item } from '~/models/Item';
@@ -17,25 +17,6 @@
     import { packageService } from '~/services/PackageService';
     import { omit } from '~/utils/utils';
     import { globalMarginTop, primaryColor } from '~/variables';
-
-    // function getPointsFromResult(result: RoutingResult<LatLonKeys> | RouteMatchingResult<LatLonKeys>) {
-    //     let startTime = Date.now();
-    //     const points = result.getPoints();
-    //     const positions = [];
-    //     let lastLon, lastLat, lat, lon, p: NMapPos;
-    //     for (let i = 0; i < points.size(); i++) {
-    //         p = points.get(i);
-    //         lat = p.getY();
-    //         lon = p.getX();
-    //         // if (!lastLon || lastLat !== lat || lastLon !== lon) {
-    //         positions.push({ lat: Math.round(lat * 1000000) / 1000000, lon: Math.round(lon * 1000000) / 1000000});
-    //         // }
-    //         // lastLon = lon;
-    //         // lastLat = lat;
-    //     }
-    //     console.log('getPointsFromResult', points.size(), Date.now() - startTime, 'ms');
-    //     return positions;
-    // }
 
     function routingResultToJSON(result: RoutingResult<LatLonKeys>) {
         const rInstructions = result.getInstructions();
@@ -68,7 +49,7 @@
 
 <script lang="ts">
     const mapContext = getMapContext();
-    export let translationFunction: Function;
+    export let translationFunction: Function = null;
     let opened = false;
     let _routeDataSource: LocalVectorDataSource;
     let _routeLayer: VectorLayer;
@@ -86,9 +67,9 @@
     let currentRoute: Route;
     let currentLine: Line;
     let line: Line<LatLonKeys>;
-    const dispatch = createEventDispatcher();
-
+    let loaded = false;
     let gridLayout: NativeViewElementNode<GridLayout>;
+    let topLayout: NativeViewElementNode<StackLayout>;
 
     let valhallaCostingOptions = { use_hills: 0, use_roads: 0, use_ferry: 0, max_hiking_difficulty: 6 };
 
@@ -177,8 +158,21 @@
         startTF.nativeView.text = currentStartSearchText = toAdd.text;
         updateWayPoints();
     }
+    let loadedListeners = [];
+    async function loadView() {
+        if (!loaded) {
+            await new Promise((resolve) => {
+                loadedListeners.push(resolve);
+                loaded = true;
+            });
+        }
+    }
+    $: {
+        if (gridLayout) {
+            loadedListeners.forEach((l) => l());
+        }
+    }
     export function addStopPoint(position: MapPos<LatLonKeys>, metaData?) {
-        console.log('addStopPoint');
         const toAdd = {
             isStart: false,
             isStop: true,
@@ -235,10 +229,11 @@
     }
     let currentTranslationY = -440;
     async function show() {
-        console.log('show');
-        const height = gridLayout.nativeView.getMeasuredHeight();
+        await loadView();
+        const nView = topLayout.nativeView;
+        const height = nView.getMeasuredHeight();
         const superParams = {
-            target: gridLayout.nativeView,
+            target: nView,
             translate: {
                 x: 0,
                 y: 0
@@ -246,14 +241,17 @@
             duration: 200
         };
         const params = translationFunction ? translationFunction(height, 0, 1, superParams) : superParams;
-        await gridLayout.nativeView.animate(params);
+        await nView.animate(params);
         currentTranslationY = 0;
     }
     async function hide() {
-        console.log('hide');
-        const height = gridLayout.nativeView.getMeasuredHeight();
+        if (!loaded) {
+            return;
+        }
+        const nView = topLayout.nativeView;
+        const height = nView.getMeasuredHeight();
         const superParams = {
-            target: gridLayout.nativeView,
+            target: nView,
             translate: {
                 x: 0,
                 y: -height
@@ -261,10 +259,11 @@
             duration: 200
         };
         const params = translationFunction ? translationFunction(height, -height, 0, superParams) : superParams;
-        await gridLayout.nativeView.animate(params);
+        await nView.animate(params);
         currentTranslationY = -height;
     }
-    function addWayPoint(position: MapPos<LatLonKeys>, metaData?, index = -1) {
+    async function addWayPoint(position: MapPos<LatLonKeys>, metaData?, index = -1) {
+        await loadView();
         const toAdd = {
             isStart: false,
             isStop: false,
@@ -420,12 +419,12 @@
                 valhallaCostingOptions
             );
             let service: RoutingService<any, any>;
-                if (!online) {
-                    service = packageService.offlineRoutingSearchService();
-                }
-                if (!service) {
-                    service = packageService.onlineRoutingSearchService()
-                }
+            if (!online) {
+                service = packageService.offlineRoutingSearchService();
+            }
+            if (!service) {
+                service = packageService.onlineRoutingSearchService();
+            }
             service.profile = profile;
             const result = await service.calculateRoute<LatLonKeys>({
                 projection: mapContext.getProjection(),
@@ -556,137 +555,155 @@
     }
 </script>
 
-<gridlayout
-    bind:this={gridLayout}
+<stacklayout
+    bind:this={topLayout}
     {...$$restProps}
-    id="directions"
-    paddingTop={globalMarginTop}
     backgroundColor={primaryColor}
-    rows="50,60,60,50"
-    translateY={currentTranslationY}
-    on:tap={()=>{}}
-    columns="*">
-    <mdbutton horizontalAlignment="left" variant="text" class="icon-btn-white" text="mdi-arrow-left" on:tap={() => cancel()} />
-    <stacklayout orientation="horizontal" horizontalAlignment="center">
-        <mdbutton
-            variant="text"
-            class="icon-btn-white"
-            text="mdi-car"
-            on:tap={() => setProfile('car')}
-            color={profileColor(profile, 'car')} />
-        <mdbutton
-            variant="text"
-            class="icon-btn-white"
-            text="mdi-walk"
-            on:tap={() => setProfile('pedestrian')}
-            color={profileColor(profile, 'pedestrian')} />
-        <mdbutton
-            variant="text"
-            class="icon-btn-white"
-            text="mdi-bike"
-            on:tap={() => setProfile('bicycle')}
-            color={profileColor(profile, 'bicycle')} />
-        <mdbutton
-            variant="text"
-            class="icon-btn-white"
-            text="mdi-auto-fix"
-            on:tap={() => setProfile('auto_shorter')}
-            color={profileColor(profile, 'auto_shorter')} />
-    </stacklayout>
-    <mdbutton
-        horizontalAlignment="right"
-        class="icon-btn-text"
-        text="mdi-magnify"
-        on:tap={() => showRoute(false)}
-        on:LongPress={() => showRoute(true)}
-        isEnabled={waypoints.length > 0}
-        margin="4 10 4 10"
-        visibility={loading ? 'hidden' : 'visible'} />
-    <mdactivityindicator
-        visibility={loading ? 'visible' : 'collapsed'}
-        horizontalAlignment="right"
-        busy={true}
-        width="44"
-        height="44"
-        color="white" />
-    <gridlayout row="1" colSpan="3" borderRadius="2" backgroundColor="white" columns=" *,auto,auto" height="44" margin="10">
-        <textfield
-            bind:this={startTF}
-            col="0"
-            marginLeft="15"
-            row="0"
-            hint="start"
-            returnKeyType="search"
-            bind:text={currentStartSearchText}
-            width="100%"
-            color="black"
-            variant="none"
-            backgroundColor="transparent"
-            floating="false"
-            verticalAlignment="center" />
-        <mdbutton
-            variant="text"
-            class="icon-btn"
-            visibility={currentStartSearchText && currentStartSearchText.length > 0 ? 'visible' : 'collapsed'}
-            row="0"
-            col="2"
-            text="mdi-close"
-            on:tap={clearStartSearch}
-            color="gray" />
-    </gridlayout>
-    <gridlayout row="2" borderRadius="2" backgroundColor="white" columns=" *,auto,auto" height="44" margin="0 10 10 10">
-        <textfield
-            bind:this={stopTF}
-            variant="none"
-            col="0"
-            color="black"
-            marginLeft="15"
-            row="0"
-            hint="stop"
-            bind:text={currentStopSearchText}
-            returnKeyType="search"
-            width="100%"
-            backgroundColor="transparent"
-            floating="false"
-            verticalAlignment="center" />
-        <mdactivityindicator visibility={false ? 'visible' : 'collapsed'} row="0" col="1" busy={true} width="{20}" height={20} />
-        <mdbutton
-            variant="text"
-            class="icon-btn"
-            visibility={currentStopSearchText && currentStopSearchText.length > 0 ? 'visible' : 'collapsed'}
-            row="0"
-            col="2"
-            text="mdi-close"
-            on:tap={clearStopSearch}
-            color="gray" />
-    </gridlayout>
-    <stacklayout orientation="horizontal" row="3" visibility={showOptions ? 'visible' : 'hidden'}>
-        <mdbutton
-            variant="text"
-            class="icon-btn-white"
-            text="mdi-ferry"
-            color={valhallaSettingColor(valhallaCostingOptions, 'use_ferry')}
-            on:tap={() => switchValhallaSetting('use_ferry')} />
-        <mdbutton
-            variant="text"
-            class="icon-btn-white"
-            text="mdi-road"
-            visibility={profile === 'bicycle' || profile === 'pedestrian' ? 'visible' : 'collapsed'}
-            color={valhallaSettingColor(valhallaCostingOptions, 'use_roads')}
-            on:tap={() => switchValhallaSetting('use_roads')} />
-        <mdbutton
-            variant="text"
-            class="icon-btn-white"
-            text="mdi-chart-areaspline"
-            visibility={profile === 'bicycle' ? 'visible' : 'collapsed'}
-            color={valhallaSettingColor(valhallaCostingOptions, 'use_hills')}
-            on:tap={() => switchValhallaSetting('use_hills')} />
-        <mdbutton
-            variant="text"
-            class="icon-btn-white"
-            text="mdi-texture-box"
-            visibility={profile === 'bicycle' ? 'visible' : 'collapsed'}
-            color={valhallaSettingColor(valhallaCostingOptions, 'avoid_bad_surface')}
-            on:tap={() => switchValhallaSetting('avoid_bad_surface')} />
-    </stacklayout>
-</gridlayout>
+    paddingTop={globalMarginTop}
+    translateY={currentTranslationY}>
+    {#if loaded}
+        <gridlayout bind:this={gridLayout} id="directions" on:tap={() => {}} rows="50,60,60,50">
+            <button
+                horizontalAlignment="left"
+                variant="text"
+                class="icon-btn-white"
+                text="mdi-arrow-left"
+                on:tap={() => cancel()} />
+            <stacklayout orientation="horizontal" horizontalAlignment="center">
+                <button
+                    variant="text"
+                    class="icon-btn-white"
+                    text="mdi-car"
+                    on:tap={() => setProfile('car')}
+                    color={profileColor(profile, 'car')} />
+                <button
+                    variant="text"
+                    class="icon-btn-white"
+                    text="mdi-walk"
+                    on:tap={() => setProfile('pedestrian')}
+                    color={profileColor(profile, 'pedestrian')} />
+                <button
+                    variant="text"
+                    class="icon-btn-white"
+                    text="mdi-bike"
+                    on:tap={() => setProfile('bicycle')}
+                    color={profileColor(profile, 'bicycle')} />
+                <button
+                    variant="text"
+                    class="icon-btn-white"
+                    text="mdi-auto-fix"
+                    on:tap={() => setProfile('auto_shorter')}
+                    color={profileColor(profile, 'auto_shorter')} />
+            </stacklayout>
+            <button
+                horizontalAlignment="right"
+                class="icon-btn-text"
+                text="mdi-magnify"
+                on:tap={() => showRoute(false)}
+                on:LongPress={() => showRoute(true)}
+                isEnabled={waypoints.length > 0}
+                margin="4 10 4 10"
+                visibility={loading ? 'hidden' : 'visible'} />
+            <mdactivityindicator
+                visibility={loading ? 'visible' : 'collapsed'}
+                horizontalAlignment="right"
+                busy={true}
+                width="44"
+                height="44"
+                color="white" />
+            <gridlayout
+                row="1"
+                colSpan="3"
+                borderRadius="2"
+                backgroundColor="white"
+                columns=" *,auto,auto"
+                height="44"
+                margin="10">
+                <textfield
+                    bind:this={startTF}
+                    col="0"
+                    marginLeft="15"
+                    row="0"
+                    hint="start"
+                    returnKeyType="search"
+                    bind:text={currentStartSearchText}
+                    width="100%"
+                    color="black"
+                    variant="none"
+                    backgroundColor="transparent"
+                    floating="false"
+                    verticalAlignment="center" />
+                <button
+                    variant="text"
+                    class="icon-btn"
+                    visibility={currentStartSearchText && currentStartSearchText.length > 0 ? 'visible' : 'collapsed'}
+                    row="0"
+                    col="2"
+                    text="mdi-close"
+                    on:tap={clearStartSearch}
+                    color="gray" />
+            </gridlayout>
+            <gridlayout row="2" borderRadius="2" backgroundColor="white" columns=" *,auto,auto" height="44" margin="0 10 10 10">
+                <textfield
+                    bind:this={stopTF}
+                    variant="none"
+                    col="0"
+                    color="black"
+                    marginLeft="15"
+                    row="0"
+                    hint="stop"
+                    bind:text={currentStopSearchText}
+                    returnKeyType="search"
+                    width="100%"
+                    backgroundColor="transparent"
+                    floating="false"
+                    verticalAlignment="center" />
+                <mdactivityindicator
+                    visibility={false ? 'visible' : 'collapsed'}
+                    row="0"
+                    col="1"
+                    busy={true}
+                    width={20}
+                    height={20} />
+                <button
+                    variant="text"
+                    class="icon-btn"
+                    visibility={currentStopSearchText && currentStopSearchText.length > 0 ? 'visible' : 'collapsed'}
+                    row="0"
+                    col="2"
+                    text="mdi-close"
+                    on:tap={clearStopSearch}
+                    color="gray" />
+            </gridlayout>
+            <stacklayout orientation="horizontal" row="3" visibility={showOptions ? 'visible' : 'hidden'}>
+                <button
+                    variant="text"
+                    class="icon-btn-white"
+                    text="mdi-ferry"
+                    color={valhallaSettingColor(valhallaCostingOptions, 'use_ferry')}
+                    on:tap={() => switchValhallaSetting('use_ferry')} />
+                <button
+                    variant="text"
+                    class="icon-btn-white"
+                    text="mdi-road"
+                    visibility={profile === 'bicycle' || profile === 'pedestrian' ? 'visible' : 'collapsed'}
+                    color={valhallaSettingColor(valhallaCostingOptions, 'use_roads')}
+                    on:tap={() => switchValhallaSetting('use_roads')} />
+                <button
+                    variant="text"
+                    class="icon-btn-white"
+                    text="mdi-chart-areaspline"
+                    visibility={profile === 'bicycle' ? 'visible' : 'collapsed'}
+                    color={valhallaSettingColor(valhallaCostingOptions, 'use_hills')}
+                    on:tap={() => switchValhallaSetting('use_hills')} />
+                <button
+                    variant="text"
+                    class="icon-btn-white"
+                    text="mdi-texture-box"
+                    visibility={profile === 'bicycle' ? 'visible' : 'collapsed'}
+                    color={valhallaSettingColor(valhallaCostingOptions, 'avoid_bad_surface')}
+                    on:tap={() => switchValhallaSetting('avoid_bad_surface')} />
+            </stacklayout>
+        </gridlayout>
+    {/if}
+</stacklayout>

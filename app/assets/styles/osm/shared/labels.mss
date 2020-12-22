@@ -401,7 +401,7 @@
 	text-dy:1;
 	// text-character-spacing: 1;
 	text-wrap-width: step([zoom], (13, 80), (13, 150), (17, 250));
-	text-size: linear([view::zoom], (10, 7.0), (15, 8.0), (16, 10.0), (17, 11.0));
+	text-size: linear([view::zoom], (10, 6.0), (15, 7.0), (16, 9.0), (17, 10.0));
 }
 }
 
@@ -463,19 +463,16 @@
 	[class=path][subclass!=track][subclass!=footway][zoom>=15] {
 			text-name: @name;
 			text-fill: @road_label;
-			text-size:linear([view::zoom], (13, 9), (16, 10), (17, 12));
+			text-size:linear([view::zoom], (13, 7), (16, 9), (17, 10));
 			text-halo-radius: @standard-halo-radius;
 			text-halo-fill: @standard-halo-fill;
-			text-spacing: 300;
+			// text-spacing: 300;
 			// text-clip: false;
 			text-placement: line;
 			text-face-name: @mont_md;
 			// text-vertical-alignment: middle;
-			text-dy:linear([view::zoom], (13, 5), (16, 5), (17, 6));
-			text-min-distance: @major-highway-text-repeat-distance;
-			[subclass=steps] { 
-				text-min-distance: @minor-highway-text-repeat-distance;
-			 }
+			text-dy:linear([view::zoom], (13, 0), (16, 1), (17, 2));
+			
 		// [zoom>=16] {
 			// text-size: 8;
 			// text-dy: 7;

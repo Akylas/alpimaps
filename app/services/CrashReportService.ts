@@ -149,7 +149,6 @@ export default class CrashReportService extends Observable {
     async start() {
         install();
         if (gVars.sentry && this.sentryEnabled) {
-            const Sentry = await import('@nativescript-community/sentry');
             this.sentry = Sentry;
             const versionName = await getVersionName();
             const buildNumber = await getBuildNumber();
@@ -225,7 +224,7 @@ export default class CrashReportService extends Observable {
         label.html = lc(message.trim());
         return confirm({
             title,
-            view: label,
+            view: label as any,
             okButtonText: showSendBugReport ? lc('send_bug_report') : undefined,
             cancelButtonText: showSendBugReport ? lc('cancel') : lc('ok'),
         }).then((result) => {

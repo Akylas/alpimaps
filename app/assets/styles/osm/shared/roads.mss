@@ -345,6 +345,23 @@
 		[class=track][zoom>=13] {
 			line-color:@track-casing;
 			line-width: linear([view::zoom], (13, @track-width-z13), (16, @track-width-z16), (19, @track-width-z19));
+			// [zoom < 16] {
+				[tracktype=grade1] {
+					line-dasharray: 0,100;
+				}
+				[tracktype=grade2] {
+					line-dasharray: 6,2;
+				}
+				[tracktype=grade3] {
+					line-dasharray: 5.6,3.0;
+				}
+				[tracktype=grade4] {
+					line-dasharray: 5,4;
+				}
+				[tracktype=grade5] {
+					line-dasharray: 4.5,4.5;
+				}
+			// }
 			[brunnel=bridge] {
 				[zoom<15] {
 					line-color: @bridge-casing;
@@ -900,6 +917,7 @@
 					// 	background/line-opacity: 0.4;
 					// }
 					line-color: @steps-fill;
+					line-opacity: linear([view::zoom], (13,	0.3), (14,0.4), (16,0.3));
 					[access=no] { line-color: @steps-fill-noaccess; }
 					line-dasharray: 2,1;
 					
@@ -967,7 +985,7 @@
 					// line-join: round;
 					// line-cap: round;
 					line-width: linear([view::zoom], (13,	@footway-width-z13), (14,	@footway-width-z14), (15, @footway-width-z15), (16, @footway-width-z16), (18, @footway-width-z18), (19, @footway-width-z19));
-
+					line-opacity: linear([view::zoom], (13,	0.3), (14,0.4), (16,0.3));
 					// line-width: @footway-width-z14;
 					[zoom>=15][surface=paved] {
 						line-dasharray: 3.5,2;
@@ -1134,24 +1152,6 @@
 			// line-width: @track-width-z13;
 			
 			line-width: linear([view::zoom], (16,	@track-width-z16 - 2 * @track-casing-width-z16), (19, @track-width-z19 - 2 * @track-casing-width-z19));
-
-			[zoom < 15] {
-					[tracktype=grade1] {
-					line-dasharray: 0,100;
-				}
-				[tracktype=grade2] {
-					line-dasharray: 8.8,3.2;
-				}
-				[tracktype=grade3] {
-					line-dasharray: 5.6,4.0;
-				}
-				[tracktype=grade4] {
-					line-dasharray: 3.2,4.8;
-				}
-				[tracktype=grade5] {
-					line-dasharray: 4.,3.2;
-				}
-			}
 
 			// [zoom>=15] {
 			// 	// line-width: @track-width-z15;
