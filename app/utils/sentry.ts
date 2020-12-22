@@ -7,7 +7,7 @@ export let isSentryEnabled = false;
 
 export async function startSentry() {
     try {
-        if (PRODUCTION || gVars.sentry) {
+        if (gVars.sentry) {
             const version = await getVersionName();
             const versionCode = await getBuildNumber();
             Sentry = require('@nativescript-community/sentry');

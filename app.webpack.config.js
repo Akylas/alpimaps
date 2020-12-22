@@ -3,8 +3,6 @@ const webpack = require('webpack');
 const { readFileSync, readdirSync } = require('fs');
 const { join, relative, resolve } = require('path');
 const nsWebpack = require('@nativescript/webpack');
-const nativeClassTransformer = require('@nativescript/webpack/transformers/ns-transform-native-classes').default;
-const preprocessConfig = require('./svelte.config.js');
 const CopyPlugin = require('copy-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const SentryCliPlugin = require('@sentry/webpack-plugin');
@@ -41,6 +39,7 @@ module.exports = (env, params = {}) => {
         cartoLicense = false, // --env.cartoLicense
         devlog, // --env.devlog
         fakeall, // --env.fakeall
+        fork = true, // --env.fakeall
         adhoc // --env.adhoc
     } = env;
 
@@ -56,6 +55,8 @@ module.exports = (env, params = {}) => {
         config.stats = {
             warningsFilter: /export .* was not found in/
         };
+    } else {
+        config.stats = 'verbose';
     }
 
     if (platform === 'android') {
@@ -65,18 +66,27 @@ module.exports = (env, params = {}) => {
     // safe as long as we dont use calc in css
     // config.externals.push('reduce-css-calc');
 
-    const coreModulesPackageName = '@akylas/nativescript';
-    config.resolve.modules = [
-        resolve(__dirname, `node_modules/${coreModulesPackageName}`),
-        resolve(__dirname, 'node_modules'),
-        `node_modules/${coreModulesPackageName}`,
-        'node_modules'
-    ];
-
+    const coreModulesPackageName = fork ? '@akylas/nativescript' : '@nativescript/core';
+    config.resolve.modules = [resolve(__dirname, `node_modules/${coreModulesPackageName}`), resolve(__dirname, 'node_modules'), `node_modules/${coreModulesPackageName}`, 'node_modules'];
     Object.assign(config.resolve.alias, {
         '@nativescript/core': `${coreModulesPackageName}`,
         'tns-core-modules': `${coreModulesPackageName}`
     });
+
+    console.log('coreModulesPackageName', coreModulesPackageName);
+
+    // const coreModulesPackageName = '@nativescript/core';
+    // config.resolve.modules = [
+    //     resolve(__dirname, `node_modules/${coreModulesPackageName}`),
+    //     resolve(__dirname, 'node_modules'),
+    //     `node_modules/${coreModulesPackageName}`,
+    //     'node_modules'
+    // ];
+
+    // Object.assign(config.resolve.alias, {
+    //     '@nativescript/core': `${coreModulesPackageName}`,
+    //     'tns-core-modules': `${coreModulesPackageName}`
+    // });
 
     const package = require('./package.json');
     const nsconfig = require('./nativescript.config.js');
@@ -87,7 +97,7 @@ module.exports = (env, params = {}) => {
     const locales = readdirSync(join(projectRoot, appPath, 'i18n'))
         .filter((s) => s.endsWith('.json'))
         .map((s) => s.replace('.json', ''));
-    console.log('locales', locales);
+    // console.log('locales', locales);
     const defines = {
         PRODUCTION: !!production,
         process: 'global.process',
@@ -318,8 +328,8 @@ module.exports = (env, params = {}) => {
     );
 
     config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${locales.join('|')})$`)));
-    if (nsconfig.cssParser !== 'css-tree') {
-        config.plugins.push(new webpack.IgnorePlugin(/css-tree$/));
+    if (fork && nsconfig.cssParser !== 'css-tree') {
+            config.plugins.push(new webpack.IgnorePlugin(/css-tree$/));
     }
 
     config.devtool = inlineSourceMap ? 'inline-cheap-source-map' : false;
@@ -376,6 +386,7 @@ module.exports = (env, params = {}) => {
             })
         );
     }
+
     config.optimization.minimize = uglify !== undefined ? !!uglify : production;
     const isAnySourceMapEnabled = !!sourceMap || !!hiddenSourceMap || !!inlineSourceMap;
     config.optimization.minimizer = [
@@ -385,9 +396,7 @@ module.exports = (env, params = {}) => {
             sourceMap: isAnySourceMapEnabled,
             terserOptions: {
                 ecma: 2017,
-                // module: true,
-                // warnings: true,
-                // toplevel: true,
+                module: true,
                 output: {
                     comments: false,
                     semicolons: !isAnySourceMapEnabled

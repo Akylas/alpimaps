@@ -104,7 +104,7 @@ export async function showError(err: Error | string) {
         cancelButtonText: showSendBugReport ? lc('cancel') : lc('ok'),
         message
     });
-    if (result && isSentryEnabled) {
+    if (gVars.sentry && result && isSentryEnabled) {
         Sentry.captureException(err);
         this.$alert(l('bug_report_sent'));
     }

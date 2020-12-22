@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-    import { GridLayout } from '@akylas/nativescript';
+    import { GridLayout } from '@nativescript/core';
     import { l, lu } from '@nativescript-community/l';
     import {
         getAirportPressureAtLocation,
@@ -25,15 +25,22 @@
     import { packageService } from '~/services/PackageService';
     import { accentColor } from '~/variables';
     import { getMapContext } from '~/mapModules/MapModule';
+    import { CanvasLabel } from '@nativescript-community/ui-canvaslabel';
 </script>
 
 <script lang="ts">
     let geoHandler: GeoHandler;
+    let gridLayout: NativeViewElementNode<GridLayout>;
+    let firstCanvas: NativeViewElementNode<CanvasLabel>;
+
     let showLocationInfo = false;
     const mapContext = getMapContext();
 
     export function switchLocationInfo() {
         showLocationInfo = !showLocationInfo;
+        if (showLocationInfo) {
+            loadView();
+        }
     }
 
     let hasBarometer = isSensorAvailable('barometer');
@@ -43,7 +50,6 @@
     let currentAltitude: number = null;
     let shownAltitude: number | string = null;
     let currentLocation: MapPos<LatLonKeys> = null;
-    let gridLayout: NativeViewElementNode<GridLayout>;
 
     export function getNativeView() {
         return gridLayout && gridLayout.nativeView;
@@ -68,11 +74,11 @@
             if (!airportPressure) {
                 shownAltitude = l('no_ref');
             }
-            shownAltitude = currentAltitude !== null ? currentAltitude : '-';
+            shownAltitude = currentAltitude !== null ? currentAltitude : '-  ';
         } else if (currentAltitude !== null) {
             shownAltitude = currentAltitude;
         } else {
-            shownAltitude = currentLocation && currentLocation.altitude !== undefined ? currentLocation.altitude : '-';
+            shownAltitude = currentLocation && currentLocation.altitude !== undefined ? currentLocation.altitude : '-  ';
         }
     }
 
@@ -91,12 +97,14 @@
 
     async function onNewLocation(e: any) {
         currentLocation = e.data;
-        const altitude = await packageService.getElevation(currentLocation);
-        console.log('onNewLocation', currentLocation, altitude, typeof altitude);
-        if (altitude !== null) {
-            currentAltitude = altitude;
+        if (currentLocation) {
+            const altitude = await packageService.getElevation(currentLocation);
+            if (altitude !== null) {
+                currentAltitude = altitude;
+            }
+        } else {
+            currentAltitude = null;
         }
-        // console.log('onNewLocation', currentLocation);
     }
     function startBarometer() {
         if (listeningForBarometer) {
@@ -176,6 +184,21 @@
             }
         }
     }
+    let loaded = false;
+    let loadedListeners = [];
+    async function loadView() {
+        if (!loaded) {
+            await new Promise((resolve) => {
+                loadedListeners.push(resolve);
+                loaded = true;
+            });
+        }
+    }
+    $: {
+        if (firstCanvas) {
+            loadedListeners.forEach((l) => l());
+        }
+    }
 </script>
 
 <gridlayout
@@ -190,38 +213,48 @@
     padding="6"
     columns="auto,*,auto"
     on:swipe={() => (showLocationInfo = false)}>
-    <canvaslabel width="60" height="60" borderRadius="30" borderWidth="4" borderColor={accentColor} backgroundColor="#aaffffff">
-        <cgroup verticalAlignment="middle" textAlignment="center">
+    {#if loaded}
+        <canvaslabel
+            bind:this={firstCanvas}
+            width="60"
+            height="60"
+            borderRadius="30"
+            borderWidth="4"
+            borderColor={accentColor}
+            backgroundColor="#aaffffff">
+            <!-- <cgroup verticalAlignment="center" textAlignment="center"> -->
             <cspan
-                text="
-                        {(currentLocation && currentLocation.speed !== undefined ? currentLocation.speed.toFixed() : '-') + '\n'} "
+                text={currentLocation && currentLocation.speed !== undefined ? currentLocation.speed.toFixed() : '10'}
                 fontSize="26"
+                textAlignment="center"
+                verticalAlignment="center"
                 fontWeight="bold" />
-            <cspan text="km/h" fontSize="10" />
-        </cgroup>
-    </canvaslabel>
-    <canvaslabel col="1" marginLeft="5" color="#fff">
-        <cspan
-            text={lu('altitude') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'}
-            fontSize="11"
-            color={accentColor}
-            verticalAlignment="top" />
-        <cgroup verticalAlignment="middle">
-            <cspan text={shownAltitude} fontSize="20" fontWeight="bold" />
-            <cspan text=" m" fontSize="12" />
-        </cgroup>
-    </canvaslabel>
-    <canvaslabel col="1" visibility={listeningForBarometer && airportRefName ? 'visible' : 'collapsed'}>
-        <cspan text={airportRefName} verticalTextAlignment="bottom" textAlignment="right" color="#fff" fontSize="9" />
-    </canvaslabel>
-    <stacklayout visibility={hasBarometer ? 'visible' : 'collapsed'} col="2" verticalAlignment="center">
-        <mdbutton variant="text" class="small-icon-btn" text="mdi-gauge" on:tap={switchBarometer} color="white" />
-        <mdbutton
-            variant="text"
-            class="small-icon-btn"
-            visibility={listeningForBarometer ? 'visible' : 'collapsed'}
-            text="mdi-reflect-vertical"
-            on:tap={getNearestAirportPressure}
-            color="white" />
-    </stacklayout>
+            <cspan text="km/h" fontSize="10" textAlignment="center" verticalAlignment="bottom" paddingBottom="3" />
+            <!-- </cgroup> -->
+        </canvaslabel>
+        <canvaslabel col="1" marginLeft="5" color="#fff">
+            <cspan
+                text={lu('altitude') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'}
+                fontSize="11"
+                color={accentColor}
+                verticalAlignment="top" />
+            <cgroup verticalAlignment="middle">
+                <cspan text={shownAltitude} fontSize="20" fontWeight="bold" />
+                <cspan text=" m" fontSize="12" />
+            </cgroup>
+        </canvaslabel>
+        <canvaslabel col="1" visibility={listeningForBarometer && airportRefName ? 'visible' : 'collapsed'}>
+            <cspan text={airportRefName} verticalTextAlignment="bottom" textAlignment="right" color="#fff" fontSize="9" />
+        </canvaslabel>
+        <stacklayout visibility={hasBarometer ? 'visible' : 'collapsed'} col="2" verticalAlignment="center">
+            <button variant="text" class="small-icon-btn" text="mdi-gauge" on:tap={switchBarometer} color="white" />
+            <button
+                variant="text"
+                class="small-icon-btn"
+                visibility={listeningForBarometer ? 'visible' : 'collapsed'}
+                text="mdi-reflect-vertical"
+                on:tap={getNearestAirportPressure}
+                color="white" />
+        </stacklayout>
+    {/if}
 </gridlayout>

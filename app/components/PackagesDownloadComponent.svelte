@@ -280,9 +280,7 @@
             }
         }, 800);
     });
-    function onLoaded() {
-   
-    }
+    
     onDestroy(() => {
         const packageService = this.$packageService;
         if (packageService) {
@@ -499,9 +497,9 @@
     }
 </script>
 
-<gridlayout rows="50,*,auto,2*" columns="*,auto,*" height="300" on:loaded={onLoaded}>
+<gridlayout rows="50,*,auto,2*" columns="*,auto,*" height="300" >
     <stacklayout row="0" colSpan="3" orientation="horizontal">
-        <mdbutton
+        <button
             class="mdi"
             shape="round"
             width="48"
@@ -557,7 +555,7 @@
                     fontSize="16"
                     visibility={item.isGroup() ? 'visible' : 'collapsed'}
                     verticalAlignment="center" />
-                <mdbutton
+                <button
                     col="1"
                     row="0"
                     rowSpan="3"
@@ -570,7 +568,7 @@
                     :visibility={!item.isGroup() ? 'visible' : 'collapsed'}
                     fontSize="12"
                     on:tap={handlePackageAction('map', item)} />
-                <mdbutton
+                <button
                     col="2"
                     row="0"
                     rowSpan="3"
@@ -582,7 +580,7 @@
                     :visibility={item.hasGeo() ? 'visible' : 'collapsed'}
                     fontSize="12"
                     on:tap={handlePackageAction('geo', item)} />
-                <mdbutton
+                <button
                     col="3"
                     row="0"
                     rowSpan="3"

@@ -52,8 +52,8 @@ Map {
 /* 3.NATURAL */
 /* 3.1 Main natural */
 @contour: #B58164;
-@contour_label: #B58164;
-@contour_halo: rgba(255, 255, 255, 0.65);
+@contour_label: #8b6652;
+@contour_halo: #b5806491;
 
 @glacier:#ffffff;
 @water: #74A4C1;
@@ -68,12 +68,12 @@ Map {
 
 // --- Parks, woods, other green things ---
 @grass: #DEE2BF;        // Lch(90,32,128) also grassland, meadow, village_green, garden, allotments
-@scrub: #CAD6A6;        // Lch(84,24,122)
-@forest: #C1C9A0;       // Lch(80,30,135)
+@scrub: #cdd6af;        // Lch(84,24,122)
+@forest: #BFCA9B;       // Lch(80,30,135)
 @heath: #d6d99f;
 @park: #cbd487;         // Lch(94,30,145)
 @allotments: #c9e1bf;   // Lch(87,20,135)
-@orchard: #aedfa3; // also vineyard, plant_nursery
+@orchard: #aedfa33a; // also vineyard, plant_nursery
 @rock: #DCD7D1;
 @fell: #F2EFE9;
 
@@ -237,11 +237,11 @@ Map {
 @standard-halo-fill: rgba(255,255,255,0.6);
 
 // @footway-fill: salmon;
-@path: rgb(150, 150, 150);
-@footway-fill: #a9a9a9;
-@footway-fill-noaccess: #bbbbbb;
+@path: #000000;
+@footway-fill: #000000;
+@footway-fill-noaccess: #000000;
 @steps-fill: @path;
-@steps-fill-noaccess: #bbbbbb;
+@steps-fill-noaccess: @footway-fill-noaccess;
 @cycleway-fill: blue;
 @cycleway-fill-noaccess: #9999ff;
 @bridleway-fill: green;
@@ -405,7 +405,7 @@ Map {
 @bridleway-width-z13:             0.3;
 @footway-width-z13:               0.5; // 0.7
 @cycleway-width-z13:              1; // 0.7
-@track-width-z13:                 0.2; // 0.5
+@track-width-z13:                 0.5; // 0.5
 @track-grade1-width-z13:          1; // 0.5
 @track-grade2-width-z13:          1; // 0.5
 @steps-width-z13:                 1.5;// 0.7

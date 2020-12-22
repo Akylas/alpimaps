@@ -9,14 +9,12 @@ import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/
 import { MapBoxElevationDataDecoder } from '@nativescript-community/ui-carto/rastertiles';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { openFilePicker } from '@nativescript-community/ui-document-picker';
-import { profile } from '@nativescript/core';
+import { showBottomSheet } from '~/components/bottomsheet';
 import * as app from '@nativescript/core/application';
 import * as appSettings from '@nativescript/core/application-settings';
 import { Color } from '@nativescript/core/color';
 import { ObservableArray } from '@nativescript/core/data/observable-array';
 import { File, Folder, path } from '@nativescript/core/file-system';
-import { showBottomSheet } from '~/components/bottomsheet';
-import OptionSelect from '~/components/OptionSelect.svelte';
 import { DataProvider, Provider } from '~/data/tilesources';
 import { $t } from '~/helpers/locale';
 import { packageService } from '~/services/PackageService';
@@ -493,8 +491,8 @@ export default class CustomLayersModule extends MapModule {
         this.customSources.splice(0, this.customSources.length);
     }
 
-    addSource() {
-        this.getSourcesLibrary().then(() => {
+    async addSource() {
+        await this.getSourcesLibrary()
             const options = {
                 props: {
                     title: $t('pick_source'),
@@ -502,6 +500,7 @@ export default class CustomLayersModule extends MapModule {
                 },
                 fullscreen: false
             };
+            const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
             showBottomSheet({
                 view: OptionSelect,
                 props: {
@@ -523,31 +522,6 @@ export default class CustomLayersModule extends MapModule {
                     }
                 }
             });
-            // const instance = new OptionSelect();
-            // instance.options = Object.keys(this.baseProviders).map(s => ({ name: s, provider: this.baseProviders[s] }));
-            // instance.$mount();
-            // ((alert({
-            //     title: Vue.prototype.$tc('pick_source'),
-            //     okButtonText: Vue.prototype.$t('cancel'),
-            //     view: instance.nativeView
-            // }) as any) as Promise<{ name: string; provider: Provider }>).then(results => {
-            //     const result = Array.isArray(results) ? results[0] : results;
-            //     if (result) {
-            //         const data = this.createRasterLayer(result.name, result.provider);
-            //         // console.log('about to add', result, data);
-            //         this.mapComp.addLayer(data.layer, 'customLayers', this.customSources.length);
-            //         this.customSources.push(data);
-            //         console.log('layer added', data.provider);
-            //         const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
-            //         savedSources.push(result.name);
-            //         // console.log('saving added_providers', savedSources);
-            //         appSettings.setString('added_providers', JSON.stringify(savedSources));
-            //     }
-        });
-        // })
-        // .catch(err => {
-        //     Vue.prototype.$showError(err);
-        // });
     }
     deleteSource(name: string) {
         let index = -1;

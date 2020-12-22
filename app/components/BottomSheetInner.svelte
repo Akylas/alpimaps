@@ -356,6 +356,21 @@
         //     ]);
         // }
     }
+    let loaded = false;
+    let loadedListeners = [];
+    export async function loadView() {
+        if (!loaded) {
+            await new Promise((resolve) => {
+                loadedListeners.push(resolve);
+                loaded = true;
+            });
+        }
+    }
+    $: {
+        if (infoView) {
+            loadedListeners.forEach((l) => l());
+        }
+    }
 </script>
 
 <gridlayout
@@ -365,66 +380,73 @@
     rows={`70,50,${profileHeight},auto`}
     backgroundColor="#aa000000"
     on:tap={() => {}}>
-    <BottomSheetInfoView
-        bind:this={infoView}
-        row="0"
-        visibility={itemIsRoute ? 'collapsed' : 'visible'}
-        item={itemIsRoute ? null : item} />
-    <BottomSheetRouteInfoView
-        bind:this={routeView}
-        row="0"
-        visibility={itemIsRoute ? 'visible' : 'collapsed'}
-        routeItem={itemIsRoute ? item : null} />
+    {#if loaded}
+        <BottomSheetInfoView
+            bind:this={infoView}
+            row="0"
+            visibility={itemIsRoute ? 'collapsed' : 'visible'}
+            item={itemIsRoute ? null : item} />
+        <BottomSheetRouteInfoView
+            bind:this={routeView}
+            row="0"
+            visibility={itemIsRoute ? 'visible' : 'collapsed'}
+            routeItem={itemIsRoute ? item : null} />
 
-    <mdactivityindicator
-        visibility={updatingItem ? 'visible' : 'collapsed'}
-        row="0"
-        horizontalAligment="right"
-        busy={true}
-        width={20}
-        height={20} />
+        <mdactivityindicator
+            visibility={updatingItem ? 'visible' : 'collapsed'}
+            row="0"
+            horizontalAligment="right"
+            busy={true}
+            width={20}
+            height={20} />
 
-    <stacklayout row="1" orientation="horizontal" width="100%" borderTopWidth="1" borderBottomWidth="1" borderColor="#44ffffff">
-        <mdbutton
-            variant="text"
-            fontSize="10"
-            on:tap={searchItemWeb}
-            text="search"
-            visibility={item && !itemIsRoute && !item.id ? 'visible' : 'collapsed'} />
-        <mdbutton
-            variant="text"
-            fontSize="10"
-            on:tap={getProfile}
-            text="profile"
-            visibility={itemIsRoute ? 'visible' : 'collapsed'} />
-        <!-- <mdbutton variant="text" fontSize="10" on:tap={openWebView} text="web" /> -->
-        <mdbutton
-            variant="text"
-            fontSize="10"
-            on:tap={saveItem}
-            text="save item"
-            visibility={item && !item.id ? 'visible' : 'collapsed'} />
-        <mdbutton
-            variant="text"
-            fontSize="10"
-            on:tap={deleteItem}
-            text="delete item"
-            visibility={item && item.id ? 'visible' : 'collapsed'}
-            color="red" />
-        <mdbutton
-            variant="text"
-            fontSize="10"
-            on:tap={shareItem}
-            text="share item"
-            visibility={item && item.id ? 'visible' : 'collapsed'} />
-    </stacklayout>
-    <linechart
-        bind:this={chart}
-        row="2"
-        height={profileHeight}
-        visibility={graphAvailable ? 'visible' : 'hidden'}
-        on:highlight={onChartHighlight} />
-    <!-- <AWebView
+        <stacklayout
+            row="1"
+            orientation="horizontal"
+            width="100%"
+            borderTopWidth="1"
+            borderBottomWidth="1"
+            borderColor="#44ffffff">
+            <button
+                variant="text"
+                fontSize="10"
+                on:tap={searchItemWeb}
+                text="search"
+                visibility={item && !itemIsRoute && !item.id ? 'visible' : 'collapsed'} />
+            <button
+                variant="text"
+                fontSize="10"
+                on:tap={getProfile}
+                text="profile"
+                visibility={itemIsRoute ? 'visible' : 'collapsed'} />
+            <!-- <button variant="text" fontSize="10" on:tap={openWebView} text="web" /> -->
+            <button
+                variant="text"
+                fontSize="10"
+                on:tap={saveItem}
+                text="save item"
+                visibility={item && !item.id ? 'visible' : 'collapsed'} />
+            <button
+                variant="text"
+                fontSize="10"
+                on:tap={deleteItem}
+                text="delete item"
+                visibility={item && item.id ? 'visible' : 'collapsed'}
+                color="red" />
+            <button
+                variant="text"
+                fontSize="10"
+                on:tap={shareItem}
+                text="share item"
+                visibility={item && item.id ? 'visible' : 'collapsed'} />
+        </stacklayout>
+        <linechart
+            bind:this={chart}
+            row="2"
+            height={profileHeight}
+            visibility={graphAvailable ? 'visible' : 'hidden'}
+            on:highlight={onChartHighlight} />
+        <!-- <AWebView
             row="3"
             height={webViewHeight}
             displayZoomControls="false"
@@ -434,7 +456,7 @@
             isScrollEnabled={scrollEnabled}
             src={webViewSrc}
         /> -->
-    <!-- <CollectionView id="bottomsheetListView" row="3" bind:this="listView" rowHeight="40" items="routeInstructions" :visibility="showListView ? 'visible' : 'hidden'" isBounceEnabled="false" @scroll="onListViewScroll" :isScrollEnabled={scrollEnabled}>
+        <!-- <CollectionView id="bottomsheetListView" row="3" bind:this="listView" rowHeight="40" items="routeInstructions" :visibility="showListView ? 'visible' : 'hidden'" isBounceEnabled="false" @scroll="onListViewScroll" :isScrollEnabled={scrollEnabled}>
             <v-template>
                 <GridLayout columns="30,*" rows="*,auto,auto,*" rippleColor="white"  @tap="onInstructionTap(item)">
                     <Label col="0" rowSpan="4" text="getRouteInstructionIcon(item) |fonticon" class="osm" color="white" fontSize="20" verticalAlignment="center" textAlignment={center} />
@@ -442,4 +464,5 @@
                 </GridLayout>
             </v-template>
         </CollectionView> -->
+    {/if}
 </gridlayout>
