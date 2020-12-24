@@ -1,5 +1,5 @@
 import { isSimulator } from '@nativescript-community/extendedinfo';
-import { Application, Color, Screen, Utils } from '@akylas/nativescript';
+import { Application, Color, Screen, Utils } from '@nativescript/core';
 import { ad } from '@nativescript/core/utils/utils';
 import CSSModule from '~/variables.module.scss';
 const locals = CSSModule.locals;

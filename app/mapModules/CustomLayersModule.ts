@@ -9,16 +9,15 @@ import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/
 import { MapBoxElevationDataDecoder } from '@nativescript-community/ui-carto/rastertiles';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { openFilePicker } from '@nativescript-community/ui-document-picker';
-import { showBottomSheet } from '~/components/bottomsheet';
-import * as app from '@nativescript/core/application';
 import * as appSettings from '@nativescript/core/application-settings';
 import { Color } from '@nativescript/core/color';
 import { ObservableArray } from '@nativescript/core/data/observable-array';
 import { File, Folder, path } from '@nativescript/core/file-system';
+import { showBottomSheet } from '~/components/bottomsheet';
 import { DataProvider, Provider } from '~/data/tilesources';
 import { $t } from '~/helpers/locale';
 import { packageService } from '~/services/PackageService';
-import { getDataFolder } from '~/utils/utils';
+import { getDataFolder, getDefaultMBTilesDir } from '~/utils/utils';
 import MapModule, { getMapContext } from './MapModule';
 const mapContext = getMapContext();
 
@@ -40,7 +39,7 @@ export interface SourceItem {
     index?: number;
     options?: { [k: string]: { min: number; max: number; value?: number } };
 }
-
+const TAG = 'CustomLayersModule';
 export default class CustomLayersModule extends MapModule {
     public customSources: ObservableArray<SourceItem> = new ObservableArray([]);
 
@@ -285,40 +284,30 @@ export default class CustomLayersModule extends MapModule {
 
     onMapReady(mapView: CartoMap<LatLonKeys>) {
         super.onMapReady(mapView);
-        const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
-        console.log('onMapReady', savedSources, this.customSources);
-        if (savedSources.length > 0) {
-            this.getSourcesLibrary().then(() => {
-                savedSources.forEach((s) => {
-                    const provider = this.baseProviders[s] || this.overlayProviders[s];
-                    const data = this.createRasterLayer(s, provider);
-                    this.customSources.push(data);
+        try {
+            const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
+            console.log('onMapReady', savedSources, this.customSources);
+            if (savedSources.length > 0) {
+                this.getSourcesLibrary().then(() => {
+                    savedSources.forEach((s) => {
+                        const provider = this.baseProviders[s] || this.overlayProviders[s];
+                        const data = this.createRasterLayer(s, provider);
+                        this.customSources.push(data);
+                    });
+                    this.customSources.forEach((data, index) => {
+                        mapContext.addLayer(data.layer, 'customLayers', index);
+                    });
                 });
-                this.customSources.forEach((data, index) => {
-                    mapContext.addLayer(data.layer, 'customLayers', index);
-                });
-            });
-        }
-
-        const folderPath = packageService.getDefaultMBTilesDir();
-        console.log('localMbtilesSource', folderPath);
-        if (folderPath) {
-            this.loadLocalMbtiles(folderPath);
-        }
-    }
-
-    getDefaultMBTilesDir() {
-        let localMbtilesSource = appSettings.getString('local_mbtiles_directory');
-        if (!localMbtilesSource) {
-            let defaultPath = path.join(getDataFolder(), 'alpimaps_mbtiles');
-            if (global.isAndroid) {
-                const dirs = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
-                const sdcardFolder = dirs[dirs.length - 1].getAbsolutePath();
-                defaultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
             }
-            localMbtilesSource = appSettings.getString('local_mbtiles_directory', defaultPath);
+
+            const folderPath = getDefaultMBTilesDir();
+            console.log('localMbtilesSource', folderPath);
+            if (folderPath) {
+                this.loadLocalMbtiles(folderPath);
+            }
+        } catch (err) {
+            console.error(TAG, 'onMapReady', err);
         }
-        return localMbtilesSource;
     }
 
     vectorTileDecoderChanged(oldVectorTileDecoder, newVectorTileDecoder) {
@@ -492,36 +481,36 @@ export default class CustomLayersModule extends MapModule {
     }
 
     async addSource() {
-        await this.getSourcesLibrary()
-            const options = {
-                props: {
-                    title: $t('pick_source'),
-                    options: Object.keys(this.baseProviders).map((s) => ({ name: s, provider: this.baseProviders[s] }))
-                },
-                fullscreen: false
-            };
-            const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
-            showBottomSheet({
-                view: OptionSelect,
-                props: {
-                    title: $t('pick_source'),
-                    options: Object.keys(this.baseProviders).map((s) => ({ name: s, provider: this.baseProviders[s] }))
-                },
-                closeCallback: (results) => {
-                    // console.log('closeCallback', results);
-                    const result = Array.isArray(results) ? results[0] : results;
-                    if (result) {
-                        const data = this.createRasterLayer(result.name, result.provider);
-                        mapContext.addLayer(data.layer, 'customLayers', this.customSources.length);
-                        this.customSources.push(data);
-                        // console.log('layer added', data.provider);
-                        const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
-                        savedSources.push(result.name);
-                        // console.log('saving added_providers', savedSources);
-                        appSettings.setString('added_providers', JSON.stringify(savedSources));
-                    }
+        await this.getSourcesLibrary();
+        const options = {
+            props: {
+                title: $t('pick_source'),
+                options: Object.keys(this.baseProviders).map((s) => ({ name: s, provider: this.baseProviders[s] }))
+            },
+            fullscreen: false
+        };
+        const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
+        showBottomSheet({
+            view: OptionSelect,
+            props: {
+                title: $t('pick_source'),
+                options: Object.keys(this.baseProviders).map((s) => ({ name: s, provider: this.baseProviders[s] }))
+            },
+            closeCallback: (results) => {
+                // console.log('closeCallback', results);
+                const result = Array.isArray(results) ? results[0] : results;
+                if (result) {
+                    const data = this.createRasterLayer(result.name, result.provider);
+                    mapContext.addLayer(data.layer, 'customLayers', this.customSources.length);
+                    this.customSources.push(data);
+                    // console.log('layer added', data.provider);
+                    const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
+                    savedSources.push(result.name);
+                    // console.log('saving added_providers', savedSources);
+                    appSettings.setString('added_providers', JSON.stringify(savedSources));
                 }
-            });
+            }
+        });
     }
     deleteSource(name: string) {
         let index = -1;

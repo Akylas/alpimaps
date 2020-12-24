@@ -22,25 +22,25 @@ export interface Address {
     houseNumber?: string;
 }
 
-namespace StyleTransformer {
-    export function to(
-        value: MarkerStyleBuilderOptions & LineStyleBuilderOptions
-    ): MarkerStyleBuilderOptions & LineStyleBuilderOptions {
-        const result = { ...value };
-        Object.keys(result).forEach((k) => {
-            if (result[k] instanceof Color) {
-                result[k] = result[k].hex;
-            }
-        });
-        return result as any;
-    }
+// namespace StyleTransformer {
+//     export function to(
+//         value: MarkerStyleBuilderOptions & LineStyleBuilderOptions
+//     ): MarkerStyleBuilderOptions & LineStyleBuilderOptions {
+//         const result = { ...value };
+//         Object.keys(result).forEach((k) => {
+//             if (result[k] instanceof Color) {
+//                 result[k] = result[k].hex;
+//             }
+//         });
+//         return result as any;
+//     }
 
-    export function from(
-        value: MarkerStyleBuilderOptions & LineStyleBuilderOptions
-    ): MarkerStyleBuilderOptions & LineStyleBuilderOptions {
-        return value;
-    }
-}
+//     export function from(
+//         value: MarkerStyleBuilderOptions & LineStyleBuilderOptions
+//     ): MarkerStyleBuilderOptions & LineStyleBuilderOptions {
+//         return value;
+//     }
+// }
 
 export class Item {
     public readonly id!: string;
@@ -74,15 +74,12 @@ export type IItem = Partial<Item> & {
 };
 
 export class ItemRepository extends CrudRepository<Item> {
-    constructor(database: NSQLDatabase) {
+    constructor(database: NSQLDatabase, private routeRepository:RouteRepository) {
         super({
             database,
             table: 'Items',
             primaryKey: 'id',
-            model: Item,
-            relationships: {
-                route: (item: Item) => new RouteRepository(database).getRoute(item.routeId)
-            }
+            model: Item
         });
     }
 
@@ -103,6 +100,7 @@ export class ItemRepository extends CrudRepository<Item> {
 
     async createItem(item: IItem) {
         const toSave = {};
+        console.log('createItem', item);
         Object.keys(item).forEach((k) => {
             if (k === 'route') {
                 return;
@@ -144,7 +142,7 @@ export class ItemRepository extends CrudRepository<Item> {
         return this.update(item, toSave);
     }
 
-    prepareGetItem(item) {
+    prepareGetItem(item: Item) {
         Object.keys(item).forEach((k) => {
             if (k !== 'id' && k !== 'routeId') {
                 item[k] = JSON.parse(item[k]);
@@ -153,17 +151,19 @@ export class ItemRepository extends CrudRepository<Item> {
         return item;
     }
     async getItem(itemId: string) {
-        let result = await this.get(itemId);
-        result = this.prepareGetItem(result);
-        result = await this.loadRelationship(result, 'route');
-        return result;
+        let element = await this.get(itemId);
+        element = this.prepareGetItem(element);
+        if (element.routeId) {
+            element.route = await this.routeRepository.getRoute(element.routeId)
+        }
+        return element;
     }
     async searchItem(where?: SqlQuery | null, orderBy?: SqlQuery | null) {
         const result = (await this.search(where, orderBy)).slice();
         for (let index = 0; index < result.length; index++) {
             let element = this.prepareGetItem(result[index]);
             if (element.routeId) {
-                element = await this.loadRelationship(element, 'route');
+                element.route =  await this.routeRepository.getRoute(element.routeId)
             }
             result[index] = element;
         }
