@@ -13,7 +13,7 @@ import { install as installBottomSheets } from '@nativescript-community/ui-mater
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import { svelteNative } from 'svelte-native';
 import { DomTraceCategory, registerNativeViewElement } from 'svelte-native/dom';
-import { TNSFontIcon } from 'nativescript-akylas-fonticon';
+import { FontIcon } from '@nativescript-community/fonticon';
 import { CanvasLabel, Group, Span } from '@nativescript-community/ui-canvaslabel';
 import { Img, initialize, shutDown } from '@nativescript-community/ui-image';
 import { CanvasView } from '@nativescript-community/ui-canvas';
@@ -108,10 +108,10 @@ if (global.isIOS) {
     networkService.start();
 }
 
-TNSFontIcon.paths = {
+FontIcon.paths = {
     osm: './assets/osm.css'
 };
-TNSFontIcon.loadCssSync();
+FontIcon.loadCssSync();
 
 import Map from '~/components/Map.svelte';
 svelteNative(Map, {});

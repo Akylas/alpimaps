@@ -42,7 +42,7 @@ Map {
 /* 1.BASEMAP */
 
 @white: #ffffff;
-@background: #EEF0E6;
+@background: #E8E6DF;
 
 /* 2.BOUNDARY */
 
@@ -51,31 +51,29 @@ Map {
 
 /* 3.NATURAL */
 /* 3.1 Main natural */
-@contour: #82957A;
-@contour_label: #82957A;
-@contour_halo: #b582957A;
+@contour: #B58164;
+@contour_label: #8b6652;
+@contour_halo: #b5806491;
 
 @glacier:#ffffff;
-@water: rgba(176, 204, 242, 1);
-@river: rgba(103, 166, 196, 1);
+@water: #74A4C1;
+@river: #67A6C4;
 
 
 @aboriginal: #82643a;
 @national_park: rgb(99, 150, 65);
 
-@protected-area: #09330C;
-@protected-area_halo: #E8FDE8;
+@protected-area: #008000;
 @aboriginal: #82643a;
 
 // --- Parks, woods, other green things ---
-@grass: rgba(139, 204, 72, 0.2);        // Lch(90,32,128) also grassland, meadow, village_green, garden, allotments
-@scrub: rgba(205,214,175,0.3);// Lch(84,24,122)
-@heath: rgba(214,217,159,0.4);
-@forest: #CEE6B5;       // Lch(80,30,135)
-@park: rgba(203,225,135,1);         // Lch(94,30,145)
+@grass: #DEE2BF;        // Lch(90,32,128) also grassland, meadow, village_green, garden, allotments
+@scrub: #cdd6af;        // Lch(84,24,122)
+@forest: #BFCA9B;       // Lch(80,30,135)
+@heath: #d6d99f;
+@park: #cbd487;         // Lch(94,30,145)
 @allotments: #c9e1bf;   // Lch(87,20,135)
 @orchard: #aedfa33a; // also vineyard, plant_nursery
-@bare_ground: #eee5dc;
 @rock: #DCD7D1;
 @fell: #F2EFE9;
 
@@ -85,7 +83,7 @@ Map {
 
 @built-up-z11: #c0c0c0;
 @built-up-z12: #d0d0d0;
-@residential: rgba(189, 191, 179, 0.4);      // Lch(89,0,0)
+@residential: rgba(191, 186, 171, 0.4);      // Lch(89,0,0)
 // @residential-line: #b9b9b9; // Lch(75,0,0)
 @retail: #ffd6d1;           // Lch(89,16,30)
 @retail-line: #d99c95;      // Lch(70,25,30)
@@ -104,13 +102,14 @@ Map {
 
 /* 4.4 Buildings */
 
-@building-fill: #D3C8CB;
+@building-fill: #CAC5BD;
 
 
 // --- Other ----
 
+@bare_ground: #eee5dc;
 @campsite: #def6c0; // also caravan_site, picnic_site
-@cemetery: rgba(161, 216, 103, 0.5); // also grave_yard
+@cemetery: rgba(175, 169, 157, 0.5); // also grave_yard
 @construction: #c7c7b4; // also brownfield
 @mud: rgba(203,177,154,0.3); // produces #e6dcd1 over @land
 @place_of_worship: #d0d0d0; // also religious
@@ -118,7 +117,7 @@ Map {
 @leisure: lighten(@park, 5%);
 @power: darken(@industrial, 5%);
 @power-line: darken(@industrial-line, 5%);
-@sand: #F6F041;
+@sand: #E8D626;
 @societal_amenities: #ffffe5;   // Lch(99,13,109)
 @tourism: #660033;
 @quarry: #c5c3c3;
@@ -209,7 +208,7 @@ Map {
 @steps-casing: @default-casing;
 @cycleway-casing: @default-casing;
 @bridleway-casing: @default-casing;
-@track-casing: #9b7057;
+@track-casing: #A5A5A5;
 
 
 
@@ -238,9 +237,9 @@ Map {
 @standard-halo-fill: rgba(255,255,255,0.6);
 
 // @footway-fill: salmon;
-@path: #ff0000;
-@footway-fill: #ff0000;
-@footway-fill-noaccess: #ff0000;
+@path: #000000;
+@footway-fill: #000000;
+@footway-fill-noaccess: #000000;
 @steps-fill: @path;
 @steps-fill-noaccess: @footway-fill-noaccess;
 @cycleway-fill: blue;
@@ -316,8 +315,8 @@ Map {
 
 /* 6.2 Natural labels */
 
-@water_label: rgba(20, 68, 131, 1);
-@water_halo: rgba(255, 255, 255, 0.9);
+@water_label: #08567d;
+@water_halo: rgba(255, 255, 255, 0.45);
 @park_label: #3A7921;
 @halo_park_label: rgba(255, 255, 255, 0.45);
 
@@ -409,7 +408,7 @@ Map {
 @track-width-z13:                 0.5; // 0.5
 @track-grade1-width-z13:          1; // 0.5
 @track-grade2-width-z13:          1; // 0.5
-@steps-width-z13:                 0.8;// 0.7
+@steps-width-z13:                 1.5;// 0.7
 
 @footway-width-z14:               0.7; // 0.7
 @secondary-width-z14:             3.5; //5
@@ -438,7 +437,7 @@ Map {
 @cycleway-width-z15:              0.9;
 @track-grade1-width-z15:          1.5;
 @track-grade2-width-z15:          1.5;
-@steps-width-z15:                 1;
+@steps-width-z15:                 3;
 @track-width-z15:                 2; // 1.5
 
 @secondary-width-z16:            9; //10
@@ -468,7 +467,6 @@ Map {
 @pedestrian-width-z17:           6;//12
 @road-width-z17:                  7;
 @service-width-z17:               7;
-@steps-width-z17:                 3;
 @minor-service-width-z17:         3.5;
 
 @motorway-width-z18:             18;//21

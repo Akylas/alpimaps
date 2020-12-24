@@ -9,7 +9,7 @@
     import { LineDataSet } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { ShareFile } from '@nativescript-community/ui-share-file';
-    import { Application, GridLayout, knownFolders } from '@nativescript/core';
+    import { Application, knownFolders } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -21,9 +21,7 @@
     import { showError } from '~/utils/error';
     import { screenHeightDips, statusBarHeight, textColor } from '~/variables';
     import BottomSheetInfoView from './BottomSheetInfoView.svelte';
-    import BottomSheetRouteInfoView from './BottomSheetRouteInfoView.svelte';
     import { formatter } from '~/mapModules/ItemFormatter';
-    import { writable } from 'svelte/store';
     import { RouteInstruction } from '~/models/Route';
 
     export const LISTVIEW_HEIGHT = 200;
@@ -49,7 +47,6 @@
         mapContext.mapModule('userLocation').on('location', onNewLocation, this);
     });
     let chart: NativeViewElementNode<LineChart>;
-    let routeView: BottomSheetRouteInfoView;
     let infoView: BottomSheetInfoView;
     let webViewSrc: string = null;
     $: {
@@ -76,25 +73,27 @@
     let showListView = false;
     $: showListView = listViewAvailable && listViewVisible;
 
-    let itemRouteNoProfile = false;
-    $: itemRouteNoProfile = item && !!item.route && (!item.route.profile || !item.route.profile.max);
-
+    // let itemRouteNoProfile = false;
     let itemIsRoute = false;
-    $: itemIsRoute = item && !!item.route;
+    // $: itemRouteNoProfile = item && !!item.route && (!item.route.profile || !item.route.profile.max);
 
-    function updateGraphAvailable(item) {
-        graphAvailable = itemIsRoute && !!item.route.profile && !!item.route.profile.data && item.route.profile.data.length > 0;
+    function updateGraphAvailable() {
+        graphAvailable = itemIsRoute && item.route.profile && item.route.profile.data && item.route.profile.data.length > 0;
     }
     $: {
-        updateGraphAvailable(item);
+        itemIsRoute = item && !!item.route;
+        updateGraphAvailable();
         updateSteps();
-        if (graphAvailable) {
+    }
+
+    $: {
+        if (chart && graphAvailable) {
             updateChartData();
         }
     }
 
     function onNewLocation(e: any) {
-        const index = routeView.onNewLocation(e);
+        const index = infoView.onNewLocation(e);
         if (index !== -1 && graphAvailable) {
             const profile = item.route.profile;
             const profileData = profile?.data;
@@ -171,7 +170,7 @@
         const profile = await packageService.getElevationProfile(item);
         // item.route.profile = profile;
         item.id !== undefined ? await updateItem(item, { route: { profile } } as any) : await saveItem(false);
-        updateGraphAvailable(item);
+        updateGraphAvailable();
         updateSteps();
         if (graphAvailable) {
             updateChartData();
@@ -230,6 +229,9 @@
     }
     let chartInitialized = false;
     function updateChartData() {
+        if (!chart) {
+            return;
+        }
         const chartView = chart.nativeView;
         const sets = [];
         const profile = item.route.profile;
@@ -367,8 +369,9 @@
         }
     }
     $: {
-        if (infoView) {
+        if (infoView && loadedListeners.length > 0) {
             loadedListeners.forEach((l) => l());
+            loadedListeners = [];
         }
     }
 </script>
@@ -384,13 +387,7 @@
         <BottomSheetInfoView
             bind:this={infoView}
             row="0"
-            visibility={itemIsRoute ? 'collapsed' : 'visible'}
-            item={itemIsRoute ? null : item} />
-        <BottomSheetRouteInfoView
-            bind:this={routeView}
-            row="0"
-            visibility={itemIsRoute ? 'visible' : 'collapsed'}
-            routeItem={itemIsRoute ? item : null} />
+            {item} />
 
         <mdactivityindicator
             visibility={updatingItem ? 'visible' : 'collapsed'}

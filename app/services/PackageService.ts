@@ -40,14 +40,13 @@ import {
 } from '@nativescript-community/ui-carto/routing';
 import { SearchRequest, VectorTileSearchService } from '@nativescript-community/ui-carto/search';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
-import * as app from '@nativescript/core/application';
 import * as appSettings from '@nativescript/core/application-settings';
 import { File, Folder, path } from '@nativescript/core/file-system';
 import KalmanFilter from 'kalmanjs';
 import { getDistanceSimple } from '~/helpers/geolib';
 import { IItem as Item } from '~/models/Item';
 import { RouteProfile } from '~/models/Route';
-import { getDataFolder } from '~/utils/utils';
+import { getDataFolder, getDefaultMBTilesDir } from '~/utils/utils';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
@@ -486,23 +485,11 @@ class PackageService extends Observable {
             });
         });
     }
-    getDefaultMBTilesDir() {
-        let localMbtilesSource = appSettings.getString('local_mbtiles_directory');
-        if (!localMbtilesSource) {
-            let defaultPath = path.join(getDataFolder(), 'alpimaps_mbtiles');
-            if (global.isAndroid) {
-                const dirs = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
-                const sdcardFolder = dirs[dirs.length - 1].getAbsolutePath();
-                defaultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
-            }
-            localMbtilesSource = appSettings.getString('local_mbtiles_directory', defaultPath);
-        }
-        return localMbtilesSource;
-    }
+
     _localOSMOfflineGeocodingService: OSMOfflineGeocodingService;
     get localOSMOfflineGeocodingService() {
         if (!this._localOSMOfflineGeocodingService) {
-            const folderPath = this.getDefaultMBTilesDir();
+            const folderPath = getDefaultMBTilesDir();
             if (Folder.exists(folderPath)) {
                 const folder = Folder.fromPath(folderPath);
                 const entities = folder.getEntitiesSync();
@@ -523,7 +510,7 @@ class PackageService extends Observable {
     _localOSMOfflineReverseGeocodingService: OSMOfflineReverseGeocodingService;
     get localOSMOfflineReverseGeocodingService() {
         if (!this._localOSMOfflineReverseGeocodingService) {
-            const folderPath = this.getDefaultMBTilesDir();
+            const folderPath = getDefaultMBTilesDir();
             if (Folder.exists(folderPath)) {
                 const folder = Folder.fromPath(folderPath);
                 const entities = folder.getEntitiesSync();
@@ -812,7 +799,7 @@ class PackageService extends Observable {
                 color: getGradeColor(lastGrade)
             });
         }
-        
+
         result.dmin = Math.round(-descent);
         result.dplus = Math.round(ascent);
         result.colors = colors;
@@ -820,6 +807,7 @@ class PackageService extends Observable {
     }
     async getElevationProfile(item: Item) {
         if (this.hillshadeLayer && item.route) {
+            console.log('getElevationProfile', item.route);
             const elevations = await this.getElevations(item.route.positions);
             if (DEV_LOG) {
                 console.log('getElevations done', elevations.size());
@@ -840,7 +828,7 @@ class PackageService extends Observable {
         } else {
             console.log('offlineRoutingSearchService', !!this._localOfflineRoutingSearchService);
             if (!this._localOfflineRoutingSearchService) {
-                const folderPath = packageService.getDefaultMBTilesDir();
+                const folderPath = getDefaultMBTilesDir();
                 if (Folder.exists(folderPath)) {
                     const folder = Folder.fromPath(folderPath);
                     const entities = folder.getEntitiesSync();
