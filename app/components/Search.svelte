@@ -11,7 +11,7 @@
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { GridLayout, ObservableArray, TextField } from '@nativescript/core';
     import { getJSON } from '@nativescript/core/http';
-    import { fonticon } from 'nativescript-akylas-fonticon';
+    import { fonticon } from '@nativescript-community/fonticon';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';

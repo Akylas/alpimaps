@@ -20,6 +20,18 @@
     import OptionPicker from './OptionPicker.svelte';
     import ScaleView from './ScaleView.svelte';
     import mapStore from '~/stores/mapStore';
+    import { AnimationCurve } from '@nativescript/core/ui/enums';
+    import { asSvelteTransition } from 'svelte-native/transitions';
+    function scale(node, { delay = 0, duration = 400, easing = AnimationCurve.easeOut }) {
+        const scaleX = node.nativeView.scaleX;
+        const scaleY = node.nativeView.scaleY;
+        return asSvelteTransition(node, delay, duration, easing, (t) => ({
+            scale: {
+                x: t * scaleX,
+                y: t * scaleY
+            }
+        }));
+    }
 </script>
 
 <script lang="ts">
@@ -59,14 +71,14 @@
     export function onSelectedItem(item: IItem, oldItem: IItem) {
         selectedItem = item;
     }
+    $: {
+        showSuggestionPackage =
+            suggestionPackage &&
+            (!suggestionPackage.status ||
+                (suggestionPackage.status.getCurrentAction() !== PackageAction.READY &&
+                    suggestionPackage.status.getCurrentAction() !== PackageAction.DOWNLOADING));
+    }
     if (gVars.packageServiceEnabled) {
-        $: {
-            showSuggestionPackage =
-                suggestionPackage &&
-                (!suggestionPackage.status ||
-                    (suggestionPackage.status.getCurrentAction() !== PackageAction.READY &&
-                        suggestionPackage.status.getCurrentAction() !== PackageAction.DOWNLOADING));
-        }
         onMount(() => {
             if (packageService) {
                 packageService.on('onProgress', onTotalDownloadProgress, this);
