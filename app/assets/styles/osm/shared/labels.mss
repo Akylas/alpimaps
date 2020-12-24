@@ -22,7 +22,7 @@
 		[zoom>=10] {
 			text-name: @name ?  ( [ele] ? [ele] + 'm' + '\n ' + @name : @name): '';
 		}
-		text-face-name: @mont_bd;
+		text-face-name: @mont_md;
 		text-size: linear([view::zoom], (7, 6), (13, 8), (18, 11))- 0.000001 * [rank]; 
 		text-line-spacing: -1;
 		text-placement: [nuti::texts3d];
@@ -373,7 +373,7 @@
 	text-halo-radius: 2;
 	text-halo-rasterizer: fast;
 	text-min-distance:30;
-	text-size: linear([view::zoom], (12, 8.0), (18, 12.0));
+	text-size: linear([view::zoom], (12, 8.0), (18, 10.0));
 	text-wrap-width: 80;
 }
 
