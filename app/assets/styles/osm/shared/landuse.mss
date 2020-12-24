@@ -24,13 +24,7 @@
     //     polygon-pattern-file: url('symbols/beach.png');
     // }
 
-  [class = 'forest'][zoom >= 5],
-  [class=wood][zoom >= 5] {
-      polygon-fill: @forest;
-      // [way_pixels >= 4]  { polygon-gamma: 0.75; }
-      // [way_pixels >= 64] { polygon-gamma: 0.3;  }
-    // }
-  }
+  
   //Also landuse = forest, converted in the SQL
 //   [class = 'wood'][zoom >= 13]::wood {
     // polygon-pattern-file: url('symbols/leaftype_unknown.svg'); // Lch(55,30,135)
@@ -152,62 +146,31 @@
   }
 
   [class = 'grass'][zoom >= 5]{
-    // ::grass {
       [subclass = 'garden'][zoom >= 10] {
-        // [zoom >= 10] {
           polygon-fill: @grass;
-          // [way_pixels >= 4]  { polygon-gamma: 0.75; }
-          // [way_pixels >= 64] { polygon-gamma: 0.3;  }
-        // }
-        // [zoom >= 13] {
-          // polygon-pattern-file: url('symbols/plant_nursery.png');
-          // polygon-pattern-opacity: 0.6;
-        //   polygon-pattern-alignment: global;
-          // [way_pixels >= 4]  { polygon-pattern-gamma: 0.75; }
-          // [way_pixels >= 64] { polygon-pattern-gamma: 0.3;  }
-        // }
-      }
-      [subclass = 'park'][zoom >= 10] {
-        // [zoom >= 10] {
-          // ::grass {
-            polygon-fill: @park;
-          // }
-          // [way_pixels >= 4]  { polygon-gamma: 0.75; }
-          // [way_pixels >= 64] { polygon-gamma: 0.3;  }
-        // }
       }
       [subclass = 'grassland'],
       [subclass = 'meadow'],
       [subclass = 'grass'],
       [subclass = 'village_green']{
         polygon-fill: @grass;
+      }
 
+      [subclass = 'park'][zoom >= 10] {
+        polygon-fill: @grass;
+        line-color: @park;
       }
       [subclass = 'heath'] {
         polygon-fill: @heath;
-
       }
       [subclass = 'fell'] {
         polygon-fill: @fell;
-
       }
-
       [subclass = 'scrub'] {
         polygon-fill:@scrub;
       }
-    // }
     [subclass = 'allotments'][zoom >= 10]/* ::grass */ {
-      // [zoom >= 10] {
         polygon-fill: @allotments;
-        // [way_pixels >= 4]  { polygon-gamma: 0.75; }
-        // [way_pixels >= 64] { polygon-gamma: 0.3;  }
-      // }
-      // [zoom >= 13] {
-        // polygon-pattern-file: url('symbols/allotments.png');
-      //   polygon-pattern-alignment: global;
-        // [way_pixels >= 4]  { polygon-pattern-gamma: 0.75; }
-        // [way_pixels >= 64] { polygon-pattern-gamma: 0.3;  }
-      // }
       [zoom >= 16] {
         line-width: 0.5;
         line-color: desaturate(darken(@allotments, 10%), 10%);
@@ -216,8 +179,12 @@
         }
       }
     }
-    // [way_pixels >= 4]  { polygon-gamma: 0.75; }
-    // [way_pixels >= 64] { polygon-gamma: 0.3;  }
+  }
+  [subclass = forest][zoom >= 5]::forest {
+      polygon-fill: @forest;
+      // [way_pixels >= 4]  { polygon-gamma: 0.75; }
+      // [way_pixels >= 64] { polygon-gamma: 0.3;  }
+    // }
   }
   // [class = 'scree'],
   // [class = 'shingle'] {

@@ -6,21 +6,21 @@ declare global {
     }
 }
 
-if (typeof Number.prototype.toRad === 'undefined') {
-    Number.prototype.toRad = function () {
-        return this * TO_RAD;
-    };
-}
+// if (typeof Number.prototype.toRad === 'undefined') {
+Number.prototype.toRad = function () {
+    return this * TO_RAD;
+};
+// }
 
-if (typeof Number.prototype.toDeg === 'undefined') {
-    Number.prototype.toDeg = function () {
-        return this * TO_DEG;
-    };
-}
+// if (typeof Number.prototype.toDeg === 'undefined') {
+Number.prototype.toDeg = function () {
+    return this * TO_DEG;
+};
+// }
 
 function _getRoundNum(t) {
-    let e = Math.pow(10, (Math.floor(t) + '').length - 1),
-        i = t / e;
+    const e = Math.pow(10, (Math.floor(t) + '').length - 1);
+    let i = t / e;
     return (i = i >= 10 ? 10 : i >= 5 ? 5 : i >= 3 ? 3 : i >= 2 ? 2 : 1), e * i;
 }
 
@@ -69,7 +69,7 @@ export const measures = {
     sm: 1 / 1852.216,
     ft: 100 / 30.48,
     in: 100 / 2.54,
-    yd: 1 / 0.9144,
+    yd: 1 / 0.9144
 };
 // }
 
@@ -139,7 +139,7 @@ export function coords(point, raw?) {
     const retval = {
         latitude: getLat(point, raw),
         longitude: getLon(point, raw),
-        altitude: getAlt(point, raw),
+        altitude: getAlt(point, raw)
     };
     return retval;
 }
@@ -315,7 +315,7 @@ export function getCenter(coords) {
     let X = 0.0;
     let Y = 0.0;
     let Z = 0.0;
-    let lat, lon, hyp, coord;
+    let lat, lon, coord;
 
     for (let i = 0, l = coords.length; i < l; ++i) {
         coord = coords(coords[i]);
@@ -333,12 +333,12 @@ export function getCenter(coords) {
     Z = Z / nb_coords;
 
     lon = Math.atan2(Y, X);
-    hyp = Math.sqrt(X * X + Y * Y);
+    const hyp = Math.sqrt(X * X + Y * Y);
     lat = Math.atan2(Z, hyp);
 
     return {
         latitude: (lat * TO_DEG).toFixed(6),
-        longitude: (lon * TO_DEG).toFixed(6),
+        longitude: (lon * TO_DEG).toFixed(6)
     };
 }
 
@@ -402,7 +402,7 @@ export function getBounds(coords) {
         maxLng: -Infinity,
         minLng: Infinity,
         maxElev: -Infinity,
-        minElev: Infinity,
+        minElev: Infinity
     };
 
     let coord;
@@ -446,14 +446,14 @@ export function getAroundData(bounds) {
         getDistance(
             {
                 latitude: bounds.sw.latitude,
-                longitude: bounds.sw.longitude,
+                longitude: bounds.sw.longitude
             },
             center
         ),
         getDistance(
             {
                 latitude: bounds.ne.latitude,
-                longitude: bounds.ne.longitude,
+                longitude: bounds.ne.longitude
             },
             center
         )
@@ -461,7 +461,7 @@ export function getAroundData(bounds) {
     console.debug('radius', distance);
     return {
         centerCoordinate: center,
-        radius: distance,
+        radius: distance
     };
 }
 export function getBoundsOfDistance(point, distance) {
@@ -507,12 +507,12 @@ export function getBoundsOfDistance(point, distance) {
     return {
         sw: {
             latitude: minLat.toDeg(),
-            longitude: minLon.toDeg(),
+            longitude: minLon.toDeg()
         },
         ne: {
             latitude: maxLat.toDeg(),
-            longitude: maxLon.toDeg(),
-        },
+            longitude: maxLon.toDeg()
+        }
     };
 }
 
@@ -527,8 +527,8 @@ export function getBoundsOfDistance(point, distance) {
 export function isPointInside(latlng, coords) {
     let ci,
         cj,
-        result = false,
-        c = coords(latlng);
+        result = false;
+    const c = coords(latlng);
     for (let i = -1, l = coords.length, j = l - 1; ++i < l; j = i) {
         ci = coords(coords[i]);
         cj = coords(coords[j]);
@@ -587,10 +587,10 @@ function preparePolygonForIsPointInsideOptimized(coords) {
  */
 export function isPointInsideWithPreparedPolygon(point, coords) {
     let flgPointInside = false,
-        y = longitude(point),
-        x = latitude(point),
         ci,
         cj;
+    const y = longitude(point);
+    const x = latitude(point);
 
     for (let i = 0, j = coords.length - 1; i < coords.length; i++) {
         ci = coords(coords[i]);
@@ -717,97 +717,97 @@ export function getCompassInfo(bearing) {
         case 1:
             result = {
                 exact: 'NNE',
-                rough: 'N',
+                rough: 'N'
             };
             break;
         case 2:
             result = {
                 exact: 'NE',
-                rough: 'N',
+                rough: 'N'
             };
             break;
         case 3:
             result = {
                 exact: 'ENE',
-                rough: 'E',
+                rough: 'E'
             };
             break;
         case 4:
             result = {
                 exact: 'E',
-                rough: 'E',
+                rough: 'E'
             };
             break;
         case 5:
             result = {
                 exact: 'ESE',
-                rough: 'E',
+                rough: 'E'
             };
             break;
         case 6:
             result = {
                 exact: 'SE',
-                rough: 'E',
+                rough: 'E'
             };
             break;
         case 7:
             result = {
                 exact: 'SSE',
-                rough: 'S',
+                rough: 'S'
             };
             break;
         case 8:
             result = {
                 exact: 'S',
-                rough: 'S',
+                rough: 'S'
             };
             break;
         case 9:
             result = {
                 exact: 'SSW',
-                rough: 'S',
+                rough: 'S'
             };
             break;
         case 10:
             result = {
                 exact: 'SW',
-                rough: 'S',
+                rough: 'S'
             };
             break;
         case 11:
             result = {
                 exact: 'WSW',
-                rough: 'W',
+                rough: 'W'
             };
             break;
         case 12:
             result = {
                 exact: 'W',
-                rough: 'W',
+                rough: 'W'
             };
             break;
         case 13:
             result = {
                 exact: 'WNW',
-                rough: 'W',
+                rough: 'W'
             };
             break;
         case 14:
             result = {
                 exact: 'NW',
-                rough: 'W',
+                rough: 'W'
             };
             break;
         case 15:
             result = {
                 exact: 'NNW',
-                rough: 'N',
+                rough: 'N'
             };
             break;
         default:
             result = {
                 exact: 'N',
-                rough: 'N',
+                rough: 'N'
             };
     }
 
@@ -829,7 +829,7 @@ export function getMapScale(_mpp, _maxWidth) {
         scale: roundMeters,
         realScale: realMetersPerScreenCM,
         scaleWidth: (_maxWidth * roundMeters) / realMetersPerScreenCM,
-        text: formatter.distance(round),
+        text: formatter.distance(round)
     };
     return result;
 }
@@ -839,7 +839,7 @@ export function getMapScaleAtZoom(_zoom, pos) {
     const roundMeters = _getRoundNum(realMetersPerScreenCM);
     const result = {
         scale: roundMeters,
-        realScale: realMetersPerScreenCM,
+        realScale: realMetersPerScreenCM
     };
     // console.debug('getMapScaleAtZoom', _zoom, pos, mpp, result);
     return result;
@@ -869,7 +869,7 @@ export function orderByDistance(latlng, coords) {
             key: coord,
             latitude: latitude(coords[coord]),
             longitude: longitude(coords[coord]),
-            distance: d,
+            distance: d
         });
     }
 
@@ -988,7 +988,7 @@ function latLng(_obj, _format) {
     const result = {
         latitude: c.latitude,
         longitude: c.latitude,
-        altitude: c.altitude ? altitude(c.altitude) : undefined,
+        altitude: c.altitude ? altitude(c.altitude) : undefined
     };
     switch (_format) {
         case 2:
@@ -1081,7 +1081,7 @@ export const formatter = {
     latLngString,
     distance: distanceStr,
     address,
-    speed,
+    speed
 };
 /**
  * Checks if a value is in decimal format or, if neccessary, converts to decimal

@@ -125,6 +125,14 @@
     let geoHandler: GeoHandler;
     let steps;
 
+    $: {
+        if (steps) {
+            // ensure bottomSheetStepIndex is not out of range when
+            // steps changes
+            bottomSheetStepIndex = Math.min(steps.length - 1, bottomSheetStepIndex)
+        }
+    }
+
     handleOpenURL(onAppUrl);
     function onAppUrl(appURL: AppURL, args) {
         if (global.isAndroid) {
@@ -405,7 +413,7 @@
     function onSelectedItemChanged(oldValue: IItem, value: IItem) {
         mapContext.runOnModules('onSelectedItem', value, oldValue);
     }
-    function selectItem({
+    async function selectItem({
         item,
         isFeatureInteresting = false,
         peek = true,
@@ -453,7 +461,7 @@
                 if (!selectedPosMarker) {
                     selectedPosMarker = createLocalPoint(item.position, {
                         // color: '#55ff0000',
-                        color: primaryColor.setAlpha(0.7),
+                        color: primaryColor.setAlpha(178),
                         scaleWithDPI: true,
                         size: 30
                         // orientationMode: BillboardOrientation.GROUND,
@@ -484,7 +492,7 @@
             }
 
             if (!item.route && (!item.properties || !item.properties.hasOwnProperty('ele')) && packageService.hillshadeLayer) {
-                console.log('tet getElevation', item.position);
+                // console.log('test getElevation', item.position);
                 packageService.getElevation(item.position).then((result) => {
                     if ($selectedItem.position === item.position) {
                         $selectedItem.properties = $selectedItem.properties || {};
@@ -499,7 +507,7 @@
             // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
             // vectorTileDecoder.setStyleParameter('selected_name', (item.properties && item.properties.name) || '');
             if (peek) {
-                bottomSheetInner.loadView();
+                await bottomSheetInner.loadView();
                 bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
             }
             if (item.zoomBounds) {
@@ -530,9 +538,7 @@
             if (item.route) {
                 const vectorElement = item.vectorElement as Line;
                 if (vectorElement) {
-                    const color = new Color(vectorElement.color as string);
-
-                    vectorElement.color = color.lighten(10);
+                    vectorElement.color = new Color(vectorElement.color as string).lighten(10);
                     vectorElement.width -= 2;
                 }
             }
@@ -552,7 +558,6 @@
     $: shouldShowNavigationBarOverlay = global.isAndroid && navigationBarHeight !== 0 && !!selectedItem;
     $: bottomSheetStepIndex === 0 && unselectItem();
     $: {
-        console.log('keepAwakeEnabled changed', keepAwakeEnabled);
         appSettings.setBoolean(KEEP_AWAKE_KEY, keepAwakeEnabled);
         if (keepAwakeEnabled) {
             showKeepAwakeNotification();
@@ -645,7 +650,6 @@
         Object.keys(metaData).forEach((k) => {
             metaData[k] = JSON.parse(metaData[k]);
         });
-        // console.log('metaData', metaData);
         const handledByModules = mapContext.runOnModules('onVectorElementClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             const item: IItem = { position, vectorElement: element, ...metaData };

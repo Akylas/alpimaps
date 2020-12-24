@@ -75,9 +75,9 @@ namespace GeometryTransformer {
 export class Route {
     public readonly id!: string;
 
-    public readonly profile!: RouteProfile | null;
+    public profile!: RouteProfile | null;
 
-    public readonly positions!: MapPosVector<LatLonKeys>;
+    public positions!: MapPosVector<LatLonKeys>;
 
     public readonly totalTime!: number;
     public readonly totalDistance!: number;
@@ -153,7 +153,7 @@ export class RouteRepository extends CrudRepository<Route> {
                 item[k] = JSON.parse(item[k]);
             }
         });
-        return item;
+        return item as Route;
     }
     async getRoute(itemId: string) {
         let result = await this.get(itemId);

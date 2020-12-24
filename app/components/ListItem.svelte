@@ -79,7 +79,7 @@
         fontSize={14 * sizeFactor}
         visibility="(!!date)?'visible':'collapsed'"
         text={date}
-        verticalAlignment={top} />
+        verticalAlignment="top" />
     <label
         col="3"
         row="1"

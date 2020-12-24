@@ -1,5 +1,6 @@
 import { knownFolders, path } from '@nativescript/core/file-system';
 import * as app from '@nativescript/core/application';
+import * as appSettings from '@nativescript/core/application-settings';
 
 // export function throttle(fn, limit) {
 //     let waiting = false;
@@ -38,7 +39,9 @@ export function getDataFolder() {
         };
         if (checkExternalMedia()) {
             const dirs = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
-            dataFolder = dirs[dirs.length - 1].getAbsolutePath();
+            if (dirs.length > 0) {
+                dataFolder = dirs[dirs.length - 1].getAbsolutePath();
+            }
         } else {
             dataFolder = knownFolders.documents().path;
         }
@@ -49,6 +52,22 @@ export function getDataFolder() {
         dataFolder = path.join(dataFolder, 'dev');
     }
     return dataFolder;
+}
+
+export function getDefaultMBTilesDir() {
+    let localMbtilesSource = appSettings.getString('local_mbtiles_directory');
+    if (!localMbtilesSource) {
+        let defaultPath = path.join(getDataFolder(), 'alpimaps_mbtiles');
+        if (global.isAndroid) {
+            const dirs = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
+            if (dirs.length > 0) {
+                const sdcardFolder = dirs[dirs.length - 1].getAbsolutePath();
+                defaultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
+            }
+        }
+        localMbtilesSource = appSettings.getString('local_mbtiles_directory', defaultPath);
+    }
+    return localMbtilesSource;
 }
 
 // type Many<T> = T | T[];

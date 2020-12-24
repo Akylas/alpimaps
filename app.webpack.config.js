@@ -22,6 +22,13 @@ module.exports = (env, params = {}) => {
             env
         );
     }
+    Object.keys(env).forEach((k) => {
+        if (env[k] === 'false' || env[k] === '0') {
+            env[k] = false;
+        } else if (env[k] === 'true' || env[k] === '1') {
+            env[k] = true;
+        }
+    });
     const nconfig = require('./nativescript.config');
     const {
         appPath = nconfig.appPath,

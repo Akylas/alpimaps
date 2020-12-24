@@ -281,11 +281,11 @@
 
 					line-color: @bridge-casing;
 					line-join: round;
-					line-width: linear([view::zoom], (13, @steps-width-z13 + 2 * (@paths-background-width + @paths-bridge-casing-width)), (15, @steps-width-z15 + 2 * (@paths-background-width + @paths-bridge-casing-width)));
+					line-width: linear([view::zoom], (13, @steps-width-z13 + 2 * (@paths-background-width + @paths-bridge-casing-width)), (15, @steps-width-z15 + 2 * (@paths-background-width + @paths-bridge-casing-width)), (17, @steps-width-z17 + 2 * (@paths-background-width + @paths-bridge-casing-width)));
 				}
 				[brunnel=tunnel][zoom>=13] {
 
-					line-width: linear([view::zoom], (13, @steps-width-z13 + 2 * (@paths-background-width + @paths-tunnel-casing-width)), (15, @steps-width-z15 + 2 * (@paths-background-width + @paths-tunnel-casing-width)));
+					line-width: linear([view::zoom], (13, @steps-width-z13 + 2 * (@paths-background-width + @paths-tunnel-casing-width)), (15, @steps-width-z15 + 2 * (@paths-background-width + @paths-tunnel-casing-width)), (17, @steps-width-z17 + 2 * (@paths-background-width + @paths-tunnel-casing-width)));
 					line-color: @tunnel-casing;
 					line-dasharray: 4,2;
 				}
@@ -921,7 +921,7 @@
 					[access=no] { line-color: @steps-fill-noaccess; }
 					line-dasharray: 2,1;
 					
-					line-width: linear([view::zoom], (13,	@steps-width-z13), (15, @steps-width-z15));
+					line-width: linear([view::zoom], (13,	@steps-width-z13), (17, @steps-width-z15), (19, @steps-width-z17));
 				}
 			}
 		

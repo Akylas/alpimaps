@@ -18,7 +18,6 @@ import { showError } from '~/utils/error';
 import { darkColor } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
 import NSQLDatabase from './NSQLDatabase';
-import { sql } from 'kiss-orm';
 import { DouglasPeuckerGeometrySimplifier } from '@nativescript-community/ui-carto/geometry/simplifier';
 const mapContext = getMapContext();
 const filePath = path.join(knownFolders.documents().getFolder('db').path, 'db.sqlite');
@@ -40,8 +39,8 @@ export default class ItemsModule extends MapModule {
                 // for now it breaks
                 // threading: true,
             });
-            this.itemRepository = new ItemRepository(this.db);
             this.routeRepository = new RouteRepository(this.db);
+            this.itemRepository = new ItemRepository(this.db, this.routeRepository);
             await this.itemRepository.createTables();
             await this.routeRepository.createTables();
             // await this.connection.synchronize(false);
@@ -77,7 +76,7 @@ export default class ItemsModule extends MapModule {
         if (!this.localVectorLayer) {
             const projection = this.mapView.projection;
             this.localVectorDataSource = new LocalVectorDataSource({ projection });
-            this.localVectorDataSource.setGeometrySimplifier(new DouglasPeuckerGeometrySimplifier({ tolerance: 2 }));
+            // this.localVectorDataSource.setGeometrySimplifier(new DouglasPeuckerGeometrySimplifier({ tolerance: 2 }));
             this.localVectorLayer = new VectorLayer({ visibleZoomRange: [0, 24], dataSource: this.localVectorDataSource });
             this.localVectorLayer.setVectorElementEventListener<LatLonKeys>({
                 onVectorElementClicked: (data) => mapContext.onVectorElementClicked(data)
@@ -178,13 +177,13 @@ export default class ItemsModule extends MapModule {
         styleOptions?: MarkerStyleBuilderOptions | PointStyleBuilderOptions | LineStyleBuilderOptions
     ) {
         if (item.route) {
+            console.log('saving route', item.route.id, item.routeId)
             if (!item.route.id) {
                 item.route = await this.routeRepository.createRoute({ ...item.route, id: Date.now() + '' });
             }
             item.routeId = item.route.id;
-            const color = darkColor;
             item.styleOptions = {
-                color: new Color(150, color.r, color.g, color.b),
+                color: (darkColor as any).setAlpha(150),
                 joinType: LineJointType.ROUND,
                 endType: LineEndType.ROUND,
                 width: 3,
@@ -205,14 +204,15 @@ export default class ItemsModule extends MapModule {
         const selectedElement = item.vectorElement;
         if (selectedElement) {
             Object.assign(selectedElement, item.styleOptions);
-            this.localVectorDataSource.add(selectedElement);
-            item.vectorElement = selectedElement;
+            // this.localVectorDataSource.add(selectedElement);
+            // item.vectorElement = selectedElement;
         } else {
             item.vectorElement = this.addItemToLayer(item as Item);
         }
         return item; // return the first one
     }
     async deleteItem(item: IItem) {
+        console.log('deleteItem', item);
         if (item === mapContext.getSelecetedItem()) {
             mapContext.unselectItem();
         }
