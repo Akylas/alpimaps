@@ -93,6 +93,7 @@ devDependencies:
   typescript: 4.1.3
   webpack: 4.44.2_webpack-cli@3.3.12
   webpack-cli: 3.3.12_webpack@4.44.2
+  webpack-virtual-modules: 0.4.1
 lockfileVersion: 5.2
 packages:
   /@akylas/nativescript-sqlite/3.3.11:
@@ -8698,6 +8699,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-lgTS3Xhv1lCOKo7SA5TjKXMjpSM4sBjNV5+q2bqesbSPs5FjGmU6jjtBSkX9b4qW87vDIsCIlUPOEhbZrMdjeQ==
+  /webpack-virtual-modules/0.4.1:
+    dev: true
+    resolution:
+      integrity: sha512-BH/RKOHk223WdBDLFqghztx3DF5AqR3CKg3ue1KN9S1SAaXP68Kj/4rF0lsdysxXaanzx7aWl1u0+lnfj7+OtQ==
   /webpack/4.44.2_webpack-cli@3.3.12:
     dependencies:
       '@webassemblyjs/ast': 1.9.0
@@ -9085,3 +9090,4 @@ specifiers:
   typescript: ~4.1.3
   webpack: 4.44.2
   webpack-cli: ~3.3.12
+  webpack-virtual-modules: ^0.4.1

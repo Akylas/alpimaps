@@ -10,7 +10,6 @@ Map {
 @mont_bd: "Montserrat SemiBold";
 @mont_it: "Montserrat Italic";
 @mont_it_md: "Montserrat Italic";
-@maki: "maki";
 @osm: "osm";
 
 /* ~~~~ CONTENT OF COLORS-DAY ~~~~~
@@ -64,6 +63,7 @@ Map {
 @national_park: rgb(99, 150, 65);
 
 @protected-area: #008000;
+@protected-area_halo: #E8FDE8;
 @aboriginal: #82643a;
 
 // --- Parks, woods, other green things ---
@@ -408,7 +408,7 @@ Map {
 @track-width-z13:                 0.5; // 0.5
 @track-grade1-width-z13:          1; // 0.5
 @track-grade2-width-z13:          1; // 0.5
-@steps-width-z13:                 1.5;// 0.7
+@steps-width-z13:                 0.8;// 0.7
 
 @footway-width-z14:               0.7; // 0.7
 @secondary-width-z14:             3.5; //5
@@ -437,7 +437,7 @@ Map {
 @cycleway-width-z15:              0.9;
 @track-grade1-width-z15:          1.5;
 @track-grade2-width-z15:          1.5;
-@steps-width-z15:                 3;
+@steps-width-z15:                 1;
 @track-width-z15:                 2; // 1.5
 
 @secondary-width-z16:            9; //10
@@ -468,6 +468,7 @@ Map {
 @road-width-z17:                  7;
 @service-width-z17:               7;
 @minor-service-width-z17:         3.5;
+@steps-width-z17:                 3;
 
 @motorway-width-z18:             18;//21
 @motorway-link-width-z18:        12;//13

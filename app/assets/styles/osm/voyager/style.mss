@@ -10,7 +10,6 @@ Map {
 @mont_bd: "Montserrat SemiBold";
 @mont_it: "Montserrat Italic";
 @mont_it_md: "Montserrat Italic";
-@maki: "maki";
 @osm: "osm";
 
 /* ~~~~ CONTENT OF COLORS-DAY ~~~~~
