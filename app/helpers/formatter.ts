@@ -16,6 +16,26 @@ const elevationPreset = {
     units: ['m']
 };
 
+let osmIcons = require('~/osm_icons.json');
+export function osmicon(values:string[] | string) {
+    if (!values) {
+        return undefined;
+    }
+    if (!Array.isArray(values)) {
+        values = [values];
+    }
+    let value, result;
+    for (let index = 0; index < values.length; index++) {
+         value = values[index];
+         result = osmIcons[value];
+        if (result) {
+            return result;
+        }
+        
+    }
+    return values[0];
+}
+
 export function convertDistance(meters) {
     return humanUnit(meters, distancePreset);
 }
