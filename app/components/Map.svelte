@@ -351,7 +351,7 @@
             if (gVars.packageServiceEnabled) {
                 packageService.start();
             }
-            setMapStyle(appSettings.getString('mapStyle', 'osmxml'), true);
+            setMapStyle(appSettings.getString('mapStyle', 'osmxml~topo'), true);
             mapContext.runOnModules('onMapReady', cartoMap);
         } catch (err) {
             showError(err);
@@ -770,23 +770,30 @@
     }
     function setMapStyle(layerStyle: string, force = false) {
         layerStyle = layerStyle.toLowerCase();
-        console.log('setMapStyle', layerStyle, currentLayerStyle);
+        let mapStyle = layerStyle;
+        let mapStyleLayer = 'voyager';
+        if (layerStyle.indexOf('~') !== -1) {
+            const array = layerStyle.split('~');
+            mapStyle = array[0];
+            mapStyleLayer = array[1];
+        }
+        console.log('setMapStyle', layerStyle, currentLayerStyle, mapStyle, mapStyleLayer);
         if (layerStyle !== currentLayerStyle || !!force) {
             currentLayerStyle = layerStyle;
             appSettings.setString('mapStyle', layerStyle);
             const oldVectorTileDecoder = vectorTileDecoder;
-            if (layerStyle === 'default' || layerStyle === 'voyager' || layerStyle === 'positron') {
+            if (layerStyle === 'default' ) {
                 vectorTileDecoder = new CartoOnlineVectorTileLayer({
-                    style: geteCartoMapStyleFromStyle(layerStyle)
+                    style: mapStyleLayer
                 }).getTileDecoder();
             } else {
                 try {
                     vectorTileDecoder = new MBVectorTileDecoder({
-                        style: getStyleFromCartoMapStyle(currentLayerStyle),
+                        style: mapStyleLayer,
                         liveReload: TNS_ENV !== 'production',
                         ...(layerStyle.endsWith('.zip')
-                            ? { zipPath: `~/assets/styles/${layerStyle}` }
-                            : { dirPath: `~/assets/styles/${layerStyle}` })
+                            ? { zipPath: `~/assets/styles/${mapStyle}` }
+                            : { dirPath: `~/assets/styles/${mapStyle}` })
                     });
                     console.log('vectorTileDecoder', vectorTileDecoder);
                     mapContext.runOnModules('vectorTileDecoderChanged', oldVectorTileDecoder, vectorTileDecoder);
@@ -841,11 +848,19 @@
         });
     }
 
-    function selectStyle() {
-        console.log('selectStyle');
-        const assetsFolder = Folder.fromPath(path.join(knownFolders.currentApp().path, 'assets', 'styles'));
-        assetsFolder.getEntities().then((files) => {
-            const actions = files.map((e) => e.name).concat(lc('default'));
+    async function selectStyle() {
+            let styles = [];
+        const entities = await Folder.fromPath(path.join(knownFolders.currentApp().path, 'assets', 'styles')).getEntities();
+        for (let index = 0; index < entities.length; index++) {
+            const e = entities[index];
+            if (Folder.exists(e.path)) {
+                const subs = await Folder.fromPath(e.path).getEntities();
+                styles.push( ...subs.filter(s=>s.name.endsWith('.json') || s.name.endsWith('.xml')).map(s=>e.name+ '~' + s.name.split('.')[0]));
+            } else {
+                styles.push (e.name);
+            }
+        }
+            const actions = styles.concat('default');
             action({
                 title: lc('select_style'),
                 actions
@@ -854,7 +869,6 @@
                     setMapStyle(result);
                 }
             });
-        });
     }
     function selectLanguage() {
         const actions = SUPPORTED_LOCALES;
@@ -890,7 +904,8 @@
             const layerIndex = LAYERS_ORDER.indexOf(layerId);
             let realIndex = 0;
             addedLayers.some((s) => {
-                if (LAYERS_ORDER.indexOf(s as any) < layerIndex) {
+                const i =LAYERS_ORDER.indexOf(s as any);
+                if (i >= 0 && i < layerIndex) {
                     realIndex++;
                     return false;
                 }

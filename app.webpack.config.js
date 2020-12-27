@@ -7,6 +7,7 @@ const CopyPlugin = require('copy-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const SentryCliPlugin = require('@sentry/webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
+const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 
 module.exports = (env, params = {}) => {
     if (env.adhoc) {
@@ -49,7 +50,7 @@ module.exports = (env, params = {}) => {
         fork = true, // --env.fakeall
         adhoc // --env.adhoc
     } = env;
-
+    console.log('env', env);
     const config = webpackConfig(env, params);
     const mode = production ? 'production' : 'development';
     const platform = env && ((env.android && 'android') || (env.ios && 'ios'));
@@ -58,13 +59,13 @@ module.exports = (env, params = {}) => {
     const dist = resolve(projectRoot, nsWebpack.getAppPath(platform, projectRoot));
     const appResourcesFullPath = resolve(projectRoot, appResourcesPath);
 
-    if (!production) {
+    // if (!production) {
         config.stats = {
             warningsFilter: /export .* was not found in/
         };
-    } else {
-        config.stats = 'verbose';
-    }
+    // } else {
+        // config.stats = 'verbose';
+    // }
 
     if (platform === 'android') {
         // env.appComponents = [resolve(projectRoot, 'app/common/services/android/BgService.ts'), resolve(projectRoot, 'app/common/services/android/BgServiceBinder.ts')];
@@ -72,6 +73,14 @@ module.exports = (env, params = {}) => {
 
     // safe as long as we dont use calc in css
     // config.externals.push('reduce-css-calc');
+    config.externals.push('~/osm_icons.json');
+    config.externals.push(function (context, request, callback) {
+        if (/i18n$/i.test(context)) {
+            return callback(null, './i18n/' + request);
+        }
+        callback();
+    });
+    console.log('config.externals', config.externals);
 
     const coreModulesPackageName = fork ? '@akylas/nativescript' : '@nativescript/core';
     config.resolve.modules = [resolve(__dirname, `node_modules/${coreModulesPackageName}`), resolve(__dirname, 'node_modules'), `node_modules/${coreModulesPackageName}`, 'node_modules'];
@@ -104,7 +113,7 @@ module.exports = (env, params = {}) => {
     const locales = readdirSync(join(projectRoot, appPath, 'i18n'))
         .filter((s) => s.endsWith('.json'))
         .map((s) => s.replace('.json', ''));
-    // console.log('locales', locales);
+    console.log('sentry', !!sentry);
     const defines = {
         PRODUCTION: !!production,
         process: 'global.process',
@@ -165,14 +174,7 @@ module.exports = (env, params = {}) => {
     const mdiIcons = JSON.parse(
         `{${mdiSymbols.variables[mdiSymbols.variables.length - 1].value.replace(/" (F|0)(.*?)([,\n]|$)/g, '": "$1$2"$3')}}`
     );
-    // const osmSymbols = symbolsParser.parseSymbols(readFileSync(resolve(projectRoot, 'css/osm.scss')).toString());
-    // console.log('osmSymbols', osmSymbols);
-    // const osmIcons = JSON.parse(
-    //     `{${osmSymbols.variables[osmSymbols.variables.length - 1].value.replace(
-    //         /'osm-([a-zA-Z0-9-_]+)' (F|f|e|0)(.*?)([,\n]+|$)/g,
-    //         '"$1": "$2$3"$4'
-    //     )}}`
-    // );
+    // console.log('mdiIcons', mdiIcons)
 
     const scssPrepend = `$mdi-fontFamily: ${platform === 'android' ? 'materialdesignicons-webfont' : 'Material Design Icons'};`;
     const scssLoaderRuleIndex = config.module.rules.findIndex((r) => Array.isArray(r.use) && r.use.indexOf('sass-loader') !== -1);
@@ -297,6 +299,7 @@ module.exports = (env, params = {}) => {
                 p.constructor.name
             ) === -1
     );
+    // console.log('plugins after clean', config.plugins);
     // we add our rules
     const copyOptions = { ignore: [`**/${relative(appPath, appResourcesFullPath)}/**`] };
     const copyPatterns = [
@@ -312,20 +315,36 @@ module.exports = (env, params = {}) => {
             to: 'fonts',
             noErrorOnMissing: true,
             globOptions: { dot: false }
+        },
+        {
+            from: '../css/osm.scss',
+            to:'osm_icons.json',
+            transform: function(manifestBuffer, path) {
+                const osmSymbols = symbolsParser.parseSymbols(manifestBuffer.toString());
+                // console.log('osmSymbols', osmSymbols);
+                const osmIcons = osmSymbols.variables.reduce(function (acc, value) {
+                    if (value.name.startsWith('$osm-')) {
+                        acc[value.name.slice(5)] = String.fromCharCode(parseInt(value.value.slice(2, -1), 16));
+                    }
+                    return acc;
+                }, {});
+                // console.log('osmIcons', osmIcons);
+                return Buffer.from(JSON.stringify(osmIcons));
+            },
         }
     ];
     config.plugins.unshift(new CopyPlugin(copyPatterns, copyOptions));
 
     // save as long as we dont use calc in css
     // config.plugins.push(new webpack.IgnorePlugin(/reduce-css-calc/));
-    // config.plugins.unshift(
-    //     new CleanWebpackPlugin({
-    //         dangerouslyAllowCleanPatternsOutsideProject: true,
-    //         dry: false,
-    //         verbose: false,
-    //         cleanOnceBeforeBuildPatterns: itemsToClean
-    //     })
-    // );
+    config.plugins.unshift(
+        new CleanWebpackPlugin({
+            dangerouslyAllowCleanPatternsOutsideProject: true,
+            dry: false,
+            verbose: false,
+            cleanOnceBeforeBuildPatterns: itemsToClean
+        })
+    );
     config.plugins.unshift(new webpack.DefinePlugin(defines));
     config.plugins.push(
         new webpack.EnvironmentPlugin({
@@ -394,6 +413,7 @@ module.exports = (env, params = {}) => {
         );
     }
 
+    // config.optimization.usedExports = true;
     config.optimization.minimize = uglify !== undefined ? !!uglify : production;
     const isAnySourceMapEnabled = !!sourceMap || !!hiddenSourceMap || !!inlineSourceMap;
     config.optimization.minimizer = [

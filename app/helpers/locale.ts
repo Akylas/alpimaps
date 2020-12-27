@@ -37,6 +37,7 @@ function setLang(newLang) {
 
     try {
         const localeData = require(`~/i18n/${lang}.json`);
+        console.log('localeData', localeData);
         loadLocaleJSON(localeData);
     } catch (err) {
         console.log('failed to load lang json', lang, `~/i18n/${lang}.json`, err);

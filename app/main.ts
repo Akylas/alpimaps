@@ -13,7 +13,6 @@ import { install as installBottomSheets } from '@nativescript-community/ui-mater
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import { svelteNative } from 'svelte-native';
 import { DomTraceCategory, registerNativeViewElement } from 'svelte-native/dom';
-import { FontIcon } from '@nativescript-community/fonticon';
 import { CanvasLabel, Group, Span } from '@nativescript-community/ui-canvaslabel';
 import { Img, initialize, shutDown } from '@nativescript-community/ui-image';
 import { CanvasView } from '@nativescript-community/ui-canvas';
@@ -38,6 +37,22 @@ overrideSpanAndFormattedString();
 // we need to use lat lon
 setMapPosKeys('lat', 'lon');
 setGeoLocationKeys('lat', 'lon');
+
+
+    registerNativeViewElement('AbsoluteLayout', () => require('@nativescript/core').AbsoluteLayout);
+    // registerNativeViewElement('DockLayout', () => require('@nativescript/core').DockLayout);
+    registerNativeViewElement('GridLayout', () => require('@nativescript/core').GridLayout);
+    // registerNativeViewElement('Image', () => require('@nativescript/core').Image);
+    registerNativeViewElement('ScrollView', () => require('@nativescript/core').ScrollView);
+    // registerNativeViewElement('SearchBar', () => require('@nativescript/core').SearchBar);
+    // registerNativeViewElement('Slider', () => require('@nativescript/core').Slider);
+    registerNativeViewElement('StackLayout', () => require('@nativescript/core').StackLayout);
+    // registerNativeViewElement('FlexboxLayout', () => require('@nativescript/core').FlexboxLayout);
+    registerNativeViewElement('Switch', () => require('@nativescript/core').Switch);
+    registerNativeViewElement('TextField', () => require('@nativescript/core').TextField);
+    // registerNativeViewElement('TextView', () => require('@nativescript/core').TextView);
+    // registerNativeViewElement('WebView', () => require('@nativescript/core').WebView);
+    // registerNativeViewElement('WrapLayout', () => require('@nativescript/core').WrapLayout);
 
 // registerNativeViewElement('mdtextfield', () => TextField, null, {}, { override: true });
 registerNativeViewElement('button', () => Button, null, {}, { override: true });
@@ -107,11 +122,6 @@ if (global.isIOS) {
     bgService.start();
     networkService.start();
 }
-
-FontIcon.paths = {
-    osm: './assets/osm.css'
-};
-FontIcon.loadCssSync();
 
 import Map from '~/components/Map.svelte';
 svelteNative(Map, {});

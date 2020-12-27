@@ -11,12 +11,12 @@
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { GridLayout, ObservableArray, TextField } from '@nativescript/core';
     import { getJSON } from '@nativescript/core/http';
-    import { fonticon } from '@nativescript-community/fonticon';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
+    import { osmicon } from '~/helpers/formatter';
     import { l } from '~/helpers/locale';
-    import ItemFormatter, { formatter } from '~/mapModules/ItemFormatter';
+    import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import { Address, IItem as Item } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
@@ -230,7 +230,7 @@
     }
 
     function getItemIcon(item: SearchItem) {
-        return fonticon(formatter.geItemIcon(item));
+        return osmicon(formatter.geItemIcon(item));
     }
     function getItemIconColor(item: SearchItem) {
         return providerColors[item.provider];
