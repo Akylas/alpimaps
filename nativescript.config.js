@@ -3,7 +3,7 @@ module.exports = {
     appResourcesPath: 'app/App_Resources',
     webpackConfigPath: './app.webpack.config.js',
     appPath: 'app',
-    // profiling: 'timeline',
+    profiling: 'timeline',
     android: {
         maxLogcatObjectSize: 2048,
         markingMode: 'none',

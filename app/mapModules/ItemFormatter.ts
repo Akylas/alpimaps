@@ -15,25 +15,28 @@ export default class ItemFormatter {
         const properties = item.properties;
         if (properties) {
             if (properties.osm_value) {
-                result.push('osm-' + properties.osm_value);
+                result.push(properties.osm_value);
             }
             if (properties.osm_key) {
-                result.push('osm-' + properties.osm_key);
+                result.push(properties.osm_key);
             }
             if (properties.class) {
-                result.push('osm-' + properties.class);
+                result.push(properties.class);
+            }
+            if (properties.subclass) {
+                result.push(properties.subclass);
             }
             if (properties.layer && properties.layer !== 'housenumber') {
-                result.push('osm-' + properties.layer);
+                result.push(properties.layer);
             }
         }
         if (item.categories) {
-            result.push('osm-' + item.categories[0]);
+            result.push(item.categories[0]);
         }
         if (result.length === 0 && item.address && item.address.houseNumber) {
             result.push(item.address.houseNumber);
         }
-        result.push('osm-office');
+        result.push('office');
         return result;
     }
 

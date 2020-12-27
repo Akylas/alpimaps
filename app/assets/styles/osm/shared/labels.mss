@@ -1,7 +1,6 @@
 
 @name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
 @osm_icon: [nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : [nuti::osm-[class]];
-@maki_icon: [nuti::maki-[subclass]] ? [nuti::maki-[subclass]] : [nuti::maki-[class]];
 @featureId: [osmid];
 // @id_test: (([osm_id]) = [nuti::selected_id]) ? #f00 : #fff;
 // @name_test: (([name]) = [nuti::selected_name]) ? #0f0 : #fff;
@@ -202,9 +201,9 @@
 			[zoom>=7][rank<=7]{
 				::icon {
 					text-placement: [nuti::markers3d];
-					text-name: [nuti::maki-circle];
+					text-name: [nuti::osm-spring];
 					text-size: 6;
-					text-face-name: @maki;
+					text-face-name: @osm;
 					text-fill: @place_text;
 				}
 				::label {

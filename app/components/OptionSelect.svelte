@@ -9,13 +9,14 @@
     import { Template } from 'svelte-native/components';
     import ListItem from './ListItem.svelte';
     import { closeModal } from 'svelte-native';
+import { closeBottomSheet } from './bottomsheet';
 
     export let options: OptionType[];
 
     export let height: number = 350;
 
     function close(value?: OptionType) {
-        closeModal(value);
+        closeBottomSheet(value);
     }
 
     function onTap(item: OptionType, args) {

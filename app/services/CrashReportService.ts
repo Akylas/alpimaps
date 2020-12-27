@@ -1,6 +1,6 @@
 import { Observable } from '@nativescript/core/data/observable';
 import { booleanProperty } from './BackendService';
-import * as Sentry from '@nativescript-community/sentry';
+import * as SentryType from '@nativescript-community/sentry';
 import { getBuildNumber, getVersionName } from '@nativescript-community/extendedinfo';
 import { Device } from '@nativescript/core/platform';
 import { alert, confirm } from '@nativescript-community/ui-material-dialogs';
@@ -145,20 +145,20 @@ export class MessageError extends CustomError {
 
 export default class CrashReportService extends Observable {
     @booleanProperty({ default: true }) sentryEnabled: boolean;
-    sentry: typeof Sentry;
+    sentry: typeof SentryType;
     async start() {
         install();
         if (gVars.sentry && this.sentryEnabled) {
-            this.sentry = Sentry;
+            this.sentry = require('@nativescript-community/sentry');;
             const versionName = await getVersionName();
             const buildNumber = await getBuildNumber();
-            Sentry.init({
+            this.sentry.init({
                 dsn: SENTRY_DSN,
                 appPrefix: SENTRY_PREFIX,
                 release: `${versionName}`,
                 dist: `${buildNumber}.${global.isAndroid ? 'android' : 'ios'}`,
             });
-            Sentry.setTag('locale', Device.language);
+            this.sentry.setTag('locale', Device.language);
             // });
         } else {
             this.sentry = null;
@@ -186,7 +186,7 @@ export default class CrashReportService extends Observable {
             }
         }
     }
-    captureMessage(message: string, level?: Sentry.Severity) {
+    captureMessage(message: string, level?: SentryType.Severity) {
         if (this.sentryEnabled && this.sentry) {
             return this.sentry.captureMessage(message, level);
         }
@@ -196,7 +196,7 @@ export default class CrashReportService extends Observable {
             return this.sentry.setExtra(key, value);
         }
     }
-    withScope(callback: (scope: Sentry.Scope) => void) {
+    withScope(callback: (scope: SentryType.Scope) => void) {
         if (this.sentryEnabled && this.sentry) {
             return this.sentry.withScope(callback);
         }

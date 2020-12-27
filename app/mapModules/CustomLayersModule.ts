@@ -286,7 +286,7 @@ export default class CustomLayersModule extends MapModule {
         super.onMapReady(mapView);
         try {
             const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
-            console.log('onMapReady', savedSources, this.customSources);
+            // console.log('onMapReady', savedSources, this.customSources);
             if (savedSources.length > 0) {
                 this.getSourcesLibrary().then(() => {
                     savedSources.forEach((s) => {
@@ -311,7 +311,8 @@ export default class CustomLayersModule extends MapModule {
     }
 
     vectorTileDecoderChanged(oldVectorTileDecoder, newVectorTileDecoder) {
-        this.customSources.forEach((s) => {
+        for (let index = this.customSources.length-1; index >=0; index--) {
+            const s = this.customSources.getItem(index);
             if (s.layer instanceof VectorTileLayer && s.layer.getTileDecoder() === oldVectorTileDecoder) {
                 const layer = new VectorTileLayer({
                     dataSource: s.layer.dataSource,
@@ -329,11 +330,11 @@ export default class CustomLayersModule extends MapModule {
                     },
                     mapContext.getProjection()
                 );
-                mapContext.removeLayer(s.layer, 'customLayers');
+                mapContext.removeLayer(s.layer, 'customLayers', s.index);
                 mapContext.addLayer(layer, 'customLayers', s.index);
                 s.layer = layer;
             }
-        });
+        }
     }
     hillshadeLayer: HillshadeRasterTileLayer;
 
@@ -441,7 +442,7 @@ export default class CustomLayersModule extends MapModule {
                     provider: { name }
                 };
                 this.customSources.push(data);
-                mapContext.addLayer(data.layer, 'customLayers', data.index);
+                mapContext.addLayer(data.layer, 'hillshade', data.index);
             });
             // return Promise.all(
         } catch (err) {
@@ -490,27 +491,25 @@ export default class CustomLayersModule extends MapModule {
             fullscreen: false
         };
         const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
-        showBottomSheet({
+        const results = await showBottomSheet({
             view: OptionSelect,
             props: {
                 title: $t('pick_source'),
                 options: Object.keys(this.baseProviders).map((s) => ({ name: s, provider: this.baseProviders[s] }))
-            },
-            closeCallback: (results) => {
-                // console.log('closeCallback', results);
-                const result = Array.isArray(results) ? results[0] : results;
-                if (result) {
-                    const data = this.createRasterLayer(result.name, result.provider);
-                    mapContext.addLayer(data.layer, 'customLayers', this.customSources.length);
-                    this.customSources.push(data);
-                    // console.log('layer added', data.provider);
-                    const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
-                    savedSources.push(result.name);
-                    // console.log('saving added_providers', savedSources);
-                    appSettings.setString('added_providers', JSON.stringify(savedSources));
-                }
             }
         });
+        // console.log('closeCallback', results);
+        const result = Array.isArray(results) ? results[0] : results;
+        if (result) {
+            const data = this.createRasterLayer(result.name, result.provider);
+            mapContext.addLayer(data.layer, 'customLayers', this.customSources.length);
+            this.customSources.push(data);
+            // console.log('layer added', data.provider);
+            const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
+            savedSources.push(result.name);
+            // console.log('saving added_providers', savedSources);
+            appSettings.setString('added_providers', JSON.stringify(savedSources));
+        }
     }
     deleteSource(name: string) {
         let index = -1;
