@@ -7,15 +7,15 @@
 
     let gridLayout: NativeViewElementNode<GridLayout>;
 
-    export let title: string;
+    export let title: string = null;
     export let sizeFactor: number = 1;
-    export let subtitle: string;
-    export let overText: string;
-    export let date: string;
-    export let rightIcon: string;
-    export let rightButton: string;
-    export let leftIcon: string;
-    export let avatar: string;
+    export let subtitle: string = null;
+    export let overText: string = null;
+    export let date: string = null;
+    export let rightIcon: string = null;
+    export let rightButton: string = null;
+    export let leftIcon: string = null;
+    export let avatar: string = null;
     export let showBottomLine: boolean = true;
 
     export let overlineColor: string = '#5C5C5C';
@@ -77,7 +77,7 @@
         col="3"
         row="1"
         fontSize={14 * sizeFactor}
-        visibility="(!!date)?'visible':'collapsed'"
+        visibility={(!!date)?'visible':'collapsed'}
         text={date}
         verticalAlignment="top" />
     <label
