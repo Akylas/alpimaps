@@ -84,6 +84,7 @@
     bind:this={gridLayout}
     columns="*,auto"
     height={210 + navigationBarHeight}
+    paddingBottom={navigationBarHeight}
     backgroundColor="#99000000">
     {#if loaded}
         <collectionview col="0" rowHeight="70" items={customSources} bind:this={collectionView}>

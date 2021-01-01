@@ -1,9 +1,4 @@
-Map {
-	background-color: @background;
-  south-pole-color: @background;
-  north-pole-color: @water;
-	font-directory: url(fonts/);
-}
+
 //CARTO Fonts
 @mont: "Montserrat Regular";
 @mont_md: "Montserrat Medium";
@@ -41,7 +36,7 @@ Map {
 /* 1.BASEMAP */
 
 @white: #ffffff;
-@background: #EEF0E6;
+@background: rgba(238,240,230,1);
 
 /* 2.BOUNDARY */
 

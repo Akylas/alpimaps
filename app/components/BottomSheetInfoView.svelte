@@ -35,7 +35,7 @@
         return item.properties[prop];
     }
     function propIcon(prop) {
-        console.log('propIcon', prop);
+        // console.log('propIcon', prop);
         switch (prop) {
             case 'ele':
                 return 'mdi-elevation-rise';

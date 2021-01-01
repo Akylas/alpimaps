@@ -49,6 +49,13 @@
                 "2": 2
             }
         },
+        "drawBackground": {
+            "default": 1,
+            "values": {
+                "1": 1,
+                "0": 0
+            }
+        },
         "contours": {
             "default": 1,
             "values": {

@@ -7,9 +7,10 @@
     import { Line, LineEndType, LineJointType, LineStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/line';
     import { Marker, MarkerStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/marker';
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
+    import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
     import { TextField } from '@nativescript/core';
     import { Device, GridLayout, StackLayout } from '@nativescript/core';
-    import {  onDestroy } from 'svelte';
+    import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { getMapContext } from '~/mapModules/MapModule';
     import { IItem as Item } from '~/models/Item';
@@ -48,6 +49,10 @@
 </script>
 
 <script lang="ts">
+    import { getDistanceSimple } from '~/helpers/geolib';
+    import { convertDistance, convertValueToUnit, formatValueToUnit } from '~/helpers/formatter';
+import { getCenter } from '~/utils/geo';
+
     const mapContext = getMapContext();
     export let translationFunction: Function = null;
     let opened = false;
@@ -192,6 +197,7 @@
             addStopPoint(position, metaData);
             return;
         }
+        const lastPoint = waypoints[waypoints.length - 1];
         const group = new Group();
         group.elements = [
             new Marker({
@@ -201,6 +207,17 @@
                     hideIfOverlapped: false,
                     scaleWithDPI: true,
                     color: 'red'
+                }
+            }),
+            new Text({
+                position: getCenter(position, lastPoint.position),
+                // position: { lat: (position.lat - lastPoint.position.lat) / 2, lon: (position.lon - lastPoint.position.lon) / 2 },
+                text: formatValueToUnit(getDistanceSimple(position, lastPoint.position), 'km'),
+                styleBuilder: {
+                    hideIfOverlapped: false,
+                    scaleWithDPI: false,
+                    color: 'darkgray',
+                    fontSize: 12
                 }
             })
         ];

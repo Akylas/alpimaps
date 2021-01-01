@@ -9,10 +9,11 @@
 	// order is important for icon to take precedence over label and respect rank
 	::icon {
 		text-face-name: @osm;
-		text-size: linear([view::zoom], (7, 7), (13, 8), (18, 12))- 0.000001 * [rank]; 
+		text-size: linear([view::zoom], (7, 7), (13, 8), (18, 12))+ 0.000001 * [ele]; 
 		text-placement: [nuti::markers3d];
 		text-name: @osm_icon;
 		text-fill: @peak_label;
+		// text-min-distance: 50;
 		// text-dy: linear([view::zoom], (7, 15), (13, 16), (18, 20)); 
 		text-feature-id: @featureId;
 	}
@@ -21,8 +22,9 @@
 		[zoom>=10] {
 			text-name: @name ?  ( [ele] ? [ele] + 'm' + '\n ' + @name : @name): '';
 		}
+		// text-min-distance: 50;
 		text-face-name: @mont_md;
-		text-size: linear([view::zoom], (7, 6), (13, 8), (18, 11))- 0.000001 * [rank]; 
+		text-size: linear([view::zoom], (7, 6), (13, 8), (18, 11))+ 0.000001 * [ele]; 
 		text-line-spacing: -1;
 		text-placement: [nuti::texts3d];
 		text-fill: @peak_label;
