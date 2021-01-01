@@ -2,7 +2,7 @@
     import { AppURL, handleOpenURL } from '@nativescript-community/appurl';
     import * as EInfo from '@nativescript-community/extendedinfo';
     import * as perms from '@nativescript-community/perms';
-    import { CartoMapStyle, ClickType, MapPos } from '@nativescript-community/ui-carto/core';
+    import { CartoMapStyle, ClickType, MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
     import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
     import { Layer } from '@nativescript-community/ui-carto/layers';
@@ -502,7 +502,7 @@
                 });
                 // console.log('get elevation done ', item);
             }
-            // console.log('selectedItem', item);
+            console.log('selectedItem', item);
             // const vectorTileDecoder = getVectorTileDecoder();
             // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
             // vectorTileDecoder.setStyleParameter('selected_name', (item.properties && item.properties.name) || '');
@@ -516,6 +516,11 @@
                     height: Screen.mainScreen.heightPixels
                 });
                 cartoMap.moveToFitBounds(item.zoomBounds, undefined, true, true, false, 200);
+                // cartoMap.setZoom(zoomLevel, 200);
+                // cartoMap.setFocusPos(getCenter(item.zoomBounds.northeast, item.zoomBounds.southwest), 200);
+            } else if (item.properties.extent) {
+                const extent = item.properties.extent;
+                cartoMap.moveToFitBounds(new MapBounds({lat:extent[1], lon:extent[0]}, {lat:extent[3], lon:extent[2]}), undefined, true, true, false, 200);
                 // cartoMap.setZoom(zoomLevel, 200);
                 // cartoMap.setFocusPos(getCenter(item.zoomBounds.northeast, item.zoomBounds.southwest), 200);
             } else {
