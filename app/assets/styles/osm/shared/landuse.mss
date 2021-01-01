@@ -1,4 +1,12 @@
-
+Map {
+	// background-color: @background;
+  // ['nuti::drawBackground'!=0] {
+    background-color: @background;
+  // }
+  south-pole-color: @background;
+  north-pole-color: @water;
+	font-directory: url(fonts/);
+}
 #landcover['mapnik::geometry_type'=3] {
 
   ::first {
@@ -36,7 +44,7 @@
 //     opacity: 0.4; // The entire layer has opacity to handle overlapping forests
 //   }
 
-  [class = 'ice'][zoom >= 8] {
+  [class = 'ice'] {
     // [zoom >= 8] {
       polygon-fill: @glacier;
       line-width: 0.5;
@@ -771,7 +779,7 @@
     text-size: 9;
     text-wrap-width: 100;
   }  
-  [class=rock][subclass=cliff][zoom>=12] { 
+  [class=rock][subclass=cliff][zoom>=12]::cliff { 
     line-color: #777;
     line-width: linear([view::zoom], (12, 0.5), (15,1));
     [zoom >= 15] {

@@ -108,7 +108,8 @@
                 neighbourhood
             };
             this.properties = actualProperties;
-            properties.name = actualName;
+            console.log('test', actualName, name)
+            this.properties.name = actualName;
             this.position = { lat: data.geometry.coordinates[1], lon: data.geometry.coordinates[0] };
         }
     }
@@ -344,8 +345,7 @@
         if (!networkService.connected) {
             return Promise.resolve([]);
         }
-        return getJSON(
-            queryString(
+        const url =queryString(
                 {
                     q: options.query,
                     lat: options.location && options.location.lat,
@@ -353,9 +353,10 @@
                     lang: options.language,
                     limit: 40
                 },
-                'http://photon.komoot.de/api'
+                'https://photon.komoot.de/api'
             )
-        ).then(function (results: any) {
+            console.log('photonSearch', url);
+        return getJSON(url).then(function (results: any) {
             return results.features.filter((r) => r.properties.osm_type !== 'R').map((f) => new PhotonFeature(f));
         });
     }
@@ -381,13 +382,13 @@
         await Promise.all([
             searchInGeocodingService(options)
                 .then((r) => result.push(...r))
-                .catch((err) => {}),
+                .catch((err) => {console.error('searchInGeocodingService', err);}),
             herePlaceSearch(options)
                 .then((r) => result.push(...r))
-                .catch((err) => {}),
+                .catch((err) => {console.error('herePlaceSearch', err);}),
             photonSearch(options)
                 .then((r) => result.push(...r))
-                .catch((err) => {})
+                .catch((err) => {console.error('photonSearch', err);})
         ]);
         if (result.length === 0) {
             showSnack({ message: l('no_result_found') });
@@ -443,6 +444,7 @@
         if (!item) {
             return;
         }
+        console.log('onItemTap', item);
         mapContext.selectItem({ item, isFeatureInteresting: true, zoom: 14 });
         unfocus();
     }
