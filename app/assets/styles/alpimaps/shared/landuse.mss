@@ -10,7 +10,7 @@
 #landcover {
 	[class=rock][zoom>=8] {
 		polygon-fill: rgba(112, 112, 112, 0.3);
-		[subclass = 'cliff'][zoom >= 13] {
+		[subclass = 'cliff'][zoom >= 13]::cliff {
 			// line-color: #9F9F9E;
 			// line-width: 3;
 			line-pattern-file: url('symbols/cliff.svg');
@@ -38,8 +38,8 @@
 	[subclass='sand'][zoom>=8] {
 		polygon-fill: @beach;
 	}
-	[class=ice][zoom>=8],
-	[subclass='glacier'][zoom>=8] {
+	[class=ice][zoom>=6],
+	[subclass='glacier'][zoom>=6] {
 		polygon-fill: @ice;
 		line-width:0.2;
 		line-color: @ice_outline;

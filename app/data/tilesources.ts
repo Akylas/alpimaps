@@ -4,20 +4,7 @@ import { RasterTileLayerOptions } from '@nativescript-community/ui-carto/layers/
 export interface DataProviderOptions {
     [k: string]: any;
 }
-export interface DataProvider {
-    url?: string | string[];
-    sourceOptions?: Partial<HTTPTileDataSourceOptions>;
-    layerOptions?: Partial<RasterTileLayerOptions>;
-    urlOptions?: DataProviderOptions;
-    category?: string;
-    legend?: string;
-    isOverlay?: boolean;
-    cacheable?: boolean;
-    downloadable?: boolean;
-    attribution?: string;
-    devHidden?: boolean;
-    variants?: { [k: string]: Provider | string };
-}
+
 export interface ProviderOptions extends DataProviderOptions {
     variantName?: string;
 }
@@ -27,6 +14,8 @@ export interface Provider {
     name?: string;
     id?: string;
     cacheable?: boolean;
+    hillshade?: boolean;
+    terrarium?: boolean;
     downloadable?: boolean;
     devHidden?: boolean;
     isOverlay?: boolean;
@@ -38,7 +27,7 @@ export interface Provider {
     variants?: { [k: string]: Provider | string };
 }
 
-export const data: { [k: string]: DataProvider } = {
+export const data: { [k: string]: Provider } = {
     // AkMap: {
     //     sourceOptions: {
     //         maxZoom: 24
@@ -85,6 +74,13 @@ export const data: { [k: string]: DataProvider } = {
         category: 'ski',
         url: 'https://tiles.skimap.org/openskimap2x/{z}/{x}/{y}.png',
         attribution: '&copy; <a href="http://www.openskimap.org">OpenSkiMap</a>, {attribution.OpenStreetMap}',
+        isOverlay: true,
+    },
+
+    ElevationTiles: {
+        url:'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
+        hillshade:true,
+        terrarium:false,
         isOverlay: true,
     },
     // OpenSnowMap: {
