@@ -502,7 +502,7 @@
                 });
                 // console.log('get elevation done ', item);
             }
-            console.log('selectedItem', item);
+            // console.log('selectedItem', item);
             // const vectorTileDecoder = getVectorTileDecoder();
             // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
             // vectorTileDecoder.setStyleParameter('selected_name', (item.properties && item.properties.name) || '');
@@ -909,8 +909,7 @@
             const layerIndex = LAYERS_ORDER.indexOf(layerId);
             let realIndex = 0;
             addedLayers.some((s) => {
-                const i =LAYERS_ORDER.indexOf(s as any);
-                if (i >= 0 && i < layerIndex) {
+                if (LAYERS_ORDER.indexOf(s as any) < layerIndex) {
                     realIndex++;
                     return false;
                 }

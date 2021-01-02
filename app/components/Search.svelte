@@ -108,7 +108,6 @@
                 neighbourhood
             };
             this.properties = actualProperties;
-            console.log('test', actualName, name)
             this.properties.name = actualName;
             this.position = { lat: data.geometry.coordinates[1], lon: data.geometry.coordinates[0] };
         }
@@ -444,7 +443,7 @@
         if (!item) {
             return;
         }
-        console.log('onItemTap', item);
+        // console.log('onItemTap', item);
         mapContext.selectItem({ item, isFeatureInteresting: true, zoom: 14 });
         unfocus();
     }
