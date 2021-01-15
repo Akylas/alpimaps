@@ -17,7 +17,7 @@
         line-opacity: linear([view: : zoom], (5, 0.8), (6, 0.9));
         line-dasharray: 1.35, 0.9;
     }
-    [admin_level>=5][zoom>=6][zoom<=14] {
+    [admin_level=5][zoom>=6][zoom<=14] {
         line-color: @border_region;
         line-width: linear([view: : zoom], (5, 0.7), (6, 0.8), (7, 0.9), (8, 0.9), (9, 1), (10, 1.2));
         line-opacity: linear([view: : zoom], (5, 0.8), (6, 0.9));

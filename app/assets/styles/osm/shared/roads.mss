@@ -1,5 +1,6 @@
 /* For the main linear features, such as roads and railways. */
 @name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
+// @selected_route_line_width: ([osmid] = [nuti::selected_id]) 4 ? 2;
 
 
 // Areas
@@ -1665,43 +1666,6 @@
 		}
 	}
 }
-#route['nuti::routes'>0]{
-	[ref!=null],
-	[zoom>=12] {
-		line-color: @route;
-		line-opacity: 0.35;
-		line-width: 1;
-		line-geometry-transform: translate(1,1);
-		[ref!=null][name!=null]{
-			text-name: [name];
-			// text-avoid-edges: false;
-			text-placement: line;
-			text-wrap-before: true;
-			text-face-name: @mont;
-			text-fill: @route;
-			text-size: linear([view::zoom], (13, 6.0), (18, 8.0));
-			text-halo-fill: @minor_halo;
-			text-halo-radius: 0.5;
-			text-halo-rasterizer: fast;
-			text-min-distance: 5;
-			// [zoom>=15][name!=null] {
-			// 	text-dy: 3;
-			// 	text-name: [name];
-				
-			// }
-		}
-	}
-	// [ref!=null][zoom<=12] {
-	// 	text-placement: line;
-	// 	text-name: [ref];
-	// 	text-size: 9;
-	// 	// text-file: url(shield/default-[ref_length].svg);
-	// 	text-face-name: @mont;
-	// 	text-fill: #333;
-		
-	// }
-	
-}
 
 #aeroway {
 	[class=runway][zoom>=11] {
@@ -1803,3 +1767,44 @@
 // 	}
 // }
 
+
+#route['nuti::routes'>0]{
+	[network=4][zoom>=10],
+	[network=3][zoom>=9],
+	[network=2][zoom>=8],
+	[network=1] {
+		[class=hiking] {
+			// back/line-width:linear([view::zoom], (4, 2),  (10, 2),  (12, 3));
+			line-width: linear([view::zoom], (4, 1),  (10, 1),  (12, 2));
+			// back/line-color: ([color] ? [color] : @hiking_route);
+			line-color:([color] ? [color] : @hiking_route);
+			// line-color:([osmid] = [nuti::selected_id]) ? #ffffff : ([color] ? [color] : @hiking_route);
+		}
+		[class=bicycle] {
+			// back/line-width:2;
+			line-width: 1;
+			line-color:([color] ? [color] : @biking_route);
+			// line-color:([osmid] = [nuti::selected_id]) ? #ffffff : ([color] ? [color] : @biking_route);
+			// back/line-color: ([color] ? [color] : @biking_route);
+		}
+		// back/line-opacity: [osmid] = [nuti::selected_id] ? 1: 0;
+		// line-opacity: 0.65;
+		line-dasharray: [osmid] = [nuti::selected_id] ? (0,0) :  (1,4);
+	
+		line-cap: round;
+		line-join: round;
+		[ref!=null]{
+			text-fill: [textcolor] ? [textcolor] : ([color] ? [color] : @road_text);
+			text-name: [ref];
+			text-placement: line;
+			text-wrap-before: true;
+			text-face-name: @mont;
+			text-size: linear([view::zoom], (13, 6.0), (18, 8.0));
+			text-halo-fill: @minor_halo;
+			text-halo-radius: 0.5;
+			text-halo-rasterizer: fast;
+			text-dy: 2;
+		}
+	}
+	
+}

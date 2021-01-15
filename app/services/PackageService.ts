@@ -23,7 +23,12 @@ import {
     ReverseGeocodingRequest,
     ReverseGeocodingService
 } from '@nativescript-community/ui-carto/geocoding/service';
-import { Feature, FeatureCollection, VectorTileFeatureCollection } from '@nativescript-community/ui-carto/geometry/feature';
+import {
+    Feature,
+    FeatureCollection,
+    VectorTileFeature,
+    VectorTileFeatureCollection
+} from '@nativescript-community/ui-carto/geometry/feature';
 import { HillshadeRasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
 import { CartoOnlineVectorTileLayer, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
 import {
@@ -101,7 +106,7 @@ function getGradeColor(grade) {
 const average = (arr) => arr.reduce((p, c) => p + c, 0) / arr.length;
 
 let PackageManagerListener;
-if (gVars.packageServiceEnabled) {
+if (__CARTO_PACKAGESERVICE__) {
     PackageManagerListener = class implements CartoPackageManagerListener {
         constructor(private type: PackageType, public superThis: PackageService) {}
         onPackageCancelled(id: string, version: number) {
@@ -159,7 +164,7 @@ class PackageService extends Observable {
         return Folder.fromPath(path.join(this.docPath, 'routingpackages'));
     }
     get packageManager() {
-        if (gVars.packageServiceEnabled && !this._packageManager) {
+        if (__CARTO_PACKAGESERVICE__ && !this._packageManager) {
             this._packageManager = new CartoPackageManager({
                 source: 'carto.streets',
                 dataFolder: this.dataFolder.path,
@@ -169,7 +174,7 @@ class PackageService extends Observable {
         return this._packageManager;
     }
     get geoPackageManager() {
-        if (gVars.packageServiceEnabled && !this._geoPackageManager) {
+        if (__CARTO_PACKAGESERVICE__ && !this._geoPackageManager) {
             this._geoPackageManager = new CartoPackageManager({
                 source: 'geocoding:carto.streets',
                 dataFolder: this.geoDataFolder.path,
@@ -179,7 +184,7 @@ class PackageService extends Observable {
         return this._geoPackageManager;
     }
     get routingPackageManager() {
-        if (gVars.packageServiceEnabled && !this._routingPackageManager) {
+        if (__CARTO_PACKAGESERVICE__ && !this._routingPackageManager) {
             this._routingPackageManager = new CartoPackageManager({
                 source: 'routing:carto.streets',
                 dataFolder: this.routingDataFolder.path,
@@ -190,7 +195,7 @@ class PackageService extends Observable {
     }
     started = false;
     start() {
-        if (gVars.packageServiceEnabled) {
+        if (__CARTO_PACKAGESERVICE__) {
             if (this.started) {
                 return;
             }
@@ -208,7 +213,7 @@ class PackageService extends Observable {
         }
     }
     updatePackagesList(manager: CartoPackageManager) {
-        if (gVars.packageServiceEnabled) {
+        if (__CARTO_PACKAGESERVICE__) {
             const age = manager.getServerPackageListAge();
             if (age <= 0 || age > 3600 * 24 * 30) {
                 return manager.startPackageListDownload();
@@ -217,7 +222,7 @@ class PackageService extends Observable {
         return false;
     }
     updatePackagesLists() {
-        if (gVars.packageServiceEnabled) {
+        if (__CARTO_PACKAGESERVICE__) {
             return (
                 this.updatePackagesList(this.packageManager) ||
                 this.updatePackagesList(this.geoPackageManager) ||
@@ -321,7 +326,7 @@ class PackageService extends Observable {
     }
     dataSourcehasContours = false;
     getDataSource(withContour = false) {
-        if (gVars.packageServiceEnabled) {
+        if (__CARTO_PACKAGESERVICE__) {
             if (this.dataSource && this.dataSourcehasContours !== withContour) {
                 this.dataSource = null;
             }
@@ -385,7 +390,7 @@ class PackageService extends Observable {
     //         .readTextSync();
     // }
     getVectorTileDecoder(style: string = 'voyager') {
-        if (gVars.packageServiceEnabled && !this.vectorTileDecoder) {
+        if (__CARTO_PACKAGESERVICE__ && !this.vectorTileDecoder) {
             this.vectorTileDecoder = new CartoOnlineVectorTileLayer({ style: CartoMapStyle.VOYAGER }).getTileDecoder();
         }
         return this.vectorTileDecoder;
@@ -441,17 +446,19 @@ class PackageService extends Observable {
         return items;
     }
 
-    convertFeatureCollection(features: FeatureCollection) {
-        let feature: Feature;
-        if (features.getFeatureCount() > 0) {
-            feature = features.getFeature(0);
-            const r = {
-                properties: feature.properties,
-                position: feature.geometry ? fromNativeMapPos(feature.geometry.getCenterPos()) : undefined
-            } as GeoResult;
-
-            return r;
+    convertFeatureCollection(features: VectorTileFeatureCollection, options: SearchRequest) {
+        const projection = this.vectorTileSearchService.options.layer.getDataSource().getProjection();
+        let feature: VectorTileFeature;
+        const count = features.getFeatureCount();
+        const result = [];
+        for (let index = 0; index < count; index++) {
+            feature = features.getFeature(index);
+            result.push({
+                properties: { layer: feature.layerName, ...feature.properties } as any,
+                position: feature.geometry ? (projection.toWgs84(feature.geometry.getCenterPos()) as any) : undefined
+            } as GeoResult);
         }
+        return result;
     }
     convertGeoCodingResult(result: GeocodingResult, full = false) {
         let feature: Feature;
@@ -532,8 +539,8 @@ class PackageService extends Observable {
         if (!this._vectorTileSearchService) {
             if (this.localVectorTileLayer) {
                 this._vectorTileSearchService = new VectorTileSearchService({
-                    minZoom: 10,
-                    maxZoom: 10,
+                    minZoom: 14,
+                    maxZoom: 14,
                     layer: this.localVectorTileLayer
                 });
             }
@@ -566,12 +573,12 @@ class PackageService extends Observable {
         }
         return this.searchInGeocodingService(service, options);
     }
-    searchInVectorTiles(options: SearchRequest): Promise<VectorTileFeatureCollection> {
+    async searchInVectorTiles(options: SearchRequest): Promise<VectorTileFeatureCollection> {
         const service = this.vectorTileSearchService;
         if (!service) {
-            return Promise.resolve(null);
+            return null;
         }
-        return new Promise((resolve) => service.findFeatures(options, (result) => resolve(result)));
+        return new Promise((resolve) => service.findFeatures(options, resolve));
     }
     prepareGeoCodingResult(geoRes: GeoResult) {
         const address: any = {};
@@ -793,13 +800,12 @@ class PackageService extends Observable {
             }
             lastGrade = grade;
         }
-        if (colors[colors.length - 1].distance < grades.length - 1) {
+        if (colors[colors.length - 1].d < grades.length - 1) {
             colors.push({
                 d: grades.length - 1,
                 color: getGradeColor(lastGrade)
             });
         }
-
         result.dmin = Math.round(-descent);
         result.dplus = Math.round(ascent);
         result.colors = colors;
@@ -807,7 +813,9 @@ class PackageService extends Observable {
     }
     async getElevationProfile(item: Item) {
         if (this.hillshadeLayer && item.route) {
-            console.log('getElevationProfile', item.route);
+            if (DEV_LOG) {
+                console.log('getElevationProfile', item.route);
+            }
             const elevations = await this.getElevations(item.route.positions);
             if (DEV_LOG) {
                 console.log('getElevations done', elevations.size());
@@ -818,7 +826,7 @@ class PackageService extends Observable {
     }
 
     offlineRoutingSearchService() {
-        if (gVars.packageServiceEnabled) {
+        if (__CARTO_PACKAGESERVICE__) {
             if (!this._offlineRoutingSearchService) {
                 this._offlineRoutingSearchService = new PackageManagerValhallaRoutingService({
                     packageManager: packageService.routingPackageManager
@@ -826,7 +834,7 @@ class PackageService extends Observable {
             }
             return this._offlineRoutingSearchService;
         } else {
-            console.log('offlineRoutingSearchService', !!this._localOfflineRoutingSearchService);
+            // console.log('offlineRoutingSearchService', !!this._localOfflineRoutingSearchService);
             if (!this._localOfflineRoutingSearchService) {
                 const folderPath = getDefaultMBTilesDir();
                 if (Folder.exists(folderPath)) {

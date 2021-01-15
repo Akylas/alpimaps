@@ -165,6 +165,8 @@ Map {
 @state_halo:         #fbf8f3;
 
 @route:            #0000ff; 
+@hiking_route:            #8800ff; 
+@biking_route:            #0000ff; 
 @continent_text:     #405c78; 
 @continent_halo:     #fbf8f3;
 

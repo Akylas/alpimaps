@@ -6,6 +6,8 @@ const { subscribe, set, update } = writable({
     showGlobe: getBoolean('showGlobe', false),
     show3DBuildings: getBoolean('show3DBuildings', false),
     showContourLines: getBoolean('showContourLines', true),
+    showSlopePercentages: getBoolean('showSlopePercentages', false),
+    showRoutes: getBoolean('showRoutes', false),
     contourLinesOpacity: getNumber('contourLinesOpacity', 1),
     zoomBiais: getString('zoomBiais', '0'),
     preloading: getBoolean('preloading', false)
@@ -47,6 +49,18 @@ const store = {
         update((s) => {
             s.showContourLines = value;
             setBoolean('showContourLines', value);
+            return s;
+        }),
+    setShowRoutes: (value: boolean) =>
+        update((s) => {
+            s.showRoutes = value;
+            setBoolean('showRoutes', value);
+            return s;
+        }),
+    setShowSlopePercentages: (value: boolean) =>
+        update((s) => {
+            s.showSlopePercentages = value;
+            setBoolean('showSlopePercentages', value);
             return s;
         }),
     setPreloading: (value: boolean) =>

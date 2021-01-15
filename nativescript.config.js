@@ -5,7 +5,7 @@ module.exports = {
     appPath: 'app',
     // profiling: 'timeline',
     android: {
-        maxLogcatObjectSize: 2048,
+        maxLogcatObjectSize: 4096,
         markingMode: 'none',
         v8Flags: '--expose_gc',
         codeCache: true,

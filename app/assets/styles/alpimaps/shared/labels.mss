@@ -4,7 +4,7 @@
 @osm_icon: [nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : [nuti::osm-[class]];
 @featureId: [osmid];
 
-// @id_test: (([osm_id]) = [nuti::selected_id]) ? #f00 : #fff;
+// @selected: ([osm_id] = [nuti::selected_id]) ? #f00 : #fff;
 // @name_test: (([name]) = [nuti::selected_name]) ? #0f0 : #fff;
 
 #water_name[class=ocean][zoom>=3][zoom<=9],

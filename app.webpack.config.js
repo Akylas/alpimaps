@@ -7,9 +7,17 @@ const CopyPlugin = require('copy-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const SentryCliPlugin = require('@sentry/webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
-const {CleanWebpackPlugin} = require('clean-webpack-plugin');
+const IgnoreNotFoundExportPlugin = require('./IgnoreNotFoundExportPlugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 module.exports = (env, params = {}) => {
+    Object.keys(env).forEach((k) => {
+        if (env[k] === 'false' || env[k] === '0') {
+            env[k] = false;
+        } else if (env[k] === 'true' || env[k] === '1') {
+            env[k] = true;
+        }
+    });
     if (env.adhoc) {
         env = Object.assign(
             {},
@@ -23,13 +31,6 @@ module.exports = (env, params = {}) => {
             env
         );
     }
-    Object.keys(env).forEach((k) => {
-        if (env[k] === 'false' || env[k] === '0') {
-            env[k] = false;
-        } else if (env[k] === 'true' || env[k] === '1') {
-            env[k] = true;
-        }
-    });
     const nconfig = require('./nativescript.config');
     const {
         appPath = nconfig.appPath,
@@ -51,39 +52,40 @@ module.exports = (env, params = {}) => {
         adhoc // --env.adhoc
     } = env;
     console.log('env', env);
+    env.appPath = nconfig.appPath;
+    env.appResourcesPath = nconfig.appResourcesPath;
     const config = webpackConfig(env, params);
     const mode = production ? 'production' : 'development';
     const platform = env && ((env.android && 'android') || (env.ios && 'ios'));
     const tsconfig = 'tsconfig.json';
     const projectRoot = params.projectRoot || __dirname;
-    const dist = resolve(projectRoot, nsWebpack.getAppPath(platform, projectRoot));
+    const dist = nsWebpack.Utils.platform.getDistPath();
     const appResourcesFullPath = resolve(projectRoot, appResourcesPath);
 
-    // if (!production) {
-        config.stats = {
-            warningsFilter: /export .* was not found in/
-        };
-    // } else {
-        // config.stats = 'verbose';
-    // }
+    // config.stats = {
+    //     modulesSpace:Infinity,
+    //     optimizationBailout: true
 
-    if (platform === 'android') {
-        // env.appComponents = [resolve(projectRoot, 'app/common/services/android/BgService.ts'), resolve(projectRoot, 'app/common/services/android/BgServiceBinder.ts')];
-    }
+    // }
 
     // safe as long as we dont use calc in css
     // config.externals.push('reduce-css-calc');
     config.externals.push('~/osm_icons.json');
-    config.externals.push(function (context, request, callback) {
+    config.externals.push(function ({ context, request }, cb) {
         if (/i18n$/i.test(context)) {
-            return callback(null, './i18n/' + request);
+            return cb(null, './i18n/' + request);
         }
-        callback();
+        cb();
     });
-    console.log('config.externals', config.externals);
+    // console.log('config.externals', config.externals);
 
     const coreModulesPackageName = fork ? '@akylas/nativescript' : '@nativescript/core';
-    config.resolve.modules = [resolve(__dirname, `node_modules/${coreModulesPackageName}`), resolve(__dirname, 'node_modules'), `node_modules/${coreModulesPackageName}`, 'node_modules'];
+    config.resolve.modules = [
+        resolve(__dirname, `node_modules/${coreModulesPackageName}`),
+        resolve(__dirname, 'node_modules'),
+        `node_modules/${coreModulesPackageName}`,
+        'node_modules'
+    ];
     Object.assign(config.resolve.alias, {
         '@nativescript/core': `${coreModulesPackageName}`,
         'tns-core-modules': `${coreModulesPackageName}`
@@ -113,17 +115,18 @@ module.exports = (env, params = {}) => {
     const locales = readdirSync(join(projectRoot, appPath, 'i18n'))
         .filter((s) => s.endsWith('.json'))
         .map((s) => s.replace('.json', ''));
-    console.log('sentry', !!sentry);
+    // console.log('sentry', !!sentry);
     const defines = {
         PRODUCTION: !!production,
         process: 'global.process',
         'global.TNS_WEBPACK': 'true',
         'gVars.platform': `"${platform}"`,
+        __UI_XML_PARSER__: false,
         'global.isIOS': isIOS,
         'global.autoRegisterUIModules': false,
         'global.isAndroid': isAndroid,
         'gVars.internalApp': false,
-        'gVars.packageServiceEnabled': cartoLicense,
+        __CARTO_PACKAGESERVICE__: cartoLicense,
         TNS_ENV: JSON.stringify(mode),
         SUPPORTED_LOCALES: JSON.stringify(locales),
         'gVars.sentry': !!sentry,
@@ -174,18 +177,18 @@ module.exports = (env, params = {}) => {
     const mdiIcons = JSON.parse(
         `{${mdiSymbols.variables[mdiSymbols.variables.length - 1].value.replace(/" (F|0)(.*?)([,\n]|$)/g, '": "$1$2"$3')}}`
     );
-    // console.log('mdiIcons', mdiIcons)
 
     const scssPrepend = `$mdi-fontFamily: ${platform === 'android' ? 'materialdesignicons-webfont' : 'Material Design Icons'};`;
-    const scssLoaderRuleIndex = config.module.rules.findIndex((r) => Array.isArray(r.use) && r.use.indexOf('sass-loader') !== -1);
+    const scssLoaderRuleIndex = config.module.rules.findIndex((r) => r.test && r.test.toString().indexOf('scss') !== -1);
     config.module.rules.splice(
         scssLoaderRuleIndex,
         1,
         {
             test: /app\.scss$/,
             use: [
+                { loader: 'apply-css-loader' },
                 {
-                    loader: '@nativescript/webpack/helpers/css2json-loader',
+                    loader: 'css2json-loader',
                     options: { useForImports: true }
                 },
                 {
@@ -294,32 +297,30 @@ module.exports = (env, params = {}) => {
     }
     // we remove default rules
     config.plugins = config.plugins.filter(
-        (p) =>
-            ['DefinePlugin', 'CleanWebpackPlugin', 'CopyPlugin', 'Object', 'ForkTsCheckerWebpackPlugin'].indexOf(
-                p.constructor.name
-            ) === -1
+        (p) => ['CleanWebpackPlugin', 'CopyPlugin', 'Object', 'ForkTsCheckerWebpackPlugin'].indexOf(p.constructor.name) === -1
     );
-    // console.log('plugins after clean', config.plugins);
+    console.log('plugins after clean', config.plugins);
     // we add our rules
-    const copyOptions = { ignore: [`**/${relative(appPath, appResourcesFullPath)}/**`] };
+    const globOptions = { dot: false, ignore: [`**/${relative(appPath, appResourcesFullPath)}/**`] };
+
+    const context = nsWebpack.Utils.platform.getEntryDirPath();
     const copyPatterns = [
-        { from: 'fonts/!(ios|android)/**/*', to: 'fonts', flatten: true, noErrorOnMissing: true, globOptions: { dot: false } },
-        { from: 'fonts/*', to: 'fonts', flatten: true, noErrorOnMissing: true, globOptions: { dot: false } },
-        { from: `fonts/${platform}/**/*`, to: 'fonts', flatten: true, noErrorOnMissing: true, globOptions: { dot: false } },
-        { from: '**/*.jpg', noErrorOnMissing: true, globOptions: { dot: false } },
-        { from: '**/*.png', noErrorOnMissing: true, globOptions: { dot: false } },
-        { from: 'assets/**/*', noErrorOnMissing: true, globOptions: { dot: false } },
-        { from: 'i18n/**/*', noErrorOnMissing: true, globOptions: { dot: false } },
+        { context, from: 'fonts/!(ios|android)/**/*', to: 'fonts/[name].[ext]', noErrorOnMissing: true, globOptions },
+        { context, from: 'fonts/*', to: 'fonts/[name].[ext]', noErrorOnMissing: true, globOptions },
+        { context, from: `fonts/${platform}/**/*`, to: 'fonts/[name].[ext]', noErrorOnMissing: true, globOptions },
+        { context, from: '**/*.jpg', noErrorOnMissing: true, globOptions },
+        { context, from: '**/*.png', noErrorOnMissing: true, globOptions },
+        { context, from: 'assets/**/*', noErrorOnMissing: true, globOptions },
+        { context, from: 'i18n/**/*', globOptions },
         {
-            from: '../node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf',
+            from: 'node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf',
             to: 'fonts',
-            noErrorOnMissing: true,
-            globOptions: { dot: false }
+            globOptions
         },
         {
-            from: '../css/osm.scss',
-            to:'osm_icons.json',
-            transform: function(manifestBuffer, path) {
+            from: 'css/osm.scss',
+            to: 'osm_icons.json',
+            transform: (manifestBuffer, path) => {
                 const osmSymbols = symbolsParser.parseSymbols(manifestBuffer.toString());
                 // console.log('osmSymbols', osmSymbols);
                 const osmIcons = osmSymbols.variables.reduce(function (acc, value) {
@@ -331,9 +332,11 @@ module.exports = (env, params = {}) => {
                 // console.log('osmIcons', osmIcons);
                 return Buffer.from(JSON.stringify(osmIcons));
             },
+            globOptions
         }
     ];
-    config.plugins.unshift(new CopyPlugin(copyPatterns, copyOptions));
+    config.plugins.unshift(new CopyPlugin({ patterns: copyPatterns }));
+    config.plugins.push(new IgnoreNotFoundExportPlugin());
 
     // save as long as we dont use calc in css
     // config.plugins.push(new webpack.IgnorePlugin(/reduce-css-calc/));
@@ -345,7 +348,9 @@ module.exports = (env, params = {}) => {
             cleanOnceBeforeBuildPatterns: itemsToClean
         })
     );
-    config.plugins.unshift(new webpack.DefinePlugin(defines));
+
+    Object.assign(config.plugins.find((p) => p.constructor.name === 'DefinePlugin').definitions, defines);
+    // config.plugins.unshift(new webpack.DefinePlugin(defines));
     config.plugins.push(
         new webpack.EnvironmentPlugin({
             NODE_ENV: JSON.stringify(mode), // use 'development' unless process.env.NODE_ENV is defined
@@ -355,7 +360,7 @@ module.exports = (env, params = {}) => {
 
     config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${locales.join('|')})$`)));
     if (fork && nsconfig.cssParser !== 'css-tree') {
-            config.plugins.push(new webpack.IgnorePlugin(/css-tree$/));
+        config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /css-tree$/ }));
     }
 
     config.devtool = inlineSourceMap ? 'inline-cheap-source-map' : false;
@@ -413,14 +418,14 @@ module.exports = (env, params = {}) => {
         );
     }
 
-    // config.optimization.usedExports = true;
+    config.optimization.usedExports = true;
     config.optimization.minimize = uglify !== undefined ? !!uglify : production;
     const isAnySourceMapEnabled = !!sourceMap || !!hiddenSourceMap || !!inlineSourceMap;
     config.optimization.minimizer = [
         new TerserPlugin({
             parallel: true,
-            cache: true,
-            sourceMap: isAnySourceMapEnabled,
+            // cache: true,
+            // sourceMap: isAnySourceMapEnabled,
             terserOptions: {
                 ecma: 2017,
                 module: true,

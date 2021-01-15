@@ -84,6 +84,9 @@ export function getBoundsZoomLevel(bounds: MapBounds<LatLonKeys>, mapDim: { widt
 export function toRadians(value) {
     return value * TO_RAD;
 }
+export function toDegrees(value) {
+    return value * TO_DEG;
+}
 function wrap(n, min, max) {
     return n >= min && n < max ? n : mod(n - min, max - min) + min;
 }

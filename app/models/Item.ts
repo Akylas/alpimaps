@@ -52,6 +52,7 @@ export class Item {
         osm_key?: string;
         class?: string;
         layer?: string;
+        extent?: string | [number, number, number, number];
     } | null;
 
     public provider!: 'photon' | 'here' | 'carto' | null;
@@ -74,7 +75,7 @@ export type IItem = Partial<Item> & {
 };
 
 export class ItemRepository extends CrudRepository<Item> {
-    constructor(database: NSQLDatabase, private routeRepository:RouteRepository) {
+    constructor(database: NSQLDatabase, private routeRepository: RouteRepository) {
         super({
             database,
             table: 'Items',
@@ -100,7 +101,6 @@ export class ItemRepository extends CrudRepository<Item> {
 
     async createItem(item: IItem) {
         const toSave = {};
-        console.log('createItem', item);
         Object.keys(item).forEach((k) => {
             if (k === 'route') {
                 return;
@@ -154,16 +154,16 @@ export class ItemRepository extends CrudRepository<Item> {
         let element = await this.get(itemId);
         element = this.prepareGetItem(element);
         if (element.routeId) {
-            element.route = await this.routeRepository.getRoute(element.routeId)
+            element.route = await this.routeRepository.getRoute(element.routeId);
         }
         return element;
     }
     async searchItem(where?: SqlQuery | null, orderBy?: SqlQuery | null) {
         const result = (await this.search(where, orderBy)).slice();
         for (let index = 0; index < result.length; index++) {
-            let element = this.prepareGetItem(result[index]);
+            const element = this.prepareGetItem(result[index]);
             if (element.routeId) {
-                element.route =  await this.routeRepository.getRoute(element.routeId)
+                element.route = await this.routeRepository.getRoute(element.routeId);
             }
             result[index] = element;
         }

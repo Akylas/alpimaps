@@ -251,7 +251,7 @@
 		<NutiParameter name="osm-waterfall" type="string" value="" />
 		<NutiParameter name="osm-wilderness_hut" type="string" value="" />
 		<NutiParameter name="osm-windmill" type="string" value="" />
-		<NutiParameter name="routes" type="int" value="0">
+		<NutiParameter name="routes" type="int" value="1">
 			<Value id="0" value="0" />
 			<Value id="1" value="1" />
 		</NutiParameter>
@@ -3735,7 +3735,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>8735660</MinScaleDenominator>
 			<MaxScaleDenominator>17471320</MaxScaleDenominator>
-			<Filter>[admin_level] &gt;= 5 or [admin_level] = 4</Filter>
+			<Filter>[admin_level] = 5 or [admin_level] = 4</Filter>
 			<LineSymbolizer stroke="rgb(115,114,107)" stroke-dasharray="1.35,0.9" stroke-opacity="linear([view: : zoom],5,0.8,6,0.9)" stroke-width="linear([view: : zoom],5,0.7,6,0.8,7,0.9,8,0.9,9,1,10,1.2)" />
 		</Rule>
 		<Rule name="auto">
@@ -3753,7 +3753,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>8735660</MaxScaleDenominator>
-			<Filter>[admin_level] &gt;= 5 or [admin_level] = 4</Filter>
+			<Filter>[admin_level] = 5 or [admin_level] = 4</Filter>
 			<LineSymbolizer stroke="rgb(115,114,107)" stroke-dasharray="1.35,0.9" stroke-opacity="linear([view: : zoom],5,0.8,6,0.9)" stroke-width="linear([view: : zoom],5,0.7,6,0.8,7,0.9,8,0.9,9,1,10,1.2)" />
 		</Rule>
 		<Rule name="combined">
@@ -3761,34 +3761,6 @@
 			<MaxScaleDenominator>8735660</MaxScaleDenominator>
 			<Filter>[admin_level] = 2</Filter>
 			<LineSymbolizer stroke="rgb(99,99,92)" stroke-opacity="linear([view: : zoom],2,0.7,3,0.8,10,0.8,14,0.4)" stroke-width="linear([view: : zoom],3,0.5,4,0.6,5,0.8,6,0.85,7,1,8,1.1,9,1.4)" />
-		</Rule>
-	</Style>
-	<Style name="route" filter-mode="first">
-		<Rule name="auto">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[nuti::routes] &gt; 0 and [ref] &lt;&gt; null and [ref] &lt;&gt; null and [name] &lt;&gt; null</Filter>
-			<LineSymbolizer geometry-transform="translate(1,1)" stroke="rgb(0,0,255)" stroke-opacity="0.35" stroke-width="1" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(0,0,255)" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" minimum-distance="5" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[name]</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[nuti::routes] &gt; 0 and [ref] &lt;&gt; null</Filter>
-			<LineSymbolizer geometry-transform="translate(1,1)" stroke="rgb(0,0,255)" stroke-opacity="0.35" stroke-width="1" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[name] &lt;&gt; null and ( [nuti::routes] &gt; 0 and [ref] &lt;&gt; null and [ref] &lt;&gt; null or ( [nuti::routes] &gt; 0 and [ref] &lt;&gt; null ) )</Filter>
-			<LineSymbolizer geometry-transform="translate(1,1)" stroke="rgb(0,0,255)" stroke-opacity="0.35" stroke-width="1" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(0,0,255)" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" minimum-distance="5" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[name]</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[nuti::routes] &gt; 0</Filter>
-			<LineSymbolizer geometry-transform="translate(1,1)" stroke="rgb(0,0,255)" stroke-opacity="0.35" stroke-width="1" />
 		</Rule>
 	</Style>
 	<Style name="aerodrome_label" filter-mode="first">
@@ -16393,6 +16365,344 @@
 			<TextSymbolizer avoid-edges="1" face-name="Montserrat Regular" fill="rgb(101,101,94)" minimum-distance="linear([view::zoom],17,100,18,50,19,20)" size="linear([view::zoom],17,9,18,11)">[housenumber]</TextSymbolizer>
 		</Rule>
 	</Style>
+	<Style name="route" filter-mode="first">
+		<Rule name="auto">
+			<MinScaleDenominator>4367830</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [ref] &lt;&gt; null and [class] = 'bicycle'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(0,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>4367830</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [ref] &lt;&gt; null and [class] = 'hiking'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(136,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],4,1,10,1,12,2)" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>4367830</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [ref] &lt;&gt; null</Filter>
+			<LineSymbolizer stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>4367830</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [class] = 'bicycle'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(0,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>4367830</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [class] = 'hiking'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(136,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],4,1,10,1,12,2)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>4367830</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1</Filter>
+			<LineSymbolizer stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 2 and [ref] &lt;&gt; null and [class] = 'bicycle'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(0,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 2 and [ref] &lt;&gt; null and [class] = 'hiking'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(136,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],4,1,10,1,12,2)" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 2 and [ref] &lt;&gt; null</Filter>
+			<LineSymbolizer stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 2 and [class] = 'bicycle'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(0,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 2 and [class] = 'hiking'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(136,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],4,1,10,1,12,2)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [ref] &lt;&gt; null and [class] = 'bicycle'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(0,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [ref] &lt;&gt; null and [class] = 'hiking'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(136,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],4,1,10,1,12,2)" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [ref] &lt;&gt; null</Filter>
+			<LineSymbolizer stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 2</Filter>
+			<LineSymbolizer stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [class] = 'bicycle'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(0,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [class] = 'hiking'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(136,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],4,1,10,1,12,2)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1</Filter>
+			<LineSymbolizer stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 3 and [ref] &lt;&gt; null and [class] = 'bicycle'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(0,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 3 and [ref] &lt;&gt; null and [class] = 'hiking'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(136,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],4,1,10,1,12,2)" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 3 and [ref] &lt;&gt; null</Filter>
+			<LineSymbolizer stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 2 and [ref] &lt;&gt; null and [class] = 'bicycle'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(0,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 2 and [ref] &lt;&gt; null and [class] = 'hiking'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(136,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],4,1,10,1,12,2)" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 2 and [ref] &lt;&gt; null</Filter>
+			<LineSymbolizer stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[class] = 'bicycle' and ( [nuti::routes] &gt; 0 and [network] = 3 or ( [nuti::routes] &gt; 0 and [network] = 2 ) )</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(0,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[class] = 'hiking' and ( [nuti::routes] &gt; 0 and [network] = 3 or ( [nuti::routes] &gt; 0 and [network] = 2 ) )</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(136,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],4,1,10,1,12,2)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [ref] &lt;&gt; null and [class] = 'bicycle'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(0,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [ref] &lt;&gt; null and [class] = 'hiking'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(136,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],4,1,10,1,12,2)" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [ref] &lt;&gt; null</Filter>
+			<LineSymbolizer stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and ( [network] = 3 or [network] = 2 )</Filter>
+			<LineSymbolizer stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [class] = 'bicycle'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(0,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [class] = 'hiking'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(136,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],4,1,10,1,12,2)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1</Filter>
+			<LineSymbolizer stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 4 and [ref] &lt;&gt; null and [class] = 'bicycle'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(0,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 4 and [ref] &lt;&gt; null and [class] = 'hiking'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(136,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],4,1,10,1,12,2)" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 4 and [ref] &lt;&gt; null</Filter>
+			<LineSymbolizer stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 3 and [ref] &lt;&gt; null and [class] = 'bicycle'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(0,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 3 and [ref] &lt;&gt; null and [class] = 'hiking'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(136,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],4,1,10,1,12,2)" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 3 and [ref] &lt;&gt; null</Filter>
+			<LineSymbolizer stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 2 and [ref] &lt;&gt; null and [class] = 'bicycle'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(0,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 2 and [ref] &lt;&gt; null and [class] = 'hiking'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(136,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],4,1,10,1,12,2)" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 2 and [ref] &lt;&gt; null</Filter>
+			<LineSymbolizer stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[class] = 'bicycle' and ( [nuti::routes] &gt; 0 and [network] = 4 or ( [nuti::routes] &gt; 0 and [network] = 3 ) or ( [nuti::routes] &gt; 0 and [network] = 2 ) )</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(0,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[class] = 'hiking' and ( [nuti::routes] &gt; 0 and [network] = 4 or ( [nuti::routes] &gt; 0 and [network] = 3 ) or ( [nuti::routes] &gt; 0 and [network] = 2 ) )</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(136,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],4,1,10,1,12,2)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [ref] &lt;&gt; null and [class] = 'bicycle'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(0,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [ref] &lt;&gt; null and [class] = 'hiking'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(136,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],4,1,10,1,12,2)" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [ref] &lt;&gt; null</Filter>
+			<LineSymbolizer stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" />
+			<TextSymbolizer dy="2" face-name="Montserrat Regular" fill="{([textcolor]) ? ([textcolor]) : (([color]) ? ([color]) : ('rgb(0,0,0)'))}" halo-fill="rgb(255,255,255)" halo-radius="0.5" halo-rasterizer="fast" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="1">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and ( [network] = 4 or [network] = 3 or [network] = 2 )</Filter>
+			<LineSymbolizer stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [class] = 'bicycle'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(0,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1 and [class] = 'hiking'</Filter>
+			<LineSymbolizer stroke="{([color]) ? ([color]) : ('rgb(136,0,255)')}" stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],4,1,10,1,12,2)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[nuti::routes] &gt; 0 and [network] = 1</Filter>
+			<LineSymbolizer stroke-dasharray="{(([osmid])=([nuti::selected_id])) ? ('0,0') : ('1,4')}" stroke-linecap="round" stroke-linejoin="round" />
+		</Rule>
+	</Style>
 	<Layer name="aeroway">
 		<StyleName>aeroway</StyleName>
 	</Layer>
@@ -16417,9 +16727,6 @@
 	</Layer>
 	<Layer name="boundary">
 		<StyleName>boundary</StyleName>
-	</Layer>
-	<Layer name="route">
-		<StyleName>route</StyleName>
 	</Layer>
 	<Layer name="aerodrome_label">
 		<StyleName>aerodrome_label</StyleName>
@@ -16460,5 +16767,8 @@
 	</Layer>
 	<Layer name="housenumber">
 		<StyleName>housenumber</StyleName>
+	</Layer>
+	<Layer name="route">
+		<StyleName>route</StyleName>
 	</Layer>
 </Map>

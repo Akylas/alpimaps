@@ -24,14 +24,14 @@ export interface IMapModule {
     onVectorElementClicked?(data: VectorElementEventData<LatLonKeys>);
     onSelectedItem?(item: IItem, oldItem: IItem);
 }
-export type LayerType = 'map' | 'customLayers' | 'hillshade'|'selection' | 'items' | 'directions' | 'userLocation' | 'search';
+export type LayerType = 'map' | 'customLayers' | 'hillshade' | 'selection' | 'items' | 'directions' | 'userLocation' | 'search';
 
 export interface MapContext {
     drawer: Drawer;
     mapModules: MapModules;
     toggleMenu(side: string);
     showOptions();
-    mapModule<T extends keyof MapModules>(id: T);
+    mapModule<T extends keyof MapModules>(id: T): MapModules[T];
     onMapReady(callback: (map: CartoMap<LatLonKeys>) => void);
     onMapMove(callback: (map: CartoMap<LatLonKeys>) => void);
     onMapStable(callback: (map: CartoMap<LatLonKeys>) => void);
@@ -46,12 +46,14 @@ export interface MapContext {
         isFeatureInteresting: boolean;
         peek?: boolean;
         setSelected?: boolean;
+        minZoom?: number;
         zoom?: number;
     }) => void;
+    zoomToItem: (args: { item: IItem; zoom?: number; minZoom?: number }) => void;
     unselectItem: () => void;
     getCurrentLanguage: () => string;
-    getSelecetedItem: () => IItem;
-    addLayer: (layer: Layer<any, any>, layerId: LayerType, offset?: number) => void;
+    getSelectedItem: () => IItem;
+    addLayer: (layer: Layer<any, any>, layerId: LayerType, offset?: number) => number;
     removeLayer: (layer: Layer<any, any>, layerId: LayerType, offset?: number) => void;
     onVectorElementClicked: (data: VectorElementEventData<LatLonKeys>) => boolean;
     onVectorTileClicked: (data: VectorTileEventData<LatLonKeys>) => boolean;
@@ -80,7 +82,7 @@ const listeners = {
 export let drawer: Drawer;
 
 const mapContext: MapContext = {
-    mapModules:  {},
+    mapModules: {},
     onMapReady(callback: (map: CartoMap<LatLonKeys>) => void) {
         listeners.onMapReady.push(callback);
     },

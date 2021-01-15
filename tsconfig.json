@@ -5,10 +5,9 @@
         "moduleResolution": "node",
         "declaration": false,
         "removeComments": false,
-        "emitDecoratorMetadata": false,
+        "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "sourceMap": true,
-        "pretty": true,
         "skipLibCheck": true,
         "allowUnreachableCode": false,
         "allowUnusedLabels": false,
@@ -21,8 +20,10 @@
         "allowSyntheticDefaultImports": true,
         "lib": ["es6", "dom", "es2015.iterable", "es2017.string", "es2018.promise"],
         "baseUrl": ".",
-        "types": ["node", "svelte"],  
+        "types": ["node", "svelte", "geojson"],
         "paths": {
+            "@nativescript/core": ["@akylas/nativescript"],
+            "@nativescript/core/*": ["@akylas/nativescript/*"],
             "~/*": ["app/*"]
         }
     },
