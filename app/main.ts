@@ -1,3 +1,6 @@
+// require('@nativescript/core/ui/frame/activity');
+// require('@nativescript/core/ui/frame');
+import './app.scss';
 import { startSentry } from '~/utils/sentry';
 import { install as installLogging } from '~/utils/logging';
 startSentry();
@@ -29,6 +32,7 @@ import { PersistentBottomSheet } from '@nativescript-community/ui-persistent-bot
 import { BgService } from './services/BgService';
 import { Application, Trace } from '@nativescript/core';
 import { networkService } from './services/NetworkService';
+import SymbolShape from '~/components/SymbolShape';
 installMixins();
 installBottomSheets();
 installUIMixins();
@@ -38,21 +42,20 @@ overrideSpanAndFormattedString();
 setMapPosKeys('lat', 'lon');
 setGeoLocationKeys('lat', 'lon');
 
-
-    registerNativeViewElement('AbsoluteLayout', () => require('@nativescript/core').AbsoluteLayout);
-    // registerNativeViewElement('DockLayout', () => require('@nativescript/core').DockLayout);
-    registerNativeViewElement('GridLayout', () => require('@nativescript/core').GridLayout);
-    // registerNativeViewElement('Image', () => require('@nativescript/core').Image);
-    registerNativeViewElement('ScrollView', () => require('@nativescript/core').ScrollView);
-    // registerNativeViewElement('SearchBar', () => require('@nativescript/core').SearchBar);
-    // registerNativeViewElement('Slider', () => require('@nativescript/core').Slider);
-    registerNativeViewElement('StackLayout', () => require('@nativescript/core').StackLayout);
-    // registerNativeViewElement('FlexboxLayout', () => require('@nativescript/core').FlexboxLayout);
-    registerNativeViewElement('Switch', () => require('@nativescript/core').Switch);
-    registerNativeViewElement('TextField', () => require('@nativescript/core').TextField);
-    // registerNativeViewElement('TextView', () => require('@nativescript/core').TextView);
-    // registerNativeViewElement('WebView', () => require('@nativescript/core').WebView);
-    // registerNativeViewElement('WrapLayout', () => require('@nativescript/core').WrapLayout);
+registerNativeViewElement('AbsoluteLayout', () => require('@nativescript/core').AbsoluteLayout);
+// registerNativeViewElement('DockLayout', () => require('@nativescript/core').DockLayout);
+registerNativeViewElement('GridLayout', () => require('@nativescript/core').GridLayout);
+// registerNativeViewElement('Image', () => require('@nativescript/core').Image);
+registerNativeViewElement('ScrollView', () => require('@nativescript/core').ScrollView);
+// registerNativeViewElement('SearchBar', () => require('@nativescript/core').SearchBar);
+// registerNativeViewElement('Slider', () => require('@nativescript/core').Slider);
+registerNativeViewElement('StackLayout', () => require('@nativescript/core').StackLayout);
+// registerNativeViewElement('FlexboxLayout', () => require('@nativescript/core').FlexboxLayout);
+registerNativeViewElement('Switch', () => require('@nativescript/core').Switch);
+registerNativeViewElement('TextField', () => require('@nativescript/core').TextField);
+// registerNativeViewElement('TextView', () => require('@nativescript/core').TextView);
+// registerNativeViewElement('WebView', () => require('@nativescript/core').WebView);
+// registerNativeViewElement('WrapLayout', () => require('@nativescript/core').WrapLayout);
 
 // registerNativeViewElement('mdtextfield', () => TextField, null, {}, { override: true });
 registerNativeViewElement('button', () => Button, null, {}, { override: true });
@@ -72,6 +75,7 @@ registerNativeViewElement('cgroup', () => Group as any);
 // registerNativeViewElement('mdspeeddial', () => SpeedDial);
 // registerNativeViewElement('mdspeeddialitem', () => SpeedDialItem);
 registerNativeViewElement('bottomsheet', () => PersistentBottomSheet);
+registerNativeViewElement('symbolshape', () => SymbolShape as any);
 CollectionViewElement.register();
 DrawerElement.register();
 

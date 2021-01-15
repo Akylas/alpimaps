@@ -23,7 +23,6 @@ declare module '*.scss' {
 declare const gVars: {
     sentry: boolean;
     platform: string;
-    packageServiceEnabled: string;
     CARTO_TOKEN: string;
     IGN_TOKEN: string;
     THUNDERFOREST_TOKEN: string;
@@ -42,6 +41,7 @@ declare const DEV_LOG: boolean;
 declare const NO_CONSOLE: boolean;
 declare const TEST_LOGS: boolean;
 declare const PRODUCTION: boolean;
+declare const __CARTO_PACKAGESERVICE__: boolean;
 declare const LOCAL_MBTILES: string;
 declare const SENTRY_DSN: string;
 declare const SENTRY_PREFIX: string;

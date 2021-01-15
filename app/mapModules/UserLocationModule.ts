@@ -89,7 +89,7 @@ export default class UserLocationModule extends MapModule {
 
             // always add it at 1 to respect local order
             mapContext.addLayer(this.localBackVectorLayer, 'userLocation');
-            mapContext.addLayer(this.localVectorLayer, 'userLocation', 1);
+            mapContext.addLayer(this.localVectorLayer, 'userLocation');
         }
     }
     onMapMove(e) {

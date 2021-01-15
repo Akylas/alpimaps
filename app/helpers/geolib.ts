@@ -903,12 +903,12 @@ export function findNearest(latlng, coords, offset, limit) {
  * @param        mixed       array or object with coords [{latitude: 51.5143, longitude: 7.4138} {latitude: 123, longitude: 123} ...]
  * @return       integer     length of the path (in meters)
  */
-export function getPathLength(coords) {
+export function getPathLength(cs) {
     let dist = 0;
     let last, coord;
 
-    for (let i = 0, l = coords.length; i < l; ++i) {
-        coord = coords(coords[i]);
+    for (let i = 0, l = cs.length; i < l; ++i) {
+        coord = coords(cs[i]);
         if (last) {
             dist += getDistanceSimple(coord, last);
         }

@@ -38,7 +38,7 @@
     let currentMapZoom = 0;
     let totalDownloadProgress = 0;
     const mapContext = getMapContext();
-    let packageServiceEnabled = gVars.packageServiceEnabled;
+    let packageServiceEnabled = __CARTO_PACKAGESERVICE__;
 
     let selectedItem: IItem = null;
 
@@ -78,7 +78,7 @@
                 (suggestionPackage.status.getCurrentAction() !== PackageAction.READY &&
                     suggestionPackage.status.getCurrentAction() !== PackageAction.DOWNLOADING));
     }
-    if (gVars.packageServiceEnabled) {
+    if (__CARTO_PACKAGESERVICE__) {
         onMount(() => {
             if (packageService) {
                 packageService.on('onProgress', onTotalDownloadProgress, this);
@@ -145,7 +145,7 @@
         });
     }
     function downloadSuggestion() {
-        if (gVars.packageServiceEnabled) {
+        if (__CARTO_PACKAGESERVICE__) {
             if (suggestionPackage) {
                 packageService.packageManager.startPackageDownload(suggestionPackage.id);
             }
@@ -153,7 +153,7 @@
         }
     }
     async function customDownloadSuggestion() {
-        if (gVars.packageServiceEnabled) {
+        if (__CARTO_PACKAGESERVICE__) {
             console.log('customDownloadSuggestion');
             if (!suggestionPackage) {
                 return;
@@ -174,7 +174,6 @@
                     cancelButtonText: l('cancel'),
                     view: nView
                 });
-                console.log('result', result, options);
                 if (result) {
                     if (options[0].checked) {
                         packageService.packageManager.startPackageDownload(suggestionPackage.id);
@@ -203,7 +202,7 @@
         userLocationModule = null;
     });
     function onTotalDownloadProgress(e) {
-        if (gVars.packageServiceEnabled) {
+        if (__CARTO_PACKAGESERVICE__) {
             if (e.data === 100) {
                 totalDownloadProgress = 0;
             } else {
@@ -212,7 +211,7 @@
         }
     }
     function onPackageStatusChanged(e) {
-        if (gVars.packageServiceEnabled) {
+        if (__CARTO_PACKAGESERVICE__) {
             const { id, status } = e.data;
             if (suggestionPackage && id === suggestionPackage.id) {
                 suggestionPackage.status = status;
