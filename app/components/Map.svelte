@@ -1,12 +1,17 @@
-<script lang="ts" context="module">
+<script lang="ts">
     import { AppURL, handleOpenURL } from '@nativescript-community/appurl';
     import * as EInfo from '@nativescript-community/extendedinfo';
     import * as perms from '@nativescript-community/perms';
     import { CartoMapStyle, ClickType, MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
     import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
+    import { PolygonGeometry } from '@nativescript-community/ui-carto/geometry';
+    import { VectorTileFeatureCollection } from '@nativescript-community/ui-carto/geometry/feature';
+    import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
+    import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
     import { Layer } from '@nativescript-community/ui-carto/layers';
     import {
+        BaseVectorTileLayer,
         CartoOnlineVectorTileLayer,
         VectorElementEventData,
         VectorLayer,
@@ -15,15 +20,16 @@
         VectorTileRenderOrder
     } from '@nativescript-community/ui-carto/layers/vector';
     import { Projection } from '@nativescript-community/ui-carto/projections';
+    import { VectorTileSearchService } from '@nativescript-community/ui-carto/search';
     import { CartoMap, PanningMode, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
     import { setShowDebug, setShowError, setShowInfo, setShowWarn } from '@nativescript-community/ui-carto/utils';
-    import { Line, LineStyleBuilder, LineStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/line';
+    import { Line } from '@nativescript-community/ui-carto/vectorelements/line';
     import {
         Marker,
         MarkerStyleBuilder,
         MarkerStyleBuilderOptions
     } from '@nativescript-community/ui-carto/vectorelements/marker';
-    import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/point';
+    import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
     import { Drawer } from '@nativescript-community/ui-drawer';
     import { action, alert, login } from '@nativescript-community/ui-material-dialogs';
@@ -54,8 +60,8 @@
     import { packageService } from '~/services/PackageService';
     import mapStore from '~/stores/mapStore';
     import { showError } from '~/utils/error';
-    import { computeDistanceBetween, getBoundsZoomLevel } from '~/utils/geo';
-    import { isSentryEnabled, Sentry } from '~/utils/sentry';
+    import { computeDistanceBetween, latLngToTileXY } from '~/utils/geo';
+    import { Sentry } from '~/utils/sentry';
     import { accentColor, screenHeightDips, screenWidthDips } from '~/variables';
     import { navigationBarHeight, primaryColor } from '../variables';
     import { showBottomSheet } from './bottomsheet';
@@ -65,10 +71,20 @@
     import MapRightMenu from './MapRightMenu.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
     import Search from './Search.svelte';
+
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
     const mailRegexp = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
 
-    const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'selection', 'items', 'directions', 'search', 'userLocation'];
+    const LAYERS_ORDER: LayerType[] = [
+        'map',
+        'customLayers',
+        'hillshade',
+        'selection',
+        'items',
+        'directions',
+        'search',
+        'userLocation'
+    ];
     const KEEP_AWAKE_KEY = 'keepAwake';
     let defaultLiveSync = global.__onLiveSync;
 
@@ -85,9 +101,6 @@
             return android.util.Base64.encodeToString(data, android.util.Base64.DEFAULT);
         }
     }
-</script>
-
-<script lang="ts">
     let page: NativeViewElementNode<Page>;
     let cartoMap: CartoMap<LatLonKeys>;
     let rightMenu: MapRightMenu;
@@ -99,10 +112,12 @@
     let searchView: Search;
     const mapContext = getMapContext();
 
-    let selectedPosMarker: Marker<LatLonKeys>;
+    // let selectedRouteLine: Line<LatLonKeys>;
+    let selectedOSMId: string;
+    let selectedPosMarker: Point<LatLonKeys>;
     let selectedItem = watcher<IItem>(null, onSelectedItemChanged);
     let appVersion = EInfo.getVersionNameSync() + '.' + EInfo.getBuildNumberSync();
-    let packageServiceEnabled = gVars.packageServiceEnabled;
+    let packageServiceEnabled = __CARTO_PACKAGESERVICE__;
     let licenseRegistered: boolean = false;
     let darkMode = false;
     // $: {
@@ -118,7 +133,7 @@
     let itemLoading = false;
     let projection: Projection = null;
     let currentLanguage = appSettings.getString('language', 'en');
-    let addedLayers: string[] = [];
+    let addedLayers: { layer: Layer<any, any>; layerId: LayerType }[] = [];
     let keepAwakeEnabled = appSettings.getBoolean(KEEP_AWAKE_KEY, false);
     let currentMapRotation = 0;
     let shouldShowNavigationBarOverlay = false;
@@ -129,7 +144,7 @@
         if (steps) {
             // ensure bottomSheetStepIndex is not out of range when
             // steps changes
-            bottomSheetStepIndex = Math.min(steps.length - 1, bottomSheetStepIndex)
+            bottomSheetStepIndex = Math.min(steps.length - 1, bottomSheetStepIndex);
         }
     }
 
@@ -209,7 +224,7 @@
             getMap: () => cartoMap,
             getProjection: () => projection,
             getCurrentLanguage: () => currentLanguage,
-            getSelecetedItem: () => $selectedItem,
+            getSelectedItem: () => $selectedItem,
             onVectorElementClicked,
             onVectorTileClicked,
             getVectorTileDecoder,
@@ -217,6 +232,7 @@
             unselectItem,
             addLayer,
             removeLayer,
+            zoomToItem,
             setBottomSheetStepIndex: (index: number) => {
                 bottomSheetStepIndex = index;
             },
@@ -348,7 +364,7 @@
         cartoMap.setZoom(zoom, 0);
         try {
             const status = await perms.request('storage');
-            if (gVars.packageServiceEnabled) {
+            if (__CARTO_PACKAGESERVICE__) {
                 packageService.start();
             }
             setMapStyle(appSettings.getString('mapStyle', 'osmxml~topo'), true);
@@ -386,10 +402,19 @@
     }
 
     function onMainMapClicked(e) {
+        if (ignoreNextMapClick) {
+            ignoreNextMapClick = false;
+            return;
+        }
+        if (didIgnoreAlreadySelected) {
+            didIgnoreAlreadySelected = false;
+            return;
+        }
         const { clickType, position } = e.data;
         const handledByModules = mapContext.runOnModules('onMapClicked', e);
+        // console.log('mapTile', latLngToTileXY(position.lat, position.lon, cartoMap.zoom), clickType === ClickType.SINGLE, handledByModules, !!selectedItem);
         if (!handledByModules && clickType === ClickType.SINGLE) {
-            selectItem({ item: { position, properties: {} }, isFeatureInteresting: !selectedItem });
+            selectItem({ item: { position, properties: {} }, isFeatureInteresting: !$selectedItem });
         }
         unFocusSearch();
     }
@@ -399,17 +424,6 @@
         const styleBuilder = new MarkerStyleBuilder(options);
         return new Marker<LatLonKeys>({ position, projection, styleBuilder });
     }
-    function createLocalPoint(position: MapPos<LatLonKeys>, options: PointStyleBuilderOptions) {
-        getOrCreateLocalVectorLayer();
-        const styleBuilder = new PointStyleBuilder(options);
-        return new Point<LatLonKeys>({ position, projection, styleBuilder });
-    }
-    function createLocalLine(positions: MapPos<LatLonKeys>[], options: LineStyleBuilderOptions) {
-        getOrCreateLocalVectorLayer();
-        const styleBuilder = new LineStyleBuilder(options);
-        return new Line<LatLonKeys>({ positions, projection, styleBuilder });
-    }
-
     function onSelectedItemChanged(oldValue: IItem, value: IItem) {
         mapContext.runOnModules('onSelectedItem', value, oldValue);
     }
@@ -419,6 +433,8 @@
         peek = true,
         setSelected = true,
         showButtons = false,
+        preventZoom = false,
+        minZoom,
         zoom
     }: {
         item: IItem;
@@ -426,8 +442,12 @@
         isFeatureInteresting: boolean;
         peek?: boolean;
         setSelected?: boolean;
+        preventZoom?: boolean;
+        minZoom?: number;
         zoom?: number;
     }) {
+        didIgnoreAlreadySelected = false;
+        // console.log('selectItem', item, isFeatureInteresting);
         if (isFeatureInteresting) {
             if (item.route) {
                 const vectorElement = item.vectorElement as Line;
@@ -435,33 +455,38 @@
                     const color = new Color(vectorElement.color as string);
                     vectorElement.color = color.darken(10);
                     vectorElement.width += 2;
+                } else if (item.route.osmid) {
+                    selectedOSMId = item.route.osmid + '';
+                    // console.log('selectedOSMId', selectedOSMId)
+                    setStyleParameter('selected_id', selectedOSMId);
+                    // if (!selectedRouteLine) {
+                    //     getOrCreateLocalVectorLayer();
+                    //     selectedRouteLine = mapContext.mapModule('items').createLocalLine(item, {
+                    //         // color: '#55ff0000',
+                    //         color: (darkColor as any).setAlpha(150),
+                    //         joinType: LineJointType.ROUND,
+                    //         endType: LineEndType.ROUND,
+                    //         width: 3,
+                    //         clickWidth: 10
+                    //     });
+                    //     localVectorDataSource.add(selectedRouteLine);
+                    // } else {
+                    //     selectedRouteLine.positions = item.route.positions;
+                    //     selectedRouteLine.visible = true;
+                    // }
                 }
-                // if (!selectedRouteLine) {
-                //     selectedRouteLine = createLocalLine(item.route.positions, {
-                //         // color: '#55ff0000',
-                //         color: '#99ffffff',
-                //         // visible: false,
-                //         joinType: LineJointType.ROUND,
-                //         endType: LineEndType.ROUND,
-                //         width: (item.styleOptions ? item.styleOptions.width : 6) + 2,
-                //         clickWidth: 0
 
-                //         // orientationMode: BillboardOrientation.GROUND,
-                //         // scalingMode: BillboardScaling.SCREEN_SIZE
-                //     });
-                //     localVectorDataSource.add(selectedRouteLine);
-                // } else {
-                //     selectedRouteLine.positions = item.route.positions;
-                //     selectedRouteLine.visible = true;
-                // }
                 if (selectedPosMarker) {
                     selectedPosMarker.visible = false;
                 }
             } else {
                 if (!selectedPosMarker) {
-                    selectedPosMarker = createLocalPoint(item.position, {
+                    getOrCreateLocalVectorLayer();
+                    const itemModule = mapContext.mapModule('items');
+                    selectedPosMarker = itemModule.createLocalPoint(item.position, {
                         // color: '#55ff0000',
                         color: primaryColor.setAlpha(178),
+                        clickSize: 0,
                         scaleWithDPI: true,
                         size: 30
                         // orientationMode: BillboardOrientation.GROUND,
@@ -472,9 +497,10 @@
                     selectedPosMarker.position = item.position;
                     selectedPosMarker.visible = true;
                 }
-                // if (selectedRouteLine) {
-                //     selectedRouteLine.visible = false;
-                // }
+                if (selectedOSMId) {
+                    selectedOSMId = null;
+                    setStyleParameter('selected_id', '0');
+                }
             }
             // item.route = {
             //     instructions: Array.from({length: 40}, () => ({
@@ -510,27 +536,43 @@
                 await bottomSheetInner.loadView();
                 bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
             }
-            if (item.zoomBounds) {
-                const zoomLevel = getBoundsZoomLevel(item.zoomBounds, {
-                    width: Screen.mainScreen.widthPixels,
-                    height: Screen.mainScreen.heightPixels
-                });
-                cartoMap.moveToFitBounds(item.zoomBounds, undefined, true, true, false, 200);
-                // cartoMap.setZoom(zoomLevel, 200);
-                // cartoMap.setFocusPos(getCenter(item.zoomBounds.northeast, item.zoomBounds.southwest), 200);
-            } else if (item.properties.extent) {
-                const extent = item.properties.extent;
-                cartoMap.moveToFitBounds(new MapBounds({lat:extent[1], lon:extent[0]}, {lat:extent[3], lon:extent[2]}), undefined, true, true, false, 200);
-                // cartoMap.setZoom(zoomLevel, 200);
-                // cartoMap.setFocusPos(getCenter(item.zoomBounds.northeast, item.zoomBounds.southwest), 200);
-            } else {
-                if (zoom) {
-                    cartoMap.setZoom(zoom, 200);
-                }
-                cartoMap.setFocusPos(item.position, 200);
+            if (preventZoom) {
+                return;
             }
+            zoomToItem({ item, zoom, minZoom });
         } else {
             unselectItem();
+        }
+    }
+    export function zoomToItem({ item, zoom, minZoom }: { item: IItem; zoom?: number; minZoom?: number }) {
+        if (item.zoomBounds) {
+            // const zoomLevel = getBoundsZoomLevel(item.zoomBounds, {
+            //     width: Screen.mainScreen.widthPixels,
+            //     height: Screen.mainScreen.heightPixels
+            // });
+            cartoMap.moveToFitBounds(item.zoomBounds, undefined, true, true, false, 200);
+            // cartoMap.setZoom(zoomLevel, 200);
+            // cartoMap.setFocusPos(getCenter(item.zoomBounds.northeast, item.zoomBounds.southwest), 200);
+        } else if (item.properties.extent) {
+            let extent: [number, number, number, number] = item.properties.extent as any;
+            if (typeof extent === 'string') {
+                extent = JSON.parse(`[${extent}]`);
+            }
+            cartoMap.moveToFitBounds(
+                new MapBounds({ lat: extent[1], lon: extent[0] }, { lat: extent[3], lon: extent[2] }),
+                undefined,
+                true,
+                true,
+                false,
+                200
+            );
+        } else {
+            if (zoom) {
+                cartoMap.setZoom(zoom, 200);
+            } else if (minZoom) {
+                cartoMap.setZoom(Math.max(minZoom, cartoMap.zoom), 200);
+            }
+            cartoMap.setFocusPos(item.position, 200);
         }
     }
     export function unselectItem() {
@@ -540,6 +582,10 @@
             if (selectedPosMarker) {
                 selectedPosMarker.visible = false;
             }
+            if (selectedOSMId) {
+                selectedOSMId = null;
+                setStyleParameter('selected_id', '0');
+            }
             if (item.route) {
                 const vectorElement = item.vectorElement as Line;
                 if (vectorElement) {
@@ -548,16 +594,15 @@
                 }
             }
             bottomSheetStepIndex = 0;
-            // const vectorTileDecoder = getVectorTileDecoder();
-            // vectorTileDecoder.setStyleParameter('selected_id', '0');
-            // vectorTileDecoder.setStyleParameter('selected_name', '');
         }
     }
 
     $: setRenderProjectionMode($mapStore.showGlobe);
-    $: setStyleParameter('buildings', !!$mapStore.show3DBuildings ? '2' : '1');
-    $: setStyleParameter('contours', $mapStore.showContourLines ? '1' : '0');
-    $: setStyleParameter('contoursOpacity', $mapStore.contourLinesOpacity.toFixed(1));
+    $: vectorTileDecoder && setStyleParameter('buildings', !!$mapStore.show3DBuildings ? '2' : '1');
+    $: vectorTileDecoder && setStyleParameter('contours', $mapStore.showContourLines ? '1' : '0');
+    $: vectorTileDecoder && setStyleParameter('routes', $mapStore.showRoutes ? '1' : '0');
+    $: vectorTileDecoder && setStyleParameter('contoursOpacity', $mapStore.contourLinesOpacity.toFixed(1));
+    $: vectorTileDecoder && toggleHillshadeSlope($mapStore.showSlopePercentages);
     $: currentLayer && (currentLayer.zoomLevelBias = parseFloat($mapStore.zoomBiais));
     $: currentLayer && (currentLayer.preloading = $mapStore.preloading);
     $: shouldShowNavigationBarOverlay = global.isAndroid && navigationBarHeight !== 0 && !!selectedItem;
@@ -570,23 +615,82 @@
             hideKeepAwakeNotification();
         }
     }
+    function toggleHillshadeSlope(value: boolean) {
+        if (mapContext) {
+            mapContext.mapModule('customLayers').toggleHillshadeSlope(value);
+            // cartoMap.redraw();
+        }
+    }
 
     function cancelDirections() {
         directionsPanel.cancel();
     }
+
+    async function handleRouteSelection(featureData, layer: VectorTileLayer) {
+        const item: IItem = {
+            properties: featureData,
+
+            route: {
+                osmid: featureData.osmid,
+                layer
+            } as any
+        };
+        selectItem({ item, isFeatureInteresting: true, preventZoom: true });
+    }
+    async function handleSelectedRoutes() {
+        unFocusSearch();
+        try {
+            if (selectedRoutes && selectedRoutes.length > 0) {
+                if (selectedRoutes.length === 1) {
+                    handleRouteSelection(selectedRoutes[0].featureData, selectedRoutes[0].layer);
+                } else {
+                    const RouteSelect = (await import('~/components/RouteSelect.svelte')).default;
+                    const results = await showBottomSheet({
+                        view: RouteSelect,
+                        props: {
+                            title: l('pick_route'),
+                            options: selectedRoutes.map((s) => ({ name: s.featureData.name, route: s }))
+                        }
+                    });
+                    const result = Array.isArray(results) ? results[0] : results;
+                    if (result) {
+                        handleRouteSelection(result.route.featureData, result.route.layer);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        }
+        selectedRoutes = null;
+        handleSelectedRouteTimer = null;
+    }
+    let ignoreNextMapClick = false;
+    let handleSelectedRouteTimer: NodeJS.Timeout;
+    let selectedRoutes: { featurePosition; featureData; layer: BaseVectorTileLayer<any, any> }[];
+    let didIgnoreAlreadySelected = false;
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
-        const { clickType, position, featureLayerName, featureData, featurePosition } = data;
-        console.log('onVectorTileClicked', featureLayerName, featureData.class, featureData.subclass, featureData);
+        const { clickType, position, featureLayerName, featureData, featurePosition, layer } = data;
+        // if (DEV_LO/G) {
+            console.log(
+                'onVectorTileClicked',
+                featureLayerName,
+                featureData.class,
+                featureData.subclass,
+                featureData,
+                featurePosition
+            );
+        // }
+
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             if (
                 featureLayerName === 'transportation' ||
                 featureLayerName === 'transportation_name' ||
-                featureLayerName === 'route' ||
+                featureLayerName === 'waterway' ||
+                // featureLayerName === 'place' ||
                 featureLayerName === 'contour' ||
                 featureLayerName === 'hillshade' ||
-                ((featureLayerName === 'waterway' ||
-                    featureLayerName === 'building' ||
+                ((featureLayerName === 'building' ||
                     featureLayerName === 'park' ||
                     featureLayerName === 'landcover' ||
                     featureLayerName === 'landuse') &&
@@ -594,7 +698,36 @@
             ) {
                 return false;
             }
+            if (
+                !!$selectedItem &&
+                ((featureData.osmid && featureData.osmid === $selectedItem.properties.osmid) ||
+                    (featureData.name === $selectedItem.properties.name &&
+                        $selectedItem.position.lat === featurePosition.lat &&
+                        $selectedItem.position.lon === featurePosition.lon))
+            ) {
+                console.log(
+                    'onVectorTileClicked ignoring already selected item',
+                    featureData.name,
+                    featurePosition,
+                    $selectedItem
+                );
+                didIgnoreAlreadySelected = true;
+                return false;
+            }
             featureData.layer = featureLayerName;
+            if (featureLayerName === 'route') {
+                if (handleSelectedRouteTimer) {
+                    clearTimeout(handleSelectedRouteTimer);
+                }
+                selectedRoutes = selectedRoutes || [];
+                handleSelectedRouteTimer = setTimeout(handleSelectedRoutes, 10);
+                if (selectedRoutes.findIndex((s) => s.featureData.osmid === featureData.osmid) === -1) {
+                    selectedRoutes.push({ featurePosition, featureData, layer });
+                    ignoreNextMapClick = true;
+                }
+
+                return false;
+            }
 
             const isFeatureInteresting =
                 !!featureData.name ||
@@ -602,6 +735,12 @@
                 featureLayerName === 'mountain_peak' ||
                 featureLayerName === 'housenumber';
             if (isFeatureInteresting) {
+                ignoreNextMapClick = false;
+                selectedRoutes = null;
+                if (handleSelectedRouteTimer) {
+                    clearTimeout(handleSelectedRouteTimer);
+                    handleSelectedRouteTimer = null;
+                }
                 const result: IItem = {
                     properties: featureData,
                     position: isFeatureInteresting ? featurePosition : position
@@ -634,10 +773,6 @@
                                 }
                             }
                         })
-                        // .then(() => {
-                        //     console.log('test about to select item', result);
-                        //     selectItem({ item: result, isFeatureInteresting });
-                        // })
                         .catch((err) => {
                             console.error(err);
                         });
@@ -688,7 +823,8 @@
                 );
     }
 
-    function setStyleParameter(key: string, value) {
+    function setStyleParameter(key: string, value: string) {
+        console.log('setStyleParameter', key, value);
         const decoder = getVectorTileDecoder();
         if (decoder) {
             decoder.setStyleParameter(key, value);
@@ -739,10 +875,6 @@
         appSettings.setString('language', code);
         currentLanguage = code;
         packageService.currentLanguage = code;
-        // if (currentLayer === null) {
-        //     return;
-        // }
-
         setStyleParameter('lang', code);
         setStyleParameter('fallback_lang', 'latin');
     }
@@ -787,7 +919,7 @@
             currentLayerStyle = layerStyle;
             appSettings.setString('mapStyle', layerStyle);
             const oldVectorTileDecoder = vectorTileDecoder;
-            if (layerStyle === 'default' ) {
+            if (layerStyle === 'default') {
                 vectorTileDecoder = new CartoOnlineVectorTileLayer({
                     style: mapStyleLayer
                 }).getTileDecoder();
@@ -800,7 +932,6 @@
                             ? { zipPath: `~/assets/styles/${mapStyle}` }
                             : { dirPath: `~/assets/styles/${mapStyle}` })
                     });
-                    console.log('vectorTileDecoder', vectorTileDecoder);
                     mapContext.runOnModules('vectorTileDecoderChanged', oldVectorTileDecoder, vectorTileDecoder);
                 } catch (err) {
                     showError(err);
@@ -808,7 +939,8 @@
                 }
             }
             updateLanguage(currentLanguage);
-            if (gVars.packageServiceEnabled) {
+            console.log('test done');
+            if (__CARTO_PACKAGESERVICE__) {
                 setCurrentLayer(currentLayerStyle);
             }
         }
@@ -854,26 +986,30 @@
     }
 
     async function selectStyle() {
-            let styles = [];
+        let styles = [];
         const entities = await Folder.fromPath(path.join(knownFolders.currentApp().path, 'assets', 'styles')).getEntities();
         for (let index = 0; index < entities.length; index++) {
             const e = entities[index];
             if (Folder.exists(e.path)) {
                 const subs = await Folder.fromPath(e.path).getEntities();
-                styles.push( ...subs.filter(s=>s.name.endsWith('.json') || s.name.endsWith('.xml')).map(s=>e.name+ '~' + s.name.split('.')[0]));
+                styles.push(
+                    ...subs
+                        .filter((s) => s.name.endsWith('.json') || s.name.endsWith('.xml'))
+                        .map((s) => e.name + '~' + s.name.split('.')[0])
+                );
             } else {
-                styles.push (e.name);
+                styles.push(e.name);
             }
         }
-            const actions = styles.concat('default');
-            action({
-                title: lc('select_style'),
-                actions
-            }).then((result) => {
-                if (actions.indexOf(result) !== -1) {
-                    setMapStyle(result);
-                }
-            });
+        const actions = styles.concat('default');
+        action({
+            title: lc('select_style'),
+            actions
+        }).then((result) => {
+            if (actions.indexOf(result) !== -1) {
+                setMapStyle(result);
+            }
+        });
     }
     function selectLanguage() {
         const actions = SUPPORTED_LOCALES;
@@ -893,35 +1029,26 @@
         showBottomSheet({ parent: page, view: PackagesDownloadComponent });
     }
     function removeLayer(layer: Layer<any, any>, layerId: LayerType, offset?: number) {
-        const realLayerId = offset ? layerId + offset : layerId;
-        const index = addedLayers.indexOf(realLayerId);
+        // const realLayerId = offset ? layerId + offset : layerId;
+        const index = addedLayers.findIndex((d) => d.layer === layer);
         if (index !== -1) {
             addedLayers.splice(index, 1);
         }
         cartoMap.removeLayer(layer);
     }
-    function addLayer(layer: Layer<any, any>, layerId: LayerType, offset?: number) {
-        const realLayerId = offset ? layerId + offset : layerId;
+    function addLayer(layer: Layer<any, any>, layerId: LayerType) {
         if (cartoMap) {
-            if (addedLayers.indexOf(realLayerId) !== -1) {
+            if (addedLayers.findIndex((d) => d.layer === layer) !== -1) {
                 return;
             }
             const layerIndex = LAYERS_ORDER.indexOf(layerId);
-            let realIndex = 0;
-            addedLayers.some((s) => {
-                if (LAYERS_ORDER.indexOf(s as any) < layerIndex) {
-                    realIndex++;
-                    return false;
-                }
-                return true;
-            });
+            let realIndex = addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) > layerIndex);
             if (realIndex >= 0 && realIndex < addedLayers.length) {
-                const index = realIndex + (offset || 0);
-                cartoMap.addLayer(layer, index);
-                addedLayers.splice(index, 0, realLayerId);
+                cartoMap.addLayer(layer, realIndex);
+                addedLayers.splice(realIndex, 0, { layer, layerId });
             } else {
                 cartoMap.addLayer(layer);
-                addedLayers.push(realLayerId);
+                addedLayers.push({ layer, layerId });
             }
             cartoMap.requestRedraw();
         }
@@ -1296,6 +1423,47 @@
                 bind:this={locationInfoPanel}
                 isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
             <DirectionsPanel bind:this={directionsPanel} width="100%" verticalAlignment="top" />
+            <stacklayout horizontalAlignment="left" verticalAlignment="middle">
+                <button
+                    variant="text"
+                    class="icon-btn"
+                    text="mdi-domain"
+                    color={$mapStore.show3DBuildings ? primaryColor : 'gray'}
+                    on:tap={() => mapStore.setShow3DBuildings(!$mapStore.show3DBuildings)} />
+
+                <button
+                    variant="text"
+                    class="icon-btn"
+                    text="mdi-bullseye"
+                    color={$mapStore.showContourLines ? primaryColor : 'gray'}
+                    on:tap={() => mapStore.setShowContourLines(!$mapStore.showContourLines)} />
+                <button
+                    variant="text"
+                    class="icon-btn"
+                    text="mdi-signal"
+                    color={$mapStore.showSlopePercentages ? primaryColor : 'gray'}
+                    on:tap={() => mapStore.setShowSlopePercentages(!$mapStore.showSlopePercentages)} />
+                <button
+                    variant="text"
+                    class="icon-btn"
+                    text="mdi-map-marker-path"
+                    color={$mapStore.showRoutes ? primaryColor : 'gray'}
+                    on:tap={() => mapStore.setShowRoutes(!$mapStore.showRoutes)} />
+                <button
+                    variant="text"
+                    class="icon-btn"
+                    text="mdi-globe-model"
+                    color={$mapStore.showGlobe ? primaryColor : 'gray'}
+                    on:tap={() => mapStore.setShowGlobe(!$mapStore.showGlobe)} />
+
+                <button
+                    variant="text"
+                    class="icon-btn"
+                    text="mdi-map-clock"
+                    visibility={packageServiceEnabled ? 'visible' : 'collapsed'}
+                    color={$mapStore.preloading ? primaryColor : 'gray'}
+                    on:tap={() => mapStore.setPreloading(!$mapStore.preloading)} />
+            </stacklayout>
             <canvaslabel
                 orientation="vertical"
                 verticalAlignment="middle"
