@@ -37,7 +37,6 @@ function setLang(newLang) {
 
     try {
         const localeData = require(`~/i18n/${lang}.json`);
-        console.log('localeData', localeData);
         loadLocaleJSON(localeData);
     } catch (err) {
         console.log('failed to load lang json', lang, `~/i18n/${lang}.json`, err);
@@ -53,7 +52,6 @@ let deviceLanguage = getString('language');
 if (!deviceLanguage) {
     deviceLanguage = Device.language.split('-')[0].toLowerCase();
     setString('language', deviceLanguage);
-    console.log('prefs language not set', deviceLanguage, getString('language'));
 }
 // console.log('deviceLanguage', deviceLanguage);
 function getOwmLanguage(language) {

@@ -24,8 +24,8 @@ import { closeBottomSheet } from './bottomsheet';
     }
 </script>
 
-<collectionView row="1" items={options} {height}>
+<collectionView row="1" items={options} {height} rowHeight="72">
     <Template let:item>
-        <ListItem title={item.name} subtitle={item.data} showBottomLine on:tap={(event) => onTap(item, event)} />
+        <ListItem title={item.name} subtitle={item.data} on:tap={(event) => onTap(item, event)} />
     </Template>
 </collectionView>

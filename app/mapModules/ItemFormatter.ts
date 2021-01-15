@@ -107,6 +107,9 @@ export default class ItemFormatter {
     getItemSubtitle(item: Item) {
         // console.log('getItemSubtitle', item);
         if (item) {
+            if (item.properties && item.properties.ref) {
+                return item.properties.ref;
+            }
             // console.log('getItemSubtitle', item);
             if (this.getItemName(item)) {
                 return this.getItemAddress(item);

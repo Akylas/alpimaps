@@ -1,113 +1,53 @@
 <script lang="ts">
-    import { GridLayout } from '@nativescript/core';
+    import { Canvas, CanvasView } from '@nativescript-community/ui-canvas';
     import { createEventDispatcher } from 'svelte';
-    import { primaryColor } from '~/variables';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { mdiFontFamily, primaryColor } from '~/variables';
+    import SymbolShape from './SymbolShape';
     const dispatch = createEventDispatcher();
 
-    let gridLayout: NativeViewElementNode<GridLayout>;
-
-    export let title: string = null;
-    export let sizeFactor: number = 1;
-    export let subtitle: string = null;
-    export let overText: string = null;
-    export let date: string = null;
-    export let rightIcon: string = null;
-    export let rightButton: string = null;
-    export let leftIcon: string = null;
-    export let avatar: string = null;
     export let showBottomLine: boolean = true;
-
-    export let overlineColor: string = '#5C5C5C';
-    export let subtitleColor: string = '#676767';
-
-    $: avatar && gridLayout && gridLayout.nativeView && gridLayout.nativeView.requestLayout();
+    export let showSymbol: boolean = false;
+    export let extraPaddingLeft: number = 0;
+    export let title: string = null;
+    export let subtitle: string = null;
+    export let leftIcon: string = null;
+    export let leftIconFonFamily: string = mdiFontFamily;
+    export let symbol: string = null;
+    export let symbolColor: string = 'null';
+    export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
 </script>
 
-<gridlayout bind:this={gridLayout}
-    columns={`${16 * sizeFactor},auto,*,auto,${16 * sizeFactor}`}
-    rows={`${16 * sizeFactor},auto,*,auto,${16 * sizeFactor}`}
-    rippleColor={primaryColor}
-    on:tap={(event) => dispatch('tap', event)}>
-    <label
-        visibility={!!leftIcon ? 'visible' : 'collapsed'}
-        col="1"
-        row="0"
-        rowSpan="5"
-        fontSize={24 * sizeFactor}
-        marginRight={16 * sizeFactor}
-        textAlignment="left"
-        text={leftIcon}
-        horizontalAlignment="left"
-        verticalAlignment="center"
-        color="#757575"
-        class="mdi" />
-    <image
-        visibility={!!avatar ? 'visible' : 'collapsed'}
-        col="1"
-        row="1"
-        rowSpan="3"
-        width={40 * sizeFactor}
-        height={40 * sizeFactor}
-        marginRight={16 * sizeFactor}
-        src={avatar}
-        verticalAlignment="center" />
-    <label
-        col="2"
-        row="1"
-        fontSize={10 * sizeFactor}
-        visibility={!!overText ? 'visible' : 'collapsed'}
-        textTransform="uppercase"
-        text={overText}
-        verticalAlignment="center"
-        color={overlineColor} />
-
-    <label col="2" row="2" fontSize={17 * sizeFactor} text={title} textWrap="true" verticalAlignment="bottom" />
-    <label
-        visibility={!!subtitle ? 'visible' : 'collapsed'}
-        col="2"
-        row="3"
-        fontSize={14 * sizeFactor}
-        text={subtitle}
-        verticalAlignment="top"
-        color={subtitleColor}
-        textWrap="true" />
-
-    <label
-        col="3"
-        row="1"
-        fontSize={14 * sizeFactor}
-        visibility={(!!date)?'visible':'collapsed'}
-        text={date}
-        verticalAlignment="top" />
-    <label
-        col="3"
-        row="1"
-        rowSpan="3"
-        visibility={!!rightIcon ? 'visible' : 'collapsed'}
-        class="mdi"
-        fontSize={24 * sizeFactor}
-        textAlignment="right"
-        color="#757575"
-        text={rightIcon}
-        verticalAlignment="center" />
-    <!-- <MDRipple rowSpan="5" colSpan="5" /> -->
-    <button
-        variant="flat"
-        col="3"
-        row="1"
-        rowSpan="3"
-        visibility={!!rightButton ? 'visible' : 'collapsed'}
-        class="icon-themed-btn"
-        text={rightButton}
-        verticalAlignment="center"
-        on:tap={(event) => dispatch('rightTap', event)} />
-    <absolutelayout
-        visibility={!!showBottomLine ? 'visible' : 'collapsed'}
-        row="4"
-        colSpan="5"
-        marginLeft="20"
-        backgroundColor="#44ffffff"
-        height="1"
-        verticalAlignment="bottom" />
+<gridlayout rippleColor={primaryColor} on:tap={(event) => dispatch('tap', event)}>
+    <canvaslabel padding="16" on:draw={onDraw}>
+        <symbolshape
+            visibility={showSymbol ? 'visible' : 'hidden'}
+            {symbol}
+            color={symbolColor}
+            width="34"
+            height="32"
+            verticalAligment="middle" />
+        <cgroup verticalAlignment="middle" paddingBottom={subtitle ? 10 : 0}>
+            <cspan
+                visibility={leftIcon ? 'visible' : 'hidden'}
+                paddingLeft="10"
+                width="40"
+                text={leftIcon}
+                fontFamily={leftIconFonFamily}
+                fontSize="24" />
+        </cgroup>
+        <cgroup paddingLeft={(leftIcon ? 40 : 0) + extraPaddingLeft} verticalAlignment="middle" textAlignment="left">
+            <cspan text={title} fontWeight="bold" color="white" fontSize="16" />
+            <cspan text={subtitle ? '\n' + subtitle : ''} color="#D0D0D0" fontSize="13" />
+        </cgroup>
+        <line
+            visibility={showBottomLine ? 'visible' : 'hidden'}
+            height="1"
+            color="#55ffffff"
+            strokeWidth="1"
+            startX="0"
+            verticalAlignment="bottom"
+            startY="0"
+            stopX="100%"
+            stopY="0" />
+    </canvaslabel>
 </gridlayout>
