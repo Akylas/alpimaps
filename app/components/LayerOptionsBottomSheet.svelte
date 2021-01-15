@@ -8,6 +8,7 @@
     } from '@nativescript-community/ui-carto/layers/raster';
     import { action } from '@nativescript-community/ui-material-dialogs';
     import { setNumber, setString } from '@nativescript/core/application-settings';
+    import { onMount } from 'svelte';
     import { l } from '~/helpers/locale';
     import { SourceItem } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
@@ -34,15 +35,16 @@
         }
         actions = res;
     }
-    let options: { [k: string]: { value?: number; min?: number; max?: number } } = {};
-    $: {
+    let options: {
+        [k: string]: { value?: number; min?: number; max?: number; transform?: Function; transformBack?: Function };
+    } = {};
+    onMount(() => {
         const layer = item.layer;
         const opts = item.options || {};
-        // console.log('opts', opts)
         let result = { ...item.options };
 
         Object.keys(result).forEach((k) => {
-            result[k].value = layer[k];
+            result[k].value = opts[k].transformBack ? opts[k].transformBack(layer[k]) : layer[k];
         });
         options = result;
         // const layer = item.layer;
@@ -52,15 +54,19 @@
         //     min:options[k][0] * 100,
         //     max:options[k][1] * 100
         // }))
-    }
+    });
     function optionValue(name) {
         return Math.round(options[name].value * 100);
         // return Math.round(options * 100);
     }
     function onOptionChanged(name, event) {
-        const newValue = event.value / 100;
-        item.layer[name] = options[name].value = newValue;
+        let newValue = (event.value || 0) / 100;
         setNumber(`${item.name}_${name}`, newValue);
+        options[name].value = newValue;
+        if (options[name].transform) {
+            newValue = options[name].transform(newValue);
+        }
+        item.layer[name] = newValue;
     }
     function handleAction(act: string) {
         const customLayers = mapContext.mapModule('customLayers');
@@ -141,13 +147,16 @@
                         // use native for now
                         switch (result) {
                             case 'bicubic':
-                                item.layer.getNative().setTileFilterMode(RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BICUBIC);
+                                (item.layer as RasterTileLayer).tileFilterMode =
+                                    RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BICUBIC;
                                 break;
                             case 'bilinear':
-                                item.layer.getNative().setTileFilterMode(RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BILINEAR);
+                                (item.layer as RasterTileLayer).tileFilterMode =
+                                    RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BILINEAR;
                                 break;
                             case 'nearest':
-                                item.layer.getNative().setTileFilterMode(RasterTileFilterMode.RASTER_TILE_FILTER_MODE_NEAREST);
+                                (item.layer as RasterTileLayer).tileFilterMode =
+                                    RasterTileFilterMode.RASTER_TILE_FILTER_MODE_NEAREST;
                                 break;
                         }
                     });
@@ -177,9 +186,7 @@
             </gridlayout>
         {/each}
         <stacklayout orientation="horizontal">
-            {#each actions as action}
-                <button variant="text" text={l(action)} on:tap={handleAction(action)} />
-            {/each}
+            {#each actions as action}<button variant="text" text={l(action)} on:tap={handleAction(action)} />{/each}
         </stacklayout>
     </stacklayout>
 </scrollview>

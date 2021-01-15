@@ -52,6 +52,7 @@
     import { getDistanceSimple } from '~/helpers/geolib';
     import { convertDistance, convertValueToUnit, formatValueToUnit } from '~/helpers/formatter';
 import { getCenter } from '~/utils/geo';
+import { showError } from '~/utils/error';
 
     const mapContext = getMapContext();
     export let translationFunction: Function = null;
@@ -484,7 +485,7 @@ import { getCenter } from '~/utils/geo';
             hide();
         } catch (error) {
             console.log('showRoute error', error, error.stack);
-            if (!online) {
+            // if (!online) {
                 // return confirm({
                 //     message: $t('try_online'),
                 //     okButtonText: $t('ok'),
@@ -496,11 +497,11 @@ import { getCenter } from '~/utils/geo';
                 //         cancel();
                 //     }
                 // });
-            } else {
+            // } else {
                 loading = false;
                 cancel();
-                throw error || 'failed to compute route';
-            }
+                showError(error || 'failed to compute route');
+            // }
         }
     }
     function ensureRouteLayer() {

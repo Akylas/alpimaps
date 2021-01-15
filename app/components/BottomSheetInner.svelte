@@ -31,9 +31,15 @@
     const mapContext = getMapContext();
 
     export let item: Item;
-
     let profileHeight = PROFILE_HEIGHT;
     let graphAvailable = false;
+    let chart: NativeViewElementNode<LineChart>;
+    let infoView: BottomSheetInfoView;
+    let webViewSrc: string = null;
+    let showListView = false;
+    $: showListView = listViewAvailable && listViewVisible;
+    let itemIsRoute = false;
+    let itemCanQueryProfile = false;
 
     onMount(() => {
         updateSteps();
@@ -46,13 +52,9 @@
     onDestroy(() => {
         mapContext.mapModule('userLocation').on('location', onNewLocation, this);
     });
-    let chart: NativeViewElementNode<LineChart>;
-    let infoView: BottomSheetInfoView;
-    let webViewSrc: string = null;
     $: {
-        // if (listViewAvailable && item?.properties) {
-        if (item && item.properties) {
-            const props = item.properties;
+        const props = item && item.properties;
+        if (props) {
             let name = props.name;
             if (props.wikipedia) {
                 name = props.wikipedia.split(':')[1];
@@ -63,25 +65,18 @@
             const url = `https://duckduckgo.com/?kae=d&ks=s&ko=-2&kaj=m&k1=-1&q=${encodeURIComponent(name)
                 .toLowerCase()
                 .replace('/s+/g', '+')}`;
-            // console.log('webViewSrc', url);
             webViewSrc = url;
         } else {
             webViewSrc = null;
         }
     }
-    let rows = '70,50,auto,auto';
-    let showListView = false;
-    $: showListView = listViewAvailable && listViewVisible;
-
-    // let itemRouteNoProfile = false;
-    let itemIsRoute = false;
-    // $: itemRouteNoProfile = item && !!item.route && (!item.route.profile || !item.route.profile.max);
 
     function updateGraphAvailable() {
-        graphAvailable = itemIsRoute && item.route.profile && item.route.profile.data && item.route.profile.data.length > 0;
+        graphAvailable = itemIsRoute && !!item.route.profile && !!item.route.profile.data && item.route.profile.data.length > 0;
     }
     $: {
         itemIsRoute = item && !!item.route;
+        itemCanQueryProfile = itemIsRoute && !!item.route.positions;
         updateGraphAvailable();
         updateSteps();
     }
@@ -102,7 +97,6 @@
                 dataSet.setIgnoreFiltered(true);
                 const item = profileData[index];
                 dataSet.setIgnoreFiltered(false);
-                // console.log('highlight item', item);
                 chart.nativeView.highlightValues([
                     {
                         dataSetIndex: 0,
@@ -130,6 +124,9 @@
                 (Application.android.foregroundActivity as android.app.Activity).startActivity(intent);
             }
         }
+    }
+    function zoomToItem() {
+        mapContext.zoomToItem({ item });
     }
     function openWebView() {
         openUrl(webViewSrc);
@@ -166,22 +163,33 @@
 
     let updatingItem = false;
     async function getProfile() {
-        updatingItem = true;
-        const profile = await packageService.getElevationProfile(item);
-        // item.route.profile = profile;
-        item.id !== undefined ? await updateItem(item, { route: { profile } } as any) : await saveItem(false);
-        updateGraphAvailable();
-        updateSteps();
-        if (graphAvailable) {
-            updateChartData();
-        }
-        mapContext.setBottomSheetStepIndex(3);
+        try {
+            updatingItem = true;
+            const profile = await packageService.getElevationProfile(item);
+            // item.route.profile = profile;
+            if (item.id !== undefined) {
+                await updateItem(item, { route: { profile } } as any);
+            } else {
+                await saveItem(false);
+            }
+            updateGraphAvailable();
+            updateSteps();
+            if (graphAvailable) {
+                updateChartData();
+            }
+            mapContext.setBottomSheetStepIndex(3);
+        } catch(err) {
+            showError(err);
+        } finally {
         updatingItem = false;
+
+        }
+        
     }
     function saveItem(peek = true) {
-        mapContext
+        return mapContext
             .mapModule('items')
-            .saveItem(mapContext.getSelecetedItem())
+            .saveItem(mapContext.getSelectedItem())
             .then((item) => {
                 mapContext.selectItem({ item, isFeatureInteresting: true, peek });
             })
@@ -190,7 +198,7 @@
             });
     }
     async function updateItem(item: IItem, data: Partial<IItem>, peek = true) {
-        mapContext
+        return mapContext
             .mapModule('items')
             .updateItem(item, data)
             .then((item) => {
@@ -201,7 +209,7 @@
             });
     }
     function deleteItem() {
-        mapContext.mapModule('items').deleteItem(mapContext.getSelecetedItem());
+        mapContext.mapModule('items').deleteItem(mapContext.getSelectedItem());
     }
     function shareItem() {
         const itemToShare = omit(item, 'vectorElement');
@@ -248,11 +256,14 @@
                 chartView.setDrawHighlight(false);
                 const leftAxis = chartView.getAxisLeft();
                 leftAxis.setTextColor(textColor);
-                leftAxis.setLabelCount(3);
+                leftAxis.ensureLastLabel = true;
+                // leftAxis.setLabelCount(3);
 
                 const xAxis = chartView.getXAxis();
                 xAxis.setPosition(XAxisPosition.BOTTOM);
+                xAxis.setLabelTextAlign(Align.CENTER);
                 xAxis.setTextColor(textColor);
+                xAxis.ensureLastLabel = true;
                 xAxis.setValueFormatter({
                     getAxisLabel: (value, axis) => convertValueToUnit(value, 'km').join(' ')
                 });
@@ -381,13 +392,11 @@
     id="bottomsheetinner"
     width="100%"
     rows={`70,50,${profileHeight},auto`}
+    columns="*,auto"
     backgroundColor="#aa000000"
     on:tap={() => {}}>
     {#if loaded}
-        <BottomSheetInfoView
-            bind:this={infoView}
-            row="0"
-            {item} />
+        <BottomSheetInfoView bind:this={infoView} row="0" {item} />
 
         <mdactivityindicator
             visibility={updatingItem ? 'visible' : 'collapsed'}
@@ -396,7 +405,13 @@
             busy={true}
             width={20}
             height={20} />
-
+        <button
+            col="1"
+            variant="text"
+            class="icon-btn"
+            text="mdi-crosshairs-gps"
+            visibility={itemIsRoute ? 'visible' : 'collapsed'}
+            on:tap={zoomToItem} />
         <stacklayout
             row="1"
             orientation="horizontal"
@@ -415,7 +430,7 @@
                 fontSize="10"
                 on:tap={getProfile}
                 text="profile"
-                visibility={itemIsRoute ? 'visible' : 'collapsed'} />
+                visibility={(itemIsRoute && itemCanQueryProfile) ? 'visible' : 'collapsed'} />
             <!-- <button variant="text" fontSize="10" on:tap={openWebView} text="web" /> -->
             <button
                 variant="text"
@@ -456,7 +471,7 @@
         <!-- <CollectionView id="bottomsheetListView" row="3" bind:this="listView" rowHeight="40" items="routeInstructions" :visibility="showListView ? 'visible' : 'hidden'" isBounceEnabled="false" @scroll="onListViewScroll" :isScrollEnabled={scrollEnabled}>
             <v-template>
                 <GridLayout columns="30,*" rows="*,auto,auto,*" rippleColor="white"  @tap="onInstructionTap(item)">
-                    <Label col="0" rowSpan="4" text="getRouteInstructionIcon(item) |fonticon" class="osm" color="white" fontSize="20" verticalAlignment="center" textAlignment={center} />
+                    <Label col="0" rowSpan="4"ƒ text="getRouteInstructionIcon(item) |fonticon" class="osm" color="white" fontSize="20" verticalAlignment="center" textAlignment={center} />
                     <Label col="1" row="1" text="getRouteInstructionTitle(item)" color="white" fontSize="13" fontWeight={bold} textWrap={true} />
                 </GridLayout>
             </v-template>

@@ -3,6 +3,7 @@
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
     import { ClusterElementBuilder } from '@nativescript-community/ui-carto/layers/cluster';
     import { ClusteredVectorLayer } from '@nativescript-community/ui-carto/layers/vector';
+    import { SearchRequest, VectorTileSearchService } from '@nativescript-community/ui-carto/search';
     import { VectorElementVector } from '@nativescript-community/ui-carto/vectorelements';
     import { Marker } from '@nativescript-community/ui-carto/vectorelements/marker';
     import { Point, PointStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/point';
@@ -139,6 +140,7 @@
 </script>
 
 <script lang="ts">
+
     let gridLayout: NativeViewElementNode<GridLayout>;
     let textField: NativeViewElementNode<TextField>;
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -304,18 +306,19 @@
             .searchInLocalGeocodingService(options)
             .then((result) => packageService.convertGeoCodingResults(result, true));
     }
-    function searchInVectorTiles(options) {
-        return packageService.searchInVectorTiles(options).then((result) => packageService.convertFeatureCollection(result));
+    function searchInVectorTiles(options: SearchRequest) {
+        return packageService.searchInVectorTiles(options).then((result) => packageService.convertFeatureCollection(result, options));
+        // return packageService.searchInVectorTiles(options).then((result) => []);
     }
 
-    function herePlaceSearch(options: {
+    async function herePlaceSearch(options: {
         query: string;
         language?: string;
         location?: MapPos<LatLonKeys>;
         locationRadius?: number;
     }) {
         if (networkService.connected) {
-            return Promise.resolve([]);
+            return [];
         }
         return getJSON(
             queryString(
@@ -340,9 +343,9 @@
             )
         ).then((result: any) => result.results.items.map((f) => new HereFeature(f)));
     }
-    function photonSearch(options: { query: string; language?: string; location?: MapPos<LatLonKeys>; locationRadius?: number }) {
+    async function photonSearch(options: { query: string; language?: string; location?: MapPos<LatLonKeys>; locationRadius?: number }) {
         if (!networkService.connected) {
-            return Promise.resolve([]);
+            return [];
         }
         const url =queryString(
                 {
@@ -363,15 +366,20 @@
     async function instantSearch(_query) {
         loading = true;
         currentQuery = cleanUpString(_query);
+        const position = mapContext.getMap().focusPos;
+        console.log(position);
         const options = {
-            query: cleanUpString(_query),
+            query: currentQuery,
             projection: mapContext.getProjection(),
             language: packageService.currentLanguage,
-            // regexFilter: `.*${cleanUpString(_query)}.*`,
-            // filterExpression: `layer::name='transportation_name'`,
-            // filterExpression: "layer::name='place' OR layer::name='poi'",
+            // regexFilter: `.*${currentQuery}.*`,
+            // filterExpression: `layer='transportation_name'`,
+            filterExpression: `regexp_ilike(name,'.*${currentQuery}.*')`,
+            // filterExpression: `class='bakery'`,
             // `REGEXP_LIKE(name, '${_query}')`
-            location: mapContext.getMap().focusPos
+            location: position,
+            position,
+            searchRadius:1000
             // locationRadius: 1000,
         };
 
@@ -379,15 +387,18 @@
 
         let result = [];
         await Promise.all([
-            searchInGeocodingService(options)
+            searchInVectorTiles(options as any)
                 .then((r) => result.push(...r))
-                .catch((err) => {console.error('searchInGeocodingService', err);}),
-            herePlaceSearch(options)
-                .then((r) => result.push(...r))
-                .catch((err) => {console.error('herePlaceSearch', err);}),
-            photonSearch(options)
-                .then((r) => result.push(...r))
-                .catch((err) => {console.error('photonSearch', err);})
+                .catch((err) => {console.error('searchInVectorTiles', err);}),
+            // searchInGeocodingService(options)
+            //     .then((r) => result.push(...r))
+            //     .catch((err) => {console.error('searchInGeocodingService', err);}),
+            // herePlaceSearch(options)
+            //     .then((r) => result.push(...r))
+            //     .catch((err) => {console.error('herePlaceSearch', err);}),
+            // photonSearch(options)
+            //     .then((r) => result.push(...r))
+            //     .catch((err) => {console.error('photonSearch', err);})
         ]);
         if (result.length === 0) {
             showSnack({ message: l('no_result_found') });
@@ -443,8 +454,7 @@
         if (!item) {
             return;
         }
-        // console.log('onItemTap', item);
-        mapContext.selectItem({ item, isFeatureInteresting: true, zoom: 14 });
+        mapContext.selectItem({ item, isFeatureInteresting: true, minZoom: 14 });
         unfocus();
     }
     function updateFilteredDataItems() {

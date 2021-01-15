@@ -6,6 +6,7 @@ import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 const sql = SqlQuery.createFromTemplateString;
 import NSQLDatabase from '../mapModules/NSQLDatabase';
+import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
 
 export enum RoutingAction {
     HEAD_ON,
@@ -74,8 +75,9 @@ namespace GeometryTransformer {
 
 export class Route {
     public readonly id!: string;
-
+    public osmid?: number;
     public profile!: RouteProfile | null;
+    public layer?: VectorTileLayer;
 
     public positions!: MapPosVector<LatLonKeys>;
 
@@ -117,7 +119,7 @@ export class RouteRepository extends CrudRepository<Route> {
             const data = item[k];
             if (typeof data === 'string') {
                 toSave[k] = data;
-            } else {
+            } else if (k !== 'layer' && k !== 'osmid') {
                 if (k === 'positions') {
                     toSave[k] = GeometryTransformer.to(data);
                 } else {
