@@ -670,7 +670,7 @@
     let didIgnoreAlreadySelected = false;
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureLayerName, featureData, featurePosition, layer } = data;
-        // if (DEV_LO/G) {
+        if (DEV_LOG) {
             console.log(
                 'onVectorTileClicked',
                 featureLayerName,
@@ -679,7 +679,7 @@
                 featureData,
                 featurePosition
             );
-        // }
+        }
 
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
@@ -824,7 +824,7 @@
     }
 
     function setStyleParameter(key: string, value: string) {
-        console.log('setStyleParameter', key, value);
+        // console.log('setStyleParameter', key, value);
         const decoder = getVectorTileDecoder();
         if (decoder) {
             decoder.setStyleParameter(key, value);
