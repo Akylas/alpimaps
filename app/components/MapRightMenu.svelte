@@ -32,13 +32,13 @@
         customSources = null;
     });
 
-    const packageServiceEnabled = gVars.packageServiceEnabled;
+    const packageServiceEnabled = __CARTO_PACKAGESERVICE__;
 
     function addSource() {
         customLayers.addSource();
     }
     function clearCache() {
-        clearCache();
+        // clearCache();
     }
     function onLayerOpacityChanged(item, event) {
         const opacity = event.value / 100;
@@ -54,7 +54,7 @@
             parent: gridLayout,
             view: LayerOptionsBottomSheet,
             disableDimBackground: true,
-            dismissOnBackgroundTap: false,
+            dismissOnBackgroundTap: true,
             props: {
                 item
             }
@@ -137,6 +137,12 @@
                 text="mdi-signal"
                 color={$mapStore.showContourLines ? primaryColor : 'gray'}
                 on:tap={() => mapStore.setShowContourLines(!$mapStore.showContourLines)} />
+            <button
+                variant="text"
+                class="icon-btn"
+                text="mdi-map-marker-path"
+                color={$mapStore.showRoutes ? primaryColor : 'gray'}
+                on:tap={() => mapStore.setShowRoutes(!$mapStore.showRoutes)} />
             <button
                 variant="text"
                 class="icon-btn"

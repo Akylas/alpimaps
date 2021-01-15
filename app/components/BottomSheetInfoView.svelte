@@ -20,7 +20,9 @@
     let routeDplus: string = null;
     let hasProfile = false;
     let routeDmin: string = null;
+    let showSymbol: boolean = false;
     let itemIsRoute = false;
+    let itemProps = null;
     // $: itemRouteNoProfile = item && !!item.route && (!item.route.profile || !item.route.profile.max);
 
     let remainingDistanceOnCurrentRoute = null;
@@ -31,6 +33,12 @@
         switch (prop) {
             case 'ele':
                 return convertElevation(item.properties[prop]);
+            case 'dplus':
+                return routeDplus;
+            case 'dmin':
+                return routeDmin;
+            case 'distance':
+                return routeDistance;
         }
         return item.properties[prop];
     }
@@ -38,7 +46,12 @@
         // console.log('propIcon', prop);
         switch (prop) {
             case 'ele':
+            case 'dplus':
                 return 'mdi-elevation-rise';
+            case 'dmin':
+                return 'mdi-elevation-decline';
+            case 'distance':
+                return 'mdi-map-marker-distance';
         }
         return null;
     }
@@ -48,19 +61,18 @@
         return updateRouteItemWithPosition(item, currentLocation);
     }
 
-    function updateRouteItemWithPosition(routeItem, location) {
+    function updateRouteItemWithPosition(routeItem: Item, location) {
         if (routeItem) {
             const route = routeItem.route;
             const positions = route.positions;
             const onPathIndex = isLocationOnPath(location, positions, false, true, 10);
-            console.log('onPathIndex', onPathIndex);
             if (onPathIndex >= 0) {
                 const distance = distanceToEnd(onPathIndex, positions);
                 remainingDistanceOnCurrentRoute = distance;
                 routeInstruction = null;
                 for (let index = route.instructions.length - 1; index >= 0; index--) {
                     const element = route.instructions[index];
-                    if (element.pointIndex <= onPathIndex) {
+                    if (element.index <= onPathIndex) {
                         routeInstruction = element;
                         break;
                     }
@@ -77,26 +89,24 @@
         }
         return -1;
     }
-    $:{
-        if (itemIsRoute && currentLocation) {
-            updateRouteItemWithPosition(item, currentLocation);
-        }
-    }
-    $: {
+
+    function updateItem(item) {
         itemIsRoute = item && !!item.route;
+        itemProps = item && item.properties;
         itemIcon = item && formatter.geItemIcon(item);
         itemTitle = item && formatter.getItemTitle(item);
         itemSubtitle = item && formatter.getItemSubtitle(item);
-        
+        showSymbol = itemIsRoute && itemProps && !!itemProps.ref;
+        let newPropsToDraw = [];
         if (!itemIsRoute && item) {
             const props = item.properties;
             if (props) {
-                propsToDraw = PROPS_TO_SHOW.filter((k) => props.hasOwnProperty(k));
+                newPropsToDraw = PROPS_TO_SHOW.filter((k) => props.hasOwnProperty(k));
             } else {
-                propsToDraw = [];
+                newPropsToDraw = [];
             }
         } else {
-            propsToDraw = [];
+            newPropsToDraw = [];
         }
 
         if (!item || !itemIsRoute) {
@@ -104,78 +114,105 @@
             routeDuration = null;
         } else {
             const route = item.route;
-            let result = `${convertValueToUnit(route.totalDistance, 'km').join(' ')}`;
-            if (remainingDistanceOnCurrentRoute) {
-                result += ` (${convertValueToUnit(remainingDistanceOnCurrentRoute, 'km').join(' ')})`;
+            let result;
+            if (route.totalDistance || (itemProps && itemProps.distance)) {
+                result = `${convertValueToUnit(route.totalDistance || itemProps.distance * 1000, 'km').join(' ')}`;
+                if (remainingDistanceOnCurrentRoute) {
+                    result += ` (${convertValueToUnit(remainingDistanceOnCurrentRoute, 'km').join(' ')})`;
+                }
+                routeDistance = result;
+                newPropsToDraw.push('distance');
             }
-            routeDistance = result;
-             result = `${convertDuration(route.totalTime * 1000)}`;
-            if (remainingDistanceOnCurrentRoute) {
-                result += ` (~ ${convertDuration(
-                    ((route.totalTime * remainingDistanceOnCurrentRoute) / route.totalDistance) * 1000
-                )})`;
+
+            if (route.totalTime) {
+                result = `${convertDuration(route.totalTime * 1000)}`;
+                if (remainingDistanceOnCurrentRoute) {
+                    result += ` (~ ${convertDuration(
+                        ((route.totalTime * remainingDistanceOnCurrentRoute) / route.totalDistance) * 1000
+                    )})`;
+                }
+                routeDuration = result;
             }
-            routeDuration = result;
         }
- 
+
         hasProfile = itemIsRoute && !!item.route.profile && !!item.route.profile.max;
         if (!hasProfile) {
-            routeDplus = null;
-            routeDmin = null;
+            if (itemProps && itemProps.ascent) {
+                routeDplus = `${convertElevation(itemProps.ascent)}`;
+                newPropsToDraw.push('dplus');
+            } else {
+                routeDplus = null;
+            }
+            if (itemProps && itemProps.descent) {
+                routeDmin = `${convertElevation(itemProps.descent)}`;
+                newPropsToDraw.push('dmin');
+            } else {
+                routeDmin = null;
+            }
         } else {
             const profile = item.route.profile;
             routeDplus = `${convertElevation(profile.dplus)}`;
             routeDmin = `${convertElevation(-profile.dmin)}`;
+            newPropsToDraw.push('dplus', 'dmin');
+        }
+        propsToDraw = newPropsToDraw;
+    }
+    $: {
+        try {
+            updateItem(item);
+        } catch(err) {
+            console.error('updateItem', err);
+        }
+    }
+    $: {
+        if (itemIsRoute && currentLocation) {
+            updateRouteItemWithPosition(item, currentLocation);
         }
     }
 </script>
 
-<canvaslabel {...$$restProps} fontSize="16" color="white" padding="10">
-    {#if itemIsRoute}
+<canvaslabel {...$$restProps} fontSize="16" color="white" padding="10 10 4 10">
+    <cspan horizontalAlignment="left" verticalAlignment="top" text={routeInstruction && routeInstruction.inst} fontSize={15} />
+    <cgroup verticalAlignment="middle" paddingBottom={(itemSubtitle ? 4 : 0) + (propsToDraw.length > 0 ? 12 : 0)}>
         <cspan
-            horizontalAlignment="left"
-            verticalAlignment="top"
-            text={routeInstruction && routeInstruction.inst}
-            fontSize={15} />
+            visibility={itemIcon ? 'visible' : 'hidden'}
+            paddingLeft="10"
+            width="40"
+            text={osmicon(itemIcon)}
+            fontFamily="osm"
+            fontSize={24} />
+    </cgroup>
+    <symbolshape
+        visibility={showSymbol ? 'visible' : 'hidden'}
+        symbol={(itemProps && itemProps.symbol) || 0}
+        color={(itemProps && itemProps.color) || 0}
+        width="34"
+        height="32"
+        top={propsToDraw.length > 0 ? 1 : 6} />
+
+    <cgroup
+        paddingLeft="40"
+        paddingBottom={(itemSubtitle ? 4 : 0) + (propsToDraw.length > 0 ? 12 : 0)}
+        verticalAlignment="middle"
+        textAlignment="left">
         <cspan
-            horizontalAlignment="left"
-            verticalAlignment="top"
-            color="#01B719"
+            text={itemTitle}
             fontWeight="bold"
-            text={routeDuration}
+            color={routeDuration ? '#01B719' : 'white'}
             :fontSize={routeInstruction ? 10 : 16}
             :paddingTop={routeInstruction ? 18 : 0} />
-        <cgroup verticalAlignment="bottom" textAlignment="left">
-            <cspan color="gray" fontFamily={mdiFontFamily} text="mdi-map-marker-distance" />
-            <cspan text={' ' + routeDistance} fontSize={14} />
-        </cgroup>
-        <cgroup verticalAlignment="bottom" textAlignment="center" visibility={hasProfile ? 'visible' : 'hidden'}>
-            <cspan color="gray" fontFamily={mdiFontFamily} text="mdi-elevation-rise" />
-            <cspan text={' ' + routeDplus} fontSize={14} />
-        </cgroup>
-        <cgroup verticalAlignment="bottom" textAlignment="right" visibility={hasProfile ? 'visible' : 'hidden'}>
-            <cspan color="gray" fontFamily={mdiFontFamily} text="mdi-elevation-decline" />
-            <cspan text={routeDmin} fontSize={14} />
-        </cgroup>
-    {:else}
-        <cgroup verticalAlignment="middle" paddingBottom={(itemSubtitle ? 10 : 0) + (propsToDraw.length > 0 ? 5 : 0)}>
-            <cspan
-                visibility={itemIcon ? 'visible' : 'hidden'}
-                paddingLeft="10"
-                width="40"
-                text={osmicon(itemIcon)}
-                fontFamily="osm"
-                fontSize={24} />
-        </cgroup>
-        <cgroup paddingLeft="40" paddingBottom={(itemSubtitle ? 10 : 0) + 5} verticalAlignment="middle" textAlignment="left">
-            <cspan text={itemTitle} fontWeight="bold" />
-            <cspan text={itemSubtitle ? '\n' + itemSubtitle : ''} color="#D0D0D0" fontSize={13} />
-        </cgroup>
+        <cspan text={itemSubtitle ? '\n' + itemSubtitle : ''} color="#D0D0D0" fontSize={13} />
+    </cgroup>
+    <cgroup
+        fontSize="14"
+        verticalAlignment="bottom"
+        textAlignment="left"
+        visibility={propsToDraw.length > 0 ? 'visible' : 'hidden'}>
         {#each propsToDraw as prop, index}
-            <cgroup fontSize="14" paddingLeft={index * 60} verticalAlignment="bottom" textAlignment="left">
+            <cgroup>
                 <cspan fontFamily={mdiFontFamily} color="gray" text={propIcon(prop) + ' '} />
-                <cspan text={propValue(prop)} />
+                <cspan text={propValue(prop) + '  '} />
             </cgroup>
         {/each}
-    {/if}
+    </cgroup>
 </canvaslabel>

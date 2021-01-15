@@ -83,7 +83,7 @@ export async function showError(err: Error | string) {
         return;
     }
 
-    console.log('showError', err);
+    console.log('showError', err, new Error().stack);
     if (err['customErrorConstructorName'] === 'NoNetworkError') {
         showSnack({ message: l('no_network') });
         return;
