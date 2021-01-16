@@ -30,8 +30,8 @@ function setLang(newLang) {
                 nextDay: '[Demain à] LT',
                 lastWeek: 'dddd [dernier] [à] LT',
                 nextWeek: 'dddd [à] LT',
-                sameElse: 'L',
-            },
+                sameElse: 'L'
+            }
         });
     }
 
@@ -70,9 +70,14 @@ function getOwmLanguage(language) {
 }
 export let lang;
 
-export function convertTime(date, formatStr: string) {
-    // console.log('convertTime', date, formatStr);
-    return dayjs(date).format(formatStr);
+export function convertTime(date: number | string | dayjs.Dayjs, formatStr: string) {
+    if (date) {
+        if (!date['format']) {
+            date = dayjs(date);
+        }
+        return (date as dayjs.Dayjs).format(formatStr);
+    }
+    return '';
 }
 
 export function convertDuration(date, formatStr: string = 'H [hrs], m [min]') {

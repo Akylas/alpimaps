@@ -15,7 +15,7 @@
         "build": "npm run pandroid; npm run pios",
         "webpack": "webpack --config app.webpack.config.js --env.android",
         "buildtest": "npm run pandroid -- --env.adhoc --aab; npm run pios -- --env.adhoc",
-        "run.android.production": "cross-var devns run android --release --key-store-path $KEYSTORE_PATH --key-store-password $KEYSTORE_PASSWORD --key-store-alias $KEYSTORE_ALIAS --key-store-alias-password $KEYSTORE_ALIAS_PASSWORD --env.adhoc --env.sentry=0 --env.sourceMap=0",
+        "run.android.production": "cross-var devns run android --release --key-store-path $KEYSTORE_PATH --key-store-password $KEYSTORE_PASSWORD --key-store-alias $KEYSTORE_ALIAS --key-store-alias-password $KEYSTORE_ALIAS_PASSWORD --env.adhoc --env.sentry=0 --env.sourceMap=0 --env.noconsole",
         "run.ios.production": "tns run ios --bundle --release --env.adhoc --for-device --provision 'AlpiMaps App Distribution'"
     },
     "dependencies": {
@@ -23,6 +23,7 @@
         "@akylas/nativescript-sqlite": "3.3.11",
         "@mdi/font": "4.9.95",
         "@nativescript-community/appurl": "1.4.2",
+        "@nativescript-community/css-theme": "^1.2.6",
         "@nativescript-community/extendedinfo": "1.2.0",
         "@nativescript-community/fonticon": "3.0.0",
         "@nativescript-community/gesturehandler": "0.1.36",
@@ -40,7 +41,7 @@
         "@nativescript-community/ui-canvas": "4.0.38",
         "@nativescript-community/ui-canvaslabel": "1.0.37",
         "@nativescript-community/ui-carto": "file:../nativescript-carto/plugin",
-        "@nativescript-community/ui-chart": "1.1.18",
+        "@nativescript-community/ui-chart": "1.1.19",
         "@nativescript-community/ui-collectionview": "4.0.16",
         "@nativescript-community/ui-document-picker": "1.1.3",
         "@nativescript-community/ui-drawer": "0.0.22",
@@ -57,6 +58,7 @@
         "@nativescript-community/ui-persistent-bottomsheet": "0.0.14",
         "@nativescript-community/ui-share-file": "1.2.1",
         "@nativescript-community/ui-webview": "1.1.5",
+        "@nativescript/appavailability": "2.0.0",
         "@nativescript/brightness": "2.0.0",
         "@nativescript/email": "2.0.0",
         "app-root-path": "3.0.0",
@@ -66,7 +68,7 @@
         "gpx-parser-builder": "^1.0.2",
         "human-unit": "^2.0.1",
         "kalmanjs": "^1.1.0",
-        "kiss-orm": "1.1.1",
+        "kiss-orm": "2.0.1",
         "make-error": "1.3.6",
         "merge-options": "^3.0.4",
         "nativescript-inappbrowser": "3.0.1",
@@ -101,6 +103,7 @@
         "eslint-plugin-prettier": "^3.3.1",
         "eslint-plugin-svelte3": "3.0.0",
         "fork-ts-checker-webpack-plugin": "^6.1.0",
+        "nativescript-set-version": "0.2.1",
         "nativescript-worker-loader": "^0.12.1",
         "postcss": "^8.2.4",
         "postcss-combine-duplicated-selectors": "^10.0.2",
@@ -116,10 +119,11 @@
         "svelte-loader-hot": "0.3.1",
         "svelte-native-preprocessor": "~0.2.0",
         "svelte-preprocess": "4.6.1",
+        "terser-webpack-plugin": "^5.1.1",
         "ts-loader": "^8.0.14",
         "typescript": "~4.1.3",
-        "webpack": "5.13.0",
+        "webpack": "5.15.0",
         "webpack-cli": "~4.3.1",
-        "webpack-virtual-modules": "^0.4.1"
+        "webpack-virtual-modules": "^0.4.2"
     }
 }
