@@ -80,11 +80,6 @@ registerNativeViewElement('symbolshape', () => SymbolShape as any);
 CollectionViewElement.register();
 DrawerElement.register();
 
-import { start as startTheme } from '~/helpers/theme';
-// on startup we need to ensure theme is loaded because of a mixin
-// on startup we need to say what we are using
-startTheme();
-
 if (global.isIOS) {
     const variables = require('~/variables');
     const primaryColor = variables.primaryColor;
