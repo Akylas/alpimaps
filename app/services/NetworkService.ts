@@ -10,10 +10,12 @@ import {
     off as applicationOff,
     on as applicationOn,
     resumeEvent,
-    suspendEvent,
+    suspendEvent
 } from '@nativescript/core/application';
 import { getBounds, getPathLength } from '~/helpers/geolib';
 import { RouteProfile } from '~/models/Route';
+import * as appavailability from '@nativescript/appavailability';
+import { ad } from '@nativescript/core/utils/utils';
 
 type HTTPOptions = http.HttpRequestOptions;
 
@@ -22,7 +24,7 @@ const contactEmail = 'contact%40akylas.fr';
 const osmOverpassUrl = 'http://overpass-api.de/api/';
 const OSMReplaceKeys = {
     'contact:phone': 'phone',
-    via_ferrata_scale: 'difficulty',
+    via_ferrata_scale: 'difficulty'
 };
 const OSMIgnoredSubtypes = ['parking_entrance', 'tram_stop', 'platform', 'bus_stop', 'tram', 'track'];
 const OSMClassProps = [
@@ -40,7 +42,7 @@ const OSMClassProps = [
     'aeroway',
     'boundary',
     'office',
-    'tourism',
+    'tourism'
 ];
 function prepareOSMWay(way, nodes) {
     const points = [];
@@ -66,25 +68,25 @@ function prepareOSMWay(way, nodes) {
             region: {
                 northeast: {
                     lat: region.maxLat,
-                    lon: region.maxLng,
+                    lon: region.maxLng
                 },
                 southwest: {
                     lat: region.minLat,
-                    lon: region.minLng,
-                },
+                    lon: region.minLng
+                }
             },
-            points,
+            points
         },
         id: way.id,
         osm: {
             id: way.id,
-            type: way.type,
+            type: way.type
         },
         tags: way.tags,
         start: points[0],
         startOnRoute: true,
         endOnRoute: true,
-        end: points[points.length - 1],
+        end: points[points.length - 1]
     };
     Object.keys(OSMReplaceKeys).forEach(function (key) {
         if (way.tags[key]) {
@@ -100,8 +102,8 @@ function prepareOSMWay(way, nodes) {
                 result.notes = [
                     {
                         title: 'note',
-                        text: way.tags.note,
-                    },
+                        text: way.tags.note
+                    }
                 ];
             } else {
                 result.description = way.tags.note;
@@ -138,10 +140,10 @@ function prepareOSMObject(ele, _withIcon?, _testForGeoFeature?) {
     const result = {
         osm: {
             id: ele.id,
-            type: ele.type,
+            type: ele.type
         } as any,
         id,
-        tags: ele.tags,
+        tags: ele.tags
     } as any;
     OSMClassProps.forEach(function (key) {
         if (ele.tags[key]) {
@@ -187,8 +189,8 @@ function prepareOSMObject(ele, _withIcon?, _testForGeoFeature?) {
                 result.notes = [
                     {
                         title: 'note',
-                        text: ele.tags.note,
-                    },
+                        text: ele.tags.note
+                    }
                 ];
             } else {
                 result.description = ele.tags.note;
@@ -412,7 +414,7 @@ export class CustomError extends BaseError {
 
     toJSON() {
         const error = {
-            message: this.message,
+            message: this.message
         };
         Object.getOwnPropertyNames(this).forEach((key) => {
             if (typeof this[key] !== 'function') {
@@ -438,7 +440,7 @@ export class TimeoutError extends CustomError {
         super(
             Object.assign(
                 {
-                    message: 'timeout_error',
+                    message: 'timeout_error'
                 },
                 props
             ),
@@ -452,7 +454,7 @@ export class NoNetworkError extends CustomError {
         super(
             Object.assign(
                 {
-                    message: 'no_network',
+                    message: 'no_network'
                 },
                 props
             ),
@@ -472,7 +474,7 @@ export class HTTPError extends CustomError {
         super(
             Object.assign(
                 {
-                    message: 'httpError',
+                    message: 'httpError'
                 },
                 props
             ),
@@ -495,8 +497,8 @@ export class NetworkService extends Observable {
                 object: this,
                 data: {
                     connected: value,
-                    connectionType: this._connectionType,
-                },
+                    connectionType: this._connectionType
+                }
             } as NetworkConnectionStateEventData);
         }
     }
@@ -514,7 +516,8 @@ export class NetworkService extends Observable {
         // console.log('creating NetworkHandler Handler');
     }
     monitoring = false;
-    start() {
+    canCheckWeather = false;
+    async start() {
         if (this.monitoring) {
             return;
         }
@@ -522,6 +525,8 @@ export class NetworkService extends Observable {
         applicationOn(resumeEvent, this.onAppResume, this);
         connectivity.startMonitoring(this.onConnectionStateChange.bind(this));
         this.connectionType = connectivity.getConnectionType();
+
+        this.canCheckWeather = await appavailability.available(global.isIOS ? 'weather://' : 'com.akylas.weather');
     }
     stop() {
         if (!this.monitoring) {
@@ -573,7 +578,7 @@ export class NetworkService extends Observable {
                         new HTTPError({
                             statusCode: response.statusCode,
                             message: error.error_description || error.message || error.error || error,
-                            requestParams,
+                            requestParams
                         })
                     );
                 } catch (e) {
@@ -591,7 +596,7 @@ export class NetworkService extends Observable {
                             new HTTPError({
                                 statusCode: response.statusCode,
                                 message: match[1],
-                                requestParams,
+                                requestParams
                             })
                         );
                     }
@@ -599,7 +604,7 @@ export class NetworkService extends Observable {
                         new HTTPError({
                             statusCode: response.statusCode,
                             message: 'HTTP error',
-                            requestParams,
+                            requestParams
                         })
                     );
                 }
@@ -658,10 +663,10 @@ export class NetworkService extends Observable {
             url: osmOverpassUrl,
             queryParams: {
                 data: escape(data),
-                contact: contactEmail,
+                contact: contactEmail
             },
             method: 'GET',
-            timeout: 60000,
+            timeout: 60000
         }).then((result) => {
             let results;
             if (feature.usingWays) {
@@ -740,7 +745,7 @@ export class NetworkService extends Observable {
         const params = {
             key: gVars.MAPQUEST_TOKEN,
             inFormat: 'json',
-            outFormat: 'json',
+            outFormat: 'json'
         };
         // const postParams = {
         //     json: JSON.stringify({
@@ -761,17 +766,17 @@ export class NetworkService extends Observable {
                 useFilter: true,
                 // cyclingRoadFactor:0.1,
                 shapeFormat: 'cmp6',
-                latLngCollection: compress(_points, 6),
+                latLngCollection: compress(_points, 6)
             }),
             // silent:_params.silent,
             method: 'POST',
-            timeout: 60000,
+            timeout: 60000
         }).then((e) => {
             // console.debug('test', e);
             if (e.info.statuscode > 300 && e.info.statuscode < 600) {
                 return Promise.reject({
                     code: e.info.statuscode,
-                    error: e.info.messages.join(', '),
+                    error: e.info.messages.join(', ')
                 });
             } else {
                 return e;
@@ -792,14 +797,14 @@ export class NetworkService extends Observable {
             const r = await this.actualMapquestElevationProfile(_points.slice(0, semi));
             const r2 = await this.actualMapquestElevationProfile(_points.slice(semi));
             const firstDistanceTotal = r.elevationProfile[r.elevationProfile.length - 1].distance;
-            res= {
+            res = {
                 elevationProfile: r.elevationProfile.concat(
                     r2.elevationProfile.map((e) => {
                         e.distance += firstDistanceTotal;
                         return e;
                     })
                 ),
-                shapePoints: r.shapePoints.concat(r2.shapePoints),
+                shapePoints: r.shapePoints.concat(r2.shapePoints)
             };
         } else {
             res = await this.actualMapquestElevationProfile(_points);
@@ -813,7 +818,7 @@ export class NetworkService extends Observable {
             min: [100000, 100000],
             dplus: 0,
             dmin: 0,
-            data: [],
+            data: []
         };
         profile.forEach(function (value, index) {
             // console.log('test', index, value, last ? last.height : undefined, result.dplus, result.dmin);
@@ -913,6 +918,48 @@ export class NetworkService extends Observable {
         result.dplus = Math.round(result.dplus);
         // console.log('got profile', result);
         return result;
+    }
+
+    broadcastPromises: { [key: string]: { resolve: Function; reject: Function; timeoutTimer: NodeJS.Timer }[] } = {};
+    sendWeatherBroadcastQuery({ lat, lon, timeout = 0 }) {
+        return new Promise((resolve, reject) => {
+            const id = Date.now().valueOf() + '';
+            this.broadcastPromises[id] = this.broadcastPromises[id] || [];
+            let timeoutTimer;
+            if (timeout > 0) {
+                timeoutTimer = setTimeout(() => {
+                    // we need to try catch because the simple fact of creating a new Error actually throws.
+                    // so we will get an uncaughtException
+                    try {
+                        reject(new Error('timeout'));
+                    } catch {}
+                    delete this.broadcastPromises[id];
+                }, timeout);
+            }
+            this.broadcastPromises[id].push({ resolve, reject, timeoutTimer });
+            const intent = new android.content.Intent('com.akylas.weather.QUERY_WEATHER');
+            intent.putExtra('id', id);
+            intent.putExtra('lat', lat);
+            intent.putExtra('lon', lon);
+            intent.putExtra('package', 'akylas.alpi.maps');
+            intent.setPackage('com.akylas.weather');
+            const context: android.content.Context = ad.getApplicationContext();
+
+            context.sendBroadcast(intent);
+        });
+    }
+    onWeatherResultBroadcast(id, weatherData, error) {
+        if (id && this.broadcastPromises.hasOwnProperty(id)) {
+            this.broadcastPromises[id].forEach(function (executor) {
+                executor.timeoutTimer && clearTimeout(executor.timeoutTimer);
+                if (error) {
+                    executor.reject(error);
+                } else {
+                    executor.resolve(weatherData);
+                }
+            });
+            delete this.broadcastPromises[id];
+        }
     }
 }
 export const networkService = new NetworkService();

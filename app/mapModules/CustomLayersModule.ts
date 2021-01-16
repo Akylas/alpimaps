@@ -32,6 +32,34 @@ import { toDegrees, toRadians } from '~/utils/geo';
 import MapModule, { getMapContext } from './MapModule';
 const mapContext = getMapContext();
 
+const DEFAULT_HILLSHADE_SHADER =
+    'uniform vec4 u_shadowColor;\n \
+uniform vec4 u_highlightColor;\n \
+uniform vec4 u_accentColor;\n \
+uniform vec3 u_lightDir;\n \
+vec4 applyLighting(lowp vec4 color, mediump vec3 normal, mediump vec3 surfaceNormal, mediump float intensity) {\n \
+    mediump float lighting = max(0.0, dot(normal, u_lightDir));\n \
+    mediump float accent = normal.z;\n \
+    lowp vec4 accent_color = (1.0 - accent) * u_accentColor * intensity;\n \
+    mediump float alpha = clamp(u_shadowColor.a*(1.0-lighting)+u_highlightColor.a*lighting, 0.0, 1.0);\n \
+    lowp vec4 shade_color = vec4(mix(u_shadowColor.rgb, u_highlightColor.rgb, lighting), alpha);\n \
+    return (accent_color * (1.0 - shade_color.a) + shade_color) * color * intensity;\n \
+}';
+
+const SLOPE_HILLSHADE_SHADER =
+    'uniform vec4 u_shadowColor; \n \
+uniform vec4 u_highlightColor; \n \
+uniform vec4 u_accentColor; \n \
+uniform vec3 u_lightDir;  \n\
+vec4 applyLighting(lowp vec4 color, mediump vec3 normal, mediump vec3 surfaceNormal, mediump float intensity) { \n \
+   mediump float lighting = max(0.0, dot(normal, u_lightDir)); \n \
+   mediump float slope = acos(dot(normal, surfaceNormal)) *180.0 / 3.14159 * 1.2; \n \
+   if (slope >= 45.0) {return vec4(0.7568627450980392* 0.5, 0.5450980392156863* 0.5, 0.7176470588235294* 0.5, 0.5); } \n \
+   if (slope >= 40.0) {return vec4( 0.5, 0, 0, 0.5); } \n \
+   if (slope >= 35.0) {return vec4(0.9098039215686275* 0.5, 0.4627450980392157* 0.5, 0.2235294117647059* 0.5, 0.5); } \n \
+   if (slope >= 30.0) {return vec4(0.9411764705882353* 0.5, 0.9019607843137255* 0.5, 0.3058823529411765* 0.5, 0.5); } \n \
+   return vec4(0, 0, 0, 0.0); \n \
+} \n';
 function templateString(str: string, data) {
     return str.replace(
         /{(\w*)}/g, // or /{(\w*)}/g for "{this} instead of %this%"
@@ -41,6 +69,35 @@ function templateString(str: string, data) {
     );
 }
 
+const HILLSHADE_OPTIONS = {
+    contrast: {
+        min: 0,
+        max: 1
+    },
+    heightScale: {
+        min: 0,
+        max: 2
+    },
+    zoomLevelBias: {
+        min: 0,
+        max: 5
+    },
+    highlightColor: {
+        type: 'color'
+    },
+    accentColor: {
+        type: 'color'
+    },
+    shadowColor: {
+        type: 'color'
+    },
+    illuminationDirection: {
+        min: 0,
+        max: 359,
+        transform: (value) => [Math.sin(toRadians(value)), Math.cos(toRadians(value)), 0],
+        transformBack: (value) => toDegrees(((value.x || value[0]) > 0 ? 1 : -1) * Math.acos(value.y || value[1]))
+    }
+};
 export interface SourceItem {
     opacity: number;
     legend?: string;
@@ -143,11 +200,16 @@ export default class CustomLayersModule extends MapModule {
     }
     createHillshadeTileLayer(name, dataSource, options: HillshadeRasterTileLayerOptions = {}, terrarium = false) {
         const contrast = appSettings.getNumber(`${name}_contrast`, 1);
-        const heightScale = appSettings.getNumber(`${name}_heightScale`, 1.6);
+        const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.086);
         const illuminationDirection = appSettings.getNumber(`${name}_illuminationDirection`, 335);
         const opacity = appSettings.getNumber(`${name}_opacity`, 1);
         const decoder = terrarium ? new TerrariumElevationDataDecoder() : new MapBoxElevationDataDecoder();
         const tileFilterModeStr = appSettings.getString(`${name}_tileFilterMode`, 'bilinear');
+
+        const accentColor = new Color(appSettings.getString(`${name}_accentColor`, 'rgba(0,0,0,0.39)'));
+        const shadowColor = new Color(appSettings.getString(`${name}_shadowColor`, 'rgba(0,0,0,0.39)'));
+        const highlightColor = new Color(appSettings.getString(`${name}_highlightColor`, 'rgba(255, 255, 255,0)'));
+
         let tileFilterMode: RasterTileFilterMode;
         switch (tileFilterModeStr) {
             case 'bicubic':
@@ -165,52 +227,26 @@ export default class CustomLayersModule extends MapModule {
             tileFilterMode,
             visibleZoomRange: [3, 16],
             contrast,
+            // exagerateHeightScaleEnabled: false,
+            normalMapLightingShader: DEFAULT_HILLSHADE_SHADER,
             illuminationDirection: [Math.sin(toRadians(illuminationDirection)), Math.cos(toRadians(illuminationDirection)), 0],
-            highlightColor: new Color(255, 255, 255, 255),
-            shadowColor: new Color(100, 0, 0, 0),
-            accentColor: new Color(100, 0, 0, 0),
-            // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_ALL,
+            highlightColor,
+            shadowColor,
+            accentColor,
             heightScale,
             dataSource,
             opacity,
             visible: opacity !== 0,
-            // maxUnderzoomLevel:1,
-            // maxOverzoomLevel:1,
             ...options
         });
     }
     toggleHillshadeSlope(value: boolean) {
         if (this.hillshadeLayer) {
             if (value) {
-                this.hillshadeLayer.normalMapLightingShader =
-                    'uniform vec4 u_shadowColor; \n \
-                     uniform vec4 u_highlightColor; \n \
-                     uniform vec4 u_accentColor; \n \
-                     uniform vec3 u_lightDir;  \n\
-                     vec4 applyLighting(lowp vec4 color, mediump vec3 normal, mediump vec3 surfaceNormal, mediump float intensity) { \n \
-                        mediump float lighting = max(0.0, dot(normal, u_lightDir)); \n \
-                        mediump float slope = acos(dot(normal, surfaceNormal)) *180.0 / 3.14159 * 1.2; \n \
-                        if (slope >= 45.0) {return vec4(0.7568627450980392* 0.5, 0.5450980392156863* 0.5, 0.7176470588235294* 0.5, 0.5); } \n \
-                        if (slope >= 40.0) {return vec4( 0.5, 0, 0, 0.5); } \n \
-                        if (slope >= 35.0) {return vec4(0.9098039215686275* 0.5, 0.4627450980392157* 0.5, 0.2235294117647059* 0.5, 0.5); } \n \
-                        if (slope >= 30.0) {return vec4(0.9411764705882353* 0.5, 0.9019607843137255* 0.5, 0.3058823529411765* 0.5, 0.5); } \n \
-                        return vec4(0, 0, 0, 0.0); \n \
-                    } \n';
+                this.hillshadeLayer.normalMapLightingShader = SLOPE_HILLSHADE_SHADER;
                 this.hillshadeLayer.exagerateHeightScaleEnabled = false;
             } else {
-                this.hillshadeLayer.normalMapLightingShader =
-                    'uniform vec4 u_shadowColor;\n \
-                       uniform vec4 u_highlightColor;\n \
-                       uniform vec4 u_accentColor;\n \
-                       uniform vec3 u_lightDir;\n \
-                       vec4 applyLighting(lowp vec4 color, mediump vec3 normal, mediump vec3 surfaceNormal, mediump float intensity) {\n \
-                           mediump float lighting = max(0.0, dot(normal, u_lightDir));\n \
-                           mediump float accent = normal.z;\n \
-                           lowp vec4 accent_color = (1.0 - accent) * u_accentColor * intensity;\n \
-                           mediump float alpha = clamp(u_shadowColor.a*(1.0-lighting)+u_highlightColor.a*lighting, 0.0, 1.0);\n \
-                           lowp vec4 shade_color = vec4(mix(u_shadowColor.rgb, u_highlightColor.rgb, lighting), alpha);\n \
-                           return (accent_color * (1.0 - shade_color.a) + shade_color) * color * intensity;\n \
-                       }';
+                this.hillshadeLayer.normalMapLightingShader = DEFAULT_HILLSHADE_SHADER;
                 this.hillshadeLayer.exagerateHeightScaleEnabled = true;
             }
         }
@@ -241,26 +277,7 @@ export default class CustomLayersModule extends MapModule {
         };
         console.log('createRasterLayer', provider);
         if (provider.hillshade) {
-            Object.assign(options, {
-                contrast: {
-                    min: 0,
-                    max: 1
-                },
-                heightScale: {
-                    min: 0,
-                    max: 2
-                },
-                zoomLevelBias: {
-                    min: 0,
-                    max: 5
-                },
-                illuminationDirection: {
-                    min: 0,
-                    max: 359,
-                    transform: (value) => [Math.sin(toRadians(value)), Math.cos(toRadians(value)), 0],
-                    transformBack: (value) => toDegrees(Math.acos(value.y || value[1]))
-                }
-            });
+            Object.assign(options, HILLSHADE_OPTIONS);
             layer = this.createHillshadeTileLayer(
                 id,
                 provider.cacheable !== false
@@ -588,26 +605,7 @@ export default class CustomLayersModule extends MapModule {
                 name,
                 opacity,
                 layer,
-                options: {
-                    contrast: {
-                        min: 0,
-                        max: 1
-                    },
-                    heightScale: {
-                        min: 0,
-                        max: 2
-                    },
-                    zoomLevelBias: {
-                        min: 0,
-                        max: 5
-                    },
-                    illuminationDirection: {
-                        min: 0,
-                        max: 359,
-                        transform: (value) => [Math.sin(toRadians(value)), Math.cos(toRadians(value)), 0],
-                        transformBack: (value) => toDegrees(Math.acos(value.y || value[1]))
-                    }
-                },
+                options: HILLSHADE_OPTIONS,
                 provider: { name }
             };
             this.customSources.push(data);

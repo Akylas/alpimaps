@@ -7,15 +7,18 @@
         RasterTileLayer
     } from '@nativescript-community/ui-carto/layers/raster';
     import { action } from '@nativescript-community/ui-material-dialogs';
+    import { Color } from '@nativescript/core';
     import { setNumber, setString } from '@nativescript/core/application-settings';
     import { onMount } from 'svelte';
     import { l } from '~/helpers/locale';
     import { SourceItem } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
+    import { showError } from '~/utils/error';
+    import { pickColor } from '~/utils/utils';
     import { closeBottomSheet } from './bottomsheet';
 
     const mapContext = getMapContext();
-
+    let scrollView;
     export let item: SourceItem;
     let actions: string[] = [];
     $: {
@@ -36,7 +39,14 @@
         actions = res;
     }
     let options: {
-        [k: string]: { value?: number; min?: number; max?: number; transform?: Function; transformBack?: Function };
+        [k: string]: {
+            type?: string;
+            value?: any;
+            min?: number;
+            max?: number;
+            transform?: Function;
+            transformBack?: Function;
+        };
     } = {};
     onMount(() => {
         const layer = item.layer;
@@ -56,6 +66,9 @@
         // }))
     });
     function optionValue(name) {
+        if (options[name].type === 'color') {
+            return options[name].value as any;
+        }
         return Math.round(options[name].value * 100);
         // return Math.round(options * 100);
     }
@@ -67,6 +80,19 @@
             newValue = options[name].transform(newValue);
         }
         item.layer[name] = newValue;
+    }
+    async function pickOptionColor(name, color: Color) {
+        // console.log('pickOptionColor', name, color, typeof color);
+        try {
+            const newColor = await pickColor(color, scrollView.nativeView);
+            // console.log('newColor', item.name, name, newColor);
+            setString(`${item.name}_${name}`, newColor.hex);
+            options[name].value = newColor.hex;
+            item.layer[name] = newColor;
+            // console.log('item.layer', name, newColor, item.layer);
+        } catch (err) {
+            showError(err);
+        }
     }
     function handleAction(act: string) {
         const customLayers = mapContext.mapModule('customLayers');
@@ -166,24 +192,51 @@
     }
 </script>
 
-<scrollview>
+<scrollview bind:this={scrollView} height="200">
     <stacklayout>
         {#each Object.entries(options) as [name, option]}
-            <gridlayout height="50" columns="100,*,50">
-                <canvaslabel colSpan="3" fontSize="13" color="white" padding="10">
-                    <cspan text={name} verticalAlignment="center" paddingLeft="10" horizontalAlignment="left" width="100" />
-                    <cspan text={optionValue(name) / 100 + ''} verticalAlignment="center" textAlignment="right" />
-                </canvaslabel>
-                <mdslider
-                    col="1"
-                    marginLeft="10"
-                    marginRight="10"
-                    value={optionValue(name)}
-                    on:valueChange={(event) => onOptionChanged(name, event)}
-                    minValue={option.min * 100}
-                    maxValue={option.max * 100}
-                    verticalAlignment="center" />
-            </gridlayout>
+            {#if option.type === 'color'}
+                <gridlayout height="50" columsn="*" on:tap={pickOptionColor(name, optionValue(name))}>
+                    <canvaslabel fontSize="13" color="white" padding="10">
+                        <cspan text={name} verticalAlignment="center" paddingLeft="10" horizontalAlignment="left" width="100" />
+                        <circle
+                            strokeWidth="2"
+                            paintStyle="fill"
+                            fillColor="gray"
+                            radius="15"
+                            antiAlias={true}
+                            horizontalAlignment="right"
+                            verticalAlignment="middle"
+                            width="20" />
+                        <circle
+                            strokeWidth="2"
+                            paintStyle="fill_and_stroke"
+                            strokeColor="gray"
+                            fillColor={optionValue(name)}
+                            radius="15"
+                            antiAlias={true}
+                            horizontalAlignment="right"
+                            verticalAlignment="middle"
+                            width="20" />
+                    </canvaslabel>
+                </gridlayout>
+            {:else}
+                <gridlayout height="50" columns="100,*,50">
+                    <canvaslabel colSpan="3" fontSize="13" color="white" padding="10">
+                        <cspan text={name} verticalAlignment="center" paddingLeft="10" horizontalAlignment="left" width="100" />
+                        <cspan text={optionValue(name) / 100 + ''} verticalAlignment="center" textAlignment="right" />
+                    </canvaslabel>
+                    <mdslider
+                        col="1"
+                        marginLeft="10"
+                        marginRight="10"
+                        value={optionValue(name)}
+                        on:valueChange={(event) => onOptionChanged(name, event)}
+                        minValue={option.min * 100}
+                        maxValue={option.max * 100}
+                        verticalAlignment="center" />
+                </gridlayout>
+            {/if}
         {/each}
         <stacklayout orientation="horizontal">
             {#each actions as action}<button variant="text" text={l(action)} on:tap={handleAction(action)} />{/each}

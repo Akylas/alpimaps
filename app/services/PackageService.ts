@@ -580,10 +580,11 @@ class PackageService extends Observable {
         }
         return new Promise((resolve) => service.findFeatures(options, resolve));
     }
-    prepareGeoCodingResult(geoRes: GeoResult) {
+    prepareGeoCodingResult(geoRes: GeoResult, onlyAddress = false) {
         const address: any = {};
 
         [
+            ['name', 'getName'],
             ['country', 'getCountry'],
             ['locality', 'getLocality'],
             ['neighbourhood', 'getNeighbourhood'],
@@ -605,11 +606,14 @@ class PackageService extends Observable {
         if (cat && cat.size() > 0) {
             geoRes['categories'] = nativeVectorToArray(cat);
         }
-        geoRes.provider = 'carto';
-        geoRes.properties.name = geoRes.properties.name || geoRes.address.getName();
-        geoRes.address = address;
-        if (geoRes.properties.name.length === 0) {
-            delete geoRes.properties.name;
+        const res = geoRes as Item;
+        res.provider = 'carto';
+        res.address = address;
+        if (!onlyAddress) {
+            geoRes.properties.name = geoRes.properties.name || res.address.name || res.address.road;
+            if (geoRes.properties.name.length === 0) {
+                delete geoRes.properties.name;
+            }
         }
         return geoRes as Item;
     }

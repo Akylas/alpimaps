@@ -222,6 +222,7 @@
         setMapContext({
             drawer: drawer.nativeView,
             getMap: () => cartoMap,
+            getMainPage: () => page,
             getProjection: () => projection,
             getCurrentLanguage: () => currentLanguage,
             getSelectedItem: () => $selectedItem,
@@ -449,6 +450,7 @@
         didIgnoreAlreadySelected = false;
         // console.log('selectItem', item, isFeatureInteresting);
         if (isFeatureInteresting) {
+            
             if (item.route) {
                 const vectorElement = item.vectorElement as Line;
                 if (vectorElement) {
@@ -480,6 +482,7 @@
                     selectedPosMarker.visible = false;
                 }
             } else {
+                
                 if (!selectedPosMarker) {
                     getOrCreateLocalVectorLayer();
                     const itemModule = mapContext.mapModule('items');
@@ -515,6 +518,36 @@
             // } as any
             if (setSelected) {
                 $selectedItem = item;
+            }
+            if (!item.route) {
+                const service = packageService.localOSMOfflineReverseGeocodingService;
+                if (service) {
+                    itemLoading = true;
+                    const radius = 100;
+                    try {
+                        const res = await packageService.searchInGeocodingService(service, {
+                            projection,
+                            location: item.position,
+                            searchRadius: radius
+                        });
+                        if (res) {
+                            for (let index = 0; index < res.size(); index++) {
+                                const r = packageService.convertGeoCodingResult(res.get(index));
+                                if (computeDistanceBetween(item.position, r.position) <= radius && r.rank > 0.7) {
+                                    if ($selectedItem.position === item.position) {
+                                        $selectedItem = packageService.prepareGeoCodingResult({
+                                            address: r.address as any,
+                                            ...$selectedItem
+                                        }, r.rank < 0.9);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    } catch(err) {
+                        console.error(err);
+                    }
+                }
             }
 
             if (!item.route && (!item.properties || !item.properties.hasOwnProperty('ele')) && packageService.hillshadeLayer) {
@@ -670,7 +703,7 @@
     let didIgnoreAlreadySelected = false;
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureLayerName, featureData, featurePosition, layer } = data;
-        if (DEV_LOG) {
+        // if (DEV_LOG) {
             console.log(
                 'onVectorTileClicked',
                 featureLayerName,
@@ -679,7 +712,7 @@
                 featureData,
                 featurePosition
             );
-        }
+        // }
 
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
@@ -746,37 +779,6 @@
                     position: isFeatureInteresting ? featurePosition : position
                 };
                 selectItem({ item: result, isFeatureInteresting });
-
-                const service = packageService.localOSMOfflineReverseGeocodingService;
-                if (service) {
-                    itemLoading = true;
-                    const radius = 100;
-                    packageService
-                        .searchInGeocodingService(service, {
-                            projection,
-                            location: featurePosition,
-                            searchRadius: radius
-                        })
-                        .then((res) => {
-                            if (res) {
-                                for (let index = 0; index < res.size(); index++) {
-                                    const r = packageService.convertGeoCodingResult(res.get(index));
-                                    if (computeDistanceBetween(result.position, r.position) <= radius && r.rank > 0.9) {
-                                        if ($selectedItem.position === result.position) {
-                                            $selectedItem = packageService.prepareGeoCodingResult({
-                                                address: r.address as any,
-                                                ...selectedItem
-                                            });
-                                        }
-                                        break;
-                                    }
-                                }
-                            }
-                        })
-                        .catch((err) => {
-                            console.error(err);
-                        });
-                }
             }
             unFocusSearch();
 

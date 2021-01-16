@@ -135,7 +135,7 @@
 		[class=minor] {
 			[zoom>=13] {
 				line-color: @residential-casing;
-				line-width: linear([view::zoom], (13, @residential-width-z13), (14, @residential-width-z14), (15, @residential-width-z15), (16, @residential-width-z16), (17, @residential-width-z17), (18, @residential-width-z18), (19, @residential-width-z19));
+				line-width: linear([view::zoom], (13, @residential-width-z13 - 2 * @residential-casing-width-z13), (13.1, @residential-width-z13), (14, @residential-width-z14), (15, @residential-width-z15), (16, @residential-width-z16), (17, @residential-width-z17), (18, @residential-width-z18), (19, @residential-width-z19));
 				[brunnel=tunnel] {
 					line-dasharray: 4,2;
 				}
@@ -390,22 +390,20 @@
 			[brunnel=tunnel] {
 				line-color: @tunnel-casing;
 				line-dasharray: 4,2;
-				line-width: @track-width-z13 + 2 * (@paths-background-width + @paths-tunnel-casing-width);
+				line-width: linear([view::zoom], (13, @track-width-z13 + 2 * (@paths-background-width + @paths-tunnel-casing-width)), (15, @track-width-z15 + 2 * (@paths-background-width + @paths-tunnel-casing-width)));
+				// [tracktype=grade1],
+				// [tracktype=grade2] {
+				// 	line-width: @track-grade1-width-z13 + 2 * (@paths-background-width + @paths-tunnel-casing-width);
+				// 	line-width: @track-grade2-width-z13 + 2 * (@paths-background-width + @paths-tunnel-casing-width);
+				// }
+				// [zoom>=15]{
 				[tracktype=grade1] {
-				line-width: @track-grade1-width-z13 + 2 * (@paths-background-width + @paths-tunnel-casing-width);
+					line-width: linear([view::zoom], (13, @track-grade1-width-z13), (15, @track-grade1-width-z15 + 2 * (@paths-background-width + @paths-tunnel-casing-width)));
 				}
 				[tracktype=grade2] {
-				line-width: @track-grade2-width-z13 + 2 * (@paths-background-width + @paths-tunnel-casing-width);
+					line-width: linear([view::zoom], (13, @track-grade2-width-z13), (15, @track-grade2-width-z15 + 2 * (@paths-background-width + @paths-tunnel-casing-width)));
 				}
-				[zoom>=15]{
-					line-width: @track-width-z15 + 2 * (@paths-background-width + @paths-tunnel-casing-width);
-					[tracktype=grade1] {
-						line-width: @track-grade1-width-z15 + 2 * (@paths-background-width + @paths-tunnel-casing-width);
-					}
-					[tracktype=grade2] {
-						line-width: @track-grade2-width-z15 + 2 * (@paths-background-width + @paths-tunnel-casing-width);
-					}
-				}
+				// }
 			}
 		}
 
@@ -699,18 +697,18 @@
 		}
 
 
-		[class=residential],
-		[class=unclassified],
-		[class=minor] {
-			[zoom>=12][class=residential],
-			[zoom=12][class=minor],
-			[zoom=12][class=unclassified] {
-				line-color: @unimportant-road;
-				line-width: @unclassified-width-z12;
-			}
-			[zoom>=13] {
-				line-color: @residential-fill;
-				line-width: linear([view::zoom], (13, @residential-width-z13 - 2 * @residential-casing-width-z13), (14, @residential-width-z14 - 2 * @residential-casing-width-z14), (15, @residential-width-z15 - 2 * @residential-casing-width-z15), (16, @residential-width-z16 - 2 * @residential-casing-width-z16), (17, @residential-width-z17 - 2 * @residential-casing-width-z17), (18, @residential-width-z18 - 2 * @residential-casing-width-z17), (19, @residential-width-z19 - 2 * @residential-casing-width-z19));
+		[class=residential][zoom>=12],
+		[class=unclassified][zoom>=12],
+		[class=minor][zoom>=12] {
+			// [zoom>=12][class=residential],
+			// [zoom=12][class=minor],
+			// [zoom=12][class=unclassified] {
+			// 	line-color: @unimportant-road;
+			// 	line-width: @unclassified-width-z12;
+			// }
+			// [zoom>=13] {
+				line-color: step([view::zoom], (12,@unimportant-road), (13, @residential-fill));
+				line-width: linear([view::zoom], (12, @unclassified-width-z12), (13, @residential-width-z13 - 2 * @residential-casing-width-z13), (14, @residential-width-z14 - 2 * @residential-casing-width-z14), (15, @residential-width-z15 - 2 * @residential-casing-width-z15), (16, @residential-width-z16 - 2 * @residential-casing-width-z16), (17, @residential-width-z17 - 2 * @residential-casing-width-z17), (18, @residential-width-z18 - 2 * @residential-casing-width-z17), (19, @residential-width-z19 - 2 * @residential-casing-width-z19));
 			
 				// [brunnel=tunnel] {
 				// 	line-color: @residential-tunnel-fill;
@@ -720,7 +718,7 @@
 				// 	line-width: linear([view::zoom], (13, @residential-width-z13 - 2 * @bridge-casing-width-z13), (14, @residential-width-z14 - 2 * @bridge-casing-width-z14), (15, @residential-width-z15 - 2 * @bridge-casing-width-z15), (16, @residential-width-z16 - 2 * @bridge-casing-width-z16), (17, @residential-width-z17 - 2 * @bridge-casing-width-z17), (18, @residential-width-z18 - 2 * @bridge-casing-width-z17), (19, @residential-width-z19 - 2 * @bridge-casing-width-z19));
 					
 				// }
-			}
+			// }
 			[zoom>=15] {
 				line-cap: round;
 				line-join: round;
@@ -890,7 +888,7 @@
 			line-color: @raceway-fill;
 			line-join: round;
 			line-cap: round;
-			line-width: linear([view::zoom], (12, 1.2), (13, 2), (14, 3), (15, 6), (18, 8), (19, 12), (20, 24));
+			line-width: linear([view::zoom], (12, 0.8), (17, 2), (18, 8), (19, 12), (20, 24));
 		}
 		[class=path]{
 			// [subclass=platform] {
@@ -955,7 +953,8 @@
 			// [bicycle != designated][horse != designated]
 			 {	
 				 [sac_scale!=null],
-				[surface!=paved][zoom>=15],
+				[surface=paved][zoom>=15],
+				[surface!=paved][zoom>=13],
 				[subclass=path][zoom>=13],
 				[zoom>=16] {
 					// [zoom>=15] {
@@ -985,7 +984,7 @@
 					line-dasharray: 3,1;
 					// line-join: round;
 					// line-cap: round;
-					line-width: linear([view::zoom], (13,	@footway-width-z13), (14,	@footway-width-z14), (15, @footway-width-z15), (16, @footway-width-z16), (18, @footway-width-z18), (19, @footway-width-z19));
+					line-width: linear([view::zoom], (13, @footway-width-z13), (14,	@footway-width-z14), (15, @footway-width-z15), (16, @footway-width-z16), (18, @footway-width-z18), (19, @footway-width-z19));
 					line-opacity: linear([view::zoom], (13,	0.3), (14,0.4), (16,0.3));
 					// line-width: @footway-width-z14;
 					[zoom>=15][surface=paved] {
@@ -1177,7 +1176,7 @@
 		// [class=rail][service!=null][zoom>=13],
 		[class=rail][zoom>=8] {
 			// ::rail {
-			[zoom<12] {
+			[zoom<13] {
 				line-color: #787878;
 				// line-width: 0.5;
 				line-width: linear([view::zoom], (8,	0.8), (12, 0.9));
@@ -1189,17 +1188,17 @@
 					line-dasharray: 2,5;
 				}
 			}
-			[zoom>=12] {
+			[zoom>=13] {
 				// [brunnel=bridge] {
 					dark/line-join: round;
 					light/line-join: round;
 					light/line-color: #ffffff;
 					[subclass=rail] {
-						dark/line-width: linear([view::zoom], (12,	1.5), (13, 2), (16, 3), (18, 5));
+						dark/line-width: linear([view::zoom], (12,	1.5), (13, 2), (16, 2), (20, 5));
 						dark/line-color: #707070;
 						// dark/line-width: 1.5;
 						// light/line-width: 0.75;
-						light/line-width: linear([view::zoom], (12,	0.75), (13, 1), (18, 2));
+						light/line-width: linear([view::zoom], (12,	0.75), (13, 1), (16, 1), (20, 2));
 						light/line-dasharray: 8,8;
 						// [zoom>=13] {
 							// dark/line-width: 2;

@@ -324,14 +324,14 @@ Map {
 
   
   ::top_of_residential {
-    [class = 'recreation_ground'][zoom >= 10],
-    [class = 'playground'][zoom >= 13],
-    [class = 'fitness_station'][zoom >= 13] {
+    [class = 'recreation_ground'][zoom >= 14],
+    [class = 'playground'][zoom >= 15],
+    [class = 'fitness_station'][zoom >= 15] {
       polygon-fill: @leisure;
-      [zoom >= 15] {
-        line-color: darken(@leisure, 60%);
-        line-width: 0.3;
-      }
+      // [zoom >= 15] {
+      //   line-color: darken(@leisure, 60%);
+      //   line-width: 0.3;
+      // }
       // [way_pixels >= 4]  { polygon-gamma: 0.75; }
       // [way_pixels >= 64] { polygon-gamma: 0.3;  }
     }
@@ -878,8 +878,9 @@ Map {
 @entrance-permissive: darken(@building-line, 15%);
 @entrance-normal: @building-line;
 
-#building['nuti::buildings'>0] [zoom >= 13] {
+#building['nuti::buildings'>0] [zoom >= 14] {
     polygon-fill: @building-low-zoom;
+    polygon-opacity:linear([view::zoom], (14, 0), (14.1, 1));
     //polygon-clip: false;
     ::3d['nuti::buildings'>1][zoom>=17]{
         building-height: [render_height] ? [render_height] : 10;

@@ -19,7 +19,7 @@ import { DomTraceCategory, registerNativeViewElement } from 'svelte-native/dom';
 import { CanvasLabel, Group, Span } from '@nativescript-community/ui-canvaslabel';
 import { Img, initialize, shutDown } from '@nativescript-community/ui-image';
 import { CanvasView } from '@nativescript-community/ui-canvas';
-import { Line } from '@nativescript-community/ui-canvas/shapes';
+import { Circle, Line } from '@nativescript-community/ui-canvas/shapes';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { LineChart } from '@nativescript-community/ui-chart';
 import { Slider } from '@nativescript-community/ui-material-slider';
@@ -68,6 +68,7 @@ registerNativeViewElement('lineChart', () => LineChart as any);
 registerNativeViewElement('cartomap', () => CartoMap as any);
 registerNativeViewElement('canvas', () => CanvasView);
 registerNativeViewElement('line', () => Line as any);
+registerNativeViewElement('circle', () => Circle as any);
 registerNativeViewElement('image', () => Img, null, {}, { override: true });
 registerNativeViewElement('canvaslabel', () => CanvasLabel);
 registerNativeViewElement('cspan', () => Span as any);
@@ -78,6 +79,11 @@ registerNativeViewElement('bottomsheet', () => PersistentBottomSheet);
 registerNativeViewElement('symbolshape', () => SymbolShape as any);
 CollectionViewElement.register();
 DrawerElement.register();
+
+import { start as startTheme } from '~/helpers/theme';
+// on startup we need to ensure theme is loaded because of a mixin
+// on startup we need to say what we are using
+startTheme();
 
 if (global.isIOS) {
     const variables = require('~/variables');
