@@ -64,9 +64,9 @@
 	[class=water],
 	[class=river][zoom>=8]{
 		polygon-fill: @water;
-		[class=river]{
-			line-color: @river; 
-			line-width:1;
-		}
+		// [class=river]{
+		// 	line-color: @river; 
+		// 	line-width:1;
+		// }
 	}
 }

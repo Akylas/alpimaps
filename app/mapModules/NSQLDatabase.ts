@@ -1,7 +1,16 @@
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import DatabaseInterface from 'kiss-orm/dist/Databases/DatabaseInterface';
+import migrate from 'kiss-orm/dist/Databases/Common/migrate';
 import { SQLiteDatabase, openOrCreate } from '@akylas/nativescript-sqlite';
-const sql = SqlQuery.createFromTemplateString;
+
+function formatIdentifier(i: string): string {
+    return i;
+}
+// Note: The mysql package does not expose the classes, so we have to rely on those ugly tests instead.
+const isPoolOrPoolConnection = (connection: any) =>
+    // Note: The mysql pacakge does not expose the classes, so we cannot use a proper instanceof...
+    connection.query && connection.query instanceof Function;
+const isPool = (connection: any) => isPoolOrPoolConnection(connection) && connection.end && !connection.release;
 
 export default class NSQLDatabase implements DatabaseInterface {
     db: SQLiteDatabase;
@@ -14,57 +23,41 @@ export default class NSQLDatabase implements DatabaseInterface {
     ) {
         this.db = openOrCreate(filePath, options);
     }
+
+    async disconnect(): Promise<void> {
+        return this.db.close();
+    }
+
     indexToPlaceholder(i: number): string {
         return '?';
     }
-    formatIdentifier(i: string): string {
-        return i;
-    }
-    async disconnect() {
-        await this.db.close();
-    }
+
     async query(query: SqlQuery): Promise<any[]> {
-        const compiledQuery = query.compile(this.indexToPlaceholder, this.formatIdentifier);
+        const compiledQuery = query.compile(this.indexToPlaceholder, formatIdentifier);
         const sqlQuery = compiledQuery.sql.trim();
-        const isInsertQuery = sqlQuery.startsWith('INSERT INTO') || sqlQuery.startsWith('UPDATE');
-        let result = isInsertQuery // when isInsertQuery == true, result is the id
-            ? await this.db.execute(sqlQuery, compiledQuery.params)
-            : await this.db.select(sqlQuery, compiledQuery.params);
-        if (isInsertQuery && !result) {
+        const result = await this.db.select(sqlQuery, compiledQuery.params);
+        return result as any[];
+    }
+    async sequence<T>(sequence: (sequenceDb: NSQLDatabase) => Promise<T>): Promise<T> {
+        return this.db.transaction<T>(() => sequence(this));
+    }
+
+    async migrate(migrations: { [key: string]: SqlQuery }) {
+        await migrate(this, migrations);
+    }
+
+    async insertAndGet(standardInsertQuery: SqlQuery): Promise<number[] | string[] | any[]> {
+        const compiledQuery = standardInsertQuery.compile(this.indexToPlaceholder, formatIdentifier);
+        const sqlQuery = compiledQuery.sql.trim();
+        let result = (await this.db.execute(sqlQuery, compiledQuery.params)) as any;
+        if (!result) {
             // create await an array result.
             result = [{}];
         }
         return result as any[];
     }
 
-    sequence<T>(sequence: (query: (query: SqlQuery) => Promise<any[]>) => Promise<T>) {
-        return this.db.transaction<T>(() => sequence((query: SqlQuery) => this.query(query) as any) as any) as any;
-    }
-
-    async migrate(migrations: { [key: string]: SqlQuery }) {
-        await this.query(sql`
-			CREATE TABLE IF NOT EXISTS "Migrations" (
-				"name" TEXT PRIMARY KEY NOT NULL
-			);
-		`);
-        const migrationsDone = await this.query(sql`SELECT * FROM "Migrations";`);
-
-        for (const [migrationName, migrationQuery] of Object.entries(migrations)) {
-            if (migrationsDone.some((migrationDone) => migrationDone.name === migrationName)) {
-                continue;
-            }
-
-            await this.sequence(async (query) => {
-                await query(sql`BEGIN;`);
-                try {
-                    await query(migrationQuery);
-                    await query(sql`INSERT INTO "Migrations" VALUES (${migrationName});`);
-                } catch (error) {
-                    await query(sql`ROLLBACK;`);
-                    throw error;
-                }
-                await query(sql`COMMIT;`);
-            });
-        }
+    async updateAndGet(standardUpdateQuery: SqlQuery): Promise<null | any[]> {
+        return this.insertAndGet(standardUpdateQuery);
     }
 }
