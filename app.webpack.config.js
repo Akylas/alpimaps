@@ -54,7 +54,7 @@ module.exports = (env, params = {}) => {
     console.log('env', env);
     env.appPath = nconfig.appPath;
     env.appResourcesPath = nconfig.appResourcesPath;
-    env.modules = ['~/receivers/WeatherReceiver'];
+    // env.modules = ['~/receivers/WeatherReceiver'];
     const config = webpackConfig(env, params);
     const mode = production ? 'production' : 'development';
     const platform = env && ((env.android && 'android') || (env.ios && 'ios'));
@@ -179,22 +179,9 @@ module.exports = (env, params = {}) => {
         `{${mdiSymbols.variables[mdiSymbols.variables.length - 1].value.replace(/" (F|0)(.*?)([,\n]|$)/g, '": "$1$2"$3')}}`
     );
     const weatherIconsCss = resolve(projectRoot, 'css/weather-icons/weather-icons-variables.scss');
-    const weatherSymbols = symbolsParser
-        .parseSymbols(readFileSync(weatherIconsCss).toString())
-        .imports.reduce(function (acc, value) {
-            return acc.concat(
-                symbolsParser.parseSymbols(readFileSync(resolve(dirname(weatherIconsCss), value.filepath)).toString()).variables
-            );
-        }, []);
-    // console.log('weatherSymbols', weatherSymbols);
-    const weatherIcons = weatherSymbols.reduce(function (acc, value) {
-        acc[value.name.slice(1)] = String.fromCharCode(parseInt(value.value.slice(2, -1), 16));
-        return acc;
-    }, {});
-
+    
     const scssPrepend = `
     $mdi-fontFamily: ${platform === 'android' ? 'materialdesignicons-webfont' : 'Material Design Icons'};
-    $wi-fontFamily: ${platform === 'android' ? 'weathericons-regular-webfont' : 'Weather Icons'};
     `;
     const scssLoaderRuleIndex = config.module.rules.findIndex((r) => r.test && r.test.toString().indexOf('scss') !== -1);
     config.module.rules.splice(
@@ -263,14 +250,6 @@ module.exports = (env, params = {}) => {
                         }
                         return match;
                     },
-                    flags: 'g'
-                }
-            },
-            {
-                loader: 'string-replace-loader',
-                options: {
-                    search: 'wi-([a-z0-9-]+)',
-                    replace: (match, p1, offset, string) => weatherIcons[p1] || match,
                     flags: 'g'
                 }
             }
