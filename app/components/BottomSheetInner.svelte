@@ -8,7 +8,7 @@
     import { LineData } from '@nativescript-community/ui-chart/data/LineData';
     import { LineDataSet } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
-    import { ShareFile } from '@nativescript-community/ui-share-file';
+    // import { ShareFile } from '@nativescript-community/ui-share-file';
     import { Application, knownFolders } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
@@ -213,38 +213,39 @@
     }
     function shareItem() {
         const itemToShare = omit(item, 'vectorElement');
-        shareFile(JSON.stringify(itemToShare), 'sharedItem.json');
+        // shareFile(JSON.stringify(itemToShare), 'sharedItem.json');
     }
     async function checkWeather() {
         try {
             updatingItem = true;
-            const result = await networkService.sendWeatherBroadcastQuery({ ...item.position, timeout: 10000 });
-            const WeatherBottomSheet = (await import('./WeatherBottomSheet.svelte')).default;
-            await showBottomSheet({
-                parent: mapContext.getMainPage(),
-                view: WeatherBottomSheet,
-                props: { item:result[0] }
-            });
+            openUrl(`weather://query?lat=${item.position.lat}&lon=${item.position.lon}`);
+            // const result = await networkService.sendWeatherBroadcastQuery({ ...item.position, timeout: 10000 });
+            // const WeatherBottomSheet = (await import('./WeatherBottomSheet.svelte')).default;
+            // await showBottomSheet({
+            //     parent: mapContext.getMainPage(),
+            //     view: WeatherBottomSheet,
+            //     props: { item:result[0] }
+            // });
         } catch (err) {
             this.showError(err);
         } finally {
             updatingItem = false;
         }
     }
-    async function shareFile(content: string, fileName: string) {
-        const file = knownFolders.temp().getFile(fileName);
-        // iOS: using writeText was not adding the file. Surely because it was too soon or something
-        // doing it sync works better but still needs a timeout
-        // showLoading('loading');
-        await file.writeText(content);
-        const shareFile = new ShareFile();
-        await shareFile.open({
-            path: file.path,
-            title: fileName,
-            options: true, // optional iOS
-            animated: true // optional iOS
-        });
-    }
+    // async function shareFile(content: string, fileName: string) {
+    //     const file = knownFolders.temp().getFile(fileName);
+    //     // iOS: using writeText was not adding the file. Surely because it was too soon or something
+    //     // doing it sync works better but still needs a timeout
+    //     // showLoading('loading');
+    //     await file.writeText(content);
+    //     const shareFile = new ShareFile();
+    //     await shareFile.open({
+    //         path: file.path,
+    //         title: fileName,
+    //         options: true, // optional iOS
+    //         animated: true // optional iOS
+    //     });
+    // }
     function getRouteInstructionTitle(item: RouteInstruction) {
         return item.inst;
     }
@@ -467,13 +468,13 @@
                 visibility={item && item.id ? 'visible' : 'collapsed'}
                 color="red"
             />
-            <button
+            <!-- <button
                 variant="text"
                 fontSize="10"
                 on:tap={shareItem}
                 text="share item"
                 visibility={item && item.id ? 'visible' : 'collapsed'}
-            />
+            /> -->
             <button
                 variant="text"
                 fontSize="10"
