@@ -1,17 +1,18 @@
-import { CartoMap } from '@nativescript-community/ui-carto/ui';
-import { GeoHandler } from '~/handlers/GeoHandler';
-import { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
 import Observable from '@nativescript-community/observable';
-import { IItem } from '~/models/Item';
 import { Layer } from '@nativescript-community/ui-carto/layers';
-import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
+import { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
 import { Projection } from '@nativescript-community/ui-carto/projections';
-import { NativeViewElementNode } from 'svelte-native/dom';
+import { CartoMap } from '@nativescript-community/ui-carto/ui';
+import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import { Drawer } from '@nativescript-community/ui-drawer';
-import DirectionsPanel from './DirectionsPanel.svelte';
+import { Page } from '@nativescript/core';
+import { NativeViewElementNode } from 'svelte-native/dom';
+import { GeoHandler } from '~/handlers/GeoHandler';
+import { IItem } from '~/models/Item';
 import CustomLayersModule from './CustomLayersModule';
-import UserLocationModule from './UserLocationModule';
+import DirectionsPanel from './DirectionsPanel.svelte';
 import ItemsModule from './ItemsModule';
+import UserLocationModule from './UserLocationModule';
 
 export interface IMapModule {
     onMapReady(mapView: CartoMap<LatLonKeys>);
@@ -37,6 +38,7 @@ export interface MapContext {
     onMapStable(callback: (map: CartoMap<LatLonKeys>) => void);
     onMapIdle(callback: (map: CartoMap<LatLonKeys>) => void);
     onMapClicked(callback: (map: CartoMap<LatLonKeys>) => void);
+    getMainPage: () => NativeViewElementNode<Page>;
     getMap: () => CartoMap<LatLonKeys>;
     getProjection: () => Projection;
     setBottomSheetStepIndex: (value: number) => void;
