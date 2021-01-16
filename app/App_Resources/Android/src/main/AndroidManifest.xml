@@ -3,6 +3,11 @@
     xmlns:android="http://schemas.android.com/apk/res/android" package="__PACKAGE__">
     <supports-screens android:smallScreens="true" android:normalScreens="true" android:largeScreens="true" android:xlargeScreens="true" />
     <uses-sdk android:targetSdkVersion="__APILEVEL__" />
+    <permission
+		android:name="akylas.alpi.maps.broadcast"
+		android:protectionLevel="signatureOrSystem">
+	</permission>
+	<uses-permission android:name="com.akylas.weather.broadcast" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
@@ -54,14 +59,19 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data
-    android:mimeType="application/gpx"
-    android:host="*" 
-    android:pathPattern=".*\\.gpx"
-  />
+                android:mimeType="application/gpx"
+                android:host="*" 
+                android:pathPattern=".*\\.gpx"
+            />
             </intent-filter>
         </activity>
         <activity android:name="com.tns.ErrorReportActivity" />
         <!-- <activity android:name="com.facebook.flipper.android.diagnostics.FlipperDiagnosticActivity" android:exported="true"/> -->
         <service android:name="akylas.alpi.maps.BgService" android:enabled="true" android:exported="false" android:stopWithTask="false" />
+        <receiver android:name=".WeatherReceiver" android:enabled="true" android:exported="true" android:permission="akylas.alpi.maps.broadcast">
+            <intent-filter>
+                <action android:name="com.akylas.weather.QUERY_WEATHER_RESULT" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
