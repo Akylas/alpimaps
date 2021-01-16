@@ -8,7 +8,7 @@ export const primaryColor = new Color(locals.primaryColor);
 export const accentColor = new Color(locals.accentColor);
 export const darkColor = new Color(locals.darkColor);
 export const backgroundColor = new Color(locals.backgroundColor);
-export const wiFontFamily: string = locals.wiFontFamily;
+export const textColor = new Color(locals.textColor);
 export const mdiFontFamily: string = locals.mdiFontFamily;
 export const actionBarHeight: number = parseFloat(locals.actionBarHeight);
 export const statusBarHeight: number = parseFloat(locals.statusBarHeight);
@@ -16,59 +16,6 @@ export const actionBarButtonHeight: number = parseFloat(locals.actionBarButtonHe
 export const screenHeightDips = Screen.mainScreen.heightDIPs;
 export const screenWidthDips = Screen.mainScreen.widthDIPs;
 export let navigationBarHeight: number = parseFloat(locals.navigationBarHeight);
-
-import { writable } from 'svelte/store';
-
-export const latoFontFamily: string = locals.latoFontFamily;
-
-export const screenScale = Screen.mainScreen.scale;
-
-if (global.isAndroid) {
-    const context: android.content.Context = ad.getApplicationContext();
-    const hasPermanentMenuKey = android.view.ViewConfiguration.get(context).hasPermanentMenuKey();
-    if (hasPermanentMenuKey) {
-        navigationBarHeight = 0;
-    }
-} else {
-    navigationBarHeight = 0;
-}
-
-export const sunnyColor = '#FFC82F';
-export const nightColor = '#845987';
-export const scatteredCloudyColor = '#cccccc';
-export const cloudyColor = '#929292';
-export const rainColor = '#4681C3';
-export const snowColor = '#43b4e0';
-export const textColor = writable('');
-export const borderColor = writable('');
-export const textLightColor = writable('');
-
-export const subtitleColor = writable('');
-export const iconColor = writable('');
-
-export function updateThemeColors(theme: string, force = false) {
-    try {
-        if (!force) {
-            theme = Application.systemAppearance();
-        }
-    } catch (err) {
-        console.error('updateThemeColors', err);
-    }
-    console.log('updateThemeColors', theme);
-    if (theme === 'dark') {
-        textColor.set('#ffffff');
-        textLightColor.set('#aaaaaa');
-        borderColor.set('#55cccccc');
-        subtitleColor.set('#aaaaaa');
-        iconColor.set('#aaaaaa');
-    } else {
-        textColor.set('#000000');
-        textLightColor.set('#444444');
-        borderColor.set('#55cccccc');
-        subtitleColor.set('#444444');
-        iconColor.set('#444444');
-    }
-}
 
 export let globalMarginTop = 0;
 
