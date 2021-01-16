@@ -23,6 +23,8 @@
     import BottomSheetInfoView from './BottomSheetInfoView.svelte';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { RouteInstruction } from '~/models/Route';
+    import { networkService } from '~/services/NetworkService';
+    import { showBottomSheet } from './bottomsheet';
 
     export const LISTVIEW_HEIGHT = 200;
     export const PROFILE_HEIGHT = 150;
@@ -178,35 +180,33 @@
                 updateChartData();
             }
             mapContext.setBottomSheetStepIndex(3);
-        } catch(err) {
+        } catch (err) {
             showError(err);
         } finally {
-        updatingItem = false;
-
+            updatingItem = false;
         }
-        
     }
-    function saveItem(peek = true) {
-        return mapContext
-            .mapModule('items')
-            .saveItem(mapContext.getSelectedItem())
-            .then((item) => {
-                mapContext.selectItem({ item, isFeatureInteresting: true, peek });
-            })
-            .catch((err) => {
-                showError(err);
-            });
+    async function saveItem(peek = true) {
+        try {
+            updatingItem = true;
+            const item = await mapContext.mapModule('items').saveItem(mapContext.getSelectedItem());
+            mapContext.selectItem({ item, isFeatureInteresting: true, peek });
+        } catch (err) {
+            showError(err);
+        } finally {
+            updatingItem = false;
+        }
     }
     async function updateItem(item: IItem, data: Partial<IItem>, peek = true) {
-        return mapContext
-            .mapModule('items')
-            .updateItem(item, data)
-            .then((item) => {
-                mapContext.selectItem({ item, isFeatureInteresting: true, peek });
-            })
-            .catch((err) => {
-                showError(err);
-            });
+        try {
+            updatingItem = true;
+            const savedItem = await mapContext.mapModule('items').updateItem(item, data);
+            mapContext.selectItem({ item: savedItem, isFeatureInteresting: true, peek });
+        } catch (err) {
+            showError(err);
+        } finally {
+            updatingItem = false;
+        }
     }
     function deleteItem() {
         mapContext.mapModule('items').deleteItem(mapContext.getSelectedItem());
@@ -214,6 +214,22 @@
     function shareItem() {
         const itemToShare = omit(item, 'vectorElement');
         shareFile(JSON.stringify(itemToShare), 'sharedItem.json');
+    }
+    async function checkWeather() {
+        try {
+            updatingItem = true;
+            const result = await networkService.sendWeatherBroadcastQuery({ ...item.position, timeout: 10000 });
+            const WeatherBottomSheet = (await import('./WeatherBottomSheet.svelte')).default;
+            await showBottomSheet({
+                parent: mapContext.getMainPage(),
+                view: WeatherBottomSheet,
+                props: { item:result[0] }
+            });
+        } catch (err) {
+            this.showError(err);
+        } finally {
+            updatingItem = false;
+        }
     }
     async function shareFile(content: string, fileName: string) {
         const file = knownFolders.temp().getFile(fileName);
@@ -404,14 +420,16 @@
             horizontalAligment="right"
             busy={true}
             width={20}
-            height={20} />
+            height={20}
+        />
         <button
             col="1"
             variant="text"
             class="icon-btn"
             text="mdi-crosshairs-gps"
             visibility={itemIsRoute ? 'visible' : 'collapsed'}
-            on:tap={zoomToItem} />
+            on:tap={zoomToItem}
+        />
         <stacklayout
             row="1"
             orientation="horizontal"
@@ -424,40 +442,53 @@
                 fontSize="10"
                 on:tap={searchItemWeb}
                 text="search"
-                visibility={item && !itemIsRoute && !item.id ? 'visible' : 'collapsed'} />
+                visibility={item && !itemIsRoute && !item.id ? 'visible' : 'collapsed'}
+            />
             <button
                 variant="text"
                 fontSize="10"
                 on:tap={getProfile}
                 text="profile"
-                visibility={(itemIsRoute && itemCanQueryProfile) ? 'visible' : 'collapsed'} />
+                visibility={itemIsRoute && itemCanQueryProfile ? 'visible' : 'collapsed'}
+            />
             <!-- <button variant="text" fontSize="10" on:tap={openWebView} text="web" /> -->
             <button
                 variant="text"
                 fontSize="10"
                 on:tap={saveItem}
                 text="save item"
-                visibility={item && !item.id ? 'visible' : 'collapsed'} />
+                visibility={item && !item.id ? 'visible' : 'collapsed'}
+            />
             <button
                 variant="text"
                 fontSize="10"
                 on:tap={deleteItem}
                 text="delete item"
                 visibility={item && item.id ? 'visible' : 'collapsed'}
-                color="red" />
+                color="red"
+            />
             <button
                 variant="text"
                 fontSize="10"
                 on:tap={shareItem}
                 text="share item"
-                visibility={item && item.id ? 'visible' : 'collapsed'} />
+                visibility={item && item.id ? 'visible' : 'collapsed'}
+            />
+            <button
+                variant="text"
+                fontSize="10"
+                on:tap={checkWeather}
+                text="weather"
+                visibility={item && networkService.canCheckWeather ? 'visible' : 'collapsed'}
+            />
         </stacklayout>
         <linechart
             bind:this={chart}
             row="2"
             height={profileHeight}
             visibility={graphAvailable ? 'visible' : 'hidden'}
-            on:highlight={onChartHighlight} />
+            on:highlight={onChartHighlight}
+        />
         <!-- <AWebView
             row="3"
             height={webViewHeight}

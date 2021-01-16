@@ -280,7 +280,7 @@ import { showError } from '~/utils/error';
         await nView.animate(params);
         currentTranslationY = -height;
     }
-    async function addWayPoint(position: MapPos<LatLonKeys>, metaData?, index = -1) {
+    export async function addWayPoint(position: MapPos<LatLonKeys>, metaData?, index = -1) {
         await loadView();
         const toAdd = {
             isStart: false,

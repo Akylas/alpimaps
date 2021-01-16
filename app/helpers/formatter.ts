@@ -16,8 +16,8 @@ const elevationPreset = {
     units: ['m']
 };
 
-let osmIcons = require('~/osm_icons.json');
-export function osmicon(values:string[] | string) {
+const osmIcons = require('~/osm_icons.json');
+export function osmicon(values: string[] | string) {
     if (!values) {
         return undefined;
     }
@@ -26,12 +26,11 @@ export function osmicon(values:string[] | string) {
     }
     let value, result;
     for (let index = 0; index < values.length; index++) {
-         value = values[index];
-         result = osmIcons[value];
+        value = values[index];
+        result = osmIcons[value];
         if (result) {
             return result;
         }
-        
     }
     return values[0];
 }
@@ -40,7 +39,7 @@ export function convertDistance(meters) {
     return humanUnit(meters, distancePreset);
 }
 export function convertElevation(meters) {
-    return convertValueToUnit(meters, 'm').join(' ');
+    return convertValueToUnit(meters, UNITS.Distance).join(' ');
 }
 
 export function formatDuration(_time): string {
@@ -49,52 +48,85 @@ export function formatDuration(_time): string {
     }
     return convertDuration(_time);
 }
+export enum UNITS {
+    InchHg = 'InchHg',
+    MMHg = 'MMHg',
+    kPa = 'kPa',
+    hPa = 'hPa',
+    Inch = 'inch',
+    MM = 'mm',
+    Celcius = 'celcius',
+    Farenheit = 'farenheit',
+    Duration = 'duration',
+    Date = 'date',
+    Distance = 'm',
+    DistanceKm = 'km',
+    Speed = 'km/h'
+}
+export function kelvinToCelsius(kelvinTemp) {
+    return kelvinTemp - 273.15;
+}
 
-export function convertValueToUnit(value: any, unit, otherParam?) {
+function celciusToFahrenheit(kelvinTemp) {
+    return (9 * kelvinTemp) / 5 + 32;
+}
+
+export function convertValueToUnit(value: any, unit: UNITS, otherParam?): [string | number, string] {
     if (value === undefined || value === null) {
         return ['', ''];
     }
-    const isString = typeof value === 'string';
     switch (unit) {
-        case 'duration':
-            return [convertDuration(value), ''];
-
-        case 'date':
+        case UNITS.kPa:
+            return [(value / 10).toFixed(), 'kPa'];
+        case UNITS.hPa:
+            return [value.toFixed(), 'hPa'];
+        case UNITS.MMHg:
+            return [(value * 0.750061561303).toFixed(), 'mm Hg'];
+        case UNITS.InchHg:
+            return [(value * 0.0295299830714).toFixed(), 'in Hg'];
+        case UNITS.MM:
+            return [value.toFixed(1), 'mm'];
+        case UNITS.Celcius:
+            return [Math.round(value * 10) / 10, ''];
+        case UNITS.Farenheit:
+            return [celciusToFahrenheit(value).toFixed(1), '°'];
+        case UNITS.Date:
             return [convertTime(value, 'M/d/yy h:mm a'), ''];
-
-        case 'm':
-            return [isString ? value : value.toFixed(), unit];
-        case 'km':
-            if (isString) {
-                return [value, unit];
-            }
+        case UNITS.Distance:
+            return [value.toFixed(), unit];
+        case UNITS.DistanceKm:
             if (value < 1000) {
                 return [value.toFixed(), 'm'];
             } else if (value > 100000) {
                 return [(value / 1000).toFixed(0), unit];
             } else {
-                return [(value / 1000).toFixed(0), unit];
+                return [(value / 1000).toFixed(1), unit];
             }
-        case 'km/h':
-            if (isString) {
-                return [value, unit];
-            }
-            return [value.toFixed(), unit];
-        case 'min/km':
-            if (isString) {
-                return [value, unit];
-            }
-            return [value === 0 ? value.toFixed() : (60 / value).toFixed(1), unit];
+        case UNITS.Speed:
+            return [value.toFixed(0), unit];
         default:
-            if (isString) {
-                return [value, unit];
-            }
             return [value.toFixed(), unit];
     }
 }
 
-export function formatValueToUnit(value: any, unit, options?: { prefix?: string; otherParam? }) {
-    let result = convertValueToUnit(value, unit, options ? options.otherParam : undefined).join('');
+export function formatValueToUnit(
+    value: any,
+    unit,
+    options?: { prefix?: string; otherParam?; join?: string; unitScale?: number }
+) {
+    options = options || {};
+    if (unit === UNITS.Celcius) {
+        options.join = options.join || '';
+    } else {
+        options.join = options.join || ' ';
+    }
+    const array = convertValueToUnit(value, unit, options?.otherParam);
+    if (options.unitScale) {
+        for (let index = 0; index < options.unitScale; index++) {
+            array[1] = `<small>${array[1]}</small>`;
+        }
+    }
+    let result = array.join(options?.join);
     if (options && options.prefix && result.length > 0) {
         result = options.prefix + result;
     }
