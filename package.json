@@ -10,12 +10,12 @@
     },
     "scripts": {
         "android": "tns run android --bundle --keyStorePath certs/android.keystore --keyStorePassword \"tirocks\" --keyStoreAlias tidev --keyStoreAliasPassword \"tirocks\"",
-        "pandroid": "tns build android --clean --bundle --release --keyStorePath certs/android.keystore --keyStorePassword \"tirocks\" --keyStoreAlias tidev --keyStoreAliasPassword \"tirocks\" --env.snapshot --env.uglify --env.production --env.compileSnapshot",
+        "pandroid": "tns build android --clean --bundle --release --keyStorePath certs/android.keystore --keyStorePassword \"tirocks\" --keyStoreAlias tidev --keyStoreAliasPassword \"tirocks\" --env.adhoc --env.sentry=0",
         "pios": "tns build ios --clean --bundle --release --env.uglify  --env.production --for-device --provision 'AlpiMaps App Distribution'",
         "build": "npm run pandroid; npm run pios",
         "webpack": "webpack --config app.webpack.config.js --env.android",
         "buildtest": "npm run pandroid -- --env.adhoc --aab; npm run pios -- --env.adhoc",
-        "run.android.production": "cross-var devns run android --release --key-store-path $KEYSTORE_PATH --key-store-password $KEYSTORE_PASSWORD --key-store-alias $KEYSTORE_ALIAS --key-store-alias-password $KEYSTORE_ALIAS_PASSWORD --env.adhoc --env.sentry=0 --env.sourceMap=0 --env.noconsole",
+        "run.android.production": "cross-var devns run android --release --key-store-path $KEYSTORE_PATH --key-store-password $KEYSTORE_PASSWORD --key-store-alias $KEYSTORE_ALIAS --key-store-alias-password $KEYSTORE_ALIAS_PASSWORD --env.adhoc --env.sentry=0 --env.sourceMap=0",
         "run.ios.production": "tns run ios --bundle --release --env.adhoc --for-device --provision 'AlpiMaps App Distribution'"
     },
     "dependencies": {
