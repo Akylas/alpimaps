@@ -1,5 +1,4 @@
 <script lang="ts" context="module">
-    import { GridLayout } from '@nativescript/core';
     import { l, lu } from '@nativescript-community/l';
     import {
         getAirportPressureAtLocation,
@@ -8,24 +7,20 @@
         stopListeningForSensor
     } from '@nativescript-community/sensors';
     import { getAltitude } from '@nativescript-community/sensors/sensors.common';
-    import { MapPos } from '@nativescript-community/ui-carto/core';
-    import {
-        ApplicationEventData,
-        off as applicationOff,
-        on as applicationOn,
-        resumeEvent,
-        suspendEvent
-    } from '@nativescript/core/application';
+    import { CanvasLabel } from '@nativescript-community/ui-canvaslabel';
+    import type { MapPos } from '@nativescript-community/ui-carto/core';
+    import { GridLayout } from '@nativescript/core';
+    import type { ApplicationEventData } from '@nativescript/core/application';
+    import { off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
     import { getNumber, getString, setNumber, setString } from '@nativescript/core/application-settings';
     import { Accuracy } from '@nativescript/core/ui/enums';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
+    import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { packageService } from '~/services/PackageService';
     import { accentColor } from '~/variables';
-    import { getMapContext } from '~/mapModules/MapModule';
-    import { CanvasLabel } from '@nativescript-community/ui-canvaslabel';
 </script>
 
 <script lang="ts">
@@ -228,7 +223,8 @@
                 fontSize="26"
                 textAlignment="center"
                 verticalAlignment="center"
-                fontWeight="bold" />
+                fontWeight="bold"
+            />
             <cspan text="km/h" fontSize="10" textAlignment="center" verticalAlignment="bottom" paddingBottom="3" />
             <!-- </cgroup> -->
         </canvaslabel>
@@ -237,7 +233,8 @@
                 text={lu('altitude') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'}
                 fontSize="11"
                 color={accentColor}
-                verticalAlignment="top" />
+                verticalAlignment="top"
+            />
             <cgroup verticalAlignment="middle">
                 <cspan text={shownAltitude} fontSize="20" fontWeight="bold" />
                 <cspan text=" m" fontSize="12" />
@@ -254,7 +251,8 @@
                 visibility={listeningForBarometer ? 'visible' : 'collapsed'}
                 text="mdi-reflect-vertical"
                 on:tap={getNearestAirportPressure}
-                color="white" />
+                color="white"
+            />
         </stacklayout>
     {/if}
 </gridlayout>
