@@ -15,26 +15,26 @@ dependencies:
   '@nativescript-community/preferences': 1.2.6
   '@nativescript-community/sensors': 1.1.1
   '@nativescript-community/sentry': 2.0.8
-  '@nativescript-community/systemui': 1.1.6
+  '@nativescript-community/systemui': 1.1.7
   '@nativescript-community/tween': 0.0.14
   '@nativescript-community/typeorm': 0.2.29
-  '@nativescript-community/ui-canvas': 4.0.38
-  '@nativescript-community/ui-canvaslabel': 1.0.37
+  '@nativescript-community/ui-canvas': 4.0.40
+  '@nativescript-community/ui-canvaslabel': 1.0.39
   '@nativescript-community/ui-carto': 'link:../nativescript-carto/plugin'
   '@nativescript-community/ui-chart': 1.1.19
-  '@nativescript-community/ui-collectionview': 4.0.16
+  '@nativescript-community/ui-collectionview': 4.0.19
   '@nativescript-community/ui-document-picker': 1.1.3
   '@nativescript-community/ui-drawer': 0.0.22
-  '@nativescript-community/ui-image': 4.0.19
+  '@nativescript-community/ui-image': 4.0.20
   '@nativescript-community/ui-label': 1.0.61
-  '@nativescript-community/ui-material-activityindicator': 5.1.16
-  '@nativescript-community/ui-material-bottomsheet': 5.1.16
-  '@nativescript-community/ui-material-button': 5.1.16
-  '@nativescript-community/ui-material-cardview': 5.1.16
-  '@nativescript-community/ui-material-dialogs': 5.1.16
-  '@nativescript-community/ui-material-progress': 5.1.16
-  '@nativescript-community/ui-material-slider': 5.1.16
-  '@nativescript-community/ui-material-snackbar': 5.1.16
+  '@nativescript-community/ui-material-activityindicator': 5.2.3
+  '@nativescript-community/ui-material-bottomsheet': 5.2.3
+  '@nativescript-community/ui-material-button': 5.2.3
+  '@nativescript-community/ui-material-cardview': 5.2.3
+  '@nativescript-community/ui-material-dialogs': 5.2.3
+  '@nativescript-community/ui-material-progress': 5.2.3
+  '@nativescript-community/ui-material-slider': 5.2.3
+  '@nativescript-community/ui-material-snackbar': 5.2.3
   '@nativescript-community/ui-persistent-bottomsheet': 0.0.14
   '@nativescript-community/ui-share-file': 1.2.1
   '@nativescript-community/ui-webview': 1.1.5
@@ -42,7 +42,7 @@ dependencies:
   '@nativescript/brightness': 2.0.0
   '@nativescript/email': 2.0.0
   app-root-path: 3.0.0
-  dayjs: 1.10.3
+  dayjs: 1.10.4
   deburr: 0.0.3
   downsample: 1.3.0
   gpx-parser-builder: 1.0.2
@@ -55,54 +55,54 @@ dependencies:
   nativescript-insomnia: 2.0.0
   nativescript-social-share: 1.6.0
   push-it-to-the-limit: 1.17.1
-  svelte-native: 0.9.5_b43de167aa5963b8aa0851d5a92eef18
+  svelte-native: 0.9.5_43b907163e0ab897efb5ea2a4c93ef99
 devDependencies:
   '@babel/core': 7.12.10
   '@nativescript/android': 7.0.1
-  '@nativescript/core': 7.1.0
-  '@nativescript/ios': 7.1.0
+  '@nativescript/core': 7.1.3
+  '@nativescript/ios': 7.1.1
   '@nativescript/types-android': 7.1.0
   '@nativescript/types-ios': 7.1.0
   '@nativescript/webpack': 'link:../../../../usr/local/pnpm-global/node_modules/@nativescript/webpack'
   '@sentry/webpack-plugin': 1.14.0
   '@types/geojson': 7946.0.7
   '@types/tween.js': 18.6.1
-  '@typescript-eslint/eslint-plugin': 4.13.0_b7210263e693dcacb9967ef540d4f052
-  '@typescript-eslint/parser': 4.13.0_eslint@7.17.0+typescript@4.1.3
-  babel-loader: 8.2.2_ffb1facb21ca645be67cace74e2396c6
-  clean-webpack-plugin: 3.0.0_webpack@5.15.0
+  '@typescript-eslint/eslint-plugin': 4.14.0_980e7d90d2d08155204a38366bd3b934
+  '@typescript-eslint/parser': 4.14.0_eslint@7.18.0+typescript@4.1.3
+  babel-loader: 8.2.2_baabc0d578894a2be8d781502c3441b6
+  clean-webpack-plugin: 3.0.0_webpack@5.17.0
   cli-highlight: 2.1.10
-  copy-webpack-plugin: 7.0.0_webpack@5.15.0
+  copy-webpack-plugin: 7.0.0_webpack@5.17.0
   cross-var: 1.1.0
-  css-loader: 5.0.1_webpack@5.15.0
+  css-loader: 5.0.1_webpack@5.17.0
   cssnano: 4.1.10
   cssnano-preset-advanced: 4.0.7
-  eslint: 7.17.0
-  eslint-config-prettier: 7.1.0_eslint@7.17.0
-  eslint-plugin-prettier: 3.3.1_69979e61f6e4e06807b16d761b81a74d
-  eslint-plugin-svelte3: 3.0.0_eslint@7.17.0+svelte@3.31.2
+  eslint: 7.18.0
+  eslint-config-prettier: 7.2.0_eslint@7.18.0
+  eslint-plugin-prettier: 3.3.1_23a112576b8ab4365b1ec4ba623342d0
+  eslint-plugin-svelte3: 3.0.0_eslint@7.18.0+svelte@3.31.2
   fork-ts-checker-webpack-plugin: 6.1.0
   nativescript-set-version: 0.2.1
   nativescript-worker-loader: 0.12.1
   postcss: 8.2.4
   postcss-combine-duplicated-selectors: 10.0.2_postcss@8.2.4
-  postcss-loader: 4.1.0_postcss@8.2.4+webpack@5.15.0
+  postcss-loader: 4.2.0_postcss@8.2.4+webpack@5.17.0
   prettier: 2.2.1
-  sass: 1.32.4
-  sass-loader: 10.1.1_sass@1.32.4+webpack@5.15.0
+  sass: 1.32.5
+  sass-loader: 10.1.1_sass@1.32.5+webpack@5.17.0
   scss-symbols-parser: 2.0.1
   semver: 7.3.4
-  string-replace-loader: 3.0.1_webpack@5.15.0
+  string-replace-loader: 3.0.1_webpack@5.17.0
   svelte: 3.31.2
-  svelte-loader: 2.13.6_svelte@3.31.2
+  svelte-loader: 3.0.0_svelte@3.31.2
   svelte-loader-hot: 0.3.1_svelte@3.31.2
   svelte-native-preprocessor: 0.2.0_svelte@3.31.2
-  svelte-preprocess: 4.6.1_298a072b176c3ef47b94ed3683337325
-  terser-webpack-plugin: 5.1.1_webpack@5.15.0
-  ts-loader: 8.0.14_typescript@4.1.3+webpack@5.15.0
+  svelte-preprocess: 4.6.3_48bea05c41730d262c866e7b1e83209c
+  terser-webpack-plugin: 5.1.1_webpack@5.17.0
+  ts-loader: 8.0.14_typescript@4.1.3+webpack@5.17.0
   typescript: 4.1.3
-  webpack: 5.15.0_webpack-cli@4.3.1
-  webpack-cli: 4.3.1_webpack@5.15.0
+  webpack: 5.17.0_webpack-cli@4.4.0
+  webpack-cli: 4.4.0_webpack@5.17.0
   webpack-virtual-modules: 0.4.2
 lockfileVersion: 5.2
 packages:
@@ -285,7 +285,7 @@ packages:
       node: '>=10.0.0'
     resolution:
       integrity: sha512-HyYEUDeIj5rRQU2Hk5HTB2uHsbRQpF70nvMhVzi+VJR0X+xNEhjPui4/kBf3VeH/wqD28PT4sVOm8qqLjBrSZg==
-  /@eslint/eslintrc/0.2.2:
+  /@eslint/eslintrc/0.3.0:
     dependencies:
       ajv: 6.12.6
       debug: 4.3.1
@@ -301,7 +301,7 @@ packages:
     engines:
       node: ^10.12.0 || >=12.0.0
     resolution:
-      integrity: sha512-EfB5OHNYp1F4px/LI/FEnGylop7nOqkQ1LRzCM0KccA2U8tvV8w01KBv37LbO7nW4H+YhKyo2LcJhRwjjV17QQ==
+      integrity: sha512-1JTKgrOKAHVivSvOYw+sJOunkBjUOvjqWk1DPja7ZFhIS2mX/4EgTT8M7eTK9jrKhL/FvXXEbQwIs3pg1xp3dg==
   /@mdi/font/4.9.95:
     dev: false
     resolution:
@@ -412,10 +412,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-CR6s8Ps+1Xpq99FX4rIeEObZubGpxGr1Zu4fD5KszNbskzctfLWUc6gtihrEU7qJzV5rV0Z5cKDxS/cJsnMsfw==
-  /@nativescript-community/systemui/1.1.6:
+  /@nativescript-community/systemui/1.1.7:
     dev: false
     resolution:
-      integrity: sha512-L4X5rev5w3mGT/XKS4snXZd8dNEksTQU5ULOB+y5H7WryCMOiCVRSXSws5dV8+kySVTzg45CGjGhYhXti441XA==
+      integrity: sha512-BHZXTweTHY2Sos+7UW4PTBYSZuz1EjXNVqNnDM+FIkKkXDlbs+xwwo+S3LQ1i39pe8Plwn2pZR88nV/+wzskSw==
   /@nativescript-community/text/1.3.10:
     dev: false
     resolution:
@@ -448,21 +448,21 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-u5SvOli/QLKf8LH0mZAJmtTiakIasGBw1F7E5Qs35BjpJsZwxeuvyAHJXvcH5Y+dQv3mAhOTsWRQmJ7llMYcpw==
-  /@nativescript-community/ui-canvas/4.0.37:
-    dev: false
-    resolution:
-      integrity: sha512-pKnujrMLGymzUrduplMsh7TR++yr8CachrtcIGNJpyGERSXvrC/qNmQAXcnH0VBGYDpuKREIHPna+3/+yBSnSg==
   /@nativescript-community/ui-canvas/4.0.38:
     dev: false
     resolution:
       integrity: sha512-x93bYLoFPvyFs9HpGpJj38yw+AfKBebOqf3IwfZ8KmVdXvzgSBLLNSAuUsRx4WA29IRfov1zna+6T23VqU94Mg==
-  /@nativescript-community/ui-canvaslabel/1.0.37:
-    dependencies:
-      '@nativescript-community/text': 1.3.10
-      '@nativescript-community/ui-canvas': 4.0.37
+  /@nativescript-community/ui-canvas/4.0.40:
     dev: false
     resolution:
-      integrity: sha512-qigacrGkJ9xYRC5iUMMkbCuFQWk9j5PujDPRdlcLEaEi/xTCUYgZ8iqtI5th1FwaarJ0tNZGh81M0zT2tr1Ggw==
+      integrity: sha512-epuJv5aA0hX2CP1MH28LXeWSXLZ9G2YO00r4XLuI/xEjtbfn71lPbhjXfn8AHhzPMbQSDhHIGDfq/VSG+GJZfw==
+  /@nativescript-community/ui-canvaslabel/1.0.39:
+    dependencies:
+      '@nativescript-community/text': 1.3.10
+      '@nativescript-community/ui-canvas': 4.0.40
+    dev: false
+    resolution:
+      integrity: sha512-5b5rKIpbr1uL2Ca+S5/NOuqnhoYcTbkUtYH+aqIWs2k/PdGQJhbTGgPqnbBx9v09lpOAANy4lGmjvpt1Ii6MeQ==
   /@nativescript-community/ui-chart/1.1.19:
     dependencies:
       '@nativescript-community/gesturehandler': 0.1.36
@@ -473,10 +473,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-xxMQUt6d9AS/mFeq92Sh0UzZ8lAA0HM05fidt1hsz281im3KyFzp7NjQKLgtsWzXMdPpl75V+ghG9xBD8Xt70w==
-  /@nativescript-community/ui-collectionview/4.0.16:
+  /@nativescript-community/ui-collectionview/4.0.19:
     dev: false
     resolution:
-      integrity: sha512-e4f9ulRavEauMzq6xafaXyU7F1m7m4A6q83st4DjnsW+rfs7wdVAytfaXTuMPrxJRJYpYizd4itEaDsdrOwKaw==
+      integrity: sha512-9PiJeDwYcRKwTh6PdY/JwwrSWW0ExnOYegMkKhcrggepUrMpsXMNlxbrS8L/5zhyqmkApr3L9LKCfXhqhYsfOQ==
   /@nativescript-community/ui-document-picker/1.1.3:
     dependencies:
       '@nativescript-community/perms': 2.1.4
@@ -489,80 +489,80 @@ packages:
     dev: false
     resolution:
       integrity: sha512-7W8sMyR2N8PnqdFiUlC+6R5C6x8DqwPGZ3YTJGBpjp+5aO5JIqJPD8OmmCugpIzlWrt73vZ2Ap9mu5v/FoBGIg==
-  /@nativescript-community/ui-image/4.0.19:
+  /@nativescript-community/ui-image/4.0.20:
     dev: false
     resolution:
-      integrity: sha512-soFPRHkt391F0UUMDbgtXQb0vv8SepvQfzTn8JcsS3/eNUNWa/cRLoRq0JftGx0+juOWqLuvI1IlK7MDqkNGvA==
+      integrity: sha512-eiD/nZUrTdoBf3OHyvBpOl7KZaA/JcmZuyo7nk2AVFRTfVpaahc3+9jJVWliZuiCFQ65iJJCoNnU1wC3xQf6Eg==
   /@nativescript-community/ui-label/1.0.61:
     dependencies:
       '@nativescript-community/text': 1.3.10
     dev: false
     resolution:
       integrity: sha512-tcXyZ+Jl6kItjEI2l1kMPs2uBnaLctC+e/izmlACzyajYM2PZugFDPk6Rt1fRdjucOopApbo+WUtuTkg8Lwo9g==
-  /@nativescript-community/ui-material-activityindicator/5.1.16:
+  /@nativescript-community/ui-material-activityindicator/5.2.3:
     dependencies:
-      '@nativescript-community/ui-material-core': 5.1.16
+      '@nativescript-community/ui-material-core': 5.2.3
     dev: false
     resolution:
-      integrity: sha512-G4AFYqIltz+uagiHgR82U9hnTURPd+7P9Ja/UCeq1zEpziu31dMbBsaQ7qzYR8t80kDogxarwRSrO+IYTMRNCw==
-  /@nativescript-community/ui-material-bottomsheet/5.1.16:
+      integrity: sha512-tvG9iiDcupzLYiStCIeiKXOhJuCdVw60L+TXOtH5xexYESptighPjer1EkREEMdpjT9UBEK1uoDxvpiU7Z6Muw==
+  /@nativescript-community/ui-material-bottomsheet/5.2.3:
     dependencies:
-      '@nativescript-community/ui-material-core': 5.1.16
+      '@nativescript-community/ui-material-core': 5.2.3
     dev: false
     resolution:
-      integrity: sha512-OmsdmS5WgFG2wmWI/lowY6e+M1nAtlVjOrTtdZwV7rc+7Nb3lFv1l5OP/iUqub/Rq50MyAJn87WAcp93Q2RLZA==
-  /@nativescript-community/ui-material-button/5.1.16:
+      integrity: sha512-2ZBCSLX/mRpR53JwauN4T+0f6BjKl+Z85Xayp1YHmZvFCZv404saMYG+Ww06W8w7MYyo1S4IJwo1Z+FfpAyVgg==
+  /@nativescript-community/ui-material-button/5.2.3:
     dependencies:
       '@nativescript-community/text': 1.3.10
-      '@nativescript-community/ui-material-core': 5.1.16
+      '@nativescript-community/ui-material-core': 5.2.3
     dev: false
     resolution:
-      integrity: sha512-rT7qXDUQ4mdZx7Ove095OhyoNv1CaawsxC7XlhDzeYg137owp84927u0tRDIH+kv7E0Gp8IEM43+ulY9kAFDdQ==
-  /@nativescript-community/ui-material-cardview/5.1.16:
+      integrity: sha512-tQjVpN/B/zccVPxH/t9CPxdcS9mz8YffySwdnJlSG0R8y46mCoW0erNDAWhpMzPm//o2S4PiPiuCj8PFbW8Gjg==
+  /@nativescript-community/ui-material-cardview/5.2.3:
     dependencies:
-      '@nativescript-community/ui-material-core': 5.1.16
+      '@nativescript-community/ui-material-core': 5.2.3
     dev: false
     resolution:
-      integrity: sha512-1X1FC3Gb+L4kI0fK1WJCAWedc/KREqBlJFifbDALlMz2jzr/t8Vt4KJCmJSi0VCUfy41XFn5QlJvYhD7OsSyQA==
-  /@nativescript-community/ui-material-core/5.1.16:
+      integrity: sha512-YlEGxK+r6EMH31/mjWHxemMSy/wKFe8p5FOGhOx2Omc5sVV4pa5fqryPJJcsImZ+zZTJ9WVMuu4/Q0DP6nXjIg==
+  /@nativescript-community/ui-material-core/5.2.3:
     dependencies:
       '@nativescript/hook': 2.0.0
     dev: false
     requiresBuild: true
     resolution:
-      integrity: sha512-RtuVFgC3NmtIyjkpHf5knYTsvcm/LvEfoEqjFlHPl5HxT/x1MuRerZs38FFtuwmbJVYpTQ6mxeDxTHiwC4jurQ==
-  /@nativescript-community/ui-material-dialogs/5.1.16:
+      integrity: sha512-Wy/MFuYhhIV6ec4Nm+Yb5/rly7au2Fo1uU0bGCHiMTk/xPfhpTORTyX42El/5VaDluhqRIG1I75KshBUMhv36A==
+  /@nativescript-community/ui-material-dialogs/5.2.3:
     dependencies:
-      '@nativescript-community/ui-material-core': 5.1.16
-      '@nativescript-community/ui-material-textfield': 5.1.16
+      '@nativescript-community/ui-material-core': 5.2.3
+      '@nativescript-community/ui-material-textfield': 5.2.3
     dev: false
     resolution:
-      integrity: sha512-tN/ziC2SYJAMMiXnFkpa0OU/mFm/X0AMmTbIiRtKVTlO+8PR35mDER5Nz7e0c8WFWrs9KbuJJzcnAbvUbnhyVw==
-  /@nativescript-community/ui-material-progress/5.1.16:
+      integrity: sha512-ofo0ECKQh9NCQLT7MvFmA9vapToDKybNWovfFoIZgXZ657eR6mUbccrzPiN//KBj2x1We5pSiD4l+2TsV4WsjQ==
+  /@nativescript-community/ui-material-progress/5.2.3:
     dependencies:
-      '@nativescript-community/ui-material-core': 5.1.16
+      '@nativescript-community/ui-material-core': 5.2.3
     dev: false
     resolution:
-      integrity: sha512-v7L8bkTurF4F4Bn8+V4UeNTR3Q7VQkOrplmHeeZePAR/4a55z5BI6WaWgvO22yrMQ8InWAUsKQvu3S2JXNSFYw==
-  /@nativescript-community/ui-material-slider/5.1.16:
+      integrity: sha512-EU9swCNfk+yMQrpCSRrCB8UK+83hwPnQ7Axy6dMlVKon5YkeiPoYIvDpLfcPhmaceEqyd4iL7BU+tpzlStlDTQ==
+  /@nativescript-community/ui-material-slider/5.2.3:
     dependencies:
-      '@nativescript-community/ui-material-core': 5.1.16
+      '@nativescript-community/ui-material-core': 5.2.3
     dev: false
     resolution:
-      integrity: sha512-NRqw/qhlzwLXnW5azExmhSC7IdNn/qo3+Cx8liiJSLXlaGQ6HJvp0+eu+3syn0hcJc2qLWAmplnoG31AX+EQGA==
-  /@nativescript-community/ui-material-snackbar/5.1.16:
+      integrity: sha512-IF5qTdnhuDnrRJe/IJhElT8ZzrovBxRUaQz+lTBNVXjhSG2wGXxEekRfzSA725VZjeMLc10Bhy1GkCdHb4XDNg==
+  /@nativescript-community/ui-material-snackbar/5.2.3:
     dependencies:
-      '@nativescript-community/ui-material-core': 5.1.16
+      '@nativescript-community/ui-material-core': 5.2.3
     dev: false
     resolution:
-      integrity: sha512-I6hxRfiuEyy8VEZ2B3KWEAER6iHy9m7IS+yoVFIYeSFSNc+S2RPNPpTFyuCx2gud2q1inn6p5KAe51zFjIFwBg==
-  /@nativescript-community/ui-material-textfield/5.1.16:
+      integrity: sha512-9zZbcq+8/HabTlNqJZZp+enXq8/QrHelcmmweYfuw4Pz/Dt5z/R8cLqqYpNp5/ZBmCffWqrsmweSBFgFKBFLAw==
+  /@nativescript-community/ui-material-textfield/5.2.3:
     dependencies:
       '@nativescript-community/text': 1.3.10
-      '@nativescript-community/ui-material-core': 5.1.16
+      '@nativescript-community/ui-material-core': 5.2.3
     dev: false
     resolution:
-      integrity: sha512-Yn1y1KlR0H8/5kb5PHdH2lhmg363N6DwtrLfhEPrzfFJCJuedlc6fC2JEt0PBmomuuAcG4iZd7yHeDuN7NKKhg==
+      integrity: sha512-mIUnuXun7P2AAr7TzP//lchbaoqe9S1iU3HVI+riOdZMzV9pHMfA0CBEGqUTMq8kEkIV1tKtLc9PjEZ/ZHHcIg==
   /@nativescript-community/ui-persistent-bottomsheet/0.0.14:
     dependencies:
       '@nativescript-community/gesturehandler': 0.1.35
@@ -589,7 +589,7 @@ packages:
     dev: false
     resolution:
       integrity: sha512-LcAMFfl6xurVOJbwBO8RpS4UCIVAufXz//eqC4RJLxXkno6xrgKbTtS47he8y2PUYrcnGX+KMoAfxxa9F2hltA==
-  /@nativescript/core/7.1.0:
+  /@nativescript/core/7.1.3:
     dependencies:
       '@nativescript/hook': 2.0.0
       css-tree: 1.1.2
@@ -598,7 +598,7 @@ packages:
     dev: true
     requiresBuild: true
     resolution:
-      integrity: sha512-gQNqFD5wZN7gGa7JblYRuXvR969ZzNg+fjkVHpXRZNzqJqdAy7k//+kNAb9Fu0HW2a2QPkSrtFJGrzQGi3ORcw==
+      integrity: sha512-UmsJvI2erL8Z5rINPMzAf9GmXqPnd+HNr15JLnQSywmnyOGZPxXFMm51W3/2lbRTERyPbiUduK3YMCzXMz5OkQ==
   /@nativescript/email/2.0.0:
     dev: false
     resolution:
@@ -609,10 +609,10 @@ packages:
       mkdirp: 1.0.4
     resolution:
       integrity: sha512-v3Hj3Zpd69sQJfFpDNXonV0EjO1a2OL4l48wlo1Ycsqk4r7RY822d/irFTjt0LllRG0OcdEGgfG6wKb0YgPyHw==
-  /@nativescript/ios/7.1.0:
+  /@nativescript/ios/7.1.1:
     dev: true
     resolution:
-      integrity: sha512-sHW7Y907AJoOtv/v2mpG0xlC4g++w/63wIN4m8TvIQq1ZChI/NH4BlJeR23XDaV1eE8oHQMIGl+WT4aWdFO0JQ==
+      integrity: sha512-6e1B9wvdZ2yiwKB1Qd+igTXukB5RC32mzn7hwoLBa4f32OR1MpBkLmNK2i06G2D0Gi823zdoiQiernY/+5XIaA==
   /@nativescript/types-android/7.1.0:
     dev: true
     resolution:
@@ -774,21 +774,21 @@ packages:
   /@types/eslint-scope/3.7.0:
     dependencies:
       '@types/eslint': 7.2.6
-      '@types/estree': 0.0.45
+      '@types/estree': 0.0.46
     dev: true
     resolution:
       integrity: sha512-O/ql2+rrCUe2W2rs7wMR+GqPRcgB6UiqN5RhrR5xruFlY7l9YLMn0ZkDzjoHLeiFkR8MCQZVudUuuvQ2BLC9Qw==
   /@types/eslint/7.2.6:
     dependencies:
-      '@types/estree': 0.0.45
+      '@types/estree': 0.0.46
       '@types/json-schema': 7.0.6
     dev: true
     resolution:
       integrity: sha512-I+1sYH+NPQ3/tVqCeUSBwTE/0heyvtXqpIopUUArlBm0Kpocb8FbMa3AZ/ASKIFpN3rnEx932TTXDbt9OXsNDw==
-  /@types/estree/0.0.45:
+  /@types/estree/0.0.46:
     dev: true
     resolution:
-      integrity: sha512-jnqIUKDUqJbDIUxm0Uj7bnlMnRm1T/eZ9N+AVMqhPgzrba2GhGG5o/jCTwmdPK709nEZsGoMzXEDUjcXHa3W0g==
+      integrity: sha512-laIjwTQaD+5DukBZaygQ79K1Z0jb1bPEMRrkXSLjtCcZm+abyp5YbrqpSLzD42FwWW6gK/aS4NYpJ804nG2brg==
   /@types/geojson/7946.0.7:
     dev: true
     resolution:
@@ -829,7 +829,7 @@ packages:
       integrity: sha512-1HcDas8SEj4z1Wc696tH56G8OlRaH/sqZOynNNB+HF0WOeXPaxTtbYzJY2oEfiUxjSKjhCKr+MvR7dCHcEelug==
   /@types/sass/1.16.0:
     dependencies:
-      '@types/node': 14.14.14
+      '@types/node': 14.14.21
     dev: true
     resolution:
       integrity: sha512-2XZovu4NwcqmtZtsBR5XYLw18T8cBCnU2USFHTnYLLHz9fkhnoEMoDsqShJIOFsFhn5aJHjweiUUdTrDGujegA==
@@ -879,13 +879,13 @@ packages:
     dev: false
     resolution:
       integrity: sha512-f5VOKSMEE0O+/L54FHwA/a7vcx9mHeSDM71844yHCOhh8Cin2xQa0UFw0b7Vc5hoZ3Ih6ZHaDobjfLih4tWPNw==
-  /@typescript-eslint/eslint-plugin/4.13.0_b7210263e693dcacb9967ef540d4f052:
+  /@typescript-eslint/eslint-plugin/4.14.0_980e7d90d2d08155204a38366bd3b934:
     dependencies:
-      '@typescript-eslint/experimental-utils': 4.13.0_eslint@7.17.0+typescript@4.1.3
-      '@typescript-eslint/parser': 4.13.0_eslint@7.17.0+typescript@4.1.3
-      '@typescript-eslint/scope-manager': 4.13.0
+      '@typescript-eslint/experimental-utils': 4.14.0_eslint@7.18.0+typescript@4.1.3
+      '@typescript-eslint/parser': 4.14.0_eslint@7.18.0+typescript@4.1.3
+      '@typescript-eslint/scope-manager': 4.14.0
       debug: 4.3.1
-      eslint: 7.17.0
+      eslint: 7.18.0
       functional-red-black-tree: 1.0.1
       lodash: 4.17.20
       regexpp: 3.1.0
@@ -903,14 +903,14 @@ packages:
       typescript:
         optional: true
     resolution:
-      integrity: sha512-ygqDUm+BUPvrr0jrXqoteMqmIaZ/bixYOc3A4BRwzEPTZPi6E+n44rzNZWaB0YvtukgP+aoj0i/fyx7FkM2p1w==
-  /@typescript-eslint/experimental-utils/4.13.0_eslint@7.17.0+typescript@4.1.3:
+      integrity: sha512-IJ5e2W7uFNfg4qh9eHkHRUCbgZ8VKtGwD07kannJvM5t/GU8P8+24NX8gi3Hf5jST5oWPY8kyV1s/WtfiZ4+Ww==
+  /@typescript-eslint/experimental-utils/4.14.0_eslint@7.18.0+typescript@4.1.3:
     dependencies:
       '@types/json-schema': 7.0.6
-      '@typescript-eslint/scope-manager': 4.13.0
-      '@typescript-eslint/types': 4.13.0
-      '@typescript-eslint/typescript-estree': 4.13.0_typescript@4.1.3
-      eslint: 7.17.0
+      '@typescript-eslint/scope-manager': 4.14.0
+      '@typescript-eslint/types': 4.14.0
+      '@typescript-eslint/typescript-estree': 4.14.0_typescript@4.1.3
+      eslint: 7.18.0
       eslint-scope: 5.1.1
       eslint-utils: 2.1.0
     dev: true
@@ -920,14 +920,14 @@ packages:
       eslint: '*'
       typescript: '*'
     resolution:
-      integrity: sha512-/ZsuWmqagOzNkx30VWYV3MNB/Re/CGv/7EzlqZo5RegBN8tMuPaBgNK6vPBCQA8tcYrbsrTdbx3ixMRRKEEGVw==
-  /@typescript-eslint/parser/4.13.0_eslint@7.17.0+typescript@4.1.3:
+      integrity: sha512-6i6eAoiPlXMKRbXzvoQD5Yn9L7k9ezzGRvzC/x1V3650rUk3c3AOjQyGYyF9BDxQQDK2ElmKOZRD0CbtdkMzQQ==
+  /@typescript-eslint/parser/4.14.0_eslint@7.18.0+typescript@4.1.3:
     dependencies:
-      '@typescript-eslint/scope-manager': 4.13.0
-      '@typescript-eslint/types': 4.13.0
-      '@typescript-eslint/typescript-estree': 4.13.0_typescript@4.1.3
+      '@typescript-eslint/scope-manager': 4.14.0
+      '@typescript-eslint/types': 4.14.0
+      '@typescript-eslint/typescript-estree': 4.14.0_typescript@4.1.3
       debug: 4.3.1
-      eslint: 7.17.0
+      eslint: 7.18.0
       typescript: 4.1.3
     dev: true
     engines:
@@ -939,26 +939,26 @@ packages:
       typescript:
         optional: true
     resolution:
-      integrity: sha512-KO0J5SRF08pMXzq9+abyHnaGQgUJZ3Z3ax+pmqz9vl81JxmTTOUfQmq7/4awVfq09b6C4owNlOgOwp61pYRBSg==
-  /@typescript-eslint/scope-manager/4.13.0:
+      integrity: sha512-sUDeuCjBU+ZF3Lzw0hphTyScmDDJ5QVkyE21pRoBo8iDl7WBtVFS+WDN3blY1CH3SBt7EmYCw6wfmJjF0l/uYg==
+  /@typescript-eslint/scope-manager/4.14.0:
     dependencies:
-      '@typescript-eslint/types': 4.13.0
-      '@typescript-eslint/visitor-keys': 4.13.0
+      '@typescript-eslint/types': 4.14.0
+      '@typescript-eslint/visitor-keys': 4.14.0
     dev: true
     engines:
       node: ^8.10.0 || ^10.13.0 || >=11.10.1
     resolution:
-      integrity: sha512-UpK7YLG2JlTp/9G4CHe7GxOwd93RBf3aHO5L+pfjIrhtBvZjHKbMhBXTIQNkbz7HZ9XOe++yKrXutYm5KmjWgQ==
-  /@typescript-eslint/types/4.13.0:
+      integrity: sha512-/J+LlRMdbPh4RdL4hfP1eCwHN5bAhFAGOTsvE6SxsrM/47XQiPSgF5MDgLyp/i9kbZV9Lx80DW0OpPkzL+uf8Q==
+  /@typescript-eslint/types/4.14.0:
     dev: true
     engines:
       node: ^8.10.0 || ^10.13.0 || >=11.10.1
     resolution:
-      integrity: sha512-/+aPaq163oX+ObOG00M0t9tKkOgdv9lq0IQv/y4SqGkAXmhFmCfgsELV7kOCTb2vVU5VOmVwXBXJTDr353C1rQ==
-  /@typescript-eslint/typescript-estree/4.13.0_typescript@4.1.3:
+      integrity: sha512-VsQE4VvpldHrTFuVPY1ZnHn/Txw6cZGjL48e+iBxTi2ksa9DmebKjAeFmTVAYoSkTk7gjA7UqJ7pIsyifTsI4A==
+  /@typescript-eslint/typescript-estree/4.14.0_typescript@4.1.3:
     dependencies:
-      '@typescript-eslint/types': 4.13.0
-      '@typescript-eslint/visitor-keys': 4.13.0
+      '@typescript-eslint/types': 4.14.0
+      '@typescript-eslint/visitor-keys': 4.14.0
       debug: 4.3.1
       globby: 11.0.1
       is-glob: 4.0.1
@@ -975,16 +975,16 @@ packages:
       typescript:
         optional: true
     resolution:
-      integrity: sha512-9A0/DFZZLlGXn5XA349dWQFwPZxcyYyCFX5X88nWs2uachRDwGeyPz46oTsm9ZJE66EALvEns1lvBwa4d9QxMg==
-  /@typescript-eslint/visitor-keys/4.13.0:
+      integrity: sha512-wRjZ5qLao+bvS2F7pX4qi2oLcOONIB+ru8RGBieDptq/SudYwshveORwCVU4/yMAd4GK7Fsf8Uq1tjV838erag==
+  /@typescript-eslint/visitor-keys/4.14.0:
     dependencies:
-      '@typescript-eslint/types': 4.13.0
+      '@typescript-eslint/types': 4.14.0
       eslint-visitor-keys: 2.0.0
     dev: true
     engines:
       node: ^8.10.0 || ^10.13.0 || >=11.10.1
     resolution:
-      integrity: sha512-6RoxWK05PAibukE7jElqAtNMq+RWZyqJ6Q/GdIxaiUj2Ept8jh8+FUVlbq9WxMYxkmEOPvCE5cRSyupMpwW31g==
+      integrity: sha512-MeHHzUyRI50DuiPgV9+LxcM52FCJFYjJiWHtXlbyC27b80mfOwKeiKI+MHOTEpcpfmoPFm/vvQS88bYIx6PZTA==
   /@webassemblyjs/ast/1.11.0:
     dependencies:
       '@webassemblyjs/helper-numbers': 1.11.0
@@ -1091,18 +1091,28 @@ packages:
     dev: true
     resolution:
       integrity: sha512-Fg5OX46pRdTgB7rKIUojkh9vXaVN6sGYCnEiJN1GYkb0RPwShZXp6KTDqmoMdQPKhcroOXh3fEzmkWmCYaKYhQ==
-  /@webpack-cli/info/1.2.1_webpack-cli@4.3.1:
+  /@webpack-cli/configtest/1.0.0_webpack-cli@4.4.0+webpack@5.17.0:
+    dependencies:
+      webpack: 5.17.0_webpack-cli@4.4.0
+      webpack-cli: 4.4.0_webpack@5.17.0
+    dev: true
+    peerDependencies:
+      webpack: 4.x.x || 5.x.x
+      webpack-cli: 4.x.x
+    resolution:
+      integrity: sha512-Un0SdBoN1h4ACnIO7EiCjWuyhNI0Jl96JC+63q6xi4HDUYRZn8Auluea9D+v9NWKc5J4sICVEltdBaVjLX39xw==
+  /@webpack-cli/info/1.2.1_webpack-cli@4.4.0:
     dependencies:
       envinfo: 7.7.3
-      webpack-cli: 4.3.1_webpack@5.15.0
+      webpack-cli: 4.4.0_webpack@5.17.0
     dev: true
     peerDependencies:
       webpack-cli: 4.x.x
     resolution:
       integrity: sha512-fLnDML5HZ5AEKzHul8xLAksoKN2cibu6MgonkUj8R9V7bbeVRkd1XbGEGWrAUNYHbX1jcqCsDEpBviE5StPMzQ==
-  /@webpack-cli/serve/1.2.1_webpack-cli@4.3.1:
+  /@webpack-cli/serve/1.2.2_webpack-cli@4.4.0:
     dependencies:
-      webpack-cli: 4.3.1_webpack@5.15.0
+      webpack-cli: 4.4.0_webpack@5.17.0
     dev: true
     peerDependencies:
       webpack-cli: 4.x.x
@@ -1111,7 +1121,7 @@ packages:
       webpack-dev-server:
         optional: true
     resolution:
-      integrity: sha512-Zj1z6AyS+vqV6Hfi7ngCjFGdHV5EwZNIHo6QfFTNe9PyW+zBU1zJ9BiOW1pmUEq950RC4+Dym6flyA/61/vhyw==
+      integrity: sha512-03GkWxcgFfm8+WIwcsqJb9agrSDNDDoxaNnexPnCCexP5SCE4IgFd9lNpSy+K2nFqVMpgTFw6SwbmVAVTndVew==
   /@xtuc/ieee754/1.2.0:
     dev: true
     resolution:
@@ -1469,14 +1479,14 @@ packages:
     dev: true
     resolution:
       integrity: sha1-NHHenK7DiOXIUOWX5Yom3fN2ArI=
-  /babel-loader/8.2.2_ffb1facb21ca645be67cace74e2396c6:
+  /babel-loader/8.2.2_baabc0d578894a2be8d781502c3441b6:
     dependencies:
       '@babel/core': 7.12.10
       find-cache-dir: 3.3.1
       loader-utils: 1.4.0
       make-dir: 3.1.0
       schema-utils: 2.7.1
-      webpack: 5.15.0_webpack-cli@4.3.1
+      webpack: 5.17.0_webpack-cli@4.4.0
     dev: true
     engines:
       node: '>= 8.9'
@@ -2134,11 +2144,11 @@ packages:
       node: '>=6.0'
     resolution:
       integrity: sha512-9e/zx1jw7B4CO+c/RXoCsfg/x1AfUBioy4owYH0bJprEYAx5hRFLRhWBqHAG57D0ZM4H7vxbP7bPe0VwhQRYDQ==
-  /clean-webpack-plugin/3.0.0_webpack@5.15.0:
+  /clean-webpack-plugin/3.0.0_webpack@5.17.0:
     dependencies:
       '@types/webpack': 4.41.25
       del: 4.1.1
-      webpack: 5.15.0_webpack-cli@4.3.1
+      webpack: 5.17.0_webpack-cli@4.4.0
     dev: true
     engines:
       node: '>=8.9.0'
@@ -2211,6 +2221,16 @@ packages:
       wrap-ansi: 7.0.0
     resolution:
       integrity: sha512-OcRE68cOsVMXp1Yvonl/fzkQOyjLSu/8bhPDfQt0e0/Eb283TKP20Fs2MqoPsr9SwA595rRCA+QMzYc9nBP+JQ==
+  /clone-deep/4.0.1:
+    dependencies:
+      is-plain-object: 2.0.4
+      kind-of: 6.0.3
+      shallow-clone: 3.0.1
+    dev: true
+    engines:
+      node: '>=6'
+    resolution:
+      integrity: sha512-neHB9xuzh/wk0dIHweyAXv2aPGZIVk3pLMe+/RNzINf17fe0OG96QroktYAUm7SM1PBnzTabaLboqqxDyMU+SQ==
   /coa/2.0.2:
     dependencies:
       '@types/q': 1.5.4
@@ -2298,7 +2318,7 @@ packages:
     dev: true
     resolution:
       integrity: sha512-4FJkXzKXEDB1snCFZlLP4gpC3JILicCpGbzG9f9G7tGqGCzETQ2hWPrcinA9oU4wtf2biUaEH5065UnMeR33oA==
-  /copy-webpack-plugin/7.0.0_webpack@5.15.0:
+  /copy-webpack-plugin/7.0.0_webpack@5.17.0:
     dependencies:
       fast-glob: 3.2.4
       glob-parent: 5.1.1
@@ -2308,7 +2328,7 @@ packages:
       p-limit: 3.1.0
       schema-utils: 3.0.0
       serialize-javascript: 5.0.1
-      webpack: 5.15.0_webpack-cli@4.3.1
+      webpack: 5.17.0_webpack-cli@4.4.0
     dev: true
     engines:
       node: '>= 10.13.0'
@@ -2352,7 +2372,7 @@ packages:
   /cosmiconfig/7.0.0:
     dependencies:
       '@types/parse-json': 4.0.0
-      import-fresh: 3.2.2
+      import-fresh: 3.3.0
       parse-json: 5.1.0
       path-type: 4.0.0
       yaml: 1.10.0
@@ -2415,7 +2435,7 @@ packages:
       node: '>4'
     resolution:
       integrity: sha512-BcxQSKTSEEQUftYpBVnsH4SF05NTuBokb19/sBt6asXGKZ/6VP7PLG1CBCkFDYOnhXhPh0jMhO6xZ71oYHXHBA==
-  /css-loader/5.0.1_webpack@5.15.0:
+  /css-loader/5.0.1_webpack@5.17.0:
     dependencies:
       camelcase: 6.2.0
       cssesc: 3.0.0
@@ -2429,7 +2449,7 @@ packages:
       postcss-value-parser: 4.1.0
       schema-utils: 3.0.0
       semver: 7.3.4
-      webpack: 5.15.0_webpack-cli@4.3.1
+      webpack: 5.17.0_webpack-cli@4.4.0
     dev: true
     engines:
       node: '>= 10.13.0'
@@ -2580,10 +2600,10 @@ packages:
       node: '>=8.0.0'
     resolution:
       integrity: sha512-wvlcdIbf6pwKEk7vHj8/Bkc0B4ylXZruLvOgs9doS5eOsOpuodOV2zJChSpkp+pRpYQLQMeF04nr3Z68Sta9jA==
-  /dayjs/1.10.3:
+  /dayjs/1.10.4:
     dev: false
     resolution:
-      integrity: sha512-/2fdLN987N8Ki7Id8BUN2nhuiRyxTLumQnSQf9CNncFCyqFsSKb9TNhzRYcC8K8eJSJOKvbvkImo/MKKhNi4iw==
+      integrity: sha512-RI/Hh4kqRc1UKLOAf/T5zdMMX5DQIlDxwUe3wSyMMnEbGunnpENCdbUgM+dW7kXidZqCttBrmw7BhN4TMddkCw==
   /debug/2.6.9:
     dependencies:
       ms: 2.0.0
@@ -2845,19 +2865,19 @@ packages:
       node: '>=0.8.0'
     resolution:
       integrity: sha1-G2HAViGQqN/2rjuyzwIAyhMLhtQ=
-  /eslint-config-prettier/7.1.0_eslint@7.17.0:
+  /eslint-config-prettier/7.2.0_eslint@7.18.0:
     dependencies:
-      eslint: 7.17.0
+      eslint: 7.18.0
     dev: true
     hasBin: true
     peerDependencies:
       eslint: '>=7.0.0'
     resolution:
-      integrity: sha512-9sm5/PxaFG7qNJvJzTROMM1Bk1ozXVTKI0buKOyb0Bsr1hrwi0H/TzxF/COtf1uxikIK8SwhX7K6zg78jAzbeA==
-  /eslint-plugin-prettier/3.3.1_69979e61f6e4e06807b16d761b81a74d:
+      integrity: sha512-rV4Qu0C3nfJKPOAhFujFxB7RMP+URFyQqqOZW9DMRD7ZDTFyjaIlETU3xzHELt++4ugC0+Jm084HQYkkJe+Ivg==
+  /eslint-plugin-prettier/3.3.1_23a112576b8ab4365b1ec4ba623342d0:
     dependencies:
-      eslint: 7.17.0
-      eslint-config-prettier: 7.1.0_eslint@7.17.0
+      eslint: 7.18.0
+      eslint-config-prettier: 7.2.0_eslint@7.18.0
       prettier: 2.2.1
       prettier-linter-helpers: 1.0.0
     dev: true
@@ -2872,9 +2892,9 @@ packages:
         optional: true
     resolution:
       integrity: sha512-Rq3jkcFY8RYeQLgk2cCwuc0P7SEFwDravPhsJZOQ5N4YI4DSg50NyqJ/9gdZHzQlHf8MvafSesbNJCcP/FF6pQ==
-  /eslint-plugin-svelte3/3.0.0_eslint@7.17.0+svelte@3.31.2:
+  /eslint-plugin-svelte3/3.0.0_eslint@7.18.0+svelte@3.31.2:
     dependencies:
-      eslint: 7.17.0
+      eslint: 7.18.0
       svelte: 3.31.2
     dev: true
     engines:
@@ -2913,10 +2933,10 @@ packages:
       node: '>=10'
     resolution:
       integrity: sha512-QudtT6av5WXels9WjIM7qz1XD1cWGvX4gGXvp/zBn9nXG02D0utdU3Em2m/QjTnrsk6bBjmCygl3rmj118msQQ==
-  /eslint/7.17.0:
+  /eslint/7.18.0:
     dependencies:
       '@babel/code-frame': 7.12.11
-      '@eslint/eslintrc': 0.2.2
+      '@eslint/eslintrc': 0.3.0
       ajv: 6.12.6
       chalk: 4.1.0
       cross-spawn: 7.0.3
@@ -2957,7 +2977,7 @@ packages:
       node: ^10.12.0 || >=12.0.0
     hasBin: true
     resolution:
-      integrity: sha512-zJk08MiBgwuGoxes5sSQhOtibZ75pz0J35XTRlZOk9xMffhpA9BTbQZxoXZzOl5zMbleShbGwtw+1kGferfFwQ==
+      integrity: sha512-fbgTiE8BfUJZuBeq2Yi7J3RB3WGUQ9PNuNbmgi6jt9Iv8qrkxfy19Ds3OpL1Pm7zg3BtTVhvcUZbIRQ0wmSjAQ==
   /espree/7.3.1:
     dependencies:
       acorn: 7.4.1
@@ -3503,15 +3523,6 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha1-2BNVwVYS04bGH53dOSLUMEgipUY=
-  /import-fresh/3.2.2:
-    dependencies:
-      parent-module: 1.0.1
-      resolve-from: 4.0.0
-    dev: true
-    engines:
-      node: '>=6'
-    resolution:
-      integrity: sha512-cTPNrlvJT6twpYy+YmKUKrTSjWFs3bjYjAhCwm+z4EOCubZxAuO+hHpRN64TqjEaYSHs7tJAE0w1CKMGmsG/lw==
   /import-fresh/3.3.0:
     dependencies:
       parent-module: 1.0.1
@@ -3726,6 +3737,14 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-YWnfyRwxL/+SsrWYfOpUtz5b3YD+nyfkHvjbcanzk8zgyO4ASD67uVMRt8k5bM4lLMDnXfriRhOpemw+NfT1eA==
+  /is-plain-object/2.0.4:
+    dependencies:
+      isobject: 3.0.1
+    dev: true
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha512-h5PpgXkWitc38BBMYawTYMWJHFZJVnBquFE57xFpjB8pJFiF6gZ+bU+WyI/yqXiFR5mdLsgYNaPe8uao6Uv9Og==
   /is-regex/1.1.1:
     dependencies:
       has-symbols: 1.0.1
@@ -3783,6 +3802,12 @@ packages:
   /isexe/2.0.0:
     resolution:
       integrity: sha1-6PvzdNxVb/iUehDcsFctYz8s+hA=
+  /isobject/3.0.1:
+    dev: true
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-TkMekrEalzFjaqH5yNHMvP2reN8=
   /isomorphic-xml2js/0.1.3:
     dependencies:
       '@types/xml2js': 0.4.7
@@ -3885,6 +3910,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-Gkm2DAKIX8geuDcEJ92e80EmQ6TyIzWBJk6AFk+aDLofQ4G/KoDe1RCY9WMuXFe0NQxsTi7HYh9BVQneOtlvkg==
+  /kind-of/6.0.3:
+    dev: true
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==
   /kiss-orm/2.0.1:
     dev: false
     engines:
@@ -4718,7 +4749,7 @@ packages:
       node: '>=6.9.0'
     resolution:
       integrity: sha512-/3vq4LU0bLH2Lj4NYN7BTf2caly0flUB7Xtrk9a5K3yLuXMkHMqMO/x3sDq8W2b1eQFSCyY0IVz2L+0HP8kUUA==
-  /postcss-loader/4.1.0_postcss@8.2.4+webpack@5.15.0:
+  /postcss-loader/4.2.0_postcss@8.2.4+webpack@5.17.0:
     dependencies:
       cosmiconfig: 7.0.0
       klona: 2.0.4
@@ -4726,7 +4757,7 @@ packages:
       postcss: 8.2.4
       schema-utils: 3.0.0
       semver: 7.3.4
-      webpack: 5.15.0_webpack-cli@4.3.1
+      webpack: 5.17.0_webpack-cli@4.4.0
     dev: true
     engines:
       node: '>= 10.13.0'
@@ -4734,7 +4765,7 @@ packages:
       postcss: ^7.0.0 || ^8.0.1
       webpack: ^4.0.0 || ^5.0.0
     resolution:
-      integrity: sha512-vbCkP70F3Q9PIk6d47aBwjqAMI4LfkXCoyxj+7NPNuVIwfTGdzv2KVQes59/RuxMniIgsYQCFSY42P3+ykJfaw==
+      integrity: sha512-mqgScxHqbiz1yxbnNcPdKYo/6aVt+XExURmEbQlviFVWogDbM4AJ0A/B+ZBpYsJrTRxKw7HyRazg9x0Q9SWwLA==
   /postcss-merge-idents/4.0.1:
     dependencies:
       cssnano-util-same-parent: 4.0.1
@@ -5383,15 +5414,15 @@ packages:
     dev: false
     resolution:
       integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==
-  /sass-loader/10.1.1_sass@1.32.4+webpack@5.15.0:
+  /sass-loader/10.1.1_sass@1.32.5+webpack@5.17.0:
     dependencies:
       klona: 2.0.4
       loader-utils: 2.0.0
       neo-async: 2.6.2
-      sass: 1.32.4
+      sass: 1.32.5
       schema-utils: 3.0.0
       semver: 7.3.4
-      webpack: 5.15.0_webpack-cli@4.3.1
+      webpack: 5.17.0_webpack-cli@4.4.0
     dev: true
     engines:
       node: '>= 10.13.0'
@@ -5409,7 +5440,7 @@ packages:
         optional: true
     resolution:
       integrity: sha512-W6gVDXAd5hR/WHsPicvZdjAWHBcEJ44UahgxcIE196fW2ong0ZHMPO1kZuI5q0VlvMQZh32gpv69PLWQm70qrw==
-  /sass/1.32.4:
+  /sass/1.32.5:
     dependencies:
       chokidar: 3.4.3
     dev: true
@@ -5417,7 +5448,7 @@ packages:
       node: '>=8.9.0'
     hasBin: true
     resolution:
-      integrity: sha512-N0BT0PI/t3+gD8jKa83zJJUb7ssfQnRRfqN+GIErokW6U4guBpfYl8qYB+OFLEho+QvnV5ZH1R9qhUC/Z2Ch9w==
+      integrity: sha512-kU1yJ5zUAmPxr7f3q0YXTAd1oZjSR1g3tYyv+xu0HZSl5JiNOaE987eiz7wCUvbm4I9fGWGU2TgApTtcP4GMNQ==
   /sax/1.2.4:
     resolution:
       integrity: sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==
@@ -5493,6 +5524,14 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-QMEp5B7cftE7APOjk5Y6xgrbWu+WkLVQwk8JNjZ8nKRciZaByEW6MubieAiToS7+dwvrjGhH8jRXz3MVd0AYqQ==
+  /shallow-clone/3.0.1:
+    dependencies:
+      kind-of: 6.0.3
+    dev: true
+    engines:
+      node: '>=8'
+    resolution:
+      integrity: sha512-/6KqX+GVUdqPuPPd2LxDDxzX6CAbjJehAAOKlNpqqUpAqPM6HeL8f+o3a+JsyGjn2lv0WY8UsTgUJjU9Ok55NA==
   /shebang-command/1.2.0:
     dependencies:
       shebang-regex: 1.0.0
@@ -5624,11 +5663,11 @@ packages:
       node: '>= 0.10.0'
     resolution:
       integrity: sha1-kdX1Ew0c75bc+n9yaUUYh0HQnuQ=
-  /string-replace-loader/3.0.1_webpack@5.15.0:
+  /string-replace-loader/3.0.1_webpack@5.17.0:
     dependencies:
       loader-utils: 2.0.0
       schema-utils: 3.0.0
-      webpack: 5.15.0_webpack-cli@4.3.1
+      webpack: 5.17.0_webpack-cli@4.4.0
     dev: true
     peerDependencies:
       webpack: ^5
@@ -5787,6 +5826,14 @@ packages:
       svelte: '>=3.19.0'
     resolution:
       integrity: sha512-s90yAPnfGE6rTbq9Vvq73z1XqLJ2qGw0VjorpwKfDZRIsB0/Ozu+uF5cyC1fS3dCyQcS2sZDMt4zQ/qDjDwa/Q==
+  /svelte-hmr/0.12.4_svelte@3.31.2:
+    dependencies:
+      svelte: 3.31.2
+    dev: true
+    peerDependencies:
+      svelte: '>=3.19.0'
+    resolution:
+      integrity: sha512-txg3Gt9PPxioHN45UO88s5DtNQZ1V5DB9EDpXz29L7WX2HpqPj6w8leD9/eynC4PbTz87bMvxNLdDiR/xdg73g==
   /svelte-loader-hot/0.3.1_svelte@3.31.2:
     dependencies:
       loader-utils: 1.4.0
@@ -5798,16 +5845,17 @@ packages:
       svelte: '>1.44.0'
     resolution:
       integrity: sha512-0Derrs0jQmdNhEN3vYztamV3aMjJoMvqfIsm+/JcEIF+oULZGDU7Ca/eVdMMEKGNpNwEQwZM+HQPfkoLzfV00Q==
-  /svelte-loader/2.13.6_svelte@3.31.2:
+  /svelte-loader/3.0.0_svelte@3.31.2:
     dependencies:
-      loader-utils: 1.4.0
+      loader-utils: 2.0.0
       svelte: 3.31.2
       svelte-dev-helper: 1.1.9
+      svelte-hmr: 0.12.4_svelte@3.31.2
     dev: true
     peerDependencies:
-      svelte: '>1.44.0'
+      svelte: '>3.0.0'
     resolution:
-      integrity: sha512-7uf7ZQdPAl+lwb1ldUYJFY/raZRUCuaNx7lMJ+F16jrVwN1+c35C2pBMGIY0mCqdKm5sm45jqELJJLGM3UG9Pw==
+      integrity: sha512-MiZ40V3kbGSghMY2zJi99eTSJtLsgvz8QQRlrWvBsLinx8tYEQzLMoivz2+H+p25LDFCPl7hZgxr3Jl1LECnEQ==
   /svelte-native-preprocessor/0.2.0_svelte@3.31.2:
     dependencies:
       svelte: 3.31.2
@@ -5816,9 +5864,9 @@ packages:
       svelte: ^3.4.1
     resolution:
       integrity: sha512-6cOnQ2XTFAWo9tgskGZBd8XQRpJ0C4FdwAp3FQaAMFqP04C/bLafwpBBnCP74qUA2tn2KYsTl6Zv1+wGcdAvsw==
-  /svelte-native/0.9.5_b43de167aa5963b8aa0851d5a92eef18:
+  /svelte-native/0.9.5_43b907163e0ab897efb5ea2a4c93ef99:
     dependencies:
-      '@nativescript/core': 7.1.0
+      '@nativescript/core': 7.1.3
       svelte: 3.31.2
     dev: false
     peerDependencies:
@@ -5826,14 +5874,14 @@ packages:
       svelte: ~3.24.1
     resolution:
       integrity: sha512-DRbrez6/uG4vDj544n12My2c4JjQrtKVFZGXTZzPxo7BMhFARbWPBJOoI89yoRn9D0gkFXxK6e1+xYB1s9GzKg==
-  /svelte-preprocess/4.6.1_298a072b176c3ef47b94ed3683337325:
+  /svelte-preprocess/4.6.3_48bea05c41730d262c866e7b1e83209c:
     dependencies:
       '@babel/core': 7.12.10
       '@types/pug': 2.0.4
       '@types/sass': 1.16.0
       detect-indent: 6.0.0
       postcss: 8.2.4
-      sass: 1.32.4
+      sass: 1.32.5
       strip-indent: 3.0.0
       svelte: 3.31.2
       typescript: 4.1.3
@@ -5878,7 +5926,7 @@ packages:
         optional: true
     requiresBuild: true
     resolution:
-      integrity: sha512-s7KdhR2pOsffyOzZIMEb315f6pfgeDnOWN47m6YKFeSEx3NMf/79Znc3vuG/Ai79SL/vsi86WDrjFPLGRfDesg==
+      integrity: sha512-VQRViCNBZi3Ni0W7aIyWJuhK+g7MSjd+s0sA9Q1rve9isz9/K0ZS3lDKnOtncjioGa2adZ10NnqtOQAGhKiZ5g==
   /svelte/3.31.2:
     dev: true
     engines:
@@ -5929,7 +5977,7 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-FBk4IesMV1rBxX2tfiK8RAmogtWn53puLOQlvO8XuwlgxcYbP4mVPS9Ph4aeamSyyVjOl24aYWAuc8U5kCVwMw==
-  /terser-webpack-plugin/5.1.1_webpack@5.15.0:
+  /terser-webpack-plugin/5.1.1_webpack@5.17.0:
     dependencies:
       jest-worker: 26.6.2
       p-limit: 3.1.0
@@ -5937,7 +5985,7 @@ packages:
       serialize-javascript: 5.0.1
       source-map: 0.6.1
       terser: 5.5.1
-      webpack: 5.15.0_webpack-cli@4.3.1
+      webpack: 5.17.0_webpack-cli@4.4.0
     dev: true
     engines:
       node: '>= 10.13.0'
@@ -6013,7 +6061,7 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-yy4SAwZ+DI3h9hQJS5/kVwTqYAM=
-  /ts-loader/8.0.14_typescript@4.1.3+webpack@5.15.0:
+  /ts-loader/8.0.14_typescript@4.1.3+webpack@5.17.0:
     dependencies:
       chalk: 4.1.0
       enhanced-resolve: 4.3.0
@@ -6021,7 +6069,7 @@ packages:
       micromatch: 4.0.2
       semver: 7.3.4
       typescript: 4.1.3
-      webpack: 5.15.0_webpack-cli@4.3.1
+      webpack: 5.17.0_webpack-cli@4.4.0
     dev: true
     engines:
       node: '>=10.0.0'
@@ -6153,11 +6201,12 @@ packages:
       node: '>=10.13.0'
     resolution:
       integrity: sha512-UjgD1mqjkG99+3lgG36at4wPnUXNvis2v1utwTgQ43C22c4LD71LsYMExdWXh4HZ+RmW+B0t1Vrg2GpXAkTOQw==
-  /webpack-cli/4.3.1_webpack@5.15.0:
+  /webpack-cli/4.4.0_webpack@5.17.0:
     dependencies:
       '@discoveryjs/json-ext': 0.5.2
-      '@webpack-cli/info': 1.2.1_webpack-cli@4.3.1
-      '@webpack-cli/serve': 1.2.1_webpack-cli@4.3.1
+      '@webpack-cli/configtest': 1.0.0_webpack-cli@4.4.0+webpack@5.17.0
+      '@webpack-cli/info': 1.2.1_webpack-cli@4.4.0
+      '@webpack-cli/serve': 1.2.2_webpack-cli@4.4.0
       colorette: 1.2.1
       commander: 6.2.1
       enquirer: 2.3.6
@@ -6167,8 +6216,8 @@ packages:
       interpret: 2.2.0
       rechoir: 0.7.0
       v8-compile-cache: 2.2.0
-      webpack: 5.15.0_webpack-cli@4.3.1
-      webpack-merge: 4.2.2
+      webpack: 5.17.0_webpack-cli@4.4.0
+      webpack-merge: 5.7.3
     dev: true
     engines:
       node: '>=10.13.0'
@@ -6192,13 +6241,16 @@ packages:
       webpack-dev-server:
         optional: true
     resolution:
-      integrity: sha512-/F4+9QNZM/qKzzL9/06Am8NXIkGV+/NqQ62Dx7DSqudxxpAgBqYn6V7+zp+0Y7JuWksKUbczRY3wMTd+7Uj6OA==
-  /webpack-merge/4.2.2:
+      integrity: sha512-/Qh07CXfXEkMu5S8wEpjuaw2Zj/CC0hf/qbTDp6N8N7JjdGuaOjZ7kttz+zhuJO/J5m7alQEhNk9lsc4rC6xgQ==
+  /webpack-merge/5.7.3:
     dependencies:
-      lodash: 4.17.20
+      clone-deep: 4.0.1
+      wildcard: 2.0.0
     dev: true
+    engines:
+      node: '>=10.0.0'
     resolution:
-      integrity: sha512-TUE1UGoTX2Cd42j3krGYqObZbOD+xF7u28WB7tfUordytSjbWTIjK/8V0amkBfTYN4/pB/GIDlJZZ657BGG19g==
+      integrity: sha512-6/JUQv0ELQ1igjGDzHkXbVDRxkfA57Zw7PfiupdLFJYrgFqY5ZP8xxbpp2lU3EPwYx89ht5Z/aDkD40hFCm5AA==
   /webpack-sources/2.2.0:
     dependencies:
       source-list-map: 2.0.1
@@ -6212,10 +6264,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-OUsT1VZhArN8nY7g6mMlw91HWnXcNXsIQjsQ83WteF4ViZ6YXqF2sWKOTDIZ0H+PPiApQdszLdZIrD7NNlU0Yw==
-  /webpack/5.15.0_webpack-cli@4.3.1:
+  /webpack/5.17.0_webpack-cli@4.4.0:
     dependencies:
       '@types/eslint-scope': 3.7.0
-      '@types/estree': 0.0.45
+      '@types/estree': 0.0.46
       '@webassemblyjs/ast': 1.11.0
       '@webassemblyjs/wasm-edit': 1.11.0
       '@webassemblyjs/wasm-parser': 1.11.0
@@ -6235,9 +6287,9 @@ packages:
       pkg-dir: 5.0.0
       schema-utils: 3.0.0
       tapable: 2.2.0
-      terser-webpack-plugin: 5.1.1_webpack@5.15.0
+      terser-webpack-plugin: 5.1.1_webpack@5.17.0
       watchpack: 2.1.0
-      webpack-cli: 4.3.1_webpack@5.15.0
+      webpack-cli: 4.4.0_webpack@5.17.0
       webpack-sources: 2.2.0
     dev: true
     engines:
@@ -6249,7 +6301,7 @@ packages:
       webpack-cli:
         optional: true
     resolution:
-      integrity: sha512-y/xG+ONDz78yn3VvP6gAvGr1/gkxOgitvHSXBmquyN8KDtrGEyE3K9WkXOPB7QmfcOBCpO4ELXwNcCYQnEmexA==
+      integrity: sha512-R+IdNEaYcYaACpXZOt7reyc8txBK7J06lOPkX1SbgmeoAnUbyBZivJIksrDBnmMA3wlTWvPcX7DubxELyPB8rA==
   /which-module/2.0.0:
     dev: false
     resolution:
@@ -6269,6 +6321,10 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==
+  /wildcard/2.0.0:
+    dev: true
+    resolution:
+      integrity: sha512-JcKqAHLPxcdb9KM49dufGXn2x3ssnfjbcaQdLlfZsL9rH9wgDQjUtDxbo8NE0F6SFvydeu1VhZe7hZuHsB2/pw==
   /word-wrap/1.2.3:
     dev: true
     engines:
@@ -6453,7 +6509,7 @@ packages:
     resolution:
       integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
 specifiers:
-  '@akylas/nativescript': 7.0.14
+  '@akylas/nativescript': 7.1.3
   '@akylas/nativescript-sqlite': 3.3.11
   '@babel/core': ^7.12.10
   '@mdi/font': 4.9.95
@@ -6470,43 +6526,43 @@ specifiers:
   '@nativescript-community/preferences': 1.2.6
   '@nativescript-community/sensors': 1.1.1
   '@nativescript-community/sentry': 2.0.8
-  '@nativescript-community/systemui': 1.1.6
+  '@nativescript-community/systemui': 1.1.7
   '@nativescript-community/tween': 0.0.14
   '@nativescript-community/typeorm': 0.2.29
-  '@nativescript-community/ui-canvas': 4.0.38
-  '@nativescript-community/ui-canvaslabel': 1.0.37
+  '@nativescript-community/ui-canvas': 4.0.40
+  '@nativescript-community/ui-canvaslabel': 1.0.39
   '@nativescript-community/ui-carto': 'file:../nativescript-carto/plugin'
   '@nativescript-community/ui-chart': 1.1.19
-  '@nativescript-community/ui-collectionview': 4.0.16
+  '@nativescript-community/ui-collectionview': 4.0.19
   '@nativescript-community/ui-document-picker': 1.1.3
   '@nativescript-community/ui-drawer': 0.0.22
-  '@nativescript-community/ui-image': 4.0.19
+  '@nativescript-community/ui-image': 4.0.20
   '@nativescript-community/ui-label': 1.0.61
-  '@nativescript-community/ui-material-activityindicator': 5.1.16
-  '@nativescript-community/ui-material-bottomsheet': 5.1.16
-  '@nativescript-community/ui-material-button': 5.1.16
-  '@nativescript-community/ui-material-cardview': 5.1.16
-  '@nativescript-community/ui-material-dialogs': 5.1.16
-  '@nativescript-community/ui-material-progress': 5.1.16
-  '@nativescript-community/ui-material-slider': 5.1.16
-  '@nativescript-community/ui-material-snackbar': 5.1.16
+  '@nativescript-community/ui-material-activityindicator': 5.2.3
+  '@nativescript-community/ui-material-bottomsheet': 5.2.3
+  '@nativescript-community/ui-material-button': 5.2.3
+  '@nativescript-community/ui-material-cardview': 5.2.3
+  '@nativescript-community/ui-material-dialogs': 5.2.3
+  '@nativescript-community/ui-material-progress': 5.2.3
+  '@nativescript-community/ui-material-slider': 5.2.3
+  '@nativescript-community/ui-material-snackbar': 5.2.3
   '@nativescript-community/ui-persistent-bottomsheet': 0.0.14
   '@nativescript-community/ui-share-file': 1.2.1
   '@nativescript-community/ui-webview': 1.1.5
   '@nativescript/android': 7.0.1
   '@nativescript/appavailability': 2.0.0
   '@nativescript/brightness': 2.0.0
-  '@nativescript/core': 7.1.0
+  '@nativescript/core': 7.1.3
   '@nativescript/email': 2.0.0
-  '@nativescript/ios': 7.1.0
+  '@nativescript/ios': 7.1.1
   '@nativescript/types-android': 7.1.0
   '@nativescript/types-ios': 7.1.0
-  '@nativescript/webpack': 3.0.8
+  '@nativescript/webpack': 4.0.1
   '@sentry/webpack-plugin': ^1.14.0
   '@types/geojson': ^7946.0.7
   '@types/tween.js': ^18.6.1
-  '@typescript-eslint/eslint-plugin': 4.13.0
-  '@typescript-eslint/parser': 4.13.0
+  '@typescript-eslint/eslint-plugin': 4.14.0
+  '@typescript-eslint/parser': 4.14.0
   app-root-path: 3.0.0
   babel-loader: ^8.2.2
   clean-webpack-plugin: 3.0.0
@@ -6516,11 +6572,11 @@ specifiers:
   css-loader: ^5.0.1
   cssnano: ^4.1.10
   cssnano-preset-advanced: ^4.0.7
-  dayjs: 1.10.3
+  dayjs: 1.10.4
   deburr: 0.0.3
   downsample: 1.3.0
-  eslint: 7.17.0
-  eslint-config-prettier: ^7.1.0
+  eslint: 7.18.0
+  eslint-config-prettier: ^7.2.0
   eslint-plugin-prettier: ^3.3.1
   eslint-plugin-svelte3: 3.0.0
   fork-ts-checker-webpack-plugin: ^6.1.0
@@ -6537,23 +6593,23 @@ specifiers:
   nativescript-worker-loader: ^0.12.1
   postcss: ^8.2.4
   postcss-combine-duplicated-selectors: ^10.0.2
-  postcss-loader: ^4.1.0
+  postcss-loader: ^4.2.0
   prettier: ^2.2.1
   push-it-to-the-limit: ^1.17.1
-  sass: ^1.32.4
+  sass: ^1.32.5
   sass-loader: 10.1.1
   scss-symbols-parser: ^2.0.1
   semver: 7.3.4
   string-replace-loader: 3.0.1
   svelte: 3.31.2
-  svelte-loader: 2.13.6
+  svelte-loader: 3.0.0
   svelte-loader-hot: 0.3.1
   svelte-native: 0.9.5
   svelte-native-preprocessor: ~0.2.0
-  svelte-preprocess: 4.6.1
+  svelte-preprocess: 4.6.3
   terser-webpack-plugin: ^5.1.1
   ts-loader: ^8.0.14
   typescript: ~4.1.3
-  webpack: 5.15.0
-  webpack-cli: ~4.3.1
+  webpack: 5.17.0
+  webpack-cli: ~4.4.0
   webpack-virtual-modules: ^0.4.2

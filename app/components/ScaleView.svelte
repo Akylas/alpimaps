@@ -1,6 +1,6 @@
 <script lang="ts">
     import { CartoMap } from '@nativescript-community/ui-carto/ui';
-    import { MapPos } from '@nativescript-community/ui-carto/core';
+    import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { Screen } from '@nativescript/core/platform';
     import { convertDistance } from '~/helpers/formatter';
     import { getMapContext } from '~/mapModules/MapModule';

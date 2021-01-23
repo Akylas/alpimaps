@@ -2,33 +2,25 @@
     import { AppURL, handleOpenURL } from '@nativescript-community/appurl';
     import * as EInfo from '@nativescript-community/extendedinfo';
     import * as perms from '@nativescript-community/perms';
-    import { CartoMapStyle, ClickType, MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
+    import { CartoMapStyle, ClickType, MapBounds } from '@nativescript-community/ui-carto/core';
+    import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
-    import { PolygonGeometry } from '@nativescript-community/ui-carto/geometry';
-    import { VectorTileFeatureCollection } from '@nativescript-community/ui-carto/geometry/feature';
-    import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
-    import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
     import { Layer } from '@nativescript-community/ui-carto/layers';
     import {
         BaseVectorTileLayer,
         CartoOnlineVectorTileLayer,
-        VectorElementEventData,
         VectorLayer,
-        VectorTileEventData,
         VectorTileLayer,
         VectorTileRenderOrder
     } from '@nativescript-community/ui-carto/layers/vector';
+    import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
     import { Projection } from '@nativescript-community/ui-carto/projections';
-    import { VectorTileSearchService } from '@nativescript-community/ui-carto/search';
     import { CartoMap, PanningMode, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
     import { setShowDebug, setShowError, setShowInfo, setShowWarn } from '@nativescript-community/ui-carto/utils';
     import { Line } from '@nativescript-community/ui-carto/vectorelements/line';
-    import {
-        Marker,
-        MarkerStyleBuilder,
-        MarkerStyleBuilderOptions
-    } from '@nativescript-community/ui-carto/vectorelements/marker';
+    import { Marker, MarkerStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/marker';
+    import type { MarkerStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/marker';
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
     import { Drawer } from '@nativescript-community/ui-drawer';
@@ -37,7 +29,7 @@
     import { Brightness } from '@nativescript/brightness';
     import { AndroidApplication, Application, Color, Page } from '@nativescript/core';
     import * as appSettings from '@nativescript/core/application-settings';
-    import { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
+    import type { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Device, Screen } from '@nativescript/core/platform';
     import { ad } from '@nativescript/core/utils/utils';
@@ -50,17 +42,19 @@
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { l, lc, lt } from '~/helpers/locale';
     import watcher from '~/helpers/watcher';
-    import CustomLayersModule, { SourceItem } from '~/mapModules/CustomLayersModule';
+    import type { SourceItem } from '~/mapModules/CustomLayersModule';
+    import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
-    import { getMapContext, LayerType, setMapContext } from '~/mapModules/MapModule';
+    import type { LayerType } from '~/mapModules/MapModule';
+    import { getMapContext, setMapContext } from '~/mapModules/MapModule';
     import UserLocationModule from '~/mapModules/UserLocationModule';
-    import { IItem } from '~/models/Item';
+    import type { IItem } from '~/models/Item';
     import { NotificationHelper, NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL } from '~/services/android/NotifcationHelper';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
     import { packageService } from '~/services/PackageService';
     import mapStore from '~/stores/mapStore';
     import { showError } from '~/utils/error';
-    import { computeDistanceBetween, latLngToTileXY } from '~/utils/geo';
+    import { computeDistanceBetween } from '~/utils/geo';
     import { Sentry } from '~/utils/sentry';
     import { accentColor, screenHeightDips, screenWidthDips } from '~/variables';
     import { navigationBarHeight, primaryColor } from '../variables';
@@ -450,7 +444,6 @@
         didIgnoreAlreadySelected = false;
         // console.log('selectItem', item, isFeatureInteresting);
         if (isFeatureInteresting) {
-            
             if (item.route) {
                 const vectorElement = item.vectorElement as Line;
                 if (vectorElement) {
@@ -482,7 +475,6 @@
                     selectedPosMarker.visible = false;
                 }
             } else {
-                
                 if (!selectedPosMarker) {
                     getOrCreateLocalVectorLayer();
                     const itemModule = mapContext.mapModule('items');
@@ -535,16 +527,19 @@
                                 const r = packageService.convertGeoCodingResult(res.get(index));
                                 if (computeDistanceBetween(item.position, r.position) <= radius && r.rank > 0.7) {
                                     if ($selectedItem.position === item.position) {
-                                        $selectedItem = packageService.prepareGeoCodingResult({
-                                            address: r.address as any,
-                                            ...$selectedItem
-                                        }, r.rank < 0.9);
+                                        $selectedItem = packageService.prepareGeoCodingResult(
+                                            {
+                                                address: r.address as any,
+                                                ...$selectedItem
+                                            },
+                                            r.rank < 0.9
+                                        );
                                     }
                                     break;
                                 }
                             }
                         }
-                    } catch(err) {
+                    } catch (err) {
                         console.error(err);
                     }
                 }
@@ -704,14 +699,14 @@
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureLayerName, featureData, featurePosition, layer } = data;
         // if (DEV_LOG) {
-            console.log(
-                'onVectorTileClicked',
-                featureLayerName,
-                featureData.class,
-                featureData.subclass,
-                featureData,
-                featurePosition
-            );
+        console.log(
+            'onVectorTileClicked',
+            featureLayerName,
+            featureData.class,
+            featureData.subclass,
+            featureData,
+            featurePosition
+        );
         // }
 
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data);
@@ -1405,7 +1400,8 @@
             on:mapMoved={onMainMapMove}
             on:mapStable={onMainMapStable}
             on:mapIdle={onMainMapIdle}
-            on:mapClicked={onMainMapClicked} />
+            on:mapClicked={onMainMapClicked}
+        />
         <bottomsheet
             android:marginBottom={navigationBarHeight}
             backgroundColor="#01550000"
@@ -1416,14 +1412,16 @@
                 bind:this={searchView}
                 verticalAlignment="top"
                 defaultElevation={0}
-                isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
+                isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
+            />
             <LocationInfoPanel
                 horizontalAlignment="left"
                 verticalAlignment="top"
                 marginLeft="20"
                 marginTop="90"
                 bind:this={locationInfoPanel}
-                isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
+                isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
+            />
             <DirectionsPanel bind:this={directionsPanel} width="100%" verticalAlignment="top" />
             <stacklayout horizontalAlignment="left" verticalAlignment="middle">
                 <button
@@ -1431,32 +1429,37 @@
                     class="icon-btn"
                     text="mdi-domain"
                     color={$mapStore.show3DBuildings ? primaryColor : 'gray'}
-                    on:tap={() => mapStore.setShow3DBuildings(!$mapStore.show3DBuildings)} />
+                    on:tap={() => mapStore.setShow3DBuildings(!$mapStore.show3DBuildings)}
+                />
 
                 <button
                     variant="text"
                     class="icon-btn"
                     text="mdi-bullseye"
                     color={$mapStore.showContourLines ? primaryColor : 'gray'}
-                    on:tap={() => mapStore.setShowContourLines(!$mapStore.showContourLines)} />
+                    on:tap={() => mapStore.setShowContourLines(!$mapStore.showContourLines)}
+                />
                 <button
                     variant="text"
                     class="icon-btn"
                     text="mdi-signal"
                     color={$mapStore.showSlopePercentages ? primaryColor : 'gray'}
-                    on:tap={() => mapStore.setShowSlopePercentages(!$mapStore.showSlopePercentages)} />
+                    on:tap={() => mapStore.setShowSlopePercentages(!$mapStore.showSlopePercentages)}
+                />
                 <button
                     variant="text"
                     class="icon-btn"
                     text="mdi-map-marker-path"
                     color={$mapStore.showRoutes ? primaryColor : 'gray'}
-                    on:tap={() => mapStore.setShowRoutes(!$mapStore.showRoutes)} />
+                    on:tap={() => mapStore.setShowRoutes(!$mapStore.showRoutes)}
+                />
                 <button
                     variant="text"
                     class="icon-btn"
                     text="mdi-globe-model"
                     color={$mapStore.showGlobe ? primaryColor : 'gray'}
-                    on:tap={() => mapStore.setShowGlobe(!$mapStore.showGlobe)} />
+                    on:tap={() => mapStore.setShowGlobe(!$mapStore.showGlobe)}
+                />
 
                 <button
                     variant="text"
@@ -1464,7 +1467,8 @@
                     text="mdi-map-clock"
                     visibility={packageServiceEnabled ? 'visible' : 'collapsed'}
                     color={$mapStore.preloading ? primaryColor : 'gray'}
-                    on:tap={() => mapStore.setPreloading(!$mapStore.preloading)} />
+                    on:tap={() => mapStore.setPreloading(!$mapStore.preloading)}
+                />
             </stacklayout>
             <canvaslabel
                 orientation="vertical"
@@ -1480,19 +1484,22 @@
                     text="mdi-crosshairs-gps"
                     visibility={$mapStore.watchingLocation || $mapStore.queryingLocation ? 'visible' : 'collapsed'}
                     textAlignment="left"
-                    verticalTextAlignement="top" />
+                    verticalTextAlignement="top"
+                />
                 <cspan
                     text="mdi-sleep-off"
                     visibility={keepAwakeEnabled ? 'visible' : 'collapsed'}
                     textAlignment="left"
-                    verticalTextAlignement="bottom" />
+                    verticalTextAlignement="bottom"
+                />
             </canvaslabel>
             <BottomSheetInner
                 bind:this={bottomSheetInner}
                 bind:steps
                 prop:bottomSheet
                 updating={itemLoading}
-                item={$selectedItem} />
+                item={$selectedItem}
+            />
             <button
                 marginTop="80"
                 visibility={currentMapRotation !== 0 ? 'visible' : 'collapsed'}
@@ -1501,11 +1508,13 @@
                 text="mdi-navigation"
                 rotate={currentMapRotation}
                 verticalAlignment="top"
-                horizontalAlignment="right" />
+                horizontalAlignment="right"
+            />
             <MapScrollingWidgets
                 bind:this={mapScrollingWidgets}
                 opacity={scrollingWidgetsOpacity}
-                userInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
+                userInteractionEnabled={scrollingWidgetsOpacity > 0.3}
+            />
             <!-- <absolutelayout
                 transition:slide={{ duration: 100 }}
                 visibility={shouldShowNavigationBarOverlay ? 'visible' : 'collapsed'}

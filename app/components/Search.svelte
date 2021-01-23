@@ -1,14 +1,14 @@
 <script context="module" lang="ts">
-    import { MapPos } from '@nativescript-community/ui-carto/core';
+    import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
     import { ClusterElementBuilder } from '@nativescript-community/ui-carto/layers/cluster';
     import { ClusteredVectorLayer } from '@nativescript-community/ui-carto/layers/vector';
-    import { SearchRequest, VectorTileSearchService } from '@nativescript-community/ui-carto/search';
+    import type { SearchRequest } from '@nativescript-community/ui-carto/search';
     import { VectorElementVector } from '@nativescript-community/ui-carto/vectorelements';
     import { Marker } from '@nativescript-community/ui-carto/vectorelements/marker';
     import { Point, PointStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/point';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { Side } from '@nativescript-community/ui-drawer';
+    import type { Side } from '@nativescript-community/ui-drawer';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { GridLayout, ObservableArray, TextField } from '@nativescript/core';
     import { getJSON } from '@nativescript/core/http';
@@ -19,7 +19,7 @@
     import { l } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
-    import { Address, IItem as Item } from '~/models/Item';
+    import type { Address, IItem as Item } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { globalMarginTop, primaryColor } from '~/variables';
@@ -140,7 +140,6 @@
 </script>
 
 <script lang="ts">
-
     let gridLayout: NativeViewElementNode<GridLayout>;
     let textField: NativeViewElementNode<TextField>;
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -307,7 +306,9 @@
             .then((result) => packageService.convertGeoCodingResults(result, true));
     }
     function searchInVectorTiles(options: SearchRequest) {
-        return packageService.searchInVectorTiles(options).then((result) => packageService.convertFeatureCollection(result, options));
+        return packageService
+            .searchInVectorTiles(options)
+            .then((result) => packageService.convertFeatureCollection(result, options));
         // return packageService.searchInVectorTiles(options).then((result) => []);
     }
 
@@ -343,21 +344,26 @@
             )
         ).then((result: any) => result.results.items.map((f) => new HereFeature(f)));
     }
-    async function photonSearch(options: { query: string; language?: string; location?: MapPos<LatLonKeys>; locationRadius?: number }) {
+    async function photonSearch(options: {
+        query: string;
+        language?: string;
+        location?: MapPos<LatLonKeys>;
+        locationRadius?: number;
+    }) {
         if (!networkService.connected) {
             return [];
         }
-        const url =queryString(
-                {
-                    q: options.query,
-                    lat: options.location && options.location.lat,
-                    lon: options.location && options.location.lon,
-                    lang: options.language,
-                    limit: 40
-                },
-                'https://photon.komoot.de/api'
-            )
-            console.log('photonSearch', url);
+        const url = queryString(
+            {
+                q: options.query,
+                lat: options.location && options.location.lat,
+                lon: options.location && options.location.lon,
+                lang: options.language,
+                limit: 40
+            },
+            'https://photon.komoot.de/api'
+        );
+        console.log('photonSearch', url);
         return getJSON(url).then(function (results: any) {
             return results.features.filter((r) => r.properties.osm_type !== 'R').map((f) => new PhotonFeature(f));
         });
@@ -379,7 +385,7 @@
             // `REGEXP_LIKE(name, '${_query}')`
             location: position,
             position,
-            searchRadius:1000
+            searchRadius: 1000
             // locationRadius: 1000,
         };
 
@@ -389,7 +395,9 @@
         await Promise.all([
             searchInVectorTiles(options as any)
                 .then((r) => result.push(...r))
-                .catch((err) => {console.error('searchInVectorTiles', err);}),
+                .catch((err) => {
+                    console.error('searchInVectorTiles', err);
+                })
             // searchInGeocodingService(options)
             //     .then((r) => result.push(...r))
             //     .catch((err) => {console.error('searchInGeocodingService', err);}),
@@ -532,7 +540,8 @@
         autocapitalizationType="none"
         floating="false"
         verticalAlignment="center"
-        color="white" />
+        color="white"
+    />
     <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} row="0" col="2" busy={true} width={20} height={20} />
     {#if loaded}
         <button
@@ -543,7 +552,8 @@
             col="3"
             text="mdi-shape"
             on:tap={toggleFilterOSMKey}
-            color={filteringOSMKey ? primaryColor : 'lightgray'} />
+            color={filteringOSMKey ? primaryColor : 'lightgray'}
+        />
         <button
             variant="text"
             class="icon-btn"
@@ -552,7 +562,8 @@
             col="4"
             text="mdi-map"
             on:tap={showResultsOnMap}
-            color="lightgray" />
+            color="lightgray"
+        />
     {/if}
     <button
         variant="text"
@@ -562,7 +573,8 @@
         col="5"
         text="mdi-close"
         on:tap={clearSearch}
-        color="lightgray" />
+        color="lightgray"
+    />
     <button col="6" variant="text" class="icon-btn-white" text="mdi-dots-vertical" on:tap={showMapMenu} />
     {#if loaded}
         <collectionview
@@ -584,7 +596,8 @@
                         class="osm"
                         fontSize="20"
                         verticalAlignment="center"
-                        textAlignment="center" />
+                        textAlignment="center"
+                    />
                     <label col="1" row="1" text={getItemTitle(item)} color="white" fontSize="14" fontWeight="bold" />
                     <label col="1" row="2" text={getItemSubtitle(item)} color="#D0D0D0" fontSize="12" />
                 </gridlayout>
