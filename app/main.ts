@@ -1,5 +1,6 @@
 // require('@nativescript/core/ui/frame/activity');
 // require('@nativescript/core/ui/frame');
+// (com as any).tns.Runtime.getCurrentRuntime().enableVerboseLogging();
 import './app.scss';
 import { startSentry } from '~/utils/sentry';
 import { install as installLogging } from '~/utils/logging';
