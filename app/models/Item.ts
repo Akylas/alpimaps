@@ -45,7 +45,7 @@ export interface Address {
 export class Item {
     public readonly id!: string;
 
-    public readonly properties!: {
+    public properties!: {
         [k: string]: any;
         name?: string;
         osm_value?: string;

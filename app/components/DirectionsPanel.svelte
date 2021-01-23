@@ -1,8 +1,11 @@
 <script lang="ts" context="module">
-    import { ClickType, fromNativeMapBounds, fromNativeMapPos, MapPos } from '@nativescript-community/ui-carto/core';
+    import { ClickType, fromNativeMapBounds, fromNativeMapPos } from '@nativescript-community/ui-carto/core';
+    import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
-    import { VectorElementEventData, VectorLayer, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
-    import { RoutingResult, RoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+    import { VectorLayer } from '@nativescript-community/ui-carto/layers/vector';
+    import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
+    import { RoutingResult, RoutingService } from '@nativescript-community/ui-carto/routing';
+    import type { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
     import { Group } from '@nativescript-community/ui-carto/vectorelements/group';
     import { Line, LineEndType, LineJointType, LineStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/line';
     import { Marker, MarkerStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/marker';
@@ -13,8 +16,9 @@
     import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { getMapContext } from '~/mapModules/MapModule';
-    import { IItem as Item } from '~/models/Item';
-    import { Route, RouteInstruction, RoutingAction } from '~/models/Route';
+    import type { IItem as Item } from '~/models/Item';
+    import { Route, RoutingAction } from '~/models/Route';
+    import type { RouteInstruction } from '~/models/Route';
     import { packageService } from '~/services/PackageService';
     import { omit } from '~/utils/utils';
     import { globalMarginTop, primaryColor } from '~/variables';
@@ -51,8 +55,8 @@
 <script lang="ts">
     import { getDistanceSimple } from '~/helpers/geolib';
     import { convertDistance, convertValueToUnit, formatValueToUnit } from '~/helpers/formatter';
-import { getCenter } from '~/utils/geo';
-import { showError } from '~/utils/error';
+    import { getCenter } from '~/utils/geo';
+    import { showError } from '~/utils/error';
 
     const mapContext = getMapContext();
     export let translationFunction: Function = null;
@@ -443,7 +447,7 @@ import { showError } from '~/utils/error';
             if (!service) {
                 service = packageService.onlineRoutingSearchService();
             }
-            service.profile = profile;
+            (service as any).profile = profile;
             const result = await service.calculateRoute<LatLonKeys>({
                 projection: mapContext.getProjection(),
                 points: waypoints.map((r) => r.position),
@@ -486,21 +490,21 @@ import { showError } from '~/utils/error';
         } catch (error) {
             console.log('showRoute error', error, error.stack);
             // if (!online) {
-                // return confirm({
-                //     message: $t('try_online'),
-                //     okButtonText: $t('ok'),
-                //     cancelButtonText: $t('cancel')
-                // }).then(result => {
-                // if (result) {
-                // showRoute(true);
-                //     } else {
-                //         cancel();
-                //     }
-                // });
+            // return confirm({
+            //     message: $t('try_online'),
+            //     okButtonText: $t('ok'),
+            //     cancelButtonText: $t('cancel')
+            // }).then(result => {
+            // if (result) {
+            // showRoute(true);
+            //     } else {
+            //         cancel();
+            //     }
+            // });
             // } else {
-                loading = false;
-                cancel();
-                showError(error || 'failed to compute route');
+            loading = false;
+            cancel();
+            showError(error || 'failed to compute route');
             // }
         }
     }
@@ -586,32 +590,37 @@ import { showError } from '~/utils/error';
                 variant="text"
                 class="icon-btn-white"
                 text="mdi-arrow-left"
-                on:tap={() => cancel()} />
+                on:tap={() => cancel()}
+            />
             <stacklayout orientation="horizontal" horizontalAlignment="center">
                 <button
                     variant="text"
                     class="icon-btn-white"
                     text="mdi-car"
                     on:tap={() => setProfile('car')}
-                    color={profileColor(profile, 'car')} />
+                    color={profileColor(profile, 'car')}
+                />
                 <button
                     variant="text"
                     class="icon-btn-white"
                     text="mdi-walk"
                     on:tap={() => setProfile('pedestrian')}
-                    color={profileColor(profile, 'pedestrian')} />
+                    color={profileColor(profile, 'pedestrian')}
+                />
                 <button
                     variant="text"
                     class="icon-btn-white"
                     text="mdi-bike"
                     on:tap={() => setProfile('bicycle')}
-                    color={profileColor(profile, 'bicycle')} />
+                    color={profileColor(profile, 'bicycle')}
+                />
                 <button
                     variant="text"
                     class="icon-btn-white"
                     text="mdi-auto-fix"
                     on:tap={() => setProfile('auto_shorter')}
-                    color={profileColor(profile, 'auto_shorter')} />
+                    color={profileColor(profile, 'auto_shorter')}
+                />
             </stacklayout>
             <button
                 horizontalAlignment="right"
@@ -621,14 +630,16 @@ import { showError } from '~/utils/error';
                 on:LongPress={() => showRoute(true)}
                 isEnabled={waypoints.length > 0}
                 margin="4 10 4 10"
-                visibility={loading ? 'hidden' : 'visible'} />
+                visibility={loading ? 'hidden' : 'visible'}
+            />
             <mdactivityindicator
                 visibility={loading ? 'visible' : 'collapsed'}
                 horizontalAlignment="right"
                 busy={true}
                 width="44"
                 height="44"
-                color="white" />
+                color="white"
+            />
             <gridlayout
                 row="1"
                 colSpan="3"
@@ -650,7 +661,8 @@ import { showError } from '~/utils/error';
                     variant="none"
                     backgroundColor="transparent"
                     floating="false"
-                    verticalAlignment="center" />
+                    verticalAlignment="center"
+                />
                 <button
                     variant="text"
                     class="icon-btn"
@@ -659,7 +671,8 @@ import { showError } from '~/utils/error';
                     col="2"
                     text="mdi-close"
                     on:tap={clearStartSearch}
-                    color="gray" />
+                    color="gray"
+                />
             </gridlayout>
             <gridlayout row="2" borderRadius="2" backgroundColor="white" columns=" *,auto,auto" height="44" margin="0 10 10 10">
                 <textfield
@@ -675,14 +688,16 @@ import { showError } from '~/utils/error';
                     width="100%"
                     backgroundColor="transparent"
                     floating="false"
-                    verticalAlignment="center" />
+                    verticalAlignment="center"
+                />
                 <mdactivityindicator
                     visibility={false ? 'visible' : 'collapsed'}
                     row="0"
                     col="1"
                     busy={true}
                     width={20}
-                    height={20} />
+                    height={20}
+                />
                 <button
                     variant="text"
                     class="icon-btn"
@@ -691,7 +706,8 @@ import { showError } from '~/utils/error';
                     col="2"
                     text="mdi-close"
                     on:tap={clearStopSearch}
-                    color="gray" />
+                    color="gray"
+                />
             </gridlayout>
             <stacklayout orientation="horizontal" row="3" visibility={showOptions ? 'visible' : 'hidden'}>
                 <button
@@ -699,28 +715,32 @@ import { showError } from '~/utils/error';
                     class="icon-btn-white"
                     text="mdi-ferry"
                     color={valhallaSettingColor(valhallaCostingOptions, 'use_ferry')}
-                    on:tap={() => switchValhallaSetting('use_ferry')} />
+                    on:tap={() => switchValhallaSetting('use_ferry')}
+                />
                 <button
                     variant="text"
                     class="icon-btn-white"
                     text="mdi-road"
                     visibility={profile === 'bicycle' || profile === 'pedestrian' ? 'visible' : 'collapsed'}
                     color={valhallaSettingColor(valhallaCostingOptions, 'use_roads')}
-                    on:tap={() => switchValhallaSetting('use_roads')} />
+                    on:tap={() => switchValhallaSetting('use_roads')}
+                />
                 <button
                     variant="text"
                     class="icon-btn-white"
                     text="mdi-chart-areaspline"
                     visibility={profile === 'bicycle' ? 'visible' : 'collapsed'}
                     color={valhallaSettingColor(valhallaCostingOptions, 'use_hills')}
-                    on:tap={() => switchValhallaSetting('use_hills')} />
+                    on:tap={() => switchValhallaSetting('use_hills')}
+                />
                 <button
                     variant="text"
                     class="icon-btn-white"
                     text="mdi-texture-box"
                     visibility={profile === 'bicycle' ? 'visible' : 'collapsed'}
                     color={valhallaSettingColor(valhallaCostingOptions, 'avoid_bad_surface')}
-                    on:tap={() => switchValhallaSetting('avoid_bad_surface')} />
+                    on:tap={() => switchValhallaSetting('avoid_bad_surface')}
+                />
             </stacklayout>
         </gridlayout>
     {/if}
