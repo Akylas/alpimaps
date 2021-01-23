@@ -1,0 +1,3 @@
+*Bug fixes*
+- a few fixes
+- new way of asking weather
