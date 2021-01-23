@@ -1,7 +1,9 @@
 <script lang="ts" context="module">
     import {
-        CartoPackageManager,
         PackageAction,
+    } from '@nativescript-community/ui-carto/packagemanager';
+    import type {
+        CartoPackageManager,
         PackageInfo,
         PackageInfoVector,
         PackageStatus

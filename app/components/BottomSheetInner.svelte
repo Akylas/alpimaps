@@ -2,7 +2,7 @@
     import { Align, Canvas, Paint } from '@nativescript-community/ui-canvas';
     import { CartoMap } from '@nativescript-community/ui-carto/ui';
     import { LineChart } from '@nativescript-community/ui-chart/charts';
-    import { HighlightEventData } from '@nativescript-community/ui-chart/charts/Chart';
+    import type { HighlightEventData } from '@nativescript-community/ui-chart/charts/Chart';
     import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
     import { Entry } from '@nativescript-community/ui-chart/data/Entry';
     import { LineData } from '@nativescript-community/ui-chart/data/LineData';
@@ -13,16 +13,16 @@
     import { openUrl } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { convertValueToUnit } from '~/helpers/formatter';
+    import { convertValueToUnit, UNITS } from '~/helpers/formatter';
     import { getMapContext } from '~/mapModules/MapModule';
-    import { IItem, IItem as Item } from '~/models/Item';
+    import type { IItem, IItem as Item } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
     import { omit } from '~/utils/utils';
     import { showError } from '~/utils/error';
     import { screenHeightDips, statusBarHeight, textColor } from '~/variables';
     import BottomSheetInfoView from './BottomSheetInfoView.svelte';
     import { formatter } from '~/mapModules/ItemFormatter';
-    import { RouteInstruction } from '~/models/Route';
+    import type { RouteInstruction } from '~/models/Route';
     import { networkService } from '~/services/NetworkService';
     import { showBottomSheet } from './bottomsheet';
 
@@ -282,7 +282,7 @@
                 xAxis.setTextColor(textColor);
                 xAxis.ensureLastLabel = true;
                 xAxis.setValueFormatter({
-                    getAxisLabel: (value, axis) => convertValueToUnit(value, 'km').join(' ')
+                    getAxisLabel: (value, axis) => convertValueToUnit(value, UNITS.DistanceKm).join(' ')
                 });
 
                 chartView.setMaxVisibleValueCount(300);
