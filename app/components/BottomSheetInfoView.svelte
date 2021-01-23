@@ -1,9 +1,9 @@
 <script lang="ts" context="module">
-    import { MapPos } from '@nativescript-community/ui-carto/core';
+    import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
-    import { convertDuration, osmicon, convertElevation, convertValueToUnit } from '~/helpers/formatter';
-    import { IItem as Item } from '~/models/Item';
-    import { RouteInstruction } from '~/models/Route';
+    import { convertDuration, osmicon, convertElevation, convertValueToUnit, UNITS } from '~/helpers/formatter';
+    import type { IItem as Item } from '~/models/Item';
+    import type { RouteInstruction } from '~/models/Route';
     import { mdiFontFamily } from '~/variables';
     import { formatter } from '~/mapModules/ItemFormatter';
     const PROPS_TO_SHOW = ['ele'];
@@ -116,9 +116,9 @@
             const route = item.route;
             let result;
             if (route.totalDistance || (itemProps && itemProps.distance)) {
-                result = `${convertValueToUnit(route.totalDistance || itemProps.distance * 1000, 'km').join(' ')}`;
+                result = `${convertValueToUnit(route.totalDistance || itemProps.distance * 1000, UNITS.DistanceKm).join(' ')}`;
                 if (remainingDistanceOnCurrentRoute) {
-                    result += ` (${convertValueToUnit(remainingDistanceOnCurrentRoute, 'km').join(' ')})`;
+                    result += ` (${convertValueToUnit(remainingDistanceOnCurrentRoute, UNITS.DistanceKm).join(' ')})`;
                 }
                 routeDistance = result;
                 newPropsToDraw.push('distance');
@@ -160,7 +160,7 @@
     $: {
         try {
             updateItem(item);
-        } catch(err) {
+        } catch (err) {
             console.error('updateItem', err);
         }
     }
@@ -180,7 +180,8 @@
             width="40"
             text={osmicon(itemIcon)}
             fontFamily="osm"
-            fontSize={24} />
+            fontSize={24}
+        />
     </cgroup>
     <symbolshape
         visibility={showSymbol ? 'visible' : 'hidden'}
@@ -188,7 +189,8 @@
         color={(itemProps && itemProps.color) || 0}
         width="34"
         height="32"
-        top={propsToDraw.length > 0 ? 1 : 6} />
+        top={propsToDraw.length > 0 ? 1 : 6}
+    />
 
     <cgroup
         paddingLeft="40"
@@ -200,7 +202,8 @@
             fontWeight="bold"
             color={routeDuration ? '#01B719' : 'white'}
             :fontSize={routeInstruction ? 10 : 16}
-            :paddingTop={routeInstruction ? 18 : 0} />
+            :paddingTop={routeInstruction ? 18 : 0}
+        />
         <cspan text={itemSubtitle ? '\n' + itemSubtitle : ''} color="#D0D0D0" fontSize={13} />
     </cgroup>
     <cgroup
