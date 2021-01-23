@@ -11,7 +11,7 @@
     import { setNumber, setString } from '@nativescript/core/application-settings';
     import { onMount } from 'svelte';
     import { l } from '~/helpers/locale';
-    import { SourceItem } from '~/mapModules/CustomLayersModule';
+    import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
     import { showError } from '~/utils/error';
     import { pickColor } from '~/utils/utils';

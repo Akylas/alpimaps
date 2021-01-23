@@ -1,8 +1,9 @@
 <script lang="ts" context="module">
     import { GridLayout, ViewBase } from '@nativescript/core';
     import { l, lc } from '@nativescript-community/l';
-    import { MapPos } from '@nativescript-community/ui-carto/core';
-    import { PackageAction, PackageStatus } from '@nativescript-community/ui-carto/packagemanager';
+    import type { MapPos } from '@nativescript-community/ui-carto/core';
+    import type { PackageStatus } from '@nativescript-community/ui-carto/packagemanager';
+    import { PackageAction } from '@nativescript-community/ui-carto/packagemanager';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { debounce } from 'push-it-to-the-limit';
@@ -12,7 +13,7 @@
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { getMapContext } from '~/mapModules/MapModule';
     import UserLocationModule from '~/mapModules/UserLocationModule';
-    import { IItem } from '~/models/Item';
+    import type { IItem } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
     import { showError } from '~/utils/error';
     import { accentColor, globalMarginTop, mdiFontFamily } from '~/variables';

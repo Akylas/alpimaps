@@ -6,7 +6,8 @@
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import CustomLayersModule, { SourceItem } from '~/mapModules/CustomLayersModule';
+    import CustomLayersModule from '~/mapModules/CustomLayersModule';
+    import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
     import { navigationBarHeight, primaryColor } from '../variables';
     import { showBottomSheet } from './bottomsheet';
@@ -96,7 +97,8 @@
                             fontSize="13"
                             fontWeight="bold"
                             verticalAlignment="top"
-                            paddingTop="5" />
+                            paddingTop="5"
+                        />
                     </canvaslabel>
                     <mdslider
                         marginLeft="10"
@@ -105,7 +107,8 @@
                         on:valueChange={(event) => onLayerOpacityChanged(item, event)}
                         minValue="0"
                         maxValue="100"
-                        verticalAlignment="center" />
+                        verticalAlignment="center"
+                    />
                     <button
                         col="1"
                         rowSpan="2"
@@ -114,7 +117,8 @@
                         variant="text"
                         class="icon-btn"
                         text="mdi-dots-vertical"
-                        on:tap={showSourceOptions(item)} />
+                        on:tap={showSourceOptions(item)}
+                    />
                 </gridlayout>
             </Template>
         </collectionview>
@@ -129,26 +133,30 @@
                 class="icon-btn"
                 text="mdi-domain"
                 color={$mapStore.show3DBuildings ? primaryColor : 'gray'}
-                on:tap={() => mapStore.setShow3DBuildings(!$mapStore.show3DBuildings)} />
+                on:tap={() => mapStore.setShow3DBuildings(!$mapStore.show3DBuildings)}
+            />
 
             <button
                 variant="text"
                 class="icon-btn"
                 text="mdi-signal"
                 color={$mapStore.showContourLines ? primaryColor : 'gray'}
-                on:tap={() => mapStore.setShowContourLines(!$mapStore.showContourLines)} />
+                on:tap={() => mapStore.setShowContourLines(!$mapStore.showContourLines)}
+            />
             <button
                 variant="text"
                 class="icon-btn"
                 text="mdi-map-marker-path"
                 color={$mapStore.showRoutes ? primaryColor : 'gray'}
-                on:tap={() => mapStore.setShowRoutes(!$mapStore.showRoutes)} />
+                on:tap={() => mapStore.setShowRoutes(!$mapStore.showRoutes)}
+            />
             <button
                 variant="text"
                 class="icon-btn"
                 text="mdi-globe-model"
                 color={$mapStore.showGlobe ? primaryColor : 'gray'}
-                on:tap={() => mapStore.setShowGlobe(!$mapStore.showGlobe)} />
+                on:tap={() => mapStore.setShowGlobe(!$mapStore.showGlobe)}
+            />
 
             <button
                 variant="text"
@@ -156,7 +164,8 @@
                 text="mdi-map-clock"
                 visibility={packageServiceEnabled ? 'visible' : 'collapsed'}
                 color={$mapStore.preloading ? primaryColor : 'gray'}
-                on:tap={() => mapStore.setPreloading(!$mapStore.preloading)} />
+                on:tap={() => mapStore.setPreloading(!$mapStore.preloading)}
+            />
         </stacklayout>
     {/if}
     <!-- <GridLayout visibility="(currentLegend)?'visible':'collapsed'" rows="auto,*" columns="auto,*" backgroundColor={white}>
