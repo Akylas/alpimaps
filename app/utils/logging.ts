@@ -1,4 +1,4 @@
-import { Sentry } from "./sentry";
+import { Sentry } from './sentry';
 
 const originalConsole = {
     log: console.log,
@@ -29,7 +29,7 @@ function convertArg(arg) {
     }
 }
 function actualLog(level: 'info' | 'log' | 'error' | 'warn' | 'debug', ...args) {
-    if (gVars.sentry) {
+    if (gVars.sentry && Sentry) {
         Sentry.addBreadcrumb({
             category: 'console',
             message: args.map(convertArg).join(' '),
