@@ -34,7 +34,7 @@
     import { Device, Screen } from '@nativescript/core/platform';
     import { ad } from '@nativescript/core/utils/utils';
     import { compose } from '@nativescript/email';
-    import { allowSleepAgain, keepAwake } from 'nativescript-insomnia';
+    import { allowSleepAgain, keepAwake } from '@nativescript-community/insomnia';
     import * as SocialShare from 'nativescript-social-share';
     import { debounce } from 'push-it-to-the-limit';
     import { onDestroy, onMount } from 'svelte';
@@ -1191,7 +1191,6 @@
     }
 
     async function switchKeepAwake() {
-        console.log('switchKeepAwake', keepAwakeEnabled);
         try {
             if (keepAwakeEnabled) {
                 await allowSleepAgain();

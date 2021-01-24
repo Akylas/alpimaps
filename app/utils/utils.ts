@@ -40,9 +40,18 @@ export function getDataFolder() {
             return mExternalStorageWriteable;
         };
         if (checkExternalMedia()) {
-            const dirs = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
-            if (dirs.length > 0) {
-                dataFolder = dirs[dirs.length - 1].getAbsolutePath();
+            const nArray = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
+            const result = [];
+            for (let index = 0; index < nArray.length; index++) {
+                const element = nArray[index];
+                if (element) {
+                    result.push(element);
+                }
+            }
+            if (result.length > 1) {
+                dataFolder = result[result.length - 1].getAbsolutePath();
+            } else {
+                dataFolder = knownFolders.documents().path;
             }
         } else {
             dataFolder = knownFolders.documents().path;
