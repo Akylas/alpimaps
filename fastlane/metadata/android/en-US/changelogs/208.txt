@@ -1,0 +1,3 @@
+*Bug fixes*
+- crash in prod when no sentry
+- cleanup
