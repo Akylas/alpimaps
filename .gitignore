@@ -16,3 +16,4 @@ report/
 package-lock.json
 /.env.default
 /fastlane/report.xml
+pnpm-lock.yaml
