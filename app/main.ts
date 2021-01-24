@@ -58,7 +58,6 @@ registerNativeViewElement('TextField', () => require('@nativescript/core').TextF
 // registerNativeViewElement('WebView', () => require('@nativescript/core').WebView);
 // registerNativeViewElement('WrapLayout', () => require('@nativescript/core').WrapLayout);
 
-// registerNativeViewElement('mdtextfield', () => TextField, null, {}, { override: true });
 registerNativeViewElement('button', () => Button, null, {}, { override: true });
 registerNativeViewElement('label', () => Label as any, null, {}, { override: true });
 registerNativeViewElement('mdactivityindicator', () => ActivityIndicator);
