@@ -1,0 +1,3 @@
+*Bug fixes*
+- prevent crashes
+- prevent blocking UI on first item selection
