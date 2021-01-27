@@ -70,9 +70,16 @@ export function getDefaultMBTilesDir() {
     if (!localMbtilesSource) {
         let defaultPath = path.join(getDataFolder(), 'alpimaps_mbtiles');
         if (global.isAndroid) {
-            const dirs = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
-            if (dirs.length > 0) {
-                const sdcardFolder = dirs[dirs.length - 1].getAbsolutePath();
+            const nArray = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
+            const result = [];
+            for (let index = 0; index < nArray.length; index++) {
+                const element = nArray[index];
+                if (element) {
+                    result.push(element);
+                }
+            }
+            if (result.length > 1) {
+                const sdcardFolder = result[result.length - 1].getAbsolutePath();
                 defaultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
             }
         }
