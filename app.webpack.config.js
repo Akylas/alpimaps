@@ -89,6 +89,7 @@ module.exports = (env, params = {}) => {
     ];
     Object.assign(config.resolve.alias, {
         '@nativescript/core': `${coreModulesPackageName}`,
+        'svelte-native': '@akylas/svelte-native',
         'tns-core-modules': `${coreModulesPackageName}`
     });
 
@@ -122,7 +123,9 @@ module.exports = (env, params = {}) => {
         process: 'global.process',
         'global.TNS_WEBPACK': 'true',
         'gVars.platform': `"${platform}"`,
-        __UI_XML_PARSER__: false,
+        __UI_USE_EXTERNAL_RENDERER__: true,
+        __UI_USE_XML_PARSER__: false,
+        'global.__AUTO_REGISTER_UI_MODULES__': false,
         'global.isIOS': isIOS,
         'global.autoRegisterUIModules': false,
         'global.isAndroid': isAndroid,
