@@ -422,7 +422,7 @@
     function onSelectedItemChanged(oldValue: IItem, value: IItem) {
         mapContext.runOnModules('onSelectedItem', value, oldValue);
     }
-    async function selectItem({
+     function selectItem({
         item,
         isFeatureInteresting = false,
         peek = true,
@@ -516,13 +516,13 @@
                 if (service) {
                     itemLoading = true;
                     const radius = 100;
-                    try {
-                        const res = await packageService.searchInGeocodingService(service, {
+                    // use a promise not to "wait" for it
+                        packageService.searchInGeocodingService(service, {
                             projection,
                             location: item.position,
                             searchRadius: radius
-                        });
-                        if (res) {
+                        }).then(res=>{
+                            if (res) {
                             for (let index = 0; index < res.size(); index++) {
                                 const r = packageService.convertGeoCodingResult(res.get(index));
                                 if (computeDistanceBetween(item.position, r.position) <= radius && r.rank > 0.7) {
@@ -539,9 +539,8 @@
                                 }
                             }
                         }
-                    } catch (err) {
-                        console.error(err);
-                    }
+                        }).catch(err=>console.error(err));
+                       
                 }
             }
 
@@ -561,8 +560,10 @@
             // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
             // vectorTileDecoder.setStyleParameter('selected_name', (item.properties && item.properties.name) || '');
             if (peek) {
-                await bottomSheetInner.loadView();
-                bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
+                bottomSheetInner.loadView().then(()=>{
+                    bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
+                });
+                
             }
             if (preventZoom) {
                 return;
@@ -936,7 +937,6 @@
                 }
             }
             updateLanguage(currentLanguage);
-            console.log('test done');
             if (__CARTO_PACKAGESERVICE__) {
                 setCurrentLayer(currentLayerStyle);
             }
