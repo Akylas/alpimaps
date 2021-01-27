@@ -21,7 +21,7 @@
     "dependencies": {
         "@akylas/nativescript": "file:../NativeScript/dist/packages/core",
         "@akylas/nativescript-sqlite": "3.3.11",
-        "@akylas/svelte-native": "0.9.6",
+        "@akylas/svelte-native": "0.9.7",
         "@mdi/font": "4.9.95",
         "@nativescript-community/appurl": "1.4.2",
         "@nativescript-community/css-theme": "^1.2.6",
