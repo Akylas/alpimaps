@@ -181,7 +181,6 @@ module.exports = (env, params = {}) => {
     const mdiIcons = JSON.parse(
         `{${mdiSymbols.variables[mdiSymbols.variables.length - 1].value.replace(/" (F|0)(.*?)([,\n]|$)/g, '": "$1$2"$3')}}`
     );
-    const weatherIconsCss = resolve(projectRoot, 'css/weather-icons/weather-icons-variables.scss');
     
     const scssPrepend = `
     $mdi-fontFamily: ${platform === 'android' ? 'materialdesignicons-webfont' : 'Material Design Icons'};
