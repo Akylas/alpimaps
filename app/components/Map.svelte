@@ -730,7 +730,7 @@
             if (
                 !!$selectedItem &&
                 ((featureData.osmid && featureData.osmid === $selectedItem.properties.osmid) ||
-                    (featureData.name === $selectedItem.properties.name &&
+                    ($selectedItem.properties && featureData.name === $selectedItem.properties.name &&
                         $selectedItem.position.lat === featurePosition.lat &&
                         $selectedItem.position.lon === featurePosition.lon))
             ) {
