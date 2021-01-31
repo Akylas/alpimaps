@@ -152,7 +152,6 @@ Map {
       // [way_pixels >= 64] { polygon-gamma: 0.3;  }
     // }
   }
-
   [class = 'grass'][zoom >= 5]{
       [subclass = 'garden'][zoom >= 10] {
           polygon-fill: @grass;
@@ -188,11 +187,17 @@ Map {
       }
     }
   }
-  [subclass = forest][zoom >= 5]::forest {
+
+  [class=wood],
+  [subclass = forest],
+  [class=tree] {
+
+    [zoom >= 5]::forest {
       polygon-fill: @forest;
       // [way_pixels >= 4]  { polygon-gamma: 0.75; }
       // [way_pixels >= 64] { polygon-gamma: 0.3;  }
     // }
+    }
   }
   // [class = 'scree'],
   // [class = 'shingle'] {
@@ -283,16 +288,8 @@ Map {
   }
 }
 
-
 #landuse['mapnik::geometry_type'=3] {
-  [name!=null][zoom>=15] {
-    text-name: @name;
-    text-face-name: @mont;
-    text-fill: @building_label;
-	  text-min-distance:50;
-    text-size: 9;
-	  text-wrap-width: 100;
-  }  
+
   [class = 'residential'][zoom >= 7]{
     // polygon-fill: @built-up-lowzoom;
     // [zoom >= 11] { polygon-fill: @built-up-z11; }
