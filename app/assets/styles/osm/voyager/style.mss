@@ -312,11 +312,12 @@
 /* 6.2 Natural labels */
 
 @water_label: rgba(20, 68, 131, 1);
-@water_halo: rgba(255, 255, 255, 0.9);
+@water_halo: rgba(255, 255, 255, 0.65);
 @park_label: #3A7921;
 @halo_park_label: rgba(255, 255, 255, 0.45);
 
-@peak_label: #9b7057;
+@peak_label: #507a46;
+@sadle_label: #8d6751;
 @peak_halo:   rgba(255, 255, 255, 0.65);
 
 /* 6.3 Place labels */
