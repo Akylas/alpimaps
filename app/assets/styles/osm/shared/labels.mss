@@ -13,9 +13,13 @@
 		text-placement: [nuti::markers3d];
 		text-name: @osm_icon;
 		text-fill: @peak_label;
+		[class="saddle"] {
+			text-fill: @sadle_label;
+		}
 		// text-min-distance: 50;
 		// text-dy: linear([view::zoom], (7, 15), (13, 16), (18, 20)); 
 		text-feature-id: @featureId;
+		text-placement-priority:[ele];
 	}
 	// ::label {
 		text-name: @name;
@@ -28,12 +32,16 @@
 		text-line-spacing: -1;
 		text-placement: [nuti::texts3d];
 		text-fill: @peak_label;
+		[class="saddle"] {
+			text-fill: @sadle_label;
+		}
 		text-dy: linear([view::zoom], (7, 6), (13, 8), (18, 11)); 
 		text-feature-id: @featureId;
 		text-wrap-width: step([zoom], (7, 40), (12, 100), (18, 150));
 		text-halo-fill: @peak_halo;
 		text-halo-rasterizer: fast;
 		text-halo-radius: 1;
+		text-placement-priority:[ele];
 		// text-dy: 10;
 	// }
 	// shield-name: @name ?  ( [ele] ? [ele] + 'm' + '\n ' + @name : @name): '';
@@ -48,6 +56,20 @@
 	
 }
 
+#landcover['mapnik::geometry_type'=3],
+#landuse['mapnik::geometry_type'=3] {
+  [name!=null][zoom>=14] {
+    text-name: @name;
+    text-face-name: @mont;
+	text-min-distance:50;
+    text-fill: @building_label;
+    text-size: 10;
+    text-wrap-width: 30;
+	text-halo-fill: @peak_halo;
+	text-halo-rasterizer: fast;
+	text-halo-radius: 1;
+  }  
+}
 
 #water_name[class=ocean][zoom>=3][zoom<=9],
 #water_name[class=sea][zoom>=6] {
