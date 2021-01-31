@@ -25,6 +25,8 @@
     import type { RouteInstruction } from '~/models/Route';
     import { networkService } from '~/services/NetworkService';
     import { showBottomSheet } from './bottomsheet';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { l } from '@nativescript-community/l';
 
     export const LISTVIEW_HEIGHT = 200;
     export const PROFILE_HEIGHT = 150;
@@ -123,7 +125,11 @@
             if (global.isAndroid) {
                 const intent = new android.content.Intent(android.content.Intent.ACTION_WEB_SEARCH);
                 intent.putExtra(android.app.SearchManager.QUERY, query); // query contains search string
-                (Application.android.foregroundActivity as android.app.Activity).startActivity(intent);
+                if (intent.resolveActivity(Application.android.context.getPackageManager()) !== null) {
+                    (Application.android.foregroundActivity as android.app.Activity).startActivity(intent);
+                } else {
+                    showSnack({ message: l('no_web_search_app') });
+                }
             }
         }
     }
@@ -411,7 +417,8 @@
     rows={`70,50,${profileHeight},auto`}
     columns="*,auto"
     backgroundColor="#aa000000"
-    on:tap={() => {}}>
+    on:tap={() => {}}
+>
     {#if loaded}
         <BottomSheetInfoView bind:this={infoView} row="0" {item} />
 
@@ -437,7 +444,8 @@
             width="100%"
             borderTopWidth="1"
             borderBottomWidth="1"
-            borderColor="#44ffffff">
+            borderColor="#44ffffff"
+        >
             <button
                 variant="text"
                 fontSize="10"
