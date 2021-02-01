@@ -37,7 +37,7 @@
 		}
 		text-dy: linear([view::zoom], (7, 6), (13, 8), (18, 11)); 
 		text-feature-id: @featureId;
-		text-wrap-width: step([zoom], (7, 40), (12, 100), (18, 150));
+		text-wrap-width: step([view::zoom], (7, 40), (12, 100), (18, 150));
 		text-halo-fill: @peak_halo;
 		text-halo-rasterizer: fast;
 		text-halo-radius: 1;
@@ -146,7 +146,7 @@
 		text-halo-radius: 1;
 		text-character-spacing: 0.5;
 		text-size: linear([view::zoom], (1, 10.0), (2, 14.0));
-		text-wrap-width: step([zoom], (1, 20), (2, 40));
+		text-wrap-width: step([view::zoom], (1, 20), (2, 40));
 	}
 	[class=country]{
 		[rank=1][zoom>=3][zoom<=6], 
@@ -173,23 +173,23 @@
 	
 			[rank=1][zoom>=2]{
 				text-size: linear([view::zoom], (2, 10.0), (5, 13.0), (6, 15.0)) - 0.000001 * [rank];
-				text-wrap-width: step([zoom], (2, 60), (3, 80), (4, 100), (5, 120), (6, 140));
+				text-wrap-width: step([view::zoom], (2, 60), (3, 80), (4, 100), (5, 120), (6, 140));
 			}
 			[rank=2][zoom>=3]{
 				text-size: linear([view::zoom], (3, 10.0), (6, 13.0)) - 0.000001 * [rank];
-				text-wrap-width: step([zoom], (3, 60), (4, 70), (5, 80), (6, 100));
+				text-wrap-width: step([view::zoom], (3, 60), (4, 70), (5, 80), (6, 100));
 			}
 			[rank=3][zoom>=4]{
 				text-size: linear([view::zoom], (4, 10.0), (8, 14.0)) - 0.000001 * [rank];
-				text-wrap-width: step([zoom], (4, 30), (5, 60), (8, 120));
+				text-wrap-width: step([view::zoom], (4, 30), (5, 60), (8, 120));
 			}
 			[rank=4][zoom>=5]{
 				text-size: linear([view::zoom], (5, 10.0), (9, 14.0)) - 0.000001 * [rank];
-				text-wrap-width: step([zoom], (5, 30), (6, 60), (7, 90), (8, 120));
+				text-wrap-width: step([view::zoom], (5, 30), (6, 60), (7, 90), (8, 120));
 			}
 			[rank=5][zoom>=5]{
 				text-size: linear([view::zoom], (5, 10.0), (9, 14.0)) - 0.000001 * [rank];
-				text-wrap-width: step([zoom], (6, 30), (7, 60), (8, 90), (9, 120));
+				text-wrap-width: step([view::zoom], (6, 30), (7, 60), (8, 90), (9, 120));
 			}
 			[rank>=6][zoom>=6]{
 				text-size: linear([view::zoom], (6, 10.0), (9, 13.0)) - 0.000001 * [rank];
@@ -213,7 +213,7 @@
 			text-wrap-before: true;
 			text-min-distance:5;
 			text-size: linear([view::zoom], (5, 11.0), (6, 12.0), (7, 13.0));
-			text-wrap-width: step([zoom], (5, 60), (6, 80), (7, 100));
+			text-wrap-width: step([view::zoom], (5, 60), (6, 80), (7, 100));
 		}
 	}
 	
@@ -244,7 +244,7 @@
 					text-dy: 0;
 					text-min-distance: 3;
 					text-size: linear([view::zoom], (4, 10.0), (5, 11.0), (6, 12.0), (7, 13.0)) - ([rank] / 3.0);
-					text-wrap-width: step([zoom], (4, 40), (5, 50), (6, 60));
+					text-wrap-width: step([view::zoom], (4, 40), (5, 50), (6, 60));
 					[zoom>=5][rank>=0][rank<=2],
 					[zoom>=7][rank>=3][rank<=5] { 
 						text-transform:uppercase;
@@ -263,7 +263,7 @@
 				text-halo-rasterizer: fast;
 				text-line-spacing: -2;
 				text-size: linear([view::zoom], (8, 13.0), (14, 21.0)) - ([rank] / 2.0) - 0.000001 * [rank];
-				text-wrap-width: step([zoom], (8, 50), (9, 60), (11, 70), (12, 80), (13, 120), (14, 200));
+				text-wrap-width: step([view::zoom], (8, 50), (9, 60), (11, 70), (12, 80), (13, 120), (14, 200));
 
 				[zoom=8][rank<=7],
 				[zoom=9][rank<=10],
@@ -285,7 +285,7 @@
 			text-halo-rasterizer: fast;
 			text-line-spacing: -2;
 			text-size: linear([view::zoom], (8, 13.0), (14, 21.0)) - ([rank] / 2.0) - 0.000001 * [rank];
-			text-wrap-width: step([zoom], (8, 50), (9, 60), (11, 70), (12, 80), (13, 120), (14, 200));
+			text-wrap-width: step([view::zoom], (8, 50), (9, 60), (11, 70), (12, 80), (13, 120), (14, 200));
 
 			[zoom=8][rank<=7],
 			[zoom=9][rank<=10],
@@ -307,7 +307,7 @@
 			text-wrap-before: true;
 			text-line-spacing: -2;
 			text-size: linear([view::zoom], (9, 9.0), (13, 13.0), (14, 15.0), (15, 17.0)) - 0.000001 * [rank];
-			text-wrap-width: step([zoom], (9, 70), (15, 80));
+			text-wrap-width: step([view::zoom], (9, 70), (15, 80));
 		}
 	}
 	[class=village][zoom>=10] {
@@ -326,7 +326,7 @@
 			text-line-spacing: -2;
 			text-wrap-before: true;
 			text-size: linear([view::zoom], (11, 9.0), (12, 10.0), (13, 11.0), (16, 16.0)) - 0.000001 * [rank];
-			text-wrap-width: step([zoom], (12, 50), (13, 90), (14, 120), (15, 140), (16, 160));
+			text-wrap-width: step([view::zoom], (12, 50), (13, 90), (14, 120), (15, 140), (16, 160));
 			text-feature-id: @featureId;
 		}
 	}
@@ -343,7 +343,7 @@
 			text-wrap-before: true;
 			text-line-spacing: -2;
 			text-size: linear([view::zoom], (12, 9.0), (13, 10.0), (16, 13.0)) - 0.000001 * [rank];
-			text-wrap-width: step([zoom], (12, 50), (13, 80), (14, 90), (15, 100), (16, 120));
+			text-wrap-width: step([view::zoom], (12, 50), (13, 80), (14, 90), (15, 100), (16, 120));
 		}
 	}
 	[class=hamlet],
@@ -362,7 +362,7 @@
 			text-wrap-before: true;
 			text-line-spacing: -2;
 			text-size: linear([view::zoom], (14, 9.0), (16, 13.0), (17, 15.0)) - 0.000001 * [rank];
-			text-wrap-width: step([zoom], (13, 50), (14, 80), (15, 100), (16, 120), (17, 140));
+			text-wrap-width: step([view::zoom], (13, 50), (14, 80), (15, 100), (16, 120), (17, 140));
 		}
 	}
 	[class=isolated_dwelling],
@@ -379,7 +379,7 @@
 			text-wrap-before: true;
 			text-line-spacing: -2;
 			text-size: linear([view::zoom], (14, 8.0), (17, 14.0)) - 0.000001 * [rank];
-			text-wrap-width: step([zoom], (13, 40), (17, 130));
+			text-wrap-width: step([view::zoom], (13, 40), (17, 130));
 		}
 	}
 }
@@ -404,7 +404,6 @@
 	[class=stream][zoom>=13],
 	[class=riverbank][zoom>=13],
 	[class=river][zoom>=12],
-	[class=riverbank],
 	[class=stream][zoom>=13],
 	[class=canal][zoom>=13],
 	[class=dam][zoom>=15],
@@ -423,7 +422,7 @@
 	text-placement: line;
 	text-dy:1;
 	// text-character-spacing: 1;
-	text-wrap-width: step([zoom], (13, 80), (13, 150), (17, 250));
+	text-wrap-width: step([view::zoom], (13, 80), (15, 150), (17, 250));
 	text-size: linear([view::zoom], (10, 6.0), (15, 7.0), (16, 9.0), (17, 10.0));
 }
 }
@@ -640,7 +639,7 @@
 			// shield-halo-rasterizer: fast;
 			// shield-halo-radius: linear([view::zoom], (14, 1), (18, 0.5));
 			// shield-size: linear([view::zoom], (14, 7), (18, 10)) - 0.000001 * [rank];
-			// shield-wrap-width: linear([zoom], (13, 10), (18, 100));
+			// shield-wrap-width: linear([view::zoom], (13, 10), (18, 100));
 			// shield-feature-id: @featureId;
 			// shield-dy: 15;
 
@@ -702,7 +701,7 @@
 					text-halo-rasterizer: fast;
 					text-halo-radius: 1;
 					text-size: linear([view::zoom], (14, 7), (18, 10)) - 0.000001 * [rank];
-					text-wrap-width: step([zoom], (14, 40), (15, 50), (16, 60), (18, 70), (19, 100));
+					text-wrap-width: step([view::zoom], (14, 40), (15, 50), (16, 60), (18, 70), (19, 100));
 					// text-feature-id: @featureId;
 					// text-min-distance: 500;
 					text-dy: 12;
@@ -716,7 +715,7 @@
 					
 					[class='national_park'],[class='protected_area'], [class='aboriginal_lands'] {
 						text-fill: @national_park;
-						text-wrap-width: step([zoom], (13, 80), (15, 180));
+						text-wrap-width: step([view::zoom], (13, 80), (15, 180));
 						text-size: 10;
 						[class='aboriginal_lands'] {
 							text-fill: @aboriginal;
@@ -776,7 +775,7 @@
 // 		// text-feature-id: [ele];
 // 		// text-allow-overlap: true;
 // 		// text-wrap-before: true;
-// 		text-wrap-width: step([zoom], (11, 40), (15, 70), (16, 90), (18, 100));
+// 		text-wrap-width: step([view::zoom], (11, 40), (15, 70), (16, 90), (18, 100));
 // 		// text-line-spacing:	-2;
 // 		text-dy: 10;
 // 		// text-min-distance: 3000;
