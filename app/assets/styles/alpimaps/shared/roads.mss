@@ -10,14 +10,14 @@
 	[class=motorway]['mapnik::geometry_type'=2][zoom>=4]{
 		// biais
 		::case[zoom>=13]{ 
-			// line-cap: [zoom]<=9 ? butt : round;
+			// line-cap: [view::zoom]<=9 ? butt : round;
 			line-join: round;
 			line-color: @motorway_case;
 			line-width: linear([view::zoom], (13, 0),(14, 2), (21, 11));
 			[brunnel='tunnel'] { line-dasharray: 6, 3; }
 		}
 		line-color: @motorway;
-		line-cap: [zoom]<=9 ? butt : round;
+		line-cap: [view::zoom]<=9 ? butt : round;
 		line-join: round;
 		line-opacity: 1;
 		line-width: linear([view::zoom], (4.5, 0),(14, 3), (21, 8));
@@ -36,8 +36,8 @@
 			}
 		}
 
-		line-cap: [zoom]<=10 ? butt : round;
-		line-join: [zoom]<=10 ? miter : round;
+		line-cap: [view::zoom]<=10 ? butt : round;
+		line-join: [view::zoom]<=10 ? miter : round;
 		line-color: @main;
 		line-width: linear([view::zoom], (4.5, 0), (14, 3),  (21, 8));
 		line-opacity: linear([view::zoom], (6, 0), (7, 1));
@@ -54,7 +54,7 @@
 
 			[brunnel='tunnel'] { line-dasharray: 6, 3; }
 		}
-		line-cap: [zoom]<=13 ? butt : round;
+		line-cap: [view::zoom]<=13 ? butt : round;
 		line-join: round;
 		line-color: @secondary;
 		line-width: linear([view::zoom], (4.5, 0), (8, 0.1), (9, 0.3), (10, 0.7), (15, 2), (21, 8));
@@ -70,8 +70,8 @@
 
 			[brunnel='tunnel'] { line-dasharray: 6, 3; }
 		}
-		line-cap: [zoom]<=15 ? butt : round;
-		line-join: [zoom]<=15 ? miter : round;
+		line-cap: [view::zoom]<=15 ? butt : round;
+		line-join: [view::zoom]<=15 ? miter : round;
 		line-color: @minor;
 		line-width: linear([view::zoom], (11, 0), (12, 0.1), (13, 0.3), (14, 1), (16, 4), (21, 12));
 	}
@@ -85,8 +85,8 @@
 
 			[brunnel='tunnel'] { line-dasharray: 6, 3; }
 		}
-		line-cap: [zoom]<=15 ? butt : round;
-		line-join: [zoom]<=15 ? miter : round;
+		line-cap: [view::zoom]<=15 ? butt : round;
+		line-join: [view::zoom]<=15 ? miter : round;
 		line-color: @pedestrian;
 		line-width: linear([view::zoom], (14, 0), (15, 0.4), (16, 0.8), (17, 1), (21, 12));
 	}
@@ -101,8 +101,8 @@
 		// }
 		polygon-fill: #bbbbbb;
 
-		// line-cap: [zoom]<=15 ? butt : round;
-		// line-join: [zoom]<=15 ? miter : round;
+		// line-cap: [view::zoom]<=15 ? butt : round;
+		// line-join: [view::zoom]<=15 ? miter : round;
 		line-color: #BBBBBB;
 		line-width: linear([view::zoom], (11, 0), (13, 0.3), (14, 0.5), (21, 12));
 	}
@@ -132,8 +132,8 @@
 		}
 
 		::fill{
-			line-cap: [zoom]<=12 ? butt : round;
-			line-join: [zoom]<=12 ? miter : round;
+			line-cap: [view::zoom]<=12 ? butt : round;
+			line-join: [view::zoom]<=12 ? miter : round;
 			line-color: @motorway;
 			line-width: linear([view::zoom], (4.5, 0), (6, 0.1), (7, 0.3), (8, 0.7), (21, 8));
 			[class=primary] { line-color: @main; }
@@ -151,8 +151,8 @@
 			[brunnel='tunnel'] { line-dasharray: 6, 3; }
 		}
 		line-color: @minor;
-		line-cap: [zoom]<=17 ? butt : round;
-		line-join: [zoom]<=17 ? miter : round;
+		line-cap: [view::zoom]<=17 ? butt : round;
+		line-join: [view::zoom]<=17 ? miter : round;
 		line-width: linear([view::zoom], (12, 0), (13, 0.1), (14, 0.3), (15, 1), (21, 8));
 	}
 
@@ -209,8 +209,8 @@
 	[class=rail][zoom>=8]{
 		// biais
 		::case[zoom>=16]{
-			// line-cap: [zoom]<=17 ? butt : round;
-			line-join: [zoom]<=17 ? miter : round;
+			// line-cap: [view::zoom]<=17 ? butt : round;
+			line-join: [view::zoom]<=17 ? miter : round;
 			line-width: linear([view::zoom], (16, 1), (17, 2), (19, 6));
 			line-color: @rail_light;
 			[brunnel=tunnel] {
