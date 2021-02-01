@@ -323,6 +323,7 @@ Map {
 @halo_park_label: rgba(255, 255, 255, 0.45);
 
 @peak_label: #9b7057;
+@sadle_label: #9b7057;
 @peak_halo:   rgba(255, 255, 255, 0.65);
 
 /* 6.3 Place labels */
