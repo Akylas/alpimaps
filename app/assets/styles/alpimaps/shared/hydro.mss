@@ -3,14 +3,14 @@
 #waterway{
 	
 	[class=stream][zoom>=13]{
-		line-cap: [zoom]<=12 ? butt : round;
+		line-cap: [view::zoom]<=12 ? butt : round;
 		line-color: @rivers_stroke;
 		line-width: linear([view::zoom], (8, 0.5), (15, 1.0), (16, 2.0));
 		line-dasharray: 7, 5;
 	}
 	[class=river],
 	[class=canal][zoom>=12]{
-		line-cap: [zoom]<=12 ? butt : round;
+		line-cap: [view::zoom]<=12 ? butt : round;
 		polygon-fill: @water;
 		line-color: @rivers_stroke;
 		line-width:1;

@@ -18,10 +18,10 @@
 	// }
 
 	// [class=river],
-	[class=riverbank] {
-		line-color: @river;
-		line-width: 0;
-	}
+	// [class=riverbank] {
+	// 	line-color: @river;
+	// 	line-width: 0;
+	// }
 	[class=stream][zoom>=12],
 	[class=canal][zoom>=12]{
 		line-color: @river; 
