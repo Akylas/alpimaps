@@ -1391,7 +1391,8 @@
         bind:this={drawer}
         translationFunction={drawerTranslationFunction}
         bottomOpenedDrawerAllowDraging={true}
-        backgroundColor="#E3E1D3">
+        backgroundColor="#E3E1D3"
+    >
         <MapRightMenu prop:bottomDrawer bind:this={rightMenu} />
         <cartomap
             zoom="16"
@@ -1406,7 +1407,8 @@
             backgroundColor="#01550000"
             {steps}
             bind:stepIndex={bottomSheetStepIndex}
-            translationFunction={bottomSheetTranslationFunction}>
+            translationFunction={bottomSheetTranslationFunction}
+        >
             <Search
                 bind:this={searchView}
                 verticalAlignment="top"
@@ -1421,7 +1423,6 @@
                 bind:this={locationInfoPanel}
                 isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
             />
-            <DirectionsPanel bind:this={directionsPanel} width="100%" verticalAlignment="top" />
             <stacklayout horizontalAlignment="left" verticalAlignment="middle">
                 <button
                     variant="text"
@@ -1508,6 +1509,7 @@
                 rotate={currentMapRotation}
                 verticalAlignment="top"
                 horizontalAlignment="right"
+                translateY={Math.max(topTranslationY - 50, 0)}
             />
             <MapScrollingWidgets
                 bind:this={mapScrollingWidgets}
@@ -1515,6 +1517,12 @@
                 userInteractionEnabled={scrollingWidgetsOpacity > 0.3}
             />
             <!-- <absolutelayout
+            <DirectionsPanel
+                bind:this={directionsPanel}
+                bind:translationY={topTranslationY}
+                width="100%"
+                verticalAlignment="top"
+            />
                 transition:slide={{ duration: 100 }}
                 visibility={shouldShowNavigationBarOverlay ? 'visible' : 'collapsed'}
                 class="navigationBarOverlay" /> -->
