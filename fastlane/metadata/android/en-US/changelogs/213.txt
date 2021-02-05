@@ -1,0 +1,8 @@
+*Features*
+- info on click feature
+
+*Bug fixes*
+- *android:* remove background location permission. we dont use it
+- show route duration
+- prevent crash on item without prpoerties
+- translate rotation button with direction panel
