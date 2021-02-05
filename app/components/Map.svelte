@@ -22,6 +22,8 @@
     import { Marker, MarkerStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/marker';
     import type { MarkerStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/marker';
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
+    import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
+    import type { TextStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/text';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
     import { Drawer } from '@nativescript-community/ui-drawer';
     import { action, alert, login } from '@nativescript-community/ui-material-dialogs';
@@ -65,6 +67,8 @@
     import MapRightMenu from './MapRightMenu.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
     import Search from './Search.svelte';
+    import { GenericGeoLocation } from '@nativescript-community/gps';
+    import { Template } from 'svelte-native/components';
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
     const mailRegexp = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
@@ -133,12 +137,32 @@
     let shouldShowNavigationBarOverlay = false;
     let geoHandler: GeoHandler;
     let steps;
+    let topTranslationY;
+
+    let ignoreNextMapClick = false;
+    let handleSelectedRouteTimer: NodeJS.Timeout;
+    let selectedRoutes: { featurePosition; featureData; layer: BaseVectorTileLayer<any, any> }[];
+    let didIgnoreAlreadySelected = false;
+    let clickedFeatures = [];
+
+    let showClickedFeatures = false;
+    let currentClickedFeatures: any[];
+    let selectedClickMarker: Text<LatLonKeys>;
 
     $: {
         if (steps) {
             // ensure bottomSheetStepIndex is not out of range when
             // steps changes
             bottomSheetStepIndex = Math.min(steps.length - 1, bottomSheetStepIndex);
+        }
+    }
+
+    $: {
+        if (showClickedFeatures === false) {
+            currentClickedFeatures = null;
+            if (selectedClickMarker) {
+                selectedClickMarker.visible = false;
+            }
         }
     }
 
@@ -397,6 +421,8 @@
     }
 
     function onMainMapClicked(e) {
+        const { clickType, position } = e.data;
+        handleClickedFeatures(position);
         if (ignoreNextMapClick) {
             ignoreNextMapClick = false;
             return;
@@ -405,7 +431,6 @@
             didIgnoreAlreadySelected = false;
             return;
         }
-        const { clickType, position } = e.data;
         const handledByModules = mapContext.runOnModules('onMapClicked', e);
         // console.log('mapTile', latLngToTileXY(position.lat, position.lon, cartoMap.zoom), clickType === ClickType.SINGLE, handledByModules, !!selectedItem);
         if (!handledByModules && clickType === ClickType.SINGLE) {
@@ -414,15 +439,15 @@
         unFocusSearch();
     }
 
-    function createLocalMarker(position: MapPos<LatLonKeys>, options: MarkerStyleBuilderOptions) {
-        getOrCreateLocalVectorLayer();
-        const styleBuilder = new MarkerStyleBuilder(options);
-        return new Marker<LatLonKeys>({ position, projection, styleBuilder });
-    }
+    // function createLocalMarker(position: MapPos<LatLonKeys>, options: MarkerStyleBuilderOptions) {
+    //     getOrCreateLocalVectorLayer();
+    //     const styleBuilder = new MarkerStyleBuilder(options);
+    //     return new Marker<LatLonKeys>({ position, projection, styleBuilder });
+    // }
     function onSelectedItemChanged(oldValue: IItem, value: IItem) {
         mapContext.runOnModules('onSelectedItem', value, oldValue);
     }
-     function selectItem({
+    function selectItem({
         item,
         isFeatureInteresting = false,
         peek = true,
@@ -517,30 +542,32 @@
                     itemLoading = true;
                     const radius = 100;
                     // use a promise not to "wait" for it
-                        packageService.searchInGeocodingService(service, {
+                    packageService
+                        .searchInGeocodingService(service, {
                             projection,
                             location: item.position,
                             searchRadius: radius
-                        }).then(res=>{
+                        })
+                        .then((res) => {
                             if (res) {
-                            for (let index = 0; index < res.size(); index++) {
-                                const r = packageService.convertGeoCodingResult(res.get(index));
-                                if (computeDistanceBetween(item.position, r.position) <= radius && r.rank > 0.7) {
-                                    if ($selectedItem.position === item.position) {
-                                        $selectedItem = packageService.prepareGeoCodingResult(
-                                            {
-                                                address: r.address as any,
-                                                ...$selectedItem
-                                            },
-                                            r.rank < 0.9
-                                        );
+                                for (let index = 0; index < res.size(); index++) {
+                                    const r = packageService.convertGeoCodingResult(res.get(index));
+                                    if (computeDistanceBetween(item.position, r.position) <= radius && r.rank > 0.7) {
+                                        if ($selectedItem.position === item.position) {
+                                            $selectedItem = packageService.prepareGeoCodingResult(
+                                                {
+                                                    address: r.address as any,
+                                                    ...$selectedItem
+                                                },
+                                                r.rank < 0.9
+                                            );
+                                        }
+                                        break;
                                     }
-                                    break;
                                 }
                             }
-                        }
-                        }).catch(err=>console.error(err));
-                       
+                        })
+                        .catch((err) => console.error(err));
                 }
             }
 
@@ -560,10 +587,9 @@
             // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
             // vectorTileDecoder.setStyleParameter('selected_name', (item.properties && item.properties.name) || '');
             if (peek) {
-                bottomSheetInner.loadView().then(()=>{
+                bottomSheetInner.loadView().then(() => {
                     bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
                 });
-                
             }
             if (preventZoom) {
                 return;
@@ -693,25 +719,55 @@
         selectedRoutes = null;
         handleSelectedRouteTimer = null;
     }
-    let ignoreNextMapClick = false;
-    let handleSelectedRouteTimer: NodeJS.Timeout;
-    let selectedRoutes: { featurePosition; featureData; layer: BaseVectorTileLayer<any, any> }[];
-    let didIgnoreAlreadySelected = false;
+    function handleClickedFeatures(position: GenericGeoLocation<LatLonKeys>) {
+        // console.log('handleClickedFeatures', clickedFeatures);
+        let fakeIndex= 0;
+        currentClickedFeatures = [...new Map(clickedFeatures.map(item => [JSON.stringify(item), item])).values()];
+        // if (currentClickedFeatures.length > 0) {
+            if (!selectedClickMarker) {
+                getOrCreateLocalVectorLayer();
+                const styleBuilder = new TextStyleBuilder({
+                    color: 'black',
+                    scaleWithDPI: true,
+                    borderWidth: 0,
+                    strokeWidth: 0,
+                    fontSize: 20,
+                    anchorPointX: 0.3,
+                    anchorPointY: -0.1
+                });
+                selectedClickMarker = new Text<LatLonKeys>({ position, projection, styleBuilder, text: '+' });
+                localVectorDataSource.add(selectedClickMarker);
+            } else {
+                selectedClickMarker.position = position;
+                selectedClickMarker.visible = true;
+            }
+            // console.log('handleClickedFeatures', currentClickedFeatures);
+        // }
+        clickedFeatures = [];
+    }
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureLayerName, featureData, featurePosition, layer } = data;
-        // if (DEV_LOG) {
-        console.log(
-            'onVectorTileClicked',
-            featureLayerName,
-            featureData.class,
-            featureData.subclass,
-            featureData,
-            featurePosition
-        );
-        // }
+        if (DEV_LOG) {
+            console.log(
+                'onVectorTileClicked',
+                featureLayerName,
+                featureData.class,
+                featureData.subclass,
+                featureData,
+                featurePosition
+            );
+        }
 
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
+            if (showClickedFeatures) {
+                clickedFeatures.push({
+                    featurePosition,
+                    layer: featureLayerName,
+                    data: featureData
+                });
+            }
+
             if (
                 featureLayerName === 'transportation' ||
                 featureLayerName === 'transportation_name' ||
@@ -729,8 +785,10 @@
             }
             if (
                 !!$selectedItem &&
-                ((featureData.osmid && featureData.osmid === $selectedItem.properties.osmid) ||
-                    ($selectedItem.properties && featureData.name === $selectedItem.properties.name &&
+                (didIgnoreAlreadySelected ||
+                    (featureData.osmid && featureData.osmid === $selectedItem.properties.osmid) ||
+                    ($selectedItem.properties &&
+                        featureData.name === $selectedItem.properties.name &&
                         $selectedItem.position.lat === featurePosition.lat &&
                         $selectedItem.position.lon === featurePosition.lon))
             ) {
@@ -777,7 +835,10 @@
                 selectItem({ item: result, isFeatureInteresting });
             }
             unFocusSearch();
-
+            if (isFeatureInteresting && showClickedFeatures) {
+                didIgnoreAlreadySelected = true;
+                return false;
+            }
             // return true to only look at first vector found
             return isFeatureInteresting;
         }
@@ -1469,6 +1530,13 @@
                     color={$mapStore.preloading ? primaryColor : 'gray'}
                     on:tap={() => mapStore.setPreloading(!$mapStore.preloading)}
                 />
+                <button
+                    variant="text"
+                    class="icon-btn"
+                    text="mdi-information-outline"
+                    color={showClickedFeatures ? primaryColor : 'gray'}
+                    on:tap={() => (showClickedFeatures = !showClickedFeatures)}
+                />
             </stacklayout>
             <canvaslabel
                 orientation="vertical"
@@ -1479,7 +1547,8 @@
                 class="label-icon-btn"
                 fontSize="12"
                 width="20"
-                height="30">
+                height="30"
+            >
                 <cspan
                     text="mdi-crosshairs-gps"
                     visibility={$mapStore.watchingLocation || $mapStore.queryingLocation ? 'visible' : 'collapsed'}
@@ -1493,13 +1562,6 @@
                     verticalTextAlignement="bottom"
                 />
             </canvaslabel>
-            <BottomSheetInner
-                bind:this={bottomSheetInner}
-                bind:steps
-                prop:bottomSheet
-                updating={itemLoading}
-                item={$selectedItem}
-            />
             <button
                 marginTop="80"
                 visibility={currentMapRotation !== 0 ? 'visible' : 'collapsed'}
@@ -1516,16 +1578,36 @@
                 opacity={scrollingWidgetsOpacity}
                 userInteractionEnabled={scrollingWidgetsOpacity > 0.3}
             />
-            <!-- <absolutelayout
             <DirectionsPanel
                 bind:this={directionsPanel}
                 bind:translationY={topTranslationY}
                 width="100%"
                 verticalAlignment="top"
             />
+            <BottomSheetInner
+                bind:this={bottomSheetInner}
+                bind:steps
+                prop:bottomSheet
+                updating={itemLoading}
+                item={$selectedItem}
+            />
+            <collectionview
                 transition:slide={{ duration: 100 }}
-                visibility={shouldShowNavigationBarOverlay ? 'visible' : 'collapsed'}
-                class="navigationBarOverlay" /> -->
+                items={currentClickedFeatures}
+                height="80"
+                margin="80 20 0 20"
+                rowHeight="20"
+                verticalAlignment="top"
+                borderRadius="16"
+                backgroundColor="#55000000"
+                visibility={currentClickedFeatures && currentClickedFeatures.length > 0 ? 'visible' : 'collapsed'}
+            >
+                <Template let:item>
+                    <canvaslabel padding="0 20 0 20">
+                        <cspan text={`${item.layer}: ${item.data.class}, ${item.data.subclass} (${item.data.name || ''})`} verticalAlignment="center" fontSize="14" color="white"/>
+                    </canvaslabel>
+                </Template>
+            </collectionview>
         </bottomsheet>
     </drawer>
 </page>
