@@ -250,6 +250,7 @@
         show();
     }
     let currentTranslationY = -440;
+    export let translationY = 0;
     async function show() {
         await loadView();
         const nView = topLayout.nativeView;
@@ -265,6 +266,7 @@
         const params = translationFunction ? translationFunction(height, 0, 1, superParams) : superParams;
         await nView.animate(params);
         currentTranslationY = 0;
+        translationY = 220;
     }
     async function hide() {
         if (!loaded) {
@@ -283,6 +285,7 @@
         const params = translationFunction ? translationFunction(height, -height, 0, superParams) : superParams;
         await nView.animate(params);
         currentTranslationY = -height;
+        translationY = 0;
     }
     export async function addWayPoint(position: MapPos<LatLonKeys>, metaData?, index = -1) {
         await loadView();
@@ -582,7 +585,8 @@
     {...$$restProps}
     backgroundColor={primaryColor}
     paddingTop={globalMarginTop}
-    translateY={currentTranslationY}>
+    translateY={currentTranslationY}
+>
     {#if loaded}
         <gridlayout bind:this={gridLayout} id="directions" on:tap={() => {}} rows="50,60,60,50">
             <button
@@ -647,7 +651,8 @@
                 backgroundColor="white"
                 columns=" *,auto,auto"
                 height="44"
-                margin="10">
+                margin="10"
+            >
                 <textfield
                     bind:this={startTF}
                     col="0"
