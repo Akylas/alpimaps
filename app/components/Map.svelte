@@ -582,7 +582,7 @@
             cartoMap.moveToFitBounds(item.zoomBounds, undefined, true, true, false, 200);
             // cartoMap.setZoom(zoomLevel, 200);
             // cartoMap.setFocusPos(getCenter(item.zoomBounds.northeast, item.zoomBounds.southwest), 200);
-        } else if (item.properties.extent) {
+        } else if (item.properties && item.properties.extent) {
             let extent: [number, number, number, number] = item.properties.extent as any;
             if (typeof extent === 'string') {
                 extent = JSON.parse(`[${extent}]`);
