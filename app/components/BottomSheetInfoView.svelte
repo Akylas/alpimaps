@@ -39,6 +39,8 @@
                 return routeDmin;
             case 'distance':
                 return routeDistance;
+            case 'duration':
+                return routeDuration;
         }
         return item.properties[prop];
     }
@@ -52,6 +54,8 @@
                 return 'mdi-elevation-decline';
             case 'distance':
                 return 'mdi-map-marker-distance';
+            case 'duration':
+                return 'mdi-timer';
         }
         return null;
     }
@@ -132,6 +136,7 @@
                     )})`;
                 }
                 routeDuration = result;
+                newPropsToDraw.push('duration');
             }
         }
 
