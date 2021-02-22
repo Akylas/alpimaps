@@ -7,7 +7,7 @@
 		android:name="akylas.alpi.maps.broadcast"
 		android:protectionLevel="signatureOrSystem">
 	</permission>
-	<uses-permission android:name="com.akylas.weather.broadcast" />
+    <uses-permission android:name="com.akylas.weather.broadcast" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -64,9 +64,9 @@
             />
             </intent-filter>
         </activity>
+        <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
         <activity android:name="com.tns.ErrorReportActivity" />
         <!-- <activity android:name="com.facebook.flipper.android.diagnostics.FlipperDiagnosticActivity" android:exported="true"/> -->
         <service android:name="akylas.alpi.maps.BgService" android:enabled="true" android:exported="false" android:stopWithTask="false" />
-        
     </application>
 </manifest>
