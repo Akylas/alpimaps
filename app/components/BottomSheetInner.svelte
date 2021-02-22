@@ -92,7 +92,7 @@ import { l } from '@nativescript-community/l';
     }
 
     function onNewLocation(e: any) {
-        const index = infoView.onNewLocation(e);
+        const index = infoView?.onNewLocation(e) || -1;
         if (index !== -1 && graphAvailable) {
             const profile = item.route.profile;
             const profileData = profile?.data;
