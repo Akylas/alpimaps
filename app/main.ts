@@ -1,12 +1,10 @@
-// require('@nativescript/core/ui/frame/activity');
-// require('@nativescript/core/ui/frame');
 // (com as any).tns.Runtime.getCurrentRuntime().enableVerboseLogging();
 import { startSentry } from '~/utils/sentry';
 import { install as installLogging } from '~/utils/logging';
 startSentry();
 installLogging();
 import './app.scss';
-import { setGeoLocationKeys } from '@nativescript-community/gps';
+import { GPSTraceCategory, setGeoLocationKeys } from '@nativescript-community/gps';
 import { installMixins as installUIMixins } from '@nativescript-community/systemui';
 import { overrideSpanAndFormattedString } from '@nativescript-community/text';
 import { setMapPosKeys } from '@nativescript-community/ui-carto/core';
@@ -97,9 +95,8 @@ themer.createShape('round', {
 });
 
 if (DEV_LOG) {
-    Trace.addCategories(DomTraceCategory);
-    // Trace.addCategories(CollectionViewTraceCategory);
-    Trace.enable();
+    // Trace.addCategories(GPSTraceCategory);
+    // Trace.enable();
 }
 
 const bgService = new BgService();
