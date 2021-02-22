@@ -66,7 +66,7 @@
     }
 
     function updateRouteItemWithPosition(routeItem: Item, location) {
-        if (routeItem) {
+        if (routeItem && routeItem.route) {
             const route = routeItem.route;
             const positions = route.positions;
             const onPathIndex = isLocationOnPath(location, positions, false, true, 10);
