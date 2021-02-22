@@ -49,15 +49,12 @@ export function getDataFolder() {
                 }
             }
             if (result.length > 1) {
-                dataFolder = result[result.length - 1].getAbsolutePath();
-            } else {
-                dataFolder = knownFolders.documents().path;
+                dataFolder = result[result.length - 1]?.getAbsolutePath();
             }
-        } else {
-            dataFolder = knownFolders.documents().path;
         }
-    } else {
-        dataFolder = knownFolders.documents().path;
+    }
+    if (!dataFolder) {
+        dataFolder = knownFolders.temp().path;
     }
     if (TNS_ENV !== 'production') {
         dataFolder = path.join(dataFolder, 'dev');
