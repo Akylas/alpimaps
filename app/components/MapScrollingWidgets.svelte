@@ -65,7 +65,7 @@
         userLocationModule = mapContext.mapModule('userLocation');
         userLocationModule.on('location', onNewLocation, this);
     });
-    $: locationButtonClass = $mapStore.watchingLocation ? 'buttonthemed' : 'buttontext';
+    $: locationButtonClass = !$mapStore.queryingLocation && $mapStore.watchingLocation ? 'buttonthemed' : 'buttontext';
     $: locationButtonLabelClass = $mapStore.queryingLocation ? 'fade-blink' : '';
     $: selectedItemHasPosition = selectedItem && !selectedItem.route && !!selectedItem.position;
 
@@ -267,7 +267,8 @@
     rows="auto,*,auto"
     columns="70,*,70"
     isPassThroughParentEnabled={true}
-    marginTop={globalMarginTop}>
+    marginTop={globalMarginTop}
+>
     {#if packageServiceEnabled}
         <label
             borderRadius="6"
@@ -287,7 +288,8 @@
             color="white"
             :html={`<big
             ><big><font face="${mdiFontFamily}">mdi-download</font></big></big
-        >${suggestionPackageName}`} />
+        >${suggestionPackageName}`}
+        />
     {/if}
     <stacklayout col="2" row="2" verticalAlignment="bottom" padding="2">
         <button
@@ -299,18 +301,15 @@
             class="floating-btn"
             text="mdi-directions"
             visibility={selectedItemHasPosition ? 'visible' : 'collapsed'}
-            isUserInteractionEnabled={userInteractionEnabled} />
-        <mdcardview
-            class={'floating-btn ' + locationButtonClass}
-            on:tap={askUserLocation}
-            on:longPress={onWatchLocation}
-            isUserInteractionEnabled={userInteractionEnabled}>
-            <canvaslabel class={'mdi ' + locationButtonLabelClass} isUserInteractionEnabled="false">
+        />
+        <mdcardview class={'floating-btn ' + locationButtonClass} on:tap={askUserLocation} on:longPress={onWatchLocation}>
+            <canvaslabel class={'mdi ' + locationButtonLabelClass} :isUserInteractionEnabled="false">
                 <cspan
                     textAlignment="center"
                     verticalAlignment="middle"
                     text="mdi-crosshairs-gps"
-                    color={$mapStore.watchingLocation ? 'white' : accentColor} />
+                    color={(!$mapStore.queryingLocation && $mapStore.watchingLocation)? 'white' : accentColor}
+                />
             </canvaslabel>
         </mdcardview>
     </stacklayout>
@@ -321,7 +320,8 @@
         text="mdi-layers"
         row="2"
         verticalAlignment="bottom"
-        horizontalAlignment="left" />
+        horizontalAlignment="left"
+    />
     <ScaleView bind:this={scaleView} col="1" row="2" horizontalAlignment="right" verticalAlignment="bottom" marginBottom="8" />
     {#if packageServiceEnabled}
         <mdprogress
@@ -330,6 +330,7 @@
             row="2"
             value={totalDownloadProgress}
             visibility={totalDownloadProgress > 0 ? 'visible' : 'collapsed'}
-            verticalAlignment="bottom" />
+            verticalAlignment="bottom"
+        />
     {/if}
 </gridlayout>
