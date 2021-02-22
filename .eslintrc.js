@@ -7,9 +7,12 @@ module.exports = {
     parser: '@typescript-eslint/parser',
     parserOptions: {
         ecmaVersion: 2019,
-        createDefaultProgram: true,
-        project: 'tsconfig.json',
-        sourceType: 'module'
+        sourceType: 'module',
+        parser: '@typescript-eslint/parser',
+        project: 'tsconfig.eslint.json',
+        extraFileExtensions: ['.svelte'],
+        warnOnUnsupportedTypeScriptVersion: false,
+        tsconfigRootDir: __dirname
     },
     globals: { gVars: true, SENTRY_DSN: true, SENTRY_PREFIX: true, PRODUCTION: true, OWM_KEY: true },
     plugins: ['prettier', 'svelte3', '@typescript-eslint'],
