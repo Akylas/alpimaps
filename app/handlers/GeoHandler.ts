@@ -1,4 +1,4 @@
-import { GPS, GenericGeoLocation, Options as GeolocationOptions, setMockEnabled } from '@nativescript-community/gps';
+import { GPS, GenericGeoLocation, Options as GeolocationOptions } from '@nativescript-community/gps';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
 import {
     ApplicationEventData,
@@ -18,13 +18,11 @@ import { l } from '@nativescript-community/l';
 let geolocation: GPS;
 
 export const desiredAccuracy = global.isAndroid ? Enums.Accuracy.high : kCLLocationAccuracyBestForNavigation;
-export const updateDistance = 1;
+export const updateDistance = 0;
 export const maximumAge = 3000;
 export const timeout = 20000;
-export const minimumUpdateTime = 1000; // Should update every 1 second according ;
+export const minimumUpdateTime = 0; // Should update every 1 second according ;
 export type GeoLocation = GenericGeoLocation<LatLonKeys>;
-
-setMockEnabled(true);
 
 export interface Session {
     lastLoc: GeoLocation;
@@ -81,14 +79,11 @@ export class GeoHandler extends Observable {
     _deferringUpdates = false;
     onUpdatedSession: Function;
     currentSession: Session;
-    // paused = false;
     sessionState: SessionState = SessionState.STOPPED;
     lastLoc: GeoLocation;
     lastAlt: number;
-    // lastSpeeds: number[];
 
     sessionsHistory: Session[] = JSON.parse(getString('sessionsHistory', '[]'));
-    // deltaDistance: number;
     launched = false;
 
     constructor() {
@@ -107,15 +102,10 @@ export class GeoHandler extends Observable {
             }
         }
         if (global.isIOS) {
-            // if (androidApp.nativeApp) {
-            // this.appOnLaunch();
-            // } else {
             applicationOn(launchEvent, this.appOnLaunch, this);
-            // }
         }
         applicationOn(suspendEvent, this.onAppPause, this);
         applicationOn(resumeEvent, this.onAppResume, this);
-        // applicationOn(exitEvent, this.onAppExit, this);
     }
     appOnLaunch() {
         if (this.launched) {
@@ -280,9 +270,14 @@ export class GeoHandler extends Observable {
 
     getLocation(options?) {
         return geolocation
-            .getCurrentLocation<LatLonKeys>(
-                options || { desiredAccuracy, minimumUpdateTime, timeout, onDeferred: this.onDeferred }
-            )
+            .getCurrentLocation<LatLonKeys>({
+                provider: 'gps',
+                minimumUpdateTime,
+                desiredAccuracy,
+                timeout,
+                onDeferred: this.onDeferred,
+                ...options
+            })
             .then((r) => {
                 console.log('getLocation result', r);
                 this.notify({
@@ -327,7 +322,12 @@ export class GeoHandler extends Observable {
     };
     startWatch(onLoc?: Function) {
         this.currentWatcher = onLoc;
-        const options: GeolocationOptions = { desiredAccuracy, minimumUpdateTime, onDeferred: this.onDeferred };
+        const options: GeolocationOptions = {
+            provider: 'gps',
+            minimumUpdateTime,
+            desiredAccuracy,
+            onDeferred: this.onDeferred
+        };
         if (DEV_LOG) {
             console.log('startWatch', options);
         }
