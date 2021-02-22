@@ -150,12 +150,10 @@ export default class UserLocationModule extends MapModule {
         const deltaMinutes = dayjs(new Date()).diff(dayjs(geoPos.timestamp), 'minute', true);
         if (deltaMinutes > 2) {
             accuracyColor = 'gray';
-        } else {
-            if (accuracy > 1000) {
-                accuracyColor = 'red';
-            } else if (accuracy > 20) {
-                accuracyColor = 'orange';
-            }
+        } else if (accuracy > 1000) {
+            accuracyColor = 'red';
+        } else if (accuracy > 20) {
+            accuracyColor = 'orange';
         }
         // console.log(
         //     'updateUserLocation',
@@ -211,9 +209,8 @@ export default class UserLocationModule extends MapModule {
             // this.userMarker.position = position;
         } else {
             // const currentLocation = { lat: this.lastUserLocation.latitude, lon: this.lastUserLocation.longitude, horizontalAccuracy: this.lastUserLocation.horizontalAccuracy };
-            this.userMarker.styleBuilder.color = accuracyColor;
-            this.userMarker.styleBuilder.color = accuracyColor;
-            this.accuracyMarker.visible = accuracy > 10;
+            this.userMarker.color = accuracyColor;
+            this.accuracyMarker.visible = accuracy > 20;
             new TWEEN.Tween(this.lastUserLocation)
                 .to(position, LOCATION_ANIMATION_DURATION)
                 .easing(TWEEN.Easing.Quadratic.Out)
@@ -238,7 +235,10 @@ export default class UserLocationModule extends MapModule {
         this.lastUserLocation = position;
     }
     onLocation(event: UserLocationdEventData) {
-        mapStore.queryingLocation = false;
+        if (mapStore.queryingLocation) {
+            this.stopWatchLocation();
+            mapStore.queryingLocation = false;
+        }
         // const { android, ios, ...toPrint } = data.location;
         // console.log('onLocation', this._userFollow, event.location, this.userFollow);
         if (event.error) {
@@ -285,13 +285,13 @@ export default class UserLocationModule extends MapModule {
     }
     askUserLocation() {
         this.userFollow = true;
-
         return this.geoHandler.enableLocation().then(() => {
             mapStore.queryingLocation = true;
-            this.geoHandler.getLocation();
+            this.startWatchLocation();
         });
     }
     onWatchLocation() {
+        mapStore.queryingLocation = false;
         if (!mapStore.watchingLocation) {
             this.startWatchLocation();
         } else {
@@ -369,7 +369,9 @@ export default class UserLocationModule extends MapModule {
                 );
                 // console.log('showMapAsAlbumArt3');
                 const notifiction = builder.build();
-                const service = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
+                const service = context.getSystemService(
+                    android.content.Context.NOTIFICATION_SERVICE
+                ) as android.app.NotificationManager;
                 service.notify(SCREENSHOT_NOTIFICATION_ID, notifiction);
             });
         }
@@ -378,7 +380,9 @@ export default class UserLocationModule extends MapModule {
     public hideScreenshotNotification() {
         if (global.isAndroid) {
             const context: android.content.Context = ad.getApplicationContext();
-            const service = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
+            const service = context.getSystemService(
+                android.content.Context.NOTIFICATION_SERVICE
+            ) as android.app.NotificationManager;
             service.cancel(SCREENSHOT_NOTIFICATION_ID);
         }
     }
