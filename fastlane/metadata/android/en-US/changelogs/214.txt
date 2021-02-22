@@ -1,0 +1,10 @@
+*Bug fixes*
+- accuracy icon color
+- *android:* androidx updare
+- prevent crash when location on non route item
+- crash on location update
+- location info panel fix
+- wait for new location when clicking on location button
+- some watch location fixes  (gps only on android)
+- crash on getting local mbtiles
+- *android:* opt out of google metrics
