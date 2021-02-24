@@ -1,6 +1,9 @@
-import { GPS, GenericGeoLocation, Options as GeolocationOptions } from '@nativescript-community/gps';
+import { GPS, GenericGeoLocation, Options as GeolocationOptions, LocationMonitor } from '@nativescript-community/gps';
+import { check, request } from '@nativescript-community/perms';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
+import { ApplicationSettings, Enums } from '@nativescript/core';
 import {
+    AndroidApplication,
     ApplicationEventData,
     android as androidApp,
     off as applicationOff,
@@ -9,11 +12,11 @@ import {
     resumeEvent,
     suspendEvent
 } from '@nativescript/core/application';
-import { Enums } from '@nativescript/core';
-import { BgService } from '~/services/BgService';
-import { getString, remove, setString } from '@nativescript/core/application-settings';
+import { AndroidActivityResultEventData } from '@nativescript/core/application/application-interfaces';
 import { EventData, Observable } from '@nativescript/core/data/observable';
-import { l } from '@nativescript-community/l';
+import { bind } from 'helpful-decorators';
+import { BgService } from '~/services/BgService';
+import { l, lc } from '~/helpers/locale';
 
 let geolocation: GPS;
 
@@ -30,7 +33,7 @@ export interface Session {
     averageSpeed: number;
     altitudeGain: number;
     altitudeNegative: number;
-    currentDistance: number;
+    distance: number;
     startTime: Date;
     lastPauseTime: Date;
     endTime: Date;
@@ -83,8 +86,13 @@ export class GeoHandler extends Observable {
     lastLoc: GeoLocation;
     lastAlt: number;
 
-    sessionsHistory: Session[] = JSON.parse(getString('sessionsHistory', '[]'));
+    sessionsHistory: Session[] = JSON.parse(ApplicationSettings.getString('sessionsHistory', '[]'));
     launched = false;
+
+    wasWatchingBeforePause = false;
+    watcherBeforePause;
+    dontWatchWhilePaused = ApplicationSettings.getBoolean('stopGPSWhilePaused', true);
+    gpsEnabled = true;
 
     constructor() {
         super();
@@ -111,7 +119,7 @@ export class GeoHandler extends Observable {
         if (this.launched) {
             return;
         }
-        this.currentSession = JSON.parse(getString('pausedSession', null));
+        this.currentSession = JSON.parse(ApplicationSettings.getString('pausedSession', null));
         if (this.currentSession) {
             this.currentSession.startTime = new Date(this.currentSession.startTime);
             this.currentSession.lastPauseTime = new Date(this.currentSession.lastPauseTime);
@@ -121,9 +129,6 @@ export class GeoHandler extends Observable {
         this.launched = true;
         geolocation.on(GPS.gps_status_event, this.onGPSStateChange, this);
     }
-    wasWatchingBeforePause = false;
-    watcherBeforePause;
-    dontWatchWhilePaused = true;
     onAppResume(args: ApplicationEventData) {
         if (global.isIOS) {
             this._isIOSBackgroundMode = false;
@@ -181,13 +186,9 @@ export class GeoHandler extends Observable {
         if (!this.launched) {
             return;
         }
-        if (
-            this.currentSession &&
-            this.currentSession.state !== SessionState.STOPPED &&
-            this.currentSession.currentDistance > 0
-        ) {
+        if (this.currentSession && this.currentSession.state !== SessionState.STOPPED && this.currentSession.distance > 0) {
             this.pauseSession();
-            setString('pausedSession', JSON.stringify(this.currentSession));
+            ApplicationSettings.setString('pausedSession', JSON.stringify(this.currentSession));
             this.currentSession = null; // to prevent storing in history
 
             // store paused session to start it again after
@@ -198,11 +199,47 @@ export class GeoHandler extends Observable {
         applicationOff(suspendEvent, this.onAppPause, this);
         applicationOff(resumeEvent, this.onAppResume, this);
     }
+
+    stop() {
+        return Promise.resolve().then(() => {
+            if (this.currentSession && this.currentSession.state !== SessionState.STOPPED && this.currentSession.distance > 0) {
+                this.pauseSession();
+                // appSettings.setString('pausedSession', JSON.stringify(this.currentSession));
+                this.currentSession = null; // to prevent storing in history
+            }
+            this.stopSession();
+            this.launched = false;
+            geolocation.off(GPS.gps_status_event, this.onGPSStateChange, this);
+            applicationOff(suspendEvent, this.onAppPause, this);
+            applicationOff(resumeEvent, this.onAppResume, this);
+            // return this.dbHandler.stop();
+        });
+    }
+    async start() {
+        // this.currentSession = JSON.parse(appSettings.getString('pausedSession', null));
+        // if (this.currentSession) {
+        //     this.currentSession.startTime = new Date(this.currentSession.startTime);
+        //     if (this.currentSession.lastPauseTime) {
+        //         this.currentSession.lastPauseTime = new Date(this.currentSession.lastPauseTime);
+        //     }
+        //     this.sessionState = SessionState.PAUSED;
+        //     this.onUpdateSessionChrono();
+        // }
+        this.launched = true;
+        geolocation.on(GPS.gps_status_event, this.onGPSStateChange, this);
+        applicationOn(suspendEvent, this.onAppPause, this);
+        applicationOn(resumeEvent, this.onAppResume, this);
+
+        const permCheck = await check('location');
+        // set to true if not allowed yet for the UI
+        this.gpsEnabled = permCheck[0] !== 'authorized' || geolocation.isEnabled();
+    }
+
     onGPSStateChange(e: GPSEvent) {
         if (DEV_LOG) {
             console.log('GPS state change', e.data);
         }
-        const enabled = e.data.enabled;
+        const enabled = (this.gpsEnabled = e.data.enabled);
         if (!enabled) {
             this.stopSession();
         }
@@ -218,14 +255,10 @@ export class GeoHandler extends Observable {
             return Promise.resolve(true);
         } else {
             return confirm({
-                // title: localize('stop_session'),
-                message: l('gps_not_enabled'),
-                okButtonText: l('settings'),
-                cancelButtonText: l('cancel')
+                message: lc('gps_not_enabled'),
+                okButtonText: lc('settings'),
+                cancelButtonText: lc('cancel')
             }).then((result) => {
-                if (DEV_LOG) {
-                    console.log('askToEnableIfNotEnabled, confirmed', result);
-                }
                 if (!!result) {
                     return geolocation.openGPSSettings();
                 }
@@ -233,74 +266,111 @@ export class GeoHandler extends Observable {
             });
         }
     }
-    checkEnabledAndAuthorized(always = false) {
-        return Promise.resolve()
-            .then(() =>
-                geolocation.isAuthorized().then((r) => {
-                    if (!r) {
-                        return geolocation.authorize(always);
-                    } else {
-                        return r;
-                    }
-                })
-            )
-            .then(() => this.askToEnableIfNotEnabled())
-            .catch((err) => {
-                if (err && /denied/i.test(err.message)) {
-                    confirm({
-                        // title: localize('stop_session'),
-                        message: l('gps_not_authorized'),
-                        okButtonText: l('settings'),
-                        cancelButtonText: l('cancel')
-                    }).then((result) => {
-                        if (result) {
-                            geolocation.openGPSSettings().catch(() => {});
-                        }
-                    });
-                    return Promise.reject(undefined);
-                } else {
-                    return Promise.reject(err);
+    async authorizeLocation() {
+        const result = await request('location');
+        this.gpsEnabled = geolocation.isEnabled();
+        return result;
+    }
+    async checkEnabledAndAuthorized(always = false) {
+        try {
+            console.log('checkEnabledAndAuthorized');
+            await check('location').then((r) => {
+                if (r[0] !== 'authorized') {
+                    return this.authorizeLocation();
                 }
             });
+            console.log('checkEnabledAndAuthorized1');
+            await this.askToEnableIfNotEnabled();
+        } catch (err) {
+            if (err && /denied/i.test(err.message)) {
+                confirm({
+                    message: lc('gps_not_authorized'),
+                    okButtonText: lc('settings'),
+                    cancelButtonText: lc('cancel')
+                }).then((result) => {
+                    if (result) {
+                        geolocation.openGPSSettings().catch(() => {});
+                    }
+                });
+                return Promise.reject();
+            } else {
+                return Promise.reject(err);
+            }
+        }
     }
 
     enableLocation() {
         return this.checkEnabledAndAuthorized();
     }
 
-    getLocation(options?) {
-        return geolocation
-            .getCurrentLocation<LatLonKeys>({
-                provider: 'gps',
+    isBatteryOptimized(context: android.content.Context) {
+        const pwrm = context.getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager;
+        const name = context.getPackageName();
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            return !pwrm.isIgnoringBatteryOptimizations(name);
+        }
+        return false;
+    }
+    checkBattery() {
+        if (global.isIOS) {
+            return Promise.resolve();
+        }
+        const activity = androidApp.foregroundActivity || androidApp.startActivity;
+        if (this.isBatteryOptimized(activity) && android.os.Build.VERSION.SDK_INT >= 22) {
+            return new Promise<void>((resolve, reject) => {
+                const REQUEST_CODE = 6645;
+                const onActivityResultHandler = (data: AndroidActivityResultEventData) => {
+                    if (data.requestCode === REQUEST_CODE) {
+                        androidApp.off(AndroidApplication.activityResultEvent, onActivityResultHandler);
+                        resolve();
+                    }
+                };
+                androidApp.on(AndroidApplication.activityResultEvent, onActivityResultHandler);
+                const intent = new android.content.Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setData(android.net.Uri.parse('package:' + activity.getPackageName()));
+                activity.startActivityForResult(intent, REQUEST_CODE);
+            });
+        }
+        return Promise.resolve();
+    }
+    getLastKnownLocation(): GeoLocation {
+        return LocationMonitor.getLastKnownLocation<LatLonKeys>();
+    }
+
+    async getLocation(options?) {
+        try {
+            const r = await geolocation.getCurrentLocation<LatLonKeys>({
+                // provider: 'gps',
                 minimumUpdateTime,
                 desiredAccuracy,
                 timeout,
+                skipPermissionCheck: true,
                 onDeferred: this.onDeferred,
                 ...options
-            })
-            .then((r) => {
-                console.log('getLocation result', r);
-                this.notify({
-                    eventName: UserLocationdEvent,
-                    object: this,
-                    location: r
-                } as UserLocationdEventData);
-                return r;
-            })
-            .catch((err) => {
-                this.notify({
-                    eventName: UserLocationdEvent,
-                    object: this,
-                    error: err
-                } as UserLocationdEventData);
-                return Promise.reject(err);
             });
+            console.log('getLocation result', r);
+            this.notify({
+                eventName: UserLocationdEvent,
+                object: this,
+                location: r
+            } as UserLocationdEventData);
+            return r;
+        } catch (err) {
+            this.notify({
+                eventName: UserLocationdEvent,
+                object: this,
+                error: err
+            } as UserLocationdEventData);
+            return Promise.reject(err);
+        }
     }
 
-    onDeferred = () => {
+    @bind
+    onDeferred() {
         this._deferringUpdates = false;
-    };
-    onLocation = (loc: GeoLocation, manager?: any) => {
+    }
+    @bind
+    onLocation(loc: GeoLocation, manager?: any) {
         if (loc) {
             this.currentWatcher && this.currentWatcher(null, loc);
             this.notify({
@@ -313,25 +383,29 @@ export class GeoHandler extends Observable {
             this._deferringUpdates = true;
             manager.allowDeferredLocationUpdatesUntilTraveledTimeout(0, 10);
         }
-    };
-    onLocationError = (err: Error) => {
+    }
+    @bind
+    onLocationError(err: Error) {
         if (DEV_LOG) {
             console.log(' location error: ', err);
         }
         this.currentWatcher && this.currentWatcher(err);
-    };
-    startWatch(onLoc?: Function) {
+    }
+    async startWatch(onLoc?: Function) {
         this.currentWatcher = onLoc;
         const options: GeolocationOptions = {
-            provider: 'gps',
             minimumUpdateTime,
             desiredAccuracy,
-            onDeferred: this.onDeferred
+            onDeferred: this.onDeferred,
+            nmeaAltitude: true,
+            skipPermissionCheck: true
         };
         if (DEV_LOG) {
             console.log('startWatch', options);
         }
+
         if (global.isIOS) {
+            geolocation.iosChangeLocManager.showsBackgroundLocationIndicator = true;
             if (this._isIOSBackgroundMode) {
                 options.pausesLocationUpdatesAutomatically = false;
                 options.allowsBackgroundLocationUpdates = true;
@@ -339,9 +413,19 @@ export class GeoHandler extends Observable {
                 options.pausesLocationUpdatesAutomatically = true;
                 options.allowsBackgroundLocationUpdates = true;
             }
+            //@ts-ignore
+            options.activityType = CLActivityType.Other;
+            // } else {
+            // options.provider = 'gps';
         }
-
-        geolocation.watchLocation(this.onLocation, this.onLocationError, options).then((r) => (this.watchId = r));
+        if (global.isAndroid) {
+            try {
+                this.bgService.get().showForeground(true);
+            } catch (err) {
+                console.error('showForeground', err, err['stack']);
+            }
+        }
+        this.watchId = await geolocation.watchLocation(this.onLocation, this.onLocationError, options);
     }
 
     stopWatch() {
@@ -349,6 +433,9 @@ export class GeoHandler extends Observable {
             console.log('stopWatch', this.watchId);
         }
         if (this.watchId) {
+            if (global.isAndroid) {
+                this.bgService.get().removeForeground();
+            }
             geolocation.clearWatch(this.watchId);
             this.watchId = null;
             this.currentWatcher = null;
@@ -455,9 +542,9 @@ export class GeoHandler extends Observable {
 
             if (deltaDistance > 2 || shouldNotif) {
                 if (DEV_LOG) {
-                    console.log('deltaDistance', deltaDistance, this.currentSession.currentDistance);
+                    console.log('deltaDistance', deltaDistance, this.currentSession.distance);
                 }
-                this.currentSession.currentDistance = this.currentSession.currentDistance + deltaDistance;
+                this.currentSession.distance = this.currentSession.distance + deltaDistance;
                 shouldNotif = true;
             }
 
@@ -468,10 +555,10 @@ export class GeoHandler extends Observable {
                 console.log('sessionDuration', sessionDuration);
             }
             if (DEV_LOG) {
-                console.log('currentDistance', this.currentSession.currentDistance);
+                console.log('distance', this.currentSession.distance);
             }
-            if (sessionDuration > 3000 && this.currentSession.currentDistance > 10 && shouldNotif) {
-                const newAvg = Math.round((this.currentSession.currentDistance / sessionDuration) * 3600); // 1m/s === 3.6 km/h => 1m/ms === 1000m/s === 3600 km/h
+            if (sessionDuration > 3000 && this.currentSession.distance > 10 && shouldNotif) {
+                const newAvg = Math.round((this.currentSession.distance / sessionDuration) * 3600); // 1m/s === 3.6 km/h => 1m/ms === 1000m/s === 3600 km/h
                 if (DEV_LOG) {
                     console.log('average Speed', newAvg);
                 }
@@ -504,7 +591,10 @@ export class GeoHandler extends Observable {
             this.updateSessionWithLoc(loc);
         }
     };
-
+    async askForSessionPerms() {
+        await this.enableLocation();
+        await this.checkBattery();
+    }
     waitingForLocation() {
         return this.currentSession && this.currentSession.lastLoc === null;
     }
@@ -519,7 +609,7 @@ export class GeoHandler extends Observable {
                 state: SessionState.RUNNING,
                 averageSpeed: 0,
                 currentSpeed: 0,
-                currentDistance: 0,
+                distance: 0,
                 altitudeGain: 0,
                 altitudeNegative: 0,
                 startTime: new Date(),
@@ -530,7 +620,7 @@ export class GeoHandler extends Observable {
             };
             // /* DEV-START */
             // this.currentSession.currentSpeed = 1.1;
-            // this.currentSession.currentDistance = 978;
+            // this.currentSession.distance = 978;
             // this.currentSession.averageSpeed = 13.43;
             // this.currentSession.altitudeGain = 1345;
             /* DEV-END */
@@ -569,7 +659,7 @@ export class GeoHandler extends Observable {
             session.lastPauseTime = null;
         }
         session.averageSpeed = Math.round(
-            (session.currentDistance / (session.endTime.valueOf() - session.startTime.valueOf() - session.pauseDuration)) * 3600
+            (session.distance / (session.endTime.valueOf() - session.startTime.valueOf() - session.pauseDuration)) * 3600
         );
     }
     stopSession() {
@@ -577,10 +667,10 @@ export class GeoHandler extends Observable {
             remove('pausedSession');
             this.stopWatch();
 
-            if (this.currentSession.currentDistance > 0) {
+            if (this.currentSession.distance > 0) {
                 this.prepareSessionForStoring(this.currentSession);
                 this.sessionsHistory.push(this.currentSession);
-                setString('sessionsHistory', JSON.stringify(this.sessionsHistory));
+                ApplicationSettings.setString('sessionsHistory', JSON.stringify(this.sessionsHistory));
             }
             this.setSessionState(SessionState.STOPPED);
 

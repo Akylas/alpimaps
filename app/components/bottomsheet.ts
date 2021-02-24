@@ -49,3 +49,6 @@ export function closeBottomSheet(result?: any): void {
         (modalPageInstanceInfo.element.nativeView as any).closeBottomSheet(result);
     }
 }
+export function isBottomSheetOpened() {
+    return modalStack.length > 0;
+}

@@ -38,6 +38,8 @@ export interface MapContext {
     onMapStable(callback: (map: CartoMap<LatLonKeys>) => void);
     onMapIdle(callback: (map: CartoMap<LatLonKeys>) => void);
     onMapClicked(callback: (map: CartoMap<LatLonKeys>) => void);
+    onVectorElementClicked(callback: (data: VectorElementEventData<LatLonKeys>)  => void);
+    onVectorTileClicked(callback: (data: VectorTileEventData<LatLonKeys>) => void);
     getMainPage: () => NativeViewElementNode<Page>;
     getMap: () => CartoMap<LatLonKeys>;
     getProjection: () => Projection;
@@ -57,8 +59,8 @@ export interface MapContext {
     getSelectedItem: () => IItem;
     addLayer: (layer: Layer<any, any>, layerId: LayerType, offset?: number) => number;
     removeLayer: (layer: Layer<any, any>, layerId: LayerType, offset?: number) => void;
-    onVectorElementClicked: (data: VectorElementEventData<LatLonKeys>) => boolean;
-    onVectorTileClicked: (data: VectorTileEventData<LatLonKeys>) => boolean;
+    vectorElementClicked: (data: VectorElementEventData<LatLonKeys>) => boolean;
+    vectorTileClicked: (data: VectorTileEventData<LatLonKeys>) => boolean;
     getVectorTileDecoder(): MBVectorTileDecoder;
     runOnModules(functionName: string, ...args);
 }
@@ -79,7 +81,8 @@ const listeners = {
     onMapMove: [],
     onMapStable: [],
     onMapIdle: [],
-    onMapClicked: []
+    onMapClicked: [],
+    onVectorElementClicked:[]
 };
 export let drawer: Drawer;
 
@@ -100,11 +103,14 @@ const mapContext: MapContext = {
     onMapClicked(callback: (map: CartoMap<LatLonKeys>) => void) {
         listeners.onMapClicked.push(callback);
     },
+    onVectorElementClicked(callback: (data: VectorElementEventData<LatLonKeys>) => void) {
+        listeners.onVectorElementClicked.push(callback);
+    },
     mapModule<T extends keyof MapModules>(id: T) {
         return mapContext.mapModules && mapContext.mapModules[id];
     },
     runOnModules(functionName: string, ...args) {
-        Object.values(mapContext.mapModules).some((m) => {
+        let result = Object.values(mapContext.mapModules).some((m) => {
             if (m && m[functionName]) {
                 const result = (m[functionName] as Function).call(m, ...args);
                 if (result) {
@@ -113,7 +119,11 @@ const mapContext: MapContext = {
                 return false;
             }
         });
-        listeners[functionName] && listeners[functionName].forEach((l) => l(...args));
+        if (!result && listeners[functionName] && listeners[functionName].length > 0) {
+            result = listeners[functionName].some((l) => l(...args));
+
+        }
+        return result;
     }
 } as any;
 

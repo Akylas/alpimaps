@@ -3,7 +3,7 @@
     import { CartoMap } from '@nativescript-community/ui-carto/ui';
     import { setNumber } from '@nativescript/core/application-settings';
     import { ObservableArray } from '@nativescript/core/data/observable-array';
-    import { onDestroy } from 'svelte';
+    import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
@@ -28,6 +28,12 @@
         customLayers = mapContext.mapModule('customLayers');
         customSources = customLayers.customSources;
     });
+    onMount(()=>{
+        customLayers = mapContext.mapModule('customLayers');
+        if (customLayers) {
+            customSources = customLayers.customSources;
+        }
+    })
     onDestroy(() => {
         customLayers = null;
         customSources = null;
@@ -62,7 +68,7 @@
         });
     }
 
-    let loaded = false;
+    let loaded = true;
     let loadedListeners = [];
     export async function loadRightMenuView() {
         if (!loaded) {
@@ -88,7 +94,7 @@
     paddingBottom={navigationBarHeight}
     backgroundColor="#99000000">
     {#if loaded}
-        <collectionview col="0" rowHeight="70" items={customSources} bind:this={collectionView}>
+        <collectionview id="collectionView" col="0" rowHeight="70" items={customSources} bind:this={collectionView}>
             <Template let:item>
                 <gridlayout paddingLeft="15" paddingRight="5" rows="*" columns="*,auto" on:longPress={showSourceOptions(item)}>
                     <canvaslabel color={item.layer.opacity === 0 ? 'grey' : 'white'}>

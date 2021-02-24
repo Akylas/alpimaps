@@ -16,6 +16,7 @@ import { EARTH_RADIUS } from '~/utils/geo';
 import { accentColor } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
 import mapStore from '~/stores/mapStore';
+import { ApplicationSettings } from '@nativescript/core';
 
 const LOCATION_ANIMATION_DURATION = 300;
 const SCREENSHOT_NOTIFICATION_ID = 23466571;
@@ -80,6 +81,9 @@ export default class UserLocationModule extends MapModule {
             this.localVectorDataSource = new LocalVectorDataSource({ projection });
 
             this.localVectorLayer = new VectorLayer({ visibleZoomRange: [0, 24], dataSource: this.localVectorDataSource });
+            this.localVectorLayer.setVectorElementEventListener<LatLonKeys>({
+                onVectorElementClicked: (data) => mapContext.vectorElementClicked(data)
+            });
             this.localBackVectorDataSource = new LocalVectorDataSource({ projection });
 
             this.localBackVectorLayer = new VectorLayer({
@@ -196,6 +200,9 @@ export default class UserLocationModule extends MapModule {
                 }
             });
             this.userMarker = new Point<LatLonKeys>({
+                metaData:{
+                    userMarker:'true'
+                },
                 position: posWithoutAltitude,
                 styleBuilder: {
                     size: 14,
@@ -236,11 +243,14 @@ export default class UserLocationModule extends MapModule {
     }
     onLocation(event: UserLocationdEventData) {
         if (mapStore.queryingLocation) {
+            this.geoHandler.dontWatchWhilePaused = ApplicationSettings.getBoolean('stopGPSWhilePaused', true);
             this.stopWatchLocation();
             mapStore.queryingLocation = false;
         }
         // const { android, ios, ...toPrint } = data.location;
-        // console.log('onLocation', this._userFollow, event.location, this.userFollow);
+        if (DEV_LOG) {
+            console.log('onLocation', this._userFollow, event.location, this.userFollow);
+        }
         if (event.error) {
             console.log(event.error);
             return;
@@ -258,22 +268,18 @@ export default class UserLocationModule extends MapModule {
         this.geoHandler = null;
     }
 
-    startWatchLocation() {
+    async startWatchLocation() {
         console.log('startWatchLocation', mapStore.watchingLocation, !!this.geoHandler);
         if (mapStore.watchingLocation || !this.geoHandler) {
             return;
         }
         this.userFollow = true;
-        return this.geoHandler
-            .enableLocation()
-            .then((r) => this.geoHandler.startWatch())
-            .then(() => {
-                mapStore.watchingLocation = true;
-                showSnack({
-                    message: lc('watching_location')
-                });
-                // console.log('started watching location');
-            });
+        await this.geoHandler.enableLocation();
+        await this.geoHandler.startWatch();
+        mapStore.watchingLocation = true;
+        showSnack({
+            message: lc('watching_location')
+        });
     }
     stopWatchLocation() {
         // console.log('stopWatchLocation');
@@ -283,12 +289,13 @@ export default class UserLocationModule extends MapModule {
             message: lc('stopped_watching_location')
         });
     }
-    askUserLocation() {
+    async askUserLocation() {
+        console.log('askUserLocation', !!this.geoHandler);
         this.userFollow = true;
-        return this.geoHandler.enableLocation().then(() => {
-            mapStore.queryingLocation = true;
-            this.startWatchLocation();
-        });
+        await this.geoHandler.enableLocation();
+        mapStore.queryingLocation = true;
+        this.geoHandler.dontWatchWhilePaused = false;
+        this.startWatchLocation();
     }
     onWatchLocation() {
         mapStore.queryingLocation = false;

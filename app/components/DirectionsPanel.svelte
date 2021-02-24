@@ -322,14 +322,6 @@
         }
         return false;
     }
-    function onVectorElementClicked(data: VectorElementEventData<LatLonKeys>) {
-        const { clickType, position, elementPos, metaData } = data;
-        // console.log('onVectorElementClicked', clickType, ClickType.LONG);
-        if (clickType === ClickType.LONG) {
-            handleClickOnPos(elementPos, metaData);
-            return true;
-        }
-    }
     export function onMapClicked(e) {
         const { clickType, position } = e.data;
         // console.log('onMapClicked', clickType, ClickType.LONG);
