@@ -56,9 +56,11 @@
 	
 }
 
-#landcover['mapnik::geometry_type'=3],
-#landuse['mapnik::geometry_type'=3] {
-  [name!=null][zoom>=14] {
+#landcover['mapnik::geometry_type'=3][name!=null],
+#landuse['mapnik::geometry_type'=3][name!=null] {
+  [class=industrial][zoom>=15],
+  [class=military][zoom>=15],
+  [zoom>=16] {
     text-name: @name;
     text-face-name: @mont;
 	text-min-distance:50;

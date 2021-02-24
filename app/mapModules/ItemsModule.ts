@@ -86,7 +86,7 @@ export default class ItemsModule extends MapModule {
             // this.localVectorDataSource.setGeometrySimplifier(new DouglasPeuckerGeometrySimplifier({ tolerance: 2 }));
             this.localVectorLayer = new VectorLayer({ visibleZoomRange: [0, 24], dataSource: this.localVectorDataSource });
             this.localVectorLayer.setVectorElementEventListener<LatLonKeys>({
-                onVectorElementClicked: (data) => mapContext.onVectorElementClicked(data)
+                onVectorElementClicked: (data) => mapContext.vectorElementClicked(data)
             });
 
             mapContext.addLayer(this.localVectorLayer, 'items');

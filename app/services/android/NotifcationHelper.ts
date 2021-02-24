@@ -159,12 +159,12 @@ export class NotificationHelper {
     /* Build context text for notification builder */
     // private static getSessionString(session: Session) {
     //     if (session.state === SessionState.RUNNING) {
-    //         return `${localize('distance')}: ${formatValueToUnit(session.currentDistance, UNITS.DistanceKm)} | ${localize('duration')}: ${convertDuration(
+    //         return `${localize('distance')}: ${formatValueToUnit(session.distance, UNITS.DistanceKm)} | ${localize('duration')}: ${convertDuration(
     //             Date.now() - session.startTime.valueOf() - session.pauseDuration,
     //             'HH:mm:ss'
     //         )}`;
     //     } else if (session.state === SessionState.PAUSED) {
-    //         return `${localize('distance')}: ${formatValueToUnit(session.currentDistance, UNITS.DistanceKm)} | ${localize('duration')}: ${convertDuration(
+    //         return `${localize('distance')}: ${formatValueToUnit(session.distance, UNITS.DistanceKm)} | ${localize('duration')}: ${convertDuration(
     //             session.lastPauseTime.valueOf() - session.startTime.valueOf() - session.pauseDuration,
     //             'HH:mm:ss'
     //         )}`;

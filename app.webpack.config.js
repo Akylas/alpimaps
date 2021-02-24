@@ -54,7 +54,8 @@ module.exports = (env, params = {}) => {
     console.log('env', env);
     env.appPath = nconfig.appPath;
     env.appResourcesPath = nconfig.appResourcesPath;
-    // env.modules = ['~/receivers/WeatherReceiver'];
+    env.modules = env.modules || [];
+    env.modules.push('~/services/android/BgService', '~/services/android/BgServiceBinder');
     const config = webpackConfig(env, params);
     const mode = production ? 'production' : 'development';
     const platform = env && ((env.android && 'android') || (env.ios && 'ios'));
