@@ -110,7 +110,6 @@
                 }
                 if (headingAccuracy !== data.accuracy) {
                     headingAccuracy = data.accuracy;
-                    console.log('headingAccuracy', headingAccuracy);
                 }
 
                 break;
