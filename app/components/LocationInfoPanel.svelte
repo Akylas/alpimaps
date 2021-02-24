@@ -6,14 +6,13 @@
         startListeningForSensor,
         stopListeningForSensor
     } from '@nativescript-community/sensors';
-    import { getAltitude } from '@nativescript-community/sensors/sensors.common';
+    import { estimateMagneticField, getAltitude } from '@nativescript-community/sensors/sensors';
     import { CanvasLabel } from '@nativescript-community/ui-canvaslabel';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { GridLayout } from '@nativescript/core';
     import type { ApplicationEventData } from '@nativescript/core/application';
     import { off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
     import { getNumber, getString, setNumber, setString } from '@nativescript/core/application-settings';
-    import { Accuracy } from '@nativescript/core/ui/enums';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
@@ -24,20 +23,12 @@
 </script>
 
 <script lang="ts">
+    import { VectorElementEventData } from '@nativescript-community/ui-carto/layers/vector';
     let geoHandler: GeoHandler;
     let gridLayout: NativeViewElementNode<GridLayout>;
     let firstCanvas: NativeViewElementNode<CanvasLabel>;
 
     let showLocationInfo = false;
-    const mapContext = getMapContext();
-
-    export function switchLocationInfo() {
-        showLocationInfo = !showLocationInfo;
-        if (showLocationInfo) {
-            loadView();
-        }
-    }
-
     let hasBarometer = isSensorAvailable('barometer');
     let listeningForBarometer = false;
     let airportPressure = getNumber('airport_pressure', null);
@@ -45,6 +36,23 @@
     let currentAltitude: number = null;
     let shownAltitude: number | string = null;
     let currentLocation: MapPos<LatLonKeys> = null;
+
+
+    const mapContext = getMapContext();
+    mapContext.onVectorElementClicked((data: VectorElementEventData<LatLonKeys>) => {
+        const { clickType, position, elementPos, metaData, element } = data;
+        // console.log('LocationInfoPanel onVectorElementClicked', clickType, position, metaData);
+        if ((metaData['userMarker'] as any) === true) {
+            switchLocationInfo();
+            return true;
+        }
+    });
+    export function switchLocationInfo() {
+        showLocationInfo = !showLocationInfo;
+        if (showLocationInfo) {
+            loadView();
+        }        
+    }
 
     export function getNativeView() {
         return gridLayout && gridLayout.nativeView;
@@ -111,8 +119,8 @@
             stopListeningForSensor('barometer', onSensor);
         }
     }
+   
     function startBarometerAltitudeUpdate() {
-        console.log('startBarometerAltitudeUpdate');
         if (!listeningForBarometer) {
             listeningForBarometer = true;
             startBarometer();
@@ -149,18 +157,22 @@
         });
     }
     function onSensor(data, sensor: string) {
-        if (sensor === 'barometer' && airportPressure != null) {
-            // we can compute altitude
-            if (airportPressure) {
-                // console.log('barometer', data.timestamp, data.pressure, airportPressure);
-                currentAltitude = Math.round(getAltitude(data.pressure, airportPressure));
-                stopBarometer();
-                if (listeningForBarometer) {
-                    setTimeout(() => {
-                        startBarometer();
-                    }, 5000);
+        switch (sensor) {
+            case 'barometer':
+                if (airportPressure != null) {
+                    // we can compute altitude
+                    if (airportPressure) {
+                        // console.log('barometer', data.timestamp, data.pressure, airportPressure);
+                        currentAltitude = Math.round(getAltitude(data.pressure, airportPressure));
+                        stopBarometer();
+                        if (listeningForBarometer) {
+                            setTimeout(() => {
+                                startBarometer();
+                            }, 5000);
+                        }
+                    }
                 }
-            }
+                break;
         }
     }
     let wasListeningForBarometerBeforePause = false;
@@ -207,7 +219,8 @@
     backgroundColor="#77000000"
     padding="6"
     columns="auto,*,auto"
-    on:swipe={() => (showLocationInfo = false)}>
+    on:swipe={() => switchLocationInfo()}
+>
     {#if loaded}
         <canvaslabel
             bind:this={firstCanvas}
@@ -216,7 +229,8 @@
             borderRadius="30"
             borderWidth="4"
             borderColor={accentColor}
-            backgroundColor="#aaffffff">
+            backgroundColor="#aaffffff"
+        >
             <!-- <cgroup verticalAlignment="center" textAlignment="center"> -->
             <cspan
                 text={currentLocation && currentLocation.speed !== undefined ? currentLocation.speed.toFixed() : '10'}

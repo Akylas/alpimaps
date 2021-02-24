@@ -60,12 +60,12 @@
     import { Sentry } from '~/utils/sentry';
     import { accentColor, screenHeightDips, screenWidthDips } from '~/variables';
     import { navigationBarHeight, primaryColor } from '../variables';
-    import { showBottomSheet } from './bottomsheet';
+    import { isBottomSheetOpened, showBottomSheet } from './bottomsheet';
     import BottomSheetInner from './BottomSheetInner.svelte';
     import DirectionsPanel from './DirectionsPanel.svelte';
     import LocationInfoPanel from './LocationInfoPanel.svelte';
-    import MapRightMenu from './MapRightMenu.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
+    // import LayersMenu from './LayersMenu.svelte';
     import Search from './Search.svelte';
     import { GenericGeoLocation } from '@nativescript-community/gps';
     import { Template } from 'svelte-native/components';
@@ -101,11 +101,11 @@
     }
     let page: NativeViewElementNode<Page>;
     let cartoMap: CartoMap<LatLonKeys>;
-    let rightMenu: MapRightMenu;
     let directionsPanel: DirectionsPanel;
     let bottomSheetInner: BottomSheetInner;
     let mapScrollingWidgets: MapScrollingWidgets;
     let locationInfoPanel: LocationInfoPanel;
+    // let layersMenu: LayersMenu;
     let drawer: NativeViewElementNode<Drawer>;
     let searchView: Search;
     const mapContext = getMapContext();
@@ -244,8 +244,8 @@
             getProjection: () => projection,
             getCurrentLanguage: () => currentLanguage,
             getSelectedItem: () => $selectedItem,
-            onVectorElementClicked,
-            onVectorTileClicked,
+            vectorElementClicked: onVectorElementClicked,
+            vectorTileClicked: onVectorTileClicked,
             getVectorTileDecoder,
             selectItem,
             unselectItem,
@@ -256,9 +256,9 @@
                 bottomSheetStepIndex = index;
             },
             toggleMenu: async (side = 'left') => {
-                if (side === 'bottom') {
-                    await rightMenu.loadRightMenuView();
-                }
+                // if (side === 'bottom') {
+                //     await layersMenu.loadRightMenuView();
+                // }
                 drawer.nativeView.toggle(side as any);
             },
             showOptions: showOptions,
@@ -321,6 +321,9 @@
         selectedPosMarker = null;
     });
     function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
+        if (isModalOpened() || isBottomSheetOpened()) {
+            return;
+        }
         data.cancel = true;
         Application.android.foregroundActivity.moveTaskToBack(true);
     }
@@ -354,7 +357,7 @@
 
     async function onMainMapReady(e) {
         cartoMap = e.object as CartoMap<LatLonKeys>;
-        console.log('onMainMapReady', cartoMap);
+        console.log('onMainMapReady');
         // CartoMap.setRunOnMainThread(false);
         setShowDebug(DEV_LOG);
         setShowInfo(DEV_LOG);
@@ -467,8 +470,11 @@
         zoom?: number;
     }) {
         didIgnoreAlreadySelected = false;
-        // console.log('selectItem', item, isFeatureInteresting);
+        // console.log('selectItem', item, isFeatureInteresting, item !== $selectedItem);
         if (isFeatureInteresting) {
+            if (item !== $selectedItem) {
+                unselectItem(false);
+            }
             if (item.route) {
                 const vectorElement = item.vectorElement as Line;
                 if (vectorElement) {
@@ -567,7 +573,8 @@
                                 }
                             }
                         })
-                        .catch((err) => console.error(err));
+                        .catch((err) =>             console.error('searchInGeocodingService', err, err['stack'])
+);
                 }
             }
 
@@ -630,7 +637,7 @@
             cartoMap.setFocusPos(item.position, 200);
         }
     }
-    export function unselectItem() {
+    export function unselectItem(updateBottomSheet = true) {
         if (!!$selectedItem) {
             const item = $selectedItem;
             $selectedItem = null;
@@ -648,7 +655,9 @@
                     vectorElement.width -= 2;
                 }
             }
-            bottomSheetStepIndex = 0;
+            if (updateBottomSheet) {
+                bottomSheetStepIndex = 0;
+            }
         }
     }
 
@@ -714,34 +723,34 @@
                 }
             }
         } catch (err) {
-            console.error(err);
+            console.error('handleSelectedRoutes', err, err['stack']);
         }
         selectedRoutes = null;
         handleSelectedRouteTimer = null;
     }
     function handleClickedFeatures(position: GenericGeoLocation<LatLonKeys>) {
         // console.log('handleClickedFeatures', clickedFeatures);
-        let fakeIndex= 0;
-        currentClickedFeatures = [...new Map(clickedFeatures.map(item => [JSON.stringify(item), item])).values()];
+        let fakeIndex = 0;
+        currentClickedFeatures = [...new Map(clickedFeatures.map((item) => [JSON.stringify(item), item])).values()];
         // if (currentClickedFeatures.length > 0) {
-            if (!selectedClickMarker) {
-                getOrCreateLocalVectorLayer();
-                const styleBuilder = new TextStyleBuilder({
-                    color: 'black',
-                    scaleWithDPI: true,
-                    borderWidth: 0,
-                    strokeWidth: 0,
-                    fontSize: 20,
-                    anchorPointX: 0.3,
-                    anchorPointY: -0.1
-                });
-                selectedClickMarker = new Text<LatLonKeys>({ position, projection, styleBuilder, text: '+' });
-                localVectorDataSource.add(selectedClickMarker);
-            } else {
-                selectedClickMarker.position = position;
-                selectedClickMarker.visible = true;
-            }
-            // console.log('handleClickedFeatures', currentClickedFeatures);
+        if (!selectedClickMarker) {
+            getOrCreateLocalVectorLayer();
+            const styleBuilder = new TextStyleBuilder({
+                color: 'black',
+                scaleWithDPI: true,
+                borderWidth: 0,
+                strokeWidth: 0,
+                fontSize: 20,
+                anchorPointX: 0.3,
+                anchorPointY: -0.1
+            });
+            selectedClickMarker = new Text<LatLonKeys>({ position, projection, styleBuilder, text: '+' });
+            localVectorDataSource.add(selectedClickMarker);
+        } else {
+            selectedClickMarker.position = position;
+            selectedClickMarker.visible = true;
+        }
+        // console.log('handleClickedFeatures', currentClickedFeatures);
         // }
         clickedFeatures = [];
     }
@@ -846,11 +855,17 @@
     }
     function onVectorElementClicked(data: VectorElementEventData<LatLonKeys>) {
         const { clickType, position, elementPos, metaData, element } = data;
+        if (DEV_LOG) {
+            console.log('onVectorElementClicked', clickType, position);
+        }
         Object.keys(metaData).forEach((k) => {
             metaData[k] = JSON.parse(metaData[k]);
         });
         const handledByModules = mapContext.runOnModules('onVectorElementClicked', data);
-        if (!handledByModules && clickType === ClickType.SINGLE) {
+        if (DEV_LOG) {
+            console.log('handledByModules', handledByModules);
+        }
+        if (!handledByModules && clickType === ClickType.SINGLE && Object.keys(metaData).length > 0) {
             const item: IItem = { position, vectorElement: element, ...metaData };
             // }
             if (item.id && $selectedItem && $selectedItem.id === item.id) {
@@ -1405,6 +1420,16 @@
                 color: keepAwakeEnabled ? 'red' : 'green',
                 id: 'keep_awake',
                 icon: keepAwakeEnabled ? 'mdi-sleep' : 'mdi-sleep-off'
+            },
+            {
+                title: lt('compass'),
+                id: 'compass',
+                icon: 'mdi-compass'
+            },
+            {
+                title: lt('bug'),
+                id: 'bug',
+                icon: 'mdi-bug'
             }
         ];
         if (packageServiceEnabled) {
@@ -1442,7 +1467,84 @@
                 case 'offline_packages':
                     downloadPackages();
                     break;
+                case 'bug':
+                    sendBug();
+                    break;
+                case 'compass':
+                    showCompass();
+                    break;
             }
+        }
+    }
+
+    async function sendBug() {
+        login({
+            title: lc('send_bug_report'),
+            message: lc('send_bug_report_desc'),
+            okButtonText: l('send'),
+            cancelButtonText: l('cancel'),
+            autoFocus: true,
+            usernameTextFieldProperties: {
+                marginLeft: 10,
+                marginRight: 10,
+                autocapitalizationType: 'none',
+                keyboardType: 'email',
+                autocorrect: false,
+                error: lc('email_required'),
+                hint: lc('email')
+            },
+            passwordTextFieldProperties: {
+                marginLeft: 10,
+                marginRight: 10,
+                error: lc('please_describe_error'),
+                secure: false,
+                hint: lc('description')
+            },
+            beforeShow: (options, usernameTextField: TextField, passwordTextField: TextField) => {
+                usernameTextField.on('textChange', (e: any) => {
+                    const text = e.value;
+                    if (!text) {
+                        usernameTextField.error = lc('email_required');
+                    } else if (!mailRegexp.test(text)) {
+                        usernameTextField.error = lc('non_valid_email');
+                    } else {
+                        usernameTextField.error = null;
+                    }
+                });
+                passwordTextField.on('textChange', (e: any) => {
+                    const text = e.value;
+                    if (!text) {
+                        passwordTextField.error = lc('description_required');
+                    } else {
+                        passwordTextField.error = null;
+                    }
+                });
+            }
+        }).then((result) => {
+            if (result.result) {
+                if (!result.userName || !mailRegexp.test(result.userName)) {
+                    showError(new Error(lc('email_required')));
+                    return;
+                }
+                if (!result.password || result.password.length === 0) {
+                    showError(new Error(lc('description_required')));
+                    return;
+                }
+                Sentry.withScope((scope) => {
+                    scope.setUser({ email: result.userName });
+                    Sentry.captureMessage(result.password);
+                    alert(l('bug_report_sent'));
+                });
+            }
+        });
+    }
+
+    async function showCompass() {
+        try {
+            const CompassView = (await import('./CompassView.svelte')).default;
+            await showBottomSheet({ parent: page, view: CompassView, transparent: true });
+        } catch (err) {
+            console.error('showCompass', err, err['stack']);
         }
     }
 </script>
@@ -1452,9 +1554,10 @@
         bind:this={drawer}
         translationFunction={drawerTranslationFunction}
         bottomOpenedDrawerAllowDraging={true}
+        bottomClosedDrawerAllowDraging={false}
         backgroundColor="#E3E1D3"
     >
-        <MapRightMenu prop:bottomDrawer bind:this={rightMenu} />
+        <!-- <LayersMenu prop:bottomDrawer bind:this={layersMenu} /> -->
         <cartomap
             zoom="16"
             on:mapReady={onMainMapReady}
@@ -1604,7 +1707,12 @@
             >
                 <Template let:item>
                     <canvaslabel padding="0 20 0 20">
-                        <cspan text={`${item.layer}: ${item.data.class}, ${item.data.subclass} (${item.data.name || ''})`} verticalAlignment="center" fontSize="14" color="white"/>
+                        <cspan
+                            text={`${item.layer}: ${item.data.class}, ${item.data.subclass} (${item.data.name || ''})`}
+                            verticalAlignment="center"
+                            fontSize="14"
+                            color="white"
+                        />
                     </canvaslabel>
                 </Template>
             </collectionview>

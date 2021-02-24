@@ -41,15 +41,14 @@ export function getDataFolder() {
         };
         if (checkExternalMedia()) {
             const nArray = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
-            const result = [];
-            for (let index = 0; index < nArray.length; index++) {
-                const element = nArray[index];
-                if (element) {
-                    result.push(element);
+            const count = nArray.length;
+            if (nArray.length > 1) {
+                for (let i = count - 1; i >= 0; i--) {
+                    dataFolder = nArray[i]?.getAbsolutePath();
+                    if (dataFolder) {
+                        break;
+                    }
                 }
-            }
-            if (result.length > 1) {
-                dataFolder = result[result.length - 1]?.getAbsolutePath();
             }
         }
     }
