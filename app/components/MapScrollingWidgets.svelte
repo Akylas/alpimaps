@@ -20,6 +20,7 @@
     import { resolveComponentElement } from './bottomsheet';
     import OptionPicker from './OptionPicker.svelte';
     import ScaleView from './ScaleView.svelte';
+    import { showBottomSheet } from './bottomsheet';
     import mapStore from '~/stores/mapStore';
     import { AnimationCurve } from '@nativescript/core/ui/enums';
     import { asSvelteTransition } from 'svelte-native/transitions';
@@ -258,6 +259,17 @@
             module.addWayPoint(selectedItem.position, selectedItem.properties);
         }
     }
+
+    async function showMapRightMenu() {
+        // mapContext.toggleMenu('bottom');
+        const LayersMenu = (await import('~/components/LayersMenu.svelte')).default;
+                    const results = await showBottomSheet({
+                        view: LayersMenu,
+                        transparent:true,
+                        disableDimBackground:true,
+                        trackingScrollView:'collectionView'
+                    });
+    }
 </script>
 
 <gridlayout
@@ -268,6 +280,7 @@
     columns="70,*,70"
     isPassThroughParentEnabled={true}
     marginTop={globalMarginTop}
+    {userInteractionEnabled}
 >
     {#if packageServiceEnabled}
         <label
@@ -315,7 +328,7 @@
     </stacklayout>
     <button
         marginTop="80"
-        on:tap={() => mapContext.toggleMenu('bottom')}
+        on:tap={showMapRightMenu}
         class="small-floating-btn"
         text="mdi-layers"
         row="2"
