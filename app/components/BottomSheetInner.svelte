@@ -26,7 +26,7 @@
     import { networkService } from '~/services/NetworkService';
     import { showBottomSheet } from './bottomsheet';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-import { l } from '@nativescript-community/l';
+    import { l } from '@nativescript-community/l';
 
     export const LISTVIEW_HEIGHT = 200;
     export const PROFILE_HEIGHT = 150;
@@ -79,15 +79,28 @@ import { l } from '@nativescript-community/l';
         graphAvailable = itemIsRoute && !!item.route.profile && !!item.route.profile.data && item.route.profile.data.length > 0;
     }
     $: {
-        itemIsRoute = item && !!item.route;
-        itemCanQueryProfile = itemIsRoute && !!item.route.positions;
-        updateGraphAvailable();
-        updateSteps();
+        try {
+            itemIsRoute = item && !!item.route;
+            itemCanQueryProfile = itemIsRoute && !!item.route.positions;
+            updateGraphAvailable();
+            if (graphAvailable) {
+                updateChartData();
+            }
+            updateSteps();
+        } catch (err) {
+            console.error('item changed', !!err, err, err.stack);
+            // showError(err);
+        }
     }
 
     $: {
-        if (chart && graphAvailable) {
-            updateChartData();
+        try {
+            if (chart && graphAvailable) {
+                updateChartData();
+            }
+        } catch (err) {
+            console.error('updateChartData', !!err, err, err.stack);
+            showError(err);
         }
     }
 
@@ -150,6 +163,10 @@ import { l } from '@nativescript-community/l';
     // $: console.log('updateSteps changed', steps);
 
     function updateSteps() {
+        if (!item) {
+            steps = [0];
+            return;
+        }
         let total = 70;
         const result = [0, total];
         total += 50;
@@ -174,18 +191,20 @@ import { l } from '@nativescript-community/l';
         try {
             updatingItem = true;
             const profile = await packageService.getElevationProfile(item);
-            // item.route.profile = profile;
-            if (item.id !== undefined) {
-                await updateItem(item, { route: { profile } } as any);
-            } else {
-                await saveItem(false);
+            if (profile) {
+                // item.route.profile = profile;
+                if (item.id !== undefined) {
+                    await updateItem(item, { route: { profile } } as any);
+                } else {
+                    await saveItem(false);
+                }
+                updateGraphAvailable();
+                updateSteps();
+                if (graphAvailable) {
+                    updateChartData();
+                }
+                mapContext.setBottomSheetStepIndex(3);
             }
-            updateGraphAvailable();
-            updateSteps();
-            if (graphAvailable) {
-                updateChartData();
-            }
-            mapContext.setBottomSheetStepIndex(3);
         } catch (err) {
             showError(err);
         } finally {
@@ -263,6 +282,7 @@ import { l } from '@nativescript-community/l';
         if (!chart) {
             return;
         }
+        console.log('updateChartData');
         const chartView = chart.nativeView;
         const sets = [];
         const profile = item.route.profile;
@@ -355,9 +375,17 @@ import { l } from '@nativescript-community/l';
                 const lineData = new LineData(sets);
                 chartView.setData(lineData);
             } else {
+                console.log('update data set values');
                 chartView.highlightValues(null);
-                const dataSet = chartData.getDataSetByIndex(0);
-                dataSet.setValues(profileData);
+                const set = chartData.getDataSetByIndex(0);
+                set.setValues(profileData);
+                if (profile.colors && profile.colors.length > 0) {
+                    set.setLineWidth(2);
+                    set.setColors(profile.colors);
+                } else {
+                    set.setLineWidth(1);
+                    set.setColor('#60B3FC');
+                }
                 chartView.getData().notifyDataChanged();
                 chartView.notifyDataSetChanged();
             }

@@ -28,6 +28,7 @@ import { Button } from '@nativescript-community/ui-material-button';
 // import { TextField } from '@nativescript-community/ui-material-textfield';
 import { CardView } from '@nativescript-community/ui-material-cardview';
 import { PersistentBottomSheet } from '@nativescript-community/ui-persistent-bottomsheet';
+import { SVGView } from '@nativescript-community/ui-svg';
 import { BgService } from './services/BgService';
 import { Application, Trace } from '@nativescript/core';
 import { networkService } from './services/NetworkService';
@@ -73,6 +74,7 @@ registerNativeViewElement('image', () => Img as any, null, {}, { override: true 
 registerNativeViewElement('canvaslabel', () => CanvasLabel as any);
 registerNativeViewElement('cspan', () => Span as any);
 registerNativeViewElement('cgroup', () => Group as any);
+registerNativeViewElement('svgview', () => SVGView);
 // registerNativeViewElement('mdspeeddial', () => SpeedDial);
 // registerNativeViewElement('mdspeeddialitem', () => SpeedDialItem);
 registerNativeViewElement('bottomsheet', () => PersistentBottomSheet as any);
@@ -94,25 +96,26 @@ themer.createShape('round', {
     }
 });
 
-if (DEV_LOG) {
-    // Trace.addCategories(GPSTraceCategory);
-    // Trace.enable();
-}
+// if (DEV_LOG) {
+//     Trace.addCategories(GPSTraceCategory);
+//     Trace.enable();
+// }
 
+// we need to instantiate it to "start" it
 const bgService = new BgService();
 Application.on(Application.launchEvent, () => {
     initialize({ isDownsampleEnabled: true });
 
-    if (global.isAndroid) {
-        bgService.start();
-        networkService.start();
-        // const receiverCallback = (androidContext, intent: android.content.Intent) => {
-        //     console.log('receiverCallback', intent.getAction(), intent.getAction() === android.content.Intent.ACTION_SCREEN_ON);
-        // (Vue.prototype.$getAppComponent() as App).$emit('screen', intent.getAction() === android.content.Intent.ACTION_SCREEN_ON);
-        // };
-        // application.android.registerBroadcastReceiver(android.content.Intent.ACTION_SCREEN_ON, receiverCallback);
-        // application.android.registerBroadcastReceiver(android.content.Intent.ACTION_SCREEN_OFF, receiverCallback);
-    }
+    // if (global.isAndroid) {
+    // bgService.start();
+    networkService.start();
+    // const receiverCallback = (androidContext, intent: android.content.Intent) => {
+    //     console.log('receiverCallback', intent.getAction(), intent.getAction() === android.content.Intent.ACTION_SCREEN_ON);
+    // (Vue.prototype.$getAppComponent() as App).$emit('screen', intent.getAction() === android.content.Intent.ACTION_SCREEN_ON);
+    // };
+    // application.android.registerBroadcastReceiver(android.content.Intent.ACTION_SCREEN_ON, receiverCallback);
+    // application.android.registerBroadcastReceiver(android.content.Intent.ACTION_SCREEN_OFF, receiverCallback);
+    // }
 });
 Application.on(Application.exitEvent, () => {
     shutDown();
@@ -122,10 +125,6 @@ Application.on(Application.exitEvent, () => {
     // application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_OFF);
     // }
 });
-if (global.isIOS) {
-    bgService.start();
-    networkService.start();
-}
 
 import Map from '~/components/Map.svelte';
 svelteNative(Map, {});
