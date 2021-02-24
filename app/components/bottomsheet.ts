@@ -6,7 +6,7 @@ import { PageSpec } from 'svelte-native/dom/navigation';
 
 export interface ShowBottomSheetOptions extends Omit<BottomSheetOptions, 'view'> {
     view: PageSpec;
-    parent: NativeViewElementNode<View> | View;
+    parent?: NativeViewElementNode<View> | View;
     props?: any;
 }
 interface ComponentInstanceInfo {
