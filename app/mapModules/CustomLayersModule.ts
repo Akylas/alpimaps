@@ -179,7 +179,7 @@ export default class CustomLayersModule extends MapModule {
         layer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
         layer.setVectorTileEventListener<LatLonKeys>(
             {
-                onVectorTileClicked: (e) => mapContext.onVectorTileClicked(e)
+                onVectorTileClicked: (e) => mapContext.vectorTileClicked(e)
             },
             mapContext.getProjection()
         );
@@ -517,7 +517,7 @@ export default class CustomLayersModule extends MapModule {
                 // layer.setBuildingRenderOrder(VectorTileRenderOrder.LAYER);
                 layer.setVectorTileEventListener<LatLonKeys>(
                     {
-                        onVectorTileClicked: mapContext.onVectorTileClicked
+                        onVectorTileClicked: mapContext.vectorTileClicked
                     },
                     mapContext.getProjection()
                 );
@@ -612,7 +612,7 @@ export default class CustomLayersModule extends MapModule {
             mapContext.addLayer(data.layer, 'hillshade');
             // return Promise.all(
         } catch (err) {
-            console.error(err);
+            console.error('loadLocalMbtiles', err);
             setTimeout(() => {
                 throw err;
             }, 0);
@@ -635,7 +635,7 @@ export default class CustomLayersModule extends MapModule {
                 }
             })
             .catch((err) => {
-                console.error(err);
+                console.error('selectLocalMbtilesFolder', err);
                 setTimeout(() => {
                     throw err;
                 }, 0);

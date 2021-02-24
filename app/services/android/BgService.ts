@@ -1,11 +1,3 @@
-import { $t } from '~/helpers/locale';
-import {
-    ApplicationEventData,
-    off as applicationOff,
-    on as applicationOn,
-    resumeEvent,
-    suspendEvent
-} from '@nativescript/core/application';
 import {
     GeoHandler,
     SessionChronoEvent,
@@ -14,33 +6,24 @@ import {
     SessionState,
     SessionStateEvent
 } from '~/handlers/GeoHandler';
+import { lc } from '~/helpers/locale';
 import { BgServiceBinder } from '~/services/android/BgServiceBinder';
 import { ACTION_PAUSE, ACTION_RESUME, NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL, NotificationHelper } from './NotifcationHelper';
 
-function titlecase(value) {
-    return value.replace(/\w\S*/g, function (txt) {
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-    });
-}
-const DEFAULT_TEXT = titlecase($t('tap_to_open'));
-const NOTIFICATION_ID = 3426824;
+const NOTIFICATION_ID = 3426124;
 
+@NativeClass
 @JavaProxy('akylas.alpi.maps.BgService')
 export class BgService extends android.app.Service {
-    geoHandler: GeoHandler;
-    builder: androidx.core.app.NotificationCompat.Builder;
-    recording = false;
     currentNotifText: string;
-    inBackground = false;
-    bounded = false;
+    geoHandler: GeoHandler;
+    bounded: boolean;
+    mNotificationBuilder: androidx.core.app.NotificationCompat.Builder;
+    mNotification: globalAndroid.app.Notification;
+    notificationManager: any;
+    recording: boolean;
+    alwaysShowNotification: boolean;
 
-    alwaysShowNotification = false;
-
-    notificationManager: android.app.NotificationManager;
-
-    constructor() {
-        super();
-    }
     onStartCommand(intent: android.content.Intent, flags: number, startId: number) {
         super.onStartCommand(intent, flags, startId);
         const action = intent ? intent.getAction() : null;
@@ -52,10 +35,12 @@ export class BgService extends android.app.Service {
         return android.app.Service.START_STICKY;
     }
     onCreate() {
-        this.currentNotifText = DEFAULT_TEXT;
+        this.currentNotifText = lc('tap_to_open');
         this.recording = false;
-        this.inBackground = false;
-        this.alwaysShowNotification = false; // oreo
+        // this.inBackground = false;
+        this.bounded = false;
+        this.alwaysShowNotification = false;
+        // this.alwaysShowNotification = android.os.Build.VERSION.SDK_INT >= 26; // oreo
         this.notificationManager = this.getSystemService(android.content.Context.NOTIFICATION_SERVICE);
         NotificationHelper.createNotificationChannel(this);
     }
@@ -65,8 +50,8 @@ export class BgService extends android.app.Service {
             this.geoHandler.off(SessionChronoEvent, this.onSessionChronoEvent, this);
             this.geoHandler = null;
         }
-        applicationOff(resumeEvent, this.onAppEvent, this);
-        applicationOff(suspendEvent, this.onAppEvent, this);
+        // applicationOff(resumeEvent, this.onAppEvent, this);
+        // applicationOff(suspendEvent, this.onAppEvent, this);
     }
 
     onBind(intent: android.content.Intent) {
@@ -77,6 +62,7 @@ export class BgService extends android.app.Service {
         return result;
     }
     onUnbind(intent: android.content.Intent) {
+        console.log('onUnbind');
         this.bounded = false;
         this.removeForeground();
         // return true if you would like to have the service's onRebind(Intent) method later called when new clients bind to it.
@@ -86,8 +72,18 @@ export class BgService extends android.app.Service {
         // a client is binding to the service with bindService(), after onUnbind() has already been called
     }
 
-    private mNotification: android.app.Notification;
-    private mNotificationBuilder: androidx.core.app.NotificationCompat.Builder;
+    onBounded() {
+        this.geoHandler = new GeoHandler();
+        this.geoHandler.bgService =  new WeakRef(this as any);
+        this.showForeground();
+        this.geoHandler.on(SessionStateEvent, this.onSessionStateEvent, this);
+        this.geoHandler.on(SessionChronoEvent, this.onSessionChronoEvent, this);
+        // applicationOn(resumeEvent, this.onAppEvent, this);
+        // applicationOn(suspendEvent, this.onAppEvent, this);
+    }
+
+    // private mNotification: android.app.Notification;
+    // private mNotificationBuilder: androidx.core.app.NotificationCompat.Builder;
     displayNotification(sessionRunning) {
         this.mNotificationBuilder = new androidx.core.app.NotificationCompat.Builder(
             this,
@@ -97,24 +93,21 @@ export class BgService extends android.app.Service {
         this.mNotification = NotificationHelper.getNotification(this, this.mNotificationBuilder, this.geoHandler.currentSession);
         this.notificationManager.notify(NOTIFICATION_ID, this.mNotification); // todo check if necessary in pre Android O
     }
-    dismissNotification() {
-        // cancel notification
-        this.notificationManager.cancel(NOTIFICATION_ID); // todo check if necessary?
-        this.stopForeground(android.app.Service.STOP_FOREGROUND_REMOVE);
-        this.mNotification = null;
-    }
-    private onSessionStateEvent(e: SessionEventData) {
+
+    onSessionStateEvent(e: SessionEventData) {
+        // const { positions, ...noLocs } = e.data;
         switch (e.data.state) {
             case SessionState.RUNNING:
                 this.recording = true;
+                this.updateNotification();
                 break;
             case SessionState.STOPPED:
                 this.recording = false;
+                this.removeForeground();
                 break;
         }
-        this.updateNotification();
     }
-    protected updateNotification() {
+    updateNotification() {
         if (!this.mNotificationBuilder) {
             this.displayNotification(this.recording);
         } else {
@@ -126,50 +119,47 @@ export class BgService extends android.app.Service {
             this.notificationManager.notify(NOTIFICATION_ID, this.mNotification);
         }
     }
-    protected onSessionChronoEvent(e: SessionChronoEventData) {
+    onSessionChronoEvent(e: SessionChronoEventData) {
         this.updateNotification();
     }
 
-    showForeground() {
+    showForeground(force = false) {
         if (!this.bounded) {
             return;
         }
-        if (this.inBackground || this.recording || this.alwaysShowNotification) {
+        if (force || this.recording || this.alwaysShowNotification) {
             try {
                 if (!this.mNotification) {
                     this.displayNotification(this.recording);
                 }
                 this.startForeground(NOTIFICATION_ID, this.mNotification);
             } catch (err) {
-                console.error(err);
+                console.error('showForeground', err, err['stack']);
             }
         }
     }
 
     removeForeground() {
-        this.stopForeground(android.app.Service.STOP_FOREGROUND_DETACH);
+        console.log('removeForeground');
+        this.stopForeground(false);
         this.notificationManager.cancel(NOTIFICATION_ID);
+        this.mNotification = null;
     }
-    onAppEvent(event: ApplicationEventData) {
-        if (event.eventName === suspendEvent) {
-            if (!this.inBackground) {
-                this.inBackground = true;
-            }
-        } else if (event.eventName === resumeEvent) {
-            if (this.inBackground) {
-                this.inBackground = false;
-                // if (!this.alwaysShowNotification) {
-                // this.removeForeground();
-                // }
-            }
+
+    onGlassesDisconnected() {
+        if (!this.recording) {
+            this.removeForeground();
         }
     }
-    onBounded() {
-        this.geoHandler = new GeoHandler();
-        this.geoHandler.on(SessionStateEvent, this.onSessionStateEvent, this);
-        this.geoHandler.on(SessionChronoEvent, this.onSessionChronoEvent, this);
-        applicationOn(resumeEvent, this.onAppEvent, this);
-        applicationOn(suspendEvent, this.onAppEvent, this);
-        // this.showForeground();
-    }
+    // onAppEvent(event: ApplicationEventData) {
+    //     if (event.eventName === suspendEvent) {
+    //         if (!this.inBackground) {
+    //             this.inBackground = true;
+    //         }
+    //     } else if (event.eventName === resumeEvent) {
+    //         if (this.inBackground) {
+    //             this.inBackground = false;
+    //         }
+    //     }
+    // }
 }

@@ -11,7 +11,4 @@ export class BgService extends BgServiceCommon {
         this.geoHandler.bgService = new WeakRef(this as any);
         this._handlerLoaded();
     }
-    // updateNotifText(text: string) {}
-    stop() {}
-    start() {}
 }

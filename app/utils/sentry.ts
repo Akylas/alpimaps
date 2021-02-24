@@ -21,6 +21,6 @@ export async function startSentry() {
             isSentryEnabled = true;
         }
     } catch (err) {
-        console.error(err);
+        console.error('startSentry', err, err['stack']);
     }
 }

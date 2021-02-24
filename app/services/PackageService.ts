@@ -813,9 +813,11 @@ class PackageService extends Observable {
         result.dmin = Math.round(-descent);
         result.dplus = Math.round(ascent);
         result.colors = colors;
+        console.log(JSON.stringify(colors))
         return result;
     }
     async getElevationProfile(item: Item) {
+ 
         if (this.hillshadeLayer && item.route) {
             if (DEV_LOG) {
                 console.log('getElevationProfile', item.route);

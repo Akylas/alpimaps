@@ -216,7 +216,7 @@
                 animatedClusters: true
             });
             _searchLayer.setVectorElementEventListener<LatLonKeys>({
-                onVectorElementClicked: (data) => mapContext.onVectorElementClicked(data)
+                onVectorElementClicked: (data) => mapContext.vectorElementClicked(data)
             });
             mapContext.addLayer(_searchLayer, 'search');
         }
@@ -522,7 +522,7 @@
     backgroundColor={focused ? '#99000000' : '#55000000'}
     borderRadius={searchResultsVisible ? 10 : 25}
     margin={`${globalMarginTop + 10} 10 10 10`}>
-    <button variant="text" class="icon-btn-white" text="mdi-menu" on:tap={() => showMenu('left')} />
+    <button variant="text" class="icon-btn-white" text="mdi-magnify" on:tap={() => showMenu('left')} />
     <textfield
         bind:this={textField}
         variant="none"
