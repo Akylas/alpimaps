@@ -217,7 +217,7 @@
 </script>
 
 <gridLayout {height}>
-    <canvaslabel color="white" padding="16">
+    <canvaslabel padding="16">
         <cspan text={currentPressure} fontSize="16" textAlignment="right" />
         <cgroup
             visibility={!!referencePressure ? 'visible' : 'hidden'}
@@ -247,16 +247,16 @@
             class="icon-btn"
             text="mdi-gauge"
             on:tap={switchBarometer}
-            color={listeningForBarometer ? primaryColor : 'white'}
+            color={listeningForBarometer ? primaryColor : undefined}
         />
-        <button variant="text" class="icon-btn" text="mdi-airplane" on:tap={getNearestAirportPressure} color="white" />
-        <button variant="text" class="icon-btn" text="mdi-refresh" on:tap={resetReference} color="white" />
+        <button variant="text" class="icon-btn" text="mdi-airplane" on:tap={getNearestAirportPressure}/>
+        <button variant="text" class="icon-btn" text="mdi-refresh" on:tap={resetReference} />
         <button
             variant="text"
             class="icon-btn"
             text="mdi-crosshairs-gps"
             on:tap={askUserLocation}
-            color={$mapStore.watchingLocation || $mapStore.queryingLocation ? primaryColor : 'white'}
+            color={$mapStore.watchingLocation || $mapStore.queryingLocation ? primaryColor : undefined}
         />
     </stacklayout>
 </gridLayout>
