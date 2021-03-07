@@ -1,15 +1,13 @@
-<script lang="ts" context="module">
+<script lang="ts">
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
     import { convertDuration, osmicon, convertElevation, convertValueToUnit, UNITS } from '~/helpers/formatter';
     import type { IItem as Item } from '~/models/Item';
     import type { RouteInstruction } from '~/models/Route';
-    import { mdiFontFamily } from '~/variables';
+    import { mdiFontFamily, subtitleColor } from '~/variables';
     import { formatter } from '~/mapModules/ItemFormatter';
     const PROPS_TO_SHOW = ['ele'];
-</script>
 
-<script lang="ts">
     export let item: Item;
     let itemIcon: string[] = null;
     let itemTitle: string = null;
@@ -175,7 +173,7 @@
     }
 </script>
 
-<canvaslabel {...$$restProps} fontSize="16" color="white" padding="10 10 4 10">
+<canvaslabel {...$$restProps} fontSize="16" padding="10 10 4 10">
     <cspan horizontalAlignment="left" verticalAlignment="top" text={routeInstruction && routeInstruction.inst} fontSize={15} />
     <cgroup verticalAlignment="middle" paddingBottom={(itemSubtitle ? 4 : 0) + (propsToDraw.length > 0 ? 12 : 0)}>
         <cspan
@@ -200,21 +198,23 @@
         paddingLeft="40"
         paddingBottom={(itemSubtitle ? 4 : 0) + (propsToDraw.length > 0 ? 12 : 0)}
         verticalAlignment="middle"
-        textAlignment="left">
+        textAlignment="left"
+    >
         <cspan
             text={itemTitle}
             fontWeight="bold"
-            color={routeDuration ? '#01B719' : 'white'}
+            color={routeDuration ? '#01B719' : undefined}
             :fontSize={routeInstruction ? 10 : 16}
             :paddingTop={routeInstruction ? 18 : 0}
         />
-        <cspan text={itemSubtitle ? '\n' + itemSubtitle : ''} color="#D0D0D0" fontSize={13} maxLines={2}/>
+        <cspan text={itemSubtitle ? '\n' + itemSubtitle : ''} color={$subtitleColor} fontSize={13} maxLines={2} />
     </cgroup>
     <cgroup
         fontSize="14"
         verticalAlignment="bottom"
         textAlignment="left"
-        visibility={propsToDraw.length > 0 ? 'visible' : 'hidden'}>
+        visibility={propsToDraw.length > 0 ? 'visible' : 'hidden'}
+    >
         {#each propsToDraw as prop, index}
             <cgroup>
                 <cspan fontFamily={mdiFontFamily} color="gray" text={propIcon(prop) + ' '} />

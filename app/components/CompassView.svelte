@@ -132,7 +132,7 @@
 </script>
 
 <gridLayout {height}>
-    <label color="white" text={headingAccuracy} verticalAlignment="top" />
+    <label text={headingAccuracy} verticalAlignment="top" />
     <svgview src="~/assets/svgs/needle_background.svg" stretch="aspectFit" horizontalAlignment="center" />
     <svgview src="~/assets/svgs/needle.svg" stretch="aspectFit" horizontalAlignment="center" rotate={-currentHeading} />
     <image

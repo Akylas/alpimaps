@@ -2,7 +2,7 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- theme to use FOR launch screen-->
-    <style name="LaunchScreenThemeBase" parent="Theme.MaterialComponents.NoActionBar">
+    <style name="LaunchScreenThemeBase" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="toolbarStyle">@style/NativeScriptToolbarStyle</item>
 
         <item name="colorPrimary">@color/colorPrimary</item>
@@ -20,7 +20,7 @@
     </style>
 
     <!-- theme to use AFTER launch screen is loaded-->
-    <style name="AppThemeBase" parent="Theme.MaterialComponents.NoActionBar">
+    <style name="AppThemeBase" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="toolbarStyle">@style/NativeScriptToolbarStyle</item>
         <item name="android:windowTranslucentStatus">true</item>
         <item name="colorPrimary">@color/colorPrimary</item>
@@ -30,6 +30,11 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
+    </style>
+    <style name="WindowAnimationTransition">
+        <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:windowExitAnimation">@android:anim/fade_out</item>
     </style>
 
     <style name="AppTheme" parent="AppThemeBase">

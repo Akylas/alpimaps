@@ -1,7 +1,7 @@
 // (com as any).tns.Runtime.getCurrentRuntime().enableVerboseLogging();
 import { setGeoLocationKeys } from '@nativescript-community/gps';
 import { installMixins as installUIMixins } from '@nativescript-community/systemui';
-import { overrideSpanAndFormattedString } from '@nativescript-community/text';
+import { createNativeAttributedString, overrideSpanAndFormattedString } from '@nativescript-community/text';
 import { setMapPosKeys } from '@nativescript-community/ui-carto/core';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
 import DrawerElement from '@nativescript-community/ui-drawer/svelte';
@@ -15,14 +15,15 @@ import Map from '~/components/Map.svelte';
 import { install as installLogging } from '~/utils/logging';
 import { startSentry } from '~/utils/sentry';
 import './app.scss';
-import { BgService } from './services/BgService';
-import { networkService } from './services/NetworkService';
+import { BgService } from '~/services/BgService';
+import { networkService } from '~/services/NetworkService';
 startSentry();
 installLogging();
 installMixins();
 installBottomSheets();
 installUIMixins();
 overrideSpanAndFormattedString();
+console.log('test', createNativeAttributedString);
 
 // we need to use lat lon
 setMapPosKeys('lat', 'lon');
@@ -80,6 +81,11 @@ registerNativeViewElement(
 registerNativeViewElement('symbolshape', () => require('~/components/SymbolShape').default);
 CollectionViewElement.register();
 DrawerElement.register();
+
+import { start } from '~/helpers/theme';
+// on startup we need to ensure theme is loaded because of a mixin
+// on startup we need to say what we are using
+start();
 
 if (global.isIOS) {
     const variables = require('~/variables');

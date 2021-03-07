@@ -20,8 +20,14 @@ export function onLanguageChanged(callback) {
 }
 
 $lang.subscribe((newLang: string) => {
+    if (lang === newLang) {
+        return;
+    }
     lang = newLang;
-    // console.log('changed lang', lang, Device.region);
+    if (lang === null) {
+        return;
+    }
+    console.log('changed lang', lang, newLang, Device.region);
     try {
         require(`dayjs/locale/${newLang}`);
     } catch (err) {
@@ -54,15 +60,9 @@ function setLang(newLang) {
     if (supportedLanguages.indexOf(newLang) === -1) {
         newLang = 'en';
     }
-    console.log('changed lang', lang, Device.region);
+    console.log('changed lang', newLang, Device.region);
     currentLocale = null;
     $lang.set(newLang);
-}
-
-let deviceLanguage = getString('language');
-if (!deviceLanguage) {
-    deviceLanguage = Device.language.split('-')[0].toLowerCase();
-    setString('language', deviceLanguage);
 }
 // console.log('deviceLanguage', deviceLanguage);
 function getOwmLanguage(language) {
@@ -80,14 +80,12 @@ function getOwmLanguage(language) {
     }
 }
 
-
 function titlecase(value) {
     return value.replace(/\w\S*/g, function (txt) {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
 }
 export function getLocaleDisplayName(locale?) {
-    console.log('getLocaleDisplayName', locale);
     if (global.isIOS) {
         if (!currentLocale) {
             currentLocale = NSLocale.alloc().initWithLocaleIdentifier(lang);
@@ -100,7 +98,6 @@ export function getLocaleDisplayName(locale?) {
         return titlecase(java.util.Locale.forLanguageTag(locale || lang).getDisplayLanguage(currentLocale));
     }
 }
-
 
 export async function selectLanguage() {
     try {
@@ -142,7 +139,7 @@ export function convertDuration(date, formatStr: string = 'H [hrs], m [min]') {
 
 prefs.on('key:language', () => {
     const newLanguage = getString('language');
-    console.log('language changed', newLanguage);
+    console.log('key language changed', newLanguage);
     // on pref change we are updating
     if (newLanguage === lang) {
         return;
@@ -150,7 +147,14 @@ prefs.on('key:language', () => {
     setLang(newLanguage);
 });
 
-setLang(deviceLanguage);
+
+let currentLanguage = getString('language');
+if (!currentLanguage) {
+    currentLanguage = Device.language.split('-')[0].toLowerCase();
+    setString('language', currentLanguage);
+} else {
+    setLang(currentLanguage);
+}
 
 export { l, lc, lu, lt };
 export const sl = derived([$lang], () => l);

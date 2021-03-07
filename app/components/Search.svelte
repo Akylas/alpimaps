@@ -22,7 +22,7 @@
     import type { Address, IItem as Item } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { GeoResult, packageService } from '~/services/PackageService';
-    import { globalMarginTop, primaryColor } from '~/variables';
+    import { globalMarginTop, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import { queryString } from '../utils/http';
 
     const providerColors = {
@@ -529,7 +529,7 @@
     {...$$restProps}
     rows="44,auto"
     columns="auto,*,auto,auto,auto,auto,auto"
-    backgroundColor={focused ? '#99000000' : '#55000000'}
+    backgroundColor={$widgetBackgroundColor}
     borderRadius={searchResultsVisible ? 10 : 25}
     margin={`${globalMarginTop + 10} 10 10 10`}
 >
@@ -551,7 +551,6 @@
         autocapitalizationType="none"
         floating="false"
         verticalAlignment="center"
-        color="white"
     />
     <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} row="0" col="2" busy={true} width={20} height={20} />
     {#if loaded}
@@ -563,7 +562,7 @@
             col="3"
             text="mdi-shape"
             on:tap={toggleFilterOSMKey}
-            color={filteringOSMKey ? primaryColor : 'lightgray'}
+            color={filteringOSMKey ? primaryColor : $subtitleColor}
         />
         <button
             variant="text"
@@ -573,7 +572,7 @@
             col="4"
             text="mdi-map"
             on:tap={showResultsOnMap}
-            color="lightgray"
+            color={$subtitleColor}
         />
     {/if}
     <button
@@ -584,7 +583,7 @@
         col="5"
         text="mdi-close"
         on:tap={clearSearch}
-        color="lightgray"
+        color={$subtitleColor}
     />
     <button col="6" variant="text" class="icon-btn-white" text="mdi-dots-vertical" on:tap={showMapMenu} />
     {#if loaded}
@@ -599,7 +598,7 @@
             visibility={searchResultsVisible ? 'visible' : 'collapsed'}
         >
             <Template let:item>
-                <gridlayout columns="30,*" rows="*,auto,auto,*" rippleColor="white" on:tap={() => onItemTap(item)}>
+                <gridlayout columns="30,*" padding="0 10 0 10" rows="*,auto,auto,*" class="textRipple" on:tap={() => onItemTap(item)}>
                     <label
                         col="0"
                         rowSpan="4"
@@ -610,8 +609,8 @@
                         verticalAlignment="center"
                         textAlignment="center"
                     />
-                    <label col="1" row="1" text={getItemTitle(item)} color="white" fontSize="14" fontWeight="bold" />
-                    <label col="1" row="2" text={getItemSubtitle(item)} color="#D0D0D0" fontSize="12" />
+                    <label col="1" row="1" text={getItemTitle(item)} fontSize="14" fontWeight="bold" />
+                    <label col="1" row="2" text={getItemSubtitle(item)} class="subtitle" fontSize="12" />
                 </gridlayout>
             </Template>
         </collectionview>

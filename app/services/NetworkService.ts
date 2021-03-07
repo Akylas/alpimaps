@@ -4,7 +4,7 @@ import * as http from '@nativescript/core/http';
 import { BaseError } from 'make-error';
 import mergeOptions from 'merge-options';
 import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
-import { $t } from '~/helpers/locale';
+import { l } from '~/helpers/locale';
 import {
     ApplicationEventData,
     off as applicationOff,
@@ -428,7 +428,7 @@ export class CustomError extends BaseError {
     }
     toString() {
         // console.log('customError to string');
-        return evalTemplateString($t(this.message), Object.assign({ localize: $t }, this.assignedLocalData));
+        return evalTemplateString(l(this.message), Object.assign({ localize: l }, this.assignedLocalData));
         // return evalMessageInContext.call(Object.assign({localize}, this.assignedLocalData), localize(this.message))
         // return this.message || this.stack;
     }
