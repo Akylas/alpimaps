@@ -729,7 +729,7 @@
                     variant="text"
                     class="icon-btn-white"
                     text="mdi-chart-areaspline"
-                    visibility={profile === 'bicycle' ? 'visible' : 'collapsed'}
+                    visibility={profile === 'bicycle' || profile === 'pedestrian' ? 'visible' : 'collapsed'}
                     color={valhallaSettingColor(valhallaCostingOptions, 'use_hills')}
                     on:tap={() => switchValhallaSetting('use_hills')}
                 />
