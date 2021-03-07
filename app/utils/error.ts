@@ -78,7 +78,7 @@ export class CustomError extends BaseError {
     getMessage() {}
 }
 
-export async function showError(err: Error | string) {
+export async function showError(err: Error | string, nonBugError = false) {
     if (!err) {
         return;
     }

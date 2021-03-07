@@ -17,6 +17,7 @@ import { accentColor } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
 import mapStore from '~/stores/mapStore';
 import { ApplicationSettings } from '@nativescript/core';
+import { packageService } from '~/services/PackageService';
 
 const LOCATION_ANIMATION_DURATION = 300;
 const SCREENSHOT_NOTIFICATION_ID = 23466571;
@@ -114,7 +115,7 @@ export default class UserLocationModule extends MapModule {
         if (global.isAndroid) {
             const context: android.content.Context = ad.getApplicationContext();
             const myKM = context.getSystemService(android.content.Context.KEYGUARD_SERVICE) as android.app.KeyguardManager;
-            const locked = myKM.inKeyguardRestrictedInputMode();
+            const locked = myKM.isKeyguardLocked();
             // console.log('onNewLocation', locked);
             if (locked) {
                 // it is locked
@@ -126,14 +127,9 @@ export default class UserLocationModule extends MapModule {
         }
     }
 
-    updateUserLocation(geoPos: GeoLocation) {
+    async updateUserLocation(geoPos: GeoLocation) {
         const position = {
-            lat: geoPos.lat,
-            lon: geoPos.lon,
-            altitude: geoPos.altitude,
-            horizontalAccuracy: geoPos.horizontalAccuracy,
-            verticalAccuracy: geoPos.verticalAccuracy,
-            speed: geoPos.speed
+            ...geoPos
         };
         if (
             !this.mapView ||
@@ -143,6 +139,11 @@ export default class UserLocationModule extends MapModule {
                 this.lastUserLocation.horizontalAccuracy === geoPos.horizontalAccuracy)
         ) {
             return;
+        }
+
+        const altitude = await packageService.getElevation(geoPos);
+        if (altitude !== null) {
+            position.altitude = Math.round(altitude);
         }
 
         // if (!!this.userFollow) {
@@ -200,8 +201,8 @@ export default class UserLocationModule extends MapModule {
                 }
             });
             this.userMarker = new Point<LatLonKeys>({
-                metaData:{
-                    userMarker:'true'
+                metaData: {
+                    userMarker: 'true'
                 },
                 position: posWithoutAltitude,
                 styleBuilder: {
