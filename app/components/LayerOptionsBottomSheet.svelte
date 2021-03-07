@@ -30,9 +30,9 @@
         if (item.provider.downloadable === true) {
             res.push('download');
         }
-        if (item.legend) {
-            res.push('legend');
-        }
+        // if (item.legend) {
+        //     res.push('legend');
+        // }
         if (item.layer instanceof RasterTileLayer || item.layer instanceof HillshadeRasterTileLayer) {
             res.push('tile_filter_mode');
         }

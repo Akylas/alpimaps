@@ -12,11 +12,11 @@
     import { navigationBarHeight, primaryColor } from '../variables';
     import { showBottomSheet } from './bottomsheet';
     import mapStore from '~/stores/mapStore';
+    import { debounce } from 'push-it-to-the-limit';
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
 </script>
 
 <script lang="ts">
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
-
     const mapContext = getMapContext();
     let gridLayout: NativeViewElementNode<GridLayout>;
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -28,12 +28,12 @@
         customLayers = mapContext.mapModule('customLayers');
         customSources = customLayers.customSources;
     });
-    onMount(()=>{
+    onMount(() => {
         customLayers = mapContext.mapModule('customLayers');
         if (customLayers) {
             customSources = customLayers.customSources;
         }
-    })
+    });
     onDestroy(() => {
         customLayers = null;
         customSources = null;
@@ -47,12 +47,30 @@
     function clearCache() {
         // clearCache();
     }
-    function onLayerOpacityChanged(item, event) {
-        const opacity = event.value / 100;
+    const updateItem = debounce(function (item: SourceItem) {
+        customSources.some((d, index) => {
+            if (d === item) {
+                customSources.setItem(index, item);
+                return true;
+            }
+        });
+    }, 500);
+    function onLayerOpacityChanged(item: SourceItem, event) {
+        const opacity = (event.value);
+        if (item.layer.opacity === opacity) {
+            return;
+        }
         item.layer.opacity = opacity;
         setNumber(item.name + '_opacity', opacity);
-        item.layer.visible = opacity !== 0;
+        item.layer.visible = opacity !== 0 ? true : false;
         mapContext.getMap().requestRedraw();
+        // customSources.some((d, index) => {
+        //     if (d === item) {
+        //         customSources.setItem(index, item);
+        //         return true;
+        //     }
+        // });
+        updateItem(item);
     }
 
     async function showSourceOptions(item: SourceItem) {
@@ -67,6 +85,7 @@
             }
         });
     }
+    async function onItemReordered() {}
 
     let loaded = true;
     let loadedListeners = [];
@@ -92,13 +111,24 @@
     columns="*,auto"
     height={210 + navigationBarHeight}
     paddingBottom={navigationBarHeight}
-    backgroundColor="#99000000">
+    backgroundColor="#99000000"
+>
     {#if loaded}
-        <collectionview id="collectionView" col="0" rowHeight="70" items={customSources} bind:this={collectionView}>
+        <collectionview
+            id="trackingScrollView"
+            col="0"
+            rowHeight="70"
+            items={customSources}
+            bind:this={collectionView}
+            reorderEnabled={true}
+            reorderLongPressEnabled={true}
+            on:itemReordered={onItemReordered}
+        >
             <Template let:item>
-                <gridlayout paddingLeft="15" paddingRight="5" rows="*" columns="*,auto" on:longPress={showSourceOptions(item)}>
-                    <canvaslabel color={item.layer.opacity === 0 ? 'grey' : 'white'}>
+                <gridlayout paddingLeft="15" paddingRight="5" rows="*" columns="2*,*,auto">
+                    <canvaslabel colSpan="2">
                         <cspan
+                            color={item.layer.opacity === 0 ? 'grey' : 'white'}
                             text={item.name.toUpperCase()}
                             fontSize="13"
                             fontWeight="bold"
@@ -109,14 +139,14 @@
                     <mdslider
                         marginLeft="10"
                         marginRight="10"
-                        value={Math.round(item.layer.opacity * 100)}
+                        value={(item.layer.opacity)}
                         on:valueChange={(event) => onLayerOpacityChanged(item, event)}
                         minValue="0"
-                        maxValue="100"
+                        maxValue="1"
                         verticalAlignment="center"
                     />
                     <button
-                        col="1"
+                        col="2"
                         rowSpan="2"
                         color="white"
                         rippleColor="white"

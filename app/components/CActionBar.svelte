@@ -1,33 +1,17 @@
-<script lang="ts">
-    import { Frame } from '@nativescript/core';
-    import { createEventDispatcher, onMount } from 'svelte';
-    import { goBack } from 'svelte-native';
-    import { actionBarHeight } from '~/variables';
-
-    const dispatch = createEventDispatcher();
-
+<script lang="typescript">
+    import { onMount } from 'svelte';
+    import { closeModal, goBack } from 'svelte-native';
+    import { Frame } from '@nativescript/core/ui/frame';
+    import { actionBarHeight, globalMarginTop, textColor } from '~/variables';
     export let title: string;
-    export let height: number = actionBarHeight;
-    export let subtitle: string;
     export let showMenuIcon: boolean = false;
+    export let canGoBack: boolean = false;
     export let modalWindow: boolean = false;
-    export let canGoBack = false;
-
-    let menuIcon: string = 'mdi-menu';
-    let menuIconVisible: boolean = true;
-
-    $: {
-        if (modalWindow) {
-            menuIcon = 'mdi-close';
-        } else if (canGoBack) {
-            menuIcon = global.isIOS ? 'mdi-chevron-left' : 'mdi-arrow-left';
-        } else {
-            menuIcon = 'mdi-menu';
-        }
-    }
-    $: {
-        menuIconVisible = modalWindow || canGoBack || showMenuIcon;
-    }
+    export let disableBackButton: boolean = false;
+    export let onClose: Function = null;
+    let menuIcon: string;
+    let menuIconVisible: boolean;
+    let menuIconVisibility: string;
 
     onMount(() => {
         setTimeout(() => {
@@ -35,34 +19,33 @@
         }, 0);
     });
     function onMenuIcon() {
-        if (canGoBack) {
-            return goBack();
+        if (modalWindow) {
+            onClose ? onClose() : closeModal(undefined);
         } else {
-            dispatch('tapMenuIcon');
+            goBack();
         }
     }
+    $: {
+        if (modalWindow) {
+            menuIcon = 'mdi-close';
+        } else {
+            menuIcon = canGoBack ? (global.isIOS ? 'mdi-chevron-left' : 'mdi-arrow-left') : 'mdi-menu';
+        }
+    }
+    $: menuIconVisible = ((canGoBack || modalWindow) && !disableBackButton) || showMenuIcon;
+    $: menuIconVisibility = menuIconVisible ? 'visible' : 'collapsed';
 </script>
 
-<gridlayout class="actionBar" columns="auto,*, auto" rows="auto,auto">
-    <stacklayout col="1" colSpan="3" verticalAlignment="center" {height}>
-        {#if title}<label class="actionBarTitle" textAlignment="left" text={title} />{/if}
-        <label visibility={!!subtitle ? 'visible' : 'collapse'} textAlignment="left" class="actionBarSubtitle" text={subtitle} />
-    </stacklayout>
-    <contentview col="1" colSpan="2" {height}>
-        <slot name="title" />
-    </contentview>
-
-    <stacklayout orientation="horizontal" col="2" verticalAlignment="top" {height}>
-        <slot name="rightButtons" />
-    </stacklayout>
-    <contentview col="0" verticalAlignment="top" {height}>
-        <button
-            rippleColor="white"
-            variant="text"
-            visibility={menuIconVisible ? 'visible' : 'collapsed'}
-            class="icon-btn"
-            text={menuIcon}
-            on:tap={onMenuIcon} />
-    </contentview>
-    <slot row="1" colSpan="3" name="subView" />
-</gridlayout>
+<gridLayout class="actionBar" height={actionBarHeight + globalMarginTop} columns="auto,*, auto" rows="*" paddingLeft="5" paddingRight="5" paddingTop={globalMarginTop}>
+    <label id="title" color={textColor} col="1" colSpan="3" class="actionBarTitle" textAlignment="left" visibility={!!title ? 'visible' : 'hidden'} text={title || ''} verticalTextAlignment="center" />
+    <!-- {#if showLogo && !title}
+        <label col="1" class="activelook" fontSize="28" color="white" text="logo" verticalAlignment="center" marginLeft="6" />
+    {/if} -->
+    <stackLayout col="0" orientation="horizontal">
+        <slot name="left" />
+        <button color={textColor} variant="text" visibility={menuIconVisibility} class="icon-btn" text={menuIcon} on:tap={onMenuIcon} />
+    </stackLayout>
+    <stackLayout col="2" orientation="horizontal">
+        <slot />
+    </stackLayout>
+</gridLayout>

@@ -90,8 +90,7 @@ export class GeoHandler extends Observable {
     launched = false;
 
     wasWatchingBeforePause = false;
-    watcherBeforePause;
-    dontWatchWhilePaused = ApplicationSettings.getBoolean('stopGPSWhilePaused', true);
+    dontWatchWhilePaused = ApplicationSettings.getBoolean('stopGPSWhilePaused', false);
     gpsEnabled = true;
 
     constructor() {
@@ -138,16 +137,14 @@ export class GeoHandler extends Observable {
             }
             if (this.currentSession) {
                 // we need to restart
-                const watcher = this.currentWatcher;
                 this.stopWatch();
-                this.startWatch(watcher);
+                this.startWatch();
             }
         }
 
         if (!this.currentSession) {
             if (this.wasWatchingBeforePause) {
-                this.startWatch(this.watcherBeforePause);
-                this.watcherBeforePause = null;
+                this.startWatch();
                 this.wasWatchingBeforePause = false;
             } else if (this.isWatching()) {
                 // if (global.isAndroid) {
@@ -165,14 +162,12 @@ export class GeoHandler extends Observable {
             }
             if (this.currentSession) {
                 // we need to restart
-                const watcher = this.currentWatcher;
                 this.stopWatch();
-                this.startWatch(watcher);
+                this.startWatch();
             }
         }
         if (!this.currentSession && this.isWatching()) {
             if (this.dontWatchWhilePaused) {
-                this.watcherBeforePause = this.currentWatcher;
                 this.wasWatchingBeforePause = true;
                 this.stopWatch();
             } else {
@@ -268,18 +263,22 @@ export class GeoHandler extends Observable {
     }
     async authorizeLocation() {
         const result = await request('location');
+        if (
+            (Array.isArray(result) && result[0] !== 'authorized') ||
+            Object.keys(result).some((s) => result[s] !== 'authorized')
+        ) {
+            throw new Error('gps_denied');
+        }
         this.gpsEnabled = geolocation.isEnabled();
         return result;
     }
     async checkEnabledAndAuthorized(always = false) {
         try {
-            console.log('checkEnabledAndAuthorized');
             await check('location').then((r) => {
                 if (r[0] !== 'authorized') {
                     return this.authorizeLocation();
                 }
             });
-            console.log('checkEnabledAndAuthorized1');
             await this.askToEnableIfNotEnabled();
         } catch (err) {
             if (err && /denied/i.test(err.message)) {
@@ -391,14 +390,18 @@ export class GeoHandler extends Observable {
         }
         this.currentWatcher && this.currentWatcher(err);
     }
-    async startWatch(onLoc?: Function) {
-        this.currentWatcher = onLoc;
+    async startWatch(opts?:Partial<GeolocationOptions>) {
+        let updateDistance = ApplicationSettings.getNumber('gps_update_distance', 0);
+        let minimumUpdateTime = ApplicationSettings.getNumber('gps_update_minTime', 0);
+        let desiredAccuracy = ApplicationSettings.getNumber('gps_desired_accuracy', global.isAndroid ? Enums.Accuracy.high : kCLLocationAccuracyBestForNavigation);
         const options: GeolocationOptions = {
+            updateDistance,
             minimumUpdateTime,
             desiredAccuracy,
             onDeferred: this.onDeferred,
             nmeaAltitude: true,
-            skipPermissionCheck: true
+            skipPermissionCheck: true,
+            ...opts
         };
         if (DEV_LOG) {
             console.log('startWatch', options);
@@ -408,15 +411,12 @@ export class GeoHandler extends Observable {
             geolocation.iosChangeLocManager.showsBackgroundLocationIndicator = true;
             if (this._isIOSBackgroundMode) {
                 options.pausesLocationUpdatesAutomatically = false;
-                options.allowsBackgroundLocationUpdates = true;
+                options.allowsBackgroundLocationUpdates = ApplicationSettings.getBoolean('gps_ios_allow_background', true);
             } else {
-                options.pausesLocationUpdatesAutomatically = true;
-                options.allowsBackgroundLocationUpdates = true;
+                options.pausesLocationUpdatesAutomatically = ApplicationSettings.getBoolean('gps_ios_auto_pause_updates', true);
+                options.allowsBackgroundLocationUpdates = ApplicationSettings.getBoolean('gps_ios_allow_background', true);
             }
-            //@ts-ignore
-            options.activityType = CLActivityType.Other;
-            // } else {
-            // options.provider = 'gps';
+            options.activityType = ApplicationSettings.getNumber('gps_ios_activitytype', CLActivityType.Other);
         }
         if (global.isAndroid) {
             try {
@@ -426,6 +426,46 @@ export class GeoHandler extends Observable {
             }
         }
         this.watchId = await geolocation.watchLocation(this.onLocation, this.onLocationError, options);
+    }
+
+    getWatchSettings() {
+        let options = {
+            gps_update_distance: {
+                id: 'gps_update_distance',
+                title:lc('gps_update_distance'),
+                description:lc('gps_update_distance_desc'),
+                type:'prompt'
+            },
+            gps_desired_accuracy: {
+                id: 'gps_desired_accuracy',
+                title:lc('gps_desired_accuracy'),
+                description:lc('gps_desired_accuracy_desc'),
+                values : global.isIOS ? 
+                    [{title:lc('best_for_navigation'), value:kCLLocationAccuracyBestForNavigation },
+                    {title:lc('best'), value:kCLLocationAccuracyBest },
+                    {title:'10m', value:kCLLocationAccuracyNearestTenMeters },
+                    {title:'100m', value:kCLLocationAccuracyHundredMeters },
+                    {title:'1km', value:kCLLocationAccuracyKilometer },
+                    {title:'3km', value:kCLLocationAccuracyThreeKilometers },
+                    {title:lc('reduced'), value:kCLLocationAccuracyReduced },]
+                :[{title:lc('finer_location_accuracy'), value:Enums.Accuracy.high }, {title:lc('approximate_accuracy'), value:Enums.Accuracy.any }]
+            }
+        }
+        if (global.isIOS) {
+
+        } else {
+            Object.assign(options, {
+                gps_update_minTime: {
+                    id: 'gps_update_minTime',
+                    title:lc('gps_update_minTime'),
+                    description:lc('gps_update_minTime_desc'),
+                    type:'prompt'
+                }
+            })
+        }
+        return {
+
+        }
     }
 
     stopWatch() {
@@ -627,7 +667,7 @@ export class GeoHandler extends Observable {
 
             // this.lastSpeeds = [];
             this.onUpdatedSession = onUpdate;
-            this.startWatch(this.onNewLoc);
+            this.startWatch();
             this.setSessionState(SessionState.RUNNING);
             this.startChronoTimer();
             return this.currentSession;
@@ -692,7 +732,7 @@ export class GeoHandler extends Observable {
         if (this.currentSession && this.sessionState === SessionState.PAUSED) {
             this.currentSession.pauseDuration += Date.now() - this.currentSession.lastPauseTime.valueOf();
             this.currentSession.lastPauseTime = null;
-            this.startWatch(this.onNewLoc);
+            this.startWatch();
             this.setSessionState(SessionState.RUNNING);
         }
         this.startChronoTimer();
