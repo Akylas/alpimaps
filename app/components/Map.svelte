@@ -74,6 +74,7 @@
     import { asSvelteTransition } from 'svelte-native/transitions';
     import { AnimationCurve } from '@nativescript/core/ui/enums';
     import { NetworkConnectionStateEvent, NetworkConnectionStateEventData, networkService } from '~/services/NetworkService';
+    import { isDark, toggleTheme } from '~/helpers/theme';
 
     function slideFromRight(node, { delay = 0, duration = 200, easing = AnimationCurve.easeOut }) {
         const scaleX = node.nativeView.scaleX;
@@ -388,10 +389,12 @@
         cartoMap = e.object as CartoMap<LatLonKeys>;
         // console.log('onMainMapReady');
         // CartoMap.setRunOnMainThread(false);
-        setShowDebug(DEV_LOG);
-        setShowInfo(DEV_LOG);
-        setShowWarn(DEV_LOG);
-        setShowError(true);
+        if (DEV_LOG) {
+            setShowDebug(DEV_LOG);
+            setShowInfo(DEV_LOG);
+            setShowWarn(DEV_LOG);
+            setShowError(true);
+        }
         projection = cartoMap.projection;
         // if (global.isAndroid) {
         //     console.log('onMapReady', com.carto.ui.BaseMapView.getSDKVersion());
@@ -418,8 +421,10 @@
             if (__CARTO_PACKAGESERVICE__) {
                 packageService.start();
             }
-            setMapStyle(appSettings.getString('mapStyle', 'osmxml~voyager'), true);
-            mapContext.runOnModules('onMapReady', cartoMap);
+            setTimeout(() => {
+                setMapStyle(appSettings.getString('mapStyle', 'osmxml~voyager'), true);
+                mapContext.runOnModules('onMapReady', cartoMap);
+            }, 100);
         } catch (err) {
             showError(err);
         }
@@ -954,7 +959,7 @@
             dataSource: packageService.getDataSource($mapStore.showContourLines),
             decoder
         });
-        updateLanguage(currentLanguage);
+        handleNewLanguage(currentLanguage);
         // console.log('currentLayer', !!currentLayer);
         currentLayer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
         currentLayer.setVectorTileEventListener<LatLonKeys>(
@@ -971,13 +976,12 @@
         }
     }
     function handleNewLanguage(newLang) {
-
         currentLanguage = newLang;
         packageService.currentLanguage = newLang;
         setStyleParameter('lang', newLang);
         setStyleParameter('fallback_lang', 'latin');
     }
-    onLanguageChanged(handleNewLanguage)
+    onLanguageChanged(handleNewLanguage);
 
     function getVectorTileDecoder() {
         return vectorTileDecoder || packageService.getVectorTileDecoder();
@@ -1125,7 +1129,11 @@
                 return;
             }
             const layerIndex = LAYERS_ORDER.indexOf(layerId);
-            let realIndex = Math.max(addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) >= layerIndex), 0) + index;
+            let realIndex =
+                Math.max(
+                    addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) >= layerIndex),
+                    0
+                ) + index;
             const nbLayers = cartoMap.getLayers().count();
             if (realIndex >= 0 && realIndex < nbLayers) {
                 cartoMap.getLayers().insert(realIndex, layer);
@@ -1427,7 +1435,7 @@
             },
             {
                 title: lt('keep_awake'),
-                color: keepAwakeEnabled ? 'red' : 'green',
+                color: keepAwakeEnabled ? 'red' : '#00ff00',
                 id: 'keep_awake',
                 icon: keepAwakeEnabled ? 'mdi-sleep' : 'mdi-sleep-off'
             },
@@ -1441,6 +1449,13 @@
                 title: lt('settings'),
                 id: 'settings',
                 icon: 'mdi-cogs'
+            },
+
+            {
+                title: lt('dark_mode'),
+                id: 'dark_mode',
+                color: isDark() ? primaryColor : undefined,
+                icon: 'mdi-theme-light-dark'
             },
 
             {
@@ -1488,6 +1503,9 @@
                     break;
                 case 'offline_packages':
                     downloadPackages();
+                    break;
+                case 'dark_mode':
+                    toggleTheme();
                     break;
                 case 'bug':
                     sendBug();
@@ -1675,7 +1693,6 @@
                 horizontalAlignment="right"
                 isUserInteractionEnabled="false"
                 color="red"
-                class="label-icon-btn"
                 fontSize="12"
                 width="20"
                 height="30"

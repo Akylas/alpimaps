@@ -9,34 +9,73 @@
     font-family: $mdi-fontFamily;
 }
 
-Page {
+page {
     status-bar-style: dark;
-    navigation-bar-color: $primary-color;
-    status-bar-color: $dark-color;
+    navigation-bar-color: $text-color-light;
+    status-bar-color: #ddd;
+    background-color: $text-color-dark;
+
+    .ns-dark &,
+    &.ns-dark {
+        status-bar-style: dark;
+        // navigation-bar-color: $text-color-light;
+        status-bar-color: $text-color-light;
+        background-color: #1c1c1e;
+    }
 }
+htmllabel,
 canvaslabel,
-htmllabel {
-    color: $text-color;
+label,
+mdbutton,
+button {
+    color: $text-color-light;
+    .ns-dark & {
+        color: $text-color-dark;
+    }
+}
+mdbutton,
+button {
+    ripple-color: $text-color-light;
+    .ns-dark & {
+        ripple-color: $text-color-dark;
+    }
+}
+mdtextfield,
+textfield {
+    color: $text-color-light;
+    backgroundcolor-color: $text-color-dark;
+    placeholder-color: gray;
+    .ns-dark & {
+        color: $text-color-dark;
+        backgroundcolor-color: $text-color-light;
+        placeholder-color: lightgray;
+    }
+}
+.textRipple {
+    ripple-color: $text-color-light;
+    .ns-dark & {
+        ripple-color: $text-color-dark;
+    }
+}
+.subtitle {
+    color: #888888;
+    .ns-dark & {
+        color: #aaaaaa;
+    }
 }
 
-mdbutton, mdcardview {
+mdbutton,
+mdcardview {
     shape: round;
 }
 
-.buttonwhite {
-    background-color: transparent;
-    color: white;
-    ripple-color: white;
-}
 .buttonthemed {
     background-color: $primary-color;
-    color: white;
-    // ripple-color: $dark-color;
+    color: $text-color-dark;
 }
 .buttontext {
-    background-color: white;
+    background-color: $text-color-dark;
     color: $primary-color;
-    // ripple-color: $dark-color;
 }
 
 .maki {
@@ -47,17 +86,6 @@ mdbutton, mdcardview {
     font-family: 'osm';
 }
 
-.themedBack {
-    background-color: $primary-color;
-}
-
-.icon-btn {
-    @extend .mdi;
-    color: $text-color;
-    width: 44;
-    height: 44;
-    font-size: 24
-}
 .small-icon-btn {
     @extend .icon-btn;
     width: 30;
@@ -65,26 +93,20 @@ mdbutton, mdcardview {
     font-size: 16;
 }
 
-.label-icon-btn {
-    @extend .mdi;
-    color: $text-color;
-    font-size: 24;
-}
-
 .icon-btn-white {
     @extend .icon-btn;
-    color: white;
-    ripple-color: white;
+    color: $text-color-dark;
+    ripple-color: $text-color-dark;
 }
+
 .icon-btn-text {
-    @extend .icon-btn;
-    background-color: white;
-    color: $primary-color;
+    @extend .buttontext, .icon-btn;
     ripple-color: $dark-color;
 }
 
 .floating-btn {
     @extend .mdi;
+    color: white;
     elevation: 6;
     font-size: 24;
     padding: 0;
@@ -106,37 +128,11 @@ mdbutton, mdcardview {
     font-size: 10;
 }
 
-
-MDSpeedDialButton, MDSpeedDialItemButton {
-    @extend .mdi ;
-    shape: round;
-    border-radius: null;
-    // color: white;
-}
-MDSpeedDialItemTitle {
-    shape: round;
-    border-radius: null;
-    background-color: #444;
-    vertical-text-alignment: middle;
-    font-size:11;
-    color: white;
-    padding:6;
-}
-
 // .menuButtons {
 //     padding-left: 12;
 //     padding-right: 12;
 //     margin-bottom: 10;
 // }
-
-.menu-btn {
-    @extend .icon-btn;
-    // ripple-color: #b8b7b7;
-    // color: $accent-color;
-}
-.menuButtons mdbutton {
-    @extend .menu-btn;
-}
 
 .navigationBarOverlay {
     height: $navigation-bar-height;
@@ -145,30 +141,21 @@ MDSpeedDialItemTitle {
     vertical-alignment: bottom;
 }
 
-// ListItem
-.icon-themed-btn {
-    @extend .icon-btn;
-    ripple-color: $accent-color;
-    color: $accent-color;
-}
 .actionBar {
     background-color: scale-color(white, $alpha: -30%);
-    .ns-black & {
-        background-color: scale-color(black, $alpha: -30%);
-    }
     .ns-dark & {
         background-color: scale-color(#1c1c1e, $alpha: -30%);
     }
+    height: $actionbar-height;
 }
 
 .actionBarButton {
     @extend .mdi;
     width: $actionbar-height;
     height: $actionbar-height;
-    color: black;
-    .ns-dark &,
-    .ns-black & {
-        color: white;
+    color: $text-color-light;
+    .ns-dark & {
+        color: $text-color-dark;
     }
     margin: 0;
     padding: 0;
@@ -179,14 +166,28 @@ MDSpeedDialItemTitle {
     // @extend .lato;
     font-size: 20;
     font-weight: 500;
-    color: black;
-    .ns-dark &,
-    .ns-black & {
-        color: white;
+    color: $text-color-light;
+    .ns-dark & {
+        color: $text-color-dark;
     }
 }
 
 .actionBarSubtitle {
     font-size: 13;
     color: rgba(255, 255, 255, 0.533);
+}
+
+.icon-btn {
+    @extend .mdi;
+    ripple-color: gray;
+    color: $text-color-light;
+    .ns-dark & {
+        color: $text-color-dark;
+        ripple-color: $text-color-dark;
+    }
+    width: $actionbar-button-height;
+    height: $actionbar-button-height;
+    font-size: 24;
+    // margin: 0;
+    // padding: 0;
 }
