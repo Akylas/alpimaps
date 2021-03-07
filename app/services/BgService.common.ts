@@ -11,7 +11,7 @@ import {
 export const BgServiceLoadedEvent = 'BgServiceLoadedEvent';
 
 let _sharedInstance: BgServiceCommon;
-const onServiceLoadedListeners = [];
+let onServiceLoadedListeners = [];
 export function onServiceLoaded(callback: (geoHandler: GeoHandler) => void) {
     if (_sharedInstance) {
         callback(_sharedInstance.geoHandler);
@@ -47,6 +47,7 @@ export abstract class BgServiceCommon extends Observable {
             this._loaded = true;
             _sharedInstance = this;
             onServiceLoadedListeners.forEach((l) => l(this.geoHandler));
+            onServiceLoadedListeners = [];
             this.notify({
                 eventName: BgServiceLoadedEvent,
                 object: this
