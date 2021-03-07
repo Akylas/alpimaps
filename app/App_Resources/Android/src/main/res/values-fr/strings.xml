@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+  <string name="light">"clair"</string>
+  <string name="dark">"sombre"</string>
+  <string name="auto">"auto"</string>
+  <string name="dark_mode">"mode sombre"</string>
+  <string name="language">"langue"</string>
   <string name="third_parties">"bibliothèques tierces"</string>
   <string name="tap_to_open">"AlpiMaps surveille votre position. \nAppuyez pour ouvrir"</string>
   <string name="stopped_watching_location">"a cessé de regarder votre position"</string>

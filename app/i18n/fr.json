@@ -77,5 +77,9 @@
   "stopped_watching_location": "a cessé de regarder votre position",
   "tap_to_open": "AlpiMaps surveille votre position. \nAppuyez pour ouvrir",
   "third_parties": "bibliothèques tierces",
-  "language": "langue"
+  "language": "langue",
+  "dark_mode": "mode sombre",
+  "auto": "auto",
+  "dark": "sombre",
+  "light": "clair"
 }
