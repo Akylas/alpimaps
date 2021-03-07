@@ -31,7 +31,7 @@ export default class ItemFormatter {
             }
         }
         if (item.categories) {
-            result.push(item.categories[0]);
+            result.push(...item.categories.reverse());
         }
         if (result.length === 0 && item.address && item.address.houseNumber) {
             result.push(item.address.houseNumber);
@@ -60,42 +60,10 @@ export default class ItemFormatter {
         const address = item.address;
         if (address) {
             return formatAddress(item, part);
-            // const houseNumber = address.houseNumber;
-            // if (houseNumber > 0) {
-            //     result = houseNumber + ', ';
-            // }
-            // const street = address.street;
-            // if (street && street !== this.getItemName(item)) {
-            //     result += street;
-            // }
-            // // const city = address.locality;
-            // // if (city) {
-            // //     result = (result ? result + ', ' : '') + city;
-            // // }
-            // const county = address.county;
-            // if (county) {
-            //     result = (result ? result + ' ' : '') + county;
-            // }
-            // const postcode = address.postcode;
-            // if (postcode) {
-            //     result = (result ? result + ' ' : '') + postcode;
-            // }
-            // // const country = address.country;
-            // // if (country) {
-            // //     result = (result ? result + ' ' : '') + country;
-            // // }
-            // return result;
         }
     }
     getItemTitle(item: Item) {
-        // console.log('getItemTitle', item);
         if (item) {
-            // if (item.route) {
-            //     const route = item.route;
-            //     const dataT = convertDuration(route.totalTime * 1000);
-            //     const dataD = convertDistance(route.totalDistance);
-            //     return `<>${dataT} ${dataD.value.toFixed(1)} ${dataD.unit}`;
-            // }
             return (
                 this.getItemName(item) ||
                 this.getItemAddress(item, 1) ||
@@ -105,12 +73,10 @@ export default class ItemFormatter {
         return '';
     }
     getItemSubtitle(item: Item) {
-        // console.log('getItemSubtitle', item);
         if (item) {
             if (item.properties && item.properties.ref) {
                 return item.properties.ref;
             }
-            // console.log('getItemSubtitle', item);
             if (this.getItemName(item)) {
                 return this.getItemAddress(item);
             } else {

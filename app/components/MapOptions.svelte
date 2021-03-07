@@ -29,10 +29,10 @@
 <collectionView items={options} {height} colWidth="20%" rowHeight="80" backgroundColor="#99000000">
     <Template let:item>
         <gridlayout backgroundColor={item.color} rippleColor={item.color || primaryColor} on:tap={() => onTap(item)}>
-            <canvaslabel>
-                <cgroup verticalAlignment="center" textAlignment="center">
-                    <cspan color="white" fontFamily={mdiFontFamily} text={item.icon} fontSize="30" />
-                    <cspan color="white" text={'\n' + item.title} fontSize="12" />
+            <canvaslabel paddingTop="15"  color="white">
+                <cgroup verticalAlignment="top" textAlignment="center">
+                    <cspan fontFamily={mdiFontFamily} text={item.icon} fontSize="30" />
+                    <cspan text={'\n' + item.title} fontSize="12" />
                 </cgroup>
             </canvaslabel>
         </gridlayout>

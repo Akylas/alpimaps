@@ -5,7 +5,8 @@ import {
     MapPos,
     MapPosVector,
     fromNativeMapPos,
-    nativeVectorToArray
+    nativeVectorToArray,
+    MapBounds
 } from '@nativescript-community/ui-carto/core';
 import { MergedMBVTTileDataSource, OrderedTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
 import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
@@ -55,10 +56,11 @@ import { getDataFolder, getDefaultMBTilesDir } from '~/utils/utils';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
-interface GeoResult {
+export interface GeoResult {
     properties?: { [k: string]: any };
     address: Address;
     position?: MapPos<LatLonKeys>;
+    bounds?: MapBounds<LatLonKeys>;
     provider?: string;
     rank?: number;
 }
@@ -144,9 +146,6 @@ class PackageService extends Observable {
     _localOfflineRoutingSearchService: ValhallaOfflineRoutingService;
     _onlineRoutingSearchService: ValhallaOnlineRoutingService;
 
-    log(...args) {
-        console.log(`[${this.constructor.name}]`, ...args);
-    }
     _docPath;
     get docPath() {
         if (!this._docPath) {
@@ -437,8 +436,10 @@ class PackageService extends Observable {
         return this._offlineReverseSearchService;
     }
     convertGeoCodingResults(result: GeocodingResultVector, full = false) {
-        const items = [];
-        // this.dataItems = new GeocodingResultArray(result);
+        const items: GeoResult[] = [];
+        if (!result) {
+            return items;
+        }
         const size = result.size();
         for (let i = 0; i < size; i++) {
             items.push(this.convertGeoCodingResult(result.get(i), full));
@@ -470,8 +471,11 @@ class PackageService extends Observable {
                 rank,
                 properties: feature.properties,
                 address: result.getAddress(),
-                position: feature.geometry ? fromNativeMapPos(feature.geometry.getCenterPos()) : undefined
+                position: fromNativeMapPos(feature.geometry.getCenterPos())
             } as GeoResult;
+            if ('getPos' in feature.geometry === false) {
+                r.bounds = features.getBounds();
+            }
             if (full) {
                 this.prepareGeoCodingResult(r);
             }
@@ -586,36 +590,46 @@ class PackageService extends Observable {
         [
             ['name', 'getName'],
             ['country', 'getCountry'],
-            ['locality', 'getLocality'],
+            ['city', 'getLocality'],
             ['neighbourhood', 'getNeighbourhood'],
             ['state', 'getRegion'],
             ['postcode', 'getPostcode'],
-            ['road', 'getStreet'],
+            ['street', 'getStreet'],
             ['houseNumber', 'getHouseNumber'],
             ['county', 'getCounty']
         ].forEach((d) => {
-            if (!address[d[0]]) {
-                const value = geoRes.address[d[1]]();
-                if (value.length > 0) {
-                    address[d[0]] = value;
+            if (!address[d[0]] && d[1] in geoRes.address) {
+                try {
+                    const value = geoRes.address[d[1]]();
+                    if (value.length > 0) {
+                        address[d[0]] = value;
+                    }
+                } catch(err) {
+                    console.error('error getting address', d[0], err);
                 }
+                
             }
         });
-
-        const cat = geoRes.address.getCategories();
-        if (cat && cat.size() > 0) {
-            geoRes['categories'] = nativeVectorToArray(cat);
+        if ('getCategories' in geoRes.address) {
+            const cat = geoRes.address.getCategories();
+            if (cat && cat.size() > 0) {
+                geoRes['categories'] = nativeVectorToArray(cat);
+            }
         }
+        
         const res = geoRes as Item;
         res.provider = 'carto';
         res.address = address;
         if (!onlyAddress) {
-            geoRes.properties.name = geoRes.properties.name || res.address.name || res.address.road;
+            geoRes.properties.name = geoRes.properties.name || res.address.name || res.address.street;
             if (geoRes.properties.name.length === 0) {
                 delete geoRes.properties.name;
             }
         }
         return geoRes as Item;
+    }
+    hasElevation() {
+        return !!this.hillshadeLayer;
     }
     async getElevation(pos: MapPos<LatLonKeys>): Promise<number> {
         if (this.hillshadeLayer) {
@@ -813,11 +827,9 @@ class PackageService extends Observable {
         result.dmin = Math.round(-descent);
         result.dplus = Math.round(ascent);
         result.colors = colors;
-        console.log(JSON.stringify(colors))
         return result;
     }
     async getElevationProfile(item: Item) {
- 
         if (this.hillshadeLayer && item.route) {
             if (DEV_LOG) {
                 console.log('getElevationProfile', item.route);

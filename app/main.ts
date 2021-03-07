@@ -1,38 +1,24 @@
 // (com as any).tns.Runtime.getCurrentRuntime().enableVerboseLogging();
-import { startSentry } from '~/utils/sentry';
-import { install as installLogging } from '~/utils/logging';
-startSentry();
-installLogging();
-import './app.scss';
-import { GPSTraceCategory, setGeoLocationKeys } from '@nativescript-community/gps';
+import { setGeoLocationKeys } from '@nativescript-community/gps';
 import { installMixins as installUIMixins } from '@nativescript-community/systemui';
 import { overrideSpanAndFormattedString } from '@nativescript-community/text';
 import { setMapPosKeys } from '@nativescript-community/ui-carto/core';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
 import DrawerElement from '@nativescript-community/ui-drawer/svelte';
-import { Label } from '@nativescript-community/ui-label';
+import { initialize, shutDown } from '@nativescript-community/ui-image';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
+import { Application } from '@nativescript/core';
 import { svelteNative } from 'svelte-native';
-import { DomTraceCategory, FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
-import { CanvasLabel, Group, Span } from '@nativescript-community/ui-canvaslabel';
-import { Img, initialize, shutDown } from '@nativescript-community/ui-image';
-import { CanvasView } from '@nativescript-community/ui-canvas';
-import { Circle, Line } from '@nativescript-community/ui-canvas/shapes';
-import { CartoMap } from '@nativescript-community/ui-carto/ui';
-import { LineChart } from '@nativescript-community/ui-chart';
-import { Slider } from '@nativescript-community/ui-material-slider';
-import { Progress } from '@nativescript-community/ui-material-progress';
-import { ActivityIndicator } from '@nativescript-community/ui-material-activityindicator';
-import { Button } from '@nativescript-community/ui-material-button';
-// import { TextField } from '@nativescript-community/ui-material-textfield';
-import { CardView } from '@nativescript-community/ui-material-cardview';
-import { PersistentBottomSheet } from '@nativescript-community/ui-persistent-bottomsheet';
-import { SVGView } from '@nativescript-community/ui-svg';
+import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
+import Map from '~/components/Map.svelte';
+import { install as installLogging } from '~/utils/logging';
+import { startSentry } from '~/utils/sentry';
+import './app.scss';
 import { BgService } from './services/BgService';
-import { Application, Trace } from '@nativescript/core';
 import { networkService } from './services/NetworkService';
-import SymbolShape from '~/components/SymbolShape';
+startSentry();
+installLogging();
 installMixins();
 installBottomSheets();
 installUIMixins();
@@ -55,30 +41,43 @@ registerNativeViewElement('StackLayout', () => require('@nativescript/core').Sta
 // registerNativeViewElement('FlexboxLayout', () => require('@nativescript/core').FlexboxLayout);
 registerNativeViewElement('Switch', () => require('@nativescript/core').Switch);
 registerNativeViewElement('TextField', () => require('@nativescript/core').TextField);
+// registerNativeViewElement('button', () => require('@nativescript/core').Button);
 // registerNativeViewElement('TextView', () => require('@nativescript/core').TextView);
 // registerNativeViewElement('WebView', () => require('@nativescript/core').WebView);
 // registerNativeViewElement('WrapLayout', () => require('@nativescript/core').WrapLayout);
 
-registerNativeViewElement('button', () => Button as any, null, {}, { override: true });
-registerNativeViewElement('label', () => Label as any, null, {}, { override: true });
-registerNativeViewElement('mdactivityindicator', () => ActivityIndicator as any);
-registerNativeViewElement('mdprogress', () => Progress as any);
-registerNativeViewElement('mdcardview', () => CardView as any);
-registerNativeViewElement('mdslider', () => Slider as any);
-registerNativeViewElement('lineChart', () => LineChart as any);
-registerNativeViewElement('cartomap', () => CartoMap as any);
-registerNativeViewElement('canvas', () => CanvasView as any);
-registerNativeViewElement('line', () => Line as any);
-registerNativeViewElement('circle', () => Circle as any);
-registerNativeViewElement('image', () => Img as any, null, {}, { override: true });
-registerNativeViewElement('canvaslabel', () => CanvasLabel as any);
-registerNativeViewElement('cspan', () => Span as any);
-registerNativeViewElement('cgroup', () => Group as any);
-registerNativeViewElement('svgview', () => SVGView);
+registerNativeViewElement(
+    'button',
+    () => require('@nativescript-community/ui-material-button').Button,
+    null,
+    {},
+    { override: true }
+);
+registerNativeViewElement('label', () => require('@nativescript-community/ui-label').Label, null, {}, { override: true });
+registerNativeViewElement(
+    'mdactivityindicator',
+    () => require('@nativescript-community/ui-material-activityindicator').ActivityIndicator
+);
+registerNativeViewElement('mdprogress', () => require('@nativescript-community/ui-material-progress').Progress);
+registerNativeViewElement('mdcardview', () => require('@nativescript-community/ui-material-cardview').CardView);
+registerNativeViewElement('mdslider', () => require('@nativescript-community/ui-material-slider').Slider);
+registerNativeViewElement('lineChart', () => require('@nativescript-community/ui-chart').LineChart);
+registerNativeViewElement('cartomap', () => require('@nativescript-community/ui-carto/ui').CartoMap);
+registerNativeViewElement('canvas', () => require('@nativescript-community/ui-canvas').CanvasView);
+registerNativeViewElement('line', () => require('@nativescript-community/ui-canvas/shapes').Line);
+registerNativeViewElement('circle', () => require('@nativescript-community/ui-canvas/shapes').Circle);
+registerNativeViewElement('image', () => require('@nativescript-community/ui-image').Img, null, {}, { override: true });
+registerNativeViewElement('canvaslabel', () => require('@nativescript-community/ui-canvaslabel').CanvasLabel);
+registerNativeViewElement('cspan', () => require('@nativescript-community/ui-canvaslabel').Span);
+registerNativeViewElement('cgroup', () => require('@nativescript-community/ui-canvaslabel').Group);
+registerNativeViewElement('svgview', () => require('@nativescript-community/ui-svg').SVGView);
 // registerNativeViewElement('mdspeeddial', () => SpeedDial);
 // registerNativeViewElement('mdspeeddialitem', () => SpeedDialItem);
-registerNativeViewElement('bottomsheet', () => PersistentBottomSheet as any);
-registerNativeViewElement('symbolshape', () => SymbolShape as any);
+registerNativeViewElement(
+    'bottomsheet',
+    () => require('@nativescript-community/ui-persistent-bottomsheet').PersistentBottomSheet
+);
+registerNativeViewElement('symbolshape', () => require('~/components/SymbolShape').default);
 CollectionViewElement.register();
 DrawerElement.register();
 
@@ -95,6 +94,10 @@ themer.createShape('round', {
         unit: '%'
     }
 });
+
+// Application.on(Application.displayedEvent, () => {
+//     console.log('displayed');
+// });
 
 // if (DEV_LOG) {
 //     Trace.addCategories(GPSTraceCategory);
@@ -126,5 +129,4 @@ Application.on(Application.exitEvent, () => {
     // }
 });
 
-import Map from '~/components/Map.svelte';
 svelteNative(Map, {});

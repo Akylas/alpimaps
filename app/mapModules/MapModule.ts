@@ -1,5 +1,6 @@
 import Observable from '@nativescript-community/observable';
 import { Layer } from '@nativescript-community/ui-carto/layers';
+import { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
 import { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
 import { Projection } from '@nativescript-community/ui-carto/projections';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
@@ -38,7 +39,7 @@ export interface MapContext {
     onMapStable(callback: (map: CartoMap<LatLonKeys>) => void);
     onMapIdle(callback: (map: CartoMap<LatLonKeys>) => void);
     onMapClicked(callback: (map: CartoMap<LatLonKeys>) => void);
-    onVectorElementClicked(callback: (data: VectorElementEventData<LatLonKeys>)  => void);
+    onVectorElementClicked(callback: (data: VectorElementEventData<LatLonKeys>) => void);
     onVectorTileClicked(callback: (data: VectorTileEventData<LatLonKeys>) => void);
     getMainPage: () => NativeViewElementNode<Page>;
     getMap: () => CartoMap<LatLonKeys>;
@@ -57,10 +58,15 @@ export interface MapContext {
     unselectItem: () => void;
     getCurrentLanguage: () => string;
     getSelectedItem: () => IItem;
-    addLayer: (layer: Layer<any, any>, layerId: LayerType, offset?: number) => number;
-    removeLayer: (layer: Layer<any, any>, layerId: LayerType, offset?: number) => void;
+    addLayer: (layer: Layer<any, any>, layerId: LayerType) => number;
+    insertLayer: (layer: Layer<any, any>, layerId: LayerType, index: number) => void;
+    removeLayer: (layer: Layer<any, any>, layerId: LayerType) => void;
+    moveLayer: (layer: Layer<any, any>, newIndex: number) => void;
+    getLayerIndex: (layer: Layer<any, any>) => number;
+    getLayerTypeFirstIndex: (layerId: LayerType) => number;
     vectorElementClicked: (data: VectorElementEventData<LatLonKeys>) => boolean;
     vectorTileClicked: (data: VectorTileEventData<LatLonKeys>) => boolean;
+    rasterTileClicked: (data: RasterTileClickInfo<LatLonKeys>) => boolean;
     getVectorTileDecoder(): MBVectorTileDecoder;
     runOnModules(functionName: string, ...args);
 }
@@ -82,7 +88,8 @@ const listeners = {
     onMapStable: [],
     onMapIdle: [],
     onMapClicked: [],
-    onVectorElementClicked:[]
+    onVectorElementClicked: [],
+    onRasterTileClicked: []
 };
 export let drawer: Drawer;
 
@@ -106,6 +113,9 @@ const mapContext: MapContext = {
     onVectorElementClicked(callback: (data: VectorElementEventData<LatLonKeys>) => void) {
         listeners.onVectorElementClicked.push(callback);
     },
+    onRasterTileClicked(callback: (data: RasterTileClickInfo<LatLonKeys>) => void) {
+        listeners.onRasterTileClicked.push(callback);
+    },
     mapModule<T extends keyof MapModules>(id: T) {
         return mapContext.mapModules && mapContext.mapModules[id];
     },
@@ -121,7 +131,6 @@ const mapContext: MapContext = {
         });
         if (!result && listeners[functionName] && listeners[functionName].length > 0) {
             result = listeners[functionName].some((l) => l(...args));
-
         }
         return result;
     }
