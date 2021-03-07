@@ -81,7 +81,6 @@
                         break;
                     }
                 }
-                console.log('instruction', routeInstruction);
             } else {
                 routeInstruction = null;
                 remainingDistanceOnCurrentRoute = null;
@@ -105,7 +104,7 @@
         if (!itemIsRoute && item) {
             const props = item.properties;
             if (props) {
-                newPropsToDraw = PROPS_TO_SHOW.filter((k) => props.hasOwnProperty(k));
+                newPropsToDraw = PROPS_TO_SHOW.filter((k) => k in props);
             } else {
                 newPropsToDraw = [];
             }
@@ -209,7 +208,7 @@
             :fontSize={routeInstruction ? 10 : 16}
             :paddingTop={routeInstruction ? 18 : 0}
         />
-        <cspan text={itemSubtitle ? '\n' + itemSubtitle : ''} color="#D0D0D0" fontSize={13} />
+        <cspan text={itemSubtitle ? '\n' + itemSubtitle : ''} color="#D0D0D0" fontSize={13} maxLines={2}/>
     </cgroup>
     <cgroup
         fontSize="14"
