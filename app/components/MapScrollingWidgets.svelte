@@ -1,4 +1,4 @@
-<script lang="ts" >
+<script lang="ts">
     import { GridLayout, ViewBase } from '@nativescript/core';
     import { l, lc } from '@nativescript-community/l';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
@@ -16,7 +16,7 @@
     import type { IItem } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
     import { showError } from '~/utils/error';
-    import { accentColor, globalMarginTop, mdiFontFamily } from '~/variables';
+    import { accentColor, globalMarginTop, mdiFontFamily, primaryColor } from '~/variables';
     import { resolveComponentElement } from './bottomsheet';
     import OptionPicker from './OptionPicker.svelte';
     import ScaleView from './ScaleView.svelte';
@@ -262,12 +262,12 @@
     async function showMapRightMenu() {
         // mapContext.toggleMenu('bottom');
         const LayersMenu = (await import('~/components/LayersMenu.svelte')).default;
-                    const results = await showBottomSheet({
-                        view: LayersMenu,
-                        transparent:true,
-                        disableDimBackground:true,
-                        trackingScrollView:'trackingScrollView'
-                    });
+        const results = await showBottomSheet({
+            view: LayersMenu,
+            transparent: true,
+            disableDimBackground: true,
+            trackingScrollView: 'trackingScrollView'
+        });
     }
 </script>
 
@@ -329,6 +329,7 @@
         marginTop="80"
         on:tap={showMapRightMenu}
         class="small-floating-btn"
+        color={primaryColor}
         text="mdi-layers"
         row="2"
         verticalAlignment="bottom"

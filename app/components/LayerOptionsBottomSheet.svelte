@@ -15,6 +15,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { showError } from '~/utils/error';
     import { pickColor } from '~/utils/utils';
+import { textLightColor } from '~/variables';
     import { closeBottomSheet } from './bottomsheet';
 
     const mapContext = getMapContext();
@@ -197,12 +198,12 @@
         {#each Object.entries(options) as [name, option]}
             {#if option.type === 'color'}
                 <gridlayout height="50" columsn="*" on:tap={pickOptionColor(name, optionValue(name))}>
-                    <canvaslabel fontSize="13" color="white" padding="10">
+                    <canvaslabel fontSize="13" padding="10">
                         <cspan text={name} verticalAlignment="center" paddingLeft="10" horizontalAlignment="left" width="100" />
                         <circle
                             strokeWidth="2"
                             paintStyle="fill"
-                            fillColor="gray"
+                            fillColor={$textLightColor}
                             radius="15"
                             antiAlias={true}
                             horizontalAlignment="right"
@@ -211,7 +212,7 @@
                         <circle
                             strokeWidth="2"
                             paintStyle="fill_and_stroke"
-                            strokeColor="gray"
+                            strokeColor={$textLightColor}
                             fillColor={optionValue(name)}
                             radius="15"
                             antiAlias={true}
@@ -222,7 +223,7 @@
                 </gridlayout>
             {:else}
                 <gridlayout height="50" columns="100,*,50">
-                    <canvaslabel colSpan="3" fontSize="13" color="white" padding="10">
+                    <canvaslabel colSpan="3" fontSize="13" padding="10">
                         <cspan text={name} verticalAlignment="center" paddingLeft="10" horizontalAlignment="left" width="100" />
                         <cspan text={optionValue(name) / 100 + ''} verticalAlignment="center" textAlignment="right" />
                     </canvaslabel>
