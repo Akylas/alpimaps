@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-    import { l, lu } from '@nativescript-community/l';
+    import { l, lc, lu } from '~/helpers/locale';
     import {
         getAirportPressureAtLocation,
         isSensorAvailable,
@@ -15,15 +15,18 @@
     import { getNumber, getString, setNumber, setString } from '@nativescript/core/application-settings';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { GeoHandler } from '~/handlers/GeoHandler';
+    import { GeoHandler, GeoLocation, UserLocationdEventData } from '~/handlers/GeoHandler';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { packageService } from '~/services/PackageService';
     import { accentColor } from '~/variables';
+    import { VectorElementEventData } from '@nativescript-community/ui-carto/layers/vector';
+    import { prompt } from '@nativescript-community/ui-material-dialogs';
+    import { networkService } from '~/services/NetworkService';
 </script>
 
 <script lang="ts">
-    import { VectorElementEventData } from '@nativescript-community/ui-carto/layers/vector';
+
     let geoHandler: GeoHandler;
     let gridLayout: NativeViewElementNode<GridLayout>;
     let firstCanvas: NativeViewElementNode<CanvasLabel>;
@@ -31,12 +34,11 @@
     let showLocationInfo = false;
     let hasBarometer = isSensorAvailable('barometer');
     let listeningForBarometer = false;
-    let airportPressure = getNumber('airport_pressure', null);
-    let airportRefName: string = getString('airport_ref', null);
+    let referencePressure = null;
+    let airportRefName: string = null;
     let currentAltitude: number = null;
     let shownAltitude: number | string = null;
-    let currentLocation: MapPos<LatLonKeys> = null;
-
+    let currentLocation: GeoLocation = null;
 
     const mapContext = getMapContext();
     mapContext.onVectorElementClicked((data: VectorElementEventData<LatLonKeys>) => {
@@ -51,7 +53,7 @@
         showLocationInfo = !showLocationInfo;
         if (showLocationInfo) {
             loadView();
-        }        
+        }
     }
 
     export function getNativeView() {
@@ -63,7 +65,7 @@
         if (module) {
             if (showLocationInfo) {
                 module.on('location', onNewLocation, this);
-                onNewLocation({ data: module.lastUserLocation });
+                onNewLocation({ data: module.lastUserLocation } as any);
             } else {
                 module.off('location', onNewLocation, this);
                 if (listeningForBarometer) {
@@ -74,7 +76,7 @@
     }
     $: {
         if (listeningForBarometer) {
-            if (!airportPressure) {
+            if (!referencePressure) {
                 shownAltitude = l('no_ref');
             }
             shownAltitude = currentAltitude !== null ? currentAltitude : '-  ';
@@ -98,13 +100,10 @@
         geoHandler = handler;
     });
 
-    async function onNewLocation(e: any) {
+    async function onNewLocation(e: UserLocationdEventData) {
         currentLocation = e.data;
         if (currentLocation) {
-            const altitude = await packageService.getElevation(currentLocation);
-            if (altitude !== null) {
-                currentAltitude = Math.round(altitude);
-            }
+            currentAltitude = currentLocation.altitude;
         } else {
             currentAltitude = null;
         }
@@ -119,7 +118,7 @@
             stopListeningForSensor('barometer', onSensor);
         }
     }
-   
+
     function startBarometerAltitudeUpdate() {
         if (!listeningForBarometer) {
             listeningForBarometer = true;
@@ -139,16 +138,23 @@
             startBarometerAltitudeUpdate();
         }
     }
-    function getNearestAirportPressure() {
+    function resetReference() {
+        referencePressure = null;
+        airportRefName = null;
+    }
+    async function getNearestAirportPressure() {
+        referencePressure = null;
+        airportRefName = null;
+        if (!networkService.connected || packageService.hasElevation()) {
+            return;
+        }
         return geoHandler.enableLocation().then(() => {
             geoHandler
                 .getLocation({ maximumAge: 120000 })
                 .then((r) => getAirportPressureAtLocation(gVars.AVWX_API_KEY, r.lat, r.lon))
                 .then((r) => {
-                    airportPressure = r.pressure;
+                    referencePressure = r.pressure;
                     airportRefName = r.name;
-                    setNumber('airport_pressure', airportPressure);
-                    setString('airport_ref', airportRefName);
                     alert(`found nearest airport pressure ${r.name} with pressure:${r.pressure} hPa`);
                 })
                 .catch((err) => {
@@ -156,20 +162,39 @@
                 });
         });
     }
-    function onSensor(data, sensor: string) {
+    async function onSensor(data, sensor: string) {
         switch (sensor) {
             case 'barometer':
-                if (airportPressure != null) {
-                    // we can compute altitude
-                    if (airportPressure) {
-                        // console.log('barometer', data.timestamp, data.pressure, airportPressure);
-                        currentAltitude = Math.round(getAltitude(data.pressure, airportPressure));
-                        stopBarometer();
-                        if (listeningForBarometer) {
-                            setTimeout(() => {
-                                startBarometer();
-                            }, 5000);
-                        }
+                if (referencePressure != null) {
+                    currentAltitude = Math.round(getAltitude(data.pressure, referencePressure));
+                    stopBarometer();
+                    if (listeningForBarometer) {
+                        setTimeout(() => {
+                            startBarometer();
+                        }, 5000);
+                    }
+                } else if (currentLocation && Date.now() - currentLocation.timestamp < 60 * 1000 * 10 && currentAltitude) {
+                    stopBarometer();
+                    let assumedTemp = 15;
+                    const result = await prompt({
+                        title: lc('current_temperature'),
+                        // message: this.$tc('change_glasses_name'),
+                        okButtonText: l('set'),
+                        cancelButtonText: l('cancel'),
+                        autoFocus: true,
+                        defaultText: assumedTemp + ''
+                    });
+                    if (result && !!result.result && result.text.length > 0) {
+                        assumedTemp = parseFloat(result.text);
+                    }
+                    referencePressure =
+                        data.pressure *
+                        Math.pow(1 - (0.0065 * currentLocation.altitude) / (assumedTemp + 0.0065 * currentLocation.altitude + 273.15), -5.257);
+
+                    if (listeningForBarometer) {
+                        setTimeout(() => {
+                            startBarometer();
+                        }, 5000);
                     }
                 }
                 break;
@@ -231,16 +256,14 @@
             borderColor={accentColor}
             backgroundColor="#aaffffff"
         >
-            <!-- <cgroup verticalAlignment="center" textAlignment="center"> -->
-            <cspan
-                text={currentLocation && currentLocation.speed !== undefined ? currentLocation.speed.toFixed() : '10'}
-                fontSize="26"
-                textAlignment="center"
-                verticalAlignment="center"
-                fontWeight="bold"
-            />
-            <cspan text="km/h" fontSize="10" textAlignment="center" verticalAlignment="bottom" paddingBottom="3" />
-            <!-- </cgroup> -->
+            <cgroup verticalAlignment="center" textAlignment="center">
+                <cspan
+                    text={currentLocation && currentLocation.speed !== undefined ? currentLocation.speed.toFixed() : '10'}
+                    fontSize="26"
+                    fontWeight="bold"
+                />
+                <cspan text={'\n' + 'km/h'} fontSize="10" />
+            </cgroup>
         </canvaslabel>
         <canvaslabel col="1" marginLeft="5" color="#fff">
             <cspan
@@ -255,7 +278,7 @@
             </cgroup>
         </canvaslabel>
         <canvaslabel col="1" visibility={listeningForBarometer && airportRefName ? 'visible' : 'collapsed'}>
-            <cspan text={airportRefName} verticalTextAlignment="bottom" textAlignment="right" color="#fff" fontSize="9" />
+            <cspan text={airportRefName} verticalAlignment="bottom" textAlignment="right" color="#fff" fontSize="9" />
         </canvaslabel>
         <stacklayout visibility={hasBarometer ? 'visible' : 'collapsed'} col="2" verticalAlignment="center">
             <button variant="text" class="small-icon-btn" text="mdi-gauge" on:tap={switchBarometer} color="white" />

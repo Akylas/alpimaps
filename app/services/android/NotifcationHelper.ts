@@ -1,6 +1,5 @@
 import { Session, SessionState } from '~/handlers/GeoHandler';
-import { $tc } from '~/helpers/locale';
-import { convertDuration, formatValueToUnit } from '~/helpers/formatter';
+import { lc } from '~/helpers/locale';
 import { ad } from '@nativescript/core/utils/utils';
 
 export const ACTION_START = 'akylas.alpi.maps.action.START';
@@ -43,16 +42,16 @@ export class NotificationHelper {
         // tapActionIntentBuilder.getPendingIntent(10, PendingIntent.FLAG_UPDATE_CURRENT);
 
         // ACTION: NOTIFICATION BUTTON STOP
-        const stopActionIntent = new android.content.Intent(context, activityClass);
-        stopActionIntent.setAction(ACTION_STOP);
+        // const stopActionIntent = new android.content.Intent(context, activityClass);
+        // stopActionIntent.setAction(ACTION_STOP);
         // pending intent wrapper for notification stop action
-        const stopActionPendingIntent = android.app.PendingIntent.getService(context, 14, stopActionIntent, 0);
+        // const stopActionPendingIntent = android.app.PendingIntent.getService(context, 14, stopActionIntent, 0);
 
         // ACTION: NOTIFICATION BUTTON RESUME
-        const resumeActionIntent = new android.content.Intent(context, activityClass);
-        resumeActionIntent.setAction(ACTION_RESUME);
+        // const resumeActionIntent = new android.content.Intent(context, activityClass);
+        // resumeActionIntent.setAction(ACTION_RESUME);
         // pending intent wrapper for notification resume action
-        const resumeActionPendingIntent = android.app.PendingIntent.getService(context, 16, resumeActionIntent, 0);
+        // const resumeActionPendingIntent = android.app.PendingIntent.getService(context, 16, resumeActionIntent, 0);
 
         // construct notification in builder
         builder.setVisibility(androidx.core.app.NotificationCompat.VISIBILITY_SECRET);
@@ -68,12 +67,12 @@ export class NotificationHelper {
         return builder.build();
     }
 
-    public static updateBuilderTexts(builder, session: Session) {
+    public static updateBuilderTexts(builder: androidx.core.app.NotificationCompat.Builder, session: Session) {
         builder.setContentTitle(null);
         if (session) {
             // builder.setContentText(NotificationHelper.getSessionString(session));
         } else {
-            builder.setContentText($tc('tap_to_open'));
+            builder.setContentText(lc('tap_to_open'));
         }
     }
 

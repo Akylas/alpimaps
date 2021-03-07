@@ -1,4 +1,4 @@
-import { knownFolders, path } from '@nativescript/core/file-system';
+import { Folder, knownFolders, path } from '@nativescript/core/file-system';
 import * as app from '@nativescript/core/application';
 import * as appSettings from '@nativescript/core/application-settings';
 import { Application, Color, View } from '@nativescript/core';
@@ -54,10 +54,14 @@ export function getDataFolder() {
     }
     if (!dataFolder) {
         dataFolder = knownFolders.temp().path;
+    // } else {
+    //     if (global.isAndroid && Folder.exists(path.join(dataFolder, '../../../..', 'alpimaps_mbtiles'))) {
+    //         dataFolder = path.join(dataFolder, '../../../..', 'alpimaps_mbtiles');
+    //     }
     }
-    if (TNS_ENV !== 'production') {
-        dataFolder = path.join(dataFolder, 'dev');
-    }
+    // if (TNS_ENV !== 'production') {
+    //     dataFolder = path.join(dataFolder, 'dev');
+    // }
     return dataFolder;
 }
 

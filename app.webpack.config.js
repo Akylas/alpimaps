@@ -63,7 +63,13 @@ module.exports = (env, params = {}) => {
     const projectRoot = params.projectRoot || __dirname;
     const dist = nsWebpack.Utils.platform.getDistPath();
     const appResourcesFullPath = resolve(projectRoot, appResourcesPath);
-
+    config.externals.push('~/licenses.json');
+    config.externals.push(function ({ context, request }, cb) {
+        if (/i18n$/i.test(context)) {
+            return cb(null, './i18n/' + request);
+        }
+        cb();
+    });
     // config.stats = {
     //     modulesSpace:Infinity,
     //     optimizationBailout: true

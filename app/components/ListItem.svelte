@@ -2,7 +2,6 @@
     import { Canvas, CanvasView } from '@nativescript-community/ui-canvas';
     import { createEventDispatcher } from 'svelte';
     import { mdiFontFamily, primaryColor } from '~/variables';
-    import SymbolShape from './SymbolShape';
     const dispatch = createEventDispatcher();
 
     export let showBottomLine: boolean = true;
@@ -22,7 +21,7 @@
         <symbolshape
             visibility={showSymbol ? 'visible' : 'hidden'}
             {symbol}
-            color={symbolColor}
+            color={symbolColor || 0}
             width="34"
             height="32"
             verticalAligment="middle" />

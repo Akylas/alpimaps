@@ -848,24 +848,8 @@
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'bog' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(214,217,159)" />
-			<PolygonPatternSymbolizer file="symbols/bog.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'bog'</Filter>
 			<PolygonSymbolizer fill="rgb(214,217,159)" />
-			<PolygonPatternSymbolizer file="symbols/bog.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'fen' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
 			<PolygonPatternSymbolizer file="symbols/bog.png" />
 		</Rule>
 		<Rule name="auto">
@@ -878,25 +862,9 @@
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'string_bog' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(214,217,159)" />
-			<PolygonPatternSymbolizer file="symbols/bog.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'string_bog'</Filter>
 			<PolygonSymbolizer fill="rgb(214,217,159)" />
 			<PolygonPatternSymbolizer file="symbols/bog.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'swamp' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(191,202,155)" />
-			<PolygonPatternSymbolizer file="symbols/swamp.png" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
@@ -908,36 +876,14 @@
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'mangrove' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonPatternSymbolizer file="symbols/mangrove.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'mangrove'</Filter>
 			<PolygonPatternSymbolizer file="symbols/mangrove.png" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'reedbed' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonPatternSymbolizer file="symbols/reed.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'reedbed'</Filter>
 			<PolygonPatternSymbolizer file="symbols/reed.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'marsh' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-			<PolygonPatternSymbolizer file="symbols/marsh.png" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
@@ -949,22 +895,7 @@
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'saltmarsh' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonPatternSymbolizer file="symbols/marsh.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'saltmarsh'</Filter>
-			<PolygonPatternSymbolizer file="symbols/marsh.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'wet_meadow' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
 			<PolygonPatternSymbolizer file="symbols/marsh.png" />
 		</Rule>
 		<Rule name="auto">
@@ -977,23 +908,8 @@
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'allotments' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(201,225,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'allotments'</Filter>
 			<PolygonSymbolizer fill="rgb(201,225,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'park' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-			<LineSymbolizer stroke="rgb(203,212,135)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
@@ -1001,13 +917,6 @@
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'park'</Filter>
 			<PolygonSymbolizer fill="rgb(222,226,191)" />
 			<LineSymbolizer stroke="rgb(203,212,135)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'garden' and [name] &lt;&gt; null</Filter>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
@@ -1032,22 +941,8 @@
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonPatternSymbolizer file="symbols/wetland.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland'</Filter>
 			<PolygonPatternSymbolizer file="symbols/wetland.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'scrub' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(205,214,175)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
@@ -1058,22 +953,8 @@
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'fell' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(242,239,233)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'fell'</Filter>
 			<PolygonSymbolizer fill="rgb(242,239,233)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'heath' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(214,217,159)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
@@ -1081,90 +962,17 @@
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'heath'</Filter>
 			<PolygonSymbolizer fill="rgb(214,217,159)" />
 		</Rule>
-		<Rule name="auto">
+		<Rule name="combined">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'grassland' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and ( [subclass] = 'grassland' or [subclass] = 'meadow' or [subclass] = 'grass' or [subclass] = 'village_green' )</Filter>
 			<PolygonSymbolizer fill="rgb(222,226,191)" />
 		</Rule>
-		<Rule name="auto">
+		<Rule name="combined">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'grassland'</Filter>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'meadow' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'meadow'</Filter>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'grass' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'grass'</Filter>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'village_green' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'village_green'</Filter>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'rock' and [subclass] = 'scree' and [name] &lt;&gt; null</Filter>
+			<Filter>[mapnik::geometry_type] = 3 and [class] = 'rock' and ( [subclass] = 'scree' or [subclass] = 'shingle' )</Filter>
 			<PolygonSymbolizer fill="rgb(238,229,220)" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'rock' and [subclass] = 'scree'</Filter>
-			<PolygonSymbolizer fill="rgb(238,229,220)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'rock' and [subclass] = 'shingle' and [name] &lt;&gt; null</Filter>
-			<PolygonSymbolizer fill="rgb(238,229,220)" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'rock' and [subclass] = 'shingle'</Filter>
-			<PolygonSymbolizer fill="rgb(238,229,220)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'rock' and [subclass] = 'bare_rock' and [name] &lt;&gt; null</Filter>
-			<PolygonSymbolizer fill="rgb(220,215,209)" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
@@ -1175,70 +983,14 @@
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'farmland' and [subclass] = 'vineyard' and [name] &lt;&gt; null</Filter>
-			<PolygonSymbolizer fill="rgba(174,223,163,0.227451)" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'farmland' and [subclass] = 'vineyard'</Filter>
 			<PolygonSymbolizer fill="rgba(174,223,163,0.227451)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'sand' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(232,214,38)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'sand'</Filter>
 			<PolygonSymbolizer fill="rgb(232,214,38)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null and ( [class] = 'farmland' or [class] = 'greenhouse_horticulture' )</Filter>
-			<PolygonSymbolizer fill="rgb(238,240,213)" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null and [class] = 'farmyard'</Filter>
-			<PolygonSymbolizer fill="rgb(245,220,186)" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null and [class] = 'park'</Filter>
-			<PolygonSymbolizer fill="rgb(203,212,135)" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null and [class] = 'landfill'</Filter>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null and [class] = 'ice'</Filter>
-			<PolygonSymbolizer fill="rgb(255,255,255)" />
-			<LineSymbolizer stroke="rgb(204,204,204)" stroke-width="0.5" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
@@ -1274,24 +1026,8 @@
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'bog' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(214,217,159)" />
-			<PolygonPatternSymbolizer file="symbols/bog.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'bog'</Filter>
 			<PolygonSymbolizer fill="rgb(214,217,159)" />
-			<PolygonPatternSymbolizer file="symbols/bog.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'fen' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
 			<PolygonPatternSymbolizer file="symbols/bog.png" />
 		</Rule>
 		<Rule name="auto">
@@ -1304,25 +1040,9 @@
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'string_bog' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(214,217,159)" />
-			<PolygonPatternSymbolizer file="symbols/bog.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'string_bog'</Filter>
 			<PolygonSymbolizer fill="rgb(214,217,159)" />
 			<PolygonPatternSymbolizer file="symbols/bog.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'swamp' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(191,202,155)" />
-			<PolygonPatternSymbolizer file="symbols/swamp.png" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
@@ -1334,36 +1054,14 @@
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'mangrove' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonPatternSymbolizer file="symbols/mangrove.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'mangrove'</Filter>
 			<PolygonPatternSymbolizer file="symbols/mangrove.png" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'reedbed' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonPatternSymbolizer file="symbols/reed.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'reedbed'</Filter>
 			<PolygonPatternSymbolizer file="symbols/reed.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'marsh' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-			<PolygonPatternSymbolizer file="symbols/marsh.png" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
@@ -1375,22 +1073,7 @@
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'saltmarsh' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonPatternSymbolizer file="symbols/marsh.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'saltmarsh'</Filter>
-			<PolygonPatternSymbolizer file="symbols/marsh.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [subclass] = 'wet_meadow' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
 			<PolygonPatternSymbolizer file="symbols/marsh.png" />
 		</Rule>
 		<Rule name="auto">
@@ -1403,23 +1086,8 @@
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'allotments' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(201,225,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'allotments'</Filter>
 			<PolygonSymbolizer fill="rgb(201,225,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'park' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-			<LineSymbolizer stroke="rgb(203,212,135)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
@@ -1431,23 +1099,8 @@
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'garden' and [name] &lt;&gt; null</Filter>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'garden'</Filter>
 			<PolygonSymbolizer fill="rgb(222,226,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'farmland' and [subclass] = 'vineyard' and [name] &lt;&gt; null</Filter>
-			<PolygonSymbolizer fill="rgba(174,223,163,0.227451)" />
-			<PolygonPatternSymbolizer file="symbols/vineyard.png" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
@@ -1512,22 +1165,8 @@
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonPatternSymbolizer file="symbols/wetland.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'wetland'</Filter>
 			<PolygonPatternSymbolizer file="symbols/wetland.png" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'scrub' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(205,214,175)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
@@ -1535,12 +1174,11 @@
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'scrub'</Filter>
 			<PolygonSymbolizer fill="rgb(205,214,175)" />
 		</Rule>
-		<Rule name="auto">
+		<Rule name="combined">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'fell' and [name] &lt;&gt; null</Filter>
+			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null and ( [class] = 'industrial' or [class] = 'military' )</Filter>
 			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(242,239,233)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
@@ -1551,114 +1189,26 @@
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'heath' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(214,217,159)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'heath'</Filter>
 			<PolygonSymbolizer fill="rgb(214,217,159)" />
 		</Rule>
-		<Rule name="auto">
+		<Rule name="combined">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'grassland' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and ( [subclass] = 'grassland' or [subclass] = 'meadow' or [subclass] = 'grass' or [subclass] = 'village_green' )</Filter>
 			<PolygonSymbolizer fill="rgb(222,226,191)" />
 		</Rule>
-		<Rule name="auto">
+		<Rule name="combined">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'grassland'</Filter>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'meadow' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'meadow'</Filter>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'grass' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'grass'</Filter>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'village_green' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'village_green'</Filter>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'rock' and [subclass] = 'scree' and [name] &lt;&gt; null</Filter>
+			<Filter>[mapnik::geometry_type] = 3 and [class] = 'rock' and ( [subclass] = 'scree' or [subclass] = 'shingle' )</Filter>
 			<PolygonSymbolizer fill="rgb(238,229,220)" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'rock' and [subclass] = 'scree'</Filter>
-			<PolygonSymbolizer fill="rgb(238,229,220)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'rock' and [subclass] = 'shingle' and [name] &lt;&gt; null</Filter>
-			<PolygonSymbolizer fill="rgb(238,229,220)" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'rock' and [subclass] = 'shingle'</Filter>
-			<PolygonSymbolizer fill="rgb(238,229,220)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'rock' and [subclass] = 'bare_rock' and [name] &lt;&gt; null</Filter>
-			<PolygonSymbolizer fill="rgb(220,215,209)" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'rock' and [subclass] = 'bare_rock'</Filter>
 			<PolygonSymbolizer fill="rgb(220,215,209)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'farmland' and [subclass] = 'orchard' and [name] &lt;&gt; null</Filter>
-			<PolygonSymbolizer fill="rgba(174,223,163,0.227451)" />
-			<PolygonPatternSymbolizer file="symbols/orchard.png" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
@@ -1676,57 +1226,8 @@
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'sand' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgb(232,214,38)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'sand'</Filter>
 			<PolygonSymbolizer fill="rgb(232,214,38)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null and ( [class] = 'farmland' or [class] = 'greenhouse_horticulture' )</Filter>
-			<PolygonSymbolizer fill="rgb(238,240,213)" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null and [class] = 'farmyard'</Filter>
-			<PolygonSymbolizer fill="rgb(245,220,186)" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null and [class] = 'park'</Filter>
-			<PolygonSymbolizer fill="rgb(203,212,135)" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null and [class] = 'landfill'</Filter>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null and [class] = 'ice'</Filter>
-			<PolygonSymbolizer fill="rgb(255,255,255)" />
-			<LineSymbolizer stroke="rgb(204,204,204)" stroke-width="0.5" />
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
@@ -1937,8 +1438,8 @@
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'garden' and [name] &lt;&gt; null</Filter>
-			<PolygonSymbolizer fill="rgb(222,226,191)" />
 			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+			<PolygonSymbolizer fill="rgb(222,226,191)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
@@ -1967,8 +1468,8 @@
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'farmland' and [subclass] = 'vineyard' and [name] &lt;&gt; null</Filter>
 			<PolygonSymbolizer fill="rgba(174,223,163,0.227451)" />
 			<PolygonPatternSymbolizer file="symbols/vineyard.png" />
-			<LineSymbolizer stroke="rgb(199,201,174)" stroke-width="0.5" />
 			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+			<LineSymbolizer stroke="rgb(199,201,174)" stroke-width="0.5" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
@@ -2057,6 +1558,12 @@
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'grass' and [subclass] = 'scrub'</Filter>
 			<PolygonSymbolizer fill="rgb(205,214,175)" />
 		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null and ( [class] = 'industrial' or [class] = 'military' )</Filter>
+			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
@@ -2141,8 +1648,8 @@
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'farmland' and [subclass] = 'orchard' and [name] &lt;&gt; null</Filter>
 			<PolygonSymbolizer fill="rgba(174,223,163,0.227451)" />
 			<PolygonPatternSymbolizer file="symbols/orchard.png" />
-			<LineSymbolizer stroke="rgb(199,201,174)" stroke-width="0.5" />
 			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+			<LineSymbolizer stroke="rgb(199,201,174)" stroke-width="0.5" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
@@ -2370,36 +1877,16 @@
 	</Style>
 	<Style name="landuse" filter-mode="first">
 		<Rule name="combined">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>8735660</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'residential'</Filter>
 			<PolygonSymbolizer fill="rgba(191,186,171,0.4)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'residential' and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgba(191,186,171,0.4)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'residential'</Filter>
-			<PolygonSymbolizer fill="rgba(191,186,171,0.4)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
+		<Rule name="combined">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [class] = 'residential' and [name] &lt;&gt; null</Filter>
+			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null and ( [class] = 'industrial' or [class] = 'military' )</Filter>
 			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-			<PolygonSymbolizer fill="rgba(191,186,171,0.4)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
@@ -2407,10 +1894,10 @@
 			<Filter>[mapnik::geometry_type] = 3 and [class] = 'residential'</Filter>
 			<PolygonSymbolizer fill="rgba(191,186,171,0.4)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null</Filter>
+		<Rule name="combined">
+			<MinScaleDenominator>8530.91797</MinScaleDenominator>
+			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null and ( [class] = 'industrial' or [class] = 'military' )</Filter>
 			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
@@ -2432,6 +1919,12 @@
 			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null</Filter>
 			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null and ( [class] = 'industrial' or [class] = 'military' )</Filter>
+			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
@@ -2449,6 +1942,12 @@
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null</Filter>
+			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type] = 3 and [name] &lt;&gt; null and ( [class] = 'industrial' or [class] = 'military' )</Filter>
 			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(97,97,90)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" minimum-distance="50" size="10" wrap-width="30">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
@@ -3896,10 +3395,22 @@
 	</Style>
 	<Style name="place" filter-mode="first">
 		<Rule name="auto">
+			<MinScaleDenominator>559082240</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[class] = 'town'</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],9,9.0,13,13.0,14,15.0,15,17.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],9,70,15,80)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
 			<MinScaleDenominator>139770560</MinScaleDenominator>
 			<MaxScaleDenominator>559082240</MaxScaleDenominator>
 			<Filter>[class] = 'continent'</Filter>
 			<TextSymbolizer character-spacing="0.5" face-name="Montserrat Medium" fill="rgb(64,92,120)" halo-fill="rgb(251,248,243)" halo-radius="1" size="linear([view::zoom],1,10.0,2,14.0)" text-transform="uppercase" wrap-width="step([view::zoom],1,20,2,40)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>139770560</MinScaleDenominator>
+			<MaxScaleDenominator>559082240</MaxScaleDenominator>
+			<Filter>[class] = 'town'</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],9,9.0,13,13.0,14,15.0,15,17.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],9,70,15,80)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>69885280</MinScaleDenominator>
@@ -3912,6 +3423,12 @@
 			<MaxScaleDenominator>139770560</MaxScaleDenominator>
 			<Filter>[class] = 'country' and [rank] = 1</Filter>
 			<TextSymbolizer character-spacing="0.5" face-name="Montserrat Medium" fill="rgba({linear([view::zoom],4,107,5,136,6,163)},{linear([view::zoom],4,125,5,148,6,171)},{linear([view::zoom],4,145,5,163,6,181)},1)" halo-fill="rgb(251,248,243)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" minimum-distance="2" placement="[nuti::texts3d]" size="(linear([view::zoom],2,10.0,5,13.0,6,15.0))-((1.0e-06)*([rank]))" text-transform="uppercase" wrap-before="1" wrap-width="step([view::zoom],2,60,3,80,4,100,5,120,6,140)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>69885280</MinScaleDenominator>
+			<MaxScaleDenominator>139770560</MaxScaleDenominator>
+			<Filter>[class] = 'town'</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],9,9.0,13,13.0,14,15.0,15,17.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],9,70,15,80)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>34942640</MinScaleDenominator>
@@ -3930,6 +3447,12 @@
 			<MaxScaleDenominator>69885280</MaxScaleDenominator>
 			<Filter>[class] = 'country' and [rank] = 1</Filter>
 			<TextSymbolizer character-spacing="0.5" face-name="Montserrat Medium" fill="rgba({linear([view::zoom],4,107,5,136,6,163)},{linear([view::zoom],4,125,5,148,6,171)},{linear([view::zoom],4,145,5,163,6,181)},1)" halo-fill="rgb(251,248,243)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" minimum-distance="2" placement="[nuti::texts3d]" size="(linear([view::zoom],2,10.0,5,13.0,6,15.0))-((1.0e-06)*([rank]))" text-transform="uppercase" wrap-before="1" wrap-width="step([view::zoom],2,60,3,80,4,100,5,120,6,140)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34942640</MinScaleDenominator>
+			<MaxScaleDenominator>69885280</MaxScaleDenominator>
+			<Filter>[class] = 'town'</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],9,9.0,13,13.0,14,15.0,15,17.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],9,70,15,80)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17471320</MinScaleDenominator>
@@ -3954,6 +3477,12 @@
 			<MaxScaleDenominator>34942640</MaxScaleDenominator>
 			<Filter>[class] = 'country' and [rank] = 1</Filter>
 			<TextSymbolizer character-spacing="0.5" face-name="Montserrat Medium" fill="rgba({linear([view::zoom],4,107,5,136,6,163)},{linear([view::zoom],4,125,5,148,6,171)},{linear([view::zoom],4,145,5,163,6,181)},1)" halo-fill="rgb(251,248,243)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" minimum-distance="2" placement="[nuti::texts3d]" size="(linear([view::zoom],2,10.0,5,13.0,6,15.0))-((1.0e-06)*([rank]))" text-transform="uppercase" wrap-before="1" wrap-width="step([view::zoom],2,60,3,80,4,100,5,120,6,140)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>17471320</MinScaleDenominator>
+			<MaxScaleDenominator>34942640</MaxScaleDenominator>
+			<Filter>[class] = 'town'</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],9,9.0,13,13.0,14,15.0,15,17.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],9,70,15,80)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>8735660</MinScaleDenominator>
@@ -3992,6 +3521,12 @@
 			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(124,138,155)" halo-fill="rgb(251,248,243)" halo-radius="1" halo-rasterizer="fast" minimum-distance="5" placement="[nuti::texts3d]" size="linear([view::zoom],5,11.0,6,12.0,7,13.0)" text-transform="uppercase" wrap-before="1" wrap-width="step([view::zoom],5,60,6,80,7,100)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
+			<MinScaleDenominator>8735660</MinScaleDenominator>
+			<MaxScaleDenominator>17471320</MaxScaleDenominator>
+			<Filter>[class] = 'town'</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],9,9.0,13,13.0,14,15.0,15,17.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],9,70,15,80)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
 			<MinScaleDenominator>4367830</MinScaleDenominator>
 			<MaxScaleDenominator>8735660</MaxScaleDenominator>
 			<Filter>[class] = 'country' and [rank] &gt;= 6</Filter>
@@ -4028,10 +3563,10 @@
 			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(124,138,155)" halo-fill="rgb(251,248,243)" halo-radius="1" halo-rasterizer="fast" minimum-distance="5" placement="[nuti::texts3d]" size="linear([view::zoom],5,11.0,6,12.0,7,13.0)" text-transform="uppercase" wrap-before="1" wrap-width="step([view::zoom],5,60,6,80,7,100)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
-			<MinScaleDenominator>2183915</MinScaleDenominator>
-			<MaxScaleDenominator>4367830</MaxScaleDenominator>
-			<Filter>[class] = 'city' and [rank] &lt;= 11 and [rank] &lt;= 7</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="((linear([view::zoom],8,13.0,14,21.0))-(([rank])/(2.0)))-((1.0e-06)*([rank]))" text-transform="uppercase" wrap-width="step([view::zoom],8,50,9,60,11,70,12,80,13,120,14,200)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+			<MinScaleDenominator>4367830</MinScaleDenominator>
+			<MaxScaleDenominator>8735660</MaxScaleDenominator>
+			<Filter>[class] = 'town'</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],9,9.0,13,13.0,14,15.0,15,17.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],9,70,15,80)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>2183915</MinScaleDenominator>
@@ -4066,14 +3601,26 @@
 		<Rule name="auto">
 			<MinScaleDenominator>2183915</MinScaleDenominator>
 			<MaxScaleDenominator>4367830</MaxScaleDenominator>
-			<Filter>[class] = 'city' and [rank] &lt;= 11</Filter>
+			<Filter>[class] = 'village' and [rank] &lt;= 14</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::texts3d]" size="(linear([view::zoom],8,7.0,11,9.0,12,10.0,13,11.0,16,16.0))-((1.0e-06)*([rank]))" wrap-before="1">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[class] = 'city' and [rank] &lt;= 7</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="((linear([view::zoom],8,13.0,14,21.0))-(([rank])/(2.0)))-((1.0e-06)*([rank]))" text-transform="uppercase" wrap-width="step([view::zoom],8,50,9,60,11,70,12,80,13,120,14,200)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[class] = 'city'</Filter>
 			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="((linear([view::zoom],8,13.0,14,21.0))-(([rank])/(2.0)))-((1.0e-06)*([rank]))" wrap-width="step([view::zoom],8,50,9,60,11,70,12,80,13,120,14,200)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
-			<MinScaleDenominator>1091957.5</MinScaleDenominator>
-			<MaxScaleDenominator>2183915</MaxScaleDenominator>
-			<Filter>[class] = 'city' and [rank] &lt;= 11 and [rank] &lt;= 10</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="((linear([view::zoom],8,13.0,14,21.0))-(([rank])/(2.0)))-((1.0e-06)*([rank]))" text-transform="uppercase" wrap-width="step([view::zoom],8,50,9,60,11,70,12,80,13,120,14,200)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[class] = 'town'</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],9,9.0,13,13.0,14,15.0,15,17.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],9,70,15,80)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>1091957.5</MinScaleDenominator>
@@ -4102,14 +3649,26 @@
 		<Rule name="auto">
 			<MinScaleDenominator>1091957.5</MinScaleDenominator>
 			<MaxScaleDenominator>2183915</MaxScaleDenominator>
-			<Filter>[class] = 'town' and [rank] &lt;= 12</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],9,9.0,13,13.0,14,15.0,15,17.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],9,70,15,80)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+			<Filter>[class] = 'village' and [rank] &lt;= 14</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::texts3d]" size="(linear([view::zoom],8,7.0,11,9.0,12,10.0,13,11.0,16,16.0))-((1.0e-06)*([rank]))" wrap-before="1">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
-		<Rule name="combined">
+		<Rule name="auto">
 			<MinScaleDenominator>1091957.5</MinScaleDenominator>
 			<MaxScaleDenominator>2183915</MaxScaleDenominator>
-			<Filter>[class] = 'city' and ( [rank] &lt;= 11 or [rank] &lt;= 12 )</Filter>
+			<Filter>[class] = 'city' and [rank] &lt;= 10</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="((linear([view::zoom],8,13.0,14,21.0))-(([rank])/(2.0)))-((1.0e-06)*([rank]))" text-transform="uppercase" wrap-width="step([view::zoom],8,50,9,60,11,70,12,80,13,120,14,200)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[class] = 'city'</Filter>
 			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="((linear([view::zoom],8,13.0,14,21.0))-(([rank])/(2.0)))-((1.0e-06)*([rank]))" wrap-width="step([view::zoom],8,50,9,60,11,70,12,80,13,120,14,200)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[class] = 'town'</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],9,9.0,13,13.0,14,15.0,15,17.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],9,70,15,80)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>545978.75</MinScaleDenominator>
@@ -4126,261 +3685,93 @@
 		<Rule name="combined">
 			<MinScaleDenominator>545978.75</MinScaleDenominator>
 			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<Filter>[class] = 'city' and ( [rank] &lt;= 11 or [rank] &lt;= 12 or [rank] &lt;= 15 )</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="((linear([view::zoom],8,13.0,14,21.0))-(([rank])/(2.0)))-((1.0e-06)*([rank]))" text-transform="uppercase" wrap-width="step([view::zoom],8,50,9,60,11,70,12,80,13,120,14,200)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>545978.75</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
 			<Filter>[class] = 'state' and ( [rank] &lt;= 2 or [rank] &lt;= 4 or [rank] &lt;= 99 )</Filter>
 			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(124,138,155)" halo-fill="rgb(251,248,243)" halo-radius="1" halo-rasterizer="fast" minimum-distance="5" placement="[nuti::texts3d]" size="linear([view::zoom],5,11.0,6,12.0,7,13.0)" text-transform="uppercase" wrap-before="1" wrap-width="step([view::zoom],5,60,6,80,7,100)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>545978.75</MinScaleDenominator>
 			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<Filter>[class] = 'village' and [rank] &lt;= 11</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" feature-id="[osmid]" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],11,9.0,12,10.0,13,11.0,16,16.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],12,50,13,90,14,120,15,140,16,160)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+			<Filter>[class] = 'village' and [rank] &lt;= 13</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::texts3d]" size="(linear([view::zoom],8,7.0,11,9.0,12,10.0,13,11.0,16,16.0))-((1.0e-06)*([rank]))" wrap-before="1">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>545978.75</MinScaleDenominator>
 			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<Filter>[class] = 'town' and [rank] &lt;= 12</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],9,9.0,13,13.0,14,15.0,15,17.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],9,70,15,80)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
-			<Filter>[class] = 'village' and [rank] &lt;= 14</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" feature-id="[osmid]" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],11,9.0,12,10.0,13,11.0,16,16.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],12,50,13,90,14,120,15,140,16,160)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
-			<Filter>[class] = 'city' and ( [rank] &lt;= 11 or [rank] &lt;= 12 or [rank] &lt;= 15 )</Filter>
+			<Filter>[class] = 'city'</Filter>
 			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="((linear([view::zoom],8,13.0,14,21.0))-(([rank])/(2.0)))-((1.0e-06)*([rank]))" text-transform="uppercase" wrap-width="step([view::zoom],8,50,9,60,11,70,12,80,13,120,14,200)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
-			<Filter>[class] = 'town' and [rank] &lt;= 12</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],9,9.0,13,13.0,14,15.0,15,17.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],9,70,15,80)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[class] = 'village' and [rank] &lt;= 14</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" feature-id="[osmid]" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],11,9.0,12,10.0,13,11.0,16,16.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],12,50,13,90,14,120,15,140,16,160)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[class] = 'city' and ( [rank] &lt;= 11 or [rank] &lt;= 12 or [rank] &lt;= 15 )</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="((linear([view::zoom],8,13.0,14,21.0))-(([rank])/(2.0)))-((1.0e-06)*([rank]))" text-transform="uppercase" wrap-width="step([view::zoom],8,50,9,60,11,70,12,80,13,120,14,200)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[rank] &lt;= 12 and ( [class] = 'hamlet' or [class] = 'island' or [class] = 'islet' or [class] = 'neighbourhood' )</Filter>
-			<TextSymbolizer face-name="Montserrat Italic" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],14,9.0,16,13.0,17,15.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],13,50,14,80,15,100,16,120,17,140)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[class] = 'suburb' and [rank] &lt;= 11</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],12,9.0,13,10.0,16,13.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],12,50,13,80,14,90,15,100,16,120)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[class] = 'town' and [rank] &lt;= 12</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],9,9.0,13,13.0,14,15.0,15,17.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],9,70,15,80)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[class] = 'village' and [rank] &lt;= 14</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" feature-id="[osmid]" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],11,9.0,12,10.0,13,11.0,16,16.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],12,50,13,90,14,120,15,140,16,160)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[class] = 'city' and ( [rank] &lt;= 11 or [rank] &lt;= 12 or [rank] &lt;= 15 )</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="((linear([view::zoom],8,13.0,14,21.0))-(([rank])/(2.0)))-((1.0e-06)*([rank]))" text-transform="uppercase" wrap-width="step([view::zoom],8,50,9,60,11,70,12,80,13,120,14,200)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[rank] &lt;= 12 and ( [class] = 'isolated_dwelling' or [class] = 'locality' )</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],14,8.0,17,14.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],13,40,17,130)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[rank] &lt;= 12 and ( [class] = 'hamlet' or [class] = 'island' or [class] = 'islet' or [class] = 'neighbourhood' )</Filter>
-			<TextSymbolizer face-name="Montserrat Italic" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],14,9.0,16,13.0,17,15.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],13,50,14,80,15,100,16,120,17,140)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[class] = 'suburb' and [rank] &lt;= 11</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],12,9.0,13,10.0,16,13.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],12,50,13,80,14,90,15,100,16,120)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[class] = 'town' and [rank] &lt;= 12</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],9,9.0,13,13.0,14,15.0,15,17.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],9,70,15,80)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[class] = 'village'</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" feature-id="[osmid]" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],11,9.0,12,10.0,13,11.0,16,16.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],12,50,13,90,14,120,15,140,16,160)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[class] = 'city' and ( [rank] &lt;= 11 or [rank] &lt;= 12 or [rank] &lt;= 15 )</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="((linear([view::zoom],8,13.0,14,21.0))-(([rank])/(2.0)))-((1.0e-06)*([rank]))" text-transform="uppercase" wrap-width="step([view::zoom],8,50,9,60,11,70,12,80,13,120,14,200)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[rank] &lt;= 12 and ( [class] = 'isolated_dwelling' or [class] = 'locality' )</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],14,8.0,17,14.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],13,40,17,130)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[rank] &lt;= 12 and ( [class] = 'hamlet' or [class] = 'island' or [class] = 'islet' or [class] = 'neighbourhood' )</Filter>
-			<TextSymbolizer face-name="Montserrat Italic" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],14,9.0,16,13.0,17,15.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],13,50,14,80,15,100,16,120,17,140)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[class] = 'suburb' and [rank] &lt;= 11</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],12,9.0,13,10.0,16,13.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],12,50,13,80,14,90,15,100,16,120)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[class] = 'town' and [rank] &lt;= 12</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],9,9.0,13,13.0,14,15.0,15,17.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],9,70,15,80)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[class] = 'village'</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" feature-id="[osmid]" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],11,9.0,12,10.0,13,11.0,16,16.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],12,50,13,90,14,120,15,140,16,160)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[rank] &lt;= 12 and ( [class] = 'isolated_dwelling' or [class] = 'locality' )</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],14,8.0,17,14.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],13,40,17,130)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[rank] &lt;= 12 and ( [class] = 'hamlet' or [class] = 'island' or [class] = 'islet' or [class] = 'neighbourhood' )</Filter>
-			<TextSymbolizer face-name="Montserrat Italic" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],14,9.0,16,13.0,17,15.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],13,50,14,80,15,100,16,120,17,140)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[class] = 'suburb'</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],12,9.0,13,10.0,16,13.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],12,50,13,80,14,90,15,100,16,120)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[class] = 'village'</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" feature-id="[osmid]" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],11,9.0,12,10.0,13,11.0,16,16.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],12,50,13,90,14,120,15,140,16,160)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<MinScaleDenominator>545978.75</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
 			<Filter>[class] = 'town'</Filter>
 			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],9,9.0,13,13.0,14,15.0,15,17.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],9,70,15,80)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[rank] &lt;= 12 and ( [class] = 'isolated_dwelling' or [class] = 'locality' )</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],14,8.0,17,14.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],13,40,17,130)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[rank] &lt;= 12 and ( [class] = 'hamlet' or [class] = 'island' or [class] = 'islet' or [class] = 'neighbourhood' )</Filter>
-			<TextSymbolizer face-name="Montserrat Italic" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],14,9.0,16,13.0,17,15.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],13,50,14,80,15,100,16,120,17,140)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[class] = 'isolated_dwelling' or [class] = 'locality'</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],14,8.0,17,14.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],13,40,17,130)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[class] = 'hamlet' or [class] = 'island' or [class] = 'islet' or [class] = 'neighbourhood'</Filter>
-			<TextSymbolizer face-name="Montserrat Italic" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],14,9.0,16,13.0,17,15.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],13,50,14,80,15,100,16,120,17,140)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
+			<Filter>[class] = 'village'</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::texts3d]" size="(linear([view::zoom],8,7.0,11,9.0,12,10.0,13,11.0,16,16.0))-((1.0e-06)*([rank]))" wrap-before="1">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
+			<Filter>[class] = 'city'</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="((linear([view::zoom],8,13.0,14,21.0))-(([rank])/(2.0)))-((1.0e-06)*([rank]))" text-transform="uppercase" wrap-width="step([view::zoom],8,50,9,60,11,70,12,80,13,120,14,200)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
 			<Filter>[class] = 'suburb'</Filter>
 			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],12,9.0,13,10.0,16,13.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],12,50,13,80,14,90,15,100,16,120)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[class] = 'village'</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" feature-id="[osmid]" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],11,9.0,12,10.0,13,11.0,16,16.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],12,50,13,90,14,120,15,140,16,160)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
+			<Filter>[class] = 'town'</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],9,9.0,13,13.0,14,15.0,15,17.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],9,70,15,80)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
-			<MinScaleDenominator>4265.45898</MinScaleDenominator>
-			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class] = 'village'</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" placement="[nuti::texts3d]" size="(linear([view::zoom],8,7.0,11,9.0,12,10.0,13,11.0,16,16.0))-((1.0e-06)*([rank]))" wrap-before="1">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class] = 'city'</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="((linear([view::zoom],8,13.0,14,21.0))-(([rank])/(2.0)))-((1.0e-06)*([rank]))" text-transform="uppercase" wrap-width="step([view::zoom],8,50,9,60,11,70,12,80,13,120,14,200)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[class] = 'isolated_dwelling' or [class] = 'locality'</Filter>
 			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],14,8.0,17,14.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],13,40,17,130)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
-			<MinScaleDenominator>4265.45898</MinScaleDenominator>
-			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[class] = 'hamlet' or [class] = 'island' or [class] = 'islet' or [class] = 'neighbourhood'</Filter>
 			<TextSymbolizer face-name="Montserrat Italic" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],14,9.0,16,13.0,17,15.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],13,50,14,80,15,100,16,120,17,140)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
-		<Rule name="combined">
+		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
-			<Filter>[class] = 'village'</Filter>
-			<TextSymbolizer face-name="Montserrat Medium" feature-id="[osmid]" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],11,9.0,12,10.0,13,11.0,16,16.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],12,50,13,90,14,120,15,140,16,160)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class] = 'suburb'</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],12,9.0,13,10.0,16,13.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],12,50,13,80,14,90,15,100,16,120)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class] = 'town'</Filter>
+			<TextSymbolizer face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" placement="[nuti::texts3d]" size="(linear([view::zoom],9,9.0,13,13.0,14,15.0,15,17.0))-((1.0e-06)*([rank]))" wrap-before="1" wrap-width="step([view::zoom],9,70,15,80)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 	</Style>
 	<Style name="place::icon" filter-mode="first">
 		<Rule name="combined">
-			<MinScaleDenominator>17471320</MinScaleDenominator>
-			<MaxScaleDenominator>69885280</MaxScaleDenominator>
-			<Filter>[class] = 'city' and [rank] &lt;= 2</Filter>
-			<TextSymbolizer face-name="osm" fill="rgb(51,51,51)" placement="[nuti::markers3d]" size="6">[nuti::osm-spring]</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17471320</MinScaleDenominator>
-			<MaxScaleDenominator>34942640</MaxScaleDenominator>
-			<Filter>[class] = 'city' and [rank] &lt;= 4</Filter>
-			<TextSymbolizer face-name="osm" fill="rgb(51,51,51)" placement="[nuti::markers3d]" size="6">[nuti::osm-spring]</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>8735660</MinScaleDenominator>
-			<MaxScaleDenominator>17471320</MaxScaleDenominator>
-			<Filter>[class] = 'city' and ( [rank] &lt;= 2 or [rank] &lt;= 4 or [rank] &lt;= 6 )</Filter>
-			<TextSymbolizer face-name="osm" fill="rgb(51,51,51)" placement="[nuti::markers3d]" size="6">[nuti::osm-spring]</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
 			<MinScaleDenominator>4367830</MinScaleDenominator>
-			<MaxScaleDenominator>8735660</MaxScaleDenominator>
-			<Filter>[class] = 'city' and ( [rank] &lt;= 2 or [rank] &lt;= 4 or [rank] &lt;= 6 or [rank] &lt;= 7 )</Filter>
+			<MaxScaleDenominator>69885280</MaxScaleDenominator>
+			<Filter>[class] = 'city'</Filter>
 			<TextSymbolizer face-name="osm" fill="rgb(51,51,51)" placement="[nuti::markers3d]" size="6">[nuti::osm-spring]</TextSymbolizer>
 		</Rule>
 	</Style>
@@ -4388,43 +3779,43 @@
 		<Rule name="auto">
 			<MinScaleDenominator>34942640</MinScaleDenominator>
 			<MaxScaleDenominator>69885280</MaxScaleDenominator>
-			<Filter>[class] = 'city' and [rank] &lt;= 2</Filter>
+			<Filter>[class] = 'city'</Filter>
 			<TextSymbolizer dx="-5" dy="0" face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" minimum-distance="3" placement="[nuti::texts3d]" size="10" wrap-width="step([view::zoom],4,40,5,50,6,60)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17471320</MinScaleDenominator>
 			<MaxScaleDenominator>34942640</MaxScaleDenominator>
-			<Filter>[class] = 'city' and [rank] &lt;= 2 and [rank] &gt;= 0</Filter>
+			<Filter>[class] = 'city' and [rank] &gt;= 0 and [rank] &lt;= 2</Filter>
 			<TextSymbolizer dx="-5" dy="0" face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" minimum-distance="3" placement="[nuti::texts3d]" size="10" text-transform="uppercase" wrap-width="step([view::zoom],4,40,5,50,6,60)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
-		<Rule name="combined">
+		<Rule name="auto">
 			<MinScaleDenominator>17471320</MinScaleDenominator>
 			<MaxScaleDenominator>34942640</MaxScaleDenominator>
-			<Filter>[class] = 'city' and ( [rank] &lt;= 2 or [rank] &lt;= 4 )</Filter>
+			<Filter>[class] = 'city'</Filter>
 			<TextSymbolizer dx="-5" dy="0" face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" minimum-distance="3" placement="[nuti::texts3d]" size="10" wrap-width="step([view::zoom],4,40,5,50,6,60)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>8735660</MinScaleDenominator>
 			<MaxScaleDenominator>17471320</MaxScaleDenominator>
-			<Filter>[class] = 'city' and [rank] &lt;= 2 and [rank] &gt;= 0</Filter>
+			<Filter>[class] = 'city' and [rank] &gt;= 0 and [rank] &lt;= 2</Filter>
 			<TextSymbolizer dx="-5" dy="0" face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" minimum-distance="3" placement="[nuti::texts3d]" size="10" text-transform="uppercase" wrap-width="step([view::zoom],4,40,5,50,6,60)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
-		<Rule name="combined">
+		<Rule name="auto">
 			<MinScaleDenominator>8735660</MinScaleDenominator>
 			<MaxScaleDenominator>17471320</MaxScaleDenominator>
-			<Filter>[class] = 'city' and ( [rank] &lt;= 2 or [rank] &lt;= 4 or [rank] &lt;= 6 )</Filter>
+			<Filter>[class] = 'city'</Filter>
 			<TextSymbolizer dx="-5" dy="0" face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" minimum-distance="3" placement="[nuti::texts3d]" size="10" wrap-width="step([view::zoom],4,40,5,50,6,60)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>4367830</MinScaleDenominator>
 			<MaxScaleDenominator>8735660</MaxScaleDenominator>
-			<Filter>[class] = 'city' and [rank] &lt;= 2 and [rank] &gt;= 0 or ( [class] = 'city' and [rank] &lt;= 4 and [rank] &gt;= 3 ) or ( [class] = 'city' and [rank] &lt;= 6 and [rank] &gt;= 3 and [rank] &lt;= 5 )</Filter>
+			<Filter>[class] = 'city' and [rank] &gt;= 0 and [rank] &lt;= 2 or ( [class] = 'city' and [rank] &gt;= 3 and [rank] &lt;= 5 )</Filter>
 			<TextSymbolizer dx="-5" dy="0" face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" minimum-distance="3" placement="[nuti::texts3d]" size="10" text-transform="uppercase" wrap-width="step([view::zoom],4,40,5,50,6,60)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
-		<Rule name="combined">
+		<Rule name="auto">
 			<MinScaleDenominator>4367830</MinScaleDenominator>
 			<MaxScaleDenominator>8735660</MaxScaleDenominator>
-			<Filter>[class] = 'city' and ( [rank] &lt;= 2 or [rank] &lt;= 4 or [rank] &lt;= 6 or [rank] &lt;= 7 )</Filter>
+			<Filter>[class] = 'city'</Filter>
 			<TextSymbolizer dx="-5" dy="0" face-name="Montserrat Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" halo-rasterizer="fast" line-spacing="-2" minimum-distance="3" placement="[nuti::texts3d]" size="10" wrap-width="step([view::zoom],4,40,5,50,6,60)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 	</Style>
@@ -5645,24 +5036,24 @@
 		<Rule name="combined">
 			<MinScaleDenominator>1091957.5</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" placement-priority="[ele]" size="(linear([view::zoom],7,7,13,8,18,12))+((1.0e-06)*([ele]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,7,13,8,18,12))+((1.0e-06)*([ele]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" placement-priority="[ele]" size="(linear([view::zoom],7,7,13,8,18,12))+((1.0e-06)*([ele]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(155,112,87)" placement="[nuti::markers3d]" size="(linear([view::zoom],7,7,13,8,18,12))+((1.0e-06)*([ele]))">{([nuti::osm-[subclass]]) ? ([nuti::osm-[subclass]]) : ([nuti::osm-[class]])}</TextSymbolizer>
 		</Rule>
 	</Style>
 	<Style name="mountain_peak" filter-mode="first">
 		<Rule name="combined">
 			<MinScaleDenominator>1091957.5</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<TextSymbolizer dy="linear([view::zoom],7,6,13,8,18,11)" face-name="Montserrat Medium" feature-id="[osmid]" fill="rgb(155,112,87)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" line-spacing="-1" placement="[nuti::texts3d]" placement-priority="[ele]" size="(linear([view::zoom],7,6,13,8,18,11))+((1.0e-06)*([ele]))" wrap-width="step([view::zoom],7,40,12,100,18,150)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+			<TextSymbolizer dy="linear([view::zoom],7,6,13,8,18,11)" face-name="Montserrat Medium" feature-id="[osmid]" fill="rgb(155,112,87)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" line-spacing="-1" placement="[nuti::texts3d]" size="(linear([view::zoom],7,6,13,8,18,11))+((1.0e-06)*([ele]))" wrap-width="step([view::zoom],7,40,13,100,18,150)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<TextSymbolizer dy="linear([view::zoom],7,6,13,8,18,11)" face-name="Montserrat Medium" feature-id="[osmid]" fill="rgb(155,112,87)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" line-spacing="-1" placement="[nuti::texts3d]" placement-priority="[ele]" size="(linear([view::zoom],7,6,13,8,18,11))+((1.0e-06)*([ele]))" wrap-width="step([view::zoom],7,40,12,100,18,150)">{(([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])) ? (([ele]) ? (((([ele])+('m'))+('\n '))+(([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name]))) : (([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name]))) : ('')}</TextSymbolizer>
+			<TextSymbolizer dy="linear([view::zoom],7,6,13,8,18,11)" face-name="Montserrat Medium" feature-id="[osmid]" fill="rgb(155,112,87)" halo-fill="rgba(255,255,255,0.65)" halo-radius="1" halo-rasterizer="fast" line-spacing="-1" placement="[nuti::texts3d]" size="(linear([view::zoom],7,6,13,8,18,11))+((1.0e-06)*([ele]))" wrap-width="step([view::zoom],7,40,13,100,18,150)">{(([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])) ? (([ele]) ? (((([ele])+('m'))+('\n '))+(([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name]))) : (([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name]))) : ('')}</TextSymbolizer>
 		</Rule>
 	</Style>
 	<Style name="waterway" filter-mode="first">
@@ -5947,22 +5338,10 @@
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'primary'</Filter>
 			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(0,0,0)" halo-fill="rgb(254,253,225)" halo-radius="1" halo-rasterizer="fast" minimum-distance="5" placement="line" size="(linear([view::zoom],13,6.0,18,13.0))+(4.0e-05)" vertical-alignment="middle" wrap-before="1">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
-		<Rule name="auto">
+		<Rule name="combined">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 2 and [class] = 'path' and [subclass] = 'path'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],13,0,16,1,17,2)" face-name="Montserrat Medium" fill="rgb(99,94,84)" halo-fill="rgba(255,255,255,0.6)" halo-radius="1" placement="line" size="linear([view::zoom],13,7,16,9,17,10)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway'</Filter>
-			<TextSymbolizer face-name="Montserrat Regular" fill="rgb(0,0,0)" halo-fill="rgb(255,255,255)" halo-radius="1" halo-rasterizer="fast" minimum-distance="5" placement="line" size="linear([view::zoom],13,7,18,10)" vertical-alignment="middle" wrap-before="1">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type] = 2 and [class] = 'track'</Filter>
+			<Filter>[mapnik::geometry_type] = 2 and [class] = 'path' and [subclass] = 'path' or ( [mapnik::geometry_type] = 2 and [class] = 'track' )</Filter>
 			<TextSymbolizer dy="linear([view::zoom],13,0,16,1,17,2)" face-name="Montserrat Medium" fill="rgb(99,94,84)" halo-fill="rgba(255,255,255,0.6)" halo-radius="1" placement="line" size="linear([view::zoom],13,7,16,9,17,10)">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -14623,148 +14002,148 @@
 			<MinScaleDenominator>136494.688</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and ( [subclass] = 'chair_lift' or [subclass] = 'drag_lift' or [subclass] = 't-bar' or [subclass] = 'j-bar' or [subclass] = 'platter' or [subclass] = 'rope_tow' or [subclass] = 'zip_line' )</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,30" stroke-linejoin="round" stroke-width="4" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,30" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="4" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>136494.688</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and [subclass] = 'goods'</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(112,112,112)" stroke-dasharray="6,25" stroke-linejoin="round" stroke-width="3.5" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(112,112,112)" stroke-dasharray="6,25" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="3.5" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>136494.688</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and ( [subclass] = 'cable_car' or [subclass] = 'gondola' or [subclass] = 'mixed_lift' )</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,13" stroke-linecap="round" stroke-width="2" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,13" stroke-linecap="round" stroke-opacity="0.5" stroke-width="2" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>68247.3438</MinScaleDenominator>
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and ( [subclass] = 'chair_lift' or [subclass] = 'drag_lift' or [subclass] = 't-bar' or [subclass] = 'j-bar' or [subclass] = 'platter' or [subclass] = 'rope_tow' or [subclass] = 'zip_line' )</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,30" stroke-linejoin="round" stroke-width="4" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,30" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="4" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>68247.3438</MinScaleDenominator>
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and [subclass] = 'goods'</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(112,112,112)" stroke-dasharray="6,25" stroke-linejoin="round" stroke-width="3.5" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(112,112,112)" stroke-dasharray="6,25" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="3.5" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>68247.3438</MinScaleDenominator>
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and ( [subclass] = 'cable_car' or [subclass] = 'gondola' or [subclass] = 'mixed_lift' )</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,13" stroke-linecap="round" stroke-width="2" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,13" stroke-linecap="round" stroke-opacity="0.5" stroke-width="2" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and ( [subclass] = 'chair_lift' or [subclass] = 'drag_lift' or [subclass] = 't-bar' or [subclass] = 'j-bar' or [subclass] = 'platter' or [subclass] = 'rope_tow' or [subclass] = 'zip_line' )</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,30" stroke-linejoin="round" stroke-width="4" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,30" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="4" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and [subclass] = 'goods'</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(112,112,112)" stroke-dasharray="6,25" stroke-linejoin="round" stroke-width="3.5" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(112,112,112)" stroke-dasharray="6,25" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="3.5" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and ( [subclass] = 'cable_car' or [subclass] = 'gondola' or [subclass] = 'mixed_lift' )</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,13" stroke-linecap="round" stroke-width="2" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,13" stroke-linecap="round" stroke-opacity="0.5" stroke-width="2" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and ( [subclass] = 'chair_lift' or [subclass] = 'drag_lift' or [subclass] = 't-bar' or [subclass] = 'j-bar' or [subclass] = 'platter' or [subclass] = 'rope_tow' or [subclass] = 'zip_line' )</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,30" stroke-linejoin="round" stroke-width="4" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,30" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="4" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and [subclass] = 'goods'</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(112,112,112)" stroke-dasharray="6,25" stroke-linejoin="round" stroke-width="3.5" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(112,112,112)" stroke-dasharray="6,25" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="3.5" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and ( [subclass] = 'cable_car' or [subclass] = 'gondola' or [subclass] = 'mixed_lift' )</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,13" stroke-linecap="round" stroke-width="2" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,13" stroke-linecap="round" stroke-opacity="0.5" stroke-width="2" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and ( [subclass] = 'chair_lift' or [subclass] = 'drag_lift' or [subclass] = 't-bar' or [subclass] = 'j-bar' or [subclass] = 'platter' or [subclass] = 'rope_tow' or [subclass] = 'zip_line' )</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,30" stroke-linejoin="round" stroke-width="4" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,30" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="4" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and [subclass] = 'goods'</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(112,112,112)" stroke-dasharray="6,25" stroke-linejoin="round" stroke-width="3.5" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(112,112,112)" stroke-dasharray="6,25" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="3.5" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and ( [subclass] = 'cable_car' or [subclass] = 'gondola' or [subclass] = 'mixed_lift' )</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,13" stroke-linecap="round" stroke-width="2" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,13" stroke-linecap="round" stroke-opacity="0.5" stroke-width="2" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and ( [subclass] = 'chair_lift' or [subclass] = 'drag_lift' or [subclass] = 't-bar' or [subclass] = 'j-bar' or [subclass] = 'platter' or [subclass] = 'rope_tow' or [subclass] = 'zip_line' )</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,30" stroke-linejoin="round" stroke-width="4" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,30" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="4" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and [subclass] = 'goods'</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(112,112,112)" stroke-dasharray="6,25" stroke-linejoin="round" stroke-width="3.5" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(112,112,112)" stroke-dasharray="6,25" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="3.5" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and ( [subclass] = 'cable_car' or [subclass] = 'gondola' or [subclass] = 'mixed_lift' )</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,13" stroke-linecap="round" stroke-width="2" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,13" stroke-linecap="round" stroke-opacity="0.5" stroke-width="2" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and ( [subclass] = 'chair_lift' or [subclass] = 'drag_lift' or [subclass] = 't-bar' or [subclass] = 'j-bar' or [subclass] = 'platter' or [subclass] = 'rope_tow' or [subclass] = 'zip_line' )</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,30" stroke-linejoin="round" stroke-width="4" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,30" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="4" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and [subclass] = 'goods'</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(112,112,112)" stroke-dasharray="6,25" stroke-linejoin="round" stroke-width="3.5" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(112,112,112)" stroke-dasharray="6,25" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="3.5" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type] = 2 and [class] = 'aerialway' and ( [subclass] = 'cable_car' or [subclass] = 'gondola' or [subclass] = 'mixed_lift' )</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-width="1" />
-			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,13" stroke-linecap="round" stroke-width="2" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-opacity="0.5" stroke-width="1" />
+			<LineSymbolizer stroke="rgb(0,0,0)" stroke-dasharray="1,13" stroke-linecap="round" stroke-opacity="0.5" stroke-width="2" />
 		</Rule>
 	</Style>
 	<Style name="water_name" filter-mode="first">
@@ -14775,33 +14154,75 @@
 			<TextSymbolizer character-spacing="1.1" face-name="Montserrat Italic" fill="rgb(255,255,255)" halo-fill="rgb(152,194,202)" halo-radius="1" line-spacing="-2" size="linear([view::zoom],2,14.0,5,20.0)" wrap-before="1" wrap-width="50">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
-			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MinScaleDenominator>2183915</MinScaleDenominator>
 			<MaxScaleDenominator>17471320</MaxScaleDenominator>
 			<Filter>[class] = 'sea'</Filter>
 			<TextSymbolizer character-spacing="1.1" face-name="Montserrat Italic" fill="rgb(255,255,255)" halo-fill="rgb(152,194,202)" halo-radius="1" line-spacing="-2" size="12" wrap-before="1" wrap-width="50">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
-			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MinScaleDenominator>2183915</MinScaleDenominator>
 			<MaxScaleDenominator>17471320</MaxScaleDenominator>
 			<Filter>[class] = 'ocean'</Filter>
 			<TextSymbolizer character-spacing="1.1" face-name="Montserrat Italic" fill="rgb(255,255,255)" halo-fill="rgb(152,194,202)" halo-radius="1" line-spacing="-2" size="linear([view::zoom],2,14.0,5,20.0)" wrap-before="1" wrap-width="50">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[class] = 'lake' and [way_pixels] &gt; 40</Filter>
+			<TextSymbolizer face-name="Montserrat Italic" fill="rgb(8,86,125)" halo-fill="rgba(255,255,255,0.45)" halo-radius="2" halo-rasterizer="fast" minimum-distance="30" placement="[nuti::texts3d]" size="linear([view::zoom],12,8.0,18,10.0)" wrap-before="1" wrap-width="80">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[class] = 'sea'</Filter>
+			<TextSymbolizer character-spacing="1.1" face-name="Montserrat Italic" fill="rgb(255,255,255)" halo-fill="rgb(152,194,202)" halo-radius="1" line-spacing="-2" size="12" wrap-before="1" wrap-width="50">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[class] = 'ocean'</Filter>
+			<TextSymbolizer character-spacing="1.1" face-name="Montserrat Italic" fill="rgb(255,255,255)" halo-fill="rgb(152,194,202)" halo-radius="1" line-spacing="-2" size="linear([view::zoom],2,14.0,5,20.0)" wrap-before="1" wrap-width="50">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>545978.75</MinScaleDenominator>
 			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<Filter>[class] = 'lake' and [way_pixels] &gt; 500</Filter>
+			<Filter>[class] = 'lake' and [way_pixels] &gt; 40</Filter>
+			<TextSymbolizer face-name="Montserrat Italic" fill="rgb(8,86,125)" halo-fill="rgba(255,255,255,0.45)" halo-radius="2" halo-rasterizer="fast" minimum-distance="30" placement="[nuti::texts3d]" size="linear([view::zoom],12,8.0,18,10.0)" wrap-before="1" wrap-width="80">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>545978.75</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[class] = 'sea'</Filter>
+			<TextSymbolizer character-spacing="1.1" face-name="Montserrat Italic" fill="rgb(255,255,255)" halo-fill="rgb(152,194,202)" halo-radius="1" line-spacing="-2" size="12" wrap-before="1" wrap-width="50">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>272989.375</MinScaleDenominator>
+			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
+			<Filter>[class] = 'lake' and ( [way_pixels] &gt; 40 or [way_pixels] &gt; 20 )</Filter>
+			<TextSymbolizer face-name="Montserrat Italic" fill="rgb(8,86,125)" halo-fill="rgba(255,255,255,0.45)" halo-radius="2" halo-rasterizer="fast" minimum-distance="30" placement="[nuti::texts3d]" size="linear([view::zoom],12,8.0,18,10.0)" wrap-before="1" wrap-width="80">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>272989.375</MinScaleDenominator>
+			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
+			<Filter>[class] = 'sea'</Filter>
+			<TextSymbolizer character-spacing="1.1" face-name="Montserrat Italic" fill="rgb(255,255,255)" halo-fill="rgb(152,194,202)" halo-radius="1" line-spacing="-2" size="12" wrap-before="1" wrap-width="50">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
+			<Filter>[class] = 'lake' and ( [way_pixels] &gt; 40 or [way_pixels] &gt; 20 or [way_pixels] &gt; 5 )</Filter>
 			<TextSymbolizer face-name="Montserrat Italic" fill="rgb(8,86,125)" halo-fill="rgba(255,255,255,0.45)" halo-radius="2" halo-rasterizer="fast" minimum-distance="30" placement="[nuti::texts3d]" size="linear([view::zoom],12,8.0,18,10.0)" wrap-before="1" wrap-width="80">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class] = 'sea'</Filter>
 			<TextSymbolizer character-spacing="1.1" face-name="Montserrat Italic" fill="rgb(255,255,255)" halo-fill="rgb(152,194,202)" halo-radius="1" line-spacing="-2" size="12" wrap-before="1" wrap-width="50">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[class] = 'lake' and ( [way_pixels] &gt; 500 or [way_pixels] &gt; 0 )</Filter>
+			<Filter>[class] = 'lake' and ( [way_pixels] &gt; 40 or [way_pixels] &gt; 20 or [way_pixels] &gt; 5 )</Filter>
 			<TextSymbolizer face-name="Montserrat Italic" fill="rgb(8,86,125)" halo-fill="rgba(255,255,255,0.45)" halo-radius="2" halo-rasterizer="fast" minimum-distance="30" placement="[nuti::texts3d]" size="linear([view::zoom],12,8.0,18,10.0)" wrap-before="1" wrap-width="80">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
@@ -14809,6 +14230,12 @@
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[class] = 'sea'</Filter>
 			<TextSymbolizer character-spacing="1.1" face-name="Montserrat Italic" fill="rgb(255,255,255)" halo-fill="rgb(152,194,202)" halo-radius="1" line-spacing="-2" size="12" wrap-before="1" wrap-width="50">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class] = 'lake'</Filter>
+			<TextSymbolizer face-name="Montserrat Italic" fill="rgb(8,86,125)" halo-fill="rgba(255,255,255,0.45)" halo-radius="2" halo-rasterizer="fast" minimum-distance="30" placement="[nuti::texts3d]" size="linear([view::zoom],12,8.0,18,10.0)" wrap-before="1" wrap-width="80">{([nuti::lang]) ? (([name:[nuti::lang]]) ? ([name:[nuti::lang]]) : (([name:[nuti::fallback_lang]]) ? ([name:[nuti::fallback_lang]]) : ([name]))) : ([name])}</TextSymbolizer>
 		</Rule>
 	</Style>
 	<Style name="housenumber" filter-mode="first">

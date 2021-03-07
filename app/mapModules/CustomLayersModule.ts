@@ -21,7 +21,7 @@ import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { openFilePicker } from '@nativescript-community/ui-document-picker';
 import * as appSettings from '@nativescript/core/application-settings';
 import { Color } from '@nativescript/core/color';
-import { ObservableArray } from '@nativescript/core/data/observable-array';
+import { ChangeType, ChangedData, ObservableArray } from '@nativescript/core/data/observable-array';
 import { File, Folder, path } from '@nativescript/core/file-system';
 import { showBottomSheet } from '~/components/bottomsheet';
 import { Provider } from '~/data/tilesources';
@@ -102,21 +102,65 @@ export interface SourceItem {
     opacity: number;
     legend?: string;
     name: string;
+    local?: boolean;
     layer: TileLayer<any, any>;
     provider: Provider;
     index?: number;
-    options?: { [k: string]: { min: number; max: number; value?: number; transform?: Function; transformBack?: Function } };
+    options?: {
+        [k: string]:
+            | { min: number; max: number; value?: number; transform?: Function; transformBack?: Function }
+            | { type: string };
+    };
 }
 const TAG = 'CustomLayersModule';
 export default class CustomLayersModule extends MapModule {
-    public customSources: ObservableArray<SourceItem> = new ObservableArray([]);
+    public customSources: ObservableArray<SourceItem>;
 
     constructor() {
         super();
-        // this.customSources = new ObservableArray([]) as any;
+
+        this.customSources = new ObservableArray([]);
+        this.customSources.addEventListener(ObservableArray.changeEvent, this.onCustomSourcesChanged, this);
+    }
+    onCustomSourcesChanged(event: ChangedData<SourceItem>) {
+        if (!this.listenForSourceChanges) {
+            return;
+        }
+        switch (event.action) {
+            // case ChangeType.Delete: {
+            //     this._listViewAdapter.notifyItemRangeRemoved(event.index, event.removed.length);
+            //     return;
+            // }
+            // case ChangeType.Add: {
+            //     if (event.addedCount > 0) {
+            //         this._listViewAdapter.notifyItemRangeInserted(event.index, event.addedCount);
+            //     }
+            //     // Reload the items to avoid duplicate Load on Demand indicators:
+            //     return;
+            // }
+            // case ChangeType.Update: {
+            //     if (event.addedCount > 0) {
+            //         this._listViewAdapter.notifyItemRangeChanged(event.index, event.addedCount);
+            //     }
+            //     // if (event.removed && event.removed.length > 0) {
+            //     //     this._listViewAdapter.notifyItemRangeRemoved(event.index, event.removed.length);
+            //     // }
+            //     return;
+            // }
+            case ChangeType.Splice: {
+                if (event.addedCount > 0) {
+                    this.moveSource(this.customSources.getItem(event.index).name, event.index);
+                    // this._listViewAdapter.notifyItemRangeInserted(event.index, event.addedCount);
+                }
+                // if (event.removed && event.removed.length > 0) {
+                //     this._listViewAdapter.notifyItemRangeRemoved(event.index, event.removed.length);
+                // }
+                return;
+            }
+        }
     }
     createMergeMBTilesDataSource(sources: string[]) {
-        console.log('createMergeMBTilesDataSource', sources);
+        // console.log('createMergeMBTilesDataSource', sources);
         if (sources.length === 1) {
             return new MBTilesTileDataSource({
                 databasePath: sources[0]
@@ -135,7 +179,7 @@ export default class CustomLayersModule extends MapModule {
     }
 
     createOrderedMBTilesDataSource(sources: string[]) {
-        console.log('createOrderedMBTilesDataSource', sources);
+        // console.log('createOrderedMBTilesDataSource', sources);
         if (sources.length === 1) {
             return new MBTilesTileDataSource({
                 databasePath: sources[0]
@@ -158,7 +202,8 @@ export default class CustomLayersModule extends MapModule {
 
     createMergeMBtiles(
         { name, sources, legend }: { name: string; sources: string[]; legend?: string },
-        worldMbtiles?: MBTilesTileDataSource
+        worldMbtiles?: MBTilesTileDataSource,
+        options = {}
     ) {
         let dataSource: TileDataSource<any, any> = this.createMergeMBTilesDataSource(sources);
         if (worldMbtiles) {
@@ -187,7 +232,6 @@ export default class CustomLayersModule extends MapModule {
             name,
             opacity,
             legend,
-            index: undefined,
             layer,
             options: {
                 zoomLevelBias: {
@@ -195,7 +239,8 @@ export default class CustomLayersModule extends MapModule {
                     max: 5
                 }
             },
-            provider: { name, sources, legend }
+            provider: { name, sources, legend },
+            ...options
         };
     }
     createHillshadeTileLayer(name, dataSource, options: HillshadeRasterTileLayerOptions = {}, terrarium = false) {
@@ -253,8 +298,9 @@ export default class CustomLayersModule extends MapModule {
     }
     createRasterLayer(id: string, provider: Provider) {
         const opacity = appSettings.getNumber(`${id}_opacity`, 1);
-        const rasterCachePath = path.join(getDataFolder(), 'rastercache');
-        const databasePath = File.fromPath(path.join(rasterCachePath, id)).path;
+        const rasterCachePath = Folder.fromPath(path.join(getDataFolder(), 'rastercache'));
+        console.log('createRasterLayer', rasterCachePath, rasterCachePath.path);
+        const databasePath = File.fromPath(path.join(rasterCachePath.path, id)).path;
 
         // Apply zoom level bias to the raster layer.
         // By default, bitmaps are upsampled on high-DPI screens.
@@ -275,7 +321,15 @@ export default class CustomLayersModule extends MapModule {
                 max: 5
             }
         };
-        console.log('createRasterLayer', provider);
+        if (provider.cacheable !== false) {
+            Object.assign(options, {
+                cacheSize: {
+                    min: 0,
+                    max: 2048
+                }
+            });
+        }
+        const cacheSize = appSettings.getNumber(`${id}_cacheSize`, 300);
         if (provider.hillshade) {
             Object.assign(options, HILLSHADE_OPTIONS);
             layer = this.createHillshadeTileLayer(
@@ -283,12 +337,14 @@ export default class CustomLayersModule extends MapModule {
                 provider.cacheable !== false
                     ? new PersistentCacheTileDataSource({
                           dataSource,
-                          capacity: 300 * 1024 * 1024,
+                          capacity: cacheSize * 1024 * 1024,
                           databasePath
                       })
                     : dataSource,
                 {
                     zoomLevelBias,
+                    //@ts-ignore
+                    cacheSize,
                     opacity,
                     // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                     visible: opacity !== 0,
@@ -305,11 +361,13 @@ export default class CustomLayersModule extends MapModule {
                     provider.cacheable !== false
                         ? new PersistentCacheTileDataSource({
                               dataSource,
-                              capacity: 300 * 1024 * 1024,
+                              capacity: cacheSize * 1024 * 1024,
                               databasePath
                           })
                         : dataSource,
                 zoomLevelBias,
+                //@ts-ignore
+                cacheSize,
                 opacity,
                 // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                 visible: opacity !== 0,
@@ -328,6 +386,7 @@ export default class CustomLayersModule extends MapModule {
     }
 
     sourcesLoaded = false;
+    listenForSourceChanges = false;
     baseProviders: { [k: string]: Provider } = {};
     overlayProviders: { [k: string]: Provider } = {};
     isOverlay(providerName, provider: Provider) {
@@ -474,29 +533,31 @@ export default class CustomLayersModule extends MapModule {
         this.sourcesLoaded = true;
     }
 
-    onMapReady(mapView: CartoMap<LatLonKeys>) {
+    async onMapReady(mapView: CartoMap<LatLonKeys>) {
         super.onMapReady(mapView);
         try {
             const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
             // console.log('onMapReady', savedSources, this.customSources);
             if (savedSources.length > 0) {
-                this.getSourcesLibrary().then(() => {
-                    savedSources.forEach((s) => {
-                        const provider = this.baseProviders[s] || this.overlayProviders[s];
-                        const data = this.createRasterLayer(s, provider);
-                        this.customSources.push(data);
-                    });
-                    this.customSources.forEach((data, index) => {
-                        mapContext.addLayer(data.layer, 'customLayers');
-                    });
+                await this.getSourcesLibrary();
+                savedSources.forEach((s) => {
+                    const provider = this.baseProviders[s] || this.overlayProviders[s];
+                    try {
+                        if (provider) {
+                            const data = this.createRasterLayer(s, provider);
+                            this.customSources.push(data);
+                            mapContext.addLayer(data.layer, 'customLayers');
+                        }
+                    } catch (err) {
+                        console.error('createRasterLayer', err);
+                    }
                 });
             }
-
             const folderPath = getDefaultMBTilesDir();
-            console.log('localMbtilesSource', folderPath);
             if (folderPath) {
-                this.loadLocalMbtiles(folderPath);
+                await this.loadLocalMbtiles(folderPath);
             }
+            this.listenForSourceChanges = true;
         } catch (err) {
             console.error(TAG, 'onMapReady', err);
         }
@@ -521,28 +582,26 @@ export default class CustomLayersModule extends MapModule {
                     },
                     mapContext.getProjection()
                 );
-                mapContext.removeLayer(s.layer, 'customLayers');
-                mapContext.addLayer(layer, 'customLayers');
+                const cartoMap = mapContext.getMap();
+                const index = mapContext.getLayerIndex(layer);
+                cartoMap.getLayers().set(index, layer);
                 s.layer = layer;
             }
         });
     }
     hillshadeLayer: HillshadeRasterTileLayer;
-
-    async getElevation(pos: MapPos<LatLonKeys>) {
-        if (this.hillshadeLayer) {
-            return new Promise((resolve, reject) => {
-                this.hillshadeLayer.getElevationAsync(pos, (err, result) => {
-                    // console.log('searchInGeocodingService done', err, result && result.size());
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
-                    resolve(result);
-                });
-            });
+    addDataSource(data: SourceItem) {
+        const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
+        const layerIndex = savedSources.indexOf(data.name);
+        if (layerIndex === -1) {
+            this.customSources.push(data);
+            mapContext.addLayer(data.layer, 'customLayers');
+            savedSources.push(data.name);
+            appSettings.setString('added_providers', JSON.stringify(savedSources));
+        } else {
+            this.customSources.splice(layerIndex, 0, data);
+            mapContext.insertLayer(data.layer, 'customLayers', layerIndex);
         }
-        return null;
     }
     async loadLocalMbtiles(directory: string) {
         if (!Folder.exists(directory)) {
@@ -550,7 +609,7 @@ export default class CustomLayersModule extends MapModule {
         }
         try {
             const folder = Folder.fromPath(directory);
-            let index = this.customSources.length;
+            const index = this.customSources.length;
             const entities = await folder.getEntities();
             let worldMbtiles: MBTilesTileDataSource;
             const worldMbtilesIndex = entities.findIndex((e) => e.name === 'world.mbtiles');
@@ -565,10 +624,12 @@ export default class CustomLayersModule extends MapModule {
                         name: 'world',
                         sources: [entity.path]
                     },
-                    worldMbtiles
+                    undefined,
+                    {
+                        local: true
+                    }
                 );
-                this.customSources.push(data);
-                mapContext.addLayer(data.layer, 'customLayers');
+                this.addDataSource(data);
             }
             const folders = entities.filter((e) => Folder.exists(e.path)).sort((a, b) => b.name.localeCompare(a.name));
             for (let i = 0; i < folders.length; i++) {
@@ -580,14 +641,15 @@ export default class CustomLayersModule extends MapModule {
                         name: f.name,
                         sources: subentities.map((e2) => e2.path).filter((s) => s.endsWith('.mbtiles'))
                     },
-                    worldMbtiles
+                    undefined,
+                    {
+                        local: true
+                    }
                 );
-                this.customSources.push(data);
                 if (!packageService.localVectorTileLayer) {
-                    console.log('adding localVectorTileLayer', f.name);
                     packageService.localVectorTileLayer = data.layer;
                 }
-                mapContext.addLayer(data.layer, 'customLayers');
+                this.addDataSource(data);
             }
             // console.log('loading etiles', e.name);
             const dataSource = this.createOrderedMBTilesDataSource(
@@ -595,21 +657,22 @@ export default class CustomLayersModule extends MapModule {
             );
             const name = 'Hillshade';
             const opacity = appSettings.getNumber(`${name}_opacity`, 1);
-            const layer = (this.hillshadeLayer = packageService.hillshadeLayer = this.createHillshadeTileLayer(name, dataSource, {
-                // maxOverzoomLevel:0,
-                // maxUnderzoomLevel:0
-            }));
-
+            const layer = (this.hillshadeLayer = packageService.hillshadeLayer = this.createHillshadeTileLayer(name, dataSource));
+            // layer.setRasterTileEventListener<LatLonKeys>(
+            //     {
+            //         onRasterTileClicked: (e) => mapContext.rasterTileClicked(e)
+            //     },
+            //     mapContext.getProjection()
+            // );
             const data = {
-                index: index++,
                 name,
                 opacity,
                 layer,
+                local: true,
                 options: HILLSHADE_OPTIONS,
                 provider: { name }
             };
-            this.customSources.push(data);
-            mapContext.addLayer(data.layer, 'hillshade');
+            this.addDataSource(data);
             // return Promise.all(
         } catch (err) {
             console.error('loadLocalMbtiles', err);
@@ -668,12 +731,7 @@ export default class CustomLayersModule extends MapModule {
         const result = Array.isArray(results) ? results[0] : results;
         if (result) {
             const data = this.createRasterLayer(result.name, result.provider);
-            mapContext.addLayer(data.layer, 'customLayers');
-            this.customSources.push(data);
-            // console.log('layer added', data.provider);
-            const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
-            savedSources.push(result.name);
-            appSettings.setString('added_providers', JSON.stringify(savedSources));
+            this.addDataSource(data);
         }
     }
     deleteSource(name: string) {
@@ -688,7 +746,7 @@ export default class CustomLayersModule extends MapModule {
         });
         // console.log('deleteSource', name, index);
         if (index !== -1) {
-            mapContext.removeLayer(this.customSources.getItem(index).layer, 'customLayers', index);
+            mapContext.removeLayer(this.customSources.getItem(index).layer, 'customLayers');
             this.customSources.splice(index, 1);
         }
         const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
@@ -696,6 +754,43 @@ export default class CustomLayersModule extends MapModule {
         appSettings.remove(name + '_opacity');
         if (index !== -1) {
             savedSources.splice(index, 1);
+            appSettings.setString('added_providers', JSON.stringify(savedSources));
+        }
+    }
+    moveSource(name: string, newIndex: number) {
+        let index = -1;
+
+        this.customSources.some((d, i) => {
+            if (d.name === name) {
+                index = i;
+                return true;
+            }
+            return false;
+        });
+        const layerIndex = mapContext.getLayerTypeFirstIndex('customLayers');
+        if (index !== -1) {
+            const item = this.customSources.getItem(index);
+            const layer = item.layer;
+            mapContext.moveLayer(layer, newIndex + layerIndex);
+            if (index !== newIndex) {
+                this.customSources.splice(index, 1);
+                this.customSources.splice(newIndex, 0, item);
+            }
+        }
+        const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
+        index = savedSources.indexOf(name);
+        console.log('moveSource', name, index, newIndex);
+        if (index !== -1) {
+            // let firstNonLocalIndex = -1;
+            // this.customSources.some((d, i) => {
+            //     if (d.local !== true) {
+            //         firstNonLocalIndex = i;
+            //         return true;
+            //     }
+            //     return false;
+            // });
+            savedSources.splice(index, 1);
+            savedSources.splice(newIndex, 0, name);
             appSettings.setString('added_providers', JSON.stringify(savedSources));
         }
     }

@@ -140,8 +140,8 @@ export function formatAddress(item: IItem, part = 0) {
     if ((properties.osm_value || properties.osm_key || properties.class) && address && address.houseNumber) {
         result += address.houseNumber + ' ';
     }
-    if (address.road) {
-        result += address.road + ' ';
+    if (address.street) {
+        result += address.street + ' ';
     }
 
     if (part === 1 && result.length > 0) {
@@ -157,14 +157,18 @@ export function formatAddress(item: IItem, part = 0) {
     if (address.postcode) {
         result += address.postcode + ' ';
     }
-    if (address.county) {
-        result += address.county + ' ';
+    if (address.city) {
+        result += address.city;
+        if (address.county && address.county !== address.city) {
+            result += '(' + address.county + ')';
+        }
+        result += ' ';
     }
     // if (address.county) {
     //     result += address.county + ' ';
     // }
-    if (address.region) {
-        result += address.region + ' ';
+    if (address.state) {
+        result += address.state + ' ';
     }
     return result.trimRight();
 }

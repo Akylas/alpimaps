@@ -75,7 +75,7 @@ export class BgService extends android.app.Service {
     onBounded() {
         this.geoHandler = new GeoHandler();
         this.geoHandler.bgService =  new WeakRef(this as any);
-        this.showForeground();
+        // this.showForeground();
         this.geoHandler.on(SessionStateEvent, this.onSessionStateEvent, this);
         this.geoHandler.on(SessionChronoEvent, this.onSessionChronoEvent, this);
         // applicationOn(resumeEvent, this.onAppEvent, this);

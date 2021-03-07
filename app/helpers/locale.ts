@@ -1,21 +1,27 @@
-import { loadLocaleJSON } from '@nativescript-community/l';
+import { l, lc, loadLocaleJSON, lt, lu } from '@nativescript-community/l';
+import { ApplicationSettings } from '@nativescript/core';
 import { getString, setString } from '@nativescript/core/application-settings';
 import { Device } from '@nativescript/core/platform';
 import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
+import { derived, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
-export { l, lc, lt, lu, l as $t, lc as $tc, lt as $tt, lu as $tu } from '@nativescript-community/l';
 const supportedLanguages = SUPPORTED_LOCALES;
+import OptionSelect from '~/components/OptionSelect.svelte';
+import { showBottomSheet } from '~/components/bottomsheet';
 
 dayjs.extend(updateLocale);
+export let lang;
+let currentLocale = null;
+export const $lang = writable(null);
+const onLanguageChangedCallbacks = [];
+export function onLanguageChanged(callback) {
+    onLanguageChangedCallbacks.push(callback);
+}
 
-function setLang(newLang) {
-    newLang = getOwmLanguage(newLang);
-    if (supportedLanguages.indexOf(newLang) === -1) {
-        newLang = 'en';
-    }
+$lang.subscribe((newLang: string) => {
     lang = newLang;
-    console.log('changed lang', lang, Device.region);
+    // console.log('changed lang', lang, Device.region);
     try {
         require(`dayjs/locale/${newLang}`);
     } catch (err) {
@@ -42,10 +48,15 @@ function setLang(newLang) {
         console.log('failed to load lang json', lang, `~/i18n/${lang}.json`, err);
     }
     onLanguageChangedCallbacks.forEach((c) => c(lang));
-}
-const onLanguageChangedCallbacks = [];
-export function onLanguageChanged(callback) {
-    onLanguageChangedCallbacks.push(callback);
+});
+function setLang(newLang) {
+    newLang = getOwmLanguage(newLang);
+    if (supportedLanguages.indexOf(newLang) === -1) {
+        newLang = 'en';
+    }
+    console.log('changed lang', lang, Device.region);
+    currentLocale = null;
+    $lang.set(newLang);
 }
 
 let deviceLanguage = getString('language');
@@ -68,8 +79,47 @@ function getOwmLanguage(language) {
         return language;
     }
 }
-export let lang;
 
+
+function titlecase(value) {
+    return value.replace(/\w\S*/g, function (txt) {
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+}
+export function getLocaleDisplayName(locale?) {
+    console.log('getLocaleDisplayName', locale);
+    if (global.isIOS) {
+        if (!currentLocale) {
+            currentLocale = NSLocale.alloc().initWithLocaleIdentifier(lang);
+        }
+        return titlecase(currentLocale.localizedStringForLanguageCode(locale || lang));
+    } else {
+        if (!currentLocale) {
+            currentLocale = java.util.Locale.forLanguageTag(lang);
+        }
+        return titlecase(java.util.Locale.forLanguageTag(locale || lang).getDisplayLanguage(currentLocale));
+    }
+}
+
+
+export async function selectLanguage() {
+    try {
+        const actions = SUPPORTED_LOCALES;
+        const result = await showBottomSheet<any>({
+            view: OptionSelect,
+            props: {
+                title: lc('select_language'),
+                options: actions.map((k) => ({ name: getLocaleDisplayName(k), data: k }))
+            },
+            trackingScrollView: 'collectionView'
+        });
+        if (result && actions.indexOf(result.data) !== -1) {
+            ApplicationSettings.setString('language', result.data);
+        }
+    } catch (err) {
+        this.showError(err);
+    }
+}
 export function convertTime(date: number | string | dayjs.Dayjs, formatStr: string) {
     if (date) {
         if (!date['format']) {
@@ -101,3 +151,12 @@ prefs.on('key:language', () => {
 });
 
 setLang(deviceLanguage);
+
+export { l, lc, lu, lt };
+export const sl = derived([$lang], () => l);
+export const slc = derived([$lang], () => lc);
+export const slt = derived([$lang], () => lt);
+export const slu = derived([$lang], () => lu);
+export const sconvertDuration = derived([$lang], () => convertDuration);
+export const scconvertTime = derived([$lang], () => convertTime);
+export const sgetLocaleDisplayName = derived([$lang], () => getLocaleDisplayName);

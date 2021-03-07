@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" >
     import { GridLayout, ViewBase } from '@nativescript/core';
     import { l, lc } from '@nativescript-community/l';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
@@ -24,6 +24,7 @@
     import mapStore from '~/stores/mapStore';
     import { AnimationCurve } from '@nativescript/core/ui/enums';
     import { asSvelteTransition } from 'svelte-native/transitions';
+    import { showModal } from 'svelte-native';
     function scale(node, { delay = 0, duration = 400, easing = AnimationCurve.easeOut }) {
         const scaleX = node.nativeView.scaleX;
         const scaleY = node.nativeView.scaleY;
@@ -34,9 +35,7 @@
             }
         }));
     }
-</script>
 
-<script lang="ts">
     let currentMapZoom = 0;
     let totalDownloadProgress = 0;
     const mapContext = getMapContext();
@@ -267,7 +266,7 @@
                         view: LayersMenu,
                         transparent:true,
                         disableDimBackground:true,
-                        trackingScrollView:'collectionView'
+                        trackingScrollView:'trackingScrollView'
                     });
     }
 </script>
@@ -321,7 +320,7 @@
                     textAlignment="center"
                     verticalAlignment="middle"
                     text="mdi-crosshairs-gps"
-                    color={(!$mapStore.queryingLocation && $mapStore.watchingLocation)? 'white' : accentColor}
+                    color={!$mapStore.queryingLocation && $mapStore.watchingLocation ? 'white' : accentColor}
                 />
             </canvaslabel>
         </mdcardview>

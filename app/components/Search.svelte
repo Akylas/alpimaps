@@ -1,4 +1,4 @@
-<script context="module" lang="ts">
+<script lang="ts">
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
     import { ClusterElementBuilder } from '@nativescript-community/ui-carto/layers/cluster';
@@ -16,12 +16,12 @@
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { osmicon } from '~/helpers/formatter';
-    import { l } from '~/helpers/locale';
+    import { l, slc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { Address, IItem as Item } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
-    import { packageService } from '~/services/PackageService';
+    import { GeoResult, packageService } from '~/services/PackageService';
     import { globalMarginTop, primaryColor } from '~/variables';
     import { queryString } from '../utils/http';
 
@@ -99,13 +99,13 @@
                 ...actualProperties
             } = properties;
             this.address = {
-                region,
+                state,
+                county: region,
                 houseNumber: housenumber,
                 postcode,
-                county: city,
+                city,
                 country,
-                state,
-                road: properties['osm_key'] === 'highway' ? name : street,
+                street: properties['osm_key'] === 'highway' ? name : street,
                 neighbourhood
             };
             this.properties = actualProperties;
@@ -137,9 +137,7 @@
     interface SearchItem extends Item {
         showOnMap?: boolean;
     }
-</script>
 
-<script lang="ts">
     let gridLayout: NativeViewElementNode<GridLayout>;
     let textField: NativeViewElementNode<TextField>;
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -147,7 +145,7 @@
     let _searchLayer: ClusteredVectorLayer;
     let searchClusterStyle: PointStyleBuilder;
     let searchAsTypeTimer;
-    let dataItems: ObservableArray<SearchItem> = new ObservableArray([] as any);
+    let dataItems: SearchItem[];
     let filteredDataItems: SearchItem[] = dataItems as any;
     let loading = false;
     let filteringOSMKey = false;
@@ -195,7 +193,8 @@
             position: item.position,
             styleBuilder: {
                 hideIfOverlapped: false,
-                size: 10,
+                clickSize: 20,
+                size: 20,
                 scaleWithDPI: true,
                 color: providerColors[item.provider]
             },
@@ -227,7 +226,7 @@
     }
     let searchResultsVisible = false;
     $: {
-        searchResultsVisible = hasFocus && searchResultsCount > 0;
+        searchResultsVisible = focused && searchResultsCount > 0;
     }
 
     function getItemIcon(item: SearchItem) {
@@ -291,7 +290,7 @@
                     searchAsTypeTimer = setTimeout(() => {
                         searchAsTypeTimer = null;
                         instantSearch(query);
-                    }, 500);
+                    }, 1000);
                 } else if (query.length === 0 && currentSearchText && currentSearchText.length > 2) {
                     unfocus();
                 }
@@ -300,16 +299,19 @@
         }
     }
 
-    function searchInGeocodingService(options) {
-        return packageService
-            .searchInLocalGeocodingService(options)
-            .then((result) => packageService.convertGeoCodingResults(result, true));
+    async function searchInGeocodingService(options) {
+        let result: any = await packageService.searchInLocalGeocodingService(options);
+        result = packageService.convertGeoCodingResults(result, true) as any;
+        return (result as any) as GeoResult[];
     }
-    function searchInVectorTiles(options: SearchRequest) {
-        return packageService
-            .searchInVectorTiles(options)
-            .then((result) => packageService.convertFeatureCollection(result, options));
-        // return packageService.searchInVectorTiles(options).then((result) => []);
+    async function searchInVectorTiles(options: SearchRequest) {
+        let result: any = await packageService.searchInVectorTiles(options);
+        if (result) {
+            result = packageService.convertFeatureCollection(result, options) as any;
+        } else {
+            result = [];
+        }
+        return (result as any) as GeoResult[];
     }
 
     async function herePlaceSearch(options: {
@@ -318,7 +320,7 @@
         location?: MapPos<LatLonKeys>;
         locationRadius?: number;
     }) {
-        if (networkService.connected) {
+        if (!networkService.connected) {
             return [];
         }
         return getJSON(
@@ -363,7 +365,6 @@
             },
             'https://photon.komoot.de/api'
         );
-        console.log('photonSearch', url);
         return getJSON(url).then(function (results: any) {
             return results.features.filter((r) => r.properties.osm_type !== 'R').map((f) => new PhotonFeature(f));
         });
@@ -373,7 +374,6 @@
         loading = true;
         currentQuery = cleanUpString(_query);
         const position = mapContext.getMap().focusPos;
-        console.log(position);
         const options = {
             query: currentQuery,
             projection: mapContext.getProjection(),
@@ -394,26 +394,32 @@
         let result = [];
         await Promise.all([
             searchInVectorTiles(options as any)
-                .then((r) => result.push(...r))
+                .then((r) => r && result.push(...r))
                 .catch((err) => {
                     console.error('searchInVectorTiles', err);
+                }),
+            searchInGeocodingService(options)
+                .then((r) => r && result.push(...r))
+                .catch((err) => {
+                    console.error('searchInGeocodingService', err);
+                }),
+            herePlaceSearch(options)
+                .then((r) => r && result.push(...r))
+                .catch((err) => {
+                    console.error('herePlaceSearch', err);
+                }),
+            photonSearch(options)
+                .then((r) => r && result.push(...r))
+                .catch((err) => {
+                    console.error('photonSearch', err);
                 })
-            // searchInGeocodingService(options)
-            //     .then((r) => result.push(...r))
-            //     .catch((err) => {console.error('searchInGeocodingService', err);}),
-            // herePlaceSearch(options)
-            //     .then((r) => result.push(...r))
-            //     .catch((err) => {console.error('herePlaceSearch', err);}),
-            // photonSearch(options)
-            //     .then((r) => result.push(...r))
-            //     .catch((err) => {console.error('photonSearch', err);})
         ]);
         if (result.length === 0) {
             showSnack({ message: l('no_result_found') });
         } else {
             await loadView();
         }
-        dataItems = new ObservableArray(result);
+        dataItems = result;
         updateFilteredDataItems();
         loading = false;
     }
@@ -485,8 +491,12 @@
         dataSource.clear();
         showingOnMap = true;
         const items = filteredDataItems.filter(
-            (d) => !!d && (d.provider === 'here' || (d.provider === 'carto' && d.properties.layer === 'poi'))
+            // (d) => !!d && (d.provider === 'here' || (d.provider === 'carto' && d.properties.layer === 'poi'))
+            (d) => !!d && (d.provider === 'here' || d.provider === 'carto')
         );
+        if (items.length === 0) {
+            return;
+        }
         items.forEach((d) => {
             dataSource.add(createSearchMarker(d));
         });
@@ -521,7 +531,8 @@
     columns="auto,*,auto,auto,auto,auto,auto"
     backgroundColor={focused ? '#99000000' : '#55000000'}
     borderRadius={searchResultsVisible ? 10 : 25}
-    margin={`${globalMarginTop + 10} 10 10 10`}>
+    margin={`${globalMarginTop + 10} 10 10 10`}
+>
     <button variant="text" class="icon-btn-white" text="mdi-magnify" on:tap={() => showMenu('left')} />
     <textfield
         bind:this={textField}
@@ -529,7 +540,7 @@
         col="1"
         padding="0 15 0 0"
         row="0"
-        hint="Search"
+        hint={$slc('search')}
         placeholder="search"
         returnKeyType="search"
         on:focus={onFocus}
@@ -585,7 +596,8 @@
             colSpan="7"
             rowHeight="49"
             items={filteredDataItems}
-            visibility={searchResultsVisible ? 'visible' : 'collapsed'}>
+            visibility={searchResultsVisible ? 'visible' : 'collapsed'}
+        >
             <Template let:item>
                 <gridlayout columns="30,*" rows="*,auto,auto,*" rippleColor="white" on:tap={() => onItemTap(item)}>
                     <label

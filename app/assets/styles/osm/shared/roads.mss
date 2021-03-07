@@ -1559,37 +1559,15 @@
 		[subclass = 'cable_car'],
 		[subclass = 'gondola'],
 		[subclass = 'mixed_lift'] {
-		//  {
 			line-width: 1;
-			// line-join: round;
-			// line-cap: round;
 			line-color: #808080;
+			line-opacity: 0.5;
 	
 			dash/line-width: 2;
-			// dash/line-join: round;
 			dash/line-cap: round;
 			dash/line-color: black;
 			dash/line-dasharray: 1,13;
-			// dash/line-clip: false;
-			// [zoom >= 17] {
-			//   text-name: "[name]";
-			//   text-fill: #666666;
-			//   text-size: 10;
-			//   text-dy: 4;
-			//   text-spacing: 900;
-			//   text-clip: false;
-			//   text-placement: line;
-			//   text-repeat-distance: 200;
-			//   text-margin: 18;
-			// //   text-face-name: @book-fonts;
-			//   text-halo-radius: @standard-halo-radius;
-			//   text-halo-fill: @standard-halo-fill;
-			// }
-			// [zoom >= 19] {
-			//   text-size: 11;
-			//   text-dy: 5;
-			// }
-		// }
+			dash/line-opacity: 0.5;
 		}
 	
 		[subclass = 'goods'] {
@@ -1598,12 +1576,14 @@
 				line-join: round;
 				line-cap: round;
 				line-color: #808080;
+				line-opacity: 0.5;
 		
 				dash/line-width: 3.5;
 				dash/line-join: round;
 				dash/line-color: #707070;
 				dash/line-dasharray: 6,25;
-				// dash/line-clip: false;
+				dash/line-opacity: 0.5;
+			// dash/line-clip: false;
 				// [zoom >= 17] {
 				//   text-name: [name];
 				//   text-fill: #666666;
@@ -1637,11 +1617,13 @@
 				line-join: round;
 				line-cap: round;
 				line-color: #808080;
+				line-opacity: 0.5;
 		
 				dash/line-width: 4;
 				dash/line-join: round;
 				dash/line-color: black;
 				dash/line-dasharray: 1,30;
+				dash/line-opacity: 0.5;
 				// dash/line-clip: false;
 				// [zoom >= 17] {
 				//   text-name: [name];

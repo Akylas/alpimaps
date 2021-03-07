@@ -27,6 +27,7 @@
     import { showBottomSheet } from './bottomsheet';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { l } from '@nativescript-community/l';
+import { slc } from '~/helpers/locale';
 
     export const LISTVIEW_HEIGHT = 200;
     export const PROFILE_HEIGHT = 150;
@@ -478,14 +479,14 @@
                 variant="text"
                 fontSize="10"
                 on:tap={searchItemWeb}
-                text="search"
+                text={$slc('search')}
                 visibility={item && !itemIsRoute && !item.id ? 'visible' : 'collapsed'}
             />
             <button
                 variant="text"
                 fontSize="10"
                 on:tap={getProfile}
-                text="profile"
+                text={$slc('profile')}
                 visibility={itemIsRoute && itemCanQueryProfile ? 'visible' : 'collapsed'}
             />
             <!-- <button variant="text" fontSize="10" on:tap={openWebView} text="web" /> -->
@@ -493,14 +494,14 @@
                 variant="text"
                 fontSize="10"
                 on:tap={saveItem}
-                text="save item"
+                text={$slc('save')}
                 visibility={item && !item.id ? 'visible' : 'collapsed'}
             />
             <button
                 variant="text"
                 fontSize="10"
                 on:tap={deleteItem}
-                text="delete item"
+                text={$slc('delete')}
                 visibility={item && item.id ? 'visible' : 'collapsed'}
                 color="red"
             />
@@ -515,7 +516,7 @@
                 variant="text"
                 fontSize="10"
                 on:tap={checkWeather}
-                text="weather"
+                text={$slc('weather')}
                 visibility={item && networkService.canCheckWeather ? 'visible' : 'collapsed'}
             />
         </stacklayout>
