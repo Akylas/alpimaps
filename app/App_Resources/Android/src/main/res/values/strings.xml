@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+  <string name="light">"light"</string>
+  <string name="dark">"dark"</string>
+  <string name="auto">"auto"</string>
+  <string name="dark_mode">"dark mode"</string>
+  <string name="language">"language"</string>
   <string name="profile">"profile"</string>
   <string name="save">"save"</string>
   <string name="weather">"weather"</string>

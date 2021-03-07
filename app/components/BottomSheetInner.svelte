@@ -19,7 +19,7 @@
     import { packageService } from '~/services/PackageService';
     import { omit } from '~/utils/utils';
     import { showError } from '~/utils/error';
-    import { screenHeightDips, statusBarHeight, textColor } from '~/variables';
+    import { borderColor, screenHeightDips, statusBarHeight, textColor, widgetBackgroundColor } from '~/variables';
     import BottomSheetInfoView from './BottomSheetInfoView.svelte';
     import { formatter } from '~/mapModules/ItemFormatter';
     import type { RouteInstruction } from '~/models/Route';
@@ -27,7 +27,8 @@
     import { showBottomSheet } from './bottomsheet';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { l } from '@nativescript-community/l';
-import { slc } from '~/helpers/locale';
+    import { slc } from '~/helpers/locale';
+    import { onThemeChanged } from '~/helpers/theme';
 
     export const LISTVIEW_HEIGHT = 200;
     export const PROFILE_HEIGHT = 150;
@@ -279,6 +280,18 @@ import { slc } from '~/helpers/locale';
         return item.name;
     }
     let chartInitialized = false;
+
+    onThemeChanged(() => {
+        if (!chart) {
+            return;
+        }
+        const chartView = chart.nativeView;
+        const leftAxis = chartView.getAxisLeft();
+        leftAxis.setTextColor($textColor);
+        const xAxis = chartView.getXAxis();
+        xAxis.setTextColor($textColor);
+        const set = chartView.getData()?.getDataSetByIndex(0)?.setValueTextColor($textColor);
+    });
     function updateChartData() {
         if (!chart) {
             return;
@@ -299,14 +312,14 @@ import { slc } from '~/helpers/locale';
                 chartView.getLegend().setEnabled(false);
                 chartView.setDrawHighlight(false);
                 const leftAxis = chartView.getAxisLeft();
-                leftAxis.setTextColor(textColor);
+                leftAxis.setTextColor($textColor);
                 leftAxis.ensureLastLabel = true;
                 // leftAxis.setLabelCount(3);
 
                 const xAxis = chartView.getXAxis();
                 xAxis.setPosition(XAxisPosition.BOTTOM);
                 xAxis.setLabelTextAlign(Align.CENTER);
-                xAxis.setTextColor(textColor);
+                xAxis.setTextColor($textColor);
                 xAxis.ensureLastLabel = true;
                 xAxis.setValueFormatter({
                     getAxisLabel: (value, axis) => convertValueToUnit(value, UNITS.DistanceKm).join(' ')
@@ -347,7 +360,7 @@ import { slc } from '~/helpers/locale';
             if (!chartData) {
                 const set = new LineDataSet(profileData, 'a', 'd', 'avg');
                 set.setDrawValues(true);
-                set.setValueTextColor(textColor);
+                set.setValueTextColor($textColor);
                 set.setValueTextSize(10);
                 set.setMaxFilterNumber(200);
                 set.setUseColorsForFill(true);
@@ -376,7 +389,6 @@ import { slc } from '~/helpers/locale';
                 const lineData = new LineData(sets);
                 chartView.setData(lineData);
             } else {
-                console.log('update data set values');
                 chartView.highlightValues(null);
                 const set = chartData.getDataSetByIndex(0);
                 set.setValues(profileData);
@@ -445,7 +457,7 @@ import { slc } from '~/helpers/locale';
     width="100%"
     rows={`70,50,${profileHeight},auto`}
     columns="*,auto"
-    backgroundColor="#aa000000"
+    backgroundColor={$widgetBackgroundColor}
     on:tap={() => {}}
 >
     {#if loaded}
@@ -473,7 +485,7 @@ import { slc } from '~/helpers/locale';
             width="100%"
             borderTopWidth="1"
             borderBottomWidth="1"
-            borderColor="#44ffffff"
+            borderColor={$borderColor}
         >
             <button
                 variant="text"

@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts">
     import { GridLayout } from '@nativescript/core';
     import { CartoMap } from '@nativescript-community/ui-carto/ui';
     import { setNumber } from '@nativescript/core/application-settings';
@@ -9,14 +9,12 @@
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
-    import { navigationBarHeight, primaryColor } from '../variables';
+    import { navigationBarHeight, primaryColor, widgetBackgroundColor } from '~/variables';
     import { showBottomSheet } from './bottomsheet';
     import mapStore from '~/stores/mapStore';
     import { debounce } from 'push-it-to-the-limit';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-</script>
 
-<script lang="ts">
     const mapContext = getMapContext();
     let gridLayout: NativeViewElementNode<GridLayout>;
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -56,7 +54,7 @@
         });
     }, 500);
     function onLayerOpacityChanged(item: SourceItem, event) {
-        const opacity = (event.value);
+        const opacity = event.value;
         if (item.layer.opacity === opacity) {
             return;
         }
@@ -111,7 +109,7 @@
     columns="*,auto"
     height={210 + navigationBarHeight}
     paddingBottom={navigationBarHeight}
-    backgroundColor="#99000000"
+    backgroundColor={$widgetBackgroundColor}
 >
     {#if loaded}
         <collectionview
@@ -128,7 +126,7 @@
                 <gridlayout paddingLeft="15" paddingRight="5" rows="*" columns="2*,*,auto">
                     <canvaslabel colSpan="2">
                         <cspan
-                            color={item.layer.opacity === 0 ? 'grey' : 'white'}
+                            color={item.layer.opacity === 0 ? 'grey' : undefined}
                             text={item.name.toUpperCase()}
                             fontSize="13"
                             fontWeight="bold"
@@ -139,7 +137,7 @@
                     <mdslider
                         marginLeft="10"
                         marginRight="10"
-                        value={(item.layer.opacity)}
+                        value={item.layer.opacity}
                         on:valueChange={(event) => onLayerOpacityChanged(item, event)}
                         minValue="0"
                         maxValue="1"
@@ -148,8 +146,6 @@
                     <button
                         col="2"
                         rowSpan="2"
-                        color="white"
-                        rippleColor="white"
                         variant="text"
                         class="icon-btn"
                         text="mdi-dots-vertical"
@@ -172,20 +168,20 @@
                 on:tap={() => mapStore.setShow3DBuildings(!$mapStore.show3DBuildings)}
             />
 
-            <button
+            <!-- <button
                 variant="text"
                 class="icon-btn"
                 text="mdi-signal"
                 color={$mapStore.showContourLines ? primaryColor : 'gray'}
                 on:tap={() => mapStore.setShowContourLines(!$mapStore.showContourLines)}
-            />
-            <button
+            /> -->
+            <!-- <button
                 variant="text"
                 class="icon-btn"
                 text="mdi-map-marker-path"
                 color={$mapStore.showRoutes ? primaryColor : 'gray'}
                 on:tap={() => mapStore.setShowRoutes(!$mapStore.showRoutes)}
-            />
+            /> -->
             <button
                 variant="text"
                 class="icon-btn"
