@@ -151,3 +151,42 @@ MDSpeedDialItemTitle {
     ripple-color: $accent-color;
     color: $accent-color;
 }
+.actionBar {
+    background-color: scale-color(white, $alpha: -30%);
+    .ns-black & {
+        background-color: scale-color(black, $alpha: -30%);
+    }
+    .ns-dark & {
+        background-color: scale-color(#1c1c1e, $alpha: -30%);
+    }
+}
+
+.actionBarButton {
+    @extend .mdi;
+    width: $actionbar-height;
+    height: $actionbar-height;
+    color: black;
+    .ns-dark &,
+    .ns-black & {
+        color: white;
+    }
+    margin: 0;
+    padding: 0;
+    font-size: 32;
+}
+
+.actionBarTitle {
+    // @extend .lato;
+    font-size: 20;
+    font-weight: 500;
+    color: black;
+    .ns-dark &,
+    .ns-black & {
+        color: white;
+    }
+}
+
+.actionBarSubtitle {
+    font-size: 13;
+    color: rgba(255, 255, 255, 0.533);
+}

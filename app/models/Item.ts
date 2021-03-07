@@ -13,12 +13,12 @@ const sql = SqlQuery.createFromTemplateString;
 export interface Address {
     country?: string;
     name?: string;
+    city?: string;
     county?: string;
     state?: string;
     neighbourhood?: string;
     postcode?: string;
-    region?: string;
-    road?: string;
+    street?: string;
     houseNumber?: string;
 }
 

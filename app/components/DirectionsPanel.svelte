@@ -287,6 +287,9 @@
         currentTranslationY = -height;
         translationY = 0;
     }
+    export function isVisible() {
+        return translationY > 0;
+    }
     export async function addWayPoint(position: MapPos<LatLonKeys>, metaData?, index = -1) {
         await loadView();
         const toAdd = {

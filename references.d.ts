@@ -46,6 +46,9 @@ declare const LOCAL_MBTILES: string;
 declare const SENTRY_DSN: string;
 declare const SENTRY_PREFIX: string;
 declare const SUPPORTED_LOCALES: string[];
+declare const GIT_URL: string;
+declare const STORE_LINK: string;
+declare const STORE_REVIEW_LINK: string;
 // declare const process: { env: any };
 
 declare namespace akylas {

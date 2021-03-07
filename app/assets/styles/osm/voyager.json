@@ -2,7 +2,6 @@
     "layers": [
         "route",
         "housenumber",
-        "water_name",
         "transportation",
         "transportation_name",
         "building",
@@ -10,6 +9,7 @@
         "water",
         "waterway",
         "mountain_peak",
+        "water_name",
         "poi",
         "aerodrome_label",
         "boundary",
