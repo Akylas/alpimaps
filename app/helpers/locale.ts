@@ -4,6 +4,7 @@ import { getString, setString } from '@nativescript/core/application-settings';
 import { Device } from '@nativescript/core/platform';
 import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
+import timezone from 'dayjs/plugin/timezone';
 import { derived, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
 const supportedLanguages = SUPPORTED_LOCALES;
@@ -11,6 +12,8 @@ import OptionSelect from '~/components/OptionSelect.svelte';
 import { showBottomSheet } from '~/components/bottomsheet';
 
 dayjs.extend(updateLocale);
+dayjs.extend(timezone);
+
 export let lang;
 let currentLocale = null;
 export const $lang = writable(null);

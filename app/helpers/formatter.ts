@@ -36,6 +36,9 @@ export function osmicon(values: string[] | string) {
 }
 
 export function convertDistance(meters) {
+    if (meters === undefined) {
+        return undefined;
+    }
     return humanUnit(meters, distancePreset);
 }
 export function convertElevation(meters) {

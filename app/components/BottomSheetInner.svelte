@@ -1,5 +1,13 @@
 <script lang="ts">
-    import { Align, Canvas, Paint } from '@nativescript-community/ui-canvas';
+    import {
+        Align,
+        Canvas,
+        DashPathEffect,
+        LayoutAlignment,
+        Paint,
+        StaticLayout,
+        Style
+    } from '@nativescript-community/ui-canvas';
     import { CartoMap } from '@nativescript-community/ui-carto/ui';
     import { LineChart } from '@nativescript-community/ui-chart/charts';
     import type { HighlightEventData } from '@nativescript-community/ui-chart/charts/Chart';
@@ -9,7 +17,7 @@
     import { LineDataSet } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     // import { ShareFile } from '@nativescript-community/ui-share-file';
-    import { Application, knownFolders } from '@nativescript/core';
+    import { Application } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -29,12 +37,21 @@
     import { l } from '@nativescript-community/l';
     import { slc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
+    import { VectorElementEventData } from '@nativescript-community/ui-carto/layers/vector';
+    import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
+    import { GenericMapPos } from '@nativescript-community/ui-carto/core';
 
     export const LISTVIEW_HEIGHT = 200;
     export const PROFILE_HEIGHT = 150;
     export const WEB_HEIGHT = 400;
 
     const mapContext = getMapContext();
+    const highlightPaint = new Paint();
+    highlightPaint.setColor('#8687A2');
+    highlightPaint.setAntiAlias(true);
+    // highlightPaint.setTextAlign(Align.CENTER);
+    highlightPaint.setStrokeWidth(1);
+    highlightPaint.setTextSize(10);
 
     export let item: Item;
     let profileHeight = PROFILE_HEIGHT;
@@ -46,6 +63,7 @@
     $: showListView = listViewAvailable && listViewVisible;
     let itemIsRoute = false;
     let itemCanQueryProfile = false;
+    let currentLocation: GenericMapPos<LatLonKeys> = null;
 
     onMount(() => {
         updateSteps();
@@ -58,6 +76,20 @@
     onDestroy(() => {
         mapContext.mapModule('userLocation').on('location', onNewLocation, this);
     });
+
+    mapContext.onVectorElementClicked((data: VectorElementEventData<LatLonKeys>) => {
+        const { clickType, position, elementPos, metaData, element } = data;
+        const selectedItem: IItem = { position, vectorElement: element, ...metaData };
+        if (item && item.id && item.route && selectedItem.id === item.id) {
+            updateRouteItemWithPosition(item, position, false, true);
+        }
+    });
+
+    $: {
+        if (itemIsRoute && currentLocation) {
+            updateRouteItemWithPosition(item, currentLocation);
+        }
+    }
     $: {
         const props = item && item.properties;
         if (props) {
@@ -106,32 +138,76 @@
         }
     }
 
-    function onNewLocation(e: any) {
-        const index = infoView?.onNewLocation(e) || -1;
-        if (index !== -1 && graphAvailable) {
-            const profile = item.route.profile;
-            const profileData = profile?.data;
-            if (profileData) {
-                const dataSet = chart.nativeView.getData().getDataSetByIndex(0);
-                dataSet.setIgnoreFiltered(true);
-                const item = profileData[index];
-                dataSet.setIgnoreFiltered(false);
-                chart.nativeView.highlightValues([
-                    {
-                        dataSetIndex: 0,
-                        x: index,
-                        entry: item
-                    } as any
-                ]);
+    function updateRouteItemWithPosition(
+        routeItem: Item,
+        location: GenericMapPos<LatLonKeys>,
+        updateNavigationInstruction = true,
+        updateGraph = true
+    ) {
+        if (routeItem && routeItem.route) {
+            const route = routeItem.route;
+            const positions = route.positions;
+            const onPathIndex = isLocationOnPath(location, positions, false, true, 10);
+            if (updateNavigationInstruction) {
+                let routeInstruction;
+                for (let index = route.instructions.length - 1; index >= 0; index--) {
+                    const element = route.instructions[index];
+                    if (element.index <= onPathIndex) {
+                        routeInstruction = element;
+                        break;
+                    }
+                }
+
+                const distance = distanceToEnd(onPathIndex, positions);
+                navigationInstructions = {
+                    instruction: routeInstruction,
+                    remainingDistance: distance,
+                    remainingTime: ((route.totalTime * distance) / route.totalDistance) * 1000
+                };
             }
+            if (graphAvailable) {
+                if (onPathIndex === -1) {
+                    chart.nativeView.highlight(null);
+                } else {
+                    const profile = item.route.profile;
+                    const profileData = profile?.data;
+                    if (profileData) {
+                        const dataSet = chart.nativeView.getData().getDataSetByIndex(0);
+                        dataSet.setIgnoreFiltered(true);
+                        const item = profileData[onPathIndex];
+                        dataSet.setIgnoreFiltered(false);
+                        chart.nativeView.highlightValues([
+                            {
+                                dataSetIndex: 0,
+                                x: onPathIndex,
+                                entry: item
+                            } as any
+                        ]);
+                    }
+                }
+            }
+        } else if (updateNavigationInstruction) {
+            navigationInstructions = null;
         }
+    }
+
+    function onNewLocation(e: any) {
+        currentLocation = e.data;
+        this.updateRouteItemWithPosition(item, currentLocation);
     }
     function onChartHighlight(event: HighlightEventData) {
         const x = event.highlight.entryIndex;
         const positions = item.route.positions;
         const position = positions.getPos(Math.max(0, Math.min(x, positions.size() - 1)));
         if (position) {
-            mapContext.selectItem({ item: { position }, isFeatureInteresting: true, setSelected: false, peek: false });
+            updateRouteItemWithPosition(item, position, true, false);
+            mapContext.selectItem({
+                item: { position },
+                isFeatureInteresting: true,
+                setSelected: false,
+                peek: false,
+                zoomDuration: 0
+            });
         }
     }
     function searchItemWeb() {
@@ -162,6 +238,11 @@
         listViewAvailable = !listViewAvailable;
     }
     export let steps;
+    export let navigationInstructions: {
+        remainingDistance: number;
+        remainingTime: number;
+        instruction: RouteInstruction;
+    };
     // $: console.log('updateSteps changed', steps);
 
     function updateSteps() {
@@ -286,17 +367,19 @@
             return;
         }
         const chartView = chart.nativeView;
+
         const leftAxis = chartView.getAxisLeft();
         leftAxis.setTextColor($textColor);
+        leftAxis.setGridColor($borderColor);
         const xAxis = chartView.getXAxis();
         xAxis.setTextColor($textColor);
+        xAxis.setGridColor($borderColor);
         const set = chartView.getData()?.getDataSetByIndex(0)?.setValueTextColor($textColor);
     });
     function updateChartData() {
         if (!chart) {
             return;
         }
-        console.log('updateChartData');
         const chartView = chart.nativeView;
         const sets = [];
         const profile = item.route.profile;
@@ -304,15 +387,21 @@
         if (profileData) {
             if (!chartInitialized) {
                 chartInitialized = true;
+                chartView.panGestureOptions = { minDist: 40, failOffsetYEnd: 20 };
                 chartView.setHighlightPerDragEnabled(true);
                 chartView.setHighlightPerTapEnabled(true);
-                // chart.setScaleXEnabled(true);
-                // chart.setDragEnabled(true);
+                chartView.setScaleXEnabled(true);
+                chartView.setDragEnabled(true);
+                chartView.clipHighlightToContent = false;
+                chartView.setClipValuesToContent(false);
+                // chartView.setExtraTopOffset(30);
+                chartView.setExtraOffsets(0, 0, 0, 0);
                 chartView.getAxisRight().setEnabled(false);
                 chartView.getLegend().setEnabled(false);
-                chartView.setDrawHighlight(false);
                 const leftAxis = chartView.getAxisLeft();
                 leftAxis.setTextColor($textColor);
+                leftAxis.setGridColor($borderColor);
+                leftAxis.setGridDashedLine(new DashPathEffect([6, 3], 0));
                 leftAxis.ensureLastLabel = true;
                 // leftAxis.setLabelCount(3);
 
@@ -320,38 +409,70 @@
                 xAxis.setPosition(XAxisPosition.BOTTOM);
                 xAxis.setLabelTextAlign(Align.CENTER);
                 xAxis.setTextColor($textColor);
-                xAxis.ensureLastLabel = true;
+                xAxis.setGridColor($borderColor);
+                xAxis.setDrawGridLines(false);
+                xAxis.setDrawMarkTicks(true);
+                // xAxis.ensureLastLabel = true;
                 xAxis.setValueFormatter({
                     getAxisLabel: (value, axis) => convertValueToUnit(value, UNITS.DistanceKm).join(' ')
                 });
 
                 chartView.setMaxVisibleValueCount(300);
-                chartView.setMarker({
-                    paint: new Paint(),
-                    refreshContent(e: Entry, highlight: Highlight) {
-                        this.entry = e;
-                    },
-                    draw(canvas: Canvas, posX: any, posY: any) {
-                        const canvasHeight = canvas.getHeight();
-                        const paint = this.paint as Paint;
-                        paint.setColor('#FFBB73');
-                        paint.setAntiAlias(true);
-                        paint.setTextAlign(Align.CENTER);
-                        paint.setStrokeWidth(1);
-                        paint.setTextSize(10);
-                        canvas.save();
-                        canvas.translate(posX, posY);
-                        canvas.drawLine(-5, 0, 5, 0, paint);
-                        canvas.drawLine(0, -5, 0, 5, paint);
-                        if (posY > canvasHeight - 20) {
-                            canvas.translate(0, -30);
-                        } else {
-                            canvas.translate(0, 10);
-                        }
-                        canvas.drawText(this.entry.a.toFixed(), 0, 5, paint);
-                        canvas.restore();
+                chartView.setCustomRenderer({
+                    drawHighlight(c: Canvas, h: Highlight<Entry>, set: LineDataSet, paint: Paint) {
+                        // const canvasHeight = c.getHeight();
+                        const x = h.drawX;
+                        const y = h.drawY;
+                        const w = 50;
+
+                        highlightPaint.setColor('#8687A2');
+                        paint.setColor('#8687A2');
+                        paint.setStyle(Style.FILL);
+
+                        c.drawLine(x, 0, x, y - 5, highlightPaint);
+                        highlightPaint.setColor('white');
+                        const layout = new StaticLayout(
+                            h.entry.a.toFixed() + 'm' + '\n' + h.entry.g.toFixed() + '%',
+                            highlightPaint,
+                            w,
+                            LayoutAlignment.ALIGN_CENTER,
+                            1,
+                            0,
+                            true
+                        );
+                        c.drawRoundRect(x - w / 2, 0, x + w / 2, layout.getHeight(), 2, 2, paint);
+                        c.save();
+                        c.translate(x - w / 2, 0);
+                        layout.draw(c);
+                        c.restore();
                     }
-                } as any);
+                });
+                // chartView.setMarker({
+                //     paint: new Paint(),
+                //     refreshContent(e: Entry, highlight: Highlight) {
+                //         this.entry = e;
+                //     },
+                //     draw(canvas: Canvas, posX: any, posY: any) {
+                //         const canvasHeight = canvas.getHeight();
+                //         const paint = this.paint as Paint;
+                //         paint.setColor('#FFBB73');
+                //         paint.setAntiAlias(true);
+                //         paint.setTextAlign(Align.CENTER);
+                //         paint.setStrokeWidth(1);
+                //         paint.setTextSize(10);
+                //         canvas.save();
+                //         canvas.translate(posX, posY);
+                //         canvas.drawLine(-5, 0, 5, 0, paint);
+                //         canvas.drawLine(0, -5, 0, 5, paint);
+                //         if (posY > canvasHeight - 20) {
+                //             canvas.translate(0, -20);
+                //         } else {
+                //             canvas.translate(0,10);
+                //         }
+                //         canvas.drawText(this.entry.a.toFixed() + 'm' + '\n' + this.entry.g.toFixed() + '%' , 0, 5, paint);
+                //         canvas.restore();
+                //     }
+                // } as any);
             } else {
                 chartView.highlightValues(null);
                 chartView.resetZoom();
@@ -481,6 +602,7 @@
         />
         <stacklayout
             row="1"
+            colSpan="2"
             orientation="horizontal"
             width="100%"
             borderTopWidth="1"
@@ -535,6 +657,7 @@
         <linechart
             bind:this={chart}
             row="2"
+            colSpan="2"
             height={profileHeight}
             visibility={graphAvailable ? 'visible' : 'hidden'}
             on:highlight={onChartHighlight}

@@ -10,7 +10,7 @@
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
     import { navigationBarHeight, primaryColor, widgetBackgroundColor } from '~/variables';
-    import { showBottomSheet } from './bottomsheet';
+    import { closeBottomSheet, showBottomSheet } from './bottomsheet';
     import mapStore from '~/stores/mapStore';
     import { debounce } from 'push-it-to-the-limit';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
@@ -62,17 +62,14 @@
         setNumber(item.name + '_opacity', opacity);
         item.layer.visible = opacity !== 0 ? true : false;
         mapContext.getMap().requestRedraw();
-        // customSources.some((d, index) => {
-        //     if (d === item) {
-        //         customSources.setItem(index, item);
-        //         return true;
-        //     }
-        // });
         updateItem(item);
     }
 
     async function showSourceOptions(item: SourceItem) {
         const LayerOptionsBottomSheet = (await import('./LayerOptionsBottomSheet.svelte')).default;
+        closeBottomSheet();
+        setTimeout(()=>{
+            
         showBottomSheet({
             parent: gridLayout,
             view: LayerOptionsBottomSheet,
@@ -82,6 +79,7 @@
                 item
             }
         });
+        }, 0)
     }
     async function onItemReordered() {}
 
@@ -156,7 +154,7 @@
         </collectionview>
         <stacklayout col="1" borderLeftColor="rgba(255,255,255,0.4)" borderLeftWidth="1">
             <button variant="text" class="icon-btn" text="mdi-plus" on:tap={addSource} />
-            <button variant="text" class="icon-btn" text="mdi-layers-off" on:tap={clearCache} />
+            <!-- <button variant="text" class="icon-btn" text="mdi-layers-off" on:tap={clearCache} /> -->
             <!-- <MDButton class="buttonthemed" @tap="addSource" text={l('add_source')} /> -->
             <!-- <MDButton class="buttonthemed" @tap="clearCache" text={l('clear_cache')} /> -->
             <!-- <MDButton class="buttonthemed" @tap="selectLocalMbtilesFolder" text={l('select_local_folder')} /> -->
