@@ -20,7 +20,7 @@ import { MapBoxElevationDataDecoder, TerrariumElevationDataDecoder } from '@nati
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { openFilePicker } from '@nativescript-community/ui-document-picker';
 import * as appSettings from '@nativescript/core/application-settings';
-import { Color } from '@nativescript/core/color';
+import { Color } from '@nativescript/core';
 import { ChangeType, ChangedData, ObservableArray } from '@nativescript/core/data/observable-array';
 import { File, Folder, path } from '@nativescript/core/file-system';
 import { showBottomSheet } from '~/components/bottomsheet';
@@ -533,34 +533,36 @@ export default class CustomLayersModule extends MapModule {
         this.sourcesLoaded = true;
     }
 
-    async onMapReady(mapView: CartoMap<LatLonKeys>) {
+     onMapReady(mapView: CartoMap<LatLonKeys>) {
         super.onMapReady(mapView);
-        try {
-            const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
-            // console.log('onMapReady', savedSources, this.customSources);
-            if (savedSources.length > 0) {
-                await this.getSourcesLibrary();
-                savedSources.forEach((s) => {
-                    const provider = this.baseProviders[s] || this.overlayProviders[s];
-                    try {
-                        if (provider) {
-                            const data = this.createRasterLayer(s, provider);
-                            this.customSources.push(data);
-                            mapContext.addLayer(data.layer, 'customLayers');
+        (async ()=>{
+            try {
+                const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
+                // console.log('onMapReady', savedSources, this.customSources);
+                if (savedSources.length > 0) {
+                    await this.getSourcesLibrary();
+                    savedSources.forEach((s) => {
+                        const provider = this.baseProviders[s] || this.overlayProviders[s];
+                        try {
+                            if (provider) {
+                                const data = this.createRasterLayer(s, provider);
+                                this.customSources.push(data);
+                                mapContext.addLayer(data.layer, 'customLayers');
+                            }
+                        } catch (err) {
+                            console.error('createRasterLayer', err);
                         }
-                    } catch (err) {
-                        console.error('createRasterLayer', err);
-                    }
-                });
+                    });
+                }
+                const folderPath = getDefaultMBTilesDir();
+                if (folderPath) {
+                    await this.loadLocalMbtiles(folderPath);
+                }
+                this.listenForSourceChanges = true;
+            } catch (err) {
+                console.error(TAG, 'onMapReady', err);
             }
-            const folderPath = getDefaultMBTilesDir();
-            if (folderPath) {
-                await this.loadLocalMbtiles(folderPath);
-            }
-            this.listenForSourceChanges = true;
-        } catch (err) {
-            console.error(TAG, 'onMapReady', err);
-        }
+        })();
     }
 
     vectorTileDecoderChanged(oldVectorTileDecoder, newVectorTileDecoder) {

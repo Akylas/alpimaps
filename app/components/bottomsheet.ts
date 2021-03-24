@@ -1,5 +1,6 @@
 import { BottomSheetOptions } from '@nativescript-community/ui-material-bottomsheet';
 import { View, ViewBase } from '@nativescript/core';
+import { View as View2 } from '@nativescript/core/ui/core/view';
 import { Frame } from '@nativescript/core/ui/frame';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import { PageSpec } from 'svelte-native/dom/navigation';
@@ -26,7 +27,8 @@ export function resolveComponentElement(viewSpec: PageSpec, props?: any): Compon
 export function showBottomSheet<T>(modalOptions: ShowBottomSheetOptions): Promise<T> {
     const { view, parent, props = {}, ...options } = modalOptions;
     // Get this before any potential new frames are created by component below
-    const modalLauncher = (parent && (parent instanceof View ? parent : parent.nativeView)) || Frame.topmost().currentPage;
+    const modalLauncher: View2 =
+        (parent && (parent instanceof View ? parent : parent.nativeView)) || (Frame.topmost().currentPage as any);
 
     const componentInstanceInfo = resolveComponentElement(view, props);
     const modalView: ViewBase = componentInstanceInfo.element.nativeView;

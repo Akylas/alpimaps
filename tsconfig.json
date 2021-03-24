@@ -22,10 +22,8 @@
         "baseUrl": ".",
         "types": ["node", "svelte", "geojson"],
         "paths": {
-            "svelte-native": ["@akylas/svelte-native"],
-            "svelte-native/*": ["@akylas/svelte-native/*"],
-            "@nativescript/core": ["@akylas/nativescript"],
-            "@nativescript/core/*": ["@akylas/nativescript/*"],
+            "svelte-native": ["node_modules/@akylas/svelte-native"],
+            "@nativescript/core": ["node_modules/@akylas/nativescript"],
             "~/*": ["app/*"]
         }
     },

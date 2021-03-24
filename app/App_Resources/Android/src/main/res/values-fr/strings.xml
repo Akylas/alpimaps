@@ -46,7 +46,7 @@
   <string name="current_temperature">"température actuelle"</string>
   <string name="compass">"boussole"</string>
   <string name="choose">"choisir"</string>
-  <string name="bug">"punaise"</string>
+  <string name="bug">"bug"</string>
   <string name="approximate_accuracy">"précision approximative"</string>
   <string name="altitude">"altitude"</string>
   <string name="altimeter">"altimètre"</string>

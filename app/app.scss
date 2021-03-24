@@ -5,8 +5,37 @@
     font-family: 'Lato Regular', 'res/lato';
 }
 
-.mdi {
+%mdi {
     font-family: $mdi-fontFamily;
+}
+%alpimaps {
+    font-family: $alpimaps-fontFamily;
+}
+
+%icon-btn{
+    ripple-color: gray;
+    color: $text-color-light;
+    .ns-dark & {
+        color: $text-color-dark;
+        ripple-color: $text-color-dark;
+    }
+    width: $actionbar-button-height;
+    height: $actionbar-button-height;
+    font-size: 24;
+}
+
+%buttontext {
+    background-color: $text-color-dark;
+    color: $primary-color;
+    ripple-color: $dark-color;
+}
+
+.mdi {
+    @extend %mdi;
+}
+
+.alpimaps {
+    @extend %alpimaps;
 }
 
 page {
@@ -74,8 +103,7 @@ mdcardview {
     color: $text-color-dark;
 }
 .buttontext {
-    background-color: $text-color-dark;
-    color: $primary-color;
+    @extend %buttontext;
 }
 
 .maki {
@@ -87,25 +115,30 @@ mdcardview {
 }
 
 .small-icon-btn {
-    @extend .icon-btn;
+    @extend %mdi;
+    @extend %icon-btn;
     width: 30;
     height: 30;
     font-size: 16;
 }
 
 .icon-btn-white {
-    @extend .icon-btn;
+    @extend %mdi;
+    @extend %icon-btn;
     color: $text-color-dark;
     ripple-color: $text-color-dark;
 }
 
 .icon-btn-text {
-    @extend .buttontext, .icon-btn;
-    ripple-color: $dark-color;
+    @extend %mdi, %icon-btn, %buttontext;
+}
+.icon-btn-text[isEnabled='false'] {
+    background-color:lightGray;
+    color:gray;
 }
 
 .floating-btn {
-    @extend .mdi;
+    @extend %mdi;
     color: white;
     elevation: 6;
     font-size: 24;
@@ -115,7 +148,8 @@ mdcardview {
     height: 54;
 }
 .small-floating-btn {
-    @extend .mdi, .buttontext;
+    @extend %mdi;
+    @extend %buttontext;
     elevation: 3;
     dynamic-elevation-offset: 3;
     font-size: 24;
@@ -150,7 +184,7 @@ mdcardview {
 }
 
 .actionBarButton {
-    @extend .mdi;
+    @extend %mdi;
     width: $actionbar-height;
     height: $actionbar-height;
     color: $text-color-light;
@@ -176,18 +210,10 @@ mdcardview {
     font-size: 13;
     color: rgba(255, 255, 255, 0.533);
 }
-
 .icon-btn {
-    @extend .mdi;
-    ripple-color: gray;
-    color: $text-color-light;
-    .ns-dark & {
-        color: $text-color-dark;
-        ripple-color: $text-color-dark;
-    }
-    width: $actionbar-button-height;
-    height: $actionbar-button-height;
-    font-size: 24;
+    @extend %mdi;
+    @extend %icon-btn;
+   
     // margin: 0;
     // padding: 0;
 }

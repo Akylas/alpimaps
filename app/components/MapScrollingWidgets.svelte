@@ -15,8 +15,19 @@
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import type { IItem } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
+    import { convertDistance } from '~/helpers/formatter';
     import { showError } from '~/utils/error';
-    import { accentColor, globalMarginTop, mdiFontFamily, primaryColor } from '~/variables';
+    import {
+        accentColor,
+        alpimapsFontFamily,
+borderColor,
+                globalMarginTop,
+        mdiFontFamily,
+        primaryColor,
+subtitleColor,
+                textColor,
+        widgetBackgroundColor
+    } from '~/variables';
     import { resolveComponentElement } from './bottomsheet';
     import OptionPicker from './OptionPicker.svelte';
     import ScaleView from './ScaleView.svelte';
@@ -25,6 +36,10 @@
     import { AnimationCurve } from '@nativescript/core/ui/enums';
     import { asSvelteTransition } from 'svelte-native/transitions';
     import { showModal } from 'svelte-native';
+    import { RouteInstruction } from '~/models/Route';
+    import { RoutingAction } from '~/models/Route';
+    import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+import { onThemeChanged } from '~/helpers/theme';
     function scale(node, { delay = 0, duration = 400, easing = AnimationCurve.easeOut }) {
         const scaleX = node.nativeView.scaleX;
         const scaleY = node.nativeView.scaleY;
@@ -50,20 +65,65 @@
     let scaleView: ScaleView;
     let userLocationModule: UserLocationModule = null;
     let currentLocation: MapPos = null;
-    let lastSuggestionKey: string;
+    // let lastSuggestionKey: string;
     let gridLayout: NativeViewElementNode<GridLayout>;
+    let navigationCanvas: NativeViewElementNode<CanvasView>;
 
     let showSuggestionPackage = false;
     let locationButtonClass = 'buttontext';
     let locationButtonLabelClass: string = '';
     let selectedItemHasPosition = false;
 
+    let instructionIcon;
+    export let navigationInstructions: {
+        remainingDistance: number;
+        remainingTime: number;
+        instruction: RouteInstruction;
+    };
+    $: {
+        if (navigationInstructions && navigationInstructions.instruction) {
+            switch (navigationInstructions.instruction.a) {
+                case RoutingAction.UTURN:
+                    instructionIcon = 'alpimaps-u-turn';
+                    break;
+                case RoutingAction.FINISH:
+                    instructionIcon = 'alpimaps-flag-checkered';
+                    break;
+                case RoutingAction.TURN_LEFT:
+                    instructionIcon = 'alpimaps-left-turn-1';
+                    break;
+                case RoutingAction.TURN_RIGHT:
+                    instructionIcon = 'alpimaps-right-turn-1';
+                    break;
+                case RoutingAction.STAY_ON_ROUNDABOUT:
+                case RoutingAction.ENTER_ROUNDABOUT:
+                    instructionIcon = 'alpimaps-roundabout';
+                    break;
+                default:
+                case RoutingAction.HEAD_ON:
+                case RoutingAction.GO_STRAIGHT:
+                    instructionIcon = 'alpimaps-up-arrow';
+                    break;
+            }
+        } else {
+            instructionIcon = null;
+        }
+        navigationCanvas && navigationCanvas.nativeView.invalidate();
+       
+    }
+
+
+
+    onThemeChanged(() => {
+        navigationCanvas && navigationCanvas.nativeView.invalidate();
+    });
+
     export function getNativeView() {
         return gridLayout && gridLayout.nativeView;
     }
     mapContext.onMapReady(() => {
         userLocationModule = mapContext.mapModule('userLocation');
-        userLocationModule.on('location', onNewLocation, this);
+        // userLocationModule.on('location', onNewLocation, this);
     });
     $: locationButtonClass = !$mapStore.queryingLocation && $mapStore.watchingLocation ? 'buttonthemed' : 'buttontext';
     $: locationButtonLabelClass = $mapStore.queryingLocation ? 'fade-blink' : '';
@@ -193,13 +253,12 @@
             }
         }
     }
-    function onNewLocation(e: any) {
-        currentLocation = e.data;
-        console.log('onNewLocation', currentLocation);
-    }
+    // function onNewLocation(e: any) {
+    //     currentLocation = e.data;
+    // }
 
     onDestroy(() => {
-        userLocationModule.off('location', onNewLocation, this);
+        // userLocationModule.off('location', onNewLocation, this);
         userLocationModule = null;
     });
     function onTotalDownloadProgress(e) {
@@ -268,6 +327,65 @@
             disableDimBackground: true,
             trackingScrollView: 'trackingScrollView'
         });
+    }
+
+    let iconPaint: Paint;
+    let textPaint: Paint;
+    function drawNavigationInstruction({ canvas, object }: { canvas: Canvas; object: Canvas }) {
+        let w = canvas.getWidth();
+        let h = canvas.getHeight();
+        if (!iconPaint) {
+            iconPaint = new Paint();
+            iconPaint.setAntiAlias(true);
+            iconPaint.fontFamily = alpimapsFontFamily;
+        }
+        if (!textPaint) {
+            textPaint = new Paint();
+            textPaint.setAntiAlias(true);
+        }
+        textPaint.setColor($textColor);
+        iconPaint.setColor($textColor);
+        iconPaint.setTextSize(40);
+        canvas.save();
+
+        if (navigationInstructions.instruction) {
+            const data = convertDistance(navigationInstructions.instruction.dist);
+
+            let staticLayout = new StaticLayout(instructionIcon, iconPaint, w, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+            canvas.translate(10, h / 2 - staticLayout.getHeight() / 2);
+            staticLayout.draw(canvas);
+            canvas.restore();
+            textPaint.setTextSize(11);
+            canvas.drawText(
+                `${data.value.toFixed(data.unit === 'm' ? 0 : 1)} ${data.unit}`,
+                14,
+                h / 2 + staticLayout.getHeight() / 2 + 15,
+                textPaint
+            );
+            textPaint.setTextSize(13);
+            staticLayout = new StaticLayout(
+                navigationInstructions.instruction.inst,
+                textPaint,
+                w - 20 - 50,
+                LayoutAlignment.ALIGN_NORMAL,
+                1,
+                0,
+                true
+            );
+            canvas.translate(60, 10);
+            staticLayout.draw(canvas);
+            if (navigationInstructions.instruction.name) {
+                let transH = staticLayout.getHeight();
+                textPaint.setTextSize(11);
+                textPaint.setColor($subtitleColor);
+                canvas.drawText(
+                    navigationInstructions.instruction.name,
+                0,
+                transH + 10,
+                textPaint
+            );
+            }
+        }
     }
 </script>
 
@@ -346,4 +464,22 @@
             verticalAlignment="bottom"
         />
     {/if}
+    <canvas
+        bind:this={navigationCanvas}
+        rowSpan="3"
+        antiAlias={true}
+        transition:scale={{ duration: 200 }}
+        on:swipe={() => (navigationInstructions = null)}
+        col="1"
+        visibility={navigationInstructions ? 'visible' : 'collapsed'}
+        verticalAlignment="bottom"
+        horizontalAlignment="center"
+        backgroundColor={$widgetBackgroundColor}
+        borderRadius="6"
+        marginBottom="24"
+        elevation="2"
+        width="70%"
+        height="100"
+        on:draw={drawNavigationInstruction}
+    />
 </gridlayout>

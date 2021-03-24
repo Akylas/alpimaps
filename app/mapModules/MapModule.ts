@@ -53,6 +53,7 @@ export interface MapContext {
         setSelected?: boolean;
         minZoom?: number;
         zoom?: number;
+        zoomDuration?: number;
     }) => void;
     zoomToItem: (args: { item: IItem; zoom?: number; minZoom?: number }) => void;
     unselectItem: () => void;
