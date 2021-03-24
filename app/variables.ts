@@ -12,6 +12,7 @@ export const textColorDark = locals.textColorDark;
 export const textColorLight = locals.textColorLight;
 export const backgroundColor = new Color(locals.backgroundColor);
 export const mdiFontFamily: string = locals.mdiFontFamily;
+export const alpimapsFontFamily: string = locals.alpimapsFontFamily;
 export const actionBarHeight: number = parseFloat(locals.actionBarHeight);
 export const statusBarHeight: number = parseFloat(locals.statusBarHeight);
 export const actionBarButtonHeight: number = parseFloat(locals.actionBarButtonHeight);

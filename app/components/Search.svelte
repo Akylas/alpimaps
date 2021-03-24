@@ -371,6 +371,7 @@
     }
     let currentQuery;
     async function instantSearch(_query) {
+        console.log('instantSearch', _query,loading) ;
         loading = true;
         currentQuery = cleanUpString(_query);
         const position = mapContext.getMap().focusPos;
@@ -399,31 +400,36 @@
                     console.error('searchInVectorTiles', err);
                 }),
             searchInGeocodingService(options)
-                .then((r) => r && result.push(...r))
+                .then((r) => loading && r  && result.push(...r))
                 .catch((err) => {
                     console.error('searchInGeocodingService', err);
                 }),
             herePlaceSearch(options)
-                .then((r) => r && result.push(...r))
+                .then((r) => loading && r  && result.push(...r))
                 .catch((err) => {
                     console.error('herePlaceSearch', err);
                 }),
             photonSearch(options)
-                .then((r) => r && result.push(...r))
+                .then((r) => loading && r && result.push(...r))
                 .catch((err) => {
                     console.error('photonSearch', err);
                 })
         ]);
+        if (!loading) {
+            // was cancelled
+            return;
+        }
         if (result.length === 0) {
             showSnack({ message: l('no_result_found') });
         } else {
             await loadView();
         }
-        dataItems = result;
+        dataItems = result.map(s=>({...s , color:getItemIconColor(s), icon:getItemIcon(s), title:getItemTitle(s), subtitle:getItemSubtitle(s)}));
         updateFilteredDataItems();
         loading = false;
     }
     function clearSearch() {
+        loading = false;
         if (searchAsTypeTimer) {
             clearTimeout(searchAsTypeTimer);
             searchAsTypeTimer = null;
@@ -527,13 +533,13 @@
     id="search"
     bind:this={gridLayout}
     {...$$restProps}
-    rows="44,auto"
+    rows="auto,auto"
     columns="auto,*,auto,auto,auto,auto,auto"
     backgroundColor={$widgetBackgroundColor}
     borderRadius={searchResultsVisible ? 10 : 25}
     margin={`${globalMarginTop + 10} 10 10 10`}
 >
-    <button variant="text" class="icon-btn-white" text="mdi-magnify" on:tap={() => showMenu('left')} />
+    <button variant="text" class="icon-btn" text="mdi-magnify" on:tap={() => showMenu('left')} />
     <textfield
         bind:this={textField}
         variant="none"
@@ -556,7 +562,7 @@
     {#if loaded}
         <button
             variant="text"
-            class="icon-btn"
+            class="small-icon-btn"
             visibility={searchResultsVisible ? 'visible' : 'collapsed'}
             row="0"
             col="3"
@@ -566,7 +572,7 @@
         />
         <button
             variant="text"
-            class="icon-btn"
+            class="small-icon-btn"
             visibility={searchResultsVisible ? 'visible' : 'collapsed'}
             row="0"
             col="4"
@@ -585,7 +591,7 @@
         on:tap={clearSearch}
         color={$subtitleColor}
     />
-    <button col="6" variant="text" class="icon-btn-white" text="mdi-dots-vertical" on:tap={showMapMenu} />
+    <button col="6" variant="text" class="icon-btn" text="mdi-dots-vertical" on:tap={showMapMenu} />
     {#if loaded}
         <collectionview
             bind:this={collectionView}
@@ -598,19 +604,19 @@
             visibility={searchResultsVisible ? 'visible' : 'collapsed'}
         >
             <Template let:item>
-                <gridlayout columns="30,*" padding="0 10 0 10" rows="*,auto,auto,*" class="textRipple" on:tap={() => onItemTap(item)}>
+                <gridlayout columns="34,*" padding="0 10 0 10" rows="*,auto,auto,*" class="textRipple" on:tap={() => onItemTap(item)}>
                     <label
                         col="0"
                         rowSpan="4"
-                        text={getItemIcon(item)}
-                        color={getItemIconColor(item)}
+                        text={item.icon}
+                        color={item.color}
                         class="osm"
                         fontSize="20"
                         verticalAlignment="center"
                         textAlignment="center"
                     />
-                    <label col="1" row="1" text={getItemTitle(item)} fontSize="14" fontWeight="bold" />
-                    <label col="1" row="2" text={getItemSubtitle(item)} class="subtitle" fontSize="12" />
+                    <label col="1" row="1" text={item.title} fontSize="14" fontWeight="bold"/>
+                    <label col="1" row="2" text={item.subtitle} class="subtitle" fontSize="12" visibility={!!item.subtitle ? 'visible' : 'collapsed'} />
                 </gridlayout>
             </Template>
         </collectionview>
