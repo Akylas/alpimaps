@@ -23,7 +23,6 @@ installMixins();
 installBottomSheets();
 installUIMixins();
 overrideSpanAndFormattedString();
-console.log('test', createNativeAttributedString);
 
 // we need to use lat lon
 setMapPosKeys('lat', 'lon');
@@ -42,6 +41,7 @@ registerNativeViewElement('StackLayout', () => require('@nativescript/core').Sta
 // registerNativeViewElement('FlexboxLayout', () => require('@nativescript/core').FlexboxLayout);
 registerNativeViewElement('Switch', () => require('@nativescript/core').Switch);
 registerNativeViewElement('TextField', () => require('@nativescript/core').TextField);
+// registerNativeViewElement('ncanvas', () => require('@nativescript/canvas').Canvas);
 // registerNativeViewElement('button', () => require('@nativescript/core').Button);
 // registerNativeViewElement('TextView', () => require('@nativescript/core').TextView);
 // registerNativeViewElement('WebView', () => require('@nativescript/core').WebView);
