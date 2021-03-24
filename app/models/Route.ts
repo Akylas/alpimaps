@@ -12,7 +12,7 @@ export enum RoutingAction {
     HEAD_ON,
     FINISH,
     NO_TURN,
-    GO_STRAIGHTT,
+    GO_STRAIGHT,
     TURN_RIGHT,
     UTURN,
     TURN_LEFT,

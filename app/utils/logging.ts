@@ -5,7 +5,8 @@ const originalConsole = {
     info: console.info,
     error: console.error,
     warn: console.warn,
-    debug: console.debug
+    debug: console.debug,
+    dir: console.dir
 };
 
 function convertArg(arg) {

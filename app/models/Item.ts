@@ -2,7 +2,7 @@ import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
 import { VectorElement } from '@nativescript-community/ui-carto/vectorelements';
 import { LineStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/line';
 import { MarkerStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/marker';
-import { Color } from '@nativescript/core/color';
+import { Color } from '@nativescript/core';
 import { Route, RouteRepository } from './Route';
 import NSQLDatabase from '../mapModules/NSQLDatabase';
 
