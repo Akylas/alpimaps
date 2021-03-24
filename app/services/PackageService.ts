@@ -2,11 +2,11 @@ import Observable from '@nativescript-community/observable';
 import {
     CartoMapStyle,
     IntVector,
+    MapBounds,
     MapPos,
     MapPosVector,
     fromNativeMapPos,
-    nativeVectorToArray,
-    MapBounds
+    nativeVectorToArray
 } from '@nativescript-community/ui-carto/core';
 import { MergedMBVTTileDataSource, OrderedTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
 import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
@@ -97,8 +97,10 @@ class WindowKalmanFilter extends MathFilter {
 }
 
 function getGradeColor(grade) {
-    if (grade >= 20) {
+    if (grade >= 30) {
         return 'red';
+    } else if (grade >= 20) {
+        return 'orange';
     } else if (grade >= 10) {
         return 'yellow';
     }
@@ -488,6 +490,7 @@ class PackageService extends Observable {
     ): Promise<GeocodingResultVector> {
         return new Promise((resolve, reject) => {
             service.calculateAddresses(options, (err, result) => {
+                // console.log('calculateAddresses', options, err, result && result.size());
                 if (err) {
                     reject(err);
                     return;
@@ -604,10 +607,9 @@ class PackageService extends Observable {
                     if (value.length > 0) {
                         address[d[0]] = value;
                     }
-                } catch(err) {
+                } catch (err) {
                     console.error('error getting address', d[0], err);
                 }
-                
             }
         });
         if ('getCategories' in geoRes.address) {
@@ -616,13 +618,14 @@ class PackageService extends Observable {
                 geoRes['categories'] = nativeVectorToArray(cat);
             }
         }
-        
+
+        // console.log('prepareGeoCodingResul2t', geoRes, geoRes.address);
         const res = geoRes as Item;
         res.provider = 'carto';
         res.address = address;
         if (!onlyAddress) {
-            geoRes.properties.name = geoRes.properties.name || res.address.name || res.address.street;
-            if (geoRes.properties.name.length === 0) {
+            const name = (geoRes.properties.name = geoRes.properties.name || res.address.name || res.address.street);
+            if (name && name.length === 0) {
                 delete geoRes.properties.name;
             }
         }

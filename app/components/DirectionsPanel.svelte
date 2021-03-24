@@ -120,7 +120,7 @@
         if (!_routeLayer) {
             _routeLayer = new VectorLayer({ visibleZoomRange: [0, 24], dataSource: getRouteDataSource(), opacity: 0.7 });
             _routeLayer.setVectorElementEventListener<LatLonKeys>({
-                onVectorElementClicked: (data) => mapContext.onVectorElementClicked(data)
+                onVectorElementClicked: (data) => mapContext.vectorElementClicked(data)
             });
             mapContext.addLayer(_routeLayer, 'directions');
         }
@@ -429,6 +429,9 @@
     }
     async function showRoute(online = false) {
         try {
+            if (waypoints.length <=1) {
+                return;
+            }
             let startTime = Date.now();
             loading = true;
             console.log(
@@ -626,8 +629,7 @@
                 class="icon-btn-text"
                 text="mdi-magnify"
                 on:tap={() => showRoute(false)}
-                on:LongPress={() => showRoute(true)}
-                isEnabled={waypoints.length > 0}
+                isEnabled={waypoints.length > 1}
                 margin="4 10 4 10"
                 visibility={loading ? 'hidden' : 'visible'}
             />

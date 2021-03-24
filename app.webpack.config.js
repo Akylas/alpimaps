@@ -9,6 +9,7 @@ const SentryCliPlugin = require('@sentry/webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const IgnoreNotFoundExportPlugin = require('./IgnoreNotFoundExportPlugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const Fontmin = require('fontmin');
 
 module.exports = (env, params = {}) => {
     Object.keys(env).forEach((k) => {
@@ -97,7 +98,11 @@ module.exports = (env, params = {}) => {
     Object.assign(config.resolve.alias, {
         '@nativescript/core': `${coreModulesPackageName}`,
         'svelte-native': '@akylas/svelte-native',
-        'tns-core-modules': `${coreModulesPackageName}`
+        'tns-core-modules': `${coreModulesPackageName}`,
+        'get-pixels/node-pixels': '~/helpers/get-pixels',
+        '~/get-pixels/node-pixels': '~/helpers/get-pixels',
+        './get-pixels/node-pixels': '~/helpers/get-pixels',
+        'app/tns_modules/get-pixels/node-pixels': '~/helpers/get-pixels'
     });
 
     console.log('coreModulesPackageName', coreModulesPackageName);
@@ -188,8 +193,16 @@ module.exports = (env, params = {}) => {
     const mdiIcons = JSON.parse(
         `{${mdiSymbols.variables[mdiSymbols.variables.length - 1].value.replace(/" (F|0)(.*?)([,\n]|$)/g, '": "$1$2"$3')}}`
     );
-    
-    const scssPrepend = `
+
+    const appSymbols = symbolsParser.parseSymbols(readFileSync(resolve(projectRoot, 'css/variables.scss')).toString());
+    const appIcons = {};
+    appSymbols.variables
+        .filter((v) => v.name.startsWith('$icon-'))
+        .forEach((v) => {
+            appIcons[v.name.replace('$icon-', '')] = String.fromCharCode(parseInt(v.value.slice(2), 16));
+        });
+
+    const scssPrepend = `$alpimaps-fontFamily: alpimaps;
     $mdi-fontFamily: ${platform === 'android' ? 'materialdesignicons-webfont' : 'Material Design Icons'};
     `;
     const scssLoaderRuleIndex = config.module.rules.findIndex((r) => r.test && r.test.toString().indexOf('scss') !== -1);
@@ -244,6 +257,7 @@ module.exports = (env, params = {}) => {
         }
     );
 
+    const usedMDIICons = [];
     config.module.rules.push({
         // rules to replace mdi icons and not use nativescript-font-icon
         test: /\.(ts|js|scss|css|svelte)$/,
@@ -252,10 +266,25 @@ module.exports = (env, params = {}) => {
             {
                 loader: 'string-replace-loader',
                 options: {
-                    search: 'mdi-([a-z-]+)',
+                    search: 'mdi-([a-z0-9-_]+)',
                     replace: (match, p1, offset, str) => {
                         if (mdiIcons[p1]) {
-                            return String.fromCharCode(parseInt(mdiIcons[p1], 16));
+                            const res = String.fromCharCode(parseInt(mdiIcons[p1], 16));
+                            usedMDIICons.push(res);
+                            return res;
+                        }
+                        return match;
+                    },
+                    flags: 'g'
+                }
+            },
+            {
+                loader: 'string-replace-loader',
+                options: {
+                    search: 'alpimaps-([a-z0-9-_]+)',
+                    replace: (match, p1, offset, str) => {
+                        if (appIcons[p1]) {
+                            return appIcons[p1];
                         }
                         return match;
                     },
@@ -312,15 +341,16 @@ module.exports = (env, params = {}) => {
     config.plugins = config.plugins.filter(
         (p) => ['CleanWebpackPlugin', 'CopyPlugin', 'Object', 'ForkTsCheckerWebpackPlugin'].indexOf(p.constructor.name) === -1
     );
+    // config.plugins.push(new NativeScriptHTTPPlugin());
     console.log('plugins after clean', config.plugins);
     // we add our rules
     const globOptions = { dot: false, ignore: [`**/${relative(appPath, appResourcesFullPath)}/**`] };
 
     const context = nsWebpack.Utils.platform.getEntryDirPath();
     const copyPatterns = [
-        { context, from: 'fonts/!(ios|android)/**/*', to: 'fonts/[name].[ext]', noErrorOnMissing: true, globOptions },
-        { context, from: 'fonts/*', to: 'fonts/[name].[ext]', noErrorOnMissing: true, globOptions },
-        { context, from: `fonts/${platform}/**/*`, to: 'fonts/[name].[ext]', noErrorOnMissing: true, globOptions },
+        { context, from: 'fonts/!(ios|android)/**/*', to: 'fonts/[name][ext]', noErrorOnMissing: true, globOptions },
+        { context, from: 'fonts/*', to: 'fonts/[name][ext]', noErrorOnMissing: true, globOptions },
+        { context, from: `fonts/${platform}/**/*`, to: 'fonts/[name][ext]', noErrorOnMissing: true, globOptions },
         { context, from: '**/*.jpg', noErrorOnMissing: true, globOptions },
         { context, from: '**/*.png', noErrorOnMissing: true, globOptions },
         { context, from: 'assets/**/*', noErrorOnMissing: true, globOptions },
@@ -328,7 +358,24 @@ module.exports = (env, params = {}) => {
         {
             from: 'node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf',
             to: 'fonts',
-            globOptions
+            globOptions,
+            transform: {
+                cache: { keys: { key: usedMDIICons.join('') } },
+                transformer(content, path) {
+                    return new Promise((resolve, reject) => {
+                        new Fontmin()
+                            .src(content)
+                            .use(Fontmin.glyph({ text: usedMDIICons.join('') }))
+                            .run(function (err, files) {
+                                if (err) {
+                                    reject(err);
+                                } else {
+                                    resolve(files[0].contents);
+                                }
+                            });
+                    });
+                }
+            }
         },
         {
             from: 'css/osm.scss',

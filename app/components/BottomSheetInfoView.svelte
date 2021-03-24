@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { MapPos } from '@nativescript-community/ui-carto/core';
+    import type { GenericMapPos, MapPos } from '@nativescript-community/ui-carto/core';
     import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
     import { convertDuration, osmicon, convertElevation, convertValueToUnit, UNITS } from '~/helpers/formatter';
     import type { IItem as Item } from '~/models/Item';
@@ -22,10 +22,6 @@
     let itemIsRoute = false;
     let itemProps = null;
     // $: itemRouteNoProfile = item && !!item.route && (!item.route.profile || !item.route.profile.max);
-
-    let remainingDistanceOnCurrentRoute = null;
-    let routeInstruction: RouteInstruction = null;
-    let currentLocation: MapPos<LatLonKeys> = null;
 
     function propValue(prop) {
         switch (prop) {
@@ -58,39 +54,6 @@
         return null;
     }
 
-    export function onNewLocation(e: any) {
-        currentLocation = e.data;
-        return updateRouteItemWithPosition(item, currentLocation);
-    }
-
-    function updateRouteItemWithPosition(routeItem: Item, location) {
-        if (routeItem && routeItem.route) {
-            const route = routeItem.route;
-            const positions = route.positions;
-            const onPathIndex = isLocationOnPath(location, positions, false, true, 10);
-            if (onPathIndex >= 0) {
-                const distance = distanceToEnd(onPathIndex, positions);
-                remainingDistanceOnCurrentRoute = distance;
-                routeInstruction = null;
-                for (let index = route.instructions.length - 1; index >= 0; index--) {
-                    const element = route.instructions[index];
-                    if (element.index <= onPathIndex) {
-                        routeInstruction = element;
-                        break;
-                    }
-                }
-            } else {
-                routeInstruction = null;
-                remainingDistanceOnCurrentRoute = null;
-            }
-            return onPathIndex;
-        } else {
-            remainingDistanceOnCurrentRoute = null;
-            routeInstruction = null;
-        }
-        return -1;
-    }
-
     function updateItem(item) {
         itemIsRoute = item && !!item.route;
         itemProps = item && item.properties;
@@ -98,6 +61,7 @@
         itemTitle = item && formatter.getItemTitle(item);
         itemSubtitle = item && formatter.getItemSubtitle(item);
         showSymbol = itemIsRoute && itemProps && !!itemProps.ref;
+
         let newPropsToDraw = [];
         if (!itemIsRoute && item) {
             const props = item.properties;
@@ -118,20 +82,15 @@
             let result;
             if (route.totalDistance || (itemProps && itemProps.distance)) {
                 result = `${convertValueToUnit(route.totalDistance || itemProps.distance * 1000, UNITS.DistanceKm).join(' ')}`;
-                if (remainingDistanceOnCurrentRoute) {
-                    result += ` (${convertValueToUnit(remainingDistanceOnCurrentRoute, UNITS.DistanceKm).join(' ')})`;
-                }
+
+                console.log('routeDistance', routeDistance);
                 routeDistance = result;
                 newPropsToDraw.push('distance');
             }
 
             if (route.totalTime) {
                 result = `${convertDuration(route.totalTime * 1000)}`;
-                if (remainingDistanceOnCurrentRoute) {
-                    result += ` (~ ${convertDuration(
-                        ((route.totalTime * remainingDistanceOnCurrentRoute) / route.totalDistance) * 1000
-                    )})`;
-                }
+
                 routeDuration = result;
                 newPropsToDraw.push('duration');
             }
@@ -166,18 +125,12 @@
             console.error('updateItem', err);
         }
     }
-    $: {
-        if (itemIsRoute && currentLocation) {
-            updateRouteItemWithPosition(item, currentLocation);
-        }
-    }
 </script>
 
 <canvaslabel {...$$restProps} fontSize="16" padding="10 10 4 10">
-    <cspan horizontalAlignment="left" verticalAlignment="top" text={routeInstruction && routeInstruction.inst} fontSize={15} />
     <cgroup verticalAlignment="middle" paddingBottom={(itemSubtitle ? 4 : 0) + (propsToDraw.length > 0 ? 12 : 0)}>
         <cspan
-            visibility={itemIcon ? 'visible' : 'hidden'}
+            visibility={itemIcon && itemIcon.length > 0 ? 'visible' : 'hidden'}
             paddingLeft="10"
             width="40"
             text={osmicon(itemIcon)}
@@ -200,13 +153,7 @@
         verticalAlignment="middle"
         textAlignment="left"
     >
-        <cspan
-            text={itemTitle}
-            fontWeight="bold"
-            color={routeDuration ? '#01B719' : undefined}
-            :fontSize={routeInstruction ? 10 : 16}
-            :paddingTop={routeInstruction ? 18 : 0}
-        />
+        <cspan text={itemTitle} fontWeight="bold" color={routeDuration ? '#01B719' : undefined} :fontSize={16} />
         <cspan text={itemSubtitle ? '\n' + itemSubtitle : ''} color={$subtitleColor} fontSize={13} maxLines={2} />
     </cgroup>
     <cgroup

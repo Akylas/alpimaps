@@ -258,7 +258,7 @@
         >
             <cgroup verticalAlignment="center" textAlignment="center">
                 <cspan
-                    text={currentLocation && currentLocation.speed !== undefined ? currentLocation.speed.toFixed() : '10'}
+                    text={currentLocation && currentLocation.speed !== undefined ? currentLocation.speed.toFixed() : ''}
                     fontSize="26"
                     fontWeight="bold"
                 />
