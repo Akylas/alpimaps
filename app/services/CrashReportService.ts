@@ -5,7 +5,7 @@ import { getBuildNumber, getVersionName } from '@nativescript-community/extended
 import { Device } from '@nativescript/core/platform';
 import { alert, confirm } from '@nativescript-community/ui-material-dialogs';
 import { Label as HTMLLabel } from '@nativescript-community/ui-label';
-import { Color } from '@nativescript/core/color';
+import { Color } from '@nativescript/core';
 import { BaseError } from 'make-error';
 import { install } from '~/utils/logging';
 import { l, lc } from '@nativescript-community/l';

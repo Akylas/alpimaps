@@ -2,7 +2,7 @@
     import { AppURL, handleOpenURL } from '@nativescript-community/appurl';
     import * as EInfo from '@nativescript-community/extendedinfo';
     import * as perms from '@nativescript-community/perms';
-    import { CartoMapStyle, ClickType, MapBounds } from '@nativescript-community/ui-carto/core';
+    import { CartoMapStyle, ClickType, GenericMapPos, MapBounds, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
@@ -30,7 +30,7 @@
     import { action, alert, login } from '@nativescript-community/ui-material-dialogs';
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { Brightness } from '@nativescript/brightness';
-    import { AndroidApplication, Application, Color, Page } from '@nativescript/core';
+    import { AndroidApplication, Application, Color, Utils, Page } from '@nativescript/core';
     import * as appSettings from '@nativescript/core/application-settings';
     import type { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
@@ -67,25 +67,26 @@
     import LocationInfoPanel from './LocationInfoPanel.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
     import Search from './Search.svelte';
-    import { GenericGeoLocation } from '@nativescript-community/gps';
+    import { GenericGeoLocation, GeoLocation } from '@nativescript-community/gps';
     import { Template } from 'svelte-native/components';
     import { isModalOpened, showModal } from 'svelte-native';
     import { isSensorAvailable } from '@nativescript-community/sensors';
-    import { asSvelteTransition } from 'svelte-native/transitions';
-    import { AnimationCurve } from '@nativescript/core/ui/enums';
+    // import { asSvelteTransition } from 'svelte-native/transitions';
+    // import { AnimationCurve } from '@nativescript/core/ui/enums';
     import { NetworkConnectionStateEvent, NetworkConnectionStateEventData, networkService } from '~/services/NetworkService';
     import { isDark, toggleTheme } from '~/helpers/theme';
+    import { RouteInstruction } from '~/models/Route';
 
-    function slideFromRight(node, { delay = 0, duration = 200, easing = AnimationCurve.easeOut }) {
-        const scaleX = node.nativeView.scaleX;
-        const scaleY = node.nativeView.scaleY;
-        return asSvelteTransition(node, delay, duration, easing, (t) => ({
-            scale: {
-                x: t * scaleX,
-                y: t * scaleY
-            }
-        }));
-    }
+    // function slideFromRight(node, { delay = 0, duration = 200, easing = AnimationCurve.easeOut }) {
+    //     const scaleX = node.nativeView.scaleX;
+    //     const scaleY = node.nativeView.scaleY;
+    //     return asSvelteTransition(node, delay, duration, easing, (t) => ({
+    //         scale: {
+    //             x: t * scaleX,
+    //             y: t * scaleY
+    //         }
+    //     }));
+    // }
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
     const mailRegexp = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
@@ -153,6 +154,12 @@
     let steps;
     let topTranslationY;
     let networkConnected = false;
+    let navigationInstructions: {
+        remainingDistance: number;
+        remainingTime: number;
+        instruction: RouteInstruction;
+    };
+
 
     let ignoreNextMapClick = false;
     let handleSelectedRouteTimer: NodeJS.Timeout;
@@ -163,6 +170,8 @@
     let showClickedFeatures = false;
     let currentClickedFeatures: any[];
     let selectedClickMarker: Text<LatLonKeys>;
+
+    const bottomSheetPanGestureOptions = { failOffsetXEnd: 20, minDist: 40 };
 
     $: {
         if (steps) {
@@ -387,7 +396,6 @@
 
     async function onMainMapReady(e) {
         cartoMap = e.object as CartoMap<LatLonKeys>;
-        // console.log('onMainMapReady');
         // CartoMap.setRunOnMainThread(false);
         if (DEV_LOG) {
             setShowDebug(DEV_LOG);
@@ -421,13 +429,14 @@
             if (__CARTO_PACKAGESERVICE__) {
                 packageService.start();
             }
-            setTimeout(() => {
-                setMapStyle(appSettings.getString('mapStyle', 'osmxml~voyager'), true);
-                mapContext.runOnModules('onMapReady', cartoMap);
-            }, 100);
+            setMapStyle(appSettings.getString('mapStyle', 'osm.zip~voyager'), true);
         } catch (err) {
             showError(err);
         }
+
+        setTimeout(() => {
+            mapContext.runOnModules('onMapReady', cartoMap);
+        }, 100);
     }
 
     function onMainMapMove(e) {
@@ -491,22 +500,26 @@
         setSelected = true,
         showButtons = false,
         preventZoom = false,
+        position,
         minZoom,
-        zoom
+        zoom,
+        zoomDuration
     }: {
         item: IItem;
         showButtons?: boolean;
+        position?: GenericMapPos<LatLonKeys>;
         isFeatureInteresting: boolean;
         peek?: boolean;
         setSelected?: boolean;
         preventZoom?: boolean;
         minZoom?: number;
         zoom?: number;
+        zoomDuration?: number;
     }) {
         didIgnoreAlreadySelected = false;
-        // console.log('selectItem', item, isFeatureInteresting, item !== $selectedItem);
         if (isFeatureInteresting) {
-            if (item !== $selectedItem) {
+            let isCurrentItem = item !== $selectedItem;
+            if (setSelected && isCurrentItem) {
                 unselectItem(false);
             }
             if (item.route) {
@@ -576,7 +589,7 @@
             if (setSelected) {
                 $selectedItem = item;
             }
-            if (!item.route) {
+            if (setSelected && !item.route) {
                 const service = packageService.localOSMOfflineReverseGeocodingService;
                 if (service) {
                     itemLoading = true;
@@ -609,18 +622,17 @@
                         })
                         .catch((err) => console.error('searchInGeocodingService', err, err['stack']));
                 }
+                if (item.properties && 'ele' in item.properties === false && packageService.hasElevation()) {
+                    packageService.getElevation(item.position).then((result) => {
+                        if ($selectedItem.position === item.position) {
+                            $selectedItem.properties = $selectedItem.properties || {};
+                            $selectedItem.properties['ele'] = result;
+                            $selectedItem = { ...$selectedItem };
+                        }
+                    });
+                }
             }
 
-            if (!item.route && 'ele' in item.properties === false && packageService.hasElevation()) {
-                packageService.getElevation(item.position).then((result) => {
-                    if ($selectedItem.position === item.position) {
-                        $selectedItem.properties = $selectedItem.properties || {};
-                        $selectedItem.properties['ele'] = result;
-                        $selectedItem = { ...$selectedItem };
-                    }
-                });
-                // console.log('get elevation done ', item);
-            }
             // console.log('selectedItem', item);
             // const vectorTileDecoder = getVectorTileDecoder();
             // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
@@ -633,18 +645,28 @@
             if (preventZoom) {
                 return;
             }
-            zoomToItem({ item, zoom, minZoom });
+            zoomToItem({ item, zoom, minZoom, duration: zoomDuration });
         } else {
             unselectItem();
         }
     }
-    export function zoomToItem({ item, zoom, minZoom }: { item: IItem; zoom?: number; minZoom?: number }) {
+    export function zoomToItem({
+        item,
+        zoom,
+        minZoom,
+        duration = 200
+    }: {
+        item: IItem;
+        zoom?: number;
+        minZoom?: number;
+        duration?;
+    }) {
         if (item.zoomBounds) {
             // const zoomLevel = getBoundsZoomLevel(item.zoomBounds, {
             //     width: Screen.mainScreen.widthPixels,
             //     height: Screen.mainScreen.heightPixels
             // });
-            cartoMap.moveToFitBounds(item.zoomBounds, undefined, true, true, false, 200);
+            cartoMap.moveToFitBounds(item.zoomBounds, undefined, true, true, false, duration);
             // cartoMap.setZoom(zoomLevel, 200);
             // cartoMap.setFocusPos(getCenter(item.zoomBounds.northeast, item.zoomBounds.southwest), 200);
         } else if (item.properties && item.properties.extent) {
@@ -662,11 +684,11 @@
             );
         } else {
             if (zoom) {
-                cartoMap.setZoom(zoom, 200);
+                cartoMap.setZoom(zoom, duration);
             } else if (minZoom) {
-                cartoMap.setZoom(Math.max(minZoom, cartoMap.zoom), 200);
+                cartoMap.setZoom(Math.max(minZoom, cartoMap.zoom), duration);
             }
-            cartoMap.setFocusPos(item.position, 200);
+            cartoMap.setFocusPos(item.position, duration);
         }
     }
     export function unselectItem(updateBottomSheet = true) {
@@ -703,6 +725,15 @@
     $: currentLayer && (currentLayer.preloading = $mapStore.preloading);
     $: shouldShowNavigationBarOverlay = global.isAndroid && navigationBarHeight !== 0 && !!selectedItem;
     $: bottomSheetStepIndex === 0 && unselectItem();
+    $: {
+        if (cartoMap) {
+            cartoMap
+                .getOptions()
+                .setFocusPointOffset(
+                    toNativeScreenPos({ x: 0, y: Utils.layout.toDevicePixels(steps[bottomSheetStepIndex]) / 2 })
+                );
+        }
+    }
     $: {
         appSettings.setBoolean(KEEP_AWAKE_KEY, keepAwakeEnabled);
         if (keepAwakeEnabled) {
@@ -911,7 +942,7 @@
             if (item.route) {
                 item.route.positions = (element as Line<LatLonKeys>).getPoses() as any;
             }
-            selectItem({ item, isFeatureInteresting: true });
+            selectItem({ item, isFeatureInteresting: true, position });
             unFocusSearch();
             return true;
         }
@@ -1029,10 +1060,11 @@
                 }).getTileDecoder();
             } else {
                 try {
+                    console.log('test', layerStyle);
                     vectorTileDecoder = new MBVectorTileDecoder({
                         style: mapStyleLayer,
                         liveReload: TNS_ENV !== 'production',
-                        ...(layerStyle.endsWith('.zip')
+                        ...(mapStyle.endsWith('.zip')
                             ? { zipPath: `~/assets/styles/${mapStyle}` }
                             : { dirPath: `~/assets/styles/${mapStyle}` })
                     });
@@ -1472,6 +1504,12 @@
                 icon: 'mdi-altimeter'
             });
         }
+        // options.splice(options.length - 2, 0, {
+        //     title: lt('test'),
+        //     id: 'threejs',
+        //     icon: 'mdi-rotate-3d'
+        // });
+
         if (packageServiceEnabled) {
             options.unshift({
                 title: lt('offline_packages'),
@@ -1509,6 +1547,17 @@
                     break;
                 case 'bug':
                     sendBug();
+                    break;
+                case 'threejs':
+                    // try {
+                    //     const Three = require('./Three.svelte').default;
+
+                    //     await showModal({ page: Three, animated: true, fullscreen: true , props:{
+                    //         position: cartoMap.getFocusPos()
+                    //     }});
+                    // } catch (err) {
+                    //     showError(err);
+                    // }
                     break;
                 case 'compass':
                     try {
@@ -1621,6 +1670,7 @@
         <bottomsheet
             android:marginBottom={navigationBarHeight}
             backgroundColor="#01550000"
+            panGestureOptions={bottomSheetPanGestureOptions}
             {steps}
             bind:stepIndex={bottomSheetStepIndex}
             translationFunction={bottomSheetTranslationFunction}
@@ -1717,6 +1767,7 @@
             />
             <MapScrollingWidgets
                 bind:this={mapScrollingWidgets}
+                bind:navigationInstructions
                 opacity={scrollingWidgetsOpacity}
                 userInteractionEnabled={scrollingWidgetsOpacity > 0.3}
             />
@@ -1729,6 +1780,7 @@
             <BottomSheetInner
                 bind:this={bottomSheetInner}
                 bind:steps
+                bind:navigationInstructions
                 prop:bottomSheet
                 updating={itemLoading}
                 item={$selectedItem}
