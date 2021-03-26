@@ -6,6 +6,7 @@
     import type { RouteInstruction } from '~/models/Route';
     import { mdiFontFamily, subtitleColor } from '~/variables';
     import { formatter } from '~/mapModules/ItemFormatter';
+    import dayjs from 'dayjs';
     const PROPS_TO_SHOW = ['ele'];
 
     export let item: Item;
@@ -43,9 +44,9 @@
         switch (prop) {
             case 'ele':
             case 'dplus':
-                return 'mdi-elevation-rise';
+                return '↑';
             case 'dmin':
-                return 'mdi-elevation-decline';
+                return '↓';
             case 'distance':
                 return 'mdi-map-marker-distance';
             case 'duration':
@@ -82,29 +83,30 @@
             let result;
             if (route.totalDistance || (itemProps && itemProps.distance)) {
                 result = `${convertValueToUnit(route.totalDistance || itemProps.distance * 1000, UNITS.DistanceKm).join(' ')}`;
-
-                console.log('routeDistance', routeDistance);
                 routeDistance = result;
                 newPropsToDraw.push('distance');
             }
 
             if (route.totalTime) {
-                result = `${convertDuration(route.totalTime * 1000)}`;
+                if (route.totalTime < 3600) {
+                    routeDuration = dayjs.duration( route.totalTime, 'seconds').format('m [min]');
+                } else {
+                    routeDuration = dayjs.duration( route.totalTime, 'seconds').format('H [h] m [min]');
 
-                routeDuration = result;
+                }
                 newPropsToDraw.push('duration');
             }
         }
 
         hasProfile = itemIsRoute && !!item.route.profile && !!item.route.profile.max;
         if (!hasProfile) {
-            if (itemProps && itemProps.ascent) {
+            if (itemProps && itemProps.ascent && itemProps.ascent > 0) {
                 routeDplus = `${convertElevation(itemProps.ascent)}`;
                 newPropsToDraw.push('dplus');
             } else {
                 routeDplus = null;
             }
-            if (itemProps && itemProps.descent) {
+            if (itemProps && itemProps.descent && itemProps.descent > 0) {
                 routeDmin = `${convertElevation(itemProps.descent)}`;
                 newPropsToDraw.push('dmin');
             } else {
@@ -112,9 +114,14 @@
             }
         } else {
             const profile = item.route.profile;
-            routeDplus = `${convertElevation(profile.dplus)}`;
-            routeDmin = `${convertElevation(-profile.dmin)}`;
-            newPropsToDraw.push('dplus', 'dmin');
+            if (profile.dplus > 0) {
+                routeDplus = `${convertElevation(profile.dplus)}`;
+                newPropsToDraw.push('dplus');
+            }
+            if (profile.dmin < 0) {
+                routeDmin = `${convertElevation(-profile.dmin)}`;
+                newPropsToDraw.push('dmin');
+            }
         }
         propsToDraw = newPropsToDraw;
     }

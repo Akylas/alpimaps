@@ -10,6 +10,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 const IgnoreNotFoundExportPlugin = require('./IgnoreNotFoundExportPlugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const Fontmin = require('fontmin');
+const { HotModuleReplacementPlugin } = require('webpack');
 
 module.exports = (env, params = {}) => {
     Object.keys(env).forEach((k) => {
@@ -339,8 +340,14 @@ module.exports = (env, params = {}) => {
     }
     // we remove default rules
     config.plugins = config.plugins.filter(
-        (p) => ['CleanWebpackPlugin', 'CopyPlugin', 'Object', 'ForkTsCheckerWebpackPlugin'].indexOf(p.constructor.name) === -1
+        (p) => ['CleanWebpackPlugin', 'CopyPlugin', 'Object', 'ForkTsCheckerWebpackPlugin', 'HotModuleReplacementPlugin'].indexOf(p.constructor.name) === -1
     );
+    console.log(config.plugins.map(s=>s.constructor.name));
+
+    if (hmr) {
+        // we need to do it ourselves because linking the package breaks it
+        config.plugins.push(new HotModuleReplacementPlugin());
+    }
     // config.plugins.push(new NativeScriptHTTPPlugin());
     console.log('plugins after clean', config.plugins);
     // we add our rules
