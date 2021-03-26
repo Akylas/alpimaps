@@ -506,7 +506,6 @@ export class NetworkService extends Observable {
         return this._connectionType;
     }
     set connectionType(value: connectivity.connectionType) {
-        console.log('set connectionType', value);
         if (this._connectionType !== value) {
             this._connectionType = value;
             this.connected = value !== connectivity.connectionType.none;
@@ -541,7 +540,6 @@ export class NetworkService extends Observable {
         this.connectionType = connectivity.getConnectionType();
     }
     onConnectionStateChange(newConnectionType: connectivity.connectionType) {
-        console.log('onConnectionStateChange', newConnectionType, connectivity.connectionType[newConnectionType]);
         this.connectionType = newConnectionType;
     }
     request(requestParams: HttpRequestOptions, retry = 0) {

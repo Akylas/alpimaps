@@ -11,10 +11,10 @@ const distancePreset = {
     units: ['m', 'km']
 };
 
-const elevationPreset = {
-    factors: [],
-    units: ['m']
-};
+// const elevationPreset = {
+//     factors: [],
+//     units: ['m']
+// };
 
 const osmIcons = require('~/osm_icons.json');
 export function osmicon(values: string[] | string) {

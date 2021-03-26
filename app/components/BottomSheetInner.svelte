@@ -200,7 +200,7 @@
         const positions = item.route.positions;
         const position = positions.getPos(Math.max(0, Math.min(x, positions.size() - 1)));
         if (position) {
-            updateRouteItemWithPosition(item, position, true, false);
+            updateRouteItemWithPosition(item, position, false, false);
             mapContext.selectItem({
                 item: { position },
                 isFeatureInteresting: true,
@@ -242,7 +242,7 @@
         remainingDistance: number;
         remainingTime: number;
         instruction: RouteInstruction;
-    };
+    } = undefined;
     // $: console.log('updateSteps changed', steps);
 
     function updateSteps() {

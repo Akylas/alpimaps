@@ -4,7 +4,9 @@ import { getString, setString } from '@nativescript/core/application-settings';
 import { Device } from '@nativescript/core/platform';
 import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
+import duration from 'dayjs/plugin/duration';
 import timezone from 'dayjs/plugin/timezone';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import { derived, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
 const supportedLanguages = SUPPORTED_LOCALES;
@@ -13,6 +15,8 @@ import { showBottomSheet } from '~/components/bottomsheet';
 
 dayjs.extend(updateLocale);
 dayjs.extend(timezone);
+dayjs.extend(duration);
+dayjs.extend(relativeTime);
 
 export let lang;
 let currentLocale = null;
@@ -30,7 +34,7 @@ $lang.subscribe((newLang: string) => {
     if (lang === null) {
         return;
     }
-    console.log('changed lang', lang, newLang, Device.region);
+    // console.log('changed lang', lang, newLang, Device.region);
     try {
         require(`dayjs/locale/${newLang}`);
     } catch (err) {
@@ -63,7 +67,7 @@ function setLang(newLang) {
     if (supportedLanguages.indexOf(newLang) === -1) {
         newLang = 'en';
     }
-    console.log('changed lang', newLang, Device.region);
+    // console.log('changed lang', newLang, Device.region);
     currentLocale = null;
     $lang.set(newLang);
 }
@@ -149,7 +153,6 @@ prefs.on('key:language', () => {
     }
     setLang(newLanguage);
 });
-
 
 let currentLanguage = getString('language');
 if (!currentLanguage) {
