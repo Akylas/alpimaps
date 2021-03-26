@@ -18,8 +18,8 @@ paint.setTextSize(34);
 export default class SymbolShape extends Shape {
     @stringProperty symbol: string;
     @colorProperty({ nonPaintProp: true }) color: Color;
-    @lengthProperty left: Length = zeroLength;
-    @lengthProperty top: Length = zeroLength;
+    @lengthProperty left = zeroLength;
+    @lengthProperty top = zeroLength;
     drawOnCanvas(canvas: Canvas) {
         const availableWidth = layout.toDevicePixels(canvas.getWidth());
         const availableHeight = layout.toDevicePixels(canvas.getHeight());

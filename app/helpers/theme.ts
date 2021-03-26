@@ -7,16 +7,23 @@ import { updateThemeColors } from '~/variables';
 import { showBottomSheet } from '~/components/bottomsheet';
 import OptionSelect from '~/components/OptionSelect.svelte';
 import { lc } from '@nativescript-community/l';
+import { writable } from 'svelte/store';
 
 export type Themes = 'auto' | 'light' | 'dark';
 const onThemeChangedCallbacks = [];
 export function onThemeChanged(callback) {
     onThemeChangedCallbacks.push(callback);
 }
+export let theme: Themes;
+export const currentTheme = writable('auto');
+export const sTheme = writable('auto');
 
 Application.on(Application.systemAppearanceChangedEvent, (event) => {
-    updateThemeColors(theme);
-    onThemeChangedCallbacks.forEach((c) => c(theme));
+    if (theme === 'auto') {
+        currentTheme.set(event.newValue);
+        updateThemeColors(event.newValue);
+        onThemeChangedCallbacks.forEach((c) => c(event.newValue));
+    }
 });
 
 export function getThemeDisplayName(toDisplay = theme) {
@@ -50,7 +57,6 @@ export async function selectTheme() {
 }
 
 export function applyTheme(theme: Themes) {
-    console.log('applyTheme', theme);
     const AppCompatDelegate = global.isAndroid ? androidx.appcompat.app.AppCompatDelegate : undefined;
     switch (theme) {
         case 'auto':
@@ -86,11 +92,8 @@ export function applyTheme(theme: Themes) {
     }
 }
 
-export let theme: Themes;
-
-export function toggleTheme() {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    console.log('toggleTheme', newTheme);
+export function toggleTheme(autoDark = false) {
+    const newTheme = theme === 'dark' ? (autoDark ? 'auto' : 'light') : 'dark';
     setString('theme', newTheme);
 }
 export function isDark() {
@@ -116,7 +119,7 @@ export function start() {
         }
 
         theme = newTheme;
-
+        sTheme.set(newTheme);
         applyTheme(newTheme);
         updateThemeColors(newTheme, newTheme !== 'auto');
         onThemeChangedCallbacks.forEach((c) => c(theme));

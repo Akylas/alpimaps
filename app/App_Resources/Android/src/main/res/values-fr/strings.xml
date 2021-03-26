@@ -9,7 +9,7 @@
   <string name="tap_to_open">"AlpiMaps surveille votre position. \nAppuyez pour ouvrir"</string>
   <string name="stopped_watching_location">"a cessé de regarder votre position"</string>
   <string name="source_code">"code source"</string>
-  <string name="share_screenshot">"partager une capture d\'écran"</string>
+  <string name="share_screenshot">"capture d\'écran"</string>
   <string name="share_application">"partager l\'application"</string>
   <string name="settings">"réglages"</string>
   <string name="set">"ensemble"</string>
@@ -20,7 +20,6 @@
   <string name="search_package">"package de recherche"</string>
   <string name="save_item">"enregistrer l\'élément"</string>
   <string name="routing_package">"package de routage"</string>
-  <string name="review_application">"examen de la demande"</string>
   <string name="reduced">"réduit (1-20km)"</string>
   <string name="please_describe_error">"veuillez décrire votre erreur"</string>
   <string name="offline_packages">"packages hors ligne"</string>
@@ -79,5 +78,6 @@
   <string name="app_name">"Alpi Maps"</string>
   <string name="title_activity_kimera">"Alpi Maps"</string>
   <string name="weather">"weather"</string>
+  <string name="review_application">"review application"</string>
   <string name="watching_location">"watching your location"</string>
 </resources>

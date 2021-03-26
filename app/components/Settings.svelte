@@ -11,7 +11,7 @@
     import CActionBar from './CActionBar.svelte';
     import ThirdPartySoftwareBottomSheet from './ThirdPartySoftwareBottomSheet.svelte';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
 
     let collectionView: NativeViewElementNode<CollectionView>;
 
@@ -38,9 +38,6 @@ import { NativeViewElementNode } from 'svelte-native/dom';
     }
     function getSubtitle(item) {
         switch (item.id) {
-            case 'dark_mode':
-            case 'language':
-                return '';
             case 'version':
                 return appVersion;
             case 'github':
@@ -48,7 +45,7 @@ import { NativeViewElementNode } from 'svelte-native/dom';
             case 'third_party':
                 return lc('list_used_third_parties');
         }
-        return null;
+        return '';
     }
     let items = [
         {
@@ -73,17 +70,16 @@ import { NativeViewElementNode } from 'svelte-native/dom';
         {
             id: 'share',
             rightBtnIcon: 'mdi-chevron-right'
-        },
-        {
-            id: 'review',
-            rightBtnIcon: 'mdi-chevron-right'
         }
+        // {
+        //     id: 'review',
+        //     rightBtnIcon: 'mdi-chevron-right'
+        // }
     ];
 
-    onThemeChanged(()=>{
+    onThemeChanged(() => {
         // (collectionView.nativeView as CollectionView).refreshVisibleItems();
-
-    })
+    });
     function onLongPress() {}
     async function onTap(command) {
         switch (command) {
@@ -122,15 +118,9 @@ import { NativeViewElementNode } from 'svelte-native/dom';
     <page actionBarHidden="true">
         <gridlayout rows="auto,*">
             <CActionBar canGoBack modalWindow title={$slc('settings')} />
-            <collectionview 
-            bind:this={collectionView}
-            row="1" {items} rowHeight="60">
+            <collectionview bind:this={collectionView} row="1" {items} rowHeight="60">
                 <Template let:item>
-                    <gridLayout
-                        columns="auto,*,auto"
-                        class="textRipple"
-                        on:tap={(event) => onTap(item.id)}
-                    >
+                    <gridLayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id)}>
                         <label
                             fontSize="36"
                             text={item.icon}
@@ -150,7 +140,7 @@ import { NativeViewElementNode } from 'svelte-native/dom';
                                 lineBreak="end"
                             />
                             <label
-                                visibilty={getSubtitle(item) ? 'visible' : 'collapsed'}
+                                visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'}
                                 fontSize="14"
                                 class="subtitle"
                                 text={getSubtitle(item)}

@@ -74,7 +74,7 @@
     // import { asSvelteTransition } from 'svelte-native/transitions';
     // import { AnimationCurve } from '@nativescript/core/ui/enums';
     import { NetworkConnectionStateEvent, NetworkConnectionStateEventData, networkService } from '~/services/NetworkService';
-    import { isDark, toggleTheme } from '~/helpers/theme';
+    import { sTheme, toggleTheme } from '~/helpers/theme';
     import { RouteInstruction } from '~/models/Route';
 
     // function slideFromRight(node, { delay = 0, duration = 200, easing = AnimationCurve.easeOut }) {
@@ -1060,7 +1060,6 @@
                 }).getTileDecoder();
             } else {
                 try {
-                    console.log('test', layerStyle);
                     vectorTileDecoder = new MBVectorTileDecoder({
                         style: mapStyleLayer,
                         liveReload: TNS_ENV !== 'production',
@@ -1486,7 +1485,7 @@
             {
                 title: lt('dark_mode'),
                 id: 'dark_mode',
-                color: isDark() ? primaryColor : undefined,
+                color: $sTheme === 'dark' ? primaryColor : undefined,
                 icon: 'mdi-theme-light-dark'
             },
 
@@ -1543,7 +1542,7 @@
                     downloadPackages();
                     break;
                 case 'dark_mode':
-                    toggleTheme();
+                    toggleTheme(true);
                     break;
                 case 'bug':
                     sendBug();
