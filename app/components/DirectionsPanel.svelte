@@ -419,7 +419,7 @@
         );
     }
     function switchValhallaSetting(key: string) {
-        valhallaCostingOptions[key] = !valhallaCostingOptions[key];
+        valhallaCostingOptions[key] = !!valhallaCostingOptions[key] ? 0 : 1;
     }
     function valhallaSetting(key: string) {
         return valhallaCostingOptions[key];
@@ -429,7 +429,7 @@
     }
     async function showRoute(online = false) {
         try {
-            if (waypoints.length <=1) {
+            if (waypoints.length <= 1) {
                 return;
             }
             let startTime = Date.now();

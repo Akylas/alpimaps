@@ -299,7 +299,6 @@ export default class CustomLayersModule extends MapModule {
     createRasterLayer(id: string, provider: Provider) {
         const opacity = appSettings.getNumber(`${id}_opacity`, 1);
         const rasterCachePath = Folder.fromPath(path.join(getDataFolder(), 'rastercache'));
-        console.log('createRasterLayer', rasterCachePath, rasterCachePath.path);
         const databasePath = File.fromPath(path.join(rasterCachePath.path, id)).path;
 
         // Apply zoom level bias to the raster layer.
@@ -781,7 +780,6 @@ export default class CustomLayersModule extends MapModule {
         }
         const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
         index = savedSources.indexOf(name);
-        console.log('moveSource', name, index, newIndex);
         if (index !== -1) {
             // let firstNonLocalIndex = -1;
             // this.customSources.some((d, i) => {
