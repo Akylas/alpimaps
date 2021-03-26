@@ -9,11 +9,12 @@
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
-    import { navigationBarHeight, primaryColor, widgetBackgroundColor } from '~/variables';
+    import { borderColor, navigationBarHeight, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import { closeBottomSheet, showBottomSheet } from './bottomsheet';
     import mapStore from '~/stores/mapStore';
     import { debounce } from 'push-it-to-the-limit';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
+import { onThemeChanged } from '~/helpers/theme';
 
     const mapContext = getMapContext();
     let gridLayout: NativeViewElementNode<GridLayout>;
@@ -68,18 +69,18 @@
     async function showSourceOptions(item: SourceItem) {
         const LayerOptionsBottomSheet = (await import('./LayerOptionsBottomSheet.svelte')).default;
         closeBottomSheet();
-        setTimeout(()=>{
-            
-        showBottomSheet({
-            parent: gridLayout,
-            view: LayerOptionsBottomSheet,
-            disableDimBackground: true,
-            dismissOnBackgroundTap: true,
-            props: {
-                item
-            }
-        });
-        }, 0)
+        setTimeout(() => {
+            showBottomSheet({
+                parent: gridLayout,
+                view: LayerOptionsBottomSheet,
+                trackingScrollView: 'scrollView',
+                disableDimBackground: true,
+                dismissOnBackgroundTap: true,
+                props: {
+                    item
+                }
+            });
+        }, 0);
     }
     async function onItemReordered() {}
 
@@ -98,6 +99,12 @@
             loadedListeners.forEach((l) => l());
         }
     }
+    function onButtonLongPress(item, event) {
+        collectionView.nativeView.startDragging(customSources.indexOf(item));
+    }
+    onThemeChanged(() => {
+        collectionView && (collectionView.nativeView as CollectionView).refreshVisibleItems();
+    });
 </script>
 
 <gridlayout
@@ -113,28 +120,27 @@
         <collectionview
             id="trackingScrollView"
             col="0"
-            rowHeight="70"
             items={customSources}
             bind:this={collectionView}
             reorderEnabled={true}
-            reorderLongPressEnabled={true}
             on:itemReordered={onItemReordered}
         >
             <Template let:item>
-                <gridlayout paddingLeft="15" paddingRight="5" rows="*" columns="2*,*,auto">
-                    <canvaslabel colSpan="2">
-                        <cspan
-                            color={item.layer.opacity === 0 ? 'grey' : undefined}
-                            text={item.name.toUpperCase()}
-                            fontSize="13"
-                            fontWeight="bold"
-                            verticalAlignment="top"
-                            paddingTop="5"
-                        />
-                    </canvaslabel>
+                <gridlayout paddingLeft="15" paddingRight="5" rows="*" columns="100,*,auto" borderBottomColor={$borderColor}  borderBottomWidth="1">
+                    <label
+                        color={item.layer.opacity === 0 ? $subtitleColor : $textColor}
+                        text={item.name.toUpperCase()}
+                        fontSize="13"
+                        fontWeight="bold"
+                        lineBreak="end"
+                        verticalTextAlignment="center"
+                        maxLines="2"
+                        paddingTop="3"
+                    />
                     <mdslider
                         marginLeft="10"
                         marginRight="10"
+                        col="1"
                         value={item.layer.opacity}
                         on:valueChange={(event) => onLayerOpacityChanged(item, event)}
                         minValue="0"
@@ -148,11 +154,12 @@
                         class="icon-btn"
                         text="mdi-dots-vertical"
                         on:tap={showSourceOptions(item)}
+                        on:longPress={(event) => onButtonLongPress(item, event)}
                     />
                 </gridlayout>
             </Template>
         </collectionview>
-        <stacklayout col="1" borderLeftColor="rgba(255,255,255,0.4)" borderLeftWidth="1">
+        <stacklayout col="1" borderLeftColor={$borderColor} borderLeftWidth="1">
             <button variant="text" class="icon-btn" text="mdi-plus" on:tap={addSource} />
             <!-- <button variant="text" class="icon-btn" text="mdi-layers-off" on:tap={clearCache} /> -->
             <!-- <MDButton class="buttonthemed" @tap="addSource" text={l('add_source')} /> -->

@@ -39,8 +39,6 @@ export default class ItemsModule extends MapModule {
     itemRepository: ItemRepository;
     routeRepository: RouteRepository;
     async initDb() {
-        console.log('ItemsModule', 'start');
-
         try {
             this.db = new NSQLDatabase(filePath, {
                 // for now it breaks
@@ -300,7 +298,6 @@ export default class ItemsModule extends MapModule {
         // }
         const coordinates = [];
         listCoordinates.forEach((s, index) => {
-            console.log('test', s.length, s[0], s[s.length - 1]);
             // if (index === 0) {
             coordinates.push(...s);
             // } else {

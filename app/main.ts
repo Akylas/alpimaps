@@ -28,13 +28,21 @@ overrideSpanAndFormattedString();
 setMapPosKeys('lat', 'lon');
 setGeoLocationKeys('lat', 'lon');
 
+class NestedScrollView extends ScrollView {
+    createNativeView() {
+        if (global.isAndroid) {
+            return new androidx.core.widget.NestedScrollView(this._context);
+        }
+        return super.createNativeView();
+    }
+}
 registerNativeViewElement('AbsoluteLayout', () => require('@nativescript/core').AbsoluteLayout);
 registerElement('Frame', () => new FrameElement());
 registerElement('Page', () => new PageElement());
 // registerNativeViewElement('DockLayout', () => require('@nativescript/core').DockLayout);
 registerNativeViewElement('GridLayout', () => require('@nativescript/core').GridLayout);
 // registerNativeViewElement('Image', () => require('@nativescript/core').Image);
-registerNativeViewElement('ScrollView', () => require('@nativescript/core').ScrollView);
+registerNativeViewElement('ScrollView', () => NestedScrollView as any);
 // registerNativeViewElement('SearchBar', () => require('@nativescript/core').SearchBar);
 // registerNativeViewElement('Slider', () => require('@nativescript/core').Slider);
 registerNativeViewElement('StackLayout', () => require('@nativescript/core').StackLayout);
@@ -83,6 +91,7 @@ CollectionViewElement.register();
 DrawerElement.register();
 
 import { start } from '~/helpers/theme';
+import { ScrollView } from '@nativescript/core/ui';
 // on startup we need to ensure theme is loaded because of a mixin
 // on startup we need to say what we are using
 start();
