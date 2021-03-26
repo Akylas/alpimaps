@@ -193,7 +193,7 @@ import { textLightColor } from '~/variables';
     }
 </script>
 
-<scrollview bind:this={scrollView} height="200">
+<scrollview bind:this={scrollView} height="200" id="scrollView">
     <stacklayout>
         {#each Object.entries(options) as [name, option]}
             {#if option.type === 'color'}

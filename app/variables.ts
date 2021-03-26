@@ -3,6 +3,7 @@ import { Application, Color, Screen, Utils } from '@nativescript/core';
 import { ad } from '@nativescript/core/utils/utils';
 import { writable } from 'svelte/store';
 import CSSModule from '~/variables.module.scss';
+import { currentTheme } from './helpers/theme';
 const locals = CSSModule.locals;
 
 export const primaryColor = new Color(locals.primaryColor);
@@ -58,7 +59,7 @@ export function updateThemeColors(theme: string, force = false) {
     } catch (err) {
         console.error('updateThemeColors', err);
     }
-    console.log('updateThemeColors', theme, force);
+    currentTheme.set(theme);
     if (theme === 'dark') {
         textColor.set(textColorDark);
         textLightColor.set('#aaaaaa');

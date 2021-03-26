@@ -12,7 +12,7 @@
     font-family: $alpimaps-fontFamily;
 }
 
-%icon-btn{
+%icon-btn {
     ripple-color: gray;
     color: $text-color-light;
     .ns-dark & {
@@ -22,12 +22,6 @@
     width: $actionbar-button-height;
     height: $actionbar-button-height;
     font-size: 24;
-}
-
-%buttontext {
-    background-color: $text-color-dark;
-    color: $primary-color;
-    ripple-color: $dark-color;
 }
 
 .mdi {
@@ -40,15 +34,12 @@
 
 page {
     status-bar-style: dark;
-    navigation-bar-color: $text-color-light;
-    status-bar-color: #ddd;
+    navigation-bar-color: transparent;
+    status-bar-color: transparent;
     background-color: $text-color-dark;
 
     .ns-dark &,
     &.ns-dark {
-        status-bar-style: dark;
-        // navigation-bar-color: $text-color-light;
-        status-bar-color: $text-color-light;
         background-color: #1c1c1e;
     }
 }
@@ -103,7 +94,9 @@ mdcardview {
     color: $text-color-dark;
 }
 .buttontext {
-    @extend %buttontext;
+    background-color: $text-color-dark;
+    color: $primary-color;
+    ripple-color: $dark-color;
 }
 
 .maki {
@@ -130,11 +123,19 @@ mdcardview {
 }
 
 .icon-btn-text {
-    @extend %mdi, %icon-btn, %buttontext;
+    @extend %mdi;
+    @extend %icon-btn;
+    background-color: $text-color-dark;
+    color: $primary-color;
+    ripple-color: $dark-color;
+    .ns-dark & {
+        color: $primary-color;
+        ripple-color: $dark-color;
+    }
 }
 .icon-btn-text[isEnabled='false'] {
-    background-color:lightGray;
-    color:gray;
+    background-color: lightGray;
+    color: gray;
 }
 
 .floating-btn {
@@ -149,7 +150,7 @@ mdcardview {
 }
 .small-floating-btn {
     @extend %mdi;
-    @extend %buttontext;
+    @extend .buttontext;
     elevation: 3;
     dynamic-elevation-offset: 3;
     font-size: 24;
@@ -213,7 +214,7 @@ mdcardview {
 .icon-btn {
     @extend %mdi;
     @extend %icon-btn;
-   
+
     // margin: 0;
     // padding: 0;
 }

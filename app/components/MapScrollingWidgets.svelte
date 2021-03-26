@@ -79,7 +79,7 @@ import { onThemeChanged } from '~/helpers/theme';
         remainingDistance: number;
         remainingTime: number;
         instruction: RouteInstruction;
-    };
+    } = undefined;
     $: {
         if (navigationInstructions && navigationInstructions.instruction) {
             switch (navigationInstructions.instruction.a) {
