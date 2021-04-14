@@ -9,6 +9,5 @@ export default async function getPixels(uri: string, cb) {
         useLegacy: true
     });
     const array = await (res.content as https.HttpsResponseLegacy).toArrayBufferAsync();
-    console.log('array2', array.byteLength);
     cb(null, ndarray(new Uint8Array(array), [512, 512, 4], [4, 4 * 512, 1], 0));
 }

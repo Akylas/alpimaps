@@ -20,12 +20,12 @@
     import {
         accentColor,
         alpimapsFontFamily,
-borderColor,
-                globalMarginTop,
+        borderColor,
+        globalMarginTop,
         mdiFontFamily,
         primaryColor,
-subtitleColor,
-                textColor,
+        subtitleColor,
+        textColor,
         widgetBackgroundColor
     } from '~/variables';
     import { resolveComponentElement } from './bottomsheet';
@@ -39,7 +39,7 @@ subtitleColor,
     import { RouteInstruction } from '~/models/Route';
     import { RoutingAction } from '~/models/Route';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-import { onThemeChanged } from '~/helpers/theme';
+    import { onThemeChanged } from '~/helpers/theme';
     function scale(node, { delay = 0, duration = 400, easing = AnimationCurve.easeOut }) {
         const scaleX = node.nativeView.scaleX;
         const scaleY = node.nativeView.scaleY;
@@ -109,10 +109,7 @@ import { onThemeChanged } from '~/helpers/theme';
             instructionIcon = null;
         }
         navigationCanvas && navigationCanvas.nativeView.invalidate();
-       
     }
-
-
 
     onThemeChanged(() => {
         navigationCanvas && navigationCanvas.nativeView.invalidate();
@@ -123,6 +120,11 @@ import { onThemeChanged } from '~/helpers/theme';
     }
     mapContext.onMapReady(() => {
         userLocationModule = mapContext.mapModule('userLocation');
+
+        const customLayers = mapContext.mapModule('customLayers');
+        if (customLayers) {
+            customLayers.on('onProgress', onTotalDownloadProgress, this);
+        }
         // userLocationModule.on('location', onNewLocation, this);
     });
     $: locationButtonClass = !$mapStore.queryingLocation && $mapStore.watchingLocation ? 'buttonthemed' : 'buttontext';
@@ -139,19 +141,29 @@ import { onThemeChanged } from '~/helpers/theme';
                 (suggestionPackage.status.getCurrentAction() !== PackageAction.READY &&
                     suggestionPackage.status.getCurrentAction() !== PackageAction.DOWNLOADING));
     }
-    if (__CARTO_PACKAGESERVICE__) {
-        onMount(() => {
+    onMount(() => {
+        if (__CARTO_PACKAGESERVICE__) {
             if (packageService) {
                 packageService.on('onProgress', onTotalDownloadProgress, this);
                 packageService.on('onPackageStatusChanged', onPackageStatusChanged, this);
             }
-        });
-        onDestroy(() => {
+        }
+    });
+    onDestroy(() => {
+
+        userLocationModule = null;
+        if (__CARTO_PACKAGESERVICE__) {
             if (packageService) {
                 packageService.off('onProgress', onTotalDownloadProgress, this);
                 packageService.off('onPackageStatusChanged', onPackageStatusChanged, this);
             }
-        });
+        }
+        const customLayers = mapContext.mapModule('customLayers');
+        if (customLayers) {
+            customLayers.off('onProgress', onTotalDownloadProgress, this);
+        }
+    });
+    if (__CARTO_PACKAGESERVICE__) {
         const updateSuggestion = debounce((focusPos) => {
             // console.log('updateSuggestion', focusPos);
 
@@ -257,17 +269,11 @@ import { onThemeChanged } from '~/helpers/theme';
     //     currentLocation = e.data;
     // }
 
-    onDestroy(() => {
-        // userLocationModule.off('location', onNewLocation, this);
-        userLocationModule = null;
-    });
     function onTotalDownloadProgress(e) {
-        if (__CARTO_PACKAGESERVICE__) {
-            if (e.data === 100) {
-                totalDownloadProgress = 0;
-            } else {
-                totalDownloadProgress = e.data;
-            }
+        if (e.data === 100) {
+            totalDownloadProgress = 0;
+        } else {
+            totalDownloadProgress = e.data;
         }
     }
     function onPackageStatusChanged(e) {
@@ -378,12 +384,7 @@ import { onThemeChanged } from '~/helpers/theme';
                 let transH = staticLayout.getHeight();
                 textPaint.setTextSize(11);
                 textPaint.setColor($subtitleColor);
-                canvas.drawText(
-                    navigationInstructions.instruction.name,
-                0,
-                transH + 10,
-                textPaint
-            );
+                canvas.drawText(navigationInstructions.instruction.name, 0, transH + 10, textPaint);
             }
         }
     }
@@ -405,7 +406,7 @@ import { onThemeChanged } from '~/helpers/theme';
             visibility={showSuggestionPackage ? 'visible' : 'collapsed'}
             col="1"
             row="2"
-            backgroundColor="#55000000"
+            backgroundColor="#00000055"
             verticalAlignment="bottom"
             verticalTextAlignment="middle"
             horizontalAlignment="center"
@@ -454,16 +455,14 @@ import { onThemeChanged } from '~/helpers/theme';
         horizontalAlignment="left"
     />
     <ScaleView bind:this={scaleView} col="1" row="2" horizontalAlignment="right" verticalAlignment="bottom" marginBottom="8" />
-    {#if packageServiceEnabled}
-        <mdprogress
-            col="0"
-            colSpan="3"
-            row="2"
-            value={totalDownloadProgress}
-            visibility={totalDownloadProgress > 0 ? 'visible' : 'collapsed'}
-            verticalAlignment="bottom"
-        />
-    {/if}
+    <mdprogress
+        col="0"
+        colSpan="3"
+        row="2"
+        value={totalDownloadProgress}
+        visibility={totalDownloadProgress > 0 ? 'visible' : 'collapsed'}
+        verticalAlignment="bottom"
+    />
     <canvas
         bind:this={navigationCanvas}
         rowSpan="3"

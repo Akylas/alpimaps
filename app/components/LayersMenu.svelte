@@ -14,7 +14,10 @@
     import mapStore from '~/stores/mapStore';
     import { debounce } from 'push-it-to-the-limit';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-import { onThemeChanged } from '~/helpers/theme';
+    import { onThemeChanged } from '~/helpers/theme';
+    import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
+    import { File, Folder, path } from '@nativescript/core/file-system';
+import { formatSize } from '~/helpers/formatter';
 
     const mapContext = getMapContext();
     let gridLayout: NativeViewElementNode<GridLayout>;
@@ -23,14 +26,22 @@ import { onThemeChanged } from '~/helpers/theme';
     export let customLayers: CustomLayersModule = null;
     export let customSources: ObservableArray<SourceItem> = [] as any;
     let currentLegend: string = null;
-    mapContext.onMapReady((view: CartoMap<LatLonKeys>) => {
-        customLayers = mapContext.mapModule('customLayers');
-        customSources = customLayers.customSources;
-    });
+    // mapContext.onMapReady((view: CartoMap<LatLonKeys>) => {
+    //     customLayers = mapContext.mapModule('customLayers');
+    //     console.log('onMapready')
+    //     customSources = customLayers.customSources;
+    // });
     onMount(() => {
         customLayers = mapContext.mapModule('customLayers');
         if (customLayers) {
             customSources = customLayers.customSources;
+            // customSources.forEach((s) => {
+            //     const dataSource = s.layer.dataSource;
+            //     if (dataSource instanceof PersistentCacheTileDataSource) {
+            //         const databasePath = dataSource.options.databasePath;
+            //         console.log(databasePath, formatSize(File.fromPath(databasePath).size));
+            //     }
+            // });
         }
     });
     onDestroy(() => {
@@ -126,7 +137,14 @@ import { onThemeChanged } from '~/helpers/theme';
             on:itemReordered={onItemReordered}
         >
             <Template let:item>
-                <gridlayout paddingLeft="15" paddingRight="5" rows="*" columns="100,*,auto" borderBottomColor={$borderColor}  borderBottomWidth="1">
+                <gridlayout
+                    paddingLeft="15"
+                    paddingRight="5"
+                    rows="*"
+                    columns="100,*,auto"
+                    borderBottomColor={$borderColor}
+                    borderBottomWidth="1"
+                >
                     <label
                         color={item.layer.opacity === 0 ? $subtitleColor : $textColor}
                         text={item.name.toUpperCase()}
