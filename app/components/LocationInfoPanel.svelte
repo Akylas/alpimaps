@@ -1,5 +1,4 @@
 <script lang="ts" context="module">
-    import { l, lc, lu } from '~/helpers/locale';
     import {
         getAirportPressureAtLocation,
         isSensorAvailable,
@@ -26,6 +25,7 @@
 </script>
 
 <script lang="ts">
+    import { l, lc, lu } from '~/helpers/locale';
 
     let geoHandler: GeoHandler;
     let gridLayout: NativeViewElementNode<GridLayout>;
@@ -228,7 +228,7 @@
     }
     $: {
         if (firstCanvas) {
-            loadedListeners.forEach((l) => l());
+            loadedListeners.forEach((listener) => listener());
         }
     }
 </script>
@@ -241,7 +241,7 @@
     visibility={showLocationInfo ? 'visible' : 'collapsed'}
     height="70"
     borderRadius="40"
-    backgroundColor="#77000000"
+    backgroundColor="#00000077"
     padding="6"
     columns="auto,*,auto"
     on:swipe={() => switchLocationInfo()}
@@ -254,7 +254,7 @@
             borderRadius="30"
             borderWidth="4"
             borderColor={accentColor}
-            backgroundColor="#aaffffff"
+            backgroundColor="#ffffffaa"
         >
             <cgroup verticalAlignment="center" textAlignment="center">
                 <cspan

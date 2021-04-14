@@ -8,7 +8,6 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const SentryCliPlugin = require('@sentry/webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const IgnoreNotFoundExportPlugin = require('./IgnoreNotFoundExportPlugin');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const Fontmin = require('fontmin');
 const { HotModuleReplacementPlugin } = require('webpack');
 
@@ -27,6 +26,7 @@ module.exports = (env, params = {}) => {
                 production: true,
                 sentry: true,
                 uploadSentry: true,
+                apiKeys: false,
                 sourceMap: true,
                 uglify: true
             },
@@ -51,13 +51,13 @@ module.exports = (env, params = {}) => {
         devlog, // --env.devlog
         fakeall, // --env.fakeall
         fork = true, // --env.fakeall
+        apiKeys = true,
         adhoc // --env.adhoc
     } = env;
-    console.log('env', env);
-    env.appPath = nconfig.appPath;
-    env.appResourcesPath = nconfig.appResourcesPath;
-    env.modules = env.modules || [];
-    env.modules.push('~/services/android/BgService', '~/services/android/BgServiceBinder');
+    env.appPath = appPath;
+    env.appResourcesPath = appResourcesPath;
+    env.appComponents = env.appComponents || [];
+    env.appComponents.push('~/services/android/BgService', '~/services/android/BgServiceBinder');
     const config = webpackConfig(env, params);
     const mode = production ? 'production' : 'development';
     const platform = env && ((env.android && 'android') || (env.ios && 'ios'));
@@ -90,6 +90,10 @@ module.exports = (env, params = {}) => {
     // console.log('config.externals', config.externals);
 
     const coreModulesPackageName = fork ? '@akylas/nativescript' : '@nativescript/core';
+    console.log('mainFields', config.resolve.mainFields);
+    console.log('importsFields', config.resolve.importsFields);
+    // config.resolve.mainFields = ['esnext', 'module', 'main'];
+    // config.resolve.importsFields = ['esnext', 'module', 'main'];
     config.resolve.modules = [
         resolve(__dirname, `node_modules/${coreModulesPackageName}`),
         resolve(__dirname, 'node_modules'),
@@ -98,12 +102,14 @@ module.exports = (env, params = {}) => {
     ];
     Object.assign(config.resolve.alias, {
         '@nativescript/core': `${coreModulesPackageName}`,
-        'svelte-native': '@akylas/svelte-native',
+        // 'svelte-native': '@akylas/svelte-native',
         'tns-core-modules': `${coreModulesPackageName}`,
         'get-pixels/node-pixels': '~/helpers/get-pixels',
         '~/get-pixels/node-pixels': '~/helpers/get-pixels',
         './get-pixels/node-pixels': '~/helpers/get-pixels',
-        'app/tns_modules/get-pixels/node-pixels': '~/helpers/get-pixels'
+        'app/tns_modules/get-pixels/node-pixels': '~/helpers/get-pixels',
+        'mjolnir.js': '~/deckgl/EventManager',
+        './controller': '~/deckgl/Controller'
     });
 
     console.log('coreModulesPackageName', coreModulesPackageName);
@@ -171,21 +177,21 @@ module.exports = (env, params = {}) => {
         if (s === 'ios' || s === 'android') {
             if (s === platform) {
                 Object.keys(keys[s]).forEach((s2) => {
-                    defines[`gVars.${s2}`] = `'${keys[s][s2]}'`;
+                    defines[`gVars.${s2}`] = apiKeys ? `'${keys[s][s2]}'` : 'undefined';
                 });
             }
         } else {
-            defines[`gVars.${s}`] = `'${keys[s]}'`;
+            defines[`gVars.${s}`] = apiKeys ? `'${keys[s]}'` : 'undefined';
         }
     });
 
-    const itemsToClean = [`${dist}/**/*`];
-    if (platform === 'android') {
-        itemsToClean.push(`${join(projectRoot, 'platforms', 'android', 'app', 'src', 'main', 'assets', 'snapshots/**/*')}`);
-        itemsToClean.push(
-            `${join(projectRoot, 'platforms', 'android', 'app', 'build', 'configurations', 'nativescript-android-snapshot')}`
-        );
-    }
+    // const itemsToClean = [`${dist}/**/*`];
+    // if (platform === 'android') {
+    //     itemsToClean.push(`${join(projectRoot, 'platforms', 'android', 'app', 'src', 'main', 'assets', 'snapshots/**/*')}`);
+    //     itemsToClean.push(
+    //         `${join(projectRoot, 'platforms', 'android', 'app', 'build', 'configurations', 'nativescript-android-snapshot')}`
+    //     );
+    // }
 
     const symbolsParser = require('scss-symbols-parser');
     const mdiSymbols = symbolsParser.parseSymbols(
@@ -340,14 +346,10 @@ module.exports = (env, params = {}) => {
     }
     // we remove default rules
     config.plugins = config.plugins.filter(
-        (p) => ['CleanWebpackPlugin', 'CopyPlugin', 'Object', 'ForkTsCheckerWebpackPlugin', 'HotModuleReplacementPlugin'].indexOf(p.constructor.name) === -1
+        (p) => ['CopyPlugin', 'ForkTsCheckerWebpackPlugin'].indexOf(p.constructor.name) === -1
     );
-    console.log(config.plugins.map(s=>s.constructor.name));
+    console.log(config.plugins.map((s) => s.constructor.name));
 
-    if (hmr) {
-        // we need to do it ourselves because linking the package breaks it
-        config.plugins.push(new HotModuleReplacementPlugin());
-    }
     // config.plugins.push(new NativeScriptHTTPPlugin());
     console.log('plugins after clean', config.plugins);
     // we add our rules
@@ -407,29 +409,28 @@ module.exports = (env, params = {}) => {
 
     // save as long as we dont use calc in css
     // config.plugins.push(new webpack.IgnorePlugin(/reduce-css-calc/));
-    config.plugins.unshift(
-        new CleanWebpackPlugin({
-            dangerouslyAllowCleanPatternsOutsideProject: true,
-            dry: false,
-            verbose: false,
-            cleanOnceBeforeBuildPatterns: itemsToClean
-        })
-    );
+    // config.plugins.unshift(
+    //     new CleanWebpackPlugin({
+    //         dangerouslyAllowCleanPatternsOutsideProject: true,
+    //         dry: false,
+    //         verbose: false,
+    //         cleanOnceBeforeBuildPatterns: itemsToClean
+    //     })
+    // );
 
     Object.assign(config.plugins.find((p) => p.constructor.name === 'DefinePlugin').definitions, defines);
     // config.plugins.unshift(new webpack.DefinePlugin(defines));
-    config.plugins.push(
-        new webpack.EnvironmentPlugin({
-            NODE_ENV: JSON.stringify(mode), // use 'development' unless process.env.NODE_ENV is defined
-            DEBUG: false
-        })
-    );
+    // config.plugins.push(
+    //     new webpack.EnvironmentPlugin({
+    //         NODE_ENV: JSON.stringify(mode), // use 'development' unless process.env.NODE_ENV is defined
+    //         DEBUG: false
+    //     })
+    // );
 
     config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${locales.join('|')})$`)));
     if (fork && nsconfig.cssParser !== 'css-tree') {
         config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /css-tree$/ }));
     }
-
     config.devtool = inlineSourceMap ? 'inline-cheap-source-map' : false;
     if (!inlineSourceMap && (hiddenSourceMap || sourceMap)) {
         if (!!sentry && !!uploadSentry) {
@@ -485,7 +486,7 @@ module.exports = (env, params = {}) => {
         );
     }
     config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|nativescript-carto|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
-    config.optimization.usedExports = true;
+    // config.optimization.usedExports = true;
     config.optimization.minimize = uglify !== undefined ? !!uglify : production;
     const isAnySourceMapEnabled = !!sourceMap || !!hiddenSourceMap || !!inlineSourceMap;
     config.optimization.minimizer = [

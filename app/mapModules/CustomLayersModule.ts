@@ -1,4 +1,4 @@
-import { MapPos } from '@nativescript-community/ui-carto/core';
+import { MapBounds, MapPos, toNativeScreenBounds } from '@nativescript-community/ui-carto/core';
 import {
     CombinedTileDataSource,
     MergedMBVTTileDataSource,
@@ -20,7 +20,7 @@ import { MapBoxElevationDataDecoder, TerrariumElevationDataDecoder } from '@nati
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { openFilePicker } from '@nativescript-community/ui-document-picker';
 import * as appSettings from '@nativescript/core/application-settings';
-import { Color } from '@nativescript/core';
+import { ApplicationSettings, Color } from '@nativescript/core';
 import { ChangeType, ChangedData, ObservableArray } from '@nativescript/core/data/observable-array';
 import { File, Folder, path } from '@nativescript/core/file-system';
 import { showBottomSheet } from '~/components/bottomsheet';
@@ -30,6 +30,7 @@ import { packageService } from '~/services/PackageService';
 import { getDataFolder, getDefaultMBTilesDir } from '~/utils/utils';
 import { toDegrees, toRadians } from '~/utils/geo';
 import MapModule, { getMapContext } from './MapModule';
+import { showError } from '~/utils/error';
 const mapContext = getMapContext();
 
 const DEFAULT_HILLSHADE_SHADER =
@@ -107,9 +108,14 @@ export interface SourceItem {
     provider: Provider;
     index?: number;
     options?: {
-        [k: string]:
-            | { min: number; max: number; value?: number; transform?: Function; transformBack?: Function }
-            | { type: string };
+        [k: string]: {
+            min?: number;
+            max?: number;
+            value?: number;
+            transform?: Function;
+            transformBack?: Function;
+            type?: string;
+        };
     };
 }
 const TAG = 'CustomLayersModule';
@@ -296,6 +302,18 @@ export default class CustomLayersModule extends MapModule {
             }
         }
     }
+
+    public tokenKeys = {
+        carto: ApplicationSettings.getString('cartoToken', gVars.CARTO_TOKEN),
+        here_appid: ApplicationSettings.getString('here_appidToken', gVars.HER_APP_ID),
+        here_appcode: ApplicationSettings.getString('here_appcodeToken', gVars.HER_APP_CODE),
+        mapbox: ApplicationSettings.getString('mapboxToken', gVars.MAPBOX_TOKEN),
+        mapquest: ApplicationSettings.getString('mapquestToken', gVars.MAPQUEST_TOKEN),
+        maptiler: ApplicationSettings.getString('maptilerToken', gVars.MAPTILER_TOKEN),
+        google: ApplicationSettings.getString('googleToken', gVars.GOOGLE_TOKEN),
+        thunderforest: ApplicationSettings.getString('thunderforestToken', gVars.THUNDERFOREST_TOKEN),
+        ign: ApplicationSettings.getString('ignToken', gVars.IGN_TOKEN)
+    };
     createRasterLayer(id: string, provider: Provider) {
         const opacity = appSettings.getNumber(`${id}_opacity`, 1);
         const rasterCachePath = Folder.fromPath(path.join(getDataFolder(), 'rastercache'));
@@ -308,9 +326,19 @@ export default class CustomLayersModule extends MapModule {
             `${id}_zoomLevelBias`,
             (Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2)) * 0.75
         );
+        let url = provider.url as string;
+        if (provider.tokenKey) {
+            const tokens = Array.isArray(provider.tokenKey) ? provider.tokenKey : [provider.tokenKey];
+            tokens.forEach((tok) => {
+                if (!this.tokenKeys[tok]) {
+                    throw new Error('missing api token');
+                }
+                url = url.replace(`{${tok}}`, this.tokenKeys[tok]);
+            });
+        }
 
         const dataSource = new HTTPTileDataSource({
-            url: provider.url as string,
+            url,
             ...provider.sourceOptions
         });
         let layer: TileLayer<any, any>;
@@ -433,6 +461,7 @@ export default class CustomLayersModule extends MapModule {
                 maxZoom: 22,
                 ...data.sourceOptions
             },
+            tokenKey: data.tokenKey,
             urlOptions: data.urlOptions,
             layerOptions: data.layerOptions
         };
@@ -441,17 +470,18 @@ export default class CustomLayersModule extends MapModule {
             provider.legend = templateString(data.legend, provider.urlOptions);
         }
         if (data.cacheable !== undefined) {
-            provider.cacheable = data.cacheable;
-        }
-        if (data.downloadable !== undefined) {
-            provider.downloadable = data.downloadable;
+            provider.cacheable = data.cacheable || !PRODUCTION;
+        } else {
+            provider.cacheable = !PRODUCTION;
         }
         if (data.hillshade === true) {
             provider.hillshade = true;
             provider.terrarium = data.terrarium;
         }
         if (data.downloadable !== undefined) {
-            provider.downloadable = data.downloadable;
+            provider.downloadable = data.downloadable || !PRODUCTION;
+        } else {
+            provider.downloadable = !PRODUCTION;
         }
         if (data.devHidden !== undefined) {
             provider.devHidden = data.devHidden;
@@ -532,9 +562,9 @@ export default class CustomLayersModule extends MapModule {
         this.sourcesLoaded = true;
     }
 
-     onMapReady(mapView: CartoMap<LatLonKeys>) {
+    onMapReady(mapView: CartoMap<LatLonKeys>) {
         super.onMapReady(mapView);
-        (async ()=>{
+        (async () => {
             try {
                 const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
                 // console.log('onMapReady', savedSources, this.customSources);
@@ -682,6 +712,60 @@ export default class CustomLayersModule extends MapModule {
             }, 0);
         }
     }
+    currentlyDownloadindDataSource: PersistentCacheTileDataSource;
+    async stopDownloads() {
+        if (this.currentlyDownloadindDataSource) {
+            this.currentlyDownloadindDataSource.stopAllDownloads();
+        }
+    }
+    async downloadDataSource(dataSource: TileDataSource<any, any>, provider: Provider) {
+        try {
+            if (this.currentlyDownloadindDataSource) {
+                return;
+            }
+            if (dataSource instanceof PersistentCacheTileDataSource) {
+                await new Promise<void>((resolve, reject) => {
+                    this.currentlyDownloadindDataSource = dataSource;
+                    const zoom = provider.sourceOptions.maxZoom - 1;
+                    const cartoMap = mapContext.getMap();
+                    const projection = dataSource.getProjection();
+                    const screenBounds = toNativeScreenBounds({
+                        min: { x: cartoMap.getMeasuredWidth(), y: 0 },
+                        max: { x: 0, y: cartoMap.getMeasuredHeight() }
+                    });
+                    const bounds = new MapBounds(
+                        projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMin()) as any),
+                        projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMax()) as any)
+                    );
+
+                    // console.log('startDownloadArea', provider, bounds, cartoMap.getZoom(), zoom);
+                    dataSource.startDownloadArea(bounds, cartoMap.getZoom(), zoom, {
+                        onDownloadCompleted: () => {
+                            this.currentlyDownloadindDataSource = null;
+                            // ensure we hide the progress
+                            this.notify({
+                                eventName: 'onProgress',
+                                object: this,
+                                data: 0
+                            });
+                            resolve();
+                        },
+                        onDownloadFailed(tile: { x: number; y: number; tileId: number }) {},
+                        onDownloadProgress: (progress: number) => {
+                            this.notify({
+                                eventName: 'onProgress',
+                                object: this,
+                                data: progress
+                            });
+                        },
+                        onDownloadStarting(tileCount: number) {}
+                    });
+                });
+            }
+        } catch (err) {
+            showError(err);
+        }
+    }
 
     selectLocalMbtilesFolder() {
         return openFilePicker({
@@ -731,7 +815,9 @@ export default class CustomLayersModule extends MapModule {
         // console.log('closeCallback', results);
         const result = Array.isArray(results) ? results[0] : results;
         if (result) {
-            const data = this.createRasterLayer(result.name, result.provider);
+            const provider = result.provider;
+            console.log('provider', provider, this.tokenKeys);
+            const data = this.createRasterLayer(result.name, provider);
             this.addDataSource(data);
         }
     }

@@ -160,7 +160,6 @@
         instruction: RouteInstruction;
     };
 
-
     let ignoreNextMapClick = false;
     let handleSelectedRouteTimer: NodeJS.Timeout;
     let selectedRoutes: { featurePosition; featureData; layer: BaseVectorTileLayer<any, any> }[];
@@ -1321,6 +1320,7 @@
     }
 
     async function switchKeepAwake() {
+        console.log('switchKeepAwake');
         try {
             if (keepAwakeEnabled) {
                 await allowSleepAgain();
@@ -1450,47 +1450,47 @@
     async function showOptions() {
         const options = [
             {
-                title: lt('select_style'),
+                title: lc('select_style'),
                 id: 'select_style',
                 icon: 'mdi-layers'
             },
             {
-                title: lt('location_info'),
+                title: lc('location_info'),
                 id: 'location_info',
                 icon: 'mdi-speedometer'
             },
             {
-                title: lt('share_screenshot'),
+                title: lc('share_screenshot'),
                 id: 'share_screenshot',
                 icon: 'mdi-cellphone-screenshot'
             },
             {
-                title: lt('keep_awake'),
+                title: lc('keep_awake'),
                 color: keepAwakeEnabled ? 'red' : '#00ff00',
                 id: 'keep_awake',
                 icon: keepAwakeEnabled ? 'mdi-sleep' : 'mdi-sleep-off'
             },
             {
-                title: lt('compass'),
+                title: lc('compass'),
                 id: 'compass',
                 icon: 'mdi-compass'
             },
 
             {
-                title: lt('settings'),
+                title: lc('settings'),
                 id: 'settings',
                 icon: 'mdi-cogs'
             },
 
             {
-                title: lt('dark_mode'),
+                title: lc('dark_mode'),
                 id: 'dark_mode',
                 color: $sTheme === 'dark' ? primaryColor : undefined,
                 icon: 'mdi-theme-light-dark'
             },
 
             {
-                title: lt('bug'),
+                title: lc('bug'),
                 id: 'bug',
                 icon: 'mdi-bug'
             }
@@ -1498,20 +1498,20 @@
 
         if (isSensorAvailable('barometer')) {
             options.splice(options.length - 2, 0, {
-                title: lt('altimeter'),
+                title: lc('altimeter'),
                 id: 'altimeter',
                 icon: 'mdi-altimeter'
             });
         }
-        // options.splice(options.length - 2, 0, {
-        //     title: lt('test'),
-        //     id: 'threejs',
-        //     icon: 'mdi-rotate-3d'
-        // });
+        options.splice(options.length - 2, 0, {
+            title: lc('test'),
+            id: 'threejs',
+            icon: 'mdi-rotate-3d'
+        });
 
         if (packageServiceEnabled) {
             options.unshift({
-                title: lt('offline_packages'),
+                title: lc('offline_packages'),
                 id: 'offline_packages',
                 icon: 'mdi-earth'
             });
@@ -1548,15 +1548,15 @@
                     sendBug();
                     break;
                 case 'threejs':
-                    // try {
-                    //     const Three = require('./Three.svelte').default;
+                    try {
+                        const Three = require('./DeckGL.svelte').default;
 
-                    //     await showModal({ page: Three, animated: true, fullscreen: true , props:{
-                    //         position: cartoMap.getFocusPos()
-                    //     }});
-                    // } catch (err) {
-                    //     showError(err);
-                    // }
+                        await showModal({ page: Three, animated: true, fullscreen: true , props:{
+                            position: cartoMap.getFocusPos()
+                        }});
+                    } catch (err) {
+                        showError(err);
+                    }
                     break;
                 case 'compass':
                     try {
@@ -1790,7 +1790,7 @@
                 margin="80 20 0 20"
                 verticalAlignment="top"
                 borderRadius="16"
-                backgroundColor="#55000000"
+                backgroundColor="#00000055"
                 visibility={currentClickedFeatures && currentClickedFeatures.length > 0 ? 'visible' : 'collapsed'}
             >
                 <Template let:item>
