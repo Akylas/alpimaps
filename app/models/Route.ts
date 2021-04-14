@@ -172,22 +172,3 @@ export class RouteRepository extends CrudRepository<Route> {
         return result;
     }
 }
-
-// @Entity()
-// export default class Route extends BaseEntity {
-//     @PrimaryColumn()
-//     id: number;
-
-//     @Column('simple-json', { nullable: true })
-//     profile?: RouteProfile;
-
-//     @Column('blob', { transformer: GeometryTransformer })
-//     positions: MapPosVector<LatLonKeys>;
-
-//     @Column()
-//     totalTime: number;
-//     @Column()
-//     totalDistance: number;
-//     @Column('simple-json', { nullable: true })
-//     instructions?: RouteInstruction[];
-// }
