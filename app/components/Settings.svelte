@@ -3,7 +3,7 @@
     import { openUrl } from '@nativescript/core/utils/utils';
     import { Template } from 'svelte-native/components';
     import { showBottomSheet } from '~/components/bottomsheet';
-    import { getLocaleDisplayName, lc, onLanguageChanged, selectLanguage, sgetLocaleDisplayName, slc } from '~/helpers/locale';
+    import { getLocaleDisplayName, l, lc, onLanguageChanged, selectLanguage, sgetLocaleDisplayName, slc } from '~/helpers/locale';
     import { getThemeDisplayName, onThemeChanged, selectTheme, theme } from '~/helpers/theme';
     import { share } from '~/utils/share';
     import { openLink } from '~/utils/ui';
@@ -12,6 +12,9 @@
     import ThirdPartySoftwareBottomSheet from './ThirdPartySoftwareBottomSheet.svelte';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { NativeViewElementNode } from 'svelte-native/dom';
+    import { getMapContext } from '~/mapModules/MapModule';
+    import { prompt } from '@nativescript-community/ui-material-dialogs';
+import { ApplicationSettings } from '@nativescript/core';
 
     let collectionView: NativeViewElementNode<CollectionView>;
 
@@ -34,12 +37,16 @@
 
             case 'third_party':
                 return lc('third_parties');
+            case 'token':
+                return lc(item.token);
         }
     }
     function getSubtitle(item) {
         switch (item.id) {
             case 'version':
                 return appVersion;
+            case 'token':
+                return item.value;
             case 'github':
                 return lc('get_app_source_code');
             case 'third_party':
@@ -76,12 +83,25 @@
         //     rightBtnIcon: 'mdi-chevron-right'
         // }
     ];
+    const customLayers = getMapContext().mapModule('customLayers');
+
+    const tokenSettings = [];
+    Object.keys(customLayers.tokenKeys).forEach((k) => {
+        tokenSettings.push({
+            id: 'token',
+            token: k,
+            value: customLayers.tokenKeys[k],
+            rightBtnIcon: 'mdi-chevron-right'
+        });
+    });
+
+    items.splice(2, 0, ...tokenSettings);
 
     onThemeChanged(() => {
         // (collectionView.nativeView as CollectionView).refreshVisibleItems();
     });
     function onLongPress() {}
-    async function onTap(command) {
+    async function onTap(command, item) {
         switch (command) {
             case 'github':
                 openLink(GIT_URL);
@@ -109,6 +129,22 @@
                     trackingScrollView: 'trackingScrollView'
                 });
                 break;
+            case 'token': {
+                const result = await prompt({
+                    title: lc('token_key', item.token),
+                    // message: this.$tc('change_glasses_name'),
+                    okButtonText: l('save'),
+                    cancelButtonText: l('cancel'),
+                    autoFocus: true,
+                    defaultText: item.value
+                });
+                if (result && !!result.result && result.text.length > 0) {
+                    customLayers.tokenKeys[item.token] = result.text;
+                    item.value = result.text;
+                    ApplicationSettings.setString(item.token + 'Token', result.text);
+                    items = items.slice(0);
+                }
+            }
         }
     }
     onLanguageChanged(() => (items = items.slice(0)));
@@ -120,7 +156,7 @@
             <CActionBar canGoBack modalWindow title={$slc('settings')} />
             <collectionview bind:this={collectionView} row="1" {items} rowHeight="60">
                 <Template let:item>
-                    <gridLayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id)}>
+                    <gridLayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)}>
                         <label
                             fontSize="36"
                             text={item.icon}

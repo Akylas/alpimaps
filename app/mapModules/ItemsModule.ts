@@ -7,13 +7,7 @@ import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry
 import { VectorLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { VectorTileSearchService } from '@nativescript-community/ui-carto/search';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
-import {
-    Line,
-    LineEndType,
-    LineJointType,
-    LineStyleBuilder,
-    LineStyleBuilderOptions
-} from '@nativescript-community/ui-carto/vectorelements/line';
+import { Line, LineEndType, LineJointType, LineStyleBuilder, LineStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/line';
 import { Marker, MarkerStyleBuilder, MarkerStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/marker';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/point';
 import { knownFolders, path } from '@nativescript/core';
@@ -229,7 +223,7 @@ export default class ItemsModule extends MapModule {
         this.shareFile(jsonStr, 'test2.json');
         const geojson: GeoJSON.FeatureCollection<GeoJSON.LineString | GeoJSON.MultiLineString> = JSON.parse(jsonStr);
 
-        const features= geojson.features;
+        const features = geojson.features;
 
         const listCoordinates: GeoJSON.Position[][] = [];
         features.forEach((f) => {
@@ -316,10 +310,7 @@ export default class ItemsModule extends MapModule {
         );
         return geometry as LineGeometry<LatLonKeys>;
     }
-    async saveItem(
-        item: Mutable<IItem>,
-        styleOptions?: MarkerStyleBuilderOptions | PointStyleBuilderOptions | LineStyleBuilderOptions
-    ) {
+    async saveItem(item: Mutable<IItem>, styleOptions?: MarkerStyleBuilderOptions | PointStyleBuilderOptions | LineStyleBuilderOptions) {
         try {
             if (item.route) {
                 if (!item.route.positions && item.route.osmid) {
