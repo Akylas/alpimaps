@@ -1,4 +1,4 @@
-import humanUnit from 'human-unit';
+import humanUnit, { sizePreset } from 'human-unit';
 import { IItem } from '~/models/Item';
 import { convertDuration, convertTime } from './locale';
 export { convertDuration, convertTime } from './locale';
@@ -33,6 +33,12 @@ export function osmicon(values: string[] | string) {
         }
     }
     return values[0];
+}
+
+export function formatSize(diskSize) {
+    const data = humanUnit(diskSize, sizePreset);
+
+    return `${data.value.toFixed(1)} ${data.unit} `;
 }
 
 export function convertDistance(meters) {

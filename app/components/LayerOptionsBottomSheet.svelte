@@ -7,7 +7,7 @@
         RasterTileLayer
     } from '@nativescript-community/ui-carto/layers/raster';
     import { action } from '@nativescript-community/ui-material-dialogs';
-    import { Color } from '@nativescript/core';
+    import { Color, File } from '@nativescript/core';
     import { setNumber, setString } from '@nativescript/core/application-settings';
     import { onMount } from 'svelte';
     import { l } from '~/helpers/locale';
@@ -15,8 +15,10 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { showError } from '~/utils/error';
     import { pickColor } from '~/utils/utils';
-import { textLightColor } from '~/variables';
+    import { textLightColor } from '~/variables';
     import { closeBottomSheet } from './bottomsheet';
+    import { Template } from 'svelte-native/components';
+    import { formatSize } from '~/helpers/formatter';
 
     const mapContext = getMapContext();
     let scrollView;
@@ -95,7 +97,7 @@ import { textLightColor } from '~/variables';
             showError(err);
         }
     }
-    function handleAction(act: string) {
+    async function handleAction(act: string) {
         const customLayers = mapContext.mapModule('customLayers');
         switch (act) {
             case 'delete': {
@@ -114,49 +116,9 @@ import { textLightColor } from '~/variables';
             case 'download': {
                 const layer = item.layer;
                 const dataSource = layer.dataSource;
-                if (dataSource instanceof PersistentCacheTileDataSource) {
-                    // const mbtilesPath = path.join(getDataFolder(), 'mbtiles');
-                    const zoom = dataSource.maxZoom - 1;
-                    // const databasePath = File.fromPath(path.join(mbtilesPath, `${item.provider.id}_${zoom}_${zoom}`))
-                    //     .path;
-                    // const savedMBTilesDataSource = new PersistentCacheTileDataSource({
-                    //     dataSource: dataSource,
-                    //     capacity: 1000 * 1024 * 1024,
-                    //     databasePath
-                    // });
-                    const cartoMap = mapContext.getMap();
-                    const projection = dataSource.getProjection();
-                    const screenBounds = toNativeScreenBounds({
-                        min: { x: cartoMap.getMeasuredWidth(), y: 0 },
-                        max: { x: 0, y: cartoMap.getMeasuredHeight() }
-                    });
-                    const bounds = new MapBounds(
-                        projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMin()) as any),
-                        projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMax()) as any)
-                    );
-                    dataSource.startDownloadArea(bounds, zoom, zoom, {
-                        onDownloadCompleted() {
-                            console.log('onDownloadCompleted');
-                            // const db = openOrCreate(databasePath);
-                            // return Promise.all([
-                            //     db.execute('INSERT INTO metadata(name, value) VALUES(?, ?)', ['minZoom', zoom]),
-                            //     db.execute('INSERT INTO metadata(name, value) VALUES(?, ?)', ['maxZoom', zoom]),
-                            //     db.execute('INSERT INTO metadata(name, value) VALUES(?, ?)', [
-                            //         'bounds',
-                            //         `${bounds.southwest.lon},${bounds.northeast.lat},${bounds.northeast.lon},${bounds.southwest.lon}`
-                            //     ])
-                            // ]);
-                        },
-                        onDownloadFailed(tile: { x: number; y: number; tileId: number }) {
-                            console.log('onDownloadFailed', tile);
-                        },
-                        onDownloadProgress(progress: number) {
-                            console.log('onDownloadProgress', progress);
-                        },
-                        onDownloadStarting(tileCount: number) {
-                            console.log('onDownloadStarting', tileCount);
-                        }
-                    });
+                const customLayers = mapContext.mapModule('customLayers');
+                if (customLayers) {
+                    customLayers.downloadDataSource(dataSource, item.provider);
                 }
                 break;
             }
@@ -191,56 +153,88 @@ import { textLightColor } from '~/variables';
         }
         closeBottomSheet();
     }
+
+    function getTitle() {
+        let result = item.name.toUpperCase();
+        const dataSource = item.layer.dataSource;
+        if (dataSource instanceof PersistentCacheTileDataSource) {
+            const databasePath = dataSource.options.databasePath;
+            result += ` (${formatSize(File.fromPath(databasePath).size)})`;
+        }
+        return result;
+    }
 </script>
 
-<scrollview bind:this={scrollView} height="200" id="scrollView">
-    <stacklayout>
-        {#each Object.entries(options) as [name, option]}
-            {#if option.type === 'color'}
-                <gridlayout height="50" columsn="*" on:tap={pickOptionColor(name, optionValue(name))}>
-                    <canvaslabel fontSize="13" padding="10">
-                        <cspan text={name} verticalAlignment="center" paddingLeft="10" horizontalAlignment="left" width="100" />
-                        <circle
-                            strokeWidth="2"
-                            paintStyle="fill"
-                            fillColor={$textLightColor}
-                            radius="15"
-                            antiAlias={true}
-                            horizontalAlignment="right"
-                            verticalAlignment="middle"
-                            width="20" />
-                        <circle
-                            strokeWidth="2"
-                            paintStyle="fill_and_stroke"
-                            strokeColor={$textLightColor}
-                            fillColor={optionValue(name)}
-                            radius="15"
-                            antiAlias={true}
-                            horizontalAlignment="right"
-                            verticalAlignment="middle"
-                            width="20" />
-                    </canvaslabel>
-                </gridlayout>
-            {:else}
-                <gridlayout height="50" columns="100,*,50">
-                    <canvaslabel colSpan="3" fontSize="13" padding="10">
-                        <cspan text={name} verticalAlignment="center" paddingLeft="10" horizontalAlignment="left" width="100" />
-                        <cspan text={optionValue(name) / 100 + ''} verticalAlignment="center" textAlignment="right" />
-                    </canvaslabel>
-                    <mdslider
-                        col="1"
-                        marginLeft="10"
-                        marginRight="10"
-                        value={optionValue(name)}
-                        on:valueChange={(event) => onOptionChanged(name, event)}
-                        minValue={option.min * 100}
-                        maxValue={option.max * 100}
-                        verticalAlignment="center" />
-                </gridlayout>
-            {/if}
-        {/each}
-        <stacklayout orientation="horizontal">
-            {#each actions as action}<button variant="text" text={l(action)} on:tap={handleAction(action)} />{/each}
+<gridlayout rows="auto,*,auto" height="240">
+    <label text={getTitle()} fontWeight="bold" padding="10 10 0 20" fontSize="20" />
+    <scrollview row="1" bind:this={scrollView} height="200" id="scrollView">
+        <stacklayout>
+            {#each Object.entries(options) as [name, option]}
+                {#if option.type === 'color'}
+                    <gridlayout height="50" columsn="*" on:tap={pickOptionColor(name, optionValue(name))}>
+                        <canvaslabel fontSize="13" padding="10">
+                            <cspan
+                                text={name}
+                                verticalAlignment="center"
+                                paddingLeft="10"
+                                horizontalAlignment="left"
+                                width="100"
+                            />
+                            <circle
+                                strokeWidth="2"
+                                paintStyle="fill"
+                                fillColor={$textLightColor}
+                                radius="15"
+                                antiAlias={true}
+                                horizontalAlignment="right"
+                                verticalAlignment="middle"
+                                width="20"
+                            />
+                            <circle
+                                strokeWidth="2"
+                                paintStyle="fill_and_stroke"
+                                strokeColor={$textLightColor}
+                                fillColor={optionValue(name)}
+                                radius="15"
+                                antiAlias={true}
+                                horizontalAlignment="right"
+                                verticalAlignment="middle"
+                                width="20"
+                            />
+                        </canvaslabel>
+                    </gridlayout>
+                {:else}
+                    <gridlayout height="50" columns="100,*,50">
+                        <canvaslabel colSpan="3" fontSize="13" padding="10">
+                            <cspan
+                                text={name}
+                                verticalAlignment="center"
+                                paddingLeft="10"
+                                horizontalAlignment="left"
+                                width="100"
+                            />
+                            <cspan text={optionValue(name) / 100 + ''} verticalAlignment="center" textAlignment="right" />
+                        </canvaslabel>
+                        <mdslider
+                            col="1"
+                            marginLeft="10"
+                            marginRight="10"
+                            value={optionValue(name)}
+                            on:valueChange={(event) => onOptionChanged(name, event)}
+                            minValue={option.min * 100}
+                            maxValue={option.max * 100}
+                            verticalAlignment="center"
+                        />
+                    </gridlayout>
+                {/if}
+            {/each}
         </stacklayout>
-    </stacklayout>
-</scrollview>
+    </scrollview>
+    <collectionview orientation="horizontal" row="2" height="40" items={actions} colWidth="auto">
+        <Template let:item>
+            <gridlayout>
+                <button variant="outline" padding="10" marginRight="10" text={l(item)} on:tap={() => handleAction(item)} />
+            </gridlayout>
+        </Template>
+    </collectionview>
+</gridlayout>

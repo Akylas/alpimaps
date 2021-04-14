@@ -6,6 +6,7 @@
 /// <reference path="./node_modules/@nativescript-community/ui-carto/typings/ak.carto.android.d.ts" />
 /// <reference path="./node_modules/@nativescript-community/ui-carto/typings/carto.android.d.ts" />
 /// <reference path="./node_modules/@nativescript-community/ui-carto/typings/carto.ios.d.ts" />
+/// <reference path="./node_modules/@danmarshall/deckgl-typings/deck.gl/index.d.ts" />
 
 // declare module '*.vue' {
 //     import Vue from 'nativescript-vue';
@@ -18,6 +19,18 @@ declare module '*.scss' {
     // export function toString(): string
     export const locals;
     // export const i
+}
+
+declare namespace akylas {
+    export namespace alpi {
+        export namespace maps {
+            export class NightModeApplication extends android.app.Application {}
+            export class WorkersContext {
+                public static getValue(key): any;
+                public static setValue(key: string, value);
+            }
+        }
+    }
 }
 
 declare const gVars: {
@@ -56,6 +69,23 @@ declare namespace akylas {
         export namespace maps {
             class BgService extends globalAndroid.app.Service {}
             class BgServiceBinder extends globalAndroid.os.Binder {}
+            export namespace Three {
+                export class GetElevationMeshesCallback extends java.lang.Object {
+                    public static class: java.lang.Class<RoutingServiceRouteCallback>;
+                    /**
+                     * Constructs a new instance of the com.akylas.carto.additions.RoutingServiceRouteCallback interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
+                     */
+                    public constructor(implementation: { onResult(error, res: string): void });
+                    public constructor();
+                    public onResult(error, res: string): void;
+                }
+                function getElevationMeshesAsync(
+                    context: android.content.Context,
+                    dataSource: com.carto.datasources.TileDataSource,
+                    options: string,
+                    callback: GetElevationMeshesCallback
+                );
+            }
         }
     }
 }
@@ -65,3 +95,4 @@ interface LatLonKeys {
     lon: number;
     altitude?: number;
 }
+
