@@ -394,26 +394,26 @@
 
         let result = [];
         await Promise.all([
-            searchInVectorTiles(options as any)
-                .then((r) => r && result.push(...r))
-                .catch((err) => {
-                    console.error('searchInVectorTiles', err);
-                }),
+            // searchInVectorTiles(options as any)
+            //     .then((r) => r && result.push(...r))
+            //     .catch((err) => {
+            //         console.error('searchInVectorTiles', err);
+            //     }),
             searchInGeocodingService(options)
                 .then((r) => loading && r  && result.push(...r))
                 .catch((err) => {
                     console.error('searchInGeocodingService', err);
                 }),
-            herePlaceSearch(options)
-                .then((r) => loading && r  && result.push(...r))
-                .catch((err) => {
-                    console.error('herePlaceSearch', err);
-                }),
-            photonSearch(options)
-                .then((r) => loading && r && result.push(...r))
-                .catch((err) => {
-                    console.error('photonSearch', err);
-                })
+            // herePlaceSearch(options)
+            //     .then((r) => loading && r  && result.push(...r))
+            //     .catch((err) => {
+            //         console.error('herePlaceSearch', err);
+            //     }),
+            // photonSearch(options)
+            //     .then((r) => loading && r && result.push(...r))
+            //     .catch((err) => {
+            //         console.error('photonSearch', err);
+            //     })
         ]);
         if (!loading) {
             // was cancelled
