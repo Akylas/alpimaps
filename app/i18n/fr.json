@@ -80,5 +80,6 @@
   "dark_mode": "mode sombre",
   "auto": "auto",
   "dark": "sombre",
-  "light": "clair"
+  "light": "clair",
+  "token_key": "clef API: %s"
 }

@@ -84,7 +84,7 @@
     let valhallaCostingOptions = { use_hills: 0, use_roads: 0, use_ferry: 0, max_hiking_difficulty: 6 };
 
     function profileColor(currentP, p) {
-        return currentP === p ? '#fff' : '#55ffffff';
+        return currentP === p ? '#fff' : '#ffffff55';
     }
 
     function setProfile(p: ValhallaProfile) {
@@ -425,7 +425,7 @@
         return valhallaCostingOptions[key];
     }
     function valhallaSettingColor(options, key: string) {
-        return options[key] ? 'white' : '#55ffffff';
+        return options[key] ? 'white' : '#ffffff55';
     }
     async function showRoute(online = false) {
         try {

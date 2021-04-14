@@ -81,5 +81,6 @@
   "dark_mode": "dark mode",
   "auto": "auto",
   "dark": "dark",
-  "light": "light"
+  "light": "light",
+  "token_key": "API token: %s"
 }

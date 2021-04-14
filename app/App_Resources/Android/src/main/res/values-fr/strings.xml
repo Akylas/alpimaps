@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+  <string name="token_key">"clef API: %1$s"</string>
   <string name="light">"clair"</string>
   <string name="dark">"sombre"</string>
   <string name="auto">"auto"</string>

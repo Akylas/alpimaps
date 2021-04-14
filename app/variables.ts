@@ -63,14 +63,14 @@ export function updateThemeColors(theme: string, force = false) {
     if (theme === 'dark') {
         textColor.set(textColorDark);
         textLightColor.set('#aaaaaa');
-        borderColor.set('#55cccccc');
+        borderColor.set('#cccccc55');
         subtitleColor.set('#aaaaaa');
         iconColor.set('#aaaaaa');
-        widgetBackgroundColor.set('#aa000000');
+        widgetBackgroundColor.set('#000000aa');
     } else {
         textColor.set(textColorLight);
         textLightColor.set('#444444');
-        borderColor.set('#55cccccc');
+        borderColor.set('#cccccc55');
         subtitleColor.set('#888888');
         iconColor.set('#444444');
         widgetBackgroundColor.set('#ffffff');
