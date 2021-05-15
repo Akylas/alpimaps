@@ -151,14 +151,14 @@ import { ApplicationSettings } from '@nativescript/core';
 </script>
 
 <frame backgroundColor="transparent">
-    <page actionBarHidden="true">
+    <page actionBarHidden={true}>
         <gridlayout rows="auto,*">
             <CActionBar canGoBack modalWindow title={$slc('settings')} />
             <collectionview bind:this={collectionView} row="1" {items} rowHeight="60">
                 <Template let:item>
                     <gridLayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)}>
                         <label
-                            fontSize="36"
+                            fontSize={36}
                             text={item.icon}
                             marginLeft="-10"
                             width="40"
