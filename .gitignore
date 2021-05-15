@@ -17,3 +17,5 @@ package-lock.json
 /.env.default
 /fastlane/report.xml
 pnpm-lock.yaml
+/app/assets/webapp.js
+/app/assets/webapp.js.LICENSE.txt

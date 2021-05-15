@@ -6,7 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Pair;
 
-import com.github.triniwiz.canvas.TNSImageAsset;
+import org.nativescript.canvas.TNSImageAsset;
 
 import java.nio.ByteBuffer;
 

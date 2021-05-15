@@ -2,16 +2,7 @@ import { GPS, GenericGeoLocation, Options as GeolocationOptions, LocationMonitor
 import { check, request } from '@nativescript-community/perms';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
 import { ApplicationSettings, Enums } from '@nativescript/core';
-import {
-    AndroidApplication,
-    ApplicationEventData,
-    android as androidApp,
-    off as applicationOff,
-    on as applicationOn,
-    launchEvent,
-    resumeEvent,
-    suspendEvent
-} from '@nativescript/core/application';
+import { AndroidApplication, ApplicationEventData, android as androidApp, off as applicationOff, on as applicationOn, launchEvent, resumeEvent, suspendEvent } from '@nativescript/core/application';
 import { AndroidActivityResultEventData } from '@nativescript/core/application/application-interfaces';
 import { EventData, Observable } from '@nativescript/core/data/observable';
 import { bind } from 'helpful-decorators';
@@ -263,10 +254,7 @@ export class GeoHandler extends Observable {
     }
     async authorizeLocation() {
         const result = await request('location');
-        if (
-            (Array.isArray(result) && result[0] !== 'authorized') ||
-            Object.keys(result).some((s) => result[s] !== 'authorized')
-        ) {
+        if ((Array.isArray(result) && result[0] !== 'authorized') || Object.keys(result).some((s) => result[s] !== 'authorized')) {
             throw new Error('gps_denied');
         }
         this.gpsEnabled = geolocation.isEnabled();
@@ -390,10 +378,10 @@ export class GeoHandler extends Observable {
         }
         this.currentWatcher && this.currentWatcher(err);
     }
-    async startWatch(opts?:Partial<GeolocationOptions>) {
-        let updateDistance = ApplicationSettings.getNumber('gps_update_distance', 0);
-        let minimumUpdateTime = ApplicationSettings.getNumber('gps_update_minTime', 0);
-        let desiredAccuracy = ApplicationSettings.getNumber('gps_desired_accuracy', global.isAndroid ? Enums.Accuracy.high : kCLLocationAccuracyBestForNavigation);
+    async startWatch(opts?: Partial<GeolocationOptions>) {
+        const updateDistance = ApplicationSettings.getNumber('gps_update_distance', 0);
+        const minimumUpdateTime = ApplicationSettings.getNumber('gps_update_minTime', 0);
+        const desiredAccuracy = ApplicationSettings.getNumber('gps_desired_accuracy', global.isAndroid ? Enums.Accuracy.high : kCLLocationAccuracyBestForNavigation);
         const options: GeolocationOptions = {
             updateDistance,
             minimumUpdateTime,
@@ -420,7 +408,7 @@ export class GeoHandler extends Observable {
         }
         if (global.isAndroid) {
             try {
-                this.bgService.get().showForeground(true);
+                (this.bgService as any).get().showForeground(true);
             } catch (err) {
                 console.error('showForeground', err, err['stack']);
             }
@@ -429,43 +417,45 @@ export class GeoHandler extends Observable {
     }
 
     getWatchSettings() {
-        let options = {
+        const options = {
             gps_update_distance: {
                 id: 'gps_update_distance',
-                title:lc('gps_update_distance'),
-                description:lc('gps_update_distance_desc'),
-                type:'prompt'
+                title: lc('gps_update_distance'),
+                description: lc('gps_update_distance_desc'),
+                type: 'prompt'
             },
             gps_desired_accuracy: {
                 id: 'gps_desired_accuracy',
-                title:lc('gps_desired_accuracy'),
-                description:lc('gps_desired_accuracy_desc'),
-                values : global.isIOS ? 
-                    [{title:lc('best_for_navigation'), value:kCLLocationAccuracyBestForNavigation },
-                    {title:lc('best'), value:kCLLocationAccuracyBest },
-                    {title:'10m', value:kCLLocationAccuracyNearestTenMeters },
-                    {title:'100m', value:kCLLocationAccuracyHundredMeters },
-                    {title:'1km', value:kCLLocationAccuracyKilometer },
-                    {title:'3km', value:kCLLocationAccuracyThreeKilometers },
-                    {title:lc('reduced'), value:kCLLocationAccuracyReduced },]
-                :[{title:lc('finer_location_accuracy'), value:Enums.Accuracy.high }, {title:lc('approximate_accuracy'), value:Enums.Accuracy.any }]
+                title: lc('gps_desired_accuracy'),
+                description: lc('gps_desired_accuracy_desc'),
+                values: global.isIOS
+                    ? [
+                          { title: lc('best_for_navigation'), value: kCLLocationAccuracyBestForNavigation },
+                          { title: lc('best'), value: kCLLocationAccuracyBest },
+                          { title: '10m', value: kCLLocationAccuracyNearestTenMeters },
+                          { title: '100m', value: kCLLocationAccuracyHundredMeters },
+                          { title: '1km', value: kCLLocationAccuracyKilometer },
+                          { title: '3km', value: kCLLocationAccuracyThreeKilometers },
+                          { title: lc('reduced'), value: kCLLocationAccuracyReduced }
+                      ]
+                    : [
+                          { title: lc('finer_location_accuracy'), value: Enums.Accuracy.high },
+                          { title: lc('approximate_accuracy'), value: Enums.Accuracy.any }
+                      ]
             }
-        }
+        };
         if (global.isIOS) {
-
         } else {
             Object.assign(options, {
                 gps_update_minTime: {
                     id: 'gps_update_minTime',
-                    title:lc('gps_update_minTime'),
-                    description:lc('gps_update_minTime_desc'),
-                    type:'prompt'
+                    title: lc('gps_update_minTime'),
+                    description: lc('gps_update_minTime_desc'),
+                    type: 'prompt'
                 }
-            })
+            });
         }
-        return {
-
-        }
+        return {};
     }
 
     stopWatch() {
@@ -474,7 +464,7 @@ export class GeoHandler extends Observable {
         }
         if (this.watchId) {
             if (global.isAndroid) {
-                this.bgService.get().removeForeground();
+                (this.bgService as any).get().removeForeground();
             }
             geolocation.clearWatch(this.watchId);
             this.watchId = null;
@@ -515,12 +505,7 @@ export class GeoHandler extends Observable {
     }
     onNewLoc = (err, loc: GeoLocation) => {
         // ignore if we haven't moved or if same timestamp
-        if (
-            err ||
-            loc.horizontalAccuracy >= 40 ||
-            (this.lastLoc &&
-                ((this.lastLoc.lat === loc.lat && this.lastLoc.lon === loc.lon) || this.lastLoc.timestamp === loc.timestamp))
-        ) {
+        if (err || loc.horizontalAccuracy >= 40 || (this.lastLoc && ((this.lastLoc.lat === loc.lat && this.lastLoc.lon === loc.lon) || this.lastLoc.timestamp === loc.timestamp))) {
             return;
         }
         if (this.lastLoc) {
@@ -589,8 +574,7 @@ export class GeoHandler extends Observable {
             }
 
             // wait to have a little more data to compugte / show average speed
-            const sessionDuration =
-                loc.timestamp.valueOf() - this.currentSession.startTime.valueOf() - this.currentSession.pauseDuration;
+            const sessionDuration = loc.timestamp.valueOf() - this.currentSession.startTime.valueOf() - this.currentSession.pauseDuration;
             if (DEV_LOG) {
                 console.log('sessionDuration', sessionDuration);
             }
@@ -611,9 +595,7 @@ export class GeoHandler extends Observable {
             if (DEV_LOG) {
                 console.log(
                     'onNewLoc',
-                    `speed: ${loc.speed && loc.speed.toFixed(1)}, loc:${loc.lat.toFixed(2)},${loc.lon.toFixed(2)}, ${new Date(
-                        loc.timestamp
-                    ).toLocaleTimeString()}, ${shouldNotif}, ${
+                    `speed: ${loc.speed && loc.speed.toFixed(1)}, loc:${loc.lat.toFixed(2)},${loc.lon.toFixed(2)}, ${new Date(loc.timestamp).toLocaleTimeString()}, ${shouldNotif}, ${
                         this.currentSession.currentSpeed && this.currentSession.currentSpeed.toFixed(1)
                     }, ${deltaDistance}, ${deltaTime}, ${deltaAlt}`
                 );
@@ -698,9 +680,7 @@ export class GeoHandler extends Observable {
             session.pauseDuration += session.endTime.valueOf() - session.lastPauseTime.valueOf();
             session.lastPauseTime = null;
         }
-        session.averageSpeed = Math.round(
-            (session.distance / (session.endTime.valueOf() - session.startTime.valueOf() - session.pauseDuration)) * 3600
-        );
+        session.averageSpeed = Math.round((session.distance / (session.endTime.valueOf() - session.startTime.valueOf() - session.pauseDuration)) * 3600);
     }
     stopSession() {
         if (this.currentSession) {
@@ -744,11 +724,7 @@ export class GeoHandler extends Observable {
     getCurrentSessionChrono() {
         if (this.currentSession) {
             if (this.currentSession.state === SessionState.PAUSED) {
-                return (
-                    this.currentSession.lastPauseTime.valueOf() -
-                    this.currentSession.startTime.valueOf() -
-                    this.currentSession.pauseDuration
-                );
+                return this.currentSession.lastPauseTime.valueOf() - this.currentSession.startTime.valueOf() - this.currentSession.pauseDuration;
             }
             return Date.now() - this.currentSession.startTime.valueOf() - this.currentSession.pauseDuration;
         }

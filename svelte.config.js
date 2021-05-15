@@ -6,10 +6,10 @@ module.exports = {
         namespace: 'foreign'
     },
     preprocess: [
-        svelteNativePreprocessor(),
         sveltePreprocess({
             defaults: { script: 'typescript', style: 'scss' },
             sourceMap: false
-        })
+        }),
+        svelteNativePreprocessor()
     ]
 };
