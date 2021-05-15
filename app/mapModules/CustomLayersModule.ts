@@ -1,20 +1,10 @@
 import { MapBounds, MapPos, toNativeScreenBounds } from '@nativescript-community/ui-carto/core';
-import {
-    CombinedTileDataSource,
-    MergedMBVTTileDataSource,
-    OrderedTileDataSource,
-    TileDataSource
-} from '@nativescript-community/ui-carto/datasources';
+import { CombinedTileDataSource, MergedMBVTTileDataSource, OrderedTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
 import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
 import { HTTPTileDataSource } from '@nativescript-community/ui-carto/datasources/http';
 import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
 import { TileLayer, TileSubstitutionPolicy } from '@nativescript-community/ui-carto/layers';
-import {
-    HillshadeRasterTileLayer,
-    HillshadeRasterTileLayerOptions,
-    RasterTileFilterMode,
-    RasterTileLayer
-} from '@nativescript-community/ui-carto/layers/raster';
+import { HillshadeRasterTileLayer, HillshadeRasterTileLayerOptions, RasterTileFilterMode, RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
 import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
 import { MapBoxElevationDataDecoder, TerrariumElevationDataDecoder } from '@nativescript-community/ui-carto/rastertiles';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
@@ -206,11 +196,7 @@ export default class CustomLayersModule extends MapModule {
         }
     }
 
-    createMergeMBtiles(
-        { name, sources, legend }: { name: string; sources: string[]; legend?: string },
-        worldMbtiles?: MBTilesTileDataSource,
-        options = {}
-    ) {
+    createMergeMBtiles({ name, sources, legend }: { name: string; sources: string[]; legend?: string }, worldMbtiles?: MBTilesTileDataSource, options = {}) {
         let dataSource: TileDataSource<any, any> = this.createMergeMBTilesDataSource(sources);
         if (worldMbtiles) {
             dataSource = new MergedMBVTTileDataSource({
@@ -322,10 +308,7 @@ export default class CustomLayersModule extends MapModule {
         // Apply zoom level bias to the raster layer.
         // By default, bitmaps are upsampled on high-DPI screens.
         // We will correct this by applying appropriate bias
-        const zoomLevelBias = appSettings.getNumber(
-            `${id}_zoomLevelBias`,
-            (Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2)) * 0.75
-        );
+        const zoomLevelBias = appSettings.getNumber(`${id}_zoomLevelBias`, (Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2)) * 0.75);
         let url = provider.url as string;
         if (provider.tokenKey) {
             const tokens = Array.isArray(provider.tokenKey) ? provider.tokenKey : [provider.tokenKey];
@@ -417,10 +400,7 @@ export default class CustomLayersModule extends MapModule {
     baseProviders: { [k: string]: Provider } = {};
     overlayProviders: { [k: string]: Provider } = {};
     isOverlay(providerName, provider: Provider) {
-        if (
-            !!provider.isOverlay ||
-            (provider.layerOptions && provider.layerOptions.opacity && provider.layerOptions.opacity < 1)
-        ) {
+        if (!!provider.isOverlay || (provider.layerOptions && provider.layerOptions.opacity && provider.layerOptions.opacity < 1)) {
             return true;
         }
         return false;
@@ -683,9 +663,7 @@ export default class CustomLayersModule extends MapModule {
                 this.addDataSource(data);
             }
             // console.log('loading etiles', e.name);
-            const dataSource = this.createOrderedMBTilesDataSource(
-                entities.filter((e) => e.name.endsWith('.etiles')).map((e2) => e2.path)
-            );
+            const dataSource = this.createOrderedMBTilesDataSource(entities.filter((e) => e.name.endsWith('.etiles')).map((e2) => e2.path));
             const name = 'Hillshade';
             const opacity = appSettings.getNumber(`${name}_opacity`, 1);
             const layer = (this.hillshadeLayer = packageService.hillshadeLayer = this.createHillshadeTileLayer(name, dataSource));
@@ -733,10 +711,7 @@ export default class CustomLayersModule extends MapModule {
                         min: { x: cartoMap.getMeasuredWidth(), y: 0 },
                         max: { x: 0, y: cartoMap.getMeasuredHeight() }
                     });
-                    const bounds = new MapBounds(
-                        projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMin()) as any),
-                        projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMax()) as any)
-                    );
+                    const bounds = new MapBounds(projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMin()) as any), projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMax()) as any));
 
                     // console.log('startDownloadArea', provider, bounds, cartoMap.getZoom(), zoom);
                     dataSource.startDownloadArea(bounds, cartoMap.getZoom(), zoom, {

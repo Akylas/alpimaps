@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+      "target": "ES2015",
+      "module": "commonjs",
+      "moduleResolution": "node",
+      "lib": ["dom"],
+      "sourceMap": false,
+      "noEmitHelpers": false,
+      "importHelpers": false,
+      "allowJs": true,
+      "baseUrl": ".",
+      "paths": {
+        "~/*": ["webapp/*"],
+        "@/*": ["webapp/*"]
+      },
+      "allowSyntheticDefaultImports": true,
+      "esModuleInterop": true,
+      "experimentalDecorators": true,
+      "emitDecoratorMetadata": true,
+      "skipLibCheck": true,
+      "strict": true,
+    },
+    "include": ["webapp"],
+    "exclude": ["node_modules", "platforms"]
+  }
+  

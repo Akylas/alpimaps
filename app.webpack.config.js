@@ -9,7 +9,6 @@ const SentryCliPlugin = require('@sentry/webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const IgnoreNotFoundExportPlugin = require('./IgnoreNotFoundExportPlugin');
 const Fontmin = require('fontmin');
-const { HotModuleReplacementPlugin } = require('webpack');
 
 module.exports = (env, params = {}) => {
     Object.keys(env).forEach((k) => {
@@ -72,6 +71,8 @@ module.exports = (env, params = {}) => {
         }
         cb();
     });
+    config.externals.push('fs', 'path', 'child_process', 'asciify-image', 'util', 'module');
+
     // config.stats = {
     //     modulesSpace:Infinity,
     //     optimizationBailout: true
@@ -90,16 +91,11 @@ module.exports = (env, params = {}) => {
     // console.log('config.externals', config.externals);
 
     const coreModulesPackageName = fork ? '@akylas/nativescript' : '@nativescript/core';
-    console.log('mainFields', config.resolve.mainFields);
-    console.log('importsFields', config.resolve.importsFields);
+    // console.log('mainFields', config.resolve.mainFields);
+    // console.log('importsFields', config.resolve.importsFields);
     // config.resolve.mainFields = ['esnext', 'module', 'main'];
     // config.resolve.importsFields = ['esnext', 'module', 'main'];
-    config.resolve.modules = [
-        resolve(__dirname, `node_modules/${coreModulesPackageName}`),
-        resolve(__dirname, 'node_modules'),
-        `node_modules/${coreModulesPackageName}`,
-        'node_modules'
-    ];
+    config.resolve.modules = [resolve(__dirname, `node_modules/${coreModulesPackageName}`), resolve(__dirname, 'node_modules'), `node_modules/${coreModulesPackageName}`, 'node_modules'];
     Object.assign(config.resolve.alias, {
         '@nativescript/core': `${coreModulesPackageName}`,
         // 'svelte-native': '@akylas/svelte-native',
@@ -112,21 +108,6 @@ module.exports = (env, params = {}) => {
         './controller': '~/deckgl/Controller'
     });
 
-    console.log('coreModulesPackageName', coreModulesPackageName);
-
-    // const coreModulesPackageName = '@nativescript/core';
-    // config.resolve.modules = [
-    //     resolve(__dirname, `node_modules/${coreModulesPackageName}`),
-    //     resolve(__dirname, 'node_modules'),
-    //     `node_modules/${coreModulesPackageName}`,
-    //     'node_modules'
-    // ];
-
-    // Object.assign(config.resolve.alias, {
-    //     '@nativescript/core': `${coreModulesPackageName}`,
-    //     'tns-core-modules': `${coreModulesPackageName}`
-    // });
-
     const package = require('./package.json');
     const nsconfig = require('./nativescript.config.js');
     const isIOS = platform === 'ios';
@@ -136,7 +117,6 @@ module.exports = (env, params = {}) => {
     const locales = readdirSync(join(projectRoot, appPath, 'i18n'))
         .filter((s) => s.endsWith('.json'))
         .map((s) => s.replace('.json', ''));
-    // console.log('sentry', !!sentry);
     const defines = {
         PRODUCTION: !!production,
         process: 'global.process',
@@ -146,7 +126,6 @@ module.exports = (env, params = {}) => {
         __UI_USE_XML_PARSER__: false,
         'global.__AUTO_REGISTER_UI_MODULES__': false,
         'global.isIOS': isIOS,
-        'global.autoRegisterUIModules': false,
         'global.isAndroid': isAndroid,
         'gVars.internalApp': false,
         __CARTO_PACKAGESERVICE__: cartoLicense,
@@ -159,11 +138,7 @@ module.exports = (env, params = {}) => {
         GIT_URL: `"${package.repository}"`,
         SUPPORT_URL: `"${package.bugs.url}"`,
         CUSTOM_URL_SCHEME: `"${CUSTOM_URL_SCHEME}"`,
-        STORE_LINK: `"${
-            isAndroid
-                ? `https://play.google.com/store/apps/details?id=${nsconfig.id}`
-                : `https://itunes.apple.com/app/id${APP_STORE_ID}`
-        }"`,
+        STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${nsconfig.id}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
         STORE_REVIEW_LINK: `"${
             isIOS
                 ? ` itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=${APP_STORE_ID}&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+Software`
@@ -185,21 +160,9 @@ module.exports = (env, params = {}) => {
         }
     });
 
-    // const itemsToClean = [`${dist}/**/*`];
-    // if (platform === 'android') {
-    //     itemsToClean.push(`${join(projectRoot, 'platforms', 'android', 'app', 'src', 'main', 'assets', 'snapshots/**/*')}`);
-    //     itemsToClean.push(
-    //         `${join(projectRoot, 'platforms', 'android', 'app', 'build', 'configurations', 'nativescript-android-snapshot')}`
-    //     );
-    // }
-
     const symbolsParser = require('scss-symbols-parser');
-    const mdiSymbols = symbolsParser.parseSymbols(
-        readFileSync(resolve(projectRoot, 'node_modules/@mdi/font/scss/_variables.scss')).toString()
-    );
-    const mdiIcons = JSON.parse(
-        `{${mdiSymbols.variables[mdiSymbols.variables.length - 1].value.replace(/" (F|0)(.*?)([,\n]|$)/g, '": "$1$2"$3')}}`
-    );
+    const mdiSymbols = symbolsParser.parseSymbols(readFileSync(resolve(projectRoot, 'node_modules/@mdi/font/scss/_variables.scss')).toString());
+    const mdiIcons = JSON.parse(`{${mdiSymbols.variables[mdiSymbols.variables.length - 1].value.replace(/" (F|0)(.*?)([,\n]|$)/g, '": "$1$2"$3')}}`);
 
     const appSymbols = symbolsParser.parseSymbols(readFileSync(resolve(projectRoot, 'css/variables.scss')).toString());
     const appIcons = {};
@@ -345,9 +308,7 @@ module.exports = (env, params = {}) => {
         });
     }
     // we remove default rules
-    config.plugins = config.plugins.filter(
-        (p) => ['CopyPlugin', 'ForkTsCheckerWebpackPlugin'].indexOf(p.constructor.name) === -1
-    );
+    config.plugins = config.plugins.filter((p) => ['CopyPlugin', 'ForkTsCheckerWebpackPlugin'].indexOf(p.constructor.name) === -1);
     console.log(config.plugins.map((s) => s.constructor.name));
 
     // config.plugins.push(new NativeScriptHTTPPlugin());
@@ -443,17 +404,11 @@ module.exports = (env, params = {}) => {
             let appVersion;
             let buildNumber;
             if (platform === 'android') {
-                appVersion = readFileSync('app/App_Resources/Android/app.gradle', 'utf8').match(
-                    /versionName "((?:[0-9]+\.?)+)"/
-                )[1];
+                appVersion = readFileSync('app/App_Resources/Android/app.gradle', 'utf8').match(/versionName "((?:[0-9]+\.?)+)"/)[1];
                 buildNumber = readFileSync('app/App_Resources/Android/app.gradle', 'utf8').match(/versionCode ([0-9]+)/)[1];
             } else if (platform === 'ios') {
-                appVersion = readFileSync('app/App_Resources/iOS/Info.plist', 'utf8').match(
-                    /<key>CFBundleShortVersionString<\/key>[\s\n]*<string>(.*?)<\/string>/
-                )[1];
-                buildNumber = readFileSync('app/App_Resources/iOS/Info.plist', 'utf8').match(
-                    /<key>CFBundleVersion<\/key>[\s\n]*<string>([0-9]*)<\/string>/
-                )[1];
+                appVersion = readFileSync('app/App_Resources/iOS/Info.plist', 'utf8').match(/<key>CFBundleShortVersionString<\/key>[\s\n]*<string>(.*?)<\/string>/)[1];
+                buildNumber = readFileSync('app/App_Resources/iOS/Info.plist', 'utf8').match(/<key>CFBundleVersion<\/key>[\s\n]*<string>([0-9]*)<\/string>/)[1];
             }
             console.log('appVersion', appVersion, buildNumber);
 
@@ -513,5 +468,62 @@ module.exports = (env, params = {}) => {
             }
         })
     ];
-    return config;
+    return [
+        {
+            entry: resolve(__dirname, 'webapp/app.ts'),
+            devtool: false,
+            mode: production ? 'production' : 'development',
+            resolve: {
+                extensions: ['.ts', '.js', '.json']
+            },
+            output: {
+                pathinfo: false,
+                path: resolve(__dirname, 'app/assets'),
+                // libraryTarget: 'commonjs',
+                library: {
+                    name: 'webapp',
+                    type: 'global'
+                },
+                filename: 'webapp.js'
+                // globalObject: 'global'
+            },
+            module: {
+                rules: [
+                    {
+                        test: /\.ts$/,
+                        loader: 'ts-loader',
+                        options: {
+                            transpileOnly: true,
+                            allowTsInNodeModules: true,
+                            configFile: resolve(__dirname, 'tsconfig.web.json'),
+                            compilerOptions: {
+                                sourceMap: false,
+                                declaration: false
+                            }
+                        }
+                    },
+                    {
+                        test: /\.js$/,
+                        loader: 'babel-loader',
+                        options: {
+                            sourceMaps: false,
+                            plugins: ['@babel/plugin-transform-runtime'],
+                            presets: [
+                                [
+                                    '@babel/env',
+                                    {
+                                        modules: false,
+                                        targets: {
+                                            chrome: '70'
+                                        }
+                                    }
+                                ]
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        config
+    ];
 };
