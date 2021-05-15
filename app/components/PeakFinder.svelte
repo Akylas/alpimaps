@@ -67,7 +67,6 @@ import { onDestroy, onMount } from 'svelte';
         //     console.log(`webview.gotMessage: ${JSON.stringify(msg.data)} (${typeof msg})`);
         // });
     }
-    console.log('PeakFinder view');
 
     onMount(()=>{
         // console.log('onMount', vectorDataSource, dataSource);
