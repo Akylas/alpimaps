@@ -3,7 +3,7 @@ android {
   defaultConfig {  
     compileSdkVersion 29
     multiDexEnabled true
-    minSdkVersion 18
+    minSdkVersion 19
     targetSdkVersion 29
     versionCode 215
     versionName "2.0.0"
@@ -31,6 +31,10 @@ android {
       // proguardFiles getDefaultProguardFile(
       //   'proguard-android-optimize.txt'),
       //   'proguard-rules.pro'
+
+      debuggable false
+      jniDebuggable false
+      renderscriptDebuggable false
     }
   } 
 

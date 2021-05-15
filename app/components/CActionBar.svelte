@@ -11,7 +11,7 @@
     export let onClose: Function = null;
     let menuIcon: string;
     let menuIconVisible: boolean;
-    let menuIconVisibility: string;
+    let menuIconVisibility: 'hidden' | 'visible' | 'collapse' | 'collapsed';
 
     onMount(() => {
         setTimeout(() => {
@@ -34,10 +34,11 @@
     }
     $: menuIconVisible = ((canGoBack || modalWindow) && !disableBackButton) || showMenuIcon;
     $: menuIconVisibility = menuIconVisible ? 'visible' : 'collapsed';
+
 </script>
 
 <gridLayout class="actionBar" height={actionBarHeight + globalMarginTop} columns="auto,*, auto" rows="*" paddingLeft="5" paddingRight="5" paddingTop={globalMarginTop}>
-    <label id="title" col="1" colSpan="3" class="actionBarTitle" textAlignment="left" visibility={!!title ? 'visible' : 'hidden'} text={title || ''} verticalTextAlignment="center" />
+    <label col="1" colSpan="3" class="actionBarTitle" textAlignment="left" visibility={!!title ? 'visible' : 'hidden'} text={title || ''} verticalTextAlignment="center" />
     <!-- {#if showLogo && !title}
         <label col="1" class="activelook" fontSize="28" color="white" text="logo" verticalAlignment="center" marginLeft="6" />
     {/if} -->
