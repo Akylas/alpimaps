@@ -335,7 +335,6 @@
             const hillshadeDatasource = packageService.hillshadeLayer?.dataSource;
             const vectorDataSource = packageService.localVectorTileLayer?.dataSource;
             const component = (await import('~/components/PeakFinder.svelte')).default;
-            console.log('openPeakFinder3', position);
             showModal({
                 page: component,
                 animated: true,
