@@ -823,7 +823,7 @@
     }
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureLayerName, featureData, featurePosition, layer } = data;
-        if (DEV_LOG) {
+        // if (DEV_LOG) {
             console.log(
                 'onVectorTileClicked',
                 featureLayerName,
@@ -832,7 +832,7 @@
                 featureData,
                 featurePosition
             );
-        }
+        // }
 
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
@@ -1503,11 +1503,6 @@
                 icon: 'mdi-altimeter'
             });
         }
-        options.splice(options.length - 2, 0, {
-            title: lc('test'),
-            id: 'threejs',
-            icon: 'mdi-rotate-3d'
-        });
 
         if (packageServiceEnabled) {
             options.unshift({
@@ -1546,17 +1541,6 @@
                     break;
                 case 'bug':
                     sendBug();
-                    break;
-                case 'threejs':
-                    try {
-                        const Three = require('./DeckGL.svelte').default;
-
-                        await showModal({ page: Three, animated: true, fullscreen: true , props:{
-                            position: cartoMap.getFocusPos()
-                        }});
-                    } catch (err) {
-                        showError(err);
-                    }
                     break;
                 case 'compass':
                     try {
@@ -1649,7 +1633,7 @@
     }
 </script>
 
-<page bind:this={page} actionBarHidden="true" backgroundColor="#E3E1D3">
+<page bind:this={page} actionBarHidden={true} backgroundColor="#E3E1D3">
     <drawer
         bind:this={drawer}
         translationFunction={drawerTranslationFunction}
