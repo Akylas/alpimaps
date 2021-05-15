@@ -1,13 +1,5 @@
 <script lang="ts">
-    import {
-        Align,
-        Canvas,
-        DashPathEffect,
-        LayoutAlignment,
-        Paint,
-        StaticLayout,
-        Style
-    } from '@nativescript-community/ui-canvas';
+    import { Align, Canvas, DashPathEffect, LayoutAlignment, Paint, StaticLayout, Style } from '@nativescript-community/ui-canvas';
     import { CartoMap } from '@nativescript-community/ui-carto/ui';
     import { LineChart } from '@nativescript-community/ui-chart/charts';
     import type { HighlightEventData } from '@nativescript-community/ui-chart/charts/Chart';
@@ -20,7 +12,7 @@
     import { Application } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode, showModal } from 'svelte-native/dom';
     import { convertValueToUnit, UNITS } from '~/helpers/formatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem, IItem as Item } from '~/models/Item';
@@ -100,9 +92,7 @@
             if (item.address) {
                 name += ' ' + item.address.county;
             }
-            const url = `https://duckduckgo.com/?kae=d&ks=s&ko=-2&kaj=m&k1=-1&q=${encodeURIComponent(name)
-                .toLowerCase()
-                .replace('/s+/g', '+')}`;
+            const url = `https://duckduckgo.com/?kae=d&ks=s&ko=-2&kaj=m&k1=-1&q=${encodeURIComponent(name).toLowerCase().replace('/s+/g', '+')}`;
             webViewSrc = url;
         } else {
             webViewSrc = null;
@@ -138,12 +128,7 @@
         }
     }
 
-    function updateRouteItemWithPosition(
-        routeItem: Item,
-        location: GenericMapPos<LatLonKeys>,
-        updateNavigationInstruction = true,
-        updateGraph = true
-    ) {
+    function updateRouteItemWithPosition(routeItem: Item, location: GenericMapPos<LatLonKeys>, updateNavigationInstruction = true, updateGraph = true) {
         if (routeItem && routeItem.route) {
             const route = routeItem.route;
             const positions = route.positions;
@@ -340,6 +325,32 @@
             updatingItem = false;
         }
     }
+
+    async function openPeakFinder() {
+        try {
+            const position = { ...item.position };
+            if (!position.altitude) {
+                position.altitude = item.properties.ele || (await packageService.getElevation(position));
+            }
+            const hillshadeDatasource = packageService.hillshadeLayer?.dataSource;
+            const vectorDataSource = packageService.localVectorTileLayer?.dataSource;
+            const component = (await import('~/components/PeakFinder.svelte')).default;
+            console.log('openPeakFinder3', position);
+            showModal({
+                page: component,
+                animated: true,
+                fullscreen: true,
+                props: {
+                    terrarium: false,
+                    position,
+                    vectorDataSource,
+                    dataSource: hillshadeDatasource
+                }
+            });
+        } catch (err) {
+            this.showError(err);
+        }
+    }
     // async function shareFile(content: string, fileName: string) {
     //     const file = knownFolders.temp().getFile(fileName);
     //     // iOS: using writeText was not adding the file. Surely because it was too soon or something
@@ -431,15 +442,7 @@
 
                         c.drawLine(x, 0, x, y - 5, highlightPaint);
                         highlightPaint.setColor('white');
-                        const layout = new StaticLayout(
-                            h.entry.a.toFixed() + 'm' + '\n' + h.entry.g.toFixed() + '%',
-                            highlightPaint,
-                            w,
-                            LayoutAlignment.ALIGN_CENTER,
-                            1,
-                            0,
-                            true
-                        );
+                        const layout = new StaticLayout(h.entry.a.toFixed() + 'm' + '\n' + h.entry.g.toFixed() + '%', highlightPaint, w, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
                         c.drawRoundRect(x - w / 2, 0, x + w / 2, layout.getHeight(), 2, 2, paint);
                         c.save();
                         c.translate(x - w / 2, 0);
@@ -570,75 +573,21 @@
             loadedListeners = [];
         }
     }
+
 </script>
 
-<gridlayout
-    {...$$restProps}
-    id="bottomsheetinner"
-    width="100%"
-    rows={`70,50,${profileHeight},auto`}
-    columns="*,auto"
-    backgroundColor={$widgetBackgroundColor}
-    on:tap={() => {}}
->
+<gridlayout {...$$restProps} id="bottomsheetinner" width="100%" rows={`70,50,${profileHeight},auto`} columns="*,auto" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
     {#if loaded}
         <BottomSheetInfoView bind:this={infoView} row="0" {item} />
 
-        <mdactivityindicator
-            visibility={updatingItem ? 'visible' : 'collapsed'}
-            row="0"
-            horizontalAligment="right"
-            busy={true}
-            width={20}
-            height={20}
-        />
-        <button
-            col="1"
-            variant="text"
-            class="icon-btn"
-            text="mdi-crosshairs-gps"
-            visibility={itemIsRoute ? 'visible' : 'collapsed'}
-            on:tap={zoomToItem}
-        />
-        <stacklayout
-            row="1"
-            colSpan="2"
-            orientation="horizontal"
-            width="100%"
-            borderTopWidth="1"
-            borderBottomWidth="1"
-            borderColor={$borderColor}
-        >
-            <button
-                variant="text"
-                fontSize="10"
-                on:tap={searchItemWeb}
-                text={$slc('search')}
-                visibility={item && !itemIsRoute && !item.id ? 'visible' : 'collapsed'}
-            />
-            <button
-                variant="text"
-                fontSize="10"
-                on:tap={getProfile}
-                text={$slc('profile')}
-                visibility={itemIsRoute && itemCanQueryProfile ? 'visible' : 'collapsed'}
-            />
+        <mdactivityindicator visibility={updatingItem ? 'visible' : 'collapsed'} row="0" horizontalAligment="right" busy={true} width={20} height={20} />
+        <button col="1" variant="text" class="icon-btn" text="mdi-crosshairs-gps" visibility={itemIsRoute ? 'visible' : 'collapsed'} on:tap={zoomToItem} />
+        <stacklayout row="1" colSpan="2" orientation="horizontal" width="100%" borderTopWidth="1" borderBottomWidth="1" borderColor={$borderColor}>
+            <button variant="text" fontSize="10" on:tap={searchItemWeb} text={$slc('search')} visibility={item && !itemIsRoute && !item.id ? 'visible' : 'collapsed'} />
+            <button variant="text" fontSize="10" on:tap={getProfile} text={$slc('profile')} visibility={itemIsRoute && itemCanQueryProfile ? 'visible' : 'collapsed'} />
             <!-- <button variant="text" fontSize="10" on:tap={openWebView} text="web" /> -->
-            <button
-                variant="text"
-                fontSize="10"
-                on:tap={saveItem}
-                text={$slc('save')}
-                visibility={item && !item.id ? 'visible' : 'collapsed'}
-            />
-            <button
-                variant="text"
-                fontSize="10"
-                on:tap={deleteItem}
-                text={$slc('delete')}
-                visibility={item && item.id ? 'visible' : 'collapsed'}
-                color="red"
-            />
+            <button variant="text" fontSize="10" on:tap={saveItem} text={$slc('save')} visibility={item && !item.id ? 'visible' : 'collapsed'} />
+            <button variant="text" fontSize="10" on:tap={deleteItem} text={$slc('delete')} visibility={item && item.id ? 'visible' : 'collapsed'} color="red" />
             <!-- <button
                 variant="text"
                 fontSize="10"
@@ -646,22 +595,10 @@
                 text="share item"
                 visibility={item && item.id ? 'visible' : 'collapsed'}
             /> -->
-            <button
-                variant="text"
-                fontSize="10"
-                on:tap={checkWeather}
-                text={$slc('weather')}
-                visibility={item && networkService.canCheckWeather ? 'visible' : 'collapsed'}
-            />
+            <button variant="text" fontSize="10" on:tap={checkWeather} text={$slc('weather')} visibility={item && networkService.canCheckWeather ? 'visible' : 'collapsed'} />
+            <button variant="text" fontSize="10" on:tap={openPeakFinder} text={$slc('peaks')} visibility={item && !itemIsRoute ? 'visible' : 'collapsed'} />
         </stacklayout>
-        <linechart
-            bind:this={chart}
-            row="2"
-            colSpan="2"
-            height={profileHeight}
-            visibility={graphAvailable ? 'visible' : 'hidden'}
-            on:highlight={onChartHighlight}
-        />
+        <linechart bind:this={chart} row="2" colSpan="2" height={profileHeight} visibility={graphAvailable ? 'visible' : 'hidden'} on:highlight={onChartHighlight} />
         <!-- <AWebView
             row="3"
             height={webViewHeight}

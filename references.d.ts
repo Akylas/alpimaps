@@ -79,12 +79,7 @@ declare namespace akylas {
                     public constructor();
                     public onResult(error, res: string): void;
                 }
-                function getElevationMeshesAsync(
-                    context: android.content.Context,
-                    dataSource: com.carto.datasources.TileDataSource,
-                    options: string,
-                    callback: GetElevationMeshesCallback
-                );
+                function getElevationMeshesAsync(context: android.content.Context, dataSource: com.carto.datasources.TileDataSource, options: string, callback: GetElevationMeshesCallback);
             }
         }
     }
@@ -96,3 +91,11 @@ interface LatLonKeys {
     altitude?: number;
 }
 
+namespace svelteNative.JSX {
+    //     interface ViewAttributes {
+    //         rippleTouch: Boolean
+    //    }
+    export interface LabelAttributes {
+        // verticalalignment: String;
+    }
+}
