@@ -1,6 +1,6 @@
 package akylas.alpi.maps
 
-import com.github.triniwiz.canvas.TNSImageAsset
+import org.nativescript.canvas.TNSImageAsset
 import org.json.JSONArray
 import org.json.JSONObject
 import java.lang.Exception

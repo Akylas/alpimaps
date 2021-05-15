@@ -43,7 +43,7 @@ export class BgService extends BgServiceCommon {
     async stop() {
         await super.stop();
         if (this.bgService) {
-            this.bgService.get().removeForeground();
+            (this.bgService as any).get().removeForeground();
             const intent = new android.content.Intent(this.context, akylas.alpi.maps.BgService.class);
             this.context.stopService(intent);
             this.context.unbindService(this.serviceConnection);
@@ -61,7 +61,7 @@ export class BgService extends BgServiceCommon {
     }
 
     get geoHandler() {
-        const bgService = this.bgService && this.bgService.get();
+        const bgService = this.bgService && (this.bgService as any).get();
         if (bgService) {
             return bgService.geoHandler;
         }

@@ -40,35 +40,15 @@ class NestedScrollView extends ScrollView {
 registerNativeViewElement('AbsoluteLayout', () => require('@nativescript/core').AbsoluteLayout);
 registerElement('Frame', () => new FrameElement());
 registerElement('Page', () => new PageElement());
-// registerNativeViewElement('DockLayout', () => require('@nativescript/core').DockLayout);
 registerNativeViewElement('GridLayout', () => require('@nativescript/core').GridLayout);
-// registerNativeViewElement('Image', () => require('@nativescript/core').Image);
 registerNativeViewElement('ScrollView', () => NestedScrollView as any);
-// registerNativeViewElement('SearchBar', () => require('@nativescript/core').SearchBar);
-// registerNativeViewElement('Slider', () => require('@nativescript/core').Slider);
 registerNativeViewElement('StackLayout', () => require('@nativescript/core').StackLayout);
-// registerNativeViewElement('FlexboxLayout', () => require('@nativescript/core').FlexboxLayout);
 registerNativeViewElement('Switch', () => require('@nativescript/core').Switch);
 registerNativeViewElement('TextField', () => require('@nativescript/core').TextField);
-registerNativeViewElement('ncanvas', () => require('@nativescript/canvas').Canvas);
-require('@nativescript/canvas-polyfill');
-// registerNativeViewElement('button', () => require('@nativescript/core').Button);
-// registerNativeViewElement('TextView', () => require('@nativescript/core').TextView);
-// registerNativeViewElement('WebView', () => require('@nativescript/core').WebView);
-// registerNativeViewElement('WrapLayout', () => require('@nativescript/core').WrapLayout);
 
-registerNativeViewElement(
-    'button',
-    () => require('@nativescript-community/ui-material-button').Button,
-    null,
-    {},
-    { override: true }
-);
+registerNativeViewElement('button', () => require('@nativescript-community/ui-material-button').Button, null, {}, { override: true });
 registerNativeViewElement('label', () => require('@nativescript-community/ui-label').Label, null, {}, { override: true });
-registerNativeViewElement(
-    'mdactivityindicator',
-    () => require('@nativescript-community/ui-material-activityindicator').ActivityIndicator
-);
+registerNativeViewElement('mdactivityindicator', () => require('@nativescript-community/ui-material-activityindicator').ActivityIndicator);
 registerNativeViewElement('mdprogress', () => require('@nativescript-community/ui-material-progress').Progress);
 registerNativeViewElement('mdcardview', () => require('@nativescript-community/ui-material-cardview').CardView);
 registerNativeViewElement('mdslider', () => require('@nativescript-community/ui-material-slider').Slider);
@@ -82,13 +62,9 @@ registerNativeViewElement('canvaslabel', () => require('@nativescript-community/
 registerNativeViewElement('cspan', () => require('@nativescript-community/ui-canvaslabel').Span);
 registerNativeViewElement('cgroup', () => require('@nativescript-community/ui-canvaslabel').Group);
 registerNativeViewElement('svgview', () => require('@nativescript-community/ui-svg').SVGView);
-// registerNativeViewElement('mdspeeddial', () => SpeedDial);
-// registerNativeViewElement('mdspeeddialitem', () => SpeedDialItem);
-registerNativeViewElement(
-    'bottomsheet',
-    () => require('@nativescript-community/ui-persistent-bottomsheet').PersistentBottomSheet
-);
+registerNativeViewElement('bottomsheet', () => require('@nativescript-community/ui-persistent-bottomsheet').PersistentBottomSheet);
 registerNativeViewElement('symbolshape', () => require('~/components/SymbolShape').default);
+registerNativeViewElement('webviewext', () => require('@nota/nativescript-webview-ext').WebViewExt);
 CollectionViewElement.register();
 DrawerElement.register();
 
@@ -112,22 +88,11 @@ themer.createShape('round', {
     }
 });
 
-// Application.on(Application.displayedEvent, () => {
-//     console.log('displayed');
-// });
-
-// if (DEV_LOG) {
-//     Trace.addCategories(GPSTraceCategory);
-//     Trace.enable();
-// }
-
 // we need to instantiate it to "start" it
 const bgService = new BgService();
 Application.on(Application.launchEvent, () => {
     initialize({ isDownsampleEnabled: true });
 
-    // if (global.isAndroid) {
-    // bgService.start();
     networkService.start();
     // const receiverCallback = (androidContext, intent: android.content.Intent) => {
     //     console.log('receiverCallback', intent.getAction(), intent.getAction() === android.content.Intent.ACTION_SCREEN_ON);
@@ -145,5 +110,4 @@ Application.on(Application.exitEvent, () => {
     // application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_OFF);
     // }
 });
-
 svelteNative(Map, {});
