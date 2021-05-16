@@ -65,7 +65,7 @@
         "@nativescript/appavailability": "2.0.0",
         "@nativescript/brightness": "2.0.0",
         "@nativescript/email": "2.0.4",
-        "@nota/nativescript-webview-ext": "^8.0.0",
+        "@nota/nativescript-webview-ext": "8.0.0",
         "camera-controls": "^1.28.2",
         "dayjs": "1.10.4",
         "deburr": "0.0.3",
