@@ -5,20 +5,17 @@ import * as Geo from './geo-three.module';
 import { Pass } from 'three/examples/jsm/postprocessing/Pass';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
+import { DeviceOrientationControls } from 'three/examples/jsm/controls/DeviceOrientationControls';
 import { Sky } from 'three/examples/jsm/objects/Sky';
-
 import CustomOutlinePass from './CustomOutlinePass';
 
 //@ts-ignore
 global.THREE = THREE;
-
 CameraControls.install({ THREE });
-
 //@ts-ignore
-const stats = new Stats();
-const devicePixelRatio = window.devicePixelRatio; // Change to 1 on retina screens to see blurry canvas.
-stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
-document.body.appendChild(stats.dom);
+// const stats = new Stats();
+// stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+// document.body.appendChild(stats.dom);
 
 function ArraySortOn(array, key) {
     return array.sort(function (a, b) {
@@ -30,14 +27,35 @@ function ArraySortOn(array, key) {
         return 0;
     });
 }
+const devicePixelRatio = window.devicePixelRatio; // Change to 1 on retina screens to see blurry canvas.
 
 let debug = false;
-const debugFeaturePoints = false;
+let debugFeaturePoints = false;
 let debugGPUPicking = false;
 let readFeatures = true;
 let drawLines = true;
+let darkTheme = false;
 let pointBufferTargetScale = 10;
+let featuresToShow = [];
+const tempVector = new THREE.Vector3(0, 0, 0);
+const exageration = 1.7;
+let currentColor = 0xffffff;
+const featuresByColor = {};
 let elevationDecoder = [6553.6 * 255, 25.6 * 255, 0.1 * 255, -10000];
+const FAR = 200000;
+const TEXT_HEIGHT = 180;
+let currentPosition;
+let elevation = 1000;
+const clock = new THREE.Clock();
+let renderingIndex = -1;
+const linesToDraw = [];
+// updSunPos(45.16667, 5.71667);
+const EPS = 1e-5;
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+console.log('isMobile', isMobile);
+let pixelsBuffer;
+const AA = devicePixelRatio <= 1;
+let showingCamera = false;
 
 export function setTerrarium(value: boolean) {
     if (value) {
@@ -54,30 +72,32 @@ export function setTerrarium(value: boolean) {
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const canvas3 = document.getElementById('canvas3') as HTMLCanvasElement;
 const canvas4 = document.getElementById('canvas4') as HTMLCanvasElement;
+const video = document.getElementById('video') as HTMLVideoElement;
 const ctx2d = canvas4.getContext('2d');
 
-let pixelsBuffer;
-let AA = true;
-if (devicePixelRatio > 1) {
-    AA = false;
-}
 const renderer = new THREE.WebGLRenderer({
     canvas,
     logarithmicDepthBuffer: true,
     antialias: AA,
     alpha: true,
     powerPreference: 'high-performance'
+    // precision: isMobile ? 'mediump' : 'highp'
 });
-// renderer.setClearColor(0xffffff, 1); // the default
+renderer.setClearColor(0x000000, 0);
 const rendereroff = new THREE.WebGLRenderer({
     canvas: canvas3,
     antialias: false,
     alpha: false,
-    powerPreference: 'high-performance'
+    powerPreference: 'high-performance',
+    stencil: false
+    // precision: isMobile ? 'mediump' : 'highp'
 });
 const pointBufferTarget = new THREE.WebGLRenderTarget(0, 0);
-
-const scene = new THREE.Scene();
+pointBufferTarget.texture.minFilter = THREE.NearestFilter;
+pointBufferTarget.texture.magFilter = THREE.NearestFilter;
+pointBufferTarget.texture.generateMipmaps = false;
+pointBufferTarget.stencilBuffer = false;
+// pointBufferTarget.texture.format = THREE.RGBFormat;
 
 function createSky() {
     // Add Sky
@@ -113,42 +133,163 @@ function createSky() {
     return sky;
 }
 
-const ambientLight = new THREE.AmbientLight(0x777777);
-const directionalLight = new THREE.DirectionalLight(0x777777);
-directionalLight.position.set(100, 10000, 700);
+const scene = new THREE.Scene();
+
+const ambientLight = new THREE.HemisphereLight(0xffeeb1, 0x080820, 1);
+const curSunLight = new THREE.SpotLight(0xffffff, 200, 100, 0.7, 1, 1);
 const sky = createSky();
 // scene.add(sky);
 // scene.add(ambientLight);
 // scene.add(directionalLight);
 sky.visible = debug;
 ambientLight.visible = debug;
-directionalLight.visible = debug;
+curSunLight.visible = debug;
 
-const debugMapCheckBox = document.getElementById('debugMap');
-debugMapCheckBox.onchange = function (event) {
-    debug = (event.target as HTMLInputElement).checked;
-    sky.visible = debug;
+let devicecontrols;
+let listeningForDeviceSensors = false;
+function toggleDeviceSensors() {
+    console.log('toggleDeviceSensors');
+
+    if (!listeningForDeviceSensors) {
+        listeningForDeviceSensors = true;
+        devicecontrols = new DeviceOrientationControls(camera);
+        devicecontrols.alphaOffset = Math.PI;
+        animate();
+    } else {
+        listeningForDeviceSensors = false;
+        if (devicecontrols) {
+            devicecontrols.dispose();
+            devicecontrols = null;
+        }
+        controls.polarAngle = 0;
+    }
+}
+
+function startCam() {
+    console.log('navigator.mediaDevices', navigator.mediaDevices);
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const constraints = { video: { width: 1280, height: 720, facingMode: 'environment' } };
+
+        navigator.mediaDevices
+            .getUserMedia(constraints)
+            .then(function (stream) {
+                // apply the stream to the video element used in the texture
+                showingCamera = true;
+                video.style.visibility = 'visible';
+                video.srcObject = stream;
+                video.play();
+                toggleDeviceSensors();
+            })
+            .catch(function (error) {
+                console.error('Unable to access the camera/webcam.', error);
+            });
+    } else {
+        console.error('MediaDevices interface not available.');
+    }
+}
+
+export function setDebugMode(value) {
+    debug = value;
     render();
-};
-const debugGPUPickingCheckbox = document.getElementById('debugGPUPicking');
-debugGPUPickingCheckbox.onchange = function (event) {
-    debugGPUPicking = (event.target as HTMLInputElement).checked;
+}
+export function toggleDebugMode() {
+    setDebugMode(!debug);
+}
+export function setDebugGPUPicking(value) {
+    debugGPUPicking = value;
     canvas3.style.visibility = debugGPUPicking ? 'visible' : 'hidden';
     render();
-};
-const readFeaturesCheckbox = document.getElementById('readFeatures');
-readFeaturesCheckbox.onchange = function (event) {
-    readFeatures = (event.target as HTMLInputElement).checked;
+}
+export function toggleDebugGPUPicking() {
+    setDebugGPUPicking(!debugGPUPicking);
+}
+export function setReadFeatures(value) {
+    readFeatures = value;
+    canvas4.style.visibility = readFeatures && drawLines ? 'visible' : 'hidden';
+    render();
+}
+export function toggleReadFeatures() {
+    setReadFeatures(!readFeatures);
+}
+export function setDrawLines(value) {
+    drawLines = value;
+    canvas4.style.visibility = readFeatures && drawLines ? 'visible' : 'hidden';
+    render();
+}
+export function toggleDrawLines() {
+    setDrawLines(!drawLines);
+}
+export function setDebugFeaturePoints(value) {
+    debugFeaturePoints = value;
+    if (map) {
+        applyOnNodes((node) => {
+            node.objectsHolder.visible = debugFeaturePoints;
+        });
+    }
+    render();
+}
+export function toggleDebugFeaturePoints() {
+    setDebugFeaturePoints(!debugFeaturePoints);
+}
+export function setDarkMode(value) {
+    darkTheme = value;
+    customOutline.fsQuad.material.uniforms.outlineColor.value.set(darkTheme ? 0xffffff : 0x000000);
+    document.body.style.backgroundColor = darkTheme ? 'black' : 'white';
+    render();
+}
+export function toggleDarkMode() {
+    setDarkMode(!darkTheme);
+}
 
-    canvas4.style.visibility = readFeatures && drawLines ? 'visible' : 'hidden';
-    render();
-};
-const drawLinesCheckbox = document.getElementById('drawLines');
-drawLinesCheckbox.onchange = function (event) {
-    drawLines = (event.target as HTMLInputElement).checked;
-    canvas4.style.visibility = readFeatures && drawLines ? 'visible' : 'hidden';
-    render();
-};
+export function toggleCamera() {
+    if (showingCamera) {
+        video.pause();
+        (video.srcObject as any).getTracks().forEach(function (track) {
+            track.stop();
+        });
+        showingCamera = false;
+
+        video.style.visibility = 'hidden';
+        toggleDeviceSensors();
+    } else {
+        startCam();
+    }
+}
+
+// const debugMapCheckBox = document.getElementById('debugMap') as HTMLInputElement;
+// debugMapCheckBox.onchange = (event: any) => setDebugMode(event.target.checked);
+// debugMapCheckBox.value = debugMapCheckBox as any;
+
+// const debugGPUPickingCheckbox = document.getElementById('debugGPUPicking') as HTMLInputElement;
+// debugGPUPickingCheckbox.onchange = (event: any) => setDebugGPUPicking(event.target.checked);
+// debugGPUPickingCheckbox.value = debugGPUPicking as any;
+// canvas3.style.visibility = debugGPUPicking ? 'visible' : 'hidden';
+
+// const readFeaturesCheckbox = document.getElementById('readFeatures') as HTMLInputElement;
+// readFeaturesCheckbox.onchange = (event: any) => setReadFeatures(event.target.checked);
+// readFeaturesCheckbox.value = readFeatures as any;
+// canvas4.style.visibility = readFeatures && drawLines ? 'visible' : 'hidden';
+
+// const drawLinesCheckbox = document.getElementById('drawLines') as HTMLInputElement;
+// drawLinesCheckbox.onchange = (event: any) => setDrawLines(event.target.checked);
+// drawLinesCheckbox.value = drawLines as any;
+// canvas4.style.visibility = readFeatures && drawLines ? 'visible' : 'hidden';
+
+// const debugFeaturePointsCheckbox = document.getElementById('debugFeaturePoints') as HTMLInputElement;
+// debugFeaturePointsCheckbox.onchange = (event: any) => setDebugFeaturePoints(event.target.checked);
+// debugFeaturePointsCheckbox.value = debugFeaturePoints as any;
+
+// const darkmodeCheckbox = document.getElementById('darkmode') as HTMLInputElement;
+// darkmodeCheckbox.onchange = (event: any) => setDarkMode(event.target.checked);
+// darkmodeCheckbox.value = darkTheme as any;
+
+// const elevationSlider = document.getElementById('elevationSlider') as HTMLInputElement;
+// elevationSlider.oninput = (event: any) => setElevation(event.target.value);
+// elevationSlider.value = elevation as any;
+
+// const cameraCheckbox = document.getElementById('camera') as HTMLInputElement;
+// cameraCheckbox.onchange = (event: any) => toggleCamera();
+// cameraCheckbox.value = showingCamera as any;
 
 class EmptyProvider extends Geo.MapProvider {
     constructor() {
@@ -184,11 +325,6 @@ class LocalHeightProvider extends Geo.MapProvider {
     }
 }
 
-const exageration = 1.7;
-
-let currentColor = 0xffffff;
-const featuresByColor = {};
-
 class MaterialHeightShader extends Geo.MapHeightNode {
     /**
      * Empty texture used as a placeholder for missing textures.
@@ -214,8 +350,8 @@ class MaterialHeightShader extends Geo.MapHeightNode {
     static getGeometry(level) {
         let size = MaterialHeightShader.GEOMETRY_SIZE;
         if (level < 11) {
-            size /= Math.pow(2, 11 - level);
-            // size /= 11 - level;
+            // size /= Math.pow(2, 11 - level);
+            size /= 11 - level;
             size = Math.max(16, size);
         }
         let geo = MaterialHeightShader.geometries[size];
@@ -246,6 +382,7 @@ class MaterialHeightShader extends Geo.MapHeightNode {
         material.userData = {
             heightMap: { value: MaterialHeightShader.EMPTY_TEXTURE },
             drawNormals: { value: 0 },
+            drawTexture: { value: 0 },
             drawBlack: { value: 0 },
             zoomlevel: { value: level },
             exageration: { value: exageration },
@@ -267,53 +404,57 @@ class MaterialHeightShader extends Geo.MapHeightNode {
             uniform vec4 elevationDecoder;
 
             float getPixelElevation(vec4 e) {
-            // Convert encoded elevation value to meters
-            return ((e.r * elevationDecoder.x + e.g * elevationDecoder.y  + e.b * elevationDecoder.z) + elevationDecoder.w) * exageration;
-        }
+                // Convert encoded elevation value to meters
+                return ((e.r * elevationDecoder.x + e.g * elevationDecoder.y  + e.b * elevationDecoder.z) + elevationDecoder.w) * exageration;
+            }
             float getElevation(vec2 coord) {
-            vec4 e = texture2D(heightMap, coord);
-            return getPixelElevation(e);
-            }
-            float getElevationMean(vec2 coord, float width, float height) {
-            float x0 = coord.x;
-            float x1= coord.x;
-            float y0 = coord.y;
-            float y1= coord.y;
-            if (x0 <= 0.0) {
-                x1 = 1.0 / width;
-            }
-            if (x0 >= 1.0) {
-                x1 = 1.0 - 1.0 / width;
-            }
-            if (y0 <= 0.0) {
-                y1 = 1.0 / height;
-            }
-            if (y0 >= 1.0) {
-                y1 = 1.0 - 1.0 / height;
-            }
-            if (x0 == x1 && y0 == y1) {
-                    vec4 e = texture2D(heightMap, coord);
+                vec4 e = texture2D(heightMap, coord);
                 return getPixelElevation(e);
-            } else {
-                vec4 e1 = texture2D(heightMap, vec2(x0,y0));
-                vec4 e2 = texture2D(heightMap, vec2(x1,y1));
-                return 2.0 * getPixelElevation(e1) -  getPixelElevation(e2);
-            }
+                }
+                float getElevationMean(vec2 coord, float width, float height) {
+                float x0 = coord.x;
+                float x1= coord.x;
+                float y0 = coord.y;
+                float y1= coord.y;
+                if (x0 <= 0.0) {
+                    x1 = 1.0 / width;
+                }
+                if (x0 >= 1.0) {
+                    x1 = 1.0 - 1.0 / width;
+                }
+                if (y0 <= 0.0) {
+                    y1 = 1.0 / height;
+                }
+                if (y0 >= 1.0) {
+                    y1 = 1.0 - 1.0 / height;
+                }
+                if (x0 == x1 && y0 == y1) {
+                        vec4 e = texture2D(heightMap, coord);
+                    return getPixelElevation(e);
+                } else {
+                    vec4 e1 = texture2D(heightMap, vec2(x0,y0));
+                    vec4 e2 = texture2D(heightMap, vec2(x1,y1));
+                    return 2.0 * getPixelElevation(e1) -  getPixelElevation(e2);
+                }
             }
             ` + shader.vertexShader;
             shader.fragmentShader =
                 `
             uniform bool drawNormals;
+            uniform bool drawTexture;
             uniform bool drawBlack;
             ` + shader.fragmentShader;
 
             // Vertex depth logic
             shader.fragmentShader = shader.fragmentShader.replace(
                 '#include <dithering_fragment>',
-                `				if(drawBlack) {
+                `
+                if(drawBlack) {
                     gl_FragColor = vec4( 0.0,0.0,0.0, 1.0 );
                 } else if(drawNormals) {
                     gl_FragColor = vec4( ( 0.5 * vNormal + 0.5 ), 1.0 );
+                } else if (!drawTexture) {
+                    gl_FragColor = vec4( 0.0,0.0,0.0, 0.0 );
                 }
                     `
             );
@@ -337,7 +478,6 @@ class MaterialHeightShader extends Geo.MapHeightNode {
                 // |   |   |   |
                 // +-----------+
 
-                // vec4 theight = texture2D(heightMap, vUv);
                 ivec2 size = textureSize(heightMap, 0);
                 float width = float(size.x);
                 float height = float(size.y);
@@ -352,7 +492,6 @@ class MaterialHeightShader extends Geo.MapHeightNode {
                     float g = getElevationMean(vUv + vec2(-offset, offset), width,height);
                     float h = getElevationMean(vUv + vec2(0, offset), width,height);
                     float i = getElevationMean(vUv + vec2(offset,offset), width,height);
-
 
                     float NormalLength = 500.0 / zoomlevel;
 
@@ -478,7 +617,7 @@ class MaterialHeightShader extends Geo.MapHeightNode {
                                                     vColor = color;
                                                     vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
                                                     // gl_PointSize =  floor(elevation / 1000.0) * 2.0;
-                                                //  gl_PointSize = gl_Position.z  + 1.0;
+                                                    //  gl_PointSize = gl_Position.z  + 1.0;
                                                     gl_Position = projectionMatrix * mvPosition;
                                                     gl_Position.z -= (elevation / 1000.0 - floor(elevation / 1000.0)) * gl_Position.z / 1000.0;
                                                 }
@@ -496,11 +635,12 @@ class MaterialHeightShader extends Geo.MapHeightNode {
 
                                     mesh.updateMatrix();
                                     mesh.updateMatrixWorld(true);
+                                    this.objectsHolder.visible = debugFeaturePoints;
                                     this.objectsHolder.add(mesh);
                                 }
                             }
 
-                            render();
+                            render(true);
                         },
                         resolve
                     );
@@ -551,8 +691,8 @@ function onControlUpdate() {
 const lod = new Geo.LODFrustum();
 lod.subdivideDistance = 40;
 lod.simplifyDistance = 140;
-
 let map;
+
 function createMap() {
     if (map !== undefined) {
         scene.remove(map);
@@ -572,20 +712,14 @@ function createMap() {
 }
 
 createMap();
-const FAR = 200000;
-const TEXT_HEIGHT = 180;
 
-const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1000, FAR);
-let currentPosition;
-let elevation = 1000;
-const EPS = 1e-5;
-const tempVector = new THREE.Vector3();
+const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 100, FAR);
 camera.position.set(0, 0, EPS);
 const controls = new CameraControls(camera, canvas);
 controls.azimuthRotateSpeed = -0.15; // negative value to invert rotation direction
 controls.polarRotateSpeed = -0.15; // negative value to invert rotation direction
 controls.minZoom = 1;
-controls.truckSpeed = (1 / EPS) * 20000;
+controls.truckSpeed = (1 / EPS) * 30000;
 controls.mouseButtons.wheel = CameraControls.ACTION.ZOOM;
 controls.touches.two = CameraControls.ACTION.TOUCH_ZOOM_TRUCK;
 controls.verticalDragToForward = true;
@@ -596,19 +730,18 @@ export function setPosition(coords) {
     if (coords.altitude) {
         elevation = coords.altitude;
     }
-    controls.moveTo(currentPosition.x, elevation, -currentPosition.y);
+    controls.moveTo(currentPosition.x, elevation * exageration, -currentPosition.y);
     controls.update(clock.getDelta());
 }
 export function setElevation(newValue) {
     elevation = newValue;
     controls.getTarget(tempVector);
-    controls.moveTo(tempVector.x, elevation, tempVector.z);
+    controls.moveTo(tempVector.x, elevation * exageration, tempVector.z);
     controls.update(clock.getDelta());
 }
 controls.addEventListener('update', () => {
     onControlUpdate();
 });
-const clock = new THREE.Clock();
 controls.addEventListener('control', () => {
     const delta = clock.getDelta();
     controls.update(delta);
@@ -624,6 +757,7 @@ renderTarget.depthBuffer = true;
 //@ts-ignore
 renderTarget.depthTexture = new THREE.DepthTexture();
 renderTarget.depthTexture.type = renderer.capabilities.isWebGL2 ? THREE.FloatType : THREE.UnsignedShortType;
+
 const composer = new EffectComposer(renderer, renderTarget);
 const renderPass = new RenderPass(scene, camera);
 composer.addPass(renderPass);
@@ -655,19 +789,16 @@ document.body.onresize = function () {
     const rendererScaleRatio = 1 + (devicePixelRatio - 1) / 2;
 
     renderer.setSize(width, height);
-    renderer.setPixelRatio(devicePixelRatio);
-    renderTarget.setSize(width, height);
+    renderer.setPixelRatio(rendererScaleRatio);
+    // renderTarget.setSize(width, height);
 
     pixelsBuffer = new Uint8Array(offWidth * offHeight * 4);
     rendereroff.setSize(offWidth, offHeight);
     rendereroff.setPixelRatio(1);
     pointBufferTarget.setSize(offWidth, offHeight);
 
-    // renderer2.setSize(width, height);
-    // renderer2.setPixelRatio(1);
-
     composer.setSize(width, height);
-    composer.setPixelRatio(devicePixelRatio);
+    composer.setPixelRatio(rendererScaleRatio);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
 
@@ -705,154 +836,180 @@ function applyOnNodes(cb) {
     applyOnNode(map.children[0], cb);
 }
 
+function wrapText(context, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(' ');
+    let line = '';
+    let nbLines = 1;
+    for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = context.measureText(testLine);
+        const testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
+            context.fillText(line, x, y);
+            line = words[n] + ' ';
+            y += lineHeight;
+            nbLines++;
+        } else {
+            line = testLine;
+        }
+    }
+    context.fillText(line, x, y);
+    return { x: x + context.measureText(line).width, y, nbLines };
+}
+
+function drawFeatures() {
+    if (!drawLines) {
+        return;
+    }
+
+    let lastFeature;
+    const minDistance = 20;
+    featuresToShow = featuresToShow.map((f) => {
+        const coords = Geo.UnitsUtils.datumsToSpherical(f.geometry.coordinates[1], f.geometry.coordinates[0]);
+        tempVector.set(coords.x, f.properties.ele * exageration, -coords.y);
+        const vector = toScreenXY(tempVector);
+        return { ...f, x: vector.x, y: vector.y, z: vector.z };
+    });
+    let deltaY;
+    featuresToShow = ArraySortOn(featuresToShow, 'x');
+
+    const featuresToDraw = [];
+    featuresToShow.forEach((f, index) => {
+        if (!lastFeature) {
+            // first
+            lastFeature = f;
+        } else if (f.x - lastFeature.x <= minDistance) {
+            deltaY = f.properties.ele - lastFeature.properties.ele;
+            if (deltaY > 0) {
+                lastFeature = f;
+            }
+        } else {
+            featuresToDraw.push(lastFeature);
+            lastFeature = f;
+        }
+    });
+    if (lastFeature) {
+        featuresToDraw.push(lastFeature);
+    }
+
+    const toShow = featuresToDraw.length;
+    ctx2d.save();
+    ctx2d.clearRect(0, 0, canvas4.width, canvas4.height);
+    ctx2d.scale(devicePixelRatio, devicePixelRatio);
+    for (let index = 0; index < toShow; index++) {
+        const f = featuresToDraw[index];
+
+        if (f.y < TEXT_HEIGHT || f.z / f.properties.ele > FAR / 3000) {
+            continue;
+        }
+
+        const textColor = darkTheme ? 'white' : 'black';
+        const color = darkTheme ? '#000000' : '#ffffff';
+        ctx2d.beginPath();
+        ctx2d.strokeStyle = textColor;
+        ctx2d.moveTo(f.x, TEXT_HEIGHT);
+        ctx2d.lineTo(f.x, f.y);
+        ctx2d.closePath();
+        ctx2d.stroke();
+        ctx2d.save();
+        ctx2d.translate(f.x, TEXT_HEIGHT);
+        ctx2d.rotate(-Math.PI / 4);
+        ctx2d.font = 'bold 12px Courier';
+        const text = f.properties.name;
+        const text2 = f.properties.ele + 'm';
+        const textWidth = ctx2d.measureText(text).width;
+        const textWidth2 = ctx2d.measureText(text2).width;
+        // const res = wrapText(ctx2d, text, 0, 0, 110, 12);
+        ctx2d.fillStyle = color + 'aa';
+        ctx2d.rect(0, 3, textWidth + 5 + textWidth2, -14);
+        ctx2d.fill();
+        ctx2d.fillStyle = textColor;
+        ctx2d.fillText(text, 0, 0);
+        ctx2d.font = 'normal 9px Courier';
+        ctx2d.fillText(text2, textWidth + 5, 0);
+        ctx2d.restore();
+    }
+    ctx2d.restore();
+}
+
 function readShownFeatures() {
     const width = pointBufferTarget.width;
     const height = pointBufferTarget.height;
     rendereroff.readRenderTargetPixels(pointBufferTarget, 0, 0, width, height, pixelsBuffer);
     const readColors = [];
-    let rFeatures = [];
+    const rFeatures = [];
     let lastColor;
-    let lastColorNb = 0;
-    const tempvector = new THREE.Vector3(0, 0, 0);
     function handleLastColor(index) {
         if (readColors.indexOf(lastColor) === -1) {
             readColors.push(lastColor);
             const feature = featuresByColor[lastColor];
             if (feature) {
-                const coords = Geo.UnitsUtils.datumsToSpherical(feature.geometry.coordinates[1], feature.geometry.coordinates[0]);
-                tempvector.set(coords.x, feature.properties.ele * exageration, -coords.y);
-                const vector = toScreenXY(tempvector);
-                if (vector.z / feature.properties.ele <= FAR / 4000) {
-                    rFeatures.push({
-                        ...feature,
-                        x: vector.x,
-                        y: vector.y,
-                        z: vector.z
-                    });
-                }
+                rFeatures.push(feature);
             }
         }
     }
-    // ingore to "high" pixels as we wont draw them because we cant draw the label
+
     const endIndex = pixelsBuffer.length - minYPx * 4 * width;
     for (let index = 0; index < endIndex; index += 4) {
         if (pixelsBuffer[index] !== 0 || pixelsBuffer[index + 1] !== 0 || pixelsBuffer[index + 2] !== 0) {
             const color = (pixelsBuffer[index] << 16) + (pixelsBuffer[index + 1] << 8) + pixelsBuffer[index + 2];
             if (lastColor === color) {
-                lastColorNb++;
+                // lastColorNb++;
             } else {
                 if (lastColor) {
                     handleLastColor(index - 1);
                 }
                 lastColor = color;
-                lastColorNb = 1;
+                // lastColorNb = 1;
             }
         } else {
             if (lastColor) {
                 handleLastColor(index - 1);
                 lastColor = null;
-                lastColorNb = 0;
+                // lastColorNb = 0;
             }
         }
     }
     if (lastColor) {
         handleLastColor(pixelsBuffer.length - 1);
         lastColor = null;
-        lastColorNb = 0;
+        // lastColorNb = 0;
     }
-    rFeatures = ArraySortOn(rFeatures, 'x');
-    let lastFeature;
-    const minDistance = 15;
-    const featuresToShow = [];
-    rFeatures.forEach((f) => {
-        if (!lastFeature) {
-            // first
-            lastFeature = f;
-        } else if (f.x - lastFeature.x < minDistance) {
-            let deltaY = f.y - lastFeature.y;
-            // const deltaZ = Math.abs(f.z - lastFeature.z);
-            // if (deltaZ < 0.01) {
-            deltaY = f.properties.ele - lastFeature.properties.ele;
-            // }
-            if (deltaY > 0) {
-                lastFeature = f;
-            }
-        } else {
-            featuresToShow.push(lastFeature);
-            lastFeature = f;
-        }
-    });
-    if (lastFeature) {
-        featuresToShow.push(lastFeature);
-    }
-
-    if (!drawLines) {
-        return;
-    }
-    const toShow = featuresToShow.length;
-    ctx2d.clearRect(0, 0, canvas4.width, canvas4.height);
-    ctx2d.save();
-    ctx2d.scale(devicePixelRatio, devicePixelRatio);
-    for (let index = 0; index < toShow; index++) {
-        const f = featuresToShow[index];
-        const y = f.y;
-        if (y >= TEXT_HEIGHT) {
-            ctx2d.beginPath();
-            ctx2d.fillStyle = 'black';
-            ctx2d.moveTo(f.x, TEXT_HEIGHT);
-            ctx2d.lineTo(f.x, f.y);
-            ctx2d.closePath();
-            ctx2d.stroke();
-            ctx2d.save();
-            ctx2d.translate(f.x, TEXT_HEIGHT);
-            ctx2d.rotate(-Math.PI / 4);
-            ctx2d.font = 'bold 12px Courier';
-            const text = f.properties.name;
-            const text2 = f.properties.ele + 'm';
-            const textWidth = ctx2d.measureText(text).width;
-            const textWidth2 = ctx2d.measureText(text2).width;
-            // const res = wrapText(ctx2d, text, 0, 0, 110, 12);
-            ctx2d.fillStyle = '#ffffffaa';
-            ctx2d.rect(0, 3, textWidth + 5 + textWidth2, -14);
-            ctx2d.fill();
-            ctx2d.fillStyle = 'black';
-            ctx2d.fillText(text, 0, 0);
-            ctx2d.font = 'normal 9px Courier';
-            ctx2d.fillText(text2, textWidth + 5, 0);
-            ctx2d.restore();
-        }
-    }
-    ctx2d.restore();
+    featuresToShow = rFeatures;
 }
 
-function render() {
+function render(forceDrawFeatures = false) {
     if (!renderer || !composer) {
         return;
     }
     if (readFeatures && pixelsBuffer) {
-        applyOnNodes((node) => {
-            node.material.userData.drawBlack.value = true;
-            node.material.userData.drawNormals.value = false;
-            node.objectsHolder.visible = true;
-        });
-        if (debugGPUPicking) {
-            rendereroff.setRenderTarget(null);
+        renderingIndex = (renderingIndex + 1) % 10;
+        if (!isMobile || forceDrawFeatures || renderingIndex === 0) {
+            applyOnNodes((node) => {
+                node.material.userData.drawBlack.value = true;
+                node.objectsHolder.visible = true;
+            });
+            if (debugGPUPicking) {
+                rendereroff.setRenderTarget(null);
+                rendereroff.render(scene, camera);
+            }
+            rendereroff.setRenderTarget(pointBufferTarget);
             rendereroff.render(scene, camera);
+
+            readShownFeatures();
+            applyOnNodes((node) => {
+                node.material.userData.drawBlack.value = false;
+                node.objectsHolder.visible = debugFeaturePoints;
+            });
         }
-        rendereroff.setRenderTarget(pointBufferTarget);
-        rendereroff.render(scene, camera);
-        readShownFeatures();
-        applyOnNodes((node) => {
-            node.material.userData.drawBlack.value = false;
-            node.material.userData.drawNormals.value = false;
-            node.objectsHolder.visible = debugFeaturePoints;
-        });
+        drawFeatures();
     } else {
-        applyOnNodes((node) => {
-            node.material.userData.drawBlack.value = false;
-            node.material.userData.drawNormals.value = debug;
-            node.objectsHolder.visible = debugFeaturePoints;
-        });
+        // applyOnNodes((node) =>
+        // {
+        // 	// node.material.userData.drawBlack.value = false;
+        // 	// node.material.userData.drawNormals.value = false;
+        // 	node.objectsHolder.visible = debugFeaturePoints;
+        // });
     }
 
     if (debug) {
@@ -860,5 +1017,14 @@ function render() {
     } else {
         composer.render();
     }
-    stats.end();
+    // stats.end();
+}
+
+function animate() {
+    if (listeningForDeviceSensors) {
+        window.requestAnimationFrame(animate);
+    }
+
+    devicecontrols && devicecontrols.update();
+    onControlUpdate();
 }

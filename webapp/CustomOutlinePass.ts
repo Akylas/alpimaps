@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 //@ts-ignore
-import { Pass, FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass';
+import { FullScreenQuad, Pass } from 'three/examples/jsm/postprocessing/Pass';
 
 export default class CustomOutlinePass extends Pass {
     resolution: THREE.Vector2;
@@ -40,12 +40,12 @@ export default class CustomOutlinePass extends Pass {
 
     get vertexShader() {
         return `
-                                 	varying vec2 vUv;
-                                 	void main() {
-                                 		vUv = uv;
-                                 		gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                                 	}
-                                 	`;
+        varying vec2 vUv;
+        void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+        `;
     }
 
     get fragmentShader() {
@@ -54,19 +54,18 @@ export default class CustomOutlinePass extends Pass {
         // The above include imports "perspectiveDepthToViewZ"
         // and other GLSL functions from ThreeJS we need for reading depth.
         uniform sampler2D sceneColorBuffer;
-            uniform sampler2D depthBuffer;
-            uniform float cameraNear;
+        uniform sampler2D depthBuffer;
+        uniform float cameraNear;
         uniform float cameraFar;
         uniform vec4 screenSize;
         uniform vec3 outlineColor;
-        uniform vec3 sceneColor;
         uniform vec2 multiplierParameters;
         uniform float depthStep;
         varying vec2 vUv;
         vec3 getPixelNormal(float x, float y) {
             return texture2D(sceneColorBuffer, vUv + screenSize.zw * vec2(x, y)).rgb;
         }
-            // Helper functions for reading from depth buffer.
+        // Helper functions for reading from depth buffer.
         float readDepth (sampler2D depthSampler, vec2 coord) {
             float fragCoordZ = texture2D(depthSampler, coord).x;
             float viewZ = perspectiveDepthToViewZ( fragCoordZ, cameraNear, cameraFar );
@@ -81,8 +80,8 @@ export default class CustomOutlinePass extends Pass {
             return clamp(num, 0.0, 1.0);
         }
         void main() {
-            vec4 sceneColor = vec4(sceneColor,1.0);
-            // vec4 sceneColor = texture2D(sceneColorBuffer, vUv);
+            // vec4 sceneColor = vec4(sceneColor,1.0);
+            vec4 sceneColor = texture2D(sceneColorBuffer, vUv);
             float depthDiff = 0.0;
             float depth = getPixelDepth(0.0, 0.0);
             depthDiff += abs(depth - getPixelDepth(depthStep, 0.0));
@@ -104,8 +103,8 @@ export default class CustomOutlinePass extends Pass {
             // Combine outline with scene color.
             vec4 outlineColor = vec4(outlineColor, 1.0);
             gl_FragColor = vec4(mix(sceneColor, outlineColor, depthDiff));
-            //  gl_FragColor = vec4(vec3(depth), 1.0);
-
+			// optional depth rendering
+			//  gl_FragColor = vec4(vec3(1.0 -pow(1.0-depth, 2.0)), 1.0);
         }
 `;
     }
