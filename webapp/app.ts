@@ -147,15 +147,26 @@ curSunLight.visible = debug;
 
 let devicecontrols;
 let listeningForDeviceSensors = false;
-function toggleDeviceSensors() {
-    console.log('toggleDeviceSensors');
 
+function onSensorUpdate() {
+    if (!listeningForDeviceSensors) {
+        return;
+    }
+
+    devicecontrols && devicecontrols.update();
+    onControlUpdate();
+}
+
+export function toggleDeviceSensors() {
     if (!listeningForDeviceSensors) {
         listeningForDeviceSensors = true;
         devicecontrols = new DeviceOrientationControls(camera);
         devicecontrols.alphaOffset = Math.PI;
-        animate();
+        window.addEventListener('orientationchange', onSensorUpdate);
+        window.addEventListener('deviceorientation', onSensorUpdate);
     } else {
+        window.removeEventListener('orientationchange', onSensorUpdate);
+        window.removeEventListener('deviceorientation', onSensorUpdate);
         listeningForDeviceSensors = false;
         if (devicecontrols) {
             devicecontrols.dispose();
@@ -165,7 +176,7 @@ function toggleDeviceSensors() {
     }
 }
 
-function startCam() {
+export function startCam() {
     console.log('navigator.mediaDevices', navigator.mediaDevices);
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         const constraints = { video: { width: 1280, height: 720, facingMode: 'environment' } };
@@ -177,7 +188,10 @@ function startCam() {
                 showingCamera = true;
                 video.style.visibility = 'visible';
                 video.srcObject = stream;
-                video.play();
+                video.onloadedmetadata = function (e) {
+                    video.play();
+                };
+                // video.play();
                 toggleDeviceSensors();
             })
             .catch(function (error) {
@@ -899,7 +913,7 @@ function drawFeatures() {
     for (let index = 0; index < toShow; index++) {
         const f = featuresToDraw[index];
 
-        if (f.y < TEXT_HEIGHT || f.z / f.properties.ele > FAR / 3000) {
+        if (f.y < TEXT_HEIGHT || f.z >= FAR || f.z / f.properties.ele > FAR / 3000) {
             continue;
         }
 
@@ -983,7 +997,7 @@ function render(forceDrawFeatures = false) {
         return;
     }
     if (readFeatures && pixelsBuffer) {
-        renderingIndex = (renderingIndex + 1) % 10;
+        renderingIndex = (renderingIndex + 1) % (listeningForDeviceSensors ? 30 : 10);
         if (!isMobile || forceDrawFeatures || renderingIndex === 0) {
             applyOnNodes((node) => {
                 node.material.userData.drawBlack.value = true;
@@ -1018,13 +1032,4 @@ function render(forceDrawFeatures = false) {
         composer.render();
     }
     // stats.end();
-}
-
-function animate() {
-    if (listeningForDeviceSensors) {
-        window.requestAnimationFrame(animate);
-    }
-
-    devicecontrols && devicecontrols.update();
-    onControlUpdate();
 }

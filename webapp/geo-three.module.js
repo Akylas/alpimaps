@@ -2032,7 +2032,7 @@ class LODFrustum extends LODRadial
 			const subdivded = node.subdivide();
 			if (subdivded) 
 			{
-				subdivded.forEach((n) => {return this.handleNode(n, minZoom, maxZoom);});
+				subdivded.forEach((n) => {return this.handleNode(n, minZoom, maxZoom, true);});
 			}
 		}
 		else if (minZoom < node.level && distance > this.simplifyDistance && node.parentNode)

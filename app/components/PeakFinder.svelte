@@ -67,30 +67,27 @@
             args.object.executeJavaScript(`webapp.setTerrarium(${terrarium});webapp.setPosition(${JSON.stringify({ ...position, altitude: currentAltitude })})`);
         });
 
-        // webview.on(WebViewExt.requestPermissionsEvent, (args: RequestPermissionsEventData) => {
-        //     const wantedPerssions = args.permissions
-        //         .map((p) => {
-        //             if (p === 'RECORD_AUDIO') {
-        //                 return android.Manifest.permission.RECORD_AUDIO;
-        //             }
+        webview.on('requestPermissions', async (args: any) => {
+            const wantedPerssions = args.permissions
+                .map((p) => {
+                    if (p === 'RECORD_AUDIO') {
+                        return android.Manifest.permission.RECORD_AUDIO;
+                    }
 
-        //             if (p === 'CAMERA') {
-        //                 return android.Manifest.permission.CAMERA;
-        //             }
+                    if (p === 'CAMERA') {
+                        return android.Manifest.permission.CAMERA;
+                    }
 
-        //             return p;
-        //         })
-        //         .filter((p) => !!p);
+                    return p;
+                })
+                .filter((p) => !!p);
+            const res = await request(wantedPerssions[0]);
+            args.callback(res[0] === 'authorized');
+        });
 
-        //     permissions
-        //         .requestPermissions(wantedPerssions)
-        //         .then(() => args.callback(true))
-        //         .catch(() => args.callback(false));
-        // });
-
-        // webview.on("gotMessage", (msg) => {
-        //     console.log(`webview.gotMessage: ${JSON.stringify(msg.data)} (${typeof msg})`);
-        // });
+        webview.on('gotMessage', (msg) => {
+            console.log(`webview.gotMessage: ${JSON.stringify(msg.data)} (${typeof msg})`);
+        });
     }
 
     onMount(() => {
@@ -123,11 +120,11 @@
         try {
             console.log('toggleCamera');
 
-            const res = await request('camera');
-            console.log('request', res);
-            if (res[0] === 'authorized') {
-                callJSFunction('toggleCamera');
-            }
+            // const res = await request('camera');
+            // console.log('request', res);
+            // if (res[0] === 'authorized') {
+                callJSFunction('toggleDeviceSensors');
+            // }
         } catch (err) {
             showError(err);
         }
