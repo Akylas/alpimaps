@@ -32,6 +32,7 @@ import android.util.Log;
 public class WebServer extends NanoHTTPD {
     TileDataSource heightDataSource;
     TileDataSource peaksDataSource;
+    TileDataSource rasterDataSource;
     MBVectorTileDecoder decoder;
     EPSG4326 projection;
     GeoJSONGeometryWriter geojsonWriter;
@@ -52,10 +53,11 @@ public class WebServer extends NanoHTTPD {
         return new double[] {w, s, e, n};
     }
 
-    public WebServer(int port, TileDataSource heightDataSource, TileDataSource peaksDataSource) {
+    public WebServer(int port, TileDataSource heightDataSource, TileDataSource peaksDataSource, TileDataSource rasterDataSource) {
         super(port);
         this.heightDataSource = heightDataSource;
         this.peaksDataSource = peaksDataSource;
+        this.rasterDataSource = rasterDataSource;
         decoder = new MBVectorTileDecoder(new CartoCSSStyleSet("#mountain_peak { text-name: [name];}"));
         projection = new EPSG4326();
         geojsonWriter = new GeoJSONGeometryWriter();
@@ -73,6 +75,9 @@ public class WebServer extends NanoHTTPD {
 
 
         switch (source) {
+            case "raster":
+                dataSource = rasterDataSource;
+                break;
             case "height":
                 dataSource = heightDataSource;
                 break;
