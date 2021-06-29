@@ -5,16 +5,7 @@ export interface DataProviderOptions {
     [k: string]: any;
 }
 
-export type TOKENS =
-    | 'google'
-    | 'carto'
-    | 'here_appid'
-    | 'here_appcode'
-    | 'mapbox'
-    | 'mapquest'
-    | 'maptiler'
-    | 'thunderforest'
-    | 'ign';
+export type TOKENS = 'google' | 'carto' | 'here_appid' | 'here_appcode' | 'mapbox' | 'mapquest' | 'maptiler' | 'thunderforest' | 'ign';
 
 export interface ProviderOptions extends DataProviderOptions {
     variantName?: string;
@@ -108,8 +99,7 @@ export const data: { [k: string]: Provider } = {
         tokenKey: 'ign',
         category: 'france',
         legend: 'https://www.geoportail.gouv.fr/depot/layers/{variant}/legendes/{variant}-legend.png',
-        url:
-            'http://wxs.ign.fr/{ign}/geoportail/wmts?LAYER={variant}&EXCEPTIONS=text/xml&FORMAT={format}&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&STYLE={style}&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
+        url: 'http://wxs.ign.fr/{ign}/geoportail/wmts?LAYER={variant}&EXCEPTIONS=text/xml&FORMAT={format}&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&STYLE={style}&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
         cacheable: true,
         urlOptions: {
             variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS',
@@ -186,8 +176,7 @@ export const data: { [k: string]: Provider } = {
         }
     },
     Avalanches: {
-        url:
-            'http://vmapfishbda.grenoble.cemagref.fr/cgi-bin/mapserv?map=/var/www/prod/test.map&LAYERS=zont%2Clint&TRANSPARENT=true&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&EXCEPTIONS=application%2Fvnd.ogc.se_inimage&FORMAT=image%2Fpng&SRS=EPSG%3A27572&BBOX={bbox}&WIDTH=300&HEIGHT=300'
+        url: 'http://vmapfishbda.grenoble.cemagref.fr/cgi-bin/mapserv?map=/var/www/prod/test.map&LAYERS=zont%2Clint&TRANSPARENT=true&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&EXCEPTIONS=application%2Fvnd.ogc.se_inimage&FORMAT=image%2Fpng&SRS=EPSG%3A27572&BBOX={bbox}&WIDTH=300&HEIGHT=300'
     },
     OpenStreetMap: {
         url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -222,8 +211,7 @@ export const data: { [k: string]: Provider } = {
             },
             HOT: {
                 url: 'http://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
-                attribution:
-                    '{attribution.OpenStreetMap}, Tiles courtesy of <a href="http://hot.openstreetmap.org/" target="_blank">Humanitarian OpenStreetMap Team</a>'
+                attribution: '{attribution.OpenStreetMap}, Tiles courtesy of <a href="http://hot.openstreetmap.org/" target="_blank">Humanitarian OpenStreetMap Team</a>'
             },
             Route500: {
                 url: 'http://{s}.tile.openstreetmap.fr/route500/{z}/{x}/{y}.png',
@@ -254,8 +242,7 @@ export const data: { [k: string]: Provider } = {
         category: 'topo',
         url: 'http://tile.waymarkedtrails.org/{variant}/{z}/{x}/{y}.png',
         isOverlay: true,
-        attribution:
-            'Map data: {attribution.OpenStreetMap}, <Overlay from hiking.waymarkedtrails.org, <a href="https://hiking.waymarkedtrails.org/help/acknowledgements"> Terms of Use</a> )',
+        attribution: 'Map data: {attribution.OpenStreetMap}, <Overlay from hiking.waymarkedtrails.org, <a href="https://hiking.waymarkedtrails.org/help/acknowledgements"> Terms of Use</a> )',
         sourceOptions: {
             maxZoom: 15
         },
@@ -316,8 +303,7 @@ export const data: { [k: string]: Provider } = {
     },
     OpenMapSurfer: {
         url: 'http://korona.geog.uni-heidelberg.de/tiles/{variant}/x={x}&y={y}&z={z}',
-        attribution:
-            'Imagery from <a href="http://giscience.uni-hd.de/">GIScience Research Group @ University of Heidelberg</a> &mdash; Map data {attribution.OpenStreetMap}',
+        attribution: 'Imagery from <a href="http://giscience.uni-hd.de/">GIScience Research Group @ University of Heidelberg</a> &mdash; Map data {attribution.OpenStreetMap}',
         urlOptions: {
             variant: 'roads'
         },
@@ -353,8 +339,7 @@ export const data: { [k: string]: Provider } = {
     },
     Hydda: {
         url: 'http://{s}.tile.openstreetmap.se/hydda/{variant}/{z}/{x}/{y}.png',
-        attribution:
-            'Tiles courtesy of <a href="http://openstreetmap.se/" target="_blank">OpenStreetMap Sweden</a> &mdash; Map data {attribution.OpenStreetMap}',
+        attribution: 'Tiles courtesy of <a href="http://openstreetmap.se/" target="_blank">OpenStreetMap Sweden</a> &mdash; Map data {attribution.OpenStreetMap}',
         sourceOptions: {
             maxZoom: 18
         },
@@ -375,8 +360,7 @@ export const data: { [k: string]: Provider } = {
          * which makes implementing protocol relativity impossible.
          */
         url: 'http://otile{s}.mqcdn.com/tiles/1.0.0/{type}/{z}/{x}/{y}.{ext}',
-        attribution:
-            'Tiles Courtesy of <a href="http://www.mapquest.com/">MapQuest</a> &mdash; ' + 'Map data {attribution.OpenStreetMap}',
+        attribution: 'Tiles Courtesy of <a href="http://www.mapquest.com/">MapQuest</a> &mdash; ' + 'Map data {attribution.OpenStreetMap}',
         sourceOptions: {
             subdomains: '1234'
         },
@@ -390,9 +374,7 @@ export const data: { [k: string]: Provider } = {
                 sourceOptions: {
                     maxZoom: 18
                 },
-                attribution:
-                    'Tiles Courtesy of <a href="http://www.mapquest.com/">MapQuest</a> &mdash; ' +
-                    'Portions Courtesy NASA/JPL-Caltech and U.S. Depart. of Agriculture, Farm Service Agency',
+                attribution: 'Tiles Courtesy of <a href="http://www.mapquest.com/">MapQuest</a> &mdash; ' + 'Portions Courtesy NASA/JPL-Caltech and U.S. Depart. of Agriculture, Farm Service Agency',
                 urlOptions: {
                     type: 'sat'
                 }
@@ -409,8 +391,7 @@ export const data: { [k: string]: Provider } = {
     MapBox: {
         tokenKey: 'mapbox',
         url: 'https://{s}.tiles.mapbox.com/v4/{variant}/{z}/{x}/{y}{2x}.png?access_token={mapbox}',
-        attribution:
-            'Imagery from <a href="http://mapbox.com/about/maps/">MapBox</a> &mdash; ' + 'Map data {attribution.OpenStreetMap}',
+        attribution: 'Imagery from <a href="http://mapbox.com/about/maps/">MapBox</a> &mdash; ' + 'Map data {attribution.OpenStreetMap}',
         layerOptions: {
             zoomLevelBias: 0
         },
@@ -439,9 +420,7 @@ export const data: { [k: string]: Provider } = {
     Stamen: {
         url: 'https://stamen-tiles-{s}.a.ssl.fastly.net/{variant}/{z}/{x}/{y}.png',
         attribution:
-            'Map tiles by <a href="http://stamen.com">Stamen Design</a>, ' +
-            '<a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; ' +
-            'Map data {attribution.OpenStreetMap}',
+            'Map tiles by <a href="http://stamen.com">Stamen Design</a>, ' + '<a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; ' + 'Map data {attribution.OpenStreetMap}',
         sourceOptions: {
             subdomains: 'abcd',
             minZoom: 0,
@@ -521,9 +500,7 @@ export const data: { [k: string]: Provider } = {
         },
         variants: {
             WorldStreetMap: {
-                attribution:
-                    '{attribution.Esri} &mdash; ' +
-                    'Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012'
+                attribution: '{attribution.Esri} &mdash; ' + 'Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012'
             },
             DeLorme: {
                 sourceOptions: {
@@ -548,9 +525,7 @@ export const data: { [k: string]: Provider } = {
                 sourceOptions: {
                     maxZoom: 18
                 },
-                attribution:
-                    '{attribution.Esri} &mdash; ' +
-                    'Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+                attribution: '{attribution.Esri} &mdash; ' + 'Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
                 urlOptions: {
                     variant: 'World_Imagery'
                 }
@@ -586,8 +561,7 @@ export const data: { [k: string]: Provider } = {
                 sourceOptions: {
                     maxZoom: 13
                 },
-                attribution:
-                    '{attribution.Esri} &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri',
+                attribution: '{attribution.Esri} &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri',
                 urlOptions: {
                     variant: 'Ocean_Basemap'
                 }
@@ -596,8 +570,7 @@ export const data: { [k: string]: Provider } = {
                 sourceOptions: {
                     maxZoom: 16
                 },
-                attribution:
-                    '{attribution.Esri} &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC',
+                attribution: '{attribution.Esri} &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC',
                 urlOptions: {
                     variant: 'NatGeo_World_Map'
                 }
@@ -648,10 +621,7 @@ export const data: { [k: string]: Provider } = {
          */
         tokenKey: ['here_appcode', 'here_appid'],
 
-        url:
-            'https://{s}.{base}.maps.cit.api.here.com/maptile/2.1/' +
-            'maptile/{mapID}/{variant}/{z}/{x}/{y}/256/png8?' +
-            'app_id={here_appid}&app_code={here_appcode}',
+        url: 'https://{s}.{base}.maps.cit.api.here.com/maptile/2.1/' + 'maptile/{mapID}/{variant}/{z}/{x}/{y}/256/png8?' + 'app_id={here_appid}&app_code={here_appcode}',
         attribution: 'Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
         urlOptions: {
             mapID: 'newest',
@@ -786,8 +756,7 @@ export const data: { [k: string]: Provider } = {
     },
     NASAGIBS: {
         category: 'other',
-        url:
-            'https://map1.vis.earthdata.nasa.gov/wmts-webmerc/{variant}/default/{time}/{tilematrixset}{maxZoom}/{z}/{y}/{x}.{format}',
+        url: 'https://map1.vis.earthdata.nasa.gov/wmts-webmerc/{variant}/default/{time}/{tilematrixset}{maxZoom}/{z}/{y}/{x}.{format}',
         attribution:
             'Imagery provided by services from the Global Imagery Browse Services (GIBS), operated by the NASA/GSFC/Earth Science Data and Information System ' +
             '(<a href="https://earthdata.nasa.gov">ESDIS</a>) with funding provided by NASA/HQ.',
@@ -900,8 +869,7 @@ export const data: { [k: string]: Provider } = {
     },
     'slopes > 30%': {
         category: 'europe',
-        url:
-            'http://www.skitrack.fr/cgi-bin/mapserv.fcgi?map=/srv/d_vttrack/vttrack/skitrack/mapserver/WMS-{variant}.map&SERVICE=WMS&VERSION=1.1.1&LAYERS=slope&FORMAT={format}&TRANSPARENT=true&REQUEST=GetMap&STYLES=&SRS=EPSG%3A900913&BBOX={bbox}&WIDTH=512&HEIGHT=512',
+        url: 'http://www.skitrack.fr/cgi-bin/mapserv.fcgi?map=/srv/d_vttrack/vttrack/skitrack/mapserver/WMS-{variant}.map&SERVICE=WMS&VERSION=1.1.1&LAYERS=slope&FORMAT={format}&TRANSPARENT=true&REQUEST=GetMap&STYLES=&SRS=EPSG%3A900913&BBOX={bbox}&WIDTH=512&HEIGHT=512',
         isOverlay: true,
         attribution: '{attribution.OpenStreetMap} &copy; <a href="http://maptoolkit.net/">Maptoolkit</a>',
         layerOptions: {
@@ -937,8 +905,7 @@ export const data: { [k: string]: Provider } = {
         //     }
     },
     USGS: {
-        url:
-            'http://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/WMTS/tile/1.0.0/USGSTopo/default/GoogleMapsCompatible/{zoom}/{y}/{x}',
+        url: 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/WMTS/tile/1.0.0/USGSTopo/default/GoogleMapsCompatible/{zoom}/{y}/{x}',
         attribution:
             'USGS The National Map. The National Boundaries Dataset, National Elevation Dataset, Geographic Names Information System, National Hydrography Dataset, National Land Cover Database, National Structures Dataset, and National Transportation Dataset; U.S. Census Bureau - TIGER/Line; HERE Road Data. USGS MapServer'
     }

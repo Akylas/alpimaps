@@ -47,6 +47,11 @@ export function convertDistance(meters) {
     }
     return humanUnit(meters, distancePreset);
 }
+
+export function formatDistance(meters) {
+    const data = convertDistance(meters);
+    return `${data.value.toFixed(1)} ${data.unit}`;
+}
 export function convertElevation(meters) {
     return convertValueToUnit(meters, UNITS.Distance).join(' ');
 }
@@ -118,11 +123,7 @@ export function convertValueToUnit(value: any, unit: UNITS, otherParam?): [strin
     }
 }
 
-export function formatValueToUnit(
-    value: any,
-    unit,
-    options?: { prefix?: string; otherParam?; join?: string; unitScale?: number }
-) {
+export function formatValueToUnit(value: any, unit, options?: { prefix?: string; otherParam?; join?: string; unitScale?: number }) {
     options = options || {};
     if (unit === UNITS.Celcius) {
         options.join = options.join || '';
