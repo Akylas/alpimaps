@@ -404,8 +404,8 @@
         <label
             borderRadius="6"
             visibility={showSuggestionPackage ? 'visible' : 'collapsed'}
-            col="1"
-            row="2"
+            col={1}
+            row={2}
             backgroundColor="#00000055"
             verticalAlignment="bottom"
             verticalTextAlignment="middle"
@@ -428,7 +428,7 @@
             on:tap={startDirections}
             row="0"
             rowSpan="2"
-            col="2"
+            col={2}
             class="floating-btn"
             text="mdi-directions"
             visibility={selectedItemHasPosition ? 'visible' : 'collapsed'}

@@ -8,8 +8,15 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const SentryCliPlugin = require('@sentry/webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const IgnoreNotFoundExportPlugin = require('./IgnoreNotFoundExportPlugin');
-const Fontmin = require('fontmin');
-
+const Fontmin = require('@akylas/fontmin');
+function fixedFromCharCode(codePt) {
+    if (codePt > 0xffff) {
+        codePt -= 0x10000;
+        return String.fromCharCode(0xd800 + (codePt >> 10), 0xdc00 + (codePt & 0x3ff));
+    } else {
+        return String.fromCharCode(codePt);
+    }
+}
 module.exports = (env, params = {}) => {
     Object.keys(env).forEach((k) => {
         if (env[k] === 'false' || env[k] === '0') {
@@ -98,7 +105,7 @@ module.exports = (env, params = {}) => {
     config.resolve.modules = [resolve(__dirname, `node_modules/${coreModulesPackageName}`), resolve(__dirname, 'node_modules'), `node_modules/${coreModulesPackageName}`, 'node_modules'];
     Object.assign(config.resolve.alias, {
         '@nativescript/core': `${coreModulesPackageName}`,
-        // 'svelte-native': '@akylas/svelte-native',
+        'svelte-native': '@akylas/svelte-native',
         'tns-core-modules': `${coreModulesPackageName}`,
         'get-pixels/node-pixels': '~/helpers/get-pixels',
         '~/get-pixels/node-pixels': '~/helpers/get-pixels',
@@ -163,7 +170,6 @@ module.exports = (env, params = {}) => {
     const symbolsParser = require('scss-symbols-parser');
     const mdiSymbols = symbolsParser.parseSymbols(readFileSync(resolve(projectRoot, 'node_modules/@mdi/font/scss/_variables.scss')).toString());
     const mdiIcons = JSON.parse(`{${mdiSymbols.variables[mdiSymbols.variables.length - 1].value.replace(/" (F|0)(.*?)([,\n]|$)/g, '": "$1$2"$3')}}`);
-
     const appSymbols = symbolsParser.parseSymbols(readFileSync(resolve(projectRoot, 'css/variables.scss')).toString());
     const appIcons = {};
     appSymbols.variables
@@ -239,9 +245,11 @@ module.exports = (env, params = {}) => {
                     search: 'mdi-([a-z0-9-_]+)',
                     replace: (match, p1, offset, str) => {
                         if (mdiIcons[p1]) {
-                            const res = String.fromCharCode(parseInt(mdiIcons[p1], 16));
-                            usedMDIICons.push(res);
-                            return res;
+                            const unicodeHex = mdiIcons[p1];
+                            const numericValue = parseInt(unicodeHex, 16);
+                            const character = fixedFromCharCode(numericValue);
+                            usedMDIICons.push(numericValue);
+                            return character;
                         }
                         return match;
                     },
@@ -309,10 +317,10 @@ module.exports = (env, params = {}) => {
     }
     // we remove default rules
     config.plugins = config.plugins.filter((p) => ['CopyPlugin', 'ForkTsCheckerWebpackPlugin'].indexOf(p.constructor.name) === -1);
-    console.log(config.plugins.map((s) => s.constructor.name));
+    // console.log(config.plugins.map((s) => s.constructor.name));
 
     // config.plugins.push(new NativeScriptHTTPPlugin());
-    console.log('plugins after clean', config.plugins);
+    // console.log('plugins after clean', config.plugins);
     // we add our rules
     const globOptions = { dot: false, ignore: [`**/${relative(appPath, appResourcesFullPath)}/**`] };
 
@@ -330,12 +338,11 @@ module.exports = (env, params = {}) => {
             to: 'fonts',
             globOptions,
             transform: {
-                cache: { keys: { key: usedMDIICons.join('') } },
                 transformer(content, path) {
                     return new Promise((resolve, reject) => {
                         new Fontmin()
                             .src(content)
-                            .use(Fontmin.glyph({ text: usedMDIICons.join('') }))
+                            .use(Fontmin.glyph({ subset: usedMDIICons }))
                             .run(function (err, files) {
                                 if (err) {
                                     reject(err);
@@ -365,6 +372,9 @@ module.exports = (env, params = {}) => {
             globOptions
         }
     ];
+    if (devlog) {
+        copyPatterns.push({ context: 'dev_assets', from: '**/*', to: 'assets', globOptions });
+    }
     config.plugins.unshift(new CopyPlugin({ patterns: copyPatterns }));
     config.plugins.push(new IgnoreNotFoundExportPlugin());
 
@@ -440,6 +450,26 @@ module.exports = (env, params = {}) => {
             })
         );
     }
+
+    // config.plugins.push(
+    //     new webpack.ProvidePlugin({
+    //         Buffer: ['buffer', 'Buffer']
+    //     })
+    // );
+    // handle node polyfills
+    // config.externals.push('fs');
+    config.externalsPresets = { node: false };
+    config.resolve.fallback = config.resolve.fallback || {};
+    config.resolve.fallback.timers = require.resolve('timers/');
+    config.resolve.fallback.util = false;
+    config.resolve.fallback.stream = require.resolve('stream/');
+    config.resolve.fallback.buffer = false;
+    config.resolve.fallback.path = false;
+    config.resolve.fallback.emitter = false;
+    config.resolve.fallback.fs = false;
+    config.resolve.fallback.assert = false;
+    config.resolve.fallback.tty = false;
+    config.resolve.fallback.os = false;
     config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|nativescript-carto|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
     // config.optimization.usedExports = true;
     config.optimization.minimize = uglify !== undefined ? !!uglify : production;
@@ -470,11 +500,18 @@ module.exports = (env, params = {}) => {
     ];
     return [
         {
-            entry: resolve(__dirname, 'webapp/app.ts'),
+            entry: resolve(__dirname, 'geo-three/webapp/app.ts'),
             devtool: false,
             mode: production ? 'production' : 'development',
+
             resolve: {
-                extensions: ['.ts', '.js', '.json']
+                exportsFields: [],
+                mainFields: ['browser', 'module', 'main'],
+                extensions: ['.ts', '.js', '.json'],
+                alias: {
+                    './LocalHeightProvider': resolve(__dirname, 'webapp/LocalHeightProvider'),
+                    './RasterMapProvider': resolve(__dirname, 'webapp/RasterMapProvider')
+                }
             },
             output: {
                 pathinfo: false,

@@ -155,7 +155,7 @@ import { formatSize } from '~/helpers/formatter';
                         maxLines="2"
                         paddingTop="3"
                     />
-                    <mdslider
+                    <slider
                         marginLeft="10"
                         marginRight="10"
                         col="1"

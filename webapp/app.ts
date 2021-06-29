@@ -2,20 +2,59 @@ import CameraControls from 'camera-controls';
 import Stats from 'stats.js';
 import * as THREE from 'three';
 import * as Geo from './geo-three.module';
-import { Pass } from 'three/examples/jsm/postprocessing/Pass';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { DeviceOrientationControls } from 'three/examples/jsm/controls/DeviceOrientationControls';
 import { Sky } from 'three/examples/jsm/objects/Sky';
-import CustomOutlinePass from './CustomOutlinePass';
+import { Effect, EffectAttribute, EffectComposer, EffectPass, RenderPass } from 'postprocessing';
+
+class CustomOutlineEffect extends Effect {
+    constructor() {
+        super(
+            'CustomEffect',
+            `
+		uniform vec3 weights;
+		uniform vec3 outlineColor;
+		uniform vec2 multiplierParameters;
+
+		float readZDepth(vec2 uv) {
+			return viewZToOrthographicDepth( getViewZ(readDepth(uv)), cameraNear, cameraFar );
+		}
+		void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth, out vec4 outputColor) {
+
+			// outputColor = vec4(inputColor.rgb * weights, inputColor.a);
+			// outputColor = vec4(vec3(viewZToOrthographicDepth( getViewZ(depth), cameraNear, cameraFar )), 1.0);
+			float depthDiff = 0.0;
+			float zdepth = viewZToOrthographicDepth( getViewZ(depth), cameraNear, cameraFar );
+			// depthDiff += abs(zdepth - readZDepth(uv + texelSize * vec2(1, 0)));
+			depthDiff += abs(zdepth - readZDepth(uv + texelSize * vec2(-1, 0)));
+			depthDiff += abs(zdepth - readZDepth(uv + texelSize * vec2(0, 1)));
+			// depthDiff += abs(zdepth - readZDepth(uv + texelSize * vec2(0, -1)));
+			depthDiff = depthDiff /depth;
+			depthDiff = depthDiff * multiplierParameters.y;
+			depthDiff = pow(depthDiff, multiplierParameters.x);
+			// Combine outline with scene color.
+			vec4 outlineColor = vec4(outlineColor, 1.0);
+			outputColor = vec4(mix(inputColor, outlineColor, depthDiff));
+		}
+`,
+            {
+                attributes: EffectAttribute.DEPTH,
+                uniforms: new Map([
+                    ['outlineColor', new THREE.Uniform(new THREE.Color(darkTheme ? 0xffffff : 0x000000))],
+                    ['multiplierParameters', new THREE.Uniform(new THREE.Vector2(0.6, 30))]
+                    // ['multiplierParameters', new THREE.Uniform(new THREE.Vector2(1, 40))]
+                ])
+            }
+        );
+    }
+}
 
 //@ts-ignore
 global.THREE = THREE;
 CameraControls.install({ THREE });
 //@ts-ignore
-// const stats = new Stats();
-// stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
-// document.body.appendChild(stats.dom);
+const stats = new Stats();
+stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild(stats.dom);
 
 function ArraySortOn(array, key) {
     return array.sort(function (a, b) {
@@ -34,7 +73,9 @@ let debugFeaturePoints = false;
 let debugGPUPicking = false;
 let readFeatures = true;
 let drawLines = true;
+let drawElevations = false;
 let darkTheme = false;
+let normalsInDebug = false;
 let pointBufferTargetScale = 10;
 let featuresToShow = [];
 const tempVector = new THREE.Vector3(0, 0, 0);
@@ -77,10 +118,12 @@ const ctx2d = canvas4.getContext('2d');
 
 const renderer = new THREE.WebGLRenderer({
     canvas,
-    logarithmicDepthBuffer: true,
+    // logarithmicDepthBuffer: true,
     antialias: AA,
     alpha: true,
-    powerPreference: 'high-performance'
+    powerPreference: 'high-performance',
+    stencil: false
+    // depth: false
     // precision: isMobile ? 'mediump' : 'highp'
 });
 renderer.setClearColor(0x000000, 0);
@@ -135,11 +178,11 @@ function createSky() {
 
 const scene = new THREE.Scene();
 
-const ambientLight = new THREE.HemisphereLight(0xffeeb1, 0x080820, 1);
+const ambientLight = new THREE.HemisphereLight(0xffeeb1, 0x080820, 0.7);
 const curSunLight = new THREE.SpotLight(0xffffff, 200, 100, 0.7, 1, 1);
 const sky = createSky();
-// scene.add(sky);
-// scene.add(ambientLight);
+scene.add(sky);
+scene.add(ambientLight);
 // scene.add(directionalLight);
 sky.visible = debug;
 ambientLight.visible = debug;
@@ -204,7 +247,12 @@ export function startCam() {
 
 export function setDebugMode(value) {
     debug = value;
-    render();
+
+    sky.visible = debug;
+    ambientLight.visible = debug;
+    curSunLight.visible = debug;
+    createMap();
+    onControlUpdate();
 }
 export function toggleDebugMode() {
     setDebugMode(!debug);
@@ -212,6 +260,19 @@ export function toggleDebugMode() {
 export function setDebugGPUPicking(value) {
     debugGPUPicking = value;
     canvas3.style.visibility = debugGPUPicking ? 'visible' : 'hidden';
+    render();
+}
+export function toggleNormalsInDebug() {
+    setNormalsInDebug(!normalsInDebug);
+}
+export function setNormalsInDebug(value) {
+    normalsInDebug = value;
+    if (map) {
+        applyOnNodes((node) => {
+            node.material.userData.computeNormals.value = normalsInDebug || debug;
+            node.material.userData.drawNormals.value = normalsInDebug;
+        });
+    }
     render();
 }
 export function toggleDebugGPUPicking() {
@@ -247,12 +308,21 @@ export function toggleDebugFeaturePoints() {
 }
 export function setDarkMode(value) {
     darkTheme = value;
-    customOutline.fsQuad.material.uniforms.outlineColor.value.set(darkTheme ? 0xffffff : 0x000000);
+    (outlineEffect as any).uniforms.get('outlineColor').value.set(darkTheme ? 0xffffff : 0x000000);
     document.body.style.backgroundColor = darkTheme ? 'black' : 'white';
     render();
 }
 export function toggleDarkMode() {
     setDarkMode(!darkTheme);
+}
+
+export function setDrawElevations(value) {
+    drawElevations = value;
+    render();
+}
+export function toggleDrawElevations(value) {
+    setDrawElevations(!drawElevations);
+    render();
 }
 
 export function toggleCamera() {
@@ -395,8 +465,9 @@ class MaterialHeightShader extends Geo.MapHeightNode {
     static prepareMaterial(material, level) {
         material.userData = {
             heightMap: { value: MaterialHeightShader.EMPTY_TEXTURE },
-            drawNormals: { value: 0 },
-            drawTexture: { value: 0 },
+            drawNormals: { value: normalsInDebug },
+            computeNormals: { value: normalsInDebug || debug },
+            drawTexture: { value: debug },
             drawBlack: { value: 0 },
             zoomlevel: { value: level },
             exageration: { value: exageration },
@@ -411,7 +482,7 @@ class MaterialHeightShader extends Geo.MapHeightNode {
             // Vertex variables
             shader.vertexShader =
                 `
-            uniform bool drawNormals;
+            uniform bool computeNormals;
             uniform float exageration;
             uniform float zoomlevel;
             uniform sampler2D heightMap;
@@ -421,7 +492,7 @@ class MaterialHeightShader extends Geo.MapHeightNode {
                 // Convert encoded elevation value to meters
                 return ((e.r * elevationDecoder.x + e.g * elevationDecoder.y  + e.b * elevationDecoder.z) + elevationDecoder.w) * exageration;
             }
-            float getElevation(vec2 coord) {
+            float getElevation(vec2 coord, float width, float height) {
                 vec4 e = texture2D(heightMap, coord);
                 return getPixelElevation(e);
                 }
@@ -496,16 +567,16 @@ class MaterialHeightShader extends Geo.MapHeightNode {
                 float width = float(size.x);
                 float height = float(size.y);
                 float e = getElevationMean(vUv, width,height);
-                if (drawNormals) {
+                if (computeNormals) {
                     float offset = 1.0 / width;
-                    float a = getElevationMean(vUv + vec2(-offset, -offset), width,height);
-                    float b = getElevationMean(vUv + vec2(0, -offset), width,height);
-                    float c = getElevationMean(vUv + vec2(offset, -offset), width,height);
-                    float d = getElevationMean(vUv + vec2(-offset, 0), width,height);
-                    float f = getElevationMean(vUv + vec2(offset, 0), width,height);
-                    float g = getElevationMean(vUv + vec2(-offset, offset), width,height);
-                    float h = getElevationMean(vUv + vec2(0, offset), width,height);
-                    float i = getElevationMean(vUv + vec2(offset,offset), width,height);
+                    float a = getElevation(vUv + vec2(-offset, -offset), width,height);
+                    float b = getElevation(vUv + vec2(0, -offset), width,height);
+                    float c = getElevation(vUv + vec2(offset, -offset), width,height);
+                    float d = getElevation(vUv + vec2(-offset, 0), width,height);
+                    float f = getElevation(vUv + vec2(offset, 0), width,height);
+                    float g = getElevation(vUv + vec2(-offset, offset), width,height);
+                    float h = getElevation(vUv + vec2(0, offset), width,height);
+                    float i = getElevation(vUv + vec2(offset,offset), width,height);
 
                     float NormalLength = 500.0 / zoomlevel;
 
@@ -631,7 +702,7 @@ class MaterialHeightShader extends Geo.MapHeightNode {
                                                     vColor = color;
                                                     vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
                                                     // gl_PointSize =  floor(elevation / 1000.0) * 2.0;
-                                                    //  gl_PointSize = gl_Position.z  + 1.0;
+                                                    // gl_PointSize *= 41.0;
                                                     gl_Position = projectionMatrix * mvPosition;
                                                     gl_Position.z -= (elevation / 1000.0 - floor(elevation / 1000.0)) * gl_Position.z / 1000.0;
                                                 }
@@ -711,7 +782,7 @@ function createMap() {
     if (map !== undefined) {
         scene.remove(map);
     }
-    const provider = debug ? new Geo.DebugProvider() : new EmptyProvider();
+    const provider = debug && !normalsInDebug ? new Geo.DebugProvider() : new EmptyProvider();
     provider.minZoom = 5;
     provider.maxZoom = 11;
     map = new Geo.MapView(null, provider, new LocalHeightProvider(), render);
@@ -761,23 +832,10 @@ controls.addEventListener('control', () => {
     controls.update(delta);
 });
 
-const renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
-renderTarget.texture.format = THREE.RGBAFormat;
-renderTarget.texture.minFilter = THREE.NearestFilter;
-renderTarget.texture.magFilter = THREE.NearestFilter;
-renderTarget.texture.generateMipmaps = false;
-renderTarget.stencilBuffer = false;
-renderTarget.depthBuffer = true;
-//@ts-ignore
-renderTarget.depthTexture = new THREE.DepthTexture();
-renderTarget.depthTexture.type = renderer.capabilities.isWebGL2 ? THREE.FloatType : THREE.UnsignedShortType;
-
-const composer = new EffectComposer(renderer, renderTarget);
-const renderPass = new RenderPass(scene, camera);
-composer.addPass(renderPass);
-
-const customOutline = new CustomOutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
-composer.addPass(customOutline);
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const outlineEffect = new CustomOutlineEffect();
+composer.addPass(new EffectPass(camera, outlineEffect));
 
 let minYPx = 0;
 document.body.onresize = function () {
@@ -812,7 +870,7 @@ document.body.onresize = function () {
     pointBufferTarget.setSize(offWidth, offHeight);
 
     composer.setSize(width, height);
-    composer.setPixelRatio(rendererScaleRatio);
+    // composer.setPixelRatio(rendererScaleRatio);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
 
@@ -870,14 +928,28 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
     context.fillText(line, x, y);
     return { x: x + context.measureText(line).width, y, nbLines };
 }
-
+function roundRect(ctx, x, y, w, h, r) {
+    if (w < 2 * r) {
+        r = w / 2;
+    }
+    if (h < 2 * r) {
+        r = h / 2;
+    }
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+}
 function drawFeatures() {
     if (!drawLines) {
         return;
     }
 
     let lastFeature;
-    const minDistance = 20;
+    const minDistance = 24;
     featuresToShow = featuresToShow.map((f) => {
         const coords = Geo.UnitsUtils.datumsToSpherical(f.geometry.coordinates[1], f.geometry.coordinates[0]);
         tempVector.set(coords.x, f.properties.ele * exageration, -coords.y);
@@ -928,19 +1000,25 @@ function drawFeatures() {
         ctx2d.save();
         ctx2d.translate(f.x, TEXT_HEIGHT);
         ctx2d.rotate(-Math.PI / 4);
-        ctx2d.font = 'bold 12px Courier';
+        ctx2d.font = '14px Noto Sans';
         const text = f.properties.name;
-        const text2 = f.properties.ele + 'm';
         const textWidth = ctx2d.measureText(text).width;
-        const textWidth2 = ctx2d.measureText(text2).width;
-        // const res = wrapText(ctx2d, text, 0, 0, 110, 12);
-        ctx2d.fillStyle = color + 'aa';
-        ctx2d.rect(0, 3, textWidth + 5 + textWidth2, -14);
+        let totalWidth = textWidth + 10;
+        let text2;
+        if (drawElevations) {
+            text2 = f.properties.ele + 'm';
+            const textWidth2 = ctx2d.measureText(text2).width;
+            totalWidth += textWidth2 - 5;
+        }
+        ctx2d.fillStyle = color + 'cc';
+        roundRect(ctx2d, 0, -12, totalWidth, 17, 8);
         ctx2d.fill();
         ctx2d.fillStyle = textColor;
-        ctx2d.fillText(text, 0, 0);
-        ctx2d.font = 'normal 9px Courier';
-        ctx2d.fillText(text2, textWidth + 5, 0);
+        ctx2d.fillText(text, 5, 0);
+        if (drawElevations) {
+            ctx2d.font = 'normal 9px Courier';
+            ctx2d.fillText(text2, textWidth + 10, 0);
+        }
         ctx2d.restore();
     }
     ctx2d.restore();
@@ -997,8 +1075,11 @@ function render(forceDrawFeatures = false) {
         return;
     }
     if (readFeatures && pixelsBuffer) {
-        renderingIndex = (renderingIndex + 1) % (listeningForDeviceSensors ? 30 : 10);
-        if (!isMobile || forceDrawFeatures || renderingIndex === 0) {
+        renderingIndex = (renderingIndex + 1) % (listeningForDeviceSensors ? 10 : 5);
+        if (forceDrawFeatures || renderingIndex === 0) {
+            const skyWasVisible = sky.visible;
+            sky.visible = false;
+
             applyOnNodes((node) => {
                 node.material.userData.drawBlack.value = true;
                 node.objectsHolder.visible = true;
@@ -1015,6 +1096,7 @@ function render(forceDrawFeatures = false) {
                 node.material.userData.drawBlack.value = false;
                 node.objectsHolder.visible = debugFeaturePoints;
             });
+            sky.visible = skyWasVisible;
         }
         drawFeatures();
     } else {
@@ -1029,7 +1111,7 @@ function render(forceDrawFeatures = false) {
     if (debug) {
         renderer.render(scene, camera);
     } else {
-        composer.render();
+        composer.render(clock.getDelta());
     }
-    // stats.end();
+    stats.end();
 }

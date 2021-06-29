@@ -82,5 +82,12 @@
   "auto": "auto",
   "dark": "dark",
   "light": "light",
-  "token_key": "API token: %s"
+  "token_key": "API token: %s",
+  "lod": "level of details",
+  "exageration": "exageration",
+  "day_time": "day time",
+  "viewing_distance": "viewing distance",
+  "wireframe": "wireframe",
+  "depth_biais": "depth biais",
+  "depth_multiplier": "depth multiplier"
 }
