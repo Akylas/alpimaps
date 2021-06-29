@@ -10,18 +10,22 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import type { Side } from '@nativescript-community/ui-drawer';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { GridLayout, ObservableArray, TextField } from '@nativescript/core';
+    import { GridLayout, ObservableArray, Screen, TextField } from '@nativescript/core';
     import { getJSON } from '@nativescript/core/http';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { osmicon } from '~/helpers/formatter';
+    import { formatDistance, osmicon } from '~/helpers/formatter';
+    import { getMetersPerPixel } from '~/helpers/geolib';
     import { l, slc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { Address, IItem as Item } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { GeoResult, packageService } from '~/services/PackageService';
+import { showError } from '~/utils/error';
+    import { computeDistanceBetween } from '~/utils/geo';
+    import { arraySortOn } from '~/utils/utils';
     import { globalMarginTop, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import { queryString } from '../utils/http';
 
@@ -86,18 +90,7 @@
         constructor(data) {
             const properties = data.properties || {};
             const actualName = properties.name === properties.city ? undefined : properties.name;
-            const {
-                region,
-                name,
-                state,
-                street,
-                housenumber,
-                postcode,
-                city,
-                country,
-                neighbourhood,
-                ...actualProperties
-            } = properties;
+            const { region, name, state, street, housenumber, postcode, city, country, neighbourhood, ...actualProperties } = properties;
             this.address = {
                 state,
                 county: region,
@@ -302,24 +295,26 @@
     async function searchInGeocodingService(options) {
         let result: any = await packageService.searchInLocalGeocodingService(options);
         result = packageService.convertGeoCodingResults(result, true) as any;
-        return (result as any) as GeoResult[];
+        return arraySortOn(result, 'rank') as any as GeoResult[];
     }
     async function searchInVectorTiles(options: SearchRequest) {
+        // console.log('searchInVectorTiles', options);
         let result: any = await packageService.searchInVectorTiles(options);
         if (result) {
             result = packageService.convertFeatureCollection(result, options) as any;
         } else {
             result = [];
         }
-        return (result as any) as GeoResult[];
+        return arraySortOn(
+            result.map((r) => {
+                r.distance = computeDistanceBetween(options.position, r.position);
+                return r;
+            }),
+            'distance'
+        ) as any as GeoResult[];
     }
 
-    async function herePlaceSearch(options: {
-        query: string;
-        language?: string;
-        location?: MapPos<LatLonKeys>;
-        locationRadius?: number;
-    }) {
+    async function herePlaceSearch(options: { query: string; language?: string; location?: MapPos<LatLonKeys>; locationRadius?: number }) {
         if (!networkService.connected) {
             return [];
         }
@@ -335,23 +330,14 @@
                     lang: options.language,
                     // rankby: 'distance',
                     limit: 40,
-                    at: !options.locationRadius
-                        ? options.location.lat + ',' + options.location.lon + ';' + options.locationRadius
-                        : undefined,
-                    in: options.locationRadius
-                        ? options.location.lat + ',' + options.location.lon + ';' + options.locationRadius
-                        : undefined
+                    at: !options.locationRadius ? options.location.lat + ',' + options.location.lon + ';' + options.locationRadius : undefined,
+                    in: options.locationRadius ? options.location.lat + ',' + options.location.lon + ';' + options.locationRadius : undefined
                 },
                 'https://places.cit.api.here.com/places/v1/discover/search'
             )
         ).then((result: any) => result.results.items.map((f) => new HereFeature(f)));
     }
-    async function photonSearch(options: {
-        query: string;
-        language?: string;
-        location?: MapPos<LatLonKeys>;
-        locationRadius?: number;
-    }) {
+    async function photonSearch(options: { query: string; language?: string; location?: MapPos<LatLonKeys>; locationRadius?: number }) {
         if (!networkService.connected) {
             return [];
         }
@@ -371,10 +357,11 @@
     }
     let currentQuery;
     async function instantSearch(_query) {
-        console.log('instantSearch', _query,loading) ;
+        // console.log('instantSearch', _query,loading) ;
         loading = true;
         currentQuery = cleanUpString(_query);
         const position = mapContext.getMap().focusPos;
+        const mpp = getMetersPerPixel(position, mapContext.getMap().getZoom());
         const options = {
             query: currentQuery,
             projection: mapContext.getProjection(),
@@ -386,47 +373,60 @@
             // `REGEXP_LIKE(name, '${_query}')`
             location: position,
             position,
-            searchRadius: 1000
+            searchRadius: Math.min(Math.max(mpp * Screen.mainScreen.widthPixels, mpp * Screen.mainScreen.heightPixels)) //meters
             // locationRadius: 1000,
         };
+        console.log('instantSearch', position, mapContext.getMap().getZoom(), mpp, options);
 
         // TODO: dont fail when offline!!!
 
         let result = [];
-        await Promise.all([
-            // searchInVectorTiles(options as any)
-            //     .then((r) => r && result.push(...r))
-            //     .catch((err) => {
-            //         console.error('searchInVectorTiles', err);
-            //     }),
-            searchInGeocodingService(options)
-                .then((r) => loading && r  && result.push(...r))
-                .catch((err) => {
-                    console.error('searchInGeocodingService', err);
-                }),
-            // herePlaceSearch(options)
-            //     .then((r) => loading && r  && result.push(...r))
-            //     .catch((err) => {
-            //         console.error('herePlaceSearch', err);
-            //     }),
-            // photonSearch(options)
-            //     .then((r) => loading && r && result.push(...r))
-            //     .catch((err) => {
-            //         console.error('photonSearch', err);
-            //     })
-        ]);
-        if (!loading) {
-            // was cancelled
-            return;
+        try {
+            await Promise.all([
+                searchInVectorTiles({
+                    ...options,
+                    filterExpression: undefined,
+                    // filterExpression: `layer='poi'`,
+                    regexFilter: currentQuery,
+                    searchRadius: Math.min(options.searchRadius, 10000) //meters
+                })
+                    .then((r) => loading && r && result.push(...r))
+                    .catch((err) => {
+                        console.error('searchInVectorTiles', err);
+                    }),
+                searchInGeocodingService(options)
+                    .then((r) => loading && r && result.push(...r))
+                    .catch((err) => {
+                        console.error('searchInGeocodingService', err);
+                    }),
+                herePlaceSearch(options)
+                    .then((r) => loading && r && result.push(...r))
+                    .catch((err) => {
+                        console.error('herePlaceSearch', err);
+                    }),
+                photonSearch(options)
+                    .then((r) => loading && r && result.push(...r))
+                    .catch((err) => {
+                        console.error('photonSearch', err);
+                    })
+            ]);
+            console.log('search done', result.length);
+            if (!loading) {
+                // was cancelled
+                return;
+            }
+            if (result.length === 0) {
+                showSnack({ message: l('no_result_found') });
+            } else {
+                await loadView();
+            }
+            dataItems = result.map((s) => ({ ...s, color: getItemIconColor(s), icon: getItemIcon(s), title: getItemTitle(s), subtitle: getItemSubtitle(s) }));
+            updateFilteredDataItems();
+        } catch (err) {
+            showError(err);
+        } finally {
+            loading = false;
         }
-        if (result.length === 0) {
-            showSnack({ message: l('no_result_found') });
-        } else {
-            await loadView();
-        }
-        dataItems = result.map(s=>({...s , color:getItemIconColor(s), icon:getItemIcon(s), title:getItemTitle(s), subtitle:getItemSubtitle(s)}));
-        updateFilteredDataItems();
-        loading = false;
     }
     function clearSearch() {
         loading = false;
@@ -527,6 +527,7 @@
             loadedListeners.forEach((l) => l());
         }
     }
+
 </script>
 
 <gridlayout
@@ -565,58 +566,38 @@
             class="small-icon-btn"
             visibility={searchResultsVisible ? 'visible' : 'collapsed'}
             row="0"
-            col="3"
+            col={3}
             text="mdi-shape"
             on:tap={toggleFilterOSMKey}
             color={filteringOSMKey ? primaryColor : $subtitleColor}
         />
-        <button
-            variant="text"
-            class="small-icon-btn"
-            visibility={searchResultsVisible ? 'visible' : 'collapsed'}
-            row="0"
-            col="4"
-            text="mdi-map"
-            on:tap={showResultsOnMap}
-            color={$subtitleColor}
-        />
+        <button variant="text" class="small-icon-btn" visibility={searchResultsVisible ? 'visible' : 'collapsed'} row="0" col={4} text="mdi-map" on:tap={showResultsOnMap} color={$subtitleColor} />
     {/if}
     <button
         variant="text"
         class="icon-btn"
         visibility={currentSearchText && currentSearchText.length > 0 ? 'visible' : 'collapsed'}
         row="0"
-        col="5"
+        col={5}
         text="mdi-close"
         on:tap={clearSearch}
         color={$subtitleColor}
     />
-    <button col="6" variant="text" class="icon-btn" text="mdi-dots-vertical" on:tap={showMapMenu} />
+    <button col={6} variant="text" class="icon-btn" text="mdi-dots-vertical" on:tap={showMapMenu} />
     {#if loaded}
-        <collectionview
-            bind:this={collectionView}
-            col="0"
-            row="1"
-            height="200"
-            colSpan="7"
-            rowHeight="49"
-            items={filteredDataItems}
-            visibility={searchResultsVisible ? 'visible' : 'collapsed'}
-        >
+        <collectionview bind:this={collectionView} col="0" row="1" height="200" colSpan="7" rowHeight="49" items={filteredDataItems} visibility={searchResultsVisible ? 'visible' : 'collapsed'}>
             <Template let:item>
                 <gridlayout columns="34,*" padding="0 10 0 10" rows="*,auto,auto,*" class="textRipple" on:tap={() => onItemTap(item)}>
+                    <label rowSpan="4" text={item.icon} color={item.color} class="osm" fontSize="20" verticalAlignment="center" textAlignment="center" />
+                    <label col={1} row="1" text={item.title} fontSize="14" fontWeight="bold" />
                     <label
-                        col="0"
-                        rowSpan="4"
-                        text={item.icon}
-                        color={item.color}
-                        class="osm"
-                        fontSize="20"
-                        verticalAlignment="center"
-                        textAlignment="center"
+                        col={1}
+                        row="2"
+                        text={item.subtitle || (item.distance && formatDistance(item.distance))}
+                        class="subtitle"
+                        fontSize="12"
+                        visibility={!!item.subtitle || 'distance' in item ? 'visible' : 'collapsed'}
                     />
-                    <label col="1" row="1" text={item.title} fontSize="14" fontWeight="bold"/>
-                    <label col="1" row="2" text={item.subtitle} class="subtitle" fontSize="12" visibility={!!item.subtitle ? 'visible' : 'collapsed'} />
                 </gridlayout>
             </Template>
         </collectionview>

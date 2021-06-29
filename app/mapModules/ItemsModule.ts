@@ -37,7 +37,8 @@ export default class ItemsModule extends MapModule {
             this.db = new NSQLDatabase(filePath, {
                 // for now it breaks
                 // threading: true,
-            });
+                transformBlobs: false
+            } as any);
             this.routeRepository = new RouteRepository(this.db);
             this.itemRepository = new ItemRepository(this.db, this.routeRepository);
             await this.itemRepository.createTables();
@@ -46,7 +47,7 @@ export default class ItemsModule extends MapModule {
             const items = await this.itemRepository.searchItem();
             this.addItemsToLayer(items);
         } catch (err) {
-            console.log('err', err);
+            console.log('err', err, err.stack);
 
             showError(err);
         }
@@ -170,7 +171,6 @@ export default class ItemsModule extends MapModule {
     }
     async shareFile(content: string, fileName: string) {
         const file = knownFolders.temp().getFile(fileName);
-        console.log('shareFile', file.path);
         // iOS: using writeText was not adding the file. Surely because it was too soon or something
         // doing it sync works better but still needs a timeout
         // showLoading('loading');
@@ -179,6 +179,7 @@ export default class ItemsModule extends MapModule {
         await shareFile.open({
             path: file.path,
             title: fileName,
+            type: '*/*',
             options: true, // optional iOS
             animated: true // optional iOS
         });
@@ -203,7 +204,7 @@ export default class ItemsModule extends MapModule {
                 { lat: extent[3], lon: extent[2] }
             ]
         });
-        console.log('boundsGeo', boundsGeo.getBounds());
+        // console.log('boundsGeo', boundsGeo.getBounds());
         const featureCollection = await new Promise<VectorTileFeatureCollection>((resolve) =>
             searchService.findFeatures(
                 {
@@ -220,7 +221,7 @@ export default class ItemsModule extends MapModule {
         });
         const jsonStr = writer.writeFeatureCollection(featureCollection);
 
-        this.shareFile(jsonStr, 'test2.json');
+        // this.shareFile(jsonStr, 'test2.json');
         const geojson: GeoJSON.FeatureCollection<GeoJSON.LineString | GeoJSON.MultiLineString> = JSON.parse(jsonStr);
 
         const features = geojson.features;
@@ -323,7 +324,7 @@ export default class ItemsModule extends MapModule {
                 }
                 item.routeId = item.route.id;
                 item.styleOptions = {
-                    color: (darkColor as any).setAlpha(150),
+                    color: darkColor.setAlpha(150).hex,
                     joinType: LineJointType.ROUND,
                     endType: LineEndType.ROUND,
                     width: 3,

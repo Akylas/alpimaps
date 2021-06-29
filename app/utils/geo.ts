@@ -65,7 +65,7 @@ export function getBoundsZoomLevel(bounds: MapBounds<LatLonKeys>, mapDim: { widt
     }
 
     function zoom(mapPx, worldPx, fraction) {
-        return Math.round(Math.log(mapPx / worldPx / fraction) / Math.LN2);
+        return Math.log(mapPx / worldPx / fraction) / Math.LN2;
     }
 
     const ne = bounds.northeast;
@@ -168,13 +168,7 @@ function isOnSegmentGC(lat1, lng1, lat2, lng2, lat3, lng3, havTolerance) {
     return sinSumAlongTrack > 0; // Compare with half-circle == PI using sign of sin().
 }
 
-export function isLocationOnPath(
-    point: MapPos<LatLonKeys>,
-    poly: MapPosVector<LatLonKeys>,
-    closed = false,
-    geodesic = true,
-    toleranceEarth: number = DEFAULT_TOLERANCE
-) {
+export function isLocationOnPath(point: MapPos<LatLonKeys>, poly: MapPosVector<LatLonKeys>, closed = false, geodesic = true, toleranceEarth: number = DEFAULT_TOLERANCE) {
     const size = poly.size();
     if (size === 0) {
         return -1;
@@ -295,8 +289,7 @@ export function latLngToTileXY(lat, lng, zoom, tileSize = 256) {
 
     const p: { x?: number; y?: number } = {};
     p.x = ((longitude + 180.0) / 360.0) * (1 << zoom);
-    p.y =
-        ((1.0 - Math.log(Math.tan((latitude * Math.PI) / 180.0) + 1.0 / Math.cos(toRadians(lat))) / Math.PI) / 2.0) * (1 << zoom);
+    p.y = ((1.0 - Math.log(Math.tan((latitude * Math.PI) / 180.0) + 1.0 / Math.cos(toRadians(lat))) / Math.PI) / 2.0) * (1 << zoom);
 
     const tilex = Math.trunc(p.x);
     const tiley = Math.trunc(p.y);
