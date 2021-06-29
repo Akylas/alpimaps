@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+  <string name="depth_multiplier">"depth multiplier"</string>
+  <string name="depth_biais">"depth biais"</string>
+  <string name="wireframe">"wireframe"</string>
+  <string name="viewing_distance">"viewing distance"</string>
+  <string name="day_time">"day time"</string>
+  <string name="exageration">"exageration"</string>
+  <string name="lod">"level of details"</string>
   <string name="token_key">"API token: %1$s"</string>
   <string name="light">"light"</string>
   <string name="dark">"dark"</string>

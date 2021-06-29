@@ -32,9 +32,7 @@ const PI_DIV4 = Math.PI / 4;
 const XDPI = Math.min(Screen.mainScreen.widthPixels, Screen.mainScreen.heightPixels) / Screen.mainScreen.scale;
 const PX_PER_CM = XDPI / 2.54;
 
-const sexagesimalPattern = new RegExp(
-    '^([0-9]{1,3})°s*([0-9]{1,3}(?:.(?:[0-9]{1,2}))?)\'s*(([0-9]{1,3}(.([0-9]{1,2}))?)"s*)?([NEOSW]?)$'
-);
+const sexagesimalPattern = new RegExp('^([0-9]{1,3})°s*([0-9]{1,3}(?:.(?:[0-9]{1,2}))?)\'s*(([0-9]{1,3}(.([0-9]{1,2}))?)"s*)?([NEOSW]?)$');
 
 export function getNiceNumber(n: number) {
     const exponent = Math.floor(Math.log(Math.abs(n)) / Math.LN10);
@@ -213,10 +211,7 @@ export function getDistance(start, end, accuracy?) {
     do {
         const sinLambda = Math.sin(lambda),
             cosLambda = Math.cos(lambda);
-        sinSigma = Math.sqrt(
-            cosU2 * sinLambda * (cosU2 * sinLambda) +
-                (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda) * (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda)
-        );
+        sinSigma = Math.sqrt(cosU2 * sinLambda * (cosU2 * sinLambda) + (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda) * (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda));
         if (sinSigma === 0) {
             return 0; // co-incident points
         }
@@ -232,9 +227,7 @@ export function getDistance(start, end, accuracy?) {
         }
         const C = (f / 16) * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha));
         lambdaP = lambda;
-        lambda =
-            L +
-            (1 - C) * f * sinAlpha * (sigma + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM)));
+        lambda = L + (1 - C) * f * sinAlpha * (sigma + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM)));
     } while (Math.abs(lambda - lambdaP) > 1e-12 && --iterLimit > 0);
 
     if (iterLimit === 0) {
@@ -248,12 +241,7 @@ export function getDistance(start, end, accuracy?) {
     const B = (uSq / 1024) * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)));
 
     const deltaSigma =
-        B *
-        sinSigma *
-        (cos2SigmaM +
-            (B / 4) *
-                (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) -
-                    (B / 6) * cos2SigmaM * (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)));
+        B * sinSigma * (cos2SigmaM + (B / 4) * (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) - (B / 6) * cos2SigmaM * (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)));
 
     let distance: any = b * A * (sigma - deltaSigma);
 
@@ -294,9 +282,7 @@ export function getDistanceSimple(start, end, accuracy?) {
     const slon = s['longitude'].toRad();
     const elat = e['latitude'].toRad();
     const elon = e['longitude'].toRad();
-    const distance = Math.round(
-        Math.acos(Math.sin(elat) * Math.sin(slat) + Math.cos(elat) * Math.cos(slat) * Math.cos(slon - elon)) * earthRadius
-    );
+    const distance = Math.round(Math.acos(Math.sin(elat) * Math.sin(slat) + Math.cos(elat) * Math.cos(slat) * Math.cos(slon - elon)) * earthRadius);
 
     return Math.round(distance / accuracy) * accuracy;
 }
@@ -430,8 +416,7 @@ export function getBounds(coords) {
 }
 export function scaleBounds(_region, _deltaFactor) {
     if (_deltaFactor !== 0) {
-        const delta =
-            Math.max(_region.ne.latitude - _region.sw.latitude, _region.ne.longitude - _region.sw.longitude) * _deltaFactor;
+        const delta = Math.max(_region.ne.latitude - _region.sw.latitude, _region.ne.longitude - _region.sw.longitude) * _deltaFactor;
         _region.sw.latitude -= delta;
         _region.sw.longitude -= delta;
         _region.ne.latitude += delta;
@@ -534,10 +519,8 @@ export function isPointInside(latlng, coords) {
         cj = coords(coords[j]);
 
         if (
-            ((ci.longitude <= c.longitude && c.longitude < cj.longitude) ||
-                (cj.longitude <= c.longitude && c.longitude < ci.longitude)) &&
-            c.latitude <
-                ((cj.latitude - ci.latitude) * (c.longitude - ci.longitude)) / (cj.longitude - ci.longitude) + ci.latitude
+            ((ci.longitude <= c.longitude && c.longitude < cj.longitude) || (cj.longitude <= c.longitude && c.longitude < ci.longitude)) &&
+            c.latitude < ((cj.latitude - ci.latitude) * (c.longitude - ci.longitude)) / (cj.longitude - ci.longitude) + ci.latitude
         ) {
             result = !result;
         }
@@ -561,10 +544,7 @@ function preparePolygonForIsPointInsideOptimized(coords) {
             coords[i].constant = ci.latitude;
             coords[i].multiple = 0;
         } else {
-            coords[i].constant =
-                ci.latitude -
-                (ci.longitude * cj.latitude) / (cj.longitude - ci.longitude) +
-                (ci.longitude * ci.latitude) / (cj.longitude - ci.longitude);
+            coords[i].constant = ci.latitude - (ci.longitude * cj.latitude) / (cj.longitude - ci.longitude) + (ci.longitude * ci.latitude) / (cj.longitude - ci.longitude);
 
             coords[i].multiple = (cj.latitude - ci.latitude) / (cj.longitude - ci.longitude);
         }
@@ -649,9 +629,7 @@ export function getRhumbLineBearing(originLL, destLL) {
     let diffLon = longitude(destLL).toRad() - longitude(originLL).toRad();
 
     // difference latitude coords phi
-    const diffPhi = Math.log(
-        Math.tan(latitude(destLL).toRad() / 2 + PI_DIV4) / Math.tan(latitude(originLL).toRad() / 2 + PI_DIV4)
-    );
+    const diffPhi = Math.log(Math.tan(latitude(destLL).toRad() / 2 + PI_DIV4) / Math.tan(latitude(originLL).toRad() / 2 + PI_DIV4));
 
     // recalculate diffLon if it is greater than pi
     if (Math.abs(diffLon) > Math.PI) {
@@ -682,8 +660,7 @@ export function getBearing(originLL, destLL) {
     const bearing =
         (Math.atan2(
             Math.sin(dl.toRad() - ol.toRad()) * Math.cos(da.toRad()),
-            Math.cos(al.toRad()) * Math.sin(da.toRad()) -
-                Math.sin(al.toRad()) * Math.cos(da.toRad()) * Math.cos(dl.toRad() - ol.toRad())
+            Math.cos(al.toRad()) * Math.sin(da.toRad()) - Math.sin(al.toRad()) * Math.cos(da.toRad()) * Math.cos(dl.toRad() - ol.toRad())
         ).toDeg() +
             360) %
         360;
@@ -977,7 +954,7 @@ export function getFormattedDistance(_ll1, _ll2) {
 export function getMetersPerPixel(_pos, _zoom) {
     // 156543.03392804097 == 2 * Math.PI * 6378137 / 256
     // return dpi undependant pixels
-    return (156543.03392804097 * Math.cos((_pos.latitude * Math.PI) / 180)) / Math.pow(2, _zoom);
+    return (156543.03392804097 * Math.cos((_pos.lat * Math.PI) / 180)) / Math.pow(2, _zoom);
 }
 function altitudeStr(_altitude, _unit?) {
     _unit = _unit || (metrics ? 'm' : 'ft');

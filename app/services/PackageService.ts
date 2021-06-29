@@ -1,13 +1,5 @@
 import Observable from '@nativescript-community/observable';
-import {
-    CartoMapStyle,
-    IntVector,
-    MapBounds,
-    MapPos,
-    MapPosVector,
-    fromNativeMapPos,
-    nativeVectorToArray
-} from '@nativescript-community/ui-carto/core';
+import { CartoMapStyle, IntVector, MapBounds, MapPos, MapPosVector, fromNativeMapPos, nativeVectorToArray } from '@nativescript-community/ui-carto/core';
 import { MergedMBVTTileDataSource, OrderedTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
 import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
 import { HTTPTileDataSource } from '@nativescript-community/ui-carto/datasources/http';
@@ -24,32 +16,17 @@ import {
     ReverseGeocodingRequest,
     ReverseGeocodingService
 } from '@nativescript-community/ui-carto/geocoding/service';
-import {
-    Feature,
-    FeatureCollection,
-    VectorTileFeature,
-    VectorTileFeatureCollection
-} from '@nativescript-community/ui-carto/geometry/feature';
+import { Feature, FeatureCollection, VectorTileFeature, VectorTileFeatureCollection } from '@nativescript-community/ui-carto/geometry/feature';
 import { HillshadeRasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
 import { CartoOnlineVectorTileLayer, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
-import {
-    CartoPackageManager,
-    CartoPackageManagerListener,
-    PackageErrorType,
-    PackageManagerTileDataSource,
-    PackageStatus
-} from '@nativescript-community/ui-carto/packagemanager';
-import {
-    PackageManagerValhallaRoutingService,
-    ValhallaOfflineRoutingService,
-    ValhallaOnlineRoutingService
-} from '@nativescript-community/ui-carto/routing';
+import { CartoPackageManager, CartoPackageManagerListener, PackageErrorType, PackageManagerTileDataSource, PackageStatus } from '@nativescript-community/ui-carto/packagemanager';
+import { PackageManagerValhallaRoutingService, ValhallaOfflineRoutingService, ValhallaOnlineRoutingService } from '@nativescript-community/ui-carto/routing';
 import { SearchRequest, VectorTileSearchService } from '@nativescript-community/ui-carto/search';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import * as appSettings from '@nativescript/core/application-settings';
 import { File, Folder, path } from '@nativescript/core/file-system';
 import KalmanFilter from 'kalmanjs';
-import { getDistanceSimple } from '~/helpers/geolib';
+import { getDistance, getDistanceSimple } from '~/helpers/geolib';
 import { IItem as Item } from '~/models/Item';
 import { RouteProfile } from '~/models/Route';
 import { getDataFolder, getDefaultMBTilesDir } from '~/utils/utils';
@@ -69,6 +46,20 @@ class MathFilter {
     filter(_newData): any {
         return _newData;
     }
+}
+
+const DEG_TO_RAD = Math.PI / 180;
+const EARTH_RADIUS = 6371000;
+
+function dist2d(latlng1, latlng2) {
+    const rad = Math.PI / 180,
+        lat1 = latlng1.lat * rad,
+        lat2 = latlng2.lat * rad,
+        sinDLat = Math.sin(((latlng2.lat - latlng1.lat) * rad) / 2),
+        sinDLon = Math.sin(((latlng2.lon - latlng1.lon) * rad) / 2),
+        a = sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLon * sinDLon,
+        c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return EARTH_RADIUS * c;
 }
 
 class WindowKalmanFilter extends MathFilter {
@@ -97,12 +88,12 @@ class WindowKalmanFilter extends MathFilter {
 }
 
 function getGradeColor(grade) {
-    if (grade >= 30) {
-        return 'red';
-    } else if (grade >= 20) {
-        return 'orange';
-    } else if (grade >= 10) {
-        return 'yellow';
+    if (grade >= 26) {
+        return '#ff0000';
+    } else if (grade >= 18) {
+        return '#ffa500';
+    } else if (grade >= 8) {
+        return '#ffff00';
     }
     return '#60B3FC';
 }
@@ -224,11 +215,7 @@ class PackageService extends Observable {
     }
     updatePackagesLists() {
         if (__CARTO_PACKAGESERVICE__) {
-            return (
-                this.updatePackagesList(this.packageManager) ||
-                this.updatePackagesList(this.geoPackageManager) ||
-                this.updatePackagesList(this.routingPackageManager)
-            );
+            return this.updatePackagesList(this.packageManager) || this.updatePackagesList(this.geoPackageManager) || this.updatePackagesList(this.routingPackageManager);
         }
     }
     onPackageListUpdated(type: PackageType) {
@@ -484,10 +471,7 @@ class PackageService extends Observable {
             return r;
         }
     }
-    searchInGeocodingService(
-        service: ReverseGeocodingService<any, any> | GeocodingService<any, any>,
-        options
-    ): Promise<GeocodingResultVector> {
+    searchInGeocodingService(service: ReverseGeocodingService<any, any> | GeocodingService<any, any>, options): Promise<GeocodingResultVector> {
         return new Promise((resolve, reject) => {
             service.calculateAddresses(options, (err, result) => {
                 // console.log('calculateAddresses', options, err, result && result.size());
@@ -637,11 +621,13 @@ class PackageService extends Observable {
     async getElevation(pos: MapPos<LatLonKeys>): Promise<number> {
         if (this.hillshadeLayer) {
             return new Promise((resolve, reject) => {
+                // console.log('getElevation', pos);
                 this.hillshadeLayer.getElevationAsync(pos, (err, result) => {
                     if (err) {
                         reject(err);
                         return;
                     }
+                    // console.log('gotElevation', result);
                     resolve(result);
                 });
             });
@@ -702,11 +688,9 @@ class PackageService extends Observable {
                 f = 0;
             let e = 0;
             for (let k = 1; k <= dist && e < g; k++) {
-                e =
-                    grades[index + k < grades.length ? index + k : grades.length - 1].dist -
-                    grades[0 <= index - k ? index - k : 0].dist;
+                e = grades[index + k < grades.length ? index + k : grades.length - 1].dist - grades[0 <= index - k ? index - k : 0].dist;
                 for (let h = index - k; h < index + k; h++) {
-                    if ('undefined' !== typeof grades[h] && null !== grades[h]) {
+                    if (undefined !== grades[h] && null !== grades[h]) {
                         e = Math.pow(grades[h].dist, 2) / (Math.abs(h - index) + 1);
                         f += e * grades[h].grad;
                         d += e;
@@ -719,7 +703,7 @@ class PackageService extends Observable {
     }
 
     computeProfileFromHeights(positions: MapPosVector<LatLonKeys>, elevations: IntVector) {
-        let last: { lat: number; lon: number; altitude: number; tmpElevation: number },
+        let last: { lat: number; lon: number; altitude: number; tmpElevation?: number },
             currentHeight,
             currentDistance = 0;
         const result: RouteProfile = {
@@ -730,105 +714,105 @@ class PackageService extends Observable {
             data: []
         };
 
-        const profile: { lat: number; lon: number; altitude: number; tmpElevation: number }[] = [];
-        const altitudeFilter = new WindowKalmanFilter({ windowLength: 5, kalman: { R: 0.2, Q: 1 } });
+        const profile: { lat: number; lon: number; altitude: number; tmpElevation?: number }[] = [];
+        // const altitudeFilter = new WindowKalmanFilter({ windowLength: 5, kalman: { R: 0.2, Q: 1 } });
+        const range = 5;
+        const jsElevation = (elevations as any).toArray();
+        const nbPoints = positions.size();
         for (let i = 0; i < positions.size(); i++) {
             const pos = positions.get(i);
-            const altitude = elevations.get(i);
+            // const altitude = elevations.get(i);
+            const min = Math.max(i - range, 0);
+            const max = Math.min(i + range, nbPoints - 1);
             profile.push({
                 lat: pos.getY(),
                 lon: pos.getX(),
-                altitude,
-                tmpElevation: altitudeFilter.filter(elevations.get(i))
+                altitude: jsElevation[i],
+                // tmpElevation: jsElevation[i]
+                tmpElevation: Math.round(average(jsElevation.slice(min, max)))
             });
         }
         let ascent = 0;
         let descent = 0;
         let lastAlt;
-        // let lastAlt2;
-        // let grades = [];
-        const nbPoints = profile.length;
-        const filterStep = Math.min(10, Math.round(nbPoints / 10));
-
+        let lastAvgAlt;
+        const filterStep = 10;
         for (let i = 0; i < nbPoints; i++) {
             const sample = profile[i];
 
-            const deltaDistance = last ? getDistanceSimple(last, sample, 0.5) : 0;
+            const deltaDistance = last ? dist2d(last, sample) : 0;
             // const deltaDistance2 = last ? getDistanceSimple(last, sample) : 0;
             currentDistance += deltaDistance;
-            // sample.height = (sample as any).tmpElevation;
-            let grade;
+            // sample.height = sample.tmpElevation;
             if (i >= 1) {
-                const diff = (sample as any).tmpElevation - lastAlt;
+                const diff = sample.altitude - lastAlt;
                 const rdiff = Math.round(diff);
                 if (rdiff > filterStep) {
                     ascent += rdiff;
-                    lastAlt = (sample as any).tmpElevation;
+                    lastAlt = sample.altitude;
                 } else if (diff < -filterStep) {
                     descent -= rdiff;
-                    lastAlt = (sample as any).tmpElevation;
+                    lastAlt = sample.altitude;
                 }
-                // grade = (deltaDistance === 0) ? 0 : Math.round(((sample.altitude - last.altitude) / deltaDistance) * 100);
                 // grades.push(grade);
             } else {
-                lastAlt = (sample as any).tmpElevation;
+                lastAlt = sample.altitude;
             }
-            currentHeight = sample.altitude;
+            currentHeight = Math.round(sample.altitude);
+            const avg = Math.round(sample.tmpElevation);
 
             result.data.push({
                 d: Math.round(currentDistance),
-                a: Math.round(currentHeight),
-                g: grade,
-                avg: Math.round((sample as any).tmpElevation)
-            });
-            if ((sample as any).tmpElevation > result.max[1]) {
-                result.max[1] = Math.round((sample as any).tmpElevation);
+                a: currentHeight,
+                g: 0,
+                avg
+            } as any);
+            if (currentHeight > result.max[1]) {
+                result.max[1] = currentHeight;
             }
-            if ((sample as any).tmpElevation < result.min[1]) {
-                result.min[1] = Math.round((sample as any).tmpElevation);
+            if (sample.tmpElevation < result.min[1]) {
+                result.min[1] = currentHeight;
             }
             // result.points.push({ lat: sample.lat, lon: sample.lon });
 
             last = sample;
-
-            delete (sample as any).tmpElevation;
-            // delete (sample as any).tmp2Elevation;
+            lastAvgAlt = currentHeight;
+            delete sample.tmpElevation;
+            // delete sample.tmp2Elevation;
         }
         // grades.unshift(grades[0]); //no first grade let s copy the next one
         // result.data[0].grade = grades[0];
-
         const colors = [];
-        const grades = this.getSmoothedGradient(result.data);
-
-        // const gradesFiltered = [];
-        // for (let i = 0; i < grades.length; i++) {
-        //     // let min = Math.max(i - range, 0);
-        //     // let max = Math.min(i + range, grades.length - 1);
-        //     gradesFiltered[i] = Math.round(grades[i]);
-        // }
-        let grade,
-            lastGrade = grades[0];
-        for (let i = 1; i < grades.length; i++) {
-            grade = grades[i];
-            if (
-                lastGrade === undefined ||
-                (Math.floor(lastGrade / 10) !== Math.floor(grade / 10) && (lastGrade * grade <= 0 || lastGrade > 0))
-            ) {
+        // const grades = this.getSmoothedGradient(result.data);
+        let grade, lastGradeColor;
+        for (let i = 1; i < result.data.length; i++) {
+            const pt1 = result.data[i],
+                pt2 = result.data[Math.min(i + 1, profile.length - 1)];
+            let grade = Math.round((Math.min(pt2.avg - pt1.avg, pt2.a - pt1.a) / (pt2.d - pt1.d)) * 100);
+            if (Math.abs(grade) > 50) {
+                grade = result.data.length ? result.data[result.data.length - 1].g : 0;
+            }
+            pt1.g = grade;
+            const color = getGradeColor(grade);
+            if (lastGradeColor === undefined || lastGradeColor !== color) {
                 colors.push({
                     d: i,
-                    color: getGradeColor(Math.floor(lastGrade !== undefined ? lastGrade : grade))
+                    g: grade,
+                    color: getGradeColor(grade)
                 });
             }
-            lastGrade = grade;
+            lastGradeColor = color;
         }
-        if (colors[colors.length - 1].d < grades.length - 1) {
-            colors.push({
-                d: grades.length - 1,
-                color: getGradeColor(lastGrade)
-            });
-        }
+        // if (colors[colors.length - 1].d < result.data.length - 1) {
+        //     colors.push({
+        //         d: result.data.length - 1,
+        //         g: lastGrade,
+        //         color: getGradeColor(lastGrade)
+        //     });
+        // }
         result.dmin = Math.round(-descent);
         result.dplus = Math.round(ascent);
+        // console.log(JSON.stringify(colors));
         result.colors = colors;
         return result;
     }

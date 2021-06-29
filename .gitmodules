@@ -1,0 +1,3 @@
+[submodule "geo-three"]
+	path = geo-three
+	url = git@github.com:farfromrefug/geo-three.git
