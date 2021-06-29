@@ -37,7 +37,7 @@
             "default": 0
         },
         "selected_id": {
-            "default": 0
+            "default": "0"
         },
         "selected_name": {
             "default": ""

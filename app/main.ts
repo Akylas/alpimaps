@@ -4,11 +4,13 @@ import { installMixins as installUIMixins } from '@nativescript-community/system
 import { createNativeAttributedString, overrideSpanAndFormattedString } from '@nativescript-community/text';
 import { setMapPosKeys } from '@nativescript-community/ui-carto/core';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
+import PagerElement from '@nativescript-community/ui-pager/svelte';
 import DrawerElement from '@nativescript-community/ui-drawer/svelte';
+import { PagerItem } from '@nativescript-community/ui-pager';
 import { initialize, shutDown } from '@nativescript-community/ui-image';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
-import { Application } from '@nativescript/core';
+import { Application, Trace } from '@nativescript/core';
 import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
 import Map from '~/components/Map.svelte';
@@ -17,6 +19,7 @@ import { startSentry } from '~/utils/sentry';
 import './app.scss';
 import { BgService } from '~/services/BgService';
 import { networkService } from '~/services/NetworkService';
+import { ScrollView } from '@nativescript/core/ui';
 
 startSentry();
 installLogging();
@@ -43,6 +46,7 @@ registerElement('Page', () => new PageElement());
 registerNativeViewElement('GridLayout', () => require('@nativescript/core').GridLayout);
 registerNativeViewElement('ScrollView', () => NestedScrollView as any);
 registerNativeViewElement('StackLayout', () => require('@nativescript/core').StackLayout);
+registerNativeViewElement('flexlayout', () => require('@nativescript/core').FlexboxLayout);
 registerNativeViewElement('Switch', () => require('@nativescript/core').Switch);
 registerNativeViewElement('TextField', () => require('@nativescript/core').TextField);
 
@@ -51,12 +55,13 @@ registerNativeViewElement('label', () => require('@nativescript-community/ui-lab
 registerNativeViewElement('mdactivityindicator', () => require('@nativescript-community/ui-material-activityindicator').ActivityIndicator);
 registerNativeViewElement('mdprogress', () => require('@nativescript-community/ui-material-progress').Progress);
 registerNativeViewElement('mdcardview', () => require('@nativescript-community/ui-material-cardview').CardView);
-registerNativeViewElement('mdslider', () => require('@nativescript-community/ui-material-slider').Slider);
+registerNativeViewElement('slider', () => require('@nativescript-community/ui-material-slider').Slider, null, {}, { override: true });
 registerNativeViewElement('lineChart', () => require('@nativescript-community/ui-chart').LineChart);
 registerNativeViewElement('cartomap', () => require('@nativescript-community/ui-carto/ui').CartoMap);
 registerNativeViewElement('canvas', () => require('@nativescript-community/ui-canvas').CanvasView);
 registerNativeViewElement('line', () => require('@nativescript-community/ui-canvas/shapes').Line);
 registerNativeViewElement('circle', () => require('@nativescript-community/ui-canvas/shapes').Circle);
+registerNativeViewElement('text', () => require('@nativescript-community/ui-canvas/shapes').Text);
 registerNativeViewElement('image', () => require('@nativescript-community/ui-image').Img, null, {}, { override: true });
 registerNativeViewElement('canvaslabel', () => require('@nativescript-community/ui-canvaslabel').CanvasLabel);
 registerNativeViewElement('cspan', () => require('@nativescript-community/ui-canvaslabel').Span);
@@ -64,12 +69,18 @@ registerNativeViewElement('cgroup', () => require('@nativescript-community/ui-ca
 registerNativeViewElement('svgview', () => require('@nativescript-community/ui-svg').SVGView);
 registerNativeViewElement('bottomsheet', () => require('@nativescript-community/ui-persistent-bottomsheet').PersistentBottomSheet);
 registerNativeViewElement('symbolshape', () => require('~/components/SymbolShape').default);
-registerNativeViewElement('webviewext', () => require('@nota/nativescript-webview-ext').WebViewExt);
+registerNativeViewElement('awebview', () => require('@nativescript-community/ui-webview').AWebView);
+registerNativeViewElement('checkbox', () => require('@akylas/nativescript-checkbox').CheckBox);
+registerNativeViewElement('pageritem', () => PagerItem);
 CollectionViewElement.register();
+PagerElement.register();
 DrawerElement.register();
+// (com as any).swmansion.gesturehandler.GestureHandler.debug = true;
 
+// Trace.addCategories(CollectionViewTraceCategory);
+// Trace.enable();
 import { start } from '~/helpers/theme';
-import { ScrollView } from '@nativescript/core/ui';
+import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
 // on startup we need to ensure theme is loaded because of a mixin
 // on startup we need to say what we are using
 start();

@@ -7,6 +7,7 @@ import updateLocale from 'dayjs/plugin/updateLocale';
 import duration from 'dayjs/plugin/duration';
 import timezone from 'dayjs/plugin/timezone';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import localizedFormat from 'dayjs/plugin/localizedFormat';
 import { derived, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
 const supportedLanguages = SUPPORTED_LOCALES;
@@ -17,6 +18,7 @@ dayjs.extend(updateLocale);
 dayjs.extend(timezone);
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
+dayjs.extend(localizedFormat);
 
 export let lang;
 let currentLocale = null;

@@ -92,10 +92,15 @@ interface LatLonKeys {
 }
 
 namespace svelteNative.JSX {
-    //     interface ViewAttributes {
-    //         rippleTouch: Boolean
-    //    }
+    interface ViewAttributes {
+        rippleColor?: Color | String;
+        verticalAlignment?: String;
+    }
+    export interface ButtonAttributes {
+        variant?: String;
+    }
     export interface LabelAttributes {
-        // verticalalignment: String;
+        verticalTextAlignment?: String;
+        html?: String;
     }
 }

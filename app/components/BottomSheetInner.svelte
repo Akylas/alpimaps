@@ -6,14 +6,14 @@
     import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
     import { Entry } from '@nativescript-community/ui-chart/data/Entry';
     import { LineData } from '@nativescript-community/ui-chart/data/LineData';
-    import { LineDataSet } from '@nativescript-community/ui-chart/data/LineDataSet';
+    import { LineDataSet, Mode } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     // import { ShareFile } from '@nativescript-community/ui-share-file';
     import { Application } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode, showModal } from 'svelte-native/dom';
-    import { convertValueToUnit, UNITS } from '~/helpers/formatter';
+    import { convertValueToUnit, formatValueToUnit, UNITS } from '~/helpers/formatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem, IItem as Item } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
@@ -32,6 +32,11 @@
     import { VectorElementEventData } from '@nativescript-community/ui-carto/layers/vector';
     import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
     import { GenericMapPos } from '@nativescript-community/ui-carto/core';
+    import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
+    import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
+    import * as xml2js from 'xml2js';
+    import { AxisDependency } from '@nativescript-community/ui-chart/components/YAxis';
+import { openLink } from '~/utils/ui';
 
     export const LISTVIEW_HEIGHT = 200;
     export const PROFILE_HEIGHT = 150;
@@ -56,6 +61,7 @@
     let itemIsRoute = false;
     let itemCanQueryProfile = false;
     let currentLocation: GenericMapPos<LatLonKeys> = null;
+    let showProfileGrades = true;
 
     onMount(() => {
         updateSteps();
@@ -82,20 +88,48 @@
             updateRouteItemWithPosition(item, currentLocation);
         }
     }
-    $: {
-        const props = item && item.properties;
-        if (props) {
-            let name = props.name;
-            if (props.wikipedia) {
-                name = props.wikipedia.split(':')[1];
+    // $: {
+    //     const props = item && item.properties;
+    //     if (props) {
+    //         let name = props.name;
+    //         if (props.wikipedia) {
+    //             name = props.wikipedia.split(':')[1];
+    //         }
+    //         if (item.address) {
+    //             name += ' ' + item.address.county;
+    //         }
+    //         const url = `https://duckduckgo.com/?kae=d&ks=s&ko=-2&kaj=m&k1=-1&q=${encodeURIComponent(name).toLowerCase().replace('/s+/g', '+')}`;
+    //         webViewSrc = url;
+    //     } else {
+    //         webViewSrc = null;
+    //     }
+    // }
+
+    function searchWeb() {
+        let name;
+        try {
+            const props = item && item.properties;
+            if (props) {
+                name = props.name;
+                if (props.wikipedia) {
+                    name = props.wikipedia.split(':')[1];
+                }
+                if (item.address) {
+                    name += ' ' + item.address.county;
+                }
+                if (global.isAndroid) {
+                    const intent = new android.content.Intent(android.content.Intent.ACTION_WEB_SEARCH);
+                    intent.putExtra(android.app.SearchManager.QUERY, name);
+                    (Application.android.foregroundActivity as android.app.Activity).startActivity(intent);
+                } else {
+                    throw new Error();
+                }
             }
-            if (item.address) {
-                name += ' ' + item.address.county;
+        } catch (err) {
+            if (name) {
+                const url = `https://duckduckgo.com/?kae=d&ks=s&ko=-2&kaj=m&k1=-1&q=${encodeURIComponent(name).toLowerCase().replace('/s+/g', '+')}`;
+                openLink(url);
             }
-            const url = `https://duckduckgo.com/?kae=d&ks=s&ko=-2&kaj=m&k1=-1&q=${encodeURIComponent(name).toLowerCase().replace('/s+/g', '+')}`;
-            webViewSrc = url;
-        } else {
-            webViewSrc = null;
         }
     }
 
@@ -150,7 +184,7 @@
                     remainingTime: ((route.totalTime * distance) / route.totalDistance) * 1000
                 };
             }
-            if (graphAvailable) {
+            if (updateGraph && graphAvailable) {
                 if (onPathIndex === -1) {
                     chart.nativeView.highlight(null);
                 } else {
@@ -255,9 +289,10 @@
     }
 
     let updatingItem = false;
-    async function getProfile() {
+    async function getProfile(updateView = true) {
         try {
             updatingItem = true;
+            // console.log('getProfile');
             const profile = await packageService.getElevationProfile(item);
             if (profile) {
                 // item.route.profile = profile;
@@ -271,7 +306,9 @@
                 if (graphAvailable) {
                     updateChartData();
                 }
-                mapContext.setBottomSheetStepIndex(3);
+                if (updateView) {
+                    mapContext.setBottomSheetStepIndex(3);
+                }
             }
         } catch (err) {
             showError(err);
@@ -279,10 +316,66 @@
             updatingItem = false;
         }
     }
+
+    async function toGPX() {
+        const name = 'test';
+        const builder = new xml2js.Builder({
+            rootName: 'gpx'
+        });
+        const profile = item.route.profile.data;
+        return {
+            name,
+            // eslint-disable-next-line id-blacklist
+            string: builder.buildObject({
+                $: {
+                    version: '1.1',
+                    xmlns: 'http://www.topografix.com/GPX/1/1',
+                    'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+                    'xsi:schemaLocation':
+                        'http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 https://www8.garmin.com/xmlschemas/TrackPointExtensionv1.xsd',
+                    creator: `AlpiMaps`,
+                    'xmlns:gpxx': 'http://www.garmin.com/xmlschemas/GpxExtensions/v3',
+                    'xmlns:gpxtpx': 'http://www.garmin.com/xmlschemas/TrackPointExtension/v1'
+                },
+                metadata: {
+                    name,
+                    bounds: item.zoomBounds
+                        ? {
+                              minlat: item.zoomBounds.southwest.lat,
+                              minlon: item.zoomBounds.southwest.lon,
+                              maxlat: item.zoomBounds.northeast.lat,
+                              maxlon: item.zoomBounds.northeast.lon
+                          }
+                        : undefined,
+                    copyright: {
+                        author: 'AlpiMaps',
+                        year: 2021
+                    }
+                },
+                trk: {
+                    trkseg: {
+                        trkpt: item.route.positions.toArray().map((l, index) => {
+                            const result = {
+                                $: {
+                                    lat: Math.round(l.lat * 1000000) / 1000000,
+                                    lon: Math.round(l.lon * 1000000) / 1000000
+                                },
+                                ele: profile[index].a,
+                                grade: profile[index].g
+                            } as any;
+                            return result;
+                        })
+                    }
+                }
+            })
+        };
+    }
+
     async function saveItem(peek = true) {
         try {
             updatingItem = true;
             const item = await mapContext.mapModule('items').saveItem(mapContext.getSelectedItem());
+            mapContext.mapModules.directionsPanel.cancel(false);
             mapContext.selectItem({ item, isFeatureInteresting: true, peek });
         } catch (err) {
             showError(err);
@@ -304,8 +397,14 @@
     function deleteItem() {
         mapContext.mapModule('items').deleteItem(mapContext.getSelectedItem());
     }
-    function shareItem() {
-        const itemToShare = omit(item, 'vectorElement');
+    async function shareItem() {
+        if (item.route) {
+            if (!item.route.profile && itemCanQueryProfile) {
+                await getProfile(false);
+            }
+            const gpx = await toGPX();
+            mapContext.mapModules.items.shareFile(gpx.string, `${gpx.name.replace(/[\s\t]/g, '_')}.gpx`);
+        }
         // shareFile(JSON.stringify(itemToShare), 'sharedItem.json');
     }
     async function checkWeather() {
@@ -332,9 +431,21 @@
             if (!position.altitude) {
                 position.altitude = item.properties.ele || (await packageService.getElevation(position));
             }
+            console.log('openPeakFinder', item.properties.ele, position);
             const hillshadeDatasource = packageService.hillshadeLayer?.dataSource;
             const vectorDataSource = packageService.localVectorTileLayer?.dataSource;
             const component = (await import('~/components/PeakFinder.svelte')).default;
+            const customSources = mapContext.mapModules.customLayers.customSources;
+            let rasterDataSource: TileDataSource<any, any>;
+            customSources.some((s) => {
+                if (s.layer instanceof RasterTileLayer) {
+                    rasterDataSource = s.layer.dataSource;
+                    return true;
+                }
+            });
+            if (!rasterDataSource) {
+                rasterDataSource = await mapContext.mapModules.customLayers.getDataSource('openstreetmap');
+            }
             showModal({
                 page: component,
                 animated: true,
@@ -343,7 +454,8 @@
                     terrarium: false,
                     position,
                     vectorDataSource,
-                    dataSource: hillshadeDatasource
+                    dataSource: hillshadeDatasource,
+                    rasterDataSource
                 }
             });
         } catch (err) {
@@ -401,6 +513,7 @@
                 chartView.setHighlightPerDragEnabled(true);
                 chartView.setHighlightPerTapEnabled(true);
                 chartView.setScaleXEnabled(true);
+                chartView.setDoubleTapToZoomEnabled(true);
                 chartView.setDragEnabled(true);
                 chartView.clipHighlightToContent = false;
                 chartView.setClipValuesToContent(false);
@@ -424,7 +537,7 @@
                 xAxis.setDrawMarkTicks(true);
                 // xAxis.ensureLastLabel = true;
                 xAxis.setValueFormatter({
-                    getAxisLabel: (value, axis) => convertValueToUnit(value, UNITS.DistanceKm).join(' ')
+                    getAxisLabel: (value, axis) => formatValueToUnit(value, UNITS.DistanceKm) 
                 });
 
                 chartView.setMaxVisibleValueCount(300);
@@ -500,31 +613,33 @@
                     }
                 } as any);
                 set.setDrawFilled(true);
-                if (profile.colors && profile.colors.length > 0) {
+                if (showProfileGrades && profile.colors && profile.colors.length > 0) {
                     set.setLineWidth(2);
                     set.setColors(profile.colors);
                 } else {
                     set.setColor('#60B3FC');
                 }
-                // set.setMode(Mode.CUBIC_BEZIER);
-                set.setFillColor('#8060B3FC');
+                set.setMode(Mode.LINEAR);
+                set.setFillColor('#60B3FC80');
                 sets.push(set);
                 const lineData = new LineData(sets);
                 chartView.setData(lineData);
             } else {
                 chartView.highlightValues(null);
                 const set = chartData.getDataSetByIndex(0);
-                set.setValues(profileData);
-                if (profile.colors && profile.colors.length > 0) {
+                if (showProfileGrades && profile.colors && profile.colors.length > 0) {
                     set.setLineWidth(2);
                     set.setColors(profile.colors);
                 } else {
                     set.setLineWidth(1);
                     set.setColor('#60B3FC');
                 }
-                chartView.getData().notifyDataChanged();
+                set.setValues(profileData);
+                set.notifyDataSetChanged();
+                chartData.notifyDataChanged();
                 chartView.notifyDataSetChanged();
             }
+            // chartView.zoomAndCenter(7, 1, 100, 0, AxisDependency.LEFT);
         }
     }
     function routeInstructions() {
@@ -580,13 +695,14 @@
         <BottomSheetInfoView bind:this={infoView} row="0" {item} />
 
         <mdactivityindicator visibility={updatingItem ? 'visible' : 'collapsed'} row="0" horizontalAligment="right" busy={true} width={20} height={20} />
-        <button col="1" variant="text" class="icon-btn" text="mdi-crosshairs-gps" visibility={itemIsRoute ? 'visible' : 'collapsed'} on:tap={zoomToItem} />
-        <stacklayout row="1" colSpan="2" orientation="horizontal" width="100%" borderTopWidth="1" borderBottomWidth="1" borderColor={$borderColor}>
-            <button variant="text" fontSize="10" on:tap={searchItemWeb} text={$slc('search')} visibility={item && !itemIsRoute && !item.id ? 'visible' : 'collapsed'} />
-            <button variant="text" fontSize="10" on:tap={getProfile} text={$slc('profile')} visibility={itemIsRoute && itemCanQueryProfile ? 'visible' : 'collapsed'} />
-            <!-- <button variant="text" fontSize="10" on:tap={openWebView} text="web" /> -->
-            <button variant="text" fontSize="10" on:tap={saveItem} text={$slc('save')} visibility={item && !item.id ? 'visible' : 'collapsed'} />
-            <button variant="text" fontSize="10" on:tap={deleteItem} text={$slc('delete')} visibility={item && item.id ? 'visible' : 'collapsed'} color="red" />
+        <button col={1} variant="text" class="icon-btn" text="mdi-crosshairs-gps" visibility={itemIsRoute ? 'visible' : 'collapsed'} on:tap={zoomToItem} />
+        <flexlayout row="1" colSpan="2" borderTopWidth="1" borderBottomWidth="1" borderColor={$borderColor}>
+            <button variant="text" fontSize="10" on:tap={() => searchItemWeb()} text={$slc('search')} visibility={item && !itemIsRoute && !item.id ? 'visible' : 'collapsed'} />
+            <button variant="text" fontSize="10" on:tap={() => getProfile()} text={$slc('profile')} visibility={itemIsRoute && itemCanQueryProfile ? 'visible' : 'collapsed'} />
+            <button variant="text" fontSize="10" on:tap={() => searchWeb()} text="web" />
+            <button variant="text" fontSize="10" on:tap={() => saveItem()} text={$slc('save')} visibility={item && !item.id ? 'visible' : 'collapsed'} />
+            <button variant="text" fontSize="10" on:tap={() => shareItem()} text={$slc('share')} visibility={itemIsRoute ? 'visible' : 'collapsed'} />
+            <button variant="text" fontSize="10" on:tap={() => deleteItem()} text={$slc('delete')} visibility={item && item.id ? 'visible' : 'collapsed'} color="red" />
             <!-- <button
                 variant="text"
                 fontSize="10"
@@ -594,9 +710,9 @@
                 text="share item"
                 visibility={item && item.id ? 'visible' : 'collapsed'}
             /> -->
-            <button variant="text" fontSize="10" on:tap={checkWeather} text={$slc('weather')} visibility={item && networkService.canCheckWeather ? 'visible' : 'collapsed'} />
-            <button variant="text" fontSize="10" on:tap={openPeakFinder} text={$slc('peaks')} visibility={item && !itemIsRoute ? 'visible' : 'collapsed'} />
-        </stacklayout>
+            <button variant="text" fontSize="10" on:tap={() => checkWeather()} text={$slc('weather')} visibility={item && networkService.canCheckWeather ? 'visible' : 'collapsed'} />
+            <button variant="text" fontSize="10" on:tap={() => openPeakFinder()} text={$slc('peaks')} visibility={item && !itemIsRoute ? 'visible' : 'collapsed'} />
+        </flexlayout>
         <linechart bind:this={chart} row="2" colSpan="2" height={profileHeight} visibility={graphAvailable ? 'visible' : 'hidden'} on:highlight={onChartHighlight} />
         <!-- <AWebView
             row="3"

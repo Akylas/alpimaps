@@ -4,7 +4,7 @@
     import { convertDuration, osmicon, convertElevation, convertValueToUnit, UNITS } from '~/helpers/formatter';
     import type { IItem as Item } from '~/models/Item';
     import type { RouteInstruction } from '~/models/Route';
-    import { mdiFontFamily, subtitleColor } from '~/variables';
+    import { mdiFontFamily, subtitleColor, textColor } from '~/variables';
     import { formatter } from '~/mapModules/ItemFormatter';
     import dayjs from 'dayjs';
     const PROPS_TO_SHOW = ['ele'];
@@ -160,7 +160,7 @@
         verticalAlignment="middle"
         textAlignment="left"
     >
-        <cspan text={itemTitle} fontWeight="bold" color={routeDuration ? '#01B719' : undefined} :fontSize={16} />
+        <cspan text={itemTitle} fontWeight="bold" color={routeDuration ? '#01B719' : $textColor} :fontSize={16} />
         <cspan text={itemSubtitle ? '\n' + itemSubtitle : ''} color={$subtitleColor} fontSize={13} maxLines={2} />
     </cgroup>
     <cgroup

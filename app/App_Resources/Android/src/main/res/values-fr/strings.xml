@@ -78,6 +78,13 @@
   <string name="cancel">"annuler"</string>
   <string name="app_name">"Alpi Maps"</string>
   <string name="title_activity_kimera">"Alpi Maps"</string>
+  <string name="depth_multiplier">"depth multiplier"</string>
+  <string name="depth_biais">"depth biais"</string>
+  <string name="wireframe">"wireframe"</string>
+  <string name="viewing_distance">"viewing distance"</string>
+  <string name="day_time">"day time"</string>
+  <string name="exageration">"exageration"</string>
+  <string name="lod">"level of details"</string>
   <string name="weather">"weather"</string>
   <string name="review_application">"review application"</string>
   <string name="watching_location">"watching your location"</string>

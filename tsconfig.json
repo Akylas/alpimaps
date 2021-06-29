@@ -21,7 +21,7 @@
         "allowSyntheticDefaultImports": true,
         "lib": ["esnext", "dom"],
         "baseUrl": ".",
-        "types": ["node", "svelte", "geojson","@danmarshall/deckgl-typings"],
+        "types": ["node", "svelte", "geojson"],
         "paths": {
             "~/*": ["app/*"]
         }

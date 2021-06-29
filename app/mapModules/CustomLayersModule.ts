@@ -542,6 +542,15 @@ export default class CustomLayersModule extends MapModule {
         this.sourcesLoaded = true;
     }
 
+    async getDataSource(s: string) {
+        await this.getSourcesLibrary();
+        const provider = this.baseProviders[s] || this.overlayProviders[s];
+        if (provider) {
+            const data = this.createRasterLayer(s, provider);
+            return data.layer.dataSource;
+        }
+    }
+
     onMapReady(mapView: CartoMap<LatLonKeys>) {
         super.onMapReady(mapView);
         (async () => {
@@ -575,7 +584,7 @@ export default class CustomLayersModule extends MapModule {
     }
 
     vectorTileDecoderChanged(oldVectorTileDecoder, newVectorTileDecoder) {
-        this.customSources.forEach((s, index) => {
+        this.customSources.forEach((s, i) => {
             if (s.layer instanceof VectorTileLayer && s.layer.getTileDecoder() === oldVectorTileDecoder) {
                 const layer = new VectorTileLayer({
                     dataSource: s.layer.dataSource,
@@ -593,9 +602,7 @@ export default class CustomLayersModule extends MapModule {
                     },
                     mapContext.getProjection()
                 );
-                const cartoMap = mapContext.getMap();
-                const index = mapContext.getLayerIndex(layer);
-                cartoMap.getLayers().set(index, layer);
+                mapContext.replaceLayer(s.layer, layer);
                 s.layer = layer;
             }
         });
@@ -791,7 +798,6 @@ export default class CustomLayersModule extends MapModule {
         const result = Array.isArray(results) ? results[0] : results;
         if (result) {
             const provider = result.provider;
-            console.log('provider', provider, this.tokenKeys);
             const data = this.createRasterLayer(result.name, provider);
             this.addDataSource(data);
         }

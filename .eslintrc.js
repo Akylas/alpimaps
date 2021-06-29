@@ -4,6 +4,7 @@ module.exports = {
         es6: true,
         node: true
     },
+    ignorePatterns: ['node_modules/**/*'],
     parser: '@typescript-eslint/parser',
     parserOptions: {
         ecmaVersion: 2019,
@@ -22,7 +23,7 @@ module.exports = {
             files: '*.ts',
             rules: {
                 'eslint-plugin-svelte3/parse-error': 'off',
-                'no-undef': 'off',
+                'no-undef': 'off'
             }
         }
     ],
