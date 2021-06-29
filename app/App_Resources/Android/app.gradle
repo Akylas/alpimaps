@@ -5,7 +5,7 @@ android {
     multiDexEnabled true
     minSdkVersion 19
     targetSdkVersion 29
-    versionCode 215
+    versionCode 216
     versionName "2.0.0"
      
     ndk {
