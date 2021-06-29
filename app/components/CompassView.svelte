@@ -1,13 +1,9 @@
 <script lang="ts" context="module">
     import { MapPos } from '@nativescript-community/ui-carto/core';
-    import {
-        getAirportPressureAtLocation,
-        isSensorAvailable,
-        startListeningForSensor,
-        stopListeningForSensor
-    } from '@nativescript-community/sensors';
+    import { getAirportPressureAtLocation, isSensorAvailable, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
     import { closeBottomSheet } from './bottomsheet';
     import { estimateMagneticField, getAltitude } from '@nativescript-community/sensors/sensors';
+
 </script>
 
 <script lang="ts">
@@ -95,21 +91,19 @@
                 }
                 const newValue = 'trueHeading' in data ? data.trueHeading : data.heading;
                 const oldBearing = currentHeading;
-                const newBearing = wrap(
-                    behavior.updateBearing(
-                        oldBearing,
-                        newValue,
-                        lastHeadingTime ? Math.abs(data.timestamp - lastHeadingTime) : 10
-                    ),
-                    0,
-                    360
-                );
+                const newBearing = wrap(behavior.updateBearing(oldBearing, newValue, lastHeadingTime ? Math.abs(data.timestamp - lastHeadingTime) : 10), 0, 360);
                 if (newBearing !== oldBearing) {
                     currentHeading = newBearing;
                     lastHeadingTime = data.timestamp;
                 }
                 if (headingAccuracy !== data.accuracy) {
-                    headingAccuracy = data.accuracy;
+                    // on ios accuracy is in degrees so lower is best
+                    // on android 0 - 4 with highest is best
+                    if (global.isAndroid) {
+                        headingAccuracy = 4 - data.accuracy;
+                    } else {
+                        headingAccuracy = data.accuracy;
+                    }
                 }
 
                 break;
@@ -129,6 +123,7 @@
             console.error('stopHeadingListener', err, err['stack']);
         }
     });
+
 </script>
 
 <gridLayout {height}>

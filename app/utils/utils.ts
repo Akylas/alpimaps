@@ -4,6 +4,17 @@ import * as appSettings from '@nativescript/core/application-settings';
 import { Application, Color, View } from '@nativescript/core';
 import { l, lc, lt } from '~/helpers/locale';
 
+export function arraySortOn(array, key) {
+    return array.sort(function (a, b) {
+        if (a[key] < b[key]) {
+            return -1;
+        } else if (a[key] > b[key]) {
+            return 1;
+        }
+        return 0;
+    });
+}
+
 // export function throttle(fn, limit) {
 //     let waiting = false;
 //     return (...args) => {
@@ -54,10 +65,10 @@ export function getDataFolder() {
     }
     if (!dataFolder) {
         dataFolder = knownFolders.temp().path;
-    // } else {
-    //     if (global.isAndroid && Folder.exists(path.join(dataFolder, '../../../..', 'alpimaps_mbtiles'))) {
-    //         dataFolder = path.join(dataFolder, '../../../..', 'alpimaps_mbtiles');
-    //     }
+        // } else {
+        //     if (global.isAndroid && Folder.exists(path.join(dataFolder, '../../../..', 'alpimaps_mbtiles'))) {
+        //         dataFolder = path.join(dataFolder, '../../../..', 'alpimaps_mbtiles');
+        //     }
     }
     // if (TNS_ENV !== 'production') {
     //     dataFolder = path.join(dataFolder, 'dev');
@@ -80,6 +91,9 @@ export function getDefaultMBTilesDir() {
             }
             if (result.length > 1) {
                 const sdcardFolder = result[result.length - 1].getAbsolutePath();
+                defaultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
+            } else if (result.length > 0) {
+                const sdcardFolder = result[0].getAbsolutePath();
                 defaultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
             }
         }

@@ -133,10 +133,7 @@ export default class UserLocationModule extends MapModule {
         };
         if (
             !this.mapView ||
-            (this.lastUserLocation &&
-                this.lastUserLocation.lat === geoPos.lat &&
-                this.lastUserLocation.lon === geoPos.lon &&
-                this.lastUserLocation.horizontalAccuracy === geoPos.horizontalAccuracy)
+            (this.lastUserLocation && this.lastUserLocation.lat === geoPos.lat && this.lastUserLocation.lon === geoPos.lon && this.lastUserLocation.horizontalAccuracy === geoPos.horizontalAccuracy)
         ) {
             return;
         }
@@ -311,15 +308,9 @@ export default class UserLocationModule extends MapModule {
     initMediaSession() {
         if (!this.mediaSession) {
             const context: android.content.Context = ad.getApplicationContext();
-            const mediaSession = (this.mediaSession = new android.support.v4.media.session.MediaSessionCompat(
-                context,
-                'AlpiMaps'
-            ));
+            const mediaSession = (this.mediaSession = new android.support.v4.media.session.MediaSessionCompat(context, 'AlpiMaps'));
             mediaSession.setActive(true);
-            mediaSession.setFlags(
-                android.support.v4.media.session.MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS |
-                    android.support.v4.media.session.MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS
-            );
+            mediaSession.setFlags(android.support.v4.media.session.MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS | android.support.v4.media.session.MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS);
         }
     }
     public showMapAsAlbumArt() {
@@ -357,10 +348,7 @@ export default class UserLocationModule extends MapModule {
                 // const tapActionPendingIntent = android.app.PendingIntent.getActivity(context, 10, tapActionIntent, 0);
 
                 const context: android.content.Context = ad.getApplicationContext();
-                const builder = new androidx.core.app.NotificationCompat.Builder(
-                    context,
-                    NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL
-                );
+                const builder = new androidx.core.app.NotificationCompat.Builder(context, NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL);
                 // construct notification in builder
                 builder.setVisibility(androidx.core.app.NotificationCompat.VISIBILITY_SECRET);
                 builder.setShowWhen(false);
@@ -372,14 +360,10 @@ export default class UserLocationModule extends MapModule {
                 builder.setSmallIcon(ad.resources.getDrawableId('ic_stat_logo'));
                 builder.setContentTitle('Alpi Maps Song test!');
                 // console.log('showMapAsAlbumArt2');
-                builder.setStyle(
-                    new androidx.media.app.NotificationCompat.MediaStyle().setMediaSession(mediaSession.getSessionToken())
-                );
+                builder.setStyle(new androidx.media.app.NotificationCompat.MediaStyle().setMediaSession(mediaSession.getSessionToken()));
                 // console.log('showMapAsAlbumArt3');
                 const notifiction = builder.build();
-                const service = context.getSystemService(
-                    android.content.Context.NOTIFICATION_SERVICE
-                ) as android.app.NotificationManager;
+                const service = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
                 service.notify(SCREENSHOT_NOTIFICATION_ID, notifiction);
             });
         }
@@ -388,9 +372,7 @@ export default class UserLocationModule extends MapModule {
     public hideScreenshotNotification() {
         if (global.isAndroid) {
             const context: android.content.Context = ad.getApplicationContext();
-            const service = context.getSystemService(
-                android.content.Context.NOTIFICATION_SERVICE
-            ) as android.app.NotificationManager;
+            const service = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
             service.cancel(SCREENSHOT_NOTIFICATION_ID);
         }
     }

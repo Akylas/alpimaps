@@ -45,16 +45,7 @@ export interface MapContext {
     getMap: () => CartoMap<LatLonKeys>;
     getProjection: () => Projection;
     setBottomSheetStepIndex: (value: number) => void;
-    selectItem: (args: {
-        item: IItem;
-        showButtons?: boolean;
-        isFeatureInteresting: boolean;
-        peek?: boolean;
-        setSelected?: boolean;
-        minZoom?: number;
-        zoom?: number;
-        zoomDuration?: number;
-    }) => void;
+    selectItem: (args: { item: IItem; showButtons?: boolean; isFeatureInteresting: boolean; peek?: boolean; setSelected?: boolean; minZoom?: number; zoom?: number; zoomDuration?: number }) => void;
     zoomToItem: (args: { item: IItem; zoom?: number; minZoom?: number }) => void;
     unselectItem: () => void;
     getCurrentLanguage: () => string;
@@ -64,6 +55,7 @@ export interface MapContext {
     removeLayer: (layer: Layer<any, any>, layerId: LayerType) => void;
     moveLayer: (layer: Layer<any, any>, newIndex: number) => void;
     getLayerIndex: (layer: Layer<any, any>) => number;
+    replaceLayer: (oldLayer: Layer<any, any>, layer: Layer<any, any>) => number;
     getLayerTypeFirstIndex: (layerId: LayerType) => number;
     vectorElementClicked: (data: VectorElementEventData<LatLonKeys>) => boolean;
     vectorTileClicked: (data: VectorTileEventData<LatLonKeys>) => boolean;
