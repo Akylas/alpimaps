@@ -1,0 +1,6 @@
+*Features*
+- light/dark theme
+- new peak finder
+
+*Bug fixes*
+- peak finder updates
