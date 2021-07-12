@@ -287,15 +287,6 @@
         },
         {
             type: 'slider',
-            min: 16,
-            max: 512,
-            stepSize: 2,
-            value: 104,
-            method: 'setLOD',
-            title: lc('lod')
-        },
-        {
-            type: 'slider',
             min: 0.01,
             max: 100,
             decimalFactor: 1000,
@@ -423,7 +414,7 @@
                     on:loaded={webviewLoaded}
                     webRTC={true}
                     mediaPlaybackRequiresUserAction={false}
-                    webConsoleEnabled={false}
+                    webConsoleEnabled={!PRODUCTION}
                     displayZoomControls={false}
                     on:selected={onFeatureSelected}
                     on:position={onPositionChanged}
