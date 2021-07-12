@@ -148,7 +148,7 @@
     };
 
     let ignoreNextMapClick = false;
-    let handleSelectedRouteTimer: NodeJS.Timeout;
+    let handleSelectedRouteTimer: number;
     let selectedRoutes: { featurePosition; featureData; layer: BaseVectorTileLayer<any, any> }[];
     let didIgnoreAlreadySelected = false;
     let clickedFeatures = [];
@@ -404,11 +404,13 @@
         options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
         // options.setSeamlessPanning(true);
         // options.setEnvelopeThreadPoolSize(2);
+
         // options.setTileThreadPoolSize(2);
         options.setZoomGestures(true);
         options.setKineticRotation(false);
+        // options.setClickTypeDetection(false);
         // options.setRotatable(true);
-        const pos = JSON.parse(appSettings.getString('mapFocusPos', '{"lat":45.2002,"lon":5.7222}')) as MapPos<LatLonKeys>;
+        const pos = JSON.parse(appSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos<LatLonKeys>;
         const zoom = appSettings.getNumber('mapZoom', 10);
         cartoMap.setFocusPos(pos, 0);
         cartoMap.setZoom(zoom, 0);
@@ -417,7 +419,7 @@
             if (__CARTO_PACKAGESERVICE__) {
                 packageService.start();
             }
-            setMapStyle(appSettings.getString('mapStyle', 'osm.zip~voyager'), true);
+            setMapStyle(appSettings.getString('mapStyle',PRODUCTION ? 'osm.zip~voyager' : 'osm~voyager'), true);
         } catch (err) {
             showError(err);
         }
@@ -517,8 +519,8 @@
                     vectorElement.color = color.darken(10).hex;
                     vectorElement.width += 2;
                 } else if (item.route.osmid) {
-                    selectedOSMId = (item.route.osmid) + '';
-                    console.log('selectedOSMId', selectedOSMId)
+                    selectedOSMId = item.route.osmid + '';
+                    console.log('selectedOSMId', selectedOSMId);
                     setStyleParameter('selected_id', selectedOSMId);
                     // if (!selectedRouteLine) {
                     //     getOrCreateLocalVectorLayer();
@@ -649,7 +651,6 @@
             });
             if (cartoMap.zoom < zoomLevel) {
                 cartoMap.moveToFitBounds(item.zoomBounds, screenBounds, true, true, false, duration);
-
             }
             // cartoMap.setZoom(zoomLevel, 200);
             // cartoMap.setFocusPos(getCenter(item.zoomBounds.northeast, item.zoomBounds.southwest), 200);
@@ -723,7 +724,7 @@
     }
 
     async function handleRouteSelection(featureData, layer: VectorTileLayer) {
-        console.log('handleRouteSelection', featureData)
+        console.log('handleRouteSelection', featureData);
         const item: IItem = {
             properties: featureData,
 
@@ -825,7 +826,7 @@
                     (featureData.osmid && $selectedItem.properties && featureData.osmid === $selectedItem.properties.osmid) ||
                     ($selectedItem.properties &&
                         featureData.name === $selectedItem.properties.name &&
-                        $selectedItem.position && 
+                        $selectedItem.position &&
                         $selectedItem.position.lat === featurePosition.lat &&
                         $selectedItem.position.lon === featurePosition.lon))
             ) {
@@ -917,7 +918,7 @@
     function setStyleParameter(key: string, value: string) {
         // console.log('setStyleParameter', key, value);
         const decoder = getVectorTileDecoder();
-        if (decoder) {
+        if (!!decoder) {
             decoder.setStyleParameter(key, value);
         }
     }
@@ -1078,7 +1079,6 @@
     }
     function replaceLayer(oldLayer: Layer<any, any>, layer: Layer<any, any>) {
         const index = addedLayers.findIndex((d) => d.layer === oldLayer);
-        console.log('replaceLayer', index);
         if (index !== -1) {
             addedLayers[index].layer = layer;
             cartoMap.getLayers().set(index, layer);
@@ -1580,7 +1580,6 @@
             }
         });
     }
-
 </script>
 
 <page bind:this={page} actionBarHidden={true} backgroundColor="#E3E1D3">

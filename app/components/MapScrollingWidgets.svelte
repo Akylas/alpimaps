@@ -426,7 +426,7 @@
         <button
             transition:scale={{ duration: 200 }}
             on:tap={startDirections}
-            row="0"
+            
             rowSpan="2"
             col={2}
             class="floating-btn"

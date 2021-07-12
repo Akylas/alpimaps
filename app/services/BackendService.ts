@@ -1,15 +1,7 @@
 /* eslint-disable no-redeclare */
 // import { getBoolean, getNumber, getString, remove, setBoolean, setNumber, setString } from '@nativescript/core/application-settings';
 import { Observable } from '@nativescript/core/data/observable';
-import {
-    getBoolean,
-    getNumber,
-    getString,
-    remove,
-    setBoolean,
-    setNumber,
-    setString,
-} from '@nativescript/core/application-settings';
+import { getBoolean, getNumber, getString, remove, setBoolean, setNumber, setString } from '@nativescript/core/application-settings';
 
 const firstRun = getBoolean('firstRun', true);
 if (firstRun) {
@@ -40,7 +32,7 @@ export const stringProperty = (target: Object, key: string | symbol) => {
         get: getter,
         set: setter,
         enumerable: true,
-        configurable: true,
+        configurable: true
     });
 };
 export const objectProperty = (target: Object, key: string | symbol) => {
@@ -69,7 +61,7 @@ export const objectProperty = (target: Object, key: string | symbol) => {
         get: getter,
         set: setter,
         enumerable: true,
-        configurable: true,
+        configurable: true
     });
 };
 
@@ -90,13 +82,7 @@ function createSetter<T>(actualkey: string, innerKey: string, options: PropertyD
         return setFunc(actualkey, newVal);
     };
 }
-function nativePropertyGenerator<T>(
-    target: Object,
-    key: any,
-    options: PropertyDecoratorOptions<T>,
-    getFunc: Function,
-    setFunc: Function
-) {
+function nativePropertyGenerator<T>(target: Object, key: any, options: PropertyDecoratorOptions<T>, getFunc: Function, setFunc: Function) {
     const actualkey = key.toString();
     const innerKey = '_' + actualkey;
     const savedValue = getFunc(actualkey);
@@ -109,7 +95,7 @@ function nativePropertyGenerator<T>(
         get: createGetter<T>(actualkey, innerKey, options),
         set: createSetter<T>(actualkey, innerKey, options, setFunc),
         enumerable: true,
-        configurable: true,
+        configurable: true
     });
 }
 export function booleanProperty(target: any, k?, desc?: PropertyDescriptor): any;
@@ -150,7 +136,7 @@ export const numberProperty = (target: Object, key: string | symbol) => {
         get: getter,
         set: setter,
         enumerable: true,
-        configurable: true,
+        configurable: true
     });
 };
 
