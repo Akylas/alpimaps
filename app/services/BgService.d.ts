@@ -11,8 +11,7 @@ export class BgService extends Observable {
     start();
     stop();
 
-
     // android
-    showForeground(force?:boolean) 
-    removeForeground()
+    showForeground(force?: boolean);
+    removeForeground();
 }

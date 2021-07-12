@@ -692,9 +692,9 @@ import { openLink } from '~/utils/ui';
 
 <gridlayout {...$$restProps} id="bottomsheetinner" width="100%" rows={`70,50,${profileHeight},auto`} columns="*,auto" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
     {#if loaded}
-        <BottomSheetInfoView bind:this={infoView} row="0" {item} />
+        <BottomSheetInfoView bind:this={infoView}  {item} />
 
-        <mdactivityindicator visibility={updatingItem ? 'visible' : 'collapsed'} row="0" horizontalAligment="right" busy={true} width={20} height={20} />
+        <mdactivityindicator visibility={updatingItem ? 'visible' : 'collapsed'}  horizontalAligment="right" busy={true} width={20} height={20} />
         <button col={1} variant="text" class="icon-btn" text="mdi-crosshairs-gps" visibility={itemIsRoute ? 'visible' : 'collapsed'} on:tap={zoomToItem} />
         <flexlayout row="1" colSpan="2" borderTopWidth="1" borderBottomWidth="1" borderColor={$borderColor}>
             <button variant="text" fontSize="10" on:tap={() => searchItemWeb()} text={$slc('search')} visibility={item && !itemIsRoute && !item.id ? 'visible' : 'collapsed'} />
