@@ -7,7 +7,7 @@ export class LocalHeightProvider extends MapProvider {
         super();
         this.name = 'local';
         this.minZoom = 5;
-        this.maxZoom = 11;
+        this.maxZoom = 12;
     }
 
     public async fetchTile(zoom, x, y): Promise<HTMLImageElement> {
@@ -29,7 +29,7 @@ export class LocalHeightProvider extends MapProvider {
             try {
                 XHRUtils.get(url, async (data) => {
                     let result = JSON.parse(data).features;
-                    result = result.filter((f) => f.properties.name && f.properties.class === 'peak');
+                    result = result.filter((f) => f.properties.name);
                     resolve(result);
                 });
             } catch (err) {
