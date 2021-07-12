@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+  <string name="geometry_size">"geometry size"</string>
   <string name="depth_multiplier">"depth multiplier"</string>
   <string name="depth_biais">"depth biais"</string>
   <string name="wireframe">"wireframe"</string>

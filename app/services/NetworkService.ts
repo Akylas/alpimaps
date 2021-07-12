@@ -5,13 +5,7 @@ import { BaseError } from 'make-error';
 import mergeOptions from 'merge-options';
 import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
 import { l } from '~/helpers/locale';
-import {
-    ApplicationEventData,
-    off as applicationOff,
-    on as applicationOn,
-    resumeEvent,
-    suspendEvent
-} from '@nativescript/core/application';
+import { ApplicationEventData, off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
 import { getBounds, getPathLength } from '~/helpers/geolib';
 import { RouteProfile } from '~/models/Route';
 import * as appavailability from '@nativescript/appavailability';
@@ -27,23 +21,7 @@ const OSMReplaceKeys = {
     via_ferrata_scale: 'difficulty'
 };
 const OSMIgnoredSubtypes = ['parking_entrance', 'tram_stop', 'platform', 'bus_stop', 'tram', 'track'];
-const OSMClassProps = [
-    'amenity',
-    'natural',
-    'leisure',
-    'shop',
-    'sport',
-    'place',
-    'highway',
-    'waterway',
-    'historic',
-    'railway',
-    'landuse',
-    'aeroway',
-    'boundary',
-    'office',
-    'tourism'
-];
+const OSMClassProps = ['amenity', 'natural', 'leisure', 'shop', 'sport', 'place', 'highway', 'waterway', 'historic', 'railway', 'landuse', 'aeroway', 'boundary', 'office', 'tourism'];
 function prepareOSMWay(way, nodes) {
     const points = [];
     if (Object.keys(nodes).length > 0) {

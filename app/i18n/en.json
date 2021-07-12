@@ -89,5 +89,6 @@
   "viewing_distance": "viewing distance",
   "wireframe": "wireframe",
   "depth_biais": "depth biais",
-  "depth_multiplier": "depth multiplier"
+  "depth_multiplier": "depth multiplier",
+  "geometry_size": "geometry size"
 }

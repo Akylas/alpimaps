@@ -155,18 +155,22 @@ export default class CustomLayersModule extends MapModule {
             }
         }
     }
-    createMergeMBTilesDataSource(sources: string[]) {
-        // console.log('createMergeMBTilesDataSource', sources);
+    createMergeMBTilesDataSource(sources: (string | TileDataSource<any, any>)[]) {
+        console.log('createMergeMBTilesDataSource', sources);
         if (sources.length === 1) {
+            if (sources[0] instanceof TileDataSource) {
+                return sources[0];
+            }
             return new MBTilesTileDataSource({
                 databasePath: sources[0]
             });
         } else {
-            const dataSources = sources.map(
-                (s) =>
-                    new MBTilesTileDataSource({
-                        databasePath: s
-                    })
+            const dataSources = sources.map((s) =>
+                s instanceof TileDataSource
+                    ? s
+                    : new MBTilesTileDataSource({
+                          databasePath: s
+                      })
             );
             return new MergedMBVTTileDataSource({
                 dataSources
@@ -175,6 +179,9 @@ export default class CustomLayersModule extends MapModule {
     }
 
     createOrderedMBTilesDataSource(sources: string[]) {
+        if (sources.length === 0) {
+            return null;
+        }
         // console.log('createOrderedMBTilesDataSource', sources);
         if (sources.length === 1) {
             return new MBTilesTileDataSource({
@@ -197,23 +204,18 @@ export default class CustomLayersModule extends MapModule {
     }
 
     createMergeMBtiles({ name, sources, legend }: { name: string; sources: string[]; legend?: string }, worldMbtiles?: MBTilesTileDataSource, options = {}) {
-        let dataSource: TileDataSource<any, any> = this.createMergeMBTilesDataSource(sources);
-        if (worldMbtiles) {
-            dataSource = new MergedMBVTTileDataSource({
-                dataSources: [worldMbtiles, dataSource]
-            });
-        }
+        const dataSource: TileDataSource<any, any> = this.createMergeMBTilesDataSource(worldMbtiles ? [worldMbtiles, ...sources] : sources);
         const opacity = appSettings.getNumber(`${name}_opacity`, 1);
         // const zoomLevelBias = Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2);
         const layer = new VectorTileLayer({
             dataSource,
-            // zoomLevelBias: zoomLevelBias * 0.75,
+            layerBlendingSpeed: 0,
+            labelRenderOrder: VectorTileRenderOrder.LAST,
             opacity,
             decoder: mapContext.getVectorTileDecoder(),
             // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_NONE,
             visible: opacity !== 0
         });
-        layer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
         layer.setVectorTileEventListener<LatLonKeys>(
             {
                 onVectorTileClicked: (e) => mapContext.vectorTileClicked(e)
@@ -627,9 +629,9 @@ export default class CustomLayersModule extends MapModule {
         }
         try {
             const folder = Folder.fromPath(directory);
-            const index = this.customSources.length;
+            // const index = this.customSources.length;
             const entities = await folder.getEntities();
-            let worldMbtiles: MBTilesTileDataSource;
+            // let worldMbtiles: MBTilesTileDataSource;
             const worldMbtilesIndex = entities.findIndex((e) => e.name === 'world.mbtiles');
             if (worldMbtilesIndex !== -1) {
                 const entity = entities.splice(worldMbtilesIndex, 1)[0];
@@ -671,25 +673,26 @@ export default class CustomLayersModule extends MapModule {
             }
             // console.log('loading etiles', e.name);
             const dataSource = this.createOrderedMBTilesDataSource(entities.filter((e) => e.name.endsWith('.etiles')).map((e2) => e2.path));
-            const name = 'Hillshade';
-            const opacity = appSettings.getNumber(`${name}_opacity`, 1);
-            const layer = (this.hillshadeLayer = packageService.hillshadeLayer = this.createHillshadeTileLayer(name, dataSource));
-            // layer.setRasterTileEventListener<LatLonKeys>(
-            //     {
-            //         onRasterTileClicked: (e) => mapContext.rasterTileClicked(e)
-            //     },
-            //     mapContext.getProjection()
-            // );
-            const data = {
-                name,
-                opacity,
-                layer,
-                local: true,
-                options: HILLSHADE_OPTIONS,
-                provider: { name }
-            };
-            this.addDataSource(data);
-            // return Promise.all(
+            if (dataSource) {
+                const name = 'Hillshade';
+                const opacity = appSettings.getNumber(`${name}_opacity`, 1);
+                const layer = (this.hillshadeLayer = packageService.hillshadeLayer = this.createHillshadeTileLayer(name, dataSource));
+                // layer.setRasterTileEventListener<LatLonKeys>(
+                //     {
+                //         onRasterTileClicked: (e) => mapContext.rasterTileClicked(e)
+                //     },
+                //     mapContext.getProjection()
+                // );
+                const data = {
+                    name,
+                    opacity,
+                    layer,
+                    local: true,
+                    options: HILLSHADE_OPTIONS,
+                    provider: { name }
+                };
+                this.addDataSource(data);
+            }
         } catch (err) {
             console.error('loadLocalMbtiles', err);
             setTimeout(() => {
