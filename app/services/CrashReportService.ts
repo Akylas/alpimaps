@@ -61,7 +61,7 @@ export class CustomError extends BaseError {
 
     toJSON() {
         const error = {
-            message: this.message,
+            message: this.message
         };
         Object.getOwnPropertyNames(this).forEach((key) => {
             if (typeof this[key] !== 'function') {
@@ -84,7 +84,7 @@ export class TimeoutError extends CustomError {
         super(
             Object.assign(
                 {
-                    message: 'timeout_error',
+                    message: 'timeout_error'
                 },
                 props
             ),
@@ -98,7 +98,7 @@ export class NoNetworkError extends CustomError {
         super(
             Object.assign(
                 {
-                    message: 'no_network',
+                    message: 'no_network'
                 },
                 props
             ),
@@ -134,7 +134,7 @@ export class MessageError extends CustomError {
         super(
             Object.assign(
                 {
-                    message: 'error',
+                    message: 'error'
                 },
                 props
             ),
@@ -149,14 +149,14 @@ export default class CrashReportService extends Observable {
     async start() {
         install();
         if (gVars.sentry && this.sentryEnabled) {
-            this.sentry = require('@nativescript-community/sentry');;
+            this.sentry = require('@nativescript-community/sentry');
             const versionName = await getVersionName();
             const buildNumber = await getBuildNumber();
             this.sentry.init({
                 dsn: SENTRY_DSN,
                 appPrefix: SENTRY_PREFIX,
                 release: `${versionName}`,
-                dist: `${buildNumber}.${global.isAndroid ? 'android' : 'ios'}`,
+                dist: `${buildNumber}.${global.isAndroid ? 'android' : 'ios'}`
             });
             this.sentry.setTag('locale', Device.language);
             // });
@@ -226,7 +226,7 @@ export default class CrashReportService extends Observable {
             title,
             view: label as any,
             okButtonText: showSendBugReport ? lc('send_bug_report') : undefined,
-            cancelButtonText: showSendBugReport ? lc('cancel') : lc('ok'),
+            cancelButtonText: showSendBugReport ? lc('cancel') : lc('ok')
         }).then((result) => {
             if (result && showSendBugReport) {
                 this.captureException(realError);

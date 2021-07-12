@@ -23,7 +23,7 @@
     import type { Address, IItem as Item } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { GeoResult, packageService } from '~/services/PackageService';
-import { showError } from '~/utils/error';
+    import { showError } from '~/utils/error';
     import { computeDistanceBetween } from '~/utils/geo';
     import { arraySortOn } from '~/utils/utils';
     import { globalMarginTop, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
@@ -270,6 +270,14 @@ import { showError } from '~/utils/error';
             textField.nativeView.focus();
         }, 100);
     }
+
+    function onReturnKey() {
+        if (searchAsTypeTimer) {
+            clearTimeout(searchAsTypeTimer);
+            searchAsTypeTimer = null;
+        }
+        instantSearch(text);
+    }
     $: {
         const query = text;
         if (query !== currentSearchText) {
@@ -349,7 +357,7 @@ import { showError } from '~/utils/error';
                 lang: options.language,
                 limit: 40
             },
-            'https://photon.komoot.de/api'
+            'https://photon.komoot.io/api'
         );
         return getJSON(url).then(function (results: any) {
             return results.features.filter((r) => r.properties.osm_type !== 'R').map((f) => new PhotonFeature(f));
@@ -527,7 +535,6 @@ import { showError } from '~/utils/error';
             loadedListeners.forEach((l) => l());
         }
     }
-
 </script>
 
 <gridlayout
@@ -546,12 +553,12 @@ import { showError } from '~/utils/error';
         variant="none"
         col="1"
         padding="0 15 0 0"
-        row="0"
         hint={$slc('search')}
-        placeholder="search"
+        placeholder={$slc('search')}
         returnKeyType="search"
         on:focus={onFocus}
         on:blur={onBlur}
+        on:return={onReturnKey}
         bind:text
         width="100%"
         backgroundColor="transparent"
@@ -559,25 +566,23 @@ import { showError } from '~/utils/error';
         floating="false"
         verticalAlignment="center"
     />
-    <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} row="0" col="2" busy={true} width={20} height={20} />
+    <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} col="2" busy={true} width={20} height={20} />
     {#if loaded}
         <button
             variant="text"
             class="small-icon-btn"
             visibility={searchResultsVisible ? 'visible' : 'collapsed'}
-            row="0"
             col={3}
             text="mdi-shape"
             on:tap={toggleFilterOSMKey}
             color={filteringOSMKey ? primaryColor : $subtitleColor}
         />
-        <button variant="text" class="small-icon-btn" visibility={searchResultsVisible ? 'visible' : 'collapsed'} row="0" col={4} text="mdi-map" on:tap={showResultsOnMap} color={$subtitleColor} />
+        <button variant="text" class="small-icon-btn" visibility={searchResultsVisible ? 'visible' : 'collapsed'} col={4} text="mdi-map" on:tap={showResultsOnMap} color={$subtitleColor} />
     {/if}
     <button
         variant="text"
         class="icon-btn"
         visibility={currentSearchText && currentSearchText.length > 0 ? 'visible' : 'collapsed'}
-        row="0"
         col={5}
         text="mdi-close"
         on:tap={clearSearch}
