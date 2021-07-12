@@ -500,7 +500,7 @@
 </script>
 
 <gridlayout rows="50,*,auto,2*" columns="*,auto,*" height="300" >
-    <stacklayout row="0" colSpan="3" orientation="horizontal">
+    <stacklayout  colSpan="3" orientation="horizontal">
         <button
             class="mdi"
             shape="round"
@@ -534,7 +534,7 @@
                 on:tap={onPackageClick(item)}
                 rippleColor="white">
                 <label
-                    row="0"
+                    
                     text={item.name.toUpperCase()}
                     color="white"
                     fontSize="13"
@@ -549,7 +549,7 @@
                     verticalAlignment="center" />
                 <label
                     col="2"
-                    row="0"
+                    
                     rowSpan="3"
                     class="mdi"
                     color="navyblue"
@@ -559,7 +559,7 @@
                     verticalAlignment="center" />
                 <button
                     col="1"
-                    row="0"
+                    
                     rowSpan="3"
                     variant="text"
                     margin="0"
@@ -572,7 +572,7 @@
                     on:tap={handlePackageAction('map', item)} />
                 <button
                     col="2"
-                    row="0"
+                    
                     rowSpan="3"
                     variant="text"
                     margin="0"
@@ -584,7 +584,7 @@
                     on:tap={handlePackageAction('geo', item)} />
                 <button
                     col="3"
-                    row="0"
+                    
                     rowSpan="3"
                     variant="text"
                     margin="0"
