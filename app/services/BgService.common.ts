@@ -1,12 +1,6 @@
 import { GeoHandler } from '~/handlers/GeoHandler';
 import { Observable } from '@nativescript/core/data/observable';
-import {
-    ApplicationEventData,
-    off as applicationOff,
-    on as applicationOn,
-    exitEvent,
-    launchEvent
-} from '@nativescript/core/application';
+import { ApplicationEventData, off as applicationOff, on as applicationOn, exitEvent, launchEvent } from '@nativescript/core/application';
 
 export const BgServiceLoadedEvent = 'BgServiceLoadedEvent';
 

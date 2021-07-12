@@ -399,6 +399,9 @@
     }
     export async function addWayPoint(position: MapPos<LatLonKeys>, metaData?, index = -1) {
         await loadView();
+        // if (waypoints.length === 0 ) {
+            // mapContext.getMap().getOptions().setClickTypeDetection(true);
+        // }
         if (waypoints.length === 0 || waypoints.getItem(0).isStart === false) {
             addStartPoint(position, metaData);
         } else {
@@ -406,30 +409,30 @@
         }
     }
 
-    function handleClickOnPos(position: MapPos<LatLonKeys>, metaData?) {
-        addWayPoint(position);
-    }
-    function handleClickOnItem(item: Item) {
-        handleClickOnPos(item.position, item.properties);
-    }
-    function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
-        const { clickType, position, featurePosition, featureData } = data;
-        // console.log('onVectorTileClicked', clickType, ClickType.LONG);
-        if (clickType === ClickType.LONG) {
-            // console.log('onVectorTileClicked', data.featureLayerName);
-            if (data.featureLayerName === 'poi' || data.featureLayerName === 'mountain_peak') {
-                handleClickOnPos(featurePosition, featureData);
-                return true;
-            }
-        }
-        return false;
-    }
+    // function handleClickOnPos(position: MapPos<LatLonKeys>, metaData?) {
+    //     addWayPoint(position);
+    // }
+    // function handleClickOnItem(item: Item) {
+    //     handleClickOnPos(item.position, item.properties);
+    // }
+    //  function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
+    //     const { clickType, position, featurePosition, featureData } = data;
+    //     // console.log('onVectorTileClicked', clickType, ClickType.LONG);
+    //     if (clickType === ClickType.LONG) {
+    //         // console.log('onVectorTileClicked', data.featureLayerName);
+    //         if (data.featureLayerName === 'poi' || data.featureLayerName === 'mountain_peak') {
+    //             handleClickOnPos(featurePosition, featureData);
+    //             return true;
+    //         }
+    //     }
+    //     return false;
+    // }
     export function onMapClicked(e) {
         const { clickType, position } = e.data;
         // console.log('onMapClicked', clickType, ClickType.LONG);
 
         if (clickType === ClickType.LONG) {
-            handleClickOnPos(position);
+            addWayPoint(position);
             return true;
         }
     }
@@ -456,6 +459,7 @@
         }
     }
     export function cancel(unselect = true) {
+        // mapContext.getMap().getOptions().setClickTypeDetection(false);
         clear(unselect);
         hide();
     }
@@ -743,7 +747,7 @@
                             <textfield
                                 col="0"
                                 marginLeft="15"
-                                row="0"
+                                
                                 hint={item.isStart ? lc('start') : lc('end')}
                                 returnKeyType="search"
                                 width="100%"
@@ -760,7 +764,7 @@
                                 variant="text"
                                 class="icon-btn"
                                 visibility={item.text && item.text.length > 0 ? 'visible' : 'collapsed'}
-                                row="0"
+                                
                                 col={2}
                                 text="mdi-close"
                                 on:tap={() => clearWayPoint(item)}
@@ -776,7 +780,7 @@
                     bind:this={startTF}
                     col="0"
                     marginLeft="15"
-                    row="0"
+                    
                     hint="start"
                     returnKeyType="search"
                     bind:text={currentStartSearchText}
@@ -793,7 +797,7 @@
                     variant="text"
                     class="icon-btn"
                     visibility={currentStartSearchText && currentStartSearchText.length > 0 ? 'visible' : 'collapsed'}
-                    row="0"
+                    
                     col={2}
                     text="mdi-close"
                     on:tap={clearStartSearch}
@@ -808,7 +812,7 @@
                     color="black"
                     marginLeft="15"
                     fontSize={15}
-                    row="0"
+                    
                     hint="stop"
                     bind:text={currentStopSearchText}
                     editable={false}
@@ -818,7 +822,7 @@
                     floating="false"
                     verticalAlignment="center"
                 />
-                <mdactivityindicator visibility={false ? 'visible' : 'collapsed'} row="0" col="1" busy={true} width={20} height={20} />
+                <mdactivityindicator visibility={false ? 'visible' : 'collapsed'}  col="1" busy={true} width={20} height={20} />
                 <button
                     variant="text"
                     class="icon-btn"
