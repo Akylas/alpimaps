@@ -100,7 +100,11 @@ namespace svelteNative.JSX {
         variant?: String;
     }
     export interface LabelAttributes {
+        autoFontSize?: boolean;
         verticalTextAlignment?: String;
+        maxLines?: number;
+        minFontSize?: number;
+        maxFontSize?: number;
         html?: String;
     }
 }
