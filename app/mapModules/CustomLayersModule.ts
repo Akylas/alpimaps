@@ -209,7 +209,7 @@ export default class CustomLayersModule extends MapModule {
         // const zoomLevelBias = Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2);
         const layer = new VectorTileLayer({
             dataSource,
-            layerBlendingSpeed: 0,
+            layerBlendingSpeed: 5,
             labelRenderOrder: VectorTileRenderOrder.LAST,
             opacity,
             decoder: mapContext.getVectorTileDecoder(),
