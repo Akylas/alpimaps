@@ -27,10 +27,11 @@
 		line-color: @river; 
 		line-width: linear([view::zoom], (13, 0.7), (14, 1), (15, 1.6));
 	}
-	[class=dam][zoom>=15],
+	[class=dam][zoom>=13],
 	[class=weir][zoom>=15]{
-		line-color: @bridge_casing;
+		line-color: @dam-casing;
 		line-width: 1;
+		polygon-fill: @dam-fill;
 	}
 	[class=lock][zoom>=16]{
 		line-color: @river;

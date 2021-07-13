@@ -235,7 +235,8 @@ Map {
 /* 5.2 Bridges */
 
 // @bridge_background: #EDEBDB;
-@bridge_casing: black;
+@dam_casing: black;
+@dam_fill: rgba(153, 153, 153, 0.432);
 
 /* 5.3 Tunnels */
 
