@@ -276,8 +276,9 @@
 /* 5.2 Bridges */
 
 @bridge_fill:  rgba(255,255,255,0.4) ;
-@bridge_casing: black;
 @bridge-casing: #000000;
+@dam_casing: black;
+@dam_fill: rgba(153, 153, 153, 0.132);
 
 /* 5.4 Piste */
 
@@ -371,7 +372,7 @@
 @trunk-width-z11:                 1.9;
 @primary-width-z11:               1.8;
 @secondary-width-z11:             1.1;
-@tertiary-width-z11:              0.7;
+@tertiary-width-z11:              1.0;
 
 @motorway-width-z12:              3.5;
 @motorway-link-width-z12:         1.5;
