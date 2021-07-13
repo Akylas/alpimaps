@@ -226,7 +226,7 @@
         return osmicon(formatter.geItemIcon(item));
     }
     function getItemIconColor(item: SearchItem) {
-        return providerColors[item.provider];
+        return providerColors[item.provider] || 'white';
     }
     function getItemTitle(item: SearchItem) {
         return formatter.getItemTitle(item);
@@ -303,7 +303,7 @@
     async function searchInGeocodingService(options) {
         let result: any = await packageService.searchInLocalGeocodingService(options);
         result = packageService.convertGeoCodingResults(result, true) as any;
-        return arraySortOn(result, 'rank') as any as GeoResult[];
+        return arraySortOn(result, 'rank').reverse() as any as GeoResult[];
     }
     async function searchInVectorTiles(options: SearchRequest) {
         // console.log('searchInVectorTiles', options);
@@ -391,17 +391,17 @@
         let result = [];
         try {
             await Promise.all([
-                searchInVectorTiles({
-                    ...options,
-                    filterExpression: undefined,
-                    // filterExpression: `layer='poi'`,
-                    regexFilter: currentQuery,
-                    searchRadius: Math.min(options.searchRadius, 10000) //meters
-                })
-                    .then((r) => loading && r && result.push(...r))
-                    .catch((err) => {
-                        console.error('searchInVectorTiles', err);
-                    }),
+                // searchInVectorTiles({
+                //     ...options,
+                //     filterExpression: undefined,
+                //     // filterExpression: `layer='poi'`,
+                //     regexFilter: currentQuery,
+                //     searchRadius: Math.min(options.searchRadius, 10000) //meters
+                // })
+                //     .then((r) => loading && r && result.push(...r))
+                //     .catch((err) => {
+                //         console.error('searchInVectorTiles', err);
+                //     }),
                 searchInGeocodingService(options)
                     .then((r) => loading && r && result.push(...r))
                     .catch((err) => {
@@ -418,7 +418,11 @@
                         console.error('photonSearch', err);
                     })
             ]);
-            console.log('search done', result.length);
+            // console.log(
+            //     'search done',
+            //     result.length,
+            //     result.map((s) => s.properties.name)
+            // );
             if (!loading) {
                 // was cancelled
                 return;
@@ -428,6 +432,7 @@
             } else {
                 await loadView();
             }
+            let now = Date.now();
             dataItems = result.map((s) => ({ ...s, color: getItemIconColor(s), icon: getItemIcon(s), title: getItemTitle(s), subtitle: getItemSubtitle(s) }));
             updateFilteredDataItems();
         } catch (err) {
