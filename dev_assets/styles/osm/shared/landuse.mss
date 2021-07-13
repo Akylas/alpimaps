@@ -769,13 +769,14 @@ Map {
 
 #landcover['mapnik::geometry_type'=2] {
 
-  [name!=null][zoom>=15] {
-    text-name: @name;
-    text-face-name: @mont;
-    text-fill: @building_label;
-    text-size: 9;
-    text-wrap-width: 100;
-  }  
+  // [name!=null][zoom>=15] {
+  //   text-name: @name;
+  //   text-face-name: @mont;
+  //   text-fill: @building_label;
+  //   text-size: 9;
+  //   text-wrap-width: 100;
+  //   text-min-distance:30;
+  // }  
   [class=rock][subclass=cliff][zoom>=12]::cliff { 
     line-color: #777;
     line-width: linear([view::zoom], (12, 0.5), (15,1));
