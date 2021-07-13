@@ -2,8 +2,6 @@
 @name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
 @osm_icon: [nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : [nuti::osm-[class]];
 @featureId: [osmid];
-// @id_test: (([osm_id]) = [nuti::selected_id]) ? #f00 : #fff;
-// @name_test: (([name]) = [nuti::selected_name]) ? #0f0 : #fff;
 
 #mountain_peak {
 	// order is important for icon to take precedence over label and respect rank
@@ -16,48 +14,31 @@
 		[class="saddle"] {
 			text-fill: @sadle_label;
 		}
-		// text-min-distance: 50;
-		// text-dy: linear([view::zoom], (7, 15), (13, 16), (18, 20)); 
 		text-feature-id: @featureId;
-		// text-placement-priority:[ele];
 	}
-	// ::label {
-		text-name: @name;
-		[zoom>=10] {
-			text-name: @name ?  ( [ele] ? [ele] + 'm' + '\n ' + @name : @name): '';
-		}
-		// text-min-distance: 50;
-		text-face-name: @mont_md;
-		text-size: linear([view::zoom], (7, 6), (13, 8), (18, 11))+ 0.000001 * [ele]; 
-		text-line-spacing: -1;
-		text-placement: [nuti::texts3d];
-		text-fill: @peak_label;
-		[class="saddle"] {
-			text-fill: @sadle_label;
-		}
-		text-dy: linear([view::zoom], (7, 6), (13, 8), (18, 11)); 
-		text-wrap-width: step([view::zoom], (7, 40), (13, 100), (18, 150));
-		text-feature-id: @featureId;
-		text-halo-fill: @peak_halo;
-		text-halo-rasterizer: fast;
-		text-halo-radius: 1;
-		// text-placement-priority:[ele];
-		// text-dy: 10;
-	// }
-	// shield-name: @name ?  ( [ele] ? [ele] + 'm' + '\n ' + @name : @name): '';
-	// shield-face-name: @mont_md;
-	// shield-size: linear([view::zoom], (7, 7), (13, 8), (18, 12))- 0.000001 * [rank]; 
-	// shield-line-spacing: -1;
-	// shield-placement: [nuti::markers3d];
-	// shield-file: url(symbols/[class].svg);
-	// shield-fill: darken(@peak_label, 10%);
-	// shield-dy: linear([view::zoom], (7, 15), (13, 16), (18, 20)); 
-	// shield-feature-id: @featureId;
+	text-name: @name;
+	[zoom>=10] {
+		text-name: @name ?  ( [ele] ? [ele] + 'm' + '\n ' + @name : @name): '';
+	}
+	text-face-name: @mont_md;
+	text-size: linear([view::zoom], (7, 6), (13, 8), (18, 11))+ 0.000001 * [ele]; 
+	text-line-spacing: -1;
+	text-placement: [nuti::texts3d];
+	text-fill: @peak_label;
+	[class="saddle"] {
+		text-fill: @sadle_label;
+	}
+	text-dy: linear([view::zoom], (7, 6), (13, 8), (18, 11)); 
+	text-wrap-width: step([view::zoom], (7, 40), (13, 100), (18, 150));
+	text-feature-id: @featureId;
+	text-halo-fill: @peak_halo;
+	text-halo-rasterizer: fast;
+	text-halo-radius: 1;
 	
 }
 
-#landcover['mapnik::geometry_type'=3][name!=null],
-#landuse['mapnik::geometry_type'=3][name!=null] {
+#landcover[name!=null],
+#landuse[name!=null] {
   [class=industrial][zoom>=15],
   [class=military][zoom>=15],
   [zoom>=16] {
@@ -90,53 +71,6 @@
 		text-size: 12;
 	}
 }
-
-// #park['mapnik::geometry_type'=1][zoom<=16]{
-// 	[class=national_park][zoom>=6],
-// 	[zoom>=8]
-// 	// [class=aboriginal_lands][zoom>=12],
-// 	// [class=protected_area][zoom>=12]
-// 	{
-// 		text-name: [name];
-// 		text-face-name: @mont_md;
-//         text-fill: #008000;
-//         [class='aboriginal_lands']{
-//             text-fill: @aboriginal;
-//         }
-// 		text-halo-fill: @peak_halo;
-// 		text-halo-rasterizer: fast; 
-// 		text-halo-radius: 1
-//         // text-largest-bbox-only: false;
-//         text-wrap-width: 150;
-//         text-wrap-before: true;
-// 		text-size: linear([view::zoom], (12, 9), (15, 12.0));
-//         // text-placement: line;
-//         text-min-distance: 150;
-// 	}
-// }
-
-// #landuse ['mapnik::geometry_type'=3] [name!=null][zoom >= 15][zoom <=16],
-// #landcover ['mapnik::geometry_type'=3] [name!=null][zoom >= 15][zoom <=16]
-// {
-//     text-name: [name];
-//     text-halo-radius: @standard-halo-radius;
-//     text-halo-fill: @standard-halo-fill;
-//     text-fill: #555;
-//     text-size: 8;
-//     text-face-name: @book-fonts;
-// 	text-placement: [nuti::markers3d];
-// // text-dy: 8;
-//     text-vertical-alignment: middle;
-//     text-spacing: 400;
-// 	text-wrap-width: 20;
-// }
-// #landuse[name!=null][zoom>=15],
-// #landcover[name!=null][zoom>=15] {
-// 	text-name: @name;
-// 	text-face-name: @mont;
-// 	text-fill: @building_label;
-// 	text-size: 9;
-// }  
 
 #place{
 	[class=continent][zoom>=1][zoom<=2]{
@@ -356,7 +290,9 @@
 	[class=island],
 	[class=islet],
 	[class=neighbourhood] {
-		[zoom>=13]
+		[zoom>=13][rank<=12],
+		[zoom>=14][rank<=17],
+		[zoom>=15]
 		// [zoom<=16][rank<=12],
 		// [zoom>=16][zoom<=17]
 		{
@@ -375,12 +311,15 @@
 	}
 	[class=isolated_dwelling],
 	[class=locality] {
-		[zoom>=13]
+		[zoom>=13][rank<=12],
+		[zoom>=14][rank<=17],
+		[zoom>=15]
 		// [zoom<=16][rank<=12],
 		// [zoom>=16][zoom<=17]
 		{
 			text-name: @name;
 			text-face-name: @mont;
+			text-allow-overlap: true;
 			text-placement: [nuti::texts3d];
 			text-fill: @place_text;
 			text-halo-fill: @place_halo;
@@ -498,15 +437,19 @@
 	[class=path][subclass!=track][subclass!=footway][zoom>=15] {
 			text-name: @name;
 			text-fill: @road_label;
-			text-size:linear([view::zoom], (13, 7), (16, 9), (17, 10));
+			text-size:linear([view::zoom], (13, 4), (16, 9), (17, 10));
 			text-halo-radius: @standard-halo-radius;
 			text-halo-fill: @standard-halo-fill;
-			// text-spacing: 300;
+			// text-spacing: 100;
 			// text-clip: false;
 			text-placement: line;
+			text-avoid-edges: false;
+			
 			text-face-name: @mont_md;
 			// text-vertical-alignment: middle;
-			text-dy:linear([view::zoom], (13, 0), (16, 1), (17, 2));
+			[subclass!=pedestrian] {
+				text-dy:linear([view::zoom], (13, 0), (16, 1), (17, 2));
+			}
 			
 		// [zoom>=16] {
 			// text-size: 8;
@@ -617,44 +560,16 @@
 	}
 }
 
-// #park['mapnik::geometry_type'=1][zoom<=16], 
-// #poi [class!='information'][subclass!='viewpoint'][subclass!=artwork][subclass!=dog_park][subclass!=playground],
-// #poi [class='information'][name!=null],
-// #poi [subclass='viewpoint'][name!=null]{
 #poi{
 	[class!=null] {
-		// [class=national_park][zoom>=6],
-	// [class=protected_area][zoom>=9],
-	// [class=aboriginal_lands][zoom>=9],
 		[class=lodging][subclass='alpine_hut'],
 		[class=lodging][subclass='wilderness_hut'],
 		[class=spring],
-		// [class=lodging][subclass='wilderness_hut'][rank<=10][zoom>=11],
 		[class=campsite][rank<=15],
-		// [zoom>=14][rank<=1][class!='information'][class!='toilets'][class!='bus'][subclass!='tram_stop'][subclass!='station'][class!='picnic_site'][subclass!='viewpoint'],
-		// [zoom>=15][rank<=2][class!='toilets'][class!='information'][class!='bus'][subclass!='tram_stop'][subclass!='station'][subclass!='viewpoint'],
-		// [class=park][zoom>=15][rank<=10],
 		[zoom>=15][rank<=15][subclass!=hotel][class!='bus'][class!='restaurant'][class!='bar'][class!='school'][class!='college'][subclass!='tram_stop'][subclass!='community_centre'][subclass!='station'],
-		// [class=park][zoom>=16][rank<=20],
 		[zoom>=16][rank<=35][subclass!='hotel'],
 		[zoom>=17][rank<=50],
-		// [class=park][zoom>=17][rank<=30],
 		[zoom>=18] {
-
-			// shield-name: @name;
-			// shield-file: url(symbols/icons/shower.svg);
-			// shield-face-name: @mont;
-			// shield-placement: [nuti::markers3d];
-			// shield-line-spacing: -1;
-			// shield-min-distance : 200;
-			// shield-fill: @poi_dark;
-			// shield-halo-fill: @peak_halo;
-			// shield-halo-rasterizer: fast;
-			// shield-halo-radius: linear([view::zoom], (14, 1), (18, 0.5));
-			// shield-size: linear([view::zoom], (14, 7), (18, 10)) - 0.000001 * [rank];
-			// shield-wrap-width: linear([view::zoom], (13, 10), (18, 100));
-			// shield-feature-id: @featureId;
-			// shield-dy: 15;
 
 			::icon {
 						// text-min-distance: 4;
@@ -701,23 +616,19 @@
 
 			[class!='information'][subclass!='viewpoint'][class!='spring'],
 			[class=spring][zoom>=17] {
-				// [class='bus'][zoom>=17],
-				// [class='railway'][zoom>=17],
-				::label {
+				// ::label {
 					text-name: @name;
-					text-face-name: @mont;
+					text-face-name: @mont_md;
 					text-placement: [nuti::texts3d];
 					text-line-spacing: -1;
-					// text-wrap-before: true;
 					text-fill: @poi_dark;
 					text-halo-fill: @peak_halo;
 					text-halo-rasterizer: fast;
 					text-halo-radius: 1;
 					text-size: linear([view::zoom], (14, 7), (18, 10)) - 0.000001 * [rank];
 					text-wrap-width: step([view::zoom], (14, 40), (15, 50), (16, 60), (18, 70), (19, 100));
-					// text-feature-id: @featureId;
-					// text-min-distance: 500;
-					text-dy: 12;
+					text-feature-id: @featureId;
+					text-dy: linear([view::zoom], (14, 9), (18, 12));
 					// text-dy: 13;
 
 					[class='bus'][zoom<17],
@@ -734,70 +645,13 @@
 							text-fill: @aboriginal;
 						}
 					}
-				}
+				// }
 				
 			}
 		}
 		
 	}
 }
-
-// #mountain_peak {
-// 	// [class=peak][zoom>=7],
-// 	// [zoom>=12]{
-// 	// [osm_id = 'nuti::selected_id'],
-// 	// [name = 'nuti::selected_name'],
-// 	::icon {
-// 	// 	[zoom>=4][comment =~'.*Highest.*'],
-// 	// [zoom>=4][comment =~'.*highest.*'],
-// 	// [zoom>=7][ele>=4000],
-// 	// [zoom>=8][ele>=3000],
-// 	// [zoom>=9][ele>=2000],
-// 	// [zoom>=10][ele>=1500],
-// 	// [zoom>=11] {
-// 			text-placement: [nuti::markers3d];
-// 			text-name: @osm_icon;
-// 	// text-size: 14 + [ele] * 0.00001;
-// 			text-size: linear([view::zoom], (7, 6), (15, 8))- 0.000001 * [rank]; 
-// 			text-face-name: @osm;
-// 			text-fill: @peak_label;
-// 			text-feature-id: @featureId;
-// 			// text-halo-fill: @halo_park_label;
-// 			// text-feature-id: [ele];
-// 			// text-halo-rasterizer: fast;
-// 			// text-halo-radius: 1;
-// 		// }
-// 	}
-// 	::label {
-// 	// 	[zoom>=4][comment =~'.*Highest.*'],
-// 	// [zoom>=4][comment =~'.*highest.*'],
-// 	// [zoom>=7][ele>=4500],
-// 	// [zoom>=8][ele>=3500],
-// 	// [zoom>=9][ele>=2500],
-// 	// [zoom>=10][ele>=2000],
-// 	// [zoom>=11] {
-// 		text-name: @name ?  ( [ele] ? [ele] + 'm' + '\n ' + @name : @name): '';
-// 		text-face-name: @mont_md;
-// 		text-size: linear([view::zoom], (6, 7), (11, 8), (14, 9))- 0.000001 * [rank]; 
-// 		text-fill: darken(@peak_label, 5%);
-// 		text-placement: [nuti::markers3d];
-// 		text-halo-fill: @halo_park_label;
-// 		text-feature-id: @featureId;
-// 		text-halo-radius: 0.5;
-// 		text-halo-rasterizer: fast;
-// 		// text-feature-id: [ele];
-// 		// text-allow-overlap: true;
-// 		// text-wrap-before: true;
-// 		text-wrap-width: step([view::zoom], (11, 40), (15, 70), (16, 90), (18, 100));
-// 		// text-line-spacing:	-2;
-// 		text-dy: 10;
-// 		// text-min-distance: 3000;
-// 		// }
-		
-// 	// }
-// 	}
-// }
- 
 
 #building['nuti::buildings'>0][name!=null][zoom>=17]{
 	text-name: [name];

@@ -31,12 +31,13 @@
 	[div=1000][zoom>=12],
 	[div=500][zoom>=12],
 	[div=200][zoom>=13],
-	[div=100][zoom>=14] {
+	[div=100][zoom>=14],
+	[div=50][zoom>=15] {
 		text-face-name: @mont;
 		text-name: [ele]+' m';
 		text-fill: @contour_label;
 		text-avoid-edges: false;
 		text-placement: line;
-		text-size: linear([view::zoom], (12, 5), (20, 9)) + 0.00001 * [ele];
+		text-size: linear([view::zoom], (12, 5), (16, 8), (20, 9)) + 0.00001 * [ele];
 	}
 }
