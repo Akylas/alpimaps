@@ -42,12 +42,7 @@ export default class ItemFormatter {
 
     getItemName(item: Item) {
         const properties = item.properties || {};
-        return (
-            properties[`name_${mapContext.getCurrentLanguage()}`] ||
-            properties.name ||
-            properties.name_int ||
-            (item.address && item.address.name)
-        );
+        return properties[`name_${mapContext.getCurrentLanguage()}`] || properties.name || properties.name_int || (item.address && item.address.name);
     }
     getItemPositionToString(item: Item) {
         const position = item.position;
@@ -64,11 +59,7 @@ export default class ItemFormatter {
     }
     getItemTitle(item: Item) {
         if (item) {
-            return (
-                this.getItemName(item) ||
-                this.getItemAddress(item, 1) ||
-                `${item.position.lat.toFixed(4)}, ${item.position.lon.toFixed(4)}`
-            );
+            return this.getItemName(item) || this.getItemAddress(item, 1) || `${item.position.lat.toFixed(4)}, ${item.position.lon.toFixed(4)}`;
         }
         return '';
     }

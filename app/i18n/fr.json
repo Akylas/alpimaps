@@ -81,5 +81,8 @@
   "auto": "auto",
   "dark": "sombre",
   "light": "clair",
-  "token_key": "clef API: %s"
+  "token_key": "clef API: %s",
+  "share": "partager",
+  "weather": "météo",
+  "peaks": "sommets"
 }
