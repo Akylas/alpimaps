@@ -86,16 +86,39 @@ class WindowKalmanFilter extends MathFilter {
         );
     }
 }
+class WindowFilter extends MathFilter {
+    windowLength: number;
+    constructor(options) {
+        super();
+        this.windowLength = options?.windowLength ?? 5;
+    }
+
+    datas = [];
+    lastData = null;
+    filter(_newData) {
+        this.datas.push(_newData);
+        this.lastData = _newData;
+        if (this.datas.length > this.windowLength) {
+            this.datas.shift();
+        }
+        return (
+            this.datas.reduce(function (sum, num) {
+                return sum + num;
+            }, 0) / this.datas.length
+        );
+    }
+}
 
 function getGradeColor(grade) {
-    if (grade >= 26) {
-        return '#ff0000';
-    } else if (grade >= 18) {
-        return '#ffa500';
-    } else if (grade >= 8) {
-        return '#ffff00';
+    if (grade > 10) {
+        return '#EA3223';
+    } else if (grade > 7) {
+        return '#FFFE54';
+    } else if (grade > 4) {
+        return '#001CF5';
+    } else {
+        return '#75FA4C';
     }
-    return '#60B3FC';
 }
 
 const average = (arr) => arr.reduce((p, c) => p + c, 0) / arr.length;
@@ -430,8 +453,12 @@ class PackageService extends Observable {
             return items;
         }
         const size = result.size();
+        let item;
         for (let i = 0; i < size; i++) {
-            items.push(this.convertGeoCodingResult(result.get(i), full));
+            item = this.convertGeoCodingResult(result.get(i), full);
+            if (item) {
+                items.push(item);
+            }
         }
         return items;
     }
@@ -467,6 +494,9 @@ class PackageService extends Observable {
             }
             if (full) {
                 this.prepareGeoCodingResult(r);
+                if (!r.properties.name && !r.address['street'] && !r.address['city']) {
+                    return;
+                }
             }
             return r;
         }
@@ -496,6 +526,7 @@ class PackageService extends Observable {
                         this._localOSMOfflineGeocodingService = new OSMOfflineGeocodingService({
                             language: this.currentLanguage,
                             maxResults: 100,
+                            autoComplete: true,
                             path: s.path
                         });
                         return true;
@@ -603,12 +634,11 @@ class PackageService extends Observable {
             }
         }
 
-        // console.log('prepareGeoCodingResul2t', geoRes, geoRes.address);
         const res = geoRes as Item;
         res.provider = 'carto';
         res.address = address;
         if (!onlyAddress) {
-            const name = (geoRes.properties.name = geoRes.properties.name || res.address.name || res.address.street);
+            const name = (geoRes.properties.name = geoRes.properties.name || res.address.name);
             if (name && name.length === 0) {
                 delete geoRes.properties.name;
             }
@@ -715,35 +745,27 @@ class PackageService extends Observable {
         };
 
         const profile: { lat: number; lon: number; altitude: number; tmpElevation?: number }[] = [];
-        // const altitudeFilter = new WindowKalmanFilter({ windowLength: 5, kalman: { R: 0.2, Q: 1 } });
-        const range = 5;
-        const jsElevation = (elevations as any).toArray();
+        const altitudeFilter = new WindowFilter({ windowLength: 2 });
+        const jsElevation: number[] = (elevations as any).toArray();
         const nbPoints = positions.size();
         for (let i = 0; i < positions.size(); i++) {
             const pos = positions.get(i);
-            // const altitude = elevations.get(i);
-            const min = Math.max(i - range, 0);
-            const max = Math.min(i + range, nbPoints - 1);
             profile.push({
                 lat: pos.getY(),
                 lon: pos.getX(),
                 altitude: jsElevation[i],
-                // tmpElevation: jsElevation[i]
-                tmpElevation: Math.round(average(jsElevation.slice(min, max)))
+                tmpElevation: altitudeFilter.filter(jsElevation[i])
             });
         }
         let ascent = 0;
         let descent = 0;
         let lastAlt;
-        let lastAvgAlt;
         const filterStep = 10;
         for (let i = 0; i < nbPoints; i++) {
             const sample = profile[i];
 
             const deltaDistance = last ? dist2d(last, sample) : 0;
-            // const deltaDistance2 = last ? getDistanceSimple(last, sample) : 0;
             currentDistance += deltaDistance;
-            // sample.height = sample.tmpElevation;
             if (i >= 1) {
                 const diff = sample.altitude - lastAlt;
                 const rdiff = Math.round(diff);
@@ -754,7 +776,6 @@ class PackageService extends Observable {
                     descent -= rdiff;
                     lastAlt = sample.altitude;
                 }
-                // grades.push(grade);
             } else {
                 lastAlt = sample.altitude;
             }
@@ -762,7 +783,7 @@ class PackageService extends Observable {
             const avg = Math.round(sample.tmpElevation);
 
             result.data.push({
-                d: Math.round(currentDistance),
+                d: currentDistance,
                 a: currentHeight,
                 g: 0,
                 avg
@@ -773,46 +794,60 @@ class PackageService extends Observable {
             if (sample.tmpElevation < result.min[1]) {
                 result.min[1] = currentHeight;
             }
-            // result.points.push({ lat: sample.lat, lon: sample.lon });
-
             last = sample;
-            lastAvgAlt = currentHeight;
             delete sample.tmpElevation;
-            // delete sample.tmp2Elevation;
         }
-        // grades.unshift(grades[0]); //no first grade let s copy the next one
-        // result.data[0].grade = grades[0];
         const colors = [];
-        // const grades = this.getSmoothedGradient(result.data);
-        let grade, lastGradeColor;
+        let grade;
+        let lastKm = 0;
+        let gradesCounter = 0;
+        let gradeSum = 0;
+        let lastIndex = 0;
+        lastAlt = result.data[0].a;
         for (let i = 1; i < result.data.length; i++) {
-            const pt1 = result.data[i],
-                pt2 = result.data[Math.min(i + 1, profile.length - 1)];
-            let grade = Math.round((Math.min(pt2.avg - pt1.avg, pt2.a - pt1.a) / (pt2.d - pt1.d)) * 100);
-            if (Math.abs(grade) > 50) {
-                grade = result.data.length ? result.data[result.data.length - 1].g : 0;
+            let idelta = 1;
+            const pt1 = result.data[i];
+            let pt2 = result.data[Math.min(i + idelta, profile.length - 1)];
+            if (pt2.d - pt1.d < 20) {
+                if (grade === undefined) {
+                    while (pt2.d - pt1.d < 20 && i + idelta < profile.length) {
+                        idelta++;
+                        pt2 = result.data[Math.min(i + idelta, profile.length - 1)];
+                    }
+                } else {
+                    pt1.g = grade;
+                    continue;
+                }
+            } else {
+                grade = ((pt2.avg - pt1.avg) / (pt2.d - pt1.d)) * 100;
             }
             pt1.g = grade;
-            const color = getGradeColor(grade);
-            if (lastGradeColor === undefined || lastGradeColor !== color) {
+            gradeSum += grade;
+            gradesCounter += 1;
+            if (pt1.d / 1000 > lastKm) {
+                lastKm += 0.5;
+                const avgGrade = gradeSum / gradesCounter;
+                gradeSum = 0;
+                gradesCounter = 0;
                 colors.push({
-                    d: i,
-                    g: grade,
-                    color: getGradeColor(grade)
+                    d: lastIndex,
+                    g: avgGrade,
+                    color: getGradeColor(Math.abs(avgGrade))
                 });
+                lastIndex = i;
+                lastAlt = pt1.a;
             }
-            lastGradeColor = color;
         }
-        // if (colors[colors.length - 1].d < result.data.length - 1) {
-        //     colors.push({
-        //         d: result.data.length - 1,
-        //         g: lastGrade,
-        //         color: getGradeColor(lastGrade)
-        //     });
-        // }
+        if (colors[colors.length - 1].lastIndex < result.data.length - 1) {
+            const avgGrade = gradeSum / gradesCounter;
+            colors.push({
+                d: result.data.length - 1,
+                g: avgGrade,
+                color: getGradeColor(avgGrade)
+            });
+        }
         result.dmin = Math.round(-descent);
         result.dplus = Math.round(ascent);
-        // console.log(JSON.stringify(colors));
         result.colors = colors;
         return result;
     }

@@ -90,5 +90,7 @@
   "wireframe": "wireframe",
   "depth_biais": "depth biais",
   "depth_multiplier": "depth multiplier",
-  "geometry_size": "geometry size"
+  "geometry_size": "geometry size",
+  "share": "share",
+  "peaks": "peaks"
 }

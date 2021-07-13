@@ -419,7 +419,7 @@
             if (__CARTO_PACKAGESERVICE__) {
                 packageService.start();
             }
-            setMapStyle(appSettings.getString('mapStyle',PRODUCTION ? 'osm.zip~voyager' : 'osm~voyager'), true);
+            setMapStyle(appSettings.getString('mapStyle', PRODUCTION ? 'osm.zip~voyager' : 'osm~voyager'), true);
         } catch (err) {
             showError(err);
         }
@@ -579,7 +579,7 @@
             if (setSelected) {
                 $selectedItem = item;
             }
-            if (setSelected && !item.route) {
+            if (setSelected && !item.route && (!item.address || !item.address['street'])) {
                 const service = packageService.localOSMOfflineReverseGeocodingService;
                 if (service) {
                     itemLoading = true;
@@ -593,19 +593,30 @@
                         })
                         .then((res) => {
                             if (res) {
+                                let bestFind;
                                 for (let index = 0; index < res.size(); index++) {
-                                    const r = packageService.convertGeoCodingResult(res.get(index));
-                                    if (computeDistanceBetween(item.position, r.position) <= radius && r.rank > 0.7) {
-                                        if ($selectedItem.position === item.position) {
-                                            $selectedItem = packageService.prepareGeoCodingResult(
-                                                {
-                                                    address: r.address as any,
-                                                    ...$selectedItem
-                                                },
-                                                r.rank < 0.9
-                                            );
+                                    const r = packageService.convertGeoCodingResult(res.get(index), true);
+                                    if (r.rank > 0.7 && computeDistanceBetween(item.position, r.position) <= radius) {
+                                        if (!bestFind || Object.keys(r.address).length > Object.keys(bestFind.address).length) {
+                                            bestFind = r;
+                                        } else if (bestFind && item.address && item.address['street']) {
+                                            break;
                                         }
+                                    } else {
                                         break;
+                                    }
+                                }
+                                if (bestFind && $selectedItem.position === item.position) {
+                                    if (item.properties.layer === 'housenumber') {
+                                        $selectedItem = {
+                                            address: { ...bestFind.address, name: null, houseNumber: item.properties.housenumber } as any,
+                                            ...$selectedItem
+                                        };
+                                    } else {
+                                        $selectedItem = {
+                                            ...$selectedItem,
+                                            address: {...bestFind.address, name:null} as any
+                                        };
                                     }
                                 }
                             }

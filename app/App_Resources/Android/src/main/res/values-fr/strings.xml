@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+  <string name="peaks">"sommets"</string>
+  <string name="weather">"météo"</string>
+  <string name="share">"partager"</string>
   <string name="token_key">"clef API: %1$s"</string>
   <string name="light">"clair"</string>
   <string name="dark">"sombre"</string>
@@ -86,7 +89,6 @@
   <string name="day_time">"day time"</string>
   <string name="exageration">"exageration"</string>
   <string name="lod">"level of details"</string>
-  <string name="weather">"weather"</string>
   <string name="review_application">"review application"</string>
   <string name="watching_location">"watching your location"</string>
 </resources>

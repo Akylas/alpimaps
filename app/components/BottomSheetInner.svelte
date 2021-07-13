@@ -36,11 +36,12 @@
     import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
     import * as xml2js from 'xml2js';
     import { AxisDependency } from '@nativescript-community/ui-chart/components/YAxis';
-import { openLink } from '~/utils/ui';
+    import { openLink } from '~/utils/ui';
 
     export const LISTVIEW_HEIGHT = 200;
     export const PROFILE_HEIGHT = 150;
     export const WEB_HEIGHT = 400;
+    export const INFOVIEW_HEIGHT = 80;
 
     const mapContext = getMapContext();
     const highlightPaint = new Paint();
@@ -269,7 +270,7 @@ import { openLink } from '~/utils/ui';
             steps = [0];
             return;
         }
-        let total = 70;
+        let total = INFOVIEW_HEIGHT;
         const result = [0, total];
         total += 50;
         result.push(total);
@@ -507,6 +508,7 @@ import { openLink } from '~/utils/ui';
         const profile = item.route.profile;
         const profileData = profile?.data;
         if (profileData) {
+            const xAxis = chartView.getXAxis();
             if (!chartInitialized) {
                 chartInitialized = true;
                 chartView.panGestureOptions = { minDist: 40, failOffsetYEnd: 20 };
@@ -528,7 +530,6 @@ import { openLink } from '~/utils/ui';
                 leftAxis.ensureLastLabel = true;
                 // leftAxis.setLabelCount(3);
 
-                const xAxis = chartView.getXAxis();
                 xAxis.setPosition(XAxisPosition.BOTTOM);
                 xAxis.setLabelTextAlign(Align.CENTER);
                 xAxis.setTextColor($textColor);
@@ -537,10 +538,10 @@ import { openLink } from '~/utils/ui';
                 xAxis.setDrawMarkTicks(true);
                 // xAxis.ensureLastLabel = true;
                 xAxis.setValueFormatter({
-                    getAxisLabel: (value, axis) => formatValueToUnit(value, UNITS.DistanceKm) 
+                    // getAxisLabel: (value, axis) => formatValueToUnit(value, UNITS.DistanceKm)
+                    getAxisLabel: (value, axis, viewPortHandler) => Math.floor(value/1000).toFixed()
                 });
 
-                chartView.setMaxVisibleValueCount(300);
                 chartView.setCustomRenderer({
                     drawHighlight(c: Canvas, h: Highlight<Entry>, set: LineDataSet, paint: Paint) {
                         // const canvasHeight = c.getHeight();
@@ -554,7 +555,7 @@ import { openLink } from '~/utils/ui';
 
                         c.drawLine(x, 0, x, y - 5, highlightPaint);
                         highlightPaint.setColor('white');
-                        const layout = new StaticLayout(h.entry.a.toFixed() + 'm' + '\n' + h.entry.g.toFixed() + '%', highlightPaint, w, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
+                        const layout = new StaticLayout(h.entry.a.toFixed() + 'm' + '\n' + '~' + Math.abs(h.entry.g.toFixed())+ '%'+ '\n' + formatValueToUnit(h.entry.d, UNITS.DistanceKm) , highlightPaint, w, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
                         c.drawRoundRect(x - w / 2, 0, x + w / 2, layout.getHeight(), 2, 2, paint);
                         c.save();
                         c.translate(x - w / 2, 0);
@@ -592,13 +593,14 @@ import { openLink } from '~/utils/ui';
                 chartView.highlightValues(null);
                 chartView.resetZoom();
             }
+            // xAxis.setLabelCount(Math.round(item.route.totalDistance) / 1000);
             const chartData = chartView.getData();
             if (!chartData) {
                 const set = new LineDataSet(profileData, 'a', 'd', 'avg');
                 set.setDrawValues(true);
                 set.setValueTextColor($textColor);
                 set.setValueTextSize(10);
-                set.setMaxFilterNumber(200);
+                set.setMaxFilterNumber(100);
                 set.setUseColorsForFill(true);
                 set.setFillFormatter({
                     getFillLinePosition(dataSet: LineDataSet, dataProvider) {
@@ -687,19 +689,17 @@ import { openLink } from '~/utils/ui';
             loadedListeners = [];
         }
     }
-
 </script>
 
-<gridlayout {...$$restProps} id="bottomsheetinner" width="100%" rows={`70,50,${profileHeight},auto`} columns="*,auto" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
+<gridlayout {...$$restProps} id="bottomsheetinner" width="100%" rows={`${INFOVIEW_HEIGHT},50,${profileHeight},auto`} columns="*,auto" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
     {#if loaded}
-        <BottomSheetInfoView bind:this={infoView}  {item} />
+        <BottomSheetInfoView bind:this={infoView} {item} />
 
-        <mdactivityindicator visibility={updatingItem ? 'visible' : 'collapsed'}  horizontalAligment="right" busy={true} width={20} height={20} />
+        <mdactivityindicator visibility={updatingItem ? 'visible' : 'collapsed'} horizontalAligment="right" busy={true} width={20} height={20} />
         <button col={1} variant="text" class="icon-btn" text="mdi-crosshairs-gps" visibility={itemIsRoute ? 'visible' : 'collapsed'} on:tap={zoomToItem} />
         <flexlayout row="1" colSpan="2" borderTopWidth="1" borderBottomWidth="1" borderColor={$borderColor}>
-            <button variant="text" fontSize="10" on:tap={() => searchItemWeb()} text={$slc('search')} visibility={item && !itemIsRoute && !item.id ? 'visible' : 'collapsed'} />
+            <button variant="text" fontSize="10" on:tap={() => searchWeb()} text={$slc('search')} visibility={item && !itemIsRoute && !item.id ? 'visible' : 'collapsed'} />
             <button variant="text" fontSize="10" on:tap={() => getProfile()} text={$slc('profile')} visibility={itemIsRoute && itemCanQueryProfile ? 'visible' : 'collapsed'} />
-            <button variant="text" fontSize="10" on:tap={() => searchWeb()} text="web" />
             <button variant="text" fontSize="10" on:tap={() => saveItem()} text={$slc('save')} visibility={item && !item.id ? 'visible' : 'collapsed'} />
             <button variant="text" fontSize="10" on:tap={() => shareItem()} text={$slc('share')} visibility={itemIsRoute ? 'visible' : 'collapsed'} />
             <button variant="text" fontSize="10" on:tap={() => deleteItem()} text={$slc('delete')} visibility={item && item.id ? 'visible' : 'collapsed'} color="red" />
