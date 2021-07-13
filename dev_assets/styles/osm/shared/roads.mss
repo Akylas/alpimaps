@@ -1,7 +1,7 @@
 /* For the main linear features, such as roads and railways. */
 @name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
 // @selected_route_line_width: ([osmid] = [nuti::selected_id]) 4 ? 2;
-@selected_item_id: [osmid] ? [osmid] : [ref] ? [ref] : [name];
+@selected_item_id: ([osmid] ? [osmid] : [ref] ? [ref] : [name]) + '';
 
 
 // Areas
@@ -51,7 +51,7 @@
 	}
 	[class=bridge] {
 		polygon-fill: @bridge_fill ;
-		line-color: lighten(@bridge_casing, 40%);
+		line-color: lighten(@bridge-casing, 40%);
 		line-width:0.5;
 	}
 }
@@ -729,7 +729,7 @@
 		[class=tertiary] {
 			[zoom>=10] {
 				line-color: @unimportant-road;
-				line-width: linear([view::zoom], (10, @tertiary-width-z10), (11, @tertiary-width-z11));
+				line-width: linear([view::zoom], (10, @tertiary-width-z10), (11, @tertiary-width-z11), (12, @tertiary-width-z12 -1 ));
 
 				[zoom>=12] {
 					line-color: @tertiary-fill;
@@ -1651,103 +1651,26 @@
 
 #aeroway {
 	[class=runway][zoom>=11] {
-		// [zoom>=11] {
-			[brunnel=bridge][zoom>=14] {
-				// line-width: 12 + 2*@major-casing-width-z14;
-				casing/line-color: @bridge-casing;
-				// line-join: round;
-				// [zoom>=15] { line-width: 18 + 2*@major-casing-width-z15; }
-				// [zoom>=16] { line-width: 24 + 2*@major-casing-width-z16; }
-				// [zoom>=17] { line-width: 24 + 2*@major-casing-width-z17; }
-				// [zoom>=18] { line-width: 24 + 2*@major-casing-width-z18; }
-				casing/line-width: linear([view::zoom], (14,12 + 2*@major-casing-width-z14), (15, 18 + 2*@major-casing-width-z15), (16,24 + 2*@major-casing-width-z16), (17,24 + 2*@major-casing-width-z17), (18,24 + 2*@major-casing-width-z18));
+		[brunnel=bridge][zoom>=14] {
+			casing/line-color: @bridge-casing;
+			casing/line-width: linear([view::zoom], (14,12 + 2*@major-casing-width-z14), (15, 18 + 2*@major-casing-width-z15), (16,24 + 2*@major-casing-width-z16), (17,24 + 2*@major-casing-width-z17), (18,24 + 2*@major-casing-width-z18));
 
-			}
-			// ::fill {
-				line-color: @runway-fill;
-				line-width: 2;
-				line-width: linear([view::zoom], (11,2), (12, 4), (13, 6), (14,12), (15,18), (16,24));
-				// [zoom>=12] { line-width: 4; }
-				// [zoom>=13] { line-width: 6; }
-				// [zoom>=14] { line-width: 12; }
-				// [zoom>=15] { line-width: 18; }
-				// [zoom>=16] { line-width: 24; }
-			// }
-		// }
+		}
+		line-color: @runway-fill;
+		line-width: 2;
+		line-width: linear([view::zoom], (11,2), (12, 4), (13, 6), (14,12), (15,18), (16,24));
 	}
 	[class=taxiway][zoom>=11] {
-		// [zoom>=11] {
-			[brunnel=bridge][zoom>=14] {
-				casing/line-width: 4 + 2*@secondary-casing-width-z14;
-				casing/line-color: @bridge-casing;
-				casing/line-width: linear([view::zoom], (14,4 + 2*@secondary-casing-width-z14), (15, 6 + 2*@secondary-casing-width-z15), (16,8 + 2*@secondary-casing-width-z16), (17,8 + 2*@secondary-casing-width-z17), (18,8 + 2*@secondary-casing-width-z18));
-			}
-			// ::fill {
-				line-color: @taxiway-fill ;
-				line-width: linear([view::zoom], (11,1), (13, 2), (14,4), (15,6), (16,8));
-			// }
-		// }
+		[brunnel=bridge][zoom>=14] {
+			casing/line-width: 4 + 2*@secondary-casing-width-z14;
+			casing/line-color: @bridge-casing;
+			casing/line-width: linear([view::zoom], (14,4 + 2*@secondary-casing-width-z14), (15, 6 + 2*@secondary-casing-width-z15), (16,8 + 2*@secondary-casing-width-z16), (17,8 + 2*@secondary-casing-width-z17), (18,8 + 2*@secondary-casing-width-z18));
+		}
+		line-color: @taxiway-fill ;
+		line-width: linear([view::zoom], (11,1), (13, 2), (14,4), (15,6), (16,8));
 	}
 }
 
-
-
-// 	[class=path][zoom>=17] {
-// 		[subclass=steps],
-// 		[subclass=cycleway],
-// 		[subclass=footway],
-// 		[subclass=path],
-// 		[subclass=track],
-// 		[subclass=bridleway] {
-// 			[oneway!=0] {
-// 				// text-name: [nuti::book-arrow];
-// 				// text-size: 15;
-// 				// text-clip: false;
-// 				// text-spacing: 180;
-// 				// text-placement: line;
-// 				// text-halo-fill: @standard-halo-fill;
-// 				// text-halo-radius: 1.5;
-// 				// // text-margin: 2;
-// 				// text-dy: 3;
-// 				// // text-upright: right;
-// 				// text-vertical-alignment: middle;
-// 				// text-face-name: @book-fonts;
-
-// 				marker-placement: line;
-// 				// marker-spacing: 180;
-// 				marker-file: [oneway]=1 ? url('symbols/oneway.svg') : url('symbols/oneway-reverse.svg');
-// 				// [oneway=-1] {
-// 					// text-upright: left;
-// 					// text-dy: -3;
-// 				// }
-// 				[subclass=footway] {
-// 					marker-fill: @footway-oneway-arrow-color;
-// 				}
-// 				[subclass=path] {
-// 					marker-fill: @footway-oneway-arrow-color;
-// 					[horse=designated] {
-// 						marker-fill: @bridleway-oneway-arrow-color;
-// 					}
-// 					[bicycle=designated] {
-// 						marker-fill: @cycleway-oneway-arrow-color;
-// 					}
-// 				}
-// 				[subclass=steps] {
-// 					marker-fill: @steps-oneway-arrow-color;
-// 				}
-// 				[subclass=cycleway] {
-// 					marker-fill: @cycleway-oneway-arrow-color;
-// 				}
-// 				[subclass=track] {
-// 					marker-fill: @track-oneway-arrow-color;
-// 				}
-// 				[subclass=bridleway] {
-// 					marker-fill: @bridleway-oneway-arrow-color;
-// 				}
-// 			}
-// 		}
-// 	}
-// }
 
 
 #route['nuti::routes'>0]{
