@@ -642,6 +642,9 @@
         "osm-sports": {
             "default": "\ue9ae"
         },
+        "osm-sports_centre": {
+            "default": "\ue9ae"
+        },
         "osm-spring": {
             "default": "\ue9af"
         },
