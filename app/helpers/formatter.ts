@@ -147,7 +147,7 @@ export function formatAddress(item: IItem, part = 0) {
     const address = item.address;
     const properties = item.properties;
     let result = '';
-    if ((properties.osm_value || properties.osm_key || properties.class) && address && address.houseNumber) {
+    if ((properties.layer === 'housenumber' || properties.name || properties.osm_value || properties.osm_key || properties.class) && address && address.houseNumber) {
         result += address.houseNumber + ' ';
     }
     if (address.street) {
@@ -177,8 +177,8 @@ export function formatAddress(item: IItem, part = 0) {
     // if (address.county) {
     //     result += address.county + ' ';
     // }
-    if (address.state) {
-        result += address.state + ' ';
-    }
+    // if (address.state) {
+    //     result += address.state + ' ';
+    // }
     return result.trimRight();
 }

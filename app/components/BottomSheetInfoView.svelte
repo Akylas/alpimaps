@@ -61,7 +61,7 @@
         itemIcon = item && formatter.geItemIcon(item);
         itemTitle = item && formatter.getItemTitle(item);
         itemSubtitle = item && formatter.getItemSubtitle(item);
-        showSymbol = itemIsRoute && itemProps && !!itemProps.ref;
+        showSymbol = itemIsRoute && itemProps && itemProps.layer === 'route';
 
         let newPropsToDraw = [];
         if (!itemIsRoute && item) {
@@ -89,10 +89,9 @@
 
             if (route.totalTime) {
                 if (route.totalTime < 3600) {
-                    routeDuration = dayjs.duration( route.totalTime, 'seconds').format('m [min]');
+                    routeDuration = dayjs.duration(route.totalTime, 'seconds').format('m [min]');
                 } else {
-                    routeDuration = dayjs.duration( route.totalTime, 'seconds').format('H [h] m [min]');
-
+                    routeDuration = dayjs.duration(route.totalTime, 'seconds').format('H [h] m [min]');
                 }
                 newPropsToDraw.push('duration');
             }
@@ -134,46 +133,31 @@
     }
 </script>
 
-<canvaslabel {...$$restProps} fontSize="16" padding="10 10 4 10">
-    <cgroup verticalAlignment="middle" paddingBottom={(itemSubtitle ? 4 : 0) + (propsToDraw.length > 0 ? 12 : 0)}>
-        <cspan
-            visibility={itemIcon && itemIcon.length > 0 ? 'visible' : 'hidden'}
-            paddingLeft="10"
-            width="40"
-            text={osmicon(itemIcon)}
-            fontFamily="osm"
-            fontSize={24}
+<gridlayout {...$$restProps} padding="5 10 4 10">
+    <flexlayout paddingLeft="40" marginBottom={ (propsToDraw.length > 0 ? 16 : 0)} flexDirection="column" >
+        <label text={itemTitle} fontWeight="bold" color={routeDuration ? '#01B719' : $textColor} fontSize={18} autoFontSize={true} flexGrow={1} maxFontSize={18} verticalTextAlignment="middle" textWrap={true}/>
+        <label visibility={itemSubtitle ? 'visible' : 'collapsed'} text={itemSubtitle} color={$subtitleColor} fontSize={13} maxLines={2}  verticalTextAlignment="top" flexGrow={1} flexShrink={0}/>
+    </flexlayout>
+    <canvaslabel {...$$restProps} fontSize="16">
+        <cgroup verticalAlignment="middle" paddingBottom={(itemSubtitle ? 4 : 0) + (propsToDraw.length > 0 ? 12 : 0)}>
+            <cspan visibility={itemIcon && itemIcon.length > 0 ? 'visible' : 'hidden'} paddingLeft="10" width="40" text={osmicon(itemIcon)} fontFamily="osm" fontSize={24} />
+        </cgroup>
+        <symbolshape
+            visibility={showSymbol ? 'visible' : 'hidden'}
+            symbol={(itemProps && itemProps.symbol) || null}
+            color={(itemProps && itemProps.color) || null}
+            width="34"
+            height="34"
+            top={propsToDraw.length > 0 ? 3 : 6}
         />
-    </cgroup>
-    <symbolshape
-        visibility={showSymbol ? 'visible' : 'hidden'}
-        symbol={(itemProps && itemProps.symbol) || 0}
-        color={(itemProps && itemProps.color) || 0}
-        width="34"
-        height="32"
-        top={propsToDraw.length > 0 ? 1 : 6}
-    />
 
-    <cgroup
-        paddingLeft="40"
-        paddingBottom={(itemSubtitle ? 4 : 0) + (propsToDraw.length > 0 ? 12 : 0)}
-        verticalAlignment="middle"
-        textAlignment="left"
-    >
-        <cspan text={itemTitle} fontWeight="bold" color={routeDuration ? '#01B719' : $textColor} :fontSize={16} />
-        <cspan text={itemSubtitle ? '\n' + itemSubtitle : ''} color={$subtitleColor} fontSize={13} maxLines={2} />
-    </cgroup>
-    <cgroup
-        fontSize="14"
-        verticalAlignment="bottom"
-        textAlignment="left"
-        visibility={propsToDraw.length > 0 ? 'visible' : 'hidden'}
-    >
-        {#each propsToDraw as prop, index}
-            <cgroup>
-                <cspan fontFamily={mdiFontFamily} color="gray" text={propIcon(prop) + ' '} />
-                <cspan text={propValue(prop) + '  '} />
-            </cgroup>
-        {/each}
-    </cgroup>
-</canvaslabel>
+        <cgroup fontSize="14" verticalAlignment="bottom" textAlignment="left" visibility={propsToDraw.length > 0 ? 'visible' : 'hidden'}>
+            {#each propsToDraw as prop, index}
+                <cgroup>
+                    <cspan fontFamily={mdiFontFamily} color="gray" text={propIcon(prop) + ' '} />
+                    <cspan text={propValue(prop) + '  '} />
+                </cgroup>
+            {/each}
+        </cgroup>
+    </canvaslabel>
+</gridlayout>
