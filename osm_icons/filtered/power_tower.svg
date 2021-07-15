@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="7"
+   height="7"
+   version="1.1"
+   id="svg1503"
+   sodipodi:docname="power_tower.svg"
+   inkscape:version="1.0.1 (c497b03c, 2020-09-10)">
+  <metadata
+     id="metadata1509">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs1507" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1792"
+     inkscape:window-height="956"
+     id="namedview1505"
+     showgrid="false"
+     inkscape:zoom="105"
+     inkscape:cx="3.5"
+     inkscape:cy="3.5"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1503" />
+  <path
+     id="path1495"
+     style="stroke:none;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none"
+     d="M 0 0 L 0 7 L 7 7 L 7 0 L 0 0 z M 3.5 1 A 2.5 2.5 0 0 1 5.0722656 1.5585938 L 3.5019531 3.1289062 L 1.9277344 1.5566406 A 2.5 2.5 0 0 1 3.5 1 z M 1.5566406 1.9277344 L 3.1289062 3.5019531 L 1.5566406 5.0742188 A 2.5 2.5 0 0 1 1 3.5 A 2.5 2.5 0 0 1 1.5566406 1.9277344 z M 5.4472656 1.9335938 A 2.5 2.5 0 0 1 6 3.5 A 2.5 2.5 0 0 1 5.4472656 5.0664062 L 3.8789062 3.5019531 L 5.4472656 1.9335938 z M 3.5019531 3.8789062 L 5.0683594 5.4472656 A 2.5 2.5 0 0 1 3.5 6 A 2.5 2.5 0 0 1 1.9335938 5.4472656 L 3.5019531 3.8789062 z " />
+</svg>

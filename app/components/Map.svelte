@@ -199,7 +199,7 @@
         if (DEV_LOG) {
             console.log('Got the following appURL', appURL.path, Array.from(appURL.params.entries()));
         }
-        if (appURL.path.startsWith('eo')) {
+        if (appURL.path.startsWith('geo')) {
             const latlong = appURL.path.split(':')[1].split(',').map(parseFloat) as [number, number];
             const loaded = !!cartoMap;
             if (latlong[0] !== 0 || latlong[1] !== 0) {
@@ -240,6 +240,37 @@
                     searchView.searchForQuery(actualQuery);
                 }
             }
+        } else if (/(http(s?):\/\/)?((maps\.google\..*?\/)|((www\.)?google\..*?\/maps\/)|(goo.gl\/maps\/)).*/.test(appURL.path)) {
+            const params = Array.from(appURL.params.entries()) as any[];
+            params.forEach((element) => {
+                console.log(element, typeof element, element[0]);
+                if (element[0] === 'saddr') {
+                    // directions!
+                    if (element[1] !== undefined) {
+                        if (/[\d.-]+,[\d.-]+/.test(element[1])) {
+                            const pos = element[1].split(',').map(parseFloat)
+                            cartoMap.setFocusPos({ lat: pos[0], lon: pos[1] }, 0);
+                            directionsPanel.addStartPoint({
+                                lat: pos[0],
+                                lon: pos[1]
+                            });
+                        }
+                    }
+                } else if (element[0] === 'daddr') {
+                    // directions!
+                    if (element[1] !== undefined) {
+                        if (/[\d.-]+,[\d.-]+/.test(element[1])) {
+                            const pos = element[1].split(',').map(parseFloat)
+                            cartoMap.setFocusPos({ lat: pos[0], lon: pos[1] }, 0);
+                            directionsPanel.addStopPoint({
+                                lat: pos[0],
+                                lon: pos[1]
+                            });
+
+                        }
+                    }
+                }
+            });
         } else if (appURL.path && appURL.path.endsWith('.gpx')) {
             console.log('importing GPX', appURL.path);
         }
@@ -583,7 +614,7 @@
                 const service = packageService.localOSMOfflineReverseGeocodingService;
                 if (service) {
                     itemLoading = true;
-                    const radius = 100;
+                    const radius = 200;
                     // use a promise not to "wait" for it
                     packageService
                         .searchInGeocodingService(service, {
@@ -615,7 +646,7 @@
                                     } else {
                                         $selectedItem = {
                                             ...$selectedItem,
-                                            address: {...bestFind.address, name:null} as any
+                                            address: { ...bestFind.address, name: null } as any
                                         };
                                     }
                                 }
@@ -625,7 +656,8 @@
                 }
                 if (item.properties && 'ele' in item.properties === false && packageService.hasElevation()) {
                     packageService.getElevation(item.position).then((result) => {
-                        if ($selectedItem.position === item.position) {
+                 
+                        if (result !== -10000 && $selectedItem.position === item.position) {
                             $selectedItem.properties = $selectedItem.properties || {};
                             $selectedItem.properties['ele'] = result;
                             $selectedItem = { ...$selectedItem };
@@ -948,12 +980,13 @@
         currentLayer = new VectorTileLayer({
             preloading: $mapStore.preloading,
             zoomLevelBias: parseFloat($mapStore.zoomBiais),
+            labelRenderOrder:VectorTileRenderOrder.LAST,
             dataSource: packageService.getDataSource($mapStore.showContourLines),
             decoder
         });
         handleNewLanguage(currentLanguage);
         // console.log('currentLayer', !!currentLayer);
-        currentLayer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
+        // currentLayer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
         currentLayer.setVectorTileEventListener<LatLonKeys>(
             {
                 onVectorTileClicked: (data) => onVectorTileClicked(data)

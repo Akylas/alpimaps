@@ -34,14 +34,13 @@
     import { GenericMapPos } from '@nativescript-community/ui-carto/core';
     import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
     import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import * as xml2js from 'xml2js';
-    import { AxisDependency } from '@nativescript-community/ui-chart/components/YAxis';
+    // import * as xml2js from 'xml2js';
     import { openLink } from '~/utils/ui';
 
-    export const LISTVIEW_HEIGHT = 200;
-    export const PROFILE_HEIGHT = 150;
-    export const WEB_HEIGHT = 400;
-    export const INFOVIEW_HEIGHT = 80;
+     const LISTVIEW_HEIGHT = 200;
+     const PROFILE_HEIGHT = 150;
+     const WEB_HEIGHT = 400;
+     const INFOVIEW_HEIGHT = 80;
 
     const mapContext = getMapContext();
     const highlightPaint = new Paint();
@@ -318,59 +317,59 @@
         }
     }
 
-    async function toGPX() {
-        const name = 'test';
-        const builder = new xml2js.Builder({
-            rootName: 'gpx'
-        });
-        const profile = item.route.profile.data;
-        return {
-            name,
-            // eslint-disable-next-line id-blacklist
-            string: builder.buildObject({
-                $: {
-                    version: '1.1',
-                    xmlns: 'http://www.topografix.com/GPX/1/1',
-                    'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-                    'xsi:schemaLocation':
-                        'http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 https://www8.garmin.com/xmlschemas/TrackPointExtensionv1.xsd',
-                    creator: `AlpiMaps`,
-                    'xmlns:gpxx': 'http://www.garmin.com/xmlschemas/GpxExtensions/v3',
-                    'xmlns:gpxtpx': 'http://www.garmin.com/xmlschemas/TrackPointExtension/v1'
-                },
-                metadata: {
-                    name,
-                    bounds: item.zoomBounds
-                        ? {
-                              minlat: item.zoomBounds.southwest.lat,
-                              minlon: item.zoomBounds.southwest.lon,
-                              maxlat: item.zoomBounds.northeast.lat,
-                              maxlon: item.zoomBounds.northeast.lon
-                          }
-                        : undefined,
-                    copyright: {
-                        author: 'AlpiMaps',
-                        year: 2021
-                    }
-                },
-                trk: {
-                    trkseg: {
-                        trkpt: item.route.positions.toArray().map((l, index) => {
-                            const result = {
-                                $: {
-                                    lat: Math.round(l.lat * 1000000) / 1000000,
-                                    lon: Math.round(l.lon * 1000000) / 1000000
-                                },
-                                ele: profile[index].a,
-                                grade: profile[index].g
-                            } as any;
-                            return result;
-                        })
-                    }
-                }
-            })
-        };
-    }
+    // async function toGPX() {
+    //     const name = 'test';
+    //     const builder = new xml2js.Builder({
+    //         rootName: 'gpx'
+    //     });
+    //     const profile = item.route.profile.data;
+    //     return {
+    //         name,
+    //         // eslint-disable-next-line id-blacklist
+    //         string: builder.buildObject({
+    //             $: {
+    //                 version: '1.1',
+    //                 xmlns: 'http://www.topografix.com/GPX/1/1',
+    //                 'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+    //                 'xsi:schemaLocation':
+    //                     'http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 https://www8.garmin.com/xmlschemas/TrackPointExtensionv1.xsd',
+    //                 creator: `AlpiMaps`,
+    //                 'xmlns:gpxx': 'http://www.garmin.com/xmlschemas/GpxExtensions/v3',
+    //                 'xmlns:gpxtpx': 'http://www.garmin.com/xmlschemas/TrackPointExtension/v1'
+    //             },
+    //             metadata: {
+    //                 name,
+    //                 bounds: item.zoomBounds
+    //                     ? {
+    //                           minlat: item.zoomBounds.southwest.lat,
+    //                           minlon: item.zoomBounds.southwest.lon,
+    //                           maxlat: item.zoomBounds.northeast.lat,
+    //                           maxlon: item.zoomBounds.northeast.lon
+    //                       }
+    //                     : undefined,
+    //                 copyright: {
+    //                     author: 'AlpiMaps',
+    //                     year: 2021
+    //                 }
+    //             },
+    //             trk: {
+    //                 trkseg: {
+    //                     trkpt: item.route.positions.toArray().map((l, index) => {
+    //                         const result = {
+    //                             $: {
+    //                                 lat: Math.round(l.lat * 1000000) / 1000000,
+    //                                 lon: Math.round(l.lon * 1000000) / 1000000
+    //                             },
+    //                             ele: profile[index].a,
+    //                             grade: profile[index].g
+    //                         } as any;
+    //                         return result;
+    //                     })
+    //                 }
+    //             }
+    //         })
+    //     };
+    // }
 
     async function saveItem(peek = true) {
         try {
@@ -403,8 +402,8 @@
             if (!item.route.profile && itemCanQueryProfile) {
                 await getProfile(false);
             }
-            const gpx = await toGPX();
-            mapContext.mapModules.items.shareFile(gpx.string, `${gpx.name.replace(/[\s\t]/g, '_')}.gpx`);
+            // const gpx = await toGPX();
+            // mapContext.mapModules.items.shareFile(gpx.string, `${gpx.name.replace(/[\s\t]/g, '_')}.gpx`);
         }
         // shareFile(JSON.stringify(itemToShare), 'sharedItem.json');
     }

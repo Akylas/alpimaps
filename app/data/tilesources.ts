@@ -179,12 +179,14 @@ export const data: { [k: string]: Provider } = {
         url: 'http://vmapfishbda.grenoble.cemagref.fr/cgi-bin/mapserv?map=/var/www/prod/test.map&LAYERS=zont%2Clint&TRANSPARENT=true&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&EXCEPTIONS=application%2Fvnd.ogc.se_inimage&FORMAT=image%2Fpng&SRS=EPSG%3A27572&BBOX={bbox}&WIDTH=300&HEIGHT=300'
     },
     OpenStreetMap: {
-        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
         legend: 'https://www.openstreetmap.org/key.html',
         sourceOptions: {
             minZoom: 2,
-            subdomains: 'abc',
-            maxZoom: 19
+            maxZoom: 19,
+            httpHeaders: {
+                'User-Agent': 'AlpiMaps'
+            },
         },
         urlOptions: {
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
