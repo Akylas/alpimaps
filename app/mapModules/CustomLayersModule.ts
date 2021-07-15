@@ -156,7 +156,7 @@ export default class CustomLayersModule extends MapModule {
         }
     }
     createMergeMBTilesDataSource(sources: (string | TileDataSource<any, any>)[]) {
-        console.log('createMergeMBTilesDataSource', sources);
+        // console.log('createMergeMBTilesDataSource', sources);
         if (sources.length === 1) {
             if (sources[0] instanceof TileDataSource) {
                 return sources[0];
@@ -593,10 +593,11 @@ export default class CustomLayersModule extends MapModule {
                     // zoomLevelBias: zoomLevelBias * 0.75,
                     opacity: s.layer.opacity,
                     decoder: newVectorTileDecoder,
-                    // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
+                    labelRenderOrder:VectorTileRenderOrder.LAST,
+            // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                     visible: s.layer.opacity !== 0
                 });
-                layer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
+                // layer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
                 // layer.setBuildingRenderOrder(VectorTileRenderOrder.LAYER);
                 layer.setVectorTileEventListener<LatLonKeys>(
                     {
