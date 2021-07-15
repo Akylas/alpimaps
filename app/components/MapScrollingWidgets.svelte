@@ -320,7 +320,7 @@
     function startDirections() {
         if (selectedItem) {
             const module = mapContext.mapModule('directionsPanel');
-            module.addWayPoint(selectedItem.position, selectedItem.properties);
+            module.addStopPoint(selectedItem.position, selectedItem.properties);
         }
     }
 

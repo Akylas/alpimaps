@@ -43,6 +43,7 @@
     let simultaneousHandlersTags = [SCROLL_VIEW_TAG_1, SCROLL_VIEW_TAG_2];
     let currentAltitude;
     let selectedPageIndex = 0;
+    const consoleEnabled = !PRODUCTION;
 
     function truncate(str, maxlength) 
 {
@@ -395,7 +396,6 @@
         item.value = event.value;
         items.setItem(index, item);
     }
-
 </script>
 
 <frame backgroundColor="transparent" on:shownModally={onShownModally}>
@@ -414,7 +414,7 @@
                     on:loaded={webviewLoaded}
                     webRTC={true}
                     mediaPlaybackRequiresUserAction={false}
-                    webConsoleEnabled={!PRODUCTION}
+                    webConsoleEnabled={consoleEnabled}
                     displayZoomControls={false}
                     on:selected={onFeatureSelected}
                     on:position={onPositionChanged}
