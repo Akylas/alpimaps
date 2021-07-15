@@ -25,7 +25,7 @@ import { SearchRequest, VectorTileSearchService } from '@nativescript-community/
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import * as appSettings from '@nativescript/core/application-settings';
 import { File, Folder, path } from '@nativescript/core/file-system';
-import KalmanFilter from 'kalmanjs';
+// import KalmanFilter from 'kalmanjs';
 import { getDistance, getDistanceSimple } from '~/helpers/geolib';
 import { IItem as Item } from '~/models/Item';
 import { RouteProfile } from '~/models/Route';
@@ -62,30 +62,30 @@ function dist2d(latlng1, latlng2) {
     return EARTH_RADIUS * c;
 }
 
-class WindowKalmanFilter extends MathFilter {
-    windowLength: number;
-    kalmanFilter: KalmanFilter;
-    constructor(options) {
-        super();
-        this.windowLength = options?.windowLength ?? 5;
-        this.kalmanFilter = new KalmanFilter(options?.kalman ?? { R: 0.2, Q: 1 });
-    }
+// class WindowKalmanFilter extends MathFilter {
+//     windowLength: number;
+//     kalmanFilter: KalmanFilter;
+//     constructor(options) {
+//         super();
+//         this.windowLength = options?.windowLength ?? 5;
+//         this.kalmanFilter = new KalmanFilter(options?.kalman ?? { R: 0.2, Q: 1 });
+//     }
 
-    datas = [];
-    lastData = null;
-    filter(_newData) {
-        this.datas.push(_newData);
-        this.lastData = _newData;
-        if (this.datas.length > this.windowLength) {
-            this.datas.shift();
-        }
-        return this.kalmanFilter.filter(
-            this.datas.reduce(function (sum, num) {
-                return sum + num;
-            }, 0) / this.datas.length
-        );
-    }
-}
+//     datas = [];
+//     lastData = null;
+//     filter(_newData) {
+//         this.datas.push(_newData);
+//         this.lastData = _newData;
+//         if (this.datas.length > this.windowLength) {
+//             this.datas.shift();
+//         }
+//         return this.kalmanFilter.filter(
+//             this.datas.reduce(function (sum, num) {
+//                 return sum + num;
+//             }, 0) / this.datas.length
+//         );
+//     }
+// }
 class WindowFilter extends MathFilter {
     windowLength: number;
     constructor(options) {
@@ -526,7 +526,7 @@ class PackageService extends Observable {
                         this._localOSMOfflineGeocodingService = new OSMOfflineGeocodingService({
                             language: this.currentLanguage,
                             maxResults: 100,
-                            autoComplete: true,
+                            autocomplete: true,
                             path: s.path
                         });
                         return true;
@@ -630,7 +630,7 @@ class PackageService extends Observable {
         if ('getCategories' in geoRes.address) {
             const cat = geoRes.address.getCategories();
             if (cat && cat.size() > 0) {
-                geoRes['categories'] = nativeVectorToArray(cat);
+                geoRes['categories'] = (nativeVectorToArray(cat) as string[]).map(s=>s.split(':')).flat();
             }
         }
 
@@ -643,6 +643,7 @@ class PackageService extends Observable {
                 delete geoRes.properties.name;
             }
         }
+        // console.log('geoRes', JSON.stringify(geoRes));
         return geoRes as Item;
     }
     hasElevation() {
