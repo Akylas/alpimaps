@@ -50,7 +50,6 @@
 
         return res;
     }
-
 </script>
 
 <script lang="ts">
@@ -223,7 +222,7 @@
             updateWayPoints;
         }
     }
-    function addStartPoint(position: MapPos<LatLonKeys>, metaData?) {
+    export function addInternalStartPoint(position: MapPos<LatLonKeys>, metaData?) {
         const toAdd = {
             isStart: true,
             isStop: false,
@@ -282,7 +281,7 @@
             loadedListeners.forEach((l) => l());
         }
     }
-    export function addStopPoint(position: MapPos<LatLonKeys>, metaData?) {
+    function addInternalStopPoint(position: MapPos<LatLonKeys>, metaData?) {
         const toAdd = {
             isStart: false,
             isStop: true,
@@ -292,7 +291,7 @@
             marker: null,
             text: metaData?.name || `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`
         };
-        const lastPoint = waypoints.getItem(waypoints.length - 1);
+        const lastPoint = waypoints.length > 0 ?waypoints.getItem(waypoints.length - 1): undefined;
         if (waypoints.length > 0 && lastPoint.isStop === true) {
             if (lastPoint.isStop === true) {
                 lastPoint.isStop = false;
@@ -318,17 +317,17 @@
                     color: 'red'
                 }
             }),
-            new Text({
-                position: getCenter(position, lastPoint.position),
-                // position: { lat: (position.lat - lastPoint.position.lat) / 2, lon: (position.lon - lastPoint.position.lon) / 2 },
-                text: formatValueToUnit(getDistanceSimple(position, lastPoint.position), 'km'),
-                styleBuilder: {
-                    hideIfOverlapped: false,
-                    scaleWithDPI: false,
-                    color: 'darkgray',
-                    fontSize: 12
-                }
-            })
+            // new Text({
+            //     position: getCenter(position, lastPoint.position),
+            //     // position: { lat: (position.lat - lastPoint.position.lat) / 2, lon: (position.lon - lastPoint.position.lon) / 2 },
+            //     text: formatValueToUnit(getDistanceSimple(position, lastPoint.position), 'km'),
+            //     styleBuilder: {
+            //         hideIfOverlapped: false,
+            //         scaleWithDPI: false,
+            //         color: 'darkgray',
+            //         fontSize: 12
+            //     }
+            // })
         ];
         toAdd.marker = group;
         getRouteDataSource().add(group);
@@ -342,6 +341,7 @@
         updateWayPoints();
     }
     function updateWayPoints() {
+        console.log('updateWayPoints', waypoints)
         if (!line) {
             line = new Line<LatLonKeys>({
                 styleBuilder: {
@@ -360,6 +360,7 @@
     export let translationY = 0;
     async function show() {
         await loadView();
+        console.log('show')
         const nView = topLayout.nativeView;
         const height = nView.getMeasuredHeight();
         const superParams = {
@@ -397,15 +398,20 @@
     export function isVisible() {
         return translationY > 0;
     }
+    export async function addStartPoint(position: MapPos<LatLonKeys>, metaData?) {
+        addInternalStartPoint(position, metaData);
+    }
+    export async function addStopPoint(position: MapPos<LatLonKeys>, metaData?) {
+        addInternalStopPoint(position, metaData);
+    }
     export async function addWayPoint(position: MapPos<LatLonKeys>, metaData?, index = -1) {
-        await loadView();
         // if (waypoints.length === 0 ) {
-            // mapContext.getMap().getOptions().setClickTypeDetection(true);
+        // mapContext.getMap().getOptions().setClickTypeDetection(true);
         // }
         if (waypoints.length === 0 || waypoints.getItem(0).isStart === false) {
-            addStartPoint(position, metaData);
+            addInternalStartPoint(position, metaData);
         } else {
-            addStopPoint(position, metaData);
+            addInternalStopPoint(position, metaData);
         }
     }
 
@@ -711,7 +717,6 @@
             console.error(error);
         }
     }
-
 </script>
 
 <stacklayout bind:this={topLayout} {...$$restProps} backgroundColor={primaryColor} paddingTop={globalMarginTop} translateY={currentTranslationY}>
@@ -747,7 +752,6 @@
                             <textfield
                                 col="0"
                                 marginLeft="15"
-                                
                                 hint={item.isStart ? lc('start') : lc('end')}
                                 returnKeyType="search"
                                 width="100%"
@@ -764,7 +768,6 @@
                                 variant="text"
                                 class="icon-btn"
                                 visibility={item.text && item.text.length > 0 ? 'visible' : 'collapsed'}
-                                
                                 col={2}
                                 text="mdi-close"
                                 on:tap={() => clearWayPoint(item)}

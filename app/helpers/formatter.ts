@@ -147,7 +147,8 @@ export function formatAddress(item: IItem, part = 0) {
     const address = item.address;
     const properties = item.properties;
     let result = '';
-    if ((properties.layer === 'housenumber' || properties.name || properties.osm_value || properties.osm_key || properties.class) && address && address.houseNumber) {
+    // if ((properties.layer === 'housenumber' || properties.name || properties.osm_value || properties.osm_key || properties.class) && address && address.houseNumber) {
+    if (address && address.houseNumber) {
         result += address.houseNumber + ' ';
     }
     if (address.street) {

@@ -9,7 +9,7 @@
     import { Template } from 'svelte-native/components';
     import ListItem from './ListItem.svelte';
     import { closeModal } from 'svelte-native';
-import { closeBottomSheet } from './bottomsheet';
+    import { closeBottomSheet } from './bottomsheet';
 
     export let options: OptionType[];
 
