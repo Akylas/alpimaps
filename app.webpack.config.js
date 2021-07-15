@@ -320,7 +320,6 @@ module.exports = (env, params = {}) => {
     config.plugins = config.plugins.filter((p) => ['CopyPlugin', 'ForkTsCheckerWebpackPlugin'].indexOf(p.constructor.name) === -1);
     // console.log(config.plugins.map((s) => s.constructor.name));
 
-    // config.plugins.push(new NativeScriptHTTPPlugin());
     // console.log('plugins after clean', config.plugins);
     // we add our rules
     const globOptions = { dot: false, ignore: [`**/${relative(appPath, appResourcesFullPath)}/**`] };
@@ -380,7 +379,8 @@ module.exports = (env, params = {}) => {
     config.plugins.push(new IgnoreNotFoundExportPlugin());
 
     // save as long as we dont use calc in css
-    // config.plugins.push(new webpack.IgnorePlugin(/reduce-css-calc/));
+    config.plugins.push(new webpack.IgnorePlugin(/reduce-css-calc/));
+    config.plugins.push(new webpack.IgnorePlugin(/punnycode/));
     // config.plugins.unshift(
     //     new CleanWebpackPlugin({
     //         dangerouslyAllowCleanPatternsOutsideProject: true,
@@ -503,8 +503,34 @@ module.exports = (env, params = {}) => {
         {
             entry: resolve(__dirname, 'geo-three/webapp/app.ts'),
             devtool: false,
+            target:'web',
             mode: production ? 'production' : 'development',
-
+            optimization:{
+                usedExports: true,
+                // minimize: true,
+                minimizer:[
+                    new TerserPlugin({
+                        parallel: true,
+                        // cache: true,
+                        // sourceMap: isAnySourceMapEnabled,
+                        terserOptions: {
+                            ecma: 2017,
+                            module: true,
+                            output: {
+                                comments: false,
+                                semicolons: !isAnySourceMapEnabled
+                            },
+                            compress: {
+                                collapse_vars: true,
+                                sequences: true,
+                                passes: 2,
+                                drop_console: production && adhoc !== true
+                            },
+                            keep_fnames: false
+                        }
+                    })
+                ]
+            },
             resolve: {
                 exportsFields: [],
                 mainFields: ['browser', 'module', 'main'],
