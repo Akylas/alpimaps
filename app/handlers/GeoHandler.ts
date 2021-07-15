@@ -5,7 +5,7 @@ import { ApplicationSettings, Enums } from '@nativescript/core';
 import { AndroidApplication, ApplicationEventData, android as androidApp, off as applicationOff, on as applicationOn, launchEvent, resumeEvent, suspendEvent } from '@nativescript/core/application';
 import { AndroidActivityResultEventData } from '@nativescript/core/application/application-interfaces';
 import { EventData, Observable } from '@nativescript/core/data/observable';
-import { bind } from 'helpful-decorators';
+import { bind } from 'helpful-decorators/dist-src/bind';
 import { BgService } from '~/services/BgService';
 import { l, lc } from '~/helpers/locale';
 

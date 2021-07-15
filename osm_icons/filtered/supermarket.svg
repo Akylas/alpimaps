@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   height="14"
+   width="14"
+   version="1.1"
+   id="svg847"
+   sodipodi:docname="supermarket.svg"
+   inkscape:version="1.0.1 (c497b03c, 2020-09-10)">
+  <metadata
+     id="metadata853">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs851" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1792"
+     inkscape:window-height="956"
+     id="namedview849"
+     showgrid="false"
+     inkscape:zoom="50.857143"
+     inkscape:cx="7"
+     inkscape:cy="7"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg847" />
+  <g
+     transform="translate(0,1)"
+     id="g841">
+    <path
+       id="circle839"
+       transform="translate(0,-1)"
+       d="M 13.435547,1.171875 A 0.55339859,0.55339859 0 0 0 13.25,1.1992188 L 11.769531,1.75 11.5,3 h 1 l 0.09961,-0.4003906 1,-0.3496094 A 0.55339859,0.55339859 0 0 0 13.435547,1.171875 Z M 10,9.5 V 11 H 1.5 a 0.5,0.5 0 0 0 0,1 H 2.5214844 A 1,1 0 0 0 2.5,12.199219 a 1,1 0 0 0 1,1 1,1 0 0 0 1,-1 A 1,1 0 0 0 4.4785156,12 H 8.5214844 A 1,1 0 0 0 8.5,12.199219 a 1,1 0 0 0 1,1 1,1 0 0 0 1,-1 A 1,1 0 0 0 10.478516,12 H 11 V 10 Z M 0,3 1,9 11,10 12.5,3 Z M 1.1699219,4 H 3.5 V 5 H 1.3476562 Z M 4,4 H 5.5 V 5 H 4 Z M 6,4 H 7.5 V 5 H 6 Z M 8,4 H 9.5 V 5 H 8 Z m 2,0 h 1.289062 l -0.21289,1 H 10 Z M 1.4375,5.5 H 3.5 V 7 H 1.7050781 Z M 4,5.5 H 5.5 V 7 H 4 Z m 2,0 H 7.5 V 7 H 6 Z m 2,0 H 9.5 V 7 H 8 Z m 2,0 h 0.970703 L 10.652344,7 H 10 Z m -8.2070312,2 H 3.5 V 8.2539062 L 1.9003906,8.0996094 Z M 4,7.5 H 5.5 V 8.4453125 L 4,8.3007812 Z m 2,0 H 7.5 V 8.6367188 L 6,8.4921875 Z m 2,0 H 9.5 V 8.828125 L 8,8.6855469 Z m 2,0 h 0.546875 L 10.25,8.9003906 10,8.8769531 Z" />
+  </g>
+</svg>

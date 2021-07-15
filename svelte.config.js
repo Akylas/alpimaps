@@ -3,7 +3,8 @@ const svelteNativePreprocessor = require('svelte-native-preprocessor');
 
 module.exports = {
     compilerOptions: {
-        namespace: 'foreign'
+        namespace: 'foreign',
+        accessors: true
     },
     preprocess: [
         sveltePreprocess({

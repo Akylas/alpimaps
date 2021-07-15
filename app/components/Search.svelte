@@ -407,16 +407,16 @@
                     .catch((err) => {
                         console.error('searchInGeocodingService', err);
                     }),
-                herePlaceSearch(options)
-                    .then((r) => loading && r && result.push(...r))
-                    .catch((err) => {
-                        console.error('herePlaceSearch', err);
-                    }),
-                photonSearch(options)
-                    .then((r) => loading && r && result.push(...r))
-                    .catch((err) => {
-                        console.error('photonSearch', err);
-                    })
+                // herePlaceSearch(options)
+                //     .then((r) => loading && r && result.push(...r))
+                //     .catch((err) => {
+                //         console.error('herePlaceSearch', err);
+                //     }),
+                // photonSearch(options)
+                //     .then((r) => loading && r && result.push(...r))
+                //     .catch((err) => {
+                //         console.error('photonSearch', err);
+                //     })
             ]);
             // console.log(
             //     'search done',
