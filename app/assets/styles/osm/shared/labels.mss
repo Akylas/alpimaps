@@ -319,7 +319,7 @@
 		{
 			text-name: @name;
 			text-face-name: @mont;
-			text-allow-overlap: true;
+			// text-allow-overlap: true;
 			text-placement: [nuti::texts3d];
 			text-fill: @place_text;
 			text-halo-fill: @place_halo;
@@ -327,8 +327,8 @@
 			text-halo-rasterizer: fast;
 			text-wrap-before: true;
 			text-line-spacing: -2;
-			text-size: linear([view::zoom], (14, 8.0), (17, 14.0)) - 0.000001 * [rank];
-			text-wrap-width: step([view::zoom], (13, 40), (17, 130));
+			text-size: linear([view::zoom], (14, 8.0), (17, 12.0)) - 0.000001 * [rank];
+			text-wrap-width: step([view::zoom], (13, 40), (17, 100));
 		}
 	}
 }
@@ -551,13 +551,13 @@
 
 
 #poi{
-	[class!=null][subclass!='guidepost'] {
-		[class=lodging][subclass='alpine_hut'],
-		[class=lodging][subclass='wilderness_hut'],
+	[class!=null][subclass!='guidepost'][subclass!='map'][class!='swimming_pool'][class!='bollard'][class!='cycle_barrier'][class!='bicycle_parking'][class!='lift_gate'][class!='gate'][class!='picnic_site'] {
+		[subclass='alpine_hut'],
+		[subclass='wilderness_hut'],
 		[class=spring],
 		[class=campsite][rank<=15],
-		[zoom>=15][rank<=15][subclass!=hotel][class!='bus'][class!='restaurant'][class!='bar'][class!='school'][class!='college'][subclass!='tram_stop'][subclass!='community_centre'][subclass!='station'],
-		[zoom>=16][rank<=35][subclass!='hotel'],
+		[zoom>=15][rank<=15][subclass!=hotel][subclass!=dormitory][class!='restaurant'][class!='bar'][class!='parking'][class!='school'][class!='college'][subclass!='community_centre'][subclass!='station'],
+		[zoom>=16][rank<=45][subclass!='hotel'],
 		[zoom>=17][rank<=50],
 		[zoom>=18] {
 
@@ -566,7 +566,7 @@
 				text-placement: [nuti::markers3d];
 				text-name: @osm_icon;
 				// text-name: [nuti::osm-peak];
-				text-size: linear([view::zoom], (18, 10), (20, 14.0)) - 0.000001 * [rank];
+				text-size: linear([view::zoom], (10, 10), (12, 11), (19, 13), (20, 17)) - 0.000001 * [rank];
 				text-face-name: @osm;
 				text-feature-id: @featureId;
 				text-halo-fill: @peak_halo;
@@ -590,7 +590,7 @@
 				[class='hospital'] {
 					text-fill: #4AA0E7;
 				}
-				[class='fountain'],[class='drinking_water'],[class='bassin'],[class='spring'] {
+				[class='fountain'],[class='drinking_water'],[class='bassin'],[class='spring'],[class='waterfall'] {
 					text-placement: point;
 					// text-allow-overlap: true;
 					text-fill: #4AA0E7;
@@ -599,7 +599,7 @@
 					text-size: linear([view::zoom], (14, 6), (16, 10));
 					text-halo-radius: 0;
 				}
-				[class='bakery'], [class='restaurant'] {
+				[class='bakery'] {
 					text-fill: #EF8000; 
 				}
 			}
@@ -615,10 +615,12 @@
 					text-halo-fill: @peak_halo;
 					text-halo-rasterizer: fast;
 					text-halo-radius: 1;
-					text-size: linear([view::zoom], (14, 7), (18, 10)) - 0.000001 * [rank];
+					// text-size: linear([view::zoom], (14, 7), (20, 12)) - 0.000001 * [rank];
+					text-size: linear([view::zoom], (10, 7), (12, 8), (19, 10), (20, 12)) - 0.000001 * [rank];
 					text-wrap-width: step([view::zoom], (14, 40), (15, 50), (16, 60), (18, 70), (19, 100));
 					text-feature-id: @featureId;
-					text-dy: linear([view::zoom], (14, 8), (18, 10));
+					// text-dy: linear([view::zoom], (14, 9), (20, 16));
+					text-dy: linear([view::zoom], (10, 9), (12, 10), (19, 12), (20, 15)) - 0.000001 * [rank];
 					// text-dy: 13;
 
 					[class='bus'][zoom<17],

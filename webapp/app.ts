@@ -610,7 +610,7 @@ class MaterialHeightShader extends Geo.MapHeightNode {
             .fetchTile(this.level, this.x, this.y)
             .then((image) => {
                 if (image) {
-                    const texture = new THREE.Texture(image as any);
+                    const texture = new THREE.Texture(image);
                     texture.generateMipmaps = false;
                     texture.format = THREE.RGBFormat;
                     texture.magFilter = THREE.LinearFilter;
