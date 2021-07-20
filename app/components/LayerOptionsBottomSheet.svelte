@@ -167,7 +167,7 @@
 
 <gridlayout rows="auto,*,auto" height="240">
     <label text={getTitle()} fontWeight="bold" padding="10 10 0 20" fontSize="20" />
-    <scrollview row="1" bind:this={scrollView} height="200" id="scrollView">
+    <scrollview row={1} bind:this={scrollView} height="200" id="scrollView">
         <stacklayout>
             {#each Object.entries(options) as [name, option]}
                 {#if option.type === 'color'}
@@ -205,7 +205,7 @@
                     </gridlayout>
                 {:else}
                     <gridlayout height="50" columns="100,*,50">
-                        <canvaslabel colSpan="3" fontSize="13" padding="10">
+                        <canvaslabel colSpan={3} fontSize="13" padding="10">
                             <cspan
                                 text={name}
                                 verticalAlignment="center"
@@ -216,7 +216,7 @@
                             <cspan text={optionValue(name) / 100 + ''} verticalAlignment="center" textAlignment="right" />
                         </canvaslabel>
                         <slider
-                            col="1"
+                            col={1}
                             marginLeft="10"
                             marginRight="10"
                             value={optionValue(name)}
@@ -230,7 +230,7 @@
             {/each}
         </stacklayout>
     </scrollview>
-    <collectionview orientation="horizontal" row="2" height="40" items={actions} colWidth="auto">
+    <collectionview orientation="horizontal" row={2} height="40" items={actions} colWidth="auto">
         <Template let:item>
             <gridlayout>
                 <button variant="outline" padding="10" marginRight="10" text={l(item)} on:tap={() => handleAction(item)} />

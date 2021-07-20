@@ -38,15 +38,17 @@
 </script>
 
 <gridLayout class="actionBar" height={actionBarHeight + globalMarginTop} columns="auto,*, auto" rows="*" paddingLeft="5" paddingRight="5" paddingTop={globalMarginTop}>
-    <label col="1" colSpan="3" class="actionBarTitle" textAlignment="left" visibility={!!title ? 'visible' : 'hidden'} text={title || ''} verticalTextAlignment="center" />
+    <slot name="center" >
+        <label col={1} colSpan={3} class="actionBarTitle" textAlignment="left" visibility={!!title ? 'visible' : 'hidden'} text={title || ''} verticalTextAlignment="center" />
     <!-- {#if showLogo && !title}
-        <label col="1" class="activelook" fontSize="28" color="white" text="logo" verticalAlignment="center" marginLeft="6" />
+        <label col={1} class="activelook" fontSize="28" color="white" text="logo" verticalAlignment="center" marginLeft="6" />
     {/if} -->
-    <stackLayout col="0" orientation="horizontal">
+    </slot>
+    <stackLayout  orientation="horizontal">
         <slot name="left" />
         <button variant="text" visibility={menuIconVisibility} class="icon-btn" text={menuIcon} on:tap={onMenuIcon} />
     </stackLayout>
-    <stackLayout col="2" orientation="horizontal">
+    <stackLayout col={2} orientation="horizontal">
         <slot />
     </stackLayout>
 </gridLayout>

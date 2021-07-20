@@ -11,6 +11,7 @@ import { l, lc } from '~/helpers/locale';
 
 let geolocation: GPS;
 
+//@ts-ignore
 export const desiredAccuracy = global.isAndroid ? Enums.Accuracy.high : kCLLocationAccuracyBestForNavigation;
 export const updateDistance = 0;
 export const maximumAge = 3000;
@@ -381,6 +382,7 @@ export class GeoHandler extends Observable {
     async startWatch(opts?: Partial<GeolocationOptions>) {
         const updateDistance = ApplicationSettings.getNumber('gps_update_distance', 0);
         const minimumUpdateTime = ApplicationSettings.getNumber('gps_update_minTime', 0);
+        //@ts-ignore
         const desiredAccuracy = ApplicationSettings.getNumber('gps_desired_accuracy', global.isAndroid ? Enums.Accuracy.high : kCLLocationAccuracyBestForNavigation);
         const options: GeolocationOptions = {
             updateDistance,
@@ -404,6 +406,7 @@ export class GeoHandler extends Observable {
                 options.pausesLocationUpdatesAutomatically = ApplicationSettings.getBoolean('gps_ios_auto_pause_updates', true);
                 options.allowsBackgroundLocationUpdates = ApplicationSettings.getBoolean('gps_ios_allow_background', true);
             }
+            //@ts-ignore
             options.activityType = ApplicationSettings.getNumber('gps_ios_activitytype', CLActivityType.Other);
         }
         if (global.isAndroid) {
@@ -430,12 +433,19 @@ export class GeoHandler extends Observable {
                 description: lc('gps_desired_accuracy_desc'),
                 values: global.isIOS
                     ? [
+                          //@ts-ignore
                           { title: lc('best_for_navigation'), value: kCLLocationAccuracyBestForNavigation },
+                          //@ts-ignore
                           { title: lc('best'), value: kCLLocationAccuracyBest },
+                          //@ts-ignore
                           { title: '10m', value: kCLLocationAccuracyNearestTenMeters },
+                          //@ts-ignore
                           { title: '100m', value: kCLLocationAccuracyHundredMeters },
+                          //@ts-ignore
                           { title: '1km', value: kCLLocationAccuracyKilometer },
+                          //@ts-ignore
                           { title: '3km', value: kCLLocationAccuracyThreeKilometers },
+                          //@ts-ignore
                           { title: lc('reduced'), value: kCLLocationAccuracyReduced }
                       ]
                     : [
@@ -621,7 +631,7 @@ export class GeoHandler extends Observable {
         return this.currentSession && this.currentSession.lastLoc === null;
     }
     startSession(onUpdate?: Function) {
-        remove('pausedSession');
+        // remove('pausedSession');
         if (this.currentSession) {
             return Promise.reject('already_running');
         }
@@ -684,7 +694,7 @@ export class GeoHandler extends Observable {
     }
     stopSession() {
         if (this.currentSession) {
-            remove('pausedSession');
+            // remove('pausedSession');
             this.stopWatch();
 
             if (this.currentSession.distance > 0) {

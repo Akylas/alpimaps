@@ -418,6 +418,7 @@
                 //         console.error('photonSearch', err);
                 //     })
             ]);
+            
             // console.log(
             //     'search done',
             //     result.length,
@@ -556,7 +557,7 @@
     <textfield
         bind:this={textField}
         variant="none"
-        col="1"
+        col={1}
         padding="0 15 0 0"
         hint={$slc('search')}
         placeholder={$slc('search')}
@@ -571,7 +572,7 @@
         floating="false"
         verticalAlignment="center"
     />
-    <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} col="2" busy={true} width={20} height={20} />
+    <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} col={2} busy={true} width={20} height={20} />
     {#if loaded}
         <button
             variant="text"
@@ -595,19 +596,20 @@
     />
     <button col={6} variant="text" class="icon-btn" text="mdi-dots-vertical" on:tap={showMapMenu} />
     {#if loaded}
-        <collectionview bind:this={collectionView} col="0" row="1" height="200" colSpan="7" rowHeight="49" items={filteredDataItems} visibility={searchResultsVisible ? 'visible' : 'collapsed'}>
+        <collectionview bind:this={collectionView} row={1} height="200" colSpan={7} rowHeight="49" items={filteredDataItems} visibility={searchResultsVisible ? 'visible' : 'collapsed'}>
             <Template let:item>
                 <gridlayout columns="34,*" padding="0 10 0 10" rows="*,auto,auto,*" class="textRipple" on:tap={() => onItemTap(item)}>
-                    <label rowSpan="4" text={item.icon} color={item.color} class="osm" fontSize="20" verticalAlignment="center" textAlignment="center" />
-                    <label col={1} row="1" text={item.title} fontSize="14" fontWeight="bold" />
+                    <label rowSpan={4} text={item.icon} color={item.color} class="osm" fontSize="20" verticalAlignment="center" textAlignment="center" />
+                    <label col={1} row={1} text={item.title} fontSize="14" fontWeight="bold" />
                     <label
                         col={1}
-                        row="2"
+                        row={2}
                         text={item.subtitle || (item.distance && formatDistance(item.distance))}
                         class="subtitle"
                         fontSize="12"
                         visibility={!!item.subtitle || 'distance' in item ? 'visible' : 'collapsed'}
                     />
+                    <label col={1} rowSpan={2} text={item.provider} class="subtitle" textAlignment="right" fontSize="12" />
                 </gridlayout>
             </Template>
         </collectionview>

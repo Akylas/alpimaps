@@ -2,7 +2,7 @@ Map {
 	background-color: @background;
   south-pole-color: @background;
   north-pole-color: @water;
-	font-directory: url(fonts/);
+	font-directory: url(../fonts/);
 }
 //CARTO Fonts
 @mont: "Montserrat Regular";
