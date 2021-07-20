@@ -499,16 +499,17 @@ module.exports = (env, params = {}) => {
             }
         })
     ];
-    return [
-        {
+    const configs = [config];
+    if (!!production) {
+        configs.unshift({
             entry: resolve(__dirname, 'geo-three/webapp/app.ts'),
             devtool: false,
-            target:'web',
+            target: 'web',
             mode: production ? 'production' : 'development',
-            optimization:{
+            optimization: {
                 usedExports: true,
                 // minimize: true,
-                minimizer:[
+                minimizer: [
                     new TerserPlugin({
                         parallel: true,
                         // cache: true,
@@ -587,7 +588,7 @@ module.exports = (env, params = {}) => {
                     }
                 ]
             }
-        },
-        config
-    ];
+        });
+    }
+    return configs;
 };
