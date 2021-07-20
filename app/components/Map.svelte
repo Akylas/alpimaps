@@ -73,7 +73,7 @@
     import { getBoundsZoomLevel } from '~/utils/geo';
     import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
-import { transitService } from '~/services/TransitService';
+    import { transitService } from '~/services/TransitService';
 
     // function slideFromRight(node, { delay = 0, duration = 200, easing = AnimationCurve.easeOut }) {
     //     const scaleX = node.nativeView.scaleX;
@@ -1733,7 +1733,18 @@ import { transitService } from '~/services/TransitService';
                 bind:this={locationInfoPanel}
                 isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
             />
-            <canvaslabel orientation="vertical" verticalAlignment="middle" horizontalAlignment="right" isUserInteractionEnabled="false" color="red" fontSize="12" width="20" height="30" class="mdi" textAlignment="center">
+            <canvaslabel
+                orientation="vertical"
+                verticalAlignment="middle"
+                horizontalAlignment="right"
+                isUserInteractionEnabled="false"
+                color="red"
+                fontSize="12"
+                width="20"
+                height="30"
+                class="mdi"
+                textAlignment="center"
+            >
                 <cspan text="mdi-access-point-network-off" visibility={networkConnected ? 'collapsed' : 'visible'} textAlignment="left" verticalTextAlignement="top" />
             </canvaslabel>
             <button
