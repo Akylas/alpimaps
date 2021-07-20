@@ -154,7 +154,7 @@ import { ApplicationSettings } from '@nativescript/core';
     <page actionBarHidden={true}>
         <gridlayout rows="auto,*">
             <CActionBar canGoBack modalWindow title={$slc('settings')} />
-            <collectionview bind:this={collectionView} row="1" {items} rowHeight="60">
+            <collectionview bind:this={collectionView} row={1} {items} rowHeight="60">
                 <Template let:item>
                     <gridLayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)}>
                         <label
@@ -166,7 +166,7 @@ import { ApplicationSettings } from '@nativescript/core';
                             fontFamily={mdiFontFamily}
                             visibility={!!item.icon ? 'visible' : 'hidden'}
                         />
-                        <stackLayout col="1" verticalAlignment="center">
+                        <stackLayout col={1} verticalAlignment="center">
                             <label
                                 fontSize="17"
                                 text={getTitle(item)}
@@ -187,7 +187,7 @@ import { ApplicationSettings } from '@nativescript/core';
                         </stackLayout>
 
                         <label
-                            col="2"
+                            col={2}
                             visibility={!!item.rightValue ? 'visible' : 'hidden'}
                             text={item.rightValue && item.rightValue()}
                             class="subtitle"
@@ -195,7 +195,7 @@ import { ApplicationSettings } from '@nativescript/core';
                             marginRight="16"
                         />
                         <button
-                            col="2"
+                            col={2}
                             variant="text"
                             width="25"
                             height="25"
@@ -206,9 +206,9 @@ import { ApplicationSettings } from '@nativescript/core';
                             on:tap={(event) => onTap(item.id)}
                         />
                         <absoluteLayout
-                            row="2"
-                            col="1"
-                            colSpan="3"
+                            row={2}
+                            col={1}
+                            colSpan={3}
                             backgroundColor={$borderColor}
                             height="1"
                             verticalAlignment="bottom"

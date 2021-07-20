@@ -24,7 +24,7 @@
     }
 </script>
 
-<collectionView row="1" items={options} {height} rowHeight="72">
+<collectionView row={1} items={options} {height} rowHeight="72">
     <Template let:item>
         <ListItem title={item.name} on:tap={(event) => onTap(item, event)} />
     </Template>

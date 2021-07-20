@@ -630,7 +630,9 @@ class PackageService extends Observable {
         if ('getCategories' in geoRes.address) {
             const cat = geoRes.address.getCategories();
             if (cat && cat.size() > 0) {
-                geoRes['categories'] = (nativeVectorToArray(cat) as string[]).map(s=>s.split(':')).flat();
+                geoRes['categories'] = nativeVectorToArray<string>(cat)
+                    .map((s) => s.split(':'))
+                    .flat();
             }
         }
 
@@ -654,12 +656,12 @@ class PackageService extends Observable {
             return new Promise((resolve, reject) => {
                 // console.log('getElevation', pos);
                 this.hillshadeLayer.getElevationAsync(pos, (err, result) => {
-                    if (err) {
+                    if (err || result === -10000) {
                         reject(err);
                         return;
                     }
                     // console.log('gotElevation', result);
-                    resolve(result);
+                    resolve(Math.max(0, result));
                 });
             });
         }

@@ -71,6 +71,9 @@
     import { sTheme, toggleTheme } from '~/helpers/theme';
     import { RouteInstruction } from '~/models/Route';
     import { getBoundsZoomLevel } from '~/utils/geo';
+    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
+    import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
+import { transitService } from '~/services/TransitService';
 
     // function slideFromRight(node, { delay = 0, duration = 200, easing = AnimationCurve.easeOut }) {
     //     const scaleX = node.nativeView.scaleX;
@@ -87,14 +90,16 @@
     const mailRegexp =
         /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
 
-    const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'hillshade', 'selection', 'items', 'directions', 'search', 'userLocation'];
+    const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'transit', 'hillshade', 'selection', 'items', 'directions', 'search', 'userLocation'];
     const KEEP_AWAKE_KEY = 'keepAwake';
     let defaultLiveSync = global.__onLiveSync;
 
     const brightness = new Brightness();
     function base64Encode(value) {
         if (global.isIOS) {
+            //@ts-ignore
             const text = NSString.stringWithString(value);
+            //@ts-ignore
             const data = text.dataUsingEncoding(NSUTF8StringEncoding);
             return data.base64EncodedStringWithOptions(0);
         }
@@ -148,14 +153,18 @@
     };
 
     let ignoreNextMapClick = false;
-    let handleSelectedRouteTimer: number;
+    let handleSelectedRouteTimer: NodeJS.Timeout;
     let selectedRoutes: { featurePosition; featureData; layer: BaseVectorTileLayer<any, any> }[];
     let didIgnoreAlreadySelected = false;
     let clickedFeatures = [];
 
     let showClickedFeatures = false;
+    let showTransitLines = false;
     let currentClickedFeatures: any[];
     let selectedClickMarker: Text<LatLonKeys>;
+
+    let transitVectorTileDataSource: GeoJSONVectorTileDataSource;
+    let transitVectorTileLayer: VectorTileLayer;
 
     const bottomSheetPanGestureOptions = { failOffsetXEnd: 20, minDist: 40 };
 
@@ -173,6 +182,47 @@
             if (selectedClickMarker) {
                 selectedClickMarker.visible = false;
             }
+        }
+    }
+    $: {
+        if (showTransitLines) {
+            if (!transitVectorTileDataSource) {
+                transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
+                    minZoom: 0,
+                    maxZoom: 24
+                });
+                transitVectorTileDataSource.createLayer('lines');
+                transitService
+                    .getTransitLines()
+                    .then((result) => {
+                        const reader = new GeoJSONGeometryReader({
+                            targetProjection: projection
+                        });
+                        // console.log('getMetroLines', result);
+                        const geometry = reader.readFeatureCollection(result);
+                        transitVectorTileDataSource.setLayerFeatureCollection(1, projection, geometry);
+                    })
+                    .catch(showError);
+            }
+            if (!transitVectorTileLayer) {
+                transitVectorTileLayer = new VectorTileLayer({
+                    // preloading: true,
+                    dataSource: transitVectorTileDataSource,
+                    decoder: new MBVectorTileDecoder({
+                        style: 'voyager',
+                        liveReload: TNS_ENV !== 'production',
+                        dirPath: '~/assets/styles/transit'
+                    })
+                });
+
+                transitVectorTileLayer.setVectorTileEventListener(this);
+                // always add it at 1 to respect local order
+                addLayer(transitVectorTileLayer, 'transit');
+            } else {
+                transitVectorTileLayer.visible = true;
+            }
+        } else if (transitVectorTileLayer) {
+            transitVectorTileLayer.visible = false;
         }
     }
 
@@ -248,7 +298,7 @@
                     // directions!
                     if (element[1] !== undefined) {
                         if (/[\d.-]+,[\d.-]+/.test(element[1])) {
-                            const pos = element[1].split(',').map(parseFloat)
+                            const pos = element[1].split(',').map(parseFloat);
                             cartoMap.setFocusPos({ lat: pos[0], lon: pos[1] }, 0);
                             directionsPanel.addStartPoint({
                                 lat: pos[0],
@@ -260,13 +310,12 @@
                     // directions!
                     if (element[1] !== undefined) {
                         if (/[\d.-]+,[\d.-]+/.test(element[1])) {
-                            const pos = element[1].split(',').map(parseFloat)
+                            const pos = element[1].split(',').map(parseFloat);
                             cartoMap.setFocusPos({ lat: pos[0], lon: pos[1] }, 0);
                             directionsPanel.addStopPoint({
                                 lat: pos[0],
                                 lon: pos[1]
                             });
-
                         }
                     }
                 }
@@ -450,7 +499,8 @@
             if (__CARTO_PACKAGESERVICE__) {
                 packageService.start();
             }
-            setMapStyle(appSettings.getString('mapStyle', PRODUCTION ? 'osm.zip~voyager' : 'osm~voyager'), true);
+            transitService.start();
+            setMapStyle(appSettings.getString('mapStyle', 'osm~voyager'), true);
         } catch (err) {
             showError(err);
         }
@@ -656,8 +706,7 @@
                 }
                 if (item.properties && 'ele' in item.properties === false && packageService.hasElevation()) {
                     packageService.getElevation(item.position).then((result) => {
-                 
-                        if (result !== -10000 && $selectedItem.position === item.position) {
+                        if ($selectedItem.position === item.position) {
                             $selectedItem.properties = $selectedItem.properties || {};
                             $selectedItem.properties['ele'] = result;
                             $selectedItem = { ...$selectedItem };
@@ -909,7 +958,7 @@
                     properties: featureData,
                     position: isFeatureInteresting ? featurePosition : position
                 };
-                selectItem({ item: result, isFeatureInteresting });
+                selectItem({ item: result, isFeatureInteresting, showButtons: featureData.class === 'bus' || featureData.subclass === 'tram_stop' });
             }
             unFocusSearch();
             if (isFeatureInteresting && showClickedFeatures) {
@@ -980,7 +1029,7 @@
         currentLayer = new VectorTileLayer({
             preloading: $mapStore.preloading,
             zoomLevelBias: parseFloat($mapStore.zoomBiais),
-            labelRenderOrder:VectorTileRenderOrder.LAST,
+            labelRenderOrder: VectorTileRenderOrder.LAST,
             dataSource: packageService.getDataSource($mapStore.showContourLines),
             decoder
         });
@@ -1673,6 +1722,7 @@
                     color={showClickedFeatures ? primaryColor : 'gray'}
                     on:tap={() => (showClickedFeatures = !showClickedFeatures)}
                 />
+                <button variant="text" class="icon-btn" text="mdi-bus-marker" color={showTransitLines ? primaryColor : 'gray'} on:tap={() => (showTransitLines = !showTransitLines)} />
             </stacklayout>
             <Search bind:this={searchView} verticalAlignment="top" defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
             <LocationInfoPanel
@@ -1683,7 +1733,7 @@
                 bind:this={locationInfoPanel}
                 isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
             />
-            <canvaslabel orientation="vertical" verticalAlignment="middle" horizontalAlignment="right" isUserInteractionEnabled="false" color="red" fontSize="12" width="20" height="30">
+            <canvaslabel orientation="vertical" verticalAlignment="middle" horizontalAlignment="right" isUserInteractionEnabled="false" color="red" fontSize="12" width="20" height="30" class="mdi" textAlignment="center">
                 <cspan text="mdi-access-point-network-off" visibility={networkConnected ? 'collapsed' : 'visible'} textAlignment="left" verticalTextAlignement="top" />
             </canvaslabel>
             <button

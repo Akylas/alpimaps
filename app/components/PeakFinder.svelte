@@ -254,7 +254,7 @@
         },
         {
             type: 'checkbox',
-            title: lc('read_Features'),
+            title: lc('read_features'),
             checked: true,
             method: 'setReadFeatures'
         },
