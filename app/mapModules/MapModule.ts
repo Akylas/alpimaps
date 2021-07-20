@@ -26,7 +26,7 @@ export interface IMapModule {
     onVectorElementClicked?(data: VectorElementEventData<LatLonKeys>);
     onSelectedItem?(item: IItem, oldItem: IItem);
 }
-export type LayerType = 'map' | 'customLayers' | 'hillshade' | 'selection' | 'items' | 'directions' | 'userLocation' | 'search';
+export type LayerType = 'map' | 'customLayers' | 'hillshade' | 'selection' | 'items' | 'directions' | 'userLocation' | 'search' | 'transit';
 
 export interface MapContext {
     drawer: Drawer;

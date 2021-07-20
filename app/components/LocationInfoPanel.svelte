@@ -265,7 +265,7 @@
                 <cspan text={'\n' + 'km/h'} fontSize="10" />
             </cgroup>
         </canvaslabel>
-        <canvaslabel col="1" marginLeft="5" color="#fff">
+        <canvaslabel col={1} marginLeft="5" color="#fff">
             <cspan
                 text={lu('altitude') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'}
                 fontSize="11"
@@ -277,10 +277,10 @@
                 <cspan text=" m" fontSize="12" />
             </cgroup>
         </canvaslabel>
-        <canvaslabel col="1" visibility={listeningForBarometer && airportRefName ? 'visible' : 'collapsed'}>
+        <canvaslabel col={1} visibility={listeningForBarometer && airportRefName ? 'visible' : 'collapsed'}>
             <cspan text={airportRefName} verticalAlignment="bottom" textAlignment="right" color="#fff" fontSize="9" />
         </canvaslabel>
-        <stacklayout visibility={hasBarometer ? 'visible' : 'collapsed'} col="2" verticalAlignment="center">
+        <stacklayout visibility={hasBarometer ? 'visible' : 'collapsed'} col={2} verticalAlignment="center">
             <button variant="text" class="small-icon-btn" text="mdi-gauge" on:tap={switchBarometer} color="white" />
             <button
                 variant="text"

@@ -61,6 +61,7 @@ registerNativeViewElement('cartomap', () => require('@nativescript-community/ui-
 registerNativeViewElement('canvas', () => require('@nativescript-community/ui-canvas').CanvasView);
 registerNativeViewElement('line', () => require('@nativescript-community/ui-canvas/shapes').Line);
 registerNativeViewElement('circle', () => require('@nativescript-community/ui-canvas/shapes').Circle);
+registerNativeViewElement('rectangle', () => require('@nativescript-community/ui-canvas/shapes').Rectangle);
 registerNativeViewElement('text', () => require('@nativescript-community/ui-canvas/shapes').Text);
 registerNativeViewElement('image', () => require('@nativescript-community/ui-image').Img, null, {}, { override: true });
 registerNativeViewElement('canvaslabel', () => require('@nativescript-community/ui-canvaslabel').CanvasLabel);
