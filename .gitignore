@@ -18,3 +18,5 @@ package-lock.json
 /fastlane/report.xml
 pnpm-lock.yaml
 /app/assets/webapp.js.LICENSE.txt
+*.db
+/geojson

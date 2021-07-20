@@ -15,7 +15,7 @@ class TransitService extends Observable {
             const entities = folder.getEntitiesSync();
             entities.some((s) => {
                 if (s.name.endsWith('.transitdb')) {
-                    this._db = openOrCreate(s.path, {});
+                    this._db = openOrCreate(s.path, { flags: android.database.sqlite.SQLiteDatabase.OPEN_READONLY });
                     return true;
                 }
             });
@@ -23,12 +23,14 @@ class TransitService extends Observable {
     }
     routes: any[];
     async getTransitLines() {
-        if (this._db) {
-            if (!this.routes) {
-                this.routes = (await this._db.select('SELECT * from routes WHERE geojson IS NOT NULL')) as any;
-                console.log('routes', this.routes);
-            }
-        }
+        // if (this._db) {
+        //     if (!this.routes) {
+        //         this.routes = (await this._db.select('SELECT * from routes WHERE geojson IS NOT NULL')) as any;
+
+        //         console.log('routes', this.routes.length);
+        //     }
+        //     return `{"type":"FeatureCollection","features":[${this.routes.map(r=>r.geojson).join(',')}]}`;
+        // }
         return networkService.request<string>({
             method: 'GET',
             toJSON: false,
