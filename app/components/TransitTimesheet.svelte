@@ -9,6 +9,7 @@
     import { Template } from 'svelte-native/components';
     import { closeModal, NativeViewElementNode } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
+import { onThemeChanged } from '~/helpers/theme';
     import { transitService } from '~/services/TransitService';
     import { showError } from '~/utils/error';
     import { openLink } from '~/utils/ui';
@@ -32,12 +33,12 @@
         try {
             loading = true;
             currentTime = time;
-            console.log('fetchLineTimeline', time, time.valueOf(), dayjs().startOf('d'), dayjs().startOf('d').valueOf());
             lineData = await transitService.getLineTimeline(line.id, time?.utc(true).valueOf());
             // prevTime = lineData[lineDataIndex].prevTime;
             // nextTime = lineData[lineDataIndex].nextTime;
             timelineItems = lineData[lineDataIndex].arrets;
             currentStopId = line.stopIds[lineDataIndex];
+            // console.log('fetchLineTimeline', time.valueOf(), lineData[lineDataIndex].prevTime, lineData[lineDataIndex].nextTime);
             directionText = timelineItems[0].stopName + '\n' + timelineItems[timelineItems.length - 1].stopName;
             const index = timelineItems.findIndex((a) => a.stopId === currentStopId);
             if (index === -1) {
@@ -52,7 +53,6 @@
             loading = false;
         }
     }
-
     function reverseTimesheet() {
         lineDataIndex = 1 - lineDataIndex;
         timelineItems = lineData[lineDataIndex].arrets;
@@ -67,7 +67,7 @@
         collectionView.nativeView.scrollToIndex(scrollIndex, false);
     }
 
-    let currentTime = dayjs();
+    let currentTime = dayjs().set('s', 0).set('ms', 0);
     let currentStopId = null;
 
     function getTripTime(item, index) {
@@ -165,6 +165,10 @@
     onMount(() => {
         fetchLineTimeline(currentTime);
     });
+
+    onThemeChanged(() => {
+        collectionView && (collectionView.nativeView as CollectionView).refreshVisibleItems();
+    });
 </script>
 
 <page bind:this={page} actionBarHidden={true}>
@@ -183,7 +187,7 @@
             verticalTextAlignment="center"
             padding={8}
         />
-        <label col={1} text={line.longName.replace(' / ', '\n')} fontWeight="bold" padding="15 10 15 10" fontSize={20} maxFontSize={20} autoFontSize={true} maxLines={3} />
+        <label col={1} text={line.longName.replace(' / ', '\n')} fontWeight="bold" padding="15 10 15 10" fontSize={20} maxFontSize={20} autoFontSize={true} maxLines={3} verticalTextAlignment="center"/>
         <stacklayout col={2} orientation="horizontal">
             <button variant="text" class="icon-btn" text="mdi-close" on:tap={() => closeModal(undefined)} />
             <button variant="text" class="icon-btn" text="mdi-pdf-box" on:tap={() => downloadPDF()} />
@@ -209,7 +213,7 @@
 
         <collectionview row={2} colSpan={3} bind:this={collectionView} items={timelineItems} itemIdGenerator={(item, i) => i} android:marginBottom={navigationBarHeight} rowHeight="50">
             <Template let:item>
-                <gridlayout rippleColor={item.color} columns="*,150" padding={4} borderBottomColor={$borderColor} borderBottomWidth={1}>
+                <gridlayout rippleColor={item.color} columns="*,200" padding={4} borderBottomColor={$borderColor} borderBottomWidth={1}>
                     <label
                         text={item.stopName}
                         maxFontSize={13}
@@ -218,11 +222,13 @@
                         verticalTextAlignment="center"
                         color={item.stopId === currentStopId ? accentColor : $textColor}
                         maxLines={2}
+                        paddingRight={10}
                     />
-                    <canvaslabel col="1" fontSize={12} color={item.stopId === currentStopId ? accentColor : $textColor}>
-                        <cspan text={getTripTime(item, 0)} textAlignment="center" verticalAlignment="center" width="30%" />
-                        <cspan text={getTripTime(item, 1)} horizontalAlignment="center" textAlignment="center" verticalAlignment="center" width="30%" />
-                        <cspan text={getTripTime(item, 2)} horizontalAlignment="right" textAlignment="center" verticalAlignment="center" width="30%" />
+                    <canvaslabel col="1" fontSize={12} color={item.stopId === currentStopId ? accentColor : $textColor} textAlignment="center" >
+                        <cspan text={getTripTime(item, 0)} verticalAlignment="center" width="25%" />
+                        <cspan text={getTripTime(item, 1)} verticalAlignment="center" paddingLeft="25%" width="25%" />
+                        <cspan text={getTripTime(item, 2)} verticalAlignment="center" paddingLeft="50%" width="25%" />
+                        <cspan text={getTripTime(item, 3)} verticalAlignment="center" paddingLeft="75%" width="25%" />
                     </canvaslabel>
                 </gridlayout>
             </Template>

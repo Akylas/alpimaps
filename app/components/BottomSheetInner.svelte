@@ -481,7 +481,7 @@
 
     async function getTransitLines() {
         try {
-            const component = (await import('./TransitLines.svelte')).default;
+            const component = (await import('./TransitLinesBottomSheet.svelte')).default;
             console.log('getTransitLines', { name: formatter.getItemName(item), position: item.position });
             showBottomSheet({ parent: mapContext.getMainPage(), view: component, disableDimBackground: true, props: { name: formatter.getItemName(item), position: item.position } });
         } catch (err) {

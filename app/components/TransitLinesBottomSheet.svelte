@@ -123,7 +123,7 @@ import { transitService } from '~/services/TransitService';
                             borderRadius={4}
                             width={50}
                             height={50}
-                            backgroundColor={item.color}
+                            backgroundColor={item.color || 'black'}
                             color={item.textColor}
                             text={item.shortName}
                             fontSize={20}
@@ -132,7 +132,7 @@ import { transitService } from '~/services/TransitService';
                             verticalTextAlignment="center"
                             padding={4}
                         />
-                        <label text={item.longName} col={1} fontSize={17} paddingLeft={10} verticalAlignment="center" maxLines={2} autoFontSize={true} lineBreak="end" />
+                        <label text={item.longName} col={1} fontSize={17} maxFontSize={17} paddingLeft={10} verticalTextAlignment="center" maxLines={2} autoFontSize={true} lineBreak="end" />
                         <button col={2} variant="text" class="icon-btn" text="mdi-information-outline" />
                     </gridlayout>
                 </Template>
