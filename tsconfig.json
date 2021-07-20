@@ -19,7 +19,7 @@
         "noImplicitUseStrict": false,
         "noFallthroughCasesInSwitch": true,
         "allowSyntheticDefaultImports": true,
-        "lib": ["esnext", "dom"],
+        "lib": ["esnext", "es2017", "dom"],
         "baseUrl": ".",
         "types": ["node", "svelte", "geojson"],
         "paths": {

@@ -500,7 +500,7 @@
 </script>
 
 <gridlayout rows="50,*,auto,2*" columns="*,auto,*" height="300" >
-    <stacklayout  colSpan="3" orientation="horizontal">
+    <stacklayout  colSpan={3} orientation="horizontal">
         <button
             class="mdi"
             shape="round"
@@ -515,10 +515,10 @@
     </stacklayout>
     <collectionview
         ref="listView"
-        row="1"
-        col="0"
-        rowSpan="3"
-        colSpan="3"
+        row={1}
+        
+        rowSpan={3}
+        colSpan={3}
         rowHeight="49"
         items={dataItems}
         on:itemTap={onPackageClick}
@@ -541,16 +541,16 @@
                     fontWeight="bold"
                     verticalAlignment="center" />
                 <label
-                    row="1"
+                    row={1}
                     text="item.getStatusText()"
                     color="#D0D0D0"
                     fontSize="11"
                     :visibility={!item.isGroup() ? 'visible' : 'collapsed'}
                     verticalAlignment="center" />
                 <label
-                    col="2"
+                    col={2}
                     
-                    rowSpan="3"
+                    rowSpan={3}
                     class="mdi"
                     color="navyblue"
                     text="mdi-chevron-right"
@@ -558,9 +558,9 @@
                     visibility={item.isGroup() ? 'visible' : 'collapsed'}
                     verticalAlignment="center" />
                 <button
-                    col="1"
+                    col={1}
                     
-                    rowSpan="3"
+                    rowSpan={3}
                     variant="text"
                     margin="0"
                     padding="0"
@@ -571,9 +571,9 @@
                     fontSize="12"
                     on:tap={handlePackageAction('map', item)} />
                 <button
-                    col="2"
+                    col={2}
                     
-                    rowSpan="3"
+                    rowSpan={3}
                     variant="text"
                     margin="0"
                     padding="0"
@@ -583,9 +583,9 @@
                     fontSize="12"
                     on:tap={handlePackageAction('geo', item)} />
                 <button
-                    col="3"
+                    col={3}
                     
-                    rowSpan="3"
+                    rowSpan={3}
                     variant="text"
                     margin="0"
                     padding="0"
@@ -595,9 +595,9 @@
                     fontSize="12"
                     on:tap={handlePackageAction('routing', item)} />
                 <mdprogress
-                    row="2"
-                    col="0"
-                    colSpan="4"
+                    row={2}
+                    
+                    colSpan={4}
                     height="3"
                     value={item.getDownloadProgress()}
                     :visibility={!item.isGroup() ? 'visible' : 'collapsed'}
@@ -605,5 +605,5 @@
             </gridlayout>
         </Template>
     </collectionview>
-    <activityindicator visibility={loading ? 'visible' : 'collapsed'} row="2" col="1" busy />
+    <activityindicator visibility={loading ? 'visible' : 'collapsed'} row={2} col={1} busy />
 </gridlayout>

@@ -59,6 +59,7 @@
     import { showError } from '~/utils/error';
     import { lc } from '~/helpers/locale';
     import { Template } from 'svelte-native/components';
+    import { networkService } from '~/services/NetworkService';
 
     const mapContext = getMapContext();
     export let translationFunction: Function = null;
@@ -118,7 +119,7 @@
     let costingOptions = { use_ferry: 0, shortest: false };
     let profileCostingOptions = {
         pedestrian: { use_hills: 1, max_hiking_difficulty: 6, step_penalty: 5, driveway_factor: 10, use_roads: 0, use_tracks: 1, walking_speed: 4 },
-        bicycle: { use_hills: 0.25, bicycle_type: 'hybrid', avoid_bad_surfaces: 0.25, use_roads: 1, use_tracks: 0, cycling_speed: 16 },
+        bicycle: { use_hills: 0.25, bicycle_type: 'hybrid', avoid_bad_surfaces: 0.25, use_roads: 1, use_tracks: 1, cycling_speed: 16 },
         car: { use_roads: 1, use_tracks: 0 }
     };
 
@@ -291,7 +292,7 @@
             marker: null,
             text: metaData?.name || `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`
         };
-        const lastPoint = waypoints.length > 0 ?waypoints.getItem(waypoints.length - 1): undefined;
+        const lastPoint = waypoints.length > 0 ? waypoints.getItem(waypoints.length - 1) : undefined;
         if (waypoints.length > 0 && lastPoint.isStop === true) {
             if (lastPoint.isStop === true) {
                 lastPoint.isStop = false;
@@ -316,7 +317,7 @@
                     scaleWithDPI: true,
                     color: 'red'
                 }
-            }),
+            })
             // new Text({
             //     position: getCenter(position, lastPoint.position),
             //     // position: { lat: (position.lat - lastPoint.position.lat) / 2, lon: (position.lon - lastPoint.position.lon) / 2 },
@@ -341,7 +342,6 @@
         updateWayPoints();
     }
     function updateWayPoints() {
-        console.log('updateWayPoints', waypoints)
         if (!line) {
             line = new Line<LatLonKeys>({
                 styleBuilder: {
@@ -360,7 +360,6 @@
     export let translationY = 0;
     async function show() {
         await loadView();
-        console.log('show')
         const nView = topLayout.nativeView;
         const height = nView.getMeasuredHeight();
         const superParams = {
@@ -530,55 +529,71 @@
             if (waypoints.length <= 1) {
                 return;
             }
-            let startTime = Date.now();
             loading = true;
-            const costing_options = {
-                [profile]: Object.assign({}, costingOptions, profileCostingOptions[profile])
-            };
-            // console.log(
-            //     'showRoute',
-            //     waypoints.map((r) => r.position),
-            //     online,
-            //     profile,
-            //     costing_options
-            // );
-            let service: RoutingService<any, any>;
-            if (!online) {
-                service = packageService.offlineRoutingSearchService();
-            }
-            if (!service) {
-                service = packageService.onlineRoutingSearchService();
-            }
-            (service as any).profile = profile;
-            const result = await service.calculateRoute<LatLonKeys>({
-                projection: mapContext.getProjection(),
-                points: waypoints.map((r) => r.position),
-                customOptions: {
-                    directions_options: { language: Device.language },
-                    costing_options
+            let route;
+            if (profile === 'bus') {
+                const positions = waypoints.map((r) => `${r.position.lat.toFixed(6)},${r.position.lon.toFixed(6)}`);
+                const result = networkService.request({
+                    url: 'http://data.mobilites-m.fr/otp/routers/default/plan',
+                    method: 'GET',
+                    queryParams: {
+                        fromPlace: positions[0],
+                        toPlace: positions[positions.length - 1],
+                        date: new Date(),
+                        time: new Date()
+                    }
+                });
+            } else {
+                const costing_options = {
+                    [profile]: Object.assign({}, costingOptions, profileCostingOptions[profile])
+                };
+                // console.log(
+                //     'showRoute',
+                //     waypoints.map((r) => r.position),
+                //     online,
+                //     profile,
+                //     costing_options
+                // );
+                let service: RoutingService<any, any>;
+                if (!online) {
+                    service = packageService.offlineRoutingSearchService();
                 }
-            });
-            // console.log('got  route', result.getTotalDistance(), result.getTotalTime(), Date.now() - startTime, 'ms');
+                if (!service) {
+                    service = packageService.onlineRoutingSearchService();
+                }
+                (service as any).profile = profile;
+                const result = await service.calculateRoute<LatLonKeys>({
+                    projection: mapContext.getProjection(),
+                    points: waypoints.map((r) => r.position),
+                    customOptions: {
+                        directions_options: { language: Device.language },
+                        costing_options
+                    }
+                });
+                // console.log('got  route', result.getTotalDistance(), result.getTotalTime(), Date.now() - startTime, 'ms');
 
-            // startTime = Date.now();
-            const route = routingResultToJSON(result);
+                route = routingResultToJSON(result);
+            }
+
             // console.log('routingResultToJSON', Date.now() - startTime, 'ms');
+            if (route) {
+                currentRoute = route;
+                clearCurrentLine();
+                currentLine = createPolyline(route, route.positions);
+                getRouteDataSource().add(currentLine);
+                ensureRouteLayer();
+                const geometry = currentLine.getGeometry();
+                mapContext.selectItem({
+                    item: {
+                        position: fromNativeMapPos(geometry.getCenterPos()),
+                        route,
+                        zoomBounds: fromNativeMapBounds(geometry.getBounds())
+                    },
+                    isFeatureInteresting: true,
+                    showButtons: true
+                });
+            }
 
-            currentRoute = route;
-            clearCurrentLine();
-            currentLine = createPolyline(route, route.positions);
-            getRouteDataSource().add(currentLine);
-            ensureRouteLayer();
-            const geometry = currentLine.getGeometry();
-            mapContext.selectItem({
-                item: {
-                    position: fromNativeMapPos(geometry.getCenterPos()),
-                    route,
-                    zoomBounds: fromNativeMapBounds(geometry.getBounds())
-                },
-                isFeatureInteresting: true,
-                showButtons: true
-            });
             loading = false;
             // getRouteDataSource().clear();
             // hide();
@@ -727,6 +742,7 @@
                 <button variant="text" class="icon-btn-white" text="mdi-car" on:tap={() => setProfile('car')} color={profileColor(profile, 'car')} />
                 <button variant="text" class="icon-btn-white" text="mdi-walk" on:tap={() => setProfile('pedestrian')} color={profileColor(profile, 'pedestrian')} />
                 <button variant="text" class="icon-btn-white" text="mdi-bike" on:tap={() => setProfile('bicycle')} color={profileColor(profile, 'bicycle')} />
+                <button variant="text" class="icon-btn-white" text="mdi-bus" on:tap={() => setProfile('bus')} color={profileColor(profile, 'bus')} />
                 <!-- <button variant="text" class="icon-btn-white" text="mdi-auto-fix" on:tap={() => setProfile('auto_shorter')} color={profileColor(profile, 'auto_shorter')} /> -->
             </stacklayout>
             <button
@@ -750,7 +766,6 @@
                         </canvaslabel>
                         <gridlayout borderRadius="2" backgroundColor="white" columns=" *,auto,auto" height="40" margin="0 10 0 40">
                             <textfield
-                                col="0"
                                 marginLeft="15"
                                 hint={item.isStart ? lc('start') : lc('end')}
                                 returnKeyType="search"
@@ -778,10 +793,10 @@
                 </Template>
             </collectionview>
             <button row={1} col={1} variant="text" class="icon-btn-white" text="mdi-swap-vertical" on:tap={() => reversePoints()} isEnabled={nbWayPoints > 1} />
-            <!-- <gridlayout row="1" colSpan="3" borderRadius="2" backgroundColor="white" columns=" *,auto,auto" height="40" margin="5 10 5 10">
+            <!-- <gridlayout row={1} colSpan={3} borderRadius="2" backgroundColor="white" columns=" *,auto,auto" height="40" margin="5 10 5 10">
                 <textfield
                     bind:this={startTF}
-                    col="0"
+                    
                     marginLeft="15"
                     
                     hint="start"
@@ -807,11 +822,11 @@
                     color="gray"
                 />
             </gridlayout> -->
-            <!-- <gridlayout row="2" borderRadius="2" backgroundColor="white" columns=" *,auto,auto" height="40" margin="0 10 0 10">
+            <!-- <gridlayout row={2} borderRadius="2" backgroundColor="white" columns=" *,auto,auto" height="40" margin="0 10 0 10">
                 <textfield
                     bind:this={stopTF}
                     variant="none"
-                    col="0"
+                    
                     color="black"
                     marginLeft="15"
                     fontSize={15}
@@ -825,19 +840,19 @@
                     floating="false"
                     verticalAlignment="center"
                 />
-                <mdactivityindicator visibility={false ? 'visible' : 'collapsed'}  col="1" busy={true} width={20} height={20} />
+                <mdactivityindicator visibility={false ? 'visible' : 'collapsed'}  col={1} busy={true} width={20} height={20} />
                 <button
                     variant="text"
                     class="icon-btn"
                     visibility={currentStopSearchText && currentStopSearchText.length > 0 ? 'visible' : 'collapsed'}
-                    row={0}
+                    
                     col={2}
                     text="mdi-close"
                     on:tap={clearStopSearch}
                     color="gray"
                 />
             </gridlayout> -->
-            <stacklayout colSpan={2} orientation="horizontal" row="3" visibility={showOptions ? 'visible' : 'hidden'}>
+            <stacklayout colSpan={2} orientation="horizontal" row={3} visibility={showOptions ? 'visible' : 'hidden'}>
                 <button
                     variant="text"
                     class="icon-btn-white"

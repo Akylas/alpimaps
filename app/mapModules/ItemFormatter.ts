@@ -1,4 +1,5 @@
 import { formatAddress } from '~/helpers/formatter';
+import { lc } from '~/helpers/locale';
 import { IItem as Item } from '~/models/Item';
 import MapModule, { getMapContext } from './MapModule';
 const mapContext = getMapContext();
@@ -20,11 +21,11 @@ export default class ItemFormatter {
             if (properties.osm_key) {
                 result.push(properties.osm_key);
             }
+            if (properties.subclass) {
+                result.push(...properties.subclass.split(';'));
+            }
             if (properties.class) {
                 result.push(properties.class);
-            }
-            if (properties.subclass) {
-                result.push(properties.subclass);
             }
             if (properties.layer && properties.layer !== 'housenumber') {
                 result.push(properties.layer);
@@ -42,7 +43,14 @@ export default class ItemFormatter {
 
     getItemName(item: Item) {
         const properties = item.properties || {};
-        return properties[`name_${mapContext.getCurrentLanguage()}`] || properties.name || properties.name_int || (item.address && item.address.name);
+        return (
+            properties[`name_${mapContext.getCurrentLanguage()}`] ||
+            properties.name ||
+            properties.name_int ||
+            (item.address && item.address.name) ||
+            (properties.subclass && lc(properties.subclass.replace(/-/g, '_'))) ||
+            (properties.class && lc(properties.class.replace(/-/g, '_')))
+        );
     }
     getItemPositionToString(item: Item) {
         const position = item.position;

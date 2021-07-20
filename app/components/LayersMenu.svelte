@@ -130,7 +130,7 @@ import { formatSize } from '~/helpers/formatter';
     {#if loaded}
         <collectionview
             id="trackingScrollView"
-            col="0"
+            
             items={customSources}
             bind:this={collectionView}
             reorderEnabled={true}
@@ -158,7 +158,7 @@ import { formatSize } from '~/helpers/formatter';
                     <slider
                         marginLeft="10"
                         marginRight="10"
-                        col="1"
+                        col={1}
                         value={item.layer.opacity}
                         on:valueChange={(event) => onLayerOpacityChanged(item, event)}
                         minValue="0"
@@ -166,8 +166,8 @@ import { formatSize } from '~/helpers/formatter';
                         verticalAlignment="center"
                     />
                     <button
-                        col="2"
-                        rowSpan="2"
+                        col={2}
+                        rowSpan={2}
                         variant="text"
                         class="icon-btn"
                         text="mdi-dots-vertical"
@@ -177,7 +177,7 @@ import { formatSize } from '~/helpers/formatter';
                 </gridlayout>
             </Template>
         </collectionview>
-        <stacklayout col="1" borderLeftColor={$borderColor} borderLeftWidth="1">
+        <stacklayout col={1} borderLeftColor={$borderColor} borderLeftWidth="1">
             <button variant="text" class="icon-btn" text="mdi-plus" on:tap={addSource} />
             <!-- <button variant="text" class="icon-btn" text="mdi-layers-off" on:tap={clearCache} /> -->
             <!-- <MDButton class="buttonthemed" @tap="addSource" text={l('add_source')} /> -->
@@ -224,7 +224,7 @@ import { formatSize } from '~/helpers/formatter';
         </stacklayout>
     {/if}
     <!-- <GridLayout visibility="(currentLegend)?'visible':'collapsed'" rows="auto,*" columns="auto,*" backgroundColor={white}>
-                <WebView rowSpan="2" colSpan="2" v-if="currentLegend" src="currentLegend" @scroll={onListViewScroll}  />
+                <WebView rowSpan={2} colSpan={2} v-if="currentLegend" src="currentLegend" @scroll={onListViewScroll}  />
                 <MDButton variant="flat" class="icon-btn" text="mdi-arrow-left" @tap="currentLegend = null" />
             </GridLayout> -->
 </gridlayout>

@@ -1,1 +1,52 @@
-<svg xmlns="http://www.w3.org/2000/svg" height="14" width="14"><path d="m9.5,8.5a2.5,2.5,0,01-5,0M1,0v14h12V0H1zm2,1h5v2H3V1zm7,0h2v2h-2V1zM7,5c1.61,0,3.02,1.1,3.41,2.66l.09.84A3.5,3.5,0,117,5z" fill-rule="evenodd"/></svg>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   height="14"
+   width="14"
+   version="1.1"
+   id="svg7438"
+   sodipodi:docname="laundry.svg"
+   inkscape:version="1.0.1 (c497b03c, 2020-09-10)">
+  <metadata
+     id="metadata7444">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs7442" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1792"
+     inkscape:window-height="956"
+     id="namedview7440"
+     showgrid="false"
+     inkscape:zoom="36.512836"
+     inkscape:cx="10.32773"
+     inkscape:cy="8.7686974"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg7438" />
+  <path
+     id="path8035"
+     d="M 1,0 V 14 H 13 V 0 Z M 3,1 H 8 V 3 H 3 Z m 7,0 h 2 V 3 H 10 Z M 7,5 c 1.61,0 3.020156,1.1001565 3.410156,2.6601562 L 10.5,8.5 A 3.5,3.5 0 1 1 7,5 Z M 4.5,8.5 c 0,3.333332 5,3.333332 5,0 z" />
+</svg>

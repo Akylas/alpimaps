@@ -422,12 +422,12 @@
         >${suggestionPackageName}`}
         />
     {/if}
-    <stacklayout col="2" row="2" verticalAlignment="bottom" padding="2">
+    <stacklayout col={2} row={2} verticalAlignment="bottom" padding="2">
         <button
             transition:scale={{ duration: 200 }}
             on:tap={startDirections}
             
-            rowSpan="2"
+            rowSpan={2}
             col={2}
             class="floating-btn"
             text="mdi-directions"
@@ -450,26 +450,26 @@
         class="small-floating-btn"
         color={primaryColor}
         text="mdi-layers"
-        row="2"
+        row={2}
         verticalAlignment="bottom"
         horizontalAlignment="left"
     />
-    <ScaleView bind:this={scaleView} col="1" row="2" horizontalAlignment="right" verticalAlignment="bottom" marginBottom="8" />
+    <ScaleView bind:this={scaleView} col={1} row={2} horizontalAlignment="right" verticalAlignment="bottom" marginBottom="8" />
     <mdprogress
-        col="0"
-        colSpan="3"
-        row="2"
+        
+        colSpan={3}
+        row={2}
         value={totalDownloadProgress}
         visibility={totalDownloadProgress > 0 ? 'visible' : 'collapsed'}
         verticalAlignment="bottom"
     />
     <canvas
         bind:this={navigationCanvas}
-        rowSpan="3"
+        rowSpan={3}
         antiAlias={true}
         transition:scale={{ duration: 200 }}
         on:swipe={() => (navigationInstructions = null)}
-        col="1"
+        col={1}
         visibility={navigationInstructions ? 'visible' : 'collapsed'}
         verticalAlignment="bottom"
         horizontalAlignment="center"
