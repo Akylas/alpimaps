@@ -412,7 +412,6 @@
 			[subclass=tram],
 			[subclass='tram-service'][zoom>=15] {
 				// [zoom>=13]  {
-					line-width: 4;
 					line-width: linear([view::zoom], (13,4),(15,5))
 					// [zoom>=15] {
 					// line-width: 5;
@@ -875,6 +874,12 @@
 		// 	}
 		// }
 
+		[class=piste]['nuti::routes'>0][zoom>=14]{
+			line-color: @raceway-fill;
+			line-join: round;
+			line-cap: round;
+			line-width: linear([view::zoom], (12, 0.8), (17, 2), (18, 8), (19, 12), (20, 24));
+		}
 
 		[class=via_ferrata] {
 			[zoom>=16] {
@@ -1700,7 +1705,7 @@
 		line-cap: round;
 		line-join: round;
 		[ref!=null]{
-			text-fill: [textcolor] ? [textcolor] : ([color] ? [color] : @road_text);
+			text-fill: [textcolor] ? replace([textcolor],'-.*', '') : ([color] ? [color] : @road_text);
 			text-name: [ref];
 			text-placement: line;
 			text-wrap-before: true;

@@ -7,6 +7,7 @@ import updateLocale from 'dayjs/plugin/updateLocale';
 import duration from 'dayjs/plugin/duration';
 import timezone from 'dayjs/plugin/timezone';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import utc from 'dayjs/plugin/utc';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import { derived, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
@@ -19,6 +20,7 @@ dayjs.extend(timezone);
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
 dayjs.extend(localizedFormat);
+dayjs.extend(utc);
 
 export let lang;
 let currentLocale = null;
@@ -97,6 +99,7 @@ function titlecase(value) {
 export function getLocaleDisplayName(locale?) {
     if (global.isIOS) {
         if (!currentLocale) {
+            //@ts-ignore
             currentLocale = NSLocale.alloc().initWithLocaleIdentifier(lang);
         }
         return titlecase(currentLocale.localizedStringForLanguageCode(locale || lang));

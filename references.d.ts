@@ -1,12 +1,7 @@
-/// <reference path="./node_modules/@nativescript/types-ios/lib/ios.d.ts" />
-/// <reference path="./node_modules/@nativescript/types-android/lib/android-28.d.ts" />
 /// <reference path="./node_modules/@nativescript/core/global-types.d.ts" />
+/// <reference path="./node_modules/@nativescript/types-android/lib/android-30.d.ts" />
 /// <reference path="./vue.shim.d.ts" />
 
-/// <reference path="./node_modules/@nativescript-community/ui-carto/typings/ak.carto.android.d.ts" />
-/// <reference path="./node_modules/@nativescript-community/ui-carto/typings/carto.android.d.ts" />
-/// <reference path="./node_modules/@nativescript-community/ui-carto/typings/carto.ios.d.ts" />
-/// <reference path="./node_modules/@danmarshall/deckgl-typings/deck.gl/index.d.ts" />
 
 // declare module '*.vue' {
 //     import Vue from 'nativescript-vue';
@@ -105,6 +100,7 @@ namespace svelteNative.JSX {
         maxLines?: number;
         minFontSize?: number;
         maxFontSize?: number;
+        lineBreak?: string;
         html?: String;
     }
 }

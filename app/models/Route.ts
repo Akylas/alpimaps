@@ -62,6 +62,7 @@ namespace GeometryTransformer {
         if (global.isAndroid) {
             return result.getData();
         } else {
+            //@ts-ignore
             const data = NSData.alloc().initWithBytesLength(result.getData(), result.size());
             return data;
         }
