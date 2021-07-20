@@ -1,11 +1,11 @@
-@lineColor: 'rgb(' + [COULEUR] + ')';
+@lineColor: [route_color]? [route_color] :'rgb(' + [COULEUR] + ')';
 
 #lines {
     line-width: linear([view::zoom], (12,2), (13,2.5), (19, 4.5));
     line-color: @lineColor;
     line-join: round;
     ::text {
-        text-name: [NUMERO];
+        text-name: [route_short_name]? [route_short_name]:[NUMERO];
         text-fill: gray;
         // text-allow-overlap: true;
 		// text-spacing: 400;
