@@ -37,10 +37,10 @@
     // import * as xml2js from 'xml2js';
     import { openLink } from '~/utils/ui';
 
-     const LISTVIEW_HEIGHT = 200;
-     const PROFILE_HEIGHT = 150;
-     const WEB_HEIGHT = 400;
-     const INFOVIEW_HEIGHT = 80;
+    const LISTVIEW_HEIGHT = 200;
+    const PROFILE_HEIGHT = 150;
+    const WEB_HEIGHT = 400;
+    const INFOVIEW_HEIGHT = 80;
 
     const mapContext = getMapContext();
     const highlightPaint = new Paint();
@@ -59,6 +59,7 @@
     let showListView = false;
     $: showListView = listViewAvailable && listViewVisible;
     let itemIsRoute = false;
+    let itemIsBusStop = false;
     let itemCanQueryProfile = false;
     let currentLocation: GenericMapPos<LatLonKeys> = null;
     let showProfileGrades = true;
@@ -104,7 +105,21 @@
     //         webViewSrc = null;
     //     }
     // }
+    function openWikipedia() {
+        try {
+            const props = item && item.properties;
+            if (props && props.wikipedia) {
+                const url = `https://en.wikipedia.org/wiki/${props.wikipedia}`;
+                openLink(url);
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
 
+    function tooltip(text) {
+        showSnack({ message: text });
+    }
     function searchWeb() {
         let name;
         try {
@@ -139,6 +154,7 @@
     $: {
         try {
             itemIsRoute = item && !!item.route;
+            itemIsBusStop = item && !itemIsRoute && !!item.properties && (item.properties.class === 'bus' || item.properties.subclass === 'tram_stop');
             itemCanQueryProfile = itemIsRoute && !!item.route.positions;
             updateGraphAvailable();
             if (graphAvailable) {
@@ -410,7 +426,8 @@
     async function checkWeather() {
         try {
             updatingItem = true;
-            openUrl(`weather://query?lat=${item.position.lat}&lon=${item.position.lon}`);
+            const query = formatter.getItemName(item);
+            openUrl(`weather://query?lat=${item.position.lat}&lon=${item.position.lon}&name=${query}`);
             // const result = await networkService.sendWeatherBroadcastQuery({ ...item.position, timeout: 10000 });
             // const WeatherBottomSheet = (await import('./WeatherBottomSheet.svelte')).default;
             // await showBottomSheet({
@@ -431,7 +448,6 @@
             if (!position.altitude) {
                 position.altitude = item.properties.ele || (await packageService.getElevation(position));
             }
-            console.log('openPeakFinder', item.properties.ele, position);
             const hillshadeDatasource = packageService.hillshadeLayer?.dataSource;
             const vectorDataSource = packageService.localVectorTileLayer?.dataSource;
             const component = (await import('~/components/PeakFinder.svelte')).default;
@@ -458,6 +474,16 @@
                     rasterDataSource
                 }
             });
+        } catch (err) {
+            this.showError(err);
+        }
+    }
+
+    async function getTransitLines() {
+        try {
+            const component = (await import('./TransitLines.svelte')).default;
+            console.log('getTransitLines', { name: formatter.getItemName(item), position: item.position });
+            showBottomSheet({ parent: mapContext.getMainPage(), view: component, disableDimBackground: true, props: { name: formatter.getItemName(item), position: item.position } });
         } catch (err) {
             this.showError(err);
         }
@@ -538,7 +564,7 @@
                 // xAxis.ensureLastLabel = true;
                 xAxis.setValueFormatter({
                     // getAxisLabel: (value, axis) => formatValueToUnit(value, UNITS.DistanceKm)
-                    getAxisLabel: (value, axis, viewPortHandler) => Math.floor(value/1000).toFixed()
+                    getAxisLabel: (value, axis, viewPortHandler) => Math.floor(value / 1000).toFixed()
                 });
 
                 chartView.setCustomRenderer({
@@ -554,7 +580,15 @@
 
                         c.drawLine(x, 0, x, y - 5, highlightPaint);
                         highlightPaint.setColor('white');
-                        const layout = new StaticLayout(h.entry.a.toFixed() + 'm' + '\n' + '~' + Math.abs(h.entry.g.toFixed())+ '%'+ '\n' + formatValueToUnit(h.entry.d, UNITS.DistanceKm) , highlightPaint, w, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
+                        const layout = new StaticLayout(
+                            h.entry.a.toFixed() + 'm' + '\n' + '~' + Math.abs(h.entry.g.toFixed()) + '%' + '\n' + formatValueToUnit(h.entry.d, UNITS.DistanceKm),
+                            highlightPaint,
+                            w,
+                            LayoutAlignment.ALIGN_CENTER,
+                            1,
+                            0,
+                            true
+                        );
                         c.drawRoundRect(x - w / 2, 0, x + w / 2, layout.getHeight(), 2, 2, paint);
                         c.save();
                         c.translate(x - w / 2, 0);
@@ -690,18 +724,55 @@
     }
 </script>
 
-<gridlayout {...$$restProps} id="bottomsheetinner" width="100%" rows={`${INFOVIEW_HEIGHT},50,${profileHeight},auto`} columns="*,auto" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
+<gridlayout {...$$restProps} width="100%" rows={`${INFOVIEW_HEIGHT},50,${profileHeight},auto`} columns="*,auto" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
     {#if loaded}
         <BottomSheetInfoView bind:this={infoView} {item} />
 
         <mdactivityindicator visibility={updatingItem ? 'visible' : 'collapsed'} horizontalAligment="right" busy={true} width={20} height={20} />
         <button col={1} variant="text" class="icon-btn" text="mdi-crosshairs-gps" visibility={itemIsRoute ? 'visible' : 'collapsed'} on:tap={zoomToItem} />
-        <flexlayout row="1" colSpan="2" borderTopWidth="1" borderBottomWidth="1" borderColor={$borderColor}>
-            <button variant="text" fontSize="10" on:tap={() => searchWeb()} text={$slc('search')} visibility={item && !itemIsRoute && !item.id ? 'visible' : 'collapsed'} />
-            <button variant="text" fontSize="10" on:tap={() => getProfile()} text={$slc('profile')} visibility={itemIsRoute && itemCanQueryProfile ? 'visible' : 'collapsed'} />
-            <button variant="text" fontSize="10" on:tap={() => saveItem()} text={$slc('save')} visibility={item && !item.id ? 'visible' : 'collapsed'} />
-            <button variant="text" fontSize="10" on:tap={() => shareItem()} text={$slc('share')} visibility={itemIsRoute ? 'visible' : 'collapsed'} />
-            <button variant="text" fontSize="10" on:tap={() => deleteItem()} text={$slc('delete')} visibility={item && item.id ? 'visible' : 'collapsed'} color="red" />
+        <stacklayout orientation="horizontal" row={1} colSpan={2} borderTopWidth="1" borderBottomWidth="1" borderColor={$borderColor}>
+            <button
+                variant="text"
+                on:tap={() => searchWeb()}
+                on:longPress={() => tooltip($slc('search_web'))}
+                visibility={item && !itemIsRoute && !item.id ? 'visible' : 'collapsed'}
+                text="mdi-web"
+                class="icon-btn"
+            />
+            <button
+                variant="text"
+                on:tap={() => getProfile()}
+                on:longPress={() => tooltip($slc('elevation_profile'))}
+                visibility={itemIsRoute && itemCanQueryProfile ? 'visible' : 'collapsed'}
+                text="mdi-chart-areaspline"
+                class="icon-btn"
+            />
+            <button variant="text" on:tap={() => saveItem()} on:longPress={() => tooltip($slc('save'))} visibility={item && !item.id ? 'visible' : 'collapsed'} text="mdi-map-plus" class="icon-btn" />
+            <button
+                variant="text"
+                on:tap={() => shareItem()}
+                on:longPress={() => tooltip($slc('share'))}
+                visibility={itemIsRoute ? 'visible' : 'collapsed'}
+                text="mdi-share-variant"
+                class="icon-btn"
+            />
+            <button
+                variant="text"
+                on:tap={() => deleteItem()}
+                on:longPress={() => tooltip($slc('delete'))}
+                visibility={item && item.id ? 'visible' : 'collapsed'}
+                color="red"
+                text="mdi-delete"
+                class="icon-btn"
+            />
+            <button
+                variant="text"
+                on:tap={() => openWikipedia()}
+                on:longPress={() => tooltip($slc('wikipedia'))}
+                visibility={item && item.properties && item.properties.wikipedia ? 'visible' : 'collapsed'}
+                text="mdi-wikipedia"
+                class="icon-btn"
+            />
             <!-- <button
                 variant="text"
                 fontSize="10"
@@ -709,12 +780,34 @@
                 text="share item"
                 visibility={item && item.id ? 'visible' : 'collapsed'}
             /> -->
-            <button variant="text" fontSize="10" on:tap={() => checkWeather()} text={$slc('weather')} visibility={item && networkService.canCheckWeather ? 'visible' : 'collapsed'} />
-            <button variant="text" fontSize="10" on:tap={() => openPeakFinder()} text={$slc('peaks')} visibility={item && !itemIsRoute ? 'visible' : 'collapsed'} />
-        </flexlayout>
-        <linechart bind:this={chart} row="2" colSpan="2" height={profileHeight} visibility={graphAvailable ? 'visible' : 'hidden'} on:highlight={onChartHighlight} />
+            <button
+                variant="text"
+                on:tap={() => checkWeather()}
+                on:longPress={() => tooltip($slc('weather'))}
+                visibility={item && networkService.canCheckWeather ? 'visible' : 'collapsed'}
+                text="mdi-weather-partly-cloudy"
+                class="icon-btn"
+            />
+            <button
+                variant="text"
+                on:tap={() => openPeakFinder()}
+                on:longPress={() => tooltip($slc('peaks'))}
+                visibility={item && !itemIsRoute ? 'visible' : 'collapsed'}
+                text="mdi-summit"
+                class="icon-btn"
+            />
+            <button
+                variant="text"
+                on:tap={() => getTransitLines()}
+                on:longPress={() => tooltip($slc('bus_stop_infos'))}
+                visibility={item && itemIsBusStop ? 'visible' : 'collapsed'}
+                text="mdi-bus"
+                class="icon-btn"
+            />
+        </stacklayout>
+        <linechart bind:this={chart} row={2} colSpan={2} height={profileHeight} visibility={graphAvailable ? 'visible' : 'hidden'} on:highlight={onChartHighlight} />
         <!-- <AWebView
-            row="3"
+            row={3}
             height={webViewHeight}
             displayZoomControls="false"
             bind:this="listView"
@@ -723,11 +816,11 @@
             isScrollEnabled={scrollEnabled}
             src={webViewSrc}
         /> -->
-        <!-- <CollectionView id="bottomsheetListView" row="3" bind:this="listView" rowHeight="40" items="routeInstructions" :visibility="showListView ? 'visible' : 'hidden'" isBounceEnabled="false" @scroll="onListViewScroll" :isScrollEnabled={scrollEnabled}>
+        <!-- <CollectionView id="bottomsheetListView" row={3} bind:this="listView" rowHeight="40" items="routeInstructions" :visibility="showListView ? 'visible' : 'hidden'" isBounceEnabled="false" @scroll="onListViewScroll" :isScrollEnabled={scrollEnabled}>
             <v-template>
                 <GridLayout columns="30,*" rows="*,auto,auto,*" rippleColor="white"  @tap="onInstructionTap(item)">
-                    <Label col="0" rowSpan="4"ƒ text="getRouteInstructionIcon(item) |fonticon" class="osm" color="white" fontSize="20" verticalAlignment="center" textAlignment={center} />
-                    <Label col="1" row="1" text="getRouteInstructionTitle(item)" color="white" fontSize="13" fontWeight={bold} textWrap={true} />
+                    <Label  rowSpan={4} text="getRouteInstructionIcon(item) |fonticon" class="osm" color="white" fontSize="20" verticalAlignment="center" textAlignment={center} />
+                    <Label col={1} row={1} text="getRouteInstructionTitle(item)" color="white" fontSize="13" fontWeight={bold} textWrap={true} />
                 </GridLayout>
             </v-template>
         </CollectionView> -->

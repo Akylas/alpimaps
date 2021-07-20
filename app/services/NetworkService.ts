@@ -1,17 +1,37 @@
 import * as connectivity from '@nativescript/core/connectivity';
-import { EventData, Observable } from '@nativescript/core/data/observable';
-import * as http from '@nativescript/core/http';
+import { ApplicationEventData, EventData, Observable, knownFolders } from '@nativescript/core';
 import { BaseError } from 'make-error';
 import mergeOptions from 'merge-options';
-import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
+import { GenericMapPos, MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
 import { l } from '~/helpers/locale';
-import { ApplicationEventData, off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
+import { off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
 import { getBounds, getPathLength } from '~/helpers/geolib';
 import { RouteProfile } from '~/models/Route';
 import * as appavailability from '@nativescript/appavailability';
 import { ad } from '@nativescript/core/utils/utils';
 
-type HTTPOptions = http.HttpRequestOptions;
+import { Headers } from '@nativescript/core/http';
+import * as https from '@nativescript-community/https';
+
+export interface CacheOptions {
+    diskLocation: string;
+    diskSize: number;
+    memorySize?: number;
+}
+type HTTPOptions = https.HttpsRequestOptions;
+
+export interface HttpRequestOptions extends HTTPOptions {
+    body?;
+    cachePolicy?: https.CachePolicy;
+    queryParams?: {};
+    apiPath?: string;
+    multipartParams?;
+    canRetry?;
+}
+
+export function getCacheControl(maxAge = 60, stale = 59) {
+    return `max-age=${maxAge}, max-stale=${stale}, stale-while-revalidate=${stale}`;
+}
 
 const contactEmail = 'contact%40akylas.fr';
 
@@ -192,6 +212,7 @@ function prepareOSMObject(ele, _withIcon?, _testForGeoFeature?) {
 }
 
 export interface HttpRequestOptions extends HTTPOptions {
+    toJSON?: boolean;
     queryParams?: {};
 }
 
@@ -442,11 +463,14 @@ export class NoNetworkError extends CustomError {
 }
 export interface HTTPErrorProps {
     statusCode: number;
+    responseHeaders?: Headers;
+    title?: string;
     message: string;
     requestParams: HTTPOptions;
 }
 export class HTTPError extends CustomError {
     statusCode: number;
+    responseHeaders?: Headers;
     requestParams: HTTPOptions;
     constructor(props: HTTPErrorProps | HTTPError) {
         super(
@@ -457,6 +481,33 @@ export class HTTPError extends CustomError {
                 props
             ),
             'HTTPError'
+        );
+    }
+}
+export class MessageError extends CustomError {
+    constructor(props: { title?: string; message: string }) {
+        super(
+            Object.assign(
+                {
+                    message: 'error'
+                },
+                props
+            ),
+            'MessageError'
+        );
+    }
+}
+// used to throw while not show the error
+export class FakeError extends CustomError {
+    constructor(props?: any) {
+        super(
+            Object.assign(
+                {
+                    message: 'error'
+                },
+                props
+            ),
+            'FakeError'
         );
     }
 }
@@ -503,8 +554,16 @@ export class NetworkService extends Observable {
         applicationOn(resumeEvent, this.onAppResume, this);
         connectivity.startMonitoring(this.onConnectionStateChange.bind(this));
         this.connectionType = connectivity.getConnectionType();
-
         this.canCheckWeather = await appavailability.available(global.isIOS ? 'weather://' : 'com.akylas.weather');
+        const folder = knownFolders.documents().getFolder('cache');
+        const diskLocation = folder.path;
+        const cacheSize = 10 * 1024 * 1024;
+        DEV_LOG && console.log('setCache', diskLocation, cacheSize);
+        https.setCache({
+            diskLocation,
+            diskSize: cacheSize,
+            memorySize: cacheSize
+        });
     }
     stop() {
         if (!this.monitoring) {
@@ -520,75 +579,103 @@ export class NetworkService extends Observable {
     onConnectionStateChange(newConnectionType: connectivity.connectionType) {
         this.connectionType = newConnectionType;
     }
-    request(requestParams: HttpRequestOptions, retry = 0) {
+    async request<T = any>(requestParams: HttpRequestOptions, retry = 0): Promise<T> {
+        // if (!this.connected) {
+        //     return Promise.reject(new NoNetworkError());
+        // }
         if (requestParams.queryParams) {
             requestParams.url = queryString(requestParams.queryParams, requestParams.url);
             delete requestParams.queryParams;
         }
-        // if (!requestParams.method) {
-        //     requestParams.method = "GET";
-        // }
         requestParams.headers = requestParams.headers || {};
         if (!requestParams.headers['Content-Type']) {
             requestParams.headers['Content-Type'] = 'application/json';
         }
-        // if (this.token) {
-        //     requestParams.headers['Authorization'] = 'Bearer ' + this.token;
-        // }
-        // console.log('request', requestParams);
+        const response = await https.request({ ...requestParams, useLegacy: true });
+        const statusCode = response.statusCode;
 
-        return http.request(requestParams).then((response) => {
-            // console.log('request response', response);
-            if (response.statusCode !== 200) {
-                try {
-                    const jsonReturn = JSON.parse(response.content.toString());
-                    // console.log('request error', jsonReturn, response.content);
-                    // if (response.statusCode === 401 && jsonReturn.error === 'invalid_grant') {
-                    //     // refresh token
-                    //     if (retry === 2) {
-                    //         console.logout();
-                    //         return Promise.reject('invalid_grant');
-                    //     }
-                    //     return this.getToken(console.loginParams).then(() => this.request(requestParams, retry++));
-                    // }
-                    const error = jsonReturn.error_description || jsonReturn.error || jsonReturn;
-                    return Promise.reject(
-                        new HTTPError({
-                            statusCode: response.statusCode,
-                            message: error.error_description || error.message || error.error || error,
-                            requestParams
-                        })
-                    );
-                } catch (e) {
-                    // error result might html
-                    // console.log('request error1', response.content, response.content.toString());
-                    const match = /<title>(.*)\n*<\/title>/.exec(response.content.toString());
-                    if (match) {
-                        // result = {
-                        //     error: {}
-                        // }
-                        // if (match[1] === 'Invalid Access Token') {
-                        //     result.error.code = 'INVALID_TOKEN';
-                        // }
+        let content: {
+            response?: any;
+        };
+        if (requestParams.toJSON !== false) {
+            try {
+                content = await response.content.toJSONAsync();
+            } catch (err) {
+                console.error('error parsing json response', err);
+            }
+        }
+
+        if (!content) {
+            content = await response.content.toStringAsync();
+        }
+        const isString = typeof content === 'string';
+        if (DEV_LOG) {
+            console.log('handleRequestResponse response', requestParams.url, statusCode, response.reason, response.headers, isString, typeof content/* , content */);
+        }
+        if (Math.round(statusCode / 100) !== 2) {
+            try {
+                let jsonReturn: {
+                    data?: any;
+                    error?;
+                };
+                if (!isString) {
+                    jsonReturn = content as any;
+                } else {
+                    const responseStr = (content as any as string).replace('=>', ':');
+                    try {
+                        jsonReturn = JSON.parse(responseStr);
+                    } catch (err) {
+                        // error result might html
+                        const match = /<title>(.*)\n*<\/title>/.exec(responseStr);
                         return Promise.reject(
                             new HTTPError({
-                                statusCode: response.statusCode,
-                                message: match[1],
+                                statusCode,
+                                responseHeaders: response.headers,
+                                message: match ? match[1] : 'HTTP error',
                                 requestParams
                             })
                         );
                     }
+                }
+                const error = jsonReturn.error || jsonReturn;
+                return Promise.reject(
+                    new HTTPError({
+                        statusCode: response.statusCode,
+                        message: error.error_description || error.message || error.error || error,
+                        requestParams
+                    })
+                );
+            } catch (e) {
+                const match = /<title>(.*)\n*<\/title>/.exec(response.content.toString());
+                if (match) {
                     return Promise.reject(
                         new HTTPError({
                             statusCode: response.statusCode,
-                            message: 'HTTP error',
+                            message: match[1],
                             requestParams
                         })
                     );
                 }
+                return Promise.reject(
+                    new HTTPError({
+                        statusCode: response.statusCode,
+                        message: 'HTTP error',
+                        requestParams
+                    })
+                );
             }
-            return response.content.toJSON();
-        });
+        }
+        if (!isString || requestParams.toJSON === false) {
+            return content as T;
+        }
+        try {
+            // we should never go there anymore
+            const result = JSON.parse(content as any as string);
+            return result.response || response;
+        } catch (e) {
+            // console.log('failed to parse result to JSON', e);
+            return undefined;
+        }
     }
 
     queryGeoFeatures(
@@ -938,6 +1025,20 @@ export class NetworkService extends Observable {
             });
             delete this.broadcastPromises[id];
         }
+    }
+    async getMetroLines() {
+        return this.request<string>({
+            method: 'GET',
+            toJSON: false,
+            url: 'https://data.mobilites-m.fr/api/lines/json',
+            headers: {
+                'Cache-Control': getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1)
+            },
+            queryParams: {
+                types: 'ligne',
+                reseaux: 'SEM,C38'
+            }
+        });
     }
 }
 export const networkService = new NetworkService();

@@ -37,7 +37,16 @@ module.exports = (env) => {
                 },
                 preprocess: [
                     sveltePreprocess({
-                        defaults: { script: 'typescript', style: 'scss' },
+                        defaults: {
+                            script: 'typescript',
+                            style: 'scss'
+                        },
+                        typescript: {
+                            compilerOptions: {
+                                target: 'es2017'
+                            }
+                        },
+
                         sourceMap: isAnySourceMapEnabled
                     }),
                     svelteNativePreprocessor()

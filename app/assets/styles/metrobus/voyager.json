@@ -1,0 +1,43 @@
+{
+    "layers": [
+        "lines"
+    ],
+    "styles": [
+        "voyager/style.mss",
+        "shared/roads.mss",
+        "shared/labels.mss"
+    ],
+    "nutiparameters": {
+        "lang": {
+            "default": "en"
+        },
+        "fallback_lang": {
+            "default": "en"
+        },
+        "selected_id": {
+            "default": ""
+        },
+        "texts3d": {
+            "default": "nutibillboard",
+            "values": {
+                "1": "nutibillboard",
+                "0": "point"
+            }
+        },
+        "markers3d": {
+            "default": "nutibillboard",
+            "values": {
+                "1": "nutibillboard",
+                "0": "point"
+            }
+        },
+        "shields3d": {
+            "default": "nutibillboard",
+            "values": {
+                "1": "nutibillboard",
+                "0": "point"
+            }
+        }
+    },
+    "name": "voyager"
+}
