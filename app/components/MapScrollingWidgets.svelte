@@ -6,7 +6,7 @@
     import { PackageAction } from '@nativescript-community/ui-carto/packagemanager';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { debounce } from 'push-it-to-the-limit';
+    import { debounce } from 'push-it-to-the-limit/target/es6';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { writable } from 'svelte/store';

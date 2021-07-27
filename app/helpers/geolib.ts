@@ -293,8 +293,8 @@ export function getDistanceSimple(start, end, accuracy?) {
  * @param        array       Collection of coords [{latitude: 51.510, longitude: 7.1321} {latitude: 49.1238, longitude: "8° 30' W"} ...]
  * @return       object      {latitude: centerLat, longitude: centerLng}
  */
-export function getCenter(coords) {
-    if (!coords.length) {
+export function getCenter(theCoords) {
+    if (!theCoords.length) {
         return undefined;
     }
 
@@ -303,8 +303,8 @@ export function getCenter(coords) {
     let Z = 0.0;
     let lat, lon, coord;
 
-    for (let i = 0, l = coords.length; i < l; ++i) {
-        coord = coords(coords[i]);
+    for (let i = 0, l = theCoords.length; i < l; ++i) {
+        coord = coords(theCoords[i]);
         lat = coord.latitude * TO_RAD;
         lon = coord.longitude * TO_RAD;
 
@@ -313,7 +313,7 @@ export function getCenter(coords) {
         Z += Math.sin(lat);
     }
 
-    const nb_coords = coords.length;
+    const nb_coords = theCoords.length;
     X = X / nb_coords;
     Y = Y / nb_coords;
     Z = Z / nb_coords;
@@ -378,8 +378,8 @@ export function getSpanFromPixels(pixelWidth, _pos, _zoom) {
  *                     maxElev: maxElev,
  *                     minElev: minElev}
  */
-export function getBounds(coords) {
-    if (!coords.length) {
+export function getBounds(theCoords) {
+    if (!theCoords.length) {
         return undefined;
     }
     const stats = {
@@ -392,8 +392,8 @@ export function getBounds(coords) {
     };
 
     let coord;
-    for (let i = 0, l = coords.length; i < l; ++i) {
-        coord = coords(coords[i]);
+    for (let i = 0, l = theCoords.length; i < l; ++i) {
+        coord = coords(theCoords[i]);
         stats.maxLat = Math.max(coord['latitude'], stats.maxLat);
         stats.minLat = Math.min(coord['latitude'], stats.minLat);
         stats.maxLng = Math.max(coord['longitude'], stats.maxLng);

@@ -379,25 +379,11 @@ module.exports = (env, params = {}) => {
     config.plugins.push(new IgnoreNotFoundExportPlugin());
 
     // save as long as we dont use calc in css
-    config.plugins.push(new webpack.IgnorePlugin(/reduce-css-calc/));
-    config.plugins.push(new webpack.IgnorePlugin(/punnycode/));
-    // config.plugins.unshift(
-    //     new CleanWebpackPlugin({
-    //         dangerouslyAllowCleanPatternsOutsideProject: true,
-    //         dry: false,
-    //         verbose: false,
-    //         cleanOnceBeforeBuildPatterns: itemsToClean
-    //     })
-    // );
+    config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /reduce-css-calc$/ }));
+    config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /punnycode$/ }));
+    config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /polymer-expressions$/ }));
 
     Object.assign(config.plugins.find((p) => p.constructor.name === 'DefinePlugin').definitions, defines);
-    // config.plugins.unshift(new webpack.DefinePlugin(defines));
-    // config.plugins.push(
-    //     new webpack.EnvironmentPlugin({
-    //         NODE_ENV: JSON.stringify(mode), // use 'development' unless process.env.NODE_ENV is defined
-    //         DEBUG: false
-    //     })
-    // );
 
     config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${locales.join('|')})$`)));
     if (fork && nsconfig.cssParser !== 'css-tree') {
@@ -483,19 +469,28 @@ module.exports = (env, params = {}) => {
             terserOptions: {
                 ecma: 2017,
                 module: true,
+                // toplevel: true,
                 output: {
                     comments: false,
                     semicolons: !isAnySourceMapEnabled
                 },
+                // mangle:true,
+                // mangle: {
+                //     // toplevel: false,
+                //     properties: {
+                //         regex: /^(?!(com|org|akylas|android|androidx)\.)/mg
+                //     },
+                // },
                 compress: {
                     // The Android SBG has problems parsing the output
                     // when these options are enabled
                     collapse_vars: platform !== 'android',
                     sequences: platform !== 'android',
-                    passes: 2,
-                    drop_console: production && adhoc !== true
+                    passes: 5,
+                    drop_console: production
                 },
-                keep_fnames: true
+                keep_classnames: false,
+                keep_fnames: false
             }
         })
     ];
@@ -516,16 +511,18 @@ module.exports = (env, params = {}) => {
                         // sourceMap: isAnySourceMapEnabled,
                         terserOptions: {
                             ecma: 2017,
-                            module: true,
-                            output: {
+                            module: false,
+                            format: {
                                 comments: false,
                                 semicolons: !isAnySourceMapEnabled
                             },
+                            // mangle: {
+                                // toplevel: false,
+                                // properties: true,
+                            // },
                             compress: {
-                                collapse_vars: true,
-                                sequences: true,
-                                passes: 2,
-                                drop_console: production && adhoc !== true
+                                passes: 5,
+                                drop_console: production
                             },
                             keep_fnames: false
                         }
