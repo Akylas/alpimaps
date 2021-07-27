@@ -49,6 +49,7 @@ registerNativeViewElement('StackLayout', () => require('@nativescript/core').Sta
 registerNativeViewElement('flexlayout', () => require('@nativescript/core').FlexboxLayout);
 registerNativeViewElement('Switch', () => require('@nativescript/core').Switch);
 registerNativeViewElement('TextField', () => require('@nativescript/core').TextField);
+registerNativeViewElement('Span', () => require('@nativescript/core').Span);
 
 registerNativeViewElement('button', () => require('@nativescript-community/ui-material-button').Button, null, {}, { override: true });
 registerNativeViewElement('label', () => require('@nativescript-community/ui-label').Label, null, {}, { override: true });
@@ -78,6 +79,7 @@ PagerElement.register();
 DrawerElement.register();
 // (com as any).swmansion.gesturehandler.GestureHandler.debug = true;
 
+// Trace.addCategories(Trace.categories.Transition);
 // Trace.addCategories(CollectionViewTraceCategory);
 // Trace.enable();
 import { start } from '~/helpers/theme';

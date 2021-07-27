@@ -1,9 +1,11 @@
 <script lang="typescript">
+    import { Frame } from '@nativescript/core/ui/frame';
     import { onMount } from 'svelte';
     import { closeModal, goBack } from 'svelte-native';
-    import { Frame } from '@nativescript/core/ui/frame';
-    import { actionBarHeight, globalMarginTop, textColor } from '~/variables';
-    export let title: string;
+    import { textColor } from '~/variables';
+
+    export let color: string = null;
+    export let title: string = null;
     export let showMenuIcon: boolean = false;
     export let canGoBack: boolean = false;
     export let modalWindow: boolean = false;
@@ -34,17 +36,12 @@
     }
     $: menuIconVisible = ((canGoBack || modalWindow) && !disableBackButton) || showMenuIcon;
     $: menuIconVisibility = menuIconVisible ? 'visible' : 'collapsed';
-
 </script>
 
-<gridLayout class="actionBar" height={actionBarHeight + globalMarginTop} columns="auto,*, auto" rows="*" paddingLeft="5" paddingRight="5" paddingTop={globalMarginTop}>
-    <slot name="center" >
-        <label col={1} colSpan={3} class="actionBarTitle" textAlignment="left" visibility={!!title ? 'visible' : 'hidden'} text={title || ''} verticalTextAlignment="center" />
-    <!-- {#if showLogo && !title}
-        <label col={1} class="activelook" fontSize="28" color="white" text="logo" verticalAlignment="center" marginLeft="6" />
-    {/if} -->
-    </slot>
-    <stackLayout  orientation="horizontal">
+<gridLayout class="actionBar" columns="auto,*, auto" rows="*" paddingLeft="5" paddingRight="5" {...$$restProps} color={color || $textColor}>
+    <label id="title" col={1} colSpan="3" class="actionBarTitle" textAlignment="left" visibility={!!title ? 'visible' : 'hidden'} text={title || ''} verticalTextAlignment="center" />
+    <slot name="center" />
+    <stackLayout orientation="horizontal">
         <slot name="left" />
         <button variant="text" visibility={menuIconVisibility} class="icon-btn" text={menuIcon} on:tap={onMenuIcon} />
     </stackLayout>

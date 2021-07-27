@@ -1,23 +1,19 @@
 <script lang="ts">
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { GridLayout } from '@nativescript/core';
-    import { CartoMap } from '@nativescript-community/ui-carto/ui';
     import { setNumber } from '@nativescript/core/application-settings';
     import { ObservableArray } from '@nativescript/core/data/observable-array';
+    import { debounce } from 'push-it-to-the-limit/target/es6';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import CustomLayersModule from '~/mapModules/CustomLayersModule';
+    import { onThemeChanged } from '~/helpers/theme';
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
+    import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
+    import mapStore from '~/stores/mapStore';
     import { borderColor, navigationBarHeight, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import { closeBottomSheet, showBottomSheet } from './bottomsheet';
-    import mapStore from '~/stores/mapStore';
-    import { debounce } from 'push-it-to-the-limit';
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { onThemeChanged } from '~/helpers/theme';
-    import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
-    import { File, Folder, path } from '@nativescript/core/file-system';
-import { formatSize } from '~/helpers/formatter';
 
     const mapContext = getMapContext();
     let gridLayout: NativeViewElementNode<GridLayout>;
@@ -118,33 +114,11 @@ import { formatSize } from '~/helpers/formatter';
     });
 </script>
 
-<gridlayout
-    {...$$restProps}
-    id="rightMenu"
-    bind:this={gridLayout}
-    columns="*,auto"
-    height={210 + navigationBarHeight}
-    paddingBottom={navigationBarHeight}
-    backgroundColor={$widgetBackgroundColor}
->
+<gridlayout {...$$restProps} id="rightMenu" bind:this={gridLayout} columns="*,auto" height={210 + navigationBarHeight} paddingBottom={navigationBarHeight} backgroundColor={$widgetBackgroundColor}>
     {#if loaded}
-        <collectionview
-            id="trackingScrollView"
-            
-            items={customSources}
-            bind:this={collectionView}
-            reorderEnabled={true}
-            on:itemReordered={onItemReordered}
-        >
+        <collectionview id="trackingScrollView" items={customSources} bind:this={collectionView} reorderEnabled={true} on:itemReordered={onItemReordered}>
             <Template let:item>
-                <gridlayout
-                    paddingLeft="15"
-                    paddingRight="5"
-                    rows="*"
-                    columns="100,*,auto"
-                    borderBottomColor={$borderColor}
-                    borderBottomWidth="1"
-                >
+                <gridlayout paddingLeft="15" paddingRight="5" rows="*" columns="100,*,auto" borderBottomColor={$borderColor} borderBottomWidth="1">
                     <label
                         color={item.layer.opacity === 0 ? $subtitleColor : $textColor}
                         text={item.name.toUpperCase()}
@@ -152,7 +126,7 @@ import { formatSize } from '~/helpers/formatter';
                         fontWeight="bold"
                         lineBreak="end"
                         verticalTextAlignment="center"
-                        maxLines="2"
+                        maxLines={2}
                         paddingTop="3"
                     />
                     <slider
@@ -171,7 +145,7 @@ import { formatSize } from '~/helpers/formatter';
                         variant="text"
                         class="icon-btn"
                         text="mdi-dots-vertical"
-                        on:tap={showSourceOptions(item)}
+                        on:tap={() => showSourceOptions(item)}
                         on:longPress={(event) => onButtonLongPress(item, event)}
                     />
                 </gridlayout>
@@ -205,13 +179,7 @@ import { formatSize } from '~/helpers/formatter';
                 color={$mapStore.showRoutes ? primaryColor : 'gray'}
                 on:tap={() => mapStore.setShowRoutes(!$mapStore.showRoutes)}
             /> -->
-            <button
-                variant="text"
-                class="icon-btn"
-                text="mdi-globe-model"
-                color={$mapStore.showGlobe ? primaryColor : 'gray'}
-                on:tap={() => mapStore.setShowGlobe(!$mapStore.showGlobe)}
-            />
+            <button variant="text" class="icon-btn" text="mdi-globe-model" color={$mapStore.showGlobe ? primaryColor : 'gray'} on:tap={() => mapStore.setShowGlobe(!$mapStore.showGlobe)} />
 
             <button
                 variant="text"

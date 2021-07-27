@@ -8,7 +8,6 @@ Map {
 	font-directory: url(fonts/);
 }
 #landcover['mapnik::geometry_type'=3] {
-
   ::first {
     // [natural = 'mud'],
     [class = 'tidalflat'] {
@@ -213,7 +212,7 @@ Map {
   //   }
   // }
 
-  [class = 'sand'][zoom >= 5] {
+  [class =sand][zoom >= 5] {
     polygon-fill: @sand;
     // [way_pixels >= 4]  { polygon-gamma: 0.75; }
     // [way_pixels >= 64] { polygon-gamma: 0.3;  }
@@ -289,8 +288,10 @@ Map {
 }
 
 #landuse['mapnik::geometry_type'=3] {
-
-  [class = 'residential'][zoom >= 7]{
+  [class = 'residential'][zoom >= 4],
+  [class = 'quarter'][zoom >= 4],
+  [class = 'neighbourhood'][zoom >= 4],
+  [class = 'suburb'][zoom >= 4]{
     // polygon-fill: @built-up-lowzoom;
     // [zoom >= 11] { polygon-fill: @built-up-z11; }
     // [zoom >= 12] { polygon-fill: @built-up-z12; }
@@ -451,7 +452,7 @@ Map {
       }
     }
 
-    [class = 'industrial'][zoom >= 8] {
+    [class=industrial][zoom >= 8] {
       // polygon-fill: @built-up-lowzoom;
       [zoom >= 11] { polygon-fill: @built-up-z11; }
       [zoom >= 12] { polygon-fill: @built-up-z12; }
@@ -768,7 +769,6 @@ Map {
 // }
 
 #landcover['mapnik::geometry_type'=2] {
-
   // [name!=null][zoom>=15] {
   //   text-name: @name;
   //   text-face-name: @mont;

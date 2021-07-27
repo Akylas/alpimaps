@@ -1,6 +1,12 @@
 <script lang="ts">
+    import { l } from '@nativescript-community/l';
     import { Align, Canvas, DashPathEffect, LayoutAlignment, Paint, StaticLayout, Style } from '@nativescript-community/ui-canvas';
+    import { GenericMapPos } from '@nativescript-community/ui-carto/core';
+    import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
+    import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
+    import { VectorElementEventData } from '@nativescript-community/ui-carto/layers/vector';
     import { CartoMap } from '@nativescript-community/ui-carto/ui';
+    import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
     import { LineChart } from '@nativescript-community/ui-chart/charts';
     import type { HighlightEventData } from '@nativescript-community/ui-chart/charts/Chart';
     import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
@@ -8,34 +14,25 @@
     import { LineData } from '@nativescript-community/ui-chart/data/LineData';
     import { LineDataSet, Mode } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
-    // import { ShareFile } from '@nativescript-community/ui-share-file';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Application } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode, showModal } from 'svelte-native/dom';
-    import { convertValueToUnit, formatValueToUnit, UNITS } from '~/helpers/formatter';
-    import { getMapContext } from '~/mapModules/MapModule';
-    import type { IItem, IItem as Item } from '~/models/Item';
-    import { packageService } from '~/services/PackageService';
-    import { omit } from '~/utils/utils';
-    import { showError } from '~/utils/error';
-    import { borderColor, screenHeightDips, statusBarHeight, textColor, widgetBackgroundColor } from '~/variables';
-    import BottomSheetInfoView from './BottomSheetInfoView.svelte';
-    import { formatter } from '~/mapModules/ItemFormatter';
-    import type { RouteInstruction } from '~/models/Route';
-    import { networkService } from '~/services/NetworkService';
-    import { showBottomSheet } from './bottomsheet';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { l } from '@nativescript-community/l';
+    import { formatValueToUnit, UNITS } from '~/helpers/formatter';
     import { slc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
-    import { VectorElementEventData } from '@nativescript-community/ui-carto/layers/vector';
-    import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
-    import { GenericMapPos } from '@nativescript-community/ui-carto/core';
-    import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
-    import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
-    // import * as xml2js from 'xml2js';
+    import { formatter } from '~/mapModules/ItemFormatter';
+    import { getMapContext } from '~/mapModules/MapModule';
+    import type { IItem, IItem as Item } from '~/models/Item';
+    import type { RouteInstruction } from '~/models/Route';
+    import { networkService } from '~/services/NetworkService';
+    import { packageService } from '~/services/PackageService';
+    import { showError } from '~/utils/error';
     import { openLink } from '~/utils/ui';
+    import { borderColor, screenHeightDips, statusBarHeight, textColor, widgetBackgroundColor } from '~/variables';
+    import { showBottomSheet } from './bottomsheet';
+    import BottomSheetInfoView from './BottomSheetInfoView.svelte';
 
     const LISTVIEW_HEIGHT = 200;
     const PROFILE_HEIGHT = 150;
@@ -481,7 +478,7 @@
 
     async function getTransitLines() {
         try {
-            const component = (await import('./TransitLinesBottomSheet.svelte')).default;
+            const component = (await import('~/components/transit/TransitLinesBottomSheet.svelte')).default;
             console.log('getTransitLines', { name: formatter.getItemName(item), position: item.position });
             showBottomSheet({ parent: mapContext.getMainPage(), view: component, disableDimBackground: true, props: { name: formatter.getItemName(item), position: item.position } });
         } catch (err) {
