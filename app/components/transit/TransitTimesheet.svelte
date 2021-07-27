@@ -7,28 +7,28 @@
     import dayjs, { Dayjs } from 'dayjs';
     import { onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
-    import { closeModal, NativeViewElementNode } from 'svelte-native/dom';
+    import { closeModal, NativeViewElementNode, navigate } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
-import { onThemeChanged } from '~/helpers/theme';
+    import { onThemeChanged } from '~/helpers/theme';
     import { transitService } from '~/services/TransitService';
     import { showError } from '~/utils/error';
     import { openLink } from '~/utils/ui';
     import { accentColor, borderColor, globalMarginTop, mdiFontFamily, navigationBarHeight, subtitleColor, textColor } from '~/variables';
+    import CActionBar from '~/components/CActionBar.svelte';
+    import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
 
     export let line: any;
-
-    let selectedPageIndex = 0;
     let loading = false;
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
-    let linesItems: any[] = null;
+    let noNetworkAndNoData = false;
     let timelineItems: any[] = null;
-
     let lineData = null;
-
     let lineDataIndex = 0;
-
     let directionText: string;
+    let currentTime = dayjs().set('s', 0).set('ms', 0);
+    let currentStopId = null;
+
     async function fetchLineTimeline(time?: Dayjs) {
         try {
             loading = true;
@@ -37,9 +37,40 @@ import { onThemeChanged } from '~/helpers/theme';
             // prevTime = lineData[lineDataIndex].prevTime;
             // nextTime = lineData[lineDataIndex].nextTime;
             timelineItems = lineData[lineDataIndex].arrets;
-            currentStopId = line.stopIds[lineDataIndex];
             // console.log('fetchLineTimeline', time.valueOf(), lineData[lineDataIndex].prevTime, lineData[lineDataIndex].nextTime);
             directionText = timelineItems[0].stopName + '\n' + timelineItems[timelineItems.length - 1].stopName;
+            if (line.stopIds) {
+                currentStopId = line.stopIds[lineDataIndex];
+                const index = timelineItems.findIndex((a) => a.stopId === currentStopId);
+                if (index === -1) {
+                    line.stopIds = line.stopIds.reverse();
+                    currentStopId = line.stopIds[lineDataIndex];
+                }
+                const scrollIndex = timelineItems.findIndex((s) => s.stopId === currentStopId);
+                collectionView.nativeView.scrollToIndex(scrollIndex, false);
+            }
+            noNetworkAndNoData = false;
+        } catch (error) {
+            if (error instanceof NoNetworkError && !timelineItems) {
+                noNetworkAndNoData = true;
+            }
+            showError(error);
+        } finally {
+            loading = false;
+        }
+    }
+
+    onNetworkChanged((connected) => {
+        if (connected && noNetworkAndNoData) {
+            fetchLineTimeline();
+        }
+    });
+    function reverseTimesheet() {
+        lineDataIndex = 1 - lineDataIndex;
+        timelineItems = lineData[lineDataIndex].arrets;
+        directionText = timelineItems[0].stopName + '\n' + timelineItems[timelineItems.length - 1].stopName;
+        if (line.stopIds) {
+            currentStopId = line.stopIds[lineDataIndex];
             const index = timelineItems.findIndex((a) => a.stopId === currentStopId);
             if (index === -1) {
                 line.stopIds = line.stopIds.reverse();
@@ -47,28 +78,8 @@ import { onThemeChanged } from '~/helpers/theme';
             }
             const scrollIndex = timelineItems.findIndex((s) => s.stopId === currentStopId);
             collectionView.nativeView.scrollToIndex(scrollIndex, false);
-        } catch (error) {
-            showError(error);
-        } finally {
-            loading = false;
         }
     }
-    function reverseTimesheet() {
-        lineDataIndex = 1 - lineDataIndex;
-        timelineItems = lineData[lineDataIndex].arrets;
-        currentStopId = line.stopIds[lineDataIndex];
-        directionText = timelineItems[0].stopName + '\n' + timelineItems[timelineItems.length - 1].stopName;
-        const index = timelineItems.findIndex((a) => a.stopId === currentStopId);
-        if (index === -1) {
-            line.stopIds = line.stopIds.reverse();
-            currentStopId = line.stopIds[lineDataIndex];
-        }
-        const scrollIndex = timelineItems.findIndex((s) => s.stopId === currentStopId);
-        collectionView.nativeView.scrollToIndex(scrollIndex, false);
-    }
-
-    let currentTime = dayjs().set('s', 0).set('ms', 0);
-    let currentStopId = null;
 
     function getTripTime(item, index) {
         const data = item.trips[index];
@@ -143,13 +154,11 @@ import { onThemeChanged } from '~/helpers/theme';
     }
     async function previousDates() {
         if (lineData[lineDataIndex].prevTime) {
-            console.log('previousDates', lineData[lineDataIndex].prevTime);
             fetchLineTimeline(dayjs.utc(lineData[lineDataIndex].prevTime));
         }
     }
     async function nextDates() {
         if (lineData[lineDataIndex].nextTime) {
-            console.log('nextDates', lineData[lineDataIndex].nextTime);
             fetchLineTimeline(dayjs.utc(lineData[lineDataIndex].nextTime));
         }
     }
@@ -157,6 +166,20 @@ import { onThemeChanged } from '~/helpers/theme';
     async function downloadPDF() {
         try {
             openUrl(`https://data.mobilites-m.fr/api/ficheHoraires/pdf?route=${line.id}`);
+        } catch (error) {
+            showError(error);
+        }
+    }
+
+    async function showDetails() {
+        try {
+            const component = (await import('~/components/transit/TransitLineDetails.svelte')).default;
+            await navigate({
+                page: component,
+                props: {
+                    line
+                }
+            });
         } catch (error) {
             showError(error);
         }
@@ -172,27 +195,27 @@ import { onThemeChanged } from '~/helpers/theme';
 </script>
 
 <page bind:this={page} actionBarHidden={true}>
-    <gridlayout rows="auto,auto,*" columns="auto,*,auto" paddingTop={globalMarginTop}>
+    <gridlayout rows="auto,auto,auto,*" columns="auto,*,auto">
+        <CActionBar backgroundColor="transparent" colSpan={3}>
+            <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={line.color} color={line.textColor} text={line.shortName} autoFontSize={true} />
+            <button variant="text" class="icon-btn" text="mdi-pdf-box" on:tap={() => downloadPDF()} />
+            <button variant="text" class="icon-btn" text="mdi-information-outline" on:tap={() => showDetails()} />
+        </CActionBar>
+
         <label
-            borderRadius={4}
-            marginLeft={5}
-            width={50}
-            height={50}
-            backgroundColor={line.color}
-            color={line.textColor}
-            text={line.shortName}
+            row={1}
+            colSpan={3}
+            text={line.longName.replace(' / ', '\n')}
+            fontWeight="bold"
+            padding="15 10 15 10"
             fontSize={20}
+            maxFontSize={20}
             autoFontSize={true}
+            maxLines={3}
             textAlignment="center"
             verticalTextAlignment="center"
-            padding={8}
         />
-        <label col={1} text={line.longName.replace(' / ', '\n')} fontWeight="bold" padding="15 10 15 10" fontSize={20} maxFontSize={20} autoFontSize={true} maxLines={3} verticalTextAlignment="center"/>
-        <stacklayout col={2} orientation="horizontal">
-            <button variant="text" class="icon-btn" text="mdi-close" on:tap={() => closeModal(undefined)} />
-            <button variant="text" class="icon-btn" text="mdi-pdf-box" on:tap={() => downloadPDF()} />
-        </stacklayout>
-        <gridlayout row={1} colSpan={3} columns="*,40,*" rows="50,auto">
+        <gridlayout row={2} colSpan={3} columns="*,40,*" rows="50,auto" visibility={noNetworkAndNoData ? 'hidden' : 'visible'}>
             <canvaslabel borderBottomColor={$borderColor} borderBottomWidth={1} marginLeft={20} rippleColor={accentColor} on:tap={() => selectDate()}>
                 <cspan text={lc('date')} fontSize={11} color={$subtitleColor} verticalAlignment="top" />
                 <cspan text="mdi-calendar-today" fontSize={22} fontFamily={mdiFontFamily} verticalAlignment="middle" textAlignment="right" />
@@ -211,7 +234,7 @@ import { onThemeChanged } from '~/helpers/theme';
             <button row={1} colSpan={3} variant="text" class="icon-btn" text="mdi-chevron-right" horizontalAlignment="right" on:tap={() => nextDates()} />
         </gridlayout>
 
-        <collectionview row={2} colSpan={3} bind:this={collectionView} items={timelineItems} itemIdGenerator={(item, i) => i} android:marginBottom={navigationBarHeight} rowHeight="50">
+        <collectionview row={3} colSpan={3} bind:this={collectionView} items={timelineItems} itemIdGenerator={(item, i) => i} android:marginBottom={navigationBarHeight} rowHeight="50">
             <Template let:item>
                 <gridlayout rippleColor={item.color} columns="*,200" padding={4} borderBottomColor={$borderColor} borderBottomWidth={1}>
                     <label
@@ -224,7 +247,7 @@ import { onThemeChanged } from '~/helpers/theme';
                         maxLines={2}
                         paddingRight={10}
                     />
-                    <canvaslabel col="1" fontSize={12} color={item.stopId === currentStopId ? accentColor : $textColor} textAlignment="center" >
+                    <canvaslabel col="1" fontSize={12} color={item.stopId === currentStopId ? accentColor : $textColor} textAlignment="center">
                         <cspan text={getTripTime(item, 0)} verticalAlignment="center" width="25%" />
                         <cspan text={getTripTime(item, 1)} verticalAlignment="center" paddingLeft="25%" width="25%" />
                         <cspan text={getTripTime(item, 2)} verticalAlignment="center" paddingLeft="50%" width="25%" />
@@ -233,6 +256,14 @@ import { onThemeChanged } from '~/helpers/theme';
                 </gridlayout>
             </Template>
         </collectionview>
-        <mdactivityindicator row={2} colSpan={3} visibility={loading ? 'visible' : 'collapsed'} busy={true} horizontalAlignment="center" verticalAlignment="center" />
+        <mdactivityindicator row={3} colSpan={3} visibility={loading ? 'visible' : 'collapsed'} busy={true} horizontalAlignment="center" verticalAlignment="center" />
+        {#if noNetworkAndNoData}
+            <canvaslabel row={2} rowSpan={2} colSpan={3}>
+                <cgroup textAlignment="center" verticalAlignment="center">
+                    <cspan text="mdi-alert-circle-outline" fontSize={50} fontFamily={mdiFontFamily} />
+                    <cspan text={'\n' + lc('no_network')} fontSize={20} />
+                </cgroup>
+            </canvaslabel>
+        {/if}
     </gridlayout>
 </page>

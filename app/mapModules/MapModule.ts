@@ -1,7 +1,7 @@
 import Observable from '@nativescript-community/observable';
 import { Layer } from '@nativescript-community/ui-carto/layers';
 import { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
-import { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
+import { VectorElementEventData, VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { Projection } from '@nativescript-community/ui-carto/projections';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
@@ -50,6 +50,7 @@ export interface MapContext {
     unselectItem: () => void;
     getCurrentLanguage: () => string;
     getSelectedItem: () => IItem;
+    getLayers: (layerId: LayerType) => { layer: VectorTileLayer; id: string }[];
     addLayer: (layer: Layer<any, any>, layerId: LayerType) => number;
     insertLayer: (layer: Layer<any, any>, layerId: LayerType, index: number) => void;
     removeLayer: (layer: Layer<any, any>, layerId: LayerType) => void;
@@ -61,6 +62,7 @@ export interface MapContext {
     vectorTileClicked: (data: VectorTileEventData<LatLonKeys>) => boolean;
     rasterTileClicked: (data: RasterTileClickInfo<LatLonKeys>) => boolean;
     getVectorTileDecoder(): MBVectorTileDecoder;
+    getCurrentLayer(): VectorTileLayer;
     runOnModules(functionName: string, ...args);
 }
 
