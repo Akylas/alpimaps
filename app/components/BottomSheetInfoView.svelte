@@ -1,12 +1,9 @@
 <script lang="ts">
-    import type { GenericMapPos, MapPos } from '@nativescript-community/ui-carto/core';
-    import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
-    import { convertDuration, osmicon, convertElevation, convertValueToUnit, UNITS } from '~/helpers/formatter';
-    import type { IItem as Item } from '~/models/Item';
-    import type { RouteInstruction } from '~/models/Route';
-    import { mdiFontFamily, subtitleColor, textColor } from '~/variables';
-    import { formatter } from '~/mapModules/ItemFormatter';
     import dayjs from 'dayjs';
+    import { convertElevation, convertValueToUnit, osmicon, UNITS } from '~/helpers/formatter';
+    import { formatter } from '~/mapModules/ItemFormatter';
+    import type { IItem as Item } from '~/models/Item';
+    import { mdiFontFamily, subtitleColor, textColor } from '~/variables';
     const PROPS_TO_SHOW = ['ele'];
 
     export let item: Item;
@@ -134,9 +131,19 @@
 </script>
 
 <gridlayout {...$$restProps} padding="5 10 4 10">
-    <flexlayout paddingLeft="40" marginBottom={ (propsToDraw.length > 0 ? 16 : 0)} flexDirection="column" >
-        <label text={itemTitle} fontWeight="bold" color={routeDuration ? '#01B719' : $textColor} fontSize={18} autoFontSize={true} flexGrow={1} maxFontSize={18} verticalTextAlignment="middle" textWrap={true}/>
-        <label visibility={itemSubtitle ? 'visible' : 'collapsed'} text={itemSubtitle} color={$subtitleColor} fontSize={13} maxLines={2}  verticalTextAlignment="top" flexGrow={1} flexShrink={0}/>
+    <flexlayout paddingLeft="40" marginBottom={propsToDraw.length > 0 ? 16 : 0} flexDirection="column">
+        <label
+            text={itemTitle}
+            fontWeight="bold"
+            color={routeDuration ? '#01B719' : $textColor}
+            fontSize={18}
+            autoFontSize={true}
+            flexGrow={1}
+            maxFontSize={18}
+            verticalTextAlignment="middle"
+            textWrap={true}
+        />
+        <label visibility={itemSubtitle ? 'visible' : 'collapsed'} text={itemSubtitle} color={$subtitleColor} fontSize={13} maxLines={2} verticalTextAlignment="top" flexGrow={1} flexShrink={0} />
     </flexlayout>
     <canvaslabel {...$$restProps} fontSize="16">
         <cgroup verticalAlignment="middle" paddingBottom={(itemSubtitle ? 4 : 0) + (propsToDraw.length > 0 ? 12 : 0)}>

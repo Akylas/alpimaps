@@ -48,7 +48,7 @@ export function install() {
         return;
     }
     installed = true;
-    if (NO_CONSOLE === true || gVars.sentry) {
+    if (NO_CONSOLE !== true && gVars.sentry) {
         console.log = (...args) => actualLog('log', ...args);
         console.info = (...args) => actualLog('info', ...args);
         console.error = (...args) => actualLog('error', ...args);
