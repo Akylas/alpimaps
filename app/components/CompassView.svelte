@@ -1,14 +1,7 @@
-<script lang="ts" context="module">
-    import { MapPos } from '@nativescript-community/ui-carto/core';
-    import { getAirportPressureAtLocation, isSensorAvailable, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
-    import { closeBottomSheet } from './bottomsheet';
-    import { estimateMagneticField, getAltitude } from '@nativescript-community/sensors/sensors';
-
-</script>
-
 <script lang="ts">
-    import { Canvas, Paint, Path, Style } from '@nativescript-community/ui-canvas';
-    import { ImageSource, Screen } from '@nativescript/core';
+        import { startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
+    import { estimateMagneticField } from '@nativescript-community/sensors/sensors';
+    import { MapPos } from '@nativescript-community/ui-carto/core';
     import { onDestroy, onMount } from 'svelte';
     function wrap(value, min, max) {
         let result;
@@ -123,11 +116,10 @@
             console.error('stopHeadingListener', err, err['stack']);
         }
     });
-
 </script>
 
 <gridLayout {height}>
-    <label text={headingAccuracy} verticalAlignment="top" />
+    <label text={headingAccuracy + ''} verticalAlignment="top" />
     <svgview src="~/assets/svgs/needle_background.svg" stretch="aspectFit" horizontalAlignment="center" />
     <svgview src="~/assets/svgs/needle.svg" stretch="aspectFit" horizontalAlignment="center" rotate={-currentHeading} />
     <image

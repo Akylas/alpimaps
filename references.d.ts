@@ -94,6 +94,9 @@ namespace svelteNative.JSX {
     export interface ButtonAttributes {
         variant?: String;
     }
+    export interface SliderAttributes {
+        stepSize?: number;
+    }
     export interface LabelAttributes {
         autoFontSize?: boolean;
         verticalTextAlignment?: String;
