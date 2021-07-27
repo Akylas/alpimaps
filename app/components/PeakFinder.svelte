@@ -7,7 +7,7 @@
     import { HandlerType, Manager } from '@nativescript-community/gesturehandler';
 
     import { MergedMBVTTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { debounce } from 'push-it-to-the-limit';
+    import { debounce } from 'push-it-to-the-limit/target/es6';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { onDestroy, onMount } from 'svelte';
     import { Drawer } from '@nativescript-community/ui-drawer';
@@ -45,11 +45,9 @@
     let selectedPageIndex = 0;
     const consoleEnabled = !PRODUCTION;
 
-    function truncate(str, maxlength) 
-{
-	return str.length > maxlength ?
-		str.slice(0, maxlength - 1) + '…' : str;
-}
+    function truncate(str, maxlength) {
+        return str.length > maxlength ? str.slice(0, maxlength - 1) + '…' : str;
+    }
     function getDefaultDataSource() {
         const cacheFolder = Folder.fromPath(path.join(knownFolders.documents().path, 'carto_cache'));
         const dataSource = new PersistentCacheTileDataSource({
@@ -446,15 +444,10 @@
                     </canvaslabel>
                     <button col={1} width={40} on:tap={(e) => callJSFunction('goToSelectedItem')} fontFamily={alpimapsFontFamily} variant="text" text="alpimaps-paper-plane" />
                 </gridlayout>
-                <button
-                    verticalAlignment="bottom"
-                    horizontalAlignment="left"
-                    color={primaryColor}
-                    on:tap={(e) => callJSFunction('togglePredefinedMapMode')}
-                    class="small-floating-btn"
-                    text="mdi-map"
-                />
-                <button verticalAlignment="bottom" horizontalAlignment="right" color={primaryColor} on:tap={(e) => drawer.nativeView.toggle('bottom')} class="small-floating-btn" text="mdi-cog" />
+                <stacklayout verticalAlignment="bottom" horizontalAlignment="left">
+                    <button color={primaryColor} on:tap={(e) => callJSFunction('togglePredefinedMapMode')} class="small-floating-btn" text="mdi-map" />
+                    <button color={primaryColor} on:tap={(e) => drawer.nativeView.toggle('bottom')} class="small-floating-btn" text="mdi-cog" />
+                </stacklayout>
             </gridLayout>
             <gridlayout prop:bottomDrawer height={300} rows="*,*" columns="30,*" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
                 <button variant="text" class="mdi" fontSize={16} width={undefined} text="mdi-cog" on:tap={() => (selectedPageIndex = 0)} />

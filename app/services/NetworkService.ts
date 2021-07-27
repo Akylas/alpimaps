@@ -13,6 +13,11 @@ import { ad } from '@nativescript/core/utils/utils';
 import { Headers } from '@nativescript/core/http';
 import * as https from '@nativescript-community/https';
 
+const onNetworkChangedCallbacks = [];
+export function onNetworkChanged(callback) {
+    onNetworkChangedCallbacks.push(callback);
+}
+
 export interface CacheOptions {
     diskLocation: string;
     diskSize: number;
@@ -132,7 +137,6 @@ function filterTag(tag, key, tags) {
     }
 }
 function prepareOSMObject(ele, _withIcon?, _testForGeoFeature?) {
-    console.debug('prepareOSMObject', ele, _withIcon, _testForGeoFeature);
     const tags = ele.tags;
     const id = isNaN(ele.id) ? ele.id : ele.id.toString();
     const result = {
@@ -371,22 +375,14 @@ export class CustomError extends BaseError {
         super(props.message);
         this.message = props.message;
         delete props.message;
-
         this.silent = props.silent;
         delete props.silent;
-        // Error.captureStackTrace && Error.captureStackTrace(this, (this as any).constructor);
-        // console.log('creating custom error', props, typeof props, props instanceof Error, props instanceof CustomError);
-
         // we need to understand if we are duplicating or not
         const isError = props instanceof Error;
         if (props.customErrorConstructorName || isError) {
             // duplicating
             // use getOwnPropertyNames to get hidden Error props
             const keys = Object.getOwnPropertyNames(props);
-            // if (isError) {
-            //     keys = keys.concat(['fileName', 'stack', 'lineNumber', 'type']);
-            // }
-            // console.log('duplicating error', keys, props.stack);
             for (let index = 0; index < keys.length; index++) {
                 const k = keys[index];
                 if (!props[k] || typeof props[k] === 'function') continue;
@@ -394,7 +390,6 @@ export class CustomError extends BaseError {
                 this[k] = props[k];
             }
         } else {
-            // console.log('creating new CustomError', props);
             this.assignedLocalData = props;
         }
 
@@ -426,10 +421,7 @@ export class CustomError extends BaseError {
         return JSON.stringify(this.toJSON());
     }
     toString() {
-        // console.log('customError to string');
         return evalTemplateString(l(this.message), Object.assign({ localize: l }, this.assignedLocalData));
-        // return evalMessageInContext.call(Object.assign({localize}, this.assignedLocalData), localize(this.message))
-        // return this.message || this.stack;
     }
 
     getMessage() {}
@@ -520,6 +512,8 @@ export class NetworkService extends Observable {
     }
     set connected(value: boolean) {
         if (this._connected !== value) {
+            console.log('connected', value);
+            onNetworkChangedCallbacks.forEach((c) => c(value));
             this._connected = value;
             this.notify({
                 eventName: NetworkConnectionStateEvent,
@@ -583,37 +577,37 @@ export class NetworkService extends Observable {
         // if (!this.connected) {
         //     return Promise.reject(new NoNetworkError());
         // }
-        if (requestParams.queryParams) {
-            requestParams.url = queryString(requestParams.queryParams, requestParams.url);
-            delete requestParams.queryParams;
-        }
-        requestParams.headers = requestParams.headers || {};
-        if (!requestParams.headers['Content-Type']) {
-            requestParams.headers['Content-Type'] = 'application/json';
-        }
-        const response = await https.request({ ...requestParams, useLegacy: true });
-        const statusCode = response.statusCode;
-
-        let content: {
-            response?: any;
-        };
-        if (requestParams.toJSON !== false) {
-            try {
-                content = await response.content.toJSONAsync();
-            } catch (err) {
-                console.error('error parsing json response', err);
+        try {
+            if (requestParams.queryParams) {
+                requestParams.url = queryString(requestParams.queryParams, requestParams.url);
+                delete requestParams.queryParams;
             }
-        }
+            requestParams.headers = requestParams.headers || {};
+            if (!requestParams.headers['Content-Type']) {
+                requestParams.headers['Content-Type'] = 'application/json';
+            }
+            const response = await https.request({ ...requestParams, useLegacy: true });
+            const statusCode = response.statusCode;
 
-        if (!content) {
-            content = await response.content.toStringAsync();
-        }
-        const isString = typeof content === 'string';
-        if (DEV_LOG) {
-            console.log('handleRequestResponse response', requestParams.url, statusCode, response.reason, response.headers, isString, typeof content/* , content */);
-        }
-        if (Math.round(statusCode / 100) !== 2) {
-            try {
+            let content: {
+                response?: any;
+            };
+            if (requestParams.toJSON !== false) {
+                try {
+                    content = await response.content.toJSONAsync();
+                } catch (err) {
+                    console.error('error parsing json response', err);
+                }
+            }
+
+            if (!content) {
+                content = await response.content.toStringAsync();
+            }
+            const isString = typeof content === 'string';
+            if (DEV_LOG) {
+                console.log('handleRequestResponse response', requestParams.url, statusCode, response.reason, response.headers, isString, typeof content, content);
+            }
+            if (Math.round(statusCode / 100) !== 2) {
                 let jsonReturn: {
                     data?: any;
                     error?;
@@ -627,54 +621,41 @@ export class NetworkService extends Observable {
                     } catch (err) {
                         // error result might html
                         const match = /<title>(.*)\n*<\/title>/.exec(responseStr);
-                        return Promise.reject(
-                            new HTTPError({
-                                statusCode,
-                                responseHeaders: response.headers,
-                                message: match ? match[1] : 'HTTP error',
-                                requestParams
-                            })
-                        );
+                        throw new HTTPError({
+                            statusCode,
+                            responseHeaders: response.headers,
+                            message: match ? match[1] : 'HTTP error',
+                            requestParams
+                        });
                     }
                 }
                 const error = jsonReturn.error || jsonReturn;
-                return Promise.reject(
-                    new HTTPError({
-                        statusCode: response.statusCode,
-                        message: error.error_description || error.message || error.error || error,
-                        requestParams
-                    })
-                );
-            } catch (e) {
-                const match = /<title>(.*)\n*<\/title>/.exec(response.content.toString());
-                if (match) {
-                    return Promise.reject(
-                        new HTTPError({
-                            statusCode: response.statusCode,
-                            message: match[1],
-                            requestParams
-                        })
-                    );
-                }
-                return Promise.reject(
-                    new HTTPError({
-                        statusCode: response.statusCode,
-                        message: 'HTTP error',
-                        requestParams
-                    })
-                );
+                throw new HTTPError({
+                    statusCode: response.statusCode,
+                    responseHeaders: response.headers,
+                    message: error.error_description || error.message || error.error || error,
+                    requestParams
+                });
             }
-        }
-        if (!isString || requestParams.toJSON === false) {
-            return content as T;
-        }
-        try {
-            // we should never go there anymore
-            const result = JSON.parse(content as any as string);
-            return result.response || response;
-        } catch (e) {
-            // console.log('failed to parse result to JSON', e);
-            return undefined;
+            if (!isString || requestParams.toJSON === false) {
+                return content as T;
+            }
+            try {
+                // we should never go there anymore
+                const result = JSON.parse(content as any as string);
+                return result.response || response;
+            } catch (e) {
+                // console.log('failed to parse result to JSON', e);
+                return undefined;
+            }
+        } catch (error) {
+            if (!(error instanceof HTTPError)) {
+                if (!this._connected) {
+                    throw new NoNetworkError();
+                }
+            } else {
+                throw error;
+            }
         }
     }
 

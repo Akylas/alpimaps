@@ -1,57 +1,62 @@
 <script lang="ts">
     import { AppURL, handleOpenURL } from '@nativescript-community/appurl';
     import * as EInfo from '@nativescript-community/extendedinfo';
+    import { GenericGeoLocation } from '@nativescript-community/gps';
+    import { allowSleepAgain, keepAwake } from '@nativescript-community/insomnia';
     import * as perms from '@nativescript-community/perms';
-    import { CartoMapStyle, ClickType, GenericMapPos, MapBounds, toNativeScreenBounds, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
+    import { isSensorAvailable } from '@nativescript-community/sensors';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
-    import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
+    import { ClickType, GenericMapPos, MapBounds, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
+    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
+    import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
     import { Layer } from '@nativescript-community/ui-carto/layers';
-    import { BaseVectorTileLayer, CartoOnlineVectorTileLayer, VectorLayer, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
+    import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
     import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
+    import { BaseVectorTileLayer, CartoOnlineVectorTileLayer, VectorLayer, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
     import { Projection } from '@nativescript-community/ui-carto/projections';
     import { CartoMap, PanningMode, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
     import { setShowDebug, setShowError, setShowInfo, setShowWarn } from '@nativescript-community/ui-carto/utils';
     import { Line } from '@nativescript-community/ui-carto/vectorelements/line';
-    import { Marker, MarkerStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/marker';
-    import type { MarkerStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/marker';
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
     import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
-    import type { TextStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/text';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
-    import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
     import { Drawer } from '@nativescript-community/ui-drawer';
     import { action, alert, login } from '@nativescript-community/ui-material-dialogs';
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { Brightness } from '@nativescript/brightness';
-    import { AndroidApplication, Application, Color, Utils, Page } from '@nativescript/core';
+    import { AndroidApplication, Application, Color, Page, Utils } from '@nativescript/core';
     import * as appSettings from '@nativescript/core/application-settings';
     import type { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Device, Screen } from '@nativescript/core/platform';
     import { ad } from '@nativescript/core/utils/utils';
     import { compose } from '@nativescript/email';
-    import { allowSleepAgain, keepAwake } from '@nativescript-community/insomnia';
     import * as SocialShare from 'nativescript-social-share';
-    import { debounce } from 'push-it-to-the-limit';
+    import { debounce } from 'push-it-to-the-limit/target/es6';
     import { onDestroy, onMount } from 'svelte';
+    import { navigate, showModal } from 'svelte-native';
+    import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
-    import { l, lc, lt, onLanguageChanged } from '~/helpers/locale';
+    import { l, lc, onLanguageChanged } from '~/helpers/locale';
+    import { sTheme, toggleTheme } from '~/helpers/theme';
     import watcher from '~/helpers/watcher';
-    import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
     import type { LayerType } from '~/mapModules/MapModule';
     import { getMapContext, setMapContext } from '~/mapModules/MapModule';
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import type { IItem } from '~/models/Item';
+    import { RouteInstruction } from '~/models/Route';
     import { NotificationHelper, NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL } from '~/services/android/NotifcationHelper';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
+    import { NetworkConnectionStateEvent, NetworkConnectionStateEventData, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
+    import { transitService } from '~/services/TransitService';
     import mapStore from '~/stores/mapStore';
     import { showError } from '~/utils/error';
-    import { computeDistanceBetween } from '~/utils/geo';
+    import { computeDistanceBetween, getBoundsZoomLevel } from '~/utils/geo';
     import { Sentry } from '~/utils/sentry';
     import { accentColor, screenHeightDips, screenWidthDips } from '~/variables';
     import { navigationBarHeight, primaryColor } from '../variables';
@@ -61,34 +66,8 @@
     import LocationInfoPanel from './LocationInfoPanel.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
     import Search from './Search.svelte';
-    import { GenericGeoLocation, GeoLocation } from '@nativescript-community/gps';
-    import { Template } from 'svelte-native/components';
-    import { isModalOpened, showModal } from 'svelte-native';
-    import { isSensorAvailable } from '@nativescript-community/sensors';
-    // import { asSvelteTransition } from 'svelte-native/transitions';
-    // import { AnimationCurve } from '@nativescript/core/ui/enums';
-    import { NetworkConnectionStateEvent, NetworkConnectionStateEventData, networkService } from '~/services/NetworkService';
-    import { sTheme, toggleTheme } from '~/helpers/theme';
-    import { RouteInstruction } from '~/models/Route';
-    import { getBoundsZoomLevel } from '~/utils/geo';
-    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
-    import { transitService } from '~/services/TransitService';
-
-    // function slideFromRight(node, { delay = 0, duration = 200, easing = AnimationCurve.easeOut }) {
-    //     const scaleX = node.nativeView.scaleX;
-    //     const scaleY = node.nativeView.scaleY;
-    //     return asSvelteTransition(node, delay, duration, easing, (t) => ({
-    //         scale: {
-    //             x: t * scaleX,
-    //             y: t * scaleY
-    //         }
-    //     }));
-    // }
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
-    const mailRegexp =
-        /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
 
     const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'transit', 'hillshade', 'selection', 'items', 'directions', 'search', 'userLocation'];
     const KEEP_AWAKE_KEY = 'keepAwake';
@@ -184,41 +163,51 @@
             }
         }
     }
+    let fetchingTransitLines = false;
     $: {
         if (showTransitLines) {
-            if (!transitVectorTileDataSource) {
-                transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
-                    minZoom: 0,
-                    maxZoom: 24
-                });
-                transitVectorTileDataSource.createLayer('lines');
+            const pos = cartoMap.focusPos;
+            if (!transitVectorTileDataSource && !fetchingTransitLines) {
                 transitService
-                    .getTransitLines()
+                    .getTransitLines(pos.lat, pos.lon)
                     .then((result) => {
+                        transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
+                            minZoom: 0,
+                            maxZoom: 24
+                        });
+                        transitVectorTileDataSource.createLayer('lines');
                         const reader = new GeoJSONGeometryReader({
                             targetProjection: projection
                         });
                         // console.log('getMetroLines', result);
                         const geometry = reader.readFeatureCollection(result);
                         transitVectorTileDataSource.setLayerFeatureCollection(1, projection, geometry);
-                    })
-                    .catch(showError);
-            }
-            if (!transitVectorTileLayer) {
-                transitVectorTileLayer = new VectorTileLayer({
-                    // preloading: true,
-                    dataSource: transitVectorTileDataSource,
-                    decoder: new MBVectorTileDecoder({
-                        style: 'voyager',
-                        liveReload: TNS_ENV !== 'production',
-                        dirPath: '~/assets/styles/transit'
-                    })
-                });
+                        if (!transitVectorTileLayer) {
+                            transitVectorTileLayer = new VectorTileLayer({
+                                // preloading: true,
+                                dataSource: transitVectorTileDataSource,
+                                decoder: new MBVectorTileDecoder({
+                                    style: 'voyager',
+                                    liveReload: TNS_ENV !== 'production',
+                                    dirPath: '~/assets/styles/transit'
+                                })
+                            });
 
-                transitVectorTileLayer.setVectorTileEventListener(this);
-                // always add it at 1 to respect local order
-                addLayer(transitVectorTileLayer, 'transit');
-            } else {
+                            transitVectorTileLayer.setVectorTileEventListener(this);
+                            // always add it at 1 to respect local order
+                            addLayer(transitVectorTileLayer, 'transit');
+                        } else {
+                            transitVectorTileLayer.visible = true;
+                        }
+                    })
+                    .catch((error) => {
+                        showTransitLines = false;
+                        showError(error);
+                    })
+                    .finally(() => {
+                        fetchingTransitLines = false;
+                    });
+            } else if (transitVectorTileLayer) {
                 transitVectorTileLayer.visible = true;
             }
         } else if (transitVectorTileLayer) {
@@ -344,6 +333,7 @@
             vectorTileClicked: onVectorTileClicked,
             rasterTileClicked: onRasterTileClicked,
             getVectorTileDecoder,
+            getCurrentLayer,
             selectItem,
             unselectItem,
             addLayer,
@@ -351,6 +341,7 @@
             getLayerIndex,
             replaceLayer,
             getLayerTypeFirstIndex,
+            getLayers,
             removeLayer,
             moveLayer,
             zoomToItem,
@@ -422,7 +413,7 @@
         selectedPosMarker = null;
     });
     function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
-        if (isModalOpened() || isBottomSheetOpened()) {
+        if (!inFront || isBottomSheetOpened()) {
             return;
         }
         data.cancel = true;
@@ -1016,7 +1007,7 @@
     }
 
     function setCurrentLayer(id: string) {
-        // console.log('setCurrentLayer', id, $mapStore.zoomBiais, $mapStore.preloading);
+        console.log('setCurrentLayer', id, $mapStore.zoomBiais, $mapStore.preloading);
         // const cartoMap = cartoMap;
         if (currentLayer) {
             removeLayer(currentLayer, 'map');
@@ -1061,6 +1052,10 @@
         return vectorTileDecoder || packageService.getVectorTileDecoder();
     }
 
+    function getCurrentLayer() {
+        return currentLayer;
+    }
+
     // function getStyleFromCartoMapStyle(style: CartoMapStyle) {
     //     switch (style) {
     //         case CartoMapStyle.DARKMATTER:
@@ -1101,6 +1096,9 @@
                 vectorTileDecoder = new CartoOnlineVectorTileLayer({
                     style: mapStyleLayer
                 }).getTileDecoder();
+                // if (!PRODUCTION) {
+                //     vectorTileDecoder.setStyleParameter('debug', '1')
+                // }
             } else {
                 try {
                     vectorTileDecoder = new MBVectorTileDecoder({
@@ -1180,6 +1178,11 @@
     function getLayerTypeFirstIndex(layerId: LayerType) {
         const layerIndex = LAYERS_ORDER.indexOf(layerId);
         return addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) >= layerIndex);
+    }
+
+    function getLayers(layerId: LayerType) {
+        const layerIndex = LAYERS_ORDER.indexOf(layerId) + 1;
+        return addedLayers.slice(0, getLayerTypeFirstIndex(LAYERS_ORDER[layerIndex]));
     }
     function addLayer(layer: Layer<any, any>, layerId: LayerType) {
         if (cartoMap) {
@@ -1390,7 +1393,7 @@
             case 'sendFeedback':
                 compose({
                     subject: `[${EInfo.getAppNameSync()}(${appVersion})] Feedback`,
-                    to: ['martin@akylas.fr'],
+                    to: ['contact@akylas.fr'],
                     attachments: [
                         {
                             fileName: 'report.json',
@@ -1424,67 +1427,6 @@
                         }
                     ]
                 }).catch((err) => showError(err));
-                break;
-            case 'sendBugReport':
-                login({
-                    title: lc('send_bug_report'),
-                    message: lc('send_bug_report_desc'),
-                    okButtonText: l('send'),
-                    cancelButtonText: l('cancel'),
-                    autoFocus: true,
-                    usernameTextFieldProperties: {
-                        marginLeft: 10,
-                        marginRight: 10,
-                        autocapitalizationType: 'none',
-                        keyboardType: 'email',
-                        autocorrect: false,
-                        error: lc('email_required'),
-                        hint: lc('email')
-                    },
-                    passwordTextFieldProperties: {
-                        marginLeft: 10,
-                        marginRight: 10,
-                        error: lc('please_describe_error'),
-                        secure: false,
-                        hint: lc('description')
-                    },
-                    beforeShow: (options, usernameTextField: TextField, passwordTextField: TextField) => {
-                        usernameTextField.on('textChange', (e: any) => {
-                            const text = e.value;
-                            if (!text) {
-                                usernameTextField.error = lc('email_required');
-                            } else if (!mailRegexp.test(text)) {
-                                usernameTextField.error = lc('non_valid_email');
-                            } else {
-                                usernameTextField.error = null;
-                            }
-                        });
-                        passwordTextField.on('textChange', (e: any) => {
-                            const text = e.value;
-                            if (!text) {
-                                passwordTextField.error = lc('description_required');
-                            } else {
-                                passwordTextField.error = null;
-                            }
-                        });
-                    }
-                }).then((result) => {
-                    if (result.result) {
-                        if (!result.userName || !mailRegexp.test(result.userName)) {
-                            showError(lc('email_required'));
-                            return;
-                        }
-                        if (!result.password || result.password.length === 0) {
-                            showError(lc('description_required'));
-                            return;
-                        }
-                        Sentry.withScope((scope) => {
-                            scope.setUser({ email: result.userName });
-                            Sentry.captureMessage(result.password);
-                            alert(l('bug_report_sent'));
-                        });
-                    }
-                });
                 break;
         }
     }
@@ -1529,14 +1471,21 @@
                 id: 'dark_mode',
                 color: $sTheme === 'dark' ? primaryColor : undefined,
                 icon: 'mdi-theme-light-dark'
-            },
+                // },
 
-            {
-                title: lc('bug'),
-                id: 'bug',
-                icon: 'mdi-bug'
+                // {
+                //     title: lc('bug'),
+                //     id: 'bug',
+                //     icon: 'mdi-bug'
             }
         ];
+        if (gVars.sentry) {
+            options.push({
+                    title: lc('bug'),
+                    id: 'bug',
+                    icon: 'mdi-bug'
+            })
+        }
 
         if (isSensorAvailable('barometer')) {
             options.splice(options.length - 2, 0, {
@@ -1613,69 +1562,89 @@
     }
 
     async function sendBug() {
-        login({
-            title: lc('send_bug_report'),
-            message: lc('send_bug_report_desc'),
-            okButtonText: l('send'),
-            cancelButtonText: l('cancel'),
-            autoFocus: true,
-            usernameTextFieldProperties: {
-                marginLeft: 10,
-                marginRight: 10,
-                autocapitalizationType: 'none',
-                keyboardType: 'email',
-                autocorrect: false,
-                error: lc('email_required'),
-                hint: lc('email')
-            },
-            passwordTextFieldProperties: {
-                marginLeft: 10,
-                marginRight: 10,
-                error: lc('please_describe_error'),
-                secure: false,
-                hint: lc('description')
-            },
-            beforeShow: (options, usernameTextField: TextField, passwordTextField: TextField) => {
-                usernameTextField.on('textChange', (e: any) => {
-                    const text = e.value;
-                    if (!text) {
-                        usernameTextField.error = lc('email_required');
-                    } else if (!mailRegexp.test(text)) {
-                        usernameTextField.error = lc('non_valid_email');
-                    } else {
-                        usernameTextField.error = null;
-                    }
-                });
-                passwordTextField.on('textChange', (e: any) => {
-                    const text = e.value;
-                    if (!text) {
-                        passwordTextField.error = lc('description_required');
-                    } else {
-                        passwordTextField.error = null;
-                    }
-                });
-            }
-        }).then((result) => {
-            if (result.result) {
-                if (!result.userName || !mailRegexp.test(result.userName)) {
-                    showError(new Error(lc('email_required')));
-                    return;
+        if (gVars.sentry) {
+            const mailRegexp =
+                /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
+            login({
+                title: lc('send_bug_report'),
+                message: lc('send_bug_report_desc'),
+                okButtonText: l('send'),
+                cancelButtonText: l('cancel'),
+                autoFocus: true,
+                usernameTextFieldProperties: {
+                    marginLeft: 10,
+                    marginRight: 10,
+                    autocapitalizationType: 'none',
+                    keyboardType: 'email',
+                    autocorrect: false,
+                    error: lc('email_required'),
+                    hint: lc('email')
+                },
+                passwordTextFieldProperties: {
+                    marginLeft: 10,
+                    marginRight: 10,
+                    error: lc('please_describe_error'),
+                    secure: false,
+                    hint: lc('description')
+                },
+                beforeShow: (options, usernameTextField: TextField, passwordTextField: TextField) => {
+                    usernameTextField.on('textChange', (e: any) => {
+                        const text = e.value;
+                        if (!text) {
+                            usernameTextField.error = lc('email_required');
+                        } else if (!mailRegexp.test(text)) {
+                            usernameTextField.error = lc('non_valid_email');
+                        } else {
+                            usernameTextField.error = null;
+                        }
+                    });
+                    passwordTextField.on('textChange', (e: any) => {
+                        const text = e.value;
+                        if (!text) {
+                            passwordTextField.error = lc('description_required');
+                        } else {
+                            passwordTextField.error = null;
+                        }
+                    });
                 }
-                if (!result.password || result.password.length === 0) {
-                    showError(new Error(lc('description_required')));
-                    return;
+            }).then((result) => {
+                if (result.result) {
+                    if (!result.userName || !mailRegexp.test(result.userName)) {
+                        showError(new Error(lc('email_required')));
+                        return;
+                    }
+                    if (!result.password || result.password.length === 0) {
+                        showError(new Error(lc('description_required')));
+                        return;
+                    }
+                    Sentry.withScope((scope) => {
+                        scope.setUser({ email: result.userName });
+                        Sentry.captureMessage(result.password);
+                        alert(l('bug_report_sent'));
+                    });
                 }
-                Sentry.withScope((scope) => {
-                    scope.setUser({ email: result.userName });
-                    Sentry.captureMessage(result.password);
-                    alert(l('bug_report_sent'));
-                });
-            }
-        });
+            });
+        }
+    }
+
+    async function showTransitLinesPage() {
+        try {
+            const component = (await import('~/components/transit/TransitLines.svelte')).default;
+            await navigate({ page: component });
+        } catch (error) {
+            showError(error);
+        }
+    }
+    let inFront = false;
+    function onNavigatingTo() {
+        inFront = true;
+    }
+    function onNavigatingFrom() {
+        inFront = false;
     }
 </script>
 
-<page bind:this={page} actionBarHidden={true} backgroundColor="#E3E1D3">
+<page bind:this={page} actionBarHidden={true} backgroundColor="#E3E1D3" on:navigatingTo={onNavigatingTo} on:navigatingFrom={onNavigatingFrom}>
     <drawer bind:this={drawer} translationFunction={drawerTranslationFunction} bottomOpenedDrawerAllowDraging={true} bottomClosedDrawerAllowDraging={false} backgroundColor="#E3E1D3">
         <!-- <LayersMenu prop:bottomDrawer bind:this={layersMenu} /> -->
         <cartomap zoom="16" on:mapReady={onMainMapReady} on:mapMoved={onMainMapMove} on:mapStable={onMainMapStable} on:mapIdle={onMainMapIdle} on:mapClicked={onMainMapClicked} />
@@ -1722,7 +1691,14 @@
                     color={showClickedFeatures ? primaryColor : 'gray'}
                     on:tap={() => (showClickedFeatures = !showClickedFeatures)}
                 />
-                <button variant="text" class="icon-btn" text="mdi-bus-marker" color={showTransitLines ? primaryColor : 'gray'} on:tap={() => (showTransitLines = !showTransitLines)} />
+                <button
+                    variant="text"
+                    class="icon-btn"
+                    text="mdi-bus-marker"
+                    color={showTransitLines ? primaryColor : 'gray'}
+                    on:tap={() => (showTransitLines = !showTransitLines)}
+                    on:longPress={() => showTransitLinesPage()}
+                />
             </stacklayout>
             <Search bind:this={searchView} verticalAlignment="top" defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
             <LocationInfoPanel

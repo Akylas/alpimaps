@@ -6,6 +6,8 @@ import { SQLiteDatabase, openOrCreate } from '@akylas/nativescript-sqlite';
 import { getDefaultMBTilesDir } from '~/utils/utils';
 import { Folder } from '@nativescript/core';
 
+const navitiaAPIEndPoint = 'https://api.navitia.io/v1/';
+
 class TransitService extends Observable {
     _db: SQLiteDatabase;
     start() {
@@ -22,7 +24,7 @@ class TransitService extends Observable {
         }
     }
     routes: any[];
-    async getTransitLines() {
+    async getTransitLines(lat, lon, line?) {
         // if (this._db) {
         //     if (!this.routes) {
         //         this.routes = (await this._db.select('SELECT * from routes WHERE geojson IS NOT NULL')) as any;
@@ -40,9 +42,25 @@ class TransitService extends Observable {
             },
             queryParams: {
                 types: 'ligne',
-                reseaux: 'SEM,C38'
+                reseaux: 'SEM,C38',
+                codes: line
             }
         });
+        // const result = await  networkService.request<string>({
+        //             method: 'GET',
+        //             toJSON: false,
+        //             url: `${navitiaAPIEndPoint}coverage/${lon};${lat}/lines${line ? '/' + line : ''}`,
+        //             headers: {
+        //                 'Cache-Control': getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1),
+        //                 Authorization: '8fad1f83-3a48-4eae-9bae-8e0177e6b7c7'
+        //             },
+        //             queryParams: {
+        //                 count:1000
+        //                 // types: 'ligne',
+        //                 // reseaux: 'SEM,C38',
+        //                 // codes: line
+        //             }
+        //         });
     }
 
     metroLinesData;
@@ -56,8 +74,8 @@ class TransitService extends Observable {
                 }
             });
             this.metroLinesData = data.reduce((acc, value) => {
-                value.color = '#' + value.color;
-                value.textColor = '#' + value.textColor;
+                value.color = value.color ? '#' + value.color : '#37333A';
+                value.textColor = value.textColor ? '#' + value.textColor : 'white';
                 acc[value.id] = value;
                 return acc;
             }, {});
@@ -74,7 +92,7 @@ class TransitService extends Observable {
             queryParams: {
                 x: position.lon,
                 y: position.lat,
-                dist: 50,
+                dist: 100,
                 details: 'true'
             }
         });
@@ -89,6 +107,24 @@ class TransitService extends Observable {
             queryParams: {
                 route: id,
                 time
+            }
+        });
+    }
+    async getDisturbances() {
+        return networkService.request({
+            url: 'https://data.mobilites-m.fr/api/dyn/evtTC/json',
+            method: 'GET',
+            headers: {
+                'Cache-Control': getCacheControl(60 * 24)
+            }
+        });
+    }
+    async getLineStops(id) {
+        return networkService.request({
+            url: `https://data.mobilites-m.fr/api/routers/default/index/routes/${id}/clusters`,
+            method: 'GET',
+            headers: {
+                'Cache-Control': getCacheControl(60 * 24)
             }
         });
     }

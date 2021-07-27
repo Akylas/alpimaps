@@ -1,9 +1,9 @@
 @import './variables';
 @import './animations';
 
-.lato {
-    font-family: 'Lato Regular', 'res/lato';
-}
+// .lato {
+//     font-family: 'Lato Regular', 'res/lato';
+// }
 
 %mdi {
     font-family: $mdi-fontFamily;
@@ -178,20 +178,21 @@ mdcardview {
 }
 
 .actionBar {
-    background-color: scale-color(white, $alpha: -30%);
+    padding-top: $status-bar-height;
+    background-color: adjust-color(white, $lightness: -30%);
     .ns-dark & {
-        background-color: scale-color(#1c1c1e, $alpha: -30%);
+        background-color: adjust-color(black, $lightness: 30%);
     }
-    height: $actionbar-height;
+    height: $actionbar-height + $status-bar-height;
 }
 
 .actionBarButton {
-    @extend %mdi;
+    @extend .mdi;
     width: $actionbar-height;
     height: $actionbar-height;
-    color: $text-color-light;
+    color: black;
     .ns-dark & {
-        color: $text-color-dark;
+        color: white;
     }
     margin: 0;
     padding: 0;
@@ -202,9 +203,9 @@ mdcardview {
     // @extend .lato;
     font-size: 20;
     font-weight: 500;
-    color: $text-color-light;
+    color: black;
     .ns-dark & {
-        color: $text-color-dark;
+        color: white;
     }
 }
 
@@ -212,10 +213,23 @@ mdcardview {
     font-size: 13;
     color: #ffffff88;
 }
+
 .icon-btn {
     @extend %mdi;
     @extend %icon-btn;
 
     // margin: 0;
     // padding: 0;
+}
+
+.transitIconLabel {
+    border-radius: 4;
+    font-weight: bold;
+    width: 50;
+    height: 50;
+    font-size: 20;
+    text-align: center;
+    vertical-text-alignment: center;
+    vertical-alignment: center;
+    padding: 8;
 }
