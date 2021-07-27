@@ -156,7 +156,6 @@ export default class CustomLayersModule extends MapModule {
         }
     }
     createMergeMBTilesDataSource(sources: (string | TileDataSource<any, any>)[]) {
-        // console.log('createMergeMBTilesDataSource', sources);
         if (sources.length === 1) {
             if (sources[0] instanceof TileDataSource) {
                 return sources[0];
@@ -172,9 +171,24 @@ export default class CustomLayersModule extends MapModule {
                           databasePath: s
                       })
             );
-            return new MergedMBVTTileDataSource({
-                dataSources
-            });
+            let result, merged;
+            for (let index = 0; index < dataSources.length; index += 2) {
+                if (index < dataSources.length - 1) {
+                    merged = new MergedMBVTTileDataSource({
+                        dataSources: [dataSources[index], dataSources[index + 1]]
+                    });
+                } else {
+                    merged = dataSources[index];
+                }
+                if (result) {
+                    result = new MergedMBVTTileDataSource({
+                        dataSources: [result, merged]
+                    });
+                } else {
+                    result = merged;
+                }
+            }
+            return result;
         }
     }
 
@@ -204,7 +218,7 @@ export default class CustomLayersModule extends MapModule {
     }
 
     createMergeMBtiles({ name, sources, legend }: { name: string; sources: string[]; legend?: string }, worldMbtiles?: MBTilesTileDataSource, options = {}) {
-        const dataSource: TileDataSource<any, any> = this.createMergeMBTilesDataSource(worldMbtiles ? [worldMbtiles, ...sources] : sources);
+        const dataSource: TileDataSource<any, any> = this.createMergeMBTilesDataSource(worldMbtiles ? [...sources, worldMbtiles] : sources);
         const opacity = appSettings.getNumber(`${name}_opacity`, 1);
         // const zoomLevelBias = Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2);
         const layer = new VectorTileLayer({
@@ -593,8 +607,8 @@ export default class CustomLayersModule extends MapModule {
                     // zoomLevelBias: zoomLevelBias * 0.75,
                     opacity: s.layer.opacity,
                     decoder: newVectorTileDecoder,
-                    labelRenderOrder:VectorTileRenderOrder.LAST,
-            // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
+                    labelRenderOrder: VectorTileRenderOrder.LAST,
+                    // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                     visible: s.layer.opacity !== 0
                 });
                 // layer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
@@ -632,25 +646,27 @@ export default class CustomLayersModule extends MapModule {
             const folder = Folder.fromPath(directory);
             // const index = this.customSources.length;
             const entities = await folder.getEntities();
-            // let worldMbtiles: MBTilesTileDataSource;
+            let worldMbtiles: MBTilesTileDataSource;
             const worldMbtilesIndex = entities.findIndex((e) => e.name === 'world.mbtiles');
             if (worldMbtilesIndex !== -1) {
                 const entity = entities.splice(worldMbtilesIndex, 1)[0];
-                // worldMbtiles = new MBTilesTileDataSource({
-                //     databasePath: entity.path
-                // });
-                const data = this.createMergeMBtiles(
-                    {
-                        legend: 'https://www.openstreetmap.org/key.html',
-                        name: 'world',
-                        sources: [entity.path]
-                    },
-                    undefined,
-                    {
-                        local: true
-                    }
-                );
-                this.addDataSource(data);
+                worldMbtiles = new MBTilesTileDataSource({
+                    databasePath: entity.path
+                });
+                // const data = this.createMergeMBtiles(
+                //     {
+                //         legend: 'https://www.openstreetmap.org/key.html',
+                //         name: 'world',
+                //         sources: [entity.path]
+                //     },
+                //     undefined,
+                //     {
+                //         local: true
+                //     }
+                // );
+                // this.customSources.push(data);
+                // mapContext.addLayer(data.layer, 'map');
+                // this.addDataSource(data);
             }
             const folders = entities.filter((e) => Folder.exists(e.path)).sort((a, b) => b.name.localeCompare(a.name));
             for (let i = 0; i < folders.length; i++) {
@@ -662,7 +678,7 @@ export default class CustomLayersModule extends MapModule {
                         name: f.name,
                         sources: subentities.map((e2) => e2.path).filter((s) => s.endsWith('.mbtiles'))
                     },
-                    undefined,
+                    i === 0 ? worldMbtiles : undefined,
                     {
                         local: true
                     }
@@ -670,7 +686,9 @@ export default class CustomLayersModule extends MapModule {
                 if (!packageService.localVectorTileLayer) {
                     packageService.localVectorTileLayer = data.layer;
                 }
-                this.addDataSource(data);
+                this.customSources.push(data);
+                mapContext.addLayer(data.layer, 'map');
+                // this.addDataSource(data);
             }
             // console.log('loading etiles', e.name);
             const dataSource = this.createOrderedMBTilesDataSource(entities.filter((e) => e.name.endsWith('.etiles')).map((e2) => e2.path));
@@ -692,7 +710,9 @@ export default class CustomLayersModule extends MapModule {
                     options: HILLSHADE_OPTIONS,
                     provider: { name }
                 };
-                this.addDataSource(data);
+                this.customSources.push(data);
+                mapContext.addLayer(data.layer, 'map');
+                // this.addDataSource(data);
             }
         } catch (err) {
             console.error('loadLocalMbtiles', err);
