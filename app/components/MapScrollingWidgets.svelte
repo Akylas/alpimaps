@@ -17,17 +17,7 @@
     import { packageService } from '~/services/PackageService';
     import { convertDistance } from '~/helpers/formatter';
     import { showError } from '~/utils/error';
-    import {
-        accentColor,
-        alpimapsFontFamily,
-        borderColor,
-        globalMarginTop,
-        mdiFontFamily,
-        primaryColor,
-        subtitleColor,
-        textColor,
-        widgetBackgroundColor
-    } from '~/variables';
+    import { accentColor, alpimapsFontFamily, borderColor, globalMarginTop, mdiFontFamily, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import { resolveComponentElement } from './bottomsheet';
     import OptionPicker from './OptionPicker.svelte';
     import ScaleView from './ScaleView.svelte';
@@ -137,9 +127,7 @@
     $: {
         showSuggestionPackage =
             suggestionPackage &&
-            (!suggestionPackage.status ||
-                (suggestionPackage.status.getCurrentAction() !== PackageAction.READY &&
-                    suggestionPackage.status.getCurrentAction() !== PackageAction.DOWNLOADING));
+            (!suggestionPackage.status || (suggestionPackage.status.getCurrentAction() !== PackageAction.READY && suggestionPackage.status.getCurrentAction() !== PackageAction.DOWNLOADING));
     }
     onMount(() => {
         if (__CARTO_PACKAGESERVICE__) {
@@ -150,7 +138,6 @@
         }
     });
     onDestroy(() => {
-
         userLocationModule = null;
         if (__CARTO_PACKAGESERVICE__) {
             if (packageService) {
@@ -196,9 +183,9 @@
 
             // console.log('onMapStable suggestions', !!suggestionPackage, suggestionPackageName, Date.now());
         }, 2000);
+        let lastSuggestionKey;
         mapContext.onMapStable((cartoMap) => {
             const zoom = Math.round(cartoMap.zoom);
-            // console.log('onMapStable', zoom);
             // currentMapRotation = Math.round(bearing * 100) / 100;
             // if (zoom < 10) {
             //     suggestionPackage = undefined;
@@ -355,29 +342,19 @@
         canvas.save();
 
         if (navigationInstructions.instruction) {
-            const data = convertDistance(navigationInstructions.instruction.dist);
 
             let staticLayout = new StaticLayout(instructionIcon, iconPaint, w, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
             canvas.translate(10, h / 2 - staticLayout.getHeight() / 2);
             staticLayout.draw(canvas);
             canvas.restore();
-            textPaint.setTextSize(11);
-            canvas.drawText(
-                `${data.value.toFixed(data.unit === 'm' ? 0 : 1)} ${data.unit}`,
-                14,
-                h / 2 + staticLayout.getHeight() / 2 + 15,
-                textPaint
-            );
+            if (navigationInstructions.instruction.dist > 0) {
+                const data = convertDistance(navigationInstructions.instruction.dist);
+                textPaint.setTextSize(11);
+                canvas.drawText(`${data.value.toFixed(data.unit === 'm' ? 0 : 1)} ${data.unit}`, 14, h / 2 + staticLayout.getHeight() / 2 + 15, textPaint);
+            }
+
             textPaint.setTextSize(13);
-            staticLayout = new StaticLayout(
-                navigationInstructions.instruction.inst,
-                textPaint,
-                w - 20 - 50,
-                LayoutAlignment.ALIGN_NORMAL,
-                1,
-                0,
-                true
-            );
+            staticLayout = new StaticLayout(navigationInstructions.instruction.inst, textPaint, w - 20 - 50, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
             canvas.translate(60, 10);
             staticLayout.draw(canvas);
             if (navigationInstructions.instruction.name) {
@@ -390,16 +367,7 @@
     }
 </script>
 
-<gridlayout
-    id="scrollingWidgets"
-    bind:this={gridLayout}
-    {...$$restProps}
-    rows="auto,*,auto"
-    columns="70,*,70"
-    isPassThroughParentEnabled={true}
-    marginTop={globalMarginTop}
-    {userInteractionEnabled}
->
+<gridlayout id="scrollingWidgets" bind:this={gridLayout} {...$$restProps} rows="auto,*,auto" columns="70,*,70" isPassThroughParentEnabled={true} marginTop={globalMarginTop} {userInteractionEnabled}>
     {#if packageServiceEnabled}
         <label
             borderRadius="6"
@@ -426,7 +394,6 @@
         <button
             transition:scale={{ duration: 200 }}
             on:tap={startDirections}
-            
             rowSpan={2}
             col={2}
             class="floating-btn"
@@ -435,34 +402,13 @@
         />
         <mdcardview class={'floating-btn ' + locationButtonClass} on:tap={askUserLocation} on:longPress={onWatchLocation}>
             <canvaslabel class={'mdi ' + locationButtonLabelClass} :isUserInteractionEnabled="false">
-                <cspan
-                    textAlignment="center"
-                    verticalAlignment="middle"
-                    text="mdi-crosshairs-gps"
-                    color={!$mapStore.queryingLocation && $mapStore.watchingLocation ? 'white' : accentColor}
-                />
+                <cspan textAlignment="center" verticalAlignment="middle" text="mdi-crosshairs-gps" color={!$mapStore.queryingLocation && $mapStore.watchingLocation ? 'white' : accentColor} />
             </canvaslabel>
         </mdcardview>
     </stacklayout>
-    <button
-        marginTop="80"
-        on:tap={showMapRightMenu}
-        class="small-floating-btn"
-        color={primaryColor}
-        text="mdi-layers"
-        row={2}
-        verticalAlignment="bottom"
-        horizontalAlignment="left"
-    />
+    <button marginTop="80" on:tap={showMapRightMenu} class="small-floating-btn" color={primaryColor} text="mdi-layers" row={2} verticalAlignment="bottom" horizontalAlignment="left" />
     <ScaleView bind:this={scaleView} col={1} row={2} horizontalAlignment="right" verticalAlignment="bottom" marginBottom="8" />
-    <mdprogress
-        
-        colSpan={3}
-        row={2}
-        value={totalDownloadProgress}
-        visibility={totalDownloadProgress > 0 ? 'visible' : 'collapsed'}
-        verticalAlignment="bottom"
-    />
+    <mdprogress colSpan={3} row={2} value={totalDownloadProgress} visibility={totalDownloadProgress > 0 ? 'visible' : 'collapsed'} verticalAlignment="bottom" />
     <canvas
         bind:this={navigationCanvas}
         rowSpan={3}

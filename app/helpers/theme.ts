@@ -3,17 +3,16 @@ import { iOSNativeHelper } from '@nativescript/core/utils';
 import Theme from '@nativescript-community/css-theme';
 import { Application, ApplicationSettings } from '@nativescript/core';
 import { prefs } from '~/services/preferences';
-import { updateThemeColors } from '~/variables';
+import { createGlobalEventListener, globalObservable, updateThemeColors } from '~/variables';
 import { showBottomSheet } from '~/components/bottomsheet';
 import OptionSelect from '~/components/OptionSelect.svelte';
 import { lc } from '@nativescript-community/l';
 import { writable } from 'svelte/store';
 
 export type Themes = 'auto' | 'light' | 'dark';
-const onThemeChangedCallbacks = [];
-export function onThemeChanged(callback) {
-    onThemeChangedCallbacks.push(callback);
-}
+
+export const onThemeChanged = createGlobalEventListener('theme');
+
 export let theme: Themes;
 export const currentTheme = writable('auto');
 export const sTheme = writable('auto');
@@ -22,7 +21,7 @@ Application.on(Application.systemAppearanceChangedEvent, (event) => {
     if (theme === 'auto') {
         currentTheme.set(event.newValue);
         updateThemeColors(event.newValue);
-        onThemeChangedCallbacks.forEach((c) => c(event.newValue));
+        globalObservable.notify({ eventName: 'theme', data: event.newValue });
     }
 });
 
@@ -125,7 +124,7 @@ export function start() {
         sTheme.set(newTheme);
         applyTheme(newTheme);
         updateThemeColors(newTheme, newTheme !== 'auto');
-        onThemeChangedCallbacks.forEach((c) => c(theme));
+        globalObservable.notify({ eventName: 'theme', data: theme });
     });
     const force = theme !== 'auto';
     if (global.isAndroid) {
