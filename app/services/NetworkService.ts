@@ -12,11 +12,9 @@ import { ad } from '@nativescript/core/utils/utils';
 
 import { Headers } from '@nativescript/core/http';
 import * as https from '@nativescript-community/https';
+import { createGlobalEventListener, globalObservable } from '~/variables';
 
-const onNetworkChangedCallbacks = [];
-export function onNetworkChanged(callback) {
-    onNetworkChangedCallbacks.push(callback);
-}
+export const onNetworkChanged = createGlobalEventListener('network');
 
 export interface CacheOptions {
     diskLocation: string;
@@ -512,8 +510,7 @@ export class NetworkService extends Observable {
     }
     set connected(value: boolean) {
         if (this._connected !== value) {
-            console.log('connected', value);
-            onNetworkChangedCallbacks.forEach((c) => c(value));
+            globalObservable.notify({ eventName: 'network', data: value });
             this._connected = value;
             this.notify({
                 eventName: NetworkConnectionStateEvent,
