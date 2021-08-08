@@ -104,6 +104,6 @@ namespace svelteNative.JSX {
         minFontSize?: number;
         maxFontSize?: number;
         lineBreak?: string;
-        html?: String;
+        _html?: string;
     }
 }
