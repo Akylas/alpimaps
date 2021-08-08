@@ -10,6 +10,7 @@ import { PagerItem } from '@nativescript-community/ui-pager';
 import { initialize, shutDown } from '@nativescript-community/ui-image';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
+import installWebRTC from '@nativescript-community/ui-webview-rtc';
 import { Application, Trace } from '@nativescript/core';
 import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
@@ -27,6 +28,7 @@ installMixins();
 installBottomSheets();
 installUIMixins();
 overrideSpanAndFormattedString();
+installWebRTC();
 
 // we need to use lat lon
 setMapPosKeys('lat', 'lon');

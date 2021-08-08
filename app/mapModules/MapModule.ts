@@ -10,6 +10,7 @@ import { Page } from '@nativescript/core';
 import { NativeViewElementNode } from 'svelte-native/dom';
 import { GeoHandler } from '~/handlers/GeoHandler';
 import { IItem } from '~/models/Item';
+import { createGlobalEventListener, globalObservable } from '~/variables';
 import CustomLayersModule from './CustomLayersModule';
 import DirectionsPanel from './DirectionsPanel.svelte';
 import ItemsModule from './ItemsModule';
@@ -77,40 +78,18 @@ export interface MapModules {
     // bottomSheet: BottomSheetInner;
 }
 
-const listeners = {
-    onMapReady: [],
-    onMapMove: [],
-    onMapStable: [],
-    onMapIdle: [],
-    onMapClicked: [],
-    onVectorElementClicked: [],
-    onRasterTileClicked: []
-};
+export function onNetworkChanged(callback: (theme) => void) {}
 export let drawer: Drawer;
 
 const mapContext: MapContext = {
     mapModules: {},
-    onMapReady(callback: (map: CartoMap<LatLonKeys>) => void) {
-        listeners.onMapReady.push(callback);
-    },
-    onMapMove(callback: (map: CartoMap<LatLonKeys>) => void) {
-        listeners.onMapMove.push(callback);
-    },
-    onMapStable(callback: (map: CartoMap<LatLonKeys>) => void) {
-        listeners.onMapStable.push(callback);
-    },
-    onMapIdle(callback: (map: CartoMap<LatLonKeys>) => void) {
-        listeners.onMapIdle.push(callback);
-    },
-    onMapClicked(callback: (map: CartoMap<LatLonKeys>) => void) {
-        listeners.onMapClicked.push(callback);
-    },
-    onVectorElementClicked(callback: (data: VectorElementEventData<LatLonKeys>) => void) {
-        listeners.onVectorElementClicked.push(callback);
-    },
-    onRasterTileClicked(callback: (data: RasterTileClickInfo<LatLonKeys>) => void) {
-        listeners.onRasterTileClicked.push(callback);
-    },
+    onMapReady: createGlobalEventListener('onMapReady'),
+    onMapMove: createGlobalEventListener('onMapMove'),
+    onMapStable: createGlobalEventListener('onMapStable'),
+    onMapIdle: createGlobalEventListener('onMapIdle'),
+    onMapClicked: createGlobalEventListener('onMapClicked'),
+    onVectorElementClicked: createGlobalEventListener('onVectorElementClicked'),
+    onRasterTileClicked: createGlobalEventListener('onRasterTileClicked'),
     mapModule<T extends keyof MapModules>(id: T) {
         return mapContext.mapModules && mapContext.mapModules[id];
     },
@@ -124,8 +103,10 @@ const mapContext: MapContext = {
                 return false;
             }
         });
-        if (!result && listeners[functionName] && listeners[functionName].length > 0) {
-            result = listeners[functionName].some((l) => l(...args));
+        if (!result) {
+            const event: any = { eventName: functionName, data: args };
+            globalObservable.notify(event);
+            result = event.result;
         }
         return result;
     }

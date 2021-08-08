@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+    <style>
+        body {
+            margin: 0;
+            width: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+        }
+        video {
+            visibility: hidden;
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+        }
+        #camera_button {
+            position: absolute;
+            margin: 0;
+            padding: 0;
+            outline: 0;
+            border: 0;
+            border-radius:38px;
+            background-color: transparent;
+            cursor: pointer;
+            width: 74px;
+            height: 74px;
+            flex-shrink: 0;
+            mix-blend-mode: difference;
+        }
+
+        #camera_button svg {
+            mix-blend-mode: difference;
+            fill: #888;
+            /* transform: scale(1.5); */
+        }
+        #camera_button {
+            bottom: 4px;
+            right: 4px;
+        }
+        #compass {
+            position: absolute;
+            background: none;
+            border: none;
+            z-index: 99;
+            top: 30px;
+            right: 4px;
+            opacity: 0.9;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: hand;
+        }
+        #compass svg {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            fill: #888;
+        }
+        #compass_slice {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: absolute;
+        }
+    </style>
+   <head>
+    <title>PeakFinder</title>
+</head>
+    <body>
+        <video id="video" autoplay playsinline></video>
+        <canvas
+            id="canvas"
+            style="
+                position: absolute;
+                top: 0px;
+                left: 0px;
+                width: 100%;
+                height: 100%;
+            "
+        ></canvas>
+        <canvas
+            id="canvas3"
+            style="
+                visibility: hidden;
+                position: absolute;
+                pointer-events: none;
+                top: 0px;
+                left: 0px;
+                width: 100%;
+                height: 100%;
+            "
+        ></canvas>
+        <canvas
+            id="canvas4"
+            style="
+                position: absolute;
+                pointer-events: none;
+                top: 0px;
+                left: 0px;
+                width: 100%;
+                height: 100%;
+            "
+        ></canvas>
+        <div id="compass" onclick="webapp.stopEventPropagation(event);webapp.setAzimuth(0)">
+            <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                <path d="m192.265625 8.027344c-89.882813 23.144531-161.09375 94.351562-184.238281 184.234375l29.0625 7.472656c20.40625-79.292969 83.355468-142.242187 162.644531-162.644531zm0 0" />
+                <path
+                    d="m474.910156 199.734375 29.0625-7.472656c-23.144531-89.882813-94.355468-161.089844-184.238281-184.234375l-7.46875 29.0625c79.292969 20.402344 142.238281 83.351562 162.644531 162.644531zm0 0"
+                />
+                <path d="m319.734375 503.957031c89.882813-23.132812 161.09375-94.324219 184.238281-184.222656l-29.0625-7.472656c-20.40625 79.308593-83.355468 142.242187-162.648437 162.632812zm0 0" />
+                <path
+                    d="m37.089844 312.261719-29.0625 7.472656c23.144531 89.898437 94.355468 161.09375 184.238281 184.222656l7.46875-29.0625c-79.292969-20.390625-142.238281-83.324219-162.644531-162.632812zm0 0"
+                />
+                <path d="m256 210.996094c-24.8125 0-45 20.1875-45 45 0 24.816406 20.1875 45 45 45s45-20.183594 45-45c0-24.8125-20.1875-45-45-45zm15 60h-30v-30h30zm0 0" />
+                <path
+                    d="m256 0-57.613281 198.386719-198.386719 57.609375 198.386719 57.601562 57.613281 198.402344 57.613281-198.402344 198.386719-57.601562-198.386719-57.609375zm0 330.996094c-41.351562 0-75-33.644532-75-75 0-41.351563 33.648438-75 75-75s75 33.648437 75 75c0 41.355468-33.648438 75-75 75zm0 0"
+                />
+                <path d="m369.097656 183.339844 40.449219-80.886719-80.890625 40.4375 9.140625 31.3125zm0 0" />
+                <path d="m337.796875 337.796875-9.136719 31.304687 80.886719 40.441407-40.449219-80.882813zm0 0" />
+                <path d="m142.902344 328.660156-40.449219 80.882813 80.886719-40.445313-9.136719-31.300781zm0 0" />
+                <path d="m174.203125 174.203125 9.140625-31.3125-80.890625-40.4375 40.449219 80.886719zm0 0" />
+            </svg>
+            <div id="compass_slice"></div>
+        </div>
+        <button id="camera_button" onclick="webapp.stopEventPropagation(event);webapp.toggleCamera()" style="visibility:hidden;">
+            <svg style="width:24px;height:24px" viewBox="0 0 24 24">
+                <path d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z" />
+            </svg>
+        </button>
+        <!-- Code -->
+        <script src="./webapp.js">
+        </script>
+    </body>
+</html>
