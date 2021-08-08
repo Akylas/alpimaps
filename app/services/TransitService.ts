@@ -6,7 +6,7 @@ import { SQLiteDatabase, openOrCreate } from '@akylas/nativescript-sqlite';
 import { getDefaultMBTilesDir } from '~/utils/utils';
 import { Folder } from '@nativescript/core';
 
-const navitiaAPIEndPoint = 'https://api.navitia.io/v1/';
+// const navitiaAPIEndPoint = 'https://api.navitia.io/v1/';
 
 class TransitService extends Observable {
     _db: SQLiteDatabase;

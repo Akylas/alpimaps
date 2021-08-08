@@ -17,7 +17,9 @@
     import { Projection } from '@nativescript-community/ui-carto/projections';
     import { CartoMap, PanningMode, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
     import { setShowDebug, setShowError, setShowInfo, setShowWarn } from '@nativescript-community/ui-carto/utils';
+    import { Group } from '@nativescript-community/ui-carto/vectorelements/group';
     import { Line } from '@nativescript-community/ui-carto/vectorelements/line';
+    import { Marker } from '@nativescript-community/ui-carto/vectorelements/marker';
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
     import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
@@ -66,6 +68,7 @@
     import LocationInfoPanel from './LocationInfoPanel.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
     import Search from './Search.svelte';
+    import { omit } from '~/utils/utils';
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
@@ -141,6 +144,7 @@
     let showTransitLines = false;
     let currentClickedFeatures: any[];
     let selectedClickMarker: Text<LatLonKeys>;
+    let selectedRouteInstructionsGroup: Group<LatLonKeys>;
 
     let transitVectorTileDataSource: GeoJSONVectorTileDataSource;
     let transitVectorTileLayer: VectorTileLayer;
@@ -434,6 +438,9 @@
             localVectorDataSource = new LocalVectorDataSource({ projection });
 
             localVectorLayer = new VectorLayer({ dataSource: localVectorDataSource });
+            localVectorLayer.setVectorElementEventListener<LatLonKeys>({
+                onVectorElementClicked: onVectorElementClicked
+            });
             addLayer(localVectorLayer, 'selection');
         }
         return localVectorLayer;
@@ -451,15 +458,15 @@
         }
         appSettings.setNumber('mapZoom', cartoMap.zoom);
         appSettings.setString('mapFocusPos', JSON.stringify(cartoMap.focusPos));
-    }, 100);
+    }, 500);
 
     async function onMainMapReady(e) {
         cartoMap = e.object as CartoMap<LatLonKeys>;
         // CartoMap.setRunOnMainThread(false);
         if (DEV_LOG) {
-            setShowDebug(DEV_LOG);
-            setShowInfo(DEV_LOG);
-            setShowWarn(DEV_LOG);
+            setShowDebug(true);
+            setShowInfo(true);
+            setShowWarn(true);
             setShowError(true);
         }
         projection = cartoMap.projection;
@@ -486,7 +493,7 @@
         cartoMap.setFocusPos(pos, 0);
         cartoMap.setZoom(zoom, 0);
         try {
-            const status = await perms.request('storage');
+            await perms.request('storage');
             if (__CARTO_PACKAGESERVICE__) {
                 packageService.start();
             }
@@ -500,11 +507,12 @@
             mapContext.runOnModules('onMapReady', cartoMap);
         }, 100);
     }
-
+    let mapMoved = false;
     function onMainMapMove(e) {
         if (!cartoMap) {
             return;
         }
+        mapMoved = true;
         const bearing = cartoMap.bearing;
         currentMapRotation = Math.round(bearing * 100) / 100;
         // console.log('onMapMove');
@@ -524,7 +532,10 @@
         if (!cartoMap) {
             return;
         }
-        saveSettings();
+        if (mapMoved) {
+            mapMoved = false;
+            saveSettings();
+        }
         mapContext.runOnModules('onMapStable', e);
     }
 
@@ -542,7 +553,7 @@
         const handledByModules = mapContext.runOnModules('onMapClicked', e);
         // console.log('mapTile', latLngToTileXY(position.lat, position.lon, cartoMap.zoom), clickType === ClickType.SINGLE, handledByModules, !!selectedItem);
         if (!handledByModules && clickType === ClickType.SINGLE) {
-            selectItem({ item: { position, properties: {} }, isFeatureInteresting: !$selectedItem });
+            selectItem({ item: { position, properties: {} }, isFeatureInteresting: !$selectedItem, preventZoom:true });
         }
         unFocusSearch();
     }
@@ -585,6 +596,7 @@
                 unselectItem(false);
             }
             if (item.route) {
+                // console.log('instructions', item.route.instructions?.length, item.route.instructions && JSON.stringify(item.route.instructions));
                 const vectorElement = item.vectorElement as Line;
                 if (vectorElement) {
                     const color = new Color(vectorElement.color as string);
@@ -592,7 +604,7 @@
                     vectorElement.width += 2;
                 } else if (item.route.osmid) {
                     selectedOSMId = item.route.osmid + '';
-                    console.log('selectedOSMId', selectedOSMId);
+                    // console.log('selectedOSMId', selectedOSMId);
                     setStyleParameter('selected_id', selectedOSMId);
                     // if (!selectedRouteLine) {
                     //     getOrCreateLocalVectorLayer();
@@ -609,6 +621,29 @@
                     //     selectedRouteLine.positions = item.route.positions;
                     //     selectedRouteLine.visible = true;
                     // }
+                }
+                if (item.route.instructions) {
+                    if (!selectedRouteInstructionsGroup) {
+                        selectedRouteInstructionsGroup = new Group();
+                    }
+                    selectedRouteInstructionsGroup.elements = item.route.instructions.map(
+                        (i, index) =>
+                            new Marker({
+                                projection: mapContext.getProjection(),
+                                position: omit(item.route.positions.getPos(i.index), 'altitude'),
+                                styleBuilder: {
+                                    size: 12,
+                                    placementPriority:10,
+                                    hideIfOverlapped: false,
+                                    scaleWithDPI: true,
+                                    color: 'red'
+                                },
+                                metaData: { instruction: JSON.stringify(i) }
+                            })
+                    );
+                    getOrCreateLocalVectorLayer();
+                    // selectedRouteInstructionsGroup.elements.forEach(e=>localVectorDataSource.add(e))
+                    localVectorDataSource.add(selectedRouteInstructionsGroup);
                 }
 
                 if (selectedPosMarker) {
@@ -758,6 +793,11 @@
             $selectedItem = null;
             if (selectedPosMarker) {
                 selectedPosMarker.visible = false;
+            }
+            if (selectedRouteInstructionsGroup) {
+                console.log('remove, selectedRouteInstructionsGroup');
+                localVectorDataSource.remove(selectedRouteInstructionsGroup);
+                selectedRouteInstructionsGroup = null;
             }
             if (selectedOSMId) {
                 selectedOSMId = null;
@@ -964,7 +1004,7 @@
     function onVectorElementClicked(data: VectorElementEventData<LatLonKeys>) {
         const { clickType, position, elementPos, metaData, element } = data;
         if (DEV_LOG) {
-            console.log('onVectorElementClicked', clickType, position);
+            console.log('onVectorElementClicked', clickType, position, metaData);
         }
         Object.keys(metaData).forEach((k) => {
             metaData[k] = JSON.parse(metaData[k]);
@@ -972,6 +1012,9 @@
         const handledByModules = mapContext.runOnModules('onVectorElementClicked', data);
         if (DEV_LOG) {
             console.log('handledByModules', handledByModules);
+        }
+        if (!!metaData.instruction) {
+            return true;
         }
         if (!handledByModules && clickType === ClickType.SINGLE && Object.keys(metaData).length > 0) {
             const item: IItem = { position, vectorElement: element, ...metaData };
@@ -1103,7 +1146,7 @@
                 try {
                     vectorTileDecoder = new MBVectorTileDecoder({
                         style: mapStyleLayer,
-                        liveReload: TNS_ENV !== 'production',
+                        liveReload: !PRODUCTION,
                         ...(mapStyle.endsWith('.zip') ? { zipPath: `~/assets/styles/${mapStyle}` } : { dirPath: `~/assets/styles/${mapStyle}` })
                     });
                     mapContext.runOnModules('vectorTileDecoderChanged', oldVectorTileDecoder, vectorTileDecoder);
@@ -1481,10 +1524,10 @@
         ];
         if (gVars.sentry) {
             options.push({
-                    title: lc('bug'),
-                    id: 'bug',
-                    icon: 'mdi-bug'
-            })
+                title: lc('bug'),
+                id: 'bug',
+                icon: 'mdi-bug'
+            });
         }
 
         if (isSensorAvailable('barometer')) {
