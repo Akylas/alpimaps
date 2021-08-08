@@ -376,12 +376,19 @@ module.exports = (env, params = {}) => {
         copyPatterns.push({ context: 'dev_assets', from: '**/*', to: 'assets', globOptions });
     }
     config.plugins.unshift(new CopyPlugin({ patterns: copyPatterns }));
+
+    config.plugins.unshift(
+        new webpack.ProvidePlugin({
+            svN: '~/svelteNamespace'
+        })
+    );
+
     config.plugins.push(new IgnoreNotFoundExportPlugin());
 
     // save as long as we dont use calc in css
-    config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /reduce-css-calc$/ }));
+    // config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /reduce-css-calc$/ }));
     config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /punnycode$/ }));
-    config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /polymer-expressions$/ }));
+    // config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /polymer-expressions$/ }));
 
     Object.assign(config.plugins.find((p) => p.constructor.name === 'DefinePlugin').definitions, defines);
 
@@ -414,9 +421,15 @@ module.exports = (env, params = {}) => {
                     release: appVersion,
                     urlPrefix: 'app:///',
                     rewrite: true,
+                    release: `${nconfig.id}@${appVersion}+${buildNumber}`,
                     dist: `${buildNumber}.${platform}`,
-                    ignore: ['tns-java-classes', 'hot-update'],
-                    include: [dist, join(dist, process.env.SOURCEMAP_REL_DIR)]
+                    ignoreFile: '.sentrycliignore',
+                    setCommits: {
+                        auto: true,
+                        ignoreMissing: true,
+                        ignoreEmpty: true
+                    },
+                    include: [join(dist, process.env.SOURCEMAP_REL_DIR)]
                 })
             );
         } else {
@@ -517,8 +530,8 @@ module.exports = (env, params = {}) => {
                                 semicolons: !isAnySourceMapEnabled
                             },
                             // mangle: {
-                                // toplevel: false,
-                                // properties: true,
+                            // toplevel: false,
+                            // properties: true,
                             // },
                             compress: {
                                 passes: 5,

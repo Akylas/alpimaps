@@ -75,9 +75,10 @@
 
     mapContext.onVectorElementClicked((data: VectorElementEventData<LatLonKeys>) => {
         const { clickType, position, elementPos, metaData, element } = data;
+        console.log('onVectorElementClicked', position);
         const selectedItem: IItem = { position, vectorElement: element, ...metaData };
         if (item && item.id && item.route && selectedItem.id === item.id) {
-            updateRouteItemWithPosition(item, position, false, true);
+            updateRouteItemWithPosition(item, position, true, true);
         }
     });
 
@@ -179,15 +180,15 @@
         if (routeItem && routeItem.route) {
             const route = routeItem.route;
             const positions = route.positions;
-            const onPathIndex = isLocationOnPath(location, positions, false, true, 10);
-            if (updateNavigationInstruction) {
+            const onPathIndex = isLocationOnPath(location, positions, false, true, 20);
+            if (onPathIndex !== -1 && updateNavigationInstruction) {
                 let routeInstruction;
                 for (let index = route.instructions.length - 1; index >= 0; index--) {
                     const element = route.instructions[index];
-                    if (element.index <= onPathIndex) {
-                        routeInstruction = element;
+                    if (element.index <  onPathIndex) {
                         break;
                     }
+                    routeInstruction = element;
                 }
 
                 const distance = distanceToEnd(onPathIndex, positions);
