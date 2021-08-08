@@ -9,6 +9,9 @@ def truncate(string, length = 20)
 end
 
 fastlane_version '2.135.2'
+$app_id = 'akylas.alpi.maps'
+$lang = 'en-US'
+$ios_scheme = 'alpimaps'
 
 desc 'test lane'
 lane :test do
@@ -39,22 +42,25 @@ desc 'Prepare the application.'
 lane :prepare do |params| 
   platform = params[:platform]
   sh("rm", "-fr", "platforms/" + platform)
-  sh("devns", "prepare", platform, "--release", "--clean", "--env.adhoc")
+  sh("tns", "prepare", platform, "--release", "--env.adhoc")
 
 end
 
 lane :build_flavor do |params| 
   platform = params[:platform]
   flavor = params[:flavor]
+
+  build
+
   version = ""
   versionCode = ""
-
+  
   Dir.chdir("..") do
     version  =  sh("./node_modules/.bin/get-version", platform, "version").gsub(/\n/,'')
     versionCode  =  sh("./node_modules/.bin/get-version", platform, "code").gsub(/\n/,'')
   end
-
-    # there we add the platform to the dist paramater. The idea is to have different dist for ios android
+  
+  # there we add the platform to the dist paramater. The idea is to have different dist for ios android
   # this is because we generate different sources for android and ios so we have different sourceMaps
   # and so to map errors correctly we use different dist for ios and android
   sentryDist =  versionCode + '.' + platform # optional distribution of the release usually the buildnumber
@@ -62,24 +68,19 @@ lane :build_flavor do |params|
   puts "flavor:"  + flavor
   puts "version:"  + version
   puts "versionCode:"  + versionCode
-  
-  build
 
   sentry_create_release(
     version: version, # release version to create
-    app_identifier: 'akylas.alpi.maps', # pass in the bundle_identifer of your app
-
+    app_identifier: $app_id, # pass in the bundle_identifer of your app
   )
   sentry_set_commits(
     version: version,
-    app_identifier: 'akylas.alpi.maps', # pass in the bundle_identifer of your app
+    app_identifier: $app_id, # pass in the bundle_identifer of your app
     auto: true, # enable completely automated commit management
     # clear: false, # clear all current commits from the release
     # commit: '...', # commit spec, see `sentry-cli releases help set-commits` for more information
   )
 
-  # sentry_upload_sourcemaps(platform:platform, version: version, versionCode: versionCode);
-  
   sentry_upload
 
   changelog = get_changelog(platform:platform, flavor:flavor)
@@ -88,47 +89,6 @@ lane :build_flavor do |params|
   add_git_tag(tag: "#{platform}/#{flavor}/#{version}/#{versionCode}")
 
   push_git_tags
-end
-
-lane :sentry_upload_sourcemaps do |params|
-  # there we add the platform to the dist paramater. The idea is to have different dist for ios android
-  # this is because we generate different sources for android and ios so we have different sourceMaps
-  # and so to map errors correctly we use different dist for ios and android
-  version = params[:version]
-  versionCode = params[:versionCode]
-  platform = params[:platform]
-  sentry_prefix = ENV['SENTRY_PREFIX']
-  sentryDist =  versionCode + '.' + platform # optional distribution of the release usually the buildnumber
-  sourceDist = ""
-  Dir.chdir("..") do
-    sourceDist  =  sh("node", "./fastlane/getDist.js", platform).gsub(/\n/,'')
-  end
-  sourceMapeDirPath = "#{sourceDist}/#{ENV['SOURCEMAP_REL_DIR']}"
-  Dir.chdir(sourceDist) do
-    Dir.glob('*.js').each do|f|
-      filePath = sourceDist + '/' + f
-      puts "uploading source file:"  + filePath
-      sentry_upload_file(
-        version: version,
-        dist: sentryDist, # optional distribution of the release usually the buildnumber
-        file:filePath,
-        file_url: sentry_prefix + f
-      )
-      # in our webpack config we put sourcemaps there for them not to be packaged with the app
-      sourceMapFilePath = "#{sourceMapeDirPath}/#{f}.map"
-      if(File.exist?(sourceMapFilePath)) 
-        puts "uploading sourcemap file:" + sourceMapFilePath
-        sentry_upload_sourcemap(
-          rewrite:true,
-          version: version,
-          dist: sentryDist, # optional distribution of the release usually the buildnumber
-          url_prefix:sentry_prefix,
-          sourcemap: sourceMapFilePath
-        )
-      end
-      
-    end
-  end
 end
 
 
@@ -140,7 +100,7 @@ lane :get_changelog  do |params|
   if(platform == "ios") 
     ignorePlatform = "android"
   end
-  isReleasable = analyze_commits(match: "#{platform}/#{flavor}*", ignore_scopes: [ignorePlatform], tag_version_match:'\d+\.\d+(\.\d+)?')
+  isReleasable = analyze_commits(match: "#{platform}/#{flavor}*", ignore_scopes: [ignorePlatform])
   logs = conventional_changelog(format: 'slack', title: "#{platform.capitalize} Beta", display_title:false, display_links:false, order:["feat", "fix", "refactor", "perf"])
   puts logs
   logs
@@ -148,39 +108,16 @@ end
 
 platform :ios do
 
-  desc 'Register device'
-  lane :registerDevice do
-    register_devices(
-      devices: {
-        "Martin Guillon's iPhone" => "f911ed373b7926e57111c8e5b1352d3c1c4f9667"
-      }
-    ) 
-  end
-
   desc 'Upload Dsyms to Sentry'
   lane :sentry_upload do 
     sentry_upload_dsym
   end
   lane :upload_store  do |params| 
-    track = params[:flavor]
     upload_to_testflight(
         changelog:params[:changelog],
-        beta_app_feedback_email: "martin.guillon@akylas.fr",
-        beta_app_description: "Your favorite Maps App",
-        demo_account_required: false,
         distribute_external: true,
-        groups: [track],
-        team_name:"Akylas",
-        notify_external_testers: true,
-        beta_app_review_info: {
-          contact_email: "martin.guillon@akylas.fr",
-          contact_first_name: "Martin",
-          contact_last_name: "Guillon",
-          contact_phone: "+33 679134385",
-          demo_account_name: "",
-          demo_account_password: "",
-          notes: "Thank you for reviewing!"
-        },
+        groups: [params[:flavor]],
+        notify_external_testers: true
       )
   end
 
@@ -196,8 +133,8 @@ platform :ios do
       prepare(platform:'ios')
       build_ios_app(
         output_directory:"dist",
-        scheme: "alpimaps",
-        workspace: './platforms/ios/alpimaps.xcworkspace'
+        scheme: $ios_scheme,
+        workspace: "./platforms/ios/#{$ios_scheme}.xcworkspace"
       )
   end
 
@@ -230,7 +167,7 @@ lane :write_changelog do |params|
     changelog = changelog[0..499]
   end
 
-  metadata_dir="metadata/android/en-US/changelogs"
+  metadata_dir="metadata/android/#{$lang}/changelogs"
   require 'fileutils'
   system 'mkdir', '-p', metadata_dir
   File.write("#{metadata_dir}/#{version}.txt", changelog)
@@ -239,12 +176,15 @@ lane :write_changelog do |params|
 end
   lane :upload_store   do |params| 
     track = params[:flavor]
+    if (track == 'beta') 
+      track = 'internal'
+    end
     write_changelog(version:params[:versionCode], changelog:params[:changelog]);
     upload_to_play_store(
       track: track,
-      package_name:'akylas.alpi.maps',
+      package_name:$app_id,
       track_promote_to: track,
-      json_key_data: ENV["PLAYSTORE_JSON_KEY_DATA"],
+      json_key: ENV["PLAYSTORE_JSON_KEY_DATA"],
       aab: './platforms/android/app/build/outputs/bundle/release/app-release.aab'
     )
   end
@@ -252,7 +192,7 @@ end
   desc 'Build the Android application.'
     lane :build do
       sh("rm", "-fr", "platforms/android")
-      sh("devns", "build", "android", "--release", "--clean", "--env.adhoc", "--aab",
+      sh("tns", "build", "android", "--release", "--clean", "--env.adhoc", "--aab",
           "--key-store-path", "../" + ENV["KEYSTORE_PATH"],
           "--key-store-password", ENV["KEYSTORE_PASSWORD"],
           "--key-store-alias", ENV["KEYSTORE_ALIAS"],
