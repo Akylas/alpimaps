@@ -1,10 +1,45 @@
 import { isSimulator } from '@nativescript-community/extendedinfo';
-import { Application, Color, Screen, Utils } from '@nativescript/core';
+import { Application, Color, Observable, Screen, Utils } from '@nativescript/core';
 import { ad } from '@nativescript/core/utils/utils';
 import { writable } from 'svelte/store';
 import CSSModule from '~/variables.module.scss';
 import { currentTheme } from './helpers/theme';
+import { get_current_component } from 'svelte/internal';
 const locals = CSSModule.locals;
+
+export const globalObservable = new Observable();
+
+const callbacks = {};
+
+export function createGlobalEventListener(eventName: string) {
+    return function (callback: Function) {
+        callbacks[eventName] = callbacks[eventName] || {};
+        const eventCallack = (event) => {
+            if (Array.isArray(event.data)) {
+                event.result = callback(...event.data);
+            } else {
+                event.result = callback(event.data);
+            }
+        };
+        callbacks[eventName][callback] = eventCallack;
+        globalObservable.on(eventName, eventCallack);
+        const component = get_current_component();
+        if (component) {
+            component.$$.on_destroy.push(() => {
+                delete callbacks[eventName][callback];
+                globalObservable.off(eventName, eventCallack);
+            });
+        }
+    };
+}
+export function createUnregisterGlobalEventListener(eventName: string) {
+    return function (callback: Function) {
+        if (callbacks[eventName] && callbacks[eventName][callback]) {
+            globalObservable.off(eventName, callbacks[eventName][callback]);
+            delete callbacks[eventName][callback];
+        }
+    };
+}
 
 export const primaryColor = new Color(locals.primaryColor);
 export const accentColor = new Color(locals.accentColor);

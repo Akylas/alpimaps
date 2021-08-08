@@ -14,6 +14,7 @@ import { prefs } from '~/services/preferences';
 const supportedLanguages = SUPPORTED_LOCALES;
 import OptionSelect from '~/components/OptionSelect.svelte';
 import { showBottomSheet } from '~/components/bottomsheet';
+import { createGlobalEventListener, globalObservable } from '~/variables';
 
 dayjs.extend(updateLocale);
 dayjs.extend(timezone);
@@ -25,10 +26,7 @@ dayjs.extend(utc);
 export let lang;
 let currentLocale = null;
 export const $lang = writable(null);
-const onLanguageChangedCallbacks = [];
-export function onLanguageChanged(callback) {
-    onLanguageChangedCallbacks.push(callback);
-}
+export const onLanguageChanged = createGlobalEventListener('language');
 
 $lang.subscribe((newLang: string) => {
     if (lang === newLang) {
@@ -64,7 +62,7 @@ $lang.subscribe((newLang: string) => {
     } catch (err) {
         console.log('failed to load lang json', lang, `~/i18n/${lang}.json`, err);
     }
-    onLanguageChangedCallbacks.forEach((c) => c(lang));
+    globalObservable.notify({ eventName: 'language', data: lang });
 });
 function setLang(newLang) {
     newLang = getOwmLanguage(newLang);

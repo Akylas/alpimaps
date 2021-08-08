@@ -1,0 +1,29 @@
+{
+    "terminal.integrated.env.osx": {
+        "KEYSTORE_PASSWORD": "tirocks",
+        "KEYSTORE_ALIAS": "tidev",
+        "KEYSTORE_ALIAS_PASSWORD": "tirocks",
+        "KEYSTORE_PATH": "certs/android.keystore",
+        "PLAYSTORE_JSON_KEY_DATA": "{\"type\":\"service_account\",\"project_id\":\"api-8250229159781642489-231322\",\"private_key_id\":\"4440c128fd6963aafcf3270229840030f3013c57\",\"private_key\":\"-----BEGIN PRIVATE KEY-----\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCXUlmFIN+DJXeU\\nvQvjBGYcaSNhPw4qdwBlllp5h7M3a2Tbp5PO7AhZBYjGUu0bp11eeNv6UINZUUML\\nY6+S8zg\/Xwqp6h+fum6l0EW4KC4rB2SdqJkJSkWIutbPJKidf1r9uEEfDfzGMBQv\\nsTowNrVcc2q1m8MpRajmuXU9ePx4+vpb60Oc5CmYZIOxBS\/q0Wz3aGeF0UvC00sw\\nn3VyKyKRH24hiNhaxvl\/jN72UGTDQINKUB547NmzgTx4JWGDqwFGBDRm9emvyAic\\na8GUmE7yzO8IPHy8NEp\/kZsGDkTlNJYgSzO5OxGBwOWVeEV\/dzKV5bE5R1p1gLA9\\n36V5E4vxAgMBAAECggEAB67bM7q1DoQW+7rTgS3Gf3fJH5Vjgz1yjDXjlxsQOuad\\ngteR1iY+0EJLLQKl3ksTnwnU5XM0EBNjq47eqb\/mobUSJglonKQLHSkjeRO1MGMa\\nNTULvCCEwkn2QSMz2ndOZ+Z0i\/6aUHe9dqRxd2Q3th94Egt8D7rlNf3BmaLscrn7\\ngiNVh7m0sqXjdTjgNhuqgsdNv2z1V0SDuP1bLSRaprAIklyUg81Vsr6tfHYe3zuH\\nCmcc69RlmOG9CEkCoGhrqJhApXswNDK7kCzp3AFxbmRPyXNOZoK1poqbNKpl2qsj\\nmgdXMkzAfJiyYJLnf5cGQ7F8Tz8KAXYxdpiAMWstSQKBgQDHkUqL\/QNeWrI4yI5J\\n57eWvvxFn9RPMiQL1bnF2i2nGrscAr1kQDWoY4Tv3HNc4Nr1OOnK5Vq2D8oQPNN3\\n1mAYOHqEvnsCWFtmmT+dyUahdpGIK4PMGGP\/0GHB0+Qq9LnnaUiA2HRT5Ci4i9Wd\\nNPHCo7JBQp73PaClqTLJ6L6zdQKBgQDCHIluflrbSwm4fjEpj9y91h074njK2RdX\\nPjHMymFITDetwexGkUoTSVEK5vaCTHV1m62LAyPb6j0fYb7b6XOuPDSdypMpjW\/1\\nm+O0A7BZwS9suj9gJFMRdtAB35sKM31kk1E7T5Dw+yvanqyxGb4wEtcnb02L\/lnp\\nXHosiy\/TDQKBgQCzzT1i3rQ4QHKuIlPAVlrcIHpdqGC6cax0VT0o+yeClNzbocRN\\nHGS7r95H1VDC73uW0I4jVXzi51rgQk0sfSLa75fDHXLqa\/z9dTkRyhQuyQrZqor2\\nSUtfYbmRznyWDyOnUP4Xx+0W4Eun6aSuHNNsz9t8XK+ohgfE+apeq6mVOQKBgFhi\\niA1gyVwK2d1A0H\/dOqTR5rPK1jd\/DAq0jhZynENAOSYMI9qp8zG+84DkU6BW0jD\/\\n9tBSWLSc\/sHYTwBxVzQhw8+JWuLTvQP3vIHOIDFuLnryf0L2p0BPej0wJLdLZLA0\\nCAvameOwanJ8R6PIVforyf3xxzyUTzpb2mGH6vnNAoGAIzaI\/OBbPKLWZr21gEOm\\n3IsHLoiFxfWz7Sf7lU7q27GujVYCclFIla5uoJh8d2uzUrThqAZQ6CsnbmlB2IeI\\ncmQj5+1TDr76QRDpEMWENbzOzP9RRaoZRwZOIYAJwf1CclzByqQDnAzn1Ga8Ttpr\\nrxqMMNduLsdF26LcC+ZuU1U=\\n-----END PRIVATE KEY-----\\n\",\"client_email\":\"akylas@api-8250229159781642489-231322.iam.gserviceaccount.com\",\"client_id\":\"107767196782095724508\",\"auth_uri\":\"https:\/\/accounts.google.com\/o\/oauth2\/auth\",\"token_uri\":\"https:\/\/oauth2.googleapis.com\/token\",\"auth_provider_x509_cert_url\":\"https:\/\/www.googleapis.com\/oauth2\/v1\/certs\",\"client_x509_cert_url\":\"https:\/\/www.googleapis.com\/robot\/v1\/metadata\/x509\/akylas%40api-8250229159781642489-231322.iam.gserviceaccount.com\"}",
+        "SENTRY_DSN": "https://d248254c54f34d3abc5c68055a7f43d3@bugs.akylas.fr/5",
+        "SENTRY_PREFIX": "app:///",
+        "SOURCEMAP_REL_DIR": "../../sourcemaps",
+        "SENTRY_AUTH": "52e7dca57168469b979fc2affc7244a1f3f8f0ca435d476197bee0e72208e6ac",
+    },
+    "files.exclude": {
+        "schema": true
+    },
+    "editor.snippetSuggestions": "top",
+    "i18n-ally.localesPaths": [
+        "app/i18n",
+        "platforms/android/app/src/main/java/com/tns/gen/java/lang",
+        "platforms/android/app/build/intermediates/javac/debug/classes/com/tns/gen/java/lang",
+        "platforms/android/app/build/intermediates/transforms/dexBuilder/debug/0/com/tns/gen/java/lang"
+    ],
+    "java.configuration.updateBuildConfiguration": "disabled",
+    "i18n-ally.keystyle": "nested",
+    "less.validate": false,
+    "i18n-ally.sourceLanguage": "en",
+    "compile-hero.disable-compile-files-on-did-save-code": true,
+    "typescript.tsdk": "node_modules/typescript/lib"
+}
