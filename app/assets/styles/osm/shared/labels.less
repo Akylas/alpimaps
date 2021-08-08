@@ -292,15 +292,15 @@
 	}
 }
 
-#water_name [class=lake][zoom>=9][way_pixels>40],
-#water_name [class=lake][zoom>=10][way_pixels>40],
-#water_name [class=lake][zoom>=11][way_pixels>20],
-#water_name [class=lake][zoom>=12][way_pixels>5],
-#water_name [class=lake][zoom>=13],
+#water [name!=null][zoom>=9][way_pixels>40],
+#water [name!=null][zoom>=10][way_pixels>30],
+#water [name!=null][zoom>=11][way_pixels>20],
+#water [name!=null][zoom>=12][way_pixels>10],
+#water [name!=null][zoom>=13],
 #landcover[class=ice][subclass=glacier][name!=null][zoom>=13]{
 	text-name: @name;
 	text-face-name: @mont_it_md;
-	text-placement: [nuti::texts3d];
+	text-placement: point;
 	text-fill: @water_label;
 	text-wrap-before: true;
 	text-halo-fill: @water_halo;
@@ -344,7 +344,8 @@
 }
 }
 
-#transportation[oneway!=0][zoom>=16] {
+#transportation[oneway!=0][zoom>=16][layer=null],
+#transportation[oneway!=0][zoom>=16][layer>=0] {
 	// intentionally omitting highway_platform, highway_construction
 	[class=motorway],
 	[class=trunk],
@@ -400,14 +401,14 @@
 	[class=path][subclass!=track][subclass!=footway][zoom>=15] {
 		text-name: @name;
 		text-fill: @road_label;
-		text-size:linear([view::zoom], (13, 4), (16, 9), (17, 10));
+		text-size:linear([view::zoom], (13, 4), (18, 10));
 		text-halo-radius: @standard-halo-radius;
 		text-halo-fill: @standard-halo-fill;
 		text-placement: line;
 		text-avoid-edges: false;
 		text-face-name: @mont_md;
 		[subclass!=pedestrian] {
-			text-dy:linear([view::zoom], (13, 0), (16, 1), (17, 2));
+			text-dy:linear([view::zoom], (13, 0), (16, 1), (18, 2));
 		}
 	}
 	// [class=path][zoom>=15] {
@@ -437,8 +438,8 @@
 	// 		}
 	// 	}
 	// }
-	// [class='motorway'][zoom>=7][zoom<=10][ref_length<=6]
-	// // [class='motorway'][zoom>=9][zoom<=10][ref_length<=6],
+	// [class=motorway][zoom>=7][zoom<=10][ref_length<=6]
+	// // [class=motorway][zoom>=9][zoom<=10][ref_length<=6],
 	// // [zoom>=11][ref_length<=6] 
 	// {
 	// 	text-name: [ref];
@@ -454,8 +455,8 @@
 	// }
 
 
-	// [class='motorway'][zoom>=7][zoom<=10][ref_length<=6],
-	// [class='motorway'][zoom>=9][zoom<=10][ref_length<=6] {
+	// [class=motorway][zoom>=7][zoom<=10][ref_length<=6],
+	// [class=motorway][zoom>=9][zoom<=10][ref_length<=6] {
 	// 	text-min-distance: 50;
 	// 	text-size: 8;
 	// 	text-placement: point;
@@ -483,7 +484,7 @@
 		text-face-name: @mont;
 		text-fill: @road_text;
 		text-halo-fill: @minor_halo;
-		text-halo-radius: 1;
+		text-halo-radius: @standard-halo-radius;
 		text-halo-rasterizer: fast;
 		text-size: linear([view::zoom], (13, 7), (18, 10));
 		
@@ -510,82 +511,161 @@
 
 
 #poi{
-	[subclass='alpine_hut'],
-	[subclass='wilderness_hut'],
+	[subclass=alpine_hut],
+	[subclass=wilderness_hut],
 	[class=spring],
 	[class=campsite][rank<=15],
 	[zoom>=15][rank<=15][subclass!=hotel][subclass!=dormitory][class!='restaurant'][class!='bar'][class!='parking'][class!='school'][class!='college'][subclass!='community_centre'][subclass!='station'],
-	[zoom>=16][rank<=45][subclass!='hotel'],
-	[zoom>=17][rank<=50],
+	[zoom>=16][rank<=60][subclass!='hotel'],
+	[zoom>=17][rank<=100],
 	[zoom>=18] {
-
+		text-fill: #495063;
+		[class=park] {
+			text-fill: #76BC54;
+		}
+		[class=national_park],[class=protected_area] {
+			text-fill: @national_park;
+		}
+		[class=aboriginal_lands] {
+			text-fill: @aboriginal;
+		}
+		[class=lodging],[class=campsite] {
+			text-size: linear([view::zoom], (18, 10), (20, 14.0)) - 0.0000011 * [rank];
+			text-fill: #854d04;
+		}
+		[class=hospital] {
+			text-fill: #4AA0E7;
+		}
+		[subclass=tram_stop], [subclass=bus_stop] {
+			text-fill: #4E9AD7;
+		}
+		[class=pharmacy] {
+			text-fill: #AF2418;
+		}
+		[class=fountain],[class=drinking_water],[class=bassin],[class=spring],[class=waterfall] {
+			text-placement: point;
+			text-fill: #4AA0E7;
+		}
+		[class=spring] {
+			text-size: linear([view::zoom], (14, 6), (16, 10));
+			// text-halo-radius: 0;
+		}
+		[class=bakery] {
+			text-fill: #EF8000; 
+		}
+		[class=restaurant],[class=fast_food] {
+			text-fill: #BC7729; 
+		}
+		[class=shop],[class=groceries] {
+			text-fill: #9F43A7; 
+		}
 		::icon {
 			text-placement: [nuti::markers3d];
 			text-name: @osm_icon;
 			text-size: linear([view::zoom], (10, 10), (12, 11), (19, 13), (20, 17)) - 0.000001 * [rank];
 			text-face-name: @osm;
 			text-feature-id: @featureId;
-			text-halo-fill: @peak_halo;
-			text-halo-rasterizer: fast;
-			text-halo-radius: linear([view::zoom], (14, 1), (18, 0.5));
+			// text-halo-fill: @peak_halo;
+			// text-halo-rasterizer: fast;
+			// text-halo-radius: linear([view::zoom], (14, 1), (18, 0.5));
 			text-fill: #495063;
-			[class='park'] {
+			[class=park] {
 				text-fill: #76BC54;
 			}
-			[class='national_park'],[class='protected_area'] {
+			[class=national_park],[class=protected_area] {
 				text-fill: @national_park;
 			}
-			[class='aboriginal_lands'] {
+			[class=aboriginal_lands] {
 				text-fill: @aboriginal;
 			}
-			[class=lodging],[class='campsite'] {
+			[class=lodging],[class=campsite] {
 				text-size: linear([view::zoom], (18, 10), (20, 14.0)) - 0.0000011 * [rank];
 				text-fill: #854d04;
 			}
-			[class='hospital'] {
+			[class=hospital] {
 				text-fill: #4AA0E7;
 			}
-			[class='fountain'],[class='drinking_water'],[class='bassin'],[class='spring'],[class='waterfall'] {
+			[subclass=tram_stop], [subclass=bus_stop] {
+				text-fill: #4E9AD7;
+			}
+			[class=pharmacy] {
+				text-fill: #AF2418;
+			}
+			[class=fountain],[class=drinking_water],[class=bassin],[class=spring],[class=waterfall] {
 				text-placement: point;
 				text-fill: #4AA0E7;
 			}
-			[class='spring'] {
+			[class=spring] {
 				text-size: linear([view::zoom], (14, 6), (16, 10));
-				text-halo-radius: 0;
+				// text-halo-radius: 0;
 			}
-			[class='bakery'] {
+			[class=bakery] {
 				text-fill: #EF8000; 
+			}
+			[class=restaurant],[class=fast_food] {
+				text-fill: #BC7729; 
+			}
+			[class=shop],[class=groceries] {
+				text-fill: #9F43A7; 
 			}
 		}
 
 		[class!='information'][subclass!='viewpoint'][class!='spring'],
 		[class=spring][zoom>=17] {
 			text-name: @name;
-			text-face-name: @mont_md;
+			text-face-name: @mont;
 			text-placement: [nuti::texts3d];
 			text-line-spacing: -1;
 			text-fill: @poi_dark;
-			text-halo-fill: @peak_halo;
-			text-halo-rasterizer: fast;
-			text-halo-radius: 1;
+			// text-halo-fill: @peak_halo;
+			// text-halo-rasterizer: fast;
+			// text-halo-radius: 1;
 			text-size: linear([view::zoom], (10, 7), (12, 8), (19, 10), (20, 12)) - 0.000001 * [rank];
 			text-wrap-width: step([view::zoom], (14, 40), (15, 50), (16, 60), (18, 70), (19, 100));
 			text-feature-id: @featureId;
-			text-dy: linear([view::zoom], (10, 9), (12, 10), (19, 12), (20, 15)) - 0.000001 * [rank];
-			[class='bus'][zoom<17],
-			[class='railway'][zoom<17] {
+			text-dy: linear([view::zoom], (10, 9), (12, 10), (19, 14), (20, 15)) - 0.000001 * [rank];
+			[class=bus][zoom<17],
+			[class=railway][zoom<17] {
 				text-opacity:0;
 				text-halo-opacity:0;
 			}
 			
-			[class='national_park'],[class='protected_area'], [class='aboriginal_lands'] {
+			[class=national_park],[class=protected_area], [class=aboriginal_lands] {
 				text-fill: @national_park;
 				text-wrap-width: step([view::zoom], (13, 80), (15, 180));
 				text-size: 10;
-				[class='aboriginal_lands'] {
+				[class=aboriginal_lands] {
 					text-fill: @aboriginal;
 				}
 			}
+			// text-fill: #495063;
+			// [class=park] {
+			// 	text-fill: #76BC54;
+			// }
+			// [class=lodging],[class=campsite] {
+			// 	text-fill: #854d04;
+			// }
+			// [class=hospital] {
+			// 	text-fill: #4AA0E7;
+			// }
+			// [subclass=tram_stop], [subclass=bus_stop] {
+			// 	text-fill: #4E9AD7;
+			// }
+			// [class=pharmacy] {
+			// 	text-fill: #AF2418;
+			// }
+			// [class=fountain],[class=drinking_water],[class=bassin],[class=spring],[class=waterfall] {
+			// 	text-fill: #4AA0E7;
+			// }
+			// [class=bakery] {
+			// 	text-fill: #EF8000; 
+			// }
+			// [class=restaurant],[class=fast_food] {
+			// 	text-fill: #BC7729; 
+			// }
+			// [class=shop],[class=groceries] {
+			// 	text-fill: #9F43A7; 
+			// }
 			
 		}
 	}

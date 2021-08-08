@@ -120,7 +120,7 @@
     let profileCostingOptions = {
         pedestrian: { use_hills: 1, max_hiking_difficulty: 6, step_penalty: 5, driveway_factor: 10, use_roads: 0, use_tracks: 1, walking_speed: 4 },
         bicycle: { use_hills: 0.25, bicycle_type: 'hybrid', avoid_bad_surfaces: 0.25, use_roads: 1, use_tracks: 1, cycling_speed: 16 },
-        car: { use_roads: 1, use_tracks: 0 }
+        auto: { use_roads: 1, use_tracks: 0 }
     };
 
     function switchValhallaSetting(key: string, options?: any) {
@@ -739,7 +739,7 @@
         <gridlayout bind:this={gridLayout} id="directions" on:tap={() => {}} rows="50,100,35" columns="*,30">
             <button horizontalAlignment="left" variant="text" class="icon-btn-white" text="mdi-arrow-left" on:tap={() => cancel()} />
             <stacklayout colSpan={2} orientation="horizontal" horizontalAlignment="center">
-                <button variant="text" class="icon-btn-white" text="mdi-car" on:tap={() => setProfile('car')} color={profileColor(profile, 'car')} />
+                <button variant="text" class="icon-btn-white" text="mdi-car" on:tap={() => setProfile('auto')} color={profileColor(profile, 'auto')} />
                 <button variant="text" class="icon-btn-white" text="mdi-walk" on:tap={() => setProfile('pedestrian')} color={profileColor(profile, 'pedestrian')} />
                 <button variant="text" class="icon-btn-white" text="mdi-bike" on:tap={() => setProfile('bicycle')} color={profileColor(profile, 'bicycle')} />
                 <button variant="text" class="icon-btn-white" text="mdi-bus" on:tap={() => setProfile('bus')} color={profileColor(profile, 'bus')} />

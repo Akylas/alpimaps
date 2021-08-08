@@ -71,7 +71,7 @@
             }
         },
         "contoursOpacity": {
-            "default": 1
+            "default": 1.0
         },
         "routes": {
             "default": 1,
