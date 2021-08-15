@@ -24,7 +24,7 @@ class TransitService extends Observable {
         }
     }
     routes: any[];
-    async getTransitLines(lat, lon, line?) {
+    async getTransitLines(line?) {
         // if (this._db) {
         //     if (!this.routes) {
         //         this.routes = (await this._db.select('SELECT * from routes WHERE geojson IS NOT NULL')) as any;
