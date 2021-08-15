@@ -1784,6 +1784,7 @@
                 on:tap={resetBearing}
                 class="small-floating-btn"
                 text="mdi-navigation"
+                color={primaryColor}
                 rotate={-currentMapRotation}
                 verticalAlignment="top"
                 horizontalAlignment="right"
