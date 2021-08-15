@@ -180,6 +180,14 @@
                 on:tap={() => mapStore.setShowRoutes(!$mapStore.showRoutes)}
             /> -->
             <button variant="text" class="icon-btn" text="mdi-globe-model" color={$mapStore.showGlobe ? primaryColor : 'gray'} on:tap={() => mapStore.setShowGlobe(!$mapStore.showGlobe)} />
+            <button
+                variant="text"
+                class="icon-btn"
+                text="mdi-rotate-3d-variant"
+                color={$mapStore.rotateEnabled ? primaryColor : 'gray'}
+                on:tap={() => mapStore.setRotateEnabled(!$mapStore.rotateEnabled)}
+            />
+            <button variant="text" class="icon-btn" text="mdi-rotate-orbit" color={$mapStore.pitchEnabled ? primaryColor : 'gray'} on:tap={() => mapStore.setPitchEnabled(!$mapStore.pitchEnabled)} />
 
             <button
                 variant="text"
