@@ -16,6 +16,7 @@
     import { accentColor, borderColor, globalMarginTop, mdiFontFamily, navigationBarHeight, subtitleColor, textColor } from '~/variables';
     import CActionBar from '~/components/CActionBar.svelte';
     import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
 
     export let line: any;
     let loading = false;
@@ -34,9 +35,14 @@
             loading = true;
             currentTime = time;
             lineData = await transitService.getLineTimeline(line.id, time?.utc(true).valueOf());
+            console.log('lineData', JSON.stringify(line.id, lineData));
             // prevTime = lineData[lineDataIndex].prevTime;
             // nextTime = lineData[lineDataIndex].nextTime;
             timelineItems = lineData[lineDataIndex].arrets;
+            if (timelineItems.length === 0) {
+                showSnack({ message: lc('no_timesheet_data') });
+                return;
+            }
             // console.log('fetchLineTimeline', time.valueOf(), lineData[lineDataIndex].prevTime, lineData[lineDataIndex].nextTime);
             directionText = timelineItems[0].stopName + '\n' + timelineItems[timelineItems.length - 1].stopName;
             if (line.stopIds) {
