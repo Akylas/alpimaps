@@ -10,7 +10,9 @@ const { subscribe, set, update } = writable({
     showRoutes: getBoolean('showRoutes', false),
     contourLinesOpacity: getNumber('contourLinesOpacity', 1),
     zoomBiais: getString('zoomBiais', '0'),
-    preloading: getBoolean('preloading', false)
+    preloading: getBoolean('preloading', false),
+    rotateEnabled: getBoolean('mapRotateEnabled', false),
+    pitchEnabled: getBoolean('mapPitchEnabled', false)
 });
 
 const store = {
@@ -79,6 +81,18 @@ const store = {
         update((s) => {
             s.zoomBiais = value;
             setString('zoomBiais', value);
+            return s;
+        }),
+    setRotateEnabled: (value: boolean) =>
+        update((s) => {
+            s.rotateEnabled = value;
+            setBoolean('mapRotateEnabled', value);
+            return s;
+        }),
+    setPitchEnabled: (value: boolean) =>
+        update((s) => {
+            s.pitchEnabled = value;
+            setBoolean('mapPitchEnabled', value);
             return s;
         })
 };
