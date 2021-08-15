@@ -822,6 +822,8 @@
     $: vectorTileDecoder && setStyleParameter('routes', $mapStore.showRoutes ? '1' : '0');
     $: vectorTileDecoder && setStyleParameter('contoursOpacity', $mapStore.contourLinesOpacity.toFixed(1));
     $: vectorTileDecoder && toggleHillshadeSlope($mapStore.showSlopePercentages);
+    $: toggleMapRotate($mapStore.rotateEnabled);
+    $: toggleMapPitch($mapStore.pitchEnabled);
     $: currentLayer && (currentLayer.zoomLevelBias = parseFloat($mapStore.zoomBiais));
     $: currentLayer && (currentLayer.preloading = $mapStore.preloading);
     $: shouldShowNavigationBarOverlay = global.isAndroid && navigationBarHeight !== 0 && !!selectedItem;
@@ -843,6 +845,16 @@
         if (mapContext) {
             mapContext.mapModule('customLayers').toggleHillshadeSlope(value);
             // cartoMap.redraw();
+        }
+    }
+    function toggleMapRotate(value: boolean) {
+        cartoMap && cartoMap.getOptions().setRotatable(value);
+    }
+    function toggleMapPitch(value: boolean) {
+        if (value) {
+            cartoMap && cartoMap.getOptions().setTiltRange(toNativeMapRange({min:30, max:90}));
+        } else {
+            cartoMap && cartoMap.getOptions().setTiltRange(toNativeMapRange({min:90, max:90}));
         }
     }
 
