@@ -1,35 +1,30 @@
 <script lang="ts">
-    import { GridLayout, ViewBase } from '@nativescript/core';
     import { l, lc } from '@nativescript-community/l';
+    import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import type { PackageStatus } from '@nativescript-community/ui-carto/packagemanager';
     import { PackageAction } from '@nativescript-community/ui-carto/packagemanager';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
+    import { GridLayout, ViewBase } from '@nativescript/core';
+    import { AnimationCurve } from '@nativescript/core/ui/enums';
     import { debounce } from 'push-it-to-the-limit/target/es6';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { writable } from 'svelte/store';
-    import { GeoHandler } from '~/handlers/GeoHandler';
+    import { asSvelteTransition } from 'svelte-native/transitions';
+    import { convertDistance } from '~/helpers/formatter';
+    import { onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import type { IItem } from '~/models/Item';
+    import { RouteInstruction, RoutingAction } from '~/models/Route';
     import { packageService } from '~/services/PackageService';
-    import { convertDistance } from '~/helpers/formatter';
+    import mapStore from '~/stores/mapStore';
     import { showError } from '~/utils/error';
-    import { accentColor, alpimapsFontFamily, borderColor, globalMarginTop, mdiFontFamily, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
-    import { resolveComponentElement } from './bottomsheet';
+    import { accentColor, alpimapsFontFamily, globalMarginTop, mdiFontFamily, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
+    import { resolveComponentElement, showBottomSheet } from './bottomsheet';
     import OptionPicker from './OptionPicker.svelte';
     import ScaleView from './ScaleView.svelte';
-    import { showBottomSheet } from './bottomsheet';
-    import mapStore from '~/stores/mapStore';
-    import { AnimationCurve } from '@nativescript/core/ui/enums';
-    import { asSvelteTransition } from 'svelte-native/transitions';
-    import { showModal } from 'svelte-native';
-    import { RouteInstruction } from '~/models/Route';
-    import { RoutingAction } from '~/models/Route';
-    import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-    import { onThemeChanged } from '~/helpers/theme';
     function scale(node, { delay = 0, duration = 400, easing = AnimationCurve.easeOut }) {
         const scaleX = node.nativeView.scaleX;
         const scaleY = node.nativeView.scaleY;
@@ -342,7 +337,6 @@
         canvas.save();
 
         if (navigationInstructions.instruction) {
-
             let staticLayout = new StaticLayout(instructionIcon, iconPaint, w, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
             canvas.translate(10, h / 2 - staticLayout.getHeight() / 2);
             staticLayout.draw(canvas);

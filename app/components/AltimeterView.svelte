@@ -1,12 +1,9 @@
 <script lang="ts" context="module">
-    import {
-        getAirportPressureAtLocation,
-        isSensorAvailable,
-        startListeningForSensor,
-        stopListeningForSensor
-    } from '@nativescript-community/sensors';
+    import { getAirportPressureAtLocation, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
     import { getAltitude } from '@nativescript-community/sensors/sensors';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
+    import { ApplicationSettings } from '@nativescript/core';
     import type { ApplicationEventData } from '@nativescript/core/application';
     import { off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
     import { onDestroy, onMount } from 'svelte';
@@ -18,14 +15,10 @@
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import mapStore from '~/stores/mapStore';
-    import { ApplicationSettings } from '@nativescript/core';
-
     import { primaryColor } from '~/variables';
 </script>
 
 <script lang="ts">
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
-
     let currentLocation: GeoLocation = null;
     let referencePressure = null;
     let referenceAltitude = null;
@@ -173,11 +166,7 @@
                             startBarometer();
                         }, 5000);
                     }
-                } else if (
-                    currentLocation &&
-                    Date.now() - currentLocation.timestamp < 60 * 1000 * 10 &&
-                    currentLocation.altitude
-                ) {
+                } else if (currentLocation && Date.now() - currentLocation.timestamp < 60 * 1000 * 10 && currentLocation.altitude) {
                     stopBarometer();
                     let assumedTemp = 15;
                     const result = await prompt({
@@ -192,9 +181,7 @@
                         assumedTemp = parseFloat(result.text);
                     }
                     referenceAltitude = currentLocation.altitude;
-                    referencePressure =
-                        data.pressure *
-                        Math.pow(1 - (0.0065 * referenceAltitude) / (assumedTemp + 0.0065 * referenceAltitude + 273.15), -5.257);
+                    referencePressure = data.pressure * Math.pow(1 - (0.0065 * referenceAltitude) / (assumedTemp + 0.0065 * referenceAltitude + 273.15), -5.257);
                     ApplicationSettings.setString(
                         'altimeter_reference',
                         JSON.stringify({
@@ -219,12 +206,7 @@
 <gridLayout {height}>
     <canvaslabel padding="16">
         <cspan text={currentPressure} fontSize="16" textAlignment="right" />
-        <cgroup
-            visibility={!!referencePressure ? 'visible' : 'hidden'}
-            verticalAlignment="bottom"
-            fontSize="14"
-            textAlignment="right"
-        >
+        <cgroup visibility={!!referencePressure ? 'visible' : 'hidden'} verticalAlignment="bottom" fontSize="14" textAlignment="right">
             <cspan text={referencePressure && referencePressure.toFixed(2)} fontSize="14" />
             <cspan text={'\n' + (referenceAltitude && Math.round(referenceAltitude) + 'm')} />
         </cgroup>
@@ -232,31 +214,13 @@
             <cspan text={pressureAltitude || '-'} fontSize="30" />
             <cspan text=" m" fontSize="20" />
         </cgroup>
-        <cspan
-            visibility={!!currentLocation ? 'visible' : 'hidden'}
-            text={!!currentLocation && currentLocation.altitude + 'm'}
-            fontSize="14"
-            verticalAlignment="bottom"
-            textAlignment="left"
-        />
+        <cspan visibility={!!currentLocation ? 'visible' : 'hidden'} text={!!currentLocation && currentLocation.altitude + 'm'} fontSize="14" verticalAlignment="bottom" textAlignment="left" />
     </canvaslabel>
 
     <stacklayout orientation="horizontal" horizontalAlignment="left" verticalAlignment="top">
-        <button
-            variant="text"
-            class="icon-btn"
-            text="mdi-gauge"
-            on:tap={switchBarometer}
-            color={listeningForBarometer ? primaryColor : undefined}
-        />
-        <button variant="text" class="icon-btn" text="mdi-airplane" on:tap={getNearestAirportPressure}/>
+        <button variant="text" class="icon-btn" text="mdi-gauge" on:tap={switchBarometer} color={listeningForBarometer ? primaryColor : undefined} />
+        <button variant="text" class="icon-btn" text="mdi-airplane" on:tap={getNearestAirportPressure} />
         <button variant="text" class="icon-btn" text="mdi-refresh" on:tap={resetReference} />
-        <button
-            variant="text"
-            class="icon-btn"
-            text="mdi-crosshairs-gps"
-            on:tap={askUserLocation}
-            color={$mapStore.watchingLocation || $mapStore.queryingLocation ? primaryColor : undefined}
-        />
+        <button variant="text" class="icon-btn" text="mdi-crosshairs-gps" on:tap={askUserLocation} color={$mapStore.watchingLocation || $mapStore.queryingLocation ? primaryColor : undefined} />
     </stacklayout>
 </gridLayout>

@@ -1,5 +1,5 @@
 <script lang="ts">
-        import { startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
+    import { startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
     import { estimateMagneticField } from '@nativescript-community/sensors/sensors';
     import { MapPos } from '@nativescript-community/ui-carto/core';
     import { onDestroy, onMount } from 'svelte';
