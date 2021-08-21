@@ -1,26 +1,24 @@
 <script lang="ts">
-    import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
-    import { LoadFinishedEventData, ShouldOverrideUrlLoadEventData, AWebView } from '@nativescript-community/ui-webview';
-    import { Folder, LoadEventData, WebView, knownFolders, path, Page, ObservableArray } from '@nativescript/core';
-    import { MapTilerOnlineTileDataSource } from '@nativescript-community/ui-carto/datasources/maptiler';
-    import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
     import { HandlerType, Manager } from '@nativescript-community/gesturehandler';
-
-    import { MergedMBVTTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { debounce } from 'push-it-to-the-limit/target/es6';
-    import { NativeViewElementNode } from 'svelte-native/dom';
-    import { onDestroy, onMount } from 'svelte';
-    import { Drawer } from '@nativescript-community/ui-drawer';
     import { request } from '@nativescript-community/perms';
-    import { showError } from '~/utils/error';
-    import { alpimapsFontFamily, mdiFontFamily, navigationBarHeight, primaryColor, textColor, widgetBackgroundColor } from '~/variables';
-    import { Template } from 'svelte-native/components';
-    import { lc } from '~/helpers/locale';
+    import { MergedMBVTTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
+    import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
+    import { MapTilerOnlineTileDataSource } from '@nativescript-community/ui-carto/datasources/maptiler';
+    import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { convertDistance, formatDistance } from '~/helpers/formatter';
+    import { Drawer } from '@nativescript-community/ui-drawer';
+    import { AWebView, LoadFinishedEventData } from '@nativescript-community/ui-webview';
+    import { Folder, knownFolders, LoadEventData, ObservableArray, Page, path } from '@nativescript/core';
     import dayjs from 'dayjs';
-    import { PorterDuffMode } from '@nativescript-community/ui-canvas';
     import type { Feature } from 'geojson';
+    import { debounce } from 'push-it-to-the-limit/target/es6';
+    import { onDestroy, onMount } from 'svelte';
+    import { Template } from 'svelte-native/components';
+    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { formatDistance } from '~/helpers/formatter';
+    import { lc } from '~/helpers/locale';
+    import { showError } from '~/utils/error';
+    import { alpimapsFontFamily, navigationBarHeight, primaryColor, widgetBackgroundColor } from '~/variables';
 
     export let position;
     export let terrarium: boolean = false;

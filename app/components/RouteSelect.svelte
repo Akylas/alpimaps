@@ -6,13 +6,10 @@
 </script>
 
 <script lang="ts">
+    import { Paint } from '@nativescript-community/ui-canvas';
     import { Template } from 'svelte-native/components';
-    import ListItem from './ListItem.svelte';
-    import { closeModal } from 'svelte-native';
     import { closeBottomSheet } from './bottomsheet';
-    import { Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
-    import { BaseVectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
-    import { osmicon } from '~/helpers/formatter';
+    import ListItem from './ListItem.svelte';
 
     export let options: OptionType[];
 
@@ -63,6 +60,7 @@
             on:tap={(event) => onTap(item, event)}
             showSymbol
             symbol={item.route.featureData.symbol || 0}
-            symbolColor={item.route.featureData.color || 0} />
+            symbolColor={item.route.featureData.color || 0}
+        />
     </Template>
 </collectionView>

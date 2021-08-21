@@ -446,4 +446,5 @@
   <string name="add_source">"ajouter une source"</string>
   <string name="pick_time">"pick a time"</string>
   <string name="pick_date">"pick a date"</string>
+  <string name="no_timesheet_data">"no timesheet data"</string>
 </resources>
