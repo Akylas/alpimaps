@@ -1,17 +1,17 @@
 <script lang="ts">
+    import { Canvas, CanvasView, LayoutAlignment, Paint, Rect, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { EventData } from '@nativescript-community/ui-image';
     import { Page, Utils } from '@nativescript/core';
+    import { navigate } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { l, lc } from '~/helpers/locale';
+    import CActionBar from '~/components/CActionBar.svelte';
+    import { lc } from '~/helpers/locale';
+    import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
     import { transitService } from '~/services/TransitService';
     import { showError } from '~/utils/error';
-    import { mdiFontFamily, textColor, textLightColor } from '~/variables';
-    import CActionBar from '~/components/CActionBar.svelte';
-    import { Canvas, CanvasView, LayoutAlignment, Paint, Rect, StaticLayout } from '@nativescript-community/ui-canvas';
-    import { navigate } from 'svelte-native';
-    import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
+    import { mdiFontFamily } from '~/variables';
 
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
