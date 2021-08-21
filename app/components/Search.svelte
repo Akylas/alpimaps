@@ -10,7 +10,7 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import type { Side } from '@nativescript-community/ui-drawer';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { GridLayout, ObservableArray, Screen, TextField } from '@nativescript/core';
+    import { GridLayout, Screen, TextField } from '@nativescript/core';
     import { getJSON } from '@nativescript/core/http';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
@@ -26,7 +26,7 @@
     import { showError } from '~/utils/error';
     import { computeDistanceBetween } from '~/utils/geo';
     import { arraySortOn } from '~/utils/utils';
-    import { globalMarginTop, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
+    import { globalMarginTop, primaryColor, subtitleColor, widgetBackgroundColor } from '~/variables';
     import { queryString } from '../utils/http';
 
     const providerColors = {
@@ -406,7 +406,7 @@
                     .then((r) => loading && r && result.push(...r))
                     .catch((err) => {
                         console.error('searchInGeocodingService', err);
-                    }),
+                    })
                 // herePlaceSearch(options)
                 //     .then((r) => loading && r && result.push(...r))
                 //     .catch((err) => {
@@ -418,7 +418,7 @@
                 //         console.error('photonSearch', err);
                 //     })
             ]);
-            
+
             // console.log(
             //     'search done',
             //     result.length,

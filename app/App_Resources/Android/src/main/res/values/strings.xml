@@ -182,6 +182,7 @@
   <string name="noodle">"noodle"</string>
   <string name="non_valid_email">"invalid email address"</string>
   <string name="no_web_search_app">"no web search app"</string>
+  <string name="no_timesheet_data">"no timesheet data"</string>
   <string name="no_result_found">"no result found"</string>
   <string name="no_ref">"no ref"</string>
   <string name="no_network">"no network"</string>
