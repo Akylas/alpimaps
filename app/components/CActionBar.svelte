@@ -1,7 +1,7 @@
 <script lang="typescript">
     import { Frame } from '@nativescript/core/ui/frame';
     import { onMount } from 'svelte';
-    import { closeModal, goBack } from 'svelte-native';
+    import { closeModal,goBack } from 'svelte-native';
     import { textColor } from '~/variables';
 
     export let color: string = null;

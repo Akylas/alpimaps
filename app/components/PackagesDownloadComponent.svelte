@@ -1,15 +1,15 @@
 <script lang="ts" context="module">
-    import {
-        PackageAction,
-    } from '@nativescript-community/ui-carto/packagemanager';
     import type {
-        CartoPackageManager,
-        PackageInfo,
-        PackageInfoVector,
-        PackageStatus
+    CartoPackageManager,
+    PackageInfo,
+    PackageInfoVector,
+    PackageStatus
+    } from '@nativescript-community/ui-carto/packagemanager';
+    import {
+    PackageAction
     } from '@nativescript-community/ui-carto/packagemanager';
     import { ObservableArray } from '@nativescript/core/data/observable-array';
-    import { onDestroy, onMount } from 'svelte';
+    import { onDestroy,onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { PackageType } from '~/services/PackageService';
 
