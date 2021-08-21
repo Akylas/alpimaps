@@ -54,12 +54,13 @@
         // clearCache();
     }
     const updateItem = debounce(function (item: SourceItem) {
-        customSources.some((d, index) => {
-            if (d === item) {
-                customSources.setItem(index, item);
-                return true;
-            }
-        });
+        customSources &&
+            customSources.some((d, index) => {
+                if (d === item) {
+                    customSources.setItem(index, item);
+                    return true;
+                }
+            });
     }, 500);
     function onLayerOpacityChanged(item: SourceItem, event) {
         const opacity = event.value;

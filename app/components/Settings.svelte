@@ -1,20 +1,20 @@
 <script lang="ts">
     import * as EInfo from '@nativescript-community/extendedinfo';
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { prompt } from '@nativescript-community/ui-material-dialogs';
+    import { ApplicationSettings } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils/utils';
     import { Template } from 'svelte-native/components';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import { showBottomSheet } from '~/components/bottomsheet';
-    import { getLocaleDisplayName, l, lc, onLanguageChanged, selectLanguage, sgetLocaleDisplayName, slc } from '~/helpers/locale';
-    import { getThemeDisplayName, onThemeChanged, selectTheme, theme } from '~/helpers/theme';
+    import { getLocaleDisplayName, l, lc, onLanguageChanged, selectLanguage, slc } from '~/helpers/locale';
+    import { getThemeDisplayName, onThemeChanged, selectTheme } from '~/helpers/theme';
+    import { getMapContext } from '~/mapModules/MapModule';
     import { share } from '~/utils/share';
     import { openLink } from '~/utils/ui';
-    import { borderColor, mdiFontFamily, primaryColor, subtitleColor, textColor } from '~/variables';
+    import { borderColor, mdiFontFamily } from '~/variables';
     import CActionBar from './CActionBar.svelte';
     import ThirdPartySoftwareBottomSheet from './ThirdPartySoftwareBottomSheet.svelte';
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { NativeViewElementNode } from 'svelte-native/dom';
-    import { getMapContext } from '~/mapModules/MapModule';
-    import { prompt } from '@nativescript-community/ui-material-dialogs';
-import { ApplicationSettings } from '@nativescript/core';
 
     let collectionView: NativeViewElementNode<CollectionView>;
 
@@ -157,24 +157,9 @@ import { ApplicationSettings } from '@nativescript/core';
             <collectionview bind:this={collectionView} row={1} {items} rowHeight="60">
                 <Template let:item>
                     <gridLayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)}>
-                        <label
-                            fontSize={36}
-                            text={item.icon}
-                            marginLeft="-10"
-                            width="40"
-                            verticalAlignment="center"
-                            fontFamily={mdiFontFamily}
-                            visibility={!!item.icon ? 'visible' : 'hidden'}
-                        />
+                        <label fontSize={36} text={item.icon} marginLeft="-10" width="40" verticalAlignment="center" fontFamily={mdiFontFamily} visibility={!!item.icon ? 'visible' : 'hidden'} />
                         <stackLayout col={1} verticalAlignment="center">
-                            <label
-                                fontSize="17"
-                                text={getTitle(item)}
-                                textWrap="true"
-                                verticalTextAlignment="top"
-                                maxLines="2"
-                                lineBreak="end"
-                            />
+                            <label fontSize="17" text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines="2" lineBreak="end" />
                             <label
                                 visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'}
                                 fontSize="14"
@@ -186,14 +171,7 @@ import { ApplicationSettings } from '@nativescript/core';
                             />
                         </stackLayout>
 
-                        <label
-                            col={2}
-                            visibility={!!item.rightValue ? 'visible' : 'hidden'}
-                            text={item.rightValue && item.rightValue()}
-                            class="subtitle"
-                            verticalAlignment="center"
-                            marginRight="16"
-                        />
+                        <label col={2} visibility={!!item.rightValue ? 'visible' : 'hidden'} text={item.rightValue && item.rightValue()} class="subtitle" verticalAlignment="center" marginRight="16" />
                         <button
                             col={2}
                             variant="text"
@@ -205,14 +183,7 @@ import { ApplicationSettings } from '@nativescript/core';
                             text={item.rightBtnIcon}
                             on:tap={(event) => onTap(item.id)}
                         />
-                        <absoluteLayout
-                            row={2}
-                            col={1}
-                            colSpan={3}
-                            backgroundColor={$borderColor}
-                            height="1"
-                            verticalAlignment="bottom"
-                        />
+                        <absoluteLayout row={2} col={1} colSpan={3} backgroundColor={$borderColor} height="1" verticalAlignment="bottom" />
                     </gridLayout>
                 </Template>
             </collectionview>

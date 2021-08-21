@@ -252,15 +252,15 @@ export default class CustomLayersModule extends MapModule {
         };
     }
     createHillshadeTileLayer(name, dataSource, options: HillshadeRasterTileLayerOptions = {}, terrarium = false) {
-        const contrast = appSettings.getNumber(`${name}_contrast`, 1);
-        const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.086);
+        const contrast = appSettings.getNumber(`${name}_contrast`, 0.45);
+        const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.34);
         const illuminationDirection = appSettings.getNumber(`${name}_illuminationDirection`, 335);
         const opacity = appSettings.getNumber(`${name}_opacity`, 1);
         const decoder = terrarium ? new TerrariumElevationDataDecoder() : new MapBoxElevationDataDecoder();
         const tileFilterModeStr = appSettings.getString(`${name}_tileFilterMode`, 'bilinear');
 
-        const accentColor = new Color(appSettings.getString(`${name}_accentColor`, 'rgba(0,0,0,0.39)'));
-        const shadowColor = new Color(appSettings.getString(`${name}_shadowColor`, 'rgba(0,0,0,0.39)'));
+        const accentColor = new Color(appSettings.getString(`${name}_accentColor`, 'rgba(0,0,0,0)'));
+        const shadowColor = new Color(appSettings.getString(`${name}_shadowColor`, 'rgba(0,0,0,0.6)'));
         const highlightColor = new Color(appSettings.getString(`${name}_highlightColor`, 'rgba(255, 255, 255,0)'));
 
         let tileFilterMode: RasterTileFilterMode;

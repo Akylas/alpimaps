@@ -1,22 +1,19 @@
 <script lang="ts">
-    import { MapPos } from '@nativescript-community/ui-carto/core';
-
     import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Page } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
     import dayjs, { Dayjs } from 'dayjs';
     import { onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
-    import { closeModal, NativeViewElementNode, navigate } from 'svelte-native/dom';
+    import { NativeViewElementNode, navigate } from 'svelte-native/dom';
+    import CActionBar from '~/components/CActionBar.svelte';
     import { lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
+    import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
     import { transitService } from '~/services/TransitService';
     import { showError } from '~/utils/error';
-    import { openLink } from '~/utils/ui';
-    import { accentColor, borderColor, globalMarginTop, mdiFontFamily, navigationBarHeight, subtitleColor, textColor } from '~/variables';
-    import CActionBar from '~/components/CActionBar.svelte';
-    import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
+    import { accentColor, borderColor, mdiFontFamily, navigationBarHeight, subtitleColor, textColor } from '~/variables';
 
     export let line: any;
     let loading = false;

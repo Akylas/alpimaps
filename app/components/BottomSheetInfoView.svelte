@@ -150,7 +150,7 @@
             <cspan visibility={itemIcon && itemIcon.length > 0 ? 'visible' : 'hidden'} paddingLeft="10" width="40" text={osmicon(itemIcon)} fontFamily="osm" fontSize={24} />
         </cgroup>
         <symbolshape
-            visibility={showSymbol ? 'visible' : 'hidden'}
+            visibility={showSymbol && itemProps && itemProps.symbol ? 'visible' : 'hidden'}
             symbol={(itemProps && itemProps.symbol) || null}
             color={(itemProps && itemProps.color) || null}
             width="34"
