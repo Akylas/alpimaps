@@ -11,13 +11,13 @@
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/CActionBar.svelte';
-import { lc } from '~/helpers/locale';
+    import { lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
     import { transitService } from '~/services/TransitService';
     import { showError } from '~/utils/error';
-    import { backgroundColor, mdiFontFamily, widgetBackgroundColor } from '~/variables';
+    import { mdiFontFamily, widgetBackgroundColor } from '~/variables';
 
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -57,7 +57,7 @@ import { lc } from '~/helpers/locale';
                 decoder: new MBVectorTileDecoder({
                     style: 'voyager',
                     liveReload: TNS_ENV !== 'production',
-                    dirPath: '~/assets/styles/transit'
+                    dirPath: '~/assets/internal_styles/transit'
                 })
             });
 

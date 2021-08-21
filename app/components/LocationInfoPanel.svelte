@@ -1,32 +1,24 @@
 <script lang="ts" context="module">
-    import {
-        getAirportPressureAtLocation,
-        isSensorAvailable,
-        startListeningForSensor,
-        stopListeningForSensor
-    } from '@nativescript-community/sensors';
-    import { estimateMagneticField, getAltitude } from '@nativescript-community/sensors/sensors';
+    import { getAirportPressureAtLocation, isSensorAvailable, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
+    import { getAltitude } from '@nativescript-community/sensors/sensors';
     import { CanvasLabel } from '@nativescript-community/ui-canvaslabel';
-    import type { MapPos } from '@nativescript-community/ui-carto/core';
+    import { VectorElementEventData } from '@nativescript-community/ui-carto/layers/vector';
+    import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { GridLayout } from '@nativescript/core';
     import type { ApplicationEventData } from '@nativescript/core/application';
     import { off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
-    import { getNumber, getString, setNumber, setString } from '@nativescript/core/application-settings';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler, GeoLocation, UserLocationdEventData } from '~/handlers/GeoHandler';
+    import { l, lc, lu } from '~/helpers/locale';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
+    import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { accentColor } from '~/variables';
-    import { VectorElementEventData } from '@nativescript-community/ui-carto/layers/vector';
-    import { prompt } from '@nativescript-community/ui-material-dialogs';
-    import { networkService } from '~/services/NetworkService';
 </script>
 
 <script lang="ts">
-    import { l, lc, lu } from '~/helpers/locale';
-
     let geoHandler: GeoHandler;
     let gridLayout: NativeViewElementNode<GridLayout>;
     let firstCanvas: NativeViewElementNode<CanvasLabel>;
@@ -187,9 +179,7 @@
                     if (result && !!result.result && result.text.length > 0) {
                         assumedTemp = parseFloat(result.text);
                     }
-                    referencePressure =
-                        data.pressure *
-                        Math.pow(1 - (0.0065 * currentLocation.altitude) / (assumedTemp + 0.0065 * currentLocation.altitude + 273.15), -5.257);
+                    referencePressure = data.pressure * Math.pow(1 - (0.0065 * currentLocation.altitude) / (assumedTemp + 0.0065 * currentLocation.altitude + 273.15), -5.257);
 
                     if (listeningForBarometer) {
                         setTimeout(() => {
@@ -247,31 +237,14 @@
     on:swipe={() => switchLocationInfo()}
 >
     {#if loaded}
-        <canvaslabel
-            bind:this={firstCanvas}
-            width="60"
-            height="60"
-            borderRadius="30"
-            borderWidth="4"
-            borderColor={accentColor}
-            backgroundColor="#ffffffaa"
-        >
+        <canvaslabel bind:this={firstCanvas} width="60" height="60" borderRadius="30" borderWidth="4" borderColor={accentColor} backgroundColor="#ffffffaa">
             <cgroup verticalAlignment="center" textAlignment="center">
-                <cspan
-                    text={currentLocation && currentLocation.speed !== undefined ? currentLocation.speed.toFixed() : ''}
-                    fontSize="26"
-                    fontWeight="bold"
-                />
+                <cspan text={currentLocation && currentLocation.speed !== undefined ? currentLocation.speed.toFixed() : ''} fontSize="26" fontWeight="bold" />
                 <cspan text={'\n' + 'km/h'} fontSize="10" />
             </cgroup>
         </canvaslabel>
         <canvaslabel col={1} marginLeft="5" color="#fff">
-            <cspan
-                text={lu('altitude') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'}
-                fontSize="11"
-                color={accentColor}
-                verticalAlignment="top"
-            />
+            <cspan text={lu('altitude') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'} fontSize="11" color={accentColor} verticalAlignment="top" />
             <cgroup verticalAlignment="middle">
                 <cspan text={shownAltitude} fontSize="20" fontWeight="bold" />
                 <cspan text=" m" fontSize="12" />
@@ -282,14 +255,7 @@
         </canvaslabel>
         <stacklayout visibility={hasBarometer ? 'visible' : 'collapsed'} col={2} verticalAlignment="center">
             <button variant="text" class="small-icon-btn" text="mdi-gauge" on:tap={switchBarometer} color="white" />
-            <button
-                variant="text"
-                class="small-icon-btn"
-                visibility={listeningForBarometer ? 'visible' : 'collapsed'}
-                text="mdi-reflect-vertical"
-                on:tap={getNearestAirportPressure}
-                color="white"
-            />
+            <button variant="text" class="small-icon-btn" visibility={listeningForBarometer ? 'visible' : 'collapsed'} text="mdi-reflect-vertical" on:tap={getNearestAirportPressure} color="white" />
         </stacklayout>
     {/if}
 </gridlayout>
