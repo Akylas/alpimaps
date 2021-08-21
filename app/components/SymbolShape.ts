@@ -1,18 +1,19 @@
-import { Align, Canvas, Paint, Rect, RectF, createRectF } from '@nativescript-community/ui-canvas';
+import { Align, Canvas, Paint, Rect, RectF, Style, createRectF } from '@nativescript-community/ui-canvas';
 import Shape, { colorProperty, lengthProperty, numberProperty, percentLengthProperty, stringProperty } from '@nativescript-community/ui-canvas/shapes/shape';
 import { Length, PercentLength, zeroLength } from '@nativescript/core/ui/styling/style-properties';
 import { Color } from '@nativescript/core';
 import { layout } from '@nativescript/core/utils/utils';
 import { osmicon } from '~/helpers/formatter';
 
-const specialShapes = ['shell_modern', 'triangle_turned', 'triangle_line', 'rectangle_line', 'red_diamond', 'drop_line', 'diamond_line', 'urned_T'];
+const specialShapes = ['shell_modern', 'triangle_turned', 'triangle_line', 'rectangle_line', 'red_diamond', 'drop_line', 'diamond_line', 'urned_T', 'white_foot'];
 
 const shapepaint = new Paint();
 shapepaint.setFontFamily('osm');
 shapepaint.setTextSize(34);
 const textpaint = new Paint();
-// textpaint.setFontWeight('bold');
+textpaint.setFontWeight('500');
 textpaint.setTextSize(18);
+textpaint.setAntiAlias(true);
 textpaint.setTextAlign(Align.CENTER);
 
 export default class SymbolShape extends Shape {
@@ -31,8 +32,22 @@ export default class SymbolShape extends Shape {
         const array = symbol.split(':');
         const length = array.length;
         if (array[1] !== 'none') {
-            shapepaint.setColor(array[1]);
-            canvas.drawRect(left, top, left + width, height + top, shapepaint);
+            const arrayBackColor = array[1].split('_');
+            const backgroundColor = arrayBackColor[0];
+            shapepaint.setColor(backgroundColor);
+            if (arrayBackColor[1] === 'round') {
+                canvas.drawOval(left, top, left + width, height + top, shapepaint);
+            } else if (arrayBackColor[1] === 'circle') {
+                shapepaint.setStyle(Style.STROKE);
+                canvas.drawOval(left, top, left + width, height + top, shapepaint);
+                shapepaint.setStyle(Style.FILL);
+            } else if (arrayBackColor[1] === 'frame') {
+                shapepaint.setStyle(Style.STROKE);
+                canvas.drawRoundRect(left, top, left + width, height + top, 3, 3, shapepaint);
+                shapepaint.setStyle(Style.FILL);
+            } else {
+                canvas.drawRoundRect(left, top, left + width, height + top, 3, 3, shapepaint);
+            }
         }
         if (length > 2) {
             const foreground = array[2];
