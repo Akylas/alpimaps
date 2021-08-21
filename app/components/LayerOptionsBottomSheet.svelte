@@ -1,15 +1,12 @@
 <script lang="ts">
-    import { MapBounds, toNativeScreenBounds } from '@nativescript-community/ui-carto/core';
     import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
-    import {
-        HillshadeRasterTileLayer,
-        RasterTileFilterMode,
-        RasterTileLayer
-    } from '@nativescript-community/ui-carto/layers/raster';
+    import { HillshadeRasterTileLayer, RasterTileFilterMode, RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
     import { action } from '@nativescript-community/ui-material-dialogs';
     import { Color, File } from '@nativescript/core';
     import { setNumber, setString } from '@nativescript/core/application-settings';
     import { onMount } from 'svelte';
+    import { Template } from 'svelte-native/components';
+    import { formatSize } from '~/helpers/formatter';
     import { l } from '~/helpers/locale';
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
@@ -17,8 +14,6 @@
     import { pickColor } from '~/utils/utils';
     import { textLightColor } from '~/variables';
     import { closeBottomSheet } from './bottomsheet';
-    import { Template } from 'svelte-native/components';
-    import { formatSize } from '~/helpers/formatter';
 
     const mapContext = getMapContext();
     let scrollView;
@@ -60,13 +55,6 @@
             result[k].value = opts[k].transformBack ? opts[k].transformBack(layer[k]) : layer[k];
         });
         options = result;
-        // const layer = item.layer;
-        // return Object.keys(options).forEach(k=> ({
-        //     name:k,
-        //     value:layer[name],
-        //     min:options[k][0] * 100,
-        //     max:options[k][1] * 100
-        // }))
     });
     function optionValue(name) {
         if (options[name].type === 'color') {
@@ -88,7 +76,6 @@
         // console.log('pickOptionColor', name, color, typeof color);
         try {
             const newColor = await pickColor(color, scrollView.nativeView);
-            // console.log('newColor', item.name, name, newColor);
             setString(`${item.name}_${name}`, newColor.hex);
             options[name].value = newColor.hex;
             item.layer[name] = newColor;
@@ -136,16 +123,13 @@
                         // use native for now
                         switch (result) {
                             case 'bicubic':
-                                (item.layer as RasterTileLayer).tileFilterMode =
-                                    RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BICUBIC;
+                                (item.layer as RasterTileLayer).tileFilterMode = RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BICUBIC;
                                 break;
                             case 'bilinear':
-                                (item.layer as RasterTileLayer).tileFilterMode =
-                                    RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BILINEAR;
+                                (item.layer as RasterTileLayer).tileFilterMode = RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BILINEAR;
                                 break;
                             case 'nearest':
-                                (item.layer as RasterTileLayer).tileFilterMode =
-                                    RasterTileFilterMode.RASTER_TILE_FILTER_MODE_NEAREST;
+                                (item.layer as RasterTileLayer).tileFilterMode = RasterTileFilterMode.RASTER_TILE_FILTER_MODE_NEAREST;
                                 break;
                         }
                     });
@@ -173,23 +157,8 @@
                 {#if option.type === 'color'}
                     <gridlayout height="50" columsn="*" on:tap={pickOptionColor(name, optionValue(name))}>
                         <canvaslabel fontSize="13" padding="10">
-                            <cspan
-                                text={name}
-                                verticalAlignment="center"
-                                paddingLeft="10"
-                                horizontalAlignment="left"
-                                width="100"
-                            />
-                            <circle
-                                strokeWidth="2"
-                                paintStyle="fill"
-                                fillColor={$textLightColor}
-                                radius="15"
-                                antiAlias={true}
-                                horizontalAlignment="right"
-                                verticalAlignment="middle"
-                                width="20"
-                            />
+                            <cspan text={name} verticalAlignment="center" paddingLeft="10" horizontalAlignment="left" width="100" />
+                            <circle strokeWidth="2" paintStyle="fill" fillColor={$textLightColor} radius="15" antiAlias={true} horizontalAlignment="right" verticalAlignment="middle" width="20" />
                             <circle
                                 strokeWidth="2"
                                 paintStyle="fill_and_stroke"
@@ -206,13 +175,7 @@
                 {:else}
                     <gridlayout height="50" columns="100,*,50">
                         <canvaslabel colSpan={3} fontSize="13" padding="10">
-                            <cspan
-                                text={name}
-                                verticalAlignment="center"
-                                paddingLeft="10"
-                                horizontalAlignment="left"
-                                width="100"
-                            />
+                            <cspan text={name} verticalAlignment="center" paddingLeft="10" horizontalAlignment="left" width="100" />
                             <cspan text={optionValue(name) / 100 + ''} verticalAlignment="center" textAlignment="right" />
                         </canvaslabel>
                         <slider

@@ -1,74 +1,73 @@
 <script lang="ts">
-    import { AppURL, handleOpenURL } from '@nativescript-community/appurl';
+    import { AppURL,handleOpenURL } from '@nativescript-community/appurl';
     import * as EInfo from '@nativescript-community/extendedinfo';
     import { GenericGeoLocation } from '@nativescript-community/gps';
-    import { allowSleepAgain, keepAwake } from '@nativescript-community/insomnia';
+    import { allowSleepAgain,keepAwake } from '@nativescript-community/insomnia';
     import * as perms from '@nativescript-community/perms';
     import { isSensorAvailable } from '@nativescript-community/sensors';
-    import type { MapPos } from '@nativescript-community/ui-carto/core';
-    import { ClickType, GenericMapPos, MapBounds, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
+    import { ClickType,GenericMapPos,MapBounds,MapPos,toNativeMapRange,toNativeScreenPos } from '@nativescript-community/ui-carto/core';
     import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
     import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
     import { Layer } from '@nativescript-community/ui-carto/layers';
     import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
-    import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
-    import { BaseVectorTileLayer, CartoOnlineVectorTileLayer, VectorLayer, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
+    import type { VectorElementEventData,VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
+    import { BaseVectorTileLayer,CartoOnlineVectorTileLayer,VectorLayer,VectorTileLayer,VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
     import { Projection } from '@nativescript-community/ui-carto/projections';
-    import { CartoMap, PanningMode, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
-    import { setShowDebug, setShowError, setShowInfo, setShowWarn } from '@nativescript-community/ui-carto/utils';
+    import { CartoMap,PanningMode,RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
+    import { setShowDebug,setShowError,setShowInfo,setShowWarn } from '@nativescript-community/ui-carto/utils';
     import { Group } from '@nativescript-community/ui-carto/vectorelements/group';
     import { Line } from '@nativescript-community/ui-carto/vectorelements/line';
     import { Marker } from '@nativescript-community/ui-carto/vectorelements/marker';
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
-    import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
+    import { Text,TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
     import { Drawer } from '@nativescript-community/ui-drawer';
-    import { action, alert, login } from '@nativescript-community/ui-material-dialogs';
+    import { action,alert,login } from '@nativescript-community/ui-material-dialogs';
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { Brightness } from '@nativescript/brightness';
-    import { AndroidApplication, Application, Color, Page, Utils } from '@nativescript/core';
+    import { AndroidApplication,Application,Color,Page,Utils } from '@nativescript/core';
     import * as appSettings from '@nativescript/core/application-settings';
     import type { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
-    import { Folder, knownFolders, path } from '@nativescript/core/file-system';
-    import { Device, Screen } from '@nativescript/core/platform';
+    import { Folder,knownFolders,path } from '@nativescript/core/file-system';
+    import { Device,Screen } from '@nativescript/core/platform';
     import { ad } from '@nativescript/core/utils/utils';
     import { compose } from '@nativescript/email';
     import * as SocialShare from 'nativescript-social-share';
     import { debounce } from 'push-it-to-the-limit/target/es6';
-    import { onDestroy, onMount } from 'svelte';
-    import { navigate, showModal } from 'svelte-native';
+    import { onDestroy,onMount } from 'svelte';
+    import { navigate,showModal } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
-    import { l, lc, onLanguageChanged } from '~/helpers/locale';
-    import { sTheme, toggleTheme } from '~/helpers/theme';
+    import { l,lc,onLanguageChanged } from '~/helpers/locale';
+    import { sTheme,toggleTheme } from '~/helpers/theme';
     import watcher from '~/helpers/watcher';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
     import type { LayerType } from '~/mapModules/MapModule';
-    import { getMapContext, setMapContext } from '~/mapModules/MapModule';
+    import { getMapContext,setMapContext } from '~/mapModules/MapModule';
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import type { IItem } from '~/models/Item';
     import { RouteInstruction } from '~/models/Route';
-    import { NotificationHelper, NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL } from '~/services/android/NotifcationHelper';
-    import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
-    import { NetworkConnectionStateEvent, NetworkConnectionStateEventData, networkService } from '~/services/NetworkService';
+    import { NotificationHelper,NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL } from '~/services/android/NotifcationHelper';
+    import { onServiceLoaded,onServiceUnloaded } from '~/services/BgService.common';
+    import { NetworkConnectionStateEvent,NetworkConnectionStateEventData,networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
     import mapStore from '~/stores/mapStore';
     import { showError } from '~/utils/error';
-    import { computeDistanceBetween, getBoundsZoomLevel } from '~/utils/geo';
+    import { computeDistanceBetween,getBoundsZoomLevel } from '~/utils/geo';
     import { Sentry } from '~/utils/sentry';
-    import { accentColor, screenHeightDips, screenWidthDips } from '~/variables';
-    import { navigationBarHeight, primaryColor } from '../variables';
-    import { isBottomSheetOpened, showBottomSheet } from './bottomsheet';
+    import { omit } from '~/utils/utils';
+    import { accentColor,screenHeightDips,screenWidthDips } from '~/variables';
+    import { navigationBarHeight,primaryColor } from '../variables';
+    import { isBottomSheetOpened,showBottomSheet } from './bottomsheet';
     import BottomSheetInner from './BottomSheetInner.svelte';
     import DirectionsPanel from './DirectionsPanel.svelte';
     import LocationInfoPanel from './LocationInfoPanel.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
     import Search from './Search.svelte';
-    import { omit } from '~/utils/utils';
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
@@ -173,7 +172,7 @@
             const pos = cartoMap.focusPos;
             if (!transitVectorTileDataSource && !fetchingTransitLines) {
                 transitService
-                    .getTransitLines(pos.lat, pos.lon)
+                    .getTransitLines()
                     .then((result) => {
                         transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
                             minZoom: 0,
@@ -193,7 +192,7 @@
                                 decoder: new MBVectorTileDecoder({
                                     style: 'voyager',
                                     liveReload: TNS_ENV !== 'production',
-                                    dirPath: '~/assets/styles/transit'
+                                    dirPath: '~/assets/internal_styles/transit'
                                 })
                             });
 
@@ -382,7 +381,7 @@
         if (DEV_LOG) {
             defaultLiveSync = global.__onLiveSync.bind(global);
             global.__onLiveSync = (...args) => {
-                // console.log('__onLiveSync', args);
+                console.log('__onLiveSync', args, currentLayerStyle);
                 const context = args[0];
                 if (!context && !!currentLayerStyle && !currentLayerStyle.endsWith('.zip')) {
                     reloadMapStyle && reloadMapStyle();
@@ -430,7 +429,7 @@
         }
     }
     function reloadMapStyle() {
-        // setMapStyle(currentLayerStyle, true);
+        setMapStyle(currentLayerStyle, true);
     }
 
     function getOrCreateLocalVectorLayer() {
@@ -485,25 +484,30 @@
 
         // options.setTileThreadPoolSize(2);
         options.setZoomGestures(true);
+        // options.setDoubleClickDetection(false);
+        options.setDoubleClickMaxDuration(0.3);
+        options.setLongClickDuration(0.6);
         options.setKineticRotation(false);
+        options.setRotatable($mapStore.rotateEnabled);
+        toggleMapPitch($mapStore.pitchEnabled);
         // options.setClickTypeDetection(false);
         // options.setRotatable(true);
         const pos = JSON.parse(appSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos<LatLonKeys>;
         const zoom = appSettings.getNumber('mapZoom', 10);
         cartoMap.setFocusPos(pos, 0);
         cartoMap.setZoom(zoom, 0);
-        try {
-            await perms.request('storage');
-            if (__CARTO_PACKAGESERVICE__) {
-                packageService.start();
-            }
-            transitService.start();
-            setMapStyle(appSettings.getString('mapStyle', 'osm~voyager'), true);
-        } catch (err) {
-            showError(err);
-        }
 
-        setTimeout(() => {
+        setTimeout(async () => {
+            try {
+                await perms.request('storage');
+                if (__CARTO_PACKAGESERVICE__) {
+                    packageService.start();
+                }
+                transitService.start();
+                setMapStyle(appSettings.getString('mapStyle', 'osm~streets'), true);
+            } catch (err) {
+                showError(err);
+            }
             mapContext.runOnModules('onMapReady', cartoMap);
         }, 100);
     }
@@ -553,7 +557,7 @@
         const handledByModules = mapContext.runOnModules('onMapClicked', e);
         // console.log('mapTile', latLngToTileXY(position.lat, position.lon, cartoMap.zoom), clickType === ClickType.SINGLE, handledByModules, !!selectedItem);
         if (!handledByModules && clickType === ClickType.SINGLE) {
-            selectItem({ item: { position, properties: {} }, isFeatureInteresting: !$selectedItem, preventZoom:true });
+            selectItem({ item: { position, properties: {} }, isFeatureInteresting: !$selectedItem, preventZoom: true });
         }
         unFocusSearch();
     }
@@ -633,7 +637,7 @@
                                 position: omit(item.route.positions.getPos(i.index), 'altitude'),
                                 styleBuilder: {
                                     size: 12,
-                                    placementPriority:10,
+                                    placementPriority: 10,
                                     hideIfOverlapped: false,
                                     scaleWithDPI: true,
                                     color: 'red'
@@ -795,7 +799,6 @@
                 selectedPosMarker.visible = false;
             }
             if (selectedRouteInstructionsGroup) {
-                console.log('remove, selectedRouteInstructionsGroup');
                 localVectorDataSource.remove(selectedRouteInstructionsGroup);
                 selectedRouteInstructionsGroup = null;
             }
@@ -852,9 +855,9 @@
     }
     function toggleMapPitch(value: boolean) {
         if (value) {
-            cartoMap && cartoMap.getOptions().setTiltRange(toNativeMapRange({min:30, max:90}));
+            cartoMap && cartoMap.getOptions().setTiltRange(toNativeMapRange({ min: 30, max: 90 }));
         } else {
-            cartoMap && cartoMap.getOptions().setTiltRange(toNativeMapRange({min:90, max:90}));
+            cartoMap && cartoMap.getOptions().setTiltRange(toNativeMapRange({ min: 90, max: 90 }));
         }
     }
 
@@ -989,7 +992,11 @@
                 return false;
             }
 
-            const isFeatureInteresting = !!featureData.name || featureLayerName === 'poi' || featureLayerName === 'mountain_peak' || featureLayerName === 'housenumber';
+            const isFeatureInteresting =
+                featureLayerName === 'poi' ||
+                featureLayerName === 'mountain_peak' ||
+                featureLayerName === 'housenumber' ||
+                (!!featureData.name && (featureData.class !== 'national_park' || cartoMap.zoom < 9) && (featureData.class !== 'protected_area' || cartoMap.zoom < 11));
             if (isFeatureInteresting) {
                 ignoreNextMapClick = false;
                 selectedRoutes = null;
@@ -1136,7 +1143,7 @@
     function setMapStyle(layerStyle: string, force = false) {
         layerStyle = layerStyle.toLowerCase();
         let mapStyle = layerStyle;
-        let mapStyleLayer = 'voyager';
+        let mapStyleLayer = 'streets';
         if (layerStyle.indexOf('~') !== -1) {
             const array = layerStyle.split('~');
             mapStyle = array[0];
@@ -1701,7 +1708,6 @@
 
 <page bind:this={page} actionBarHidden={true} backgroundColor="#E3E1D3" on:navigatingTo={onNavigatingTo} on:navigatingFrom={onNavigatingFrom}>
     <drawer bind:this={drawer} translationFunction={drawerTranslationFunction} bottomOpenedDrawerAllowDraging={true} bottomClosedDrawerAllowDraging={false} backgroundColor="#E3E1D3">
-        <!-- <LayersMenu prop:bottomDrawer bind:this={layersMenu} /> -->
         <cartomap zoom="16" on:mapReady={onMainMapReady} on:mapMoved={onMainMapMove} on:mapStable={onMainMapStable} on:mapIdle={onMainMapIdle} on:mapClicked={onMainMapClicked} />
         <bottomsheet
             android:marginBottom={navigationBarHeight}

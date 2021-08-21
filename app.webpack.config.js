@@ -98,10 +98,6 @@ module.exports = (env, params = {}) => {
     // console.log('config.externals', config.externals);
 
     const coreModulesPackageName = fork ? '@akylas/nativescript' : '@nativescript/core';
-    // console.log('mainFields', config.resolve.mainFields);
-    // console.log('importsFields', config.resolve.importsFields);
-    // config.resolve.mainFields = ['esnext', 'module', 'main'];
-    // config.resolve.importsFields = ['esnext', 'module', 'main'];
     config.resolve.modules = [resolve(__dirname, `node_modules/${coreModulesPackageName}`), resolve(__dirname, 'node_modules'), `node_modules/${coreModulesPackageName}`, 'node_modules'];
     Object.assign(config.resolve.alias, {
         '@nativescript/core': `${coreModulesPackageName}`,
@@ -372,9 +368,9 @@ module.exports = (env, params = {}) => {
             globOptions
         }
     ];
-    if (devlog) {
-        copyPatterns.push({ context: 'dev_assets', from: '**/*', to: 'assets', globOptions });
-    }
+    // if (devlog) {
+    //     copyPatterns.push({ context: 'dev_assets', from: '**/*', to: 'assets', globOptions });
+    // }
     config.plugins.unshift(new CopyPlugin({ patterns: copyPatterns }));
 
     config.plugins.unshift(
@@ -386,7 +382,7 @@ module.exports = (env, params = {}) => {
     config.plugins.push(new IgnoreNotFoundExportPlugin());
 
     // save as long as we dont use calc in css
-    // config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /reduce-css-calc$/ }));
+    config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /reduce-css-calc$/ }));
     config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /punnycode$/ }));
     // config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /polymer-expressions$/ }));
 
@@ -461,15 +457,7 @@ module.exports = (env, params = {}) => {
     config.externalsPresets = { node: false };
     config.resolve.fallback = config.resolve.fallback || {};
     config.resolve.fallback.timers = require.resolve('timers/');
-    config.resolve.fallback.util = false;
     config.resolve.fallback.stream = require.resolve('stream/');
-    config.resolve.fallback.buffer = false;
-    config.resolve.fallback.path = false;
-    config.resolve.fallback.emitter = false;
-    config.resolve.fallback.fs = false;
-    config.resolve.fallback.assert = false;
-    config.resolve.fallback.tty = false;
-    config.resolve.fallback.os = false;
     config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|nativescript-carto|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
     // config.optimization.usedExports = true;
     config.optimization.minimize = uglify !== undefined ? !!uglify : production;

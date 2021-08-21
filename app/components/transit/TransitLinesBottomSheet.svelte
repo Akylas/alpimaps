@@ -1,17 +1,14 @@
 <script lang="ts">
     import { MapPos } from '@nativescript-community/ui-carto/core';
-
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import dayjs from 'dayjs';
     import { onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
-    import { navigate, showModal } from 'svelte-native/dom';
-import { lc } from '~/helpers/locale';
-import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
+    import { NativeViewElementNode, navigate } from 'svelte-native/dom';
+    import { lc } from '~/helpers/locale';
+    import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
     import { transitService } from '~/services/TransitService';
     import { showError } from '~/utils/error';
-    import { borderColor, mdiFontFamily, navigationBarHeight } from '~/variables';
+    import { mdiFontFamily, navigationBarHeight } from '~/variables';
     import { closeBottomSheet } from '../bottomsheet';
 
     export let position: MapPos<LatLonKeys>;
@@ -100,12 +97,12 @@ import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
         </Template>
     </collectionview>
     {#if noNetworkAndNoData}
-            <canvaslabel row={1}>
-                <cgroup textAlignment="center" verticalAlignment="center">
-                    <cspan text="mdi-alert-circle-outline" fontSize={50} fontFamily={mdiFontFamily} />
-                    <cspan text={'\n' + lc('no_network')} fontSize={20} />
-                </cgroup>
-            </canvaslabel>
-        {/if}
+        <canvaslabel row={1}>
+            <cgroup textAlignment="center" verticalAlignment="center">
+                <cspan text="mdi-alert-circle-outline" fontSize={50} fontFamily={mdiFontFamily} />
+                <cspan text={'\n' + lc('no_network')} fontSize={20} />
+            </cgroup>
+        </canvaslabel>
+    {/if}
     <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} busy={true} horizontalAlignment="center" verticalAlignment="center" />
 </gridlayout>
