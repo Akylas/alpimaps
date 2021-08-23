@@ -1,24 +1,24 @@
 #boundary {
-    [admin_level='2'] {
+    [admin_level=2] {
         line-color: @border_country;
         line-opacity: @border_country_opacity;
-        line-width: linear([view: : zoom], (3, 0.5), (10, 2));
+        line-width: linear([view::zoom], (3, 0.5), (10, 2));
     }
-    [admin_level='3'][zoom>='3'][zoom<7] {
+    [admin_level=3][zoom>=3][zoom<7] {
         line-color: @border_region;
         line-width: 0.8;
         line-dasharray: 0.9, 0.36;
     }
-    [admin_level='4'][zoom>='4'][zoom<='14'] {
+    [admin_level=4][zoom>=4][zoom<=14] {
         line-color: @border_region;
-        line-width: linear([view: : zoom], (5, 0.7), (6, 0.8), (7, 0.9), (8, 0.9), (9, 1), (10, 1.2));
-        line-opacity: linear([view: : zoom], (5, 0.8), (6, 0.9));
+        line-width: linear([view::zoom], (5, 0.7), (6, 0.8), (7, 0.9), (8, 0.9), (9, 1), (10, 1.2));
+        line-opacity: linear([view::zoom], (5, 0.8), (6, 0.9));
         line-dasharray: 1.35, 0.9;
     }
-    [admin_level='5'][zoom>='6'][zoom<='14'] {
+    [admin_level=5][zoom>=6][zoom<=14] {
         line-color: @border_region;
-        line-width: linear([view: : zoom], (5, 0.7), (6, 0.8), (7, 0.9), (8, 0.9), (9, 1), (10, 1.2));
-        line-opacity: linear([view: : zoom], (5, 0.8), (6, 0.9));
+        line-width: linear([view::zoom], (5, 0.7), (6, 0.8), (7, 0.9), (8, 0.9), (9, 1), (10, 1.2));
+        line-opacity: linear([view::zoom], (5, 0.8), (6, 0.9));
         line-dasharray: 1.35, 0.9;
     }
 }
@@ -42,22 +42,35 @@
     }
     text-fill: @protected-area;
 }
-#park['mapnik::geometry_type'=3][class!='national_park'][zoom>=13],#park['mapnik::geometry_type'=3][class='national_park'] {
+#park['mapnik::geometry_type'=3][class!='national_park'][zoom>=13],
+#park['mapnik::geometry_type'=3][class='national_park'] {
     [class='national_park'] {
         polygon-fill: @national_park_fill;
     }
-    [zoom >=8] {
+    [zoom >=8][zoom <14]{
         line-width: 1.2;
-        line-width: linear([view: : zoom], (9, 0.75), (12, 1));
+        line-width: linear([view::  zoom], (9, 0.75), (12, 1));
         line-color: @protected_area_line;
         [class='aboriginal_lands'] {
             line-color: @aboriginal_line;
         }
     }
     [zoom >=14] {
+        [way_pixels > 750] {
+            line-color: @protected-area;
+            [class=aboriginal_lands] {
+                line-color: @aboriginal;
+            }
+            // line-offset: -6.8;
+            line-width: 3.6;
+            line-opacity: 0.15;
+            narrowline/line-opacity: 0.15;
+            narrowline/line-color: @protected-area;
+            [class=aboriginal_lands] {
+                narrowline/line-color: @aboriginal;
+            }
+        }
         text-size: @protected_area_font_size;
-        // text-face-name: @osm;
-        // text-name: [nuti::osm-park];
         [class='national_park'] {
             text-size: @park_font_size;
         }
@@ -68,7 +81,7 @@
         text-halo-radius: @standard-halo-radius;
         text-halo-rasterizer: fast;
         text-wrap-width: 10000;
-        text-dy: -3;
+        text-dy: 3;
         [class='aboriginal_lands'] {
             text-fill: @aboriginal_label;
         }
