@@ -5,11 +5,11 @@ Map {
   font-directory: url(../fonts/);
 }
 //CARTO Fonts
-@mont: 'Montserrat Regular';
-@mont_md: 'Montserrat Medium';
-@mont_bd: 'Montserrat SemiBold';
-@mont_it: 'Montserrat Italic';
-@mont_it_md: 'Montserrat Italic';
+@mont: 'DIN Pro Regular';
+@mont_md: 'DIN Pro Medium';
+@mont_bd: 'DIN Pro Bold';
+@mont_it: 'DIN Pro Italic';
+@mont_it_md: 'DIN Pro Italic';
 @osm: 'osm';
 
 @background: #e6e4e0;
@@ -55,11 +55,15 @@ Map {
 
 // --- Parks, woods, other green things ---
 
-@grass: linear([view::zoom], (6, fadeout(#cdebb0, 0.7)), (12,#cdebb0), (13,#cdebb0), (14,fadeout(#cdebb0, 0.5)));
-@scrub: linear([view::zoom], (6, fadeout(#c8d7ab, 0.7)), (12,#c8d7ab), (13,#c8d7ab), (14,fadeout(#c8d7ab, 0.5)));
-@heath:  linear([view::zoom], (6, fadeout(#d6d99f, 0.7)), (12,#d6d99f), (13,#d6d99f), (14,fadeout(#d6d99f, 0.5)));
+// @grass: linear([view::zoom], (6, fadeout(#cdebb0, 0.7)), (12,#cdebb0), (13,#cdebb0), (14,fadeout(#cdebb0, 0.5)));
+@grass: linear([view::zoom], (6, fadeout(#cdebb0, 0.7)), (12,#cdebb0));
+// @scrub: linear([view::zoom], (6, fadeout(#c8d7ab, 0.7)), (12,#c8d7ab), (13,#c8d7ab), (14,fadeout(#c8d7ab, 0.5)));
+@scrub: linear([view::zoom], (6, fadeout(#c8d7ab, 0.7)), (12,#c8d7ab));
+// @heath:  linear([view::zoom], (6, fadeout(#d6d99f, 0.7)), (12,#d6d99f), (13,#d6d99f), (14,fadeout(#d6d99f, 0.5)));
+@heath:  linear([view::zoom], (6, fadeout(#d6d99f, 0.7)), (12,#d6d99f));
 @fell: @heath
-@forest: linear([view::zoom], (6, fadeout(#add19e, 0.7)), (12,#add19e), (13,#add19e), (14,fadeout(#add19e, 0.5)));
+// @forest: linear([view::zoom], (6, fadeout(#add19e, 0.7)), (12,#add19e), (13,#add19e), (14,fadeout(#add19e, 0.5)));
+@forest: linear([view::zoom], (6, fadeout(#add19e, 0.7)), (12,#add19e));
 @forest_pattern:  url('symbols/leaftype_mixed.svg');
 @allotments: linear([view::zoom], (6, fadeout(#c9e1bf, 0.7)), (12,#c9e1bf)) ;
 @bare_rock:#eee5dc;
@@ -321,8 +325,8 @@ Map {
 @peak_icon:[nuti::osm-mountain];
 @saddle_icon:[nuti::osm-saddle];
 @peak_icon_width: @poi_icon_width;
-@peak_label_width: linear([view::zoom], (5, 5), (10, 11), (18, 12)) - 0.000001 * [rank];
-@peak_label_dy: linear([view::zoom], (5, 6), (10, 12), (18, 13));
+@peak_label_width: linear([view::zoom], (5, 5), (10, 7), (18, 10)) - 0.000001 * [rank];
+@peak_label_dy: linear([view::zoom], (5, 6), (10, 8), (18, 12));
 @peak_text_min_dist: linear([view::zoom], (5, 30), (10, 20), (18, 10));
 
 /* 6.3 Place labels */
@@ -334,23 +338,23 @@ Map {
 @city_label_min_dist: 1;
 @town-label-icon-size: 3;
 @town-label-wrap-width: linear([view::zoom], (12, 70), (14, 180));
-@town_label_min_dist: 20;
+@town_label_min_dist: 30;
 @town_label: #000000;
-@town_label_width:linear([view::zoom], (7, 8), (15, 18)) - 0.000001 * [rank];
+@town_label_width:linear([view::zoom], (7, 8), (10, 13), (15, 18)) - 0.000001 * [rank];
 
 @place_line_spacing:-2;
 @city_label: #000000;
 @country_label: #000000;
 @village_label: #333333;
-@village_label_width: linear([view::zoom], (7, 7), (10, 11), (16, 15)) - 0.000001 * [rank];
+@village_label_width: linear([view::zoom], (7, 7), (10, 10.5), (16, 15)) - 0.000001 * [rank];
 @hamlet_label: #333333;
 @hamlet_label_width: linear([view::zoom], (12, 9), (15, 14)) - 0.000001 * [rank];
 @island_label: #333333;
-@island_label_width: linear([view::zoom], (10, 11), (18, 16)) - 0.000001 * [rank];
+@island_label_width: linear([view::zoom], (10, 10), (18, 16)) - 0.000001 * [rank];
 @state_label: #000000;
 @district_label: #7f7f7f;
 @suburb_label: #3f4873;
-@suburb_min_dist: 15;
+@suburb_min_dist: 25;
 @suburb_label_width:linear([view::zoom], (12, 9), (13, 10), (16, 13)) - 0.000001 * [rank];
 @suburb-label-wrap-width: linear([view::zoom], (12, 40), (15, 60));
 @neighbourhood_label: #7f7f7f;
@@ -401,7 +405,10 @@ Map {
 @poi-shop-fill: #9F43A7; 
 @poi_icon_width:linear([view::zoom], (10, 10), (12, 11), (19, 13), (20, 17)) - 0.000001 * [rank];
 @poi_halo_radius:1;
-@poi_label_width:linear([view::zoom], (10, 11), (18, 12)) - 0.000001 * [rank];
-@poi_label_wrap_width:step([view::zoom], (14, 60), (18, 100));
-@poi_label_dy: linear([view::zoom], (10, 12), (18, 13));
+@poi_label_width:linear([view::zoom], (5, 5), (10, 8), (17, 10), (18, 12)) - 0.000001 * [rank];
+@poi_national_park_label_width:linear([view::zoom], (5, 8), (10, 11), (18, 12)) - 0.000001 * [rank];
+@poi_label_wrap_width:linear([view::zoom], (14, 50), (18, 100));
+@poi_national_park_wrap_width:linear([view::zoom], (14, 60), (18, 100));
+@poi_label_dy: linear([view::zoom], (10, 10), (18, 14));
 
+@peak_label_width: linear([view::zoom], (5, 5), (10, 7), (18, 10)) - 0.000001 * [rank];
