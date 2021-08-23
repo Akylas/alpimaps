@@ -5,11 +5,11 @@ Map {
   font-directory: url(../fonts/);
 }
 //CARTO Fonts
-@mont: 'Montserrat Regular';
-@mont_md: 'Montserrat Medium';
-@mont_bd: 'Montserrat SemiBold';
-@mont_it: 'Montserrat Italic';
-@mont_it_md: 'Montserrat Italic';
+@mont: 'DIN Pro Regular';
+@mont_md: 'DIN Pro Medium';
+@mont_bd: 'DIN Pro Bold';
+@mont_it: 'DIN Pro Italic';
+@mont_it_md: 'DIN Pro Italic';
 @osm: 'osm';
 
 @background: #e6e4e0;
@@ -48,7 +48,7 @@ Map {
 @park_font_size:linear([view::zoom], (12, 12), (14, 12), (14.0001, 8));
 @protected_area_font_size:linear([view::zoom], (12, 12), (14, 12), (14.0001, 8));
 
-@protected-area: #09330c;
+@protected-area: #008000;
 @protected-area_halo: #e8fde8;
 @aboriginal_label: #82643a;
 
@@ -148,7 +148,7 @@ Map {
 @primary-tunnel-fill: @primary-fill;
 @primary-casing: #d8dbe8;
 @primary-casing-width: linear([view::zoom], (10,0), (10.01,2), (18, 4));
-@primary-width: pow(2.0, linear([view::zoom], (5, -2.3), (18, 4.2))) + 0.75;
+@primary-width: pow(2.0, linear([view::zoom], (5, -5.3), (18, 4.2))) + 0.75;
 
 @primary-link-width: pow(2.0, linear([view::zoom], (14, -2.8), (18, 3.2))) + 0.5;
 
@@ -394,7 +394,9 @@ Map {
 @poi-restaurant-fill: #BC7729; 
 @poi-shop-fill: #9F43A7; 
 @poi_icon_width:linear([view::zoom], (10, 10), (12, 11), (19, 13), (20, 17)) - 0.000001 * [rank];
+@poi_national_park_label_width:@poi_icon_width;
 @poi_halo_radius:1;
 @poi_label_width:linear([view::zoom], (10, 11), (18, 12)) - 0.000001 * [rank];
 @poi_label_wrap_width:step([view::zoom], (14, 60), (18, 100));
+@poi_national_park_wrap_width:@poi_label_wrap_width;
 @poi_label_dy: linear([view::zoom], (10, 12), (18, 13));

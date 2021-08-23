@@ -5,8 +5,13 @@
 			line-color: @contour_low;
 			line-width: 0.6 ;
 		}
-		[div=50][zoom>=13] {
-			line-color: @contour_low;
+		[div=50][zoom>=13][zoom<14] ,
+		[div=50][zoom>=15]{
+			line-color: step([view::zoom], (13, @contour_semi), (14,@contour));
+			line-width: 0.6 ;
+		}
+		[div=250][zoom>=13][zoom<14] {
+			line-color: @contour;
 			line-width: 0.6 ;
 		}
 		[div=100][zoom>=12] {
@@ -29,6 +34,7 @@
 		[div=1000][zoom>=12],
 		[div=500][zoom>=12],
 		[div=200][zoom>=14],
+		[div=250][zoom>=13][zoom<14],
 		[div=100][zoom>=14],
 		[div=50][zoom>=15] 
 		{
