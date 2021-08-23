@@ -178,7 +178,7 @@
 			text-size: @hamlet_label_width ;
 	}
 	
-	[class=village]::label {
+	[class=village][zoom>=10]::label {
 			text-name: @name;
 			text-face-name: @mont_md;
 			text-placement: [nuti::texts3d];
@@ -208,7 +208,7 @@
 		text-wrap-before:true;
 	}
 	
-	[class=town][zoom<14]::label {
+	[class=town][zoom>=7][zoom<14]::label {
 		
 			text-name: @name;
 			text-face-name: @mont_md;
@@ -218,6 +218,7 @@
 			text-halo-rasterizer: fast;
 			text-fill: @town_label;
 			text-size: @town_label_width;
+			text-min-distance: @town_label_min_dist;
 			text-wrap-character: '-';
 			text-wrap-width:@town-label-wrap-width;
 			text-wrap-before:true;
@@ -226,7 +227,7 @@
 			}
 		
 	}
-	[class=city][zoom<14]{
+	[class=city][zoom>=4][zoom<14]{
 		[zoom>=4][zoom<=7] {
 			::icon {
 				text-placement: [nuti::markers3d];
@@ -522,7 +523,8 @@
 				text-fill: @poi-shop-fill; 
 			}
 		}
-		[class!='spring'][class!=bus][class!=railway][class!=campsite],
+		#park[zoom>=8],
+		#poi[class!='spring'][class!=bus][class!=railway][class!=campsite],
 		[class=bus][zoom>=17],
 		[class=campsite][zoom>=14],
 		[class=railway][zoom>=17],
@@ -537,10 +539,16 @@
 				text-halo-radius: @poi_halo_radius;
 				text-size: @poi_label_width;
 				text-wrap-width: @poi_label_wrap_width;
+				text-wrap-before:true;
 				text-feature-id: @featureId;
 				text-dy: @poi_label_dy;
 				text-fill: @poi-fill;
-				#park, [class=park] {
+				#park {
+					text-size:@poi_national_park_label_width;
+					text-wrap-width: @poi_national_park_wrap_width;
+					text-fill: darken(@poi-park-fill, 30%);
+				}
+				[class=park] {
 					text-fill: darken(@poi-park-fill, 30%);
 				}
 				[class=national_park],[class=protected_area] {
