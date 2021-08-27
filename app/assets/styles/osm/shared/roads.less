@@ -7,8 +7,6 @@
 
 #transportation {
 	['mapnik::geometry_type'=3][zoom>=13]::casing {
-		[class=residential],
-		[class=unclassified],
 		[class=minor],
 		[class=service] {
 			[zoom>=14] {
@@ -80,12 +78,8 @@
 			line-width: @service-width;
 		}
 	}
-	[class=residential][zoom>=12]::casing,
-	[class=unclassified][zoom>=12]::casing,
 	[class=minor][zoom>=12]::casing, 
-	[class=minor][brunnel=bridge][zoom>=15]::bridge, 
-	[class=residential][brunnel=bridge][zoom>=15]::bridge, 
-	[class=unclassified][brunnel=bridge][zoom>=15]::bridge {
+	[class=minor][brunnel=bridge][zoom>=15]::bridge {
 		line-width: @residential-width + @residential-casing-width;
 		// [ramp=1] {
 		// 	line-width: @residential-link-width + @residential-casing-width;
@@ -229,7 +223,7 @@
 		}
 	}
 	[class=trunk][zoom>=14]::casing,
-	[class=trunk][zoom<14]::casingLowZoom, 
+	[class=trunk][zoom>=5][zoom<14]::casingLowZoom, 
 	[class=trunk][brunnel=bridge][zoom>=15]::bridge
 		{
 		line-width: @trunk-width + @trunk-casing-width;
@@ -261,7 +255,7 @@
 	}
 	
 	[class=motorway][zoom>=14]::casing,
-	[class=motorway][zoom<14]::casingLowZoom, 
+	[class=motorway][zoom>=5][zoom<14]::casingLowZoom, 
 	[class=motorway][brunnel=bridge][zoom>=15]::bridge{
 		line-width: @motorway-width + @motorway-casing-width;
 		[ramp=1] {
@@ -323,12 +317,11 @@
 			line-cap: round;
 		}
 	}
-	[class=path][subclass=path][surface!=paved]::casing1,
+	[class=path][subclass=path][surface!=paved][zoom>=12]::casing1,
 	[class=path][subclass=pedestrian][zoom>=14]::casing,
 	[class=path][subclass!=path][zoom>=15]::casing,
 	[class=path][subclass=path][surface=paved][zoom>=15]::casing,
 	[class=path][brunnel=bridge][zoom>=16]::bridge1 {
-
 		[subclass=path][sac_scale!=null],
 		[zoom>=13] {
 			[subclass=cycleway],[bicycle=designated][mtb_type=null][surface!=unpaved] {
@@ -467,7 +460,7 @@
 		}
 	}
 
-	[class=aerialway][zoom >= 13]::aerial {
+	[class=aerialway][zoom>=13]::aerial {
 		
 		line-width: @aerial-width + @aerial-casing-width;
 		line-color: @aerial-casing-fill;

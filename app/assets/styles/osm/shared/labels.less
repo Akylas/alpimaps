@@ -232,12 +232,10 @@
 			::icon {
 				text-placement: [nuti::markers3d];
 				text-name: [nuti::osm-circle];
-				// text-allow-overlap: true;
 				text-face-name: @osm;
 				text-halo-fill: @place_halo;
 				text-halo-radius: @place_halo_radius;
 				text-halo-rasterizer: fast;
-	
 				text-min-distance:@city_label_min_dist;
 				text-fill: @city_label;
 				text-size: @city-label-icon-size;
@@ -252,16 +250,16 @@
 			text-halo-fill: @place_halo;
 			text-halo-radius: @place_halo_radius;
 			text-halo-rasterizer: fast;
-				[zoom >=7] {
-					text-face-name: @mont_bd;
-				}
-				text-min-distance:@city_label_min_dist;
-				text-dy: @city-label-dy;
-				text-fill: @city_label;
-				text-size: @city-label-width;
-				text-wrap-width: @city-label-wrap-width;
-				text-wrap-before:true;
+			[zoom >=7] {
+				text-face-name: @mont_bd;
 			}
+			text-min-distance:@city_label_min_dist;
+			text-dy: @city-label-dy;
+			text-fill: @city_label;
+			text-size: @city-label-width;
+			text-wrap-width: @city-label-wrap-width;
+			text-wrap-before:true;
+		}
 	}
 	[class=quarter]::label,
 	[class=neighbourhood]::label {
@@ -351,7 +349,7 @@
 	text-halo-radius: @water_halo_radius;
 	text-halo-rasterizer: fast;
 	text-dy:@waterway_label_dy;
-	text-spacing: 70;
+	text-spacing: @waterway_label_spacing;
 	text-size: @waterway_text_width;
 	[class=river] {
 		text-size: @river_text_width;
@@ -409,9 +407,12 @@
 		}
 	}
 }
-#transportation_name[subclass!=footway]{
+
+// we ignore footway names as the almost always duplicate the street name
+#transportation_name{
 	[class=track][zoom>=13],
 	[class=path][subclass=path][zoom>=14],
+	[class=path][subclass=footway][zoom>=18],
 	[class=path][zoom>=15] {
 		text-name: @name;
 		text-fill: @road_small_label_fill;
@@ -426,9 +427,9 @@
 		}
 	}
 	
-	[class=motorway],
-	[class=trunk],
-	[class=primary]{
+	[class=motorway][zoom>=5],
+	[class=trunk][zoom>=5],
+	[class=primary][zoom>=7]{
 		text-name: @name;
 		text-placement: line;
 		text-face-name: @mont_md;
@@ -440,11 +441,11 @@
 	}
 
 
-	[class=tertiary],
-	[class=secondary],
-	[class=minor],
-	[class=service],
-	[class=aerialway]{
+	[class=tertiary][zoom>=11],
+	[class=secondary][zoom>=9],
+	[class=minor][zoom>=12],
+	[class=service][zoom>=15],
+	[class=aerialway][zoom>=13]{
 		text-name: @name;
 		text-placement: line;
 		text-face-name: @mont_md;
