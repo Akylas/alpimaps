@@ -1,5 +1,6 @@
 /// <reference path="./node_modules/@nativescript/core/global-types.d.ts" />
 /// <reference path="./node_modules/@nativescript/types-android/lib/android-30.d.ts" />
+/// <reference path="./node_modules/@nativescript-community/ui-carto/typings/carto.android.d.ts" />
 /// <reference path="./vue.shim.d.ts" />
 
 
@@ -88,18 +89,19 @@ interface LatLonKeys {
 
 namespace svelteNative.JSX {
     interface ViewAttributes {
-        rippleColor?: Color | String;
-        verticalAlignment?: String;
+        rippleColor?: Color | string;
+        verticalAlignment?: string;
     }
     export interface ButtonAttributes {
-        variant?: String;
+        variant?: string;
+        shape?: string;
     }
     export interface SliderAttributes {
         stepSize?: number;
     }
     export interface LabelAttributes {
         autoFontSize?: boolean;
-        verticalTextAlignment?: String;
+        verticalTextAlignment?: string;
         maxLines?: number;
         minFontSize?: number;
         maxFontSize?: number;
