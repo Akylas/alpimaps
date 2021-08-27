@@ -966,7 +966,7 @@ export class NetworkService extends Observable {
     broadcastPromises: { [key: string]: { resolve: Function; reject: Function; timeoutTimer: NodeJS.Timer }[] } = {};
     sendWeatherBroadcastQuery({ lat, lon, timeout = 0 }) {
         return new Promise((resolve, reject) => {
-            const id = Date.now().valueOf() + '';
+            const id = Date.now() + '';
             this.broadcastPromises[id] = this.broadcastPromises[id] || [];
             let timeoutTimer;
             if (timeout > 0) {
