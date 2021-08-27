@@ -101,7 +101,7 @@
         // (collectionView.nativeView as CollectionView).refreshVisibleItems();
     });
     function onLongPress() {}
-    async function onTap(command, item) {
+    async function onTap(command, item?) {
         switch (command) {
             case 'github':
                 openLink(GIT_URL);
@@ -159,7 +159,7 @@
                     <gridLayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)}>
                         <label fontSize={36} text={item.icon} marginLeft="-10" width="40" verticalAlignment="center" fontFamily={mdiFontFamily} visibility={!!item.icon ? 'visible' : 'hidden'} />
                         <stackLayout col={1} verticalAlignment="center">
-                            <label fontSize="17" text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines="2" lineBreak="end" />
+                            <label fontSize="17" text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines={2} lineBreak="end" />
                             <label
                                 visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'}
                                 fontSize="14"
