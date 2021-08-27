@@ -545,7 +545,7 @@
                     text="item.getStatusText()"
                     color="#D0D0D0"
                     fontSize="11"
-                    :visibility={!item.isGroup() ? 'visible' : 'collapsed'}
+                    visibility={!item.isGroup() ? 'visible' : 'collapsed'}
                     verticalAlignment="center" />
                 <label
                     col={2}
@@ -567,9 +567,9 @@
                     text={item.getActionText('map')}
                     verticalAlignment="center"
                     horizontalAlignment="center"
-                    :visibility={!item.isGroup() ? 'visible' : 'collapsed'}
+                    visibility={!item.isGroup() ? 'visible' : 'collapsed'}
                     fontSize="12"
-                    on:tap={handlePackageAction('map', item)} />
+                    on:tap={()=>handlePackageAction('map', item)} />
                 <button
                     col={2}
                     
@@ -579,9 +579,9 @@
                     padding="0"
                     text={item.getGeoActionText()}
                     verticalAlignment="center"
-                    :visibility={item.hasGeo() ? 'visible' : 'collapsed'}
+                    visibility={item.hasGeo() ? 'visible' : 'collapsed'}
                     fontSize="12"
-                    on:tap={handlePackageAction('geo', item)} />
+                    on:tap={()=>handlePackageAction('geo', item)} />
                 <button
                     col={3}
                     
@@ -591,16 +591,15 @@
                     padding="0"
                     text={item.getRoutingActionText()}
                     verticalAlignment="center"
-                    :visibility={item.hasRouting() ? 'visible' : 'collapsed'}
+                    visibility={item.hasRouting() ? 'visible' : 'collapsed'}
                     fontSize="12"
-                    on:tap={handlePackageAction('routing', item)} />
+                    on:tap={()=>handlePackageAction('routing', item)} />
                 <mdprogress
                     row={2}
                     
                     colSpan={4}
                     height="3"
                     value={item.getDownloadProgress()}
-                    :visibility={!item.isGroup() ? 'visible' : 'collapsed'}
                     visibility={item.isDownloading() ? 'visible' : 'hidden'} />
             </gridlayout>
         </Template>
