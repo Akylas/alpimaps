@@ -16,8 +16,8 @@
         "park",
         "landcover",
         "aerodrome_label",
-        "place",
-        "poi"
+        "poi",
+        "place"
     ],
     "styles": [
         "osm/style.less",
