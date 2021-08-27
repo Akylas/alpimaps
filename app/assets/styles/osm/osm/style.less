@@ -310,6 +310,7 @@ Map {
 @waterway_label_dy:-2;
 @waterway_text_width: linear([view::zoom], (10, 6.0), (15, 7.0), (16, 9.0), (17, 12.0));
 @river_text_width: linear([view::zoom], (10, 6), (15, 10), (18, 12));
+@waterway_label_spacing: 0;
 
 @canal_width: linear([view::zoom], (13, 0.7), (14, 1), (15, 1.6));
 @stream-width: linear([view::zoom], (13, 0.7), (14, 1), (15, 1.6));
@@ -332,7 +333,7 @@ Map {
 /* 6.3 Place labels */
 
 @city-label-icon-size: 4;
-@city-label-dy: linear([view::zoom], (4, -5), (7.99, -9), (8, 0));
+@city-label-dy: linear([view::zoom], (4, -5), (7.99, -10), (8, 0));
 @city-label-width: linear([view::zoom], (4, 10), (5, 11), (6, 12), (7, 13), (12, 18))- 0.000001 * [rank];
 @city-label-wrap-width: step([view::zoom], (4, 40), (5, 50), (6, 60));
 @city_label_min_dist: 1;
