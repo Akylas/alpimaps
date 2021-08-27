@@ -1,6 +1,7 @@
 <script lang="ts">
     import { HandlerType, Manager } from '@nativescript-community/gesturehandler';
     import { request } from '@nativescript-community/perms';
+    import { estimateMagneticField, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
     import { MergedMBVTTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
     import { MapTilerOnlineTileDataSource } from '@nativescript-community/ui-carto/datasources/maptiler';
@@ -67,13 +68,13 @@
         if (!webView) {
             return;
         }
-        webView.nativeView.executeJavaScript(`webapp.setElevation(${elevation})`);
+        callJSFunction(`setElevation`, elevation);
     }, 10);
     function refresh() {
         webView.nativeView.reload();
     }
     let shown = false;
-    function onShownModally() {
+    function onNavigatedTo() {
         // called also on resume
         if (shown) {
             return;
@@ -133,16 +134,11 @@
     });
 
     function callJSFunction(method: string, ...args) {
-        // console.log('callJSFunction', method, ...args);
-        if (!webView) {
+        if (!webView?.nativeView?.nativeViewProtected) {
             return;
         }
         try {
-            if (args) {
-                webView.nativeView.executeJavaScript(`webapp.${method}(${args.join(',')})`);
-            } else {
-                webView.nativeView.executeJavaScript(`webapp.${method}()`);
-            }
+            webView.nativeView.executeJavaScript(`webapp.${method}(${args ? args.join(',') : ''})`);
         } catch (err) {
             showError(err);
         }
@@ -371,12 +367,10 @@
         selectedItem = event.data;
     }
     function onPositionChanged(event) {
-        currentAltitude = event.data.altitude;
+        position = event.data;
     }
     function onViewingDistanceChanged(event) {}
-    function onZoomChanged(event) {
-        console.log('onZoomChanged', event.data);
-    }
+    function onZoomChanged(event) {}
 
     function shouldPan(side) {
         if (side === 'bottom') {
@@ -392,121 +386,164 @@
         item.value = event.value;
         items.setItem(index, item);
     }
+
+    let listeningForHeading = false;
+    let headingAccuracy: number;
+    function startHeadingListener() {
+        if (!listeningForHeading) {
+            listeningForHeading = true;
+            headingAccuracy = undefined;
+            startListeningForSensor('heading', onSensor, 100, 0, { headingFilter: 0 });
+        }
+    }
+    function stopHeadingListener() {
+        if (listeningForHeading) {
+            listeningForHeading = false;
+            stopListeningForSensor('heading', onSensor);
+        }
+    }
+
+    function onSensor(data, sensor: string) {
+        switch (sensor) {
+            case 'heading':
+                if (global.isAndroid) {
+                    headingAccuracy = 4 - data.accuracy;
+                } else {
+                    headingAccuracy = data.accuracy;
+                }
+                if (data.accuracy < 3) {
+                    return;
+                }
+                stopHeadingListener();
+                if (global.isAndroid && !('trueHeading' in data) && position) {
+                    const res = estimateMagneticField(position.lat, position.lon, position.altitude);
+                    if (res) {
+                        data.trueHeading = data.heading + res.getDeclination();
+                    }
+                }
+                const newValue = 'trueHeading' in data ? data.trueHeading : data.heading;
+                callJSFunction('setAzimuth', 360 - newValue);
+                break;
+        }
+    }
 </script>
 
-<frame backgroundColor="transparent" on:shownModally={onShownModally}>
-    <page bind:this={page} actionBarHidden={true}>
-        <drawer
-            bind:this={drawer}
-            gestureMinDist={60}
-            bottomClosedDrawerAllowDraging={false}
-            simultaneousHandlers={simultaneousHandlersTags}
-            {shouldPan}
-            translationFunction={drawerTranslationFunction}
-        >
-            <gridLayout android:marginBottom={navigationBarHeight}>
-                <awebview
-                    bind:this={webView}
-                    on:loaded={webviewLoaded}
-                    webRTC={true}
-                    mediaPlaybackRequiresUserAction={false}
-                    webConsoleEnabled={consoleEnabled}
-                    displayZoomControls={false}
-                    on:selected={onFeatureSelected}
-                    on:position={onPositionChanged}
-                    on:zoom={onZoomChanged}
-                />
-                <!-- <canvaslabel marginTop="20" class="icon-btn" verticalAlignment="top" horizontalAlignment="left" rippleColor="#ffffff33" on:tap={toggleCamera} >
+<page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
+    <drawer bind:this={drawer} gestureMinDist={60} bottomClosedDrawerAllowDraging={false} simultaneousHandlers={simultaneousHandlersTags} {shouldPan} translationFunction={drawerTranslationFunction}>
+        <gridLayout android:marginBottom={navigationBarHeight}>
+            <awebview
+                bind:this={webView}
+                on:loaded={webviewLoaded}
+                webRTC={true}
+                mediaPlaybackRequiresUserAction={false}
+                webConsoleEnabled={consoleEnabled}
+                displayZoomControls={false}
+                on:selected={onFeatureSelected}
+                on:position={onPositionChanged}
+                on:zoom={onZoomChanged}
+            />
+            <!-- <canvaslabel marginTop="20" class="icon-btn" verticalAlignment="top" horizontalAlignment="left" rippleColor="#ffffff33" on:tap={toggleCamera} >
                     <cspan text="mdi-camera" verticalAlignment="center" textAlignment="center" color="red" xfermode={PorterDuffMode.SCREEN}/>
                 </canvaslabel> -->
 
-                <slider horizontalAlignment="left" verticalAlignment="center" bind:value={currentAltitude} minValue="0" maxValue="8000" style="transform: rotate(-90) translate(-80,50)" width="200" />
+            <slider horizontalAlignment="left" verticalAlignment="center" bind:value={currentAltitude} minValue="0" maxValue="8000" style="transform: rotate(-90) translate(-80,50)" width="200" />
 
-                <gridlayout
-                    marginBottom="40"
-                    verticalAlignment="bottom"
-                    horizontalAlignment="center"
-                    columns="*,auto"
-                    width="60%"
-                    padding={5}
-                    visibility={!!selectedItem ? 'visible' : 'hidden'}
-                    backgroundColor="#4465be94"
-                    borderRadius={20}
-                    height={40}
-                >
-                    <canvaslabel color="white" fontSize="13" paddingLeft={10} on:tap={(e) => callJSFunction('focusSelectedItem')}>
-                        <cgroup verticalAlignment="center" verticalTextAlignment="center">
-                            <cspan fontWeight="bold" text={selectedItem && truncate(selectedItem.properties.name, 25)} />
-                            <cspan text={selectedItem && ` ${selectedItem.properties.ele}m(${formatDistance(selectedItem.distance)})`} />
-                        </cgroup>
-                    </canvaslabel>
-                    <button col={1} width={40} on:tap={(e) => callJSFunction('goToSelectedItem')} fontFamily={alpimapsFontFamily} variant="text" text="alpimaps-paper-plane" />
-                </gridlayout>
-                <stacklayout verticalAlignment="bottom" horizontalAlignment="left">
-                    <button color={primaryColor} on:tap={(e) => callJSFunction('togglePredefinedMapMode')} class="small-floating-btn" text="mdi-map" />
-                    <button color={primaryColor} on:tap={(e) => drawer.nativeView.toggle('bottom')} class="small-floating-btn" text="mdi-cog" />
-                </stacklayout>
-            </gridLayout>
-            <gridlayout prop:bottomDrawer height={300} rows="*,*" columns="30,*" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
-                <button variant="text" class="mdi" fontSize={16} width={undefined} text="mdi-cog" on:tap={() => (selectedPageIndex = 0)} />
-                <button variant="text" row={1} class="mdi" fontSize={16} width={undefined} text="mdi-bug" on:tap={() => (selectedPageIndex = 1)} />
-                <pager rowSpan={2} col={1} disableSwipe={false} bind:selectedIndex={selectedPageIndex}>
-                    <pageritem>
-                        <collectionview
-                            bind:this={collectionView1}
-                            items={listView1Items}
-                            itemTemplateSelector={selectTemplate}
-                            itemIdGenerator={(item, i) => i}
-                            android:marginBottom={navigationBarHeight}
-                        >
-                            <Template let:item key="checkbox">
-                                <checkbox text={item.title} checked={item.checked} on:checkedChange={(e) => onCheckBox(item, e.value)} />
-                            </Template>
-                            <Template let:item let:index key="slider">
-                                <gridlayout rows="auto,*" columns="*,auto" orientation="horizontal" padding="0 10 0 10">
-                                    <label text={item.title} colSpan={2} />
-                                    <slider
-                                        row={1}
-                                        value={item.value}
-                                        minValue={item.min}
-                                        maxValue={item.max * (item.decimalFactor || 1)}
-                                        stepSize={item.stepSize || 0}
-                                        on:valueChange={(e) => onSliderValue(listView1Items, item, index, e)}
-                                    />
-                                    <label text={itemValue(item)} row={1} col={1} />
-                                </gridlayout>
-                            </Template>
-                        </collectionview>
-                    </pageritem>
-                    <pageritem>
-                        <collectionview
-                            bind:this={collectionView2}
-                            items={listView2Items}
-                            itemTemplateSelector={selectTemplate}
-                            itemIdGenerator={(item, i) => i}
-                            android:marginBottom={navigationBarHeight}
-                        >
-                            <Template let:item key="checkbox">
-                                <checkbox text={item.title} checked={item.checked} on:checkedChange={(e) => onCheckBox(item, e.value)} />
-                            </Template>
-                            <Template let:item let:index key="slider">
-                                <gridlayout rows="auto,*" columns="*,auto" orientation="horizontal" padding="0 10 0 10">
-                                    <label text={item.title} colSpan={2} />
-                                    <slider
-                                        row={1}
-                                        value={item.value}
-                                        minValue={item.min}
-                                        maxValue={item.max * (item.decimalFactor || 1)}
-                                        stepSize={item.stepSize || 0}
-                                        on:valueChange={(e) => onSliderValue(listView2Items, item, index, e)}
-                                    />
-                                    <label text={itemValue(item)} row={1} col={1} />
-                                </gridlayout>
-                            </Template>
-                        </collectionview>
-                    </pageritem>
-                </pager>
+            <gridlayout
+                marginBottom="40"
+                verticalAlignment="bottom"
+                horizontalAlignment="center"
+                columns="*,auto"
+                width="60%"
+                padding={5}
+                visibility={!!selectedItem ? 'visible' : 'hidden'}
+                backgroundColor="#4465be94"
+                borderRadius={20}
+                height={40}
+            >
+                <canvaslabel color="white" fontSize="13" paddingLeft={10} on:tap={(e) => callJSFunction('focusSelectedItem')}>
+                    <cgroup verticalAlignment="center" verticalTextAlignment="center">
+                        <cspan fontWeight="bold" text={selectedItem && truncate(selectedItem.properties.name, 25)} />
+                        <cspan text={selectedItem && ` ${selectedItem.properties.ele}m(${formatDistance(selectedItem.distance)})`} />
+                    </cgroup>
+                </canvaslabel>
+                <button col={1} width={40} on:tap={(e) => callJSFunction('goToSelectedItem')} fontFamily={alpimapsFontFamily} variant="text" text="alpimaps-paper-plane" />
             </gridlayout>
-        </drawer>
-    </page>
-</frame>
+            <stacklayout verticalAlignment="bottom" horizontalAlignment="left">
+                <button color={primaryColor} on:tap={(e) => callJSFunction('togglePredefinedMapMode')} class="small-floating-btn" text="mdi-map" />
+                <button color={primaryColor} on:tap={(e) => (listeningForHeading ? stopHeadingListener() : startHeadingListener())} class="small-floating-btn" text="mdi-compass" />
+                <button color={primaryColor} on:tap={(e) => drawer.nativeView.toggle('bottom')} class="small-floating-btn" text="mdi-cog" />
+            </stacklayout>
+            <mdactivityindicator visibility={listeningForHeading ? 'visible' : 'collapsed'} verticalAlignment="bottom" horizontalAlignment="right" busy={true} />
+            <image
+                visibility={headingAccuracy >= 2 ? 'visible' : 'hidden'}
+                src="~/assets/images/calibration.gif"
+                horizontalAlignment="right"
+                verticalAlignment="bottom"
+                width="90"
+                height="90"
+                on:loaded={(event) => event.object.startAnimating()}
+                autoPlayAnimations="true"
+            />
+        </gridLayout>
+        <gridlayout prop:bottomDrawer height={300} rows="*,*" columns="30,*" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
+            <button variant="text" class="mdi" fontSize={16} width={undefined} text="mdi-cog" on:tap={() => (selectedPageIndex = 0)} />
+            <button variant="text" row={1} class="mdi" fontSize={16} width={undefined} text="mdi-bug" on:tap={() => (selectedPageIndex = 1)} />
+            <pager rowSpan={2} col={1} disableSwipe={false} bind:selectedIndex={selectedPageIndex}>
+                <pageritem>
+                    <collectionview
+                        bind:this={collectionView1}
+                        items={listView1Items}
+                        itemTemplateSelector={selectTemplate}
+                        itemIdGenerator={(item, i) => i}
+                        android:marginBottom={navigationBarHeight}
+                    >
+                        <Template let:item key="checkbox">
+                            <checkbox text={item.title} checked={item.checked} on:checkedChange={(e) => onCheckBox(item, e.value)} />
+                        </Template>
+                        <Template let:item let:index key="slider">
+                            <gridlayout rows="auto,*" columns="*,auto" orientation="horizontal" padding="0 10 0 10">
+                                <label text={item.title} colSpan={2} />
+                                <slider
+                                    row={1}
+                                    value={item.value}
+                                    minValue={item.min}
+                                    maxValue={item.max * (item.decimalFactor || 1)}
+                                    stepSize={item.stepSize || 0}
+                                    on:valueChange={(e) => onSliderValue(listView1Items, item, index, e)}
+                                />
+                                <label text={itemValue(item)} row={1} col={1} />
+                            </gridlayout>
+                        </Template>
+                    </collectionview>
+                </pageritem>
+                <pageritem>
+                    <collectionview
+                        bind:this={collectionView2}
+                        items={listView2Items}
+                        itemTemplateSelector={selectTemplate}
+                        itemIdGenerator={(item, i) => i}
+                        android:marginBottom={navigationBarHeight}
+                    >
+                        <Template let:item key="checkbox">
+                            <checkbox text={item.title} checked={item.checked} on:checkedChange={(e) => onCheckBox(item, e.value)} />
+                        </Template>
+                        <Template let:item let:index key="slider">
+                            <gridlayout rows="auto,*" columns="*,auto" orientation="horizontal" padding="0 10 0 10">
+                                <label text={item.title} colSpan={2} />
+                                <slider
+                                    row={1}
+                                    value={item.value}
+                                    minValue={item.min}
+                                    maxValue={item.max * (item.decimalFactor || 1)}
+                                    stepSize={item.stepSize || 0}
+                                    on:valueChange={(e) => onSliderValue(listView2Items, item, index, e)}
+                                />
+                                <label text={itemValue(item)} row={1} col={1} />
+                            </gridlayout>
+                        </Template>
+                    </collectionview>
+                </pageritem>
+            </pager>
+        </gridlayout>
+    </drawer>
+</page>
