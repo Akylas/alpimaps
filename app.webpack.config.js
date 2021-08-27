@@ -8,6 +8,7 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const SentryCliPlugin = require('@sentry/webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const IgnoreNotFoundExportPlugin = require('./IgnoreNotFoundExportPlugin');
+const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 const Fontmin = require('@akylas/fontmin');
 function fixedFromCharCode(codePt) {
     if (codePt > 0xffff) {
@@ -233,7 +234,7 @@ module.exports = (env, params = {}) => {
     const usedMDIICons = [];
     config.module.rules.push({
         // rules to replace mdi icons and not use nativescript-font-icon
-        test: /\.(ts|js|scss|css|svelte)$/,
+        test: /\.svelte$/,
         exclude: /node_modules/,
         use: [
             {
@@ -380,6 +381,7 @@ module.exports = (env, params = {}) => {
     );
 
     config.plugins.push(new IgnoreNotFoundExportPlugin());
+    config.plugins.push(new SpeedMeasurePlugin());
 
     // save as long as we dont use calc in css
     config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /reduce-css-calc$/ }));
