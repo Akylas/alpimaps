@@ -57,7 +57,7 @@
         "@nativescript-community/ui-material-progress": "5.3.18",
         "@nativescript-community/ui-material-slider": "5.3.18",
         "@nativescript-community/ui-material-snackbar": "5.3.18",
-        "@nativescript-community/ui-pager": "13.0.26",
+        "@nativescript-community/ui-pager": "13.0.27",
         "@nativescript-community/ui-persistent-bottomsheet": "0.0.17",
         "@nativescript-community/ui-share-file": "1.2.3",
         "@nativescript-community/ui-svg": "0.0.8",
@@ -87,7 +87,7 @@
         "stats.js": "0.17.0",
         "stream": "^0.0.2",
         "svelte-native": "1.0.0-beta.2",
-        "three": "0.131.3",
+        "three": "0.132.2",
         "timers": "0.1.1",
         "xml2js": "0.4.23"
     },
