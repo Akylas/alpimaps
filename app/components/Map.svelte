@@ -504,7 +504,7 @@
                     packageService.start();
                 }
                 transitService.start();
-                setMapStyle(appSettings.getString('mapStyle', 'osm~streets'), true);
+                setMapStyle(appSettings.getString('mapStyle', 'osm~osm'), true);
             } catch (err) {
                 showError(err);
             }
