@@ -75,16 +75,10 @@ namespace GeometryTransformer {
 }
 
 export class Route {
-    public readonly id!: string;
     public osmid?: number;
-    public profile!: RouteProfile | null;
-    public layer?: VectorTileLayer;
-
-    public positions!: MapPosVector<LatLonKeys>;
 
     public readonly totalTime!: number;
     public readonly totalDistance!: number;
-    public readonly instructions?: RouteInstruction[] | null;
 }
 
 export type IRoute = Partial<Route> & {
