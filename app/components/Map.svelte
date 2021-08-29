@@ -1,73 +1,71 @@
 <script lang="ts">
-    import { AppURL,handleOpenURL } from '@nativescript-community/appurl';
+    import { AppURL, handleOpenURL } from '@nativescript-community/appurl';
     import * as EInfo from '@nativescript-community/extendedinfo';
     import { GenericGeoLocation } from '@nativescript-community/gps';
-    import { allowSleepAgain,keepAwake } from '@nativescript-community/insomnia';
+    import { allowSleepAgain, keepAwake } from '@nativescript-community/insomnia';
     import * as perms from '@nativescript-community/perms';
     import { isSensorAvailable } from '@nativescript-community/sensors';
-    import { ClickType,GenericMapPos,MapBounds,MapPos,toNativeMapRange,toNativeScreenPos } from '@nativescript-community/ui-carto/core';
+    import { ClickType, GenericMapPos, MapBounds, MapPos, toNativeMapRange, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
     import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
-    import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
     import { Layer } from '@nativescript-community/ui-carto/layers';
     import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
-    import type { VectorElementEventData,VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
-    import { BaseVectorTileLayer,CartoOnlineVectorTileLayer,VectorLayer,VectorTileLayer,VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
+    import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
+    import { BaseVectorTileLayer, CartoOnlineVectorTileLayer, VectorLayer, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
     import { Projection } from '@nativescript-community/ui-carto/projections';
-    import { CartoMap,PanningMode,RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
-    import { setShowDebug,setShowError,setShowInfo,setShowWarn } from '@nativescript-community/ui-carto/utils';
+    import { CartoMap, PanningMode, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
+    import { setShowDebug, setShowError, setShowInfo, setShowWarn } from '@nativescript-community/ui-carto/utils';
     import { Group } from '@nativescript-community/ui-carto/vectorelements/group';
-    import { Line } from '@nativescript-community/ui-carto/vectorelements/line';
-    import { Marker } from '@nativescript-community/ui-carto/vectorelements/marker';
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
-    import { Text,TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
+    import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
     import { Drawer } from '@nativescript-community/ui-drawer';
-    import { action,alert,login } from '@nativescript-community/ui-material-dialogs';
+    import { action, alert, login } from '@nativescript-community/ui-material-dialogs';
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { Brightness } from '@nativescript/brightness';
-    import { AndroidApplication,Application,Color,Page,Utils } from '@nativescript/core';
+    import { AndroidApplication, Application, Color, Page, Utils } from '@nativescript/core';
     import * as appSettings from '@nativescript/core/application-settings';
     import type { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
-    import { Folder,knownFolders,path } from '@nativescript/core/file-system';
-    import { Device,Screen } from '@nativescript/core/platform';
+    import { Folder, knownFolders, path } from '@nativescript/core/file-system';
+    import { Device, Screen } from '@nativescript/core/platform';
     import { ad } from '@nativescript/core/utils/utils';
     import { compose } from '@nativescript/email';
     import * as SocialShare from 'nativescript-social-share';
     import { debounce } from 'push-it-to-the-limit/target/es6';
-    import { onDestroy,onMount } from 'svelte';
-    import { navigate,showModal } from 'svelte-native';
+    import { onDestroy, onMount } from 'svelte';
+    import { navigate, showModal } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
-    import { l,lc,onLanguageChanged } from '~/helpers/locale';
-    import { sTheme,toggleTheme } from '~/helpers/theme';
+    import { l, lc, onLanguageChanged } from '~/helpers/locale';
+    import { sTheme, toggleTheme } from '~/helpers/theme';
     import watcher from '~/helpers/watcher';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
     import type { LayerType } from '~/mapModules/MapModule';
-    import { getMapContext,setMapContext } from '~/mapModules/MapModule';
+    import { getMapContext, setMapContext } from '~/mapModules/MapModule';
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import type { IItem } from '~/models/Item';
     import { RouteInstruction } from '~/models/Route';
-    import { NotificationHelper,NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL } from '~/services/android/NotifcationHelper';
-    import { onServiceLoaded,onServiceUnloaded } from '~/services/BgService.common';
-    import { NetworkConnectionStateEvent,NetworkConnectionStateEventData,networkService } from '~/services/NetworkService';
+    import { NotificationHelper, NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL } from '~/services/android/NotifcationHelper';
+    import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
+    import { NetworkConnectionStateEvent, NetworkConnectionStateEventData, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
     import mapStore from '~/stores/mapStore';
     import { showError } from '~/utils/error';
-    import { computeDistanceBetween,getBoundsZoomLevel } from '~/utils/geo';
+    import { computeDistanceBetween, getBoundsZoomLevel } from '~/utils/geo';
     import { Sentry } from '~/utils/sentry';
     import { omit } from '~/utils/utils';
-    import { accentColor,screenHeightDips,screenWidthDips } from '~/variables';
-    import { navigationBarHeight,primaryColor } from '../variables';
-    import { isBottomSheetOpened,showBottomSheet } from './bottomsheet';
+    import { accentColor, screenHeightDips, screenWidthDips } from '~/variables';
+    import { navigationBarHeight, primaryColor } from '../variables';
+    import { isBottomSheetOpened, showBottomSheet } from './bottomsheet';
     import BottomSheetInner from './BottomSheetInner.svelte';
     import DirectionsPanel from './DirectionsPanel.svelte';
     import LocationInfoPanel from './LocationInfoPanel.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
     import Search from './Search.svelte';
+    import type { Point as GeoJSONPoint } from 'geojson';
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
@@ -101,6 +99,7 @@
     const mapContext = getMapContext();
 
     let selectedOSMId: string;
+    let selectedId: string;
     let selectedPosMarker: Point<LatLonKeys>;
     let selectedItem = watcher<IItem>(null, onSelectedItemChanged);
     let appVersion = EInfo.getVersionNameSync() + '.' + EInfo.getBuildNumberSync();
@@ -179,12 +178,7 @@
                             maxZoom: 24
                         });
                         transitVectorTileDataSource.createLayer('lines');
-                        const reader = new GeoJSONGeometryReader({
-                            targetProjection: projection
-                        });
-                        // console.log('getMetroLines', result);
-                        const geometry = reader.readFeatureCollection(result);
-                        transitVectorTileDataSource.setLayerFeatureCollection(1, projection, geometry);
+                        transitVectorTileDataSource.setLayerGeoJSONString(1, result);
                         if (!transitVectorTileLayer) {
                             transitVectorTileLayer = new VectorTileLayer({
                                 // preloading: true,
@@ -196,7 +190,8 @@
                                 })
                             });
 
-                            transitVectorTileLayer.setVectorTileEventListener(this);
+                            // transitVectorTileLayer.setVectorTileEventListener(this,
+                            // mapContext.getProjection());
                             // always add it at 1 to respect local order
                             addLayer(transitVectorTileLayer, 'transit');
                         } else {
@@ -271,10 +266,9 @@
                             properties: {
                                 name: actualQuery
                             },
-                            position: {
-                                lat: parseFloat(match[1]),
-                                lon: parseFloat(match[2])
-                            }
+                            geometry: {
+                                coordinates: [parseFloat(match[2]), parseFloat(match[1])]
+                            } as any
                         },
                         isFeatureInteresting: true
                     });
@@ -333,6 +327,7 @@
             getCurrentLanguage: () => currentLanguage,
             getSelectedItem: () => $selectedItem,
             vectorElementClicked: onVectorElementClicked,
+            vectorTileElementClicked: onVectorTileElementClicked,
             vectorTileClicked: onVectorTileClicked,
             rasterTileClicked: onRasterTileClicked,
             getVectorTileDecoder,
@@ -557,7 +552,7 @@
         const handledByModules = mapContext.runOnModules('onMapClicked', e);
         // console.log('mapTile', latLngToTileXY(position.lat, position.lon, cartoMap.zoom), clickType === ClickType.SINGLE, handledByModules, !!selectedItem);
         if (!handledByModules && clickType === ClickType.SINGLE) {
-            selectItem({ item: { position, properties: {} }, isFeatureInteresting: !$selectedItem, preventZoom: true });
+            selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.lat] }, properties: {} }, isFeatureInteresting: !$selectedItem, preventZoom: true });
         }
         unFocusSearch();
     }
@@ -576,7 +571,6 @@
         peek = true,
         setSelected = true,
         showButtons = false,
-        position,
         preventZoom = true,
         minZoom,
         zoom,
@@ -584,7 +578,6 @@
     }: {
         item: IItem;
         showButtons?: boolean;
-        position?: GenericMapPos<LatLonKeys>;
         isFeatureInteresting: boolean;
         peek?: boolean;
         setSelected?: boolean;
@@ -596,68 +589,77 @@
         didIgnoreAlreadySelected = false;
         if (isFeatureInteresting) {
             let isCurrentItem = item !== $selectedItem;
-            if (setSelected && isCurrentItem) {
+            // console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, new Error().stack);
+            if (setSelected && isCurrentItem && !item) {
                 unselectItem(false);
             }
-            if (item.route) {
+            const route = item?.properties?.route;
+            if (setSelected && route) {
                 // console.log('instructions', item.route.instructions?.length, item.route.instructions && JSON.stringify(item.route.instructions));
-                const vectorElement = item.vectorElement as Line;
-                if (vectorElement) {
-                    const color = new Color(vectorElement.color as string);
-                    vectorElement.color = color.darken(10).hex;
-                    vectorElement.width += 2;
-                } else if (item.route.osmid) {
-                    selectedOSMId = item.route.osmid + '';
-                    // console.log('selectedOSMId', selectedOSMId);
-                    setStyleParameter('selected_id', selectedOSMId);
-                    // if (!selectedRouteLine) {
-                    //     getOrCreateLocalVectorLayer();
-                    //     selectedRouteLine = mapContext.mapModule('items').createLocalLine(item, {
-                    //         // color: '#55ff0000',
-                    //         color: (darkColor as any).setAlpha(150),
-                    //         joinType: LineJointType.ROUND,
-                    //         endType: LineEndType.ROUND,
-                    //         width: 3,
-                    //         clickWidth: 10
-                    //     });
-                    //     localVectorDataSource.add(selectedRouteLine);
-                    // } else {
-                    //     selectedRouteLine.positions = item.route.positions;
-                    //     selectedRouteLine.visible = true;
-                    // }
+                // const vectorElement = item.vectorElement as Line;
+                // if (vectorElement) {
+                //     const color = new Color(vectorElement.color as string);
+                //     vectorElement.color = color.darken(10).hex;
+                //     vectorElement.width += 2;
+                // } else if (item.route.osmid) {
+                if (item.properties.route.osmid) {
+                    selectedOSMId = (item.properties.route.osmid) + '';
+                    setStyleParameter('selected_id', item.properties.route.osmid + '');
+                } else if (item.properties.id) {
+                    selectedId = item.properties.id;
+                    mapContext.innerDecoder.setStyleParameter('selected_id', item.properties.id);
                 }
-                if (item.route.instructions) {
-                    if (!selectedRouteInstructionsGroup) {
-                        selectedRouteInstructionsGroup = new Group();
-                    }
-                    selectedRouteInstructionsGroup.elements = item.route.instructions.map(
-                        (i, index) =>
-                            new Marker({
-                                projection: mapContext.getProjection(),
-                                position: omit(item.route.positions.getPos(i.index), 'altitude'),
-                                styleBuilder: {
-                                    size: 12,
-                                    placementPriority: 10,
-                                    hideIfOverlapped: false,
-                                    scaleWithDPI: true,
-                                    color: 'red'
-                                },
-                                metaData: { instruction: JSON.stringify(i) }
-                            })
-                    );
-                    getOrCreateLocalVectorLayer();
-                    // selectedRouteInstructionsGroup.elements.forEach(e=>localVectorDataSource.add(e))
-                    localVectorDataSource.add(selectedRouteInstructionsGroup);
-                }
+                // console.log('selectedOSMId', selectedOSMId);
+                // if (!selectedRouteLine) {
+                //     getOrCreateLocalVectorLayer();
+                //     selectedRouteLine = mapContext.mapModule('items').createLocalLine(item, {
+                //         // color: '#55ff0000',
+                //         color: (darkColor as any).setAlpha(150),
+                //         joinType: LineJointType.ROUND,
+                //         endType: LineEndType.ROUND,
+                //         width: 3,
+                //         clickWidth: 10
+                //     });
+                //     localVectorDataSource.add(selectedRouteLine);
+                // } else {
+                //     selectedRouteLine.positions = item.route.positions;
+                //     selectedRouteLine.visible = true;
+                // }
+                // }
+                // if (route.instructions) {
+                //     if (!selectedRouteInstructionsGroup) {
+                //         selectedRouteInstructionsGroup = new Group();
+                //     }
+                //     selectedRouteInstructionsGroup.elements = iroute.instructions.map(
+                //         (i, index) =>
+                //             new Point({
+                //                 projection: mapContext.getProjection(),
+                //                 position: omit(item.route.positions.getPos(i.index), 'altitude'),
+                //                 styleBuilder: {
+                //                     size: 12,
+                //                     placementPriority: 10,
+                //                     hideIfOverlapped: false,
+                //                     scaleWithDPI: true,
+                //                     color: 'red'
+                //                 },
+                //                 metaData: { instruction: JSON.stringify(i) }
+                //             })
+                //     );
+                //     getOrCreateLocalVectorLayer();
+                //     // selectedRouteInstructionsGroup.elements.forEach(e=>localVectorDataSource.add(e))
+                //     localVectorDataSource.add(selectedRouteInstructionsGroup);
+                // }
 
                 if (selectedPosMarker) {
                     selectedPosMarker.visible = false;
                 }
             } else {
+                const geometry = item.geometry as GeoJSONPoint;
+                const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
                 if (!selectedPosMarker) {
                     getOrCreateLocalVectorLayer();
                     const itemModule = mapContext.mapModule('items');
-                    selectedPosMarker = itemModule.createLocalPoint(item.position, {
+                    selectedPosMarker = itemModule.createLocalPoint(position, {
                         // color: '#55ff0000',
                         color: primaryColor.setAlpha(178).hex,
                         clickSize: 0,
@@ -668,12 +670,16 @@
                     });
                     localVectorDataSource.add(selectedPosMarker);
                 } else {
-                    selectedPosMarker.position = item.position;
+                    selectedPosMarker.position = position;
                     selectedPosMarker.visible = true;
                 }
-                if (selectedOSMId) {
+                if (setSelected && selectedOSMId) {
                     selectedOSMId = null;
-                    setStyleParameter('selected_id', '0');
+                    setStyleParameter('selected_id', '');
+                }
+                if (selectedId) {
+                    selectedId = null;
+                    mapContext.innerDecoder.setStyleParameter('selected_id', '');
                 }
             }
             // item.route = {
@@ -690,16 +696,19 @@
             if (setSelected) {
                 $selectedItem = item;
             }
-            if (setSelected && !item.route && (!item.address || !item.address['street'])) {
+            if (setSelected && !route && (!item.properties.address || !item.properties.address['street'])) {
                 const service = packageService.localOSMOfflineReverseGeocodingService;
                 if (service) {
                     itemLoading = true;
                     const radius = 200;
+
+                    const geometry = item.geometry as GeoJSONPoint;
+                    const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
                     // use a promise not to "wait" for it
                     packageService
                         .searchInGeocodingService(service, {
                             projection,
-                            location: item.position,
+                            location: position,
                             searchRadius: radius
                         })
                         .then((res) => {
@@ -707,27 +716,23 @@
                                 let bestFind;
                                 for (let index = 0; index < res.size(); index++) {
                                     const r = packageService.convertGeoCodingResult(res.get(index), true);
-                                    if (r.rank > 0.7 && computeDistanceBetween(item.position, r.position) <= radius) {
+                                    if (r && r.rank > 0.7 && computeDistanceBetween(position, r.position) <= radius) {
                                         if (!bestFind || Object.keys(r.address).length > Object.keys(bestFind.address).length) {
                                             bestFind = r;
-                                        } else if (bestFind && item.address && item.address['street']) {
+                                        } else if (bestFind && item.properties.address && item.properties.address['street']) {
                                             break;
                                         }
                                     } else {
                                         break;
                                     }
                                 }
-                                if (bestFind && $selectedItem.position === item.position) {
+                                if (bestFind && $selectedItem.geometry === item.geometry) {
                                     if (item.properties.layer === 'housenumber') {
-                                        $selectedItem = {
-                                            address: { ...bestFind.address, name: null, houseNumber: item.properties.housenumber } as any,
-                                            ...$selectedItem
-                                        };
+                                        $selectedItem.properties.address = { ...bestFind.address, name: null, houseNumber: item.properties.housenumber } as any;
+                                        $selectedItem = $selectedItem;
                                     } else {
-                                        $selectedItem = {
-                                            ...$selectedItem,
-                                            address: { ...bestFind.address, name: null } as any
-                                        };
+                                        $selectedItem.properties.address = { ...bestFind.address, name: null } as any;
+                                        $selectedItem = $selectedItem;
                                     }
                                 }
                             }
@@ -735,11 +740,13 @@
                         .catch((err) => console.error('searchInGeocodingService', err, err['stack']));
                 }
                 if (item.properties && 'ele' in item.properties === false && packageService.hasElevation()) {
-                    packageService.getElevation(item.position).then((result) => {
-                        if ($selectedItem.position === item.position) {
+                    const geometry = item.geometry as GeoJSONPoint;
+                    const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+                    packageService.getElevation(position).then((result) => {
+                        if ($selectedItem.geometry === item.geometry) {
                             $selectedItem.properties = $selectedItem.properties || {};
                             $selectedItem.properties['ele'] = result;
-                            $selectedItem = { ...$selectedItem };
+                            $selectedItem = $selectedItem;
                         }
                     });
                 }
@@ -761,21 +768,19 @@
             unselectItem();
         }
     }
-    export function zoomToItem({ item, zoom, minZoom, duration = 200 }: { item: IItem; zoom?: number; minZoom?: number; duration? }) {
+    export function zoomToItem({ item, zoom, minZoom, duration = 200, forceZoomOut = false }: { item: IItem; zoom?: number; minZoom?: number; duration?; forceZoomOut?: boolean }) {
         const screenBounds = {
-            min: { x: 0, y: Utils.layout.toDevicePixels(topTranslationY) },
+            min: { x: 0, y: Utils.layout.toDevicePixels(90 + topTranslationY) },
             max: { x: page.nativeView.getMeasuredWidth(), y: page.nativeView.getMeasuredHeight() - Utils.layout.toDevicePixels(navigationBarHeight - mapTranslation) }
         };
-        if (item.zoomBounds) {
-            const zoomLevel = getBoundsZoomLevel(item.zoomBounds, {
+        if (item.properties.zoomBounds) {
+            const zoomLevel = getBoundsZoomLevel(item.properties.zoomBounds, {
                 width: Screen.mainScreen.widthDIPs,
                 height: Screen.mainScreen.widthDIPs
             });
-            if (cartoMap.zoom < zoomLevel) {
-                cartoMap.moveToFitBounds(item.zoomBounds, screenBounds, true, true, false, duration);
+            if (forceZoomOut || cartoMap.zoom < zoomLevel) {
+                cartoMap.moveToFitBounds(item.properties.zoomBounds, screenBounds, false, true, false, duration);
             }
-            // cartoMap.setZoom(zoomLevel, 200);
-            // cartoMap.setFocusPos(getCenter(item.zoomBounds.northeast, item.zoomBounds.southwest), 200);
         } else if (item.properties && item.properties.extent) {
             let extent: [number, number, number, number] = item.properties.extent as any;
             if (typeof extent === 'string') {
@@ -788,31 +793,37 @@
             } else if (minZoom) {
                 cartoMap.setZoom(Math.max(minZoom, cartoMap.zoom), duration);
             }
-            cartoMap.setFocusPos(item.position, duration);
+            const geometry = item.geometry as GeoJSONPoint;
+            const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+            cartoMap.setFocusPos(position, duration);
         }
     }
     export function unselectItem(updateBottomSheet = true) {
         if (!!$selectedItem) {
-            const item = $selectedItem;
+            // const item = $selectedItem;
             $selectedItem = null;
             if (selectedPosMarker) {
                 selectedPosMarker.visible = false;
             }
-            if (selectedRouteInstructionsGroup) {
-                localVectorDataSource.remove(selectedRouteInstructionsGroup);
-                selectedRouteInstructionsGroup = null;
-            }
+            // if (selectedRouteInstructionsGroup) {
+            //     localVectorDataSource.remove(selectedRouteInstructionsGroup);
+            //     selectedRouteInstructionsGroup = null;
+            // }
             if (selectedOSMId) {
                 selectedOSMId = null;
-                setStyleParameter('selected_id', '0');
+                setStyleParameter('selected_id', '');
             }
-            if (item.route) {
-                const vectorElement = item.vectorElement as Line;
-                if (vectorElement) {
-                    vectorElement.color = new Color(vectorElement.color as string).lighten(10);
-                    vectorElement.width -= 2;
-                }
+            if (selectedId) {
+                selectedId = null;
+                mapContext.innerDecoder.setStyleParameter('selected_id', '');
             }
+            // if (item.route) {
+            //     const vectorElement = item.vectorElement as Line;
+            //     if (vectorElement) {
+            //         vectorElement.color = new Color(vectorElement.color as string).lighten(10);
+            //         vectorElement.width -= 2;
+            //     }
+            // }
             if (updateBottomSheet) {
                 bottomSheetStepIndex = 0;
             }
@@ -862,14 +873,15 @@
     }
 
     async function handleRouteSelection(featureData, layer: VectorTileLayer) {
-        console.log('handleRouteSelection', featureData);
+        // console.log('handleRouteSelection', featureData);
         const item: IItem = {
-            properties: featureData,
-
-            route: {
-                osmid: featureData.osmid || featureData.ref || featureData.name,
-                layer
-            } as any
+            properties: {
+                ...featureData,
+                route: {
+                    osmid: featureData.osmid || featureData.ref || featureData.name
+                }
+            },
+            layer
         };
         selectItem({ item, isFeatureInteresting: true, preventZoom: true });
     }
@@ -932,10 +944,10 @@
         console.log('onRasterTileClicked', position, nearestColor);
     }
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
-        const { clickType, position, featureLayerName, featureData, featurePosition, layer } = data;
-        // if (DEV_LOG) {
-        console.log('onVectorTileClicked', featureLayerName, featureData.class, featureData.subclass, featureData, featurePosition);
-        // }
+        const { clickType, position, featureLayerName, featureData, featurePosition, featureGeometry, layer } = data;
+        if (DEV_LOG) {
+            console.log('onVectorTileClicked', clickType, featureLayerName, featureData.class, featureData.subclass, featureData, featurePosition);
+        }
 
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
@@ -954,7 +966,8 @@
                 // featureLayerName === 'place' ||
                 featureLayerName === 'contour' ||
                 featureLayerName === 'hillshade' ||
-                ((featureLayerName === 'building' || featureLayerName === 'park' || featureLayerName === 'landcover' || featureLayerName === 'landuse') && !featureData.name)
+                (featureLayerName === 'park' && !!featureGeometry['getHoles']) ||
+                ((featureLayerName === 'building' || featureLayerName === 'landcover' || featureLayerName === 'landuse') && !featureData.name)
             ) {
                 return false;
             }
@@ -964,9 +977,10 @@
                     (featureData.osmid && $selectedItem.properties && featureData.osmid === $selectedItem.properties.osmid) ||
                     ($selectedItem.properties &&
                         featureData.name === $selectedItem.properties.name &&
-                        $selectedItem.position &&
-                        $selectedItem.position.lat === featurePosition.lat &&
-                        $selectedItem.position.lon === featurePosition.lon))
+                        $selectedItem.geometry &&
+                        $selectedItem.geometry.type === 'Point' &&
+                        $selectedItem.geometry.coordinates[1] === featurePosition.lat &&
+                        $selectedItem.geometry.coordinates[0] === featurePosition.lon))
             ) {
                 // console.log(
                 //     'onVectorTileClicked ignoring already selected item',
@@ -1006,7 +1020,10 @@
                 }
                 const result: IItem = {
                     properties: featureData,
-                    position: isFeatureInteresting ? featurePosition : position
+                    geometry: {
+                        type: 'Point',
+                        coordinates: isFeatureInteresting ? [featurePosition.lon, featurePosition.lat] : [position.lon, position.lat]
+                    }
                 };
                 selectItem({ item: result, isFeatureInteresting, showButtons: featureData.class === 'bus' || featureData.subclass === 'tram_stop' });
             }
@@ -1023,28 +1040,65 @@
     function onVectorElementClicked(data: VectorElementEventData<LatLonKeys>) {
         const { clickType, position, elementPos, metaData, element } = data;
         if (DEV_LOG) {
-            console.log('onVectorElementClicked', clickType, position, metaData);
+            console.log('onVectorElementClicked', clickType, position, new Error().stack);
         }
         Object.keys(metaData).forEach((k) => {
             metaData[k] = JSON.parse(metaData[k]);
         });
         const handledByModules = mapContext.runOnModules('onVectorElementClicked', data);
-        if (DEV_LOG) {
-            console.log('handledByModules', handledByModules);
-        }
+        // if (DEV_LOG) {
+        //     console.log('handledByModules', handledByModules);
+        // }
         if (!!metaData.instruction) {
             return true;
         }
-        if (!handledByModules && clickType === ClickType.SINGLE && Object.keys(metaData).length > 0) {
-            const item: IItem = { position, vectorElement: element, ...metaData };
+        // if (!handledByModules && clickType === ClickType.SINGLE && Object.keys(metaData).length > 0) {
+        //     const item: IItem = { position, vectorElement: element, ...metaData };
+        //     // }
+        //     if (item.id && $selectedItem && $selectedItem.id === item.id) {
+        //         return true;
+        //     }
+        //     // if (item.properties?.route) {
+        //     //     item.properties.route.positions = (element as Line<LatLonKeys>).getPoses() as any;
+        //     // }
+        //     selectItem({ item, isFeatureInteresting: true, position });
+        //     unFocusSearch();
+        //     return true;
+        // }
+        return handledByModules;
+    }
+    function onVectorTileElementClicked(data: VectorTileEventData<LatLonKeys>) {
+        const { clickType, position, featureData } = data;
+        if (DEV_LOG) {
+            console.log('onVectorTileElementClicked', clickType, position, featureData.id);
+        }
+        const itemModule = mapContext.mapModule('items');
+        const feature = itemModule.getFeature(featureData.id);
+        if (!feature) {
+            return false;
+        }
+        Object.keys(feature.properties).forEach((k) => {
+            if (feature.properties[k][0] === '{' || feature.properties[k][0] === '[') {
+                feature.properties[k] = JSON.parse(feature.properties[k]);
+            }
+        });
+        const handledByModules = mapContext.runOnModules('onVectorTileElementClicked', data);
+        // if (DEV_LOG) {
+        //     console.log('handledByModules', handledByModules);
+        // }
+        if (!!featureData.instruction) {
+            return true;
+        }
+        if (!handledByModules && clickType === ClickType.SINGLE) {
+            const item: IItem = feature;
             // }
             if (item.id && $selectedItem && $selectedItem.id === item.id) {
                 return true;
             }
-            if (item.route) {
-                item.route.positions = (element as Line<LatLonKeys>).getPoses() as any;
-            }
-            selectItem({ item, isFeatureInteresting: true, position });
+            // if (item.properties?.route) {
+            //     item.properties.route.positions = (element as Line<LatLonKeys>).getPoses() as any;
+            // }
+            selectItem({ item, isFeatureInteresting: true });
             unFocusSearch();
             return true;
         }
@@ -1062,7 +1116,7 @@
 
     function setStyleParameter(key: string, value: string) {
         // console.log('setStyleParameter', key, value);
-        const decoder = getVectorTileDecoder();
+        let decoder = getVectorTileDecoder();
         if (!!decoder) {
             decoder.setStyleParameter(key, value);
         }
@@ -1699,9 +1753,11 @@
     }
     let inFront = false;
     function onNavigatingTo() {
+        console.log('onNavigatingTo');
         inFront = true;
     }
     function onNavigatingFrom() {
+        console.log('onNavigatingFrom');
         inFront = false;
     }
 </script>

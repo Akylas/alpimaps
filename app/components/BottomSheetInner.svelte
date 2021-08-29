@@ -1,38 +1,41 @@
 <script lang="ts">
     import { l } from '@nativescript-community/l';
-    import { Align,Canvas,DashPathEffect,LayoutAlignment,Paint,StaticLayout,Style } from '@nativescript-community/ui-canvas';
+    import { Align, Canvas, DashPathEffect, LayoutAlignment, Paint, StaticLayout, Style } from '@nativescript-community/ui-canvas';
     import { GenericMapPos } from '@nativescript-community/ui-carto/core';
     import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
+    import { LineGeometry, PointGeometry } from '@nativescript-community/ui-carto/geometry';
+    import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
     import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
-    import { VectorElementEventData } from '@nativescript-community/ui-carto/layers/vector';
+    import { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
     import { CartoMap } from '@nativescript-community/ui-carto/ui';
-    import { distanceToEnd,isLocationOnPath } from '@nativescript-community/ui-carto/utils';
+    import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
     import { LineChart } from '@nativescript-community/ui-chart/charts';
     import type { HighlightEventData } from '@nativescript-community/ui-chart/charts/Chart';
     import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
     import { Entry } from '@nativescript-community/ui-chart/data/Entry';
     import { LineData } from '@nativescript-community/ui-chart/data/LineData';
-    import { LineDataSet,Mode } from '@nativescript-community/ui-chart/data/LineDataSet';
+    import { LineDataSet, Mode } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Application } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
-    import { onDestroy,onMount } from 'svelte';
-    import { NativeViewElementNode,showModal } from 'svelte-native/dom';
-    import { formatValueToUnit,UNITS } from '~/helpers/formatter';
+    import { onDestroy, onMount } from 'svelte';
+    import { NativeViewElementNode, navigate, showModal } from 'svelte-native/dom';
+    import { formatValueToUnit, UNITS } from '~/helpers/formatter';
     import { slc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
-    import type { IItem,IItem as Item } from '~/models/Item';
+    import type { IItem, IItem as Item, ItemProperties } from '~/models/Item';
     import type { RouteInstruction } from '~/models/Route';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { showError } from '~/utils/error';
     import { openLink } from '~/utils/ui';
-    import { borderColor,screenHeightDips,statusBarHeight,textColor,widgetBackgroundColor } from '~/variables';
+    import { borderColor, screenHeightDips, statusBarHeight, textColor, widgetBackgroundColor } from '~/variables';
     import { showBottomSheet } from './bottomsheet';
     import BottomSheetInfoView from './BottomSheetInfoView.svelte';
+    import type { Point } from 'geojson';
 
     const LISTVIEW_HEIGHT = 200;
     const PROFILE_HEIGHT = 150;
@@ -73,11 +76,9 @@
         mapContext.mapModule('userLocation').on('location', onNewLocation, this);
     });
 
-    mapContext.onVectorElementClicked((data: VectorElementEventData<LatLonKeys>) => {
-        const { clickType, position, elementPos, metaData, element } = data;
-        console.log('onVectorElementClicked', position);
-        const selectedItem: IItem = { position, vectorElement: element, ...metaData };
-        if (item && item.id && item.route && selectedItem.id === item.id) {
+    mapContext.onVectorTileElementClicked((data: VectorTileEventData<LatLonKeys>) => {
+        const { clickType, position, feature, featureData } = data;
+        if (item && item.id && featureData?.route && feature.id === item.id) {
             updateRouteItemWithPosition(item, position, true, true);
         }
     });
@@ -127,8 +128,8 @@
                 if (props.wikipedia) {
                     name = props.wikipedia.split(':')[1];
                 }
-                if (item.address) {
-                    name += ' ' + item.address.county;
+                if (props.address) {
+                    name += ' ' + props.address.county;
                 }
                 if (global.isAndroid) {
                     const intent = new android.content.Intent(android.content.Intent.ACTION_WEB_SEARCH);
@@ -145,15 +146,14 @@
             }
         }
     }
-
     function updateGraphAvailable() {
-        graphAvailable = itemIsRoute && !!item.route.profile && !!item.route.profile.data && item.route.profile.data.length > 0;
+        graphAvailable = itemIsRoute && !!item.properties.profile && !!item.properties.profile.data && item.properties.profile.data.length > 0;
     }
     $: {
         try {
-            itemIsRoute = item && !!item.route;
-            itemIsBusStop = item && !itemIsRoute && !!item.properties && (item.properties.class === 'bus' || item.properties.subclass === 'tram_stop');
-            itemCanQueryProfile = itemIsRoute && !!item.route.positions;
+            itemIsRoute = !!item?.properties?.route;
+            itemIsBusStop = item && !itemIsRoute && (item.properties?.class === 'bus' || item.properties?.subclass === 'tram_stop');
+            itemCanQueryProfile = itemIsRoute;
             updateGraphAvailable();
             if (graphAvailable) {
                 updateChartData();
@@ -177,15 +177,17 @@
     }
 
     function updateRouteItemWithPosition(routeItem: Item, location: GenericMapPos<LatLonKeys>, updateNavigationInstruction = true, updateGraph = true) {
-        if (routeItem && routeItem.route) {
-            const route = routeItem.route;
-            const positions = route.positions;
+        if (routeItem?.properties?.route) {
+            const props = routeItem.properties;
+            const route = props.route;
+            const positions = packageService.getRouteItemPoses(routeItem);
             const onPathIndex = isLocationOnPath(location, positions, false, true, 20);
-            if (onPathIndex !== -1 && updateNavigationInstruction) {
+            console.log('updateRouteItemWithPosition', positions.get(0), location, onPathIndex);
+            if (props.instructions && onPathIndex !== -1 && updateNavigationInstruction) {
                 let routeInstruction;
-                for (let index = route.instructions.length - 1; index >= 0; index--) {
-                    const element = route.instructions[index];
-                    if (element.index <  onPathIndex) {
+                for (let index = props.instructions.length - 1; index >= 0; index--) {
+                    const element = props.instructions[index];
+                    if (element.index < onPathIndex) {
                         break;
                     }
                     routeInstruction = element;
@@ -197,12 +199,13 @@
                     remainingDistance: distance,
                     remainingTime: ((route.totalTime * distance) / route.totalDistance) * 1000
                 };
+                console.log('navigationInstructions', navigationInstructions);
             }
             if (updateGraph && graphAvailable) {
                 if (onPathIndex === -1) {
                     chart.nativeView.highlight(null);
                 } else {
-                    const profile = item.route.profile;
+                    const profile = props.profile;
                     const profileData = profile?.data;
                     if (profileData) {
                         const dataSet = chart.nativeView.getData().getDataSetByIndex(0);
@@ -230,16 +233,17 @@
     }
     function onChartHighlight(event: HighlightEventData) {
         const x = event.highlight.entryIndex;
-        const positions = item.route.positions;
-        const position = positions.getPos(Math.max(0, Math.min(x, positions.size() - 1)));
+        const positions = item.geometry?.['coordinates'];
+        const position = positions[Math.max(0, Math.min(x, positions.length - 1))];
         if (position) {
-            updateRouteItemWithPosition(item, position, false, false);
+            updateRouteItemWithPosition(item, { lat: position[1], lon: position[0] }, false, false);
             mapContext.selectItem({
-                item: { position },
+                item: { geometry: { type: 'Point', coordinates: position } },
                 isFeatureInteresting: true,
                 setSelected: false,
                 peek: false,
-                zoomDuration: 0
+                zoomDuration: 0,
+                preventZoom: false
             });
         }
     }
@@ -306,12 +310,13 @@
     async function getProfile(updateView = true) {
         try {
             updatingItem = true;
-            // console.log('getProfile');
+            console.log('getProfile');
             const profile = await packageService.getElevationProfile(item);
+            console.log('getProfile done', !!profile);
             if (profile) {
                 // item.route.profile = profile;
                 if (item.id !== undefined) {
-                    await updateItem(item, { route: { profile } } as any);
+                    item = await updateItem(item, { profile });
                 } else {
                     await saveItem(false);
                 }
@@ -397,11 +402,12 @@
             updatingItem = false;
         }
     }
-    async function updateItem(item: IItem, data: Partial<IItem>, peek = true) {
+    async function updateItem(item: IItem, data: Partial<ItemProperties>, peek = true) {
         try {
             updatingItem = true;
             const savedItem = await mapContext.mapModule('items').updateItem(item, data);
             mapContext.selectItem({ item: savedItem, isFeatureInteresting: true, peek });
+            return savedItem;
         } catch (err) {
             showError(err);
         } finally {
@@ -412,8 +418,8 @@
         mapContext.mapModule('items').deleteItem(mapContext.getSelectedItem());
     }
     async function shareItem() {
-        if (item.route) {
-            if (!item.route.profile && itemCanQueryProfile) {
+        if (item.properties?.route) {
+            if (!item.properties?.profile && itemCanQueryProfile) {
                 await getProfile(false);
             }
             // const gpx = await toGPX();
@@ -425,7 +431,8 @@
         try {
             updatingItem = true;
             const query = formatter.getItemName(item);
-            openUrl(`weather://query?lat=${item.position.lat}&lon=${item.position.lon}&name=${query}`);
+            const geometry = item.geometry as Point;
+            openUrl(`weather://query?lat=${geometry.coordinates[1]}&lon=${geometry.coordinates[0]}&name=${query}`);
             // const result = await networkService.sendWeatherBroadcastQuery({ ...item.position, timeout: 10000 });
             // const WeatherBottomSheet = (await import('./WeatherBottomSheet.svelte')).default;
             // await showBottomSheet({
@@ -442,13 +449,14 @@
 
     async function openPeakFinder() {
         try {
-            const position = { ...item.position };
+            const geometry = item.geometry as Point;
+            const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0], altitude: geometry.coordinates[2] };
+            console.log('openPeakFinder');
             if (!position.altitude) {
                 position.altitude = item.properties.ele || (await packageService.getElevation(position));
             }
             const hillshadeDatasource = packageService.hillshadeLayer?.dataSource;
             const vectorDataSource = packageService.localVectorTileLayer?.dataSource;
-            const component = (await import('~/components/PeakFinder.svelte')).default;
             const customSources = mapContext.mapModules.customLayers.customSources;
             let rasterDataSource: TileDataSource<any, any>;
             customSources.some((s) => {
@@ -457,13 +465,13 @@
                     return true;
                 }
             });
-            if (!rasterDataSource) {
-                rasterDataSource = await mapContext.mapModules.customLayers.getDataSource('openstreetmap');
-            }
-            showModal({
+            // if (!rasterDataSource) {
+            //     rasterDataSource = await mapContext.mapModules.customLayers.getDataSource('openstreetmap');
+            // }
+            const component = (await import('~/components/PeakFinder.svelte')).default;
+            console.log('openPeakFinder1');
+            navigate({
                 page: component,
-                animated: true,
-                fullscreen: true,
                 props: {
                     terrarium: false,
                     position,
@@ -480,8 +488,10 @@
     async function getTransitLines() {
         try {
             const component = (await import('~/components/transit/TransitLinesBottomSheet.svelte')).default;
-            console.log('getTransitLines', { name: formatter.getItemName(item), position: item.position });
-            showBottomSheet({ parent: mapContext.getMainPage(), view: component, disableDimBackground: true, props: { name: formatter.getItemName(item), position: item.position } });
+            const geometry = item.geometry as Point;
+            const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0], altitude: geometry.coordinates[2] };
+            console.log('getTransitLines', { name: formatter.getItemName(item), position });
+            showBottomSheet({ parent: mapContext.getMainPage(), view: component, disableDimBackground: true, props: { name: formatter.getItemName(item), position } });
         } catch (err) {
             this.showError(err);
         }
@@ -528,7 +538,7 @@
         }
         const chartView = chart.nativeView;
         const sets = [];
-        const profile = item.route.profile;
+        const profile = item.properties?.profile;
         const profileData = profile?.data;
         if (profileData) {
             const xAxis = chartView.getXAxis();
@@ -677,7 +687,7 @@
     }
     function routeInstructions() {
         if (listViewAvailable) {
-            return item.route.instructions;
+            return item.properties?.instructions;
         }
         return [];
     }
@@ -733,7 +743,7 @@
                 variant="text"
                 on:tap={() => searchWeb()}
                 on:longPress={() => tooltip($slc('search_web'))}
-                visibility={item && !itemIsRoute && !item.id ? 'visible' : 'collapsed'}
+                visibility={item && (!itemIsRoute || item.properties?.name) && !item.id ? 'visible' : 'collapsed'}
                 text="mdi-web"
                 class="icon-btn"
             />
