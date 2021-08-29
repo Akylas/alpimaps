@@ -646,21 +646,21 @@
                     }
                 } as any);
                 set.setDrawFilled(true);
-                if (showProfileGrades && profile.colors && profile.colors.length > 0) {
+                set.setColor('#60B3FC');
+                set.setLineWidth(1);
+                set.setFillColor('#60B3FC80');
+                if (showProfileGrades && profile.colors && profile.colors.length > 1) {
                     set.setLineWidth(2);
                     set.setColors(profile.colors);
-                } else {
-                    set.setColor('#60B3FC');
                 }
                 set.setMode(Mode.LINEAR);
-                set.setFillColor('#60B3FC80');
                 sets.push(set);
                 const lineData = new LineData(sets);
                 chartView.setData(lineData);
             } else {
                 chartView.highlightValues(null);
                 const set = chartData.getDataSetByIndex(0);
-                if (showProfileGrades && profile.colors && profile.colors.length > 0) {
+                if (showProfileGrades && profile.colors && profile.colors.length > 1) {
                     set.setLineWidth(2);
                     set.setColors(profile.colors);
                 } else {
