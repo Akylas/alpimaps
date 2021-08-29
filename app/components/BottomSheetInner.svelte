@@ -258,7 +258,7 @@
         }
     }
     function zoomToItem() {
-        mapContext.zoomToItem({ item });
+        mapContext.zoomToItem({ item, forceZoomOut: true });
     }
     function openWebView() {
         openUrl(webViewSrc);
