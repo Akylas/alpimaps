@@ -144,8 +144,8 @@ export function formatValueToUnit(value: any, unit, options?: { prefix?: string;
 }
 
 export function formatAddress(item: IItem, part = 0) {
-    const address = item.address;
     const properties = item.properties;
+    const address = properties.address;
     let result = '';
     // if ((properties.layer === 'housenumber' || properties.name || properties.osm_value || properties.osm_key || properties.class) && address && address.houseNumber) {
     if (address && address.houseNumber) {
