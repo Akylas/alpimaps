@@ -46,8 +46,18 @@ export interface MapContext {
     getMap: () => CartoMap<LatLonKeys>;
     getProjection: () => Projection;
     setBottomSheetStepIndex: (value: number) => void;
-    selectItem: (args: { item: IItem; showButtons?: boolean; isFeatureInteresting: boolean; peek?: boolean; setSelected?: boolean; minZoom?: number; zoom?: number; zoomDuration?: number }) => void;
-    zoomToItem: (args: { item: IItem; zoom?: number; minZoom?: number }) => void;
+    selectItem: (args: {
+        item: IItem;
+        showButtons?: boolean;
+        isFeatureInteresting: boolean;
+        peek?: boolean;
+        setSelected?: boolean;
+        minZoom?: number;
+        zoom?: number;
+        zoomDuration?: number;
+        preventZoom?: boolean;
+    }) => void;
+    zoomToItem: (args: { item: IItem; zoom?: number; minZoom?: number; forceZoomOut?: boolean }) => void;
     unselectItem: () => void;
     getCurrentLanguage: () => string;
     getSelectedItem: () => IItem;
