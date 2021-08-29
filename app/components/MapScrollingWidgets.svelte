@@ -8,6 +8,7 @@
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { GridLayout, ViewBase } from '@nativescript/core';
     import { AnimationCurve } from '@nativescript/core/ui/enums';
+import { Point } from 'geojson';
     import { debounce } from 'push-it-to-the-limit/target/es6';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -114,7 +115,7 @@
     });
     $: locationButtonClass = !$mapStore.queryingLocation && $mapStore.watchingLocation ? 'buttonthemed' : 'buttontext';
     $: locationButtonLabelClass = $mapStore.queryingLocation ? 'fade-blink' : '';
-    $: selectedItemHasPosition = selectedItem && !selectedItem.route && !!selectedItem.position;
+    $: selectedItemHasPosition = selectedItem && !selectedItem.properties?.route && selectedItem.geometry.type === 'Point';
 
     export function onSelectedItem(item: IItem, oldItem: IItem) {
         selectedItem = item;
@@ -302,7 +303,8 @@
     function startDirections() {
         if (selectedItem) {
             const module = mapContext.mapModule('directionsPanel');
-            module.addStopPoint(selectedItem.position, selectedItem.properties);
+            const geometry  = selectedItem.geometry as Point;
+            module.addStopPoint({ lat: geometry.coordinates[1], lon: geometry.coordinates[0] }, selectedItem.properties);
         }
     }
 
