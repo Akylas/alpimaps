@@ -6,12 +6,13 @@
     import type { SearchRequest } from '@nativescript-community/ui-carto/search';
     import { VectorElementVector } from '@nativescript-community/ui-carto/vectorelements';
     import { Marker } from '@nativescript-community/ui-carto/vectorelements/marker';
-    import { Point, PointStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/point';
+    import { PointStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/point';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import type { Side } from '@nativescript-community/ui-drawer';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { GridLayout, Screen, TextField } from '@nativescript/core';
     import { getJSON } from '@nativescript/core/http';
+    import { Point } from 'geojson';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -85,14 +86,13 @@
     class PhotonFeature {
         properties: { [k: string]: any };
         position: MapPos<LatLonKeys>;
-        address: Address;
-        provider = 'photon';
         constructor(data) {
             const properties = data.properties || {};
             const actualName = properties.name === properties.city ? undefined : properties.name;
             const { region, name, state, street, housenumber, postcode, city, country, neighbourhood, ...actualProperties } = properties;
-            this.address = {
+            actualProperties.address = {
                 state,
+                provider: 'photon',
                 county: region,
                 houseNumber: housenumber,
                 postcode,
@@ -101,34 +101,32 @@
                 street: properties['osm_key'] === 'highway' ? name : street,
                 neighbourhood
             };
+            actualProperties.name = actualName;
             this.properties = actualProperties;
-            this.properties.name = actualName;
             this.position = { lat: data.geometry.coordinates[1], lon: data.geometry.coordinates[0] };
         }
     }
     class HereFeature {
-        showOnMap = true;
         properties: { [k: string]: any };
         position: MapPos<LatLonKeys>;
-        address: Address;
-        categories?: string[];
-        provider = 'here';
         constructor(data) {
             this.properties = {
+                showOnMap: true,
+                provider: 'here',
                 id: data.id,
                 name: data.title,
                 osm_key: data.category.id ? data.category.id.split('-')[0] : undefined,
                 vicinity: data.vicinity,
-                averageRating: data.averageRating
+                averageRating: data.averageRating,
+                categories: [data.category.id],
+                address: { name: data.vicinity }
             };
-            this.categories = [data.category.id];
             this.position = { lat: data.position[0], lon: data.position[1] };
-            this.address = { name: data.vicinity };
         }
     }
 
     interface SearchItem extends Item {
-        showOnMap?: boolean;
+        geometry: Point;
     }
 
     let gridLayout: NativeViewElementNode<GridLayout>;
@@ -157,20 +155,20 @@
         }
         return _searchDataSource;
     }
-    function buildClusterElement(position: MapPos, elements: VectorElementVector) {
-        if (!searchClusterStyle) {
-            searchClusterStyle = new PointStyleBuilder({
-                // hideIfOverlapped: false,
-                size: 12,
-                color: 'red'
-            }).buildStyle();
-        }
+    // function buildClusterElement(position: MapPos, elements: VectorElementVector) {
+    //     if (!searchClusterStyle) {
+    //         searchClusterStyle = new PointStyleBuilder({
+    //             // hideIfOverlapped: false,
+    //             size: 12,
+    //             color: 'red'
+    //         }).buildStyle();
+    //     }
 
-        return new Point({
-            position,
-            styleBuilder: searchClusterStyle
-        });
-    }
+    //     return new Point({
+    //         position,
+    //         styleBuilder: searchClusterStyle
+    //     });
+    // }
     function itemToMetaData(item: Item) {
         const result = {};
         Object.keys(item).forEach((k) => {
@@ -183,13 +181,13 @@
     function createSearchMarker(item: SearchItem) {
         const metaData = itemToMetaData(item);
         return new Marker({
-            position: item.position,
+            position: { lat: item.geometry.coordinates[1], lon: item.geometry.coordinates[0] },
             styleBuilder: {
                 hideIfOverlapped: false,
                 clickSize: 20,
                 size: 20,
                 scaleWithDPI: true,
-                color: providerColors[item.provider]
+                color: providerColors[item.properties.provider]
             },
             metaData
         });
@@ -226,7 +224,7 @@
         return osmicon(formatter.geItemIcon(item));
     }
     function getItemIconColor(item: SearchItem) {
-        return providerColors[item.provider] || 'white';
+        return providerColors[item.properties.provider] || 'white';
     }
     function getItemTitle(item: SearchItem) {
         return formatter.getItemTitle(item);
@@ -384,7 +382,7 @@
             searchRadius: Math.min(Math.max(mpp * Screen.mainScreen.widthPixels, mpp * Screen.mainScreen.heightPixels)) //meters
             // locationRadius: 1000,
         };
-        console.log('instantSearch', position, mapContext.getMap().getZoom(), mpp, options);
+        // console.log('instantSearch', position, mapContext.getMap().getZoom(), mpp, options);
 
         // TODO: dont fail when offline!!!
 
@@ -406,17 +404,17 @@
                     .then((r) => loading && r && result.push(...r))
                     .catch((err) => {
                         console.error('searchInGeocodingService', err);
+                    }),
+                herePlaceSearch(options)
+                    .then((r) => loading && r && result.push(...r))
+                    .catch((err) => {
+                        console.error('herePlaceSearch', err);
+                    }),
+                photonSearch(options)
+                    .then((r) => loading && r && result.push(...r))
+                    .catch((err) => {
+                        console.error('photonSearch', err);
                     })
-                // herePlaceSearch(options)
-                //     .then((r) => loading && r && result.push(...r))
-                //     .catch((err) => {
-                //         console.error('herePlaceSearch', err);
-                //     }),
-                // photonSearch(options)
-                //     .then((r) => loading && r && result.push(...r))
-                //     .catch((err) => {
-                //         console.error('photonSearch', err);
-                //     })
             ]);
 
             // console.log(
@@ -512,7 +510,7 @@
         showingOnMap = true;
         const items = filteredDataItems.filter(
             // (d) => !!d && (d.provider === 'here' || (d.provider === 'carto' && d.properties.layer === 'poi'))
-            (d) => !!d && (d.provider === 'here' || d.provider === 'carto')
+            (d) => !!d && (d.properties.provider === 'here' || d.properties.provider === 'carto')
         );
         if (items.length === 0) {
             return;

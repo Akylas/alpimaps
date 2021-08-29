@@ -1,5 +1,5 @@
 import Observable from '@nativescript-community/observable';
-import { CartoMapStyle, IntVector, MapBounds, MapPos, MapPosVector, fromNativeMapPos, nativeVectorToArray } from '@nativescript-community/ui-carto/core';
+import { CartoMapStyle, GenericMapPos, IntVector, MapBounds, MapPos, MapPosVector, fromNativeMapPos, nativeVectorToArray } from '@nativescript-community/ui-carto/core';
 import { MergedMBVTTileDataSource, OrderedTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
 import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
 import { HTTPTileDataSource } from '@nativescript-community/ui-carto/datasources/http';
@@ -16,7 +16,9 @@ import {
     ReverseGeocodingRequest,
     ReverseGeocodingService
 } from '@nativescript-community/ui-carto/geocoding/service';
+import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
 import { Feature, FeatureCollection, VectorTileFeature, VectorTileFeatureCollection } from '@nativescript-community/ui-carto/geometry/feature';
+import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
 import { HillshadeRasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
 import { CartoOnlineVectorTileLayer, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { CartoPackageManager, CartoPackageManagerListener, PackageErrorType, PackageManagerTileDataSource, PackageStatus } from '@nativescript-community/ui-carto/packagemanager';
@@ -27,6 +29,7 @@ import * as appSettings from '@nativescript/core/application-settings';
 import { File, Folder, path } from '@nativescript/core/file-system';
 // import KalmanFilter from 'kalmanjs';
 import { getDistance, getDistanceSimple } from '~/helpers/geolib';
+import { getMapContext } from '~/mapModules/MapModule';
 import { IItem as Item } from '~/models/Item';
 import { RouteProfile } from '~/models/Route';
 import { getDataFolder, getDefaultMBTilesDir } from '~/utils/utils';
@@ -637,10 +640,10 @@ class PackageService extends Observable {
         }
 
         const res = geoRes as Item;
-        res.provider = 'carto';
-        res.address = address;
+        res.properties.provider = 'carto';
+        res.properties.address = address;
         if (!onlyAddress) {
-            const name = (geoRes.properties.name = geoRes.properties.name || res.address.name);
+            const name = (geoRes.properties.name = geoRes.properties.name || res.properties.address.name);
             if (name && name.length === 0) {
                 delete geoRes.properties.name;
             }
@@ -667,7 +670,7 @@ class PackageService extends Observable {
         }
         return null;
     }
-    async getElevations(pos: MapPosVector<LatLonKeys>): Promise<IntVector> {
+    async getElevations(pos: MapPosVector<LatLonKeys> | GenericMapPos<LatLonKeys>[]): Promise<IntVector> {
         if (this.hillshadeLayer) {
             return new Promise((resolve, reject) => {
                 this.hillshadeLayer.getElevationsAsync(pos, (err, result) => {
@@ -854,16 +857,39 @@ class PackageService extends Observable {
         result.colors = colors;
         return result;
     }
+    _reader: GeoJSONGeometryReader;
+    getGeoJSONReader() {
+        if (!this._reader) {
+            this._reader = new GeoJSONGeometryReader({
+                targetProjection: getMapContext().getProjection()
+            });
+        }
+        return this._reader;
+    }
+
+    getRouteItemPoses(item: Item) {
+        // console.log('getRouteItemPoses', item.geometry.type, item.geometry.coordinates.length, item._geometry);
+        let geometry = item._nativeGeometry || (packageService.getGeoJSONReader().readGeometry(item._geometry || JSON.stringify(item.geometry)) as LineGeometry<LatLonKeys>);
+        if (!item._nativeGeometry) {
+            item._nativeGeometry = geometry.getNative();
+        }
+        if (geometry['getGeometryCount']) {
+            geometry = geometry['getGeometry'](0);
+        }
+        return geometry.getPoses();
+    }
     async getElevationProfile(item: Item) {
-        if (this.hillshadeLayer && item.route) {
+        // console.log('getElevationProfile', item.geometry.type, item.geometry.coordinates.length);
+        if (this.hillshadeLayer && (item.geometry.type === 'LineString' || item.geometry.type === 'MultiLineString')) {
+            // if (DEV_LOG) {
+            //     console.log('getElevationProfile', item.geometry);
+            // }
+            const positions = this.getRouteItemPoses(item);
+            const elevations = await this.getElevations(positions);
             if (DEV_LOG) {
-                console.log('getElevationProfile', item.route);
+                console.log('getElevations done', positions.size(), elevations.size(), elevations.get(0), positions.get(0));
             }
-            const elevations = await this.getElevations(item.route.positions);
-            if (DEV_LOG) {
-                console.log('getElevations done', elevations.size());
-            }
-            return this.computeProfileFromHeights(item.route.positions, elevations);
+            return this.computeProfileFromHeights(positions, elevations);
         }
         return null;
     }
