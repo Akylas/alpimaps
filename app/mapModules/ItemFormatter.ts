@@ -10,9 +10,6 @@ export default class ItemFormatter {
         if (!item) {
             return result;
         }
-        if (item.route) {
-            return result;
-        }
         const properties = item.properties;
         if (properties) {
             if (properties.osm_value) {
@@ -31,11 +28,11 @@ export default class ItemFormatter {
                 result.push(properties.layer);
             }
         }
-        if (item.categories) {
-            result.push(...item.categories.reverse());
+        if (properties.categories) {
+            result.push(...properties.categories.reverse());
         }
-        if (result.length === 0 && item.address && item.address.houseNumber) {
-            result.push(item.address.houseNumber);
+        if (result.length === 0 && properties.address && properties.address.houseNumber) {
+            result.push(properties.address.houseNumber);
         }
         result.push('office');
         return result;
@@ -47,27 +44,25 @@ export default class ItemFormatter {
             properties[`name_${mapContext.getCurrentLanguage()}`] ||
             properties.name ||
             properties.name_int ||
-            (item.address && item.address.name) ||
+            (properties.address && properties.address.name) ||
             (properties.subclass && lc(properties.subclass.replace(/-/g, '_'))) ||
             (properties.class && lc(properties.class.replace(/-/g, '_')))
         );
     }
     getItemPositionToString(item: Item) {
-        const position = item.position;
-        if (position) {
-            return `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`;
+        if (item.geometry.type === 'Point') {
+            return `${item.geometry.coordinates[1].toFixed(3)}, ${item.geometry.coordinates[0].toFixed(3)}`;
         }
         return '';
     }
     getItemAddress(item: Item, part = 0) {
-        const address = item.address;
-        if (address) {
+        if (item.properties?.address) {
             return formatAddress(item, part);
         }
     }
     getItemTitle(item: Item) {
         if (item) {
-            return this.getItemName(item) || this.getItemAddress(item, 1) || `${item.position.lat.toFixed(4)}, ${item.position.lon.toFixed(4)}`;
+            return this.getItemName(item) || this.getItemAddress(item, 1) || this.getItemPositionToString(item);
         }
         return '';
     }

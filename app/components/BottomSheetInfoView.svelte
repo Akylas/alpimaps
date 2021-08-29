@@ -2,7 +2,7 @@
     import dayjs from 'dayjs';
     import { convertElevation, convertValueToUnit, osmicon, UNITS } from '~/helpers/formatter';
     import { formatter } from '~/mapModules/ItemFormatter';
-    import type { IItem as Item } from '~/models/Item';
+    import type { IItem as Item, ItemProperties } from '~/models/Item';
     import { mdiFontFamily, subtitleColor, textColor } from '~/variables';
     const PROPS_TO_SHOW = ['ele'];
 
@@ -18,7 +18,7 @@
     let routeDmin: string = null;
     let showSymbol: boolean = false;
     let itemIsRoute = false;
-    let itemProps = null;
+    let itemProps: ItemProperties = null;
     // $: itemRouteNoProfile = item && !!item.route && (!item.route.profile || !item.route.profile.max);
 
     function propValue(prop) {
@@ -52,31 +52,36 @@
         return null;
     }
 
-    function updateItem(item) {
-        itemIsRoute = item && !!item.route;
-        itemProps = item && item.properties;
-        itemIcon = item && formatter.geItemIcon(item);
-        itemTitle = item && formatter.getItemTitle(item);
-        itemSubtitle = item && formatter.getItemSubtitle(item);
-        showSymbol = itemIsRoute && itemProps && itemProps.layer === 'route';
+    function updateItem(item: Item) {
 
+        if (!item) {
+            routeDistance = null;
+            routeDuration = null;
+            routeDplus = null;
+            routeDmin = null;
+            propsToDraw = [];
+            return;
+        }
+        itemProps = item?.properties;
+        itemIsRoute = !!itemProps?.route;
+        itemIcon = formatter.geItemIcon(item);
+        itemTitle = formatter.getItemTitle(item);
+        itemSubtitle = formatter.getItemSubtitle(item);
+        showSymbol = itemIsRoute && itemProps && itemProps.layer === 'route';
         let newPropsToDraw = [];
-        if (!itemIsRoute && item) {
-            const props = item.properties;
-            if (props) {
-                newPropsToDraw = PROPS_TO_SHOW.filter((k) => k in props);
+        if (!itemIsRoute) {
+            if (itemProps) {
+                newPropsToDraw = PROPS_TO_SHOW.filter((k) => k in itemProps);
             } else {
                 newPropsToDraw = [];
             }
-        } else {
-            newPropsToDraw = [];
         }
 
-        if (!item || !itemIsRoute) {
+        if (!itemIsRoute) {
             routeDistance = null;
             routeDuration = null;
         } else {
-            const route = item.route;
+            const route = itemProps.route;
             let result;
             if (route.totalDistance || (itemProps && itemProps.distance)) {
                 result = `${convertValueToUnit(route.totalDistance || itemProps.distance * 1000, UNITS.DistanceKm).join(' ')}`;
@@ -94,7 +99,7 @@
             }
         }
 
-        hasProfile = itemIsRoute && !!item.route.profile && !!item.route.profile.max;
+        hasProfile = item && !!itemProps.profile && !!itemProps.profile.max;
         if (!hasProfile) {
             if (itemProps && itemProps.ascent && itemProps.ascent > 0) {
                 routeDplus = `${convertElevation(itemProps.ascent)}`;
@@ -109,7 +114,7 @@
                 routeDmin = null;
             }
         } else {
-            const profile = item.route.profile;
+            const profile = itemProps.profile;
             if (profile.dplus > 0) {
                 routeDplus = `${convertElevation(profile.dplus)}`;
                 newPropsToDraw.push('dplus');
