@@ -576,8 +576,8 @@
         peek = true,
         setSelected = true,
         showButtons = false,
-        preventZoom = false,
         position,
+        preventZoom = true,
         minZoom,
         zoom,
         zoomDuration
