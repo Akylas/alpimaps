@@ -32,6 +32,7 @@ export type LayerType = 'map' | 'customLayers' | 'hillshade' | 'selection' | 'it
 export interface MapContext {
     drawer: Drawer;
     mapModules: MapModules;
+    innerDecoder: MBVectorTileDecoder;
     toggleMenu(side: string);
     showOptions();
     mapModule<T extends keyof MapModules>(id: T): MapModules[T];
@@ -42,6 +43,7 @@ export interface MapContext {
     onMapClicked(callback: (map: CartoMap<LatLonKeys>) => void);
     onVectorElementClicked(callback: (data: VectorElementEventData<LatLonKeys>) => void);
     onVectorTileClicked(callback: (data: VectorTileEventData<LatLonKeys>) => void);
+    onVectorTileElementClicked(callback: (data: VectorTileEventData<LatLonKeys>) => void);
     getMainPage: () => NativeViewElementNode<Page>;
     getMap: () => CartoMap<LatLonKeys>;
     getProjection: () => Projection;
@@ -71,6 +73,7 @@ export interface MapContext {
     getLayerTypeFirstIndex: (layerId: LayerType) => number;
     vectorElementClicked: (data: VectorElementEventData<LatLonKeys>) => boolean;
     vectorTileClicked: (data: VectorTileEventData<LatLonKeys>) => boolean;
+    vectorTileElementClicked: (data: VectorTileEventData<LatLonKeys>) => boolean;
     rasterTileClicked: (data: RasterTileClickInfo<LatLonKeys>) => boolean;
     getVectorTileDecoder(): MBVectorTileDecoder;
     getCurrentLayer(): VectorTileLayer;
@@ -99,6 +102,7 @@ const mapContext: MapContext = {
     onMapIdle: createGlobalEventListener('onMapIdle'),
     onMapClicked: createGlobalEventListener('onMapClicked'),
     onVectorElementClicked: createGlobalEventListener('onVectorElementClicked'),
+    onVectorTileElementClicked: createGlobalEventListener('onVectorTileElementClicked'),
     onRasterTileClicked: createGlobalEventListener('onRasterTileClicked'),
     mapModule<T extends keyof MapModules>(id: T) {
         return mapContext.mapModules && mapContext.mapModules[id];
@@ -119,7 +123,12 @@ const mapContext: MapContext = {
             result = event.result;
         }
         return result;
-    }
+    },
+    innerDecoder: new MBVectorTileDecoder({
+        style: 'voyager',
+        liveReload: TNS_ENV !== 'production',
+        dirPath: '~/assets/internal_styles/inner'
+    })
 } as any;
 
 export function setMapContext(ctx) {
@@ -147,5 +156,6 @@ export default abstract class MapModule extends Observable implements IMapModule
     onMapClicked?(e);
     onVectorTileClicked?(data: VectorTileEventData<LatLonKeys>);
     onVectorElementClicked?(data: VectorElementEventData<LatLonKeys>);
+    onVectorTileElementClicked?(data: VectorTileEventData<LatLonKeys>);
     onSelectedItem?(item: IItem, oldItem: IItem);
 }
