@@ -15,6 +15,7 @@
     import { onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
+import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
     import { showError } from '~/utils/error';
     import { mdiFontFamily, widgetBackgroundColor } from '~/variables';
@@ -45,11 +46,8 @@
                 maxZoom: 24
             });
             transitVectorTileDataSource.createLayer('lines');
-            const reader = new GeoJSONGeometryReader({
-                targetProjection: cartoMap.projection
-            });
-            const geometry = reader.readFeatureCollection(lineGeoJSON);
-            transitVectorTileDataSource.setLayerFeatureCollection(1, cartoMap.projection, geometry);
+            const geometry = packageService.getGeoJSONReader().readFeatureCollection(lineGeoJSON);
+            transitVectorTileDataSource.setLayerGeoJSONString(1, lineGeoJSON);
 
             const transitVectorTileLayer = new VectorTileLayer({
                 // preloading: true,
@@ -142,7 +140,7 @@
     async function backToMapOnPoint(item) {
         try {
             mapContext.selectItem({
-                item: { position: item },
+                item: { geometry: { type: 'Point', coordinates: [item.lon, item.lat] }, properties: { id: item.id, name: item.name, color: item.color } },
                 isFeatureInteresting: true,
                 setSelected: false,
                 peek: false,
@@ -156,7 +154,7 @@
     async function selectStop(item) {
         try {
             mapContext.selectItem({
-                item: { position: item },
+                item: { geometry: { type: 'Point', coordinates: [item.lon, item.lat] }, properties: { id: item.id, name: item.name, color: item.color } },
                 isFeatureInteresting: true,
                 setSelected: false,
                 peek: false,
