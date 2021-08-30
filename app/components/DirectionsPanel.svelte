@@ -2,7 +2,7 @@
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { ClickType, fromNativeMapBounds, fromNativeMapPos } from '@nativescript-community/ui-carto/core';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
-    import { VectorLayer } from '@nativescript-community/ui-carto/layers/vector';
+    import { VectorLayer, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
     import type { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
     import { RoutingResult, RoutingService } from '@nativescript-community/ui-carto/routing';
     import { Group } from '@nativescript-community/ui-carto/vectorelements/group';
@@ -285,10 +285,6 @@
         ensureRouteLayer();
         waypoints.unshift(toAdd);
         nbWayPoints++;
-        // waypoints = waypoints;
-        if (startTF) {
-            startTF.nativeView.text = currentStartSearchText = toAdd.text;
-        }
         updateWayPoints();
     }
     let loadedListeners = [];
@@ -355,9 +351,6 @@
         ];
         toAdd.marker = group;
         getRouteDataSource().add(group);
-        if (stopTF) {
-            stopTF.nativeView.text = currentStopSearchText = toAdd.text;
-        }
         ensureRouteLayer();
         waypoints.push(toAdd);
         nbWayPoints++;
@@ -465,6 +458,30 @@
             return true;
         }
     }
+    export function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
+        const { clickType, position, featureLayerName, featureData, featurePosition, featureGeometry, layer } = data;
+        if (
+            featureLayerName === 'transportation' ||
+            featureLayerName === 'transportation_name' ||
+            featureLayerName === 'waterway' ||
+            // featureLayerName === 'place' ||
+            featureLayerName === 'contour' ||
+            featureLayerName === 'hillshade' ||
+            (featureLayerName === 'park' && !!featureGeometry['getHoles']) ||
+            ((featureLayerName === 'building' || featureLayerName === 'landcover' || featureLayerName === 'landuse') && !featureData.name)
+        ) {
+            return false;
+        }
+        // const { clickType } = e.data;
+        // console.log('onMapClicked', clickType, ClickType.LONG);
+        // const duration = e.data.clickInfo.duration;
+
+        if (clickType === ClickType.LONG) {
+            featureData.layer = featureLayerName;
+            addWayPoint(position, featureData);
+            return true;
+        }
+    }
 
     function clear(unselect = true) {
         waypoints = new ObservableArray([]);
@@ -477,14 +494,6 @@
         }
         if (currentRoute && unselect) {
             mapContext.unselectItem();
-        }
-        if (startTF) {
-            unfocus(startTF.nativeView);
-            startTF.nativeView.text = null;
-        }
-        if (stopTF) {
-            unfocus(stopTF.nativeView);
-            stopTF.nativeView.text = null;
         }
     }
     export function cancel(unselect = true) {
@@ -681,17 +690,6 @@
         textField.clearFocus();
     }
 
-    let currentStartSearchText = null;
-    let currentStopSearchText = null;
-    // onStartTextChange(e) {
-    //     currentStartSearchText = e.value;
-    // }
-    // onStopTextChange(e) {
-    //     currentStopSearchText = e.value;
-    // }
-    let startTF: NativeViewElementNode<TextField>;
-    let stopTF: NativeViewElementNode<TextField>;
-
     function clearWayPoint(item) {
         try {
             let index = -1;
@@ -702,10 +700,8 @@
                 }
                 return false;
             });
-            console.log('clearWayPoint', index);
             if (index >= 0) {
                 const toRemove = waypoints.splice(index, 1)[0];
-                console.log('clearStartSearch', !!toRemove.marker);
                 getRouteDataSource().remove(toRemove.marker);
                 if (currentRoute) {
                     mapContext.unselectItem();
@@ -723,7 +719,6 @@
         try {
             if (waypoints.length >= 1 && waypoints.getItem(0).isStart === true) {
                 const toRemove = waypoints.splice(0, 1)[0];
-                console.log('clearStartSearch', !!toRemove.marker);
                 getRouteDataSource().remove(toRemove.marker);
                 if (currentRoute) {
                     mapContext.unselectItem();
@@ -731,11 +726,6 @@
                 if (line) {
                     line.positions = waypoints.map((w) => w.position);
                 }
-            }
-            currentStartSearchText = null;
-            if (startTF) {
-                startTF.nativeView.text = null;
-                unfocus(startTF.nativeView);
             }
         } catch (error) {
             console.error(error);
@@ -745,7 +735,6 @@
         try {
             if (waypoints.length >= 1 && waypoints[waypoints.length - 1].isStop === true) {
                 const toRemove = waypoints.splice(waypoints.length - 1, 1)[0];
-                console.log('clearStopSearch', !!toRemove.marker);
                 getRouteDataSource().remove(toRemove.marker);
                 if (currentRoute) {
                     mapContext.unselectItem();
@@ -753,11 +742,6 @@
                 if (line) {
                     line.positions = waypoints.map((w) => w.position);
                 }
-            }
-            currentStopSearchText = null;
-            if (stopTF) {
-                stopTF.nativeView.text = null;
-                unfocus(stopTF.nativeView);
             }
         } catch (error) {
             console.error(error);
