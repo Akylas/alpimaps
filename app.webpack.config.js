@@ -438,16 +438,16 @@ module.exports = (env, params = {}) => {
             );
         }
     }
-    if (!!production) {
-        config.plugins.push(
-            new ForkTsCheckerWebpackPlugin({
-                async: false,
-                typescript: {
-                    configFile: resolve(tsconfig)
-                }
-            })
-        );
-    }
+    // if (!!production) {
+    //     config.plugins.push(
+    //         new ForkTsCheckerWebpackPlugin({
+    //             async: false,
+    //             typescript: {
+    //                 configFile: resolve(tsconfig)
+    //             }
+    //         })
+    //     );
+    // }
 
     // config.plugins.push(
     //     new webpack.ProvidePlugin({
