@@ -63,11 +63,15 @@ Map {
 
   [class=grass]{
 
+    [subclass=golf_course]::grass,
+    [subclass=miniature_golf]::grass{
+      polygon-fill: @golf_course;
+    }
     [subclass=grassland]::grass,
     [subclass=meadow]::grass,
     [subclass=grass]::grass,
     [subclass=village_green]::grass{
-      polygon-fill: @grass;
+      polygon-fill: @grass; 
     }
     [subclass=park] {
       park/polygon-fill: @park;
@@ -77,10 +81,6 @@ Map {
     }
 
 
-    [subclass=golf_course],
-    [subclass=miniature_golf]{
-      polygon-fill: @golf_course;
-    }
     [subclass=heath] {
       polygon-fill: @heath;
     }
