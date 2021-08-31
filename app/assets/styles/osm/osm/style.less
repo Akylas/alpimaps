@@ -355,7 +355,7 @@ Map {
 @state_label: #000000;
 @district_label: #7f7f7f;
 @suburb_label: #3f4873;
-@suburb_min_dist: 105;
+@suburb_min_dist: 25;
 @suburb_label_width:linear([view::zoom], (12, 9), (13, 10), (16, 13)) - 0.000001 * [rank];
 @suburb-label-wrap-width: linear([view::zoom], (12, 40), (15, 60));
 @neighbourhood_label: #7f7f7f;
@@ -410,6 +410,6 @@ Map {
 @poi_national_park_label_width:linear([view::zoom], (5, 8), (10, 11), (18, 12)) - 0.000001 * [rank];
 @poi_label_wrap_width:linear([view::zoom], (14, 50), (18, 100));
 @poi_national_park_wrap_width:linear([view::zoom], (14, 60), (18, 100));
-@poi_label_dy: linear([view::zoom], (10, 10), (18, 14));
+@poi_label_dy: linear([view::zoom], (10, 10), (12, 11), (19, 13), (20, 18));
 
 @peak_label_width: linear([view::zoom], (5, 5), (10, 7), (18, 10)) - 0.000001 * [rank];
