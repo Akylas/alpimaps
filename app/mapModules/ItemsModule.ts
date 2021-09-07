@@ -90,6 +90,7 @@ export default class ItemsModule extends MapModule {
             this.localVectorLayer.setVectorTileEventListener<LatLonKeys>(
                 {
                     onVectorTileClicked(info: VectorTileEventData<LatLonKeys>) {
+                        console.log('onVectorTileClicked', info.featureId, info.featureData.id, typeof info.featureData.id);
                         return mapContext.vectorTileElementClicked(info);
                     }
                 },
@@ -205,15 +206,17 @@ export default class ItemsModule extends MapModule {
             item = await this.itemRepository.updateItem(item as Item, data);
         }
         const index = this.currentLayerFeatures.findIndex((d) => d.id === item.id);
-        // console.log('updateItem', item.id, item.properties.id, index);
         if (index !== -1) {
+            this.currentItems.splice(index, 1, item);
             const sProps = {};
             Object.keys(item.properties).forEach((k) => {
-                sProps[k] = JSON.stringify(item.properties[k]);
-                // console.log('test', k, item.properties[k]);
+                if (typeof item.properties[k] === 'object') {
+                    sProps[k] = JSON.stringify(item.properties[k]);
+                } else {
+                    sProps[k] = item.properties[k];
+                }
             });
             this.currentLayerFeatures.splice(index, 1, { type: 'Feature', id: item.id, properties: sProps, geometry: item.geometry });
-            this.currentItems.splice(index, 1, item);
             // console.log('test', k, item.properties[k]);
             this.updateGeoJSONLayer();
         }
