@@ -46,7 +46,7 @@
     import { getMapContext, setMapContext } from '~/mapModules/MapModule';
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import type { IItem } from '~/models/Item';
-    import { RouteInstruction } from '~/models/Route';
+    import { RouteInstruction } from '~/models/Item';
     import { NotificationHelper, NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL } from '~/services/android/NotifcationHelper';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
     import { NetworkConnectionStateEvent, NetworkConnectionStateEventData, networkService } from '~/services/NetworkService';
