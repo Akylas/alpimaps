@@ -26,8 +26,7 @@
     import { onThemeChanged } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
-    import type { IItem, IItem as Item, ItemProperties } from '~/models/Item';
-    import type { RouteInstruction } from '~/models/Route';
+    import type { IItem, IItem as Item, ItemProperties, RouteInstruction } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { showError } from '~/utils/error';

@@ -3,7 +3,6 @@ import { VectorElement } from '@nativescript-community/ui-carto/vectorelements';
 import { LineStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/line';
 import { MarkerStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/marker';
 import { Color } from '@nativescript/core';
-import { Route, RouteInstruction, RouteProfile, RouteRepository } from './Route';
 import NSQLDatabase from '../mapModules/NSQLDatabase';
 import type { Geometry } from 'geojson';
 import mergeOptions from 'merge-options';
@@ -12,6 +11,52 @@ import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
 const sql = SqlQuery.createFromTemplateString;
+
+export enum RoutingAction {
+    HEAD_ON,
+    FINISH,
+    NO_TURN,
+    GO_STRAIGHT,
+    TURN_RIGHT,
+    UTURN,
+    TURN_LEFT,
+    REACH_VIA_LOCATION,
+    ENTER_ROUNDABOUT,
+    LEAVE_ROUNDABOUT,
+    STAY_ON_ROUNDABOUT,
+    START_AT_END_OF_STREET,
+    ENTER_AGAINST_ALLOWED_DIRECTION,
+    LEAVE_AGAINST_ALLOWED_DIRECTION,
+    GO_UP,
+    GO_DOWN,
+    WAIT
+}
+
+export interface RouteInstruction {
+    // position: MapPos<LatLonKeys>;
+    a: RoutingAction;
+    az: number;
+    dist: number;
+    index: number;
+    time: number;
+    angle: number;
+    name: string;
+    inst: string;
+}
+
+export interface RouteProfile {
+    max: [number, number];
+    min: [number, number];
+    dplus?: any;
+    dmin?: any;
+    data: { d: number; a: number; avg: number; g }[];
+    colors?: { d: number; color: string }[];
+}
+export interface Route {
+    osmid?: number;
+    totalTime: number;
+    totalDistance: number;
+}
 
 export interface Address {
     country?: string;
