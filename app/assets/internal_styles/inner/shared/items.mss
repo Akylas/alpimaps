@@ -3,7 +3,6 @@
 @pedestrian_line_width: pow(2.0, linear([view::zoom], (12, -5), (15, -2), (18, 1.6))) + 0.5;
 @bicycle_line_width: (pow(2.0, linear([view::zoom], (14, -2.8), (18, 3.2))) + 0.5) * linear([view::zoom], (14,0), (14.01, 1));
 #items {
-
 	['mapnik::geometry_type'=2]{
         back/line-color: white;
         back/line-width: @bicycle_line_width + 3;
@@ -18,10 +17,10 @@
             line-width: @pedestrian_line_width+2;
         }
 
-        ['nuti::selected_id'=id] {
+         when (['nuti::selected_id']=[id])::selected {
             back/line-width: @bicycle_line_width + 4;
             line-color: #60A5F4;
-            line-width: h + 2;
+            line-width: bicycle_line_width+ 2;
             marker-placement: line;
             marker-type:arrow;
             marker-line-width:0;
