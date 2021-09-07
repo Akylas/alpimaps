@@ -309,14 +309,13 @@
     async function getProfile(updateView = true) {
         try {
             updatingItem = true;
-            console.log('getProfile');
             const profile = await packageService.getElevationProfile(item);
-            console.log('getProfile done', !!profile);
             if (profile) {
                 // item.route.profile = profile;
                 if (item.id !== undefined) {
                     item = await updateItem(item, { profile });
                 } else {
+                    item.properties.profile = profile;
                     await saveItem(false);
                 }
                 updateGraphAvailable();
