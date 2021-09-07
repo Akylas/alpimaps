@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Add 3D terrain to a map</title>
+        <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+        <link href="./mapbox-gl.css" rel="stylesheet" />
+        <script src="./mapbox-gl.js"></script>
+        <script src="./style.js"></script>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            #map {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                width: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+
+        <script>
+
+            // mapboxgl.accessToken = 'pk.asdasdadsdsds.TGtrEmByO3-99hA0EI44Ew';
+            const map = new mapboxgl.Map({
+                container: 'map',
+                zoom: 13.1,
+                center: [5.72831, 45.19177],
+                pitch: 90,
+                attributionControl: false,
+                localFontFamily: "'Noto Sans', 'Roboto', sans-serif",
+       bearing: 0,
+                style: mapboxStyle
+            });
+
+            // map.addSource('contours', {
+            //     type: 'vector',
+            //     format: 'pbf',
+            //     maxzoom: 14,
+            //     minzoom: 9,
+            //     tiles: [MOBILE ? 'http://127.0.0.1:8080?source=data&x={x}&y={y}&z={z}' : 'http://0.0.0.0:8080/data/contours/{z}/{x}/{y}.pbf']
+            // });
+
+            map.on('load', () => {
+                // map.addSource('mapbox-dem', {
+                //     type: 'raster-dem',
+                //     tiles: [MOBILE ? 'http://127.0.0.1:8080?source=peaks&x={x}&y={y}&z={z}' : 'http://0.0.0.0:8080/data/elevation_25m/{z}/{x}/{y}.webp'],
+                //     tileSize: 256,
+                //     maxzoom: 12
+                // });
+                // map.showTileBoundaries = true;
+                // map.repaint = false;
+                // map.showTerrainWireframe=true;
+                // add the DEM source as a terrain layer with exaggerated height
+                map.setTerrain({ source: 'terrain', exaggeration: 1.5 });
+
+                // add a sky layer that will show when the map is highly pitched
+                map.addLayer({
+                    id: 'sky',
+                    type: 'sky',
+                    paint: {
+                        'sky-type': 'atmosphere',
+                        'sky-atmosphere-sun': [0.0, 0.0],
+                        'sky-atmosphere-sun-intensity': 10
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

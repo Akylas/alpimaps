@@ -32,6 +32,7 @@ import android.util.Log;
 public class WebServer extends NanoHTTPD {
     TileDataSource heightDataSource;
     TileDataSource peaksDataSource;
+    TileDataSource contoursDataSource;
     TileDataSource rasterDataSource;
     MBVectorTileDecoder decoder;
     EPSG4326 projection;
@@ -53,11 +54,12 @@ public class WebServer extends NanoHTTPD {
         return new double[] {w, s, e, n};
     }
 
-    public WebServer(int port, TileDataSource heightDataSource, TileDataSource peaksDataSource, TileDataSource rasterDataSource) {
+    public WebServer(int port, TileDataSource heightDataSource, TileDataSource peaksDataSource, TileDataSource contoursDataSource, TileDataSource rasterDataSource) {
         super(port);
         this.heightDataSource = heightDataSource;
         this.peaksDataSource = peaksDataSource;
         this.rasterDataSource = rasterDataSource;
+        this.contoursDataSource = contoursDataSource;
         decoder = new MBVectorTileDecoder(new CartoCSSStyleSet("#mountain_peak { text-name: [name];}"));
         projection = new EPSG4326();
         geojsonWriter = new GeoJSONGeometryWriter();
@@ -70,6 +72,7 @@ public class WebServer extends NanoHTTPD {
         NanoHTTPD.Method method = session.getMethod();
         Map<String, String> parms = session.getParms();
         final String source = parms.get("source");
+        final String imageFormat = parms.containsKey("format") ? parms.get("format") : "png";
 
         TileDataSource dataSource = null;
 
@@ -81,7 +84,12 @@ public class WebServer extends NanoHTTPD {
             case "height":
                 dataSource = heightDataSource;
                 break;
+            case "contours":
+                dataSource = contoursDataSource;
+                break;
             case "peaks":
+            case "data":
+            default:
                 dataSource = peaksDataSource;
                 break;
         }
@@ -133,7 +141,11 @@ public class WebServer extends NanoHTTPD {
         }
         byte[] binaryDataData = binaryData.getData();
         InputStream targetStream = new ByteArrayInputStream(binaryDataData);
-        return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "image/png", targetStream,
-        binaryDataData.length);
+        if (source.equals("data") || source.equals("contours")) {
+            return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "application/x-protobuf", targetStream,
+                binaryDataData.length);
+        }
+        return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "image/" + imageFormat, targetStream,
+                binaryDataData.length);
     }
 }
