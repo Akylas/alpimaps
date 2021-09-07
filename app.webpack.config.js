@@ -40,7 +40,7 @@ module.exports = (env, params = {}) => {
             env
         );
     }
-    const nconfig = require('./nativescript.config');
+    const nconfig = require('./nativescript.config.playstore');
     const {
         appPath = nconfig.appPath,
         appResourcesPath = nconfig.appResourcesPath,
@@ -113,7 +113,7 @@ module.exports = (env, params = {}) => {
     });
 
     const package = require('./package.json');
-    const nsconfig = require('./nativescript.config.js');
+    const nsconfig = require('./nativescript.config.playstore.js');
     const isIOS = platform === 'ios';
     const isAndroid = platform === 'android';
     const APP_STORE_ID = process.env.IOS_APP_ID;
@@ -144,11 +144,10 @@ module.exports = (env, params = {}) => {
         SUPPORT_URL: `"${package.bugs.url}"`,
         CUSTOM_URL_SCHEME: `"${CUSTOM_URL_SCHEME}"`,
         STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${nsconfig.id}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
-        STORE_REVIEW_LINK: `"${
-            isIOS
-                ? ` itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=${APP_STORE_ID}&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+Software`
-                : `market://details?id=${nsconfig.id}`
-        }"`,
+        STORE_REVIEW_LINK: `"${isIOS
+            ? ` itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=${APP_STORE_ID}&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+Software`
+            : `market://details?id=${nsconfig.id}`
+            }"`,
         DEV_LOG: !!devlog,
         TEST_LOGS: !!adhoc || !production
     };
@@ -498,97 +497,98 @@ module.exports = (env, params = {}) => {
         })
     ];
     const configs = [config];
-    if (!!production) {
-        configs.unshift({
-            entry: resolve(__dirname, 'geo-three/webapp/app.ts'),
-            devtool: false,
-            target: 'web',
-            mode: production ? 'production' : 'development',
-            optimization: {
-                usedExports: true,
-                // minimize: true,
-                minimizer: [
-                    new TerserPlugin({
-                        parallel: true,
-                        // cache: true,
-                        // sourceMap: isAnySourceMapEnabled,
-                        terserOptions: {
-                            ecma: 2017,
-                            module: false,
-                            format: {
-                                comments: false,
-                                semicolons: !isAnySourceMapEnabled
-                            },
-                            // mangle: {
-                            // toplevel: false,
-                            // properties: true,
-                            // },
-                            compress: {
-                                passes: 5,
-                                drop_console: production
-                            },
-                            keep_fnames: false
-                        }
-                    })
-                ]
+    // if (!!production) {
+    configs.unshift({
+        entry: resolve(__dirname, 'geo-three/webapp/app.ts'),
+        devtool: false,
+        target: 'web',
+        mode: production ? 'production' : 'development',
+        optimization: {
+            usedExports: true,
+            // minimize: true,
+            minimizer: [
+                new TerserPlugin({
+                    parallel: true,
+                    // cache: true,
+                    // sourceMap: isAnySourceMapEnabled,
+                    terserOptions: {
+                        ecma: 2017,
+                        module: false,
+                        format: {
+                            comments: false,
+                            semicolons: !isAnySourceMapEnabled
+                        },
+                        // mangle: {
+                        // toplevel: false,
+                        // properties: true,
+                        // },
+                        compress: {
+                            passes: 5,
+                            drop_console: production
+                        },
+                        keep_fnames: false
+                    }
+                })
+            ]
+        },
+        resolve: {
+            exportsFields: [],
+            modules: [resolve(__dirname, 'node_modules'), resolve(__dirname, 'geo-three', 'node_modules')],
+            mainFields: ['browser', 'module', 'main'],
+            extensions: ['.ts', '.js', '.json'],
+            alias: {
+                './LocalHeightProvider': resolve(__dirname, 'webapp/LocalHeightProvider'),
+                './RasterMapProvider': resolve(__dirname, 'webapp/RasterMapProvider')
+            }
+        },
+        output: {
+            pathinfo: false,
+            path: resolve(__dirname, 'app/assets'),
+            // libraryTarget: 'commonjs',
+            library: {
+                name: 'webapp',
+                type: 'global'
             },
-            resolve: {
-                exportsFields: [],
-                mainFields: ['browser', 'module', 'main'],
-                extensions: ['.ts', '.js', '.json'],
-                alias: {
-                    './LocalHeightProvider': resolve(__dirname, 'webapp/LocalHeightProvider'),
-                    './RasterMapProvider': resolve(__dirname, 'webapp/RasterMapProvider')
-                }
-            },
-            output: {
-                pathinfo: false,
-                path: resolve(__dirname, 'app/assets'),
-                // libraryTarget: 'commonjs',
-                library: {
-                    name: 'webapp',
-                    type: 'global'
-                },
-                filename: 'webapp.js'
-                // globalObject: 'global'
-            },
-            module: {
-                rules: [
-                    {
-                        test: /\.ts$/,
-                        loader: 'ts-loader',
-                        options: {
-                            transpileOnly: true,
-                            allowTsInNodeModules: true,
-                            configFile: resolve(__dirname, 'tsconfig.web.json'),
-                            compilerOptions: {
-                                sourceMap: false,
-                                declaration: false
-                            }
-                        }
-                    },
-                    {
-                        test: /\.js$/,
-                        loader: 'babel-loader',
-                        options: {
-                            sourceMaps: false,
-                            plugins: ['@babel/plugin-transform-runtime'],
-                            presets: [
-                                [
-                                    '@babel/env',
-                                    {
-                                        modules: false,
-                                        targets: {
-                                            chrome: '70'
-                                        }
-                                    }
-                                ]
-                            ]
+            filename: 'webapp.js'
+            // globalObject: 'global'
+        },
+        module: {
+            rules: [
+                {
+                    test: /\.ts$/,
+                    loader: 'ts-loader',
+                    options: {
+                        transpileOnly: true,
+                        allowTsInNodeModules: true,
+                        configFile: resolve(__dirname, 'tsconfig.web.json'),
+                        compilerOptions: {
+                            sourceMap: false,
+                            declaration: false
                         }
                     }
-                ]
-            }
-        });
-    }
+                },
+                {
+                    test: /\.js$/,
+                    loader: 'babel-loader',
+                    options: {
+                        sourceMaps: false,
+                        plugins: ['@babel/plugin-transform-runtime'],
+                        presets: [
+                            [
+                                '@babel/env',
+                                {
+                                    modules: false,
+                                    targets: {
+                                        chrome: '70'
+                                    }
+                                }
+                            ]
+                        ]
+                    }
+                }
+            ]
+        }
+    });
+    // }
     return configs;
 };
