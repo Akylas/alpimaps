@@ -2,16 +2,18 @@
     import { l, lc } from '@nativescript-community/l';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
+    import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
+    import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
     import type { PackageStatus } from '@nativescript-community/ui-carto/packagemanager';
     import { PackageAction } from '@nativescript-community/ui-carto/packagemanager';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { GridLayout, ViewBase } from '@nativescript/core';
     import { AnimationCurve } from '@nativescript/core/ui/enums';
-import { Point } from 'geojson';
+    import { Point } from 'geojson';
     import { debounce } from 'push-it-to-the-limit/target/es6';
     import { onDestroy, onMount } from 'svelte';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode, navigate } from 'svelte-native/dom';
     import { asSvelteTransition } from 'svelte-native/transitions';
     import { convertDistance } from '~/helpers/formatter';
     import { onThemeChanged } from '~/helpers/theme';
@@ -303,7 +305,7 @@ import { Point } from 'geojson';
     function startDirections() {
         if (selectedItem) {
             const module = mapContext.mapModule('directionsPanel');
-            const geometry  = selectedItem.geometry as Point;
+            const geometry = selectedItem.geometry as Point;
             module.addStopPoint({ lat: geometry.coordinates[1], lon: geometry.coordinates[0] }, selectedItem.properties);
         }
     }
@@ -361,6 +363,40 @@ import { Point } from 'geojson';
             }
         }
     }
+
+    async function open3DMap() {
+        try {
+            const position = mapContext.getMap().getFocusPos();
+            if (!position.altitude) {
+                position.altitude = await packageService.getElevation(position);
+            }
+            const hillshadeDatasource = packageService.hillshadeLayer?.dataSource;
+            const vectorDataSource = packageService.localVectorTileLayer?.dataSource;
+            const customSources = mapContext.mapModules.customLayers.customSources;
+            let rasterDataSource: TileDataSource<any, any>;
+            customSources.some((s) => {
+                if (s.layer instanceof RasterTileLayer) {
+                    rasterDataSource = s.layer.dataSource;
+                    return true;
+                }
+            });
+            if (!rasterDataSource) {
+                rasterDataSource = await mapContext.mapModules.customLayers.getDataSource('openstreetmap');
+            }
+            const component = (await import('~/components/3DMap.svelte')).default;
+            navigate({
+                page: component,
+                props: {
+                    position,
+                    vectorDataSource,
+                    dataSource: hillshadeDatasource,
+                    rasterDataSource
+                }
+            });
+        } catch (err) {
+            this.showError(err);
+        }
+    }
 </script>
 
 <gridlayout id="scrollingWidgets" bind:this={gridLayout} {...$$restProps} rows="auto,*,auto" columns="70,*,70" isPassThroughParentEnabled={true} marginTop={globalMarginTop} {userInteractionEnabled}>
@@ -402,7 +438,11 @@ import { Point } from 'geojson';
             </canvaslabel>
         </mdcardview>
     </stacklayout>
-    <button marginTop="80" on:tap={showMapRightMenu} class="small-floating-btn" color={primaryColor} text="mdi-layers" row={2} verticalAlignment="bottom" horizontalAlignment="left" />
+    <stacklayout marginTop="80" row={2} verticalAlignment="bottom" horizontalAlignment="left">
+        <button on:tap={open3DMap} class="small-floating-btn" color={primaryColor} text="mdi-video-3d" />
+        <button on:tap={showMapRightMenu} class="small-floating-btn" color={primaryColor} text="mdi-layers" />
+    </stacklayout>
+
     <ScaleView bind:this={scaleView} col={1} row={2} horizontalAlignment="right" verticalAlignment="bottom" marginBottom="8" />
     <mdprogress colSpan={3} row={2} value={totalDownloadProgress} visibility={totalDownloadProgress > 0 ? 'visible' : 'collapsed'} verticalAlignment="bottom" />
     <canvas
