@@ -4,8 +4,28 @@
 #directions {
 
 	['mapnik::geometry_type'=2]{
-        line-color: gray;
-        line-width: 3;
+		[class='waypointline'] {
+			line-color: #00000077;
+			line-width: 3;
+		}
+		[class!='waypointline'] {
+			::casing {
+				line-color: white;
+				line-width: 6.5;
+			}
+			::inner {
+				line-color: [nuti::selected_id] = [id] ? #60A5F4: #ACB0AE;
+				line-width: 5;
+				marker-placement: line;
+				marker-type:arrow;
+				marker-line-width:0;
+				marker-opacity:0.6;
+				marker-width: 4;
+				marker-height: 4;
+				marker-fill: [nuti::selected_id] = [id] ? #B3CEFF : #ACB0AE;
+			}
+		}
+		
     }
 	['mapnik::geometry_type'=1]{
 
