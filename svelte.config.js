@@ -8,8 +8,8 @@ module.exports = {
     },
     preprocess: [
         sveltePreprocess({
-            defaults: { script: 'typescript', style: 'scss' },
-            sourceMap: false
+            // defaults: { script: 'typescript', style: 'scss' },
+            sourceMap: true
         }),
         svelteNativePreprocessor()
     ]
