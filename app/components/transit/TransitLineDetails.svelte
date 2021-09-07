@@ -55,7 +55,7 @@ import { packageService } from '~/services/PackageService';
                 decoder: new MBVectorTileDecoder({
                     style: 'voyager',
                     liveReload: TNS_ENV !== 'production',
-                    dirPath: '~/assets/internal_styles/transit'
+                    dirPath: '~/assets/internal_styles/inner'
                 })
             });
 
