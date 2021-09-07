@@ -33,7 +33,8 @@
 			}
 		}
 		[class=track][zoom>=15] {
-			polygon-fill: lighten(@track-fill, 0.3);
+			polygon-fill: @track-fill;
+			polygon-opacity: 0.7;
 			// line-color: @track-casing;
 			// line-width: 1;
 			// line-dasharray: 5,4,2,4;
@@ -360,7 +361,7 @@
 				[subclass=cycleway],[bicycle=designated][mtb_type=null][surface!=unpaved] {
 					[zoom >= 14] {
 						line-color: @cycleway-inner-fill;
-						line-width: @path-width;
+						// line-width: @path-width;
 					}
 				}
 				[subclass=steps] {
@@ -373,7 +374,6 @@
 				[subclass=bridleway] {
 					line-color: @bridleway-fill;
 					line-dasharray: 4,2;
-					line-width: linear([view::zoom], (13,	@bridleway-width-z13), (15, @bridleway-width-z15));
 				}
 			}
 			
@@ -418,13 +418,16 @@
 	[class=rail][brunnel=bridge]::transit,
 	[class=transit][brunnel=bridge]::transit, 
 	[class=rail][brunnel=tunnel]::casing,
-	[class=transit][brunnel=tunnel]::casing{
+	[class=transit][brunnel=tunnel]::casing {
 	
 		[brunnel=bridge][zoom>=15] {
 			line-color: @railway-bridge-casing;
 		}
 		line-color: @railway-line;
 		line-width: @railway-line-width;
+		[brunnel=tunnel][zoom>=14] {
+			line-dasharray: 5,3;
+		}
 
 		::inner {
 			line-color: @railway-track-line;
@@ -514,7 +517,7 @@
 		// line-cap: round;
 		// line-join: round;
 		[ref!=null]{
-			text-fill: [textcolor] ? replacxe([textcolor],'-.*', '') : ([color] ? [color] : @road_small_label_fill);
+			text-fill: [textcolor] ? replace([textcolor],'-.*', '') : ([color] ? [color] : @road_small_label_fill);
 			text-name: [ref];
 			text-placement: line;
 			text-wrap-before: true;
