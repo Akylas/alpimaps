@@ -33,7 +33,7 @@ Map {
 @glacier: #e0f3fa88;
 @water: #75cff0;
 @water_stroke: darken(@water, 10%);
-@river: #8dcbf7;
+@river: @water;
 
 @aboriginal_label: #82643a;
 @national_park_label: rgb(99, 150, 65);
@@ -216,7 +216,7 @@ Map {
 @step-width: linear([view::zoom], (14, 0), (14.01, 1), (14, 1.4), (15, 1.5), (16, 1.8), (18, 6));
 @step-dasharray: 4,2;
 
-@track-fill: linear([view::zoom], (13,#744e04bb), (14,#744e04));
+@track-fill: linear([view::zoom], (13,#996600), (14,#996600));
 @track-tunnel-fill: lighten(@pedestrian-fill, 5%);
 @track-casing: linear([view::zoom], (10, #ffffff00), (14, #ffffff77));
 @track-paved-casing: #d6d9e6;
@@ -227,11 +227,11 @@ Map {
 @track_line_cap: butt;
 
 @railway: @pedestrian-polygon-fill;
-@railway-line: #b6b8c3;
-@railway-line-width: linear([view::zoom], (8,	0.8), (16, 0.4));
-@railway-track-line-width: linear([view::zoom], (8,	1), (14,	2), (20, 3));
+@railway-line: linear([view::zoom], (8,	#b6b8c3), (10, #aaa), (13, #666));
+@railway-line-width: linear([view::zoom], (8,	0.8), (16, 1));
+@railway-track-line-width: linear([view::zoom], (8,	1), (14,	2), (20, 5));
 @railway-track-line-dasharray: 0.5,30;
-@railway-track-line:  #b6b8c3;
+@railway-track-line:  @railway-line;
 
 @aerial-width: linear([view::zoom], (14,	0.5), (20, 1));
 @aerial-fill: #47484d;
@@ -259,7 +259,7 @@ Map {
 @footway-fill: #ffffff;
 @steps-fill: @path;
 @cycleway-fill: 0;
-@cycleway-inner-fill: linear([view::zoom], (15, rgba(0, 110, 255, 0.1)), (16, rgba(0, 110, 255, 0.6)));
+@cycleway-inner-fill: linear([view::zoom], (15, #bb6868), (16, rgba(0, 110, 255, 0.6)));
 @bridleway-fill: green;
 @track-fill: #ffffff;
 @aeroway-fill: #c7cce5;
@@ -279,7 +279,7 @@ Map {
 
 @bridge_fill: fadeout(#B8B8B8, 0.5);
 @bridge-casing: fadeout(#000, 0.5);
-@railway-bridge-casing: darken(@railway-line, 20%);
+@railway-bridge-casing: @bridge-casing;
 @dam_fill: #cac9c9;
 @dam_casing: darken(@dam_fill, 20%);
 
