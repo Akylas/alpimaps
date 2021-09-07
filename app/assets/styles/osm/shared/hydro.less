@@ -2,10 +2,14 @@
 
 //river styling
 #waterway{
+	[class=river],
 	[class=stream][zoom>=13],
 	[class=riverbank][zoom>=13]{
 		line-color: @river;
 		line-width: linear([view::zoom], (8, 0.5), (15, 1), (16, 2));
+		[class=river] {
+			line-width: linear([view::zoom], (8, 0.5), (15, 2), (16, 4));
+		}
 		// line-dasharray: 7, 5;
 	}
 	[class=stream][zoom>=12]{
