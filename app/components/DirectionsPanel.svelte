@@ -16,9 +16,8 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
     import { getMapContext } from '~/mapModules/MapModule';
-    import type { IItem as Item } from '~/models/Item';
-    import type { RouteInstruction } from '~/models/Route';
-    import { Route, RoutingAction } from '~/models/Route';
+    import type { IItem as Item,RouteInstruction } from '~/models/Item';
+    import { Route,RoutingAction } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { showError } from '~/utils/error';

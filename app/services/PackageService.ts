@@ -17,7 +17,7 @@ import {
     ReverseGeocodingService
 } from '@nativescript-community/ui-carto/geocoding/service';
 import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
-import { Feature, FeatureCollection, VectorTileFeature, VectorTileFeatureCollection } from '@nativescript-community/ui-carto/geometry/feature';
+import { Feature, VectorTileFeature, VectorTileFeatureCollection } from '@nativescript-community/ui-carto/geometry/feature';
 import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
 import { HillshadeRasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
 import { CartoOnlineVectorTileLayer, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
@@ -27,11 +27,8 @@ import { SearchRequest, VectorTileSearchService } from '@nativescript-community/
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import * as appSettings from '@nativescript/core/application-settings';
 import { File, Folder, path } from '@nativescript/core/file-system';
-// import KalmanFilter from 'kalmanjs';
-import { getDistance, getDistanceSimple } from '~/helpers/geolib';
 import { getMapContext } from '~/mapModules/MapModule';
-import { IItem as Item } from '~/models/Item';
-import { RouteProfile } from '~/models/Route';
+import { IItem as Item, RouteProfile } from '~/models/Item';
 import { getDataFolder, getDefaultMBTilesDir } from '~/utils/utils';
 
 export type PackageType = 'geo' | 'routing' | 'map';
