@@ -6,7 +6,7 @@ import { GenericMapPos, MapBounds, MapPos } from '@nativescript-community/ui-car
 import { l } from '~/helpers/locale';
 import { off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
 import { getBounds, getPathLength } from '~/helpers/geolib';
-import { RouteProfile } from '~/models/Route';
+import { RouteProfile } from '~/models/Item';
 import * as appavailability from '@nativescript/appavailability';
 import { ad } from '@nativescript/core/utils/utils';
 
