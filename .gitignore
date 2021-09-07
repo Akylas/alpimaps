@@ -58,3 +58,4 @@ pnpm-lock.yaml
 dist
 /geojson
 .gradle
+/app/assets/webapp.js
