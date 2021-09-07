@@ -18,7 +18,7 @@ import { Point } from 'geojson';
     import { getMapContext } from '~/mapModules/MapModule';
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import type { IItem } from '~/models/Item';
-    import { RouteInstruction, RoutingAction } from '~/models/Route';
+    import { RouteInstruction, RoutingAction } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
     import mapStore from '~/stores/mapStore';
     import { showError } from '~/utils/error';
