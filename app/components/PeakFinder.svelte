@@ -121,7 +121,8 @@
     onMount(() => {
         // console.log('onMount', !!vectorDataSource, !!dataSource, !!rasterDataSource);
         try {
-            webserver = new (akylas.alpi as any).maps.WebServer(8080, dataSource.getNative(), (vectorDataSource || getDefaultDataSource()).getNative(), rasterDataSource?.getNative());
+            const vDataSource = (vectorDataSource || getDefaultDataSource()).getNative();
+            webserver = new (akylas.alpi as any).maps.WebServer(8080, dataSource.getNative(), vDataSource, rasterDataSource?.getNative(), vDataSource);
             webserver.start();
         } catch (err) {
             console.error(err);
@@ -274,7 +275,7 @@
             max: 6,
             formatter: (f) => f.toFixed(2),
             decimalFactor: 100,
-            value: 1.7 * 100,
+            value: 2 * 100,
             method: 'setExageration',
             title: lc('exageration')
         },
@@ -285,7 +286,7 @@
             decimalFactor: 1000,
             formatter: (f) => f.toFixed(2),
             method: 'setDepthBiais',
-            value: 6 * 1000,
+            value: 0.44 * 1000,
             title: lc('depth_biais')
         },
         {
@@ -295,7 +296,7 @@
             decimalFactor: 1000,
             method: 'setDepthMultiplier',
             formatter: (f) => f.toFixed(2),
-            value: 30 * 1000,
+            value: 110 * 1000,
             title: lc('depth_multiplier')
         }
     ]);
@@ -399,6 +400,7 @@
     function stopHeadingListener() {
         if (listeningForHeading) {
             listeningForHeading = false;
+            headingAccuracy = 4;
             stopListeningForSensor('heading', onSensor);
         }
     }
