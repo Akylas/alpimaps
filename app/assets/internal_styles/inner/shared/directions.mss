@@ -6,16 +6,23 @@
 	['mapnik::geometry_type'=2]{
 		[class='waypointline'] {
 			line-color: #00000077;
+			line-join: round;
+			line-cap: round;
 			line-width: 3;
 		}
 		[class!='waypointline'] {
 			::casing {
 				line-color: white;
 				line-width: 6.5;
+				line-join: round;
+				line-cap: round;
 			}
+			when ([nuti::selected_id] = [id])::selected, 
 			::inner {
 				line-color: [nuti::selected_id] = [id] ? #60A5F4: #ACB0AE;
 				line-width: 5;
+				line-join: round;
+				line-cap: round;
 				marker-placement: line;
 				marker-type:arrow;
 				marker-line-width:0;
@@ -32,7 +39,7 @@
 		// ::icon {
 			marker-placement: [nuti::markers3d];
 			marker-file: url('symbols/pin.svg');
-			marker-fill: [isStart] ? 'green' : ([isStop] ? 'red' : 'blue');
+			marker-color: [isStart] ? 'green' : ([isStop] ? 'red' : 'blue');
 			marker-width: 24;
 			marker-height: 24;
             marker-transform: translate (0,-12);

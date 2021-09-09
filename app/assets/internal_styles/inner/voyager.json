@@ -1,11 +1,13 @@
 {
     "layers": [
         "lines",
+        "route",
         "items",
         "directions"
     ],
     "styles": [
         "voyager/style.mss",
+        "shared/route.mss",
         "shared/transit.mss",
         "shared/items.mss",
         "shared/directions.mss"
@@ -39,6 +41,13 @@
             "values": {
                 "1": "nutibillboard",
                 "0": "point"
+            }
+        },
+        "routes": {
+            "default": 0,
+            "values": {
+                "1": 1,
+                "0": 0
             }
         }
     },
