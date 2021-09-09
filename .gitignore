@@ -59,3 +59,4 @@ dist
 /geojson
 .gradle
 /app/assets/webapp.js
+/app/assets/webapp.js.LICENSE.txt
