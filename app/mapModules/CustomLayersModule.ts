@@ -223,13 +223,25 @@ export default class CustomLayersModule extends MapModule {
         // const zoomLevelBias = Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2);
         const layer = new VectorTileLayer({
             dataSource,
-            layerBlendingSpeed: 5,
+            layerBlendingSpeed: 0.3,
             labelRenderOrder: VectorTileRenderOrder.LAST,
             opacity,
             decoder: mapContext.getVectorTileDecoder(),
             // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_NONE,
             visible: opacity !== 0
         });
+        const routeLayer = new VectorTileLayer({
+            dataSource,
+            layerBlendingSpeed: 0,
+            labelRenderOrder: VectorTileRenderOrder.LAST,
+            decoder: mapContext.innerDecoder
+        });
+        routeLayer.setVectorTileEventListener<LatLonKeys>(
+            {
+                onVectorTileClicked: (e) => mapContext.vectorTileClicked(e)
+            },
+            mapContext.getProjection()
+        );
         layer.setVectorTileEventListener<LatLonKeys>(
             {
                 onVectorTileClicked: (e) => mapContext.vectorTileClicked(e)
@@ -241,6 +253,7 @@ export default class CustomLayersModule extends MapModule {
             opacity,
             legend,
             layer,
+            routeLayer,
             options: {
                 zoomLevelBias: {
                     min: 0,
@@ -688,6 +701,9 @@ export default class CustomLayersModule extends MapModule {
                 }
                 this.customSources.push(data);
                 mapContext.addLayer(data.layer, 'map');
+                if (data.routeLayer) {
+                    mapContext.addLayer(data.routeLayer, 'map');
+                }
                 // this.addDataSource(data);
             }
             // console.log('loading etiles', e.name);
