@@ -1,7 +1,6 @@
 {
     "layers": [
         "housenumber",
-        "route",
         "transportation",
         "contour",
         "transportation_name",
@@ -58,13 +57,6 @@
         },
         "contoursOpacity": {
             "default": 1.0
-        },
-        "routes": {
-            "default": 0,
-            "values": {
-                "1": 1,
-                "0": 0
-            }
         },
         "fallback_lang": {
             "default": "en"
