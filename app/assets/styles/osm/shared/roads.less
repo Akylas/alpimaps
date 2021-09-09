@@ -307,7 +307,7 @@
 	
 	
 	
-	[class=piste]['nuti::routes'>0][zoom>=14]::casing{
+	[class=piste][zoom>=14]::casing{
 		line-color: @piste-casing-fill;
 		line-join: round;
 		line-cap: round;
@@ -491,43 +491,4 @@
 		line-color: @taxiway-fill;
 		line-width: @taxiway-width;
 	}
-}
-
-
-
-#route['nuti::routes'>0]{
-	[network=4][zoom>=10],
-	[network=3][zoom>=9],
-	[network=2][zoom>=8],
-	[network=1] {
-		[class=hiking],[class=foot] {
-			line-opacity:0.5;
-			line-dasharray: @selected_item_id = [nuti::selected_id] ? (0,0) :  @hiking_route_dasharray;
-			line-color:([color] ? [color] : @hiking_route_fill);
-			line-width: @hiking_route_width + (@selected_item_id = [nuti::selected_id] ? 1 : 0);
-		}
-		[class=bicycle] {
-			line-opacity:0.5;
-			line-dasharray: @selected_item_id = [nuti::selected_id] ? (0,0) :  @biking_route_dasharray;
-			line-color:([color] ? [color] : @biking_route_fill);
-			line-width:  @biking_route_width + (@selected_item_id = [nuti::selected_id] ? 1 : 0);
-		}
-		
-	
-		// line-cap: round;
-		// line-join: round;
-		[ref!=null]{
-			text-fill: [textcolor] ? replace([textcolor],'-.*', '') : ([color] ? [color] : @road_small_label_fill);
-			text-name: [ref];
-			text-placement: line;
-			text-wrap-before: true;
-			text-face-name: @mont;
-			text-size: @route_text_width;
-			text-halo-fill: @road_label_halo;
-			text-halo-radius: @road_small_label_halo_radius;
-			text-halo-rasterizer: fast;
-			text-dy: @route_text_dy;
-		}
-	}
-	
 }
