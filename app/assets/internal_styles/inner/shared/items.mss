@@ -6,9 +6,13 @@
 	['mapnik::geometry_type'=2]{
         back/line-color: white;
         back/line-width: @bicycle_line_width + 3;
+        back/line-join: round;
+        back/line-cap: round;
         // back/line-cap:round;
         // back/line-join:round;
         line-color: blue;
+        line-join: round;
+        line-cap: round;
         // line-cap:round;
         // line-join:round;
         line-width: @bicycle_line_width+2;
@@ -17,10 +21,15 @@
             line-width: @pedestrian_line_width+2;
         }
 
-         when (['nuti::selected_id']=[id])::selected {
+         when ([nuti::selected_id] = [id])::selected {
+            back/line-color: white;
             back/line-width: @bicycle_line_width + 4;
+            back/line-join: round;
+            back/line-cap: round;
+            line-join: round;
+            line-cap: round;
             line-color: #60A5F4;
-            line-width: bicycle_line_width+ 2;
+            line-width: @bicycle_line_width+ 2;
             marker-placement: line;
             marker-type:arrow;
             marker-line-width:0;

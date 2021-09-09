@@ -183,11 +183,7 @@
                             transitVectorTileLayer = new VectorTileLayer({
                                 // preloading: true,
                                 dataSource: transitVectorTileDataSource,
-                                decoder: new MBVectorTileDecoder({
-                                    style: 'voyager',
-                                    liveReload: TNS_ENV !== 'production',
-                                    dirPath: '~/assets/internal_styles/inner'
-                                })
+                                decoder: mapContext.innerDecoder
                             });
 
                             // transitVectorTileLayer.setVectorTileEventListener(this,
@@ -604,7 +600,8 @@
                 // } else if (item.route.osmid) {
                 if (item.properties.route.osmid) {
                     selectedOSMId = (item.properties.route.osmid) + '';
-                    setStyleParameter('selected_id', item.properties.route.osmid + '');
+                    // setStyleParameter('selected_id', item.properties.route.osmid + '');
+                    mapContext.innerDecoder.setStyleParameter('selected_id', item.properties.route.osmid + '');
                 } else if (item.properties.id) {
                     selectedId = item.properties.id;
                     mapContext.innerDecoder.setStyleParameter('selected_id', item.properties.id);
@@ -675,7 +672,8 @@
                 }
                 if (setSelected && selectedOSMId) {
                     selectedOSMId = null;
-                    setStyleParameter('selected_id', '');
+                    // setStyleParameter('selected_id', '');
+                    mapContext.innerDecoder.setStyleParameter('selected_id', '');
                 }
                 if (selectedId) {
                     selectedId = null;
@@ -811,7 +809,8 @@
             // }
             if (selectedOSMId) {
                 selectedOSMId = null;
-                setStyleParameter('selected_id', '');
+                mapContext.innerDecoder.setStyleParameter('selected_id', '');
+                // setStyleParameter('selected_id', '');
             }
             if (selectedId) {
                 selectedId = null;
@@ -833,7 +832,7 @@
     $: setRenderProjectionMode($mapStore.showGlobe);
     $: vectorTileDecoder && setStyleParameter('buildings', !!$mapStore.show3DBuildings ? '2' : '1');
     $: vectorTileDecoder && setStyleParameter('contours', $mapStore.showContourLines ? '1' : '0');
-    $: vectorTileDecoder && setStyleParameter('routes', $mapStore.showRoutes ? '1' : '0');
+    $: vectorTileDecoder && mapContext?.innerDecoder?.setStyleParameter('routes', $mapStore.showRoutes ? '1' : '0');
     $: vectorTileDecoder && setStyleParameter('contoursOpacity', $mapStore.contourLinesOpacity.toFixed(1));
     $: vectorTileDecoder && toggleHillshadeSlope($mapStore.showSlopePercentages);
     $: toggleMapRotate($mapStore.rotateEnabled);
