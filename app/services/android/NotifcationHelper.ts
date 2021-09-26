@@ -12,11 +12,6 @@ export const NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL = 'alpimaps_screenshot';
 
 import { primaryColor } from '~/variables';
 
-function titlecase(value) {
-    return value.replace(/\w\S*/g, function (txt) {
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-    });
-}
 export class NotificationHelper {
     /* Creates a notification builder */
     public static getNotification(

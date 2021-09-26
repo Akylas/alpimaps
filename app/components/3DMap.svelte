@@ -78,6 +78,6 @@
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout>
-        <awebview bind:this={webView} on:loaded={webviewLoaded} webConsoleEnabled={consoleEnabled} displayZoomControls={false} />
+        <awebview bind:this={webView} on:loaded={webviewLoaded} webConsoleEnabled={consoleEnabled} displayZoomControls={false} normalizeUrls={false}/>
     </gridlayout>
 </page>
