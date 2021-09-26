@@ -1,12 +1,10 @@
 <script lang="ts">
     import { l } from '@nativescript-community/l';
     import { Align, Canvas, DashPathEffect, LayoutAlignment, Paint, StaticLayout, Style } from '@nativescript-community/ui-canvas';
-    import { GenericMapPos } from '@nativescript-community/ui-carto/core';
+    import { fromNativeMapPos, GenericMapPos } from '@nativescript-community/ui-carto/core';
     import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { LineGeometry, PointGeometry } from '@nativescript-community/ui-carto/geometry';
-    import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
     import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
-    import { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
+    import { VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
     import { CartoMap } from '@nativescript-community/ui-carto/ui';
     import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
     import { LineChart } from '@nativescript-community/ui-chart/charts';
@@ -19,8 +17,9 @@
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Application } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
+    import type { Point } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
-    import { NativeViewElementNode, navigate, showModal } from 'svelte-native/dom';
+    import { NativeViewElementNode, navigate } from 'svelte-native/dom';
     import { formatValueToUnit, UNITS } from '~/helpers/formatter';
     import { slc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
@@ -30,11 +29,11 @@
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { showError } from '~/utils/error';
+    import { computeDistanceBetween } from '~/utils/geo';
     import { openLink } from '~/utils/ui';
     import { borderColor, screenHeightDips, statusBarHeight, textColor, widgetBackgroundColor } from '~/variables';
     import { showBottomSheet } from './bottomsheet';
     import BottomSheetInfoView from './BottomSheetInfoView.svelte';
-    import type { Point } from 'geojson';
 
     const LISTVIEW_HEIGHT = 200;
     const PROFILE_HEIGHT = 150;
@@ -77,7 +76,7 @@
 
     mapContext.onVectorTileElementClicked((data: VectorTileEventData<LatLonKeys>) => {
         const { clickType, position, feature, featureData } = data;
-        if (item && item.id && featureData?.route && feature.id === item.id) {
+        if (item && item.id && featureData?.route && feature.properties?.id === item.id) {
             updateRouteItemWithPosition(item, position, true, true);
         }
     });
@@ -85,6 +84,11 @@
     $: {
         if (itemIsRoute && currentLocation) {
             updateRouteItemWithPosition(item, currentLocation);
+        }
+    }
+    $: {
+        if (!item) {
+            navigationInstructions = null;
         }
     }
     // $: {
@@ -180,8 +184,7 @@
             const props = routeItem.properties;
             const route = props.route;
             const positions = packageService.getRouteItemPoses(routeItem);
-            const onPathIndex = isLocationOnPath(location, positions, false, true, 20);
-            console.log('updateRouteItemWithPosition', positions.get(0), location, onPathIndex);
+            const onPathIndex = isLocationOnPath(location, positions, false, true, 2 * Math.pow(2, 2 * Math.max(0, 17 - mapContext.getMap().getZoom())));
             if (props.instructions && onPathIndex !== -1 && updateNavigationInstruction) {
                 let routeInstruction;
                 for (let index = props.instructions.length - 1; index >= 0; index--) {
@@ -193,12 +196,16 @@
                 }
 
                 const distance = distanceToEnd(onPathIndex, positions);
+                let distanceToNextInstruction = computeDistanceBetween(location, fromNativeMapPos(positions.get(onPathIndex)));
+                for (let index = onPathIndex; index < routeInstruction.index; index++) {
+                    distanceToNextInstruction += computeDistanceBetween(fromNativeMapPos(positions.get(index)), fromNativeMapPos(positions.get(index + 1)));
+                }
                 navigationInstructions = {
                     instruction: routeInstruction,
                     remainingDistance: distance,
+                    distanceToNextInstruction,
                     remainingTime: ((route.totalTime * distance) / route.totalDistance) * 1000
                 };
-                console.log('navigationInstructions', navigationInstructions);
             }
             if (updateGraph && graphAvailable) {
                 if (onPathIndex === -1) {
@@ -277,6 +284,7 @@
     export let navigationInstructions: {
         remainingDistance: number;
         remainingTime: number;
+        distanceToNextInstruction: number;
         instruction: RouteInstruction;
     } = undefined;
     // $: console.log('updateSteps changed', steps);
@@ -313,7 +321,7 @@
             if (profile) {
                 // item.route.profile = profile;
                 if (item.id !== undefined) {
-                    item = await updateItem(item, { profile });
+                    await updateItem(item, { profile });
                 } else {
                     item.properties.profile = profile;
                     await saveItem(false);
@@ -449,7 +457,6 @@
         try {
             const geometry = item.geometry as Point;
             const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0], altitude: geometry.coordinates[2] };
-            console.log('openPeakFinder');
             if (!position.altitude) {
                 position.altitude = item.properties.ele || (await packageService.getElevation(position));
             }
@@ -463,11 +470,10 @@
                     return true;
                 }
             });
-            // if (!rasterDataSource) {
-            //     rasterDataSource = await mapContext.mapModules.customLayers.getDataSource('openstreetmap');
-            // }
+            if (!rasterDataSource) {
+                rasterDataSource = await mapContext.mapModules.customLayers.getDataSource('openstreetmap');
+            }
             const component = (await import('~/components/PeakFinder.svelte')).default;
-            console.log('openPeakFinder1');
             navigate({
                 page: component,
                 props: {
