@@ -59,12 +59,12 @@ export default class SymbolShape extends Shape {
             } else {
                 const color = foregroundArray.length > 1 ? foregroundArray[0] : foreground || 'white';
                 shapepaint.setColor(color);
-                shape = foregroundArray[foregroundArray.length - 1];
+                shape = foregroundArray.at(-1);
             }
             if (shape) {
                 canvas.drawText(osmicon('symbol-' + shape), left, height + top - 2, shapepaint);
             } else if (array.length > 3) {
-                textpaint.setColor(array[array.length - 1]);
+                textpaint.setColor(array.at(-1));
                 canvas.drawText(array[array.length - 2], left + width / 2, height / 2 + top + 7, textpaint);
             }
         }

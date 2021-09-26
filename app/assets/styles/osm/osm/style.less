@@ -214,6 +214,11 @@ Map {
 @track-casing-width: linear([view::zoom], (14,0), (14.01,1), (16, 2.5));
 @track-width: pow(2.0, linear([view::zoom], (12, -5), (15, -2), (18, 1.6))) + 0.5;
 @track-dasharray: 6,3,6;
+@track-grade1-dasharray: 0,0;
+@track-grade2-dasharray: 7,1;
+@track-grade3-dasharray: 5,2,5;
+@track-grade4-dasharray: @track-dasharray;
+@track-grade5-dasharray: @track-dasharray;
 @track_line_join: miter;
 @track_line_cap: butt;
 
@@ -229,10 +234,10 @@ Map {
 @aerial-casing-width: linear([view::zoom], (14,	0.5), (20, 1));
 @aerial-casing-fill: #ffffff;
 
-@piste-width: linear([view::zoom], (14,	0), (14.1, 0.8), (18, 4));
-@piste-fill: #fff;
+@piste-width: linear([view::zoom], (14,	0), (14.1, 0.8), (18, 5));
+@piste-fill: #ffffff88;
 @piste-casing-width: linear([view::zoom], (14,	0), (14.1,	0.6), (20, 2));
-@piste-casing-fill: #647BF2;
+@piste-casing-fill: #647BF288;
 
 @default-casing: white;
 @pedestrian-casing: #999;
