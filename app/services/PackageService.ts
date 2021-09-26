@@ -714,14 +714,14 @@ class PackageService extends Observable {
             }
         }
         const dist = Math.max(Math.min(5, grades.length / 50), 50);
-        const lastDist = grades[grades.length - 1].dist;
+        const lastDist = grades.at(-1).dist;
         const g = Math.min(lastDist / 50, 500);
         for (let index = 0; index < grades.length; index++) {
             let d = 0,
                 f = 0;
             let e = 0;
             for (let k = 1; k <= dist && e < g; k++) {
-                e = grades[index + k < grades.length ? index + k : grades.length - 1].dist - grades[0 <= index - k ? index - k : 0].dist;
+                e = grades.at(index + k < grades.length ? index + k : - 1).dist - grades[0 <= index - k ? index - k : 0].dist;
                 for (let h = index - k; h < index + k; h++) {
                     if (undefined !== grades[h] && null !== grades[h]) {
                         e = Math.pow(grades[h].dist, 2) / (Math.abs(h - index) + 1);
@@ -841,7 +841,7 @@ class PackageService extends Observable {
                 lastAlt = pt1.a;
             }
         }
-        if (colors[colors.length - 1].lastIndex < result.data.length - 1) {
+        if (colors.at(-1).lastIndex < result.data.length - 1) {
             const avgGrade = gradeSum / gradesCounter;
             colors.push({
                 d: result.data.length - 1,
@@ -873,7 +873,7 @@ class PackageService extends Observable {
         if (geometry['getGeometryCount']) {
             geometry = geometry['getGeometry'](0);
         }
-        return geometry.getPoses();
+        return geometry.getPoses() as MapPosVector<LatLonKeys>;
     }
     async getElevationProfile(item: Item) {
         // console.log('getElevationProfile', item.geometry.type, item.geometry.coordinates.length);

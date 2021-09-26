@@ -10,6 +10,9 @@ const TerserPlugin = require('terser-webpack-plugin');
 const IgnoreNotFoundExportPlugin = require('./IgnoreNotFoundExportPlugin');
 const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 const Fontmin = require('@akylas/fontmin');
+const esbuild = require('esbuild');
+const { ESBuildMinifyPlugin } = require('esbuild-loader');
+
 function fixedFromCharCode(codePt) {
     if (codePt > 0xffff) {
         codePt -= 0x10000;
@@ -31,10 +34,10 @@ module.exports = (env, params = {}) => {
             {},
             {
                 production: true,
-                sentry: true,
-                uploadSentry: true,
-                apiKeys: false,
-                sourceMap: true,
+                sentry: false,
+                uploadSentry: false,
+                apiKeys: true,
+                sourceMap: false,
                 uglify: true
             },
             env
@@ -56,7 +59,6 @@ module.exports = (env, params = {}) => {
         noconsole, // --env.noconsole
         cartoLicense = false, // --env.cartoLicense
         devlog, // --env.devlog
-        fakeall, // --env.fakeall
         fork = true, // --env.fakeall
         apiKeys = true,
         adhoc // --env.adhoc
@@ -68,7 +70,6 @@ module.exports = (env, params = {}) => {
     const config = webpackConfig(env, params);
     const mode = production ? 'production' : 'development';
     const platform = env && ((env.android && 'android') || (env.ios && 'ios'));
-    const tsconfig = 'tsconfig.json';
     const projectRoot = params.projectRoot || __dirname;
     const dist = nsWebpack.Utils.platform.getDistPath();
     const appResourcesFullPath = resolve(projectRoot, appResourcesPath);
@@ -124,7 +125,7 @@ module.exports = (env, params = {}) => {
     const defines = {
         PRODUCTION: !!production,
         process: 'global.process',
-        window: 'undefined',
+        // window: 'undefined',
         'global.TNS_WEBPACK': 'true',
         'gVars.platform': `"${platform}"`,
         __UI_USE_EXTERNAL_RENDERER__: true,
@@ -144,10 +145,11 @@ module.exports = (env, params = {}) => {
         SUPPORT_URL: `"${package.bugs.url}"`,
         CUSTOM_URL_SCHEME: `"${CUSTOM_URL_SCHEME}"`,
         STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${nsconfig.id}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
-        STORE_REVIEW_LINK: `"${isIOS
-            ? ` itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=${APP_STORE_ID}&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+Software`
-            : `market://details?id=${nsconfig.id}`
-            }"`,
+        STORE_REVIEW_LINK: `"${
+            isIOS
+                ? ` itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=${APP_STORE_ID}&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+Software`
+                : `market://details?id=${nsconfig.id}`
+        }"`,
         DEV_LOG: !!devlog,
         TEST_LOGS: !!adhoc || !production
     };
@@ -375,7 +377,13 @@ module.exports = (env, params = {}) => {
 
     config.plugins.unshift(
         new webpack.ProvidePlugin({
-            svN: '~/svelteNamespace'
+            svN: '~/svelteNamespace',
+            setTimeout: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'setTimeout'],
+            clearTimeout: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'clearTimeout'],
+            setInterval: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'setInterval'],
+            clearInterval: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'clearInterval'],
+            requestAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame/index'), 'requestAnimationFrame'],
+            cancelAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame/index'), 'cancelAnimationFrame']
         })
     );
 
@@ -385,14 +393,15 @@ module.exports = (env, params = {}) => {
     // save as long as we dont use calc in css
     config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /reduce-css-calc$/ }));
     config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /punnycode$/ }));
+    config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /^url$/ }));
     // config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /polymer-expressions$/ }));
 
     Object.assign(config.plugins.find((p) => p.constructor.name === 'DefinePlugin').definitions, defines);
 
     config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${locales.join('|')})$`)));
-    if (fork && nsconfig.cssParser !== 'css-tree') {
-        config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /css-tree$/ }));
-    }
+    // if (fork && nsconfig.cssParser !== 'css-tree') {
+    //     config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /css-tree$/ }));
+    // }
     config.devtool = inlineSourceMap ? 'inline-cheap-source-map' : false;
     if (!inlineSourceMap && (hiddenSourceMap || sourceMap)) {
         if (!!sentry && !!uploadSentry) {
@@ -411,8 +420,6 @@ module.exports = (env, params = {}) => {
                 appVersion = readFileSync('app/App_Resources/iOS/Info.plist', 'utf8').match(/<key>CFBundleShortVersionString<\/key>[\s\n]*<string>(.*?)<\/string>/)[1];
                 buildNumber = readFileSync('app/App_Resources/iOS/Info.plist', 'utf8').match(/<key>CFBundleVersion<\/key>[\s\n]*<string>([0-9]*)<\/string>/)[1];
             }
-            console.log('appVersion', appVersion, buildNumber);
-
             config.plugins.push(
                 new SentryCliPlugin({
                     release: appVersion,
@@ -437,24 +444,10 @@ module.exports = (env, params = {}) => {
             );
         }
     }
-    // if (!!production) {
-    //     config.plugins.push(
-    //         new ForkTsCheckerWebpackPlugin({
-    //             async: false,
-    //             typescript: {
-    //                 configFile: resolve(tsconfig)
-    //             }
-    //         })
-    //     );
-    // }
+    if (!!production) {
+        // config.plugins.push(new ForkTsCheckerWebpackPlugin());
+    }
 
-    // config.plugins.push(
-    //     new webpack.ProvidePlugin({
-    //         Buffer: ['buffer', 'Buffer']
-    //     })
-    // );
-    // handle node polyfills
-    // config.externals.push('fs');
     config.externalsPresets = { node: false };
     config.resolve.fallback = config.resolve.fallback || {};
     config.resolve.fallback.timers = require.resolve('timers/');
@@ -507,27 +500,9 @@ module.exports = (env, params = {}) => {
             usedExports: true,
             // minimize: true,
             minimizer: [
-                new TerserPlugin({
-                    parallel: true,
-                    // cache: true,
-                    // sourceMap: isAnySourceMapEnabled,
-                    terserOptions: {
-                        ecma: 2017,
-                        module: false,
-                        format: {
-                            comments: false,
-                            semicolons: !isAnySourceMapEnabled
-                        },
-                        // mangle: {
-                        // toplevel: false,
-                        // properties: true,
-                        // },
-                        compress: {
-                            passes: 5,
-                            drop_console: production
-                        },
-                        keep_fnames: false
-                    }
+                new ESBuildMinifyPlugin({
+                    target: 'es2017', // Syntax to compile to (see options below for possible values)
+                    implementation: esbuild
                 })
             ]
         },
@@ -569,21 +544,23 @@ module.exports = (env, params = {}) => {
                 },
                 {
                     test: /\.js$/,
-                    loader: 'babel-loader',
+                    loader: 'esbuild-loader',
                     options: {
-                        sourceMaps: false,
-                        plugins: ['@babel/plugin-transform-runtime'],
-                        presets: [
-                            [
-                                '@babel/env',
-                                {
-                                    modules: false,
-                                    targets: {
-                                        chrome: '70'
-                                    }
-                                }
-                            ]
-                        ]
+                        target: 'es2015',
+                        implementation: esbuild
+                        // sourceMaps: false,
+                        // plugins: ['@babel/plugin-transform-runtime'],
+                        // presets: [
+                        //     [
+                        //         '@babel/env',
+                        //         {
+                        //             modules: false,
+                        //             targets: {
+                        //                 chrome: '70'
+                        //             }
+                        //         }
+                        //     ]
+                        // ]
                     }
                 }
             ]

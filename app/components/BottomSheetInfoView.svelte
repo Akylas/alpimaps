@@ -53,7 +53,6 @@
     }
 
     function updateItem(item: Item) {
-
         if (!item) {
             routeDistance = null;
             routeDuration = null;
@@ -124,7 +123,9 @@
                 newPropsToDraw.push('dmin');
             }
         }
-        propsToDraw = newPropsToDraw;
+        setTimeout(()=>{
+            propsToDraw = newPropsToDraw;
+        }, 100);
     }
     $: {
         try {

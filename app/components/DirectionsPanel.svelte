@@ -4,11 +4,11 @@
     import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
     import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
-    import { VectorTileEventData,VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
+    import { VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
     import type { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
-    import { RoutingResult,RoutingService } from '@nativescript-community/ui-carto/routing';
-    import { Color,Device,GridLayout,ObservableArray,StackLayout,TextField } from '@nativescript/core';
-    import type { Feature,Point } from 'geojson';
+    import { RoutingResult, RoutingService } from '@nativescript-community/ui-carto/routing';
+    import { Color, Device, GridLayout, ObservableArray, StackLayout, TextField } from '@nativescript/core';
+    import type { Feature, Point } from 'geojson';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -17,12 +17,12 @@
     import { lc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
-    import type { IItem as Item,RouteInstruction } from '~/models/Item';
-    import { Route,RoutingAction } from '~/models/Item';
+    import type { IItem as Item, RouteInstruction } from '~/models/Item';
+    import { Route, RoutingAction } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { showError } from '~/utils/error';
-    import { globalMarginTop,mdiFontFamily,primaryColor } from '~/variables';
+    import { globalMarginTop, mdiFontFamily, primaryColor } from '~/variables';
 
     function routingResultToJSON(result: RoutingResult<LatLonKeys>, costing_options) {
         const rInstructions = result.getInstructions();
@@ -207,6 +207,7 @@
     function getRouteDataSource() {
         if (!_routeDataSource) {
             _routeDataSource = new GeoJSONVectorTileDataSource({
+                simplifyTolerance: 0,
                 minZoom: 0,
                 maxZoom: 24
             });
@@ -530,7 +531,7 @@
                 method: 'GET',
                 queryParams: {
                     fromPlace: positions[0],
-                    toPlace: positions[positions.length - 1],
+                    toPlace: positions.at(-1),
                     date: new Date(),
                     time: new Date()
                 }
@@ -617,24 +618,25 @@
             let itemToFocus;
             if (computeMultiple) {
                 if (profile === 'bicycle') {
-                    const results = await Promise.all([
+                    const results: { route: Route; instructions: RouteInstruction[] }[] = await Promise.all([
                         computeAndAddRoute({ shortest: true }),
                         computeAndAddRoute({ shortest: false, bicycle_type: 'Cross', avoid_bad_surfaces: 1, use_hills: 1, use_roads: 0 }),
                         computeAndAddRoute({ shortest: false, bicycle_type: 'Moutain', avoid_bad_surfaces: 0, use_hills: 1, use_roads: 0 })
                     ]);
-                    itemToFocus = results[0];
+                    itemToFocus = results.reduce(function (prev, current) {
+                        return prev?.route?.totalTime > current?.route?.totalTime ? current : prev;
+                    });
                 } else if (profile === 'pedestrian') {
-                    const results = await Promise.all([
+                    const results: { route: Route; instructions: RouteInstruction[] }[] = await Promise.all([
                         computeAndAddRoute({ shortest: true }),
                         computeAndAddRoute({ shortest: false, use_hills: 1, use_roads: 0, step_penalty: 0 }),
                         computeAndAddRoute({ shortest: false, use_hills: 0, use_roads: 0, step_penalty: 1 })
                     ]);
-                    itemToFocus = results[0];
-                } else  {
-                    const results = await Promise.all([
-                        computeAndAddRoute({ shortest: true }),
-                        computeAndAddRoute({ shortest: false}),
-                    ]);
+                    itemToFocus = results.reduce(function (prev, current) {
+                        return prev?.route?.totalTime > current?.route?.totalTime ? current : prev;
+                    });
+                } else {
+                    const results = await Promise.all([computeAndAddRoute({ shortest: true }), computeAndAddRoute({ shortest: false })]);
                     itemToFocus = results[0];
                 }
             } else {
