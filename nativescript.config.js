@@ -10,7 +10,7 @@ module.exports = {
     android: {
         maxLogcatObjectSize: 4096,
         markingMode: 'none',
-        v8Flags: '--expose_gc',
+        // v8Flags: '--expose_gc',
         codeCache: true,
         enableMultithreadedJavascript: false,
         forceLog: true

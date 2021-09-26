@@ -78,19 +78,22 @@ export default class ItemsModule extends MapModule {
     getOrCreateLocalVectorLayer() {
         if (!this.localVectorLayer) {
             this.localVectorDataSource = new GeoJSONVectorTileDataSource({
+                simplifyTolerance: 0,
                 minZoom: 0,
                 maxZoom: 24
             });
             this.localVectorDataSource.createLayer('items');
             // this.localVectorDataSource.setGeometrySimplifier(new DouglasPeuckerGeometrySimplifier({ tolerance: 2 }));
             this.localVectorLayer = new VectorTileLayer({
+                labelBlendingSpeed: 0,
+                layerBlendingSpeed: 0,
+                clickRadius: 6,
                 dataSource: this.localVectorDataSource,
                 decoder: mapContext.innerDecoder
             });
             this.localVectorLayer.setVectorTileEventListener<LatLonKeys>(
                 {
                     onVectorTileClicked(info: VectorTileEventData<LatLonKeys>) {
-                        console.log('onVectorTileClicked', info.featureId, info.featureData.id, typeof info.featureData.id);
                         return mapContext.vectorTileElementClicked(info);
                     }
                 },
@@ -336,7 +339,7 @@ export default class ItemsModule extends MapModule {
         // const sorted = features.splice(index, 1);
         // console.log('test', index, count);
         // while (features.length > 0) {
-        //     index = features.findIndex((s) => s.start === sorted[sorted.length - 1].end);
+        //     index = features.findIndex((s) => s.start === sorted.at(-1).end);
         //     if (index !== -1) {
         //         sorted.push(...features.splice(index, 1));
         //     } else {
