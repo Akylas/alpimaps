@@ -19,6 +19,8 @@
 	[network=3][zoom>=9],
 	[network=2][zoom>=8],
 	[network=1] {
+        line-join: round;
+        line-cap: round;
 		[class=hiking],[class=foot] {
 			line-opacity:0.5;
 			line-dasharray: @selected_item_id = [nuti::selected_id] ? (0,0) :  @hiking_route_dasharray;
