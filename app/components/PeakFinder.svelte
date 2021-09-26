@@ -437,6 +437,7 @@
                 bind:this={webView}
                 on:loaded={webviewLoaded}
                 webRTC={true}
+                normalizeUrls={false}
                 mediaPlaybackRequiresUserAction={false}
                 webConsoleEnabled={consoleEnabled}
                 displayZoomControls={false}

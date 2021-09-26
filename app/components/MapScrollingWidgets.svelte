@@ -66,6 +66,7 @@
     export let navigationInstructions: {
         remainingDistance: number;
         remainingTime: number;
+        distanceToNextInstruction: number;
         instruction: RouteInstruction;
     } = undefined;
     $: {
@@ -345,8 +346,8 @@
             canvas.translate(10, h / 2 - staticLayout.getHeight() / 2);
             staticLayout.draw(canvas);
             canvas.restore();
-            if (navigationInstructions.instruction.dist > 0) {
-                const data = convertDistance(navigationInstructions.instruction.dist);
+            if (navigationInstructions.distanceToNextInstruction> 0) {
+                const data = convertDistance(navigationInstructions.distanceToNextInstruction);
                 textPaint.setTextSize(11);
                 canvas.drawText(`${data.value.toFixed(data.unit === 'm' ? 0 : 1)} ${data.unit}`, 14, h / 2 + staticLayout.getHeight() / 2 + 15, textPaint);
             }
