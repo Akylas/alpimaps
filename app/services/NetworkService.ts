@@ -87,7 +87,7 @@ function prepareOSMWay(way, nodes) {
         start: points[0],
         startOnRoute: true,
         endOnRoute: true,
-        end: points[points.length - 1]
+        end: points.at(-1)
     };
     Object.keys(OSMReplaceKeys).forEach(function (key) {
         if (way.tags[key]) {
@@ -742,14 +742,14 @@ export class NetworkService extends Observable {
                 for (let i = 0; i < ways.length; i++) {
                     const current = ways[i];
                     const start = current.nodes[0];
-                    const end = current.nodes[current.nodes.length - 1];
+                    const end = current.nodes.at(-1);
                     for (wayId in resultingWays) {
                         comparing = resultingWays[wayId];
                         if (!comparing || !canMerge(comparing, current)) {
                             continue;
                         }
                         start2 = comparing.nodes[0];
-                        end2 = comparing.nodes[comparing.nodes.length - 1];
+                        end2 = comparing.nodes.at(-1);
 
                         if (start2 === end) {
                             comparing.nodes = current.nodes.slice(0, -1).concat(comparing.nodes);
@@ -839,7 +839,7 @@ export class NetworkService extends Observable {
             // console.debug('semi', semi);
             const r = await this.actualMapquestElevationProfile(_points.slice(0, semi));
             const r2 = await this.actualMapquestElevationProfile(_points.slice(semi));
-            const firstDistanceTotal = r.elevationProfile[r.elevationProfile.length - 1].distance;
+            const firstDistanceTotal = r.elevationProfile.at(-1).distance;
             res = {
                 elevationProfile: r.elevationProfile.concat(
                     r2.elevationProfile.map((e) => {

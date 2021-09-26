@@ -1,3 +1,4 @@
+
 android { 
 
   defaultConfig {  
@@ -11,13 +12,15 @@ android {
     ndk {
       abiFilters.clear()
       abiFilters  'x86_64', 'arm64-v8a', 'armeabi-v7a'
+      // abiFilters 'arm64-v8a'
     }
   }
   splits {
       abi {
-          enable true
+          enable false
           reset()
           include 'armeabi-v7a','x86_64','arm64-v8a'
+          // include 'arm64-v8a'
           universalApk true
       }
   }
