@@ -174,11 +174,12 @@
                     .getTransitLines()
                     .then((result) => {
                         transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
+                            simplifyTolerance: 0,
                             minZoom: 0,
                             maxZoom: 24
                         });
                         transitVectorTileDataSource.createLayer('lines');
-                        transitVectorTileDataSource.setLayerGeoJSONString(1, result);
+                        transitVectorTileDataSource.setLayerGeoJSONString(1, result.replaceAll('"geometry":{}', '"geometry":null'));
                         if (!transitVectorTileLayer) {
                             transitVectorTileLayer = new VectorTileLayer({
                                 // preloading: true,
@@ -255,7 +256,7 @@
                 const geoTextRegexp = /([\d\.-]+),([\d\.-]+)\((.*?)\)/;
                 const query = appURL.params.get('q');
                 const match = query.match(geoTextRegexp);
-                const actualQuery = decodeURIComponent(query).replace(/[+]/g, ' ');
+                const actualQuery = decodeURIComponent(query).replaceAll('+', ' ');
                 if (match) {
                     selectItem({
                         item: {
@@ -599,7 +600,7 @@
                 //     vectorElement.width += 2;
                 // } else if (item.route.osmid) {
                 if (item.properties.route.osmid) {
-                    selectedOSMId = (item.properties.route.osmid) + '';
+                    selectedOSMId = item.properties.route.osmid + '';
                     // setStyleParameter('selected_id', item.properties.route.osmid + '');
                     mapContext.innerDecoder.setStyleParameter('selected_id', item.properties.route.osmid + '');
                 } else if (item.properties.id) {
@@ -1068,9 +1069,9 @@
     }
     function onVectorTileElementClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureData } = data;
-        if (DEV_LOG) {
-            console.log('onVectorTileElementClicked', clickType, position, featureData.id);
-        }
+        // if (DEV_LOG) {
+        //     console.log('onVectorTileElementClicked', clickType, position, featureData.id);
+        // }
         const itemModule = mapContext.mapModule('items');
         const feature = itemModule.getFeature(featureData.id);
         if (!feature) {
@@ -1752,11 +1753,9 @@
     }
     let inFront = false;
     function onNavigatingTo() {
-        console.log('onNavigatingTo');
         inFront = true;
     }
     function onNavigatingFrom() {
-        console.log('onNavigatingFrom');
         inFront = false;
     }
 </script>

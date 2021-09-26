@@ -81,25 +81,24 @@
 	}
 	[class=minor][zoom>=12]::casing, 
 	[class=minor][brunnel=bridge][zoom>=15]::bridge {
-		line-width: @residential-width + @residential-casing-width;
-		// [ramp=1] {
-		// 	line-width: @residential-link-width + @residential-casing-width;
-		// }
-		line-color: @residential-casing;
-
-
-		line-join: round;
-		line-cap: round;
-		[brunnel=tunnel][zoom>=13]{
-			line-cap: butt;
-			line-join: miter;
-			line-dasharray: @tunnel-dasharray;
+		[zoom>=14] {
+			line-width: @residential-width + @residential-casing-width;
+			line-color: @residential-casing;
+	
+			line-join: round;
+			line-cap: round;
+			[brunnel=tunnel][zoom>=13]{
+				line-cap: butt;
+				line-join: miter;
+				line-dasharray: @tunnel-dasharray;
+			}
+			[brunnel=bridge][zoom>=15]{
+				line-cap: butt;
+				line-join: miter;
+				line-color: @bridge-casing;
+			}
 		}
-		[brunnel=bridge][zoom>=15]{
-			line-cap: butt;
-			line-join: miter;
-			line-color: @bridge-casing;
-		}
+		
 		::inner {
 			line-join: round;
 			line-cap: round;
@@ -461,6 +460,21 @@
 			line-color: @track-fill;
 			line-width: @track-width;
 			line-dasharray: @track-dasharray;
+			[tracktype=grade1] {
+				line-dasharray: @track-grade1-dasharray;
+			}
+			[tracktype=grade2] {
+				line-dasharray: @track-grade2-dasharray;
+			}
+			[tracktype=grade3] {
+				line-dasharray: @track-grade3-dasharray;
+			}
+			[tracktype=grade4] {
+				line-dasharray: @track-grade4-dasharray;
+			}
+			[tracktype=grade5] {
+				line-dasharray: @track-grade5-dasharray;
+			}
 		}
 	}
 

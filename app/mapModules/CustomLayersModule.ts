@@ -233,7 +233,7 @@ export default class CustomLayersModule extends MapModule {
         const routeLayer = new VectorTileLayer({
             dataSource,
             layerBlendingSpeed: 0,
-            labelRenderOrder: VectorTileRenderOrder.LAST,
+            // labelRenderOrder: VectorTileRenderOrder.LAST,
             decoder: mapContext.innerDecoder
         });
         routeLayer.setVectorTileEventListener<LatLonKeys>(
