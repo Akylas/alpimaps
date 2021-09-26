@@ -90,7 +90,7 @@ export function getDefaultMBTilesDir() {
                 }
             }
             if (result.length > 1) {
-                const sdcardFolder = result[result.length - 1].getAbsolutePath();
+                const sdcardFolder = result.at(-1).getAbsolutePath();
                 defaultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
             } else if (result.length > 0) {
                 const sdcardFolder = result[0].getAbsolutePath();
