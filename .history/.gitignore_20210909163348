@@ -1,0 +1,62 @@
+# NativeScript application
+hooks
+platforms
+node_modules/
+
+certs
+/package-lock.json
+/report
+/times.html
+pnpm-lock.yaml
+*.js.map
+e2e/**/*.js
+/mochawesome-report
+/fastlane/report.xml
+/gpx
+/dist
+/Gemfile.lock
+firmware
+firmwares
+**/Android/src/main/res/values*/strings.xml
+App_Resources/Android/src/main/res/values*/strings.xml
+**/iOS/*.lproj/Localizable.strings
+**/iOS/*.lproj/InfoPlist.strings
+
+# NativeScript Template
+*.js.map
+!webpack.config.js
+*.css
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+.idea
+.cloud
+.project
+tmp/
+typings/
+
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+/.sentryclirc
+pnpm-lock.yaml
+/fastlane/report.xml
+*.zip
+dist
+/geojson
+.gradle
+/app/assets/webapp.js
+/app/assets/webapp.js.LICENSE.txt

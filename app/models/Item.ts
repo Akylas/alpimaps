@@ -1,15 +1,11 @@
-import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
-import { VectorElement } from '@nativescript-community/ui-carto/vectorelements';
-import { LineStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/line';
-import { MarkerStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/marker';
-import { Color } from '@nativescript/core';
-import NSQLDatabase from '../mapModules/NSQLDatabase';
-import type { Geometry } from 'geojson';
-import mergeOptions from 'merge-options';
-
-import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
-import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
+import { MapBounds } from '@nativescript-community/ui-carto/core';
 import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
+import type { Geometry } from 'geojson';
+import extend from 'just-extend';
+import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
+import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
+import NSQLDatabase from '../mapModules/NSQLDatabase';
+
 const sql = SqlQuery.createFromTemplateString;
 
 export enum RoutingAction {
@@ -128,7 +124,7 @@ export class ItemRepository extends CrudRepository<Item> {
         return item as Item;
     }
     async updateItem(item: Item, data: Partial<ItemProperties>) {
-        const updatedItem = { ...item, properties: mergeOptions(item.properties, data) };
+        const updatedItem = { ...item, properties: extend(item.properties, data) };
         await this.update(updatedItem, { properties: JSON.stringify(updatedItem.properties) });
         return updatedItem;
     }

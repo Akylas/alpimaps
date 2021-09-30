@@ -115,7 +115,7 @@
     });
 </script>
 
-<gridlayout {...$$restProps} id="rightMenu" bind:this={gridLayout} columns="*,auto" height={210 + navigationBarHeight} paddingBottom={navigationBarHeight} backgroundColor={$widgetBackgroundColor}>
+<gridlayout {...$$restProps} id="rightMenu" bind:this={gridLayout} columns="*,auto" height={210 + $navigationBarHeight} paddingBottom={$navigationBarHeight} backgroundColor={$widgetBackgroundColor}>
     {#if loaded}
         <collectionview id="trackingScrollView" items={customSources} bind:this={collectionView} reorderEnabled={true} on:itemReordered={onItemReordered}>
             <Template let:item>
