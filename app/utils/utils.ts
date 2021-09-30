@@ -78,27 +78,39 @@ export function getDataFolder() {
 
 export function getDefaultMBTilesDir() {
     let localMbtilesSource = appSettings.getString('local_mbtiles_directory');
-    if (!localMbtilesSource) {
-        let defaultPath = path.join(getDataFolder(), 'alpimaps_mbtiles');
-        if (global.isAndroid) {
-            const nArray = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
-            const result = [];
-            for (let index = 0; index < nArray.length; index++) {
-                const element = nArray[index];
-                if (element) {
-                    result.push(element);
-                }
-            }
-            if (result.length > 1) {
-                const sdcardFolder = result.at(-1).getAbsolutePath();
-                defaultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
-            } else if (result.length > 0) {
-                const sdcardFolder = result[0].getAbsolutePath();
-                defaultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
+    // if (!localMbtilesSource) {
+    let defaultPath = path.join(getDataFolder(), 'alpimaps_mbtiles');
+    if (global.isAndroid) {
+        const nArray = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
+        const result = [];
+        for (let index = 0; index < nArray.length; index++) {
+            const element = nArray[index];
+            if (element) {
+                result.push(element);
             }
         }
-        localMbtilesSource = appSettings.getString('local_mbtiles_directory', defaultPath);
+        if (result.length > 1) {
+            const sdcardFolder = result.at(-1).getAbsolutePath();
+            defaultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
+        } else if (result.length > 0) {
+            const sdcardFolder = result[0].getAbsolutePath();
+            defaultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
+        }
+    } else {
+        try {
+            const docFolder = knownFolders.documents();
+            const folders = docFolder.getEntitiesSync();
+            const index = folders.findIndex((e) => e.path.endsWith('alpimaps_mbtiles'));
+            if (index !== -1) {
+                defaultPath = folders[index].path;
+            }
+        } catch (error) {
+            console.error(error);
+        }
     }
+    localMbtilesSource = defaultPath;
+    appSettings.setString('local_mbtiles_directory', defaultPath);
+    // }
     return localMbtilesSource;
 }
 
