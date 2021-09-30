@@ -237,7 +237,7 @@
             <button row={1} colSpan={3} variant="text" class="icon-btn" text="mdi-chevron-right" horizontalAlignment="right" on:tap={() => nextDates()} />
         </gridlayout>
 
-        <collectionview row={3} colSpan={3} bind:this={collectionView} items={timelineItems} itemIdGenerator={(item, i) => i} android:marginBottom={navigationBarHeight} rowHeight="50">
+        <collectionview row={3} colSpan={3} bind:this={collectionView} items={timelineItems} itemIdGenerator={(item, i) => i} android:marginBottom={$navigationBarHeight} rowHeight="50">
             <Template let:item>
                 <gridlayout rippleColor={item.color} columns="*,200" padding={4} borderBottomColor={$borderColor} borderBottomWidth={1}>
                     <label

@@ -584,8 +584,15 @@ export default class CustomLayersModule extends MapModule {
         super.onMapReady(mapView);
         (async () => {
             try {
+                const folderPath = getDefaultMBTilesDir();
+                if (folderPath) {
+                    await this.loadLocalMbtiles(folderPath);
+                }
                 const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
-                // console.log('onMapReady', savedSources, this.customSources);
+
+                if (this.customSources.length === 0 && savedSources.length === 0) {
+                    savedSources.push('openstreetmap');
+                }
                 if (savedSources.length > 0) {
                     await this.getSourcesLibrary();
                     savedSources.forEach((s) => {
@@ -600,10 +607,6 @@ export default class CustomLayersModule extends MapModule {
                             console.error('createRasterLayer', err);
                         }
                     });
-                }
-                const folderPath = getDefaultMBTilesDir();
-                if (folderPath) {
-                    await this.loadLocalMbtiles(folderPath);
                 }
                 this.listenForSourceChanges = true;
             } catch (err) {
