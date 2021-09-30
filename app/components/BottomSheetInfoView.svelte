@@ -4,6 +4,7 @@
     import { formatter } from '~/mapModules/ItemFormatter';
     import type { IItem as Item, ItemProperties } from '~/models/Item';
     import { mdiFontFamily, subtitleColor, textColor } from '~/variables';
+    import ErrorBoundary from './ErrorBoundary';
     const PROPS_TO_SHOW = ['ele'];
 
     export let item: Item;
@@ -123,7 +124,7 @@
                 newPropsToDraw.push('dmin');
             }
         }
-        setTimeout(()=>{
+        setTimeout(() => {
             propsToDraw = newPropsToDraw;
         }, 100);
     }

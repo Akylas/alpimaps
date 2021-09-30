@@ -27,7 +27,7 @@
     import { showError } from '~/utils/error';
     import { computeDistanceBetween } from '~/utils/geo';
     import { arraySortOn } from '~/utils/utils';
-    import { globalMarginTop, primaryColor, subtitleColor, widgetBackgroundColor } from '~/variables';
+    import { globalMarginTop, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import { queryString } from '../utils/http';
 
     const providerColors = {
@@ -85,7 +85,7 @@
     // }
     class PhotonFeature {
         properties: { [k: string]: any };
-        position: MapPos<LatLonKeys>;
+        public geometry!: Point;
         constructor(data) {
             const properties = data.properties || {};
             const actualName = properties.name === properties.city ? undefined : properties.name;
@@ -103,12 +103,12 @@
             };
             actualProperties.name = actualName;
             this.properties = actualProperties;
-            this.position = { lat: data.geometry.coordinates[1], lon: data.geometry.coordinates[0] };
+            this.geometry = data.geometry;
         }
     }
     class HereFeature {
         properties: { [k: string]: any };
-        position: MapPos<LatLonKeys>;
+        public geometry!: Point;
         constructor(data) {
             this.properties = {
                 showOnMap: true,
@@ -121,7 +121,10 @@
                 categories: [data.category.id],
                 address: { name: data.vicinity }
             };
-            this.position = { lat: data.position[0], lon: data.position[1] };
+            this.geometry = {
+                type: 'Point',
+                coordinates: data.position.reverse()
+            };
         }
     }
 
@@ -221,10 +224,11 @@
     }
 
     function getItemIcon(item: SearchItem) {
-        return osmicon(formatter.geItemIcon(item));
+        const icons = formatter.geItemIcon(item);
+        return osmicon(icons);
     }
     function getItemIconColor(item: SearchItem) {
-        return providerColors[item.properties.provider] || 'white';
+        return providerColors[item.properties.provider] || $textColor;
     }
     function getItemTitle(item: SearchItem) {
         return formatter.getItemTitle(item);
@@ -279,7 +283,6 @@
     $: {
         const query = text;
         if (query !== currentSearchText) {
-            // console.log('text changed', query);
             if (query) {
                 if (searchAsTypeTimer) {
                     clearTimeout(searchAsTypeTimer);
@@ -290,8 +293,15 @@
                         searchAsTypeTimer = null;
                         instantSearch(query);
                     }, 1000);
-                } else if (query.length === 0 && currentSearchText && currentSearchText.length > 2) {
-                    unfocus();
+                } else {
+                    if (searchAsTypeTimer) {
+                        clearTimeout(searchAsTypeTimer);
+                        searchAsTypeTimer = null;
+                    }
+                    dataItems = [] as any;
+                    if (query.length === 0 && currentSearchText && currentSearchText.length > 0) {
+                        unfocus();
+                    }
                 }
             }
             currentSearchText = query;
@@ -408,12 +418,12 @@
                 herePlaceSearch(options)
                     .then((r) => loading && r && result.push(...r))
                     .catch((err) => {
-                        console.error('herePlaceSearch', err);
+                        console.error('herePlaceSearch', err, err.stack);
                     }),
                 photonSearch(options)
                     .then((r) => loading && r && result.push(...r))
                     .catch((err) => {
-                        console.error('photonSearch', err);
+                        console.error('photonSearch', err, err.stack);
                     })
             ]);
 
