@@ -432,7 +432,7 @@
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <drawer bind:this={drawer} gestureMinDist={60} bottomClosedDrawerAllowDraging={false} simultaneousHandlers={simultaneousHandlersTags} {shouldPan} translationFunction={drawerTranslationFunction}>
-        <gridLayout android:marginBottom={navigationBarHeight}>
+        <gridLayout android:marginBottom={$navigationBarHeight}>
             <awebview
                 bind:this={webView}
                 on:loaded={webviewLoaded}
@@ -498,7 +498,7 @@
                         items={listView1Items}
                         itemTemplateSelector={selectTemplate}
                         itemIdGenerator={(item, i) => i}
-                        android:marginBottom={navigationBarHeight}
+                        android:marginBottom={$navigationBarHeight}
                     >
                         <Template let:item key="checkbox">
                             <checkbox text={item.title} checked={item.checked} on:checkedChange={(e) => onCheckBox(item, e.value)} />
@@ -525,7 +525,7 @@
                         items={listView2Items}
                         itemTemplateSelector={selectTemplate}
                         itemIdGenerator={(item, i) => i}
-                        android:marginBottom={navigationBarHeight}
+                        android:marginBottom={$navigationBarHeight}
                     >
                         <Template let:item key="checkbox">
                             <checkbox text={item.title} checked={item.checked} on:checkedChange={(e) => onCheckBox(item, e.value)} />
