@@ -86,6 +86,7 @@ DrawerElement.register();
 // Trace.enable();
 import { start } from '~/helpers/theme';
 import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
+import { CartoMap } from '@nativescript-community/ui-carto/ui';
 // on startup we need to ensure theme is loaded because of a mixin
 // on startup we need to say what we are using
 start();

@@ -1,17 +1,16 @@
-import * as connectivity from '@nativescript/core/connectivity';
-import { ApplicationEventData, EventData, Observable, knownFolders } from '@nativescript/core';
-import { BaseError } from 'make-error';
-import mergeOptions from 'merge-options';
-import { GenericMapPos, MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
-import { l } from '~/helpers/locale';
-import { off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
-import { getBounds, getPathLength } from '~/helpers/geolib';
-import { RouteProfile } from '~/models/Item';
-import * as appavailability from '@nativescript/appavailability';
-import { ad } from '@nativescript/core/utils/utils';
-
-import { Headers } from '@nativescript/core/http';
 import * as https from '@nativescript-community/https';
+import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
+import * as appavailability from '@nativescript/appavailability';
+import { ApplicationEventData, EventData, Observable, knownFolders } from '@nativescript/core';
+import { off as applicationOff, on as applicationOn, resumeEvent } from '@nativescript/core/application';
+import * as connectivity from '@nativescript/core/connectivity';
+import { Headers } from '@nativescript/core/http';
+import { ad } from '@nativescript/core/utils/utils';
+import extend from 'just-extend';
+import { BaseError } from 'make-error';
+import { getBounds, getPathLength } from '~/helpers/geolib';
+import { l } from '~/helpers/locale';
+import { RouteProfile } from '~/models/Item';
 import { createGlobalEventListener, globalObservable } from '~/variables';
 
 export const onNetworkChanged = createGlobalEventListener('network');
@@ -755,13 +754,13 @@ export class NetworkService extends Observable {
                             comparing.nodes = current.nodes.slice(0, -1).concat(comparing.nodes);
                             comparing.geometry = current.geometry.slice(0, -1).concat(comparing.geometry);
                             delete resultingWays[current.id + ''];
-                            comparing.tags = mergeOptions(current.tags, comparing.tags);
+                            comparing.tags = extend({}, current.tags, comparing.tags);
                             break;
                         } else if (end2 === start) {
                             comparing.nodes = comparing.nodes.concat(current.nodes.slice(1));
                             comparing.geometry = comparing.geometry.concat(current.geometry.slice(1));
                             delete resultingWays[current.id + ''];
-                            comparing.tags = mergeOptions(current.tags, comparing.tags);
+                            comparing.tags = extend({}, current.tags, comparing.tags);
                             break;
                         }
                     }

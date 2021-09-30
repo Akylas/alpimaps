@@ -721,7 +721,7 @@ class PackageService extends Observable {
                 f = 0;
             let e = 0;
             for (let k = 1; k <= dist && e < g; k++) {
-                e = grades.at(index + k < grades.length ? index + k : - 1).dist - grades[0 <= index - k ? index - k : 0].dist;
+                e = grades.at(index + k < grades.length ? index + k : -1).dist - grades[0 <= index - k ? index - k : 0].dist;
                 for (let h = index - k; h < index + k; h++) {
                     if (undefined !== grades[h] && null !== grades[h]) {
                         e = Math.pow(grades[h].dist, 2) / (Math.abs(h - index) + 1);
@@ -865,7 +865,6 @@ class PackageService extends Observable {
     }
 
     getRouteItemPoses(item: Item) {
-        // console.log('getRouteItemPoses', item.geometry.type, item.geometry.coordinates.length, item._geometry);
         let geometry = item._nativeGeometry || (packageService.getGeoJSONReader().readGeometry(item._geometry || JSON.stringify(item.geometry)) as LineGeometry<LatLonKeys>);
         if (!item._nativeGeometry) {
             item._nativeGeometry = geometry.getNative();
@@ -876,7 +875,6 @@ class PackageService extends Observable {
         return geometry.getPoses() as MapPosVector<LatLonKeys>;
     }
     async getElevationProfile(item: Item) {
-        // console.log('getElevationProfile', item.geometry.type, item.geometry.coordinates.length);
         if (this.hillshadeLayer && (item.geometry.type === 'LineString' || item.geometry.type === 'MultiLineString')) {
             // if (DEV_LOG) {
             //     console.log('getElevationProfile', item.geometry);
