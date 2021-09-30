@@ -377,13 +377,19 @@ module.exports = (env, params = {}) => {
 
     config.plugins.unshift(
         new webpack.ProvidePlugin({
-            svN: '~/svelteNamespace',
+            svN: '~/svelteNamespace'
+        })
+    );
+
+    config.plugins.unshift(
+        new webpack.ProvidePlugin({
             setTimeout: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'setTimeout'],
             clearTimeout: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'clearTimeout'],
             setInterval: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'setInterval'],
             clearInterval: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'clearInterval'],
-            requestAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame/index'), 'requestAnimationFrame'],
-            cancelAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame/index'), 'cancelAnimationFrame']
+            FormData: [require.resolve(coreModulesPackageName + '/polyfills/formdata'), 'FormData'],
+            requestAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame'), 'requestAnimationFrame'],
+            cancelAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame'), 'cancelAnimationFrame']
         })
     );
 
@@ -414,11 +420,11 @@ module.exports = (env, params = {}) => {
             let appVersion;
             let buildNumber;
             if (platform === 'android') {
-                appVersion = readFileSync('app/App_Resources/Android/app.gradle', 'utf8').match(/versionName "((?:[0-9]+\.?)+)"/)[1];
-                buildNumber = readFileSync('app/App_Resources/Android/app.gradle', 'utf8').match(/versionCode ([0-9]+)/)[1];
+                appVersion = readFileSync('App_Resources/Android/app.gradle', 'utf8').match(/versionName "((?:[0-9]+\.?)+)"/)[1];
+                buildNumber = readFileSync('App_Resources/Android/app.gradle', 'utf8').match(/versionCode ([0-9]+)/)[1];
             } else if (platform === 'ios') {
-                appVersion = readFileSync('app/App_Resources/iOS/Info.plist', 'utf8').match(/<key>CFBundleShortVersionString<\/key>[\s\n]*<string>(.*?)<\/string>/)[1];
-                buildNumber = readFileSync('app/App_Resources/iOS/Info.plist', 'utf8').match(/<key>CFBundleVersion<\/key>[\s\n]*<string>([0-9]*)<\/string>/)[1];
+                appVersion = readFileSync('App_Resources/iOS/Info.plist', 'utf8').match(/<key>CFBundleShortVersionString<\/key>[\s\n]*<string>(.*?)<\/string>/)[1];
+                buildNumber = readFileSync('App_Resources/iOS/Info.plist', 'utf8').match(/<key>CFBundleVersion<\/key>[\s\n]*<string>([0-9]*)<\/string>/)[1];
             }
             config.plugins.push(
                 new SentryCliPlugin({

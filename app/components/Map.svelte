@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { executeOnMainThread } from '@nativescript/core/utils';
     import { AppURL, handleOpenURL } from '@nativescript-community/appurl';
     import * as EInfo from '@nativescript-community/extendedinfo';
     import { GenericGeoLocation } from '@nativescript-community/gps';
@@ -28,7 +29,7 @@
     import type { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Device, Screen } from '@nativescript/core/platform';
-    import { ad } from '@nativescript/core/utils/utils';
+    import { ad, executeOnMainThread } from '@nativescript/core/utils/utils';
     import { compose } from '@nativescript/email';
     import * as SocialShare from 'nativescript-social-share';
     import { debounce } from 'push-it-to-the-limit/target/es6';
@@ -130,6 +131,7 @@
         remainingDistance: number;
         remainingTime: number;
         instruction: RouteInstruction;
+        distanceToNextInstruction: number;
     };
 
     let ignoreNextMapClick = false;
@@ -452,8 +454,9 @@
     }, 500);
 
     async function onMainMapReady(e) {
-        cartoMap = e.object as CartoMap<LatLonKeys>;
-        // CartoMap.setRunOnMainThread(false);
+        try {
+     cartoMap = e.object as CartoMap<LatLonKeys>;
+        CartoMap.setRunOnMainThread(true);
         if (DEV_LOG) {
             setShowDebug(true);
             setShowInfo(true);
@@ -489,7 +492,7 @@
         cartoMap.setFocusPos(pos, 0);
         cartoMap.setZoom(zoom, 0);
 
-        setTimeout(async () => {
+        // setTimeout(async () => {
             try {
                 await perms.request('storage');
                 if (__CARTO_PACKAGESERVICE__) {
@@ -501,7 +504,11 @@
                 showError(err);
             }
             mapContext.runOnModules('onMapReady', cartoMap);
-        }, 100);
+        // }, 100);
+        } catch (error) {
+            console.error(error);
+        }
+        
     }
     let mapMoved = false;
     function onMainMapMove(e) {
@@ -509,14 +516,15 @@
             return;
         }
         mapMoved = true;
-        const bearing = cartoMap.bearing;
-        currentMapRotation = Math.round(bearing * 100) / 100;
         // console.log('onMapMove');
         // const bearing = cartoMap.bearing;
         // console.log('onMapMove', bearing);
         // currentMapRotation = Math.round(bearing * 100) / 100;
         mapContext.runOnModules('onMapMove', e);
-        unFocusSearch();
+        // executeOnMainThread(()=>{
+            currentMapRotation = Math.round(cartoMap.bearing * 100) / 100;
+            unFocusSearch();
+        // });
     }
     function onMainMapIdle(e) {
         if (!cartoMap) {
@@ -530,7 +538,9 @@
         }
         if (mapMoved) {
             mapMoved = false;
-            saveSettings();
+            // executeOnMainThread(() => {
+                saveSettings();
+            // })
         }
         mapContext.runOnModules('onMapStable', e);
     }
@@ -551,14 +561,10 @@
         if (!handledByModules && clickType === ClickType.SINGLE) {
             selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.lat] }, properties: {} }, isFeatureInteresting: !$selectedItem, preventZoom: true });
         }
-        unFocusSearch();
+        // executeOnMainThread(()=>{
+            unFocusSearch();
+        // });
     }
-
-    // function createLocalMarker(position: MapPos<LatLonKeys>, options: MarkerStyleBuilderOptions) {
-    //     getOrCreateLocalVectorLayer();
-    //     const styleBuilder = new MarkerStyleBuilder(options);
-    //     return new Marker<LatLonKeys>({ position, projection, styleBuilder });
-    // }
     function onSelectedItemChanged(oldValue: IItem, value: IItem) {
         mapContext.runOnModules('onSelectedItem', value, oldValue);
     }
@@ -583,194 +589,204 @@
         zoom?: number;
         zoomDuration?: number;
     }) {
-        didIgnoreAlreadySelected = false;
-        if (isFeatureInteresting) {
-            let isCurrentItem = item !== $selectedItem;
-            // console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, new Error().stack);
-            if (setSelected && isCurrentItem && !item) {
-                unselectItem(false);
-            }
-            const route = item?.properties?.route;
-            if (setSelected && route) {
-                // console.log('instructions', item.route.instructions?.length, item.route.instructions && JSON.stringify(item.route.instructions));
-                // const vectorElement = item.vectorElement as Line;
-                // if (vectorElement) {
-                //     const color = new Color(vectorElement.color as string);
-                //     vectorElement.color = color.darken(10).hex;
-                //     vectorElement.width += 2;
-                // } else if (item.route.osmid) {
-                if (item.properties.route.osmid) {
-                    selectedOSMId = item.properties.route.osmid + '';
-                    // setStyleParameter('selected_id', item.properties.route.osmid + '');
-                    mapContext.innerDecoder.setStyleParameter('selected_id', item.properties.route.osmid + '');
-                } else if (item.properties.id) {
-                    selectedId = item.properties.id;
-                    mapContext.innerDecoder.setStyleParameter('selected_id', item.properties.id);
-                }
-                // console.log('selectedOSMId', selectedOSMId);
-                // if (!selectedRouteLine) {
-                //     getOrCreateLocalVectorLayer();
-                //     selectedRouteLine = mapContext.mapModule('items').createLocalLine(item, {
-                //         // color: '#55ff0000',
-                //         color: (darkColor as any).setAlpha(150),
-                //         joinType: LineJointType.ROUND,
-                //         endType: LineEndType.ROUND,
-                //         width: 3,
-                //         clickWidth: 10
-                //     });
-                //     localVectorDataSource.add(selectedRouteLine);
-                // } else {
-                //     selectedRouteLine.positions = item.route.positions;
-                //     selectedRouteLine.visible = true;
-                // }
-                // }
-                // if (route.instructions) {
-                //     if (!selectedRouteInstructionsGroup) {
-                //         selectedRouteInstructionsGroup = new Group();
-                //     }
-                //     selectedRouteInstructionsGroup.elements = iroute.instructions.map(
-                //         (i, index) =>
-                //             new Point({
-                //                 projection: mapContext.getProjection(),
-                //                 position: omit(item.route.positions.getPos(i.index), 'altitude'),
-                //                 styleBuilder: {
-                //                     size: 12,
-                //                     placementPriority: 10,
-                //                     hideIfOverlapped: false,
-                //                     scaleWithDPI: true,
-                //                     color: 'red'
-                //                 },
-                //                 metaData: { instruction: JSON.stringify(i) }
-                //             })
-                //     );
-                //     getOrCreateLocalVectorLayer();
-                //     // selectedRouteInstructionsGroup.elements.forEach(e=>localVectorDataSource.add(e))
-                //     localVectorDataSource.add(selectedRouteInstructionsGroup);
-                // }
-
-                if (selectedPosMarker) {
-                    selectedPosMarker.visible = false;
-                }
-            } else {
-                const geometry = item.geometry as GeoJSONPoint;
-                const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-                if (!selectedPosMarker) {
-                    getOrCreateLocalVectorLayer();
-                    const itemModule = mapContext.mapModule('items');
-                    selectedPosMarker = itemModule.createLocalPoint(position, {
-                        // color: '#55ff0000',
-                        color: primaryColor.setAlpha(178).hex,
-                        clickSize: 0,
-                        scaleWithDPI: true,
-                        size: 30
-                        // orientationMode: BillboardOrientation.GROUND,
-                        // scalingMode: BillboardScaling.SCREEN_SIZE
-                    });
-                    localVectorDataSource.add(selectedPosMarker);
-                } else {
-                    selectedPosMarker.position = position;
-                    selectedPosMarker.visible = true;
-                }
-                if (setSelected && selectedOSMId) {
-                    selectedOSMId = null;
-                    // setStyleParameter('selected_id', '');
-                    mapContext.innerDecoder.setStyleParameter('selected_id', '');
-                }
-                if (selectedId) {
-                    selectedId = null;
-                    mapContext.innerDecoder.setStyleParameter('selected_id', '');
-                }
-            }
-            // item.route = {
-            //     instructions: Array.from({length: 40}, () => ({
-            //         position: null,
-            //         action: "left",
-            //         azimuth: 0,
-            //         distance: 0,
-            //         time: 0,
-            //         turnAngle: 0,
-            //         streetName: 'toto'
-            //     }))
-            // } as any
-            if (setSelected) {
-                $selectedItem = item;
-            }
-            if (setSelected && !route && (!item.properties.address || !item.properties.address['street'])) {
-                const service = packageService.localOSMOfflineReverseGeocodingService;
-                if (service) {
-                    itemLoading = true;
-                    const radius = 200;
-
-                    const geometry = item.geometry as GeoJSONPoint;
-                    const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-                    // use a promise not to "wait" for it
-                    packageService
-                        .searchInGeocodingService(service, {
-                            projection,
-                            location: position,
-                            searchRadius: radius
-                        })
-                        .then((res) => {
-                            if (res) {
-                                let bestFind;
-                                for (let index = 0; index < res.size(); index++) {
-                                    const r = packageService.convertGeoCodingResult(res.get(index), true);
-                                    if (r && r.rank > 0.7 && computeDistanceBetween(position, r.position) <= radius) {
-                                        if (!bestFind || Object.keys(r.address).length > Object.keys(bestFind.address).length) {
-                                            bestFind = r;
-                                        } else if (bestFind && item.properties.address && item.properties.address['street']) {
-                                            break;
-                                        }
-                                    } else {
-                                        break;
-                                    }
-                                }
-                                if (bestFind && $selectedItem.geometry === item.geometry) {
-                                    if (item.properties.layer === 'housenumber') {
-                                        $selectedItem.properties.address = { ...bestFind.address, name: null, houseNumber: item.properties.housenumber } as any;
-                                        $selectedItem = $selectedItem;
-                                    } else {
-                                        $selectedItem.properties.address = { ...bestFind.address, name: null } as any;
-                                        $selectedItem = $selectedItem;
-                                    }
-                                }
-                            }
-                        })
-                        .catch((err) => console.error('searchInGeocodingService', err, err['stack']));
-                }
-                if (item.properties && 'ele' in item.properties === false && packageService.hasElevation()) {
-                    const geometry = item.geometry as GeoJSONPoint;
-                    const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-                    packageService.getElevation(position).then((result) => {
-                        if ($selectedItem.geometry === item.geometry) {
-                            $selectedItem.properties = $selectedItem.properties || {};
-                            $selectedItem.properties['ele'] = result;
-                            $selectedItem = $selectedItem;
+        // console.log('selectItem')
+        return new Promise<void>(function (resolve, reject) {
+            executeOnMainThread(async function () {
+                try {
+                    didIgnoreAlreadySelected = false;
+                    if (isFeatureInteresting) {
+                        let isCurrentItem = item !== $selectedItem;
+                        // console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, new Error().stack);
+                        if (setSelected && isCurrentItem && !item) {
+                            unselectItem(false);
                         }
-                    });
-                }
-            }
+                        const route = item?.properties?.route;
+                        if (setSelected && route) {
+                            // console.log('instructions', item.route.instructions?.length, item.route.instructions && JSON.stringify(item.route.instructions));
+                            // const vectorElement = item.vectorElement as Line;
+                            // if (vectorElement) {
+                            //     const color = new Color(vectorElement.color as string);
+                            //     vectorElement.color = color.darken(10).hex;
+                            //     vectorElement.width += 2;
+                            // } else if (item.route.osmid) {
+                            if (item.properties.route.osmid) {
+                                selectedOSMId = item.properties.route.osmid + '';
+                                // setStyleParameter('selected_id', item.properties.route.osmid + '');
+                                mapContext.innerDecoder.setStyleParameter('selected_id', item.properties.route.osmid + '');
+                            } else if (item.properties.id) {
+                                selectedId = item.properties.id;
+                                mapContext.innerDecoder.setStyleParameter('selected_id', item.properties.id);
+                            }
+                            // console.log('selectedOSMId', selectedOSMId);
+                            // if (!selectedRouteLine) {
+                            //     getOrCreateLocalVectorLayer();
+                            //     selectedRouteLine = mapContext.mapModule('items').createLocalLine(item, {
+                            //         // color: '#55ff0000',
+                            //         color: (darkColor as any).setAlpha(150),
+                            //         joinType: LineJointType.ROUND,
+                            //         endType: LineEndType.ROUND,
+                            //         width: 3,
+                            //         clickWidth: 10
+                            //     });
+                            //     localVectorDataSource.add(selectedRouteLine);
+                            // } else {
+                            //     selectedRouteLine.positions = item.route.positions;
+                            //     selectedRouteLine.visible = true;
+                            // }
+                            // }
+                            // if (route.instructions) {
+                            //     if (!selectedRouteInstructionsGroup) {
+                            //         selectedRouteInstructionsGroup = new Group();
+                            //     }
+                            //     selectedRouteInstructionsGroup.elements = iroute.instructions.map(
+                            //         (i, index) =>
+                            //             new Point({
+                            //                 projection: mapContext.getProjection(),
+                            //                 position: omit(item.route.positions.getPos(i.index), 'altitude'),
+                            //                 styleBuilder: {
+                            //                     size: 12,
+                            //                     placementPriority: 10,
+                            //                     hideIfOverlapped: false,
+                            //                     scaleWithDPI: true,
+                            //                     color: 'red'
+                            //                 },
+                            //                 metaData: { instruction: JSON.stringify(i) }
+                            //             })
+                            //     );
+                            //     getOrCreateLocalVectorLayer();
+                            //     // selectedRouteInstructionsGroup.elements.forEach(e=>localVectorDataSource.add(e))
+                            //     localVectorDataSource.add(selectedRouteInstructionsGroup);
+                            // }
 
-            // console.log('selectedItem', item);
-            // const vectorTileDecoder = getVectorTileDecoder();
-            // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
-            // vectorTileDecoder.setStyleParameter('selected_name', (item.properties && item.properties.name) || '');
-            if (peek) {
-                await bottomSheetInner.loadView().then(() => {});
-                bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
-            }
-            if (preventZoom) {
-                return;
-            }
-            zoomToItem({ item, zoom, minZoom, duration: zoomDuration });
-        } else {
-            unselectItem();
-        }
+                            if (selectedPosMarker) {
+                                selectedPosMarker.visible = false;
+                            }
+                        } else {
+                            const geometry = item.geometry as GeoJSONPoint;
+                            const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+                            if (!selectedPosMarker) {
+                                getOrCreateLocalVectorLayer();
+                                const itemModule = mapContext.mapModule('items');
+                                selectedPosMarker = itemModule.createLocalPoint(position, {
+                                    // color: '#55ff0000',
+                                    color: primaryColor.setAlpha(178).hex,
+                                    clickSize: 0,
+                                    scaleWithDPI: true,
+                                    size: 30
+                                    // orientationMode: BillboardOrientation.GROUND,
+                                    // scalingMode: BillboardScaling.SCREEN_SIZE
+                                });
+                                localVectorDataSource.add(selectedPosMarker);
+                            } else {
+                                selectedPosMarker.position = position;
+                                selectedPosMarker.visible = true;
+                            }
+                            if (setSelected && selectedOSMId) {
+                                selectedOSMId = null;
+                                // setStyleParameter('selected_id', '');
+                                mapContext.innerDecoder.setStyleParameter('selected_id', '');
+                            }
+                            if (selectedId) {
+                                selectedId = null;
+                                mapContext.innerDecoder.setStyleParameter('selected_id', '');
+                            }
+                        }
+                        // item.route = {
+                        //     instructions: Array.from({length: 40}, () => ({
+                        //         position: null,
+                        //         action: "left",
+                        //         azimuth: 0,
+                        //         distance: 0,
+                        //         time: 0,
+                        //         turnAngle: 0,
+                        //         streetName: 'toto'
+                        //     }))
+                        // } as any
+                        if (setSelected) {
+                            $selectedItem = item;
+                        }
+                        if (setSelected && !route && (!item.properties.address || !item.properties.address['street'])) {
+                            const service = packageService.localOSMOfflineReverseGeocodingService;
+                            if (service) {
+                                itemLoading = true;
+                                const radius = 200;
+
+                                const geometry = item.geometry as GeoJSONPoint;
+                                const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+                                // use a promise not to "wait" for it
+                                packageService
+                                    .searchInGeocodingService(service, {
+                                        projection,
+                                        location: position,
+                                        searchRadius: radius
+                                    })
+                                    .then((res) => {
+                                        if (res) {
+                                            let bestFind;
+                                            for (let index = 0; index < res.size(); index++) {
+                                                const r = packageService.convertGeoCodingResult(res.get(index), true);
+                                                if (r && r.rank > 0.7 && computeDistanceBetween(position, r.position) <= radius) {
+                                                    if (!bestFind || Object.keys(r.address).length > Object.keys(bestFind.address).length) {
+                                                        bestFind = r;
+                                                    } else if (bestFind && item.properties.address && item.properties.address['street']) {
+                                                        break;
+                                                    }
+                                                } else {
+                                                    break;
+                                                }
+                                            }
+                                            if (bestFind && $selectedItem.geometry === item.geometry) {
+                                                if (item.properties.layer === 'housenumber') {
+                                                    $selectedItem.properties.address = { ...bestFind.address, name: null, houseNumber: item.properties.housenumber } as any;
+                                                    $selectedItem = $selectedItem;
+                                                } else {
+                                                    $selectedItem.properties.address = { ...bestFind.address, name: null } as any;
+                                                    $selectedItem = $selectedItem;
+                                                }
+                                            }
+                                        }
+                                    })
+                                    .catch((err) => console.error('searchInGeocodingService', err, err['stack']));
+                            }
+                            if (item.properties && 'ele' in item.properties === false && packageService.hasElevation()) {
+                                const geometry = item.geometry as GeoJSONPoint;
+                                const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+                                packageService.getElevation(position).then((result) => {
+                                    if ($selectedItem.geometry === item.geometry) {
+                                        $selectedItem.properties = $selectedItem.properties || {};
+                                        $selectedItem.properties['ele'] = result;
+                                        $selectedItem = $selectedItem;
+                                    }
+                                });
+                            }
+                        }
+
+                        // console.log('selectedItem', item);
+                        // const vectorTileDecoder = getVectorTileDecoder();
+                        // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
+                        // vectorTileDecoder.setStyleParameter('selected_name', (item.properties && item.properties.name) || '');
+                        if (peek) {
+                            await bottomSheetInner.loadView().then(() => {});
+                            bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
+                        }
+                        if (preventZoom) {
+                            return;
+                        }
+                        zoomToItem({ item, zoom, minZoom, duration: zoomDuration });
+                    } else {
+                        unselectItem();
+                    }
+                    resolve();
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        });
     }
     export function zoomToItem({ item, zoom, minZoom, duration = 200, forceZoomOut = false }: { item: IItem; zoom?: number; minZoom?: number; duration?; forceZoomOut?: boolean }) {
         const screenBounds = {
             min: { x: 0, y: Utils.layout.toDevicePixels(90 + topTranslationY) },
-            max: { x: page.nativeView.getMeasuredWidth(), y: page.nativeView.getMeasuredHeight() - Utils.layout.toDevicePixels(navigationBarHeight - mapTranslation) }
+            max: { x: page.nativeView.getMeasuredWidth(), y: page.nativeView.getMeasuredHeight() - Utils.layout.toDevicePixels($navigationBarHeight - mapTranslation) }
         };
         if (item.properties.zoomBounds) {
             const zoomLevel = getBoundsZoomLevel(item.properties.zoomBounds, {
@@ -840,7 +856,7 @@
     $: toggleMapPitch($mapStore.pitchEnabled);
     $: currentLayer && (currentLayer.zoomLevelBias = parseFloat($mapStore.zoomBiais));
     $: currentLayer && (currentLayer.preloading = $mapStore.preloading);
-    $: shouldShowNavigationBarOverlay = global.isAndroid && navigationBarHeight !== 0 && !!selectedItem;
+    $: shouldShowNavigationBarOverlay = $navigationBarHeight !== 0 && !!selectedItem;
     $: bottomSheetStepIndex === 0 && unselectItem();
     $: {
         if (cartoMap) {
@@ -1345,7 +1361,7 @@
     }
     // let bottomSheetTranslation = 0;
     // get bottomSheetTranslation() {
-    //     const result = mBottomSheetTranslation + navigationBarHeight;
+    //     const result = mBottomSheetTranslation + $navigationBarHeight;
     //     return result;
     // }
     let scrollingWidgetsOpacity = 1;
@@ -1623,8 +1639,8 @@
             parent: page,
             view: MapOptions,
             props: { options },
-            transparent: true,
-            disableDimBackground: true
+            // transparent: true,
+            // disableDimBackground: true
         })) as any;
         if (result) {
             switch (result.id) {
@@ -1764,7 +1780,7 @@
     <drawer bind:this={drawer} translationFunction={drawerTranslationFunction} bottomOpenedDrawerAllowDraging={true} bottomClosedDrawerAllowDraging={false} backgroundColor="#E3E1D3">
         <cartomap zoom="16" on:mapReady={onMainMapReady} on:mapMoved={onMainMapMove} on:mapStable={onMainMapStable} on:mapIdle={onMainMapIdle} on:mapClicked={onMainMapClicked} />
         <bottomsheet
-            android:marginBottom={navigationBarHeight}
+            android:marginBottom={$navigationBarHeight}
             backgroundColor="#01550000"
             panGestureOptions={bottomSheetPanGestureOptions}
             {steps}

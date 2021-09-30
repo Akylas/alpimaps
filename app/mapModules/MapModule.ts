@@ -7,6 +7,7 @@ import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import { Drawer } from '@nativescript-community/ui-drawer';
 import { Page } from '@nativescript/core';
+import { executeOnMainThread } from '@nativescript/core/utils';
 import { NativeViewElementNode } from 'svelte-native/dom';
 import { GeoHandler } from '~/handlers/GeoHandler';
 import { IItem } from '~/models/Item';
@@ -77,6 +78,7 @@ export interface MapContext {
     rasterTileClicked: (data: RasterTileClickInfo<LatLonKeys>) => boolean;
     getVectorTileDecoder(): MBVectorTileDecoder;
     getCurrentLayer(): VectorTileLayer;
+    runOnModulesOnMainThread(functionName: string, ...args);
     runOnModules(functionName: string, ...args);
 }
 
@@ -106,6 +108,11 @@ const mapContext: MapContext = {
     onRasterTileClicked: createGlobalEventListener('onRasterTileClicked'),
     mapModule<T extends keyof MapModules>(id: T) {
         return mapContext.mapModules && mapContext.mapModules[id];
+    },
+    runOnModulesOnMainThread(functionName: string, ...args) {
+        executeOnMainThread(() => {
+            this.runOnModules(functionName, ...args);
+        });
     },
     runOnModules(functionName: string, ...args) {
         let result = Object.values(mapContext.mapModules).some((m) => {

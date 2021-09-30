@@ -2,8 +2,8 @@
 module.exports = {
     id: 'akylas.alpi.maps',
     ignoredNativeDependencies: ['@nativescript-community/sentry'],
-    appResourcesPath: 'app/App_Resources',
-    webpackConfigPath: './app.webpack.config.js',
+    appResourcesPath: 'App_Resources',
+    webpackConfigPath: 'app.webpack.config.js',
     appPath: 'app',
     forceLog: true,
     // profiling: 'timeline',

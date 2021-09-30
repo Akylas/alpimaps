@@ -8,6 +8,7 @@
     import type { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
     import { RoutingResult, RoutingService } from '@nativescript-community/ui-carto/routing';
     import { Color, Device, GridLayout, ObservableArray, StackLayout, TextField } from '@nativescript/core';
+    import { executeOnMainThread } from '@nativescript/core/utils';
     import type { Feature, Point } from 'geojson';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
@@ -394,7 +395,6 @@
         addInternalStopPoint(position, metaData);
     }
     export async function addWayPoint(position: MapPos<LatLonKeys>, metaData?, index = -1) {
-        console.log('addWayPoint', metaData, waypoints.length, waypoints.getItem(0)?.properties.isStart);
         // if (waypoints.length === 0 ) {
         // mapContext.getMap().getOptions().setClickTypeDetection(true);
         // }
@@ -425,7 +425,9 @@
 
         if (clickType === ClickType.LONG) {
             featureData.layer = featureLayerName;
-            addWayPoint(position, featureData);
+            executeOnMainThread(() => {
+                addWayPoint(position, featureData);
+            });
             return true;
         }
     }
@@ -433,7 +435,9 @@
     export function onMapClicked(e) {
         const { clickType, position } = e.data;
         if (clickType === ClickType.LONG) {
-            addWayPoint(position);
+            executeOnMainThread(() => {
+                addWayPoint(position);
+            });
             return true;
         }
     }
@@ -658,8 +662,13 @@
     function ensureRouteLayer() {
         return getRouteLayer() !== null;
     }
+    let firstUpdate = true;
     function updateGeoJSONLayer() {
         ensureRouteLayer();
+        if (global.isIOS && firstUpdate) {
+            firstUpdate = false;
+            return setTimeout(updateGeoJSONLayer, 10);
+        }
         _routeDataSource.setLayerGeoJSONString(
             1,
             JSON.stringify({
@@ -742,7 +751,7 @@
 
 <stacklayout bind:this={topLayout} {...$$restProps} backgroundColor={primaryColor} paddingTop={globalMarginTop} translateY={currentTranslationY}>
     {#if loaded}
-        <gridlayout bind:this={gridLayout} id="directions" on:tap={() => {}} rows="50,100,35" columns="*,30">
+        <gridlayout bind:this={gridLayout} on:tap={() => {}} rows="50,100,auto" columns="*,30">
             <button horizontalAlignment="left" variant="text" class="icon-btn-white" text="mdi-arrow-left" on:tap={() => cancel()} />
             <stacklayout colSpan={2} orientation="horizontal" horizontalAlignment="center">
                 <button variant="text" class="icon-btn-white" text="mdi-car" on:tap={() => setProfile('auto')} color={profileColor(profile, 'auto')} />
@@ -761,7 +770,7 @@
                 visibility={loading ? 'hidden' : 'visible'}
             />
             <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} horizontalAlignment="right" busy={true} width="40" height="40" color="white" />
-            <collectionview row={1} items={waypoints} rowHeight="50" itemIdGenerator={(item, i) => item.properties.id} animateItemUpdate={true}>
+            <collectionview row={1} items={waypoints} rowHeight="50" itemIdGenerator={(item, i) => item.properties.id} animateItemUpdate={true} colSpan={2}>
                 <Template let:item>
                     <gridlayout>
                         <canvaslabel color="white" fontSize="16" paddingLeft="10" fontFamily={mdiFontFamily}>
@@ -798,7 +807,7 @@
                 </Template>
             </collectionview>
             <button row={1} col={1} variant="text" class="icon-btn-white" text="mdi-swap-vertical" on:tap={() => reversePoints()} isEnabled={nbWayPoints > 1} />
-            <gridlayout colSpan={2} columns="auto,auto,auto,auto,auto,auto,auto,*,auto,auto" orientation="horizontal" row={3} visibility={showOptions ? 'visible' : 'hidden'}>
+            <gridlayout colSpan={2} rows="45" columns="auto,auto,auto,auto,auto,auto,auto,*,auto,auto" row={2} visibility={showOptions ? 'visible' : 'collapsed'} >
                 <button
                     variant="text"
                     class="icon-btn-white"
