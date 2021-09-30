@@ -9,7 +9,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
 
     export let position;
-    export let terrarium: boolean = false;
+    // export let terrarium: boolean = false;
     export let dataSource: TileDataSource<any, any>;
     export let vectorDataSource: MBTilesTileDataSource | MergedMBVTTileDataSource<any, any>;
     export let rasterDataSource: TileDataSource<any, any>;

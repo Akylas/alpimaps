@@ -17,8 +17,7 @@ e2e/**/*.js
 /Gemfile.lock
 firmware
 firmwares
-**/Android/src/main/res/values*/strings.xml
-App_Resources/Android/src/main/res/values*/strings.xml
+**/src/main/res/values*/strings.xml
 **/iOS/*.lproj/Localizable.strings
 **/iOS/*.lproj/InfoPlist.strings
 
