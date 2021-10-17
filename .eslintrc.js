@@ -4,7 +4,7 @@ module.exports = {
         es6: true,
         node: true
     },
-    ignorePatterns: ['node_modules/**/*'],
+    ignorePatterns: ['**/node_modules/**/*'],
     parser: '@typescript-eslint/parser',
     parserOptions: {
         ecmaVersion: 2019,
