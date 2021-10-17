@@ -38,19 +38,19 @@
             referenceAltitude = json.altitude;
             airportRefName = json.name;
         }
-        applicationOn(suspendEvent, onAppPause, this);
-        applicationOn(resumeEvent, onAppResume, this);
+        applicationOn(suspendEvent, onAppPause);
+        applicationOn(resumeEvent, onAppResume);
         userLocationModule = mapContext.mapModule('userLocation');
-        userLocationModule.on('location', onNewLocation, this);
+        userLocationModule.on('location', onNewLocation);
         onNewLocation({ data: userLocationModule.lastUserLocation } as any);
         onServiceLoaded((handler: GeoHandler) => {
             geoHandler = handler;
         });
     });
     onDestroy(() => {
-        applicationOff(suspendEvent, onAppPause, this);
-        applicationOff(resumeEvent, onAppResume, this);
-        userLocationModule.off('location', onNewLocation, this);
+        applicationOff(suspendEvent, onAppPause);
+        applicationOff(resumeEvent, onAppResume);
+        userLocationModule.off('location', onNewLocation);
         if (listeningForBarometer) {
             stopBarometerAltitudeUpdate();
         }

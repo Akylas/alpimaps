@@ -33,14 +33,7 @@ import { getDataFolder, getDefaultMBTilesDir } from '~/utils/utils';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
-export interface GeoResult {
-    properties?: { [k: string]: any };
-    address: Address;
-    position?: MapPos<LatLonKeys>;
-    bounds?: MapBounds<LatLonKeys>;
-    provider?: string;
-    rank?: number;
-}
+export interface GeoResult extends Item {}
 
 class MathFilter {
     filter(_newData): any {
@@ -483,18 +476,21 @@ class PackageService extends Observable {
         const features = result.getFeatureCollection();
         if (features.getFeatureCount() > 0) {
             feature = features.getFeature(0);
+            const position = fromNativeMapPos<LatLonKeys>(feature.geometry.getCenterPos());
             const r = {
                 rank,
-                properties: feature.properties,
-                address: result.getAddress(),
-                position: fromNativeMapPos(feature.geometry.getCenterPos())
+                properties: { ...feature.properties, address: result.getAddress() },
+                geometry: {
+                    type: 'Point',
+                    coordinates: [position.lon, position.lat]
+                }
             } as GeoResult;
             if ('getPos' in feature.geometry === false) {
-                r.bounds = features.getBounds();
+                r.properties.zoomBounds = features.getBounds();
             }
             if (full) {
                 this.prepareGeoCodingResult(r);
-                if (!r.properties.name && !r.address['street'] && !r.address['city']) {
+                if (!r.properties.name && !r.properties.address['street'] && !r.properties.address['city']) {
                     return;
                 }
             }
@@ -616,9 +612,9 @@ class PackageService extends Observable {
             ['houseNumber', 'getHouseNumber'],
             ['county', 'getCounty']
         ].forEach((d) => {
-            if (!address[d[0]] && d[1] in geoRes.address) {
+            if (!address[d[0]] && d[1] in geoRes.properties.address) {
                 try {
-                    const value = geoRes.address[d[1]]();
+                    const value = geoRes.properties.address[d[1]]();
                     if (value.length > 0) {
                         address[d[0]] = value;
                     }
@@ -627,11 +623,11 @@ class PackageService extends Observable {
                 }
             }
         });
-        if ('getCategories' in geoRes.address) {
-            const cat = geoRes.address.getCategories();
+        if ('getCategories' in geoRes.properties.address) {
+            const cat = geoRes.properties.address['getCategories']();
             if (cat && cat.size() > 0) {
-                geoRes['categories'] = nativeVectorToArray<string>(cat)
-                    .map((s) => s.split(':'))
+                geoRes.properties.categories = nativeVectorToArray<string>(cat)
+                    .map((s) => s.split(':').reverse())
                     .flat();
             }
         }

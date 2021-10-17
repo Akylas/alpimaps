@@ -2,7 +2,7 @@ import Observable from '@nativescript-community/observable';
 import { getCacheControl, networkService } from './NetworkService';
 import { GenericMapPos } from '@nativescript-community/ui-carto/core';
 
-import { SQLiteDatabase, openOrCreate } from '@akylas/nativescript-sqlite';
+import { SQLiteDatabase, openOrCreate } from '@nativescript-community/sqlite';
 import { getDefaultMBTilesDir } from '~/utils/utils';
 import { Folder } from '@nativescript/core';
 
