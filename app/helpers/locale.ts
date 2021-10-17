@@ -89,10 +89,20 @@ function getOwmLanguage(language) {
     }
 }
 
-function titlecase(value) {
-    return value.replace(/\w\S*/g, function (txt) {
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-    });
+function titlecase(str:string) {
+
+    let upper = true;
+  let newStr = "";
+  for (let i = 0, l = str.length; i < l; i++) {
+    if (str[i] == " ") {
+      upper = true;
+    	newStr += " ";
+      continue;
+    }
+    newStr += upper ? str[i].toUpperCase() : str[i].toLowerCase();
+    upper = false;
+  }
+  return newStr;
 }
 export function getLocaleDisplayName(locale?) {
     if (global.isIOS) {

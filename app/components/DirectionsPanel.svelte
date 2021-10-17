@@ -1,30 +1,31 @@
 <script lang="ts" context="module">
     import type { MapPos } from '@nativescript-community/ui-carto/core';
-    import { ClickType, fromNativeMapBounds, fromNativeMapPos } from '@nativescript-community/ui-carto/core';
-    import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
-    import { VectorLayer, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
+    import { ClickType } from '@nativescript-community/ui-carto/core';
+    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
+    import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
+    import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
+    import { VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
     import type { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
     import { RoutingResult, RoutingService } from '@nativescript-community/ui-carto/routing';
-    import { Group } from '@nativescript-community/ui-carto/vectorelements/group';
-    import { Line, LineEndType, LineJointType, LineStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/line';
-    import { Marker, MarkerStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/marker';
-    import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
     import { Color, Device, GridLayout, ObservableArray, StackLayout, TextField } from '@nativescript/core';
+    import { executeOnMainThread } from '@nativescript/core/utils';
+    import type { Feature, Point } from 'geojson';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
+    import { formatDistance } from '~/helpers/formatter';
+    import { getDistance } from '~/helpers/geolib';
     import { lc } from '~/helpers/locale';
+    import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
-    import type { IItem as Item } from '~/models/Item';
-    import type { RouteInstruction } from '~/models/Route';
-    import { Route, RoutingAction } from '~/models/Route';
+    import type { IItem as Item, RouteInstruction } from '~/models/Item';
+    import { Route, RoutingAction } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { showError } from '~/utils/error';
-    import { omit } from '~/utils/utils';
     import { globalMarginTop, mdiFontFamily, primaryColor } from '~/variables';
 
-    function routingResultToJSON(result: RoutingResult<LatLonKeys>) {
+    function routingResultToJSON(result: RoutingResult<LatLonKeys>, costing_options) {
         const rInstructions = result.getInstructions();
         const instructions: RouteInstruction[] = [];
         // const positions = getPointsFromResult(result);
@@ -38,18 +39,17 @@
                 time: instruction.getTime(),
                 index,
                 angle: Math.round(instruction.getTurnAngle()),
-                name: instruction.getStreetName(),
+                name: instruction.getStreetName() !== '' ? instruction.getStreetName() : undefined,
                 inst: (instruction as any).getInstruction()
             });
         }
-        const res = {
-            positions: result.getPoints(),
+        const route = {
+            costing_options,
             totalTime: result.getTotalTime(),
-            totalDistance: result.getTotalDistance(),
-            instructions
+            totalDistance: result.getTotalDistance()
         } as Route;
 
-        return res;
+        return { route, instructions };
     }
 </script>
 
@@ -57,24 +57,28 @@
     const mapContext = getMapContext();
     export let translationFunction: Function = null;
     let opened = false;
-    let _routeDataSource: LocalVectorDataSource;
-    let _routeLayer: VectorLayer;
+    let _routeDataSource: GeoJSONVectorTileDataSource;
+    let _routeLayer: VectorTileLayer;
     let waypoints: ObservableArray<{
-        marker: Group;
-        position: MapPos<LatLonKeys>;
-        isStart: boolean;
-        isStop: boolean;
-        metaData: any;
-        text: string;
+        geometry: Point;
+        properties: {
+            color: string;
+            isStart: boolean;
+            isStop: boolean;
+            metaData: any;
+            text: string;
+        };
     }> = new ObservableArray([]);
     let nbWayPoints = 0;
+    let features: Feature[] = [];
     let profile: ValhallaProfile = 'pedestrian';
     let bicycle_type = 'Cross';
     let showOptions = true;
     let loading = false;
-    let currentRoute: Route;
-    let currentLine: Line;
-    let line: Line<LatLonKeys>;
+    let currentRoutes: Route[];
+    let writer: GeoJSONGeometryWriter<LatLonKeys>;
+    // let currentLine: Line;
+    // let line: Line<LatLonKeys>;
     let loaded = false;
     let gridLayout: NativeViewElementNode<GridLayout>;
     let topLayout: NativeViewElementNode<StackLayout>;
@@ -114,7 +118,7 @@
             max: 1
         }
     };
-
+    let computeMultiple = false;
     let costingOptions = { use_ferry: 0, shortest: false };
     let profileCostingOptions = {
         pedestrian: { use_hills: 1, max_hiking_difficulty: 6, step_penalty: 5, driveway_factor: 10, use_roads: 0, use_tracks: 1, walking_speed: 4 },
@@ -127,7 +131,6 @@
             if (options === profileCostingOptions) {
                 options = profileCostingOptions[profile];
             }
-            console.log('switchValhallaSetting', key, options);
             const settings = valhallaSettings[key];
             if (Array.isArray(settings)) {
                 const index = settings.indexOf(options[key]);
@@ -167,7 +170,6 @@
             const settings = valhallaSettings[key];
             if (Array.isArray(settings)) {
                 const index = Math.max(settings.indexOf(options[key]), 0);
-                console.log('index', key, options, index, settings.length);
                 return new Color('white').setAlpha(((index + 1) / settings.length) * 255).hex;
             } else {
                 return options[key] === settings.max ? 'white' : '#ffffff55';
@@ -194,29 +196,42 @@
 
     onDestroy(() => {
         if (_routeDataSource) {
-            _routeDataSource.clear();
             _routeDataSource = null;
         }
 
         if (_routeLayer) {
-            _routeLayer.setVectorElementEventListener(null);
+            // _routeLayer.setVectorElementEventListener(null);
             _routeLayer = null;
         }
     });
 
     function getRouteDataSource() {
         if (!_routeDataSource) {
-            const projection = mapContext.getProjection();
-            _routeDataSource = new LocalVectorDataSource({ projection });
+            _routeDataSource = new GeoJSONVectorTileDataSource({
+                simplifyTolerance: 0,
+                minZoom: 0,
+                maxZoom: 24
+            });
+            _routeDataSource.createLayer('directions');
         }
         return _routeDataSource;
     }
     function getRouteLayer() {
         if (!_routeLayer) {
-            _routeLayer = new VectorLayer({ visibleZoomRange: [0, 24], dataSource: getRouteDataSource(), opacity: 0.7 });
-            _routeLayer.setVectorElementEventListener<LatLonKeys>({
-                onVectorElementClicked: (data) => mapContext.vectorElementClicked(data)
-            });
+            _routeLayer = new VectorTileLayer({ dataSource: getRouteDataSource(), decoder: mapContext.innerDecoder, layerBlendingSpeed: 0, labelBlendingSpeed: 0 });
+            _routeLayer.setVectorTileEventListener<LatLonKeys>(
+                {
+                    onVectorTileClicked(info: VectorTileEventData<LatLonKeys>) {
+                        const feature = features.find((f) => f.properties.id === info.featureData.id);
+                        if (feature) {
+                            mapContext.selectItem({ item: feature as any, isFeatureInteresting: true });
+                            return true;
+                        }
+                        return mapContext.vectorTileElementClicked(info);
+                    }
+                },
+                mapContext.getProjection()
+            );
             mapContext.addLayer(_routeLayer, 'directions');
         }
         return _routeLayer;
@@ -224,68 +239,83 @@
     function reversePoints() {
         if (waypoints.length > 1) {
             waypoints.splice(0, waypoints.length, ...waypoints.reverse());
-            // for (let index = 0; index < waypoints.length; index++) {
-            //     const element = waypoints[index];
-
-            // }
-            // waypoints = waypoints.reverse();
             waypoints.forEach((w, index) => {
-                if (w.isStart) {
-                    w.isStart = false;
-                    w.isStop = true;
+                if (w.properties.isStart) {
+                    w.properties.isStart = false;
+                    w.properties.isStop = true;
                     waypoints.setItem(index, w);
-                } else if (w.isStop) {
-                    w.isStart = true;
-                    w.isStop = false;
+                } else if (w.properties.isStop) {
+                    w.properties.isStart = true;
+                    w.properties.isStop = false;
                     waypoints.setItem(index, w);
                 }
-                if (w.marker) {
-                    (w.marker.elements[0] as Marker).color = index === 0 ? 'green' : index === waypoints.length - 1 ? 'red' : 'blue';
-                }
+                // if (w.properties) {
+                //     w.properties.color = index === 0 ? 'green' : index === waypoints.length - 1 ? 'red' : 'blue';
+                // }
             });
-            updateWayPoints;
+            updateGeoJSONLayer();
+            show();
         }
     }
+
+    function addInternalWayPoint(position: MapPos<LatLonKeys>, metaData?) {
+        const id = Date.now() + '';
+        const toAdd: Feature = {
+            type: 'Feature',
+            properties: {
+                id,
+                ...metaData
+            },
+            geometry: {
+                type: 'Point',
+                coordinates: [position.lon, position.lat]
+            }
+        };
+        toAdd.properties.name = formatter.getItemTitle(toAdd as Item);
+        features.push(toAdd);
+        if (metaData.isStart) {
+            waypoints.unshift(toAdd);
+        } else {
+            waypoints.push(toAdd);
+        }
+        try {
+            updateWayPointLines();
+        } catch (err) {
+            console.error(err, err.stack);
+        }
+        nbWayPoints++;
+    }
+
+    function updateWayPointLines() {
+        features = features.filter((f) => f.geometry.type !== 'LineString');
+        let lastWp: { geometry: Point };
+        waypoints.forEach((w, i) => {
+            if (lastWp) {
+                const id = Date.now() + '' + i;
+                features.push({
+                    type: 'Feature',
+                    properties: {
+                        id,
+                        class: 'waypointline',
+                        text: formatDistance(getDistance(lastWp.geometry.coordinates, w.geometry.coordinates))
+                    },
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: [lastWp.geometry.coordinates, w.geometry.coordinates]
+                    }
+                });
+            }
+            lastWp = w;
+        });
+    }
     export function addInternalStartPoint(position: MapPos<LatLonKeys>, metaData?) {
-        const toAdd = {
+        addInternalWayPoint(position, {
             isStart: true,
             isStop: false,
-            id: Date.now(),
-            position,
-            metaData,
-            marker: null,
-            text: metaData ? metaData.name : `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`
-        };
-        const group = new Group();
-        group.elements = [
-            new Marker({
-                position,
-                styleBuilder: {
-                    size: 15,
-                    hideIfOverlapped: false,
-                    scaleWithDPI: true,
-                    color: 'green'
-                }
-            })
-            // new Text({
-            //     position,
-            //     text: '0',
-            //     styleBuilder: {
-            //         fontSize: 5,
-            //         anchorPointY: 1,
-            //         hideIfOverlapped: false,
-            //         // scaleWithDPI: true,
-            //         color: 'white',
-            //         // backgroundColor: 'red'
-            //     }
-            // })
-        ];
-        toAdd.marker = group;
-        getRouteDataSource().add(group);
-        ensureRouteLayer();
-        waypoints.unshift(toAdd);
-        nbWayPoints++;
-        updateWayPoints();
+            ...metaData
+        });
+        updateGeoJSONLayer();
+        show();
     }
     let loadedListeners = [];
     async function loadView() {
@@ -301,75 +331,20 @@
             loadedListeners.forEach((l) => l());
         }
     }
+
     function addInternalStopPoint(position: MapPos<LatLonKeys>, metaData?) {
-        const toAdd = {
+        const lastPoint = waypoints.getItem(waypoints.length - 1);
+        if (lastPoint?.properties.isStop) {
+            lastPoint.properties.isStop = false;
+            waypoints.setItem(waypoints.length - 1, lastPoint);
+        }
+
+        addInternalWayPoint(position, {
             isStart: false,
             isStop: true,
-            id: Date.now(),
-            position,
-            metaData,
-            marker: null,
-            text: metaData?.name || `${position.lat.toFixed(3)}, ${position.lon.toFixed(3)}`
-        };
-        const lastPoint = waypoints.length > 0 ? waypoints.getItem(waypoints.length - 1) : undefined;
-        if (waypoints.length > 0 && lastPoint.isStop === true) {
-            if (lastPoint.isStop === true) {
-                lastPoint.isStop = false;
-                waypoints.setItem(waypoints.length - 1, lastPoint);
-            }
-            (lastPoint.marker.elements[0] as Point).styleBuilder = {
-                size: 15,
-                hideIfOverlapped: false,
-                scaleWithDPI: true,
-                color: 'blue'
-            };
-            addStopPoint(position, metaData);
-            return;
-        }
-        const group = new Group();
-        group.elements = [
-            new Marker({
-                position,
-                styleBuilder: {
-                    size: 15,
-                    hideIfOverlapped: false,
-                    scaleWithDPI: true,
-                    color: 'red'
-                }
-            })
-            // new Text({
-            //     position: getCenter(position, lastPoint.position),
-            //     // position: { lat: (position.lat - lastPoint.position.lat) / 2, lon: (position.lon - lastPoint.position.lon) / 2 },
-            //     text: formatValueToUnit(getDistanceSimple(position, lastPoint.position), 'km'),
-            //     styleBuilder: {
-            //         hideIfOverlapped: false,
-            //         scaleWithDPI: false,
-            //         color: 'darkgray',
-            //         fontSize: 12
-            //     }
-            // })
-        ];
-        toAdd.marker = group;
-        getRouteDataSource().add(group);
-        ensureRouteLayer();
-        waypoints.push(toAdd);
-        nbWayPoints++;
-        // waypoints = waypoints;
-        updateWayPoints();
-    }
-    function updateWayPoints() {
-        if (!line) {
-            line = new Line<LatLonKeys>({
-                styleBuilder: {
-                    color: 'gray',
-                    width: 4
-                },
-                positions: waypoints.map((w) => w.position)
-            });
-            getRouteDataSource().add(line);
-        } else {
-            line.positions = waypoints.map((w) => w.position);
-        }
+            ...metaData
+        });
+        updateGeoJSONLayer();
         show();
     }
     let currentTranslationY = -440;
@@ -423,48 +398,20 @@
         // if (waypoints.length === 0 ) {
         // mapContext.getMap().getOptions().setClickTypeDetection(true);
         // }
-        if (waypoints.length === 0 || waypoints.getItem(0).isStart === false) {
+        if (waypoints.length === 0 || waypoints.getItem(0).properties.isStart === false) {
             addInternalStartPoint(position, metaData);
         } else {
             addInternalStopPoint(position, metaData);
         }
     }
 
-    // function handleClickOnPos(position: MapPos<LatLonKeys>, metaData?) {
-    //     addWayPoint(position);
-    // }
-    // function handleClickOnItem(item: Item) {
-    //     handleClickOnPos(item.position, item.properties);
-    // }
-    //  function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
-    //     const { clickType, position, featurePosition, featureData } = data;
-    //     // console.log('onVectorTileClicked', clickType, ClickType.LONG);
-    //     if (clickType === ClickType.LONG) {
-    //         // console.log('onVectorTileClicked', data.featureLayerName);
-    //         if (data.featureLayerName === 'poi' || data.featureLayerName === 'mountain_peak') {
-    //             handleClickOnPos(featurePosition, featureData);
-    //             return true;
-    //         }
-    //     }
-    //     return false;
-    // }
-    export function onMapClicked(e) {
-        const { clickType } = e.data;
-        // console.log('onMapClicked', clickType, ClickType.LONG);
-        // const duration = e.data.clickInfo.duration;
-
-        if (clickType === ClickType.LONG) {
-            addWayPoint(e.data.position);
-            return true;
-        }
-    }
     export function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureLayerName, featureData, featurePosition, featureGeometry, layer } = data;
         if (
             featureLayerName === 'transportation' ||
             featureLayerName === 'transportation_name' ||
             featureLayerName === 'waterway' ||
-            // featureLayerName === 'place' ||
+            featureLayerName === 'place' ||
             featureLayerName === 'contour' ||
             featureLayerName === 'hillshade' ||
             (featureLayerName === 'park' && !!featureGeometry['getHoles']) ||
@@ -478,7 +425,19 @@
 
         if (clickType === ClickType.LONG) {
             featureData.layer = featureLayerName;
-            addWayPoint(position, featureData);
+            executeOnMainThread(() => {
+                addWayPoint(position, featureData);
+            });
+            return true;
+        }
+    }
+
+    export function onMapClicked(e) {
+        const { clickType, position } = e.data;
+        if (clickType === ClickType.LONG) {
+            executeOnMainThread(() => {
+                addWayPoint(position);
+            });
             return true;
         }
     }
@@ -486,15 +445,18 @@
     function clear(unselect = true) {
         waypoints = new ObservableArray([]);
         nbWayPoints = 0;
-        if (_routeDataSource) {
-            _routeDataSource.clear();
-        }
-        if (line) {
-            line = null;
-        }
-        if (currentRoute && unselect) {
+        clearRouteDatasource();
+        if (unselect) {
             mapContext.unselectItem();
         }
+        // if (startTF) {
+        //     unfocus(startTF.nativeView);
+        //     startTF.nativeView.text = null;
+        // }
+        // if (stopTF) {
+        //     unfocus(stopTF.nativeView);
+        //     stopTF.nativeView.text = null;
+        // }
     }
     export function cancel(unselect = true) {
         // mapContext.getMap().getOptions().setClickTypeDetection(false);
@@ -502,54 +464,54 @@
         hide();
     }
 
-    let _routePointStyle;
+    // let _routePointStyle;
 
-    function routePointStyle() {
-        if (!_routePointStyle) {
-            _routePointStyle = new MarkerStyleBuilder({
-                hideIfOverlapped: false,
-                size: 10,
-                color: 'white'
-            }).buildStyle();
-        }
-        return _routePointStyle;
-    }
-    let _routeLeftPointStyle;
-    function routeLeftPointStyle() {
-        if (!_routeLeftPointStyle) {
-            _routeLeftPointStyle = new MarkerStyleBuilder({
-                hideIfOverlapped: false,
-                size: 10,
-                color: 'yellow'
-            }).buildStyle();
-        }
-        return _routeLeftPointStyle;
-    }
-    let _routeRightPointStyle;
-    function routeRightPointStyle() {
-        if (!_routeRightPointStyle) {
-            _routeRightPointStyle = new MarkerStyleBuilder({
-                hideIfOverlapped: false,
-                size: 10,
-                color: 'purple'
-            }).buildStyle();
-        }
-        return _routeRightPointStyle;
-    }
-    function createPolyline(result: Route, positions) {
-        const styleBuilder = new LineStyleBuilder({
-            color: 'orange',
-            joinType: LineJointType.ROUND,
-            endType: LineEndType.ROUND,
-            clickWidth: 20,
-            width: 6
-        });
-        return new Line({
-            positions,
-            metaData: { route: JSON.stringify(omit(result, 'positions')) },
-            styleBuilder
-        });
-    }
+    // function routePointStyle() {
+    //     if (!_routePointStyle) {
+    //         _routePointStyle = new MarkerStyleBuilder({
+    //             hideIfOverlapped: false,
+    //             size: 10,
+    //             color: 'white'
+    //         }).buildStyle();
+    //     }
+    //     return _routePointStyle;
+    // }
+    // let _routeLeftPointStyle;
+    // function routeLeftPointStyle() {
+    //     if (!_routeLeftPointStyle) {
+    //         _routeLeftPointStyle = new MarkerStyleBuilder({
+    //             hideIfOverlapped: false,
+    //             size: 10,
+    //             color: 'yellow'
+    //         }).buildStyle();
+    //     }
+    //     return _routeLeftPointStyle;
+    // }
+    // let _routeRightPointStyle;
+    // function routeRightPointStyle() {
+    //     if (!_routeRightPointStyle) {
+    //         _routeRightPointStyle = new MarkerStyleBuilder({
+    //             hideIfOverlapped: false,
+    //             size: 10,
+    //             color: 'purple'
+    //         }).buildStyle();
+    //     }
+    //     return _routeRightPointStyle;
+    // }
+    // function createPolyline(result: Route, positions) {
+    //     const styleBuilder = new LineStyleBuilder({
+    //         color: 'orange',
+    //         joinType: LineJointType.ROUND,
+    //         endType: LineEndType.ROUND,
+    //         clickWidth: 20,
+    //         width: 6
+    //     });
+    //     return new Line({
+    //         positions,
+    //         metaData: { route: JSON.stringify(omit(result, 'positions')) },
+    //         styleBuilder
+    //     });
+    // }
     function secondsToHours(sec: number) {
         const hours = sec / 3600;
         const remainder = sec % 3600;
@@ -557,138 +519,208 @@
         const seconds = remainder % 60;
         return (hours < 10 ? '0' : '') + hours + 'h' + (minutes < 10 ? '0' : '') + minutes + 'm' + (seconds < 10 ? '0' : '') + seconds + 's';
     }
-    async function showRoute(online = false) {
-        try {
-            if (waypoints.length <= 1) {
-                return;
-            }
-            loading = true;
-            let route;
-            if (profile === 'bus') {
-                const positions = waypoints.map((r) => `${r.position.lat.toFixed(6)},${r.position.lon.toFixed(6)}`);
-                const result = networkService.request({
-                    url: 'http://data.mobilites-m.fr/otp/routers/default/plan',
-                    method: 'GET',
-                    queryParams: {
-                        fromPlace: positions[0],
-                        toPlace: positions[positions.length - 1],
-                        date: new Date(),
-                        time: new Date()
-                    }
-                });
-            } else {
-                const costing_options = {
-                    [profile]: Object.assign({}, costingOptions, profileCostingOptions[profile])
-                };
-                console.log('showRoute1', online, profile, costing_options);
-                if (costing_options[profile].hasOwnProperty('weight')) {
-                    const weight = costing_options[profile]['weight'];
-                    delete costing_options[profile]['weight'];
-                    switch (profile) {
-                        case 'pedestrian':
-                            costing_options[profile]['walking_speed'] = 5.1 * (weight ? 0.7 : 1);
-                            break;
-                        case 'bicycle':
-                            costing_options[profile]['cycling_speed'] = (costing_options[profile]['bicycle_type'] === 'Mountain' ? 18 : 16) * (weight ? 0.7 : 1);
-                            break;
-                    }
-                }
-                console.log('showRoute', online, profile, costing_options);
-                let service: RoutingService<any, any>;
-                if (!online) {
-                    service = packageService.offlineRoutingSearchService();
-                }
-                if (!service) {
-                    service = packageService.onlineRoutingSearchService();
-                }
-                (service as any).profile = profile;
-                const result = await service.calculateRoute<LatLonKeys>({
-                    projection: mapContext.getProjection(),
-                    points: waypoints.map((r) => r.position),
-                    customOptions: {
-                        directions_options: { language: Device.language },
-                        costing_options
-                    }
-                });
-                // console.log('got  route', result.getTotalDistance(), result.getTotalTime(), Date.now() - startTime, 'ms');
 
-                route = routingResultToJSON(result);
+    async function computeAndAddRoute(options?) {
+        if (waypoints.length <= 1) {
+            return;
+        }
+        let route: { route: Route; instructions: RouteInstruction[] };
+        let positions;
+        const points = waypoints.map((r) => ({ lat: r.geometry.coordinates[1], lon: r.geometry.coordinates[0] }));
+        let costing_options;
+        if (profile === 'bus') {
+            const positions = points.map((r) => `${r.lat.toFixed(6)},${r.lon.toFixed(6)}`);
+            const result = networkService.request({
+                url: 'http://data.mobilites-m.fr/otp/routers/default/plan',
+                method: 'GET',
+                queryParams: {
+                    fromPlace: positions[0],
+                    toPlace: positions.at(-1),
+                    date: new Date(),
+                    time: new Date()
+                }
+            });
+        } else {
+            costing_options = {
+                [profile]: Object.assign({}, costingOptions, profileCostingOptions[profile], options || {})
+            };
+            if (costing_options[profile].hasOwnProperty('weight')) {
+                const weight = costing_options[profile]['weight'];
+                delete costing_options[profile]['weight'];
+                switch (profile) {
+                    case 'pedestrian':
+                        costing_options[profile]['walking_speed'] = 5.1 * (weight ? 0.6 : 1);
+                        break;
+                    case 'bicycle':
+                        costing_options[profile]['cycling_speed'] = (costing_options[profile]['bicycle_type'] === 'Mountain' ? 18 : 16) * (weight ? 0.6 : 1);
+                        break;
+                }
             }
-
-            // console.log('routingResultToJSON', Date.now() - startTime, 'ms');
-            if (route) {
-                currentRoute = route;
-                clearCurrentLine();
-                currentLine = createPolyline(route, route.positions);
-                getRouteDataSource().add(currentLine);
-                ensureRouteLayer();
-                const geometry = currentLine.getGeometry();
-                mapContext.selectItem({
-                    item: {
-                        position: fromNativeMapPos(geometry.getCenterPos()),
-                        route,
-                        zoomBounds: fromNativeMapBounds(geometry.getBounds())
-                    },
-                    isFeatureInteresting: true,
-                    showButtons: true
-                });
-            }
-
-            loading = false;
-            // getRouteDataSource().clear();
-            // hide();
-            // clear();
-        } catch (error) {
-            console.log('showRoute error', error, error.stack);
+            let service: RoutingService<any, any>;
             // if (!online) {
-            // return confirm({
-            //     message: $t('try_online'),
-            //     okButtonText: $t('ok'),
-            //     cancelButtonText: $t('cancel')
-            // }).then(result => {
-            // if (result) {
-            // showRoute(true);
-            //     } else {
-            //         cancel();
-            //     }
-            // });
-            // } else {
-            loading = false;
+            service = packageService.offlineRoutingSearchService();
+            // }
+            if (!service) {
+                service = packageService.onlineRoutingSearchService();
+            }
+            (service as any).profile = profile;
+            const result = await service.calculateRoute<LatLonKeys>({
+                projection: mapContext.getProjection(),
+                points,
+                customOptions: {
+                    directions_options: { language: Device.language },
+                    costing_options
+                }
+            });
+            // console.log('got  route', result.getTotalDistance(), result.getTotalTime(), Date.now() - startTime, 'ms');
+
+            route = routingResultToJSON(result, costing_options);
+            positions = result.getPoints();
+        }
+
+        if (route && positions) {
+            const geometry = new LineGeometry<LatLonKeys>({
+                poses: positions
+            });
+            if (!writer) {
+                writer = new GeoJSONGeometryWriter<LatLonKeys>({
+                    sourceProjection: mapContext.getProjection()
+                });
+            }
+            const id = Date.now() + '';
+            const item: any = {
+                type: 'Feature',
+                // id,
+                properties: {
+                    name: formatter.getItemName(waypoints.getItem(0)) + ' - ' + formatter.getItemName(waypoints.getItem(waypoints.length - 1)),
+                    class: profile,
+                    id,
+                    ...route,
+                    zoomBounds: geometry.getBounds()
+                },
+                _geometry: writer.writeGeometry(geometry),
+                get geometry() {
+                    if (!this._parsedGeometry) {
+                        this._parsedGeometry = JSON.parse(this._geometry);
+                    }
+                    return this._parsedGeometry;
+                },
+                toJSON(key) {
+                    // return `{"id":${this.id}, "properties":${JSON.stringify(this.properties)}, "geometry":${this._geometry}}`;
+                    return { type: this.type, id: this.id, properties: this.properties, geometry: this.geometry };
+                }
+            };
+            features.push(item);
+            return item;
+        }
+    }
+    async function computeRoutes() {
+        try {
+            loading = true;
+            clearCurrentRoutes(false);
+            clearWaypointLines(false);
+            let itemToFocus;
+            if (computeMultiple) {
+                if (profile === 'bicycle') {
+                    const results: { route: Route; instructions: RouteInstruction[] }[] = await Promise.all([
+                        computeAndAddRoute({ shortest: true }),
+                        computeAndAddRoute({ shortest: false, bicycle_type: 'Cross', avoid_bad_surfaces: 1, use_hills: 1, use_roads: 0 }),
+                        computeAndAddRoute({ shortest: false, bicycle_type: 'Moutain', avoid_bad_surfaces: 0, use_hills: 1, use_roads: 0 })
+                    ]);
+                    itemToFocus = results.reduce(function (prev, current) {
+                        return prev?.route?.totalTime > current?.route?.totalTime ? current : prev;
+                    });
+                } else if (profile === 'pedestrian') {
+                    const results: { route: Route; instructions: RouteInstruction[] }[] = await Promise.all([
+                        computeAndAddRoute({ shortest: true }),
+                        computeAndAddRoute({ shortest: false, use_hills: 1, use_roads: 0, step_penalty: 0 }),
+                        computeAndAddRoute({ shortest: false, use_hills: 0, use_roads: 0, step_penalty: 1 })
+                    ]);
+                    itemToFocus = results.reduce(function (prev, current) {
+                        return prev?.route?.totalTime > current?.route?.totalTime ? current : prev;
+                    });
+                } else {
+                    const results = await Promise.all([computeAndAddRoute({ shortest: true }), computeAndAddRoute({ shortest: false })]);
+                    itemToFocus = results[0];
+                }
+            } else {
+                itemToFocus = await computeAndAddRoute();
+            }
+            updateGeoJSONLayer();
+            mapContext.selectItem({
+                item: itemToFocus,
+                isFeatureInteresting: true,
+                showButtons: true
+            });
+        } catch (error) {
             cancel();
             showError(error || 'failed to compute route');
-            // }
+        } finally {
+            loading = false;
         }
     }
     function ensureRouteLayer() {
         return getRouteLayer() !== null;
     }
-    function clearCurrentLine() {
-        if (currentLine) {
-            getRouteDataSource().remove(currentLine);
-            currentLine = null;
+    let firstUpdate = true;
+    function updateGeoJSONLayer() {
+        ensureRouteLayer();
+        if (global.isIOS && firstUpdate) {
+            firstUpdate = false;
+            return setTimeout(updateGeoJSONLayer, 10);
+        }
+        _routeDataSource.setLayerGeoJSONString(
+            1,
+            JSON.stringify({
+                type: 'FeatureCollection',
+                features: features
+            })
+        );
+    }
+    function clearRouteDatasource() {
+        if (_routeDataSource) {
+            features = [];
+            _routeDataSource.deleteLayer(1);
+            _routeDataSource.createLayer('directions');
         }
     }
-    export function onUnselectedItem(item: Item) {
-        if (!!item.route && item.route === currentRoute) {
-            currentRoute = null;
-            clearCurrentLine();
+    function clearCurrentRoutes(shouldUpdateGeoJSONLayer = true) {
+        const lengthBefore = features.length;
+        features = features.filter((f) => !f.properties.route);
+        if (lengthBefore !== features.length) {
+            mapContext.unselectItem();
+            if (shouldUpdateGeoJSONLayer) {
+                updateGeoJSONLayer();
+            }
         }
     }
-    export function onSelectedItem(item: Item, oldItem: Item) {
-        if (!!oldItem && !!oldItem.route && oldItem.route === currentRoute) {
-            currentRoute = null;
-            clearCurrentLine();
-        }
-        if (!!item && !!item.route && item.route !== currentRoute) {
-            currentRoute = null;
-            clearCurrentLine();
+    function clearWaypointLines(shouldUpdateGeoJSONLayer = true) {
+        features = features.filter((f) => f.geometry.type !== 'LineString');
+        if (shouldUpdateGeoJSONLayer) {
+            updateGeoJSONLayer();
         }
     }
+    // export function onUnselectedItem(item: Item) {
+    //     if (!!item.properties?.route && item.properties?.route === currentRoute) {
+    //         clearCurrentRoute();
+    //     }
+    // }
+    // export function onSelectedItem(item: Item, oldItem: Item) {
+    //     if (!!oldItem && !!oldItem.properties?.route && oldItem.properties?.route === currentRoute) {
+    //         clearCurrentRoute();
+    //     }
+    //     if (currentRoute && item?.properties?.route !== currentRoute) {
+    //         clearCurrentRoute();
+    //     }
+    // }
 
     function unfocus(textField: TextField) {
         //@ts-ignore
         textField.clearFocus();
     }
+
+    // let startTF: NativeViewElementNode<TextField>;
+    // let stopTF: NativeViewElementNode<TextField>;
 
     function clearWayPoint(item) {
         try {
@@ -701,47 +733,15 @@
                 return false;
             });
             if (index >= 0) {
-                const toRemove = waypoints.splice(index, 1)[0];
-                getRouteDataSource().remove(toRemove.marker);
-                if (currentRoute) {
-                    mapContext.unselectItem();
+                waypoints.splice(index, 1);
+                const fIndex = features.findIndex((f) => f.properties.id === item.properties.id);
+                console.log('clearWayPoint', item.properties.id, index, fIndex);
+                if (fIndex >= 0) {
+                    features.splice(fIndex, 1);
                 }
-                if (line) {
-                    line.positions = waypoints.map((w) => w.position);
-                }
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
-    function clearStartSearch() {
-        try {
-            if (waypoints.length >= 1 && waypoints.getItem(0).isStart === true) {
-                const toRemove = waypoints.splice(0, 1)[0];
-                getRouteDataSource().remove(toRemove.marker);
-                if (currentRoute) {
-                    mapContext.unselectItem();
-                }
-                if (line) {
-                    line.positions = waypoints.map((w) => w.position);
-                }
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    }
-    function clearStopSearch() {
-        try {
-            if (waypoints.length >= 1 && waypoints[waypoints.length - 1].isStop === true) {
-                const toRemove = waypoints.splice(waypoints.length - 1, 1)[0];
-                getRouteDataSource().remove(toRemove.marker);
-                if (currentRoute) {
-                    mapContext.unselectItem();
-                }
-                if (line) {
-                    line.positions = waypoints.map((w) => w.position);
-                }
+                updateWayPointLines();
+                clearCurrentRoutes(false);
+                updateGeoJSONLayer();
             }
         } catch (error) {
             console.error(error);
@@ -751,38 +751,37 @@
 
 <stacklayout bind:this={topLayout} {...$$restProps} backgroundColor={primaryColor} paddingTop={globalMarginTop} translateY={currentTranslationY}>
     {#if loaded}
-        <gridlayout bind:this={gridLayout} id="directions" on:tap={() => {}} rows="50,100,35" columns="*,30">
+        <gridlayout bind:this={gridLayout} on:tap={() => {}} rows="50,100,auto" columns="*,30">
             <button horizontalAlignment="left" variant="text" class="icon-btn-white" text="mdi-arrow-left" on:tap={() => cancel()} />
             <stacklayout colSpan={2} orientation="horizontal" horizontalAlignment="center">
                 <button variant="text" class="icon-btn-white" text="mdi-car" on:tap={() => setProfile('auto')} color={profileColor(profile, 'auto')} />
                 <button variant="text" class="icon-btn-white" text="mdi-walk" on:tap={() => setProfile('pedestrian')} color={profileColor(profile, 'pedestrian')} />
                 <button variant="text" class="icon-btn-white" text="mdi-bike" on:tap={() => setProfile('bicycle')} color={profileColor(profile, 'bicycle')} />
-                <button variant="text" class="icon-btn-white" text="mdi-bus" on:tap={() => setProfile('bus')} color={profileColor(profile, 'bus')} />
-                <!-- <button variant="text" class="icon-btn-white" text="mdi-auto-fix" on:tap={() => setProfile('auto_shorter')} color={profileColor(profile, 'auto_shorter')} /> -->
+                <!-- <button variant="text" class="icon-btn-white" text="mdi-bus" on:tap={() => setProfile('bus')} color={profileColor(profile, 'bus')} /> -->
             </stacklayout>
             <button
                 colSpan={2}
                 horizontalAlignment="right"
                 class="icon-btn-text"
                 text="mdi-magnify"
-                on:tap={() => showRoute(false)}
+                on:tap={() => computeRoutes()}
                 isEnabled={nbWayPoints > 1}
                 margin="4 10 4 10"
                 visibility={loading ? 'hidden' : 'visible'}
             />
             <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} horizontalAlignment="right" busy={true} width="40" height="40" color="white" />
-            <collectionview row={1} items={waypoints} rowHeight="50" itemIdGenerator={(item, i) => item.id} animateItemUpdate={true}>
+            <collectionview row={1} items={waypoints} rowHeight="50" itemIdGenerator={(item, i) => item.properties.id} animateItemUpdate={true} colSpan={2}>
                 <Template let:item>
                     <gridlayout>
                         <canvaslabel color="white" fontSize="16" paddingLeft="10" fontFamily={mdiFontFamily}>
-                            <cspan text="mdi-dots-vertical" verticalAlignment="top" visibility={item.isStart ? 'hidden' : 'visible'} fontSize="18" paddingTop={-3} />
-                            <cspan text="mdi-dots-vertical" verticalAlignment="bottom" visibility={item.isStop ? 'hidden' : 'visible'} fontSize="18" paddingBottom={-3} />
-                            <cspan text={item.isStop ? 'mdi-map-marker' : 'mdi-checkbox-blank-circle-outline'} verticalAlignment="center" />
+                            <cspan text="mdi-dots-vertical" verticalAlignment="top" visibility={item.properties.isStart ? 'hidden' : 'visible'} fontSize="18" paddingTop={-3} />
+                            <cspan text="mdi-dots-vertical" verticalAlignment="bottom" visibility={item.properties.isStop ? 'hidden' : 'visible'} fontSize="18" paddingBottom={-3} />
+                            <cspan text={item.properties.isStop ? 'mdi-map-marker' : 'mdi-checkbox-blank-circle-outline'} verticalAlignment="center" />
                         </canvaslabel>
                         <gridlayout borderRadius="2" backgroundColor="white" columns=" *,auto,auto" height="40" margin="0 10 0 40">
                             <textfield
                                 marginLeft="15"
-                                hint={item.isStart ? lc('start') : lc('end')}
+                                hint={item.properties.isStart ? lc('start') : lc('end')}
                                 returnKeyType="search"
                                 width="100%"
                                 fontSize={15}
@@ -792,12 +791,12 @@
                                 backgroundColor="transparent"
                                 floating="false"
                                 verticalAlignment="center"
-                                text={item.text}
+                                text={item.properties.name}
                             />
                             <button
                                 variant="text"
                                 class="icon-btn"
-                                visibility={item.text && item.text.length > 0 ? 'visible' : 'collapsed'}
+                                visibility={item.properties.name && item.properties.name.length > 0 ? 'visible' : 'collapsed'}
                                 col={2}
                                 text="mdi-close"
                                 on:tap={() => clearWayPoint(item)}
@@ -808,66 +807,7 @@
                 </Template>
             </collectionview>
             <button row={1} col={1} variant="text" class="icon-btn-white" text="mdi-swap-vertical" on:tap={() => reversePoints()} isEnabled={nbWayPoints > 1} />
-            <!-- <gridlayout row={1} colSpan={3} borderRadius="2" backgroundColor="white" columns=" *,auto,auto" height="40" margin="5 10 5 10">
-                <textfield
-                    bind:this={startTF}
-                    
-                    marginLeft="15"
-                    
-                    hint="start"
-                    returnKeyType="search"
-                    bind:text={currentStartSearchText}
-                    width="100%"
-                    fontSize={15}
-                    editable={false}
-                    color="black"
-                    variant="none"
-                    backgroundColor="transparent"
-                    floating="false"
-                    verticalAlignment="center"
-                />
-                <button
-                    variant="text"
-                    class="icon-btn"
-                    visibility={currentStartSearchText && currentStartSearchText.length > 0 ? 'visible' : 'collapsed'}
-                    
-                    col={2}
-                    text="mdi-close"
-                    on:tap={clearStartSearch}
-                    color="gray"
-                />
-            </gridlayout> -->
-            <!-- <gridlayout row={2} borderRadius="2" backgroundColor="white" columns=" *,auto,auto" height="40" margin="0 10 0 10">
-                <textfield
-                    bind:this={stopTF}
-                    variant="none"
-                    
-                    color="black"
-                    marginLeft="15"
-                    fontSize={15}
-                    
-                    hint="stop"
-                    bind:text={currentStopSearchText}
-                    editable={false}
-                    returnKeyType="search"
-                    width="100%"
-                    backgroundColor="transparent"
-                    floating="false"
-                    verticalAlignment="center"
-                />
-                <mdactivityindicator visibility={false ? 'visible' : 'collapsed'}  col={1} busy={true} width={20} height={20} />
-                <button
-                    variant="text"
-                    class="icon-btn"
-                    visibility={currentStopSearchText && currentStopSearchText.length > 0 ? 'visible' : 'collapsed'}
-                    
-                    col={2}
-                    text="mdi-close"
-                    on:tap={clearStopSearch}
-                    color="gray"
-                />
-            </gridlayout> -->
-            <stacklayout colSpan={2} orientation="horizontal" row={3} visibility={showOptions ? 'visible' : 'hidden'}>
+            <gridlayout colSpan={2} rows="45" columns="auto,auto,auto,auto,auto,auto,auto,*,auto,auto" row={2} visibility={showOptions ? 'visible' : 'collapsed'} >
                 <button
                     variant="text"
                     class="icon-btn-white"
@@ -880,12 +820,14 @@
                     variant="text"
                     class="icon-btn-white"
                     text="mdi-road"
+                    col={1}
                     visibility={profile === 'bicycle' || profile === 'pedestrian' ? 'visible' : 'collapsed'}
                     color={valhallaSettingColor('use_roads', profileCostingOptions)}
                     on:tap={() => switchValhallaSetting('use_roads', profileCostingOptions)}
                 />
                 <button
                     variant="text"
+                    col={2}
                     class="icon-btn-white"
                     text="mdi-chart-areaspline"
                     visibility={profile === 'bicycle' || profile === 'pedestrian' ? 'visible' : 'collapsed'}
@@ -895,6 +837,7 @@
 
                 <button
                     variant="text"
+                    col={3}
                     class="icon-btn-white"
                     text="mdi-weight"
                     visibility={profile === 'bicycle' || profile === 'pedestrian' ? 'visible' : 'collapsed'}
@@ -904,6 +847,7 @@
                 <button
                     variant="text"
                     class="icon-btn-white"
+                    col={4}
                     text="mdi-texture-box"
                     visibility={profile === 'bicycle' ? 'visible' : 'collapsed'}
                     color={valhallaSettingColor('avoid_bad_surfaces', profileCostingOptions)}
@@ -912,6 +856,7 @@
                 <button
                     variant="text"
                     class="icon-btn-white"
+                    col={5}
                     text={bicycleTypeIcon(bicycle_type)}
                     visibility={profile === 'bicycle' ? 'visible' : 'collapsed'}
                     color="white"
@@ -920,21 +865,22 @@
                 <button
                     variant="text"
                     class="icon-btn-white"
+                    col={6}
                     text="mdi-stairs"
                     visibility={profile === 'pedestrian' ? 'visible' : 'collapsed'}
                     color={valhallaSettingColor('step_penalty', profileCostingOptions)}
                     on:tap={() => switchValhallaSetting('step_penalty', profileCostingOptions)}
                 />
-                <checkbox
+                <button
                     variant="text"
-                    onCheckColor="white"
-                    tintColor="white"
-                    color="white"
-                    text={lc('shortest')}
-                    checked={costingOptions.shortest === true}
-                    on:checkedChange={(e) => (costingOptions.shortest = e.value)}
+                    col={8}
+                    class="icon-btn-white"
+                    text="mdi-timer-outline"
+                    color={costingOptions.shortest ? 'white' : '#ffffff55'}
+                    on:tap={() => (costingOptions.shortest = !costingOptions.shortest)}
                 />
-            </stacklayout>
+                <button variant="text" col={9} class="icon-btn-white" text="mdi-arrow-decision" color={computeMultiple ? 'white' : '#ffffff55'} on:tap={() => (computeMultiple = !computeMultiple)} />
+            </gridlayout>
         </gridlayout>
     {/if}
 </stacklayout>

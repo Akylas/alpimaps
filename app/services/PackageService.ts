@@ -1,5 +1,5 @@
 import Observable from '@nativescript-community/observable';
-import { CartoMapStyle, IntVector, MapBounds, MapPos, MapPosVector, fromNativeMapPos, nativeVectorToArray } from '@nativescript-community/ui-carto/core';
+import { CartoMapStyle, GenericMapPos, IntVector, MapBounds, MapPos, MapPosVector, fromNativeMapPos, nativeVectorToArray } from '@nativescript-community/ui-carto/core';
 import { MergedMBVTTileDataSource, OrderedTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
 import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
 import { HTTPTileDataSource } from '@nativescript-community/ui-carto/datasources/http';
@@ -16,7 +16,9 @@ import {
     ReverseGeocodingRequest,
     ReverseGeocodingService
 } from '@nativescript-community/ui-carto/geocoding/service';
-import { Feature, FeatureCollection, VectorTileFeature, VectorTileFeatureCollection } from '@nativescript-community/ui-carto/geometry/feature';
+import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
+import { Feature, VectorTileFeature, VectorTileFeatureCollection } from '@nativescript-community/ui-carto/geometry/feature';
+import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
 import { HillshadeRasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
 import { CartoOnlineVectorTileLayer, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { CartoPackageManager, CartoPackageManagerListener, PackageErrorType, PackageManagerTileDataSource, PackageStatus } from '@nativescript-community/ui-carto/packagemanager';
@@ -25,22 +27,13 @@ import { SearchRequest, VectorTileSearchService } from '@nativescript-community/
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import * as appSettings from '@nativescript/core/application-settings';
 import { File, Folder, path } from '@nativescript/core/file-system';
-// import KalmanFilter from 'kalmanjs';
-import { getDistance, getDistanceSimple } from '~/helpers/geolib';
-import { IItem as Item } from '~/models/Item';
-import { RouteProfile } from '~/models/Route';
+import { getMapContext } from '~/mapModules/MapModule';
+import { IItem as Item, RouteProfile } from '~/models/Item';
 import { getDataFolder, getDefaultMBTilesDir } from '~/utils/utils';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
-export interface GeoResult {
-    properties?: { [k: string]: any };
-    address: Address;
-    position?: MapPos<LatLonKeys>;
-    bounds?: MapBounds<LatLonKeys>;
-    provider?: string;
-    rank?: number;
-}
+export interface GeoResult extends Item {}
 
 class MathFilter {
     filter(_newData): any {
@@ -483,18 +476,21 @@ class PackageService extends Observable {
         const features = result.getFeatureCollection();
         if (features.getFeatureCount() > 0) {
             feature = features.getFeature(0);
+            const position = fromNativeMapPos<LatLonKeys>(feature.geometry.getCenterPos());
             const r = {
                 rank,
-                properties: feature.properties,
-                address: result.getAddress(),
-                position: fromNativeMapPos(feature.geometry.getCenterPos())
+                properties: { ...feature.properties, address: result.getAddress() },
+                geometry: {
+                    type: 'Point',
+                    coordinates: [position.lon, position.lat]
+                }
             } as GeoResult;
             if ('getPos' in feature.geometry === false) {
-                r.bounds = features.getBounds();
+                r.properties.zoomBounds = features.getBounds();
             }
             if (full) {
                 this.prepareGeoCodingResult(r);
-                if (!r.properties.name && !r.address['street'] && !r.address['city']) {
+                if (!r.properties.name && !r.properties.address['street'] && !r.properties.address['city']) {
                     return;
                 }
             }
@@ -616,9 +612,9 @@ class PackageService extends Observable {
             ['houseNumber', 'getHouseNumber'],
             ['county', 'getCounty']
         ].forEach((d) => {
-            if (!address[d[0]] && d[1] in geoRes.address) {
+            if (!address[d[0]] && d[1] in geoRes.properties.address) {
                 try {
-                    const value = geoRes.address[d[1]]();
+                    const value = geoRes.properties.address[d[1]]();
                     if (value.length > 0) {
                         address[d[0]] = value;
                     }
@@ -627,20 +623,20 @@ class PackageService extends Observable {
                 }
             }
         });
-        if ('getCategories' in geoRes.address) {
-            const cat = geoRes.address.getCategories();
+        if ('getCategories' in geoRes.properties.address) {
+            const cat = geoRes.properties.address['getCategories']();
             if (cat && cat.size() > 0) {
-                geoRes['categories'] = nativeVectorToArray<string>(cat)
-                    .map((s) => s.split(':'))
+                geoRes.properties.categories = nativeVectorToArray<string>(cat)
+                    .map((s) => s.split(':').reverse())
                     .flat();
             }
         }
 
         const res = geoRes as Item;
-        res.provider = 'carto';
-        res.address = address;
+        res.properties.provider = 'carto';
+        res.properties.address = address;
         if (!onlyAddress) {
-            const name = (geoRes.properties.name = geoRes.properties.name || res.address.name);
+            const name = (geoRes.properties.name = geoRes.properties.name || res.properties.address.name);
             if (name && name.length === 0) {
                 delete geoRes.properties.name;
             }
@@ -667,7 +663,7 @@ class PackageService extends Observable {
         }
         return null;
     }
-    async getElevations(pos: MapPosVector<LatLonKeys>): Promise<IntVector> {
+    async getElevations(pos: MapPosVector<LatLonKeys> | GenericMapPos<LatLonKeys>[]): Promise<IntVector> {
         if (this.hillshadeLayer) {
             return new Promise((resolve, reject) => {
                 this.hillshadeLayer.getElevationsAsync(pos, (err, result) => {
@@ -714,14 +710,14 @@ class PackageService extends Observable {
             }
         }
         const dist = Math.max(Math.min(5, grades.length / 50), 50);
-        const lastDist = grades[grades.length - 1].dist;
+        const lastDist = grades.at(-1).dist;
         const g = Math.min(lastDist / 50, 500);
         for (let index = 0; index < grades.length; index++) {
             let d = 0,
                 f = 0;
             let e = 0;
             for (let k = 1; k <= dist && e < g; k++) {
-                e = grades[index + k < grades.length ? index + k : grades.length - 1].dist - grades[0 <= index - k ? index - k : 0].dist;
+                e = grades.at(index + k < grades.length ? index + k : -1).dist - grades[0 <= index - k ? index - k : 0].dist;
                 for (let h = index - k; h < index + k; h++) {
                     if (undefined !== grades[h] && null !== grades[h]) {
                         e = Math.pow(grades[h].dist, 2) / (Math.abs(h - index) + 1);
@@ -841,7 +837,7 @@ class PackageService extends Observable {
                 lastAlt = pt1.a;
             }
         }
-        if (colors[colors.length - 1].lastIndex < result.data.length - 1) {
+        if (colors.at(-1).lastIndex < result.data.length - 1) {
             const avgGrade = gradeSum / gradesCounter;
             colors.push({
                 d: result.data.length - 1,
@@ -854,16 +850,37 @@ class PackageService extends Observable {
         result.colors = colors;
         return result;
     }
+    _reader: GeoJSONGeometryReader;
+    getGeoJSONReader() {
+        if (!this._reader) {
+            this._reader = new GeoJSONGeometryReader({
+                targetProjection: getMapContext().getProjection()
+            });
+        }
+        return this._reader;
+    }
+
+    getRouteItemPoses(item: Item) {
+        let geometry = item._nativeGeometry || (packageService.getGeoJSONReader().readGeometry(item._geometry || JSON.stringify(item.geometry)) as LineGeometry<LatLonKeys>);
+        if (!item._nativeGeometry) {
+            item._nativeGeometry = geometry.getNative();
+        }
+        if (geometry['getGeometryCount']) {
+            geometry = geometry['getGeometry'](0);
+        }
+        return geometry.getPoses() as MapPosVector<LatLonKeys>;
+    }
     async getElevationProfile(item: Item) {
-        if (this.hillshadeLayer && item.route) {
+        if (this.hillshadeLayer && (item.geometry.type === 'LineString' || item.geometry.type === 'MultiLineString')) {
+            // if (DEV_LOG) {
+            //     console.log('getElevationProfile', item.geometry);
+            // }
+            const positions = this.getRouteItemPoses(item);
+            const elevations = await this.getElevations(positions);
             if (DEV_LOG) {
-                console.log('getElevationProfile', item.route);
+                console.log('getElevations done', positions.size(), elevations.size(), elevations.get(0), positions.get(0));
             }
-            const elevations = await this.getElevations(item.route.positions);
-            if (DEV_LOG) {
-                console.log('getElevations done', elevations.size());
-            }
-            return this.computeProfileFromHeights(item.route.positions, elevations);
+            return this.computeProfileFromHeights(positions, elevations);
         }
         return null;
     }

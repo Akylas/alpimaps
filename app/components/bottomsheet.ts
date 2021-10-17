@@ -3,6 +3,7 @@ import { View, ViewBase } from '@nativescript/core';
 import { View as View2 } from '@nativescript/core/ui/core/view';
 import { Frame } from '@nativescript/core/ui/frame';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
+import { DocumentNode } from 'svelte-native/dom/basicdom';
 import { PageSpec } from 'svelte-native/dom/navigation';
 
 export interface ShowBottomSheetOptions extends Omit<BottomSheetOptions, 'view'> {
@@ -18,7 +19,7 @@ interface ComponentInstanceInfo {
 const modalStack: ComponentInstanceInfo[] = [];
 
 export function resolveComponentElement(viewSpec: PageSpec, props?: any): ComponentInstanceInfo {
-    const dummy = createElement('fragment');
+    const dummy = createElement('fragment', window.document as unknown as DocumentNode);
     const viewInstance = new viewSpec({ target: dummy, props });
     const element = dummy.firstElement() as NativeViewElementNode<View>;
     return { element, viewInstance };
@@ -52,7 +53,7 @@ export function showBottomSheet<T>(modalOptions: ShowBottomSheetOptions): Promis
 }
 
 export function closeBottomSheet(result?: any): void {
-    const modalPageInstanceInfo = modalStack[modalStack.length - 1];
+    const modalPageInstanceInfo = modalStack.at(-1);
     if (modalPageInstanceInfo) {
         (modalPageInstanceInfo.element.nativeView as any).closeBottomSheet(result);
     }
