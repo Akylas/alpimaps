@@ -10,7 +10,7 @@ import { MapBoxElevationDataDecoder, TerrariumElevationDataDecoder } from '@nati
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { openFilePicker } from '@nativescript-community/ui-document-picker';
 import * as appSettings from '@nativescript/core/application-settings';
-import { ApplicationSettings, Color } from '@nativescript/core';
+import { ApplicationSettings, Color, profile } from '@nativescript/core';
 import { ChangeType, ChangedData, ObservableArray } from '@nativescript/core/data/observable-array';
 import { File, Folder, path } from '@nativescript/core/file-system';
 import { showBottomSheet } from '~/components/bottomsheet';
@@ -223,13 +223,25 @@ export default class CustomLayersModule extends MapModule {
         // const zoomLevelBias = Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2);
         const layer = new VectorTileLayer({
             dataSource,
-            layerBlendingSpeed: 5,
+            layerBlendingSpeed: 0.3,
             labelRenderOrder: VectorTileRenderOrder.LAST,
             opacity,
             decoder: mapContext.getVectorTileDecoder(),
             // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_NONE,
             visible: opacity !== 0
         });
+        const routeLayer = new VectorTileLayer({
+            dataSource,
+            layerBlendingSpeed: 0,
+            // labelRenderOrder: VectorTileRenderOrder.LAST,
+            decoder: mapContext.innerDecoder
+        });
+        routeLayer.setVectorTileEventListener<LatLonKeys>(
+            {
+                onVectorTileClicked: (e) => mapContext.vectorTileClicked(e)
+            },
+            mapContext.getProjection()
+        );
         layer.setVectorTileEventListener<LatLonKeys>(
             {
                 onVectorTileClicked: (e) => mapContext.vectorTileClicked(e)
@@ -241,6 +253,7 @@ export default class CustomLayersModule extends MapModule {
             opacity,
             legend,
             layer,
+            routeLayer,
             options: {
                 zoomLevelBias: {
                     min: 0,
@@ -571,8 +584,15 @@ export default class CustomLayersModule extends MapModule {
         super.onMapReady(mapView);
         (async () => {
             try {
+                const folderPath = getDefaultMBTilesDir();
+                if (folderPath) {
+                    await this.loadLocalMbtiles(folderPath);
+                }
                 const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
-                // console.log('onMapReady', savedSources, this.customSources);
+
+                if (this.customSources.length === 0 && savedSources.length === 0) {
+                    savedSources.push('openstreetmap');
+                }
                 if (savedSources.length > 0) {
                     await this.getSourcesLibrary();
                     savedSources.forEach((s) => {
@@ -588,17 +608,13 @@ export default class CustomLayersModule extends MapModule {
                         }
                     });
                 }
-                const folderPath = getDefaultMBTilesDir();
-                if (folderPath) {
-                    await this.loadLocalMbtiles(folderPath);
-                }
                 this.listenForSourceChanges = true;
             } catch (err) {
                 console.error(TAG, 'onMapReady', err);
             }
         })();
     }
-
+    @profile
     vectorTileDecoderChanged(oldVectorTileDecoder, newVectorTileDecoder) {
         this.customSources.forEach((s, i) => {
             if (s.layer instanceof VectorTileLayer && s.layer.getTileDecoder() === oldVectorTileDecoder) {
@@ -688,6 +704,9 @@ export default class CustomLayersModule extends MapModule {
                 }
                 this.customSources.push(data);
                 mapContext.addLayer(data.layer, 'map');
+                if (data.routeLayer) {
+                    mapContext.addLayer(data.routeLayer, 'map');
+                }
                 // this.addDataSource(data);
             }
             // console.log('loading etiles', e.name);
