@@ -29,7 +29,7 @@ export default class ItemFormatter {
             }
         }
         if (properties.categories) {
-            result.push(...properties.categories.reverse());
+            result.push(...properties.categories);
         }
         if (result.length === 0 && properties.address && properties.address.houseNumber) {
             result.push(properties.address.houseNumber);
