@@ -68,10 +68,10 @@
 
     mapContext.onMapReady((mapView: CartoMap<LatLonKeys>) => {
         // updateSteps();
-        mapContext.mapModule('userLocation').on('location', onNewLocation, this);
+        mapContext.mapModule('userLocation').on('location', onNewLocation);
     });
     onDestroy(() => {
-        mapContext.mapModule('userLocation').on('location', onNewLocation, this);
+        mapContext.mapModule('userLocation').on('location', onNewLocation);
     });
 
     mapContext.onVectorTileElementClicked((data: VectorTileEventData<LatLonKeys>) => {
@@ -473,7 +473,8 @@
             if (!rasterDataSource) {
                 rasterDataSource = await mapContext.mapModules.customLayers.getDataSource('openstreetmap');
             }
-            const component = (await import('~/components/PeakFinder.svelte')).default;
+            const { default: component } = await import("~/components/PeakFinder.svelte");
+            // const component = (await import('~/components/PeakFinder.svelte')).default;
             navigate({
                 page: component,
                 props: {
