@@ -6,12 +6,13 @@
     import type { SearchRequest } from '@nativescript-community/ui-carto/search';
     import { VectorElementVector } from '@nativescript-community/ui-carto/vectorelements';
     import { Marker } from '@nativescript-community/ui-carto/vectorelements/marker';
-    import { Point, PointStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/point';
+    import { PointStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/point';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import type { Side } from '@nativescript-community/ui-drawer';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { GridLayout, Screen, TextField } from '@nativescript/core';
     import { getJSON } from '@nativescript/core/http';
+    import { Point } from 'geojson';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -26,15 +27,14 @@
     import { showError } from '~/utils/error';
     import { computeDistanceBetween } from '~/utils/geo';
     import { arraySortOn } from '~/utils/utils';
-    import { globalMarginTop, primaryColor, subtitleColor, widgetBackgroundColor } from '~/variables';
+    import { globalMarginTop, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import { queryString } from '../utils/http';
-
+    import deburr from 'deburr';
     const providerColors = {
         here: 'blue',
         carto: 'orange',
         photon: 'red'
     };
-    const deburr = require('deburr');
     function cleanUpString(s) {
         return new deburr.Deburr(s)
             .toString()
@@ -84,15 +84,14 @@
     // }
     class PhotonFeature {
         properties: { [k: string]: any };
-        position: MapPos<LatLonKeys>;
-        address: Address;
-        provider = 'photon';
+        public geometry!: Point;
         constructor(data) {
             const properties = data.properties || {};
             const actualName = properties.name === properties.city ? undefined : properties.name;
             const { region, name, state, street, housenumber, postcode, city, country, neighbourhood, ...actualProperties } = properties;
-            this.address = {
+            actualProperties.address = {
                 state,
+                provider: 'photon',
                 county: region,
                 houseNumber: housenumber,
                 postcode,
@@ -101,34 +100,34 @@
                 street: properties['osm_key'] === 'highway' ? name : street,
                 neighbourhood
             };
+            actualProperties.name = actualName;
             this.properties = actualProperties;
-            this.properties.name = actualName;
-            this.position = { lat: data.geometry.coordinates[1], lon: data.geometry.coordinates[0] };
+            this.geometry = data.geometry;
         }
     }
     class HereFeature {
-        showOnMap = true;
         properties: { [k: string]: any };
-        position: MapPos<LatLonKeys>;
-        address: Address;
-        categories?: string[];
-        provider = 'here';
+        public geometry!: Point;
         constructor(data) {
             this.properties = {
+                provider: 'here',
                 id: data.id,
                 name: data.title,
                 osm_key: data.category.id ? data.category.id.split('-')[0] : undefined,
-                vicinity: data.vicinity,
-                averageRating: data.averageRating
+                // vicinity: data.vicinity,
+                // averageRating: data.averageRating,
+                categories: data.category.id.split('-'),
+                address: { name: data.vicinity }
             };
-            this.categories = [data.category.id];
-            this.position = { lat: data.position[0], lon: data.position[1] };
-            this.address = { name: data.vicinity };
+            this.geometry = {
+                type: 'Point',
+                coordinates: data.position.reverse()
+            };
         }
     }
 
     interface SearchItem extends Item {
-        showOnMap?: boolean;
+        geometry: Point;
     }
 
     let gridLayout: NativeViewElementNode<GridLayout>;
@@ -157,20 +156,20 @@
         }
         return _searchDataSource;
     }
-    function buildClusterElement(position: MapPos, elements: VectorElementVector) {
-        if (!searchClusterStyle) {
-            searchClusterStyle = new PointStyleBuilder({
-                // hideIfOverlapped: false,
-                size: 12,
-                color: 'red'
-            }).buildStyle();
-        }
+    // function buildClusterElement(position: MapPos, elements: VectorElementVector) {
+    //     if (!searchClusterStyle) {
+    //         searchClusterStyle = new PointStyleBuilder({
+    //             // hideIfOverlapped: false,
+    //             size: 12,
+    //             color: 'red'
+    //         }).buildStyle();
+    //     }
 
-        return new Point({
-            position,
-            styleBuilder: searchClusterStyle
-        });
-    }
+    //     return new Point({
+    //         position,
+    //         styleBuilder: searchClusterStyle
+    //     });
+    // }
     function itemToMetaData(item: Item) {
         const result = {};
         Object.keys(item).forEach((k) => {
@@ -180,32 +179,34 @@
         });
         return result;
     }
-    function createSearchMarker(item: SearchItem) {
-        const metaData = itemToMetaData(item);
-        return new Marker({
-            position: item.position,
-            styleBuilder: {
-                hideIfOverlapped: false,
-                clickSize: 20,
-                size: 20,
-                scaleWithDPI: true,
-                color: providerColors[item.provider]
-            },
-            metaData
-        });
-    }
+    // function createSearchMarker(item: SearchItem) {
+    //     const metaData = itemToMetaData(item);
+    //     return new Marker({
+    //         position: { lat: item.geometry.coordinates[1], lon: item.geometry.coordinates[0] },
+    //         styleBuilder: {
+    //             hideIfOverlapped: false,
+    //             clickSize: 20,
+    //             size: 20,
+    //             scaleWithDPI: true,
+    //             color: providerColors[item.properties.provider]
+    //         },
+    //         metaData
+    //     });
+    // }
     function getSearchLayer() {
         if (!_searchLayer) {
             _searchLayer = new ClusteredVectorLayer({
                 visibleZoomRange: [0, 24],
                 dataSource: getSearchDataSource(),
-                minimumClusterDistance: 20,
+                minimumClusterDistance: 30,
                 builder: new ClusterElementBuilder({
                     color: 'red',
-                    size: 15,
+                    // textColor: 'white',
+                    textSize: 15,
+                    size: 20,
+                    bbox: true,
                     shape: 'point'
-                }),
-                animatedClusters: true
+                })
             });
             _searchLayer.setVectorElementEventListener<LatLonKeys>({
                 onVectorElementClicked: (data) => mapContext.vectorElementClicked(data)
@@ -223,10 +224,11 @@
     }
 
     function getItemIcon(item: SearchItem) {
-        return osmicon(formatter.geItemIcon(item));
+        const icons = formatter.geItemIcon(item);
+        return osmicon(icons);
     }
     function getItemIconColor(item: SearchItem) {
-        return providerColors[item.provider] || 'white';
+        return providerColors[item.properties.provider] || $textColor;
     }
     function getItemTitle(item: SearchItem) {
         return formatter.getItemTitle(item);
@@ -281,7 +283,6 @@
     $: {
         const query = text;
         if (query !== currentSearchText) {
-            // console.log('text changed', query);
             if (query) {
                 if (searchAsTypeTimer) {
                     clearTimeout(searchAsTypeTimer);
@@ -292,8 +293,15 @@
                         searchAsTypeTimer = null;
                         instantSearch(query);
                     }, 1000);
-                } else if (query.length === 0 && currentSearchText && currentSearchText.length > 2) {
-                    unfocus();
+                } else {
+                    if (searchAsTypeTimer) {
+                        clearTimeout(searchAsTypeTimer);
+                        searchAsTypeTimer = null;
+                    }
+                    dataItems = [] as any;
+                    if (query.length === 0 && currentSearchText && currentSearchText.length > 0) {
+                        unfocus();
+                    }
                 }
             }
             currentSearchText = query;
@@ -384,7 +392,7 @@
             searchRadius: Math.min(Math.max(mpp * Screen.mainScreen.widthPixels, mpp * Screen.mainScreen.heightPixels)) //meters
             // locationRadius: 1000,
         };
-        console.log('instantSearch', position, mapContext.getMap().getZoom(), mpp, options);
+        // console.log('instantSearch', position, mapContext.getMap().getZoom(), mpp, options);
 
         // TODO: dont fail when offline!!!
 
@@ -406,24 +414,20 @@
                     .then((r) => loading && r && result.push(...r))
                     .catch((err) => {
                         console.error('searchInGeocodingService', err);
+                    }),
+                herePlaceSearch(options)
+                    .then((r) => loading && r && result.push(...r))
+                    .catch((err) => {
+                        console.error('herePlaceSearch', err, err.stack);
+                    }),
+                photonSearch(options)
+                    .then((r) => loading && r && result.push(...r))
+                    .catch((err) => {
+                        console.error('photonSearch', err, err.stack);
                     })
-                // herePlaceSearch(options)
-                //     .then((r) => loading && r && result.push(...r))
-                //     .catch((err) => {
-                //         console.error('herePlaceSearch', err);
-                //     }),
-                // photonSearch(options)
-                //     .then((r) => loading && r && result.push(...r))
-                //     .catch((err) => {
-                //         console.error('photonSearch', err);
-                //     })
             ]);
 
-            // console.log(
-            //     'search done',
-            //     result.length,
-            //     result.map((s) => s.properties.name)
-            // );
+            // console.log('search done', result.length, JSON.stringify(result));
             if (!loading) {
                 // was cancelled
                 return;
@@ -488,7 +492,7 @@
         if (!item) {
             return;
         }
-        mapContext.selectItem({ item, isFeatureInteresting: true, minZoom: 14 });
+        mapContext.selectItem({ item, isFeatureInteresting: true, minZoom: 14, preventZoom: false });
         unfocus();
     }
     function updateFilteredDataItems() {
@@ -506,23 +510,33 @@
         }
     }
     let showingOnMap = false;
+    let searchStyle: PointStyleBuilder;
     function showResultsOnMap() {
         const dataSource = getSearchDataSource();
-        dataSource.clear();
         showingOnMap = true;
-        const items = filteredDataItems.filter(
-            // (d) => !!d && (d.provider === 'here' || (d.provider === 'carto' && d.properties.layer === 'poi'))
-            (d) => !!d && (d.provider === 'here' || d.provider === 'carto')
-        );
-        if (items.length === 0) {
-            return;
+        // const items = filteredDataItems.filter(
+        //     // (d) => !!d && (d.provider === 'here' || (d.provider === 'carto' && d.properties.layer === 'poi'))
+        //     (d) => !!d && (d.properties.provider === 'here' || d.properties.provider === 'carto')
+        // );
+        // if (items.length === 0) {
+        //     return;
+        // }
+        const geojson = {
+            type: 'FeatureCollection',
+            features: filteredDataItems.map((s) => ({ type: 'Feature', ...s }))
+        };
+        if (!searchStyle) {
+            searchStyle = new PointStyleBuilder({ color: 'red', size: 10 });
         }
-        items.forEach((d) => {
-            dataSource.add(createSearchMarker(d));
-        });
+        const featureCollection = packageService.getGeoJSONReader().readFeatureCollection(JSON.stringify(geojson));
+        dataSource.clear();
+        dataSource.addFeatureCollection(featureCollection, searchStyle);
+        // items.forEach((d) => {
+        //     dataSource.add(createSearchMarker(d));
+        // });
         ensureSearchLayer();
         unfocus();
-        const mapBounds = dataSource.getDataExtent();
+        const mapBounds = featureCollection.getBounds();
         mapContext.getMap().moveToFitBounds(mapBounds, undefined, false, false, false, 100);
     }
 
@@ -565,7 +579,7 @@
         on:focus={onFocus}
         on:blur={onBlur}
         on:return={onReturnKey}
-        bind:text
+        text={text} on:textChange={e => text = e['value']}
         width="100%"
         backgroundColor="transparent"
         autocapitalizationType="none"
