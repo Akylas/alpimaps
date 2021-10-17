@@ -1,4 +1,3 @@
-
 module.exports = {
     id: 'akylas.alpi.maps',
     ignoredNativeDependencies: ['@nativescript-community/sentry'],
