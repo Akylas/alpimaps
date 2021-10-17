@@ -458,23 +458,19 @@
 }
 
 
-#poi, #park['mapnik::geometry_type'=1][class=national_park][zoom >=6][zoom < 12] {
-	[subclass=alpine_hut],
-	#park,
-	[subclass=wilderness_hut],
+#poi {
+	[class=lodging][subclass=alpine_hut],
+	[class=lodging][subclass=wilderness_hut],
 	[class=spring],
 	[class=campsite][rank<=15],
-	[zoom>=15][rank<=15][subclass!=hotel][subclass!=dormitory][class!='restaurant'][class!='bar'][class!='parking'][class!='school'][class!='college'][subclass!='community_centre'][subclass!='station'],
-	[zoom>=16][rank<=60][subclass!='hotel'],
-	[zoom>=17][rank<=100],
+	[zoom=15][rank<=15][subclass!=hotel][subclass!=dormitory][class!='restaurant'][class!='bar'][class!='parking'][class!='school'][class!='college'][subclass!='community_centre'][subclass!='station'],
+	[zoom=16][rank<=60][subclass!='hotel'],
+	[zoom=17][rank<=100],
 	[zoom>=18] {
 		
 		::icon {
 			text-placement: [nuti::markers3d];
 			text-name: @osm_icon;
-			#park{
-				text-name: [nuti::osm-park];
-			}
 			text-size: @poi_icon_width;
 			text-face-name: @osm;
 			text-feature-id: @featureId;
@@ -483,7 +479,7 @@
 			text-halo-radius: @poi_halo_radius;
 			text-min-distance:0;
 			text-fill: @poi-fill;
-			#park, [class=park] {
+			[class=park] {
 				text-fill: @poi-park-fill;
 			}
 			[class=national_park],[class=protected_area] {
@@ -502,7 +498,7 @@
 			[class=hospital] {
 				text-fill: @poi-hospital-fill;
 			}
-			[subclass=tram_stop], [subclass=bus_stop] {
+			[class=railway][subclass=tram_stop], [class=bus][subclass=bus_stop] {
 				text-fill: @poi-bus-fill;
 			}
 			[class=pharmacy] {
@@ -525,12 +521,10 @@
 				text-fill: @poi-shop-fill; 
 			}
 		}
-		#park[zoom>=8],
-		#poi[class!='spring'][class!=bus][class!=railway][class!=campsite],
-		[class=bus][zoom>=17],
-		[class=campsite][zoom>=14],
-		[class=railway][zoom>=17],
-		[class=spring][zoom>=17] {
+
+		[class!='spring'][class!=bus][class!=railway][class!=campsite],
+		[zoom>=14][class=campsite],
+		[zoom>=17] {
 			::text {
 				text-name: @name;
 				text-face-name: @mont_md;
@@ -546,11 +540,6 @@
 				text-feature-id: @featureId;
 				text-dy: @poi_label_dy;
 				text-fill: @poi-fill;
-				#park {
-					text-size:@poi_national_park_label_width;
-					text-wrap-width: @poi_national_park_wrap_width;
-					text-fill: darken(@poi-park-fill, 30%);
-				}
 				[class=park] {
 					text-fill: darken(@poi-park-fill, 30%);
 				}
@@ -569,7 +558,7 @@
 				[class=hospital] {
 					text-fill: darken(@poi-hospital-fill, 30%);
 				}
-				[subclass=tram_stop], [subclass=bus_stop] {
+				[class=railway][subclass=tram_stop], [class=bus][subclass=bus_stop] {
 					text-fill: darken(@poi-bus-fill, 30%);
 				}
 				[class=pharmacy] {
@@ -591,10 +580,42 @@
 					text-fill: darken(@poi-shop-fill, 30%); 
 				}
 			}
+
 		}
 		
 	}
-		
+}
+
+#park['mapnik::geometry_type'=1][class=national_park][zoom >=6][zoom < 12] {
+	::icon {
+		text-placement: [nuti::markers3d];
+		text-name: [nuti::osm-park];
+		text-size: @poi_icon_width;
+		text-face-name: @osm;
+		text-feature-id: @featureId;
+		text-halo-fill: @poi_halo;
+		text-halo-rasterizer: fast;
+		text-halo-radius: @poi_halo_radius;
+		text-min-distance:0;
+		text-fill: @poi-park-fill;
+	}
+	[zoom>=8] {
+		::text {
+			text-name: @name;
+			text-face-name: @mont_md;
+			text-placement: [nuti::texts3d];
+			text-fill: darken(@poi-park-fill, 30%);
+			text-halo-fill: @poi_halo;
+			text-halo-rasterizer: fast;
+			text-halo-radius: @poi_halo_radius;
+			text-wrap-before:true;
+			text-min-distance:0;
+			text-feature-id: @featureId;
+			text-dy: @poi_label_dy;
+			text-size:@poi_national_park_label_width;
+			text-wrap-width: @poi_national_park_wrap_width;
+		}
+	}
 }
 
 #building['nuti::buildings'>0][name!=null][zoom>=17]{
