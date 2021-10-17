@@ -15,7 +15,7 @@
     import { onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
-import { packageService } from '~/services/PackageService';
+    import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
     import { showError } from '~/utils/error';
     import { mdiFontFamily, widgetBackgroundColor } from '~/variables';
@@ -55,7 +55,7 @@ import { packageService } from '~/services/PackageService';
                 decoder: new MBVectorTileDecoder({
                     style: 'voyager',
                     liveReload: TNS_ENV !== 'production',
-                    dirPath: '~/assets/internal_styles/inner'
+                    [PRODUCTION ? 'zipPath' : 'dirPath']: `~/assets/internal_styles/inner${PRODUCTION ? '.zip' : ''}`
                 })
             });
 

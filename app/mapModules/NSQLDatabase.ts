@@ -1,7 +1,7 @@
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import DatabaseInterface from 'kiss-orm/dist/Databases/DatabaseInterface';
 import migrate from 'kiss-orm/dist/Databases/Common/migrate';
-import { SQLiteDatabase, openOrCreate } from '@akylas/nativescript-sqlite';
+import { SQLiteDatabase, openOrCreate } from '@nativescript-community/sqlite';
 
 function formatIdentifier(i: string): string {
     return i;

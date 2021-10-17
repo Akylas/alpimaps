@@ -270,12 +270,12 @@
         // this.dataItems = new ObservableArray([] as any);
         // console.log('package view mounted');
         const packageService = this.$packageService;
-        packageService.on('onPackageListUpdated', this.onPackageListUpdated, this);
-        packageService.on('onPackageListFailed', this.onPackageListFailed, this);
-        packageService.on('onPackageStatusChanged', this.onPackageStatusChanged, this);
-        packageService.on('onPackageUpdated', this.onPackageUpdated, this);
-        packageService.on('onPackageCancelled', this.onPackageCancelled, this);
-        packageService.on('onPackageFailed', this.onPackageFailed, this);
+        packageService.on('onPackageListUpdated', onPackageListUpdated);
+        packageService.on('onPackageListFailed', onPackageListFailed);
+        packageService.on('onPackageStatusChanged', onPackageStatusChanged);
+        packageService.on('onPackageUpdated', onPackageUpdated);
+        packageService.on('onPackageCancelled', onPackageCancelled);
+        packageService.on('onPackageFailed', onPackageFailed);
         setTimeout(() => {
             if (!packageService.updatePackagesLists()) {
                 this.updateDataItems();
@@ -286,12 +286,12 @@
     onDestroy(() => {
         const packageService = this.$packageService;
         if (packageService) {
-            packageService.off('onPackageListUpdated', this.onPackageListUpdated, this);
-            packageService.off('onPackageListFailed', this.onPackageListFailed, this);
-            packageService.off('onPackageStatusChanged', this.onPackageStatusChanged, this);
-            packageService.off('onPackageUpdated', this.onPackageUpdated, this);
-            packageService.off('onPackageCancelled', this.onPackageCancelled, this);
-            packageService.off('onPackageFailed', this.onPackageFailed, this);
+            packageService.off('onPackageListUpdated', onPackageListUpdated);
+            packageService.off('onPackageListFailed', onPackageListFailed);
+            packageService.off('onPackageStatusChanged', onPackageStatusChanged);
+            packageService.off('onPackageUpdated', onPackageUpdated);
+            packageService.off('onPackageCancelled', onPackageCancelled);
+            packageService.off('onPackageFailed', onPackageFailed);
         }
     });
 
