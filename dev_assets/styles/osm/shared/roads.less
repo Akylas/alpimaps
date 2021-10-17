@@ -1,0 +1,512 @@
+/* For the main linear features, such as roads and railways. */
+@name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
+// @selected_route_line_width: ([osmid] = [nuti::selected_id]) 4 ? 2;
+@selected_item_id: ([osmid] ? [osmid] : [ref] ? [ref] : [name]) + '';
+
+
+
+#transportation['mapnik::geometry_type'=3] {
+	[zoom>=13]::casing {
+		[class=minor],
+		[class=service] {
+			[zoom>=14] {
+				polygon-fill: @service-fill
+				line-color: darken(@service-fill, 10%);
+				line-width: 0.5;
+			}
+		}
+		
+		[class=path],[class=transit],[class=rail]{
+			[subclass=platform][zoom>=17]  {
+				polygon-fill: @railway;
+				line-color: darken(@railway, 10%);
+				line-width: linear([view::zoom], (17, 0), (21, 1));
+			}
+		}
+		[class=path]{
+			[subclass=pedestrian],
+			[subclass=footway][zoom>=15],
+			[subclass=cycleway][zoom>=15] {
+				polygon-fill: @pedestrian-polygon-fill;
+				line-color: darken(@pedestrian-polygon-fill, 10%);
+				line-width: 0.5;
+			}
+		}
+		[class=track][zoom>=15] {
+			polygon-fill: @track-fill;
+			polygon-opacity: 0.7;
+			// line-color: @track-casing;
+			// line-width: 1;
+			// line-dasharray: 5,4,2,4;
+			// line-cap: round;
+			// line-join: round;
+		}
+	
+		[class=bridge] {
+			polygon-fill: @bridge_fill ;
+			line-color: lighten(@bridge-casing, 40%);
+			line-width:0.5;
+		}
+	}
+}
+
+
+#transportation['mapnik::geometry_type'=2] {
+	[class=service][zoom>=15]::casing, 
+	[class=service][brunnel=bridge][zoom>=15]::bridge {
+		line-width: @service-width + @service-casing-width;
+		line-color: @service-casing;
+		// [ramp=1] {
+		// 	line-width: @service-link-width + @service-casing-width;
+		// }
+		// [brunnel=tunnel] {
+		// 	// line-opacity:@tunnel-opacity
+		// 	line-color: @service-tunnel-fill;
+		// 	line-dasharray: @tunnel-dasharray;
+		// }
+		line-join: round;
+		line-cap: round;
+		[brunnel=tunnel][zoom>=13]{
+			line-cap: butt;
+			line-join: miter;
+			line-dasharray: @tunnel-dasharray;
+		}
+		[brunnel=bridge][zoom>=15]{
+			line-cap: butt;
+			line-join: miter;
+			line-color: @bridge-casing;
+		}
+		::inner {
+			line-join: round;
+			line-cap: round;
+			line-color: @service-fill;
+			line-width: @service-width;
+		}
+	}
+	[class=minor][zoom>=12]::casing, 
+	[class=minor][brunnel=bridge][zoom>=15]::bridge {
+		[zoom>=14] {
+			line-width: @residential-width + @residential-casing-width;
+			line-color: @residential-casing;
+	
+			line-join: round;
+			line-cap: round;
+			[brunnel=tunnel][zoom>=13]{
+				line-cap: butt;
+				line-join: miter;
+				line-dasharray: @tunnel-dasharray;
+			}
+			[brunnel=bridge][zoom>=15]{
+				line-cap: butt;
+				line-join: miter;
+				line-color: @bridge-casing;
+			}
+		}
+		
+		::inner {
+			line-join: round;
+			line-cap: round;
+			line-color: @residential-fill;
+			[access=no] {
+				line-opacity: @noaccess-opacity;
+			}
+			line-width: @residential-width;
+			// [ramp=1] {
+			// 	line-width: @residential-link-width;
+			// }
+			// [brunnel=tunnel] {
+			// 	line-join: miter;
+			// 	line-cap: butt;
+			// 	line-dasharray: @tunnel-dasharray;
+			// 	line-color: @residential-tunnel-fill;
+			// }
+		}
+	}
+	[class=tertiary][zoom>=11]::casing, 
+	[class=tertiary][brunnel=bridge][zoom>=15]::bridge1 {
+		line-width: @tertiary-width + @tertiary-casing-width;
+		// [ramp=1] {
+		// 	line-width: @tertiary-link-width + @tertiary-casing-width;
+		// }
+		line-color: @tertiary-casing;
+		line-join: round;
+		line-cap: round;
+		[brunnel=tunnel][zoom>=13]{
+			line-cap: butt;
+			line-join: miter;
+			line-dasharray: @tunnel-dasharray;
+		}
+		[brunnel=bridge][zoom>=15]{
+			line-cap: butt;
+			line-join: miter;
+			line-color: @bridge-casing;
+		}
+		::inner {
+			line-join: round;
+			line-cap: round;
+			line-color: @tertiary-fill;
+			line-width: @tertiary-width;
+			// [ramp=1] {
+			// 	line-width: @tertiary-link-width;
+			// }
+			// [brunnel=tunnel] {
+			// 	line-dasharray: @tunnel-dasharray;
+			// 	line-color: @tertiary-tunnel-fill;
+			// }
+		}
+	}
+	[class=secondary][zoom>=9]::casing, 
+	[class=secondary][zoom>=9][zoom<15]::casingLowZoom,
+	[class=secondary][brunnel=bridge][zoom>=15]::bridge1{
+		line-width: @secondary-width + @secondary-casing-width;
+		// [ramp=1] {
+		// 	line-width: @secondary-link-width + @secondary-casing-width;
+		// }
+		line-color: @secondary-casing;
+		line-join: round;
+		line-cap: round;
+		[brunnel=tunnel][zoom>=13]{
+			line-cap: butt;
+			line-join: miter;
+			line-dasharray: @tunnel-dasharray;
+		}
+		[brunnel=bridge][zoom>=15]{
+			line-cap: butt;
+			line-join: miter;
+			line-color: @bridge-casing;
+		}
+		::inner {
+			line-join: round;
+			line-cap: round;
+			line-color: @secondary-fill;
+			line-width: @secondary-width;
+			// [ramp=1] {
+			// 	line-width: @secondary-link-width;
+			// }
+			// [brunnel=tunnel] {
+			// 	line-opacity:@tunnel-opacity
+			// 	line-color: @secondary-tunnel-fill;
+			// }
+		}
+	}
+	[class=primary][zoom>=15]::casing, 
+	[class=primary][zoom>=7][zoom<15]::casingLowZoom,
+	[class=primary][brunnel=bridge][zoom>=15]::bridge {
+		line-width: @primary-width + @primary-casing-width;
+		line-color: @primary-casing;
+
+		[ramp=1] {
+			line-width: @primary-link-width + @primary-casing-width;
+		}
+		line-join: round;
+		line-cap: round;
+		[brunnel=tunnel][zoom>=13]{
+			line-cap: butt;
+			line-join: miter;
+			line-dasharray: @tunnel-dasharray;
+		}
+		[brunnel=bridge][zoom>=15]{
+			line-cap: butt;
+			line-join: miter;
+			line-color: @bridge-casing;
+		}
+		::inner {
+			line-join: round;
+			line-cap: round;
+			line-color: @primary-fill;
+			line-width: @primary-width;
+			[ramp=1] {
+				line-width: @primary-link-width;
+			}
+			// [ramp=1] {
+			// 	line-width: @primary-link-width;
+			// }
+			// [brunnel=tunnel] {
+			// 	line-opacity:@tunnel-opacity
+			// 	line-color: @primary-tunnel-fill;
+			// }
+		}
+	}
+	[class=trunk][zoom>=14]::casing,
+	[class=trunk][zoom>=5][zoom<14]::casingLowZoom2, 
+	[class=trunk][brunnel=bridge][zoom>=15]::bridge
+		{
+		line-width: @trunk-width + @trunk-casing-width;
+		[ramp=1] {
+			line-width: @trunk-link-width + @trunk-casing-width;
+		}
+		line-color: @trunk-casing;
+		line-join: round;
+		line-cap: round;
+		[brunnel=tunnel][zoom>=13]{
+			line-cap: butt;
+			line-join: miter;
+			line-dasharray: @tunnel-dasharray;
+		}
+		[brunnel=bridge][zoom>=15]{
+			line-cap: butt;
+			line-join: miter;
+			line-color: @bridge-casing;
+		}
+		::inner {
+			line-join: round;
+			line-cap: round;
+			line-color: @trunk-fill;
+			line-width: @trunk-width;
+			[ramp=1] {
+				line-width: @trunk-link-width;
+			}
+		}
+	}
+	
+	[class=motorway][zoom>=14]::casing,
+	[class=motorway][zoom>=5][zoom<14]::casingLowZoom2, 
+	[class=motorway][brunnel=bridge][zoom>=15]::bridge{
+		line-width: @motorway-width + @motorway-casing-width;
+		[ramp=1] {
+			line-width: @motorway-link-width + @motorway-casing-width;
+		}
+		line-color: @motorway-casing;
+		line-join: round;
+		line-cap: round;
+		[brunnel=tunnel][zoom>=13]{
+			line-cap: butt;
+			line-join: miter;
+			line-dasharray: @tunnel-dasharray;
+		}
+		[brunnel=bridge][zoom>=15]{
+			line-cap: butt;
+			line-join: miter;
+			line-color: @bridge-casing;
+		}
+		::inner {
+			line-join: round;
+			line-cap: round;
+			line-color: @motorway-fill;
+			line-width: @motorway-width;
+			[ramp=1] {
+				line-width: @motorway-link-width;
+			}
+		}
+	}
+
+	[class=via_ferrata][zoom>=16]::casing {
+		line-color: @via_ferrata;
+		line-dasharray: @via_ferrata-dasharray;
+		line-width: @via_ferrata-line-width
+	}
+	[class=raceway][zoom>=12]::casing {
+		line-color: @raceway-casing;
+		line-join: round;
+		line-cap: round;
+		line-width: @raceway-casing-width + @raceway-width;
+		::inner {
+			line-width: @raceway-width;
+			line-color: @raceway-fill;
+			line-join: round;
+			line-cap: round;
+		}
+	}
+	
+	
+	
+	[class=piste][zoom>=14]::casing{
+		line-color: @piste-casing-fill;
+		line-join: round;
+		line-cap: round;
+		line-width: @piste-width + @piste-casing-width;
+		::inner {
+			line-color: @piste-fill;
+			line-width: @piste-width;
+			line-join: round;
+			line-cap: round;
+		}
+	}
+	[class=path][subclass=path][surface!=paved][zoom>=12]::casing1,
+	[class=path][subclass=pedestrian][zoom>=14]::casing,
+	[class=path][subclass!=path][zoom>=15]::casing,
+	[class=path][subclass=path][surface=paved][zoom>=15]::casing,
+	[class=path][brunnel=bridge][zoom>=16]::bridge1 {
+		[subclass=path][sac_scale!=null],
+		[zoom>=13] {
+			[subclass=cycleway],[bicycle=designated][mtb_type=null][surface!=unpaved] {
+				[zoom >= 14][@cycleway-fill!=0] {
+					cycleway/line-color: @cycleway-fill;
+					cycleway/line-width: @path-width + @path-casing-width+ @cycleway-casing-width;
+				}
+			}
+			line-width: @path-width + @path-casing-width;
+			line-color: @path-casing;
+			[brunnel=tunnel][zoom>=14] {
+				line-cap: butt;
+				line-join: miter;
+				line-dasharray: @tunnel-dasharray;
+			}
+			[brunnel=bridge][zoom>=16]{
+				line-cap: butt;
+				line-join: miter;
+				line-color: @bridge-casing;
+			}
+			[subclass=steps] {
+				line-width: @step-width + @path-casing-width;
+				line-color: @step-casing;
+				[brunnel=tunnel][zoom>=14] {
+					line-color: @steps-tunnel-casing;
+					line-dasharray: @tunnel-dasharray;
+				}
+			}
+			line-join: round;
+			line-cap: round;
+			::inner {
+				line-color: @path-fill;
+				line-width: @path-width;
+				line-dasharray: @path-dasharray;
+				[subclass=cycleway],[bicycle=designated][mtb_type=null][surface!=unpaved] {
+					[zoom >= 14] {
+						line-color: @cycleway-inner-fill;
+						// line-width: @path-width;
+					}
+				}
+				[subclass=steps] {
+					line-join: miter;
+					line-cap: butt;
+					line-color: @step-fill;
+					line-width: @step-width;
+					line-dasharray: @step-dasharray;
+				}
+				[subclass=bridleway] {
+					line-color: @bridleway-fill;
+					line-dasharray: 4,2;
+				}
+			}
+			
+			[subclass!=steps] {
+				[subclass=pedestrian],
+				[surface=paved],
+				[subclass=footway]
+				[sac_scale!=hiking],
+				[subclass=platform],
+				[subclass=corridor] {
+					line-color: @pedestrian-casing;
+					line-width: @pedestrian-width + @pedestrian-casing-width;
+					[subclass=footway],
+					[subclass=platform],
+					[subclass=corridor] {
+						line-width: @footway-width + @footway-casing-width;
+					}
+					
+					::inner {
+						line-dasharray: 0,0;
+						[zoom>=15] {
+							line-dasharray: @pedestrian-dasharray;
+							
+							[brunnel=tunnel] {
+								line-dasharray: @pedestrian-tunnel-dasharray;
+							}
+						}
+						line-color: @pedestrian-fill;
+						[subclass=footway], [subclass=platform], [subclass=corridor] {
+							line-width: @footway-width;
+						}
+						line-width: @pedestrian-width;
+					}
+				}
+			}
+			
+		}
+	}
+	
+	[class=rail][brunnel=null]::transit, 
+	[class=transit][brunnel=null]::transit, 
+	[class=rail][brunnel=bridge]::transit,
+	[class=transit][brunnel=bridge]::transit, 
+	[class=rail][brunnel=tunnel]::casing,
+	[class=transit][brunnel=tunnel]::casing {
+	
+		[brunnel=bridge][zoom>=15] {
+			line-color: @railway-bridge-casing;
+		}
+		line-color: @railway-line;
+		line-width: @railway-line-width;
+		[brunnel=tunnel][zoom>=14] {
+			line-dasharray: 5,3;
+		}
+
+		::inner {
+			line-color: @railway-track-line;
+			line-width: @railway-track-line-width;
+			line-dasharray: @railway-track-line-dasharray;
+		}
+	}
+	[class=track]::casing,
+	[class=track][brunnel=bridge][zoom>=16]::bridge2{
+		line-width: @track-width + @track-casing-width;
+		line-color: @track-casing;
+		[subclass=steps] {
+			line-width: @step-width + @path-casing-width;
+			line-color: @track-casing;
+		}
+		[brunnel=bridge][zoom>=16]{
+			line-cap: butt;
+			line-join: miter;
+			line-color: @bridge-casing;
+		}
+		[brunnel=tunnel][zoom>=14]{
+			line-cap: butt;
+			line-join: miter;
+			line-dasharray: @tunnel-dasharray;
+		}
+		line-join: @track_line_join;
+		line-cap: @track_line_cap;
+		::inner {
+			line-join: @track_line_join;
+			line-cap: @track_line_cap;
+			line-color: @track-fill;
+			line-width: @track-width;
+			line-dasharray: @track-dasharray;
+			[tracktype=grade1] {
+				line-dasharray: @track-grade1-dasharray;
+			}
+			[tracktype=grade2] {
+				line-dasharray: @track-grade2-dasharray;
+			}
+			[tracktype=grade3] {
+				line-dasharray: @track-grade3-dasharray;
+			}
+			[tracktype=grade4] {
+				line-dasharray: @track-grade4-dasharray;
+			}
+			[tracktype=grade5] {
+				line-dasharray: @track-grade5-dasharray;
+			}
+		}
+	}
+
+	[class=aerialway][zoom>=13]::aerial {
+		
+		line-width: @aerial-width + @aerial-casing-width;
+		line-color: @aerial-casing-fill;
+		line/line-width: @aerial-width;
+		line/line-color: @aerial-fill;
+		
+	}
+}
+
+#aeroway {
+	[class=runway] {
+		[brunnel=bridge][zoom>=15] {
+			ccasing/line-width: @secondary-width + @secondary-casing-width;
+			casing/line-color: @bridge-casing;
+		}
+		line-color: @runway-fill;
+		line-width: @runway-width;
+	}
+	[class=taxiway] {
+		[brunnel=bridge][zoom>=15] {
+			casing/line-width: @secondary-width + @secondary-casing-width;
+			casing/line-color: @bridge-casing;
+		}
+		line-color: @taxiway-fill;
+		line-width: @taxiway-width;
+	}
+}

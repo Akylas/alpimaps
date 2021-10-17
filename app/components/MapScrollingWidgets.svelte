@@ -2,22 +2,25 @@
     import { l, lc } from '@nativescript-community/l';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
+    import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
+    import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
     import type { PackageStatus } from '@nativescript-community/ui-carto/packagemanager';
     import { PackageAction } from '@nativescript-community/ui-carto/packagemanager';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { GridLayout, ViewBase } from '@nativescript/core';
     import { AnimationCurve } from '@nativescript/core/ui/enums';
+    import { Point } from 'geojson';
     import { debounce } from 'push-it-to-the-limit/target/es6';
     import { onDestroy, onMount } from 'svelte';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode, navigate } from 'svelte-native/dom';
     import { asSvelteTransition } from 'svelte-native/transitions';
     import { convertDistance } from '~/helpers/formatter';
     import { onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import type { IItem } from '~/models/Item';
-    import { RouteInstruction, RoutingAction } from '~/models/Route';
+    import { RouteInstruction, RoutingAction } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
     import mapStore from '~/stores/mapStore';
     import { showError } from '~/utils/error';
@@ -63,6 +66,7 @@
     export let navigationInstructions: {
         remainingDistance: number;
         remainingTime: number;
+        distanceToNextInstruction: number;
         instruction: RouteInstruction;
     } = undefined;
     $: {
@@ -108,13 +112,13 @@
 
         const customLayers = mapContext.mapModule('customLayers');
         if (customLayers) {
-            customLayers.on('onProgress', onTotalDownloadProgress, this);
+            customLayers.on('onProgress', onTotalDownloadProgress);
         }
-        // userLocationModule.on('location', onNewLocation, this);
+        // userLocationModule.on('location', onNewLocation);
     });
     $: locationButtonClass = !$mapStore.queryingLocation && $mapStore.watchingLocation ? 'buttonthemed' : 'buttontext';
     $: locationButtonLabelClass = $mapStore.queryingLocation ? 'fade-blink' : '';
-    $: selectedItemHasPosition = selectedItem && !selectedItem.route && !!selectedItem.position;
+    $: selectedItemHasPosition = selectedItem && !selectedItem.properties?.route && selectedItem.geometry.type === 'Point';
 
     export function onSelectedItem(item: IItem, oldItem: IItem) {
         selectedItem = item;
@@ -127,8 +131,8 @@
     onMount(() => {
         if (__CARTO_PACKAGESERVICE__) {
             if (packageService) {
-                packageService.on('onProgress', onTotalDownloadProgress, this);
-                packageService.on('onPackageStatusChanged', onPackageStatusChanged, this);
+                packageService.on('onProgress', onTotalDownloadProgress);
+                packageService.on('onPackageStatusChanged', onPackageStatusChanged);
             }
         }
     });
@@ -136,13 +140,13 @@
         userLocationModule = null;
         if (__CARTO_PACKAGESERVICE__) {
             if (packageService) {
-                packageService.off('onProgress', onTotalDownloadProgress, this);
-                packageService.off('onPackageStatusChanged', onPackageStatusChanged, this);
+                packageService.off('onProgress', onTotalDownloadProgress);
+                packageService.off('onPackageStatusChanged', onPackageStatusChanged);
             }
         }
         const customLayers = mapContext.mapModule('customLayers');
         if (customLayers) {
-            customLayers.off('onProgress', onTotalDownloadProgress, this);
+            customLayers.off('onProgress', onTotalDownloadProgress);
         }
     });
     if (__CARTO_PACKAGESERVICE__) {
@@ -302,7 +306,8 @@
     function startDirections() {
         if (selectedItem) {
             const module = mapContext.mapModule('directionsPanel');
-            module.addStopPoint(selectedItem.position, selectedItem.properties);
+            const geometry = selectedItem.geometry as Point;
+            module.addStopPoint({ lat: geometry.coordinates[1], lon: geometry.coordinates[0] }, selectedItem.properties);
         }
     }
 
@@ -341,8 +346,8 @@
             canvas.translate(10, h / 2 - staticLayout.getHeight() / 2);
             staticLayout.draw(canvas);
             canvas.restore();
-            if (navigationInstructions.instruction.dist > 0) {
-                const data = convertDistance(navigationInstructions.instruction.dist);
+            if (navigationInstructions.distanceToNextInstruction> 0) {
+                const data = convertDistance(navigationInstructions.distanceToNextInstruction);
                 textPaint.setTextSize(11);
                 canvas.drawText(`${data.value.toFixed(data.unit === 'm' ? 0 : 1)} ${data.unit}`, 14, h / 2 + staticLayout.getHeight() / 2 + 15, textPaint);
             }
@@ -357,6 +362,40 @@
                 textPaint.setColor($subtitleColor);
                 canvas.drawText(navigationInstructions.instruction.name, 0, transH + 10, textPaint);
             }
+        }
+    }
+
+    async function open3DMap() {
+        try {
+            const position = mapContext.getMap().getFocusPos();
+            if (!position.altitude) {
+                position.altitude = await packageService.getElevation(position);
+            }
+            const hillshadeDatasource = packageService.hillshadeLayer?.dataSource;
+            const vectorDataSource = packageService.localVectorTileLayer?.dataSource;
+            const customSources = mapContext.mapModules.customLayers.customSources;
+            let rasterDataSource: TileDataSource<any, any>;
+            customSources.some((s) => {
+                if (s.layer instanceof RasterTileLayer) {
+                    rasterDataSource = s.layer.dataSource;
+                    return true;
+                }
+            });
+            if (!rasterDataSource) {
+                rasterDataSource = await mapContext.mapModules.customLayers.getDataSource('openstreetmap');
+            }
+            const component = (await import('~/components/3DMap.svelte')).default;
+            navigate({
+                page: component,
+                props: {
+                    position,
+                    vectorDataSource,
+                    dataSource: hillshadeDatasource,
+                    rasterDataSource
+                }
+            });
+        } catch (err) {
+            this.showError(err);
         }
     }
 </script>
@@ -400,7 +439,11 @@
             </canvaslabel>
         </mdcardview>
     </stacklayout>
-    <button marginTop="80" on:tap={showMapRightMenu} class="small-floating-btn" color={primaryColor} text="mdi-layers" row={2} verticalAlignment="bottom" horizontalAlignment="left" />
+    <stacklayout marginTop="80" row={2} verticalAlignment="bottom" horizontalAlignment="left">
+        <button on:tap={open3DMap} class="small-floating-btn" color={primaryColor} text="mdi-video-3d" />
+        <button on:tap={showMapRightMenu} class="small-floating-btn" color={primaryColor} text="mdi-layers" />
+    </stacklayout>
+
     <ScaleView bind:this={scaleView} col={1} row={2} horizontalAlignment="right" verticalAlignment="bottom" marginBottom="8" />
     <mdprogress colSpan={3} row={2} value={totalDownloadProgress} visibility={totalDownloadProgress > 0 ? 'visible' : 'collapsed'} verticalAlignment="bottom" />
     <canvas

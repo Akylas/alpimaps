@@ -2,8 +2,10 @@
     import { Template } from 'svelte-native/components';
     import { openLink } from '~/utils/ui';
     import { primaryColor } from '~/variables';
+    //@ts-ignore
+    import licences from '~/licenses.json';
 
-    let licences = require(`~/licenses.json`);
+    // let licences = require(`~/licenses.json`);
     let items = licences.dependencies;
     function onTap(item) {
         if (item.moduleUrl) {
