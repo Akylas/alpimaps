@@ -10,7 +10,7 @@ import { MapBoxElevationDataDecoder, TerrariumElevationDataDecoder } from '@nati
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { openFilePicker } from '@nativescript-community/ui-document-picker';
 import * as appSettings from '@nativescript/core/application-settings';
-import { ApplicationSettings, Color } from '@nativescript/core';
+import { ApplicationSettings, Color, profile } from '@nativescript/core';
 import { ChangeType, ChangedData, ObservableArray } from '@nativescript/core/data/observable-array';
 import { File, Folder, path } from '@nativescript/core/file-system';
 import { showBottomSheet } from '~/components/bottomsheet';
@@ -614,7 +614,7 @@ export default class CustomLayersModule extends MapModule {
             }
         })();
     }
-
+    @profile
     vectorTileDecoderChanged(oldVectorTileDecoder, newVectorTileDecoder) {
         this.customSources.forEach((s, i) => {
             if (s.layer instanceof VectorTileLayer && s.layer.getTileDecoder() === oldVectorTileDecoder) {
