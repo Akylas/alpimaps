@@ -1,8 +1,7 @@
 <script lang="ts">
     import { Canvas, CanvasView, LayoutAlignment, Paint, Rect, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { EventData } from '@nativescript-community/ui-image';
-    import { Page, Utils } from '@nativescript/core';
+    import { EventData, Page, Utils, View } from '@nativescript/core';
     import { navigate } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -48,7 +47,7 @@
     }
 
     function onLayoutChanged(event: EventData) {
-        width = Utils.layout.toDeviceIndependentPixels(event.object.getMeasuredWidth());
+        width = Utils.layout.toDeviceIndependentPixels((event.object as View).getMeasuredWidth());
         itemsPerLine = Math.floor(width / cellWidth);
         refresh();
     }

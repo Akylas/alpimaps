@@ -121,7 +121,8 @@
     onMount(() => {
         // console.log('onMount', !!vectorDataSource, !!dataSource, !!rasterDataSource);
         try {
-            webserver = new (akylas.alpi as any).maps.WebServer(8080, dataSource.getNative(), (vectorDataSource || getDefaultDataSource()).getNative(), rasterDataSource?.getNative());
+            const vDataSource = (vectorDataSource || getDefaultDataSource()).getNative();
+            webserver = new (akylas.alpi as any).maps.WebServer(8080, dataSource.getNative(), vDataSource, rasterDataSource?.getNative(), vDataSource);
             webserver.start();
         } catch (err) {
             console.error(err);
@@ -274,7 +275,7 @@
             max: 6,
             formatter: (f) => f.toFixed(2),
             decimalFactor: 100,
-            value: 1.7 * 100,
+            value: 2 * 100,
             method: 'setExageration',
             title: lc('exageration')
         },
@@ -285,7 +286,7 @@
             decimalFactor: 1000,
             formatter: (f) => f.toFixed(2),
             method: 'setDepthBiais',
-            value: 6 * 1000,
+            value: 0.44 * 1000,
             title: lc('depth_biais')
         },
         {
@@ -295,7 +296,7 @@
             decimalFactor: 1000,
             method: 'setDepthMultiplier',
             formatter: (f) => f.toFixed(2),
-            value: 30 * 1000,
+            value: 110 * 1000,
             title: lc('depth_multiplier')
         }
     ]);
@@ -399,6 +400,7 @@
     function stopHeadingListener() {
         if (listeningForHeading) {
             listeningForHeading = false;
+            headingAccuracy = 4;
             stopListeningForSensor('heading', onSensor);
         }
     }
@@ -430,11 +432,12 @@
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <drawer bind:this={drawer} gestureMinDist={60} bottomClosedDrawerAllowDraging={false} simultaneousHandlers={simultaneousHandlersTags} {shouldPan} translationFunction={drawerTranslationFunction}>
-        <gridLayout android:marginBottom={navigationBarHeight}>
+        <gridLayout android:marginBottom={$navigationBarHeight}>
             <awebview
                 bind:this={webView}
                 on:loaded={webviewLoaded}
                 webRTC={true}
+                normalizeUrls={false}
                 mediaPlaybackRequiresUserAction={false}
                 webConsoleEnabled={consoleEnabled}
                 displayZoomControls={false}
@@ -446,7 +449,16 @@
                     <cspan text="mdi-camera" verticalAlignment="center" textAlignment="center" color="red" xfermode={PorterDuffMode.SCREEN}/>
                 </canvaslabel> -->
 
-            <slider horizontalAlignment="left" verticalAlignment="center" bind:value={currentAltitude} minValue="0" maxValue="8000" style="transform: rotate(-90) translate(-80,50)" width="200" />
+            <slider
+                horizontalAlignment="left"
+                verticalAlignment="center"
+                value={currentAltitude}
+                on:valueChange={(e) => (currentAltitude = e['value'])}
+                minValue="0"
+                maxValue="8000"
+                style="transform: rotate(-90) translate(-80,50)"
+                width="200"
+            />
 
             <gridlayout
                 marginBottom="40"
@@ -474,28 +486,19 @@
                 <button color={primaryColor} on:tap={(e) => drawer.nativeView.toggle('bottom')} class="small-floating-btn" text="mdi-cog" />
             </stacklayout>
             <mdactivityindicator visibility={listeningForHeading ? 'visible' : 'collapsed'} verticalAlignment="bottom" horizontalAlignment="right" busy={true} />
-            <image
-                visibility={headingAccuracy >= 2 ? 'visible' : 'hidden'}
-                src="~/assets/images/calibration.gif"
-                horizontalAlignment="right"
-                verticalAlignment="bottom"
-                width="90"
-                height="90"
-                on:loaded={(event) => event.object.startAnimating()}
-                autoPlayAnimations="true"
-            />
+            <label visibility={headingAccuracy >= 2 ? 'visible' : 'hidden'} class="alpimaps" text="alpimaps-compass-calibrate" horizontalAlignment="right" verticalAlignment="bottom" fontSize="80" />
         </gridLayout>
         <gridlayout prop:bottomDrawer height={300} rows="*,*" columns="30,*" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
             <button variant="text" class="mdi" fontSize={16} width={undefined} text="mdi-cog" on:tap={() => (selectedPageIndex = 0)} />
             <button variant="text" row={1} class="mdi" fontSize={16} width={undefined} text="mdi-bug" on:tap={() => (selectedPageIndex = 1)} />
-            <pager rowSpan={2} col={1} disableSwipe={false} bind:selectedIndex={selectedPageIndex}>
+            <pager rowSpan={2} col={1} disableSwipe={false} selectedIndex={selectedPageIndex} on:selectedIndexChange={(e) => (selectedPageIndex = e['value'])}>
                 <pageritem>
                     <collectionview
                         bind:this={collectionView1}
                         items={listView1Items}
                         itemTemplateSelector={selectTemplate}
                         itemIdGenerator={(item, i) => i}
-                        android:marginBottom={navigationBarHeight}
+                        android:marginBottom={$navigationBarHeight}
                     >
                         <Template let:item key="checkbox">
                             <checkbox text={item.title} checked={item.checked} on:checkedChange={(e) => onCheckBox(item, e.value)} />
@@ -522,7 +525,7 @@
                         items={listView2Items}
                         itemTemplateSelector={selectTemplate}
                         itemIdGenerator={(item, i) => i}
-                        android:marginBottom={navigationBarHeight}
+                        android:marginBottom={$navigationBarHeight}
                     >
                         <Template let:item key="checkbox">
                             <checkbox text={item.title} checked={item.checked} on:checkedChange={(e) => onCheckBox(item, e.value)} />

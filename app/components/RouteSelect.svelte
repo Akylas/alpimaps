@@ -37,7 +37,7 @@
     //             const foregroundArray = foreground.split('_');
     //             const color = foregroundArray.length > 1 ? foregroundArray[0] : 'white';
     //             paint.setColor(color);
-    //             const shape = foregroundArray[foregroundArray.length - 1];
+    //             const shape = foregroundArray.at(-1);
     //             let icon = osmicon('symbol-' + shape);
     //             if (icon) {
     //                 canvas.drawText(icon, 0, 1, 16, 48, paint);

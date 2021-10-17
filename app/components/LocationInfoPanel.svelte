@@ -56,10 +56,10 @@
         const module = mapContext.mapModule('userLocation');
         if (module) {
             if (showLocationInfo) {
-                module.on('location', onNewLocation, this);
+                module.on('location', onNewLocation);
                 onNewLocation({ data: module.lastUserLocation } as any);
             } else {
-                module.off('location', onNewLocation, this);
+                module.off('location', onNewLocation);
                 if (listeningForBarometer) {
                     stopBarometerAltitudeUpdate();
                 }
@@ -80,12 +80,12 @@
     }
 
     onMount(() => {
-        applicationOn(suspendEvent, onAppPause, this);
-        applicationOn(resumeEvent, onAppResume, this);
+        applicationOn(suspendEvent, onAppPause);
+        applicationOn(resumeEvent, onAppResume);
     });
     onDestroy(() => {
-        applicationOff(suspendEvent, onAppPause, this);
-        applicationOff(resumeEvent, onAppResume, this);
+        applicationOff(suspendEvent, onAppPause);
+        applicationOff(resumeEvent, onAppResume);
     });
 
     onServiceLoaded((handler: GeoHandler) => {

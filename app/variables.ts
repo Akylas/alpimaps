@@ -54,7 +54,7 @@ export const statusBarHeight: number = parseFloat(locals.statusBarHeight);
 export const actionBarButtonHeight: number = parseFloat(locals.actionBarButtonHeight);
 export const screenHeightDips = Screen.mainScreen.heightDIPs;
 export const screenWidthDips = Screen.mainScreen.widthDIPs;
-export let navigationBarHeight: number = parseFloat(locals.navigationBarHeight);
+export let navigationBarHeight = writable(parseFloat(locals.navigationBarHeight));
 
 export let globalMarginTop = 0;
 
@@ -64,14 +64,14 @@ if (global.isAndroid) {
     const resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
     // wont work on emulator though!
     if (id > 0 && resourceId > 0 && (resources.getBoolean(id) || isSimulator())) {
-        navigationBarHeight = Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId));
+        navigationBarHeight.set(Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId)));
         // navigationBarHeight/ = Utils.layout.toDeviceIndependentPixels(48);
     }
     globalMarginTop = statusBarHeight;
 } else {
-    navigationBarHeight = 0;
     const onAppLaunch = function () {
-        navigationBarHeight = Application.ios.window.safeAreaInsets.bottom;
+        navigationBarHeight.set(Application.ios.window.safeAreaInsets.bottom);
+        console.log('navigationBarHeight', Application.ios.window.safeAreaInsets.bottomonBarHeight);
         Application.off(Application.launchEvent, onAppLaunch);
     };
     Application.on(Application.launchEvent, onAppLaunch);

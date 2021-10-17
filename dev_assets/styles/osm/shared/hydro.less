@@ -1,0 +1,57 @@
+
+
+//river styling
+#waterway{
+	[class=river],
+	[class=stream][zoom>=13],
+	[class=riverbank][zoom>=13]{
+		line-color: @river;
+		line-width: linear([view::zoom], (8, 0.5), (15, 1), (16, 2));
+		[class=river] {
+			line-width: linear([view::zoom], (8, 0.5), (15, 2), (16, 4));
+		}
+		// line-dasharray: 7, 5;
+	}
+	[class=stream][zoom>=12]{
+		line-color: @river; 
+		line-width: @stream-width;
+	}
+	[class=canal][zoom>=12]{
+		[brunnel=tunnel] {
+			casing/line-color: @tunnel-casing;
+			casing/line-width: @canal_width + linear([view::zoom], (12, 0.5), (15, 2));
+		}
+		line-color: @river; 
+		line-width: @canal_width;
+		line-dasharray: 2, 2;
+	}
+	[class=dam][zoom>=13],
+	[class=weir][zoom>=15]{
+		polygon-fill: @dam_fill;
+		line-color: @dam_casing;
+		line-width: 1;
+	}
+	[class=lock][zoom>=16]{
+		line-color: @river;
+		line-width: 1.5;
+	}
+	[class=ditch][zoom>=15],
+	[class=drain][zoom>=15]{
+		line-color: @river;
+		line-width: 1.4;
+		line-dasharray: 2, 2;
+	}
+}
+#water {
+	[class=ocean]{
+		polygon-fill: @water;
+	}
+	
+	[class!=ocean]{
+		polygon-fill: @water_stroke; 
+		polygon-geometry-transform: translate(-0.5, -0.5);
+		::inner {
+			polygon-fill: @water;
+		}
+	}
+}
