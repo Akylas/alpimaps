@@ -112,9 +112,9 @@
 
         const customLayers = mapContext.mapModule('customLayers');
         if (customLayers) {
-            customLayers.on('onProgress', onTotalDownloadProgress, this);
+            customLayers.on('onProgress', onTotalDownloadProgress);
         }
-        // userLocationModule.on('location', onNewLocation, this);
+        // userLocationModule.on('location', onNewLocation);
     });
     $: locationButtonClass = !$mapStore.queryingLocation && $mapStore.watchingLocation ? 'buttonthemed' : 'buttontext';
     $: locationButtonLabelClass = $mapStore.queryingLocation ? 'fade-blink' : '';
@@ -131,8 +131,8 @@
     onMount(() => {
         if (__CARTO_PACKAGESERVICE__) {
             if (packageService) {
-                packageService.on('onProgress', onTotalDownloadProgress, this);
-                packageService.on('onPackageStatusChanged', onPackageStatusChanged, this);
+                packageService.on('onProgress', onTotalDownloadProgress);
+                packageService.on('onPackageStatusChanged', onPackageStatusChanged);
             }
         }
     });
@@ -140,13 +140,13 @@
         userLocationModule = null;
         if (__CARTO_PACKAGESERVICE__) {
             if (packageService) {
-                packageService.off('onProgress', onTotalDownloadProgress, this);
-                packageService.off('onPackageStatusChanged', onPackageStatusChanged, this);
+                packageService.off('onProgress', onTotalDownloadProgress);
+                packageService.off('onPackageStatusChanged', onPackageStatusChanged);
             }
         }
         const customLayers = mapContext.mapModule('customLayers');
         if (customLayers) {
-            customLayers.off('onProgress', onTotalDownloadProgress, this);
+            customLayers.off('onProgress', onTotalDownloadProgress);
         }
     });
     if (__CARTO_PACKAGESERVICE__) {
