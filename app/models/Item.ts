@@ -1,14 +1,58 @@
-import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
-import { VectorElement } from '@nativescript-community/ui-carto/vectorelements';
-import { LineStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/line';
-import { MarkerStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/marker';
-import { Color } from '@nativescript/core';
-import { Route, RouteRepository } from './Route';
+import { MapBounds } from '@nativescript-community/ui-carto/core';
+import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
+import type { Geometry } from 'geojson';
+import extend from 'just-extend';
+import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
+import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import NSQLDatabase from '../mapModules/NSQLDatabase';
 
-import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
-import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 const sql = SqlQuery.createFromTemplateString;
+
+export enum RoutingAction {
+    HEAD_ON,
+    FINISH,
+    NO_TURN,
+    GO_STRAIGHT,
+    TURN_RIGHT,
+    UTURN,
+    TURN_LEFT,
+    REACH_VIA_LOCATION,
+    ENTER_ROUNDABOUT,
+    LEAVE_ROUNDABOUT,
+    STAY_ON_ROUNDABOUT,
+    START_AT_END_OF_STREET,
+    ENTER_AGAINST_ALLOWED_DIRECTION,
+    LEAVE_AGAINST_ALLOWED_DIRECTION,
+    GO_UP,
+    GO_DOWN,
+    WAIT
+}
+
+export interface RouteInstruction {
+    // position: MapPos<LatLonKeys>;
+    a: RoutingAction;
+    az: number;
+    dist: number;
+    index: number;
+    time: number;
+    angle: number;
+    name: string;
+    inst: string;
+}
+
+export interface RouteProfile {
+    max: [number, number];
+    min: [number, number];
+    dplus?: any;
+    dmin?: any;
+    data: { d: number; a: number; avg: number; g }[];
+    colors?: { d: number; color: string }[];
+}
+export interface Route {
+    osmid?: number;
+    totalTime: number;
+    totalDistance: number;
+}
 
 export interface Address {
     country?: string;
@@ -21,40 +65,39 @@ export interface Address {
     street?: string;
     houseNumber?: string;
 }
+export interface ItemProperties {
+    [k: string]: any;
+    name?: string;
+    osm_value?: string;
+    osm_key?: string;
+    class?: string;
+    layer?: string;
+    rank?: number;
+    extent?: string | [number, number, number, number];
+    provider?: 'photon' | 'here' | 'carto';
+    categories?: string[];
+    address?: Address;
+    route?: Route;
+    profile?: RouteProfile;
+    instructions?: RouteInstruction[];
+    zoomBounds?: MapBounds<LatLonKeys>;
+}
 export class Item {
     public readonly id!: string;
 
-    public properties!: {
-        [k: string]: any;
-        name?: string;
-        osm_value?: string;
-        osm_key?: string;
-        class?: string;
-        layer?: string;
-        extent?: string | [number, number, number, number];
-    } | null;
-
-    public provider!: 'photon' | 'here' | 'carto' | null;
-
-    public categories!: string[] | null;
-
-    public address!: Address | null;
-
-    public zoomBounds!: MapBounds<LatLonKeys> | null;
-
-    public position!: MapPos<LatLonKeys> | null;
-
-    public styleOptions!: (MarkerStyleBuilderOptions & LineStyleBuilderOptions) | null;
-
-    public routeId!: string;
-    public route?: Route;
+    public properties!: ItemProperties | null;
+    public _properties!: string;
+    public geometry!: Geometry;
+    public _geometry!: string;
+    public _nativeGeometry!: any;
 }
 export type IItem = Partial<Item> & {
-    vectorElement?: VectorElement<any, any>;
+    layer?: VectorTileLayer;
+    // vectorElement?: VectorElement<any, any>;
 };
 
 export class ItemRepository extends CrudRepository<Item> {
-    constructor(database: NSQLDatabase, private routeRepository: RouteRepository) {
+    constructor(database: NSQLDatabase) {
         super({
             database,
             table: 'Items',
@@ -68,83 +111,58 @@ export class ItemRepository extends CrudRepository<Item> {
 			CREATE TABLE IF NOT EXISTS "Items" (
 				id TEXT PRIMARY KEY NOT NULL,
 				properties TEXT,
-				provider TEXT,
-				styleOptions TEXT,
-				address TEXT,
-				zoomBounds TEXT,
-				position TEXT NOT NULL,
-				routeId TEXT
+                geometry TEXT NOT NULL
 			);
 		`);
     }
 
     async createItem(item: IItem) {
-        const toSave = {};
-        Object.keys(item).forEach((k) => {
-            if (k === 'route') {
-                return;
-            }
-            const data = item[k];
-            if (typeof data === 'string') {
-                toSave[k] = data;
-            } else {
-                if (k === 'styleOptions') {
-                    Object.keys(data).forEach((k2) => {
-                        if (data[k2] instanceof Color) {
-                            data[k2] = data[k2].hex;
-                        }
-                    });
-                }
-                toSave[k] = JSON.stringify(data);
-            }
+        await this.create({
+            id: item.id,
+            properties: item._properties || JSON.stringify(item.properties),
+            geometry: item._geometry || JSON.stringify(item.geometry)
         });
-        await this.create(toSave);
         return item as Item;
     }
-    async updateItem(item: Item, data: Partial<IItem>) {
-        const toSave = {};
-        Object.keys(data).forEach((k) => {
-            if (typeof data[k] === 'string') {
-                toSave[k] = data[k];
-            } else {
-                const d = data[k];
-                if (k === 'styleOptions') {
-                    Object.keys(d).forEach((k2) => {
-                        if (d[k2] instanceof Color) {
-                            d[k2] = d[k2].hex;
-                        }
-                    });
-                }
-                toSave[k] = JSON.stringify(d);
-            }
-        });
-        return this.update(item, toSave);
+    async updateItem(item: Item, data: Partial<ItemProperties>) {
+        const updatedItem = { ...item, properties: extend(item.properties, data) };
+        await this.update(updatedItem, { properties: JSON.stringify(updatedItem.properties) });
+        return updatedItem;
     }
 
     prepareGetItem(item: Item) {
-        Object.keys(item).forEach((k) => {
-            if (k !== 'id' && k !== 'routeId') {
-                item[k] = JSON.parse(item[k]);
+        return {
+            id: item.id,
+            _properties: item.properties,
+            _geometry: item.geometry,
+            get properties() {
+                if (!this._parsedProperties) {
+                    this._parsedProperties = JSON.parse(this._properties);
+                    this._parsedProperties.id = this.id;
+                }
+                return this._parsedProperties;
+            },
+            set properties(value) {
+                delete this._properties;
+                this._parsedProperties = value;
+            },
+            get geometry() {
+                if (!this._parsedGeometry) {
+                    this._parsedGeometry = JSON.parse(this._geometry);
+                }
+                return this._parsedGeometry;
             }
-        });
-        return item;
+        };
     }
     async getItem(itemId: string) {
-        let element = await this.get(itemId);
-        element = this.prepareGetItem(element);
-        if (element.routeId) {
-            element.route = await this.routeRepository.getRoute(element.routeId);
-        }
-        return element;
+        const element = await this.get(itemId);
+        return this.prepareGetItem(element);
     }
     async searchItem(where?: SqlQuery | null, orderBy?: SqlQuery | null) {
         const result = (await this.search(where, orderBy)).slice();
         for (let index = 0; index < result.length; index++) {
             const element = this.prepareGetItem(result[index]);
-            if (element.routeId) {
-                element.route = await this.routeRepository.getRoute(element.routeId);
-            }
-            result[index] = element;
+            result[index] = element as any;
         }
         return result;
     }

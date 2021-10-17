@@ -1,16 +1,27 @@
 const sveltePreprocess = require('svelte-preprocess');
 const svelteNativePreprocessor = require('svelte-native-preprocessor');
+const { transformSync } = require('@swc/core');
+const { typescript } = require('svelte-preprocess-esbuild');
+// import { transformSync } from '@swc/core';
 
 module.exports = {
     compilerOptions: {
-        namespace: 'foreign',
-        accessors: true
+        namespace: 'foreign'
     },
     preprocess: [
-        sveltePreprocess({
-            defaults: { script: 'typescript', style: 'scss' },
-            sourceMap: false
+        typescript({
+            target: 'es2019'
         }),
-        svelteNativePreprocessor()
+        sveltePreprocess({
+            typescript: false
+        })
+        // sveltePreprocess({
+        //     typescript: {
+        //         compilerOptions: {
+        //             target: 'es2017'
+        //         }
+        //     }
+        // }),
+        // svelteNativePreprocessor()
     ]
 };
