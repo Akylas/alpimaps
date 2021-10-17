@@ -5,17 +5,18 @@ import { ACTION_PAUSE, ACTION_RESUME, NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL, 
 
 const NOTIFICATION_ID = 3426124;
 
-@NativeClass
-@JavaProxy('akylas.alpi.maps.BgService')
-export class BgService extends android.app.Service {
-    currentNotifText: string;
-    geoHandler: GeoHandler;
-    bounded: boolean;
-    mNotificationBuilder: androidx.core.app.NotificationCompat.Builder;
-    mNotification: globalAndroid.app.Notification;
-    notificationManager: any;
-    recording: boolean;
-    alwaysShowNotification: boolean;
+// @NativeClass
+// @JavaProxy('akylas.alpi.maps.BgService')
+// export class BgService extends android.app.Service {
+export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.BgService', {
+    // currentNotifText: string;
+    // geoHandler: GeoHandler;
+    // bounded: boolean;
+    // mNotificationBuilder: androidx.core.app.NotificationCompat.Builder;
+    // mNotification: globalAndroid.app.Notification;
+    // notificationManager: any;
+    // recording: boolean;
+    // alwaysShowNotification: boolean;
 
     onStartCommand(intent: android.content.Intent, flags: number, startId: number) {
         super.onStartCommand(intent, flags, startId);
@@ -26,7 +27,7 @@ export class BgService extends android.app.Service {
             this.geoHandler.pauseSession();
         }
         return android.app.Service.START_STICKY;
-    }
+    },
     onCreate() {
         this.currentNotifText = lc('tap_to_open');
         this.recording = false;
@@ -36,7 +37,7 @@ export class BgService extends android.app.Service {
         // this.alwaysShowNotification = android.os.Build.VERSION.SDK_INT >= 26; // oreo
         this.notificationManager = this.getSystemService(android.content.Context.NOTIFICATION_SERVICE);
         NotificationHelper.createNotificationChannel(this);
-    }
+    },
     onDestroy() {
         if (this.geoHandler) {
             this.geoHandler.off(SessionStateEvent, this.onSessionStateEvent, this);
@@ -45,7 +46,7 @@ export class BgService extends android.app.Service {
         }
         // applicationOff(resumeEvent, this.onAppEvent, this);
         // applicationOff(suspendEvent, this.onAppEvent, this);
-    }
+    },
 
     onBind(intent: android.content.Intent) {
         // a client is binding to the service with bindService()
@@ -53,26 +54,26 @@ export class BgService extends android.app.Service {
         const result = new BgServiceBinder();
         result.setService(this);
         return result;
-    }
+    },
     onUnbind(intent: android.content.Intent) {
         this.bounded = false;
         this.removeForeground();
         // return true if you would like to have the service's onRebind(Intent) method later called when new clients bind to it.
         return true;
-    }
+    },
     onRebind(intent: android.content.Intent) {
         // a client is binding to the service with bindService(), after onUnbind() has already been called
-    }
+    },
 
     onBounded() {
         this.geoHandler = new GeoHandler();
-        this.geoHandler.bgService = new WeakRef(this as any);
+        this.geoHandler.bgService = new WeakRef(this);
         // this.showForeground();
         this.geoHandler.on(SessionStateEvent, this.onSessionStateEvent, this);
         this.geoHandler.on(SessionChronoEvent, this.onSessionChronoEvent, this);
         // applicationOn(resumeEvent, this.onAppEvent, this);
         // applicationOn(suspendEvent, this.onAppEvent, this);
-    }
+    },
 
     // private mNotification: android.app.Notification;
     // private mNotificationBuilder: androidx.core.app.NotificationCompat.Builder;
@@ -81,7 +82,7 @@ export class BgService extends android.app.Service {
 
         this.mNotification = NotificationHelper.getNotification(this, this.mNotificationBuilder, this.geoHandler.currentSession);
         this.notificationManager.notify(NOTIFICATION_ID, this.mNotification); // todo check if necessary in pre Android O
-    }
+    },
 
     onSessionStateEvent(e: SessionEventData) {
         // const { positions, ...noLocs } = e.data;
@@ -95,7 +96,7 @@ export class BgService extends android.app.Service {
                 this.removeForeground();
                 break;
         }
-    }
+    },
     updateNotification() {
         if (!this.mNotificationBuilder) {
             this.displayNotification(this.recording);
@@ -103,10 +104,10 @@ export class BgService extends android.app.Service {
             this.mNotification = NotificationHelper.getUpdatedNotification(this, this.mNotificationBuilder, this.geoHandler.currentSession);
             this.notificationManager.notify(NOTIFICATION_ID, this.mNotification);
         }
-    }
+    },
     onSessionChronoEvent(e: SessionChronoEventData) {
         this.updateNotification();
-    }
+    },
 
     showForeground(force = false) {
         if (!this.bounded) {
@@ -122,7 +123,7 @@ export class BgService extends android.app.Service {
                 console.error('showForeground', err, err['stack']);
             }
         }
-    }
+    },
 
     removeForeground() {
         this.stopForeground(false);
@@ -141,4 +142,4 @@ export class BgService extends android.app.Service {
     //         }
     //     }
     // }
-}
+});
