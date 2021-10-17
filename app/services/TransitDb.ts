@@ -1,4 +1,4 @@
-import { SQLiteDatabase, openOrCreate } from '@akylas/nativescript-sqlite';
+import { SQLiteDatabase, openOrCreate } from '@nativescript-community/sqlite';
 
 import { setDefaultConfig } from 'gtfs/lib/utils';
 let db: TransitDatabase;

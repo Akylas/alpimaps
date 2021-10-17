@@ -10,7 +10,7 @@ import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { Line, LineEndType, LineJointType, LineStyleBuilder, LineStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/line';
 import { Marker, MarkerStyleBuilder, MarkerStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/marker';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/point';
-import { knownFolders, path } from '@nativescript/core';
+import { knownFolders, path, profile } from '@nativescript/core';
 import { IItem, Item, ItemProperties, ItemRepository } from '~/models/Item';
 import { showError } from '~/utils/error';
 import { join_em } from '~/utils/joinem';
@@ -37,6 +37,8 @@ export default class ItemsModule extends MapModule {
     localVectorLayer: VectorTileLayer;
     db: NSQLDatabase;
     itemRepository: ItemRepository;
+
+    @profile
     async initDb() {
         try {
             this.db = new NSQLDatabase(filePath, {

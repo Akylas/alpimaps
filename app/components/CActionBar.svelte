@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { Frame } from '@nativescript/core/ui/frame';
     import { onMount } from 'svelte';
     import { closeModal,goBack } from 'svelte-native';

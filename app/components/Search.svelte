@@ -29,13 +29,12 @@
     import { arraySortOn } from '~/utils/utils';
     import { globalMarginTop, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import { queryString } from '../utils/http';
-
+    import deburr from 'deburr';
     const providerColors = {
         here: 'blue',
         carto: 'orange',
         photon: 'red'
     };
-    const deburr = require('deburr');
     function cleanUpString(s) {
         return new deburr.Deburr(s)
             .toString()
@@ -111,14 +110,13 @@
         public geometry!: Point;
         constructor(data) {
             this.properties = {
-                showOnMap: true,
                 provider: 'here',
                 id: data.id,
                 name: data.title,
                 osm_key: data.category.id ? data.category.id.split('-')[0] : undefined,
-                vicinity: data.vicinity,
-                averageRating: data.averageRating,
-                categories: [data.category.id],
+                // vicinity: data.vicinity,
+                // averageRating: data.averageRating,
+                categories: data.category.id.split('-'),
                 address: { name: data.vicinity }
             };
             this.geometry = {
@@ -181,32 +179,34 @@
         });
         return result;
     }
-    function createSearchMarker(item: SearchItem) {
-        const metaData = itemToMetaData(item);
-        return new Marker({
-            position: { lat: item.geometry.coordinates[1], lon: item.geometry.coordinates[0] },
-            styleBuilder: {
-                hideIfOverlapped: false,
-                clickSize: 20,
-                size: 20,
-                scaleWithDPI: true,
-                color: providerColors[item.properties.provider]
-            },
-            metaData
-        });
-    }
+    // function createSearchMarker(item: SearchItem) {
+    //     const metaData = itemToMetaData(item);
+    //     return new Marker({
+    //         position: { lat: item.geometry.coordinates[1], lon: item.geometry.coordinates[0] },
+    //         styleBuilder: {
+    //             hideIfOverlapped: false,
+    //             clickSize: 20,
+    //             size: 20,
+    //             scaleWithDPI: true,
+    //             color: providerColors[item.properties.provider]
+    //         },
+    //         metaData
+    //     });
+    // }
     function getSearchLayer() {
         if (!_searchLayer) {
             _searchLayer = new ClusteredVectorLayer({
                 visibleZoomRange: [0, 24],
                 dataSource: getSearchDataSource(),
-                minimumClusterDistance: 20,
+                minimumClusterDistance: 30,
                 builder: new ClusterElementBuilder({
                     color: 'red',
-                    size: 15,
+                    // textColor: 'white',
+                    textSize: 15,
+                    size: 20,
+                    bbox: true,
                     shape: 'point'
-                }),
-                animatedClusters: true
+                })
             });
             _searchLayer.setVectorElementEventListener<LatLonKeys>({
                 onVectorElementClicked: (data) => mapContext.vectorElementClicked(data)
@@ -427,11 +427,7 @@
                     })
             ]);
 
-            // console.log(
-            //     'search done',
-            //     result.length,
-            //     result.map((s) => s.properties.name)
-            // );
+            // console.log('search done', result.length, JSON.stringify(result));
             if (!loading) {
                 // was cancelled
                 return;
@@ -496,7 +492,7 @@
         if (!item) {
             return;
         }
-        mapContext.selectItem({ item, isFeatureInteresting: true, minZoom: 14 });
+        mapContext.selectItem({ item, isFeatureInteresting: true, minZoom: 14, preventZoom: false });
         unfocus();
     }
     function updateFilteredDataItems() {
@@ -514,23 +510,33 @@
         }
     }
     let showingOnMap = false;
+    let searchStyle: PointStyleBuilder;
     function showResultsOnMap() {
         const dataSource = getSearchDataSource();
-        dataSource.clear();
         showingOnMap = true;
-        const items = filteredDataItems.filter(
-            // (d) => !!d && (d.provider === 'here' || (d.provider === 'carto' && d.properties.layer === 'poi'))
-            (d) => !!d && (d.properties.provider === 'here' || d.properties.provider === 'carto')
-        );
-        if (items.length === 0) {
-            return;
+        // const items = filteredDataItems.filter(
+        //     // (d) => !!d && (d.provider === 'here' || (d.provider === 'carto' && d.properties.layer === 'poi'))
+        //     (d) => !!d && (d.properties.provider === 'here' || d.properties.provider === 'carto')
+        // );
+        // if (items.length === 0) {
+        //     return;
+        // }
+        const geojson = {
+            type: 'FeatureCollection',
+            features: filteredDataItems.map((s) => ({ type: 'Feature', ...s }))
+        };
+        if (!searchStyle) {
+            searchStyle = new PointStyleBuilder({ color: 'red', size: 10 });
         }
-        items.forEach((d) => {
-            dataSource.add(createSearchMarker(d));
-        });
+        const featureCollection = packageService.getGeoJSONReader().readFeatureCollection(JSON.stringify(geojson));
+        dataSource.clear();
+        dataSource.addFeatureCollection(featureCollection, searchStyle);
+        // items.forEach((d) => {
+        //     dataSource.add(createSearchMarker(d));
+        // });
         ensureSearchLayer();
         unfocus();
-        const mapBounds = dataSource.getDataExtent();
+        const mapBounds = featureCollection.getBounds();
         mapContext.getMap().moveToFitBounds(mapBounds, undefined, false, false, false, 100);
     }
 
@@ -573,7 +579,7 @@
         on:focus={onFocus}
         on:blur={onBlur}
         on:return={onReturnKey}
-        bind:text
+        text={text} on:textChange={e => text = e['value']}
         width="100%"
         backgroundColor="transparent"
         autocapitalizationType="none"
