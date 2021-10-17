@@ -72,6 +72,7 @@ export interface ItemProperties {
     osm_key?: string;
     class?: string;
     layer?: string;
+    rank?: number;
     extent?: string | [number, number, number, number];
     provider?: 'photon' | 'here' | 'carto';
     categories?: string[];

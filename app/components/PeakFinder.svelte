@@ -449,7 +449,16 @@
                     <cspan text="mdi-camera" verticalAlignment="center" textAlignment="center" color="red" xfermode={PorterDuffMode.SCREEN}/>
                 </canvaslabel> -->
 
-            <slider horizontalAlignment="left" verticalAlignment="center" bind:value={currentAltitude} minValue="0" maxValue="8000" style="transform: rotate(-90) translate(-80,50)" width="200" />
+            <slider
+                horizontalAlignment="left"
+                verticalAlignment="center"
+                value={currentAltitude}
+                on:valueChange={(e) => (currentAltitude = e['value'])}
+                minValue="0"
+                maxValue="8000"
+                style="transform: rotate(-90) translate(-80,50)"
+                width="200"
+            />
 
             <gridlayout
                 marginBottom="40"
@@ -477,21 +486,12 @@
                 <button color={primaryColor} on:tap={(e) => drawer.nativeView.toggle('bottom')} class="small-floating-btn" text="mdi-cog" />
             </stacklayout>
             <mdactivityindicator visibility={listeningForHeading ? 'visible' : 'collapsed'} verticalAlignment="bottom" horizontalAlignment="right" busy={true} />
-            <image
-                visibility={headingAccuracy >= 2 ? 'visible' : 'hidden'}
-                src="~/assets/images/calibration.gif"
-                horizontalAlignment="right"
-                verticalAlignment="bottom"
-                width="90"
-                height="90"
-                on:loaded={(event) => event.object.startAnimating()}
-                autoPlayAnimations="true"
-            />
+            <label visibility={headingAccuracy >= 2 ? 'visible' : 'hidden'} class="alpimaps" text="alpimaps-compass-calibrate" horizontalAlignment="right" verticalAlignment="bottom" fontSize="80" />
         </gridLayout>
         <gridlayout prop:bottomDrawer height={300} rows="*,*" columns="30,*" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
             <button variant="text" class="mdi" fontSize={16} width={undefined} text="mdi-cog" on:tap={() => (selectedPageIndex = 0)} />
             <button variant="text" row={1} class="mdi" fontSize={16} width={undefined} text="mdi-bug" on:tap={() => (selectedPageIndex = 1)} />
-            <pager rowSpan={2} col={1} disableSwipe={false} bind:selectedIndex={selectedPageIndex}>
+            <pager rowSpan={2} col={1} disableSwipe={false} selectedIndex={selectedPageIndex} on:selectedIndexChange={(e) => (selectedPageIndex = e['value'])}>
                 <pageritem>
                     <collectionview
                         bind:this={collectionView1}

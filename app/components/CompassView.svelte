@@ -122,15 +122,5 @@
     <label text={headingAccuracy + ''} verticalAlignment="top" />
     <svgview src="~/assets/svgs/needle_background.svg" stretch="aspectFit" horizontalAlignment="center" />
     <svgview src="~/assets/svgs/needle.svg" stretch="aspectFit" horizontalAlignment="center" rotate={-currentHeading} />
-    <image
-        visibility={headingAccuracy >= 2 ? 'visible' : 'hidden'}
-        ref="imageView"
-        src="~/assets/images/calibration.gif"
-        horizontalAlignment="right"
-        verticalAlignment="bottom"
-        width="90"
-        height="90"
-        on:loaded={(event) => event.object.startAnimating()}
-        autoPlayAnimations="true"
-    />
+    <label visibility={headingAccuracy >= 2 ? 'visible' : 'hidden'} class="alpimaps" text="alpimaps-compass-calibrate" horizontalAlignment="right" verticalAlignment="bottom" fontSize="80" />
 </gridLayout>

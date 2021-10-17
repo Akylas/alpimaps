@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { executeOnMainThread } from '@nativescript/core/utils';
     import { AppURL, handleOpenURL } from '@nativescript-community/appurl';
     import * as EInfo from '@nativescript-community/extendedinfo';
     import { GenericGeoLocation } from '@nativescript-community/gps';
@@ -24,13 +23,12 @@
     import { action, alert, login } from '@nativescript-community/ui-material-dialogs';
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { Brightness } from '@nativescript/brightness';
-    import { AndroidApplication, Application, Color, Page, Utils } from '@nativescript/core';
+    import { AndroidApplication, Application, Color, Page, profile, Utils } from '@nativescript/core';
     import * as appSettings from '@nativescript/core/application-settings';
     import type { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Device, Screen } from '@nativescript/core/platform';
     import { ad, executeOnMainThread } from '@nativescript/core/utils/utils';
-    import { compose } from '@nativescript/email';
     import * as SocialShare from 'nativescript-social-share';
     import { debounce } from 'push-it-to-the-limit/target/es6';
     import { onDestroy, onMount } from 'svelte';
@@ -455,60 +453,60 @@
 
     async function onMainMapReady(e) {
         try {
-     cartoMap = e.object as CartoMap<LatLonKeys>;
-        CartoMap.setRunOnMainThread(true);
-        if (DEV_LOG) {
-            setShowDebug(true);
-            setShowInfo(true);
-            setShowWarn(true);
-            setShowError(true);
-        }
-        projection = cartoMap.projection;
-        // if (global.isAndroid) {
-        //     console.log('onMapReady', com.carto.ui.BaseMapView.getSDKVersion());
-        // } else {
-        //     console.log('onMapReady', cartoMap.nativeViewProtected as NTMapView);
-        // }
+            cartoMap = e.object as CartoMap<LatLonKeys>;
+            CartoMap.setRunOnMainThread(true);
+            if (DEV_LOG) {
+                setShowDebug(true);
+                setShowInfo(true);
+                setShowWarn(true);
+                setShowError(true);
+            }
+            projection = cartoMap.projection;
+            // if (global.isAndroid) {
+            //     console.log('onMapReady', com.carto.ui.BaseMapView.getSDKVersion());
+            // } else {
+            //     console.log('onMapReady', cartoMap.nativeViewProtected as NTMapView);
+            // }
 
-        const options = cartoMap.getOptions();
-        options.setWatermarkScale(0);
-        options.setRestrictedPanning(true);
-        options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
-        // options.setSeamlessPanning(true);
-        // options.setEnvelopeThreadPoolSize(2);
+            const options = cartoMap.getOptions();
+            options.setWatermarkScale(0);
+            options.setRestrictedPanning(true);
+            options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
+            // options.setSeamlessPanning(true);
+            // options.setEnvelopeThreadPoolSize(2);
 
-        // options.setTileThreadPoolSize(2);
-        options.setZoomGestures(true);
-        // options.setDoubleClickDetection(false);
-        options.setDoubleClickMaxDuration(0.3);
-        options.setLongClickDuration(0.5);
-        options.setKineticRotation(false);
-        options.setRotatable($mapStore.rotateEnabled);
-        toggleMapPitch($mapStore.pitchEnabled);
-        // options.setClickTypeDetection(false);
-        // options.setRotatable(true);
-        const pos = JSON.parse(appSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos<LatLonKeys>;
-        const zoom = appSettings.getNumber('mapZoom', 10);
-        cartoMap.setFocusPos(pos, 0);
-        cartoMap.setZoom(zoom, 0);
+            // options.setTileThreadPoolSize(2);
+            options.setZoomGestures(true);
+            // options.setDoubleClickDetection(false);
+            options.setDoubleClickMaxDuration(0.3);
+            options.setLongClickDuration(0.5);
+            options.setKineticRotation(false);
+            options.setRotatable($mapStore.rotateEnabled);
+            toggleMapPitch($mapStore.pitchEnabled);
+            // options.setClickTypeDetection(false);
+            // options.setRotatable(true);
+            const pos = JSON.parse(appSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos<LatLonKeys>;
+            const zoom = appSettings.getNumber('mapZoom', 10);
+            cartoMap.setFocusPos(pos, 0);
+            cartoMap.setZoom(zoom, 0);
 
-        // setTimeout(async () => {
+            // setTimeout(async () => {
             try {
                 await perms.request('storage');
                 if (__CARTO_PACKAGESERVICE__) {
                     packageService.start();
                 }
                 transitService.start();
-                setMapStyle(appSettings.getString('mapStyle', 'osm~osm'), true);
+                // setMapStyle(appSettings.getString('mapStyle', PRODUCTION ? 'osmxml.zip~osm' : 'osm~osm'), true);
+                setMapStyle(PRODUCTION ? 'osm.zip~osm' : 'osm~osm', true);
             } catch (err) {
                 showError(err);
             }
             mapContext.runOnModules('onMapReady', cartoMap);
-        // }, 100);
+            // }, 100);
         } catch (error) {
             console.error(error);
         }
-        
     }
     let mapMoved = false;
     function onMainMapMove(e) {
@@ -522,8 +520,8 @@
         // currentMapRotation = Math.round(bearing * 100) / 100;
         mapContext.runOnModules('onMapMove', e);
         // executeOnMainThread(()=>{
-            currentMapRotation = Math.round(cartoMap.bearing * 100) / 100;
-            unFocusSearch();
+        currentMapRotation = Math.round(cartoMap.bearing * 100) / 100;
+        unFocusSearch();
         // });
     }
     function onMainMapIdle(e) {
@@ -539,7 +537,7 @@
         if (mapMoved) {
             mapMoved = false;
             // executeOnMainThread(() => {
-                saveSettings();
+            saveSettings();
             // })
         }
         mapContext.runOnModules('onMapStable', e);
@@ -562,7 +560,7 @@
             selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.lat] }, properties: {} }, isFeatureInteresting: !$selectedItem, preventZoom: true });
         }
         // executeOnMainThread(()=>{
-            unFocusSearch();
+        unFocusSearch();
         // });
     }
     function onSelectedItemChanged(oldValue: IItem, value: IItem) {
@@ -725,8 +723,8 @@
                                             let bestFind;
                                             for (let index = 0; index < res.size(); index++) {
                                                 const r = packageService.convertGeoCodingResult(res.get(index), true);
-                                                if (r && r.rank > 0.7 && computeDistanceBetween(position, r.position) <= radius) {
-                                                    if (!bestFind || Object.keys(r.address).length > Object.keys(bestFind.address).length) {
+                                                if (r && r.properties.rank > 0.7 && computeDistanceBetween(position, r.properties.position) <= radius) {
+                                                    if (!bestFind || Object.keys(r.properties.address).length > Object.keys(bestFind.address).length) {
                                                         bestFind = r;
                                                     } else if (bestFind && item.properties.address && item.properties.address['street']) {
                                                         break;
@@ -882,9 +880,9 @@
     }
     function toggleMapPitch(value: boolean) {
         if (value) {
-            cartoMap && cartoMap.getOptions().setTiltRange(toNativeMapRange({ min: 30, max: 90 }));
+            cartoMap && cartoMap.getOptions().setTiltRange(toNativeMapRange([30, 90]));
         } else {
-            cartoMap && cartoMap.getOptions().setTiltRange(toNativeMapRange({ min: 90, max: 90 }));
+            cartoMap && cartoMap.getOptions().setTiltRange(toNativeMapRange([90, 90]));
         }
     }
 
@@ -1056,10 +1054,12 @@
     function onVectorElementClicked(data: VectorElementEventData<LatLonKeys>) {
         const { clickType, position, elementPos, metaData, element } = data;
         if (DEV_LOG) {
-            console.log('onVectorElementClicked', clickType, position, new Error().stack);
+            console.log('onVectorElementClicked', clickType, position, metaData);
         }
         Object.keys(metaData).forEach((k) => {
-            metaData[k] = JSON.parse(metaData[k]);
+            if (metaData[k][0] === '{' || metaData[k][0] === '[') {
+                metaData[k] = JSON.parse(metaData[k]);
+            }
         });
         const handledByModules = mapContext.runOnModules('onVectorElementClicked', data);
         // if (DEV_LOG) {
@@ -1068,20 +1068,26 @@
         if (!!metaData.instruction) {
             return true;
         }
-        // if (!handledByModules && clickType === ClickType.SINGLE && Object.keys(metaData).length > 0) {
-        //     const item: IItem = { position, vectorElement: element, ...metaData };
-        //     // }
-        //     if (item.id && $selectedItem && $selectedItem.id === item.id) {
-        //         return true;
-        //     }
-        //     // if (item.properties?.route) {
-        //     //     item.properties.route.positions = (element as Line<LatLonKeys>).getPoses() as any;
-        //     // }
-        //     selectItem({ item, isFeatureInteresting: true, position });
-        //     unFocusSearch();
-        //     return true;
-        // }
-        return handledByModules;
+        if (!handledByModules && clickType === ClickType.SINGLE && Object.keys(metaData).length > 0) {
+            const item: IItem = {
+                geometry: {
+                    type: 'Point',
+                    coordinates: [elementPos.lon, elementPos.lat]
+                },
+                properties: metaData
+            };
+            // }
+            if (item.id && $selectedItem && $selectedItem.id === item.id) {
+                return true;
+            }
+            // if (item.properties?.route) {
+            //     item.properties.route.positions = (element as Line<LatLonKeys>).getPoses() as any;
+            // }
+            selectItem({ item, isFeatureInteresting: true });
+            unFocusSearch();
+            return true;
+        }
+        return !!handledByModules;
     }
     function onVectorTileElementClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureData } = data;
@@ -1210,7 +1216,7 @@
     //             return CartoMapStyle.VOYAGER;
     //     }
     // }
-    function setMapStyle(layerStyle: string, force = false) {
+    const setMapStyle = profile('setMapStyle', function (layerStyle: string, force = false) {
         layerStyle = layerStyle.toLowerCase();
         let mapStyle = layerStyle;
         let mapStyleLayer = 'streets';
@@ -1233,11 +1239,13 @@
                 // }
             } else {
                 try {
+                    // const start = Date.now();
                     vectorTileDecoder = new MBVectorTileDecoder({
                         style: mapStyleLayer,
                         liveReload: !PRODUCTION,
-                        ...(mapStyle.endsWith('.zip') ? { zipPath: `~/assets/styles/${mapStyle}` } : { dirPath: `~/assets/styles/${mapStyle}` })
+                        [mapStyle.endsWith('.zip') ? 'zipPath' : 'dirPath']: `~/assets/styles/${mapStyle}`
                     });
+                    // console.log('MBVectorTileDecoder', mapStyle, mapStyleLayer, Date.now() - start, 'ms');
                     mapContext.runOnModules('vectorTileDecoderChanged', oldVectorTileDecoder, vectorTileDecoder);
                 } catch (err) {
                     showError(err);
@@ -1249,7 +1257,7 @@
                 setCurrentLayer(currentLayerStyle);
             }
         }
-    }
+    });
 
     async function selectStyle() {
         let styles = [];
@@ -1275,8 +1283,9 @@
     }
 
     async function downloadPackages() {
-        const PackagesDownloadComponent = (await import('./PackagesDownloadComponent.svelte')).default;
-        showBottomSheet({ parent: page, view: PackagesDownloadComponent });
+        // const PackagesDownloadComponent = (await import('./PackagesDownloadComponent.svelte'))['default'];
+        // const { PackagesDownloadComponent: component } = await import("~/components/PackagesDownloadComponent.svelte");
+        // showBottomSheet({ parent: page, view: PackagesDownloadComponent });
     }
     function removeLayer(layer: Layer<any, any>, layerId: LayerType) {
         // const realLayerId = offset ? layerId + offset : layerId;
@@ -1521,45 +1530,47 @@
         });
     }
     function onTap(command: string) {
-        switch (command) {
-            case 'sendFeedback':
-                compose({
-                    subject: `[${EInfo.getAppNameSync()}(${appVersion})] Feedback`,
-                    to: ['contact@akylas.fr'],
-                    attachments: [
-                        {
-                            fileName: 'report.json',
-                            path: `base64://${base64Encode(
-                                JSON.stringify(
-                                    {
-                                        device: {
-                                            model: Device.model,
-                                            DeviceType: Device.deviceType,
-                                            language: Device.language,
-                                            manufacturer: Device.manufacturer,
-                                            os: Device.os,
-                                            osVersion: Device.osVersion,
-                                            region: Device.region,
-                                            sdkVersion: Device.sdkVersion,
-                                            uuid: Device.uuid
-                                        },
-                                        screen: {
-                                            widthDIPs: screenWidthDips,
-                                            heightDIPs: screenHeightDips,
-                                            widthPixels: Screen.mainScreen.widthPixels,
-                                            heightPixels: Screen.mainScreen.heightPixels,
-                                            scale: Screen.mainScreen.scale
-                                        }
-                                    },
-                                    null,
-                                    4
-                                )
-                            )}`,
-                            mimeType: 'application/json'
-                        }
-                    ]
-                }).catch((err) => showError(err));
-                break;
+        switch (
+            command
+            // case 'sendFeedback':
+            //     compose({
+            //         subject: `[${EInfo.getAppNameSync()}(${appVersion})] Feedback`,
+            //         to: ['contact@akylas.fr'],
+            //         attachments: [
+            //             {
+            //                 fileName: 'report.json',
+            //                 path: `base64://${base64Encode(
+            //                     JSON.stringify(
+            //                         {
+            //                             device: {
+            //                                 model: Device.model,
+            //                                 DeviceType: Device.deviceType,
+            //                                 language: Device.language,
+            //                                 manufacturer: Device.manufacturer,
+            //                                 os: Device.os,
+            //                                 osVersion: Device.osVersion,
+            //                                 region: Device.region,
+            //                                 sdkVersion: Device.sdkVersion,
+            //                                 uuid: Device.uuid
+            //                             },
+            //                             screen: {
+            //                                 widthDIPs: screenWidthDips,
+            //                                 heightDIPs: screenHeightDips,
+            //                                 widthPixels: Screen.mainScreen.widthPixels,
+            //                                 heightPixels: Screen.mainScreen.heightPixels,
+            //                                 scale: Screen.mainScreen.scale
+            //                             }
+            //                         },
+            //                         null,
+            //                         4
+            //                     )
+            //                 )}`,
+            //                 mimeType: 'application/json'
+            //             }
+            //         ]
+            //     }).catch((err) => showError(err));
+            //     break;
+        ) {
         }
     }
 
@@ -1638,7 +1649,7 @@
         const result = (await showBottomSheet({
             parent: page,
             view: MapOptions,
-            props: { options },
+            props: { options }
             // transparent: true,
             // disableDimBackground: true
         })) as any;
@@ -1784,7 +1795,8 @@
             backgroundColor="#01550000"
             panGestureOptions={bottomSheetPanGestureOptions}
             {steps}
-            bind:stepIndex={bottomSheetStepIndex}
+            stepIndex={bottomSheetStepIndex}
+            on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)}
             translationFunction={bottomSheetTranslationFunction}
         >
             <stacklayout horizontalAlignment="left" verticalAlignment="middle">
@@ -1866,9 +1878,21 @@
                 horizontalAlignment="right"
                 translateY={Math.max(topTranslationY - 50, 0)}
             />
-            <MapScrollingWidgets bind:this={mapScrollingWidgets} bind:navigationInstructions opacity={scrollingWidgetsOpacity} userInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
+            <MapScrollingWidgets
+                bind:this={mapScrollingWidgets}
+                bind:navigationInstructions
+                opacity={scrollingWidgetsOpacity}
+                userInteractionEnabled={scrollingWidgetsOpacity > 0.3}
+            />
             <DirectionsPanel bind:this={directionsPanel} bind:translationY={topTranslationY} width="100%" verticalAlignment="top" />
-            <BottomSheetInner bind:this={bottomSheetInner} bind:steps bind:navigationInstructions prop:bottomSheet updating={itemLoading} item={$selectedItem} />
+            <BottomSheetInner
+                bind:this={bottomSheetInner}
+                bind:navigationInstructions
+                bind:steps
+                prop:bottomSheet
+                updating={itemLoading}
+                item={$selectedItem}
+            />
             <collectionview
                 items={currentClickedFeatures}
                 height="80"
