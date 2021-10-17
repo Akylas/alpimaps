@@ -101,7 +101,7 @@ export function getValue(point, index, possibleValues, raw) {
 // returns latitude of a given point, converted to decimal
 // set raw to true to avoid conversion
 export function getLat(point, raw?) {
-    return getValue(point, 0, ['lat', 'latitude'], raw);
+    return getValue(point, 1, ['lat', 'latitude'], raw);
 }
 
 // Alias for getLat
@@ -112,7 +112,7 @@ export function latitude(point) {
 // returns longitude of a given point, converted to decimal
 // set raw to true to avoid conversion
 export function getLon(point, raw?) {
-    return getValue(point, 1, ['lng', 'lon', 'longitude'], raw);
+    return getValue(point, 0, ['lng', 'lon', 'longitude'], raw);
 }
 
 // Alias for getLon

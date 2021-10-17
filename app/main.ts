@@ -7,7 +7,6 @@ import CollectionViewElement from '@nativescript-community/ui-collectionview/sve
 import PagerElement from '@nativescript-community/ui-pager/svelte';
 import DrawerElement from '@nativescript-community/ui-drawer/svelte';
 import { PagerItem } from '@nativescript-community/ui-pager';
-import { initialize, shutDown } from '@nativescript-community/ui-image';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import installWebRTC from '@nativescript-community/ui-webview-rtc';
@@ -66,7 +65,6 @@ registerNativeViewElement('line', () => require('@nativescript-community/ui-canv
 registerNativeViewElement('circle', () => require('@nativescript-community/ui-canvas/shapes').Circle);
 registerNativeViewElement('rectangle', () => require('@nativescript-community/ui-canvas/shapes').Rectangle);
 registerNativeViewElement('text', () => require('@nativescript-community/ui-canvas/shapes').Text);
-registerNativeViewElement('image', () => require('@nativescript-community/ui-image').Img, null, {}, { override: true });
 registerNativeViewElement('canvaslabel', () => require('@nativescript-community/ui-canvaslabel').CanvasLabel);
 registerNativeViewElement('cspan', () => require('@nativescript-community/ui-canvaslabel').Span);
 registerNativeViewElement('cgroup', () => require('@nativescript-community/ui-canvaslabel').Group);
@@ -86,6 +84,7 @@ DrawerElement.register();
 // Trace.enable();
 import { start } from '~/helpers/theme';
 import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
+import { CartoMap } from '@nativescript-community/ui-carto/ui';
 // on startup we need to ensure theme is loaded because of a mixin
 // on startup we need to say what we are using
 start();
@@ -107,7 +106,6 @@ themer.createShape('round', {
 // we need to instantiate it to "start" it
 const bgService = new BgService();
 Application.on(Application.launchEvent, () => {
-    initialize({ isDownsampleEnabled: true });
 
     networkService.start();
     // const receiverCallback = (androidContext, intent: android.content.Intent) => {
@@ -119,7 +117,6 @@ Application.on(Application.launchEvent, () => {
     // }
 });
 Application.on(Application.exitEvent, () => {
-    shutDown();
     networkService.stop();
     // if (global.isAndroid) {
     // application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_ON);

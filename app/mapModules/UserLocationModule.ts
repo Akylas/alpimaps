@@ -1,5 +1,5 @@
 import { lc } from '@nativescript-community/l';
-import { TWEEN } from '@nativescript-community/tween';
+import { Tween } from '@nativescript-community/ui-chart/animation/Tween';
 import { MapPos, MapPosVector } from '@nativescript-community/ui-carto/core';
 import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
 import { VectorLayer } from '@nativescript-community/ui-carto/layers/vector';
@@ -155,26 +155,9 @@ export default class UserLocationModule extends MapModule {
         } else if (accuracy > 20) {
             accuracyColor = 'orange';
         }
-        // console.log(
-        //     'updateUserLocation',
-        //     position,
-        //     this.userFollow,
-        //     geoPos.timestamp.valueOf(),
-        //     new Date().valueOf(),
-        //     // dayjs(new Date()).valueOf(),
-        //     // dayjs().valueOf(),
-        //     // geoPos.timestamp,
-        //     // new Date(),
-        //     // dayjs(new Date()),
-        //     // dayjs(Date.now()),
-        //     // dayjs(),
-        //     deltaMinutes,
-        //     accuracyColor
-        // );
         if (!this.userMarker) {
             const posWithoutAltitude = { lat: position.lat, lon: position.lon };
             this.getOrCreateLocalVectorLayer();
-            // const projection = this.mapView.projection;
 
             this.accuracyMarker = new Polygon<LatLonKeys>({
                 positions: this.getCirclePoints(position),
@@ -214,18 +197,16 @@ export default class UserLocationModule extends MapModule {
             // const currentLocation = { lat: this.lastUserLocation.latitude, lon: this.lastUserLocation.longitude, horizontalAccuracy: this.lastUserLocation.horizontalAccuracy };
             this.userMarker.color = accuracyColor;
             this.accuracyMarker.visible = accuracy > 20;
-            new TWEEN.Tween(this.lastUserLocation)
-                .to(position, LOCATION_ANIMATION_DURATION)
-                .easing(TWEEN.Easing.Quadratic.Out)
-                .onUpdate((newPos) => {
+            new Tween({
+                onRender: (newPos: MapPos<LatLonKeys> & { horizontalAccuracy: number; verticalAccuracy: number; speed: number }) => {
                     if (this.userMarker) {
                         const { altitude, ...posWithoutAltitude } = newPos;
                         this.accuracyMarker.positions = this.getCirclePoints(posWithoutAltitude);
                         this.userBackMarker.position = posWithoutAltitude;
                         this.userMarker.position = posWithoutAltitude;
                     }
-                })
-                .start(0);
+                }
+            }).tween(this.lastUserLocation, position as any, LOCATION_ANIMATION_DURATION);
 
             // this.userBackMarker.position = position;
             // this.userMarker.position = position;

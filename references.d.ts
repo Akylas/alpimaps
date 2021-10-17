@@ -20,7 +20,6 @@ declare module '*.scss' {
 declare namespace akylas {
     export namespace alpi {
         export namespace maps {
-            export class NightModeApplication extends android.app.Application {}
             export class WorkersContext {
                 public static getValue(key): any;
                 public static setValue(key: string, value);
