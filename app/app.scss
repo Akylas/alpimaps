@@ -61,6 +61,9 @@ button {
         ripple-color: $text-color-dark;
     }
 }
+mdbutton[variant=text] {
+    padding:0;
+}
 mdtextfield,
 textfield {
     color: $text-color-light;

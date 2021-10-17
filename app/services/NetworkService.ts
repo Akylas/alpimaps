@@ -1,17 +1,16 @@
-import * as connectivity from '@nativescript/core/connectivity';
-import { ApplicationEventData, EventData, Observable, knownFolders } from '@nativescript/core';
-import { BaseError } from 'make-error';
-import mergeOptions from 'merge-options';
-import { GenericMapPos, MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
-import { l } from '~/helpers/locale';
-import { off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
-import { getBounds, getPathLength } from '~/helpers/geolib';
-import { RouteProfile } from '~/models/Route';
-import * as appavailability from '@nativescript/appavailability';
-import { ad } from '@nativescript/core/utils/utils';
-
-import { Headers } from '@nativescript/core/http';
 import * as https from '@nativescript-community/https';
+import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
+import * as appavailability from '@nativescript/appavailability';
+import { ApplicationEventData, EventData, Observable, knownFolders } from '@nativescript/core';
+import { off as applicationOff, on as applicationOn, resumeEvent } from '@nativescript/core/application';
+import * as connectivity from '@nativescript/core/connectivity';
+import { Headers } from '@nativescript/core/http';
+import { ad } from '@nativescript/core/utils/utils';
+import extend from 'just-extend';
+import { BaseError } from 'make-error';
+import { getBounds, getPathLength } from '~/helpers/geolib';
+import { l } from '~/helpers/locale';
+import { RouteProfile } from '~/models/Item';
 import { createGlobalEventListener, globalObservable } from '~/variables';
 
 export const onNetworkChanged = createGlobalEventListener('network');
@@ -87,7 +86,7 @@ function prepareOSMWay(way, nodes) {
         start: points[0],
         startOnRoute: true,
         endOnRoute: true,
-        end: points[points.length - 1]
+        end: points.at(-1)
     };
     Object.keys(OSMReplaceKeys).forEach(function (key) {
         if (way.tags[key]) {
@@ -742,26 +741,26 @@ export class NetworkService extends Observable {
                 for (let i = 0; i < ways.length; i++) {
                     const current = ways[i];
                     const start = current.nodes[0];
-                    const end = current.nodes[current.nodes.length - 1];
+                    const end = current.nodes.at(-1);
                     for (wayId in resultingWays) {
                         comparing = resultingWays[wayId];
                         if (!comparing || !canMerge(comparing, current)) {
                             continue;
                         }
                         start2 = comparing.nodes[0];
-                        end2 = comparing.nodes[comparing.nodes.length - 1];
+                        end2 = comparing.nodes.at(-1);
 
                         if (start2 === end) {
                             comparing.nodes = current.nodes.slice(0, -1).concat(comparing.nodes);
                             comparing.geometry = current.geometry.slice(0, -1).concat(comparing.geometry);
                             delete resultingWays[current.id + ''];
-                            comparing.tags = mergeOptions(current.tags, comparing.tags);
+                            comparing.tags = extend({}, current.tags, comparing.tags);
                             break;
                         } else if (end2 === start) {
                             comparing.nodes = comparing.nodes.concat(current.nodes.slice(1));
                             comparing.geometry = comparing.geometry.concat(current.geometry.slice(1));
                             delete resultingWays[current.id + ''];
-                            comparing.tags = mergeOptions(current.tags, comparing.tags);
+                            comparing.tags = extend({}, current.tags, comparing.tags);
                             break;
                         }
                     }
@@ -839,7 +838,7 @@ export class NetworkService extends Observable {
             // console.debug('semi', semi);
             const r = await this.actualMapquestElevationProfile(_points.slice(0, semi));
             const r2 = await this.actualMapquestElevationProfile(_points.slice(semi));
-            const firstDistanceTotal = r.elevationProfile[r.elevationProfile.length - 1].distance;
+            const firstDistanceTotal = r.elevationProfile.at(-1).distance;
             res = {
                 elevationProfile: r.elevationProfile.concat(
                     r2.elevationProfile.map((e) => {
