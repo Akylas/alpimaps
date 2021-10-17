@@ -8,5 +8,5 @@ ext {
     androidXVersion = "1.2.0"
     androidXMaterial = "1.4.0"
     androidXBrowser = "1.3.0"
-    cartoMobileVersion = "4.4.1.1"
+    cartoMobileVersion = "4.4.2"
 }
