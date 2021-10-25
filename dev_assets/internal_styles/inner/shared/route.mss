@@ -46,7 +46,6 @@
 			text-size: @route_text_width;
 			text-halo-fill: @route_label_halo;
 			text-halo-radius: @route_label_halo_radius;
-			text-halo-rasterizer: fast;
 			text-dy: @route_text_dy;
 		}
 	}
