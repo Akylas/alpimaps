@@ -26,7 +26,7 @@ const groupBy = function(xs, func) {
 
 json.Map.Style.forEach((style, index) =>{
     if (Array.isArray(style.Rule)) {
-        const sortedRules = groupBy(style.Rule, s=> Object.keys(s).filter(k=>!k.endsWith('ScaleDenominator')).sort().map(k=>k+JSON.stringify(s[k])).join(''));
+        const sortedRules = groupBy(style.Rule, s=> s.Filter || '__');
         Object.keys(sortedRules).forEach(k=> {
             let subRules = sortedRules[k];
             if(subRules.length>1) {
