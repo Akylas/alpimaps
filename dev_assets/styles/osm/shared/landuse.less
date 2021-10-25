@@ -1,68 +1,49 @@
 @name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
 Map {
-	// background-color: @background;
-  // ['nuti::drawBackground'!=0] {
-    background-color: @background;
-  // }
+  background-color: @background;
   south-pole-color: @background;
   north-pole-color: @water;
 	font-directory: url(fonts/);
 }
 #landcover['mapnik::geometry_type'=3] {
-  // ::first {
-    // [natural='mud'],
-    [class=tidalflat] {
-      // [zoom >= 9] {
-        polygon-fill: @mud;
-        // [way_pixels >= 4]  { polygon-gamma: 0.75; }
-        // [way_pixels >= 64] { polygon-gamma: 0.3;  }
-      // }
-    }
-  // }
+  [class=tidalflat] {
+    polygon-fill: @mud;
+  }
 
   [class=ice] {
       polygon-fill: @glacier;
   }
 
-
-  [class=farmland][zoom >= 14]{
+  [class=farmland][zoom>=14]{
       polygon-fill: @farmland;
-      [subclass=vineyard][zoom >= 15] {
+      [subclass=vineyard][zoom>=15] {
         polygon-pattern-file: url('symbols/vineyard.png');
       }
-      [subclass=orchard][zoom >= 15] {
+      [subclass=orchard][zoom>=15] {
         polygon-pattern-file: url('symbols/orchard.png');
     }
   }
   
-  [class=rock][zoom >= 5]{
+  [class=rock][zoom>=5]{
     polygon-fill: @rock;
     [subclass=bare_rock]  {
-      [zoom >=13] {
+      [zoom>=13] {
         polygon-pattern-fill: @rock_pattern_fill;
         polygon-pattern-file: @rock_pattern;
       }
     }
     [subclass=scree]{
       polygon-fill: @scree;
-      [zoom >=13] {
+      [zoom>=13] {
         polygon-pattern-fill: @scree_pattern_fill;
         polygon-pattern-file: @scree_pattern;
       }
     }
   }
-  
-
-
-  
-
-  [class=farmyard][zoom >= 10] {
+  [class=farmyard][zoom>=10] {
     polygon-fill: @farmyard;
   }
-
-
   [class=grass]{
-
     [subclass=golf_course]::grass,
     [subclass=miniature_golf]::grass{
       polygon-fill: @golf_course;
@@ -79,8 +60,6 @@ Map {
     [subclass=garden] {
         polygon-fill: @grass;
     }
-
-
     [subclass=heath] {
       polygon-fill: @heath;
     }
@@ -89,10 +68,14 @@ Map {
     }
     [subclass=scrub] {
       polygon-fill:@scrub;
+      [zoom>=14] {
+        polygon-pattern-file: @scrub_pattern;
+        polygon-pattern-opacity:linear([view::zoom], (14, 1), (17,0.5));
+      }
     }
     [subclass=allotments]{
       polygon-fill:@allotments;
-      [zoom >= 15] {
+      [zoom>=15] {
         polygon-pattern-file: url('symbols/allotments.png');
       }
     }
@@ -103,7 +86,7 @@ Map {
   }
   [class=wood]::wood{
     polygon-fill: @forest;
-    [zoom >=14] {
+    [zoom>=14] {
       polygon-pattern-file: @forest_pattern;
       polygon-pattern-opacity:linear([view::zoom], (14, 0.5), (16,0.2));
     }
@@ -113,106 +96,48 @@ Map {
     [subclass=swamp] {
       polygon-fill: @forest;
     }
-  
     [subclass=bog] {
-        polygon-fill: @heath;
-      // }
+      polygon-fill: @heath;
     }
   
     [subclass=wet_meadow],
+    [subclass=saltmarsh],
     [subclass=marsh] {
-      // [zoom >= 5] {
         polygon-fill: @grass;
-        // [way_pixels >= 4]  { polygon-gamma: 0.75; }
-        // [way_pixels >= 64] { polygon-gamma: 0.3;  }
-      // }
     }
-    [zoom >= 13] {
+    [zoom>=13] {
       polygon-pattern-file: url('symbols/wetland.png');
-      [subclass=marsh],
-      [subclass=saltmarsh],
-      [subclass=wet_meadow] {
-        polygon-pattern-file: url('symbols/marsh.png');
-        
-      }
-      [subclass=reedbed] {
-        polygon-pattern-file: url('symbols/reed.png');
-        
-      }
-      [subclass=mangrove] {
-        polygon-pattern-file: url('symbols/mangrove.png');
-        
-      }
-      [subclass=swamp] {
-        polygon-pattern-file: url('symbols/swamp.png');
-        
-      }
-      [subclass=bog] {
-        polygon-pattern-file: url('symbols/bog.png');
-        
-      }
     }
-    
   }
 }
 
 #landuse {
-  [class=residential][zoom>=4][zoom <= 10],
+  [class=residential][zoom>=4][zoom<=10],
   [class=quarter][zoom>=4],
-  // [class=suburb][zoom >= 4],
-  [class=neighbourhood][zoom >= 4][zoom <= 10]{
+  [class=neighbourhood][zoom>=4][zoom<=10]{
        polygon-fill: @residential; 
   }
-
-  
   ::top_of_residential {
-    [class=recreation_ground][zoom >= 14],
-    [class=playground][zoom >= 15]{
+    [class=recreation_ground][zoom>=14],
+    [class=playground][zoom>=15]{
       polygon-fill: @leisure;
     }
 
-    [class=cemetery][zoom >= 10]{
+    [class=cemetery][zoom>=10]{
         polygon-fill: @cemetery;
     }
 
-
-
-
-    // [class=retail],
-    // [class=marketplace] {
-    //   [zoom >= 8] {
-    //     // polygon-fill: @built-up-lowzoom;
-    //     [zoom >= 11] { polygon-fill: @societal_amenities_low_zoom; }
-    //     [zoom >= 13] { polygon-fill: @retail; }
-    //     [zoom >= 15] {
-    //       line-width: 0.5;
-    //       line-color: @retail-line;
-    //       [name != ''] {
-    //         line-width: 0.7;
-    //       }
-    //       // [way_pixels >= 4]  { polygon-gamma: 0.75; }
-    //       // [way_pixels >= 64] { polygon-gamma: 0.3;  }
-    //     }
-    //   }
-    // }
     [class=industrial] {
       polygon-fill: @industrial;
     }
-    [class=dam][zoom>=13],
-    [class=weir][zoom>=15]{
+    [class=dam][zoom>=13]{
       polygon-fill: @dam_fill;
       line-color: @dam_casing;
       line-width: 1;
     }
-
-    // [class=railway] {
-    //   polygon-fill: @railway;
-    // }
-
-    [class=quarry][zoom >= 10] {
+    [class=quarry][zoom>=10] {
       polygon-fill: @quarry;
-      // polygon-pattern-file: url('symbols/quarry.svg');
-      [zoom >= 13] {
+      [zoom>=13] {
         line-width: 0.5;
         line-color: darken(@quarry, 30%);
       }
@@ -220,12 +145,9 @@ Map {
 
     [class=commercial]{
       polygon-fill: @commercial; 
-      [zoom >= 16] {
+      [zoom>=16] {
         line-width: 0.5;
         line-color: darken(@commercial, 20%);
-        [name != null] {
-          line-width: 0.7;
-        }
       }
     }
 
@@ -239,88 +161,62 @@ Map {
     [class=school] {
       polygon-fill:  @school;
     }
-
-
-
-
-    
-    [class=parking]{
-      [zoom >= 14] {
-        polygon-fill: @parking;
-        [zoom >= 15] {
-          line-width: 0.3;
-          line-color: @parking-outline;
-        }
+    [class=parking][zoom>=14]{
+      polygon-fill: @parking;
+      [zoom>=15] {
+        line-width: 0.3;
+        line-color: @parking-outline;
       }
     }
 
-    [class=military][zoom >= 13]{
+    [class=military][zoom>=13]{
       polygon-pattern-file: url('symbols/military_red_hatch.png');
       polygon-opacity:linear([view::zoom], (13, 0.2), (15,0.1), (17,0));
       line-color: @military;
       line-opacity: 0.24;
       line-width: linear([view::zoom], (13, 1), (15,2));
     }
-    [class=embankment][zoom >= 15]::man_made {
-      line-pattern-file: url('symbols/embankment.svg');
-    }
-    [class=zoo][zoom >= 17],
-    [class=theme_park][zoom >= 17] {
-      a/line-width: 1;
+    [class=zoo][zoom>=17],
+    [class=theme_park][zoom>=17] {
+      a/line-width: 2;
       a/line-color: @tourism;
       a/line-opacity: 0.5;
       a/line-join: round;
       a/line-cap: round;
-      [zoom >= 17],
-      [way_pixels >= 60] {
-        b/line-width: 4;
+      [way_pixels>=60] {
+        b/line-width: 6;
         b/line-color: @tourism;
         b/line-opacity: 0.3;
         b/line-join: round;
         b/line-cap: round;
       }
-      [zoom >= 17] {
-        a/line-width: 2;
-        b/line-width: 6;
-      }
     }
-
-    // [class=apron][zoom >= 10] {
-    //   polygon-fill: @apron;
-    // }
-
-    [class=aerodrome][zoom >= 10],
-    [class=ferry_terminal][zoom >= 15],
-    [class=bus_station][zoom >= 15] {
+    [class=bus_station][zoom>=15] {
       polygon-fill: @transportation-area;
       line-width: 0.2;
       line-color: saturate(darken(@transportation-area, 40%), 20%);
-      // [way_pixels >= 4]  { polygon-gamma: 0.75; }
-      // [way_pixels >= 64] { polygon-gamma: 0.3;  }
     }
-
-
     [class=stadium] {
-      [zoom >= 10] {
+      [zoom>=10] {
         polygon-fill: @stadium;
-        [zoom >= 13] {
+        [zoom>=13] {
           line-width: 0.3;
           line-color: darken(@stadium, 35%);
         }
       }
     }
 
-    [class=track][zoom >= 10] {
+    [class=track][zoom>=10] {
       polygon-fill: @track;
-      [zoom >= 15] {
+      [zoom>=15] {
         line-width: 0.5;
         line-color: desaturate(darken(@track, 20%), 10%);
       }
     }
 
-    [class=pitch][zoom >= 12]::pitch {
+    [class=pitch][zoom>=12]::pitch {
       polygon-fill: @pitch;
-      [zoom >= 15] {
+      [zoom>=15] {
         line-width: 0.5;
         line-color: desaturate(darken(@pitch, 20%), 10%);
       }
@@ -338,21 +234,16 @@ Map {
     text-wrap-width: 100;
   }  
   [class=rock][subclass=cliff][zoom>=12]::cliff { 
-    // line-pattern-fill: @cliff;
     line-color: @cliff;
     line-width: @cliff-width;
-    // line-pattern-geometry-transform: scale(1, 0.5);
-    // line-pattern-file:url('symbols/cliff.svg');
-    // line-pattern-fill:@cliff;
-    [zoom >= 15] {
-      // line/line-geometry-transform: translate(0, 2);
+    [zoom>=15] {
       line/line-offset: linear([view::zoom], (15, 0), (16,-2));
       line/line-color: @cliff; 
       line/line-dasharray: 1,8;
       line/line-width: linear([view::zoom], (15, 0), (16,3));
     }
   }
-  [class=barrier][zoom >= 15] {
+  [class=barrier][zoom>=15] {
 		[subclass=citywalls],
 		[subclass=city_wall] {
 		  line-width:linear([view::zoom], (15, 1), (17, 2),(20,3));
@@ -365,43 +256,26 @@ Map {
 		}
 	}
 }
-#building['nuti::buildings'>0] [zoom >= 14] {
-    ::3d['nuti::buildings'>1][zoom>=17]{
+#building['nuti::buildings'>0][zoom>=14] {
+    ['nuti::buildings'=2][zoom>=17]::3d{
         building-height: [render_height] ? [render_height] : 10;
         building-min-height: [render_min_height];
         building-fill: @building-fill;
         building-fill-opacity: 0.45;
     } 
     
-    [zoom >= 15] {
+    [zoom>=15] {
       polygon-fill: @building-fill;
       polygon-opacity: @building-opacity;
       line-color: @building-line;
       line-width: @building-line-width;
     }
-    // [class=school],
-    // [class=place_of_worship],
-    // [class=terminal],
-    // [class=station],
-    // [class=train_station],
-    // [class=station] {
-    //   polygon-fill: @building-major-z14;
-    //   [zoom >= 15] {
-    //     polygon-fill: @building-major-z15;
-    //     line-color: @building-major-line;
-    //     [zoom >= 16] {
-    //       polygon-fill: @building-major-fill;
-    //     }
-    //   }
-    // }
 }
 
 #aeroway['mapnik::geometry_type'=3]{
-
   [class=aerodrome] {
     polygon-fill: @aeroway;
   }
-
   [class=apron] {
     polygon-fill: @apron-fill;
   }
