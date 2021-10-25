@@ -1,9 +1,5 @@
-/* For the main linear features, such as roads and railways. */
 @name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
-// @selected_route_line_width: ([osmid] = [nuti::selected_id]) 4 ? 2;
 @selected_item_id: ([osmid] ? [osmid] : [ref] ? [ref] : [name]) + '';
-
-
 
 #transportation['mapnik::geometry_type'=3] {
 	[zoom>=13]::casing {
@@ -35,11 +31,6 @@
 		[class=track][zoom>=15] {
 			polygon-fill: @track-fill;
 			polygon-opacity: 0.7;
-			// line-color: @track-casing;
-			// line-width: 1;
-			// line-dasharray: 5,4,2,4;
-			// line-cap: round;
-			// line-join: round;
 		}
 	
 		[class=bridge] {
@@ -50,20 +41,11 @@
 	}
 }
 
-
 #transportation['mapnik::geometry_type'=2] {
 	[class=service][zoom>=15]::casing, 
 	[class=service][brunnel=bridge][zoom>=15]::bridge {
 		line-width: @service-width + @service-casing-width;
 		line-color: @service-casing;
-		// [ramp=1] {
-		// 	line-width: @service-link-width + @service-casing-width;
-		// }
-		// [brunnel=tunnel] {
-		// 	// line-opacity:@tunnel-opacity
-		// 	line-color: @service-tunnel-fill;
-		// 	line-dasharray: @tunnel-dasharray;
-		// }
 		line-join: round;
 		line-cap: round;
 		[brunnel=tunnel][zoom>=13]{
@@ -111,23 +93,11 @@
 				line-opacity: @noaccess-opacity;
 			}
 			line-width: @residential-width;
-			// [ramp=1] {
-			// 	line-width: @residential-link-width;
-			// }
-			// [brunnel=tunnel] {
-			// 	line-join: miter;
-			// 	line-cap: butt;
-			// 	line-dasharray: @tunnel-dasharray;
-			// 	line-color: @residential-tunnel-fill;
-			// }
 		}
 	}
 	[class=tertiary][zoom>=11]::casing, 
 	[class=tertiary][brunnel=bridge][zoom>=15]::bridge1 {
 		line-width: @tertiary-width + @tertiary-casing-width;
-		// [ramp=1] {
-		// 	line-width: @tertiary-link-width + @tertiary-casing-width;
-		// }
 		line-color: @tertiary-casing;
 		line-join: round;
 		line-cap: round;
@@ -146,22 +116,12 @@
 			line-cap: round;
 			line-color: @tertiary-fill;
 			line-width: @tertiary-width;
-			// [ramp=1] {
-			// 	line-width: @tertiary-link-width;
-			// }
-			// [brunnel=tunnel] {
-			// 	line-dasharray: @tunnel-dasharray;
-			// 	line-color: @tertiary-tunnel-fill;
-			// }
 		}
 	}
 	[class=secondary][zoom>=9]::casing, 
 	[class=secondary][zoom>=9][zoom<15]::casingLowZoom,
 	[class=secondary][brunnel=bridge][zoom>=15]::bridge1{
 		line-width: @secondary-width + @secondary-casing-width;
-		// [ramp=1] {
-		// 	line-width: @secondary-link-width + @secondary-casing-width;
-		// }
 		line-color: @secondary-casing;
 		line-join: round;
 		line-cap: round;
@@ -180,13 +140,6 @@
 			line-cap: round;
 			line-color: @secondary-fill;
 			line-width: @secondary-width;
-			// [ramp=1] {
-			// 	line-width: @secondary-link-width;
-			// }
-			// [brunnel=tunnel] {
-			// 	line-opacity:@tunnel-opacity
-			// 	line-color: @secondary-tunnel-fill;
-			// }
 		}
 	}
 	[class=primary][zoom>=15]::casing, 
@@ -218,13 +171,6 @@
 			[ramp=1] {
 				line-width: @primary-link-width;
 			}
-			// [ramp=1] {
-			// 	line-width: @primary-link-width;
-			// }
-			// [brunnel=tunnel] {
-			// 	line-opacity:@tunnel-opacity
-			// 	line-color: @primary-tunnel-fill;
-			// }
 		}
 	}
 	[class=trunk][zoom>=14]::casing,
@@ -307,9 +253,6 @@
 			line-cap: round;
 		}
 	}
-	
-	
-	
 	[class=piste][zoom>=14]::casing{
 		line-color: @piste-casing-fill;
 		line-join: round;
@@ -330,7 +273,7 @@
 		[subclass=path][sac_scale!=null],
 		[zoom>=13] {
 			[subclass=cycleway],[bicycle=designated][mtb_type=null][surface!=unpaved] {
-				[zoom >= 14][@cycleway-fill!=0] {
+				[zoom>=14][@cycleway-fill!=0] {
 					cycleway/line-color: @cycleway-fill;
 					cycleway/line-width: @path-width + @path-casing-width+ @cycleway-casing-width;
 				}
@@ -362,7 +305,7 @@
 				line-width: @path-width;
 				line-dasharray: @path-dasharray;
 				[subclass=cycleway],[bicycle=designated][mtb_type=null][surface!=unpaved] {
-					[zoom >= 14] {
+					[zoom>=14] {
 						line-color: @cycleway-inner-fill;
 						// line-width: @path-width;
 					}
