@@ -473,24 +473,21 @@
 		}
 	}
 }
-#poi[class=spring][zoom>=10] {
+#poi[class=spring][zoom>=12] {
 	::icon {
 		text-placement: [nuti::markers3d];
 		text-name: @osm_icon;
-		text-size: @poi_icon_width;
 		text-face-name: @osm;
 		text-feature-id: @featureId;
 		text-halo-fill: @poi_halo;
-		text-halo-radius: @poi_halo_radius;
+		text-halo-radius: @poi-spring_halo_radius;
 		text-fill: @poi-water-fill;
 		text-size: @poi-spring-size;
-		text-halo-radius: 0;
 	}
 	[zoom>=17]::text {
 		text-name: @name;
 		text-face-name: @mont_md;
 		text-placement: [nuti::texts3d];
-		text-fill: @poi-fill;
 		text-halo-fill: @poi_halo;
 		text-halo-radius: @poi_halo_radius;
 		text-size: @poi_label_width;
@@ -498,7 +495,6 @@
 		text-feature-id: @featureId;
 		text-dy: @poi_label_dy;
 		text-fill: darken(@poi-water-fill, 30%);
-		text-size: @poi-spring-size;
 	}
 }
 #poi[class!=lodging][class!=spring][class!=campsite] {
@@ -548,49 +544,47 @@
 		}
 
 		[class!=bus][class!=railway],
-		[zoom>=17] {
-			::text {
-				text-name: @name;
-				text-face-name: @mont_md;
-				text-placement: [nuti::texts3d];
-				text-fill: @poi-fill;
-				text-halo-fill: @poi_halo;
-				text-halo-radius: @poi_halo_radius;
-				text-size: @poi_label_width;
-				text-wrap-width: @poi_label_wrap_width;
-				text-feature-id: @featureId;
-				text-dy: @poi_label_dy;
-				text-fill: @poi-fill;
-				[class=park] {
-					text-fill: darken(@poi-park-fill, 30%);
-				}
-				[class=national_park],[class=protected_area] {
-					text-fill: darken(@poi-national_park-fill, 30%);
-				}
-				[class=aboriginal_lands] {
-					text-fill: darken(@poi-aboriginal-fill, 20%);
-				}
-				[class=hospital] {
-					text-fill: darken(@poi-hospital-fill, 30%);
-				}
-				[class=railway][subclass=tram_stop], [class=bus][subclass=bus_stop] {
-					text-fill: darken(@poi-bus-fill, 30%);
-				}
-				[class=pharmacy] {
-					text-fill: darken(@poi-pharmacy-fill, 30%);
-				}
-				[class=fountain],[class=drinking_water],[class=bassin],[class=waterfall] {
-					text-fill: darken(@poi-water-fill, 30%);
-				}
-				[class=bakery] {
-					text-fill: darken(@poi-bakery-fill, 30%); 
-				}
-				[class=restaurant],[class=fast_food] {
-					text-fill: darken(@poi-restaurant-fill, 30%); 
-				}
-				[class=shop],[class=groceries] {
-					text-fill: darken(@poi-shop-fill, 30%); 
-				}
+		[zoom>=17]::text {
+			text-name: @name;
+			text-face-name: @mont_md;
+			text-placement: [nuti::texts3d];
+			text-fill: @poi-fill;
+			text-halo-fill: @poi_halo;
+			text-halo-radius: @poi_halo_radius;
+			text-size: @poi_label_width;
+			text-wrap-width: @poi_label_wrap_width;
+			text-feature-id: @featureId;
+			text-dy: @poi_label_dy;
+			text-fill: @poi-fill;
+			[class=park] {
+				text-fill: darken(@poi-park-fill, 30%);
+			}
+			[class=national_park],[class=protected_area] {
+				text-fill: darken(@poi-national_park-fill, 30%);
+			}
+			[class=aboriginal_lands] {
+				text-fill: darken(@poi-aboriginal-fill, 20%);
+			}
+			[class=hospital] {
+				text-fill: darken(@poi-hospital-fill, 30%);
+			}
+			[class=railway][subclass=tram_stop], [class=bus][subclass=bus_stop] {
+				text-fill: darken(@poi-bus-fill, 30%);
+			}
+			[class=pharmacy] {
+				text-fill: darken(@poi-pharmacy-fill, 30%);
+			}
+			[class=fountain],[class=drinking_water],[class=bassin],[class=waterfall] {
+				text-fill: darken(@poi-water-fill, 30%);
+			}
+			[class=bakery] {
+				text-fill: darken(@poi-bakery-fill, 30%); 
+			}
+			[class=restaurant],[class=fast_food] {
+				text-fill: darken(@poi-restaurant-fill, 30%); 
+			}
+			[class=shop],[class=groceries] {
+				text-fill: darken(@poi-shop-fill, 30%); 
 			}
 
 		}
