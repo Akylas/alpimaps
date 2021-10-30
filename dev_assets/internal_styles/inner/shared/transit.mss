@@ -9,9 +9,9 @@
         text-fill: gray;
         text-size:linear([view::zoom], (13, 7), (16, 12));
         text-halo-radius: 0.4;
-        text-halo-fill: @lineColor;
+        text-halo-fill: white;
         text-placement: line;
-        text-face-name: @mont_bd;
+        text-face-name: @mont_md;
         text-dy:linear([view::zoom], (13, 2), (16, 3), (17, 4));
     }
 }
