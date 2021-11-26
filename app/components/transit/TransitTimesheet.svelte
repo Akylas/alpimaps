@@ -108,7 +108,7 @@
                     }
                 })
             );
-            datePicker.show(page.nativeView._getRootFragmentManager(), 'datepicker');
+            datePicker.show((page.nativeView as any)._getRootFragmentManager(), 'datepicker');
         });
     }
 
@@ -128,7 +128,7 @@
                     }
                 })
             );
-            timePicker.show(page.nativeView._getRootFragmentManager(), 'timepicker');
+            timePicker.show((page.nativeView as any)._getRootFragmentManager(), 'timepicker');
         });
     }
     async function selectDate() {
@@ -178,7 +178,7 @@
         try {
             const component = (await import('~/components/transit/TransitLineDetails.svelte')).default;
             await navigate({
-                page: component,
+                page: component as any,
                 props: {
                     line
                 }

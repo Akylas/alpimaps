@@ -1,10 +1,12 @@
 @name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
+
 Map {
   background-color: @background;
   south-pole-color: @background;
   north-pole-color: @water;
-	font-directory: url(fonts/);
+  font-directory: url(fonts/);
 }
+
 #landcover['mapnik::geometry_type'=3] {
   [class=tidalflat] {
     polygon-fill: @mud;
@@ -183,13 +185,13 @@ Map {
       a/line-opacity: 0.5;
       a/line-join: round;
       a/line-cap: round;
-      [way_pixels>=60] {
-        b/line-width: 6;
-        b/line-color: @tourism;
-        b/line-opacity: 0.3;
-        b/line-join: round;
-        b/line-cap: round;
-      }
+      // [way_pixels>=60] {
+      //   b/line-width: 6;
+      //   b/line-color: @tourism;
+      //   b/line-opacity: 0.3;
+      //   b/line-join: round;
+      //   b/line-cap: round;
+      // }
     }
     [class=bus_station][zoom>=15] {
       polygon-fill: @transportation-area;
@@ -258,7 +260,7 @@ Map {
 }
 #building['nuti::buildings'>0][zoom>=14] {
     ['nuti::buildings'=2][zoom>=17]::3d{
-        building-height: [render_height] ? [render_height] : 10;
+        building-height: [render_height] ? [render_height] : 5;
         building-min-height: [render_min_height];
         building-fill: @building-fill;
         building-fill-opacity: 0.45;

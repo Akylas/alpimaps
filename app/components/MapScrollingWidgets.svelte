@@ -377,7 +377,7 @@
             let rasterDataSource: TileDataSource<any, any>;
             customSources.some((s) => {
                 if (s.layer instanceof RasterTileLayer) {
-                    rasterDataSource = s.layer.dataSource;
+                    rasterDataSource = s.layer.options.dataSource;
                     return true;
                 }
             });
@@ -440,7 +440,7 @@
         </mdcardview>
     </stacklayout>
     <stacklayout marginTop="80" row={2} verticalAlignment="bottom" horizontalAlignment="left">
-        <button on:tap={open3DMap} class="small-floating-btn" color={primaryColor} text="mdi-video-3d" />
+        <!-- <button on:tap={open3DMap} class="small-floating-btn" color={primaryColor} text="mdi-video-3d" /> -->
         <button on:tap={showMapRightMenu} class="small-floating-btn" color={primaryColor} text="mdi-layers" />
     </stacklayout>
 

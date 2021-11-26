@@ -4,14 +4,15 @@ module.exports = {
         es6: true,
         node: true
     },
-    ignorePatterns: ['**/node_modules/**/*'],
+    ignorePatterns: ['**/node_modules/**/*', 'app/assets/**', 'platforms/**'],
     parser: '@typescript-eslint/parser',
+
     parserOptions: {
         ecmaVersion: 2019,
         sourceType: 'module',
         parser: '@typescript-eslint/parser',
         project: 'tsconfig.eslint.json',
-        extraFileExtensions: ['.svelte'],
+        // extraFileExtensions: ['.svelte'],
         warnOnUnsupportedTypeScriptVersion: false,
         tsconfigRootDir: __dirname
     },
@@ -27,6 +28,9 @@ module.exports = {
             }
         }
     ],
+    settings: {
+        'svelte3/typescript': true // load TypeScript as peer dependency
+    },
     rules: {
         'prettier/prettier': 'warn',
         'eslint-plugin-svelte3/invalid-binding': 'off',

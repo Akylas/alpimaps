@@ -5,7 +5,7 @@
     import { allowSleepAgain, keepAwake } from '@nativescript-community/insomnia';
     import * as perms from '@nativescript-community/perms';
     import { isSensorAvailable } from '@nativescript-community/sensors';
-    import { ClickType, GenericMapPos, MapBounds, MapPos, toNativeMapRange, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
+    import { ClickType, MapBounds, MapPos, toNativeMapRange, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
     import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
     import { Layer } from '@nativescript-community/ui-carto/layers';
@@ -20,20 +20,19 @@
     import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
     import { Drawer } from '@nativescript-community/ui-drawer';
-    import { action, alert, login } from '@nativescript-community/ui-material-dialogs';
-    import { TextField } from '@nativescript-community/ui-material-textfield';
+    import { action } from '@nativescript-community/ui-material-dialogs';
     import { Brightness } from '@nativescript/brightness';
-    import { AndroidApplication, Application, Color, Page, profile, Utils } from '@nativescript/core';
+    import { AndroidApplication, Application, Page, profile, Utils } from '@nativescript/core';
     import * as appSettings from '@nativescript/core/application-settings';
     import type { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
-    import { Device, Screen } from '@nativescript/core/platform';
-    import { ad, executeOnMainThread } from '@nativescript/core/utils/utils';
+    import { Screen } from '@nativescript/core/platform';
+    import { ad, executeOnMainThread, isMainThread, mainThreadify } from '@nativescript/core/utils/utils';
+    import { Point as GeoJSONPoint } from 'geojson';
     import * as SocialShare from 'nativescript-social-share';
     import { debounce } from 'push-it-to-the-limit/target/es6';
     import { onDestroy, onMount } from 'svelte';
     import { navigate, showModal } from 'svelte-native';
-    import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { l, lc, onLanguageChanged } from '~/helpers/locale';
@@ -54,9 +53,7 @@
     import mapStore from '~/stores/mapStore';
     import { showError } from '~/utils/error';
     import { computeDistanceBetween, getBoundsZoomLevel } from '~/utils/geo';
-    import { Sentry } from '~/utils/sentry';
-    import { omit } from '~/utils/utils';
-    import { accentColor, screenHeightDips, screenWidthDips } from '~/variables';
+    import { accentColor } from '~/variables';
     import { navigationBarHeight, primaryColor } from '../variables';
     import { isBottomSheetOpened, showBottomSheet } from './bottomsheet';
     import BottomSheetInner from './BottomSheetInner.svelte';
@@ -64,11 +61,10 @@
     import LocationInfoPanel from './LocationInfoPanel.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
     import Search from './Search.svelte';
-    import type { Point as GeoJSONPoint } from 'geojson';
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
-    const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'transit', 'hillshade', 'selection', 'items', 'directions', 'search', 'userLocation'];
+    const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'routes', 'transit', 'hillshade', 'selection', 'items', 'directions', 'search', 'userLocation'];
     const KEEP_AWAKE_KEY = 'keepAwake';
     let defaultLiveSync = global.__onLiveSync;
 
@@ -136,13 +132,13 @@
     let handleSelectedRouteTimer: NodeJS.Timeout;
     let selectedRoutes: { featurePosition; featureData; layer: BaseVectorTileLayer<any, any> }[];
     let didIgnoreAlreadySelected = false;
-    let clickedFeatures = [];
+    // let clickedFeatures = [];
 
-    let showClickedFeatures = false;
+    // let showClickedFeatures = false;
     let showTransitLines = false;
-    let currentClickedFeatures: any[];
+    // let currentClickedFeatures: any[];
     let selectedClickMarker: Text<LatLonKeys>;
-    let selectedRouteInstructionsGroup: Group<LatLonKeys>;
+    // let selectedRouteInstructionsGroup: Group<LatLonKeys>;
 
     let transitVectorTileDataSource: GeoJSONVectorTileDataSource;
     let transitVectorTileLayer: VectorTileLayer;
@@ -157,18 +153,20 @@
         }
     }
 
-    $: {
-        if (showClickedFeatures === false) {
-            currentClickedFeatures = null;
-            if (selectedClickMarker) {
-                selectedClickMarker.visible = false;
-            }
-        }
-    }
+    $: console.log('bottomSheetStepIndex', bottomSheetStepIndex);
+
+    // $: {
+    //     if (showClickedFeatures === false) {
+    //         currentClickedFeatures = null;
+    //         if (selectedClickMarker) {
+    //             selectedClickMarker.visible = false;
+    //         }
+    //     }
+    // }
     let fetchingTransitLines = false;
     $: {
         if (showTransitLines) {
-            const pos = cartoMap.focusPos;
+            // const pos = cartoMap.focusPos;
             if (!transitVectorTileDataSource && !fetchingTransitLines) {
                 transitService
                     .getTransitLines()
@@ -183,6 +181,7 @@
                         if (!transitVectorTileLayer) {
                             transitVectorTileLayer = new VectorTileLayer({
                                 // preloading: true,
+                                labelRenderOrder: VectorTileRenderOrder.LAST,
                                 dataSource: transitVectorTileDataSource,
                                 decoder: mapContext.innerDecoder
                             });
@@ -448,6 +447,7 @@
             return;
         }
         appSettings.setNumber('mapZoom', cartoMap.zoom);
+        appSettings.setNumber('mapBearing', cartoMap.bearing);
         appSettings.setString('mapFocusPos', JSON.stringify(cartoMap.focusPos));
     }, 500);
 
@@ -462,22 +462,15 @@
                 setShowError(true);
             }
             projection = cartoMap.projection;
-            // if (global.isAndroid) {
-            //     console.log('onMapReady', com.carto.ui.BaseMapView.getSDKVersion());
-            // } else {
-            //     console.log('onMapReady', cartoMap.nativeViewProtected as NTMapView);
-            // }
-
             const options = cartoMap.getOptions();
             options.setWatermarkScale(0);
             options.setRestrictedPanning(true);
             options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
             // options.setSeamlessPanning(true);
-            // options.setEnvelopeThreadPoolSize(2);
+            options.setEnvelopeThreadPoolSize(2);
+            options.setTileThreadPoolSize(2);
 
-            // options.setTileThreadPoolSize(2);
             options.setZoomGestures(true);
-            // options.setDoubleClickDetection(false);
             options.setDoubleClickMaxDuration(0.3);
             options.setLongClickDuration(0.5);
             options.setKineticRotation(false);
@@ -487,23 +480,21 @@
             // options.setRotatable(true);
             const pos = JSON.parse(appSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos<LatLonKeys>;
             const zoom = appSettings.getNumber('mapZoom', 10);
+            const bearing = appSettings.getNumber('mapBearing', 0);
             cartoMap.setFocusPos(pos, 0);
             cartoMap.setZoom(zoom, 0);
-
-            // setTimeout(async () => {
+            cartoMap.setBearing(bearing, 0);
             try {
                 await perms.request('storage');
                 if (__CARTO_PACKAGESERVICE__) {
                     packageService.start();
                 }
                 transitService.start();
-                // setMapStyle(appSettings.getString('mapStyle', PRODUCTION ? 'osmxml.zip~osm' : 'osm~osm'), true);
                 setMapStyle(PRODUCTION ? 'osm.zip~osm' : 'osm~osm', true);
             } catch (err) {
                 showError(err);
             }
             mapContext.runOnModules('onMapReady', cartoMap);
-            // }, 100);
         } catch (error) {
             console.error(error);
         }
@@ -519,10 +510,10 @@
         // console.log('onMapMove', bearing);
         // currentMapRotation = Math.round(bearing * 100) / 100;
         mapContext.runOnModules('onMapMove', e);
-        // executeOnMainThread(()=>{
+        // executeOnMainThread(function () {
         currentMapRotation = Math.round(cartoMap.bearing * 100) / 100;
-        unFocusSearch();
         // });
+        unFocusSearch();
     }
     function onMainMapIdle(e) {
         if (!cartoMap) {
@@ -536,16 +527,17 @@
         }
         if (mapMoved) {
             mapMoved = false;
-            // executeOnMainThread(() => {
             saveSettings();
-            // })
         }
         mapContext.runOnModules('onMapStable', e);
     }
 
     function onMainMapClicked(e) {
         const { clickType, position } = e.data;
-        handleClickedFeatures(position);
+        if (DEV_LOG) {
+            console.log('onMainMapClicked', clickType, position);
+        }
+        // handleClickedFeatures(position);
         if (ignoreNextMapClick) {
             ignoreNextMapClick = false;
             return;
@@ -559,9 +551,7 @@
         if (!handledByModules && clickType === ClickType.SINGLE) {
             selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.lat] }, properties: {} }, isFeatureInteresting: !$selectedItem, preventZoom: true });
         }
-        // executeOnMainThread(()=>{
         unFocusSearch();
-        // });
     }
     function onSelectedItemChanged(oldValue: IItem, value: IItem) {
         mapContext.runOnModules('onSelectedItem', value, oldValue);
@@ -587,199 +577,170 @@
         zoom?: number;
         zoomDuration?: number;
     }) {
-        // console.log('selectItem')
-        return new Promise<void>(function (resolve, reject) {
-            executeOnMainThread(async function () {
-                try {
-                    didIgnoreAlreadySelected = false;
-                    if (isFeatureInteresting) {
-                        let isCurrentItem = item !== $selectedItem;
-                        // console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, new Error().stack);
-                        if (setSelected && isCurrentItem && !item) {
-                            unselectItem(false);
-                        }
-                        const route = item?.properties?.route;
-                        if (setSelected && route) {
-                            // console.log('instructions', item.route.instructions?.length, item.route.instructions && JSON.stringify(item.route.instructions));
-                            // const vectorElement = item.vectorElement as Line;
-                            // if (vectorElement) {
-                            //     const color = new Color(vectorElement.color as string);
-                            //     vectorElement.color = color.darken(10).hex;
-                            //     vectorElement.width += 2;
-                            // } else if (item.route.osmid) {
-                            if (item.properties.route.osmid) {
-                                selectedOSMId = item.properties.route.osmid + '';
-                                // setStyleParameter('selected_id', item.properties.route.osmid + '');
-                                mapContext.innerDecoder.setStyleParameter('selected_id', item.properties.route.osmid + '');
-                            } else if (item.properties.id) {
-                                selectedId = item.properties.id;
-                                mapContext.innerDecoder.setStyleParameter('selected_id', item.properties.id);
-                            }
-                            // console.log('selectedOSMId', selectedOSMId);
-                            // if (!selectedRouteLine) {
-                            //     getOrCreateLocalVectorLayer();
-                            //     selectedRouteLine = mapContext.mapModule('items').createLocalLine(item, {
-                            //         // color: '#55ff0000',
-                            //         color: (darkColor as any).setAlpha(150),
-                            //         joinType: LineJointType.ROUND,
-                            //         endType: LineEndType.ROUND,
-                            //         width: 3,
-                            //         clickWidth: 10
-                            //     });
-                            //     localVectorDataSource.add(selectedRouteLine);
-                            // } else {
-                            //     selectedRouteLine.positions = item.route.positions;
-                            //     selectedRouteLine.visible = true;
-                            // }
-                            // }
-                            // if (route.instructions) {
-                            //     if (!selectedRouteInstructionsGroup) {
-                            //         selectedRouteInstructionsGroup = new Group();
-                            //     }
-                            //     selectedRouteInstructionsGroup.elements = iroute.instructions.map(
-                            //         (i, index) =>
-                            //             new Point({
-                            //                 projection: mapContext.getProjection(),
-                            //                 position: omit(item.route.positions.getPos(i.index), 'altitude'),
-                            //                 styleBuilder: {
-                            //                     size: 12,
-                            //                     placementPriority: 10,
-                            //                     hideIfOverlapped: false,
-                            //                     scaleWithDPI: true,
-                            //                     color: 'red'
-                            //                 },
-                            //                 metaData: { instruction: JSON.stringify(i) }
-                            //             })
-                            //     );
-                            //     getOrCreateLocalVectorLayer();
-                            //     // selectedRouteInstructionsGroup.elements.forEach(e=>localVectorDataSource.add(e))
-                            //     localVectorDataSource.add(selectedRouteInstructionsGroup);
-                            // }
-
-                            if (selectedPosMarker) {
-                                selectedPosMarker.visible = false;
-                            }
-                        } else {
-                            const geometry = item.geometry as GeoJSONPoint;
-                            const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-                            if (!selectedPosMarker) {
-                                getOrCreateLocalVectorLayer();
-                                const itemModule = mapContext.mapModule('items');
-                                selectedPosMarker = itemModule.createLocalPoint(position, {
-                                    // color: '#55ff0000',
-                                    color: primaryColor.setAlpha(178).hex,
-                                    clickSize: 0,
-                                    scaleWithDPI: true,
-                                    size: 30
-                                    // orientationMode: BillboardOrientation.GROUND,
-                                    // scalingMode: BillboardScaling.SCREEN_SIZE
-                                });
-                                localVectorDataSource.add(selectedPosMarker);
-                            } else {
-                                selectedPosMarker.position = position;
-                                selectedPosMarker.visible = true;
-                            }
-                            if (setSelected && selectedOSMId) {
-                                selectedOSMId = null;
-                                // setStyleParameter('selected_id', '');
-                                mapContext.innerDecoder.setStyleParameter('selected_id', '');
-                            }
-                            if (selectedId) {
-                                selectedId = null;
-                                mapContext.innerDecoder.setStyleParameter('selected_id', '');
-                            }
-                        }
-                        // item.route = {
-                        //     instructions: Array.from({length: 40}, () => ({
-                        //         position: null,
-                        //         action: "left",
-                        //         azimuth: 0,
-                        //         distance: 0,
-                        //         time: 0,
-                        //         turnAngle: 0,
-                        //         streetName: 'toto'
-                        //     }))
-                        // } as any
-                        if (setSelected) {
-                            $selectedItem = item;
-                        }
-                        if (setSelected && !route && (!item.properties.address || !item.properties.address['street'])) {
-                            const service = packageService.localOSMOfflineReverseGeocodingService;
-                            if (service) {
-                                itemLoading = true;
-                                const radius = 200;
-
-                                const geometry = item.geometry as GeoJSONPoint;
-                                const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-                                // use a promise not to "wait" for it
-                                packageService
-                                    .searchInGeocodingService(service, {
-                                        projection,
-                                        location: position,
-                                        searchRadius: radius
-                                    })
-                                    .then((res) => {
-                                        if (res) {
-                                            let bestFind;
-                                            for (let index = 0; index < res.size(); index++) {
-                                                const r = packageService.convertGeoCodingResult(res.get(index), true);
-                                                if (r && r.properties.rank > 0.7 && computeDistanceBetween(position, r.properties.position) <= radius) {
-                                                    if (!bestFind || Object.keys(r.properties.address).length > Object.keys(bestFind.address).length) {
-                                                        bestFind = r;
-                                                    } else if (bestFind && item.properties.address && item.properties.address['street']) {
-                                                        break;
-                                                    }
-                                                } else {
-                                                    break;
-                                                }
-                                            }
-                                            if (bestFind && $selectedItem.geometry === item.geometry) {
-                                                if (item.properties.layer === 'housenumber') {
-                                                    $selectedItem.properties.address = { ...bestFind.address, name: null, houseNumber: item.properties.housenumber } as any;
-                                                    $selectedItem = $selectedItem;
-                                                } else {
-                                                    $selectedItem.properties.address = { ...bestFind.address, name: null } as any;
-                                                    $selectedItem = $selectedItem;
-                                                }
-                                            }
-                                        }
-                                    })
-                                    .catch((err) => console.error('searchInGeocodingService', err, err['stack']));
-                            }
-                            if (item.properties && 'ele' in item.properties === false && packageService.hasElevation()) {
-                                const geometry = item.geometry as GeoJSONPoint;
-                                const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-                                packageService.getElevation(position).then((result) => {
-                                    if ($selectedItem.geometry === item.geometry) {
-                                        $selectedItem.properties = $selectedItem.properties || {};
-                                        $selectedItem.properties['ele'] = result;
-                                        $selectedItem = $selectedItem;
-                                    }
-                                });
-                            }
-                        }
-
-                        // console.log('selectedItem', item);
-                        // const vectorTileDecoder = getVectorTileDecoder();
-                        // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
-                        // vectorTileDecoder.setStyleParameter('selected_name', (item.properties && item.properties.name) || '');
-                        if (peek) {
-                            await bottomSheetInner.loadView().then(() => {});
-                            bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
-                        }
-                        if (preventZoom) {
-                            return;
-                        }
-                        zoomToItem({ item, zoom, minZoom, duration: zoomDuration });
-                    } else {
-                        unselectItem();
-                    }
-                    resolve();
-                } catch (error) {
-                    reject(error);
+        didIgnoreAlreadySelected = false;
+        if (isFeatureInteresting) {
+            let isCurrentItem = item !== $selectedItem;
+            if (DEV_LOG) {
+                console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons);
+            }
+            if (setSelected && isCurrentItem && !item) {
+                unselectItem(false);
+            }
+            const route = item?.properties?.route;
+            if (setSelected && route) {
+                if (item.properties.route.osmid) {
+                    selectedOSMId = item.properties.route.osmid + '';
+                    mapContext.innerDecoder.setStyleParameter('selected_id', item.properties.route.osmid + '');
+                } else if (item.properties.id) {
+                    selectedId = item.properties.id;
+                    mapContext.innerDecoder.setStyleParameter('selected_id', item.properties.id);
                 }
-            });
-        });
+                // console.log('selectedOSMId', selectedOSMId);
+                // if (!selectedRouteLine) {
+                //     getOrCreateLocalVectorLayer();
+                //     selectedRouteLine = mapContext.mapModule('items').createLocalLine(item, {
+                //         // color: '#55ff0000',
+                //         color: (darkColor as any).setAlpha(150),
+                //         joinType: LineJointType.ROUND,
+                //         endType: LineEndType.ROUND,
+                //         width: 3,
+                //         clickWidth: 10
+                //     });
+                //     localVectorDataSource.add(selectedRouteLine);
+                // } else {
+                //     selectedRouteLine.positions = item.route.positions;
+                //     selectedRouteLine.visible = true;
+                // }
+                // }
+                // if (route.instructions) {
+                //     if (!selectedRouteInstructionsGroup) {
+                //         selectedRouteInstructionsGroup = new Group();
+                //     }
+                //     selectedRouteInstructionsGroup.elements = iroute.instructions.map(
+                //         (i, index) =>
+                //             new Point({
+                //                 projection: mapContext.getProjection(),
+                //                 position: omit(item.route.positions.getPos(i.index), 'altitude'),
+                //                 styleBuilder: {
+                //                     size: 12,
+                //                     placementPriority: 10,
+                //                     hideIfOverlapped: false,
+                //                     scaleWithDPI: true,
+                //                     color: 'red'
+                //                 },
+                //                 metaData: { instruction: JSON.stringify(i) }
+                //             })
+                //     );
+                //     getOrCreateLocalVectorLayer();
+                //     // selectedRouteInstructionsGroup.elements.forEach(e=>localVectorDataSource.add(e))
+                //     localVectorDataSource.add(selectedRouteInstructionsGroup);
+                // }
+
+                if (selectedPosMarker) {
+                    selectedPosMarker.visible = false;
+                }
+            } else {
+                const geometry = item.geometry as GeoJSONPoint;
+                const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+                if (!selectedPosMarker) {
+                    getOrCreateLocalVectorLayer();
+                    const itemModule = mapContext.mapModule('items');
+                    selectedPosMarker = itemModule.createLocalPoint(position, {
+                        color: primaryColor.setAlpha(178).hex,
+                        clickSize: 0,
+                        scaleWithDPI: true,
+                        size: 30
+                    });
+                    localVectorDataSource.add(selectedPosMarker);
+                } else {
+                    selectedPosMarker.position = position;
+                    selectedPosMarker.visible = true;
+                }
+                if (setSelected && selectedOSMId) {
+                    selectedOSMId = null;
+                    mapContext.innerDecoder.setStyleParameter('selected_id', '');
+                }
+                if (selectedId) {
+                    selectedId = null;
+                    mapContext.innerDecoder.setStyleParameter('selected_id', '');
+                }
+            }
+            if (setSelected) {
+                $selectedItem = item;
+            }
+            // if (setSelected && !route && (!item.properties.address || !item.properties.address['street'])) {
+            //     const service = packageService.localOSMOfflineReverseGeocodingService;
+            //     if (service) {
+            //         itemLoading = true;
+            //         const radius = 200;
+
+            //         const geometry = item.geometry as GeoJSONPoint;
+            //         const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+            //         // use a promise not to "wait" for it
+            //         packageService
+            //             .searchInGeocodingService(service, {
+            //                 projection,
+            //                 location: position,
+            //                 searchRadius: radius
+            //             })
+            //             .then((res) => {
+            //                 if (res) {
+            //                     let bestFind;
+            //                     for (let index = 0; index < res.size(); index++) {
+            //                         const r = packageService.convertGeoCodingResult(res.get(index), true);
+            //                         if (r && r.properties.rank > 0.7 && computeDistanceBetween(position, r.properties.position) <= radius) {
+            //                             if (!bestFind || Object.keys(r.properties.address).length > Object.keys(bestFind.address).length) {
+            //                                 bestFind = r;
+            //                             } else if (bestFind && item.properties.address && item.properties.address['street']) {
+            //                                 break;
+            //                             }
+            //                         } else {
+            //                             break;
+            //                         }
+            //                     }
+            //                     if (bestFind && $selectedItem.geometry === item.geometry) {
+            //                         if (item.properties.layer === 'housenumber') {
+            //                             $selectedItem.properties.address = { ...bestFind.address, name: null, houseNumber: item.properties.housenumber } as any;
+            //                             $selectedItem = $selectedItem;
+            //                         } else {
+            //                             $selectedItem.properties.address = { ...bestFind.address, name: null } as any;
+            //                             $selectedItem = $selectedItem;
+            //                         }
+            //                     }
+            //                 }
+            //             })
+            //             .catch((err) => console.error('searchInGeocodingService', err, err['stack']));
+            //     }
+            //     if (item.properties && 'ele' in item.properties === false && packageService.hasElevation()) {
+            //         const geometry = item.geometry as GeoJSONPoint;
+            //         const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+            //         packageService.getElevation(position).then((result) => {
+            //             if ($selectedItem.geometry === item.geometry) {
+            //                 $selectedItem.properties = $selectedItem.properties || {};
+            //                 $selectedItem.properties['ele'] = result;
+            //                 $selectedItem = $selectedItem;
+            //             }
+            //         });
+            //     }
+            // }
+
+            // console.log('selectedItem', item);
+            // const vectorTileDecoder = getVectorTileDecoder();
+            // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
+            // vectorTileDecoder.setStyleParameter('selected_name', (item.properties && item.properties.name) || '');
+            if (peek) {
+                await bottomSheetInner.loadView();
+                // .then(() => {
+                bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
+                // });
+            }
+            if (preventZoom) {
+                return;
+            }
+            zoomToItem({ item, zoom, minZoom, duration: zoomDuration });
+        } else {
+            unselectItem();
+        }
     }
     export function zoomToItem({ item, zoom, minZoom, duration = 200, forceZoomOut = false }: { item: IItem; zoom?: number; minZoom?: number; duration?; forceZoomOut?: boolean }) {
         const screenBounds = {
@@ -847,7 +808,14 @@
     $: setRenderProjectionMode($mapStore.showGlobe);
     $: vectorTileDecoder && setStyleParameter('buildings', !!$mapStore.show3DBuildings ? '2' : '1');
     $: vectorTileDecoder && setStyleParameter('contours', $mapStore.showContourLines ? '1' : '0');
-    $: vectorTileDecoder && mapContext?.innerDecoder?.setStyleParameter('routes', $mapStore.showRoutes ? '1' : '0');
+    // $: vectorTileDecoder && mapContext?.innerDecoder?.setStyleParameter('routes', $mapStore.showRoutes ? '1' : '0');
+    $: {
+        const visible = $mapStore.showRoutes;
+        getLayers('routes').forEach((l) => {
+            l.layer.visible = visible;
+        });
+        cartoMap && cartoMap.requestRedraw();
+    }
     $: vectorTileDecoder && setStyleParameter('contoursOpacity', $mapStore.contourLinesOpacity.toFixed(1));
     $: vectorTileDecoder && toggleHillshadeSlope($mapStore.showSlopePercentages);
     $: toggleMapRotate($mapStore.rotateEnabled);
@@ -856,11 +824,8 @@
     $: currentLayer && (currentLayer.preloading = $mapStore.preloading);
     $: shouldShowNavigationBarOverlay = $navigationBarHeight !== 0 && !!selectedItem;
     $: bottomSheetStepIndex === 0 && unselectItem();
-    $: {
-        if (cartoMap) {
-            cartoMap.getOptions().setFocusPointOffset(toNativeScreenPos({ x: 0, y: Utils.layout.toDevicePixels(steps[bottomSheetStepIndex]) / 2 }));
-        }
-    }
+    $: cartoMap?.getOptions().setFocusPointOffset(toNativeScreenPos({ x: 0, y: Utils.layout.toDevicePixels(steps[bottomSheetStepIndex]) / 2 }));
+
     $: {
         appSettings.setBoolean(KEEP_AWAKE_KEY, keepAwakeEnabled);
         if (keepAwakeEnabled) {
@@ -870,20 +835,13 @@
         }
     }
     function toggleHillshadeSlope(value: boolean) {
-        if (mapContext) {
-            mapContext.mapModule('customLayers').toggleHillshadeSlope(value);
-            // cartoMap.redraw();
-        }
+        mapContext?.mapModule('customLayers').toggleHillshadeSlope(value);
     }
     function toggleMapRotate(value: boolean) {
-        cartoMap && cartoMap.getOptions().setRotatable(value);
+        cartoMap?.getOptions().setRotatable(value);
     }
     function toggleMapPitch(value: boolean) {
-        if (value) {
-            cartoMap && cartoMap.getOptions().setTiltRange(toNativeMapRange([30, 90]));
-        } else {
-            cartoMap && cartoMap.getOptions().setTiltRange(toNativeMapRange([90, 90]));
-        }
+        cartoMap?.getOptions().setTiltRange(toNativeMapRange([value ? 30 : 90, 90]));
     }
 
     async function handleRouteSelection(featureData, layer: VectorTileLayer) {
@@ -909,6 +867,7 @@
                     const RouteSelect = (await import('~/components/RouteSelect.svelte')).default;
                     const results = await showBottomSheet({
                         view: RouteSelect,
+                        ignoreTopSafeArea: true,
                         props: {
                             title: l('pick_route'),
                             options: selectedRoutes.map((s) => ({ name: s.featureData.name, route: s }))
@@ -927,10 +886,8 @@
         handleSelectedRouteTimer = null;
     }
     function handleClickedFeatures(position: GenericGeoLocation<LatLonKeys>) {
-        // console.log('handleClickedFeatures', clickedFeatures);
         let fakeIndex = 0;
-        currentClickedFeatures = [...new Map(clickedFeatures.map((item) => [JSON.stringify(item), item])).values()];
-        // if (currentClickedFeatures.length > 0) {
+        // currentClickedFeatures = [...new Map(clickedFeatures.map((item) => [JSON.stringify(item), item])).values()];
         if (!selectedClickMarker) {
             getOrCreateLocalVectorLayer();
             const styleBuilder = new TextStyleBuilder({
@@ -948,14 +905,11 @@
             selectedClickMarker.position = position;
             selectedClickMarker.visible = true;
         }
-        // console.log('handleClickedFeatures', currentClickedFeatures);
-        // }
-        clickedFeatures = [];
+        // clickedFeatures = [];
     }
 
     function onRasterTileClicked(data: RasterTileClickInfo<LatLonKeys>) {
         const { clickType, position, nearestColor, layer } = data;
-        console.log('onRasterTileClicked', position, nearestColor);
     }
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureLayerName, featureData, featurePosition, featureGeometry, layer } = data;
@@ -965,26 +919,26 @@
 
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
-            if (showClickedFeatures) {
-                clickedFeatures.push({
-                    featurePosition,
-                    layer: featureLayerName,
-                    data: featureData
-                });
-            }
+            // if (showClickedFeatures) {
+            //     clickedFeatures.push({
+            //         featurePosition,
+            //         layer: featureLayerName,
+            //         data: featureData
+            //     });
+            // }
 
-            if (
-                featureLayerName === 'transportation' ||
-                featureLayerName === 'transportation_name' ||
-                featureLayerName === 'waterway' ||
-                // featureLayerName === 'place' ||
-                featureLayerName === 'contour' ||
-                featureLayerName === 'hillshade' ||
-                (featureLayerName === 'park' && !!featureGeometry['getHoles']) ||
-                ((featureLayerName === 'building' || featureLayerName === 'landcover' || featureLayerName === 'landuse') && !featureData.name)
-            ) {
-                return false;
-            }
+            // if (
+            //     featureLayerName === 'transportation' ||
+            //     featureLayerName === 'transportation_name' ||
+            //     featureLayerName === 'waterway' ||
+            //     // featureLayerName === 'place' ||
+            //     featureLayerN    ame === 'contour' ||
+            //     featureLayerName === 'hillshade' ||
+            //     (featureLayerName === 'park' && !!featureGeometry['getHoles']) ||
+            //     ((featureLayerName === 'building' || featureLayerName === 'landcover' || featureLayerName === 'landuse') && !featureData.name)
+            // ) {
+            //     return false;
+            // }
             if (
                 !!$selectedItem &&
                 (didIgnoreAlreadySelected ||
@@ -1016,7 +970,6 @@
                     selectedRoutes.push({ featurePosition, featureData, layer });
                     ignoreNextMapClick = true;
                 }
-
                 return false;
             }
 
@@ -1042,10 +995,10 @@
                 selectItem({ item: result, isFeatureInteresting, showButtons: featureData.class === 'bus' || featureData.subclass === 'tram_stop' });
             }
             unFocusSearch();
-            if (isFeatureInteresting && showClickedFeatures) {
-                didIgnoreAlreadySelected = true;
-                return false;
-            }
+            // if (isFeatureInteresting && showClickedFeatures) {
+            //     didIgnoreAlreadySelected = true;
+            //     return false;
+            // }
             // return true to only look at first vector found
             return isFeatureInteresting;
         }
@@ -1091,9 +1044,9 @@
     }
     function onVectorTileElementClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureData } = data;
-        // if (DEV_LOG) {
-        //     console.log('onVectorTileElementClicked', clickType, position, featureData.id);
-        // }
+        if (DEV_LOG) {
+            console.log('onVectorTileElementClicked', clickType, position, featureData.id);
+        }
         const itemModule = mapContext.mapModule('items');
         const feature = itemModule.getFeature(featureData.id);
         if (!feature) {
@@ -1127,9 +1080,11 @@
         return handledByModules;
     }
     function unFocusSearch() {
+        // executeOnMainThread(function () {
         if (searchView && searchView.hasFocus()) {
             searchView.unfocus();
         }
+        // });
     }
 
     function setRenderProjectionMode(showGlobe) {
@@ -1145,37 +1100,40 @@
     }
 
     function setCurrentLayer(id: string) {
-        console.log('setCurrentLayer', id, $mapStore.zoomBiais, $mapStore.preloading);
-        // const cartoMap = cartoMap;
-        if (currentLayer) {
-            removeLayer(currentLayer, 'map');
-            currentLayer.setVectorTileEventListener(null);
-            currentLayer = null;
-        }
-        currentLayerStyle = id;
-        const decoder = getVectorTileDecoder();
+        if (__CARTO_PACKAGESERVICE__) {
+            console.log('setCurrentLayer', id, $mapStore.zoomBiais, $mapStore.preloading);
+            // const cartoMap = cartoMap;
+            if (currentLayer) {
+                removeLayer(currentLayer, 'map');
+                currentLayer.setVectorTileEventListener(null);
+                currentLayer = null;
+            }
+            currentLayerStyle = id;
+            const decoder = getVectorTileDecoder();
 
-        currentLayer = new VectorTileLayer({
-            preloading: $mapStore.preloading,
-            zoomLevelBias: parseFloat($mapStore.zoomBiais),
-            labelRenderOrder: VectorTileRenderOrder.LAST,
-            dataSource: packageService.getDataSource($mapStore.showContourLines),
-            decoder
-        });
-        handleNewLanguage(currentLanguage);
-        // console.log('currentLayer', !!currentLayer);
-        // currentLayer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
-        currentLayer.setVectorTileEventListener<LatLonKeys>(
-            {
-                onVectorTileClicked: (data) => onVectorTileClicked(data)
-            },
-            projection
-        );
-        try {
-            addLayer(currentLayer, 'map');
-        } catch (err) {
-            showError(err);
-            vectorTileDecoder = null;
+            currentLayer = new VectorTileLayer({
+                preloading: $mapStore.preloading,
+                zoomLevelBias: parseFloat($mapStore.zoomBiais),
+                labelRenderOrder: VectorTileRenderOrder.LAST,
+                dataSource: packageService.getDataSource($mapStore.showContourLines),
+                decoder
+            });
+            handleNewLanguage(currentLanguage);
+            // console.log('currentLayer', !!currentLayer);
+            // currentLayer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
+            currentLayer.setVectorTileEventListener<LatLonKeys>(
+                {
+                    onVectorTileClicked: (data) => onVectorTileClicked(data)
+                },
+                projection,
+                akylas.alpi.maps.VectorTileEventListener
+            );
+            try {
+                addLayer(currentLayer, 'map');
+            } catch (err) {
+                showError(err);
+                vectorTileDecoder = null;
+            }
         }
     }
     function handleNewLanguage(newLang) {
@@ -1318,14 +1276,17 @@
     }
     function getLayerTypeFirstIndex(layerId: LayerType) {
         const layerIndex = LAYERS_ORDER.indexOf(layerId);
-        return addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) >= layerIndex);
+        return addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) === layerIndex);
     }
 
     function getLayers(layerId: LayerType) {
-        const layerIndex = LAYERS_ORDER.indexOf(layerId) + 1;
-        return addedLayers.slice(0, getLayerTypeFirstIndex(LAYERS_ORDER[layerIndex]));
+        const layerIndex = LAYERS_ORDER.indexOf(layerId);
+        const startIndex = addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) === layerIndex);
+        const endIndex = addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) > layerIndex);
+        return addedLayers.slice(startIndex, endIndex !== -1 ? endIndex : undefined);
     }
     function addLayer(layer: Layer<any, any>, layerId: LayerType) {
+        // console.log('addLayer', layer.constructor.name, layerId, new Error().stack);
         if (cartoMap) {
             if (addedLayers.findIndex((d) => d.layer === layer) !== -1) {
                 return;
@@ -1339,7 +1300,7 @@
                 cartoMap.addLayer(layer);
                 addedLayers.push({ layer, layerId });
             }
-            cartoMap.requestRedraw();
+            // cartoMap.requestRedraw();
         }
     }
     function insertLayer(layer: Layer<any, any>, layerId: LayerType, index: number) {
@@ -1614,21 +1575,8 @@
                 id: 'dark_mode',
                 color: $sTheme === 'dark' ? primaryColor : undefined,
                 icon: 'mdi-theme-light-dark'
-                // },
-
-                // {
-                //     title: lc('bug'),
-                //     id: 'bug',
-                //     icon: 'mdi-bug'
             }
         ];
-        if (gVars.sentry) {
-            options.push({
-                title: lc('bug'),
-                id: 'bug',
-                icon: 'mdi-bug'
-            });
-        }
 
         if (isSensorAvailable('barometer')) {
             options.splice(options.length - 2, 0, {
@@ -1673,9 +1621,6 @@
                 case 'dark_mode':
                     toggleTheme(true);
                     break;
-                case 'bug':
-                    sendBug();
-                    break;
                 case 'compass':
                     try {
                         const CompassView = (await import('./CompassView.svelte')).default;
@@ -1701,72 +1646,6 @@
                     }
                     break;
             }
-        }
-    }
-
-    async function sendBug() {
-        if (gVars.sentry) {
-            const mailRegexp =
-                /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
-            login({
-                title: lc('send_bug_report'),
-                message: lc('send_bug_report_desc'),
-                okButtonText: l('send'),
-                cancelButtonText: l('cancel'),
-                autoFocus: true,
-                usernameTextFieldProperties: {
-                    marginLeft: 10,
-                    marginRight: 10,
-                    autocapitalizationType: 'none',
-                    keyboardType: 'email',
-                    autocorrect: false,
-                    error: lc('email_required'),
-                    hint: lc('email')
-                },
-                passwordTextFieldProperties: {
-                    marginLeft: 10,
-                    marginRight: 10,
-                    error: lc('please_describe_error'),
-                    secure: false,
-                    hint: lc('description')
-                },
-                beforeShow: (options, usernameTextField: TextField, passwordTextField: TextField) => {
-                    usernameTextField.on('textChange', (e: any) => {
-                        const text = e.value;
-                        if (!text) {
-                            usernameTextField.error = lc('email_required');
-                        } else if (!mailRegexp.test(text)) {
-                            usernameTextField.error = lc('non_valid_email');
-                        } else {
-                            usernameTextField.error = null;
-                        }
-                    });
-                    passwordTextField.on('textChange', (e: any) => {
-                        const text = e.value;
-                        if (!text) {
-                            passwordTextField.error = lc('description_required');
-                        } else {
-                            passwordTextField.error = null;
-                        }
-                    });
-                }
-            }).then((result) => {
-                if (result.result) {
-                    if (!result.userName || !mailRegexp.test(result.userName)) {
-                        showError(new Error(lc('email_required')));
-                        return;
-                    }
-                    if (!result.password || result.password.length === 0) {
-                        showError(new Error(lc('description_required')));
-                        return;
-                    }
-                    Sentry.withScope((scope) => {
-                        scope.setUser({ email: result.userName });
-                        Sentry.captureMessage(result.password);
-                        alert(l('bug_report_sent'));
-                    });
-                }
-            });
         }
     }
 
@@ -1827,20 +1706,25 @@
                     color={$mapStore.preloading ? primaryColor : 'gray'}
                     on:tap={() => mapStore.setPreloading(!$mapStore.preloading)}
                 />
-                <button
+                <!-- <button
                     variant="text"
                     class="icon-btn"
                     text="mdi-information-outline"
                     color={showClickedFeatures ? primaryColor : 'gray'}
                     on:tap={() => (showClickedFeatures = !showClickedFeatures)}
-                />
+                /> -->
                 <button
                     variant="text"
                     class="icon-btn"
                     text="mdi-bus-marker"
                     color={showTransitLines ? primaryColor : 'gray'}
                     on:tap={() => (showTransitLines = !showTransitLines)}
-                    on:longPress={() => showTransitLinesPage()}
+                    on:longPress={(event) => {
+                        if (event.ios && event.ios.state !== 3) {
+                            return;
+                        }
+                        showTransitLinesPage();
+                    }}
                 />
             </stacklayout>
             <Search bind:this={searchView} verticalAlignment="top" defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
@@ -1878,22 +1762,10 @@
                 horizontalAlignment="right"
                 translateY={Math.max(topTranslationY - 50, 0)}
             />
-            <MapScrollingWidgets
-                bind:this={mapScrollingWidgets}
-                bind:navigationInstructions
-                opacity={scrollingWidgetsOpacity}
-                userInteractionEnabled={scrollingWidgetsOpacity > 0.3}
-            />
+            <MapScrollingWidgets bind:this={mapScrollingWidgets} bind:navigationInstructions opacity={scrollingWidgetsOpacity} userInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
             <DirectionsPanel bind:this={directionsPanel} bind:translationY={topTranslationY} width="100%" verticalAlignment="top" />
-            <BottomSheetInner
-                bind:this={bottomSheetInner}
-                bind:navigationInstructions
-                bind:steps
-                prop:bottomSheet
-                updating={itemLoading}
-                item={$selectedItem}
-            />
-            <collectionview
+            <BottomSheetInner bind:this={bottomSheetInner} bind:navigationInstructions bind:steps prop:bottomSheet updating={itemLoading} item={$selectedItem} />
+            <!-- <collectionview
                 items={currentClickedFeatures}
                 height="80"
                 margin="80 20 0 20"
@@ -1905,7 +1777,7 @@
                 <Template let:item>
                     <label padding="0 20 0 20" text={JSON.stringify(item)} verticalAlignment="center" fontSize="11" color="white" />
                 </Template>
-            </collectionview>
+            </collectionview> -->
         </bottomsheet>
     </drawer>
 </page>

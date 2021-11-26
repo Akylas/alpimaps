@@ -466,7 +466,7 @@
             let rasterDataSource: TileDataSource<any, any>;
             customSources.some((s) => {
                 if (s.layer instanceof RasterTileLayer) {
-                    rasterDataSource = s.layer.dataSource;
+                    rasterDataSource = s.layer.options.dataSource;
                     return true;
                 }
             });
@@ -480,6 +480,7 @@
                 props: {
                     terrarium: false,
                     position,
+                    bearing: mapContext.getMap().bearing,
                     vectorDataSource,
                     dataSource: hillshadeDatasource,
                     rasterDataSource
