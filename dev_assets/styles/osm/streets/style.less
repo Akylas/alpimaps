@@ -1,9 +1,3 @@
-Map {
-  background-color: @background;
-  south-pole-color: @background;
-  north-pole-color: @water;
-  font-directory: url(../fonts/);
-}
 //CARTO Fonts
 @mont: 'DIN Pro Regular';
 @mont_md: 'DIN Pro Medium';
@@ -388,6 +382,7 @@ Map {
 @poi-pharmacy-fill: #AF2418;
 @poi-water-fill: #4AA0E7;
 @poi-spring-size: linear([view::zoom], (14, 3), (16, 10));
+@poi-spring_halo_radius: linear([view::zoom], (14, 0), (14.4, 1));
 @poi-bakery-fill: #EF8000; 
 @poi-restaurant-fill: #BC7729; 
 @poi-shop-fill: #9F43A7; 
@@ -397,4 +392,4 @@ Map {
 @poi_label_width:linear([view::zoom], (10, 11), (18, 12)) - 0.000001 * [rank];
 @poi_label_wrap_width:step([view::zoom], (14, 60), (18, 100));
 @poi_national_park_wrap_width:@poi_label_wrap_width;
-@poi_label_dy: linear([view::zoom], (10, 12), (18, 13));
+@poi_label_dy: linear([view::zoom], (10, 10), (12, 11), (18, 14), (19, 15), (20, 16));

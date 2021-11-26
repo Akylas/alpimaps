@@ -65,7 +65,7 @@ $lang.subscribe((newLang: string) => {
     globalObservable.notify({ eventName: 'language', data: lang });
 });
 function setLang(newLang) {
-    newLang = getOwmLanguage(newLang);
+    newLang = getActualLanguage(newLang);
     if (supportedLanguages.indexOf(newLang) === -1) {
         newLang = 'en';
     }
@@ -73,36 +73,38 @@ function setLang(newLang) {
     currentLocale = null;
     $lang.set(newLang);
 }
-// console.log('deviceLanguage', deviceLanguage);
-function getOwmLanguage(language) {
-    if (language === 'cs') {
-        // Czech
-        return 'cz';
-    } else if (language === 'ko') {
-        // Korean
-        return 'kr';
-    } else if (language === 'lv') {
-        // Latvian
-        return 'la';
-    } else {
-        return language;
+function getActualLanguage(language) {
+    switch (language) {
+        case 'en':
+            return 'en';
+        case 'cs':
+            return 'cz';
+        case 'jp':
+            return 'ja';
+        case 'kr':
+            return 'kr';
+        case 'lv':
+            return 'la';
+        case 'auto':
+            return Device.language.split('-')[0].toLowerCase();
+        default:
+            return language;
     }
 }
 
-function titlecase(str:string) {
-
+function titlecase(str: string) {
     let upper = true;
-  let newStr = "";
-  for (let i = 0, l = str.length; i < l; i++) {
-    if (str[i] == " ") {
-      upper = true;
-    	newStr += " ";
-      continue;
+    let newStr = '';
+    for (let i = 0, l = str.length; i < l; i++) {
+        if (str[i] === ' ') {
+            upper = true;
+            newStr += ' ';
+            continue;
+        }
+        newStr += upper ? str[i].toUpperCase() : str[i].toLowerCase();
+        upper = false;
     }
-    newStr += upper ? str[i].toUpperCase() : str[i].toLowerCase();
-    upper = false;
-  }
-  return newStr;
+    return newStr;
 }
 export function getLocaleDisplayName(locale?) {
     if (global.isIOS) {
@@ -167,7 +169,7 @@ prefs.on('key:language', () => {
     setLang(newLanguage);
 });
 
-let currentLanguage = getString('language');
+let currentLanguage = getString('language', DEFAULT_LOCALE);
 if (!currentLanguage) {
     currentLanguage = Device.language.split('-')[0].toLowerCase();
     setString('language', currentLanguage);

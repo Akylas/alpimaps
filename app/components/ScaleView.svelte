@@ -2,6 +2,7 @@
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { CartoMap } from '@nativescript-community/ui-carto/ui';
     import { Screen } from '@nativescript/core/platform';
+    import { executeOnMainThread } from '@nativescript/core/utils';
     import { convertDistance } from '~/helpers/formatter';
     import { getMapContext } from '~/mapModules/MapModule';
 
@@ -18,16 +19,18 @@
     let scaleText = null;
     let scaleWidth = 80;
     function updateData() {
-        const cartoMap = mapContext.getMap();
-        if (!cartoMap) {
-            return;
-        }
-        const zoom = cartoMap.zoom;
+        // executeOnMainThread(() => {
+            const cartoMap = mapContext.getMap();
+            if (!cartoMap) {
+                return;
+            }
+            const zoom = cartoMap.zoom;
 
-        const newMpp = Math.round(getMetersPerPixel(cartoMap.focusPos, zoom) * 100) / 100;
-        const metersPerCM = PX_PER_CM * newMpp;
-        const data = convertDistance(metersPerCM);
-        scaleText = `${data.value.toFixed(1)} ${data.unit} (${zoom.toFixed(1)})`;
+            const newMpp = Math.round(getMetersPerPixel(cartoMap.focusPos, zoom) * 100) / 100;
+            const metersPerCM = PX_PER_CM * newMpp;
+            const data = convertDistance(metersPerCM);
+            scaleText = `${data.value.toFixed(1)} ${data.unit} (${zoom.toFixed(1)})`;
+        // });
     }
     mapContext.onMapReady((mapView: CartoMap<LatLonKeys>) => {
         updateData();

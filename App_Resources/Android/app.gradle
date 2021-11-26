@@ -1,3 +1,4 @@
+
 project.ext.multiDexEnabled = true
 android { 
 
@@ -73,10 +74,13 @@ dependencies {
 //         config.exclude group: 'com.google.android.material', module: moduleToExclude
 //     }
 // }
-configurations.all {
-  //  exclude group: 'com.android.support', module: 'customtabs'
 
-//   ['bottomappbar','appbar','badge','bottomnavigation', 'circularreveal', 'floatingactionbutton','imageview', 'radiobutton', 'tabs', 'textview', 'textfield', 'chip', 'card', 'navigation'].each {
-//     exclude group: 'com.google.android.material', exclude module : "$it"
-//   }
+task createProguard {
+    dependsOn 'buildMetadata'
+    doLast {
+        exec {
+            workingDir "$USER_PROJECT_ROOT"
+            commandLine 'node', 'scripts/createProguard.js'
+        }
+    }
 }
