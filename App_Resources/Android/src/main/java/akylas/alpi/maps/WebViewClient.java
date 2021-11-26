@@ -1,3 +1,4 @@
+
 package akylas.alpi.maps;
 
 import java.io.ByteArrayInputStream;
@@ -7,9 +8,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Arrays;
+import java.util.Set;
 import java.lang.Exception;
+import java.nio.charset.StandardCharsets;
 
-import fi.iki.elonen.NanoHTTPD;
+import android.os.Looper;
+import android.util.Log;
+import android.webkit.WebView;
+import android.webkit.WebResourceResponse;
+import android.webkit.WebResourceRequest;
+import android.graphics.Bitmap;
+import android.net.Uri;
 
 import com.carto.core.MapPos;
 import com.carto.core.MapPosVector;
@@ -27,9 +36,12 @@ import com.carto.styles.CartoCSSStyleSet;
 import com.carto.vectortiles.MBVectorTileDecoder;
 import com.carto.core.MapBounds;
 
-import android.util.Log;
 
-public class WebServer extends NanoHTTPD {
+public class WebViewClient extends android.webkit.WebViewClient {
+    static final String AUTHORITY = "127.0.0.1:8080";
+    
+    android.webkit.WebViewClient originalClient;
+
     TileDataSource heightDataSource;
     TileDataSource peaksDataSource;
     TileDataSource contoursDataSource;
@@ -54,8 +66,9 @@ public class WebServer extends NanoHTTPD {
         return new double[] {w, s, e, n};
     }
 
-    public WebServer(int port, TileDataSource heightDataSource, TileDataSource peaksDataSource, TileDataSource contoursDataSource, TileDataSource rasterDataSource) {
-        super(port);
+    public WebViewClient(android.webkit.WebViewClient originalClient, TileDataSource heightDataSource, TileDataSource peaksDataSource, TileDataSource contoursDataSource, TileDataSource rasterDataSource) {
+        super();
+        this.originalClient = originalClient;
         this.heightDataSource = heightDataSource;
         this.peaksDataSource = peaksDataSource;
         this.rasterDataSource = rasterDataSource;
@@ -67,15 +80,36 @@ public class WebServer extends NanoHTTPD {
     }
 
     @Override
-    public NanoHTTPD.Response serve(NanoHTTPD.IHTTPSession session) {
-        String uri = session.getUri();
-        NanoHTTPD.Method method = session.getMethod();
-        Map<String, String> parms = session.getParms();
-        final String source = parms.get("source");
-        final String imageFormat = parms.containsKey("format") ? parms.get("format") : "png";
+    public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+        WebResourceResponse response = shouldInterceptRequest(view, Uri.parse(url));
+        if (response != null) {
+            return response;
+        }
+        return super.shouldInterceptRequest(view, url);
+    }
+
+    @Override
+    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+        WebResourceResponse response = shouldInterceptRequest(view, request.getUrl());
+        if (response != null) {
+            return response;
+        }
+        return super.shouldInterceptRequest(view, request);
+    }
+
+    public WebResourceResponse shouldInterceptRequest(WebView view, Uri uri) {
+
+        String server = uri.getAuthority();
+        if (!server.equals(AUTHORITY)) {
+            return null;
+        }
+        String path = uri.getPath();
+        String protocol = uri.getScheme();
+        Set<String> args = uri.getQueryParameterNames();
+        final String source = uri.getQueryParameter("source");
+        final String imageFormat = args.contains("format") ? uri.getQueryParameter("format") : "png";
 
         TileDataSource dataSource = null;
-
 
         switch (source) {
             case "raster":
@@ -94,12 +128,12 @@ public class WebServer extends NanoHTTPD {
                 break;
         }
         if (dataSource == null) {
-            return newFixedLengthResponse(NanoHTTPD.Response.Status.NOT_FOUND, "text/plain", "source not found: " + source);
+            return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream("source not found".getBytes(StandardCharsets.UTF_8)));
         }
 
-        int z = Integer.parseInt(parms.get("z"));
-        int x = Integer.parseInt(parms.get("x"));
-        int y = Integer.parseInt(parms.get("y"));
+        int z = Integer.parseInt(uri.getQueryParameter("z"));
+        int x = Integer.parseInt(uri.getQueryParameter("x"));
+        int y = Integer.parseInt(uri.getQueryParameter("y"));
 
 
         if (source.equals("peaks")) {
@@ -122,30 +156,55 @@ public class WebServer extends NanoHTTPD {
                 searchRequest.setGeometry(geometry);
                 searchRequest.setFilterExpression("layer::name='mountain_peak'");
                 VectorTileFeatureCollection result = searchService.findFeatures(searchRequest);
-                geojsonWriter.writeFeatureCollection(result);
     
-                return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "plain/text", geojsonWriter.writeFeatureCollection(result));
+                return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream(geojsonWriter.writeFeatureCollection(result).getBytes(StandardCharsets.UTF_8)));
+                // return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "plain/text", );
             } catch(Exception exception) {
-                return NanoHTTPD.newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "plain/text", exception.toString());
+                return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream(exception.toString().getBytes(StandardCharsets.UTF_8)));
+                // return NanoHTTPD.newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "plain/text", exception.toString());
             }
             
         }
 
         TileData tileData = dataSource.loadTile(new MapTile(x, y, z, 0));
         if (tileData == null) {
-            return newFixedLengthResponse(NanoHTTPD.Response.Status.NOT_FOUND, "text/plain", "not found");
+            return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream("not found".getBytes(StandardCharsets.UTF_8)));
         }
         BinaryData binaryData = tileData.getData();
         if (binaryData == null) {
-            return newFixedLengthResponse(NanoHTTPD.Response.Status.NOT_FOUND, "text/plain", "not found");
+            return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream("not found".getBytes(StandardCharsets.UTF_8)));
         }
         byte[] binaryDataData = binaryData.getData();
         InputStream targetStream = new ByteArrayInputStream(binaryDataData);
         if (source.equals("data") || source.equals("contours")) {
-            return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "application/x-protobuf", targetStream,
-                binaryDataData.length);
+                return new WebResourceResponse("application/x-protobuf", "utf-8", targetStream);
+        // return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "application/x-protobuf", targetStream,
+                // binaryDataData.length);
         }
-        return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "image/" + imageFormat, targetStream,
-                binaryDataData.length);
+                return new WebResourceResponse("image/" + imageFormat, "utf-8", targetStream);
+        // return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "image/" + imageFormat, targetStream,
+                // binaryDataData.length);
+    }
+
+    @Override
+    public boolean shouldOverrideUrlLoading (WebView view, 
+                WebResourceRequest request) {
+        return originalClient.shouldOverrideUrlLoading(view, request);
+    }
+    @Override
+    public boolean shouldOverrideUrlLoading (WebView view, 
+                String url) {
+        return originalClient.shouldOverrideUrlLoading(view, url);
+    }
+    @Override
+    public void onPageStarted (WebView view, 
+                String url, 
+                Bitmap favicon) {
+        originalClient.onPageStarted(view, url, favicon);
+    }
+    @Override
+    public void onPageFinished (WebView view, 
+                String url) {
+        originalClient.onPageFinished(view, url);
     }
 }
