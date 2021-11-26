@@ -97,7 +97,10 @@
         options.setKineticRotation(false);
         // const route = dataItems.map(i=>([]))
         try {
-            const layers = mapContext.getLayers('map');
+            let layers = mapContext.getLayers('map');
+            if (layers.length === 0) {
+                layers = mapContext.getLayers('customLayers');
+            }
             layers.forEach((l) => {
                 var prototype = Object.getPrototypeOf(l.layer);
                 cartoMap.addLayer(new prototype.constructor(l.layer.options));

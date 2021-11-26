@@ -73,7 +73,6 @@ registerNativeViewElement('bottomsheet', () => require('@nativescript-community/
 registerNativeViewElement('symbolshape', () => require('~/components/SymbolShape').default);
 registerNativeViewElement('awebview', () => require('@nativescript-community/ui-webview').AWebView);
 registerNativeViewElement('checkbox', () => require('@akylas/nativescript-checkbox').CheckBox);
-registerNativeViewElement('pageritem', () => PagerItem);
 CollectionViewElement.register();
 PagerElement.register();
 DrawerElement.register();
@@ -106,7 +105,6 @@ themer.createShape('round', {
 // we need to instantiate it to "start" it
 const bgService = new BgService();
 Application.on(Application.launchEvent, () => {
-
     networkService.start();
     // const receiverCallback = (androidContext, intent: android.content.Intent) => {
     //     console.log('receiverCallback', intent.getAction(), intent.getAction() === android.content.Intent.ACTION_SCREEN_ON);
