@@ -1,3 +1,0 @@
-@variant = GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN25TOUR
-
-GET https://www.geoportail.gouv.fr/depot/layers/{{variant}}/legendes/{{variant}}-legend.png

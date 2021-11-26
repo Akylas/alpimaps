@@ -17,7 +17,7 @@ import { showBottomSheet } from '~/components/bottomsheet';
 import { Provider } from '~/data/tilesources';
 import { l } from '~/helpers/locale';
 import { packageService } from '~/services/PackageService';
-import { getDataFolder, getDefaultMBTilesDir } from '~/utils/utils';
+import { getAndroidRealPath, getDataFolder, getDefaultMBTilesDir, listFolder } from '~/utils/utils';
 import { toDegrees, toRadians } from '~/utils/geo';
 import MapModule, { getMapContext } from './MapModule';
 import { showError } from '~/utils/error';
@@ -218,12 +218,22 @@ export default class CustomLayersModule extends MapModule {
     }
 
     createMergeMBtiles({ name, sources, legend }: { name: string; sources: string[]; legend?: string }, worldMbtiles?: MBTilesTileDataSource, options = {}) {
+        // console.log('createMergeMBtiles', sources, worldMbtiles);
+        // if (global.isAndroid) {
+        //     sources = sources.map((s) => getAndroidRealPath(s));
+        // }
+        // console.log('createMergeMBtiles2', sources);
         const dataSource: TileDataSource<any, any> = this.createMergeMBTilesDataSource(worldMbtiles ? [...sources, worldMbtiles] : sources);
+        if (!dataSource) {
+            console.error('failed to create merged mbTiles dataSource', sources);
+            return;
+        }
         const opacity = appSettings.getNumber(`${name}_opacity`, 1);
         // const zoomLevelBias = Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2);
         const layer = new VectorTileLayer({
             dataSource,
-            layerBlendingSpeed: 0.3,
+            layerBlendingSpeed: 3,
+            labelBlendingSpeed: 0,
             labelRenderOrder: VectorTileRenderOrder.LAST,
             opacity,
             decoder: mapContext.getVectorTileDecoder(),
@@ -233,6 +243,7 @@ export default class CustomLayersModule extends MapModule {
         const routeLayer = new VectorTileLayer({
             dataSource,
             layerBlendingSpeed: 0,
+            visible: false,
             // labelRenderOrder: VectorTileRenderOrder.LAST,
             decoder: mapContext.innerDecoder
         });
@@ -246,7 +257,8 @@ export default class CustomLayersModule extends MapModule {
             {
                 onVectorTileClicked: (e) => mapContext.vectorTileClicked(e)
             },
-            mapContext.getProjection()
+            mapContext.getProjection(),
+            akylas.alpi.maps.VectorTileEventListener
         );
         return {
             name,
@@ -584,7 +596,7 @@ export default class CustomLayersModule extends MapModule {
         super.onMapReady(mapView);
         (async () => {
             try {
-                const folderPath = getDefaultMBTilesDir();
+                const folderPath = await getDefaultMBTilesDir();
                 if (folderPath) {
                     await this.loadLocalMbtiles(folderPath);
                 }
@@ -655,13 +667,8 @@ export default class CustomLayersModule extends MapModule {
         }
     }
     async loadLocalMbtiles(directory: string) {
-        if (!Folder.exists(directory)) {
-            return;
-        }
         try {
-            const folder = Folder.fromPath(directory);
-            // const index = this.customSources.length;
-            const entities = await folder.getEntities();
+            const entities = listFolder(directory);
             let worldMbtiles: MBTilesTileDataSource;
             const worldMbtilesIndex = entities.findIndex((e) => e.name === 'world.mbtiles');
             if (worldMbtilesIndex !== -1) {
@@ -669,47 +676,33 @@ export default class CustomLayersModule extends MapModule {
                 worldMbtiles = new MBTilesTileDataSource({
                     databasePath: entity.path
                 });
-                // const data = this.createMergeMBtiles(
-                //     {
-                //         legend: 'https://www.openstreetmap.org/key.html',
-                //         name: 'world',
-                //         sources: [entity.path]
-                //     },
-                //     undefined,
-                //     {
-                //         local: true
-                //     }
-                // );
-                // this.customSources.push(data);
-                // mapContext.addLayer(data.layer, 'map');
-                // this.addDataSource(data);
             }
-            const folders = entities.filter((e) => Folder.exists(e.path)).sort((a, b) => b.name.localeCompare(a.name));
+            const folders = entities.filter((e) => e.isFolder).sort((a, b) => b.name.localeCompare(a.name));
             for (let i = 0; i < folders.length; i++) {
                 const f = folders[i];
-                const subentities = await Folder.fromPath(f.path).getEntities();
-                const data = this.createMergeMBtiles(
-                    {
-                        legend: 'https://www.openstreetmap.org/key.html',
-                        name: f.name,
-                        sources: subentities.map((e2) => e2.path).filter((s) => s.endsWith('.mbtiles'))
-                    },
-                    i === 0 ? worldMbtiles : undefined,
-                    {
-                        local: true
+                const subentities = listFolder(f.path);
+                if (subentities?.length > 0) {
+                    const data = this.createMergeMBtiles(
+                        {
+                            legend: 'https://www.openstreetmap.org/key.html',
+                            name: f.name,
+                            sources: subentities.map((e2) => e2.path).filter((s) => s.endsWith('.mbtiles'))
+                        },
+                        i === 0 ? worldMbtiles : undefined,
+                        {
+                            local: true
+                        }
+                    );
+                    if (!packageService.localVectorTileLayer) {
+                        packageService.localVectorTileLayer = data.layer;
                     }
-                );
-                if (!packageService.localVectorTileLayer) {
-                    packageService.localVectorTileLayer = data.layer;
+                    this.customSources.push(data);
+                    mapContext.addLayer(data.layer, 'map');
+                    if (data.routeLayer) {
+                        mapContext.addLayer(data.routeLayer, 'routes');
+                    }
                 }
-                this.customSources.push(data);
-                mapContext.addLayer(data.layer, 'map');
-                if (data.routeLayer) {
-                    mapContext.addLayer(data.routeLayer, 'map');
-                }
-                // this.addDataSource(data);
             }
-            // console.log('loading etiles', e.name);
             const dataSource = this.createOrderedMBTilesDataSource(entities.filter((e) => e.name.endsWith('.etiles')).map((e2) => e2.path));
             if (dataSource) {
                 const name = 'Hillshade';
@@ -831,7 +824,7 @@ export default class CustomLayersModule extends MapModule {
         };
         const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
         const results = await showBottomSheet({
-            view: OptionSelect,
+            view: OptionSelect as any,
             props: {
                 title: l('pick_source'),
                 options: Object.keys(this.baseProviders).map((s) => ({ name: s, provider: this.baseProviders[s] }))

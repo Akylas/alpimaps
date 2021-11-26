@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-      "target": "es2017",
+      "target": "es2019",
       "module": "esnext",
       "moduleResolution": "node",
       "lib": ["dom"],
@@ -10,17 +10,17 @@
       "allowJs": true,
       "baseUrl": ".",
       "paths": {
-        "~/*": ["webapp/*"],
-        "@/*": ["webapp/*"]
+        "~/*": ["peakfinder/*"],
+        "@/*": ["peakfinder/*"]
       },
       "allowSyntheticDefaultImports": true,
       "esModuleInterop": true,
       "experimentalDecorators": true,
-      "emitDecoratorMetadata": true,
+      "emitDecoratorMetadata": false,
       "skipLibCheck": true,
       "strict": true,
     },
-    "include": ["webapp"],
+    "include": ["peakfinder"],
     "exclude": ["node_modules", "platforms"]
   }
   

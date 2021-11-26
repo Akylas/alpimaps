@@ -54,7 +54,7 @@ export const statusBarHeight: number = parseFloat(locals.statusBarHeight);
 export const actionBarButtonHeight: number = parseFloat(locals.actionBarButtonHeight);
 export const screenHeightDips = Screen.mainScreen.heightDIPs;
 export const screenWidthDips = Screen.mainScreen.widthDIPs;
-export let navigationBarHeight = writable(parseFloat(locals.navigationBarHeight));
+export const navigationBarHeight = writable(parseFloat(locals.navigationBarHeight));
 
 export let globalMarginTop = 0;
 

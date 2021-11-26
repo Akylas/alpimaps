@@ -407,27 +407,27 @@
 
     export function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureLayerName, featureData, featurePosition, featureGeometry, layer } = data;
-        if (
-            featureLayerName === 'transportation' ||
-            featureLayerName === 'transportation_name' ||
-            featureLayerName === 'waterway' ||
-            featureLayerName === 'place' ||
-            featureLayerName === 'contour' ||
-            featureLayerName === 'hillshade' ||
-            (featureLayerName === 'park' && !!featureGeometry['getHoles']) ||
-            ((featureLayerName === 'building' || featureLayerName === 'landcover' || featureLayerName === 'landuse') && !featureData.name)
-        ) {
-            return false;
-        }
+        // if (
+        //     featureLayerName === 'transportation' ||
+        //     featureLayerName === 'transportation_name' ||
+        //     featureLayerName === 'waterway' ||
+        //     featureLayerName === 'place' ||
+        //     featureLayerName === 'contour' ||
+        //     featureLayerName === 'hillshade' ||
+        //     (featureLayerName === 'park' && !!featureGeometry['getHoles']) ||
+        //     ((featureLayerName === 'building' || featureLayerName === 'landcover' || featureLayerName === 'landuse') && !featureData.name)
+        // ) {
+        //     return false;
+        // }
         // const { clickType } = e.data;
         // console.log('onMapClicked', clickType, ClickType.LONG);
         // const duration = e.data.clickInfo.duration;
 
         if (clickType === ClickType.LONG) {
             featureData.layer = featureLayerName;
-            executeOnMainThread(() => {
+            // executeOnMainThread(() => {
                 addWayPoint(position, featureData);
-            });
+            // });
             return true;
         }
     }
@@ -435,9 +435,9 @@
     export function onMapClicked(e) {
         const { clickType, position } = e.data;
         if (clickType === ClickType.LONG) {
-            executeOnMainThread(() => {
+            // executeOnMainThread(() => {
                 addWayPoint(position);
-            });
+            // });
             return true;
         }
     }

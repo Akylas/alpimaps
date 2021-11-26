@@ -19,13 +19,14 @@
         "noImplicitUseStrict": false,
         "noFallthroughCasesInSwitch": true,
         "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
         "lib": ["esnext", "es2017", "dom"],
         "baseUrl": ".",
-        "types": ["node", "svelte", "geojson"],
+        "types": ["node", "svelte", "geojson", "offscreencanvas"],
         "paths": {
             "~/*": ["app/*"]
         }
     },
-    "include": ["app/**/*", "references.d.ts"],
-    "exclude": ["node_modules", "platforms", "**/angular"]
+    "include": ["app/**/*", "typings/*.d.ts", "3dterrain"],
+    "exclude": ["**/node_modules", "**/build", "platforms", "**/angular"]
 }

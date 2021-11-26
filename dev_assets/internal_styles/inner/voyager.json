@@ -44,7 +44,7 @@
             }
         },
         "routes": {
-            "default": 0,
+            "default": 1,
             "values": {
                 "1": 1,
                 "0": 0
