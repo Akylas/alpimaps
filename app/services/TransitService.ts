@@ -3,25 +3,25 @@ import { getCacheControl, networkService } from './NetworkService';
 import { GenericMapPos } from '@nativescript-community/ui-carto/core';
 
 import { SQLiteDatabase, openOrCreate } from '@nativescript-community/sqlite';
-import { getDefaultMBTilesDir } from '~/utils/utils';
+import { getDefaultMBTilesDir, getSavedMBTilesDir } from '~/utils/utils';
 import { Folder } from '@nativescript/core';
 
 // const navitiaAPIEndPoint = 'https://api.navitia.io/v1/';
 
 class TransitService extends Observable {
     _db: SQLiteDatabase;
-    start() {
-        const folderPath = getDefaultMBTilesDir();
-        if (Folder.exists(folderPath)) {
-            const folder = Folder.fromPath(folderPath);
-            const entities = folder.getEntitiesSync();
-            entities.some((s) => {
-                if (s.name.endsWith('.transitdb')) {
-                    this._db = openOrCreate(s.path, { flags: android.database.sqlite.SQLiteDatabase.OPEN_READONLY });
-                    return true;
-                }
-            });
-        }
+    async start() {
+        // const folderPath = getSavedMBTilesDir();
+        // if (Folder.exists(folderPath)) {
+        //     const folder = Folder.fromPath(folderPath);
+        //     const entities = folder.getEntitiesSync();
+        //     entities.some((s) => {
+        //         if (s.name.endsWith('.transitdb')) {
+        //             this._db = openOrCreate(s.path, { flags: android.database.sqlite.SQLiteDatabase.OPEN_READONLY });
+        //             return true;
+        //         }
+        //     });
+        // }
     }
     routes: any[];
     async getTransitLines(line?) {

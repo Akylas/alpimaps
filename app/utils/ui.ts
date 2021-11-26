@@ -1,12 +1,13 @@
-import {InAppBrowser} from 'nativescript-inappbrowser';
+import { InAppBrowser } from '@akylas/nativescript-inappbrowser';
 import { primaryColor } from '~/variables';
 import { openUrl } from '@nativescript/core/utils/utils';
 
 export async function openLink(url) {
     try {
         const available = await InAppBrowser.isAvailable();
+        console.log('openLink', url, available);
         if (available) {
-            return InAppBrowser.open(url, {
+            const result = await InAppBrowser.open(url, {
                 // iOS Properties
                 dismissButtonStyle: 'close',
                 preferredBarTintColor: primaryColor,
@@ -20,8 +21,10 @@ export async function openLink(url) {
                 secondaryToolbarColor: 'white',
                 enableUrlBarHiding: true,
                 enableDefaultShare: true,
-                forceCloseOnRedirection: false,
+                forceCloseOnRedirection: false
             });
+            console.log('result', result);
+            return result;
         } else {
             openUrl(url);
         }
@@ -29,7 +32,7 @@ export async function openLink(url) {
         alert({
             title: 'Error',
             message: error.message,
-            okButtonText: 'Ok',
+            okButtonText: 'Ok'
         });
     }
 }

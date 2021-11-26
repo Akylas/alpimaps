@@ -1,8 +1,11 @@
-import { Folder, knownFolders, path } from '@nativescript/core/file-system';
+import { Application, Color, Device, FileSystemEntity, Folder, View } from '@nativescript/core';
 import * as app from '@nativescript/core/application';
+import { android as androidApp } from '@nativescript/core/application';
 import * as appSettings from '@nativescript/core/application-settings';
-import { Application, Color, View } from '@nativescript/core';
-import { l, lc, lt } from '~/helpers/locale';
+import { knownFolders, path } from '@nativescript/core/file-system';
+import { lc } from '~/helpers/locale';
+import { pickFolder } from '@nativescript-community/ui-document-picker';
+import lazy from '@nativescript/core/utils/lazy';
 
 export function arraySortOn(array, key) {
     return array.sort(function (a, b) {
@@ -76,41 +79,151 @@ export function getDataFolder() {
     return dataFolder;
 }
 
-export function getDefaultMBTilesDir() {
-    let localMbtilesSource = appSettings.getString('local_mbtiles_directory');
-    // if (!localMbtilesSource) {
-    let defaultPath = path.join(getDataFolder(), 'alpimaps_mbtiles');
-    if (global.isAndroid) {
-        const nArray = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
+function getTreeUri(context, uri) {
+    let documentId = android.provider.DocumentsContract.getTreeDocumentId(uri);
+    if (android.provider.DocumentsContract.isDocumentUri(context, uri)) {
+        documentId = android.provider.DocumentsContract.getDocumentId(uri);
+    }
+
+    return android.provider.DocumentsContract.buildDocumentUriUsingTree(uri, documentId);
+}
+
+export function listFolder(folderPath: string): (Partial<FileSystemEntity> & { isFolder: boolean })[] {
+    if (global.isAndroid && sdkVersion() >= 30) {
+        // console.log('listFolder', folderPath);
+
+        const uri = android.net.Uri.parse(folderPath);
+        const context: android.app.Activity = androidApp.foregroundActivity || androidApp.startActivity;
         const result = [];
-        for (let index = 0; index < nArray.length; index++) {
-            const element = nArray[index];
-            if (element) {
-                result.push(element);
-            }
+        const treeDocumentUri = getTreeUri(context, uri);
+        const childrenUri = android.provider.DocumentsContract.buildChildDocumentsUriUsingTree(treeDocumentUri, android.provider.DocumentsContract.getTreeDocumentId(treeDocumentUri));
+        const cursor = context.getContentResolver().query(childrenUri, null, null, null, null);
+
+        const idIndex = cursor.getColumnIndex(android.provider.DocumentsContract.Document.COLUMN_DOCUMENT_ID);
+        const nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
+        const mimeIndex = cursor.getColumnIndex('mime_type');
+        while (cursor?.moveToNext()) {
+            const name = cursor.getString(nameIndex);
+            const mimeType = cursor.getString(mimeIndex);
+            // const childUri = android.provider.DocumentsContract.buildChildDocumentsUriUsingTree(uri, docId);
+            // console.log('childUri', name, docId, childUri);
+
+            const documentUri = android.provider.DocumentsContract.buildDocumentUriUsingTree(treeDocumentUri, cursor.getString(idIndex));
+            result.push({
+                name,
+                mimeType,
+                isFolder: mimeType === 'vnd.android.document/directory', //android.provider.DocumentsContract.Document.MIME_TYPE_DIR
+                path: getTreeUri(context, documentUri).toString()
+            } as any);
         }
-        if (result.length > 1) {
-            const sdcardFolder = result.at(-1).getAbsolutePath();
-            defaultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
-        } else if (result.length > 0) {
-            const sdcardFolder = result[0].getAbsolutePath();
-            defaultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
-        }
+        return result;
     } else {
-        try {
-            const docFolder = knownFolders.documents();
-            const folders = docFolder.getEntitiesSync();
-            const index = folders.findIndex((e) => e.path.endsWith('alpimaps_mbtiles'));
-            if (index !== -1) {
-                defaultPath = folders[index].path;
+        const docFolder = Folder.fromPath(folderPath);
+        return docFolder.getEntitiesSync().map((f) => {
+            f['isFolder'] = Folder.exists(f.path);
+            return f as any;
+        });
+    }
+}
+
+let savedMBTilesDir = appSettings.getString('local_mbtiles_directory');
+
+export function getSavedMBTilesDir() {
+    return savedMBTilesDir;
+}
+const sdkVersion = lazy(() => parseInt(Device.sdkVersion, 10));
+
+export function getAndroidRealPath(src) {
+    let filePath = '';
+
+    // ExternalStorageProvider
+    // const uri  = android.net.Uri.parse(android.net.Uri.decode(src));
+    const docId = android.net.Uri.decode(src);
+    // console.log('docId', docId);
+    const split = docId.split(':');
+    const type = split[split.length - 2];
+
+    if ('primary' === type) {
+        return android.os.Environment.getExternalStorageDirectory() + '/' + split[split.length - 1];
+    } else {
+        // if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
+        //getExternalMediaDirs() added in API 21
+        const external = androidApp.context.getExternalMediaDirs();
+        if (external.length > 1) {
+            filePath = external[1].getAbsolutePath();
+            filePath = filePath.substring(0, filePath.indexOf('Android')) + split[split.length - 1];
+        }
+        // } else {
+        //     filePath = "/storage/" + type + "/" + split[1];
+        // }
+        return filePath;
+    }
+}
+
+export async function getDefaultMBTilesDir() {
+    let localMbtilesSource = sdkVersion() >= 30 ? savedMBTilesDir : null;
+    if (global.isAndroid && localMbtilesSource && sdkVersion() >= 30) {
+        const context: android.app.Activity = androidApp.foregroundActivity || androidApp.startActivity;
+        const granted = context.getContentResolver().getPersistedUriPermissions();
+        let found = false;
+        for (let index = 0; index < granted.size(); index++) {
+            if (localMbtilesSource === granted.get(index).getUri().toString()) {
+                found = true;
+                break;
             }
-        } catch (error) {
-            console.error(error);
+        }
+        if (!found) {
+            localMbtilesSource = savedMBTilesDir = null;
+            appSettings.remove('local_mbtiles_directory');
         }
     }
-    localMbtilesSource = defaultPath;
-    appSettings.setString('local_mbtiles_directory', defaultPath);
-    // }
+    if (!localMbtilesSource) {
+        let resultPath;
+        if (global.isAndroid) {
+            if (sdkVersion() >= 30) {
+                const result = await pickFolder({
+                    permissions: {
+                        read: true,
+                        persistable: true
+                    }
+                });
+                console.log('result', result);
+                resultPath = result.folders[0];
+            } else {
+                const nArray = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
+                const result = [];
+                for (let index = 0; index < nArray.length; index++) {
+                    const element = nArray[index];
+                    if (element) {
+                        result.push(element);
+                    }
+                }
+                if (result.length > 1) {
+                    const sdcardFolder = result.at(-1).getAbsolutePath();
+                    resultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
+                } else if (result.length > 0) {
+                    const sdcardFolder = result[0].getAbsolutePath();
+                    resultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
+                }
+            }
+        } else {
+            try {
+                const docFolder = knownFolders.documents();
+                const folders = docFolder.getEntitiesSync();
+                const index = folders.findIndex((e) => e.path.endsWith('alpimaps_mbtiles'));
+                if (index !== -1) {
+                    resultPath = folders[index].path;
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        if (resultPath) {
+            localMbtilesSource = resultPath;
+            savedMBTilesDir = localMbtilesSource;
+            appSettings.setString('local_mbtiles_directory', resultPath);
+        }
+    }
     return localMbtilesSource;
 }
 

@@ -11,7 +11,7 @@ module.exports = {
         markingMode: 'none',
         // v8Flags: '--expose_gc',
         codeCache: true,
-        enableMultithreadedJavascript: false,
+        enableMultithreadedJavascript: true,
         forceLog: true
     },
     cssParser: 'rework'

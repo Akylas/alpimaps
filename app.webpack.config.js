@@ -10,9 +10,6 @@ const TerserPlugin = require('terser-webpack-plugin');
 const IgnoreNotFoundExportPlugin = require('./IgnoreNotFoundExportPlugin');
 const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 const Fontmin = require('@akylas/fontmin');
-const esbuild = require('esbuild');
-const { ESBuildMinifyPlugin } = require('esbuild-loader');
-const ZipPlugin = require('zip-webpack-plugin');
 
 function fixedFromCharCode(codePt) {
     if (codePt > 0xffff) {
@@ -61,7 +58,10 @@ module.exports = (env, params = {}) => {
         cartoLicense = false, // --env.cartoLicense
         devlog, // --env.devlog
         fork = true, // --env.fakeall
+        buildpeakfinder, // --env.buildpeakfinder
         apiKeys = true,
+        locale = 'auto', // --env.locale
+        theme = 'auto', // --env.theme
         adhoc // --env.adhoc
     } = env;
     env.appPath = appPath;
@@ -264,7 +264,7 @@ module.exports = (env, params = {}) => {
     config.resolve.modules = [resolve(__dirname, `node_modules/${coreModulesPackageName}`), resolve(__dirname, 'node_modules'), `node_modules/${coreModulesPackageName}`, 'node_modules'];
     Object.assign(config.resolve.alias, {
         '@nativescript/core': `${coreModulesPackageName}`,
-        'svelte-native': '@akylas/svelte-native',
+        // 'svelte-native': '@akylas/svelte-native',
         'tns-core-modules': `${coreModulesPackageName}`,
         '@nativescript/core/accessibility$': '~/acessibilityShim',
         '../../../accessibility$': '~/acessibilityShim',
@@ -296,6 +296,8 @@ module.exports = (env, params = {}) => {
         __CARTO_PACKAGESERVICE__: cartoLicense,
         TNS_ENV: JSON.stringify(mode),
         SUPPORTED_LOCALES: JSON.stringify(locales),
+        DEFAULT_LOCALE: `"${locale}"`,
+        DEFAULT_THEME: `"${theme}"`,
         'gVars.sentry': !!sentry,
         NO_CONSOLE: noconsole,
         SENTRY_DSN: `"${process.env.SENTRY_DSN}"`,
@@ -646,113 +648,15 @@ module.exports = (env, params = {}) => {
                     // when these options are enabled
                     collapse_vars: platform !== 'android',
                     sequences: platform !== 'android',
-                    passes: 5,
+                    passes: 3,
                     drop_console: production && noconsole
                 }
             }
         })
     ];
-    const configs = [config];
-    if (!!production) {
-        configs.unshift({
-            entry: resolve(__dirname, 'geo-three/webapp/app.ts'),
-            devtool: false,
-            target: 'web',
-            mode: production ? 'production' : 'development',
-            optimization: {
-                usedExports: true,
-                minimizer: [
-                    new TerserPlugin({
-                        parallel: true,
-                        terserOptions: {
-                            ecma: 2015,
-                            module: true,
-                            toplevel: false,
-                            keep_classnames: false,
-                            keep_fnames: false,
-                            output: {
-                                comments: false,
-                                semicolons: !isAnySourceMapEnabled
-                            },
-                            mangle: {
-                                properties: {
-                                    reserved: ['__metadata'],
-                                    regex: /^(m[A-Z]|nativeViewProtected$|nativeTextViewProtected$)/
-                                }
-                            },
-                            compress: {
-                                booleans_as_integers: false,
-                                // The Android SBG has problems parsing the output
-                                // when these options are enabled
-                                collapse_vars: platform !== 'android',
-                                sequences: platform !== 'android',
-                                passes: 5,
-                                drop_console: production && noconsole
-                            }
-                        }
-                    })
-                ]
-            },
-            resolve: {
-                exportsFields: [],
-                modules: [resolve(__dirname, 'node_modules'), resolve(__dirname, 'geo-three', 'node_modules')],
-                mainFields: ['browser', 'module', 'main'],
-                extensions: ['.ts', '.js', '.json'],
-                alias: {
-                    './LocalHeightProvider': resolve(__dirname, 'webapp/LocalHeightProvider'),
-                    './RasterMapProvider': resolve(__dirname, 'webapp/RasterMapProvider')
-                }
-            },
-            output: {
-                pathinfo: false,
-                path: resolve(__dirname, 'app/assets'),
-                // libraryTarget: 'commonjs',
-                library: {
-                    name: 'webapp',
-                    type: 'global'
-                },
-                filename: 'webapp.js'
-                // globalObject: 'global'
-            },
-            module: {
-                rules: [
-                    {
-                        test: /\.ts$/,
-                        loader: 'ts-loader',
-                        options: {
-                            transpileOnly: true,
-                            allowTsInNodeModules: true,
-                            configFile: resolve(__dirname, 'tsconfig.web.json'),
-                            compilerOptions: {
-                                sourceMap: false,
-                                declaration: false
-                            }
-                        }
-                    },
-                    {
-                        test: /\.js$/,
-                        loader: 'esbuild-loader',
-                        options: {
-                            target: 'es2015',
-                            implementation: esbuild
-                            // sourceMaps: false,
-                            // plugins: ['@babel/plugin-transform-runtime'],
-                            // presets: [
-                            //     [
-                            //         '@babel/env',
-                            //         {
-                            //             modules: false,
-                            //             targets: {
-                            //                 chrome: '70'
-                            //             }
-                            //         }
-                            //     ]
-                            // ]
-                        }
-                    }
-                ]
-            }
-        });
+    if (buildpeakfinder) {
+        return [require('./peakfinder.webpack.config.js')(env, params), config];
+    } else {
+        return config;
     }
-    return configs;
 };

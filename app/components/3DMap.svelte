@@ -15,7 +15,7 @@
     export let rasterDataSource: TileDataSource<any, any>;
     let webView: NativeViewElementNode<AWebView>;
     let page: NativeViewElementNode<Page>;
-    let webserver;
+    // let webserver;
     let selectedItem: Feature & { distance: number } = null;
 
     const now = new Date();
@@ -45,8 +45,8 @@
 
     function webviewLoaded(args: LoadEventData) {
         const webview = args.object as AWebView;
-        webview.registerLocalResource('https://api.maptiler.com/maps/topo/sprite@2x.json', '~/assets/3dterrain/sprite@2x.json')
-        webview.registerLocalResource('https://api.maptiler.com/maps/topo/sprite@2x.png', '~/assets/3dterrain/sprite@2x.png')
+        // webview.registerLocalResource('https://api.maptiler.com/maps/topo/sprite@2x.json', '~/assets/3dterrain/sprite@2x.json')
+        // webview.registerLocalResource('https://api.maptiler.com/maps/topo/sprite@2x.png', '~/assets/3dterrain/sprite@2x.png')
         // webview.once('layoutChanged', () => {
         // webview.src = '~/assets/webapp.html';
         // });
@@ -56,21 +56,21 @@
         // });
     }
 
-    onMount(() => {
-        console.log('onMount', !!vectorDataSource, !!dataSource, !!rasterDataSource);
-        try {
-            const vDataSource = vectorDataSource.getNative();
-            webserver = new (akylas.alpi as any).maps.WebServer(8080, dataSource.getNative(), vDataSource, rasterDataSource?.getNative(), vDataSource);
-            webserver.start();
-        } catch (err) {
-            console.error(err);
-        }
-    });
-    onDestroy(() => {
-        if (webserver) {
-            webserver.stop();
-        }
-    });
+    // onMount(() => {
+        // console.log('onMount', !!vectorDataSource, !!dataSource, !!rasterDataSource);
+        // try {
+            // const vDataSource = vectorDataSource.getNative();
+            // webserver = new (akylas.alpi as any).maps.WebServer(8080, dataSource.getNative(), vDataSource, rasterDataSource?.getNative(), vDataSource);
+            // webserver.start();
+        // } catch (err) {
+            // console.error(err);
+        // }
+    // });
+    // onDestroy(() => {
+        // if (webserver) {
+            // webserver.stop();
+        // }
+    // });
 
     $: currentAltitude = position.altitude + 10;
     $: updateElevation(currentAltitude);
