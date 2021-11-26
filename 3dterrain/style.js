@@ -5249,7 +5249,6 @@ const mapboxStyle = {
                     "class",
                     "hamlet",
                     "island",
-                    "islet",
                     "neighbourhood",
                     "suburb"
                 ]

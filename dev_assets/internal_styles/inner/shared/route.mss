@@ -14,7 +14,7 @@
 @route_label_halo_radius: 1;
 @route_label_halo: #f2f5f8;
 
-#route['nuti::routes'>0]{
+#route{
 	[network=4][zoom>=10],
 	[network=3][zoom>=9],
 	[network=2][zoom>=8],
