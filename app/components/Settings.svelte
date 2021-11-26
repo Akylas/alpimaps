@@ -178,10 +178,11 @@
                             width="25"
                             height="25"
                             fontSize="20"
+                            horizontalAlignment="right"
                             visibility={!!item.rightBtnIcon ? 'visible' : 'hidden'}
                             class="icon-btn"
                             text={item.rightBtnIcon}
-                            on:tap={(event) => onTap(item.id)}
+                            on:tap={() => onTap(item.id)}
                         />
                         <absoluteLayout row={2} col={1} colSpan={3} backgroundColor={$borderColor} height="1" verticalAlignment="bottom" />
                     </gridLayout>

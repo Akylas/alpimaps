@@ -152,7 +152,7 @@ export default class ItemsModule extends MapModule {
     //     return new Line({ positions: item.route.positions, projection: mapContext.getProjection(), styleBuilder, metaData });
     // }
     addItemToLayer(item: IItem, autoUpdate = false) {
-        this.getOrCreateLocalVectorLayer();
+        // this.getOrCreateLocalVectorLayer();
         // if (!writer) {
         //     const projection = this.localVectorLayer.getDataSource().getProjection();
         //     writer = new GeoJSONGeometryWriter<LatLonKeys>({
@@ -203,8 +203,10 @@ export default class ItemsModule extends MapModule {
         );
     }
     addItemsToLayer(items: readonly Item[]) {
-        items.forEach((i) => this.addItemToLayer(i), this);
-        this.updateGeoJSONLayer();
+        if (items.length > 0) {
+            items.forEach((i) => this.addItemToLayer(i), this);
+            this.updateGeoJSONLayer();
+        }
     }
     async updateItem(item: IItem, data: Partial<ItemProperties>) {
         if (Object.keys(data).length > 0) {

@@ -1,43 +1,40 @@
 @name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
 @selected_item_id: ([osmid] ? [osmid] : [ref] ? [ref] : [name]) + '';
 
-#transportation['mapnik::geometry_type'=3] {
-	[zoom>=13]::casing {
-		[class=minor],
-		[class=service] {
-			[zoom>=14] {
-				polygon-fill: @service-fill
-				line-color: darken(@service-fill, 10%);
-				line-width: 0.5;
-			}
+#transportation['mapnik::geometry_type'=3][zoom>=13]::casing {
+	[class=minor],
+	[class=service] {
+		[zoom>=14] {
+			polygon-fill: @service-fill
+			line-color: darken(@service-fill, 10%);
+			line-width: 0.5;
 		}
-		
-		[class=path],[class=transit],[class=rail]{
-			[subclass=platform][zoom>=17]  {
-				polygon-fill: @railway;
-				line-color: darken(@railway, 10%);
-				line-width: linear([view::zoom], (17, 0), (21, 1));
-			}
+	}
+	[class=path],[class=transit],[class=rail]{
+		[subclass=platform][zoom>=17]  {
+			polygon-fill: @railway;
+			line-color: darken(@railway, 10%);
+			line-width: linear([view::zoom], (17, 0), (21, 1));
 		}
-		[class=path]{
-			[subclass=pedestrian],
-			[subclass=footway][zoom>=15],
-			[subclass=cycleway][zoom>=15] {
-				polygon-fill: @pedestrian-polygon-fill;
-				line-color: darken(@pedestrian-polygon-fill, 10%);
-				line-width: 0.5;
-			}
+	}
+	[class=path]{
+		[subclass=pedestrian],
+		[subclass=footway][zoom>=15],
+		[subclass=cycleway][zoom>=15] {
+			polygon-fill: @pedestrian-polygon-fill;
+			line-color: darken(@pedestrian-polygon-fill, 10%);
+			line-width: 0.5;
 		}
-		[class=track][zoom>=15] {
-			polygon-fill: @track-fill;
-			polygon-opacity: 0.7;
-		}
-	
-		[class=bridge] {
-			polygon-fill: @bridge_fill ;
-			line-color: lighten(@bridge-casing, 40%);
-			line-width:0.5;
-		}
+	}
+	[class=track][zoom>=15] {
+		polygon-fill: @track-fill;
+		polygon-opacity: 0.7;
+	}
+
+	[class=bridge] {
+		polygon-fill: @bridge_fill ;
+		line-color: lighten(@bridge-casing, 40%);
+		line-width:0.5;
 	}
 }
 
@@ -358,14 +355,12 @@
 			
 		}
 	}
-	
 	[class=rail][brunnel=null]::transit, 
 	[class=transit][brunnel=null]::transit, 
 	[class=rail][brunnel=bridge]::transit,
 	[class=transit][brunnel=bridge]::transit, 
 	[class=rail][brunnel=tunnel]::casing,
 	[class=transit][brunnel=tunnel]::casing {
-	
 		[brunnel=bridge][zoom>=15] {
 			line-color: @railway-bridge-casing;
 		}

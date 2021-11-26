@@ -197,16 +197,21 @@ export default class UserLocationModule extends MapModule {
             // const currentLocation = { lat: this.lastUserLocation.latitude, lon: this.lastUserLocation.longitude, horizontalAccuracy: this.lastUserLocation.horizontalAccuracy };
             this.userMarker.color = accuracyColor;
             this.accuracyMarker.visible = accuracy > 20;
-            new Tween({
-                onRender: (newPos: MapPos<LatLonKeys> & { horizontalAccuracy: number; verticalAccuracy: number; speed: number }) => {
-                    if (this.userMarker) {
-                        const { altitude, ...posWithoutAltitude } = newPos;
-                        this.accuracyMarker.positions = this.getCirclePoints(posWithoutAltitude);
-                        this.userBackMarker.position = posWithoutAltitude;
-                        this.userMarker.position = posWithoutAltitude;
+
+            const currentPosition = { ...this.lastUserLocation };
+            try {
+                new Tween({
+                    onRender: (newPos: any) => {
+                        if (this.userMarker) {
+                            this.accuracyMarker.positions = this.getCirclePoints(newPos);
+                            this.userBackMarker.position = newPos;
+                            this.userMarker.position = newPos;
+                        }
                     }
-                }
-            }).tween(this.lastUserLocation, position as any, LOCATION_ANIMATION_DURATION);
+                }).tween({ lat: currentPosition.lat, lon: currentPosition.lon }, { lat: position.lat, lon: position.lon }, LOCATION_ANIMATION_DURATION);
+            } catch (err) {
+                console.error(err);
+            }
 
             // this.userBackMarker.position = position;
             // this.userMarker.position = position;
@@ -225,9 +230,9 @@ export default class UserLocationModule extends MapModule {
             mapStore.queryingLocation = false;
         }
         // const { android, ios, ...toPrint } = data.location;
-        if (DEV_LOG) {
-            console.log('onLocation', this._userFollow, event.location, this.userFollow);
-        }
+        // if (DEV_LOG) {
+        //     console.log('onLocation', this._userFollow, event.location, this.userFollow);
+        // }
         if (event.error) {
             console.log(event.error);
             return;

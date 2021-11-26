@@ -359,6 +359,9 @@ export class GeoHandler extends Observable {
     }
     @bind
     onLocation(loc: GeoLocation, manager?: any) {
+        // if (DEV_LOG) {
+        //     console.log('onLocation', loc);
+        // }
         if (loc) {
             this.currentWatcher && this.currentWatcher(null, loc);
             this.notify({
@@ -385,6 +388,7 @@ export class GeoHandler extends Observable {
         //@ts-ignore
         const desiredAccuracy = ApplicationSettings.getNumber('gps_desired_accuracy', global.isAndroid ? Enums.Accuracy.high : kCLLocationAccuracyBestForNavigation);
         const options: GeolocationOptions = {
+            // provider: 'gps',
             updateDistance,
             minimumUpdateTime,
             desiredAccuracy,

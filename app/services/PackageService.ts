@@ -29,7 +29,7 @@ import * as appSettings from '@nativescript/core/application-settings';
 import { File, Folder, path } from '@nativescript/core/file-system';
 import { getMapContext } from '~/mapModules/MapModule';
 import { IItem as Item, RouteProfile } from '~/models/Item';
-import { getDataFolder, getDefaultMBTilesDir } from '~/utils/utils';
+import { getDataFolder, getDefaultMBTilesDir, getSavedMBTilesDir, listFolder } from '~/utils/utils';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
@@ -513,10 +513,9 @@ class PackageService extends Observable {
     _localOSMOfflineGeocodingService: OSMOfflineGeocodingService;
     get localOSMOfflineGeocodingService() {
         if (!this._localOSMOfflineGeocodingService) {
-            const folderPath = getDefaultMBTilesDir();
-            if (Folder.exists(folderPath)) {
-                const folder = Folder.fromPath(folderPath);
-                const entities = folder.getEntitiesSync();
+            const folderPath = getSavedMBTilesDir();
+            if (folderPath) {
+                const entities = listFolder(folderPath);
                 entities.some((s) => {
                     if (s.name.endsWith('.nutigeodb')) {
                         this._localOSMOfflineGeocodingService = new OSMOfflineGeocodingService({
@@ -535,10 +534,9 @@ class PackageService extends Observable {
     _localOSMOfflineReverseGeocodingService: OSMOfflineReverseGeocodingService;
     get localOSMOfflineReverseGeocodingService() {
         if (!this._localOSMOfflineReverseGeocodingService) {
-            const folderPath = getDefaultMBTilesDir();
-            if (Folder.exists(folderPath)) {
-                const folder = Folder.fromPath(folderPath);
-                const entities = folder.getEntitiesSync();
+            const folderPath = getSavedMBTilesDir();
+            if (folderPath) {
+                const entities = listFolder(folderPath);
                 entities.some((s) => {
                     if (s.name.endsWith('.nutigeodb')) {
                         this._localOSMOfflineReverseGeocodingService = new OSMOfflineReverseGeocodingService({
@@ -896,10 +894,9 @@ class PackageService extends Observable {
         } else {
             // console.log('offlineRoutingSearchService', !!this._localOfflineRoutingSearchService);
             if (!this._localOfflineRoutingSearchService) {
-                const folderPath = getDefaultMBTilesDir();
-                if (Folder.exists(folderPath)) {
-                    const folder = Folder.fromPath(folderPath);
-                    const entities = folder.getEntitiesSync();
+                const folderPath = getSavedMBTilesDir();
+                if (folderPath) {
+                    const entities = listFolder(folderPath);
                     entities.some((s) => {
                         if (s.name.endsWith('.vtiles')) {
                             this._localOfflineRoutingSearchService = new ValhallaOfflineRoutingService({

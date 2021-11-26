@@ -8,8 +8,11 @@
     import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Drawer } from '@nativescript-community/ui-drawer';
-    import { AWebView, LoadFinishedEventData } from '@nativescript-community/ui-webview';
+    import { prompt } from '@nativescript-community/ui-material-dialogs';
+    import { AWebView, LoadFinishedEventData, WebViewEventData } from '@nativescript-community/ui-webview';
     import { Folder, knownFolders, LoadEventData, ObservableArray, Page, path } from '@nativescript/core';
+    import { getBoolean, getNumber, setBoolean, setNumber } from '@nativescript/core/application-settings';
+    import { layout } from '@nativescript/core/utils';
     import dayjs from 'dayjs';
     import type { Feature } from 'geojson';
     import { debounce } from 'push-it-to-the-limit/target/es6';
@@ -19,9 +22,10 @@
     import { formatDistance } from '~/helpers/formatter';
     import { lc } from '~/helpers/locale';
     import { showError } from '~/utils/error';
-    import { alpimapsFontFamily, navigationBarHeight, primaryColor, widgetBackgroundColor } from '~/variables';
+    import { alpimapsFontFamily, navigationBarHeight, primaryColor, textColorDark, textColorLight, widgetBackgroundColor } from '~/variables';
 
     export let position;
+    export let bearing;
     export let terrarium: boolean = false;
     export let dataSource: TileDataSource<any, any>;
     export let vectorDataSource: MBTilesTileDataSource | MergedMBVTTileDataSource<any, any>;
@@ -31,8 +35,6 @@
     let drawer: NativeViewElementNode<Drawer>;
     let collectionView1: NativeViewElementNode<CollectionView>;
     let collectionView2: NativeViewElementNode<CollectionView>;
-    // 45.182362864932706, 5.722772489758224,
-    let webserver;
     let selectedItem: Feature & { distance: number } = null;
 
     const now = new Date();
@@ -65,10 +67,10 @@
     }
 
     const updateElevation = debounce(function (elevation) {
-        if (!webView) {
+        if (isNaN(elevation)) {
             return;
         }
-        callJSFunction(`setElevation`, elevation);
+        callJSFunction('setElevation', elevation);
     }, 10);
     function refresh() {
         webView.nativeView.reload();
@@ -81,7 +83,7 @@
         }
         shown = true;
         if (webView) {
-            webView.nativeView.src = '~/assets/webapp.html';
+            webView.nativeView.src = '~/assets/peakfinder/index.html';
         }
     }
 
@@ -92,18 +94,37 @@
         // });
 
         webview.once(AWebView.loadFinishedEvent, (args: LoadFinishedEventData) => {
-            args.object.executeJavaScript(`webapp.setTerrarium(${terrarium});webapp.setPosition(${JSON.stringify({ ...position, altitude: currentAltitude })})`);
+            const startValues = {
+                setTerrarium: terrarium,
+                setPosition: { ...position, altitude: currentAltitude },
+                setAzimuth: bearing
+            };
+            listView1Items.forEach((item) => {
+                startValues[item.method] = item.value as number;
+            });
+            listView2Items.forEach((item) => {
+                startValues[item.method] = item.value as number;
+            });
+            args.object.executeJavaScript(`
+webapp.callMethods(${JSON.stringify(startValues)});
+`);
+
+            // args.object.executeJavaScript(`
+            // webapp.setTerrarium(${terrarium});
+            // webapp.setAzimuth(${bearing}, false);
+            // webapp.setPosition(${JSON.stringify({ ...position, altitude: currentAltitude })});
+            // `);
         });
 
         webview.on('requestPermissions', async (args: any) => {
             const wantedPerssions = args.permissions
                 .map((p) => {
                     if (p === 'RECORD_AUDIO') {
-                        return android.Manifest.permission.RECORD_AUDIO;
+                        return 'android.permission.RECORD_AUDIO';
                     }
 
                     if (p === 'CAMERA') {
-                        return android.Manifest.permission.CAMERA;
+                        return 'android.permission.CAMERA';
                     }
 
                     return p;
@@ -118,28 +139,29 @@
         // });
     }
 
-    onMount(() => {
-        // console.log('onMount', !!vectorDataSource, !!dataSource, !!rasterDataSource);
-        try {
-            const vDataSource = (vectorDataSource || getDefaultDataSource()).getNative();
-            webserver = new (akylas.alpi as any).maps.WebServer(8080, dataSource.getNative(), vDataSource, rasterDataSource?.getNative(), vDataSource);
-            webserver.start();
-        } catch (err) {
-            console.error(err);
-        }
-    });
-    onDestroy(() => {
-        if (webserver) {
-            webserver.stop();
-        }
-    });
+    // onMount(() => {
+    // console.log('onMount', !!vectorDataSource, !!dataSource, !!rasterDataSource);
+    // try {
+    //     const vDataSource = (vectorDataSource || getDefaultDataSource()).getNative();
+    //     webserver = new (akylas.alpi as any).maps.WebServer(8080, dataSource.getNative(), vDataSource, vDataSource, rasterDataSource?.getNative());
+    //     webserver.start();
+    // } catch (err) {
+    //     console.error(err);
+    // }
+    // });
+    // onDestroy(() => {
+    //     if (webserver) {
+    //         webserver.stop();
+    //     }
+    // });
 
     function callJSFunction(method: string, ...args) {
-        if (!webView?.nativeView?.nativeViewProtected) {
+        const nView = webView?.nativeView;
+        if (!nView) {
             return;
         }
         try {
-            webView.nativeView.executeJavaScript(`webapp.${method}(${args ? args.join(',') : ''})`);
+            nView.executeJavaScript(`webapp.${method}(${args ? args.join(',') : ''})`);
         } catch (err) {
             showError(err);
         }
@@ -156,13 +178,33 @@
     // function resetBearing() {
     //     callJSFunction('setAzimuth', 0);
     // }
-
+    function itemKey(item) {
+        const method = item.method as string;
+        return method[3].toLowerCase() + method.slice(4);
+    }
+    function saveItem(item, value, number = false) {
+        if (item.method === 'setDarkMode') {
+            darkMode = value;
+        }
+        if (item.shouldSave) {
+            if (number) {
+                setNumber(`peakfinder_${itemKey(item)}`, value);
+            } else {
+                setBoolean(`peakfinder_${itemKey(item)}`, value);
+            }
+        }
+    }
     function onCheckBox(item, value: boolean) {
-        callJSFunction(item.method, value);
+        try {
+            callJSFunction(item.method, value);
+            saveItem(item, value);
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     function itemValue(item) {
-        const result = item.value / (item.decimalFactor || 1);
+        const result = item.value;
         // console.log('itemValue', item.title, item.value, result)
         if (item.formatter) {
             return item.formatter(result);
@@ -170,51 +212,70 @@
         return result + '';
     }
 
+    let darkMode = getBoolean('peakfinder_darkMode', false);
+
     const listView1Items = new ObservableArray([
         {
             type: 'checkbox',
             title: lc('dark_mode'),
-            checked: false,
+            shouldSave: true,
+            value: darkMode,
             method: 'setDarkMode'
         },
         {
             type: 'checkbox',
             title: lc('map_mode'),
-            checked: false,
+            shouldSave: true,
+            value: getBoolean('peakfinder_mapMode', false),
             method: 'setMapMode'
         },
         {
             type: 'checkbox',
+            title: lc('auto colors'),
+            shouldSave: true,
+            value: getBoolean('peakfinder_generateColors', false),
+            method: 'setGenerateColors'
+        },
+        {
+            type: 'checkbox',
             title: lc('map_outline'),
-            checked: false,
+            shouldSave: true,
+            value: getBoolean('peakfinder_mapOultine', true),
             method: 'setMapOultine'
         },
         {
             type: 'checkbox',
             title: lc('day_night_cycle'),
-            checked: false,
+            shouldSave: true,
+            value: getBoolean('peakfinder_dayNightCycle', false),
             method: 'setDayNightCycle'
         },
         {
             type: 'checkbox',
-            title: lc('draw_features'),
-            checked: false,
-            method: 'setDebugFeaturePoints'
-        },
-        {
-            type: 'checkbox',
             title: lc('draw_elevations'),
-            checked: false,
+            shouldSave: true,
+            value: getBoolean('peakfinder_drawElevations', false),
             method: 'setDrawElevations'
         },
         {
             type: 'slider',
             min: 10,
             max: 400000,
-            value: 173000,
+            shouldSave: true,
+            value: getNumber('peakfinder_viewingDistance', 173000),
             method: 'setViewingDistance',
             formatter: formatDistance,
             title: lc('viewing_distance')
+        },
+        {
+            type: 'slider',
+            min: 10,
+            max: 80,
+            shouldSave: true,
+            value: getNumber('peakfinder_cameraFOVFactor', 28),
+            method: 'setCameraFOVFactor',
+            formatter: formatDistance,
+            title: lc('camera_fov')
         },
         {
             type: 'slider',
@@ -230,74 +291,111 @@
         {
             type: 'checkbox',
             title: lc('debug_mode'),
-            checked: false,
+            value: false,
             method: 'setDebugMode'
         },
         {
             type: 'checkbox',
-            title: lc('compute_normals'),
-            checked: false,
-            method: 'setComputeNormals'
-        },
-        {
-            type: 'checkbox',
-            title: lc('draw_normals'),
-            checked: false,
-            method: 'setNormalsInDebug'
-        },
-        {
-            type: 'checkbox',
             title: lc('read_features'),
-            checked: true,
+            value: true,
             method: 'setReadFeatures'
         },
         {
             type: 'checkbox',
-            title: lc('debug_gpu_picking'),
-            checked: false,
-            method: 'setDebugGPUPicking'
-        },
-        {
-            type: 'checkbox',
             title: lc('show_fps'),
-            checked: false,
+            value: !PRODUCTION,
             method: 'setShowStats'
         },
         {
             type: 'checkbox',
             title: lc('wireframe'),
-            checked: false,
+            value: false,
             method: 'setWireFrame'
+        },
+        {
+            type: 'checkbox',
+            title: lc('debug_gpu_picking'),
+            value: false,
+            method: 'setDebugGPUPicking'
+        },
+        {
+            type: 'checkbox',
+            title: lc('draw_features'),
+            value: false,
+            method: 'setDebugFeaturePoints'
+        },
+        {
+            type: 'checkbox',
+            title: lc('compute_normals'),
+            value: false,
+            method: 'setComputeNormals'
+        },
+        {
+            type: 'checkbox',
+            title: lc('draw_normals'),
+            value: false,
+            method: 'setNormalsInDebug'
         },
         {
             type: 'slider',
             min: 0,
             max: 6,
+            shouldSave: true,
             formatter: (f) => f.toFixed(2),
             decimalFactor: 100,
-            value: 2 * 100,
+            value: getNumber('peakfinder_exageration', 1.6),
             method: 'setExageration',
             title: lc('exageration')
         },
         {
             type: 'slider',
-            min: 0.01,
-            max: 100,
-            decimalFactor: 1000,
+            min: 0,
+            max: 2,
+            shouldSave: true,
+            decimalFactor: 100,
             formatter: (f) => f.toFixed(2),
             method: 'setDepthBiais',
-            value: 0.44 * 1000,
+            value: getNumber('peakfinder_depthBiais', 0.44),
             title: lc('depth_biais')
         },
         {
             type: 'slider',
-            min: 0.01,
-            max: 1000,
-            decimalFactor: 1000,
+            min: 0,
+            max: 120,
+            shouldSave: true,
+            decimalFactor: 100,
             method: 'setDepthMultiplier',
             formatter: (f) => f.toFixed(2),
-            value: 110 * 1000,
+            value: getNumber('peakfinder_depthMultiplier', 110),
             title: lc('depth_multiplier')
+        },
+        {
+            type: 'slider',
+            min: 0,
+            max: 40,
+            shouldSave: true,
+            decimalFactor: 100,
+            method: 'setDepthPostMultiplier',
+            formatter: (f) => f.toFixed(2),
+            value: getNumber('peakfinder_depthPostMultiplier', 1),
+            title: lc('depth_post_multiplier')
+        },
+        {
+            type: 'slider',
+            min: 16,
+            max: 512,
+            shouldSave: true,
+            transformer: (value) => {
+                value = Math.round(value);
+                if (value % 2 === 1) {
+                    return value - 1;
+                }
+                return value;
+            },
+            method: 'setGeometrySize',
+            formatter: (f) => f.toFixed(),
+            value: getNumber('peakfinder_geometrySize', 320),
+            title: lc('geometry_size')
         }
     ]);
 
@@ -350,7 +448,7 @@
     $: {
         callJSFunction('setDate', secondsInDay);
     }
-    $: currentAltitude = position.altitude + 10;
+    $: currentAltitude = position.altitude;
     $: updateElevation(currentAltitude);
 
     $: {
@@ -370,6 +468,15 @@
     function onPositionChanged(event) {
         position = event.data;
     }
+
+    function onSensorsToggle(event) {
+        console.log('onSensorsToggle', event.data);
+        if (event.data) {
+            startHeadingListener();
+        } else {
+            stopHeadingListener();
+        }
+    }
     function onViewingDistanceChanged(event) {}
     function onZoomChanged(event) {}
 
@@ -381,11 +488,34 @@
             return collectionView1.nativeView.scrollOffset <= 0;
         }
     }
-    function onSliderValue(items: ObservableArray<any>, item, index, event) {
-        // console.log('onSliderValue', item.title, item.value, index, event.value)
-        callJSFunction(item.method, event.value / (item.decimalFactor || 1));
-        item.value = event.value;
-        items.setItem(index, item);
+    function onSliderValue(items: ObservableArray<any>, item, event) {
+        try {
+            let newValue = event.value / (item.decimalFactor || 1);
+            if (item.transformer) {
+                newValue = item.transformer(newValue);
+            }
+            saveItem(item, newValue, true);
+            callJSFunction(item.method, newValue);
+            const index = items.findIndex((i) => i.method === item.method);
+            item.value = newValue;
+            items.setItem(index, item);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async function promptSliderValue(items: ObservableArray<any>, item) {
+        const result = await prompt({
+            defaultText: item.value * (item.decimalFactor || 1) + '',
+            capitalizationType: 'none',
+            textFieldProperties: {
+                keyboardType: 'number'
+            }
+        });
+
+        if (result?.result) {
+            onSliderValue(items, item, { value: parseFloat(result.text) });
+        }
     }
 
     let listeningForHeading = false;
@@ -409,11 +539,12 @@
         switch (sensor) {
             case 'heading':
                 if (global.isAndroid) {
-                    headingAccuracy = 4 - data.accuracy;
-                } else {
                     headingAccuracy = data.accuracy;
+                } else {
+                    headingAccuracy = 4 - data.accuracy;
                 }
-                if (data.accuracy < 3) {
+                // console.log('heading', data.accuracy, headingAccuracy)
+                if (headingAccuracy < 3) {
                     return;
                 }
                 stopHeadingListener();
@@ -428,40 +559,53 @@
                 break;
         }
     }
+    let currentHeight = 0;
+    let sliderHeight = 0;
+    function onLayoutChanged(event) {
+        currentHeight = layout.toDeviceIndependentPixels(event.object.getMeasuredHeight());
+        sliderHeight = 0.7 * currentHeight;
+    }
+    function createCustomWebViewClient(webview: AWebView, webClientClass) {
+        const originalClient = new webClientClass(webview);
+        const vDataSource = (vectorDataSource || getDefaultDataSource()).getNative();
+        const client = new (akylas as any).alpi.maps.WebViewClient(originalClient, dataSource?.getNative(), vDataSource, vDataSource, rasterDataSource?.getNative());
+        client.originalClient = originalClient;
+        return client;
+    }
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <drawer bind:this={drawer} gestureMinDist={60} bottomClosedDrawerAllowDraging={false} simultaneousHandlers={simultaneousHandlersTags} {shouldPan} translationFunction={drawerTranslationFunction}>
-        <gridLayout android:marginBottom={$navigationBarHeight}>
+        <gridLayout android:marginBottom={$navigationBarHeight} on:layoutChanged={onLayoutChanged}>
             <awebview
                 bind:this={webView}
                 on:loaded={webviewLoaded}
+                createWebViewClient={createCustomWebViewClient}
                 webRTC={true}
                 normalizeUrls={false}
                 mediaPlaybackRequiresUserAction={false}
+                debugMode={consoleEnabled}
                 webConsoleEnabled={consoleEnabled}
                 displayZoomControls={false}
+                on:sensors={onSensorsToggle}
                 on:selected={onFeatureSelected}
                 on:position={onPositionChanged}
                 on:zoom={onZoomChanged}
             />
-            <!-- <canvaslabel marginTop="20" class="icon-btn" verticalAlignment="top" horizontalAlignment="left" rippleColor="#ffffff33" on:tap={toggleCamera} >
-                    <cspan text="mdi-camera" verticalAlignment="center" textAlignment="center" color="red" xfermode={PorterDuffMode.SCREEN}/>
-                </canvaslabel> -->
-
             <slider
                 horizontalAlignment="left"
                 verticalAlignment="center"
                 value={currentAltitude}
                 on:valueChange={(e) => (currentAltitude = e['value'])}
                 minValue="0"
-                maxValue="8000"
-                style="transform: rotate(-90) translate(-80,50)"
-                width="200"
+                maxValue="6000"
+                originX={0}
+                style={`transform: rotate(-90) translate(20,${sliderHeight * 0.5})`}
+                width={sliderHeight}
             />
 
             <gridlayout
-                marginBottom="40"
+                marginBottom={50}
                 verticalAlignment="bottom"
                 horizontalAlignment="center"
                 columns="*,auto"
@@ -478,20 +622,29 @@
                         <cspan text={selectedItem && ` ${selectedItem.properties.ele}m(${formatDistance(selectedItem.distance)})`} />
                     </cgroup>
                 </canvaslabel>
-                <button col={1} width={40} on:tap={(e) => callJSFunction('goToSelectedItem')} fontFamily={alpimapsFontFamily} variant="text" text="alpimaps-paper-plane" />
+                <button col={1} width={40} on:tap={(e) => callJSFunction('goToSelectedItem')} fontFamily={alpimapsFontFamily} variant="text" text="alpimaps-paper-plane" color="white" />
             </gridlayout>
-            <stacklayout verticalAlignment="bottom" horizontalAlignment="left">
+            <stacklayout verticalAlignment="bottom" horizontalAlignment="left" orientation="horizontal" marginLeft={5}>
                 <button color={primaryColor} on:tap={(e) => callJSFunction('togglePredefinedMapMode')} class="small-floating-btn" text="mdi-map" />
                 <button color={primaryColor} on:tap={(e) => (listeningForHeading ? stopHeadingListener() : startHeadingListener())} class="small-floating-btn" text="mdi-compass" />
                 <button color={primaryColor} on:tap={(e) => drawer.nativeView.toggle('bottom')} class="small-floating-btn" text="mdi-cog" />
             </stacklayout>
             <mdactivityindicator visibility={listeningForHeading ? 'visible' : 'collapsed'} verticalAlignment="bottom" horizontalAlignment="right" busy={true} />
-            <label visibility={headingAccuracy >= 2 ? 'visible' : 'hidden'} class="alpimaps" text="alpimaps-compass-calibrate" horizontalAlignment="right" verticalAlignment="bottom" fontSize="80" />
+            <label text={currentAltitude?.toFixed(0) + 'm'} horizontalAlignment="right" verticalAlignment="bottom" fontSize="12" color={darkMode ? textColorDark : textColorLight} paddingRight={10} />
+            <label
+                visibility={!listeningForHeading || headingAccuracy >= 2 ? 'hidden' : 'visible'}
+                class="alpimaps"
+                text="alpimaps-compass-calibrate"
+                horizontalAlignment="right"
+                verticalAlignment="bottom"
+                fontSize="80"
+                marginBottom={100}
+            />
         </gridLayout>
-        <gridlayout prop:bottomDrawer height={300} rows="*,*" columns="30,*" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
+        <gridlayout prop:bottomDrawer height={300} rows="30,*" columns="*,*" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
             <button variant="text" class="mdi" fontSize={16} width={undefined} text="mdi-cog" on:tap={() => (selectedPageIndex = 0)} />
-            <button variant="text" row={1} class="mdi" fontSize={16} width={undefined} text="mdi-bug" on:tap={() => (selectedPageIndex = 1)} />
-            <pager rowSpan={2} col={1} disableSwipe={false} selectedIndex={selectedPageIndex} on:selectedIndexChange={(e) => (selectedPageIndex = e['value'])}>
+            <button variant="text" col={1} class="mdi" fontSize={16} width={undefined} text="mdi-bug" on:tap={() => (selectedPageIndex = 1)} />
+            <pager colSpan={2} row={1} disableSwipe={false} selectedIndex={selectedPageIndex} on:selectedIndexChange={(e) => (selectedPageIndex = e['value'])}>
                 <pageritem>
                     <collectionview
                         bind:this={collectionView1}
@@ -501,20 +654,20 @@
                         android:marginBottom={$navigationBarHeight}
                     >
                         <Template let:item key="checkbox">
-                            <checkbox text={item.title} checked={item.checked} on:checkedChange={(e) => onCheckBox(item, e.value)} />
+                            <checkbox text={item.title} checked={item.value} on:checkedChange={(e) => onCheckBox(item, e.value)} />
                         </Template>
-                        <Template let:item let:index key="slider">
+                        <Template let:item key="slider">
                             <gridlayout rows="auto,*" columns="*,auto" orientation="horizontal" padding="0 10 0 10">
                                 <label text={item.title} colSpan={2} />
                                 <slider
                                     row={1}
-                                    value={item.value}
-                                    minValue={item.min}
+                                    value={item.value * (item.decimalFactor || 1)}
+                                    minValue={item.min * (item.decimalFactor || 1)}
                                     maxValue={item.max * (item.decimalFactor || 1)}
                                     stepSize={item.stepSize || 0}
-                                    on:valueChange={(e) => onSliderValue(listView1Items, item, index, e)}
+                                    on:valueChange={(e) => onSliderValue(listView1Items, item, e)}
                                 />
-                                <label text={itemValue(item)} row={1} col={1} />
+                                <label text={itemValue(item)} row={1} col={1} on:tap={() => promptSliderValue(listView1Items, item)} />
                             </gridlayout>
                         </Template>
                     </collectionview>
@@ -528,20 +681,20 @@
                         android:marginBottom={$navigationBarHeight}
                     >
                         <Template let:item key="checkbox">
-                            <checkbox text={item.title} checked={item.checked} on:checkedChange={(e) => onCheckBox(item, e.value)} />
+                            <checkbox text={item.title} checked={item.value} on:checkedChange={(e) => onCheckBox(item, e.value)} />
                         </Template>
-                        <Template let:item let:index key="slider">
+                        <Template let:item key="slider">
                             <gridlayout rows="auto,*" columns="*,auto" orientation="horizontal" padding="0 10 0 10">
                                 <label text={item.title} colSpan={2} />
                                 <slider
                                     row={1}
-                                    value={item.value}
-                                    minValue={item.min}
+                                    value={item.value * (item.decimalFactor || 1)}
+                                    minValue={item.min * (item.decimalFactor || 1)}
                                     maxValue={item.max * (item.decimalFactor || 1)}
                                     stepSize={item.stepSize || 0}
-                                    on:valueChange={(e) => onSliderValue(listView2Items, item, index, e)}
+                                    on:valueChange={(e) => onSliderValue(listView2Items, item, e)}
                                 />
-                                <label text={itemValue(item)} row={1} col={1} />
+                                <label text={itemValue(item)} row={1} col={1} on:tap={()=>promptSliderValue(listView2Items, item)} />
                             </gridlayout>
                         </Template>
                     </collectionview>

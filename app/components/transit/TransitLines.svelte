@@ -116,8 +116,8 @@
     });
 </script>
 
-<page bind:this={page} actionBarHidden={true} on:navigatingTo={onNavigatingTo} on:layoutChanged={onLayoutChanged}>
-    <gridLayout rows="auto,*">
+<page bind:this={page} actionBarHidden={true} on:navigatingTo={onNavigatingTo}>
+    <gridLayout rows="auto,*" on:layoutChanged={onLayoutChanged} >
         <CActionBar title={lc('lines')} />
         <collectionview row={1} items={dataItems}>
             <Template let:item>

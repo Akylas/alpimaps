@@ -1,7 +1,6 @@
 
 @name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
 @osm_icon: [nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]]?[nuti::osm-[class]]:[nuti::osm-symbol-dot]);
-@featureId: [osmid];
 
 #mountain_peak {
 	// order is important for icon to take precedence over label and respect rank
@@ -15,7 +14,6 @@
 			text-name: @saddle_icon;
 			text-fill: @sadle_label;
 		}
-		text-feature-id: @featureId;
 	}
 	[class=peak]::text, 
 	[zoom>=12]::text {
@@ -33,7 +31,6 @@
 		}
 		text-dy: @peak_label_dy; 
 		text-wrap-width: @poi_label_wrap_width;
-		text-feature-id: @featureId;
 		text-halo-fill: @peak_halo;
 		text-halo-radius: @peak_halo_radius;
 		text-min-distance: @peak_text_min_dist;
@@ -424,7 +421,6 @@
 			text-name: @osm_icon;
 			text-size: @poi_icon_width;
 			text-face-name: @osm;
-			text-feature-id: @featureId;
 			text-halo-fill: @poi_halo;
 			text-halo-radius: @poi_halo_radius;
 			text-fill: @poi-lodging-fill;
@@ -438,7 +434,6 @@
 			text-halo-radius: @poi_halo_radius;
 			text-size: @poi_label_width;
 			text-wrap-width: @poi_label_wrap_width;
-			text-feature-id: @featureId;
 			text-dy: @poi_label_dy;
 			text-fill: darken(@poi-lodging-fill, 10%);
 		}
@@ -452,7 +447,6 @@
 			text-name: @osm_icon;
 			text-size: @poi_icon_width;
 			text-face-name: @osm;
-			text-feature-id: @featureId;
 			text-halo-fill: @poi_halo;
 			text-halo-radius: @poi_halo_radius;
 			text-size: linear([view::zoom], (18, 10), (20, 14.0)) - 0.0000011 * [rank];
@@ -467,7 +461,6 @@
 			text-halo-radius: @poi_halo_radius;
 			text-size: @poi_label_width;
 			text-wrap-width: @poi_label_wrap_width;
-			text-feature-id: @featureId;
 			text-dy: @poi_label_dy;
 			text-fill: darken(@poi-campsite-fill, 30%);
 		}
@@ -478,7 +471,6 @@
 		text-placement: [nuti::markers3d];
 		text-name: @osm_icon;
 		text-face-name: @osm;
-		text-feature-id: @featureId;
 		text-halo-fill: @poi_halo;
 		text-halo-radius: @poi-spring_halo_radius;
 		text-fill: @poi-water-fill;
@@ -492,7 +484,6 @@
 		text-halo-radius: @poi_halo_radius;
 		text-size: @poi_label_width;
 		text-wrap-width: @poi_label_wrap_width;
-		text-feature-id: @featureId;
 		text-dy: @poi_label_dy;
 		text-fill: darken(@poi-water-fill, 30%);
 	}
@@ -507,7 +498,6 @@
 			text-name: @osm_icon;
 			text-size: @poi_icon_width;
 			text-face-name: @osm;
-			text-feature-id: @featureId;
 			text-halo-fill: @poi_halo;
 			text-halo-radius: @poi_halo_radius;
 			text-fill: @poi-fill;
@@ -553,7 +543,6 @@
 			text-halo-radius: @poi_halo_radius;
 			text-size: @poi_label_width;
 			text-wrap-width: @poi_label_wrap_width;
-			text-feature-id: @featureId;
 			text-dy: @poi_label_dy;
 			text-fill: @poi-fill;
 			[class=park] {
@@ -598,7 +587,6 @@
 		text-name: [nuti::osm-park];
 		text-size: @poi_icon_width;
 		text-face-name: @osm;
-		text-feature-id: @featureId;
 		text-halo-fill: @poi_halo;
 		text-halo-radius: @poi_halo_radius;
 		text-fill: @poi-park-fill;
@@ -611,7 +599,6 @@
 			text-fill: darken(@poi-park-fill, 30%);
 			text-halo-fill: @poi_halo;
 			text-halo-radius: @poi_halo_radius;
-			text-feature-id: @featureId;
 			text-dy: @poi_label_dy;
 			text-size:@poi_national_park_label_width;
 			text-wrap-width: @poi_national_park_wrap_width;
