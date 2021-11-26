@@ -757,613 +757,753 @@
 		</Rule>
 	</Style>
 	<Style name="poi::icon" filter-mode="first">
-		<Rule name="auto">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<Filter>[class]='spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],14,3,16,10)">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
-		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]='campsite' and [rank]&lt;=15</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(133,77,4)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(133,77,4)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>68247.3438</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]='lodging' and ([subclass]='alpine_hut' or [subclass]='wilderness_hut')</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(133,77,4)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(133,77,4)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>68247.3438</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]='spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],14,3,16,10)">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="linear([view::zoom],14,0,14.4,1)" placement="[nuti::markers3d]" size="linear([view::zoom],14,3,16,10)">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[class]='campsite' or ([class]='lodging' and [subclass]='alpine_hut') or ([class]='lodging' and [subclass]='wilderness_hut')</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(133,77,4)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(133,77,4)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[class]='spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],14,3,16,10)">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="linear([view::zoom],14,0,14.4,1)" placement="[nuti::markers3d]" size="linear([view::zoom],14,3,16,10)">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[subclass]&lt;&gt;'station' and ([class]='railway' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]='tram_stop' or ([class]='bus' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]='bus_stop'))</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(58,76,166)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(58,76,166)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[subclass]&lt;&gt;'station' and ([class]='shop' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' or ([class]='groceries' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre'))</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(159,67,167)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(159,67,167)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[class]='fast_food' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(188,119,41)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(188,119,41)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[class]='bakery' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(239,128,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(239,128,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[subclass]&lt;&gt;'station' and ([class]='fountain' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' or ([class]='drinking_water' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre') or ([class]='bassin' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre') or ([class]='waterfall' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre'))</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[class]='pharmacy' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(175,36,24)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(175,36,24)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[class]='hospital' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[class]='aboriginal_lands' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(130,100,58)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(130,100,58)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[subclass]&lt;&gt;'station' and ([class]='national_park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' or ([class]='protected_area' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre'))</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(99,150,65)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(99,150,65)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[class]='park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(118,188,84)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(118,188,84)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[class]&lt;&gt;'lodging' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[class]='campsite' or ([class]='lodging' and [subclass]='alpine_hut') or ([class]='lodging' and [subclass]='wilderness_hut')</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(133,77,4)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(133,77,4)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[class]='spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],14,3,16,10)">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="linear([view::zoom],14,0,14.4,1)" placement="[nuti::markers3d]" size="linear([view::zoom],14,3,16,10)">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[class]='railway' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [subclass]='tram_stop' or ([class]='bus' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [subclass]='bus_stop')</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(58,76,166)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(58,76,166)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[rank]&lt;=60 and ([class]='shop' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' or ([class]='groceries' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'))</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(159,67,167)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(159,67,167)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[rank]&lt;=60 and ([class]='restaurant' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' or ([class]='fast_food' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'))</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(188,119,41)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(188,119,41)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[class]='bakery' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(239,128,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(239,128,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[rank]&lt;=60 and ([class]='fountain' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' or ([class]='drinking_water' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite') or ([class]='bassin' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite') or ([class]='waterfall' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'))</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[class]='pharmacy' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(175,36,24)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(175,36,24)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[class]='hospital' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[class]='aboriginal_lands' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(130,100,58)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(130,100,58)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[rank]&lt;=60 and ([class]='national_park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' or ([class]='protected_area' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'))</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(99,150,65)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(99,150,65)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[class]='park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(118,188,84)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(118,188,84)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[class]&lt;&gt;'lodging' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[class]='campsite' or ([class]='lodging' and [subclass]='alpine_hut') or ([class]='lodging' and [subclass]='wilderness_hut')</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(133,77,4)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(133,77,4)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[class]='spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],14,3,16,10)">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="linear([view::zoom],14,0,14.4,1)" placement="[nuti::markers3d]" size="linear([view::zoom],14,3,16,10)">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[class]='railway' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [subclass]='tram_stop' or ([class]='bus' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [subclass]='bus_stop')</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(58,76,166)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(58,76,166)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[rank]&lt;=100 and ([class]='shop' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' or ([class]='groceries' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'))</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(159,67,167)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(159,67,167)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[rank]&lt;=100 and ([class]='restaurant' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' or ([class]='fast_food' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'))</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(188,119,41)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(188,119,41)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[class]='bakery' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(239,128,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(239,128,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[rank]&lt;=100 and ([class]='fountain' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' or ([class]='drinking_water' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite') or ([class]='bassin' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite') or ([class]='waterfall' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'))</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[class]='pharmacy' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(175,36,24)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(175,36,24)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[class]='hospital' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[class]='aboriginal_lands' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(130,100,58)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(130,100,58)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[rank]&lt;=100 and ([class]='national_park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' or ([class]='protected_area' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'))</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(99,150,65)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(99,150,65)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[class]='park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(118,188,84)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(118,188,84)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[class]&lt;&gt;'lodging' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[class]='lodging' and [rank]&lt;=100 or ([class]='campsite' and [rank]&lt;=15) or [class]='campsite' or ([class]='lodging' and [subclass]='alpine_hut') or ([class]='lodging' and [subclass]='wilderness_hut')</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(133,77,4)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(133,77,4)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[class]='spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],14,3,16,10)">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="linear([view::zoom],14,0,14.4,1)" placement="[nuti::markers3d]" size="linear([view::zoom],14,3,16,10)">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]='railway' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [subclass]='tram_stop' or ([class]='bus' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [subclass]='bus_stop')</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(58,76,166)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(58,76,166)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]&lt;&gt;'campsite' and ([class]='shop' and [class]&lt;&gt;'spring' or ([class]='groceries' and [class]&lt;&gt;'spring'))</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(159,67,167)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(159,67,167)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]&lt;&gt;'campsite' and ([class]='restaurant' and [class]&lt;&gt;'spring' or ([class]='fast_food' and [class]&lt;&gt;'spring'))</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(188,119,41)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(188,119,41)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]='bakery' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(239,128,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(239,128,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]&lt;&gt;'campsite' and ([class]='fountain' and [class]&lt;&gt;'spring' or ([class]='drinking_water' and [class]&lt;&gt;'spring') or ([class]='bassin' and [class]&lt;&gt;'spring') or ([class]='waterfall' and [class]&lt;&gt;'spring'))</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]='pharmacy' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(175,36,24)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(175,36,24)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]='hospital' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]='aboriginal_lands' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(130,100,58)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(130,100,58)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]&lt;&gt;'campsite' and ([class]='national_park' and [class]&lt;&gt;'spring' or ([class]='protected_area' and [class]&lt;&gt;'spring'))</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(99,150,65)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(99,150,65)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]='park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(118,188,84)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(118,188,84)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]&lt;&gt;'lodging' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]='campsite' or ([class]='lodging' and [subclass]='alpine_hut') or ([class]='lodging' and [subclass]='wilderness_hut') or [class]='lodging'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(133,77,4)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(133,77,4)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]='spring'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],14,3,16,10)">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(74,160,231)" halo-fill="rgb(242,245,248)" halo-radius="linear([view::zoom],14,0,14.4,1)" placement="[nuti::markers3d]" size="linear([view::zoom],14,3,16,10)">{([nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]] ? [nuti::osm-[class]] : [nuti::osm-symbol-dot]))}</TextSymbolizer>
 		</Rule>
 	</Style>
 	<Style name="poi::text" filter-mode="first">
 		<Rule name="combined">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]='lodging' and ([subclass]='alpine_hut' or [subclass]='wilderness_hut')</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'railway' and ([class]='shop' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' or ([class]='groceries' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus'))</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(55,23,58)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[class]='fast_food' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(62,39,14)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[class]='bakery' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(86,46,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'railway' and ([class]='fountain' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' or ([class]='drinking_water' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus') or ([class]='bassin' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus') or ([class]='waterfall' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus'))</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[class]='pharmacy' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(40,8,6)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[class]='hospital' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[class]='aboriginal_lands' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(59,46,27)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'railway' and ([class]='national_park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' or ([class]='protected_area' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus'))</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(29,43,19)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[class]='park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(51,86,34)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'lodging' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway' or ([class]='lodging' and [subclass]='alpine_hut') or ([class]='lodging' and [subclass]='wilderness_hut')</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'railway' and ([class]='shop' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' or ([class]='groceries' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus'))</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(55,23,58)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'railway' and ([class]='restaurant' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' or ([class]='fast_food' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus'))</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(62,39,14)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[class]='bakery' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(86,46,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'railway' and ([class]='fountain' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' or ([class]='drinking_water' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus') or ([class]='bassin' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus') or ([class]='waterfall' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus'))</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[class]='pharmacy' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(40,8,6)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[class]='hospital' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[class]='aboriginal_lands' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(59,46,27)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'railway' and ([class]='national_park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' or ([class]='protected_area' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus'))</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(29,43,19)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[class]='park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(51,86,34)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'lodging' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway' or ([class]='lodging' and [subclass]='alpine_hut') or ([class]='lodging' and [subclass]='wilderness_hut')</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>4265.45898</MinScaleDenominator>
-			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'railway' and ([class]='shop' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' or ([class]='groceries' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus'))</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(55,23,58)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>4265.45898</MinScaleDenominator>
-			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'railway' and ([class]='restaurant' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' or ([class]='fast_food' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus'))</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(62,39,14)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>4265.45898</MinScaleDenominator>
-			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
-			<Filter>[class]='bakery' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(86,46,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>4265.45898</MinScaleDenominator>
-			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'railway' and ([class]='fountain' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' or ([class]='drinking_water' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus') or ([class]='bassin' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus') or ([class]='waterfall' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus'))</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>4265.45898</MinScaleDenominator>
-			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
-			<Filter>[class]='pharmacy' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(40,8,6)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[class]='railway' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [subclass]='tram_stop' or ([class]='bus' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [subclass]='bus_stop')</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(18,24,53)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>4265.45898</MinScaleDenominator>
-			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
-			<Filter>[class]='hospital' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>4265.45898</MinScaleDenominator>
-			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
-			<Filter>[class]='aboriginal_lands' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(59,46,27)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(18,24,53)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'railway' and ([class]='national_park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' or ([class]='protected_area' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus'))</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(29,43,19)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>4265.45898</MinScaleDenominator>
-			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
-			<Filter>[class]='park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(51,86,34)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<Filter>[rank]&lt;=100 and ([class]='shop' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' or ([class]='groceries' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(55,23,58)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'lodging' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway' or ([class]&lt;&gt;'lodging' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100) or ([class]='campsite' and [rank]&lt;=15) or [class]='campsite' or ([class]='lodging' and [rank]&lt;=100) or [class]='spring' or ([class]='lodging' and [subclass]='alpine_hut') or ([class]='lodging' and [subclass]='wilderness_hut')</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'railway' and ([class]='shop' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus' or ([class]='groceries' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus'))</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(55,23,58)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'railway' and ([class]='restaurant' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus' or ([class]='fast_food' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus'))</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(62,39,14)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<Filter>[rank]&lt;=100 and ([class]='restaurant' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' or ([class]='fast_food' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(62,39,14)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
-			<Filter>[class]='bakery' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(86,46,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class]='bakery' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(86,46,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'railway' and ([class]='fountain' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus' or ([class]='drinking_water' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus') or ([class]='bassin' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus') or ([class]='waterfall' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus'))</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[rank]&lt;=100 and ([class]='fountain' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' or ([class]='drinking_water' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite') or ([class]='bassin' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite') or ([class]='waterfall' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
-			<Filter>[class]='pharmacy' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(40,8,6)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class]='pharmacy' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(40,8,6)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class]='hospital' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class]='aboriginal_lands' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(59,46,27)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[rank]&lt;=100 and ([class]='national_park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' or ([class]='protected_area' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(29,43,19)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class]='park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(51,86,34)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'lodging' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 or ([class]='campsite' and [rank]&lt;=15) or [class]='campsite' or ([class]='lodging' and [rank]&lt;=100)</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class]='spring'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class]='lodging' and ([subclass]='alpine_hut' or [subclass]='wilderness_hut')</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]='railway' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [subclass]='tram_stop' or ([class]='bus' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [subclass]='bus_stop')</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(18,24,53)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(18,24,53)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'campsite' and ([class]='shop' and [class]&lt;&gt;'spring' or ([class]='groceries' and [class]&lt;&gt;'spring'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(55,23,58)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'campsite' and ([class]='restaurant' and [class]&lt;&gt;'spring' or ([class]='fast_food' and [class]&lt;&gt;'spring'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(62,39,14)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[class]='bakery' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(86,46,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'campsite' and ([class]='fountain' and [class]&lt;&gt;'spring' or ([class]='drinking_water' and [class]&lt;&gt;'spring') or ([class]='bassin' and [class]&lt;&gt;'spring') or ([class]='waterfall' and [class]&lt;&gt;'spring'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[class]='pharmacy' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(40,8,6)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[class]='hospital' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[class]='aboriginal_lands' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(59,46,27)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'campsite' and ([class]='national_park' and [class]&lt;&gt;'spring' or ([class]='protected_area' and [class]&lt;&gt;'spring'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(29,43,19)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[class]='park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(51,86,34)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'lodging' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' or ([class]='campsite' and [rank]&lt;=15) or [class]='campsite'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[class]='spring'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[class]='lodging'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+	</Style>
+	<Style name="poi" filter-mode="first">
+		<Rule name="combined">
+			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'railway' and ([class]='shop' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' or ([class]='groceries' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(55,23,58)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[class]='fast_food' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(62,39,14)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[class]='bakery' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(86,46,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'railway' and ([class]='fountain' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' or ([class]='drinking_water' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus') or ([class]='bassin' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus') or ([class]='waterfall' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[class]='pharmacy' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(40,8,6)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[class]='hospital' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[class]='aboriginal_lands' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(59,46,27)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'railway' and ([class]='national_park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' or ([class]='protected_area' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(29,43,19)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[class]='park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(51,86,34)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'lodging' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=15 and [class]&lt;&gt;'restaurant' and [class]&lt;&gt;'bar' and [class]&lt;&gt;'parking' and [class]&lt;&gt;'school' and [class]&lt;&gt;'college' and [subclass]&lt;&gt;'community_centre' and [subclass]&lt;&gt;'station' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>8530.91797</MinScaleDenominator>
+			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'railway' and ([class]='shop' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' or ([class]='groceries' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(55,23,58)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>8530.91797</MinScaleDenominator>
+			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'railway' and ([class]='restaurant' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' or ([class]='fast_food' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(62,39,14)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>8530.91797</MinScaleDenominator>
+			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
+			<Filter>[class]='bakery' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(86,46,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>8530.91797</MinScaleDenominator>
+			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'railway' and ([class]='fountain' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' or ([class]='drinking_water' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus') or ([class]='bassin' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus') or ([class]='waterfall' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>8530.91797</MinScaleDenominator>
+			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
+			<Filter>[class]='pharmacy' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(40,8,6)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>8530.91797</MinScaleDenominator>
+			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
+			<Filter>[class]='hospital' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>8530.91797</MinScaleDenominator>
+			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
+			<Filter>[class]='aboriginal_lands' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(59,46,27)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>8530.91797</MinScaleDenominator>
+			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'railway' and ([class]='national_park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' or ([class]='protected_area' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(29,43,19)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>8530.91797</MinScaleDenominator>
+			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
+			<Filter>[class]='park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(51,86,34)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>8530.91797</MinScaleDenominator>
+			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'lodging' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=60 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'railway' and ([class]='shop' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' or ([class]='groceries' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(55,23,58)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'railway' and ([class]='restaurant' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' or ([class]='fast_food' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(62,39,14)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class]='bakery' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(86,46,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'railway' and ([class]='fountain' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' or ([class]='drinking_water' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus') or ([class]='bassin' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus') or ([class]='waterfall' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class]='pharmacy' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(40,8,6)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class]='hospital' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class]='aboriginal_lands' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(59,46,27)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'railway' and ([class]='national_park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' or ([class]='protected_area' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(29,43,19)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class]='park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(51,86,34)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'lodging' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [rank]&lt;=100 and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'railway' and ([class]='shop' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus' or ([class]='groceries' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(55,23,58)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'railway' and ([class]='restaurant' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus' or ([class]='fast_food' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(62,39,14)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[class]='bakery' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(86,46,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'railway' and ([class]='fountain' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus' or ([class]='drinking_water' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus') or ([class]='bassin' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus') or ([class]='waterfall' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus'))</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[class]='pharmacy' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(40,8,6)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]='hospital' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(18,82,134)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]='aboriginal_lands' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(59,46,27)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(59,46,27)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]&lt;&gt;'railway' and ([class]='national_park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus' or ([class]='protected_area' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus'))</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(29,43,19)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(29,43,19)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]='park' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(51,86,34)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(51,86,34)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
-		<Rule name="combined">
+		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'lodging' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway' or ([class]&lt;&gt;'lodging' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite') or ([class]='campsite' and [rank]&lt;=15) or [class]='campsite' or [class]='spring' or ([class]='lodging' and [subclass]='alpine_hut') or ([class]='lodging' and [subclass]='wilderness_hut') or [class]='lodging'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<Filter>[class]&lt;&gt;'lodging' and [class]&lt;&gt;'spring' and [class]&lt;&gt;'campsite' and [class]&lt;&gt;'bus' and [class]&lt;&gt;'railway'</Filter>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,8,17,10,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 	</Style>
 	<Style name="aerodrome_label" filter-mode="first">
@@ -2500,7 +2640,7 @@
 			<MinScaleDenominator>272989.375</MinScaleDenominator>
 			<MaxScaleDenominator>17471320</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=1 and [class]='national_park'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(118,188,84)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">[nuti::osm-park]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(118,188,84)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">[nuti::osm-park]</TextSymbolizer>
 		</Rule>
 	</Style>
 	<Style name="park::text" filter-mode="first">
@@ -2508,7 +2648,7 @@
 			<MinScaleDenominator>272989.375</MinScaleDenominator>
 			<MaxScaleDenominator>4367830</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=1 and [class]='national_park'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,19,13,20,18)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(51,86,34)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,8,10,11,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,60,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(51,86,34)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,8,10,11,18,12)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,60,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 	</Style>
 	<Style name="mountain_peak::icon" filter-mode="first">
@@ -2516,12 +2656,12 @@
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
 			<Filter>[class]='saddle'</Filter>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(102,102,0)" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">[nuti::osm-saddle]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(102,102,0)" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">[nuti::osm-saddle]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<TextSymbolizer face-name="osm" feature-id="[osmid]" fill="rgb(34,102,0)" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">[nuti::osm-mountain]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" fill="rgb(34,102,0)" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">[nuti::osm-mountain]</TextSymbolizer>
 		</Rule>
 	</Style>
 	<Style name="mountain_peak::text" filter-mode="first">
@@ -2529,24 +2669,24 @@
 			<MinScaleDenominator>1091957.5</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
 			<Filter>[class]='peak'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],5,6,10,8,18,12)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(34,102,0)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" line-spacing="-1" minimum-distance="linear([view::zoom],5,30,10,20,18,10)" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,7,18,10)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(34,102,0)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" line-spacing="-1" minimum-distance="linear([view::zoom],5,30,10,20,18,10)" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,7,18,10)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>272989.375</MinScaleDenominator>
 			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
 			<Filter>[class]='peak'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],5,6,10,8,18,12)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(34,102,0)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" line-spacing="-1" minimum-distance="linear([view::zoom],5,30,10,20,18,10)" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,7,18,10)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{((([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) ? ([ele] ? (([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name]))+', '+[ele]+'m' : ([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) : '')}</TextSymbolizer>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(34,102,0)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" line-spacing="-1" minimum-distance="linear([view::zoom],5,30,10,20,18,10)" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,7,18,10)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{((([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) ? ([ele] ? (([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name]))+', '+[ele]+'m' : ([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) : '')}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]='saddle'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],5,6,10,8,18,12)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(102,102,0)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" line-spacing="-1" minimum-distance="linear([view::zoom],5,30,10,20,18,10)" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,7,18,10)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{((([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) ? ([ele] ? (([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name]))+', '+[ele]+'m' : ([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) : '')}</TextSymbolizer>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(102,102,0)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" line-spacing="-1" minimum-distance="linear([view::zoom],5,30,10,20,18,10)" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,7,18,10)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{((([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) ? ([ele] ? (([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name]))+', '+[ele]+'m' : ([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) : '')}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<TextSymbolizer dy="linear([view::zoom],5,6,10,8,18,12)" face-name="DIN Pro Medium" feature-id="[osmid]" fill="rgb(34,102,0)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" line-spacing="-1" minimum-distance="linear([view::zoom],5,30,10,20,18,10)" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,7,18,10)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{((([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) ? ([ele] ? (([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name]))+', '+[ele]+'m' : ([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) : '')}</TextSymbolizer>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(34,102,0)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" line-spacing="-1" minimum-distance="linear([view::zoom],5,30,10,20,18,10)" placement="[nuti::texts3d]" size="linear([view::zoom],5,5,10,7,18,10)-1.0e-06*[rank]" wrap-width="linear([view::zoom],14,50,18,100)">{((([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) ? ([ele] ? (([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name]))+', '+[ele]+'m' : ([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) : '')}</TextSymbolizer>
 		</Rule>
 	</Style>
 	<Style name="landuse" filter-mode="first">
@@ -2832,21 +2972,21 @@
 			<LineSymbolizer stroke="rgb(94,187,48)" stroke-width="0.3" />
 		</Rule>
 		<Rule name="combined">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[class]='parking'</Filter>
 			<PolygonSymbolizer fill="rgba(238,238,238,0.5)" />
 			<LineSymbolizer stroke="rgba(136,136,136,0.5)" stroke-width="0.3" />
 		</Rule>
 		<Rule name="combined">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[class]='quarry'</Filter>
 			<PolygonSymbolizer fill="rgba(197,195,195,0.533333)" />
 			<LineSymbolizer stroke="rgba(122,117,117,0.533333)" stroke-width="0.5" />
 		</Rule>
 		<Rule name="combined">
-			<MinScaleDenominator>8530.91797</MinScaleDenominator>
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[class]='bus_station'</Filter>
 			<PolygonSymbolizer fill="rgb(233,231,226)" />
@@ -2958,34 +3098,6 @@
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[class]='industrial'</Filter>
 			<PolygonSymbolizer fill="rgba(214,216,225,0.466667)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
-			<Filter>[way_pixels]&gt;=60 and ([class]='zoo' or [class]='theme_park')</Filter>
-			<LineSymbolizer stroke="rgb(102,0,51)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="2" />
-			<LineSymbolizer stroke="rgb(102,0,51)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.3" stroke-width="6" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
-			<Filter>[class]='parking'</Filter>
-			<PolygonSymbolizer fill="rgba(238,238,238,0.5)" />
-			<LineSymbolizer stroke="rgba(136,136,136,0.5)" stroke-width="0.3" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
-			<Filter>[class]='quarry'</Filter>
-			<PolygonSymbolizer fill="rgba(197,195,195,0.533333)" />
-			<LineSymbolizer stroke="rgba(122,117,117,0.533333)" stroke-width="0.5" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
-			<Filter>[class]='bus_station'</Filter>
-			<PolygonSymbolizer fill="rgb(233,231,226)" />
-			<LineSymbolizer stroke="rgb(171,146,85)" stroke-width="0.2" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
@@ -3072,7 +3184,7 @@
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[nuti::buildings]=2</Filter>
-			<BuildingSymbolizer fill="rgb(220,217,214)" fill-opacity="0.45" height="([render_height] ? [render_height] : 10)" min-height="[render_min_height]" />
+			<BuildingSymbolizer fill="rgb(220,217,214)" fill-opacity="0.45" height="([render_height] ? [render_height] : 5)" min-height="[render_min_height]" />
 		</Rule>
 	</Style>
 	<Style name="building" filter-mode="first">
@@ -6469,6 +6581,7 @@
 	<Layer name="poi">
 		<StyleName>poi::icon</StyleName>
 		<StyleName>poi::text</StyleName>
+		<StyleName>poi</StyleName>
 	</Layer>
 	<Layer name="aerodrome_label">
 		<StyleName>aerodrome_label</StyleName>
