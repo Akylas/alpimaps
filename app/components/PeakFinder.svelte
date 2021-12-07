@@ -70,7 +70,7 @@
         if (isNaN(elevation)) {
             return;
         }
-        callJSFunction('setElevation', elevation);
+        callJSFunction('setSettings', 'elevation', elevation);
     }, 10);
     function refresh() {
         webView.nativeView.reload();
@@ -83,37 +83,30 @@
         }
         shown = true;
         if (webView) {
+            // webView.nativeView.src = 'http://10.0.2.2:8081/example/?generateColor=true&shadows=true&dayNightCycle=true';
             webView.nativeView.src = '~/assets/peakfinder/index.html';
         }
     }
 
     function webviewLoaded(args: LoadEventData) {
         const webview = args.object as AWebView;
-        // webview.once('layoutChanged', () => {
-        // webview.src = '~/assets/webapp.html';
-        // });
+
 
         webview.once(AWebView.loadFinishedEvent, (args: LoadFinishedEventData) => {
             const startValues = {
-                setTerrarium: terrarium,
+                terrarium: terrarium,
                 setPosition: { ...position, altitude: currentAltitude },
                 setAzimuth: bearing
             };
             listView1Items.forEach((item) => {
-                startValues[item.method] = item.value as number;
+                startValues[item.key || item['method']] = item.value as number;
             });
             listView2Items.forEach((item) => {
-                startValues[item.method] = item.value as number;
+                startValues[item.key || item['method']] = item.value as number;
             });
             args.object.executeJavaScript(`
 webapp.callMethods(${JSON.stringify(startValues)});
 `);
-
-            // args.object.executeJavaScript(`
-            // webapp.setTerrarium(${terrarium});
-            // webapp.setAzimuth(${bearing}, false);
-            // webapp.setPosition(${JSON.stringify({ ...position, altitude: currentAltitude })});
-            // `);
         });
 
         webview.on('requestPermissions', async (args: any) => {
@@ -134,9 +127,6 @@ webapp.callMethods(${JSON.stringify(startValues)});
             args.callback(res[0] === 'authorized');
         });
 
-        // webview.on('gotMessage', (msg) => {
-        //     console.log(`webview.gotMessage: ${JSON.stringify(msg.data)} (${typeof msg})`);
-        // });
     }
 
     // onMount(() => {
@@ -156,12 +146,13 @@ webapp.callMethods(${JSON.stringify(startValues)});
     // });
 
     function callJSFunction(method: string, ...args) {
+        console.log('callJSFunction', method, `webapp.${method}(${args ? args.map((s) => (typeof s === 'string' ? `"${s}"` : s)).join(',') : ''})`);
         const nView = webView?.nativeView;
         if (!nView) {
             return;
         }
         try {
-            nView.executeJavaScript(`webapp.${method}(${args ? args.join(',') : ''})`);
+            nView.executeJavaScript(`webapp.${method}(${args ? args.map((s) => (typeof s === 'string' ? `"${s}"` : s)).join(',') : ''})`);
         } catch (err) {
             showError(err);
         }
@@ -180,10 +171,13 @@ webapp.callMethods(${JSON.stringify(startValues)});
     // }
     function itemKey(item) {
         const method = item.method as string;
-        return method[3].toLowerCase() + method.slice(4);
+        if (method) {
+            return method[3].toLowerCase() + method.slice(4);
+        }
+        return item.key;
     }
     function saveItem(item, value, number = false) {
-        if (item.method === 'setDarkMode') {
+        if (item.key === 'dark') {
             darkMode = value;
         }
         if (item.shouldSave) {
@@ -196,7 +190,11 @@ webapp.callMethods(${JSON.stringify(startValues)});
     }
     function onCheckBox(item, value: boolean) {
         try {
-            callJSFunction(item.method, value);
+            if (item.key) {
+                callJSFunction('setSettings', item.key, value);
+            } else {
+                callJSFunction(item.method, value);
+            }
             saveItem(item, value);
         } catch (error) {
             console.error(error);
@@ -220,42 +218,49 @@ webapp.callMethods(${JSON.stringify(startValues)});
             title: lc('dark_mode'),
             shouldSave: true,
             value: darkMode,
-            method: 'setDarkMode'
+            key: 'dark'
         },
         {
             type: 'checkbox',
             title: lc('map_mode'),
             shouldSave: true,
-            value: getBoolean('peakfinder_mapMode', false),
-            method: 'setMapMode'
+            value: getBoolean('peakfinder_mapMap', false),
+            key: 'mapMap'
         },
         {
             type: 'checkbox',
-            title: lc('auto colors'),
+            title: lc('generateColor'),
             shouldSave: true,
-            value: getBoolean('peakfinder_generateColors', false),
-            method: 'setGenerateColors'
+            value: getBoolean('peakfinder_generateColor', false),
+            key: 'generateColor'
         },
         {
             type: 'checkbox',
-            title: lc('map_outline'),
+            title: lc('outline'),
             shouldSave: true,
-            value: getBoolean('peakfinder_mapOultine', true),
-            method: 'setMapOultine'
+            value: getBoolean('peakfinder_outline', true),
+            key: 'outline'
         },
         {
             type: 'checkbox',
-            title: lc('day_night_cycle'),
+            title: lc('dayNightCycle'),
             shouldSave: true,
             value: getBoolean('peakfinder_dayNightCycle', false),
-            method: 'setDayNightCycle'
+            key: 'dayNightCycle'
+        },
+        {
+            type: 'checkbox',
+            title: lc('shadows'),
+            shouldSave: true,
+            value: getBoolean('peakfinder_shadows', false),
+            key: 'shadows'
         },
         {
             type: 'checkbox',
             title: lc('draw_elevations'),
             shouldSave: true,
             value: getBoolean('peakfinder_drawElevations', false),
-            method: 'setDrawElevations'
+            key: 'drawElevations'
         },
         {
             type: 'slider',
@@ -263,7 +268,7 @@ webapp.callMethods(${JSON.stringify(startValues)});
             max: 400000,
             shouldSave: true,
             value: getNumber('peakfinder_viewingDistance', 173000),
-            method: 'setViewingDistance',
+            key: 'far',
             formatter: formatDistance,
             title: lc('viewing_distance')
         },
@@ -273,7 +278,7 @@ webapp.callMethods(${JSON.stringify(startValues)});
             max: 80,
             shouldSave: true,
             value: getNumber('peakfinder_cameraFOVFactor', 28),
-            method: 'setCameraFOVFactor',
+            key: 'fovFactor',
             formatter: formatDistance,
             title: lc('camera_fov')
         },
@@ -281,7 +286,7 @@ webapp.callMethods(${JSON.stringify(startValues)});
             type: 'slider',
             min: 0,
             max: 86400,
-            method: 'setDate',
+            key: 'secondsInDay',
             value: secondsInDay,
             formatter: formatSecondsInDay,
             title: lc('day_time')
@@ -292,49 +297,49 @@ webapp.callMethods(${JSON.stringify(startValues)});
             type: 'checkbox',
             title: lc('debug_mode'),
             value: false,
-            method: 'setDebugMode'
+            key: 'debug'
         },
         {
             type: 'checkbox',
             title: lc('read_features'),
             value: true,
-            method: 'setReadFeatures'
+            key: 'readFeatures'
         },
         {
             type: 'checkbox',
             title: lc('show_fps'),
             value: !PRODUCTION,
-            method: 'setShowStats'
+            key: 'stats'
         },
         {
             type: 'checkbox',
             title: lc('wireframe'),
             value: false,
-            method: 'setWireFrame'
+            key: 'wireframe'
         },
         {
             type: 'checkbox',
             title: lc('debug_gpu_picking'),
             value: false,
-            method: 'setDebugGPUPicking'
+            key: 'debugGPUPicking'
         },
         {
             type: 'checkbox',
             title: lc('draw_features'),
             value: false,
-            method: 'setDebugFeaturePoints'
+            key: 'debugFeaturePoints'
         },
         {
             type: 'checkbox',
             title: lc('compute_normals'),
             value: false,
-            method: 'setComputeNormals'
+            key: 'computeNormals'
         },
         {
             type: 'checkbox',
             title: lc('draw_normals'),
             value: false,
-            method: 'setNormalsInDebug'
+            key: 'drawNormals'
         },
         {
             type: 'slider',
@@ -344,7 +349,7 @@ webapp.callMethods(${JSON.stringify(startValues)});
             formatter: (f) => f.toFixed(2),
             decimalFactor: 100,
             value: getNumber('peakfinder_exageration', 1.6),
-            method: 'setExageration',
+            key: 'exageration',
             title: lc('exageration')
         },
         {
@@ -354,7 +359,7 @@ webapp.callMethods(${JSON.stringify(startValues)});
             shouldSave: true,
             decimalFactor: 100,
             formatter: (f) => f.toFixed(2),
-            method: 'setDepthBiais',
+            key: 'depthBiais',
             value: getNumber('peakfinder_depthBiais', 0.44),
             title: lc('depth_biais')
         },
@@ -364,7 +369,7 @@ webapp.callMethods(${JSON.stringify(startValues)});
             max: 120,
             shouldSave: true,
             decimalFactor: 100,
-            method: 'setDepthMultiplier',
+            key: 'depthMultiplier',
             formatter: (f) => f.toFixed(2),
             value: getNumber('peakfinder_depthMultiplier', 110),
             title: lc('depth_multiplier')
@@ -375,7 +380,7 @@ webapp.callMethods(${JSON.stringify(startValues)});
             max: 40,
             shouldSave: true,
             decimalFactor: 100,
-            method: 'setDepthPostMultiplier',
+            key: 'depthPostMultiplier',
             formatter: (f) => f.toFixed(2),
             value: getNumber('peakfinder_depthPostMultiplier', 1),
             title: lc('depth_post_multiplier')
@@ -392,7 +397,7 @@ webapp.callMethods(${JSON.stringify(startValues)});
                 }
                 return value;
             },
-            method: 'setGeometrySize',
+            key: 'geometrySize',
             formatter: (f) => f.toFixed(),
             value: getNumber('peakfinder_geometrySize', 320),
             title: lc('geometry_size')
@@ -488,6 +493,22 @@ webapp.callMethods(${JSON.stringify(startValues)});
             return collectionView1.nativeView.scrollOffset <= 0;
         }
     }
+
+    function toggleSetting(key) {
+        let item;
+        let index = listView1Items.findIndex((i) => i.key === key);
+        if (index >= 0) {
+            item = listView1Items.getItem(index);
+        } else {
+            index = listView2Items.findIndex((i) => i.key === key);
+            if (index >= 0) {
+                item = listView2Items.getItem(index);
+            }
+        }
+        if (item) {
+            onCheckBox(item, !item.value);
+        }
+    }
     function onSliderValue(items: ObservableArray<any>, item, event) {
         try {
             let newValue = event.value / (item.decimalFactor || 1);
@@ -495,7 +516,11 @@ webapp.callMethods(${JSON.stringify(startValues)});
                 newValue = item.transformer(newValue);
             }
             saveItem(item, newValue, true);
-            callJSFunction(item.method, newValue);
+            if (item.key) {
+                callJSFunction('setSettings', item.key, newValue);
+            } else {
+                callJSFunction(item.method, newValue);
+            }
             const index = items.findIndex((i) => i.method === item.method);
             item.value = newValue;
             items.setItem(index, item);
@@ -625,7 +650,7 @@ webapp.callMethods(${JSON.stringify(startValues)});
                 <button col={1} width={40} on:tap={(e) => callJSFunction('goToSelectedItem')} fontFamily={alpimapsFontFamily} variant="text" text="alpimaps-paper-plane" color="white" />
             </gridlayout>
             <stacklayout verticalAlignment="bottom" horizontalAlignment="left" orientation="horizontal" marginLeft={5}>
-                <button color={primaryColor} on:tap={(e) => callJSFunction('togglePredefinedMapMode')} class="small-floating-btn" text="mdi-map" />
+                <button color={primaryColor} on:tap={(e) => toggleSetting('mapMap')} class="small-floating-btn" text="mdi-map" />
                 <button color={primaryColor} on:tap={(e) => (listeningForHeading ? stopHeadingListener() : startHeadingListener())} class="small-floating-btn" text="mdi-compass" />
                 <button color={primaryColor} on:tap={(e) => drawer.nativeView.toggle('bottom')} class="small-floating-btn" text="mdi-cog" />
             </stacklayout>
@@ -694,7 +719,7 @@ webapp.callMethods(${JSON.stringify(startValues)});
                                     stepSize={item.stepSize || 0}
                                     on:valueChange={(e) => onSliderValue(listView2Items, item, e)}
                                 />
-                                <label text={itemValue(item)} row={1} col={1} on:tap={()=>promptSliderValue(listView2Items, item)} />
+                                <label text={itemValue(item)} row={1} col={1} on:tap={() => promptSliderValue(listView2Items, item)} />
                             </gridlayout>
                         </Template>
                     </collectionview>
