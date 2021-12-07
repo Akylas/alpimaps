@@ -560,22 +560,22 @@ module.exports = (env, params = {}) => {
                 svN: '~/svelteNamespace'
             })
         );
-        if (buildstyle) {
-            config.plugins.unshift(
-                new WebpackShellPluginNext({
-                    onBuildStart: {
-                        scripts: [
-                            './css2xml dev_assets/styles/osm/streets.json dev_assets/styles/osmxml/streets.xml',
-                            './css2xml dev_assets/styles/osm/osm.json dev_assets/styles/osmxml/osm.xml',
-                            './css2xml dev_assets/styles/osm/outdoors.json dev_assets/styles/osmxml/outdoors.xml',
-                            'cd ./dev_assets/styles/osmxml && zip -r ../../../app/assets/styles/osm.zip ./* && cd -'
-                        ],
-                        blocking: true,
-                        parallel: false
-                    }
-                })
-            );
-        }
+    }
+    if (buildstyle) {
+        config.plugins.unshift(
+            new WebpackShellPluginNext({
+                onBuildStart: {
+                    scripts: [
+                        './css2xml dev_assets/styles/osm/streets.json dev_assets/styles/osmxml/streets.xml',
+                        './css2xml dev_assets/styles/osm/osm.json dev_assets/styles/osmxml/osm.xml',
+                        './css2xml dev_assets/styles/osm/outdoors.json dev_assets/styles/osmxml/outdoors.xml',
+                        'cd ./dev_assets/styles/osmxml && zip -r ../../../app/assets/styles/osm.zip ./* && cd -'
+                    ],
+                    blocking: true,
+                    parallel: false
+                }
+            })
+        );
     }
 
     Object.assign(config.plugins.find((p) => p.constructor.name === 'DefinePlugin').definitions, defines);
