@@ -10,6 +10,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 const IgnoreNotFoundExportPlugin = require('./IgnoreNotFoundExportPlugin');
 const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 const Fontmin = require('@akylas/fontmin');
+const WebpackShellPluginNext = require('webpack-shell-plugin-next');
 
 function fixedFromCharCode(codePt) {
     if (codePt > 0xffff) {
@@ -45,24 +46,23 @@ module.exports = (env, params = {}) => {
     const {
         appPath = nconfig.appPath,
         appResourcesPath = nconfig.appResourcesPath,
-        hmr, // --env.hmr
-        production, // --env.production
-        sourceMap, // --env.sourceMap
-        hiddenSourceMap, // --env.hiddenSourceMap
-        inlineSourceMap, // --env.inlineSourceMap
-        sentry, // --env.sentry
+        production,
+        sourceMap,
+        hiddenSourceMap,
+        inlineSourceMap,
+        sentry,
         uploadSentry,
-        verbose, // --env.verbose
-        uglify, // --env.uglify
-        noconsole, // --env.noconsole
-        cartoLicense = false, // --env.cartoLicense
-        devlog, // --env.devlog
-        fork = true, // --env.fakeall
-        buildpeakfinder, // --env.buildpeakfinder
+        uglify,
+        noconsole,
+        cartoLicense = false,
+        devlog,
+        fork = true,
+        buildpeakfinder,
+        buildstyle,
         apiKeys = true,
-        locale = 'auto', // --env.locale
-        theme = 'auto', // --env.theme
-        adhoc // --env.adhoc
+        locale = 'auto',
+        theme = 'auto',
+        adhoc
     } = env;
     env.appPath = appPath;
     env.appResourcesPath = appResourcesPath;
@@ -560,6 +560,22 @@ module.exports = (env, params = {}) => {
                 svN: '~/svelteNamespace'
             })
         );
+        if (buildstyle) {
+            config.plugins.unshift(
+                new WebpackShellPluginNext({
+                    onBuildStart: {
+                        scripts: [
+                            './css2xml dev_assets/styles/osm/streets.json dev_assets/styles/osmxml/streets.xml',
+                            './css2xml dev_assets/styles/osm/osm.json dev_assets/styles/osmxml/osm.xml',
+                            './css2xml dev_assets/styles/osm/outdoors.json dev_assets/styles/osmxml/outdoors.xml',
+                            'cd ./dev_assets/styles/osmxml && zip -r ../../../app/assets/styles/osm.zip ./* && cd -'
+                        ],
+                        blocking: true,
+                        parallel: false
+                    }
+                })
+            );
+        }
     }
 
     Object.assign(config.plugins.find((p) => p.constructor.name === 'DefinePlugin').definitions, defines);
