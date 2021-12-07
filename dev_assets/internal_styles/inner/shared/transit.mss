@@ -11,7 +11,7 @@
         text-halo-radius: 0.4;
         text-halo-fill: white;
         text-placement: line;
-        text-face-name: @mont_md;
+        text-face-name: @mont;
         text-dy:linear([view::zoom], (13, 2), (16, 3), (17, 4));
     }
 }
