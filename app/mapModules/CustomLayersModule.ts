@@ -217,7 +217,11 @@ export default class CustomLayersModule extends MapModule {
         }
     }
 
-    createMergeMBtiles({ name, sources, legend }: { name: string; sources: string[]; legend?: string }, worldMbtiles?: MBTilesTileDataSource, options = {}) {
+    createMergeMBtiles(
+        { name, sources, legend, rendererLayerFilter }: { name: string; sources: string[]; legend?: string; rendererLayerFilter?: string },
+        worldMbtiles?: MBTilesTileDataSource,
+        options = {}
+    ) {
         // console.log('createMergeMBtiles', sources, worldMbtiles);
         // if (global.isAndroid) {
         //     sources = sources.map((s) => getAndroidRealPath(s));
@@ -237,6 +241,8 @@ export default class CustomLayersModule extends MapModule {
             labelRenderOrder: VectorTileRenderOrder.LAST,
             opacity,
             decoder: mapContext.getVectorTileDecoder(),
+            rendererLayerFilter,
+            clickHandlerLayerFilter: '(place|poi|mountain_peak|landuse|housenumber|water_name|waterway::label|water::label|landcover::label|park).*',
             // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_NONE,
             visible: opacity !== 0
         });
@@ -676,6 +682,21 @@ export default class CustomLayersModule extends MapModule {
                 worldMbtiles = new MBTilesTileDataSource({
                     databasePath: entity.path
                 });
+                // const data = this.createMergeMBtiles(
+                //     {
+                //         legend: 'https://www.openstreetmap.org/key.html',
+                //         name: 'world',
+                //         sources: [entity.path]
+                //         // rendererLayerFilter: '(.|s)*S(.|s)*'
+                //     },
+                //     undefined,
+                //     {
+                //         local: true
+                //     }
+                // );
+
+                // this.customSources.push(data);
+                // mapContext.addLayer(data.layer, 'map');
             }
             const folders = entities.filter((e) => e.isFolder).sort((a, b) => b.name.localeCompare(a.name));
             for (let i = 0; i < folders.length; i++) {
