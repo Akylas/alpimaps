@@ -153,8 +153,6 @@
         }
     }
 
-    $: console.log('bottomSheetStepIndex', bottomSheetStepIndex);
-
     // $: {
     //     if (showClickedFeatures === false) {
     //         currentClickedFeatures = null;
