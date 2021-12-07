@@ -21,6 +21,7 @@ import { getAndroidRealPath, getDataFolder, getDefaultMBTilesDir, listFolder } f
 import { toDegrees, toRadians } from '~/utils/geo';
 import MapModule, { getMapContext } from './MapModule';
 import { showError } from '~/utils/error';
+import mapStore from '~/stores/mapStore';
 const mapContext = getMapContext();
 
 const DEFAULT_HILLSHADE_SHADER =
@@ -249,7 +250,7 @@ export default class CustomLayersModule extends MapModule {
         const routeLayer = new VectorTileLayer({
             dataSource,
             layerBlendingSpeed: 0,
-            visible: false,
+            visible: mapStore.showRoutes,
             // labelRenderOrder: VectorTileRenderOrder.LAST,
             decoder: mapContext.innerDecoder
         });
@@ -325,13 +326,12 @@ export default class CustomLayersModule extends MapModule {
         });
     }
     toggleHillshadeSlope(value: boolean) {
-        if (this.hillshadeLayer) {
+        if (this.hillshadeLayer && this.hillshadeLayer.exagerateHeightScaleEnabled !== !value) {
+            this.hillshadeLayer.exagerateHeightScaleEnabled = !value;
             if (value) {
                 this.hillshadeLayer.normalMapLightingShader = SLOPE_HILLSHADE_SHADER;
-                this.hillshadeLayer.exagerateHeightScaleEnabled = false;
             } else {
                 this.hillshadeLayer.normalMapLightingShader = DEFAULT_HILLSHADE_SHADER;
-                this.hillshadeLayer.exagerateHeightScaleEnabled = true;
             }
         }
     }
