@@ -1,1 +1,227 @@
-<Map font-directory="../fonts/" background-color="transparent" background-image="" north-pole-color="transparent" south-pole-color="transparent"><Parameters></Parameters><NutiParameters><NutiParameter name="fallback_lang" type="string" value="en"></NutiParameter><NutiParameter name="lang" type="string" value="en"></NutiParameter><NutiParameter name="markers3d" type="string" value="nutibillboard"><Value id="0" value="point"></Value><Value id="1" value="nutibillboard"></Value></NutiParameter><NutiParameter name="routes" type="int" value="0"><Value id="0" value="0"></Value><Value id="1" value="1"></Value></NutiParameter><NutiParameter name="selected_id" type="string" value=""></NutiParameter><NutiParameter name="shields3d" type="string" value="nutibillboard"><Value id="0" value="point"></Value><Value id="1" value="nutibillboard"></Value></NutiParameter><NutiParameter name="texts3d" type="string" value="nutibillboard"><Value id="0" value="point"></Value><Value id="1" value="nutibillboard"></Value></NutiParameter></NutiParameters><Style name="directions" filter-mode="first"><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator><Filter>[mapnik::geometry_type]=2 and [class]='waypointline'</Filter><LineSymbolizer stroke="rgba(0,0,0,0.466667)" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></LineSymbolizer></Rule><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator><Filter>[mapnik::geometry_type]=1</Filter><MarkersSymbolizer allow-overlap="true" clip="false" color="{([isStart] ? 'green' : ([isStop] ? 'red' : 'blue'))}" file="symbols/pin.svg" height="24" placement="[nuti::markers3d]" transform="translate(0,-12)" width="24"></MarkersSymbolizer></Rule></Style><Style name="directions::casing" filter-mode="first"><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator><Filter>[mapnik::geometry_type]=2 and [class]&lt;&gt;'waypointline'</Filter><LineSymbolizer stroke="rgb(255,255,255)" stroke-linecap="round" stroke-linejoin="round" stroke-width="6.5"></LineSymbolizer></Rule></Style><Style name="directions::inner" filter-mode="first"><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator><Filter>[mapnik::geometry_type]=2 and [class]&lt;&gt;'waypointline'</Filter><LineSymbolizer stroke="{([nuti::selected_id]=[id] ? 'rgb(96,165,244)' : 'rgb(172,176,174)')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"></LineSymbolizer><MarkersSymbolizer fill="{([nuti::selected_id]=[id] ? 'rgb(179,206,255)' : 'rgb(172,176,174)')}" height="4" marker-type="arrow" opacity="0.6" placement="line" stroke-width="0" width="4"></MarkersSymbolizer></Rule></Style><Style name="directions::selected" filter-mode="first"><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator><Filter>[mapnik::geometry_type]=2 and [class]&lt;&gt;'waypointline' and [nuti::selected_id]=[id]</Filter><LineSymbolizer stroke="{([nuti::selected_id]=[id] ? 'rgb(96,165,244)' : 'rgb(172,176,174)')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"></LineSymbolizer><MarkersSymbolizer fill="{([nuti::selected_id]=[id] ? 'rgb(179,206,255)' : 'rgb(172,176,174)')}" height="4" marker-type="arrow" opacity="0.6" placement="line" stroke-width="0" width="4"></MarkersSymbolizer></Rule></Style><Style name="items" filter-mode="first"><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator><Filter>[mapnik::geometry_type]=2 and [nuti::selected_id]&lt;&gt;[id] and [class]='pedestrian'</Filter><LineSymbolizer stroke="rgb(96,165,244)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="linear([view::zoom],16,1,18,0.3)" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+0.5+2"></LineSymbolizer></Rule><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator><Filter>[mapnik::geometry_type]=2 and [nuti::selected_id]&lt;&gt;[id]</Filter><LineSymbolizer stroke="rgb(96,165,244)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="linear([view::zoom],16,1,18,0.3)" stroke-width="(pow(2.0,linear([view::zoom],14,-2.8,18,3.2))+0.5)*linear([view::zoom],14,0,14.01,1)+2"></LineSymbolizer></Rule></Style><Style name="items::selected" filter-mode="first"><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator><Filter>[mapnik::geometry_type]=2 and [nuti::selected_id]=[id] and [class]='pedestrian'</Filter><LineSymbolizer stroke="rgb(255,255,255)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="linear([view::zoom],16,1,18,0.3)" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+0.5+4"></LineSymbolizer><LineSymbolizer stroke="rgb(96,165,244)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="linear([view::zoom],16,1,18,0.3)" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+0.5+2"></LineSymbolizer><MarkersSymbolizer fill="rgb(96,165,244)" height="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+0.5" marker-type="arrow" opacity="0.6" placement="line" stroke-width="0" width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+0.5"></MarkersSymbolizer></Rule><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator><Filter>[mapnik::geometry_type]=2 and [nuti::selected_id]=[id]</Filter><LineSymbolizer stroke="rgb(255,255,255)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="linear([view::zoom],16,1,18,0.3)" stroke-width="(pow(2.0,linear([view::zoom],14,-2.8,18,3.2))+0.5)*linear([view::zoom],14,0,14.01,1)+4"></LineSymbolizer><LineSymbolizer stroke="rgb(96,165,244)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="linear([view::zoom],16,1,18,0.3)" stroke-width="(pow(2.0,linear([view::zoom],14,-2.8,18,3.2))+0.5)*linear([view::zoom],14,0,14.01,1)+2"></LineSymbolizer><MarkersSymbolizer fill="rgb(96,165,244)" height="(pow(2.0,linear([view::zoom],14,-2.8,18,3.2))+0.5)*linear([view::zoom],14,0,14.01,1)" marker-type="arrow" opacity="0.6" placement="line" stroke-width="0" width="(pow(2.0,linear([view::zoom],14,-2.8,18,3.2))+0.5)*linear([view::zoom],14,0,14.01,1)"></MarkersSymbolizer></Rule></Style><Style name="route" filter-mode="first"><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=1 and [ref]&lt;&gt;null and [class]='bicycle'</Filter><LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 1 : 0))"></LineSymbolizer><TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer></Rule><Rule name="combined"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=1 and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter><LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 1 : 0))"></LineSymbolizer><TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer></Rule><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=1 and [ref]&lt;&gt;null</Filter><LineSymbolizer stroke-linecap="round" stroke-linejoin="round"></LineSymbolizer><TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer></Rule><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=1 and [class]='bicycle'</Filter><LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 1 : 0))"></LineSymbolizer></Rule><Rule name="combined"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=1 and ([class]='hiking' or [class]='foot')</Filter><LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 1 : 0))"></LineSymbolizer></Rule><Rule name="auto"><MinScaleDenominator>4367830</MinScaleDenominator><MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=1</Filter><LineSymbolizer stroke-linecap="round" stroke-linejoin="round"></LineSymbolizer></Rule><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>4367830</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=2 and [ref]&lt;&gt;null and [class]='bicycle'</Filter><LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 1 : 0))"></LineSymbolizer><TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer></Rule><Rule name="combined"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>4367830</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=2 and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter><LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 1 : 0))"></LineSymbolizer><TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer></Rule><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>4367830</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=2 and [ref]&lt;&gt;null</Filter><LineSymbolizer stroke-linecap="round" stroke-linejoin="round"></LineSymbolizer><TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer></Rule><Rule name="auto"><MinScaleDenominator>2183915</MinScaleDenominator><MaxScaleDenominator>4367830</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=2 and [class]='bicycle'</Filter><LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 1 : 0))"></LineSymbolizer></Rule><Rule name="combined"><MinScaleDenominator>2183915</MinScaleDenominator><MaxScaleDenominator>4367830</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=2 and ([class]='hiking' or [class]='foot')</Filter><LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 1 : 0))"></LineSymbolizer></Rule><Rule name="combined"><MinScaleDenominator>2183915</MinScaleDenominator><MaxScaleDenominator>4367830</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and ([network]=2 or [network]=1)</Filter><LineSymbolizer stroke-linecap="round" stroke-linejoin="round"></LineSymbolizer></Rule><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>2183915</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=3 and [ref]&lt;&gt;null and [class]='bicycle'</Filter><LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 1 : 0))"></LineSymbolizer><TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer></Rule><Rule name="combined"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>2183915</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=3 and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter><LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 1 : 0))"></LineSymbolizer><TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer></Rule><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>2183915</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=3 and [ref]&lt;&gt;null</Filter><LineSymbolizer stroke-linecap="round" stroke-linejoin="round"></LineSymbolizer><TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer></Rule><Rule name="combined"><MinScaleDenominator>1091957.5</MinScaleDenominator><MaxScaleDenominator>2183915</MaxScaleDenominator><Filter>[class]='bicycle' and ([nuti::routes]&gt;0 and [network]=3 or ([nuti::routes]&gt;0 and [network]=2))</Filter><LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 1 : 0))"></LineSymbolizer></Rule><Rule name="combined"><MinScaleDenominator>1091957.5</MinScaleDenominator><MaxScaleDenominator>2183915</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=3 and ([class]='hiking' or [class]='foot') or ([nuti::routes]&gt;0 and [network]=2 and [class]='hiking') or ([nuti::routes]&gt;0 and [network]=2 and [class]='foot')</Filter><LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 1 : 0))"></LineSymbolizer></Rule><Rule name="combined"><MinScaleDenominator>1091957.5</MinScaleDenominator><MaxScaleDenominator>2183915</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and ([network]=3 or [network]=2 or [network]=1)</Filter><LineSymbolizer stroke-linecap="round" stroke-linejoin="round"></LineSymbolizer></Rule><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1091957.5</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=4 and [ref]&lt;&gt;null and [class]='bicycle'</Filter><LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 1 : 0))"></LineSymbolizer><TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer></Rule><Rule name="combined"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1091957.5</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=4 and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter><LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 1 : 0))"></LineSymbolizer><TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer></Rule><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1091957.5</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=4 and [ref]&lt;&gt;null</Filter><LineSymbolizer stroke-linecap="round" stroke-linejoin="round"></LineSymbolizer><TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer></Rule><Rule name="combined"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1091957.5</MaxScaleDenominator><Filter>[class]='bicycle' and ([nuti::routes]&gt;0 and [network]=4 or ([nuti::routes]&gt;0 and [network]=3) or ([nuti::routes]&gt;0 and [network]=2))</Filter><LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 1 : 0))"></LineSymbolizer></Rule><Rule name="combined"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1091957.5</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and [network]=4 and ([class]='hiking' or [class]='foot') or ([nuti::routes]&gt;0 and [network]=3 and [class]='hiking') or ([nuti::routes]&gt;0 and [network]=3 and [class]='foot') or ([nuti::routes]&gt;0 and [network]=2 and [class]='hiking') or ([nuti::routes]&gt;0 and [network]=2 and [class]='foot')</Filter><LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 1 : 0))"></LineSymbolizer></Rule><Rule name="combined"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1091957.5</MaxScaleDenominator><Filter>[nuti::routes]&gt;0 and ([network]=4 or [network]=3 or [network]=2 or [network]=1)</Filter><LineSymbolizer stroke-linecap="round" stroke-linejoin="round"></LineSymbolizer></Rule></Style><Style name="lines" filter-mode="first"><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator><Filter>[mapnik::geometry_type]=1</Filter><MarkersSymbolizer allow-overlap="true" clip="false" fill="rgb(255,255,255)" height="linear([view::zoom],12,4,13,5.5,19,8.5)" marker-type="ellipse" placement="[nuti::markers3d]" stroke="[color]" width="linear([view::zoom],12,4,13,5.5,19,8.5)"></MarkersSymbolizer></Rule><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator><Filter>[mapnik::geometry_type]=2</Filter><LineSymbolizer stroke="{([route_color] ? [route_color] : 'rgb('+[COULEUR]+')')}" stroke-linejoin="round" stroke-width="linear([view::zoom],12,2,13,2.5,19,4.5)"></LineSymbolizer></Rule></Style><Style name="lines::text" filter-mode="first"><Rule name="auto"><MinScaleDenominator>33.3238983</MinScaleDenominator><MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator><Filter>[mapnik::geometry_type]=2</Filter><TextSymbolizer dy="linear([view::zoom],13,2,16,3,17,4)" face-name="DIN Pro Medium" fill="rgb(128,128,128)" halo-fill="{([route_color] ? [route_color] : 'rgb('+[COULEUR]+')')}" halo-radius="0.4" placement="line" size="linear([view::zoom],13,7,16,12)">{([route_short_name] ? [route_short_name] : [NUMERO])}</TextSymbolizer></Rule></Style><Layer name="directions"><StyleName>directions</StyleName><StyleName>directions::casing</StyleName><StyleName>directions::inner</StyleName><StyleName>directions::selected</StyleName></Layer><Layer name="items"><StyleName>items</StyleName><StyleName>items::selected</StyleName></Layer><Layer name="route"><StyleName>route</StyleName></Layer><Layer name="lines"><StyleName>lines</StyleName><StyleName>lines::text</StyleName></Layer></Map>
+<?xml version="1.0"?>
+<Map font-directory="../fonts/" background-color="transparent" background-image="" north-pole-color="transparent" south-pole-color="transparent">
+	<Parameters />
+	<NutiParameters>
+		<NutiParameter name="fallback_lang" type="string" value="en" />
+		<NutiParameter name="lang" type="string" value="en" />
+		<NutiParameter name="markers3d" type="string" value="nutibillboard">
+			<Value id="0" value="point" />
+			<Value id="1" value="nutibillboard" />
+		</NutiParameter>
+		<NutiParameter name="routes" type="int" value="1">
+			<Value id="0" value="0" />
+			<Value id="1" value="1" />
+		</NutiParameter>
+		<NutiParameter name="selected_id" type="string" value="" />
+		<NutiParameter name="shields3d" type="string" value="nutibillboard">
+			<Value id="0" value="point" />
+			<Value id="1" value="nutibillboard" />
+		</NutiParameter>
+		<NutiParameter name="texts3d" type="string" value="nutibillboard">
+			<Value id="0" value="point" />
+			<Value id="1" value="nutibillboard" />
+		</NutiParameter>
+	</NutiParameters>
+	<Style name="directions" filter-mode="first">
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=2 and [class]='waypointline'</Filter>
+			<LineSymbolizer stroke="rgba(0,0,0,0.466667)" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=1</Filter>
+			<MarkersSymbolizer allow-overlap="true" clip="false" color="{([isStart] ? 'green' : ([isStop] ? 'red' : 'blue'))}" file="symbols/pin.svg" height="24" placement="[nuti::markers3d]" transform="translate(0,-12)" width="24" />
+		</Rule>
+	</Style>
+	<Style name="directions::casing" filter-mode="first">
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=2 and [class]&lt;&gt;'waypointline'</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-linecap="round" stroke-linejoin="round" stroke-width="6.5" />
+		</Rule>
+	</Style>
+	<Style name="directions::inner" filter-mode="first">
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=2 and [class]&lt;&gt;'waypointline'</Filter>
+			<LineSymbolizer stroke="{([nuti::selected_id]=[id] ? 'rgb(96,165,244)' : 'rgb(172,176,174)')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="5" />
+			<MarkersSymbolizer fill="{([nuti::selected_id]=[id] ? 'rgb(179,206,255)' : 'rgb(172,176,174)')}" height="4" marker-type="arrow" opacity="0.6" placement="line" stroke-width="0" width="4" />
+		</Rule>
+	</Style>
+	<Style name="directions::selected" filter-mode="first">
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=2 and [class]&lt;&gt;'waypointline' and [nuti::selected_id]=[id]</Filter>
+			<LineSymbolizer stroke="{([nuti::selected_id]=[id] ? 'rgb(96,165,244)' : 'rgb(172,176,174)')}" stroke-linecap="round" stroke-linejoin="round" stroke-width="5" />
+			<MarkersSymbolizer fill="{([nuti::selected_id]=[id] ? 'rgb(179,206,255)' : 'rgb(172,176,174)')}" height="4" marker-type="arrow" opacity="0.6" placement="line" stroke-width="0" width="4" />
+		</Rule>
+	</Style>
+	<Style name="items" filter-mode="first">
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=2 and [nuti::selected_id]&lt;&gt;[id] and [class]='pedestrian'</Filter>
+			<LineSymbolizer stroke="rgb(96,165,244)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="linear([view::zoom],16,1,18,0.3)" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+0.5+2" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=2 and [nuti::selected_id]&lt;&gt;[id]</Filter>
+			<LineSymbolizer stroke="rgb(96,165,244)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="linear([view::zoom],16,1,18,0.3)" stroke-width="(pow(2.0,linear([view::zoom],14,-2.8,18,3.2))+0.5)*linear([view::zoom],14,0,14.01,1)+2" />
+		</Rule>
+	</Style>
+	<Style name="items::selected" filter-mode="first">
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=2 and [nuti::selected_id]=[id] and [class]='pedestrian'</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="linear([view::zoom],16,1,18,0.3)" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+0.5+4" />
+			<LineSymbolizer stroke="rgb(96,165,244)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="linear([view::zoom],16,1,18,0.3)" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+0.5+2" />
+			<MarkersSymbolizer fill="rgb(96,165,244)" height="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+0.5" marker-type="arrow" opacity="0.6" placement="line" stroke-width="0" width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+0.5" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=2 and [nuti::selected_id]=[id]</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="linear([view::zoom],16,1,18,0.3)" stroke-width="(pow(2.0,linear([view::zoom],14,-2.8,18,3.2))+0.5)*linear([view::zoom],14,0,14.01,1)+4" />
+			<LineSymbolizer stroke="rgb(96,165,244)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="linear([view::zoom],16,1,18,0.3)" stroke-width="(pow(2.0,linear([view::zoom],14,-2.8,18,3.2))+0.5)*linear([view::zoom],14,0,14.01,1)+2" />
+			<MarkersSymbolizer fill="rgb(96,165,244)" height="(pow(2.0,linear([view::zoom],14,-2.8,18,3.2))+0.5)*linear([view::zoom],14,0,14.01,1)" marker-type="arrow" opacity="0.6" placement="line" stroke-width="0" width="(pow(2.0,linear([view::zoom],14,-2.8,18,3.2))+0.5)*linear([view::zoom],14,0,14.01,1)" />
+		</Rule>
+	</Style>
+	<Style name="route::casing" filter-mode="first">
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[nuti::selected_id]=(([osmid] ? [osmid] : ([ref] ? [ref] : [name])))</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="2+linear([view::zoom],4,1,10,1,12,2)+2.0" />
+		</Rule>
+	</Style>
+	<Style name="route::inner" filter-mode="first">
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[ref]&lt;&gt;null and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 0.3 : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 0.3 : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[ref]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 0.3 : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[class]='hiking' or [class]='foot'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 0.3 : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" />
+		</Rule>
+	</Style>
+	<Style name="route::selected" filter-mode="first">
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[nuti::selected_id]=(([osmid] ? [osmid] : ([ref] ? [ref] : [name]))) and [ref]&lt;&gt;null and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 0.3 : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[nuti::selected_id]=(([osmid] ? [osmid] : ([ref] ? [ref] : [name]))) and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 0.3 : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[nuti::selected_id]=(([osmid] ? [osmid] : ([ref] ? [ref] : [name]))) and [ref]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[nuti::selected_id]=(([osmid] ? [osmid] : ([ref] ? [ref] : [name]))) and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 0.3 : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[nuti::selected_id]=(([osmid] ? [osmid] : ([ref] ? [ref] : [name]))) and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 0.3 : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[nuti::selected_id]=(([osmid] ? [osmid] : ([ref] ? [ref] : [name])))</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" />
+		</Rule>
+	</Style>
+	<Style name="lines" filter-mode="first">
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=1</Filter>
+			<MarkersSymbolizer allow-overlap="true" clip="false" fill="rgb(255,255,255)" height="linear([view::zoom],12,4,13,5.5,19,8.5)" marker-type="ellipse" placement="[nuti::markers3d]" stroke="[color]" width="linear([view::zoom],12,4,13,5.5,19,8.5)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=2</Filter>
+			<LineSymbolizer stroke="{([route_color] ? [route_color] : 'rgb('+[COULEUR]+')')}" stroke-linejoin="round" stroke-width="linear([view::zoom],12,2,13,2.5,19,4.5)" />
+		</Rule>
+	</Style>
+	<Style name="lines::text" filter-mode="first">
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=2</Filter>
+			<TextSymbolizer dy="linear([view::zoom],13,2,16,3,17,4)" face-name="DIN Pro Regular" fill="rgb(128,128,128)" halo-fill="rgb(255,255,255)" halo-radius="0.4" placement="line" size="linear([view::zoom],13,7,16,12)">{([route_short_name] ? [route_short_name] : [NUMERO])}</TextSymbolizer>
+		</Rule>
+	</Style>
+	<Layer name="directions">
+		<StyleName>directions</StyleName>
+		<StyleName>directions::casing</StyleName>
+		<StyleName>directions::inner</StyleName>
+		<StyleName>directions::selected</StyleName>
+	</Layer>
+	<Layer name="items">
+		<StyleName>items</StyleName>
+		<StyleName>items::selected</StyleName>
+	</Layer>
+	<Layer name="route">
+		<StyleName>route::casing</StyleName>
+		<StyleName>route::inner</StyleName>
+		<StyleName>route::selected</StyleName>
+	</Layer>
+	<Layer name="lines">
+		<StyleName>lines</StyleName>
+		<StyleName>lines::text</StyleName>
+	</Layer>
+</Map>
