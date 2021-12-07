@@ -1677,25 +1677,6 @@
 			<PolygonSymbolizer fill="rgba(203,177,154,0.3)" />
 		</Rule>
 		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[class]='ice' and [subclass]='glacier' and [name]&lt;&gt;null and [mapnik::geometry_type]=2</Filter>
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(28,136,175)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" placement="line" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[class]='ice' and [subclass]='glacier' and [name]&lt;&gt;null and [mapnik::geometry_type]=3</Filter>
-			<PolygonSymbolizer fill="rgba(224,243,250,0.533333)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(28,136,175)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[class]='ice' and [subclass]='glacier' and [name]&lt;&gt;null</Filter>
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(28,136,175)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=3 and [class]='rock' and [subclass]='scree'</Filter>
@@ -2515,6 +2496,14 @@
 			<LineSymbolizer offset="linear([view::zoom],15,0,16,-2)" stroke="rgb(58,114,29)" stroke-dasharray="1,8" stroke-width="linear([view::zoom],15,0,16,3)" />
 		</Rule>
 	</Style>
+	<Style name="landcover::label" filter-mode="first">
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='ice' and [subclass]='glacier' and [name]&lt;&gt;null</Filter>
+			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(28,136,175)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+	</Style>
 	<Style name="park" filter-mode="first">
 		<Rule name="auto">
 			<MinScaleDenominator>4367830</MinScaleDenominator>
@@ -2633,16 +2622,47 @@
 			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(51,86,34)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]" wrap-width="step([view::zoom],14,60,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 	</Style>
+	<Style name="mountain_peak" filter-mode="first">
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=2 and [class]='cliff' and [name]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke="rgb(58,114,29)" stroke-width="linear([view::zoom],12,0.5,15,1)" />
+			<TextSymbolizer face-name="DIN Pro Regular" fill="rgb(97,97,90)" placement="line" size="9">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=2 and [class]='cliff'</Filter>
+			<LineSymbolizer stroke="rgb(58,114,29)" stroke-width="linear([view::zoom],12,0.5,15,1)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=2 and [class]='cliff' and [name]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke="rgb(58,114,29)" stroke-width="linear([view::zoom],12,0.5,15,1)" />
+			<LineSymbolizer offset="linear([view::zoom],15,0,16,-2)" stroke="rgb(58,114,29)" stroke-dasharray="1,8" stroke-width="linear([view::zoom],15,0,16,3)" />
+			<TextSymbolizer face-name="DIN Pro Regular" fill="rgb(97,97,90)" placement="line" size="9">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=2 and [class]='cliff'</Filter>
+			<LineSymbolizer stroke="rgb(58,114,29)" stroke-width="linear([view::zoom],12,0.5,15,1)" />
+			<LineSymbolizer offset="linear([view::zoom],15,0,16,-2)" stroke="rgb(58,114,29)" stroke-dasharray="1,8" stroke-width="linear([view::zoom],15,0,16,3)" />
+		</Rule>
+	</Style>
 	<Style name="mountain_peak::icon" filter-mode="first">
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[class]='saddle'</Filter>
+			<Filter>[mapnik::geometry_type]=1 and [class]='saddle'</Filter>
 			<TextSymbolizer face-name="osm" fill="rgb(102,102,0)" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">[nuti::osm-saddle]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=1</Filter>
 			<TextSymbolizer face-name="osm" fill="rgb(34,102,0)" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">[nuti::osm-mountain]</TextSymbolizer>
 		</Rule>
 	</Style>
@@ -2650,24 +2670,25 @@
 		<Rule name="auto">
 			<MinScaleDenominator>1091957.5</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[class]='peak'</Filter>
+			<Filter>[mapnik::geometry_type]=1 and [class]='peak'</Filter>
 			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(34,102,0)" halo-fill="rgb(255,255,255)" halo-radius="1" line-spacing="-1" minimum-distance="linear([view::zoom],5,30,10,20,18,10)" placement="[nuti::texts3d]" size="linear([view::zoom],10,11,18,12)-1.0e-06*[rank]" wrap-width="step([view::zoom],14,60,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>272989.375</MinScaleDenominator>
 			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<Filter>[class]='peak'</Filter>
+			<Filter>[mapnik::geometry_type]=1 and [class]='peak'</Filter>
 			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(34,102,0)" halo-fill="rgb(255,255,255)" halo-radius="1" line-spacing="-1" minimum-distance="linear([view::zoom],5,30,10,20,18,10)" placement="[nuti::texts3d]" size="linear([view::zoom],10,11,18,12)-1.0e-06*[rank]" wrap-width="step([view::zoom],14,60,18,100)">{((([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) ? ([ele] ? (([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name]))+', '+[ele]+'m' : ([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) : '')}</TextSymbolizer>
 		</Rule>
-		<Rule name="auto">
+		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[class]='saddle'</Filter>
+			<Filter>[mapnik::geometry_type]=1 and [class]='saddle'</Filter>
 			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(102,102,0)" halo-fill="rgb(255,255,255)" halo-radius="1" line-spacing="-1" minimum-distance="linear([view::zoom],5,30,10,20,18,10)" placement="[nuti::texts3d]" size="linear([view::zoom],10,11,18,12)-1.0e-06*[rank]" wrap-width="step([view::zoom],14,60,18,100)">{((([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) ? ([ele] ? (([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name]))+', '+[ele]+'m' : ([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) : '')}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=1</Filter>
 			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(34,102,0)" halo-fill="rgb(255,255,255)" halo-radius="1" line-spacing="-1" minimum-distance="linear([view::zoom],5,30,10,20,18,10)" placement="[nuti::texts3d]" size="linear([view::zoom],10,11,18,12)-1.0e-06*[rank]" wrap-width="step([view::zoom],14,60,18,100)">{((([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) ? ([ele] ? (([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name]))+', '+[ele]+'m' : ([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) : '')}</TextSymbolizer>
 		</Rule>
 	</Style>
@@ -3315,417 +3336,15 @@
 		</Rule>
 	</Style>
 	<Style name="water" filter-mode="first">
-		<Rule name="auto">
-			<MinScaleDenominator>2183915</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
 			<Filter>[class]&lt;&gt;'ocean'</Filter>
 			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>2183915</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>2183915</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;40 and [class]='ice'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(28,136,175)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>1091957.5</MinScaleDenominator>
-			<MaxScaleDenominator>2183915</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;40 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>1091957.5</MinScaleDenominator>
-			<MaxScaleDenominator>2183915</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;40</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>1091957.5</MinScaleDenominator>
-			<MaxScaleDenominator>2183915</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>1091957.5</MinScaleDenominator>
-			<MaxScaleDenominator>2183915</MaxScaleDenominator>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;30 and [class]='ice'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(28,136,175)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>545978.75</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;40 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>545978.75</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;40</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>545978.75</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;30 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>545978.75</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;30</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>545978.75</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>545978.75</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;20 and [class]='ice'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(28,136,175)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;40 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;40</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;30 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;30</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;20 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;20</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;10 and [class]='ice'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(28,136,175)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;40 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;40</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;30 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;30</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;20 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;20</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;10 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;10</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;2 and [class]='ice'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(28,136,175)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;40 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;40</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;30 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;30</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;20 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;20</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;10 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;10</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;2 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;2</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;0 and [class]='ice'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(28,136,175)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;40 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;40</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;30 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;30</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;20 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;20</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;10 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;10</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;2 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;2</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;0 and [class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;0</Filter>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-0.5,-0.5)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<PolygonSymbolizer fill="rgb(117,207,240)" />
 		</Rule>
 	</Style>
@@ -3737,80 +3356,172 @@
 			<PolygonSymbolizer fill="rgb(117,207,240)" />
 		</Rule>
 	</Style>
-	<Style name="waterway" filter-mode="first">
+	<Style name="water::label" filter-mode="first">
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;40 and [class]='ice'</Filter>
+			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(28,136,175)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
 		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;40</Filter>
+			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;30 and [class]='ice'</Filter>
+			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(28,136,175)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
 			<MinScaleDenominator>545978.75</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[name]&lt;&gt;null and ([way_pixels]&gt;40 or [way_pixels]&gt;30)</Filter>
+			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
+			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;20 and [class]='ice'</Filter>
+			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(28,136,175)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>272989.375</MinScaleDenominator>
+			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
+			<Filter>[name]&lt;&gt;null and ([way_pixels]&gt;40 or [way_pixels]&gt;30 or [way_pixels]&gt;20)</Filter>
+			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
+			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;10 and [class]='ice'</Filter>
+			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(28,136,175)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
+			<Filter>[name]&lt;&gt;null and ([way_pixels]&gt;40 or [way_pixels]&gt;30 or [way_pixels]&gt;20 or [way_pixels]&gt;10)</Filter>
+			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;2 and [class]='ice'</Filter>
+			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(28,136,175)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[name]&lt;&gt;null and ([way_pixels]&gt;40 or [way_pixels]&gt;30 or [way_pixels]&gt;20 or [way_pixels]&gt;10 or [way_pixels]&gt;2)</Filter>
+			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[name]&lt;&gt;null and [way_pixels]&gt;0 and [class]='ice'</Filter>
+			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(28,136,175)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[name]&lt;&gt;null and ([way_pixels]&gt;40 or [way_pixels]&gt;30 or [way_pixels]&gt;20 or [way_pixels]&gt;10 or [way_pixels]&gt;2 or [way_pixels]&gt;0)</Filter>
+			<TextSymbolizer face-name="DIN Pro Italic" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" minimum-distance="20" size="linear([view::zoom],12,9,18,13)-1.0e-06*[rank]" wrap-width="20">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+	</Style>
+	<Style name="waterway" filter-mode="first">
+		<Rule name="combined">
+			<MinScaleDenominator>272989.375</MinScaleDenominator>
 			<MaxScaleDenominator>139770560</MaxScaleDenominator>
 			<Filter>[class]='river'</Filter>
 			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],8,0.5,15,2,16,4)" />
 		</Rule>
 		<Rule name="combined">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
-			<Filter>[class]='river'</Filter>
-			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],8,0.5,15,2,16,4)" />
-			<TextSymbolizer dy="0" face-name="DIN Pro Medium" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" placement="line" size="linear([view::zoom],10,6,15,10,18,12)" spacing="0">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]='canal' and [brunnel]='tunnel'</Filter>
 			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
 			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]='canal'</Filter>
 			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]='stream'</Filter>
 			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
 		</Rule>
 		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
+			<Filter>[class]='river'</Filter>
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],8,0.5,15,2,16,4)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[class]='riverbank'</Filter>
 			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],8,0.5,15,2,16,4)" />
-			<TextSymbolizer dy="0" face-name="DIN Pro Medium" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" placement="line" size="linear([view::zoom],10,6.0,15,7.0,16,9.0,17,10)" spacing="0">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[class]='river'</Filter>
-			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],8,0.5,15,2,16,4)" />
-			<TextSymbolizer dy="0" face-name="DIN Pro Medium" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" placement="line" size="linear([view::zoom],10,6,15,10,18,12)" spacing="0">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[class]='stream'</Filter>
-			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
-			<TextSymbolizer dy="0" face-name="DIN Pro Medium" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" placement="line" size="linear([view::zoom],10,6.0,15,7.0,16,9.0,17,10)" spacing="0">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[class]='canal' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
-			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
-			<TextSymbolizer dy="0" face-name="DIN Pro Medium" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" placement="line" size="linear([view::zoom],10,6.0,15,7.0,16,9.0,17,10)" spacing="0">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[class]='canal'</Filter>
-			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
-			<TextSymbolizer dy="0" face-name="DIN Pro Medium" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" placement="line" size="linear([view::zoom],10,6.0,15,7.0,16,9.0,17,10)" spacing="0">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[class]='ditch' or [class]='drain'</Filter>
 			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="1.4" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[class]='canal'</Filter>
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[class]='stream'</Filter>
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[class]='river' or [class]='riverbank'</Filter>
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],8,0.5,15,2,16,4)" />
+		</Rule>
+	</Style>
+	<Style name="waterway::label" filter-mode="first">
+		<Rule name="combined">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
+			<Filter>[class]='river'</Filter>
+			<TextSymbolizer dy="0" face-name="DIN Pro Medium" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" placement="line" size="linear([view::zoom],10,6,15,10,18,12)" spacing="0">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='riverbank'</Filter>
+			<TextSymbolizer dy="0" face-name="DIN Pro Medium" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" placement="line" size="linear([view::zoom],10,6.0,15,7.0,16,9.0,17,10)" spacing="0">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='river'</Filter>
+			<TextSymbolizer dy="0" face-name="DIN Pro Medium" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" placement="line" size="linear([view::zoom],10,6,15,10,18,12)" spacing="0">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='stream' or [class]='canal'</Filter>
+			<TextSymbolizer dy="0" face-name="DIN Pro Medium" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" placement="line" size="linear([view::zoom],10,6.0,15,7.0,16,9.0,17,10)" spacing="0">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[class]='ditch' or [class]='drain'</Filter>
 			<TextSymbolizer dy="0" face-name="DIN Pro Medium" fill="rgb(58,76,166)" halo-fill="rgba(255,255,255,0.533333)" halo-radius="1" placement="line" size="linear([view::zoom],10,6.0,15,7.0,16,9.0,17,10)" spacing="0">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 	</Style>
@@ -6478,6 +6189,7 @@
 		<StyleName>landcover::sand</StyleName>
 		<StyleName>landcover::wood</StyleName>
 		<StyleName>landcover::cliff</StyleName>
+		<StyleName>landcover::label</StyleName>
 	</Layer>
 	<Layer name="park">
 		<StyleName>park</StyleName>
@@ -6485,6 +6197,7 @@
 		<StyleName>park::text</StyleName>
 	</Layer>
 	<Layer name="mountain_peak">
+		<StyleName>mountain_peak</StyleName>
 		<StyleName>mountain_peak::icon</StyleName>
 		<StyleName>mountain_peak::text</StyleName>
 	</Layer>
@@ -6506,9 +6219,11 @@
 	<Layer name="water">
 		<StyleName>water</StyleName>
 		<StyleName>water::inner</StyleName>
+		<StyleName>water::label</StyleName>
 	</Layer>
 	<Layer name="waterway">
 		<StyleName>waterway</StyleName>
+		<StyleName>waterway::label</StyleName>
 	</Layer>
 	<Layer name="water_name">
 		<StyleName>water_name</StyleName>
