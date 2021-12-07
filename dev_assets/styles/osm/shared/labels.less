@@ -2,42 +2,6 @@
 @name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
 @osm_icon: [nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]]?[nuti::osm-[class]]:[nuti::osm-symbol-dot]);
 
-#mountain_peak {
-	// order is important for icon to take precedence over label and respect rank
-	::icon {
-		text-face-name: @osm;
-		text-size: @peak_icon_width; 
-		text-placement: [nuti::markers3d];
-		text-name: @peak_icon;
-		text-fill: @peak_label;
-		[class=saddle] {
-			text-name: @saddle_icon;
-			text-fill: @sadle_label;
-		}
-	}
-	[class=peak]::text, 
-	[zoom>=12]::text {
-		text-name: @name;
-		[zoom>=10] {
-			text-name: @name ?  ( [ele] ? @name  + ', ' +[ele] + 'm': @name): '';
-		}
-		text-face-name: @mont_md;
-		text-size: @peak_label_width; 
-		text-line-spacing: -1;
-		text-placement: [nuti::texts3d];
-		text-fill: @peak_label;
-		[class="saddle"] {
-			text-fill: @sadle_label;
-		}
-		text-dy: @peak_label_dy; 
-		text-wrap-width: @poi_label_wrap_width;
-		text-halo-fill: @peak_halo;
-		text-halo-radius: @peak_halo_radius;
-		text-min-distance: @peak_text_min_dist;
-	}
-	
-}
-
 #landcover[name!=null],
 #landuse[name!=null] {
   [class=quarry][zoom>=14],
@@ -280,17 +244,20 @@
 #water [name!=null][zoom>=13][way_pixels>2],
 #water [name!=null][zoom>=15][way_pixels>0],
 #landcover[class=ice][subclass=glacier][name!=null][zoom>=13]{
-	text-name: @name;
-	text-face-name: @mont_it_md;
-	text-fill: @water_label;
-	[class=ice] {
-		text-fill: @glacier_label;
+	::label {
+		text-name: @name;
+		text-face-name: @mont_it_md;
+		text-fill: @water_label;
+		[class=ice] {
+			text-fill: @glacier_label;
+		}
+		text-halo-fill: @water_halo;
+		text-halo-radius: @water_halo_radius;
+		text-size: @glacier_label_width;
+		text-min-distance:20;
+		text-wrap-width: @glacier_label_wrap_width;
 	}
-	text-halo-fill: @water_halo;
-	text-halo-radius: @water_halo_radius;
-	text-size: @glacier_label_width;
-	text-min-distance:20;
-	text-wrap-width: @glacier_label_wrap_width;
+	
 }
 
 #waterway[class=riverbank][zoom>=13],
@@ -299,24 +266,25 @@
 #waterway[class=canal][zoom>=13],
 #waterway[class=ditch][zoom>=15],
 #waterway[class=drain][zoom>=15]{
-
-	text-name: @name;
-	text-face-name: @mont_md;
-	[class=dam][class=weir] {
-		text-placement: point;
-		text-fill: @dam_casing;
-	}
-	[class!=dam][class!=weir] {
-		text-placement: line;
-		text-fill: @water_label;
-	}
-	text-halo-fill: @water_halo;
-	text-halo-radius: @water_halo_radius;
-	text-dy:@waterway_label_dy;
-	text-spacing: @waterway_label_spacing;
-	text-size: @waterway_text_width;
-	[class=river] {
-		text-size: @river_text_width;
+	::label {
+		text-name: @name;
+		text-face-name: @mont_md;
+		[class=dam][class=weir] {
+			text-placement: point;
+			text-fill: @dam_casing;
+		}
+		[class!=dam][class!=weir] {
+			text-placement: line;
+			text-fill: @water_label;
+		}
+		text-halo-fill: @water_halo;
+		text-halo-radius: @water_halo_radius;
+		text-dy:@waterway_label_dy;
+		text-spacing: @waterway_label_spacing;
+		text-size: @waterway_text_width;
+		[class=river] {
+			text-size: @river_text_width;
+		}
 	}
 }
 
