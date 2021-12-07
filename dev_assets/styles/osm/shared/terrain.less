@@ -1,3 +1,61 @@
+
+#mountain_peak {
+	
+	['mapnik::geometry_type'=2] {
+		[class=cliff][zoom>=12] { 
+			line-color: @cliff;
+			line-width: @cliff-width;
+			[zoom>=15] {
+			  line/line-offset: linear([view::zoom], (15, 0), (16,-2));
+			  line/line-color: @cliff; 
+			  line/line-dasharray: 1,8;
+			  line/line-width: linear([view::zoom], (15, 0), (16,3));
+			}
+			[name!=null] {
+				text-name: @name;
+				text-face-name: @mont;
+				text-fill: @building_label;
+				text-size: 9;
+				text-placement: line;
+			}
+		}
+	}
+	['mapnik::geometry_type'=1] {
+		// order is important for icon to take precedence over label and respect rank
+		::icon {
+			text-face-name: @osm;
+			text-size: @peak_icon_width; 
+			text-placement: [nuti::markers3d];
+			text-name: @peak_icon;
+			text-fill: @peak_label;
+			[class=saddle] {
+				text-name: @saddle_icon;
+				text-fill: @sadle_label;
+			}
+		}
+		[class=peak]::text, 
+		[zoom>=12]::text {
+			text-name: @name;
+			[zoom>=10] {
+				text-name: @name ?  ( [ele] ? @name  + ', ' +[ele] + 'm': @name): '';
+			}
+			text-face-name: @mont_md;
+			text-size: @peak_label_width; 
+			text-line-spacing: -1;
+			text-placement: [nuti::texts3d];
+			text-fill: @peak_label;
+			[class="saddle"] {
+				text-fill: @sadle_label;
+			}
+			text-dy: @peak_label_dy; 
+			text-wrap-width: @poi_label_wrap_width;
+			text-halo-fill: @peak_halo;
+			text-halo-radius: @peak_halo_radius;
+			text-min-distance: @peak_text_min_dist;
+		}
+	}
+}
+
 #contour['nuti::contours'>0][zoom>=12][ele>0] {
 	[div=10][zoom>=15],
 	[div=20][zoom>=14]{
