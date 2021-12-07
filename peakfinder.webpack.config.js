@@ -47,7 +47,7 @@ module.exports = (env, params = {}) => {
         },
         resolve: {
             exportsFields: [],
-            modules: [resolve(__dirname, 'node_modules'), resolve(__dirname, 'geo-three', 'node_modules')],
+            modules: [resolve(__dirname, 'geo-three', 'node_modules'), resolve(__dirname, 'node_modules')],
             mainFields: ['browser', 'module', 'main'],
             extensions: ['.css', '.ts', '.js', '.json'],
             alias: {
