@@ -8,9 +8,11 @@ const imageBitmapLoader = getSharedImageBitmapLoader({
 });
 
 export class LocalHeightProvider extends RasterMapProvider {
+    public terrarium: boolean;
     public constructor(local = false) {
         super();
         this.name = 'local';
+        this.terrarium = false;
         this.minZoom = 5;
         this.maxZoom = 12;
     }
