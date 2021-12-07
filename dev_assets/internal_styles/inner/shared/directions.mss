@@ -2,7 +2,6 @@
 // @markerOverlap: [nuti::selected_id] = [id] ? false : true;
 
 #directions {
-
 	['mapnik::geometry_type'=2]{
 		[class='waypointline'] {
 			line-color: #00000077;
