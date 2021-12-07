@@ -809,7 +809,9 @@
     // $: vectorTileDecoder && mapContext?.innerDecoder?.setStyleParameter('routes', $mapStore.showRoutes ? '1' : '0');
     $: {
         const visible = $mapStore.showRoutes;
+        console.log('showRoutes changed', visible);
         getLayers('routes').forEach((l) => {
+            console.log('updating layer visibility', visible);
             l.layer.visible = visible;
         });
         cartoMap && cartoMap.requestRedraw();
@@ -818,7 +820,6 @@
     $: vectorTileDecoder && toggleHillshadeSlope($mapStore.showSlopePercentages);
     $: toggleMapRotate($mapStore.rotateEnabled);
     $: toggleMapPitch($mapStore.pitchEnabled);
-    $: currentLayer && (currentLayer.zoomLevelBias = parseFloat($mapStore.zoomBiais));
     $: currentLayer && (currentLayer.preloading = $mapStore.preloading);
     $: shouldShowNavigationBarOverlay = $navigationBarHeight !== 0 && !!selectedItem;
     $: bottomSheetStepIndex === 0 && unselectItem();
@@ -1099,7 +1100,7 @@
 
     function setCurrentLayer(id: string) {
         if (__CARTO_PACKAGESERVICE__) {
-            console.log('setCurrentLayer', id, $mapStore.zoomBiais, $mapStore.preloading);
+            console.log('setCurrentLayer', id, $mapStore.preloading);
             // const cartoMap = cartoMap;
             if (currentLayer) {
                 removeLayer(currentLayer, 'map');
@@ -1111,7 +1112,6 @@
 
             currentLayer = new VectorTileLayer({
                 preloading: $mapStore.preloading,
-                zoomLevelBias: parseFloat($mapStore.zoomBiais),
                 labelRenderOrder: VectorTileRenderOrder.LAST,
                 dataSource: packageService.getDataSource($mapStore.showContourLines),
                 decoder
@@ -1684,16 +1684,16 @@
                     class="icon-btn"
                     text="mdi-bullseye"
                     color={$mapStore.showContourLines ? primaryColor : 'gray'}
-                    on:tap={() => mapStore.setShowContourLines(!$mapStore.showContourLines)}
+                    on:tap={() => (mapStore.showContourLines = !mapStore.showContourLines)}
                 />
                 <button
                     variant="text"
                     class="icon-btn"
                     text="mdi-signal"
                     color={$mapStore.showSlopePercentages ? primaryColor : 'gray'}
-                    on:tap={() => mapStore.setShowSlopePercentages(!$mapStore.showSlopePercentages)}
+                    on:tap={() => (mapStore.showSlopePercentages = !mapStore.showSlopePercentages)}
                 />
-                <button variant="text" class="icon-btn" text="mdi-routes" color={$mapStore.showRoutes ? primaryColor : 'gray'} on:tap={() => mapStore.setShowRoutes(!$mapStore.showRoutes)} />
+                <button variant="text" class="icon-btn" text="mdi-routes" color={$mapStore.showRoutes ? primaryColor : 'gray'} on:tap={() => (mapStore.showRoutes = !mapStore.showRoutes)} />
                 <button variant="text" class="icon-btn" text="mdi-speedometer" color="gray" on:tap={switchLocationInfo} />
 
                 <button
@@ -1702,7 +1702,7 @@
                     text="mdi-map-clock"
                     visibility={packageServiceEnabled ? 'visible' : 'collapsed'}
                     color={$mapStore.preloading ? primaryColor : 'gray'}
-                    on:tap={() => mapStore.setPreloading(!$mapStore.preloading)}
+                    on:tap={() => (mapStore.preloading = !$mapStore.preloading)}
                 />
                 <!-- <button
                     variant="text"
