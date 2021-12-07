@@ -24,12 +24,12 @@ public class VectorTileEventListener extends AKVectorTileEventListener {
         final Variant name  = feature.getProperties().getObjectElement("name");
         final Geometry geometry  = feature.getGeometry();
         if (
-            featureLayerName.equals("transportation") ||
-            featureLayerName.equals("transportation_name") ||
-            featureLayerName.equals("waterway") ||
+            // featureLayerName.equals("transportation") ||
+            // featureLayerName.equals("transportation_name") ||
+            // featureLayerName.equals("waterway") ||
             // featureLayerName.equals("place") ||
-            featureLayerName.equals("contour") ||
-            featureLayerName.equals("hillshade") ||
+            // featureLayerName.equals("contour") ||
+            // featureLayerName.equals("hillshade") ||
             (featureLayerName.equals("park") && geometry instanceof com.carto.geometry.PolygonGeometry
 ) ||
             ((featureLayerName.equals("building") || featureLayerName.equals("landcover" )|| featureLayerName.equals(  "landuse")) && name != null)
