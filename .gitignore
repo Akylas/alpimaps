@@ -3,6 +3,7 @@ hooks
 platforms
 node_modules/
 
+Gemfile.lock
 certs
 /package-lock.json
 /report
