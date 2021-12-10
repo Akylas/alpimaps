@@ -751,7 +751,7 @@
 
 <stacklayout bind:this={topLayout} {...$$restProps} backgroundColor={primaryColor} paddingTop={globalMarginTop} translateY={currentTranslationY}>
     {#if loaded}
-        <gridlayout bind:this={gridLayout} on:tap={() => {}} rows="50,100,auto" columns="*,30">
+        <gridlayout bind:this={gridLayout} on:tap={() => {}} rows="50,100,auto" columns="*,40">
             <button horizontalAlignment="left" variant="text" class="icon-btn-white" text="mdi-arrow-left" on:tap={() => cancel()} />
             <stacklayout colSpan={2} orientation="horizontal" horizontalAlignment="center">
                 <button variant="text" class="icon-btn-white" text="mdi-car" on:tap={() => setProfile('auto')} color={profileColor(profile, 'auto')} />
@@ -763,14 +763,16 @@
                 colSpan={2}
                 horizontalAlignment="right"
                 class="icon-btn-text"
+                width={40}
+                height={40}
                 text="mdi-magnify"
                 on:tap={() => computeRoutes()}
                 isEnabled={nbWayPoints > 1}
-                margin="4 10 4 10"
+                marginRight={10}
                 visibility={loading ? 'hidden' : 'visible'}
             />
             <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} horizontalAlignment="right" busy={true} width="40" height="40" color="white" />
-            <collectionview row={1} items={waypoints} rowHeight="50" itemIdGenerator={(item, i) => item.properties.id} animateItemUpdate={true} colSpan={2}>
+            <collectionview row={1} items={waypoints} rowHeight="50" itemIdGenerator={(item, i) => item.properties.id} animateItemUpdate={true}>
                 <Template let:item>
                     <gridlayout>
                         <canvaslabel color="white" fontSize="16" paddingLeft="10" fontFamily={mdiFontFamily}>
@@ -778,7 +780,7 @@
                             <cspan text="mdi-dots-vertical" verticalAlignment="bottom" visibility={item.properties.isStop ? 'hidden' : 'visible'} fontSize="18" paddingBottom={-3} />
                             <cspan text={item.properties.isStop ? 'mdi-map-marker' : 'mdi-checkbox-blank-circle-outline'} verticalAlignment="center" />
                         </canvaslabel>
-                        <gridlayout borderRadius="2" backgroundColor="white" columns=" *,auto,auto" height="40" margin="0 10 0 40">
+                        <gridlayout borderRadius="2" backgroundColor="white" columns=" *,auto,auto" height="40" margin="0 0 0 40">
                             <textfield
                                 marginLeft="15"
                                 hint={item.properties.isStart ? lc('start') : lc('end')}
@@ -806,7 +808,7 @@
                     </gridlayout>
                 </Template>
             </collectionview>
-            <button row={1} col={1} variant="text" class="icon-btn-white" text="mdi-swap-vertical" on:tap={() => reversePoints()} isEnabled={nbWayPoints > 1} />
+            <button row={1} col={1} variant="text" class="icon-btn-white" text="mdi-swap-vertical" on:tap={() => reversePoints()} isEnabled={nbWayPoints > 1}/>
             <gridlayout colSpan={2} rows="45" columns="auto,auto,auto,auto,auto,auto,auto,*,auto,auto" row={2} visibility={showOptions ? 'visible' : 'collapsed'} >
                 <button
                     variant="text"
