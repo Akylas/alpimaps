@@ -4,15 +4,18 @@
         "transportation",
         "contour",
         "transportation_name",
-        "water_name",
         "waterway",
+        "water_name",
         "water",
         "boundary",
         "aeroway",
+        "building_name",
         "building",
+        "landuse_name",
         "landuse",
         "mountain_peak",
         "park",
+        "landcover_name",
         "landcover",
         "aerodrome_label",
         "poi",
@@ -28,6 +31,7 @@
         "shared/labels.less"
     ],
     "nutiparameters": {
+        "_clickhandlerlayerfilter":"(poi|mountain_peak|landuse|housenumber|water_name|water|landuse::label|landcover::label|park).*",
         "lang": {
             "default": "en"
         },
