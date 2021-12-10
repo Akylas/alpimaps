@@ -3,7 +3,7 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { ApplicationSettings } from '@nativescript/core';
-    import { openUrl } from '@nativescript/core/utils/utils';
+    import { dismissSoftInput, openUrl } from '@nativescript/core/utils/utils';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { showBottomSheet } from '~/components/bottomsheet';
@@ -96,10 +96,6 @@
     });
 
     items.splice(2, 0, ...tokenSettings);
-
-    onThemeChanged(() => {
-        // (collectionView.nativeView as CollectionView).refreshVisibleItems();
-    });
     function onLongPress() {}
     async function onTap(command, item?) {
         switch (command) {
@@ -132,12 +128,12 @@
             case 'token': {
                 const result = await prompt({
                     title: lc('token_key', item.token),
-                    // message: this.$tc('change_glasses_name'),
                     okButtonText: l('save'),
                     cancelButtonText: l('cancel'),
                     autoFocus: true,
                     defaultText: item.value
                 });
+                dismissSoftInput();
                 if (result && !!result.result && result.text.length > 0) {
                     customLayers.tokenKeys[item.token] = result.text;
                     item.value = result.text;
@@ -181,6 +177,7 @@
                             horizontalAlignment="right"
                             visibility={!!item.rightBtnIcon ? 'visible' : 'hidden'}
                             class="icon-btn"
+                            marginRight={10}
                             text={item.rightBtnIcon}
                             on:tap={() => onTap(item.id)}
                         />

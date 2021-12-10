@@ -809,9 +809,7 @@
     // $: vectorTileDecoder && mapContext?.innerDecoder?.setStyleParameter('routes', $mapStore.showRoutes ? '1' : '0');
     $: {
         const visible = $mapStore.showRoutes;
-        console.log('showRoutes changed', visible);
         getLayers('routes').forEach((l) => {
-            console.log('updating layer visibility', visible);
             l.layer.visible = visible;
         });
         cartoMap && cartoMap.requestRedraw();

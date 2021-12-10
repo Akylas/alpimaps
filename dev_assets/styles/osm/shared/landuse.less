@@ -53,14 +53,13 @@ Map {
     [subclass=grassland]::grass,
     [subclass=meadow]::grass,
     [subclass=grass]::grass,
-    [subclass=village_green]::grass{
+    [subclass=null]::grass,
+    [subclass=village_green]::grass,
+    [subclass=garden]{
       polygon-fill: @grass; 
     }
     [subclass=park] {
       park/polygon-fill: @park;
-    }
-    [subclass=garden] {
-        polygon-fill: @grass;
     }
     [subclass=heath] {
       polygon-fill: @heath;
@@ -234,16 +233,6 @@ Map {
     text-size: 9;
     text-placement: line;
     text-wrap-width: 100;
-  }  
-  [class=rock][subclass=cliff][zoom>=12]::cliff { 
-    line-color: @cliff;
-    line-width: @cliff-width;
-    [zoom>=15] {
-      line/line-offset: linear([view::zoom], (15, 0), (16,-2));
-      line/line-color: @cliff; 
-      line/line-dasharray: 1,8;
-      line/line-width: linear([view::zoom], (15, 0), (16,3));
-    }
   }
   [class=barrier][zoom>=15] {
 		[subclass=citywalls],
@@ -258,20 +247,18 @@ Map {
 		}
 	}
 }
-#building['nuti::buildings'>0][zoom>=14] {
-    ['nuti::buildings'=2][zoom>=17]::3d{
-        building-height: [render_height] ? [render_height] : 5;
-        building-min-height: [render_min_height];
-        building-fill: @building-fill;
-        building-fill-opacity: 0.45;
-    } 
-    
-    [zoom>=15] {
-      polygon-fill: @building-fill;
-      polygon-opacity: @building-opacity;
-      line-color: @building-line;
-      line-width: @building-line-width;
-    }
+#building['nuti::buildings'>0][zoom>=15] {
+  ['nuti::buildings'=2][zoom>=17]::3d{
+      building-height: [render_height] ? [render_height] : 5;
+      building-min-height: [render_min_height];
+      building-fill: @building-fill;
+      building-fill-opacity: 0.45;
+  } 
+  
+  polygon-fill: @building-fill;
+  polygon-opacity: @building-opacity;
+  line-color: @building-line;
+  line-width: @building-line-width;
 }
 
 #aeroway['mapnik::geometry_type'=3]{
