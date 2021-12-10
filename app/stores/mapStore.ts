@@ -1,5 +1,5 @@
 import { getBoolean, getNumber, getString, setBoolean, setNumber, setString } from '@nativescript/core/application-settings';
-import { Writable, get, writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 
 const storeData = {
     watchingLocation: false,
@@ -34,13 +34,12 @@ class ProxyClass {
     set(internal, prop, value) {
         internal.update((s) => {
             s[prop] = value;
-            if (storeProperties.indexOf(prop) !== -1) {
-                return;
-            }
-            if (typeof value === 'boolean') {
-                setBoolean(prop, value);
-            } else {
-                setNumber(prop, value);
+            if (storeProperties.indexOf(prop) === -1) {
+                if (typeof value === 'boolean') {
+                    setBoolean(prop, value);
+                } else {
+                    setNumber(prop, value);
+                }
             }
             return s;
         });
