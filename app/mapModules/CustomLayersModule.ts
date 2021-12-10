@@ -243,7 +243,7 @@ export default class CustomLayersModule extends MapModule {
             opacity,
             decoder: mapContext.getVectorTileDecoder(),
             rendererLayerFilter,
-            clickHandlerLayerFilter: '(place|poi|mountain_peak|landuse|housenumber|water_name|waterway::label|water::label|landcover::label|park).*',
+            clickHandlerLayerFilter: PRODUCTION ? undefined : '',
             // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_NONE,
             visible: opacity !== 0
         });

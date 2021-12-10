@@ -2,6 +2,7 @@
     import { startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
     import { estimateMagneticField } from '@nativescript-community/sensors/sensors';
     import { MapPos } from '@nativescript-community/ui-carto/core';
+    import { executeOnMainThread } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     function wrap(value, min, max) {
         let result;
@@ -20,8 +21,8 @@
         return result;
     }
     class SmoothCompassBehavior {
-        static DISTANCE_FACTOR = 0.0025;
-        static MAX_ACCELERATION = 0.0005;
+        static DISTANCE_FACTOR: number = 0.0025;
+        static MAX_ACCELERATION: number = 0.0005;
 
         distanceFactor;
         maxAcceleration;
@@ -89,14 +90,16 @@
                     currentHeading = newBearing;
                     lastHeadingTime = data.timestamp;
                 }
-                if (headingAccuracy !== data.accuracy) {
-                    // on ios accuracy is in degrees so lower is best
-                    // on android 0 - 4 with highest is best
-                    if (global.isAndroid) {
-                        headingAccuracy = 4 - data.accuracy;
-                    } else {
-                        headingAccuracy = data.accuracy;
+                // on ios accuracy is in degrees so lower is best
+                // on android 0 - 4 with highest is best
+                const newAccuracy = global.isAndroid ? 4 - data.accuracy : data.accuracy;
+                if (headingAccuracy !== newAccuracy) {
+                    if (DEV_LOG) {
+                        console.log('headingAccuracy', newAccuracy);
                     }
+                    executeOnMainThread(() => {
+                        headingAccuracy = newAccuracy;
+                    });
                 }
 
                 break;
@@ -119,8 +122,7 @@
 </script>
 
 <gridLayout {height}>
-    <label text={headingAccuracy + ''} verticalAlignment="top" />
     <svgview src="~/assets/svgs/needle_background.svg" stretch="aspectFit" horizontalAlignment="center" />
     <svgview src="~/assets/svgs/needle.svg" stretch="aspectFit" horizontalAlignment="center" rotate={-currentHeading} />
-    <label visibility={headingAccuracy >= 2 ? 'visible' : 'hidden'} class="alpimaps" text="alpimaps-compass-calibrate" horizontalAlignment="right" verticalAlignment="bottom" fontSize="80" />
+    <label visibility={headingAccuracy >= 2 ? 'visible' : 'hidden'} class="alpimaps" text="alpimaps-compass-calibrate" horizontalAlignment="right" verticalAlignment="bottom" fontSize={60} />
 </gridLayout>
