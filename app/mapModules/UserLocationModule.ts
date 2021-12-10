@@ -275,6 +275,7 @@ export default class UserLocationModule extends MapModule {
         console.log('askUserLocation', !!this.geoHandler);
         this.userFollow = true;
         await this.geoHandler.enableLocation();
+        console.log('set queryingLocation', !!this.geoHandler);
         mapStore.queryingLocation = true;
         this.geoHandler.dontWatchWhilePaused = false;
         this.startWatchLocation();

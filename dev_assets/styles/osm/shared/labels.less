@@ -2,21 +2,19 @@
 @name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
 @osm_icon: [nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]]?[nuti::osm-[class]]:[nuti::osm-symbol-dot]);
 
-#landcover[name!=null],
-#landuse[name!=null] {
-  [class=quarry][zoom>=14],
-  [class=industrial][zoom>=15],
-  [class=military][zoom>=15],
-  [zoom>=16] {
-    text-name: @name;
-    text-face-name: @mont;
-    text-fill: @building_label;
-    text-size: 10;
-	text-min-distance:150;
-    text-wrap-width: 10;
-	text-halo-fill: @peak_halo;
-	text-halo-radius: 1;
-  }  
+#landcover_name[class!=ice][zoom>=13],
+#landuse_name[zoom>=13]
+{
+	::label {
+		text-name: @name;
+		text-face-name: @mont;
+		text-fill: @building_label;
+		text-size: 10;
+		text-min-distance:150;
+		text-wrap-width: 10;
+		text-halo-fill: @peak_halo;
+		text-halo-radius: 1;
+	}
 }
 
 #water_name[class=ocean][zoom>=3][zoom<=9],
@@ -237,13 +235,8 @@
 	}
 }
 
-#water [name!=null][zoom>=9][way_pixels>40],
-#water [name!=null][zoom>=10][way_pixels>30],
-#water [name!=null][zoom>=11][way_pixels>20],
-#water [name!=null][zoom>=12][way_pixels>10],
-#water [name!=null][zoom>=13][way_pixels>2],
-#water [name!=null][zoom>=15][way_pixels>0],
-#landcover[class=ice][subclass=glacier][name!=null][zoom>=13]{
+#water_name[class=lake],
+#landcover_name[class=ice]{
 	::label {
 		text-name: @name;
 		text-face-name: @mont_it_md;
@@ -559,22 +552,20 @@
 		text-halo-radius: @poi_halo_radius;
 		text-fill: @poi-park-fill;
 	}
-	[zoom>=8] {
-		::text {
-			text-name: @name;
-			text-face-name: @mont_md;
-			text-placement: [nuti::texts3d];
-			text-fill: darken(@poi-park-fill, 30%);
-			text-halo-fill: @poi_halo;
-			text-halo-radius: @poi_halo_radius;
-			text-dy: @poi_label_dy;
-			text-size:@poi_national_park_label_width;
-			text-wrap-width: @poi_national_park_wrap_width;
-		}
+	[zoom>=8]::text {
+		text-name: @name;
+		text-face-name: @mont_md;
+		text-placement: [nuti::texts3d];
+		text-fill: darken(@poi-park-fill, 30%);
+		text-halo-fill: @poi_halo;
+		text-halo-radius: @poi_halo_radius;
+		text-dy: @poi_label_dy;
+		text-size:@poi_national_park_label_width;
+		text-wrap-width: @poi_national_park_wrap_width;
 	}
 }
 
-#building['nuti::buildings'>0][name!=null][zoom>=17]{
+#building_name['nuti::buildings'>0][zoom>=16]{
 	text-name: [name];
 	text-face-name: @mont;
 	text-fill: @housenumber;
