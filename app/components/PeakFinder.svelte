@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { HandlerType, Manager } from '@nativescript-community/gesturehandler';
     import { request } from '@nativescript-community/perms';
     import { estimateMagneticField, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
     import { MergedMBVTTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
@@ -7,7 +6,6 @@
     import { MapTilerOnlineTileDataSource } from '@nativescript-community/ui-carto/datasources/maptiler';
     import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { Drawer } from '@nativescript-community/ui-drawer';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { AWebView, LoadFinishedEventData, WebViewEventData } from '@nativescript-community/ui-webview';
     import { Folder, knownFolders, LoadEventData, ObservableArray, Page, path } from '@nativescript/core';
@@ -32,19 +30,21 @@
     export let rasterDataSource: TileDataSource<any, any>;
     let webView: NativeViewElementNode<AWebView>;
     let page: NativeViewElementNode<Page>;
-    let drawer: NativeViewElementNode<Drawer>;
     let collectionView1: NativeViewElementNode<CollectionView>;
     let collectionView2: NativeViewElementNode<CollectionView>;
     let selectedItem: Feature & { distance: number } = null;
+    let bottomSheetStepIndex = 0;
 
     const now = new Date();
     let secondsInDay = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
     const SCROLL_VIEW_TAG_1 = 9721;
     const SCROLL_VIEW_TAG_2 = 9722;
-    let simultaneousHandlersTags = [SCROLL_VIEW_TAG_1, SCROLL_VIEW_TAG_2];
+    let simultaneousHandlersTags = [];
+    // let simultaneousHandlersTags = [SCROLL_VIEW_TAG_1, SCROLL_VIEW_TAG_2];
     let currentAltitude;
     let selectedPageIndex = 0;
-    const consoleEnabled = !PRODUCTION;
+    const consoleEnabled = false;
+    // const consoleEnabled = !PRODUCTION;
 
     function truncate(str, maxlength) {
         return str.length > maxlength ? str.slice(0, maxlength - 1) + '…' : str;
@@ -83,14 +83,13 @@
         }
         shown = true;
         if (webView) {
-            // webView.nativeView.src = 'http://10.0.2.2:8081/example/?generateColor=true&shadows=true&dayNightCycle=true';
+            // webView.nativeView.src = 'http://192.168.1.51:3000/?stats=true';
             webView.nativeView.src = '~/assets/peakfinder/index.html';
         }
     }
 
     function webviewLoaded(args: LoadEventData) {
         const webview = args.object as AWebView;
-
 
         webview.once(AWebView.loadFinishedEvent, (args: LoadFinishedEventData) => {
             const startValues = {
@@ -104,9 +103,7 @@
             listView2Items.forEach((item) => {
                 startValues[item.key || item['method']] = item.value as number;
             });
-            args.object.executeJavaScript(`
-webapp.callMethods(${JSON.stringify(startValues)});
-`);
+            args.object.executeJavaScript(`webapp.callMethods(${JSON.stringify(startValues)});`);
         });
 
         webview.on('requestPermissions', async (args: any) => {
@@ -126,7 +123,6 @@ webapp.callMethods(${JSON.stringify(startValues)});
             const res = await request(wantedPerssions[0]);
             args.callback(res[0] === 'authorized');
         });
-
     }
 
     // onMount(() => {
@@ -146,7 +142,9 @@ webapp.callMethods(${JSON.stringify(startValues)});
     // });
 
     function callJSFunction(method: string, ...args) {
-        console.log('callJSFunction', method, `webapp.${method}(${args ? args.map((s) => (typeof s === 'string' ? `"${s}"` : s)).join(',') : ''})`);
+        // if (DEV_LOG) {
+        //     console.log('callJSFunction', method, `webapp.${method}(${args ? args.map((s) => (typeof s === 'string' ? `"${s}"` : s)).join(',') : ''})`);
+        // }
         const nView = webView?.nativeView;
         if (!nView) {
             return;
@@ -252,7 +250,7 @@ webapp.callMethods(${JSON.stringify(startValues)});
             type: 'checkbox',
             title: lc('shadows'),
             shouldSave: true,
-            value: getBoolean('peakfinder_shadows', false),
+            value: getBoolean('peakfinder_shadows', true),
             key: 'shadows'
         },
         {
@@ -277,7 +275,7 @@ webapp.callMethods(${JSON.stringify(startValues)});
             min: 10,
             max: 80,
             shouldSave: true,
-            value: getNumber('peakfinder_cameraFOVFactor', 28),
+            value: getNumber('peakfinder_cameraFOVFactor', 28.605121612548828),
             key: 'fovFactor',
             formatter: formatDistance,
             title: lc('camera_fov')
@@ -360,7 +358,7 @@ webapp.callMethods(${JSON.stringify(startValues)});
             decimalFactor: 100,
             formatter: (f) => f.toFixed(2),
             key: 'depthBiais',
-            value: getNumber('peakfinder_depthBiais', 0.44),
+            value: getNumber('peakfinder_depthBiais', 0.23),
             title: lc('depth_biais')
         },
         {
@@ -371,19 +369,8 @@ webapp.callMethods(${JSON.stringify(startValues)});
             decimalFactor: 100,
             key: 'depthMultiplier',
             formatter: (f) => f.toFixed(2),
-            value: getNumber('peakfinder_depthMultiplier', 110),
+            value: getNumber('peakfinder_depthMultiplier', 11),
             title: lc('depth_multiplier')
-        },
-        {
-            type: 'slider',
-            min: 0,
-            max: 40,
-            shouldSave: true,
-            decimalFactor: 100,
-            key: 'depthPostMultiplier',
-            formatter: (f) => f.toFixed(2),
-            value: getNumber('peakfinder_depthPostMultiplier', 1),
-            title: lc('depth_post_multiplier')
         },
         {
             type: 'slider',
@@ -404,48 +391,6 @@ webapp.callMethods(${JSON.stringify(startValues)});
         }
     ]);
 
-    function drawerTranslationFunction(side, width, value, delta, progress) {
-        if (side === 'left') {
-            const result = {
-                mainContent: {
-                    translateX: 0
-                },
-                [side + 'Drawer']: {
-                    translateX: side === 'left' ? -value : value
-                }
-                // backDrop: {
-                //     translateX: 0,
-                //     opacity: 0,
-                // },
-            } as any;
-            if (side === 'left') {
-                result.backDrop = {
-                    translateX: 0,
-                    opacity: progress
-                };
-            }
-            return result;
-        } else if (side === 'bottom') {
-            const result = {
-                mainContent: {
-                    translateY: 0
-                },
-                [side + 'Drawer']: {
-                    translateY: value
-                }
-                // backDrop: {
-                //     translateX: 0,
-                //     opacity: 0,
-                // },
-            } as any;
-            result.backDrop = {
-                translateY: 0,
-                opacity: 0
-            };
-            return result;
-        }
-    }
-
     function selectTemplate(item, index, items) {
         // Your logic here
         return item.type;
@@ -456,16 +401,16 @@ webapp.callMethods(${JSON.stringify(startValues)});
     $: currentAltitude = position.altitude;
     $: updateElevation(currentAltitude);
 
-    $: {
-        if (collectionView1) {
-            const manager = Manager.getInstance();
-            const gestureHandler = manager.createGestureHandler(HandlerType.NATIVE_VIEW, SCROLL_VIEW_TAG_1, {
-                shouldActivateOnStart: true,
-                disallowInterruption: false
-            });
-            gestureHandler.attachToView(collectionView1.nativeView);
-        }
-    }
+    // $: {
+    //     if (collectionView1) {
+    //         const manager = Manager.getInstance();
+    //         const gestureHandler = manager.createGestureHandler(HandlerType.NATIVE_VIEW, SCROLL_VIEW_TAG_1, {
+    //             shouldActivateOnStart: true,
+    //             disallowInterruption: false
+    //         });
+    //         gestureHandler.attachToView(collectionView1.nativeView);
+    //     }
+    // }
 
     function onFeatureSelected(event) {
         selectedItem = event.data;
@@ -475,7 +420,6 @@ webapp.callMethods(${JSON.stringify(startValues)});
     }
 
     function onSensorsToggle(event) {
-        console.log('onSensorsToggle', event.data);
         if (event.data) {
             startHeadingListener();
         } else {
@@ -521,7 +465,7 @@ webapp.callMethods(${JSON.stringify(startValues)});
             } else {
                 callJSFunction(item.method, newValue);
             }
-            const index = items.findIndex((i) => i.method === item.method);
+            const index = items.findIndex((i) => i === item);
             item.value = newValue;
             items.setItem(index, item);
         } catch (error) {
@@ -597,10 +541,13 @@ webapp.callMethods(${JSON.stringify(startValues)});
         client.originalClient = originalClient;
         return client;
     }
+    function itemIdGenerator(item, i) {
+        return i;
+    }
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
-    <drawer bind:this={drawer} gestureMinDist={60} bottomClosedDrawerAllowDraging={false} simultaneousHandlers={simultaneousHandlersTags} {shouldPan} translationFunction={drawerTranslationFunction}>
+    <bottomsheet on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)} steps={[0, 300]} stepIndex={bottomSheetStepIndex} panGestureOptions={{ failOffsetXEnd: 50, minDist: 150 }} {shouldPan}>
         <gridLayout android:marginBottom={$navigationBarHeight} on:layoutChanged={onLayoutChanged}>
             <awebview
                 bind:this={webView}
@@ -608,6 +555,7 @@ webapp.callMethods(${JSON.stringify(startValues)});
                 createWebViewClient={createCustomWebViewClient}
                 webRTC={true}
                 normalizeUrls={false}
+                domStorage={true}
                 mediaPlaybackRequiresUserAction={false}
                 debugMode={consoleEnabled}
                 webConsoleEnabled={consoleEnabled}
@@ -652,7 +600,7 @@ webapp.callMethods(${JSON.stringify(startValues)});
             <stacklayout verticalAlignment="bottom" horizontalAlignment="left" orientation="horizontal" marginLeft={5}>
                 <button color={primaryColor} on:tap={(e) => toggleSetting('mapMap')} class="small-floating-btn" text="mdi-map" />
                 <button color={primaryColor} on:tap={(e) => (listeningForHeading ? stopHeadingListener() : startHeadingListener())} class="small-floating-btn" text="mdi-compass" />
-                <button color={primaryColor} on:tap={(e) => drawer.nativeView.toggle('bottom')} class="small-floating-btn" text="mdi-cog" />
+                <button color={primaryColor} on:tap={(e) => (bottomSheetStepIndex = 1 - bottomSheetStepIndex)} class="small-floating-btn" text="mdi-cog" />
             </stacklayout>
             <mdactivityindicator visibility={listeningForHeading ? 'visible' : 'collapsed'} verticalAlignment="bottom" horizontalAlignment="right" busy={true} />
             <label text={currentAltitude?.toFixed(0) + 'm'} horizontalAlignment="right" verticalAlignment="bottom" fontSize="12" color={darkMode ? textColorDark : textColorLight} paddingRight={10} />
@@ -666,18 +614,12 @@ webapp.callMethods(${JSON.stringify(startValues)});
                 marginBottom={100}
             />
         </gridLayout>
-        <gridlayout prop:bottomDrawer height={300} rows="30,*" columns="*,*" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
+        <gridlayout prop:bottomSheet height={300} rows="30,*" columns="*,*" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
             <button variant="text" class="mdi" fontSize={16} width={undefined} text="mdi-cog" on:tap={() => (selectedPageIndex = 0)} />
             <button variant="text" col={1} class="mdi" fontSize={16} width={undefined} text="mdi-bug" on:tap={() => (selectedPageIndex = 1)} />
             <pager colSpan={2} row={1} disableSwipe={false} selectedIndex={selectedPageIndex} on:selectedIndexChange={(e) => (selectedPageIndex = e['value'])}>
                 <pageritem>
-                    <collectionview
-                        bind:this={collectionView1}
-                        items={listView1Items}
-                        itemTemplateSelector={selectTemplate}
-                        itemIdGenerator={(item, i) => i}
-                        android:marginBottom={$navigationBarHeight}
-                    >
+                    <collectionview bind:this={collectionView1} items={listView1Items} itemTemplateSelector={selectTemplate} {itemIdGenerator} android:marginBottom={$navigationBarHeight}>
                         <Template let:item key="checkbox">
                             <checkbox text={item.title} checked={item.value} on:checkedChange={(e) => onCheckBox(item, e.value)} />
                         </Template>
@@ -698,13 +640,7 @@ webapp.callMethods(${JSON.stringify(startValues)});
                     </collectionview>
                 </pageritem>
                 <pageritem>
-                    <collectionview
-                        bind:this={collectionView2}
-                        items={listView2Items}
-                        itemTemplateSelector={selectTemplate}
-                        itemIdGenerator={(item, i) => i}
-                        android:marginBottom={$navigationBarHeight}
-                    >
+                    <collectionview bind:this={collectionView2} items={listView2Items} itemTemplateSelector={selectTemplate} {itemIdGenerator} android:marginBottom={$navigationBarHeight}>
                         <Template let:item key="checkbox">
                             <checkbox text={item.title} checked={item.value} on:checkedChange={(e) => onCheckBox(item, e.value)} />
                         </Template>
@@ -726,5 +662,5 @@ webapp.callMethods(${JSON.stringify(startValues)});
                 </pageritem>
             </pager>
         </gridlayout>
-    </drawer>
+    </bottomsheet>
 </page>
