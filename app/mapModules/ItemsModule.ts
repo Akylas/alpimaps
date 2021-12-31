@@ -247,7 +247,7 @@ export default class ItemsModule extends MapModule {
     async getRoutePositions(item: IItem) {
         const layer = item.layer;
         const properties = item.properties;
-        const projection = layer.getDataSource().getProjection();
+        const projection = layer.dataSource.getProjection();
         const mapProjection = mapContext.getProjection();
         const searchService = new VectorTileSearchService({
             minZoom: 14,
@@ -261,10 +261,11 @@ export default class ItemsModule extends MapModule {
         const boundsGeo = new PolygonGeometry<LatLonKeys>({
             poses: [
                 { lat: extent[1], lon: extent[0] },
-                { lat: extent[3], lon: extent[2] }
+                { lat: extent[3], lon: extent[0] },
+                { lat: extent[3], lon: extent[2] },
+                { lat: extent[1], lon: extent[2] }
             ]
         });
-        // console.log('boundsGeo', boundsGeo.getBounds());
         const featureCollection = await new Promise<VectorTileFeatureCollection>((resolve) =>
             searchService.findFeatures(
                 {
@@ -275,7 +276,11 @@ export default class ItemsModule extends MapModule {
                 resolve
             )
         );
+        const count = featureCollection.getFeatureCount();
         console.log('found', featureCollection.getFeatureCount());
+        if (count === 0) {
+            return null;
+        }
         if (!writer) {
             writer = new GeoJSONGeometryWriter<LatLonKeys>({
                 sourceProjection: projection
@@ -289,7 +294,7 @@ export default class ItemsModule extends MapModule {
         const features = geojson.features;
 
         const listCoordinates: GeoJSON.Position[][] = [];
-        features.forEach((f) => {
+        features.forEach((f, i) => {
             if (f.geometry.type === 'MultiLineString') {
                 listCoordinates.push(...f.geometry.coordinates);
             } else {
@@ -300,25 +305,25 @@ export default class ItemsModule extends MapModule {
         console.log('listCoordinate s', listCoordinates.length);
         const sorted = [];
 
-        // listCoordinates.forEach((coords) => {
-        //     // try to find the current sorted one where the end point is the closest to our start point.
-        //     const start = coords[0];
-        //     let minDist = Number.MAX_SAFE_INTEGER;
-        //     let index = -1;
-        //     sorted.forEach((s2, i) => {
-        //         const end = s2[s2.length - 1];
-        //         const distance = getDistanceSimple([start[1], start[0]], [end[1], end[0]]);
-        //         if (distance < minDist) {
-        //             minDist = distance;
-        //             index = i;
-        //         }
-        //     });
-        //     if (index < sorted.length - 1) {
-        //         sorted.splice(index + 1, 0, coords);
-        //     } else {
-        //         sorted.push(coords);
-        //     }
-        // });
+        listCoordinates.forEach((coords) => {
+            // try to find the current sorted one where the end point is the closest to our start point.
+            const start = coords[0];
+            let minDist = Number.MAX_SAFE_INTEGER;
+            let index = -1;
+            sorted.forEach((s2, i) => {
+                const end = s2[s2.length - 1];
+                const distance = getDistanceSimple([start[1], start[0]], [end[1], end[0]]);
+                if (distance < minDist) {
+                    minDist = distance;
+                    index = i;
+                }
+            });
+            if (index < sorted.length - 1) {
+                sorted.splice(index + 1, 0, coords);
+            } else {
+                sorted.push(coords);
+            }
+        });
         // now let s try to find the right order.
         // console.log('test', sorted.length);
         // console.log(
@@ -353,28 +358,24 @@ export default class ItemsModule extends MapModule {
         // if (features.length > 0) {
         //     sorted.push(...features);
         // }
-        const coordinates = [];
-        listCoordinates.forEach((s, index) => {
-            // if (index === 0) {
-            coordinates.push(...s);
-            // } else {
-            // coordinates.push(...s.geometry.coordinates);
-            // }
-        });
+        // const coordinates = [];
+        // listCoordinates.forEach((s, index) => {
+        //     // if (index === 0) {
+        //     coordinates.push(...s);
+        //     // } else {
+        //     // coordinates.push(...s.geometry.coordinates);
+        //     // }
+        // });
+
         return {
             type: 'LineString' as any,
-            coordinates
+            coordinates: sorted.flat()
         };
         // console.log('coordinates', coordinates.length);
         // const reader = new GeoJSONGeometryReader({
         //     targetProjection: mapProjection
         // });
-        // const geometry = reader.readGeometry(
-        //     JSON.stringify({
-        //         type: 'LineString',
-        //         coordinates
-        //     })
-        // );
+
         // return geometry as LineGeometry<LatLonKeys>;
     }
     async saveItem(item: Mutable<IItem>, styleOptions?: MarkerStyleBuilderOptions | PointStyleBuilderOptions | LineStyleBuilderOptions) {
@@ -383,39 +384,17 @@ export default class ItemsModule extends MapModule {
             if (properties?.route) {
                 if (!item.geometry && properties.route.osmid) {
                     item.geometry = await this.getRoutePositions(item);
+                    if (!item.geometry) {
+                        return item;
+                    }
                 }
-                // if (!item.route.id) {
-                //     item.route = await this.routeRepository.createRoute({ ...item.route, id: Date.now() + '' });
-                // }
-                // item.routeId = item.route.id;
-                // item.styleOptions = {
-                //     color: darkColor.setAlpha(150).hex,
-                //     joinType: LineJointType.ROUND,
-                //     endType: LineEndType.ROUND,
-                //     width: 3,
-                //     clickWidth: 10,
-                //     ...item.styleOptions
-                // };
-                // } else {
-                //     item.styleOptions = {
-                //         color: 'yellow',
-                //         size: 20,
-                //         ...item.styleOptions
-                //     };
             }
             if (!item.id) {
-                item = await this.itemRepository.createItem({ ...item, id: item.properties.id || Date.now() + '' });
+                const id = item.properties.id || Date.now();
+                item.properties.id = id;
+                item = await this.itemRepository.createItem({ ...item, id });
             }
             this.addItemToLayer(item, true);
-
-            // const selectedElement = item.vectorElement;
-            // if (selectedElement) {
-            //     Object.assign(selectedElement, item.styleOptions);
-            //     // this.localVectorDataSource.add(selectedElement);
-            //     // item.vectorElement = selectedElement;
-            // } else {
-            //     item.vectorElement = this.addItemToLayer(item as Item);
-            // }
             return item; // return the first one
         } catch (err) {
             showError(err);
