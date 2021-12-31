@@ -426,7 +426,7 @@
         if (clickType === ClickType.LONG) {
             featureData.layer = featureLayerName;
             // executeOnMainThread(() => {
-                addWayPoint(position, featureData);
+            addWayPoint(position, featureData);
             // });
             return true;
         }
@@ -436,7 +436,7 @@
         const { clickType, position } = e.data;
         if (clickType === ClickType.LONG) {
             // executeOnMainThread(() => {
-                addWayPoint(position);
+            addWayPoint(position);
             // });
             return true;
         }
@@ -739,6 +739,13 @@
                 if (fIndex >= 0) {
                     features.splice(fIndex, 1);
                 }
+                if (index === waypoints.length) {
+                    const lastPoint = waypoints.getItem(waypoints.length - 1);
+                    if (!lastPoint?.properties.isStop) {
+                        lastPoint.properties.isStop = true;
+                        waypoints.setItem(waypoints.length - 1, lastPoint);
+                    }
+                }
                 updateWayPointLines();
                 clearCurrentRoutes(false);
                 updateGeoJSONLayer();
@@ -808,8 +815,8 @@
                     </gridlayout>
                 </Template>
             </collectionview>
-            <button row={1} col={1} variant="text" class="icon-btn-white" text="mdi-swap-vertical" on:tap={() => reversePoints()} isEnabled={nbWayPoints > 1}/>
-            <gridlayout colSpan={2} rows="45" columns="auto,auto,auto,auto,auto,auto,auto,*,auto,auto" row={2} visibility={showOptions ? 'visible' : 'collapsed'} >
+            <button row={1} col={1} variant="text" class="icon-btn-white" text="mdi-swap-vertical" on:tap={() => reversePoints()} isEnabled={nbWayPoints > 1} />
+            <gridlayout colSpan={2} rows="45" columns="auto,auto,auto,auto,auto,auto,auto,*,auto,auto" row={2} visibility={showOptions ? 'visible' : 'collapsed'}>
                 <button
                     variant="text"
                     class="icon-btn-white"
