@@ -1,8 +1,3 @@
-
-Map {
-  background-color: transparent;
-  font-directory: url(../fonts/);
-}
 @mont: 'DIN Pro Regular';
 
 @standard-halo-radius: 1;

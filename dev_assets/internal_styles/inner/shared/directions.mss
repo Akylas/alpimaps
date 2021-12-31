@@ -8,6 +8,14 @@
 			line-join: round;
 			line-cap: round;
 			line-width: 3;
+			text-name: [text];
+			text-placement: line;
+			text-wrap-before: true;
+			text-face-name: @mont;
+			text-size: 10;
+			text-halo-fill: @route_label_halo;
+			text-halo-radius: @route_label_halo_radius;
+			text-dy: @route_text_dy;
 		}
 		[class!='waypointline'] {
 			::casing {
