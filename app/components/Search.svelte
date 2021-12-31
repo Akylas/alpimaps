@@ -4,8 +4,6 @@
     import { ClusterElementBuilder } from '@nativescript-community/ui-carto/layers/cluster';
     import { ClusteredVectorLayer } from '@nativescript-community/ui-carto/layers/vector';
     import type { SearchRequest } from '@nativescript-community/ui-carto/search';
-    import { VectorElementVector } from '@nativescript-community/ui-carto/vectorelements';
-    import { Marker } from '@nativescript-community/ui-carto/vectorelements/marker';
     import { PointStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/point';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import type { Side } from '@nativescript-community/ui-drawer';
@@ -21,7 +19,7 @@
     import { l, slc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
-    import type { Address, IItem as Item } from '~/models/Item';
+    import type { IItem as Item } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { GeoResult, packageService } from '~/services/PackageService';
     import { showError } from '~/utils/error';
