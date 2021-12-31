@@ -566,10 +566,12 @@ module.exports = (env, params = {}) => {
             new WebpackShellPluginNext({
                 onBuildStart: {
                     scripts: [
-                        './css2xml dev_assets/styles/osm/streets.json dev_assets/styles/osmxml/streets.xml',
-                        './css2xml dev_assets/styles/osm/osm.json dev_assets/styles/osmxml/osm.xml',
-                        './css2xml dev_assets/styles/osm/outdoors.json dev_assets/styles/osmxml/outdoors.xml',
-                        'cd ./dev_assets/styles/osmxml && zip -r ../../../app/assets/styles/osm.zip ./* && cd -'
+                        './css2xml dev_assets/styles/osm/streets.json dev_assets/styles/osmxml_cleaned/streets.xml',
+                        './css2xml dev_assets/styles/osm/osm.json dev_assets/styles/osmxml_cleaned/osm.xml',
+                        './css2xml dev_assets/styles/osm/outdoors.json dev_assets/styles/osmxml_cleaned/outdoors.xml',
+                        'cd ./dev_assets/styles/osmxml_cleaned && zip -r ../../../app/assets/styles/osm.zip ./* && cd -',
+                        './css2xml dev_assets/internal_styles/inner/voyager.json dev_assets/internal_styles/inner_cleaned/voyager.xml',
+                        'cd ./dev_assets/internal_styles/inner_cleaned && zip -r ../../../app/assets/internal_styles/inner.zip ./* && cd -'
                     ],
                     blocking: true,
                     parallel: false
