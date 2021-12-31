@@ -49,7 +49,7 @@ export interface RouteProfile {
     colors?: { d: number; color: string }[];
 }
 export interface Route {
-    osmid?: number;
+    osmid?: string;
     totalTime: number;
     totalDistance: number;
 }
@@ -109,7 +109,7 @@ export class ItemRepository extends CrudRepository<Item> {
     async createTables() {
         return this.database.query(sql`
 			CREATE TABLE IF NOT EXISTS "Items" (
-				id TEXT PRIMARY KEY NOT NULL,
+				id BIGINT PRIMARY KEY NOT NULL,
 				properties TEXT,
                 geometry TEXT NOT NULL
 			);
