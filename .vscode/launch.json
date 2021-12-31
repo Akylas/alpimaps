@@ -33,7 +33,7 @@
             "sourceMapPathOverrides": {
                 "webpack:///*": "${workspaceRoot}/app/*"
             },
-            "tnsArgs":["--env.sourceMap", "--emulator", "--env.emulator", "--env.es5", "--no-hmr"]
+            "tnsArgs":["--env.sourceMap", "--emulator", "--no-hmr"]
         },
         {
             "name": "Attach on Android",
