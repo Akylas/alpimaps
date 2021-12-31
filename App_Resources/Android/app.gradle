@@ -1,10 +1,8 @@
 
-project.ext.multiDexEnabled = true
 android { 
 
   defaultConfig {  
     compileSdkVersion 31
-    multiDexEnabled true
     minSdkVersion 19
     targetSdkVersion 31
     versionCode 216
@@ -30,6 +28,7 @@ android {
   }  
   buildTypes { // THIS CAUSES RELEASE MODE ERROR ON APP LAUNCH
     release {
+      multiDexEnabled false
       // Enables code shrinking, obfuscation, and optimization for only
       // your project's release build type.
       minifyEnabled true
@@ -52,7 +51,10 @@ android {
       jniDebuggable false
       renderscriptDebuggable false
     }
-  } 
+    debug {
+      multiDexEnabled true
+    }
+  }
   // packagingOptions {
   //     exclude '/res/values-v21/<file_to_exclude>'
   // }
@@ -75,12 +77,12 @@ dependencies {
 //     }
 // }
 
-task createProguard {
-    dependsOn 'buildMetadata'
-    doLast {
-        exec {
-            workingDir "$USER_PROJECT_ROOT"
-            commandLine 'node', 'scripts/createProguard.js'
-        }
-    }
-}
+// task createProguard {
+//     dependsOn 'buildMetadata'
+//     doLast {
+//         exec {
+//             workingDir "$USER_PROJECT_ROOT"
+//             commandLine 'node', 'scripts/createProguard.js'
+//         }
+//     }
+// }
