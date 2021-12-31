@@ -20,7 +20,10 @@
             "default": "en"
         },
         "selected_id": {
-            "default": ""
+            "default": -1
+        },
+        "selected_osmid": {
+            "default": -1
         },
         "texts3d": {
             "default": "nutibillboard",
