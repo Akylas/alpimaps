@@ -1,7 +1,8 @@
 <script lang="ts" context="module">
     export interface OptionType {
         name: string;
-        data?: string;
+        isPick?: boolean;
+        [k: string]: any;
     }
 </script>
 
@@ -9,6 +10,8 @@
     import { Template } from 'svelte-native/components';
     import { closeBottomSheet } from './bottomsheet';
     import ListItem from './ListItem.svelte';
+    import { openFilePicker } from '@nativescript-community/ui-document-picker';
+    import { File } from '@nativescript/core';
 
     export let options: OptionType[];
 
@@ -18,8 +21,27 @@
         closeBottomSheet(value);
     }
 
-    function onTap(item: OptionType, args) {
-        close(item);
+    async function onTap(item: OptionType, args) {
+        if (item.isPick) {
+            try {
+                const result = await openFilePicker({
+                    extensions: ['file/*'],
+                    multipleSelection: false,
+                    pickerMode: 0
+                });
+                console.log('openFilePicker', result, result.android.toString(), File.exists(result.files[0]))
+                if (File.exists(result.files[0])) {
+                    const file = File.fromPath(result.files[0]);
+                    close({ name: file.name, data: { url: file.path }, isPick: true });
+                } else {
+                    close(null);
+                }
+            } catch (err) {
+                close(null);
+            }
+        } else {
+            close(item);
+        }
     }
 </script>
 
