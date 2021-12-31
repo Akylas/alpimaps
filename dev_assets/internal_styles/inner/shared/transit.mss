@@ -4,7 +4,7 @@
     line-width: linear([view::zoom], (12,2), (13,2.5), (19, 4.5));
     line-color: @lineColor;
     line-join: round;
-    ::text {
+    ::label {
         text-name: [route_short_name]? [route_short_name]:[NUMERO];
         text-fill: gray;
         text-size:linear([view::zoom], (13, 7), (16, 12));
