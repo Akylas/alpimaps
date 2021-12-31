@@ -64,7 +64,7 @@ export interface MapContext {
     unselectItem: () => void;
     getCurrentLanguage: () => string;
     getSelectedItem: () => IItem;
-    getLayers: (layerId: LayerType) => { layer: VectorTileLayer; id: string }[];
+    getLayers: (layerId?: LayerType) => { layer: VectorTileLayer; id: string }[];
     addLayer: (layer: Layer<any, any>, layerId: LayerType) => number;
     insertLayer: (layer: Layer<any, any>, layerId: LayerType, index: number) => void;
     removeLayer: (layer: Layer<any, any>, layerId: LayerType) => void;
