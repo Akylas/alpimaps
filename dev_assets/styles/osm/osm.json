@@ -31,7 +31,7 @@
         "shared/labels.less"
     ],
     "nutiparameters": {
-        "_clickhandlerlayerfilter":"(poi|mountain_peak|landuse|housenumber|water_name|water|landuse::label|landcover::label|park).*",
+        "_clickhandlerlayerfilter":".*::(icon|label)",
         "lang": {
             "default": "en"
         },
