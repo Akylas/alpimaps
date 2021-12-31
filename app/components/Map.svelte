@@ -19,7 +19,7 @@
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
     import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
-    import { Drawer } from '@nativescript-community/ui-drawer';
+    // import { Drawer } from '@nativescript-community/ui-drawer';
     import { action } from '@nativescript-community/ui-material-dialogs';
     import { Brightness } from '@nativescript/brightness';
     import { AndroidApplication, Application, Page, profile, Utils } from '@nativescript/core';
@@ -89,7 +89,7 @@
     let bottomSheetInner: BottomSheetInner;
     let mapScrollingWidgets: MapScrollingWidgets;
     let locationInfoPanel: LocationInfoPanel;
-    let drawer: NativeViewElementNode<Drawer>;
+    // let drawer: NativeViewElementNode<Drawer>;
     let searchView: Search;
     const mapContext = getMapContext();
 
@@ -314,7 +314,7 @@
             Application.android.on(AndroidApplication.activityBackPressedEvent, onAndroidBackButton);
         }
         setMapContext({
-            drawer: drawer.nativeView,
+            // drawer: drawer.nativeView,
             getMap: () => cartoMap,
             getMainPage: () => page,
             getProjection: () => projection,
@@ -344,7 +344,7 @@
                 // if (side === 'bottom') {
                 //     await layersMenu.loadRightMenuView();
                 // }
-                drawer.nativeView.toggle(side as any);
+                // drawer.nativeView.toggle(side as any);
             },
 
             showOptions: showOptions,
@@ -418,7 +418,7 @@
         }
     }
     function reloadMapStyle() {
-        setMapStyle(currentLayerStyle, true);
+        mapContext.runOnModules('reloadMapStyle');
     }
 
     function getOrCreateLocalVectorLayer() {
@@ -577,7 +577,7 @@
     }) {
         didIgnoreAlreadySelected = false;
         if (isFeatureInteresting) {
-            let isCurrentItem = item !== $selectedItem;
+            let isCurrentItem = item === $selectedItem;
             if (DEV_LOG) {
                 console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons);
             }
@@ -586,14 +586,17 @@
             }
             const route = item?.properties?.route;
             if (setSelected && route) {
-                if (item.properties.route.osmid) {
-                    selectedOSMId = item.properties.route.osmid + '';
-                    mapContext.innerDecoder.setStyleParameter('selected_id', item.properties.route.osmid + '');
-                } else if (item.properties.id) {
+                console.log('selected_id', typeof item.properties.route.osmid, item.properties.route.osmid, typeof item.properties.id, item.properties.id, setSelected);
+                if (item.properties.id !== undefined) {
                     selectedId = item.properties.id;
-                    mapContext.innerDecoder.setStyleParameter('selected_id', item.properties.id);
+                    mapContext.innerDecoder.setStyleParameter('selected_id', selectedId + '');
+                    mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
+                } else if (item.properties.route.osmid !== undefined) {
+                    selectedOSMId = item.properties.route.osmid;
+                    mapContext.innerDecoder.setStyleParameter('selected_osmid', selectedOSMId + '');
+                    mapContext.innerDecoder.setStyleParameter('selected_id', '0');
                 }
-                // console.log('selectedOSMId', selectedOSMId);
+// console.log('selectedOSMId', selectedOSMId);
                 // if (!selectedRouteLine) {
                 //     getOrCreateLocalVectorLayer();
                 //     selectedRouteLine = mapContext.mapModule('items').createLocalLine(item, {
@@ -654,13 +657,13 @@
                     selectedPosMarker.position = position;
                     selectedPosMarker.visible = true;
                 }
-                if (setSelected && selectedOSMId) {
-                    selectedOSMId = null;
-                    mapContext.innerDecoder.setStyleParameter('selected_id', '');
+                if (setSelected && selectedOSMId !== undefined) {
+                    selectedOSMId = undefined;
+                    mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
                 }
-                if (selectedId) {
-                    selectedId = null;
-                    mapContext.innerDecoder.setStyleParameter('selected_id', '');
+                if (setSelected && selectedId !== undefined) {
+                    selectedId = undefined;
+                    mapContext.innerDecoder.setStyleParameter('selected_id', '0');
                 }
             }
             if (setSelected) {
@@ -745,7 +748,7 @@
             min: { x: 0, y: Utils.layout.toDevicePixels(90 + topTranslationY) },
             max: { x: page.nativeView.getMeasuredWidth(), y: page.nativeView.getMeasuredHeight() - Utils.layout.toDevicePixels($navigationBarHeight - mapTranslation) }
         };
-        if (item.properties.zoomBounds) {
+        if (item.properties?.zoomBounds) {
             const zoomLevel = getBoundsZoomLevel(item.properties.zoomBounds, {
                 width: Screen.mainScreen.widthDIPs,
                 height: Screen.mainScreen.widthDIPs
@@ -753,7 +756,7 @@
             if (forceZoomOut || cartoMap.zoom < zoomLevel) {
                 cartoMap.moveToFitBounds(item.properties.zoomBounds, screenBounds, false, true, false, duration);
             }
-        } else if (item.properties && item.properties.extent) {
+        } else if (item.properties?.extent) {
             let extent: [number, number, number, number] = item.properties.extent as any;
             if (typeof extent === 'string') {
                 extent = JSON.parse(`[${extent}]`);
@@ -781,14 +784,14 @@
             //     localVectorDataSource.remove(selectedRouteInstructionsGroup);
             //     selectedRouteInstructionsGroup = null;
             // }
-            if (selectedOSMId) {
-                selectedOSMId = null;
-                mapContext.innerDecoder.setStyleParameter('selected_id', '');
+            if (selectedOSMId !== undefined) {
+                selectedOSMId = undefined;
+                mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
                 // setStyleParameter('selected_id', '');
             }
-            if (selectedId) {
-                selectedId = null;
-                mapContext.innerDecoder.setStyleParameter('selected_id', '');
+            if (selectedId !== undefined) {
+                selectedId = undefined;
+                mapContext.innerDecoder.setStyleParameter('selected_id', '0');
             }
             // if (item.route) {
             //     const vectorElement = item.vectorElement as Line;
@@ -909,9 +912,9 @@
         const { clickType, position, nearestColor, layer } = data;
     }
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
-        const { clickType, position, featureLayerName, featureData, featurePosition, featureGeometry, layer } = data;
+        const { clickType, featureId, position, featureLayerName, featureData, featurePosition, featureGeometry, layer } = data;
         if (DEV_LOG) {
-            console.log('onVectorTileClicked', clickType, featureLayerName, featureData.class, featureData.subclass, featureData, featurePosition);
+            console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, featurePosition);
         }
 
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data);
@@ -936,16 +939,19 @@
             // ) {
             //     return false;
             // }
+            // featureData.id = featureId;
+            const currentProperties = $selectedItem?.properties;
+            const currentGeometry = $selectedItem?.geometry;
             if (
                 !!$selectedItem &&
                 (didIgnoreAlreadySelected ||
-                    (featureData.osmid && $selectedItem.properties && featureData.osmid === $selectedItem.properties.osmid) ||
-                    ($selectedItem.properties &&
-                        featureData.name === $selectedItem.properties.name &&
-                        $selectedItem.geometry &&
-                        $selectedItem.geometry.type === 'Point' &&
-                        $selectedItem.geometry.coordinates[1] === featurePosition.lat &&
-                        $selectedItem.geometry.coordinates[0] === featurePosition.lon))
+                    (currentProperties && featureData.osmid && featureData.osmid === currentProperties.osmid) ||
+                    featureId === currentProperties.id ||
+                    (featureData.name === currentProperties.name &&
+                        currentGeometry &&
+                        currentGeometry.type === 'Point' &&
+                        currentGeometry.coordinates[1] === featurePosition.lat &&
+                        currentGeometry.coordinates[0] === featurePosition.lon))
             ) {
                 // console.log(
                 //     'onVectorTileClicked ignoring already selected item',
@@ -963,7 +969,7 @@
                 }
                 selectedRoutes = selectedRoutes || [];
                 handleSelectedRouteTimer = setTimeout(handleSelectedRoutes, 10);
-                if (selectedRoutes.findIndex((s) => s.featureData.osmid === featureData.osmid || s.featureData.ref === featureData.ref) === -1) {
+                if (selectedRoutes.findIndex((s) => s.featureData.osmid === featureData.osmid) === -1) {
                     selectedRoutes.push({ featurePosition, featureData, layer });
                     ignoreNextMapClick = true;
                 }
@@ -1276,6 +1282,9 @@
     }
 
     function getLayers(layerId: LayerType) {
+        if (!layerId) {
+            return addedLayers.slice();
+        }
         const layerIndex = LAYERS_ORDER.indexOf(layerId);
         const startIndex = addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) === layerIndex);
         const endIndex = addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) > layerIndex);
@@ -1663,105 +1672,99 @@
 </script>
 
 <page bind:this={page} actionBarHidden={true} backgroundColor="#E3E1D3" on:navigatingTo={onNavigatingTo} on:navigatingFrom={onNavigatingFrom}>
-    <drawer bind:this={drawer} translationFunction={drawerTranslationFunction} bottomOpenedDrawerAllowDraging={true} bottomClosedDrawerAllowDraging={false} backgroundColor="#E3E1D3">
+    <!-- <drawer bind:this={drawer} translationFunction={drawerTranslationFunction} bottomOpenedDrawerAllowDraging={true} bottomClosedDrawerAllowDraging={false} backgroundColor="#E3E1D3"> -->
+    <!-- <gridlayout backgroundColor="#E3E1D3"> -->
+    <bottomsheet
+        android:marginBottom={$navigationBarHeight}
+        backgroundColor="#01550000"
+        panGestureOptions={bottomSheetPanGestureOptions}
+        {steps}
+        stepIndex={bottomSheetStepIndex}
+        on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)}
+        translationFunction={bottomSheetTranslationFunction}
+    >
         <cartomap zoom="16" on:mapReady={onMainMapReady} on:mapMoved={onMainMapMove} on:mapStable={onMainMapStable} on:mapIdle={onMainMapIdle} on:mapClicked={onMainMapClicked} />
-        <bottomsheet
-            android:marginBottom={$navigationBarHeight}
-            backgroundColor="#01550000"
-            panGestureOptions={bottomSheetPanGestureOptions}
-            {steps}
-            stepIndex={bottomSheetStepIndex}
-            on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)}
-            translationFunction={bottomSheetTranslationFunction}
-        >
-            <stacklayout horizontalAlignment="left" verticalAlignment="middle">
-                <button variant="text" class="icon-btn" text={keepAwakeEnabled ? 'mdi-sleep' : 'mdi-sleep-off'} color={keepAwakeEnabled ? 'red' : 'gray'} on:tap={switchKeepAwake} />
+        <stacklayout horizontalAlignment="left" verticalAlignment="middle">
+            <button variant="text" class="icon-btn" text={keepAwakeEnabled ? 'mdi-sleep' : 'mdi-sleep-off'} color={keepAwakeEnabled ? 'red' : 'gray'} on:tap={switchKeepAwake} />
 
-                <button
-                    variant="text"
-                    class="icon-btn"
-                    text="mdi-bullseye"
-                    color={$mapStore.showContourLines ? primaryColor : 'gray'}
-                    on:tap={() => (mapStore.showContourLines = !mapStore.showContourLines)}
-                />
-                <button
-                    variant="text"
-                    class="icon-btn"
-                    text="mdi-signal"
-                    color={$mapStore.showSlopePercentages ? primaryColor : 'gray'}
-                    on:tap={() => (mapStore.showSlopePercentages = !mapStore.showSlopePercentages)}
-                />
-                <button variant="text" class="icon-btn" text="mdi-routes" color={$mapStore.showRoutes ? primaryColor : 'gray'} on:tap={() => (mapStore.showRoutes = !mapStore.showRoutes)} />
-                <button variant="text" class="icon-btn" text="mdi-speedometer" color="gray" on:tap={switchLocationInfo} />
+            <button
+                variant="text"
+                class="icon-btn"
+                text="mdi-bullseye"
+                color={$mapStore.showContourLines ? primaryColor : 'gray'}
+                on:tap={() => (mapStore.showContourLines = !mapStore.showContourLines)}
+            />
+            <button
+                variant="text"
+                class="icon-btn"
+                text="mdi-signal"
+                color={$mapStore.showSlopePercentages ? primaryColor : 'gray'}
+                on:tap={() => (mapStore.showSlopePercentages = !mapStore.showSlopePercentages)}
+            />
+            <button variant="text" class="icon-btn" text="mdi-routes" color={$mapStore.showRoutes ? primaryColor : 'gray'} on:tap={() => (mapStore.showRoutes = !mapStore.showRoutes)} />
+            <button variant="text" class="icon-btn" text="mdi-speedometer" color="gray" on:tap={switchLocationInfo} />
 
-                <button
-                    variant="text"
-                    class="icon-btn"
-                    text="mdi-map-clock"
-                    visibility={packageServiceEnabled ? 'visible' : 'collapsed'}
-                    color={$mapStore.preloading ? primaryColor : 'gray'}
-                    on:tap={() => (mapStore.preloading = !$mapStore.preloading)}
-                />
-                <!-- <button
+            <button
+                variant="text"
+                class="icon-btn"
+                text="mdi-map-clock"
+                visibility={packageServiceEnabled ? 'visible' : 'collapsed'}
+                color={$mapStore.preloading ? primaryColor : 'gray'}
+                on:tap={() => (mapStore.preloading = !$mapStore.preloading)}
+            />
+            <!-- <button
                     variant="text"
                     class="icon-btn"
                     text="mdi-information-outline"
                     color={showClickedFeatures ? primaryColor : 'gray'}
                     on:tap={() => (showClickedFeatures = !showClickedFeatures)}
                 /> -->
-                <button
-                    variant="text"
-                    class="icon-btn"
-                    text="mdi-bus-marker"
-                    color={showTransitLines ? primaryColor : 'gray'}
-                    on:tap={() => (showTransitLines = !showTransitLines)}
-                    on:longPress={(event) => {
-                        if (event.ios && event.ios.state !== 3) {
-                            return;
-                        }
-                        showTransitLinesPage();
-                    }}
-                />
-            </stacklayout>
-            <Search bind:this={searchView} verticalAlignment="top" defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
-            <LocationInfoPanel
-                horizontalAlignment="left"
-                verticalAlignment="top"
-                marginLeft="20"
-                marginTop="90"
-                bind:this={locationInfoPanel}
-                isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
-            />
-            <canvaslabel
-                orientation="vertical"
-                verticalAlignment="middle"
-                horizontalAlignment="right"
-                isUserInteractionEnabled="false"
-                color="red"
-                fontSize="12"
-                width="20"
-                height="30"
-                class="mdi"
-                textAlignment="center"
-            >
-                <cspan text="mdi-access-point-network-off" visibility={networkConnected ? 'collapsed' : 'visible'} textAlignment="left" verticalTextAlignement="top" />
-            </canvaslabel>
             <button
-                marginTop="90"
-                visibility={currentMapRotation !== 0 ? 'visible' : 'collapsed'}
-                on:tap={resetBearing}
-                class="small-floating-btn"
-                text="mdi-navigation"
-                color={primaryColor}
-                rotate={-currentMapRotation}
-                verticalAlignment="top"
-                horizontalAlignment="right"
-                translateY={Math.max(topTranslationY - 50, 0)}
+                variant="text"
+                class="icon-btn"
+                text="mdi-bus-marker"
+                color={showTransitLines ? primaryColor : 'gray'}
+                on:tap={() => (showTransitLines = !showTransitLines)}
+                on:longPress={(event) => {
+                    if (event.ios && event.ios.state !== 3) {
+                        return;
+                    }
+                    showTransitLinesPage();
+                }}
             />
-            <MapScrollingWidgets bind:this={mapScrollingWidgets} bind:navigationInstructions opacity={scrollingWidgetsOpacity} userInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
-            <DirectionsPanel bind:this={directionsPanel} bind:translationY={topTranslationY} width="100%" verticalAlignment="top" />
-            <BottomSheetInner bind:this={bottomSheetInner} bind:navigationInstructions bind:steps prop:bottomSheet updating={itemLoading} item={$selectedItem} />
-            <!-- <collectionview
+        </stacklayout>
+        <Search bind:this={searchView} verticalAlignment="top" defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
+        <LocationInfoPanel horizontalAlignment="left" verticalAlignment="top" marginLeft="20" marginTop="90" bind:this={locationInfoPanel} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
+        <canvaslabel
+            orientation="vertical"
+            verticalAlignment="middle"
+            horizontalAlignment="right"
+            isUserInteractionEnabled="false"
+            color="red"
+            fontSize="12"
+            width="20"
+            height="30"
+            class="mdi"
+            textAlignment="center"
+        >
+            <cspan text="mdi-access-point-network-off" visibility={networkConnected ? 'collapsed' : 'visible'} textAlignment="left" verticalTextAlignement="top" />
+        </canvaslabel>
+        <button
+            marginTop="90"
+            visibility={currentMapRotation !== 0 ? 'visible' : 'collapsed'}
+            on:tap={resetBearing}
+            class="small-floating-btn"
+            text="mdi-navigation"
+            color={primaryColor}
+            rotate={-currentMapRotation}
+            verticalAlignment="top"
+            horizontalAlignment="right"
+            translateY={Math.max(topTranslationY - 50, 0)}
+        />
+        <MapScrollingWidgets bind:this={mapScrollingWidgets} bind:navigationInstructions opacity={scrollingWidgetsOpacity} userInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
+        <DirectionsPanel bind:this={directionsPanel} bind:translationY={topTranslationY} width="100%" verticalAlignment="top" />
+        <BottomSheetInner bind:this={bottomSheetInner} bind:navigationInstructions bind:steps prop:bottomSheet updating={itemLoading} item={$selectedItem} />
+        <!-- <collectionview
                 items={currentClickedFeatures}
                 height="80"
                 margin="80 20 0 20"
@@ -1774,6 +1777,6 @@
                     <label padding="0 20 0 20" text={JSON.stringify(item)} verticalAlignment="center" fontSize="11" color="white" />
                 </Template>
             </collectionview> -->
-        </bottomsheet>
-    </drawer>
+    </bottomsheet>
+    <!-- </gridlayout> -->
 </page>
