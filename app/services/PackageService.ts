@@ -861,7 +861,7 @@ class PackageService extends Observable {
     getRouteItemPoses(item: Item) {
         let geometry = item._nativeGeometry || (packageService.getGeoJSONReader().readGeometry(item._geometry || JSON.stringify(item.geometry)) as LineGeometry<LatLonKeys>);
         if (!item._nativeGeometry) {
-            item._nativeGeometry = geometry.getNative();
+            item._nativeGeometry = geometry.getNative?.() || geometry;
         }
         if (geometry['getGeometryCount']) {
             geometry = geometry['getGeometry'](0);
