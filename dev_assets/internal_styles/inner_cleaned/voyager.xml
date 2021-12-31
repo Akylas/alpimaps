@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<Map font-directory="../fonts/" background-color="transparent" background-image="" north-pole-color="transparent" south-pole-color="transparent">
+<Map font-directory="fonts" background-color="transparent" background-image="" north-pole-color="transparent" south-pole-color="transparent">
 	<Parameters />
 	<NutiParameters>
 		<NutiParameter name="fallback_lang" type="string" value="en" />
@@ -12,7 +12,8 @@
 			<Value id="0" value="0" />
 			<Value id="1" value="1" />
 		</NutiParameter>
-		<NutiParameter name="selected_id" type="string" value="" />
+		<NutiParameter name="selected_id" type="int" value="-1" />
+		<NutiParameter name="selected_osmid" type="int" value="-1" />
 		<NutiParameter name="shields3d" type="string" value="nutibillboard">
 			<Value id="0" value="point" />
 			<Value id="1" value="nutibillboard" />
@@ -28,6 +29,7 @@
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='waypointline'</Filter>
 			<LineSymbolizer stroke="rgba(0,0,0,0.466667)" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="10" wrap-before="true">[text]</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
@@ -96,91 +98,704 @@
 	</Style>
 	<Style name="route::casing" filter-mode="first">
 		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MinScaleDenominator>4367830</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[nuti::selected_id]=(([osmid] ? [osmid] : ([ref] ? [ref] : [name])))</Filter>
-			<LineSymbolizer stroke="rgb(255,255,255)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="2+linear([view::zoom],4,1,10,1,12,2)+2.0" />
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid]</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="linear([view::zoom],15,0.5,17,0.1)" stroke-width="2+linear([view::zoom],4,1,10,1,12,2)+2.0" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[nuti::selected_osmid]=[osmid] and ([network]=2 or [network]=1)</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="linear([view::zoom],15,0.5,17,0.1)" stroke-width="2+linear([view::zoom],4,1,10,1,12,2)+2.0" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[nuti::selected_osmid]=[osmid] and ([network]=3 or [network]=2 or [network]=1)</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="linear([view::zoom],15,0.5,17,0.1)" stroke-width="2+linear([view::zoom],4,1,10,1,12,2)+2.0" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[nuti::selected_osmid]=[osmid] and ([network]=4 or [network]=3 or [network]=2 or [network]=1)</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="linear([view::zoom],15,0.5,17,0.1)" stroke-width="2+linear([view::zoom],4,1,10,1,12,2)+2.0" />
 		</Rule>
 	</Style>
 	<Style name="route::inner" filter-mode="first">
 		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MinScaleDenominator>4367830</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[ref]&lt;&gt;null and [class]='bicycle'</Filter>
-			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 0.3 : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 2 : 0))" />
-			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer>
+			<Filter>[network]=1 and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>4367830</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[network]=1 and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>4367830</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[network]=1</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[network]=2 and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[network]=2 and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[network]=1 and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[network]=1 and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[network]=2 or [network]=1</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[class]='bicycle' and ([network]=3 or [network]=2)</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[network]=3 and ([class]='hiking' or [class]='foot') or ([network]=2 and [class]='hiking') or ([network]=2 and [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[network]=1 and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[network]=1 and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[network]=3 or [network]=2 or [network]=1</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[class]='bicycle' and ([network]=4 or [network]=3 or [network]=2)</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[network]=4 and ([class]='hiking' or [class]='foot') or ([network]=3 and [class]='hiking') or ([network]=3 and [class]='foot') or ([network]=2 and [class]='hiking') or ([network]=2 and [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[network]=1 and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[network]=1 and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[network]=4 or [network]=3 or [network]=2 or [network]=1</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=4 and [ref]&lt;&gt;null and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=4 and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=4 and [ref]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=3 and [ref]&lt;&gt;null and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=3 and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=3 and [ref]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=2 and [ref]&lt;&gt;null and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=2 and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=2 and [ref]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=1 and [ref]&lt;&gt;null and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=1 and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=1 and [ref]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='bicycle' and ([network]=4 or [network]=3 or [network]=2)</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=4 and ([class]='hiking' or [class]='foot') or ([network]=3 and [class]='hiking') or ([network]=3 and [class]='foot') or ([network]=2 and [class]='hiking') or ([network]=2 and [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=1 and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=1 and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=4 or [network]=3 or [network]=2 or [network]=1</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=4 and [ref]&lt;&gt;null and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
-			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 0.3 : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 2 : 0))" />
-			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=4 and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[ref]&lt;&gt;null</Filter>
-			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" />
-			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=4 and [ref]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[class]='bicycle'</Filter>
-			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 0.3 : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 2 : 0))" />
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=3 and [ref]&lt;&gt;null and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[class]='hiking' or [class]='foot'</Filter>
-			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 0.3 : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 2 : 0))" />
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=3 and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" />
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=3 and [ref]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=2 and [ref]&lt;&gt;null and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=2 and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=2 and [ref]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=1 and [ref]&lt;&gt;null and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=1 and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=1 and [ref]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[class]='bicycle' and ([network]=4 or [network]=3 or [network]=2)</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=4 and ([class]='hiking' or [class]='foot') or ([network]=3 and [class]='hiking') or ([network]=3 and [class]='foot') or ([network]=2 and [class]='hiking') or ([network]=2 and [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=1 and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=1 and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=4 or [network]=3 or [network]=2 or [network]=1</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
 		</Rule>
 	</Style>
 	<Style name="route::selected" filter-mode="first">
 		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MinScaleDenominator>4367830</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[nuti::selected_id]=(([osmid] ? [osmid] : ([ref] ? [ref] : [name]))) and [ref]&lt;&gt;null and [class]='bicycle'</Filter>
-			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 0.3 : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 2 : 0))" />
-			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid] and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>4367830</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid] and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>4367830</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid]</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[network]=2 and [nuti::selected_osmid]=[osmid] and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[network]=2 and [nuti::selected_osmid]=[osmid] and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid] and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid] and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>2183915</MinScaleDenominator>
+			<MaxScaleDenominator>4367830</MaxScaleDenominator>
+			<Filter>[nuti::selected_osmid]=[osmid] and ([network]=2 or [network]=1)</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[class]='bicycle' and ([network]=3 and [nuti::selected_osmid]=[osmid] or ([network]=2 and [nuti::selected_osmid]=[osmid]))</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[network]=3 and [nuti::selected_osmid]=[osmid] and ([class]='hiking' or [class]='foot') or ([network]=2 and [nuti::selected_osmid]=[osmid] and [class]='hiking') or ([network]=2 and [nuti::selected_osmid]=[osmid] and [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid] and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid] and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>1091957.5</MinScaleDenominator>
+			<MaxScaleDenominator>2183915</MaxScaleDenominator>
+			<Filter>[nuti::selected_osmid]=[osmid] and ([network]=3 or [network]=2 or [network]=1)</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[class]='bicycle' and ([network]=4 and [nuti::selected_osmid]=[osmid] or ([network]=3 and [nuti::selected_osmid]=[osmid]) or ([network]=2 and [nuti::selected_osmid]=[osmid]))</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[network]=4 and [nuti::selected_osmid]=[osmid] and ([class]='hiking' or [class]='foot') or ([network]=3 and [nuti::selected_osmid]=[osmid] and [class]='hiking') or ([network]=3 and [nuti::selected_osmid]=[osmid] and [class]='foot') or ([network]=2 and [nuti::selected_osmid]=[osmid] and [class]='hiking') or ([network]=2 and [nuti::selected_osmid]=[osmid] and [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid] and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid] and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<Filter>[nuti::selected_osmid]=[osmid] and ([network]=4 or [network]=3 or [network]=2 or [network]=1)</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=4 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=4 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=4 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=3 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=3 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=3 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=2 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=2 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=2 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[ref]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='bicycle' and ([network]=4 and [nuti::selected_osmid]=[osmid] or ([network]=3 and [nuti::selected_osmid]=[osmid]) or ([network]=2 and [nuti::selected_osmid]=[osmid]))</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=4 and [nuti::selected_osmid]=[osmid] and ([class]='hiking' or [class]='foot') or ([network]=3 and [nuti::selected_osmid]=[osmid] and [class]='hiking') or ([network]=3 and [nuti::selected_osmid]=[osmid] and [class]='foot') or ([network]=2 and [nuti::selected_osmid]=[osmid] and [class]='hiking') or ([network]=2 and [nuti::selected_osmid]=[osmid] and [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid] and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid] and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[nuti::selected_osmid]=[osmid] and ([network]=4 or [network]=3 or [network]=2 or [network]=1)</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=4 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[nuti::selected_id]=(([osmid] ? [osmid] : ([ref] ? [ref] : [name]))) and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
-			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 0.3 : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 2 : 0))" />
-			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=4 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[nuti::selected_id]=(([osmid] ? [osmid] : ([ref] ? [ref] : [name]))) and [ref]&lt;&gt;null</Filter>
-			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" />
-			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,6.0,18,8.0)" wrap-before="true">[ref]</TextSymbolizer>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=4 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[nuti::selected_id]=(([osmid] ? [osmid] : ([ref] ? [ref] : [name]))) and [class]='bicycle'</Filter>
-			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 0.3 : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 2 : 0))" />
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=3 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[nuti::selected_id]=(([osmid] ? [osmid] : ([ref] ? [ref] : [name]))) and ([class]='hiking' or [class]='foot')</Filter>
-			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-dasharray="{((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? '0,0' : '6,2')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 0.3 : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(((([osmid] ? [osmid] : ([ref] ? [ref] : [name])))+''=[nuti::selected_id] ? 2 : 0))" />
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=3 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[nuti::selected_id]=(([osmid] ? [osmid] : ([ref] ? [ref] : [name])))</Filter>
-			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" />
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=3 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=2 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=2 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=2 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid] and [ref]&lt;&gt;null</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+			<TextSymbolizer dy="2" face-name="DIN Pro Regular" fill="{([textcolor] ? [textcolor].replace('-.*','') : ([color] ? [color] : 'rgb(0,0,0)'))}" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],13,8.0,18,12.0)" wrap-before="true">[name]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[class]='bicycle' and ([network]=4 and [nuti::selected_osmid]=[osmid] or ([network]=3 and [nuti::selected_osmid]=[osmid]) or ([network]=2 and [nuti::selected_osmid]=[osmid]))</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=4 and [nuti::selected_osmid]=[osmid] and ([class]='hiking' or [class]='foot') or ([network]=3 and [nuti::selected_osmid]=[osmid] and [class]='hiking') or ([network]=3 and [nuti::selected_osmid]=[osmid] and [class]='foot') or ([network]=2 and [nuti::selected_osmid]=[osmid] and [class]='hiking') or ([network]=2 and [nuti::selected_osmid]=[osmid] and [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid] and [class]='bicycle'</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(0,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[network]=1 and [nuti::selected_osmid]=[osmid] and ([class]='hiking' or [class]='foot')</Filter>
+			<LineSymbolizer stroke="{([color] ? [color] : 'rgb(136,0,255)')}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[nuti::selected_osmid]=[osmid] and ([network]=4 or [network]=3 or [network]=2 or [network]=1)</Filter>
+			<LineSymbolizer stroke-linecap="round" stroke-linejoin="round" stroke-opacity="([osmid]=[nuti::selected_osmid] ? linear([view::zoom],14,1,15,0.3,17,0.1) : 0.5)" stroke-width="linear([view::zoom],4,1,10,1,12,2)+(([osmid]=[nuti::selected_osmid] ? 2 : 0))" />
 		</Rule>
 	</Style>
 	<Style name="lines" filter-mode="first">
@@ -197,7 +812,7 @@
 			<LineSymbolizer stroke="{([route_color] ? [route_color] : 'rgb('+[COULEUR]+')')}" stroke-linejoin="round" stroke-width="linear([view::zoom],12,2,13,2.5,19,4.5)" />
 		</Rule>
 	</Style>
-	<Style name="lines::text" filter-mode="first">
+	<Style name="lines::label" filter-mode="first">
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
@@ -222,6 +837,6 @@
 	</Layer>
 	<Layer name="lines">
 		<StyleName>lines</StyleName>
-		<StyleName>lines::text</StyleName>
+		<StyleName>lines::label</StyleName>
 	</Layer>
 </Map>
