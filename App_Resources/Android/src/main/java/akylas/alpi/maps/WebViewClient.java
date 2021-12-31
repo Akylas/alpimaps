@@ -158,10 +158,8 @@ public class WebViewClient extends android.webkit.WebViewClient {
                 VectorTileFeatureCollection result = searchService.findFeatures(searchRequest);
     
                 return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream(geojsonWriter.writeFeatureCollection(result).getBytes(StandardCharsets.UTF_8)));
-                // return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "plain/text", );
             } catch(Exception exception) {
                 return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream(exception.toString().getBytes(StandardCharsets.UTF_8)));
-                // return NanoHTTPD.newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "plain/text", exception.toString());
             }
             
         }
@@ -177,13 +175,9 @@ public class WebViewClient extends android.webkit.WebViewClient {
         byte[] binaryDataData = binaryData.getData();
         InputStream targetStream = new ByteArrayInputStream(binaryDataData);
         if (source.equals("data") || source.equals("contours")) {
-                return new WebResourceResponse("application/x-protobuf", "utf-8", targetStream);
-        // return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "application/x-protobuf", targetStream,
-                // binaryDataData.length);
+            return new WebResourceResponse("application/x-protobuf", "utf-8", targetStream);
         }
-                return new WebResourceResponse("image/" + imageFormat, "utf-8", targetStream);
-        // return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "image/" + imageFormat, targetStream,
-                // binaryDataData.length);
+            return new WebResourceResponse("image/" + imageFormat, "utf-8", targetStream);
     }
 
     @Override
