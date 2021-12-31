@@ -248,7 +248,7 @@
                 isFeatureInteresting: true,
                 setSelected: false,
                 peek: false,
-                zoomDuration: 0,
+                zoomDuration: 100,
                 preventZoom: false
             });
         }
