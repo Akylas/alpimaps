@@ -72,7 +72,7 @@ module.exports = (env, params = {}) => {
                 </button></body></html>
                 `,
                 meta: {
-                    viewport: 'width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no'
+                    viewport: 'initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no'
                 },
                 minify: {
                     collapseWhitespace: true,
