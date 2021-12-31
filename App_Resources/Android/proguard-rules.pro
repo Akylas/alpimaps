@@ -1,10 +1,9 @@
 #-dontobfuscate
 -dontwarn **
 #-keepattributes *Annotation*, EnclosingMethod, Exceptions, InnerClasses
--keepattributes EnclosingMethod, InnerClasses
+-keepattributes EnclosingMethod
 
 -keep,includedescriptorclasses        class     com.tns.** { *; }
--keep,includedescriptorclasses public interface com.tns.** { *; }
 
 -keep,allowoptimization public class java.lang.String** { public  *; }
 -keep,allowoptimization public class java.lang.Integer** { public  *; }
@@ -402,12 +401,12 @@
 -keep,allowoptimization public class com.nativescript.material.textfield.TextInputLayout** { public  *; }
 -keep,allowoptimization public class com.nativescript.material.textfield.TextInputEditText** { public  *; }
 -keep,allowoptimization public class android.hardware.GeomagneticField** { public  *; }
--keep,allowoptimization public class androidx.core.widget.NestedScrollVie** { public  *; }
--keep,allowoptimization public class android.app.Notificatio** { public  *; }
--keep,allowoptimization public class androidx.core.app.NotificationCompa** { public  *; }
--keep,allowoptimization public class androidx.core.app.NotificationCompat.Builde** { public  *; }
+-keep,allowoptimization public class androidx.core.widget.NestedScrollView** { public  *; }
+-keep,allowoptimization public class android.app.Notification** { public  *; }
+-keep,allowoptimization public class androidx.core.app.NotificationCompat** { public  *; }
+-keep,allowoptimization public class androidx.core.app.NotificationCompat.Builder** { public  *; }
 -keep,allowoptimization public class android.app.PendingInten** { public  *; }
--keep,allowoptimization public class akylas.alpi.maps.** { public  *; }
+-keep,allowoptimization public class akylas.alpi.maps.** { public protected *; }
 -keep,allowoptimization public class androidx.appcompat.app.AppCompatDelegate** { public  *; }
 -keep,allowoptimization public class android.content.ServiceConnection** { public  *; }
 -keep,allowoptimization public class android.os.Binder** { public  *; }
@@ -419,3 +418,10 @@
 -keep,allowoptimization public class com.caverock.androidsvg.PreserveAspectRatio** { public  *; }
 -keep,allowoptimization public class com.caverock.androidsvg.RenderOptions** { public  *; }
 -keep,allowoptimization public class androidx.appcompat.widget.AppCompatCheckBox** { public  *; }
+-keep,allowoptimization public class android.provider.DocumentsContract** { public  *; }
+-keep,allowoptimization public class android.provider.OpenableColumns** { public  *; }
+-keep,allowoptimization public class com.google.android.material.datepicker.MaterialDatePicker.Builder** { public  *; }
+-keep,allowoptimization public class com.google.android.material.datepicker.MaterialDatePicker** { public  *; }
+-keep,allowoptimization public class com.google.android.material.timepicker.MaterialTimePicker.Builder** { public  *; }
+-keep,allowoptimization public class com.google.android.material.timepicker.MaterialTimePicker** { public  *; }
+-keep,allowoptimization public class java.lang.Long** { public  *; }
