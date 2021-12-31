@@ -51,6 +51,7 @@ registerNativeViewElement('flexlayout', () => require('@nativescript/core').Flex
 registerNativeViewElement('Switch', () => require('@nativescript/core').Switch);
 registerNativeViewElement('TextField', () => require('@nativescript/core').TextField);
 registerNativeViewElement('Span', () => require('@nativescript/core').Span);
+// registerNativeViewElement('WebView', () => require('@nativescript/core').WebView);
 
 registerNativeViewElement('button', () => require('@nativescript-community/ui-material-button').Button, null, {}, { override: true });
 registerNativeViewElement('label', () => require('@nativescript-community/ui-label').Label, null, {}, { override: true });
@@ -76,17 +77,13 @@ registerNativeViewElement('checkbox', () => require('@akylas/nativescript-checkb
 CollectionViewElement.register();
 PagerElement.register();
 DrawerElement.register();
-// (com as any).swmansion.gesturehandler.GestureHandler.debug = true;
 
-// Trace.addCategories(Trace.categories.Transition);
+// import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
+// Trace.addCategories(Trace.categories.ViewHierarchy);
 // Trace.addCategories(CollectionViewTraceCategory);
 // Trace.enable();
-import { start } from '~/helpers/theme';
-import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
-import { CartoMap } from '@nativescript-community/ui-carto/ui';
-// on startup we need to ensure theme is loaded because of a mixin
-// on startup we need to say what we are using
-start();
+import { start as startThemeHelper } from '~/helpers/theme';
+startThemeHelper();
 
 if (global.isIOS) {
     const variables = require('~/variables');
