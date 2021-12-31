@@ -2,8 +2,9 @@
 @name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
 @osm_icon: [nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]]?[nuti::osm-[class]]:[nuti::osm-symbol-dot]);
 
-#landcover_name[class!=ice][zoom>=13],
-#landuse_name[zoom>=13]
+#landcover_name[class!=ice][zoom>=16],
+#landuse_name[class=quarry][zoom>=13],
+#landuse_name[zoom>=16]
 {
 	::label {
 		text-name: @name;
@@ -11,7 +12,7 @@
 		text-fill: @building_label;
 		text-size: 10;
 		text-min-distance:150;
-		text-wrap-width: 10;
+		text-wrap-width:@suburb-label-wrap-width;
 		text-halo-fill: @peak_halo;
 		text-halo-radius: 1;
 	}
@@ -20,7 +21,7 @@
 #water_name[class=ocean][zoom>=3][zoom<=9],
 #water_name[class=sea][zoom>=6] {
 	text-name: @name;
-	text-face-name: @mont_it_md;
+	text-face-name: @mont_it;
 	text-wrap-width: 50;
 	text-fill: @marine_labels;
 	text-halo-fill: @marine_labels_halo;
@@ -34,8 +35,8 @@
 	}
 }
 
-#place{
-	[class=continent][zoom>=1][zoom<=2]::label{
+#place::label{
+	[class=continent][zoom>=1][zoom<=2]{
 		text-name: @name;
 		text-fill: @continent_text;
 		text-face-name: @mont_md;
@@ -47,7 +48,7 @@
 		text-size: linear([view::zoom], (1, 10.0), (2, 14.0));
 		text-wrap-width: step([view::zoom], (1, 20), (2, 40));
 	}
-	[class=country][zoom>=2][zoom<=6]::label{
+	[class=country][zoom>=2][zoom<=6]{
 			text-name: @name;
 			text-face-name: @mont_bd;
 			text-placement: [nuti::texts3d];
@@ -85,7 +86,7 @@
 				text-wrap-width: 30;
 			}
 	}
-	[class=state][zoom>=3][zoom<=6]::label{
+	[class=state][zoom>=3][zoom<=6]{
 			text-name: @name;
 			text-face-name: @mont_md;
 			text-wrap-character: '-';
@@ -100,7 +101,7 @@
 	
 
 	
-	[class=island][zoom>=12][zoom<=14]::label {
+	[class=island][zoom>=12][zoom<=14] {
 			text-name: @name;
 			text-face-name: @mont_md;
 			text-wrap-character: '-';
@@ -112,7 +113,7 @@
 			text-halo-radius: @place_halo_radius;
 			text-size: @island_label_width ;
 	}
-	[class=hamlet][zoom>=11][zoom<=14]::label {
+	[class=hamlet][zoom>=11][zoom<=14] {
 			text-name: @name;
 			text-face-name: @mont_md;
 			text-placement: [nuti::texts3d];
@@ -125,7 +126,7 @@
 			text-size: @hamlet_label_width ;
 	}
 	
-	[class=village][zoom>=10][zoom<=14]::label {
+	[class=village][zoom>=10][zoom<=14] {
 			text-name: @name;
 			text-face-name: @mont_md;
 			text-placement: [nuti::texts3d];
@@ -137,7 +138,7 @@
 			text-halo-radius: @place_halo_radius;
 			text-size: @village_label_width ;
 	}
-	[class=suburb][zoom>=12][zoom<=14]::label{
+	[class=suburb][zoom>=12][zoom<=14]{
 		text-name: @name;
 		text-face-name: @mont_md;
 		text-placement: [nuti::texts3d];
@@ -152,7 +153,7 @@
 		text-wrap-width: @suburb-label-wrap-width;
 	}
 	
-	[class=town][zoom>=7][zoom<14]::label {
+	[class=town][zoom>=7][zoom<14] {
 		
 			text-name: @name;
 			text-face-name: @mont_md;
@@ -183,7 +184,6 @@
 			}
 			
 		}
-		::label{
 			text-name: @name;
 			text-face-name: @mont_md;
 			text-placement: [nuti::texts3d];
@@ -198,10 +198,9 @@
 			text-fill: @city_label;
 			text-size: @city-label-width;
 			text-wrap-width: @city-label-wrap-width;
-		}
 	}
-	[class=quarter][zoom>=14][zoom<=16]::label,
-	[class=neighbourhood][zoom>=14][zoom<=16]::label {
+	[class=quarter][zoom>=14][zoom<=16],
+	[class=neighbourhood][zoom>=14][zoom<=16] {
 		 {
 			text-name: @name;
 			text-face-name: @mont_md;
@@ -220,8 +219,8 @@
 			}
 		}
 	}
-	[class=isolated_dwelling][zoom>=12][zoom<=14]::label,
-	[class=locality][zoom>=12][zoom<=14]::label {
+	[class=isolated_dwelling][zoom>=12][zoom<=14],
+	[class=locality][zoom>=12][zoom<=14] {
 		text-name: @name;
 		text-face-name: @mont;
 		text-placement: [nuti::texts3d];
@@ -239,7 +238,7 @@
 #landcover_name[class=ice]{
 	::label {
 		text-name: @name;
-		text-face-name: @mont_it_md;
+		text-face-name: @mont_it;
 		text-fill: @water_label;
 		[class=ice] {
 			text-fill: @glacier_label;
@@ -386,7 +385,7 @@
 			text-halo-radius: @poi_halo_radius;
 			text-fill: @poi-lodging-fill;
 		}
-		::text {
+		::label {
 			text-name: @name;
 			text-face-name: @mont_md;
 			text-placement: [nuti::texts3d];
@@ -413,7 +412,7 @@
 			text-size: linear([view::zoom], (18, 10), (20, 14.0)) - 0.0000011 * [rank];
 			text-fill: @poi-campsite-fill;
 		}
-		::text[zoom>=17] {
+		::label[zoom>=17] {
 			text-name: @name;
 			text-face-name: @mont_md;
 			text-placement: [nuti::texts3d];
@@ -437,7 +436,7 @@
 		text-fill: @poi-water-fill;
 		text-size: @poi-spring-size;
 	}
-	[zoom>=17]::text {
+	[zoom>=17]::label {
 		text-name: @name;
 		text-face-name: @mont_md;
 		text-placement: [nuti::texts3d];
@@ -495,7 +494,7 @@
 		}
 
 		[class!=bus][class!=railway],
-		[zoom>=17]::text {
+		[zoom>=17]::label {
 			text-name: @name;
 			text-face-name: @mont_md;
 			text-placement: [nuti::texts3d];
@@ -552,7 +551,7 @@
 		text-halo-radius: @poi_halo_radius;
 		text-fill: @poi-park-fill;
 	}
-	[zoom>=8]::text {
+	[zoom>=8]::label {
 		text-name: @name;
 		text-face-name: @mont_md;
 		text-placement: [nuti::texts3d];
@@ -565,7 +564,7 @@
 	}
 }
 
-#building_name['nuti::buildings'>0][zoom>=16]{
+#building_name['nuti::buildings'>0][zoom>=17]{
 	text-name: [name];
 	text-face-name: @mont;
 	text-fill: @housenumber;
