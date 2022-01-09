@@ -24,6 +24,7 @@
 		// order is important for icon to take precedence over label and respect rank
 		::icon {
 			text-face-name: @osm;
+			text-feature-id: @name;
 			text-size: @peak_icon_width; 
 			text-placement: [nuti::markers3d];
 			text-name: @peak_icon;
@@ -36,9 +37,11 @@
 		[class=peak]::label, 
 		[zoom>=12]::label {
 			text-name: @name;
+			text-feature-id: @name;
 			[zoom>=10] {
 				text-name: @name ?  ( [ele] ? @name  + ', ' +[ele] + 'm': @name): '';
 			}
+			// text-name: ['mapnik::feature_id'];
 			text-face-name: @mont_md;
 			text-size: @peak_label_width; 
 			text-line-spacing: -1;
