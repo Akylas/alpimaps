@@ -305,34 +305,65 @@ export default class ItemsModule extends MapModule {
             }
         });
         // const test = join_em(listCoordinates);
-        console.log('listCoordinate s', listCoordinates.length);
-        const sorted = [];
-
-        listCoordinates.forEach((coords) => {
+        const sorted = listCoordinates.slice();
+        const indexTest = new Array(sorted.length).fill(0).map((value, i) => i);
+        listCoordinates.forEach((coords, i) => {
             // try to find the current sorted one where the end point is the closest to our start point.
             const start = coords[0];
             let minDist = Number.MAX_SAFE_INTEGER;
-            let index = -1;
-            sorted.forEach((s2, i) => {
+            let foundNearest;
+            listCoordinates.forEach((s2, j) => {
+                if (i === j) {
+                    return;
+                }
                 const end = s2[s2.length - 1];
                 const distance = getDistanceSimple([start[1], start[0]], [end[1], end[0]]);
                 if (distance < minDist) {
                     minDist = distance;
-                    index = i;
+                    foundNearest = s2;
                 }
             });
-            if (index < sorted.length - 1) {
-                sorted.splice(index + 1, 0, coords);
-            } else {
-                sorted.push(coords);
+            if (foundNearest) {
+                const index = sorted.indexOf(foundNearest);
+                const indexOther = sorted.indexOf(coords);
+                if (index !== -1) {
+                    sorted.splice(index, 1);
+                    sorted.splice(indexOther, 0, foundNearest);
+                    const removed = indexTest.splice(index, 1);
+                    indexTest.splice(indexOther, 0, removed[0]);
+                }
             }
         });
-        // now let s try to find the right order.
-        // console.log('test', sorted.length);
+        listCoordinates.forEach((coords, i) => {
+            // try to find the current sorted one where the end point is the closest to our start point.
+            const end = coords[coords.length - 1];
+            let minDist = Number.MAX_SAFE_INTEGER;
+            let foundNearest;
+            listCoordinates.forEach((s2, j) => {
+                if (i === j) {
+                    return;
+                }
+                const start = s2[0];
+                const distance = getDistanceSimple([start[1], start[0]], [end[1], end[0]]);
+                if (distance < minDist) {
+                    minDist = distance;
+                    foundNearest = s2;
+                }
+            });
+            if (foundNearest) {
+                const index = sorted.indexOf(foundNearest);
+                const indexOther = sorted.indexOf(coords);
+                if (index !== -1) {
+                    sorted.splice(index, 1);
+                    sorted.splice(indexOther + 1, 0, foundNearest);
+                }
+            }
+        });
         // console.log(
         //     'test2',
+        //     indexTest,
         //     sorted.map((s, i) => {
-        //         if (i < sorted.length -1) {
+        //         if (i < sorted.length - 1) {
         //             const start = sorted[i][sorted[i].length - 1];
         //             const end = sorted[i + 1][0];
         //             return getDistanceSimple([start[1], start[0]], [end[1], end[0]]);
@@ -340,46 +371,11 @@ export default class ItemsModule extends MapModule {
         //         return 0;
         //     })
         // );
-        // throw new Error();
-        // let count = 0;
-        // features.forEach((f: any) => {
-        //     count += f.geometry.coordinates.length;
-        //     f.start = f.geometry.coordinates[0].join('');
-        //     f.end = f.geometry.coordinates[f.geometry.coordinates.length - 1].join('');
-        // });
-        // let index = features.findIndex((s) => features.findIndex((s2) => s2.end === s.start) === -1);
-        // const sorted = features.splice(index, 1);
-        // console.log('test', index, count);
-        // while (features.length > 0) {
-        //     index = features.findIndex((s) => s.start === sorted.at(-1).end);
-        //     if (index !== -1) {
-        //         sorted.push(...features.splice(index, 1));
-        //     } else {
-        //         break;
-        //     }
-        // }
-        // if (features.length > 0) {
-        //     sorted.push(...features);
-        // }
-        // const coordinates = [];
-        // listCoordinates.forEach((s, index) => {
-        //     // if (index === 0) {
-        //     coordinates.push(...s);
-        //     // } else {
-        //     // coordinates.push(...s.geometry.coordinates);
-        //     // }
-        // });
 
         return {
             type: 'LineString' as any,
             coordinates: sorted.flat()
         };
-        // console.log('coordinates', coordinates.length);
-        // const reader = new GeoJSONGeometryReader({
-        //     targetProjection: mapProjection
-        // });
-
-        // return geometry as LineGeometry<LatLonKeys>;
     }
     async saveItem(item: Mutable<IItem>, styleOptions?: MarkerStyleBuilderOptions | PointStyleBuilderOptions | LineStyleBuilderOptions) {
         try {
@@ -404,7 +400,6 @@ export default class ItemsModule extends MapModule {
         }
     }
     async deleteItem(item: IItem) {
-        console.log('deleteItem', item.id, item.properties.id);
         if (item === mapContext.getSelectedItem()) {
             mapContext.unselectItem();
         }
