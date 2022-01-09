@@ -4,7 +4,8 @@
     line-width: linear([view::zoom], (12,2), (13,2.5), (19, 4.5));
     line-color: @lineColor;
     line-join: round;
-    ::label {
+    when ([nuti::selected_id_str] = [id]) {
+        line-width: linear([view::zoom], (12,4), (13,4.5), (19, 6.5));
         text-name: [route_short_name]? [route_short_name]:[NUMERO];
         text-fill: gray;
         text-size:linear([view::zoom], (13, 7), (16, 12));
@@ -14,6 +15,7 @@
         text-face-name: @mont;
         text-dy:linear([view::zoom], (13, 2), (16, 3), (17, 4));
     }
+    
 }
 #lines['mapnik::geometry_type'=1] {
     marker-placement: [nuti::markers3d];
