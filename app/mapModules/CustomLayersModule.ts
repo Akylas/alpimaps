@@ -349,74 +349,65 @@ export default class CustomLayersModule extends MapModule {
         thunderforest: ApplicationSettings.getString('thunderforestToken', gVars.THUNDERFOREST_TOKEN),
         ign: ApplicationSettings.getString('ignToken', gVars.IGN_TOKEN)
     };
+
     createRasterLayer(id: string, provider: Provider) {
         const opacity = appSettings.getNumber(`${id}_opacity`, 1);
-        const rasterCachePath = Folder.fromPath(path.join(getDataFolder(), 'rastercache'));
-        const databasePath = File.fromPath(path.join(rasterCachePath.path, id)).path;
 
         // Apply zoom level bias to the raster layer.
         // By default, bitmaps are upsampled on high-DPI screens.
         // We will correct this by applying appropriate bias
         const zoomLevelBias = appSettings.getNumber(`${id}_zoomLevelBias`, (Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2)) * 0.75);
-        let url = provider.url as string;
-        if (provider.tokenKey) {
-            const tokens = Array.isArray(provider.tokenKey) ? provider.tokenKey : [provider.tokenKey];
-            tokens.forEach((tok) => {
-                if (!this.tokenKeys[tok]) {
-                    throw new Error('missing api token');
-                }
-                url = url.replace(`{${tok}}`, this.tokenKeys[tok]);
-            });
-        }
-
-        const dataSource = new HTTPTileDataSource({
-            url,
-            ...provider.sourceOptions
-        });
+        let dataSource: TileDataSource<any, any>;
         let layer: TileLayer<any, any>;
+        let legend;
         const options = {
             zoomLevelBias: {
                 min: 0,
                 max: 5
             }
         };
-        if (provider.cacheable !== false) {
-            Object.assign(options, {
-                cacheSize: {
-                    min: 0,
-                    max: 2048
-                }
+
+        if (provider.type === 'orux') {
+            dataSource = new OruxDBTileDataSource({
+                databasePath: provider.url as string
             });
-        }
-        const cacheSize = appSettings.getNumber(`${id}_cacheSize`, 300);
-        if (provider.hillshade) {
-            Object.assign(options, HILLSHADE_OPTIONS);
-            layer = this.createHillshadeTileLayer(
-                id,
-                provider.cacheable !== false
-                    ? new PersistentCacheTileDataSource({
-                          dataSource,
-                          capacity: cacheSize * 1024 * 1024,
-                          databasePath
-                      })
-                    : dataSource,
-                {
-                    zoomLevelBias,
-                    //@ts-ignore
-                    cacheSize,
-                    opacity,
-                    // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
-                    visible: opacity !== 0,
-                    ...provider.layerOptions
-                },
-                provider.terrarium === true
-            );
-            if (!this.hillshadeLayer) {
-                this.hillshadeLayer = packageService.hillshadeLayer = layer as HillshadeRasterTileLayer;
-            }
-        } else {
             layer = new RasterTileLayer({
-                dataSource:
+                dataSource,
+                zoomLevelBias,
+                opacity,
+                visible: opacity !== 0
+            });
+        } else {
+            const rasterCachePath = Folder.fromPath(path.join(getDataFolder(), 'rastercache'));
+            const databasePath = File.fromPath(path.join(rasterCachePath.path, id)).path;
+            legend = provider.legend;
+            let url = provider.url as string;
+            if (provider.tokenKey) {
+                const tokens = Array.isArray(provider.tokenKey) ? provider.tokenKey : [provider.tokenKey];
+                tokens.forEach((tok) => {
+                    if (!this.tokenKeys[tok]) {
+                        throw new Error('missing api token');
+                    }
+                    url = url.replace(`{${tok}}`, this.tokenKeys[tok]);
+                });
+            }
+            dataSource = new HTTPTileDataSource({
+                url,
+                ...provider.sourceOptions
+            });
+            if (provider.cacheable !== false) {
+                Object.assign(options, {
+                    cacheSize: {
+                        min: 0,
+                        max: 2048
+                    }
+                });
+            }
+            const cacheSize = appSettings.getNumber(`${id}_cacheSize`, 300);
+            if (provider.hillshade) {
+                Object.assign(options, HILLSHADE_OPTIONS);
+                layer = this.createHillshadeTileLayer(
+                    id,
                     provider.cacheable !== false
                         ? new PersistentCacheTileDataSource({
                               dataSource,
@@ -424,19 +415,46 @@ export default class CustomLayersModule extends MapModule {
                               databasePath
                           })
                         : dataSource,
-                zoomLevelBias,
-                //@ts-ignore
-                cacheSize,
-                opacity,
-                // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
-                visible: opacity !== 0,
-                ...provider.layerOptions
-            });
+                    {
+                        zoomLevelBias,
+                        //@ts-ignore
+                        cacheSize,
+                        opacity,
+                        // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
+                        visible: opacity !== 0,
+                        ...provider.layerOptions
+                    },
+                    provider.terrarium === true
+                );
+                if (!this.hillshadeLayer) {
+                    this.hillshadeLayer = packageService.hillshadeLayer = layer as HillshadeRasterTileLayer;
+                }
+            } else {
+                layer = new RasterTileLayer({
+                    dataSource:
+                        provider.cacheable !== false
+                            ? new PersistentCacheTileDataSource({
+                                  dataSource,
+                                  capacity: cacheSize * 1024 * 1024,
+                                  databasePath
+                              })
+                            : dataSource,
+                    zoomLevelBias,
+                    //@ts-ignore
+                    cacheSize,
+                    opacity,
+                    // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
+                    visible: opacity !== 0,
+                    ...provider.layerOptions
+                });
+            }
         }
+
         // console.log('createRasterLayer', id, opacity, provider.url, provider.sourceOptions, dataSource, dataSource.maxZoom, dataSource.minZoom);
         return {
             name: id,
-            legend: provider.legend,
+            id,
+            legend,
             opacity,
             options,
             layer,
@@ -605,10 +623,11 @@ export default class CustomLayersModule extends MapModule {
         (async () => {
             try {
                 const folderPath = await getDefaultMBTilesDir();
+                // console.log('folderPath', folderPath);
                 if (folderPath) {
                     await this.loadLocalMbtiles(folderPath);
                 }
-                const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
+                const savedSources: (string | Provider)[] = JSON.parse(appSettings.getString('added_providers', '[]'));
 
                 if (this.customSources.length === 0 && savedSources.length === 0) {
                     savedSources.push('openstreetmap');
@@ -616,10 +635,15 @@ export default class CustomLayersModule extends MapModule {
                 if (savedSources.length > 0) {
                     await this.getSourcesLibrary();
                     savedSources.forEach((s) => {
-                        const provider = this.baseProviders[s] || this.overlayProviders[s];
+                        let provider;
+                        if (typeof s === 'string') {
+                            provider = this.baseProviders[s] || this.overlayProviders[s];
+                        } else {
+                            provider = s;
+                        }
                         try {
                             if (provider) {
-                                const data = this.createRasterLayer(s, provider);
+                                const data = this.createRasterLayer(provider.id || provider.name, provider);
                                 this.customSources.push(data);
                                 mapContext.addLayer(data.layer, 'customLayers');
                             }
@@ -634,6 +658,15 @@ export default class CustomLayersModule extends MapModule {
             }
         })();
     }
+
+    reloadMapStyle() {
+        mapContext.getLayers().forEach((data) => {
+            if (data.layer instanceof VectorTileLayer) {
+                const decoder = data.layer.getTileDecoder();
+                decoder.reloadStyle();
+            }
+        });
+    }
     @profile
     vectorTileDecoderChanged(oldVectorTileDecoder, newVectorTileDecoder) {
         this.customSources.forEach((s, i) => {
@@ -643,7 +676,7 @@ export default class CustomLayersModule extends MapModule {
                     // zoomLevelBias: zoomLevelBias * 0.75,
                     opacity: s.layer.opacity,
                     decoder: newVectorTileDecoder,
-                    labelRenderOrder: VectorTileRenderOrder.LAST,
+                    // labelRenderOrder: VectorTileRenderOrder.LAST,
                     // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                     visible: s.layer.opacity !== 0
                 });
