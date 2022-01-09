@@ -85,7 +85,7 @@
     });
 </script>
 
-<gridlayout rows="auto,*" class="bottomsheet" height="200">
+<gridlayout rows="auto,*" class="bottomsheet" height="300">
     <label text={name} fontWeight="bold" padding="15 10 15 20" fontSize="20" />
     <collectionview bind:this={collectionView} row={1} items={linesItems} itemIdGenerator={(item, i) => i} android:marginBottom={$navigationBarHeight} rowHeight="70">
         <Template let:item>
