@@ -6,8 +6,8 @@
         "transportation_name",
         "waterway",
         "water_name",
-        "water",
         "boundary",
+        "water",
         "aeroway",
         "building_name",
         "building",
@@ -32,39 +32,13 @@
     ],
     "nutiparameters": {
         "_clickhandlerlayerfilter":".*::(icon|label)",
-        "lang": {
-            "default": "en"
-        },
-        "zoomBiais": {
-            "default": 0
-        },
-        "selected_id": {
-            "default": "0"
-        },
-        "selected_name": {
-            "default": ""
-        },
-        "buildings": {
-            "default": 1,
-            "values": {
-                "1": 1,
-                "0": 0,
-                "2": 2
-            }
-        },
-        "contours": {
-            "default": 1,
-            "values": {
-                "1": 1,
-                "0": 0
-            }
-        },
-        "contoursOpacity": {
-            "default": 1.0
-        },
-        "fallback_lang": {
-            "default": "en"
-        },
+        "lang": "en",
+        "zoomBiais": 0,
+        "selected_id": "0",
+        "buildings": 1,
+        "contours": 1,
+        "contoursOpacity": 1.0,
+        "fallback_lang": "en",
         "texts3d": {
             "default": "nutibillboard",
             "values": {
