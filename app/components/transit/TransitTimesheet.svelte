@@ -201,7 +201,7 @@
     <gridlayout rows="auto,auto,auto,*" columns="auto,*,auto">
         <CActionBar backgroundColor="transparent" colSpan={3}>
             <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={line.color} color={line.textColor} text={line.shortName} autoFontSize={true} />
-            <button variant="text" class="icon-btn" text="mdi-pdf-box" on:tap={() => downloadPDF()} />
+            <button variant="text" class="icon-btn" text="mdi-file-pdf-box" on:tap={() => downloadPDF()} />
             <button variant="text" class="icon-btn" text="mdi-information-outline" on:tap={() => showDetails()} />
         </CActionBar>
 
