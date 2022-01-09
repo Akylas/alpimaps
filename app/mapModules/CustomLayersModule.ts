@@ -94,6 +94,7 @@ export interface SourceItem {
     opacity: number;
     legend?: string;
     name: string;
+    id?: string;
     local?: boolean;
     layer: TileLayer<any, any>;
     provider: Provider;
