@@ -759,7 +759,10 @@
         } else if (item.properties?.extent) {
             let extent: [number, number, number, number] = item.properties.extent as any;
             if (typeof extent === 'string') {
-                extent = JSON.parse(`[${extent}]`);
+                if (extent[0] !== '[') {
+                    extent = `[${extent}]` as any;
+                }
+                extent = JSON.parse(extent as any);
             }
             cartoMap.moveToFitBounds(new MapBounds({ lat: extent[1], lon: extent[0] }, { lat: extent[3], lon: extent[2] }), screenBounds, true, true, false, 200);
         } else {
