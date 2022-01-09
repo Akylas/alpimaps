@@ -219,8 +219,8 @@
 			}
 		}
 	}
-	[class=isolated_dwelling][zoom>=12][zoom<=14],
-	[class=locality][zoom>=12][zoom<=14] {
+	[class=isolated_dwelling][zoom>=12][zoom<=16],
+	[class=locality][zoom>=13][zoom<=16] {
 		text-name: @name;
 		text-face-name: @mont;
 		text-placement: [nuti::texts3d];
@@ -234,7 +234,7 @@
 	}
 }
 
-#water_name[class=lake],
+#water_name[class!=river],
 #landcover_name[class=ice]{
 	::label {
 		text-name: @name;
@@ -564,7 +564,7 @@
 	}
 }
 
-#building_name['nuti::buildings'>0][zoom>=17]{
+#building_name['nuti::buildings'>0][zoom>=17]::label{
 	text-name: [name];
 	text-face-name: @mont;
 	text-fill: @housenumber;
@@ -574,7 +574,7 @@
 	text-size: linear([view::zoom], (16, 6.0), (18, 8.0), (20, 10));
 	text-min-distance: linear([view::zoom], (16, 100), (17, 50), (18, 20));
 }
-#housenumber[zoom>=18]{
+#housenumber[zoom>=18]::label{
 	text-name: [housenumber];
 	text-face-name: @mont;
 	text-fill: @housename;
@@ -584,7 +584,7 @@
 
 }
 
-#aerodrome_label[zoom>=15] {
+#aerodrome_label[zoom>=15]::label {
 	text-name: @name;
 	text-face-name: @mont;
 	text-fill: @building_label;

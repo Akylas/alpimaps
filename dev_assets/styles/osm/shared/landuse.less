@@ -15,7 +15,7 @@ Map {
       polygon-fill: @glacier;
   }
 
-  [class=farmland][zoom>=14]{
+  [class=farmland][zoom>=12]{
       polygon-fill: @farmland;
       [subclass=vineyard][zoom>=15] {
         polygon-pattern-file: url('symbols/vineyard.png');
@@ -41,9 +41,6 @@ Map {
       }
     }
   }
-  [class=farmyard][zoom>=10] {
-    polygon-fill: @farmyard;
-  }
   [class=grass]{
     [subclass=golf_course]::grass,
     [subclass=miniature_golf]::grass{
@@ -54,7 +51,7 @@ Map {
     [subclass=grass]::grass,
     [subclass=null]::grass,
     [subclass=village_green]::grass,
-    [subclass=garden]{
+    [subclass=garden]::grass{
       polygon-fill: @grass; 
     }
     [subclass=park] {
@@ -118,6 +115,11 @@ Map {
        polygon-fill: @residential; 
   }
   ::top_of_residential {
+    [class=pedestrian]{
+      polygon-fill: @pedestrian-polygon-fill;
+      line-color: darken(@pedestrian-polygon-fill, 10%);
+      line-width: 0.5;
+    }
     [class=recreation_ground][zoom>=14],
     [class=playground][zoom>=15]{
       polygon-fill: @leisure;
@@ -178,18 +180,9 @@ Map {
     }
     [class=zoo][zoom>=17],
     [class=theme_park][zoom>=17] {
-      a/line-width: 2;
-      a/line-color: @tourism;
-      a/line-opacity: 0.5;
-      a/line-join: round;
-      a/line-cap: round;
-      // [way_pixels>=60] {
-      //   b/line-width: 6;
-      //   b/line-color: @tourism;
-      //   b/line-opacity: 0.3;
-      //   b/line-join: round;
-      //   b/line-cap: round;
-      // }
+      line-width: 2;
+      line-color: @tourism;
+      line-opacity: 0.5;
     }
     [class=bus_station][zoom>=15] {
       polygon-fill: @transportation-area;

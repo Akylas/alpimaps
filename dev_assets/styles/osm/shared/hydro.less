@@ -2,38 +2,35 @@
 
 //river styling
 #waterway{
+	[brunnel=tunnel][zoom>=12] {
+		casing/line-color: @tunnel-casing;
+		casing/line-width: @canal_width + linear([view::zoom], (12, 0.5), (15, 2));
+	}
+	inner/line-color: @river;
 	[class=river][zoom>=3],
 	[class=riverbank][zoom>=13]{
-		line-color: @river;
-		line-width: linear([view::zoom], (8, 0.5), (15, 2), (16, 4));
+		inner/line-width: linear([view::zoom], (8, 0.5), (15, 2), (16, 4));
 	}
 	[class=stream][zoom>=12]{
-		line-color: @river; 
-		line-width: @stream-width;
+		inner/line-width: @stream-width;
 	}
 	[class=canal][zoom>=12]{
-		[brunnel=tunnel] {
-			casing/line-color: @tunnel-casing;
-			casing/line-width: @canal_width + linear([view::zoom], (12, 0.5), (15, 2));
-		}
-		line-color: @river; 
-		line-width: @canal_width;
-		line-dasharray: 2, 2;
+		inner/line-width: @canal_width;
 	}
-	[class=ditch][zoom>=15],
-	[class=drain][zoom>=15]{
-		line-color: @river;
-		line-width: 1.4;
-		line-dasharray: 2, 2;
+	[class=ditch][zoom>=13],
+	[class=drain][zoom>=13]{
+		inner/line-width: 1.4;
+	}
+	[intermittent=1] {
+		inner/line-dasharray: 2, 2;
 	}
 }
 #water {
-	polygon-fill: @water;
 	[class!=ocean]{
-		polygon-fill: @water_stroke; 
-		polygon-geometry-transform: translate(-0.5, -0.5);
-		::inner {
-			polygon-fill: @water;
+		outer/polygon-fill: @water_stroke; 
+		[zoom>=12]{
+			outer/polygon-geometry-transform: translate(-1.0, -1.0);
 		}
 	}
+	polygon-fill: @water;
 }
