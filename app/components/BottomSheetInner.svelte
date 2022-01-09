@@ -473,7 +473,7 @@
             if (!rasterDataSource) {
                 rasterDataSource = await mapContext.mapModules.customLayers.getDataSource('openstreetmap');
             }
-            const { default: component } = await import("~/components/PeakFinder.svelte");
+            const { default: component } = await import('~/components/PeakFinder.svelte');
             // const component = (await import('~/components/PeakFinder.svelte')).default;
             navigate({
                 page: component,
@@ -496,7 +496,6 @@
             const component = (await import('~/components/transit/TransitLinesBottomSheet.svelte')).default;
             const geometry = item.geometry as Point;
             const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0], altitude: geometry.coordinates[2] };
-            console.log('getTransitLines', { name: formatter.getItemName(item), position });
             showBottomSheet({ parent: mapContext.getMainPage(), view: component, disableDimBackground: true, props: { name: formatter.getItemName(item), position } });
         } catch (err) {
             this.showError(err);
