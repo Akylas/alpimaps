@@ -146,7 +146,7 @@ export default class CustomLayersModule extends MapModule {
             // }
             case ChangeType.Splice: {
                 if (event.addedCount > 0) {
-                    this.moveSource(this.customSources.getItem(event.index).name, event.index);
+                    this.moveSource(this.customSources.getItem(event.index), event.index);
                     // this._listViewAdapter.notifyItemRangeInserted(event.index, event.addedCount);
                 }
                 // if (event.removed && event.removed.length > 0) {
