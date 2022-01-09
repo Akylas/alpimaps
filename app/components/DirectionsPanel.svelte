@@ -587,7 +587,7 @@
                     sourceProjection: mapContext.getProjection()
                 });
             }
-            const id = Date.now() + '';
+            const id = Date.now() ;
             const item: any = {
                 type: 'Feature',
                 // id,
