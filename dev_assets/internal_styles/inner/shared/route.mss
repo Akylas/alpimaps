@@ -12,6 +12,8 @@
 @route_label_halo_radius: 1;
 @route_label_halo: #f2f5f8;
 
+@symbolColor: replace([symbol], '(:|_).*', '');
+
 #route{
 	[network=4][zoom>=10],
 	[network=3][zoom>=9],
@@ -33,13 +35,23 @@
 			line-width: @route_width + ([osmid] = [nuti::selected_osmid] ? 2 : 0);
 			// line-dasharray: [id] = [nuti::selected_id] ? (0,0) :  @biking_route_dasharray;
 			[class=hiking],[class=foot] {
-				line-color:([color] ? [color] : @hiking_route_fill);
+				[symbol=null] {
+					[network=4] {
+						line-color:yellow;
+					}
+					[network<=3] {
+						line-color:red;
+					}
+				}
+				[symbol!=null] {
+					line-color:(@symbolColor);
+				}
 			}
 			[class=bicycle] {
-				line-color:([color] ? [color] : @biking_route_fill);
+				line-color:([symbol] ? @symbolColor : @biking_route_fill);
 			}
 			[ref!=null][zoom>=13]{
-				text-fill: [textcolor] ? replace([textcolor],'-.*', '') : ([color] ? [color] : @route_label_fill);
+				text-fill: ([symbol] ? @symbolColor : @route_label_fill);
 				text-name: [ref];
 				[zoom>=15]{
 					text-name: [name];
