@@ -238,20 +238,22 @@ export default class CustomLayersModule extends MapModule {
         const layer = new VectorTileLayer({
             dataSource,
             layerBlendingSpeed: 3,
-            labelBlendingSpeed: 0,
+            labelBlendingSpeed: 3,
             labelRenderOrder: VectorTileRenderOrder.LAST,
             opacity,
             decoder: mapContext.getVectorTileDecoder(),
             rendererLayerFilter,
-            clickHandlerLayerFilter: PRODUCTION ? undefined : '',
+            clickHandlerLayerFilter: PRODUCTION ? undefined : '.*::(icon|label)',
             // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_NONE,
             visible: opacity !== 0
         });
         const routeLayer = new VectorTileLayer({
             dataSource,
             layerBlendingSpeed: 0,
+            rendererLayerFilter: 'route.*',
+            clickHandlerLayerFilter: 'route.*',
             visible: mapStore.showRoutes,
-            // labelRenderOrder: VectorTileRenderOrder.LAST,
+            labelRenderOrder: VectorTileRenderOrder.LAYER,
             decoder: mapContext.innerDecoder
         });
         routeLayer.setVectorTileEventListener<LatLonKeys>(
