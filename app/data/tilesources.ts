@@ -13,6 +13,7 @@ export interface ProviderOptions extends DataProviderOptions {
 export interface Provider {
     tokenKey?: TOKENS | TOKENS[];
     url?: string | string[] | Function;
+    type?: string;
     urlOptions?: ProviderOptions;
     name?: string;
     id?: string;
@@ -186,7 +187,7 @@ export const data: { [k: string]: Provider } = {
             maxZoom: 19,
             httpHeaders: {
                 'User-Agent': 'AlpiMaps'
-            },
+            }
         },
         urlOptions: {
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
