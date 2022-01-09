@@ -659,17 +659,22 @@ export default class CustomLayersModule extends MapModule {
         });
     }
     hillshadeLayer: HillshadeRasterTileLayer;
-    addDataSource(data: SourceItem) {
-        const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
-        const layerIndex = savedSources.indexOf(data.name);
+    addDataSource(item: SourceItem) {
+        const name = this.getSourceItemId(item);
+        const savedSources: (string | Provider)[] = JSON.parse(appSettings.getString('added_providers', '[]'));
+        const layerIndex = savedSources.findIndex((s) => (typeof s === 'string' ? s : s?.id) === name);
         if (layerIndex === -1) {
-            this.customSources.push(data);
-            mapContext.addLayer(data.layer, 'customLayers');
-            savedSources.push(data.name);
+            this.customSources.push(item);
+            mapContext.addLayer(item.layer, 'customLayers');
+            if (item.provider.type) {
+                savedSources.push(item.provider);
+            } else {
+                savedSources.push(name);
+            }
             appSettings.setString('added_providers', JSON.stringify(savedSources));
         } else {
-            this.customSources.splice(layerIndex, 0, data);
-            mapContext.insertLayer(data.layer, 'customLayers', layerIndex);
+            this.customSources.splice(layerIndex, 0, item);
+            mapContext.insertLayer(item.layer, 'customLayers', layerIndex);
         }
     }
     async loadLocalMbtiles(directory: string) {
@@ -836,34 +841,37 @@ export default class CustomLayersModule extends MapModule {
 
     async addSource() {
         await this.getSourcesLibrary();
-        const options = {
-            props: {
-                title: l('pick_source'),
-                options: Object.keys(this.baseProviders).map((s) => ({ name: s, provider: this.baseProviders[s] }))
-            },
-            fullscreen: false
-        };
         const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
         const results = await showBottomSheet({
             view: OptionSelect as any,
             props: {
                 title: l('pick_source'),
-                options: Object.keys(this.baseProviders).map((s) => ({ name: s, provider: this.baseProviders[s] }))
+                options:
+                    //  [{ name: l('pick'), isPick: true }].concat
+                    Object.keys(this.baseProviders).map((s) => ({ name: s, isPick: false, data: this.baseProviders[s] }))
             }
         });
-        // console.log('closeCallback', results);
         const result = Array.isArray(results) ? results[0] : results;
         if (result) {
-            const provider = result.provider;
-            const data = this.createRasterLayer(result.name, provider);
+            const provider = result.data;
+            if (result.isPick) {
+                provider.name = File.fromPath(provider.url).name;
+                provider.id = provider.url;
+                provider.type = 'orux';
+            }
+            const data = this.createRasterLayer(provider.id || result.name, provider);
             this.addDataSource(data);
         }
     }
-    deleteSource(name: string) {
-        let index = -1;
 
+    getSourceItemId(item: SourceItem) {
+        return item.id || item.name;
+    }
+    deleteSource(item: SourceItem) {
+        let index = -1;
+        const name = this.getSourceItemId(item);
         this.customSources.some((d, i) => {
-            if (d.name === name) {
+            if (d.id === name || d.name === name) {
                 index = i;
                 return true;
             }
@@ -874,19 +882,20 @@ export default class CustomLayersModule extends MapModule {
             mapContext.removeLayer(this.customSources.getItem(index).layer, 'customLayers');
             this.customSources.splice(index, 1);
         }
-        const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
-        index = savedSources.indexOf(name);
+        const savedSources: (string | Provider)[] = JSON.parse(appSettings.getString('added_providers', '[]'));
+        index = savedSources.findIndex((s) => (typeof s === 'string' ? s : s?.id) === name);
         appSettings.remove(name + '_opacity');
         if (index !== -1) {
             savedSources.splice(index, 1);
             appSettings.setString('added_providers', JSON.stringify(savedSources));
         }
     }
-    moveSource(name: string, newIndex: number) {
+    moveSource(item: SourceItem, newIndex: number) {
         let index = -1;
+        const name = this.getSourceItemId(item);
 
         this.customSources.some((d, i) => {
-            if (d.name === name) {
+            if (d.id === name || d.name === name) {
                 index = i;
                 return true;
             }
@@ -902,8 +911,8 @@ export default class CustomLayersModule extends MapModule {
                 this.customSources.splice(newIndex, 0, item);
             }
         }
-        const savedSources: string[] = JSON.parse(appSettings.getString('added_providers', '[]'));
-        index = savedSources.indexOf(name);
+        const savedSources: (string | Provider)[] = JSON.parse(appSettings.getString('added_providers', '[]'));
+        index = savedSources.findIndex((s) => (typeof s === 'string' ? s : s?.id) === name);
         if (index !== -1) {
             // let firstNonLocalIndex = -1;
             // this.customSources.some((d, i) => {
@@ -914,7 +923,11 @@ export default class CustomLayersModule extends MapModule {
             //     return false;
             // });
             savedSources.splice(index, 1);
-            savedSources.splice(newIndex, 0, name);
+            if (item.provider.type) {
+                savedSources.splice(newIndex, 0, item.provider);
+            } else {
+                savedSources.splice(newIndex, 0, name);
+            }
             appSettings.setString('added_providers', JSON.stringify(savedSources));
         }
     }
