@@ -183,7 +183,25 @@
                                 dataSource: transitVectorTileDataSource,
                                 decoder: mapContext.innerDecoder
                             });
-
+                            transitVectorTileLayer.setVectorTileEventListener<LatLonKeys>(
+                                {
+                                    onVectorTileClicked: ({featureData}) => {
+                                        const item: IItem = {
+                                            properties: {
+                                                ...featureData,
+                                                route: {
+                                                    osmid: featureData.id
+                                                } as any
+                                            },
+                                            layer: transitVectorTileLayer
+                                        };
+                                        selectItem({ item, isFeatureInteresting: true, preventZoom: true });
+                                        return true;
+                                        // mapContext.vectorTileClicked(e);
+                                    }
+                                },
+                                mapContext.getProjection()
+                            );
                             // transitVectorTileLayer.setVectorTileEventListener(this,
                             // mapContext.getProjection());
                             // always add it at 1 to respect local order
@@ -589,14 +607,22 @@
                 console.log('selected_id', typeof item.properties.route.osmid, item.properties.route.osmid, typeof item.properties.id, item.properties.id, setSelected);
                 if (item.properties.id !== undefined) {
                     selectedId = item.properties.id;
-                    mapContext.innerDecoder.setStyleParameter('selected_id', selectedId + '');
+                    if (typeof item.properties.id === 'string') {
+                        mapContext.innerDecoder.setStyleParameter('selected_id_str', selectedId + '');
+                        mapContext.innerDecoder.setStyleParameter('selected_id', '0');
+
+                    } else {
+                        mapContext.innerDecoder.setStyleParameter('selected_id', selectedId + '');
+                        mapContext.innerDecoder.setStyleParameter('selected_id_str', '0');
+                    }
                     mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
                 } else if (item.properties.route.osmid !== undefined) {
                     selectedOSMId = item.properties.route.osmid;
                     mapContext.innerDecoder.setStyleParameter('selected_osmid', selectedOSMId + '');
                     mapContext.innerDecoder.setStyleParameter('selected_id', '0');
+                    mapContext.innerDecoder.setStyleParameter('selected_id_str', '0');
                 }
-// console.log('selectedOSMId', selectedOSMId);
+                // console.log('selectedOSMId', selectedOSMId);
                 // if (!selectedRouteLine) {
                 //     getOrCreateLocalVectorLayer();
                 //     selectedRouteLine = mapContext.mapModule('items').createLocalLine(item, {
@@ -664,6 +690,7 @@
                 if (setSelected && selectedId !== undefined) {
                     selectedId = undefined;
                     mapContext.innerDecoder.setStyleParameter('selected_id', '0');
+                    mapContext.innerDecoder.setStyleParameter('selected_id_str', '');
                 }
             }
             if (setSelected) {
@@ -795,6 +822,7 @@
             if (selectedId !== undefined) {
                 selectedId = undefined;
                 mapContext.innerDecoder.setStyleParameter('selected_id', '0');
+                mapContext.innerDecoder.setStyleParameter('selected_id_str', '');
             }
             // if (item.route) {
             //     const vectorElement = item.vectorElement as Line;
