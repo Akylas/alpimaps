@@ -18,7 +18,6 @@
 		}
 	}
 	[class=path]{
-		[subclass=pedestrian],
 		[subclass=footway][zoom>=15],
 		[subclass=cycleway][zoom>=15] {
 			polygon-fill: @pedestrian-polygon-fill;
@@ -269,7 +268,7 @@
 	[class=path][brunnel=bridge][zoom>=16]::bridge1 {
 		[subclass=path][sac_scale!=null],
 		[zoom>=13] {
-			[subclass=cycleway],[bicycle=designated][mtb_type=null][surface!=unpaved] {
+			[subclass=cycleway],[bicycle=designated][surface=paved] {
 				[zoom>=14][@cycleway-fill!=0] {
 					cycleway/line-color: @cycleway-fill;
 					cycleway/line-width: @path-width + @path-casing-width+ @cycleway-casing-width;
@@ -278,13 +277,9 @@
 			line-width: @path-width + @path-casing-width;
 			line-color: @path-casing;
 			[brunnel=tunnel][zoom>=14] {
-				line-cap: butt;
-				line-join: miter;
 				line-dasharray: @tunnel-dasharray;
 			}
 			[brunnel=bridge][zoom>=16]{
-				line-cap: butt;
-				line-join: miter;
 				line-color: @bridge-casing;
 			}
 			[subclass=steps] {
@@ -301,7 +296,7 @@
 				line-color: @path-fill;
 				line-width: @path-width;
 				line-dasharray: @path-dasharray;
-				[subclass=cycleway],[bicycle=designated][mtb_type=null][surface!=unpaved] {
+				[subclass=cycleway],[bicycle=designated][surface=paved] {
 					[zoom>=14] {
 						line-color: @cycleway-inner-fill;
 						// line-width: @path-width;
@@ -324,7 +319,7 @@
 				[subclass=pedestrian],
 				[surface=paved],
 				[subclass=footway]
-				[sac_scale!=hiking],
+				[sac_scale=null],
 				[subclass=platform],
 				[subclass=corridor] {
 					line-color: @pedestrian-casing;
@@ -336,7 +331,7 @@
 					}
 					
 					::inner {
-						line-dasharray: 0,0;
+						line-dasharray: none;
 						[zoom>=15] {
 							line-dasharray: @pedestrian-dasharray;
 							
