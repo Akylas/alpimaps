@@ -88,7 +88,7 @@
         const customLayers = mapContext.mapModule('customLayers');
         switch (act) {
             case 'delete': {
-                customLayers.deleteSource(item.name);
+                customLayers.deleteSource(item);
                 break;
             }
             case 'clear_cache': {
