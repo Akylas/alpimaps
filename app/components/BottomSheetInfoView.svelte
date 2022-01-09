@@ -134,6 +134,26 @@
             console.error('updateItem', err);
         }
     }
+
+    function getSymbol(itemProps) {
+        if (!itemProps) {
+            return null;
+        }
+        if (itemProps.symbol) {
+            return itemProps.symbol;
+        } else {
+            if (itemProps.class === 'hiking') {
+                switch (itemProps.network) {
+                    case 4:
+                        return 'yellow:yellow:green_lower';
+                    case 3:
+                        return 'yellow:white:yellow_lower';
+                    default:
+                        return 'red:white:red_lower:50:black';
+                }
+            }
+        }
+    }
 </script>
 
 <gridlayout {...$$restProps} padding="5 10 4 10">
@@ -156,8 +176,8 @@
             <cspan visibility={itemIcon && itemIcon.length > 0 ? 'visible' : 'hidden'} paddingLeft="10" width="40" text={osmicon(itemIcon)} fontFamily="osm" fontSize={24} />
         </cgroup>
         <symbolshape
-            visibility={showSymbol && itemProps && itemProps.symbol ? 'visible' : 'hidden'}
-            symbol={(itemProps && itemProps.symbol) || null}
+            visibility={showSymbol && itemProps && (itemProps.symbol || itemProps.network) ? 'visible' : 'hidden'}
+            symbol={getSymbol(itemProps)}
             color={(itemProps && itemProps.color) || null}
             width="34"
             height="34"
