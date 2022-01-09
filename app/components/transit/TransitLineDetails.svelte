@@ -50,13 +50,8 @@
             transitVectorTileDataSource.setLayerGeoJSONString(1, lineGeoJSON);
 
             const transitVectorTileLayer = new VectorTileLayer({
-                // preloading: true,
                 dataSource: transitVectorTileDataSource,
-                decoder: new MBVectorTileDecoder({
-                    style: 'voyager',
-                    liveReload: TNS_ENV !== 'production',
-                    [PRODUCTION ? 'zipPath' : 'dirPath']: `~/assets/internal_styles/inner${PRODUCTION ? '.zip' : ''}`
-                })
+                decoder: getMapContext().innerDecoder
             });
 
             transitVectorTileLayer.setVectorTileEventListener(this);
@@ -177,7 +172,7 @@
         <CActionBar backgroundColor="transparent">
             <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={line.color} color={line.textColor} text={line.shortName} autoFontSize={true} />
 
-            <button variant="text" class="icon-btn" text="mdi-pdf-box" on:tap={() => downloadPDF()} />
+            <button variant="text" class="icon-btn" text="mdi-file-pdf-box" on:tap={() => downloadPDF()} />
             <button variant="text" class="icon-btn" text="mdi-calendar-clock-outline" on:tap={() => showTimesheet()} />
         </CActionBar>
 
