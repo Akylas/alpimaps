@@ -21,9 +21,9 @@
         close(item);
     }
 
-    const paint = new Paint();
-    paint.setFontFamily('osm');
-    paint.setTextSize(34);
+    // const paint = new Paint();
+    // paint.setFontFamily('osm');
+    // paint.setTextSize(34);
     // function onDraw({ canvas, object, item }: { canvas: Canvas; object: CanvasView; item }) {
     //     //red:white:red_lower:549:black
     //     const route = item.route;
@@ -48,18 +48,38 @@
     //         canvas.drawRect(16, 16, 50, 50, paint);
     //     }
     // }
+
+    function getSymbol(item) {
+        const properties = item.route.featureData;
+        console.log('getSymbol',properties)
+        if (properties.symbol) {
+            return properties.symbol;
+        } else {
+            if (properties.class === 'hiking') {
+
+                switch (properties.network) {
+                case 4:
+                    return 'yellow:yellow:green_lower';
+                case 3:
+                    return 'yellow:white:yellow_lower';
+                default:
+                    return 'red:white:red_lower:50:black';
+            }
+            }
+        }
+    }
 </script>
 
 <collectionView items={options} rowHeight="72" height="200">
     <Template let:item>
         <ListItem
-            title={item.name}
+            title={item.name || item.route.featureData.class}
             subtitle={item.route.featureData.ref}
             showBottomLine
             extraPaddingLeft={44}
             on:tap={(event) => onTap(item, event)}
             showSymbol
-            symbol={item.route.featureData.symbol || 0}
+            symbol={getSymbol(item)}
             symbolColor={item.route.featureData.color || 0}
         />
     </Template>
