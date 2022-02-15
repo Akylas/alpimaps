@@ -31,10 +31,8 @@ export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.B
     onCreate() {
         this.currentNotifText = lc('tap_to_open');
         this.recording = false;
-        // this.inBackground = false;
         this.bounded = false;
         this.alwaysShowNotification = false;
-        // this.alwaysShowNotification = android.os.Build.VERSION.SDK_INT >= 26; // oreo
         this.notificationManager = this.getSystemService(android.content.Context.NOTIFICATION_SERVICE);
         NotificationHelper.createNotificationChannel(this);
     },
@@ -44,8 +42,6 @@ export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.B
             this.geoHandler.off(SessionChronoEvent, this.onSessionChronoEvent, this);
             this.geoHandler = null;
         }
-        // applicationOff(resumeEvent, this.onAppEvent, this);
-        // applicationOff(suspendEvent, this.onAppEvent, this);
     },
 
     onBind(intent: android.content.Intent) {
@@ -71,8 +67,6 @@ export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.B
         // this.showForeground();
         this.geoHandler.on(SessionStateEvent, this.onSessionStateEvent, this);
         this.geoHandler.on(SessionChronoEvent, this.onSessionChronoEvent, this);
-        // applicationOn(resumeEvent, this.onAppEvent, this);
-        // applicationOn(suspendEvent, this.onAppEvent, this);
     },
 
     // private mNotification: android.app.Notification;
@@ -132,11 +126,11 @@ export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.B
     }
 
     // onAppEvent(event: ApplicationEventData) {
-    //     if (event.eventName === suspendEvent) {
+    //     if (event.eventName === backgroundEvent) {
     //         if (!this.inBackground) {
     //             this.inBackground = true;
     //         }
-    //     } else if (event.eventName === resumeEvent) {
+    //     } else if (event.eventName === foregroundEvent) {
     //         if (this.inBackground) {
     //             this.inBackground = false;
     //         }

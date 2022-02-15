@@ -3,11 +3,9 @@
     "whitelist": [
         "android.hardware:GeomagneticField*",
         "androidx.core.widget:NestedScrollView*", "android.app:Notification*", "androidx.core.app:NotificationCompat*", "androidx.core.app.NotificationCompat:Builder*", "android.app:PendingIntent",
-        "akylas.alpi.maps*:*","androidx.appcompat.app:AppCompatDelegate*", "android.content:ServiceConnection*", "android.os:Binder*", "android.app:Service*", "top.defaults.colorpicker.ColorPickerPopup:ColorPickerObserver*","android.app:NotificationManager*","android.app:NotificationChannel*",
-
+        "akylas.alpi.maps*:*","androidx.appcompat.app:AppCompatDelegate*", "android.content:ServiceConnection*", "android.os:Binder*", "android.app:Service*","android.app:NotificationManager*","android.app:NotificationChannel*",
+        "top.defaults.colorpicker.ColorPickerPopup:Builder*", "top.defaults.colorpicker:ColorPickerPopup*","top.defaults.colorpicker.ColorPickerPopup:ColorPickerObserver*",
         "com.caverock.androidsvg:SVG*","com.caverock.androidsvg:PreserveAspectRatio*","com.caverock.androidsvg:RenderOptions*",
-
-        "android.webkit:WebChromeClient*","android.webkit:ConsoleMessage*","android.webkit:PermissionRequest*",
 
         "androidx.appcompat.widget:AppCompatCheckBox*",
         "android.provider:DocumentsContract*","android.provider:OpenableColumns*","android.database:Cursor*",
