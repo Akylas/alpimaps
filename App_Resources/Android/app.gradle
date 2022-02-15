@@ -1,26 +1,27 @@
+project.ext.abiCodes = ['armeabi':1, 'armeabi-v7a':2, 'arm64-v8a':3, 'x86':4, 'x86_64':5]
 
 android { 
-
   defaultConfig {  
-    compileSdkVersion 31
     minSdkVersion 19
-    targetSdkVersion 31
     versionCode 216
     versionName "2.0.0"
-     
     ndk {
       abiFilters.clear()
-      abiFilters  'x86_64', 'arm64-v8a', 'armeabi-v7a'
-      // abiFilters 'arm64-v8a'
     }
+  }
+  lintOptions {
+      checkReleaseBuilds false
+      // Or, if you prefer, you can continue to check for errors in release builds,
+      // but continue the build even when errors are found:
+      abortOnError false
   }
   splits {
       abi {
-          enable false
+          // enable gradle.startParameter.taskNames.contains("assembleRelease")  !project.hasProperty('dbgBld')
+          enable project.hasProperty('splitEnabled')
           reset()
-          include 'armeabi-v7a','x86_64','arm64-v8a'
-          // include 'arm64-v8a'
-          universalApk true
+          include  'x86_64', 'arm64-v8a', 'armeabi-v7a'
+          universalApk false
       }
   }
   aaptOptions {
@@ -60,6 +61,9 @@ android {
   // }
 }
 dependencies {
+
+    implementation 'com.github.duanhong169:logger:1.0.0'
+    implementation 'com.github.duanhong169:checkerboarddrawable:1.0.2'
     implementation 'com.github.duanhong169:colorpicker:1.1.6'
 }
 
@@ -77,12 +81,20 @@ dependencies {
 //     }
 // }
 
-// task createProguard {
-//     dependsOn 'buildMetadata'
-//     doLast {
-//         exec {
-//             workingDir "$USER_PROJECT_ROOT"
-//             commandLine 'node', 'scripts/createProguard.js'
-//         }
-//     }
-// }
+task createProguard {
+    dependsOn 'buildMetadata'
+    doLast {
+        exec {
+            workingDir "$USER_PROJECT_ROOT"
+            commandLine 'node', 'scripts/createProguard.js'
+        }
+    }
+}
+android.applicationVariants.all { variant ->
+    variant.outputs.each { output ->
+        def baseAbiVersionCode = project.ext.abiCodes.get(output.getFilter("ABI"), 0)
+        if (baseAbiVersionCode != null) {
+            output.versionCodeOverride = baseAbiVersionCode * 10000000 + variant.versionCode
+        }
+    }
+}
