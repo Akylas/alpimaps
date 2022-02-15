@@ -1,6 +1,5 @@
 
 #mountain_peak {
-	
 	['mapnik::geometry_type'=2] {
 		[class=cliff][zoom>=12] { 
 			line-color: @cliff;
@@ -20,11 +19,12 @@
 			}
 		}
 	}
-	['mapnik::geometry_type'=1] {
+	['mapnik::geometry_type'=1][class=peak],
+	['mapnik::geometry_type'=1][zoom>=12]{
 		// order is important for icon to take precedence over label and respect rank
 		::icon {
 			text-face-name: @osm;
-			text-feature-id: @name;
+			text-feature-id: [name]+[ele];
 			text-size: @peak_icon_width; 
 			text-placement: [nuti::markers3d];
 			text-name: @peak_icon;
@@ -32,12 +32,12 @@
 			[class=saddle] {
 				text-name: @saddle_icon;
 				text-fill: @sadle_label;
+				text-size: @peak_icon_width - 0.000001; 
 			}
 		}
-		[class=peak]::label, 
-		[zoom>=12]::label {
+		::label {
 			text-name: @name;
-			text-feature-id: @name;
+			text-feature-id: [name]+[ele];
 			[zoom>=10] {
 				text-name: @name ?  ( [ele] ? @name  + ', ' +[ele] + 'm': @name): '';
 			}
@@ -49,24 +49,25 @@
 			text-fill: @peak_label;
 			[class="saddle"] {
 				text-fill: @sadle_label;
+				text-size: @peak_label_width - 0.000001; 
 			}
 			text-dy: @peak_label_dy; 
 			text-wrap-width: @poi_label_wrap_width;
 			text-halo-fill: @peak_halo;
 			text-halo-radius: @peak_halo_radius;
-			text-min-distance: @peak_text_min_dist;
+			// text-min-distance: @peak_text_min_dist;
 		}
 	}
 }
 
 #contour['nuti::contours'>0][zoom>=12][ele>0] {
-	[div=10][zoom>=15],
+	[div=10][zoom>=14],
 	[div=20][zoom>=14]{
 		line-color: @contour_low;
 		line-width: 0.6 ;
 	}
 	[div=50][zoom>=13][zoom<14] ,
-	[div=50][zoom>=15]{
+	[div=50][zoom>=14]{
 		line-color: step([view::zoom], (13, @contour_semi), (14,@contour));
 		line-width: 0.6 ;
 	}

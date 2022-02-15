@@ -6,7 +6,8 @@
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { GridLayout } from '@nativescript/core';
     import type { ApplicationEventData } from '@nativescript/core/application';
-    import { off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
+    import { off as applicationOff, on as applicationOn } from '@nativescript/core/application';
+    import { backgroundEvent, foregroundEvent } from '@akylas/nativescript/application';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler, GeoLocation, UserLocationdEventData } from '~/handlers/GeoHandler';
@@ -80,12 +81,12 @@
     }
 
     onMount(() => {
-        applicationOn(suspendEvent, onAppPause);
-        applicationOn(resumeEvent, onAppResume);
+        applicationOn(backgroundEvent, onAppPause);
+        applicationOn(foregroundEvent, onAppResume);
     });
     onDestroy(() => {
-        applicationOff(suspendEvent, onAppPause);
-        applicationOff(resumeEvent, onAppResume);
+        applicationOff(backgroundEvent, onAppPause);
+        applicationOff(foregroundEvent, onAppResume);
     });
 
     onServiceLoaded((handler: GeoHandler) => {

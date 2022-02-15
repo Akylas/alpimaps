@@ -2,7 +2,7 @@ import * as https from '@nativescript-community/https';
 import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
 import * as appavailability from '@nativescript/appavailability';
 import { ApplicationEventData, EventData, Observable, knownFolders } from '@nativescript/core';
-import { off as applicationOff, on as applicationOn, resumeEvent } from '@nativescript/core/application';
+import { off as applicationOff, on as applicationOn, foregroundEvent } from '@nativescript/core/application';
 import * as connectivity from '@nativescript/core/connectivity';
 import { Headers } from '@nativescript/core/http';
 import { ad } from '@nativescript/core/utils/utils';
@@ -541,7 +541,7 @@ export class NetworkService extends Observable {
             return;
         }
         this.monitoring = true;
-        applicationOn(resumeEvent, this.onAppResume, this);
+        applicationOn(foregroundEvent, this.onAppResume, this);
         connectivity.startMonitoring(this.onConnectionStateChange.bind(this));
         this.connectionType = connectivity.getConnectionType();
         this.canCheckWeather = await appavailability.available(global.isIOS ? 'weather://' : 'com.akylas.weather');
@@ -559,7 +559,7 @@ export class NetworkService extends Observable {
         if (!this.monitoring) {
             return;
         }
-        applicationOff(resumeEvent, this.onAppResume, this);
+        applicationOff(foregroundEvent, this.onAppResume, this);
         this.monitoring = false;
         connectivity.stopMonitoring();
     }
