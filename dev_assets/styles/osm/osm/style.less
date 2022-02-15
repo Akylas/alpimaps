@@ -314,8 +314,8 @@
 
 @peak_icon:[nuti::osm-mountain];
 @saddle_icon:[nuti::osm-saddle];
-@peak_icon_width: @poi_icon_width;
-@peak_label_width: linear([view::zoom], (5, 5), (10, 7), (18, 10)) - 0.000001 * [rank];
+@peak_icon_width: @poi_icon_width + 0.000001 * [ele];
+@peak_label_width: linear([view::zoom], (5, 8), (10, 9), (18, 12)) + 0.000001 * [ele] - 0.000001 * [rank];
 @peak_label_dy: @poi_label_dy;
 @peak_text_min_dist: linear([view::zoom], (5, 20), (10, 10), (18, 5));
 

@@ -1,27 +1,31 @@
 // (com as any).tns.Runtime.getCurrentRuntime().enableVerboseLogging();
 import { setGeoLocationKeys } from '@nativescript-community/gps';
 import { installMixins as installUIMixins } from '@nativescript-community/systemui';
-import { createNativeAttributedString, overrideSpanAndFormattedString } from '@nativescript-community/text';
+import { overrideSpanAndFormattedString } from '@nativescript-community/text';
 import { setMapPosKeys } from '@nativescript-community/ui-carto/core';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
-import PagerElement from '@nativescript-community/ui-pager/svelte';
 import DrawerElement from '@nativescript-community/ui-drawer/svelte';
-import { PagerItem } from '@nativescript-community/ui-pager';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
+import PagerElement from '@nativescript-community/ui-pager/svelte';
 import installWebRTC from '@nativescript-community/ui-webview-rtc';
-import { Application, Trace } from '@nativescript/core';
+import { Application } from '@nativescript/core';
+import { ScrollView } from '@nativescript/core/ui';
 import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
 import Map from '~/components/Map.svelte';
+// import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
+// Trace.addCategories(Trace.categories.ViewHierarchy);
+// Trace.addCategories(CollectionViewTraceCategory);
+// Trace.enable();
+import { start as startThemeHelper } from '~/helpers/theme';
+import { BgService } from '~/services/BgService';
+import { networkService } from '~/services/NetworkService';
 import { install as installLogging } from '~/utils/logging';
 import { startSentry } from '~/utils/sentry';
 import './app.scss';
-import { BgService } from '~/services/BgService';
-import { networkService } from '~/services/NetworkService';
-import { ScrollView } from '@nativescript/core/ui';
 
-startSentry();
+// startSentry();
 installLogging();
 installMixins();
 installBottomSheets();
@@ -49,10 +53,11 @@ registerNativeViewElement('ScrollView', () => NestedScrollView as any);
 registerNativeViewElement('StackLayout', () => require('@nativescript/core').StackLayout);
 registerNativeViewElement('flexlayout', () => require('@nativescript/core').FlexboxLayout);
 registerNativeViewElement('Switch', () => require('@nativescript/core').Switch);
-registerNativeViewElement('TextField', () => require('@nativescript/core').TextField);
+// registerNativeViewElement('TextField', () => require('@nativescript/core').TextField);
 registerNativeViewElement('Span', () => require('@nativescript/core').Span);
 // registerNativeViewElement('WebView', () => require('@nativescript/core').WebView);
 
+registerNativeViewElement('textfield', () => require('@nativescript-community/ui-material-textfield').TextField, null, {}, { override: true });
 registerNativeViewElement('button', () => require('@nativescript-community/ui-material-button').Button, null, {}, { override: true });
 registerNativeViewElement('label', () => require('@nativescript-community/ui-label').Label, null, {}, { override: true });
 registerNativeViewElement('mdactivityindicator', () => require('@nativescript-community/ui-material-activityindicator').ActivityIndicator);
@@ -78,11 +83,6 @@ CollectionViewElement.register();
 PagerElement.register();
 DrawerElement.register();
 
-// import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
-// Trace.addCategories(Trace.categories.ViewHierarchy);
-// Trace.addCategories(CollectionViewTraceCategory);
-// Trace.enable();
-import { start as startThemeHelper } from '~/helpers/theme';
 startThemeHelper();
 
 if (global.isIOS) {
@@ -118,4 +118,5 @@ Application.on(Application.exitEvent, () => {
     // application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_OFF);
     // }
 });
+//@ts-ignore
 svelteNative(Map, {});

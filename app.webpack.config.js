@@ -271,6 +271,19 @@ module.exports = (env, params = {}) => {
         '../../accessibility$': '~/acessibilityShim',
         [`${coreModulesPackageName}/accessibility$`]: '~/acessibilityShim'
     });
+    let appVersion;
+    let buildNumber;
+    if (platform === 'android') {
+        const gradlePath = resolve(projectRoot, appResourcesPath, 'Android/app.gradle');
+        const gradleData = readFileSync(gradlePath, 'utf8');
+        appVersion = gradleData.match(/versionName "((?:[0-9]+\.?)+)"/)[1];
+        buildNumber = gradleData.match(/versionCode ([0-9]+)/)[1];
+    } else if (platform === 'ios') {
+        const plistPath = resolve(projectRoot, appResourcesPath, 'iOS/Info.plist');
+        const plistData = readFileSync(plistPath, 'utf8');
+        appVersion = plistData.match(/<key>CFBundleShortVersionString<\/key>[\s\n]*<string>(.*?)<\/string>/)[1];
+        buildNumber = plistData.match(/<key>CFBundleVersion<\/key>[\s\n]*<string>([0-9]*)<\/string>/)[1];
+    }
 
     const package = require('./package.json');
     const nsconfig = require('./nativescript.config.playstore.js');
@@ -294,6 +307,9 @@ module.exports = (env, params = {}) => {
         'global.autoLoadPolyfills': false,
         'gVars.internalApp': false,
         __CARTO_PACKAGESERVICE__: cartoLicense,
+        __APP_ID__: `"${nconfig.id}"`,
+        __APP_VERSION__: `"${appVersion}"`,
+        __APP_BUILD_NUMBER__: `"${buildNumber}"`,
         TNS_ENV: JSON.stringify(mode),
         SUPPORTED_LOCALES: JSON.stringify(locales),
         DEFAULT_LOCALE: `"${locale}"`,
@@ -593,15 +609,6 @@ module.exports = (env, params = {}) => {
                     filename: join(process.env.SOURCEMAP_REL_DIR, '[name].js.map')
                 })
             );
-            let appVersion;
-            let buildNumber;
-            if (platform === 'android') {
-                appVersion = readFileSync('App_Resources/Android/app.gradle', 'utf8').match(/versionName "((?:[0-9]+\.?)+)"/)[1];
-                buildNumber = readFileSync('App_Resources/Android/app.gradle', 'utf8').match(/versionCode ([0-9]+)/)[1];
-            } else if (platform === 'ios') {
-                appVersion = readFileSync('App_Resources/iOS/Info.plist', 'utf8').match(/<key>CFBundleShortVersionString<\/key>[\s\n]*<string>(.*?)<\/string>/)[1];
-                buildNumber = readFileSync('App_Resources/iOS/Info.plist', 'utf8').match(/<key>CFBundleVersion<\/key>[\s\n]*<string>([0-9]*)<\/string>/)[1];
-            }
             config.plugins.push(
                 new SentryCliPlugin({
                     release: appVersion,
