@@ -5,12 +5,13 @@
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { ApplicationSettings } from '@nativescript/core';
     import type { ApplicationEventData } from '@nativescript/core/application';
-    import { off as applicationOff, on as applicationOn, resumeEvent, suspendEvent } from '@nativescript/core/application';
+    import { off as applicationOff, on as applicationOn } from '@nativescript/core/application';
+    import { backgroundEvent, foregroundEvent } from '@akylas/nativescript/application';
     import { onDestroy, onMount } from 'svelte';
     import { GeoHandler, GeoLocation, UserLocationdEventData } from '~/handlers/GeoHandler';
     import { l, lc } from '~/helpers/locale';
     import { getMapContext } from '~/mapModules/MapModule';
-    import UserLocationModule from '~/mapModules/UserLocationModule';
+    import UserLocationModule, { LocationEvent } from '~/mapModules/UserLocationModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
@@ -19,6 +20,7 @@
 </script>
 
 <script lang="ts">
+    const ALT_REF_SETTING = 'altimeter_reference';
     let currentLocation: GeoLocation = null;
     let referencePressure = null;
     let referenceAltitude = null;
@@ -31,26 +33,26 @@
     export let height: number = 200;
     let geoHandler: GeoHandler;
     onMount(() => {
-        const reference = ApplicationSettings.getString('altimeter_reference');
+        const reference = ApplicationSettings.getString(ALT_REF_SETTING);
         if (reference) {
             const json = JSON.parse(reference);
             referencePressure = json.pressure;
             referenceAltitude = json.altitude;
             airportRefName = json.name;
         }
-        applicationOn(suspendEvent, onAppPause);
-        applicationOn(resumeEvent, onAppResume);
+        applicationOn(backgroundEvent, onAppPause);
+        applicationOn(foregroundEvent, onAppResume);
         userLocationModule = mapContext.mapModule('userLocation');
-        userLocationModule.on('location', onNewLocation);
+        userLocationModule.on(LocationEvent, onNewLocation);
         onNewLocation({ data: userLocationModule.lastUserLocation } as any);
         onServiceLoaded((handler: GeoHandler) => {
             geoHandler = handler;
         });
     });
     onDestroy(() => {
-        applicationOff(suspendEvent, onAppPause);
-        applicationOff(resumeEvent, onAppResume);
-        userLocationModule.off('location', onNewLocation);
+        applicationOff(backgroundEvent, onAppPause);
+        applicationOff(foregroundEvent, onAppResume);
+        userLocationModule.off(LocationEvent, onNewLocation);
         if (listeningForBarometer) {
             stopBarometerAltitudeUpdate();
         }
@@ -123,7 +125,7 @@
         referenceAltitude = null;
         referencePressure = null;
         airportRefName = null;
-        ApplicationSettings.remove('altimeter_reference');
+        ApplicationSettings.remove(ALT_REF_SETTING);
     }
     async function getNearestAirportPressure() {
         referencePressure = null;
@@ -140,7 +142,7 @@
                     referencePressure = r.pressure;
                     airportRefName = r.name;
                     ApplicationSettings.setString(
-                        'altimeter_reference',
+                        ALT_REF_SETTING,
                         JSON.stringify({
                             altitude: r.elevation,
                             pressure: r.pressure,
@@ -171,7 +173,6 @@
                     let assumedTemp = 15;
                     const result = await prompt({
                         title: lc('current_temperature'),
-                        // message: this.$tc('change_glasses_name'),
                         okButtonText: l('set'),
                         cancelButtonText: l('cancel'),
                         autoFocus: true,
@@ -183,7 +184,7 @@
                     referenceAltitude = currentLocation.altitude;
                     referencePressure = data.pressure * Math.pow(1 - (0.0065 * referenceAltitude) / (assumedTemp + 0.0065 * referenceAltitude + 273.15), -5.257);
                     ApplicationSettings.setString(
-                        'altimeter_reference',
+                        ALT_REF_SETTING,
                         JSON.stringify({
                             altitude: referenceAltitude,
                             pressure: referencePressure

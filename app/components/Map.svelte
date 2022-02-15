@@ -185,7 +185,7 @@
                             });
                             transitVectorTileLayer.setVectorTileEventListener<LatLonKeys>(
                                 {
-                                    onVectorTileClicked: ({featureData}) => {
+                                    onVectorTileClicked: ({ featureData }) => {
                                         const item: IItem = {
                                             properties: {
                                                 ...featureData,
@@ -482,7 +482,6 @@
             options.setWatermarkScale(0);
             options.setRestrictedPanning(true);
             options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
-            // options.setSeamlessPanning(true);
             options.setEnvelopeThreadPoolSize(2);
             options.setTileThreadPoolSize(2);
 
@@ -610,7 +609,6 @@
                     if (typeof item.properties.id === 'string') {
                         mapContext.innerDecoder.setStyleParameter('selected_id_str', selectedId + '');
                         mapContext.innerDecoder.setStyleParameter('selected_id', '0');
-
                     } else {
                         mapContext.innerDecoder.setStyleParameter('selected_id', selectedId + '');
                         mapContext.innerDecoder.setStyleParameter('selected_id_str', '0');
@@ -696,71 +694,68 @@
             if (setSelected) {
                 $selectedItem = item;
             }
-            // if (setSelected && !route && (!item.properties.address || !item.properties.address['street'])) {
-            //     const service = packageService.localOSMOfflineReverseGeocodingService;
-            //     if (service) {
-            //         itemLoading = true;
-            //         const radius = 200;
+            if (setSelected && !route) {
+                // if (!item.properties.address || !item.properties.address['street']) {
+                //     const service = packageService.localOSMOfflineReverseGeocodingService;
+                //     if (service) {
+                //         itemLoading = true;
+                //         const radius = 200;
 
-            //         const geometry = item.geometry as GeoJSONPoint;
-            //         const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-            //         // use a promise not to "wait" for it
-            //         packageService
-            //             .searchInGeocodingService(service, {
-            //                 projection,
-            //                 location: position,
-            //                 searchRadius: radius
-            //             })
-            //             .then((res) => {
-            //                 if (res) {
-            //                     let bestFind;
-            //                     for (let index = 0; index < res.size(); index++) {
-            //                         const r = packageService.convertGeoCodingResult(res.get(index), true);
-            //                         if (r && r.properties.rank > 0.7 && computeDistanceBetween(position, r.properties.position) <= radius) {
-            //                             if (!bestFind || Object.keys(r.properties.address).length > Object.keys(bestFind.address).length) {
-            //                                 bestFind = r;
-            //                             } else if (bestFind && item.properties.address && item.properties.address['street']) {
-            //                                 break;
-            //                             }
-            //                         } else {
-            //                             break;
-            //                         }
-            //                     }
-            //                     if (bestFind && $selectedItem.geometry === item.geometry) {
-            //                         if (item.properties.layer === 'housenumber') {
-            //                             $selectedItem.properties.address = { ...bestFind.address, name: null, houseNumber: item.properties.housenumber } as any;
-            //                             $selectedItem = $selectedItem;
-            //                         } else {
-            //                             $selectedItem.properties.address = { ...bestFind.address, name: null } as any;
-            //                             $selectedItem = $selectedItem;
-            //                         }
-            //                     }
-            //                 }
-            //             })
-            //             .catch((err) => console.error('searchInGeocodingService', err, err['stack']));
-            //     }
-            //     if (item.properties && 'ele' in item.properties === false && packageService.hasElevation()) {
-            //         const geometry = item.geometry as GeoJSONPoint;
-            //         const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-            //         packageService.getElevation(position).then((result) => {
-            //             if ($selectedItem.geometry === item.geometry) {
-            //                 $selectedItem.properties = $selectedItem.properties || {};
-            //                 $selectedItem.properties['ele'] = result;
-            //                 $selectedItem = $selectedItem;
-            //             }
-            //         });
-            //     }
-            // }
+                //         const geometry = item.geometry as GeoJSONPoint;
+                //         const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+                //         // use a promise not to "wait" for it
+                //         packageService
+                //             .searchInGeocodingService(service, {
+                //                 projection,
+                //                 location: position,
+                //                 searchRadius: radius
+                //             })
+                //             .then((res) => {
+                //                 if (res) {
+                //                     let bestFind;
+                //                     for (let index = 0; index < res.size(); index++) {
+                //                         const r = packageService.convertGeoCodingResult(res.get(index), true);
+                //                         if (r && r.properties.rank > 0.7 && computeDistanceBetween(position, r.properties.position) <= radius) {
+                //                             if (!bestFind || Object.keys(r.properties.address).length > Object.keys(bestFind.address).length) {
+                //                                 bestFind = r;
+                //                             } else if (bestFind && item.properties.address && item.properties.address['street']) {
+                //                                 break;
+                //                             }
+                //                         } else {
+                //                             break;
+                //                         }
+                //                     }
+                //                     if (bestFind && $selectedItem.geometry === item.geometry) {
+                //                         if (item.properties.layer === 'housenumber') {
+                //                             $selectedItem.properties.address = { ...bestFind.address, name: null, houseNumber: item.properties.housenumber } as any;
+                //                             $selectedItem = $selectedItem;
+                //                         } else {
+                //                             $selectedItem.properties.address = { ...bestFind.address, name: null } as any;
+                //                             $selectedItem = $selectedItem;
+                //                         }
+                //                     }
+                //                 }
+                //             })
+                //             .catch((err) => console.error('searchInGeocodingService', err, err['stack']));
+                //     }
+                // }
 
-            // console.log('selectedItem', item);
-            // const vectorTileDecoder = getVectorTileDecoder();
-            // vectorTileDecoder.setStyleParameter('selected_id', ((item.properties && item.properties.osm_id) || '') + '');
-            // vectorTileDecoder.setStyleParameter('selected_name', (item.properties && item.properties.name) || '');
+                if (item.properties && 'ele' in item.properties === false && packageService.hasElevation()) {
+                    const geometry = item.geometry as GeoJSONPoint;
+                    const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+                    packageService.getElevation(position).then((result) => {
+                        if ($selectedItem.geometry === item.geometry) {
+                            $selectedItem.properties = $selectedItem.properties || {};
+                            $selectedItem.properties['ele'] = result;
+                            $selectedItem = $selectedItem;
+                        }
+                    });
+                }
+            }
+
             if (peek) {
                 await bottomSheetInner.loadView();
-                // .then(() => {
                 bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
-                // });
             }
             if (preventZoom) {
                 return;
@@ -1453,7 +1448,7 @@
         }
     }
 
-    let lastBrightness;
+    let lastBrightness = null;
     function showKeepAwakeNotification() {
         lastBrightness = brightness.get();
         brightness.set({
@@ -1492,9 +1487,13 @@
     }
 
     function hideKeepAwakeNotification() {
+        if(lastBrightness === null) {
+            return;
+        }
         brightness.set({
             intensity: lastBrightness
         });
+        lastBrightness = null;
         if (global.isAndroid) {
             const context: android.content.Context = ad.getApplicationContext();
             const service = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
@@ -1714,7 +1713,7 @@
         on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)}
         translationFunction={bottomSheetTranslationFunction}
     >
-        <cartomap zoom="16" on:mapReady={onMainMapReady} on:mapMoved={onMainMapMove} on:mapStable={onMainMapStable} on:mapIdle={onMainMapIdle} on:mapClicked={onMainMapClicked} />
+        <cartomap zoom="16" on:mapReady={onMainMapReady} on:mapMoved={onMainMapMove} on:mapStable={onMainMapStable} on:mapIdle={onMainMapIdle} on:mapClicked={onMainMapClicked} useTextureView={false}/>
         <stacklayout horizontalAlignment="left" verticalAlignment="middle">
             <button variant="text" class="icon-btn" text={keepAwakeEnabled ? 'mdi-sleep' : 'mdi-sleep-off'} color={keepAwakeEnabled ? 'red' : 'gray'} on:tap={switchKeepAwake} />
 
