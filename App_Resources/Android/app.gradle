@@ -98,3 +98,4 @@ android.applicationVariants.all { variant ->
         }
     }
 }
+
