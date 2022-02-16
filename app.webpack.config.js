@@ -41,6 +41,18 @@ module.exports = (env, params = {}) => {
             },
             env
         );
+    } else if (env.timeline) {
+        env = Object.assign(
+            {},
+            {
+                production: true,
+                sentry: false,
+                uploadSentry: false,
+                sourceMap: false,
+                uglify: false
+            },
+            env
+        );
     }
     const nconfig = require('./nativescript.config.playstore');
     const {
@@ -652,7 +664,7 @@ module.exports = (env, params = {}) => {
         new TerserPlugin({
             parallel: true,
             terserOptions: {
-                ecma: 2020,
+                ecma: isAndroid ? 2020 : 2017,
                 module: true,
                 toplevel: false,
                 keep_classnames: false,
