@@ -4,14 +4,14 @@ import { installMixins as installUIMixins } from '@nativescript-community/system
 import { overrideSpanAndFormattedString } from '@nativescript-community/text';
 import { setMapPosKeys } from '@nativescript-community/ui-carto/core';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
-import DrawerElement from '@nativescript-community/ui-drawer/svelte';
+// import DrawerElement from '@nativescript-community/ui-drawer/svelte';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
 import installWebRTC from '@nativescript-community/ui-webview-rtc';
 import { Application } from '@nativescript/core';
 import { ScrollView } from '@nativescript/core/ui';
-import { svelteNative } from 'svelte-native';
+import { svelteNative , svelteNativeNoFrame} from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
 import Map from '~/components/Map.svelte';
 // import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
@@ -22,7 +22,7 @@ import { start as startThemeHelper } from '~/helpers/theme';
 import { BgService } from '~/services/BgService';
 import { networkService } from '~/services/NetworkService';
 import { install as installLogging } from '~/utils/logging';
-import { startSentry } from '~/utils/sentry';
+// import { startSentry } from '~/utils/sentry';
 import './app.scss';
 
 // startSentry();
@@ -81,7 +81,7 @@ registerNativeViewElement('awebview', () => require('@nativescript-community/ui-
 registerNativeViewElement('checkbox', () => require('@akylas/nativescript-checkbox').CheckBox);
 CollectionViewElement.register();
 PagerElement.register();
-DrawerElement.register();
+// DrawerElement.register();
 
 startThemeHelper();
 
