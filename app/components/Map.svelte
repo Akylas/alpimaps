@@ -1,6 +1,6 @@
 <script lang="ts">
     import { AppURL, handleOpenURL } from '@nativescript-community/appurl';
-    import * as EInfo from '@nativescript-community/extendedinfo';
+    // import * as EInfo from '@nativescript-community/extendedinfo';
     import { GenericGeoLocation } from '@nativescript-community/gps';
     import { allowSleepAgain, keepAwake } from '@nativescript-community/insomnia';
     import * as perms from '@nativescript-community/perms';
@@ -15,7 +15,6 @@
     import { Projection } from '@nativescript-community/ui-carto/projections';
     import { CartoMap, PanningMode, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
     import { setShowDebug, setShowError, setShowInfo, setShowWarn } from '@nativescript-community/ui-carto/utils';
-    import { Group } from '@nativescript-community/ui-carto/vectorelements/group';
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
     import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
@@ -27,7 +26,7 @@
     import type { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Screen } from '@nativescript/core/platform';
-    import { ad, executeOnMainThread, isMainThread, mainThreadify } from '@nativescript/core/utils/utils';
+    import { ad } from '@nativescript/core/utils/utils';
     import { Point as GeoJSONPoint } from 'geojson';
     import * as SocialShare from 'nativescript-social-share';
     import { debounce } from 'push-it-to-the-limit/target/es6';
@@ -52,7 +51,7 @@
     import { transitService } from '~/services/TransitService';
     import mapStore from '~/stores/mapStore';
     import { showError } from '~/utils/error';
-    import { computeDistanceBetween, getBoundsZoomLevel } from '~/utils/geo';
+    import { getBoundsZoomLevel } from '~/utils/geo';
     import { accentColor } from '~/variables';
     import { navigationBarHeight, primaryColor } from '../variables';
     import { isBottomSheetOpened, showBottomSheet } from './bottomsheet';
@@ -69,27 +68,13 @@
     let defaultLiveSync = global.__onLiveSync;
 
     const brightness = new Brightness();
-    function base64Encode(value) {
-        if (global.isIOS) {
-            //@ts-ignore
-            const text = NSString.stringWithString(value);
-            //@ts-ignore
-            const data = text.dataUsingEncoding(NSUTF8StringEncoding);
-            return data.base64EncodedStringWithOptions(0);
-        }
-        if (global.isAndroid) {
-            const text = new java.lang.String(value);
-            const data = text.getBytes('UTF-8');
-            return android.util.Base64.encodeToString(data, android.util.Base64.DEFAULT);
-        }
-    }
+    
     let page: NativeViewElementNode<Page>;
     let cartoMap: CartoMap<LatLonKeys>;
     let directionsPanel: DirectionsPanel;
     let bottomSheetInner: BottomSheetInner;
     let mapScrollingWidgets: MapScrollingWidgets;
     let locationInfoPanel: LocationInfoPanel;
-    // let drawer: NativeViewElementNode<Drawer>;
     let searchView: Search;
     const mapContext = getMapContext();
 
@@ -97,14 +82,8 @@
     let selectedId: string;
     let selectedPosMarker: Point<LatLonKeys>;
     let selectedItem = watcher<IItem>(null, onSelectedItemChanged);
-    let appVersion = EInfo.getVersionNameSync() + '.' + EInfo.getBuildNumberSync();
     let packageServiceEnabled = __CARTO_PACKAGESERVICE__;
     let licenseRegistered: boolean = false;
-    let darkMode = false;
-    // $: {
-    //     darkMode = currentLayerStyle === 'positron';
-    //     setMapStyle(darkMode ? 'positron' : 'voyager');
-    // }
     let currentLayer: VectorTileLayer;
     let currentLayerStyle: string;
     let localVectorDataSource: LocalVectorDataSource;
@@ -132,13 +111,9 @@
     let handleSelectedRouteTimer: NodeJS.Timeout;
     let selectedRoutes: { featurePosition; featureData; layer: BaseVectorTileLayer<any, any> }[];
     let didIgnoreAlreadySelected = false;
-    // let clickedFeatures = [];
 
-    // let showClickedFeatures = false;
     let showTransitLines = false;
-    // let currentClickedFeatures: any[];
     let selectedClickMarker: Text<LatLonKeys>;
-    // let selectedRouteInstructionsGroup: Group<LatLonKeys>;
 
     let transitVectorTileDataSource: GeoJSONVectorTileDataSource;
     let transitVectorTileLayer: VectorTileLayer;
@@ -848,7 +823,7 @@
     $: toggleMapRotate($mapStore.rotateEnabled);
     $: toggleMapPitch($mapStore.pitchEnabled);
     $: currentLayer && (currentLayer.preloading = $mapStore.preloading);
-    $: shouldShowNavigationBarOverlay = $navigationBarHeight !== 0 && !!selectedItem;
+    // $: shouldShowNavigationBarOverlay = $navigationBarHeight !== 0 && !!selectedItem;
     $: bottomSheetStepIndex === 0 && unselectItem();
     $: cartoMap?.getOptions().setFocusPointOffset(toNativeScreenPos({ x: 0, y: Utils.layout.toDevicePixels(steps[bottomSheetStepIndex]) / 2 }));
 
