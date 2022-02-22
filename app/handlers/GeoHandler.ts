@@ -1,7 +1,7 @@
 import { GPS, GenericGeoLocation, Options as GeolocationOptions, LocationMonitor } from '@nativescript-community/gps';
 import { check, request } from '@nativescript-community/perms';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
-import { ApplicationSettings, Enums } from '@nativescript/core';
+import { ApplicationSettings, CoreTypes } from '@nativescript/core';
 import { AndroidApplication, ApplicationEventData, android as androidApp, off as applicationOff, on as applicationOn, launchEvent } from '@nativescript/core/application';
 import { backgroundEvent, foregroundEvent } from '@akylas/nativescript/application';
 import { AndroidActivityResultEventData } from '@nativescript/core/application/application-interfaces';
@@ -9,11 +9,14 @@ import { EventData, Observable } from '@nativescript/core/data/observable';
 import { bind } from 'helpful-decorators/dist-src/bind';
 import { BgService } from '~/services/BgService';
 import { l, lc } from '~/helpers/locale';
+import { formatDistance, formatDuration } from '~/helpers/formatter';
+import AppActivity from '~/android/AppActivity';
+import { sdkVersion } from '~/utils/utils';
 
 let geolocation: GPS;
 
 //@ts-ignore
-export const desiredAccuracy = global.isAndroid ? Enums.Accuracy.high : kCLLocationAccuracyBestForNavigation;
+export const desiredAccuracy = __ANDROID__ ? CoreTypes.Accuracy.high : kCLLocationAccuracyBestForNavigation;
 export const updateDistance = 0;
 export const maximumAge = 3000;
 export const timeout = 20000;
@@ -92,14 +95,14 @@ export class GeoHandler extends Observable {
         if (!geolocation) {
             geolocation = new GPS();
         }
-        if (global.isAndroid) {
+        if (__ANDROID__) {
             if (androidApp.nativeApp) {
                 this.appOnLaunch();
             } else {
                 applicationOn(launchEvent, this.appOnLaunch, this);
             }
         }
-        if (global.isIOS) {
+        if (__IOS__) {
             applicationOn(launchEvent, this.appOnLaunch, this);
         }
         applicationOn(backgroundEvent, this.onAppPause, this);
@@ -120,7 +123,7 @@ export class GeoHandler extends Observable {
         geolocation.on(GPS.gps_status_event, this.onGPSStateChange, this);
     }
     onAppResume(args: ApplicationEventData) {
-        if (global.isIOS) {
+        if (__IOS__) {
             this._isIOSBackgroundMode = false;
             // For iOS applications, args.ios is UIApplication.
 
@@ -137,14 +140,14 @@ export class GeoHandler extends Observable {
                 this.startWatch();
                 this.wasWatchingBeforePause = false;
             } else if (this.isWatching()) {
-                if (global.isAndroid) {
+                if (__ANDROID__) {
                     (this.bgService as any).get().removeForeground();
                 }
             }
         }
     }
     onAppPause(args: ApplicationEventData) {
-        if (global.isIOS) {
+        if (__IOS__) {
             this._isIOSBackgroundMode = true;
             // For iOS applications, args.ios is UIApplication.
             DEV_LOG && console.log('UIApplication: backgroundEvent', this.isWatching());
@@ -159,7 +162,7 @@ export class GeoHandler extends Observable {
                 this.wasWatchingBeforePause = true;
                 this.stopWatch();
             } else {
-                if (global.isAndroid) {
+                if (__ANDROID__) {
                     (this.bgService as any).get().showForeground(true);
                 }
             }
@@ -288,13 +291,13 @@ export class GeoHandler extends Observable {
     isBatteryOptimized(context: android.content.Context) {
         const pwrm = context.getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager;
         const name = context.getPackageName();
-        if (android.os.Build.VERSION.SDK_INT >= 23) {
+        if (sdkVersion() >= 23) {
             return !pwrm.isIgnoringBatteryOptimizations(name);
         }
         return false;
     }
     checkBattery() {
-        if (global.isIOS) {
+        if (__IOS__) {
             return Promise.resolve();
         }
         const activity = androidApp.foregroundActivity || androidApp.startActivity;
@@ -375,15 +378,12 @@ export class GeoHandler extends Observable {
         this.currentWatcher && this.currentWatcher(err);
     }
     async startWatch(opts?: Partial<GeolocationOptions>) {
-        const updateDistance = ApplicationSettings.getNumber('gps_update_distance', 0);
-        const minimumUpdateTime = ApplicationSettings.getNumber('gps_update_minTime', 0);
         //@ts-ignore
-        const desiredAccuracy = ApplicationSettings.getNumber('gps_desired_accuracy', global.isAndroid ? Enums.Accuracy.high : kCLLocationAccuracyBestForNavigation);
         const options: GeolocationOptions = {
             // provider: 'gps',
-            updateDistance,
-            minimumUpdateTime,
-            desiredAccuracy,
+            updateDistance: ApplicationSettings.getNumber('gps_update_distance', updateDistance),
+            minimumUpdateTime: ApplicationSettings.getNumber('gps_update_minTime', minimumUpdateTime),
+            desiredAccuracy: ApplicationSettings.getNumber('gps_desired_accuracy', desiredAccuracy),
             onDeferred: this.onDeferred,
             nmeaAltitude: true,
             skipPermissionCheck: true,
@@ -391,7 +391,7 @@ export class GeoHandler extends Observable {
         };
         DEV_LOG && console.log('startWatch', options);
 
-        if (global.isIOS) {
+        if (__IOS__) {
             geolocation.iosChangeLocManager.showsBackgroundLocationIndicator = true;
             if (this._isIOSBackgroundMode) {
                 options.pausesLocationUpdatesAutomatically = false;
@@ -403,29 +403,33 @@ export class GeoHandler extends Observable {
             //@ts-ignore
             options.activityType = ApplicationSettings.getNumber('gps_ios_activitytype', CLActivityType.Other);
         }
-        // if (global.isAndroid) {
-        //     try {
-        //         (this.bgService as any).get().showForeground(true);
-        //     } catch (err) {
-        //         console.error('showForeground', err, err['stack']);
-        //     }
-        // }
+        if (__ANDROID__ && !this.dontWatchWhilePaused) {
+            const activity = androidApp.startActivity as AppActivity;
+            activity.enableShowWhenLockedAndTurnScreenOn();
+            //     try {
+            //         (this.bgService as any).get().showForeground(true);
+            //     } catch (err) {
+            //         console.error('showForeground', err, err['stack']);
+            //     }
+        }
         this.watchId = await geolocation.watchLocation(this.onLocation, this.onLocationError, options);
     }
 
     getWatchSettings() {
         const options = {
             gps_update_distance: {
-                id: 'gps_update_distance',
                 title: lc('gps_update_distance'),
                 description: lc('gps_update_distance_desc'),
-                type: 'prompt'
+                default: updateDistance,
+                type: 'prompt',
+                formatter: formatDistance
             },
             gps_desired_accuracy: {
-                id: 'gps_desired_accuracy',
                 title: lc('gps_desired_accuracy'),
                 description: lc('gps_desired_accuracy_desc'),
-                values: global.isIOS
+                default: desiredAccuracy,
+                formatter: formatDistance,
+                values: __IOS__
                     ? [
                           //@ts-ignore
                           { title: lc('best_for_navigation'), value: kCLLocationAccuracyBestForNavigation },
@@ -443,29 +447,34 @@ export class GeoHandler extends Observable {
                           { title: lc('reduced'), value: kCLLocationAccuracyReduced }
                       ]
                     : [
-                          { title: lc('finer_location_accuracy'), value: Enums.Accuracy.high },
-                          { title: lc('approximate_accuracy'), value: Enums.Accuracy.any }
+                          { title: lc('finer_location_accuracy'), value: CoreTypes.Accuracy.high },
+                          { title: lc('approximate_accuracy'), value: CoreTypes.Accuracy.any }
                       ]
             }
         };
-        if (global.isIOS) {
+        if (__IOS__) {
         } else {
             Object.assign(options, {
                 gps_update_minTime: {
-                    id: 'gps_update_minTime',
                     title: lc('gps_update_minTime'),
                     description: lc('gps_update_minTime_desc'),
+                    default: minimumUpdateTime,
+                    formatter: (n) => formatDuration(n * 1000, 's[s]'),
                     type: 'prompt'
                 }
             });
         }
-        return {};
+        return options;
     }
 
     stopWatch() {
         DEV_LOG && console.log('stopWatch', this.watchId);
         if (this.watchId) {
-            if (global.isAndroid) {
+            if (__ANDROID__) {
+                if (!this.dontWatchWhilePaused) {
+                    const activity = androidApp.startActivity as AppActivity;
+                    activity.disableShowWhenLockedAndTurnScreenOn();
+                }
                 (this.bgService as any).get().removeForeground();
             }
             geolocation.clearWatch(this.watchId);
