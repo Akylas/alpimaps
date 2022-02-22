@@ -10,7 +10,7 @@ import { ApplicationSettings, Color } from '@nativescript/core';
 import { ad } from '@nativescript/core/utils/utils';
 import dayjs from 'dayjs';
 import { GeoHandler, GeoLocation, UserLocationdEvent, UserLocationdEventData } from '~/handlers/GeoHandler';
-import { NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL } from '~/services/android/NotifcationHelper';
+import { NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
 import { packageService } from '~/services/PackageService';
 import mapStore from '~/stores/mapStore';
 import { EARTH_RADIUS } from '~/utils/geo';
@@ -18,7 +18,6 @@ import { accentColor } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
 
 const LOCATION_ANIMATION_DURATION = 300;
-const SCREENSHOT_NOTIFICATION_ID = 23466571;
 
 // const NOTIFICATION_SERVICE = android.content.Context.NOTIFICATION_SERVICE;
 
@@ -103,26 +102,12 @@ export default class UserLocationModule extends MapModule {
         return this.mLastUserLocation;
     }
     set lastUserLocation(value) {
-        // console.log('set lastUserLocation', value);
         this.mLastUserLocation = value;
         this.notify({
             eventName: 'location',
             object: this,
             data: value
         });
-        if (global.isAndroid) {
-            const context: android.content.Context = ad.getApplicationContext();
-            const myKM = context.getSystemService(android.content.Context.KEYGUARD_SERVICE) as android.app.KeyguardManager;
-            const locked = myKM.isKeyguardLocked();
-            // console.log('onNewLocation', locked);
-            if (locked) {
-                // it is locked
-                this.showMapAsAlbumArt();
-            } else {
-                // it is not locked
-                this.hideScreenshotNotification();
-            }
-        }
     }
 
     async updateUserLocation(geoPos: GeoLocation) {
@@ -135,6 +120,8 @@ export default class UserLocationModule extends MapModule {
         ) {
             return;
         }
+
+        DEV_LOG && console.log('updateUserLocation');
 
         const altitude = await packageService.getElevation(geoPos);
         if (altitude !== null) {
@@ -286,79 +273,6 @@ export default class UserLocationModule extends MapModule {
             this.startWatchLocation();
         } else {
             this.stopWatchLocation();
-        }
-    }
-
-    mediaSession: android.support.v4.media.session.MediaSessionCompat;
-    initMediaSession() {
-        if (!this.mediaSession) {
-            const context: android.content.Context = ad.getApplicationContext();
-            const mediaSession = (this.mediaSession = new android.support.v4.media.session.MediaSessionCompat(context, 'AlpiMaps'));
-            mediaSession.setActive(true);
-            mediaSession.setFlags(android.support.v4.media.session.MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS | android.support.v4.media.session.MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS);
-        }
-    }
-    public showMapAsAlbumArt() {
-        if (global.isAndroid) {
-            // console.log('showMapAsAlbumArt');
-            // (this.mapView.android as com.carto.ui.MapView).onResume();
-            this.mapView.captureRendering(false).then((result) => {
-                // console.log('showMapAsAlbumArt0', result, result.android);
-                const color = accentColor.android;
-                // NotificationHelper.createNotificationChannel(context);
-                this.initMediaSession();
-                const mediaSession = this.mediaSession;
-                mediaSession.setMetadata(
-                    new android.support.v4.media.MediaMetadataCompat.Builder()
-                        // .putBitmap(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ART, result.android)
-                        .putBitmap(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ALBUM_ART, result.android)
-                        .putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ALBUM_ARTIST, 'test')
-                        .putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ALBUM, 'test')
-                        .putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_TITLE, 'test')
-                        .build()
-                );
-
-                const pscb = new android.support.v4.media.session.PlaybackStateCompat.Builder();
-                pscb.setState(android.support.v4.media.session.PlaybackStateCompat.STATE_PLAYING, 0, 0);
-                mediaSession.setPlaybackState(pscb.build());
-                // mediaSession.setCallback(new android.support.v4.media.session.MediaSessionCompat.Callback({
-
-                // }));
-
-                // console.log('showMapAsAlbumArt1', mediaSession, mediaSession.getSessionToken());
-                // const activityClass = (com as any).tns.NativeScriptActivity.class;
-                // const tapActionIntent = new android.content.Intent(context, activityClass);
-                // tapActionIntent.setAction(android.content.Intent.ACTION_MAIN);
-                // tapActionIntent.addCategory(android.content.Intent.CATEGORY_LAUNCHER);
-                // const tapActionPendingIntent = android.app.PendingIntent.getActivity(context, 10, tapActionIntent, 0);
-
-                const context: android.content.Context = ad.getApplicationContext();
-                const builder = new androidx.core.app.NotificationCompat.Builder(context, NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL);
-                // construct notification in builder
-                builder.setVisibility(androidx.core.app.NotificationCompat.VISIBILITY_SECRET);
-                builder.setShowWhen(false);
-                // builder.setOngoing(true);
-                builder.setColor(color);
-                builder.setOnlyAlertOnce(true);
-                // builder.setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH);
-                // builder.setContentIntent(tapActionPendingIntent);
-                builder.setSmallIcon(ad.resources.getDrawableId('ic_stat_logo'));
-                builder.setContentTitle('Alpi Maps Song test!');
-                // console.log('showMapAsAlbumArt2');
-                builder.setStyle(new androidx.media.app.NotificationCompat.MediaStyle().setMediaSession(mediaSession.getSessionToken()));
-                // console.log('showMapAsAlbumArt3');
-                const notifiction = builder.build();
-                const service = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
-                service.notify(SCREENSHOT_NOTIFICATION_ID, notifiction);
-            });
-        }
-    }
-
-    public hideScreenshotNotification() {
-        if (global.isAndroid) {
-            const context: android.content.Context = ad.getApplicationContext();
-            const service = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
-            service.cancel(SCREENSHOT_NOTIFICATION_ID);
         }
     }
 }

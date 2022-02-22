@@ -225,7 +225,7 @@ export default class CustomLayersModule extends MapModule {
         options = {}
     ) {
         // console.log('createMergeMBtiles', sources, worldMbtiles);
-        // if (global.isAndroid) {
+        // if (__ANDROID__) {
         //     sources = sources.map((s) => getAndroidRealPath(s));
         // }
         // console.log('createMergeMBtiles2', sources);

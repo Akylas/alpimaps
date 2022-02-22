@@ -77,7 +77,7 @@
     async function onMapReady(e) {
         cartoMap = e.object as CartoMap<LatLonKeys>;
         // projection = cartoMap.projection;
-        // if (global.isAndroid) {
+        // if (__ANDROID__) {
         //     console.log('onMapReady', com.carto.ui.BaseMapView.getSDKVersion());
         // } else {
         //     console.log('onMapReady', cartoMap.nativeViewProtected as NTMapView);

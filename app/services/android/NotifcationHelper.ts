@@ -11,54 +11,42 @@ export const NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL = 'alpimaps_keepawake';
 export const NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL = 'alpimaps_screenshot';
 
 import { primaryColor } from '~/variables';
+import { sdkVersion } from '~/utils/utils';
 
-export class NotificationHelper {
+export namespace NotificationHelper {
+    const NotificationManager = android.app.NotificationManager;
+    const NotificationCompat = androidx.core.app.NotificationCompat;
+    const Intent = android.content.Intent;
     /* Creates a notification builder */
-    public static getNotification(context: android.content.Context, builder: androidx.core.app.NotificationCompat.Builder, session: Session) {
-        // create notification channel
+    export function getNotification(context: android.content.Context, options: { title?: string; channel?: string; builder?: androidx.core.app.NotificationCompat.Builder } = {}) {
+        const builder = options.builder || new NotificationCompat.Builder(context, options.channel);
         const color = primaryColor.android;
-        NotificationHelper.createNotificationChannel(context);
-
         const activityClass = (com as any).tns.NativeScriptActivity.class;
-        // ACTION: NOTIFICATION TAP & BUTTON SHOW
-        const tapActionIntent = new android.content.Intent(context, activityClass);
-        tapActionIntent.setAction(android.content.Intent.ACTION_MAIN);
-        tapActionIntent.addCategory(android.content.Intent.CATEGORY_LAUNCHER);
-        // artificial back stack for started Activity (https://developer.android.com/training/notify-user/navigation.html#DirectEntry)
-        // const tapActionIntentBuilder = TaskStackBuilder.create(context);
-        // tapActionIntentBuilder.addParentStack(MainActivity.class);
-        // tapActionIntentBuilder.addNextIntent(tapActionIntent);
-        // pending intent wrapper for notification tap
-        const tapActionPendingIntent = android.app.PendingIntent.getActivity(context, 10, tapActionIntent, 0);
-        // tapActionIntentBuilder.getPendingIntent(10, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        // ACTION: NOTIFICATION BUTTON STOP
-        // const stopActionIntent = new android.content.Intent(context, activityClass);
-        // stopActionIntent.setAction(ACTION_STOP);
-        // pending intent wrapper for notification stop action
-        // const stopActionPendingIntent = android.app.PendingIntent.getService(context, 14, stopActionIntent, 0);
-
-        // ACTION: NOTIFICATION BUTTON RESUME
-        // const resumeActionIntent = new android.content.Intent(context, activityClass);
-        // resumeActionIntent.setAction(ACTION_RESUME);
-        // pending intent wrapper for notification resume action
-        // const resumeActionPendingIntent = android.app.PendingIntent.getService(context, 16, resumeActionIntent, 0);
-
-        // construct notification in builder
-        builder.setVisibility(androidx.core.app.NotificationCompat.VISIBILITY_SECRET);
+        const tapActionIntent = new Intent(context, activityClass);
+        tapActionIntent.setAction(Intent.ACTION_MAIN);
+        tapActionIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        const FLAG_IMMUTABLE = 0x04000000; //android.app.PendingIntent.FLAG_IMMUTABLE
+        const tapActionPendingIntent = android.app.PendingIntent.getActivity(context, 10, tapActionIntent, FLAG_IMMUTABLE);
+        builder.setVisibility(NotificationCompat.VISIBILITY_SECRET);
         builder.setShowWhen(false);
         builder.setOngoing(true);
         builder.setColor(color);
         builder.setOnlyAlertOnce(true);
-        builder.setPriority(androidx.core.app.NotificationCompat.PRIORITY_MIN);
+        builder.setPriority(NotificationCompat.PRIORITY_MIN);
         builder.setContentIntent(tapActionPendingIntent);
         builder.setSmallIcon(ad.resources.getDrawableId('ic_stat_logo'));
-        // builder.setLargeIcon(NotificationHelper.getNotificationIconLarge(context, tracking));
-        NotificationHelper.updateBuilderTexts(builder, session);
-        return builder.build();
+        builder.setContentTitle(options.title || null);
+        return builder;
+    }
+    export function getLocationNotification(context: android.content.Context, builder: androidx.core.app.NotificationCompat.Builder, session: Session) {
+        const nBuilder = getNotification(context, {
+            builder
+        });
+        updateBuilderTexts(nBuilder, session);
+        return nBuilder.build();
     }
 
-    public static updateBuilderTexts(builder: androidx.core.app.NotificationCompat.Builder, session: Session) {
+    export function updateBuilderTexts(builder: androidx.core.app.NotificationCompat.Builder, session: Session) {
         builder.setContentTitle(null);
         if (session) {
             // builder.setContentText(NotificationHelper.getSessionString(session));
@@ -68,17 +56,16 @@ export class NotificationHelper {
     }
 
     /* Constructs an updated notification */
-    public static getUpdatedNotification(context, builder, session: Session) {
-        NotificationHelper.updateBuilderTexts(builder, session);
+    export function getUpdatedNotification(context, builder, session: Session) {
+        updateBuilderTexts(builder, session);
         return builder.build();
     }
 
     /* Create a notification channel */
-    public static createNotificationChannel(context) {
+    export function createNotificationChannel() {
         const color = primaryColor.android;
-        if (android.os.Build.VERSION.SDK_INT >= 26) {
-            const NotificationManager = android.app.NotificationManager;
-            const service = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
+        if (sdkVersion() >= 26) {
+            const service = getNotificationManager();
             // create channel
             let channel = new android.app.NotificationChannel(NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL, 'Alpi Maps Record Session', NotificationManager.IMPORTANCE_LOW);
             channel.setDescription('Display current Map');
@@ -99,9 +86,27 @@ export class NotificationHelper {
             return false;
         }
     }
+    let notificationManager: android.app.NotificationManager;
+    function getNotificationManager() {
+        if (!notificationManager) {
+            const context: android.content.Context = ad.getApplicationContext();
+            notificationManager = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE);
+        }
+        return notificationManager;
+    }
+
+    export function showNotification(notification: android.app.Notification, id: number) {
+        const service = getNotificationManager();
+        service.notify(id, notification);
+    }
+
+    export function hideNotification(id: number) {
+        const service = getNotificationManager();
+        service.cancel(id);
+    }
 
     /* Get station image for notification's large icon */
-    private static getNotificationIconLarge(context, tracking) {
+    function getNotificationIconLarge(context, tracking) {
         // get dimensions
         // const resources = context.getResources();
         // const height = resources.getDimension(android.R.dimen.notification_large_icon_height);
@@ -119,7 +124,7 @@ export class NotificationHelper {
     }
 
     /* Return a bitmap for a given resource id of a vector drawable */
-    private static getBitmap(context, resource) {
+    function getBitmap(context, resource) {
         // const drawable = VectorDrawableCompat.create(context.getResources(), resource, null);
         // if (drawable != null) {
         //     Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);

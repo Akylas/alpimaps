@@ -17,7 +17,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.location.gps" />
     <application android:name="com.tns.NativeScriptApplication" android:allowBackup="true" android:icon="@mipmap/icon" android:label="@string/app_name" android:hardwareAccelerated="true" android:networkSecurityConfig="@xml/network_security_config" android:requestLegacyExternalStorage="true" android:largeHeap="true">
-        <activity android:name="com.tns.NativeScriptActivity" android:label="@string/title_activity_kimera" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|locale|uiMode" android:theme="@style/LaunchScreenTheme" android:windowSoftInputMode="stateHidden|adjustPan" android:screenOrientation="user" android:launchMode="singleTask" android:exported="true">
+        <activity android:name="akylas.alpi.maps.MainActivity" android:label="@string/title_activity_kimera" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|locale|uiMode" android:theme="@style/LaunchScreenTheme" android:windowSoftInputMode="stateHidden|adjustPan" android:screenOrientation="user" android:launchMode="singleTask" android:exported="true" android:showOnLockScreen="true">
             <meta-data android:name="SET_THEME_ON_LAUNCH" android:resource="@style/AppTheme" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
