@@ -68,7 +68,7 @@
     let defaultLiveSync = global.__onLiveSync;
 
     const brightness = new Brightness();
-    
+
     let page: NativeViewElementNode<Page>;
     let cartoMap: CartoMap<LatLonKeys>;
     let directionsPanel: DirectionsPanel;
@@ -202,7 +202,7 @@
 
     handleOpenURL(onAppUrl);
     function onAppUrl(appURL: AppURL, args) {
-        if (global.isAndroid) {
+        if (__ANDROID__) {
             const activity = Application.android.startActivity;
             const visible = activity && activity.getWindow().getDecorView().getRootView().isShown();
             if (!visible) {
@@ -303,7 +303,7 @@
     onMount(() => {
         networkService.on(NetworkConnectionStateEvent, onNetworkChange);
         networkConnected = networkService.connected;
-        if (global.isAndroid) {
+        if (__ANDROID__) {
             Application.android.on(AndroidApplication.activityBackPressedEvent, onAndroidBackButton);
         }
         setMapContext({
@@ -1429,50 +1429,28 @@
         brightness.set({
             intensity: 100
         });
-        if (global.isAndroid) {
-            const Intent = android.content.Intent;
-            const NotificationCompat = androidx.core.app.NotificationCompat;
+        if (__ANDROID__) {
             const context: android.content.Context = ad.getApplicationContext();
-            const builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL);
-            // create notification channel
-            const color = accentColor.android;
-            NotificationHelper.createNotificationChannel(context);
+            const builder = NotificationHelper.getNotification(context, {
+                title: 'Alpi Maps is keeping the screen awake',
+                channel: NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL
+            });
 
-            const activityClass = (com as any).tns.NativeScriptActivity.class;
-            const tapActionIntent = new Intent(context, activityClass);
-            tapActionIntent.setAction(Intent.ACTION_MAIN);
-            tapActionIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-            const tapActionPendingIntent = android.app.PendingIntent.getActivity(context, 10, tapActionIntent, 0);
-
-            // construct notification in builder
-            builder.setVisibility(NotificationCompat.VISIBILITY_SECRET);
-            builder.setShowWhen(false);
-            builder.setOngoing(true);
-            builder.setColor(color);
-            builder.setOnlyAlertOnce(true);
-            builder.setPriority(NotificationCompat.PRIORITY_MIN);
-            builder.setContentIntent(tapActionPendingIntent);
-            builder.setSmallIcon(ad.resources.getDrawableId('ic_stat_logo'));
-            builder.setContentTitle('Alpi Maps is keeping the screen awake');
-            // builder.setLargeIcon();
-            const notifiction = builder.build();
-            const service = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
-            service.notify(KEEP_AWAKE_NOTIFICATION_ID, notifiction);
+            const notification = builder.build();
+            NotificationHelper.showNotification(notification, KEEP_AWAKE_NOTIFICATION_ID);
         }
     }
 
     function hideKeepAwakeNotification() {
-        if(lastBrightness === null) {
+        if (lastBrightness === null) {
             return;
         }
         brightness.set({
             intensity: lastBrightness
         });
         lastBrightness = null;
-        if (global.isAndroid) {
-            const context: android.content.Context = ad.getApplicationContext();
-            const service = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager;
-            service.cancel(KEEP_AWAKE_NOTIFICATION_ID);
+        if (__ANDROID__) {
+            NotificationHelper.hideNotification(KEEP_AWAKE_NOTIFICATION_ID);
         }
     }
 
@@ -1650,7 +1628,7 @@
                 case 'settings':
                     try {
                         const Settings = (await import('~/components/Settings.svelte')).default;
-                        showModal({ page: Settings, animated: true, fullscreen: true });
+                        navigate({ page: Settings });
                     } catch (err) {
                         console.error('showSettings', err, err['stack']);
                     }
@@ -1688,7 +1666,15 @@
         on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)}
         translationFunction={bottomSheetTranslationFunction}
     >
-        <cartomap zoom="16" on:mapReady={onMainMapReady} on:mapMoved={onMainMapMove} on:mapStable={onMainMapStable} on:mapIdle={onMainMapIdle} on:mapClicked={onMainMapClicked} useTextureView={false}/>
+        <cartomap
+            zoom="16"
+            on:mapReady={onMainMapReady}
+            on:mapMoved={onMainMapMove}
+            on:mapStable={onMainMapStable}
+            on:mapIdle={onMainMapIdle}
+            on:mapClicked={onMainMapClicked}
+            useTextureView={false}
+        />
         <stacklayout horizontalAlignment="left" verticalAlignment="middle">
             <button variant="text" class="icon-btn" text={keepAwakeEnabled ? 'mdi-sleep' : 'mdi-sleep-off'} color={keepAwakeEnabled ? 'red' : 'gray'} on:tap={switchKeepAwake} />
 

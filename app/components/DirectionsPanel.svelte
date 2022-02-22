@@ -665,7 +665,7 @@
     let firstUpdate = true;
     function updateGeoJSONLayer() {
         ensureRouteLayer();
-        if (global.isIOS && firstUpdate) {
+        if (__IOS__ && firstUpdate) {
             firstUpdate = false;
             return setTimeout(updateGeoJSONLayer, 10);
         }
