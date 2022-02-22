@@ -13,6 +13,7 @@
 			<Value id="1" value="1" />
 		</NutiParameter>
 		<NutiParameter name="selected_id" type="int" value="-1" />
+		<NutiParameter name="selected_id_str" type="string" value="" />
 		<NutiParameter name="selected_osmid" type="int" value="-1" />
 		<NutiParameter name="shields3d" type="string" value="nutibillboard">
 			<Value id="0" value="point" />
@@ -1186,6 +1187,13 @@
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=2 and [nuti::selected_id_str]=[id]</Filter>
+			<LineSymbolizer stroke="{([route_color] ? [route_color] : 'rgb('+[COULEUR]+')')}" stroke-linejoin="round" stroke-width="linear([view::zoom],12,4,13,4.5,19,6.5)" />
+			<TextSymbolizer dy="linear([view::zoom],13,2,16,3,17,4)" face-name="DIN Pro Regular" fill="rgb(128,128,128)" halo-fill="rgb(255,255,255)" halo-radius="0.4" placement="line" size="linear([view::zoom],13,7,16,12)">{([route_short_name] ? [route_short_name] : [NUMERO])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=1</Filter>
 			<MarkersSymbolizer allow-overlap="true" clip="false" fill="rgb(255,255,255)" height="linear([view::zoom],12,4,13,5.5,19,8.5)" marker-type="ellipse" placement="[nuti::markers3d]" stroke="[color]" width="linear([view::zoom],12,4,13,5.5,19,8.5)" />
 		</Rule>
@@ -1194,14 +1202,6 @@
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2</Filter>
 			<LineSymbolizer stroke="{([route_color] ? [route_color] : 'rgb('+[COULEUR]+')')}" stroke-linejoin="round" stroke-width="linear([view::zoom],12,2,13,2.5,19,4.5)" />
-		</Rule>
-	</Style>
-	<Style name="lines::label" filter-mode="first">
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2</Filter>
-			<TextSymbolizer dy="linear([view::zoom],13,2,16,3,17,4)" face-name="DIN Pro Regular" fill="rgb(128,128,128)" halo-fill="rgb(255,255,255)" halo-radius="0.4" placement="line" size="linear([view::zoom],13,7,16,12)">{([route_short_name] ? [route_short_name] : [NUMERO])}</TextSymbolizer>
 		</Rule>
 	</Style>
 	<Layer name="directions">
@@ -1221,6 +1221,5 @@
 	</Layer>
 	<Layer name="lines">
 		<StyleName>lines</StyleName>
-		<StyleName>lines::label</StyleName>
 	</Layer>
 </Map>

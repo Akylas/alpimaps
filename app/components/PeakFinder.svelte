@@ -507,7 +507,7 @@
     function onSensor(data, sensor: string) {
         switch (sensor) {
             case 'heading':
-                if (global.isAndroid) {
+                if (__ANDROID__) {
                     headingAccuracy = data.accuracy;
                 } else {
                     headingAccuracy = 4 - data.accuracy;
@@ -517,7 +517,7 @@
                     return;
                 }
                 stopHeadingListener();
-                if (global.isAndroid && !('trueHeading' in data) && position) {
+                if (__ANDROID__ && !('trueHeading' in data) && position) {
                     const res = estimateMagneticField(position.lat, position.lon, position.altitude);
                     if (res) {
                         data.trueHeading = data.heading + res.getDeclination();
