@@ -12,7 +12,6 @@ import localizedFormat from 'dayjs/plugin/localizedFormat';
 import { derived, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
 const supportedLanguages = SUPPORTED_LOCALES;
-import OptionSelect from '~/components/OptionSelect.svelte';
 import { showBottomSheet } from '~/components/bottomsheet';
 import { createGlobalEventListener, globalObservable } from '~/variables';
 
@@ -107,7 +106,7 @@ function titlecase(str: string) {
     return newStr;
 }
 export function getLocaleDisplayName(locale?) {
-    if (global.isIOS) {
+    if (__IOS__) {
         if (!currentLocale) {
             //@ts-ignore
             currentLocale = NSLocale.alloc().initWithLocaleIdentifier(lang);
@@ -124,6 +123,7 @@ export function getLocaleDisplayName(locale?) {
 export async function selectLanguage() {
     try {
         const actions = SUPPORTED_LOCALES;
+        const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
         const result = await showBottomSheet<any>({
             view: OptionSelect,
             props: {

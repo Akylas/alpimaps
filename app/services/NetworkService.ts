@@ -544,7 +544,7 @@ export class NetworkService extends Observable {
         applicationOn(foregroundEvent, this.onAppResume, this);
         connectivity.startMonitoring(this.onConnectionStateChange.bind(this));
         this.connectionType = connectivity.getConnectionType();
-        this.canCheckWeather = await appavailability.available(global.isIOS ? 'weather://' : 'com.akylas.weather');
+        this.canCheckWeather = await appavailability.available(__IOS__ ? 'weather://' : 'com.akylas.weather');
         const folder = knownFolders.documents().getFolder('cache');
         const diskLocation = folder.path;
         const cacheSize = 10 * 1024 * 1024;

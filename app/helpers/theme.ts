@@ -5,7 +5,6 @@ import { Application, ApplicationSettings } from '@nativescript/core';
 import { prefs } from '~/services/preferences';
 import { createGlobalEventListener, globalObservable, updateThemeColors } from '~/variables';
 import { showBottomSheet } from '~/components/bottomsheet';
-import OptionSelect from '~/components/OptionSelect.svelte';
 import { lc } from '@nativescript-community/l';
 import { writable } from 'svelte/store';
 
@@ -39,6 +38,7 @@ export function getThemeDisplayName(toDisplay = theme) {
 export async function selectTheme() {
     try {
         const actions: Themes[] = ['auto', 'light', 'dark'];
+        const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
         const result = await showBottomSheet<any>({
             view: OptionSelect,
             props: {
@@ -56,11 +56,11 @@ export async function selectTheme() {
 }
 
 export function applyTheme(theme: Themes) {
-    const AppCompatDelegate = global.isAndroid ? androidx.appcompat.app.AppCompatDelegate : undefined;
+    const AppCompatDelegate = __ANDROID__ ? androidx.appcompat.app.AppCompatDelegate : undefined;
     switch (theme) {
         case 'auto':
             Theme.setMode(Theme.Auto);
-            if (global.isAndroid) {
+            if (__ANDROID__) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
             } else {
                 if (Application.ios.window) {
@@ -71,7 +71,7 @@ export function applyTheme(theme: Themes) {
             break;
         case 'light':
             Theme.setMode(Theme.Light);
-            if (global.isAndroid) {
+            if (__ANDROID__) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
             } else {
                 if (Application.ios.window) {
@@ -82,7 +82,7 @@ export function applyTheme(theme: Themes) {
             break;
         case 'dark':
             Theme.setMode(Theme.Dark);
-            if (global.isAndroid) {
+            if (__ANDROID__) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
             } else {
                 if (Application.ios.window) {
@@ -103,7 +103,7 @@ export function isDark() {
 }
 
 export function start() {
-    if (global.isIOS && iOSNativeHelper.MajorVersion < 13) {
+    if (__IOS__ && iOSNativeHelper.MajorVersion < 13) {
         theme = 'light';
     } else {
         theme = (getString('theme', 'auto') || 'auto') as Themes;
@@ -112,7 +112,7 @@ export function start() {
 
     prefs.on('key:theme', () => {
         let newTheme = getString('theme') as Themes;
-        if (global.isIOS && iOSNativeHelper.MajorVersion < 13) {
+        if (__IOS__ && iOSNativeHelper.MajorVersion < 13) {
             newTheme = 'light';
         }
         // on pref change we are updating
@@ -127,7 +127,7 @@ export function start() {
         globalObservable.notify({ eventName: 'theme', data: theme });
     });
     const force = theme !== 'auto';
-    if (global.isAndroid) {
+    if (__ANDROID__) {
         applyTheme(theme);
         if (Application.android && Application.android.context) {
             updateThemeColors(theme, force);
