@@ -77,7 +77,7 @@
     function onSensor(data, sensor: string) {
         switch (sensor) {
             case 'heading':
-                if (global.isAndroid && !('trueHeading' in data) && location) {
+                if (__ANDROID__ && !('trueHeading' in data) && location) {
                     const res = estimateMagneticField(location.lat, location.lon, altitude);
                     if (res) {
                         data.trueHeading = data.heading + res.getDeclination();
@@ -92,7 +92,7 @@
                 }
                 // on ios accuracy is in degrees so lower is best
                 // on android 0 - 4 with highest is best
-                const newAccuracy = global.isAndroid ? 4 - data.accuracy : data.accuracy;
+                const newAccuracy = __ANDROID__ ? 4 - data.accuracy : data.accuracy;
                 if (headingAccuracy !== newAccuracy) {
                     if (DEV_LOG) {
                         console.log('headingAccuracy', newAccuracy);
