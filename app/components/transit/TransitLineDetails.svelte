@@ -188,7 +188,7 @@
             textAlignment="center"
             verticalTextAlignment="center"
         />
-        <cartomap row={2} zoom="16" on:mapReady={onMapReady} useTextureView={true} />
+        <cartomap row={2} zoom="16" on:mapReady={onMapReady} useTextureView={false} />
         <collectionview bind:this={collectionView} row={3} items={dataItems}>
             <Template let:item>
                 <gridlayout columns="60,*,auto" rows="30,30" on:tap={() => selectStop(item)}>
