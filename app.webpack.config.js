@@ -32,6 +32,8 @@ module.exports = (env, params = {}) => {
         env = Object.assign(
             {},
             {
+                buildpeakfinder: true,
+                buildstyle: true,
                 production: true,
                 sentry: false,
                 uploadSentry: false,
