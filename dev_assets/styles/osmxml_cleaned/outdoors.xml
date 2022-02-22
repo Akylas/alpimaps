@@ -3,15 +3,8 @@
 	<Parameters />
 	<NutiParameters>
 		<NutiParameter name="_clickhandlerlayerfilter" type="string" value=".*::(icon|label)" />
-		<NutiParameter name="buildings" type="int" value="1">
-			<Value id="0" value="0" />
-			<Value id="1" value="1" />
-			<Value id="2" value="2" />
-		</NutiParameter>
-		<NutiParameter name="contours" type="int" value="1">
-			<Value id="0" value="0" />
-			<Value id="1" value="1" />
-		</NutiParameter>
+		<NutiParameter name="buildings" type="int" value="1" />
+		<NutiParameter name="contours" type="int" value="1" />
 		<NutiParameter name="contoursOpacity" type="float" value="1" />
 		<NutiParameter name="fallback_lang" type="string" value="en" />
 		<NutiParameter name="lang" type="string" value="en" />
@@ -448,7 +441,6 @@
 		<NutiParameter name="osm-wilderness_hut" type="string" value="" />
 		<NutiParameter name="osm-windmill" type="string" value="" />
 		<NutiParameter name="selected_id" type="string" value="0" />
-		<NutiParameter name="selected_name" type="string" value="" />
 		<NutiParameter name="shields3d" type="string" value="nutibillboard">
 			<Value id="0" value="point" />
 			<Value id="1" value="nutibillboard" />
@@ -496,10 +488,10 @@
 			<Filter>[class]='country' and [rank]=1</Filter>
 			<TextSymbolizer face-name="DIN Pro Bold" fill="rgb(0,0,0)" halo-fill="rgb(251,248,243)" halo-radius="1" line-spacing="-2" placement="[nuti::texts3d]" size="linear([view::zoom],2,10.0,5,13.0,6,15.0)-1.0e-06*[rank]" wrap-character="-" wrap-width="step([view::zoom],2,60,3,80,4,100,5,120,6,140)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
-		<Rule name="auto">
+		<Rule name="combined">
 			<MinScaleDenominator>69885280</MinScaleDenominator>
 			<MaxScaleDenominator>139770560</MaxScaleDenominator>
-			<Filter>[class]='state'</Filter>
+			<Filter>[class]='state' or [class]='province'</Filter>
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(251,248,243)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,11.0,6,12.0,7,13.0)" wrap-character="-" wrap-width="step([view::zoom],5,60,6,80,7,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
@@ -532,10 +524,10 @@
 			<Filter>[class]='city'</Filter>
 			<TextSymbolizer dy="linear([view::zoom],4,-5,7.99,-9,8,0)" face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" minimum-distance="1" placement="[nuti::texts3d]" size="linear([view::zoom],4,10,5,11,6,12,7,13,12,18)-1.0e-06*[rank]" wrap-character="-" wrap-width="step([view::zoom],4,40,5,50,6,60)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
-		<Rule name="auto">
+		<Rule name="combined">
 			<MinScaleDenominator>34942640</MinScaleDenominator>
 			<MaxScaleDenominator>69885280</MaxScaleDenominator>
-			<Filter>[class]='state'</Filter>
+			<Filter>[class]='state' or [class]='province'</Filter>
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(251,248,243)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,11.0,6,12.0,7,13.0)" wrap-character="-" wrap-width="step([view::zoom],5,60,6,80,7,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
@@ -580,10 +572,10 @@
 			<Filter>[class]='city'</Filter>
 			<TextSymbolizer dy="linear([view::zoom],4,-5,7.99,-9,8,0)" face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" minimum-distance="1" placement="[nuti::texts3d]" size="linear([view::zoom],4,10,5,11,6,12,7,13,12,18)-1.0e-06*[rank]" wrap-character="-" wrap-width="step([view::zoom],4,40,5,50,6,60)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
-		<Rule name="auto">
+		<Rule name="combined">
 			<MinScaleDenominator>17471320</MinScaleDenominator>
 			<MaxScaleDenominator>34942640</MaxScaleDenominator>
-			<Filter>[class]='state'</Filter>
+			<Filter>[class]='state' or [class]='province'</Filter>
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(251,248,243)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,11.0,6,12.0,7,13.0)" wrap-character="-" wrap-width="step([view::zoom],5,60,6,80,7,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
@@ -634,10 +626,10 @@
 			<Filter>[class]='city'</Filter>
 			<TextSymbolizer dy="linear([view::zoom],4,-5,7.99,-9,8,0)" face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" minimum-distance="1" placement="[nuti::texts3d]" size="linear([view::zoom],4,10,5,11,6,12,7,13,12,18)-1.0e-06*[rank]" wrap-character="-" wrap-width="step([view::zoom],4,40,5,50,6,60)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
-		<Rule name="auto">
+		<Rule name="combined">
 			<MinScaleDenominator>8735660</MinScaleDenominator>
 			<MaxScaleDenominator>17471320</MaxScaleDenominator>
-			<Filter>[class]='state'</Filter>
+			<Filter>[class]='state' or [class]='province'</Filter>
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(251,248,243)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],5,11.0,6,12.0,7,13.0)" wrap-character="-" wrap-width="step([view::zoom],5,60,6,80,7,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
@@ -670,7 +662,7 @@
 			<Filter>[class]='hamlet'</Filter>
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" minimum-distance="15" placement="[nuti::texts3d]" size="linear([view::zoom],12,9,15,14)-1.0e-06*[rank]" wrap-character="-" wrap-width="linear([view::zoom],12,40,15,60)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
-		<Rule name="auto">
+		<Rule name="combined">
 			<MinScaleDenominator>68247.3438</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]='town'</Filter>
@@ -679,30 +671,60 @@
 		<Rule name="combined">
 			<MinScaleDenominator>68247.3438</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[class]='isolated_dwelling' or [class]='locality'</Filter>
+			<Filter>[class]='isolated_dwelling'</Filter>
 			<TextSymbolizer face-name="DIN Pro Regular" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" line-spacing="-2" placement="[nuti::texts3d]" size="linear([view::zoom],14,8,17,12)-1.0e-06*[rank]" wrap-character="-" wrap-width="linear([view::zoom],14,32,17,60)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]='suburb'</Filter>
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(63,72,115)" halo-fill="rgb(242,245,248)" halo-radius="1" line-spacing="-2" minimum-distance="15" placement="[nuti::texts3d]" size="linear([view::zoom],12,9,13,10,16,13)-1.0e-06*[rank]" text-transform="uppercase" wrap-character="-" wrap-width="linear([view::zoom],12,40,15,60)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]='village'</Filter>
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" minimum-distance="15" placement="[nuti::texts3d]" size="linear([view::zoom],7,7,10,11,16,15)-1.0e-06*[rank]" wrap-character="-" wrap-width="linear([view::zoom],12,40,15,60)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]='hamlet'</Filter>
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" minimum-distance="15" placement="[nuti::texts3d]" size="linear([view::zoom],12,9,15,14)-1.0e-06*[rank]" wrap-character="-" wrap-width="linear([view::zoom],12,40,15,60)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
+			<Filter>[class]='island'</Filter>
+			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" minimum-distance="15" placement="[nuti::texts3d]" size="linear([view::zoom],10,11,18,16)-1.0e-06*[rank]" wrap-character="-" wrap-width="linear([view::zoom],12,40,15,60)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>68247.3438</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='locality'</Filter>
+			<TextSymbolizer face-name="DIN Pro Regular" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" line-spacing="-2" placement="[nuti::texts3d]" size="linear([view::zoom],14,8,17,12)-1.0e-06*[rank]" wrap-character="-" wrap-width="linear([view::zoom],14,32,17,60)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>68247.3438</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='suburb'</Filter>
+			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(63,72,115)" halo-fill="rgb(242,245,248)" halo-radius="1" line-spacing="-2" minimum-distance="15" placement="[nuti::texts3d]" size="linear([view::zoom],12,9,13,10,16,13)-1.0e-06*[rank]" text-transform="uppercase" wrap-character="-" wrap-width="linear([view::zoom],12,40,15,60)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>68247.3438</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='village'</Filter>
+			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" minimum-distance="15" placement="[nuti::texts3d]" size="linear([view::zoom],7,7,10,11,16,15)-1.0e-06*[rank]" wrap-character="-" wrap-width="linear([view::zoom],12,40,15,60)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>68247.3438</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='hamlet'</Filter>
+			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" minimum-distance="15" placement="[nuti::texts3d]" size="linear([view::zoom],12,9,15,14)-1.0e-06*[rank]" wrap-character="-" wrap-width="linear([view::zoom],12,40,15,60)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>68247.3438</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[class]='island'</Filter>
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" minimum-distance="15" placement="[nuti::texts3d]" size="linear([view::zoom],10,11,18,16)-1.0e-06*[rank]" wrap-character="-" wrap-width="linear([view::zoom],12,40,15,60)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
@@ -713,7 +735,7 @@
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(65,74,118)" halo-fill="rgb(242,245,248)" halo-radius="1" line-spacing="-2" minimum-distance="15" placement="[nuti::texts3d]" size="linear([view::zoom],12,10,16,12)-1.0e-06*[rank]" text-transform="uppercase" wrap-character="-" wrap-width="linear([view::zoom],13,44,17,80)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MinScaleDenominator>8530.91797</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[class]='isolated_dwelling' or [class]='locality'</Filter>
 			<TextSymbolizer face-name="DIN Pro Regular" fill="rgb(51,51,51)" halo-fill="rgb(242,245,248)" halo-radius="1" line-spacing="-2" placement="[nuti::texts3d]" size="linear([view::zoom],14,8,17,12)-1.0e-06*[rank]" wrap-character="-" wrap-width="linear([view::zoom],14,32,17,60)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
@@ -1507,7 +1529,7 @@
 			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(149,110,80)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="[nuti::texts3d]" size="linear([view::zoom],10,11,18,12)-1.0e-06*[rank]" wrap-width="step([view::zoom],14,60,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 	</Style>
-	<Style name="aerodrome_label" filter-mode="first">
+	<Style name="aerodrome_label::label" filter-mode="first">
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
@@ -1550,12 +1572,6 @@
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=3 and [class]='grass' and [subclass]='park'</Filter>
 			<PolygonSymbolizer fill="rgb(182,230,158)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34942640</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=3 and [class]='grass' and [subclass]='garden'</Filter>
-			<PolygonSymbolizer fill="{linear([view::zoom],9,'rgba(202,216,162,0.2)',15,'rgba(202,216,162,0.466667)')}" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>34942640</MinScaleDenominator>
@@ -1620,60 +1636,24 @@
 		<Rule name="combined">
 			<MinScaleDenominator>136494.688</MinScaleDenominator>
 			<MaxScaleDenominator>34942640</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=3 and [class]='grass' and [subclass]='garden'</Filter>
-			<PolygonSymbolizer fill="{linear([view::zoom],9,'rgba(202,216,162,0.2)',15,'rgba(202,216,162,0.466667)')}" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>1091957.5</MinScaleDenominator>
-			<MaxScaleDenominator>34942640</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=3 and [class]='rock'</Filter>
-			<PolygonSymbolizer fill="rgb(245,242,238)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>1091957.5</MinScaleDenominator>
-			<MaxScaleDenominator>34942640</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [name]&lt;&gt;null</Filter>
-			<TextSymbolizer face-name="DIN Pro Regular" fill="rgb(97,97,90)" placement="line" size="9" wrap-width="100">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>1091957.5</MinScaleDenominator>
-			<MaxScaleDenominator>34942640</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=3 and [class]='ice'</Filter>
-			<PolygonSymbolizer fill="rgba(224,243,250,0.533333)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>1091957.5</MinScaleDenominator>
-			<MaxScaleDenominator>34942640</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=3 and [class]='tidalflat'</Filter>
-			<PolygonSymbolizer fill="rgba(203,177,154,0.3)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=3 and [class]='farmyard'</Filter>
-			<PolygonSymbolizer fill="rgb(245,220,186)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>136494.688</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=3 and [class]='rock'</Filter>
 			<PolygonSymbolizer fill="rgb(245,242,238)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<MaxScaleDenominator>34942640</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [name]&lt;&gt;null</Filter>
 			<TextSymbolizer face-name="DIN Pro Regular" fill="rgb(97,97,90)" placement="line" size="9" wrap-width="100">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<MaxScaleDenominator>34942640</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=3 and [class]='ice'</Filter>
 			<PolygonSymbolizer fill="rgba(224,243,250,0.533333)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
+			<MaxScaleDenominator>34942640</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=3 and [class]='tidalflat'</Filter>
 			<PolygonSymbolizer fill="rgba(203,177,154,0.3)" />
 		</Rule>
@@ -1763,18 +1743,6 @@
 		<Rule name="auto">
 			<MinScaleDenominator>68247.3438</MinScaleDenominator>
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=3 and [class]='grass' and [subclass]='garden'</Filter>
-			<PolygonSymbolizer fill="{linear([view::zoom],9,'rgba(202,216,162,0.2)',15,'rgba(202,216,162,0.466667)')}" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=3 and [class]='farmyard'</Filter>
-			<PolygonSymbolizer fill="rgb(245,220,186)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=3 and [class]='rock'</Filter>
 			<PolygonSymbolizer fill="rgb(245,242,238)" />
 		</Rule>
@@ -1853,18 +1821,6 @@
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=3 and [class]='grass' and [subclass]='park'</Filter>
 			<PolygonSymbolizer fill="rgb(182,230,158)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=3 and [class]='grass' and [subclass]='garden'</Filter>
-			<PolygonSymbolizer fill="{linear([view::zoom],9,'rgba(202,216,162,0.2)',15,'rgba(202,216,162,0.466667)')}" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=3 and [class]='farmyard'</Filter>
-			<PolygonSymbolizer fill="rgb(245,220,186)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
@@ -2005,18 +1961,6 @@
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=3 and [class]='grass' and [subclass]='garden'</Filter>
-			<PolygonSymbolizer fill="{linear([view::zoom],9,'rgba(202,216,162,0.2)',15,'rgba(202,216,162,0.466667)')}" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=3 and [class]='farmyard'</Filter>
-			<PolygonSymbolizer fill="rgb(245,220,186)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=3 and [class]='rock'</Filter>
 			<PolygonSymbolizer fill="rgb(245,242,238)" />
 		</Rule>
@@ -2049,7 +1993,7 @@
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=3 and [class]='grass' and ([subclass]='grassland' or [subclass]='meadow' or [subclass]='grass' or [subclass]=null or [subclass]='village_green')</Filter>
+			<Filter>[mapnik::geometry_type]=3 and [class]='grass' and ([subclass]='grassland' or [subclass]='meadow' or [subclass]='grass' or [subclass]=null or [subclass]='village_green' or [subclass]='garden')</Filter>
 			<PolygonSymbolizer fill="{linear([view::zoom],9,'rgba(202,216,162,0.2)',15,'rgba(202,216,162,0.466667)')}" />
 		</Rule>
 		<Rule name="combined">
@@ -2246,16 +2190,22 @@
 	</Style>
 	<Style name="mountain_peak::icon" filter-mode="first">
 		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MinScaleDenominator>272989.375</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=1 and [class]='saddle'</Filter>
-			<TextSymbolizer face-name="osm" fill="rgb(102,102,0)" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">[nuti::osm-saddle]</TextSymbolizer>
+			<Filter>[mapnik::geometry_type]=1 and [class]='peak'</Filter>
+			<TextSymbolizer face-name="osm" feature-id="[name]+[ele]" fill="rgb(34,102,0)" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">[nuti::osm-mountain]</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
+			<Filter>[mapnik::geometry_type]=1 and [class]='saddle'</Filter>
+			<TextSymbolizer face-name="osm" feature-id="[name]+[ele]" fill="rgb(102,102,0)" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]-1.0e-06">[nuti::osm-saddle]</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=1</Filter>
-			<TextSymbolizer face-name="osm" fill="rgb(34,102,0)" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">[nuti::osm-mountain]</TextSymbolizer>
+			<TextSymbolizer face-name="osm" feature-id="[name]+[ele]" fill="rgb(34,102,0)" placement="[nuti::markers3d]" size="linear([view::zoom],10,10,12,11,19,13,20,17)-1.0e-06*[rank]">[nuti::osm-mountain]</TextSymbolizer>
 		</Rule>
 	</Style>
 	<Style name="mountain_peak::label" filter-mode="first">
@@ -2263,25 +2213,25 @@
 			<MinScaleDenominator>1091957.5</MinScaleDenominator>
 			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=1 and [class]='peak'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(34,102,0)" halo-fill="rgb(255,255,255)" halo-radius="1" line-spacing="-1" minimum-distance="linear([view::zoom],5,30,10,20,18,10)" placement="[nuti::texts3d]" size="linear([view::zoom],10,11,18,12)-1.0e-06*[rank]" wrap-width="step([view::zoom],14,60,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" feature-id="[name]+[ele]" fill="rgb(34,102,0)" halo-fill="rgb(255,255,255)" halo-radius="1" line-spacing="-1" placement="[nuti::texts3d]" size="linear([view::zoom],10,11,18,12)-1.0e-06*[rank]" wrap-width="step([view::zoom],14,60,18,100)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>272989.375</MinScaleDenominator>
 			<MaxScaleDenominator>1091957.5</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=1 and [class]='peak'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(34,102,0)" halo-fill="rgb(255,255,255)" halo-radius="1" line-spacing="-1" minimum-distance="linear([view::zoom],5,30,10,20,18,10)" placement="[nuti::texts3d]" size="linear([view::zoom],10,11,18,12)-1.0e-06*[rank]" wrap-width="step([view::zoom],14,60,18,100)">{((([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) ? ([ele] ? (([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name]))+', '+[ele]+'m' : ([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) : '')}</TextSymbolizer>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" feature-id="[name]+[ele]" fill="rgb(34,102,0)" halo-fill="rgb(255,255,255)" halo-radius="1" line-spacing="-1" placement="[nuti::texts3d]" size="linear([view::zoom],10,11,18,12)-1.0e-06*[rank]" wrap-width="step([view::zoom],14,60,18,100)">{((([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) ? ([ele] ? (([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name]))+', '+[ele]+'m' : ([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) : '')}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=1 and [class]='saddle'</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(102,102,0)" halo-fill="rgb(255,255,255)" halo-radius="1" line-spacing="-1" minimum-distance="linear([view::zoom],5,30,10,20,18,10)" placement="[nuti::texts3d]" size="linear([view::zoom],10,11,18,12)-1.0e-06*[rank]" wrap-width="step([view::zoom],14,60,18,100)">{((([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) ? ([ele] ? (([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name]))+', '+[ele]+'m' : ([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) : '')}</TextSymbolizer>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" feature-id="[name]+[ele]" fill="rgb(102,102,0)" halo-fill="rgb(255,255,255)" halo-radius="1" line-spacing="-1" placement="[nuti::texts3d]" size="linear([view::zoom],10,11,18,12)-1.0e-06*[rank]-1.0e-06" wrap-width="step([view::zoom],14,60,18,100)">{((([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) ? ([ele] ? (([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name]))+', '+[ele]+'m' : ([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) : '')}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=1</Filter>
-			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" fill="rgb(34,102,0)" halo-fill="rgb(255,255,255)" halo-radius="1" line-spacing="-1" minimum-distance="linear([view::zoom],5,30,10,20,18,10)" placement="[nuti::texts3d]" size="linear([view::zoom],10,11,18,12)-1.0e-06*[rank]" wrap-width="step([view::zoom],14,60,18,100)">{((([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) ? ([ele] ? (([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name]))+', '+[ele]+'m' : ([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) : '')}</TextSymbolizer>
+			<TextSymbolizer dy="linear([view::zoom],10,10,12,11,18,14,19,15,20,16)" face-name="DIN Pro Medium" feature-id="[name]+[ele]" fill="rgb(34,102,0)" halo-fill="rgb(255,255,255)" halo-radius="1" line-spacing="-1" placement="[nuti::texts3d]" size="linear([view::zoom],10,11,18,12)-1.0e-06*[rank]" wrap-width="step([view::zoom],14,60,18,100)">{((([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) ? ([ele] ? (([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name]))+', '+[ele]+'m' : ([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])) : '')}</TextSymbolizer>
 		</Rule>
 	</Style>
 	<Style name="landuse" filter-mode="first">
@@ -2697,7 +2647,7 @@
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[class]='zoo' or [class]='theme_park'</Filter>
-			<LineSymbolizer stroke="rgb(102,0,51)" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.5" stroke-width="2" />
+			<LineSymbolizer stroke="rgb(102,0,51)" stroke-opacity="0.5" stroke-width="2" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
@@ -2810,7 +2760,7 @@
 			<LineSymbolizer stroke="rgb(205,202,198)" stroke-width="linear([view::zoom],16,0,17,0.75)" />
 		</Rule>
 	</Style>
-	<Style name="building_name" filter-mode="first">
+	<Style name="building_name::label" filter-mode="first">
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
@@ -2883,6 +2833,32 @@
 			<LineSymbolizer stroke="rgb(199,204,229)" stroke-width="linear([view::zoom],13,2,16,24)" />
 		</Rule>
 	</Style>
+	<Style name="water" filter-mode="first">
+		<Rule name="auto">
+			<MinScaleDenominator>272989.375</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'ocean'</Filter>
+			<PolygonSymbolizer fill="rgb(71,191,235)" />
+			<PolygonSymbolizer fill="rgb(117,207,240)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>272989.375</MinScaleDenominator>
+			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
+			<PolygonSymbolizer fill="rgb(117,207,240)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
+			<Filter>[class]&lt;&gt;'ocean'</Filter>
+			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-1.0,-1.0)" />
+			<PolygonSymbolizer fill="rgb(117,207,240)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
+			<PolygonSymbolizer fill="rgb(117,207,240)" />
+		</Rule>
+	</Style>
 	<Style name="boundary" filter-mode="first">
 		<Rule name="auto">
 			<MinScaleDenominator>139770560</MinScaleDenominator>
@@ -2937,32 +2913,6 @@
 			<MaxScaleDenominator>17471320</MaxScaleDenominator>
 			<Filter>[admin_level]=2</Filter>
 			<LineSymbolizer stroke="rgb(120,123,140)" stroke-opacity="1" stroke-width="linear([view::zoom],3,0.5,10,2)" />
-		</Rule>
-	</Style>
-	<Style name="water" filter-mode="first">
-		<Rule name="auto">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" />
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>272989.375</MinScaleDenominator>
-			<MaxScaleDenominator>1.11816448e+09</MaxScaleDenominator>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<Filter>[class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(71,191,235)" geometry-transform="translate(-1.0,-1.0)" />
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
-			<PolygonSymbolizer fill="rgb(117,207,240)" />
 		</Rule>
 	</Style>
 	<Style name="water_name" filter-mode="first">
@@ -3034,19 +2984,19 @@
 			<MaxScaleDenominator>139770560</MaxScaleDenominator>
 			<LineSymbolizer stroke="rgb(141,203,247)" />
 		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+		<Rule name="auto">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]='canal' and [brunnel]='tunnel' and [intermittent]=1</Filter>
-			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
 			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
 		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+		<Rule name="auto">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]='canal' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
 			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>136494.688</MinScaleDenominator>
@@ -3058,6 +3008,20 @@
 			<MinScaleDenominator>136494.688</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]='canal'</Filter>
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
+			<Filter>[class]='stream' and [brunnel]='tunnel' and [intermittent]=1</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
+			<Filter>[class]='stream' and [brunnel]='tunnel'</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
 			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
 		</Rule>
 		<Rule name="auto">
@@ -3075,6 +3039,20 @@
 		<Rule name="auto">
 			<MinScaleDenominator>136494.688</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
+			<Filter>[class]='river' and [brunnel]='tunnel' and [intermittent]=1</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="linear([view::zoom],8,0.5,15,2,16,4)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
+			<Filter>[class]='river' and [brunnel]='tunnel'</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],8,0.5,15,2,16,4)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]='river' and [intermittent]=1</Filter>
 			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="linear([view::zoom],8,0.5,15,2,16,4)" />
 		</Rule>
@@ -3083,6 +3061,20 @@
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]='river'</Filter>
 			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],8,0.5,15,2,16,4)" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
+			<Filter>[brunnel]='tunnel' and [intermittent]=1</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" />
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>136494.688</MinScaleDenominator>
+			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
+			<Filter>[brunnel]='tunnel'</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
+			<LineSymbolizer stroke="rgb(141,203,247)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>136494.688</MinScaleDenominator>
@@ -3098,6 +3090,20 @@
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='ditch' and [brunnel]='tunnel' and [intermittent]=1</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="1.4" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='ditch' and [brunnel]='tunnel'</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="1.4" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[class]='ditch' and [intermittent]=1</Filter>
 			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="1.4" />
 		</Rule>
@@ -3105,6 +3111,20 @@
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[class]='ditch'</Filter>
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="1.4" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='drain' and [brunnel]='tunnel' and [intermittent]=1</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="1.4" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='drain' and [brunnel]='tunnel'</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
 			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="1.4" />
 		</Rule>
 		<Rule name="combined">
@@ -3122,6 +3142,20 @@
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='canal' and [brunnel]='tunnel' and [intermittent]=1</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='canal' and [brunnel]='tunnel'</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[class]='canal' and [intermittent]=1</Filter>
 			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
 		</Rule>
@@ -3129,6 +3163,20 @@
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[class]='canal'</Filter>
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='stream' and [brunnel]='tunnel' and [intermittent]=1</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='stream' and [brunnel]='tunnel'</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
 			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)" />
 		</Rule>
 		<Rule name="combined">
@@ -3146,6 +3194,20 @@
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='river' and [brunnel]='tunnel' and [intermittent]=1</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="linear([view::zoom],8,0.5,15,2,16,4)" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='river' and [brunnel]='tunnel'</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],8,0.5,15,2,16,4)" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[class]='river' and [intermittent]=1</Filter>
 			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="linear([view::zoom],8,0.5,15,2,16,4)" />
 		</Rule>
@@ -3153,6 +3215,20 @@
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[class]='river'</Filter>
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],8,0.5,15,2,16,4)" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='riverbank' and [brunnel]='tunnel' and [intermittent]=1</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" stroke-width="linear([view::zoom],8,0.5,15,2,16,4)" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='riverbank' and [brunnel]='tunnel'</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
 			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],8,0.5,15,2,16,4)" />
 		</Rule>
 		<Rule name="combined">
@@ -3166,6 +3242,20 @@
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[class]='riverbank'</Filter>
 			<LineSymbolizer stroke="rgb(141,203,247)" stroke-width="linear([view::zoom],8,0.5,15,2,16,4)" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[brunnel]='tunnel' and [intermittent]=1</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
+			<LineSymbolizer stroke="rgb(141,203,247)" stroke-dasharray="2,2" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[brunnel]='tunnel'</Filter>
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-width="linear([view::zoom],13,0.7,14,1,15,1.6)+linear([view::zoom],12,0.5,15,2)" />
+			<LineSymbolizer stroke="rgb(141,203,247)" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
@@ -3413,7 +3503,13 @@
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[nuti::contours]&gt;0 and [ele]&gt;0 and [div]=20</Filter>
+			<Filter>[nuti::contours]&gt;0 and [ele]&gt;0 and [div]=50</Filter>
+			<LineSymbolizer stroke="{step([view::zoom],13,'rgba(34,102,0,0.2)',14,'rgba(34,102,0,0.4)')}" stroke-width="0.6" />
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
+			<Filter>[nuti::contours]&gt;0 and [ele]&gt;0 and ([div]=10 or [div]=20)</Filter>
 			<LineSymbolizer stroke="rgba(34,102,0,0.2)" stroke-width="0.6" />
 		</Rule>
 		<Rule name="auto">
@@ -3556,7 +3652,7 @@
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='pedestrian' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
+			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
@@ -3704,128 +3800,128 @@
 			<Filter>[mapnik::geometry_type]=2 and [class]='track'</Filter>
 			<LineSymbolizer stroke="rgb(204,170,0)" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],12,0,12.01,0.5,15,2,16,2,19,9)+linear([view::zoom],13,0,13.01,1,16,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='footway' and [subclass]&lt;&gt;'steps' and [sac_scale]=null and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
+			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='footway' and [subclass]&lt;&gt;'steps' and [sac_scale]=null</Filter>
 			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='path' and [surface]='paved' and [sac_scale]&lt;&gt;null and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
+			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='path' and [surface]='paved' and [sac_scale]&lt;&gt;null</Filter>
 			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='footway' and [subclass]&lt;&gt;'steps' and [surface]='paved' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
+			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='footway' and [subclass]&lt;&gt;'steps' and [surface]='paved'</Filter>
 			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='platform' and [subclass]&lt;&gt;'steps' and [surface]='paved' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
+			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='platform' and [subclass]&lt;&gt;'steps' and [surface]='paved'</Filter>
 			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='corridor' and [subclass]&lt;&gt;'steps' and [surface]='paved' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
+			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='corridor' and [subclass]&lt;&gt;'steps' and [surface]='paved'</Filter>
 			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='platform' and [subclass]&lt;&gt;'steps' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
+			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='platform' and [subclass]&lt;&gt;'steps'</Filter>
 			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='corridor' and [subclass]&lt;&gt;'steps' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
+			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='corridor' and [subclass]&lt;&gt;'steps'</Filter>
 			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='path' and [surface]='paved' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
+			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='path' and [surface]='paved'</Filter>
 			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='steps' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="linear([view::zoom],14,0,14.01,1,14,1.4,15,1.5,16,1.8,18,6)+linear([view::zoom],14,0,14.01,1,16,1.5)" />
+			<LineSymbolizer stroke="rgb(128,128,128)" stroke-dasharray="12,5" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],14,0,14.01,1,14,1.4,15,1.5,16,1.8,18,6)+linear([view::zoom],14,0,14.01,1,16,1.5)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='pedestrian' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
+			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='pedestrian'</Filter>
 			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]&lt;&gt;'path' and [subclass]&lt;&gt;'steps' and [surface]='paved' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
+			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
 		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>17061.8359</MinScaleDenominator>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]&lt;&gt;'path' and [subclass]&lt;&gt;'steps' and [surface]='paved'</Filter>
 			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
@@ -3834,7 +3930,7 @@
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]&lt;&gt;'path' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="{linear([view::zoom],14,'rgba(204,170,0,0)',14.01,'rgb(204,170,0)')}" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
+			<LineSymbolizer stroke="{linear([view::zoom],14,'rgba(204,170,0,0)',14.01,'rgb(204,170,0)')}" stroke-dasharray="12,5" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
@@ -4100,206 +4196,20 @@
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='footway' and [subclass]&lt;&gt;'steps' and [sac_scale]=null and [brunnel]='bridge'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='footway' and [subclass]&lt;&gt;'steps' and [sac_scale]=null and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='footway' and [subclass]&lt;&gt;'steps' and [sac_scale]=null</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='path' and [surface]='paved' and [sac_scale]&lt;&gt;null and [brunnel]='bridge'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='path' and [surface]='paved' and [sac_scale]&lt;&gt;null and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='path' and [surface]='paved' and [sac_scale]&lt;&gt;null</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='footway' and [subclass]&lt;&gt;'steps' and [surface]='paved' and [brunnel]='bridge'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='footway' and [subclass]&lt;&gt;'steps' and [surface]='paved' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='footway' and [subclass]&lt;&gt;'steps' and [surface]='paved'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='platform' and [subclass]&lt;&gt;'steps' and [surface]='paved' and [brunnel]='bridge'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='platform' and [subclass]&lt;&gt;'steps' and [surface]='paved' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='platform' and [subclass]&lt;&gt;'steps' and [surface]='paved'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='corridor' and [subclass]&lt;&gt;'steps' and [surface]='paved' and [brunnel]='bridge'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='corridor' and [subclass]&lt;&gt;'steps' and [surface]='paved' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='corridor' and [subclass]&lt;&gt;'steps' and [surface]='paved'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='platform' and [subclass]&lt;&gt;'steps' and [brunnel]='bridge'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='platform' and [subclass]&lt;&gt;'steps' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='platform' and [subclass]&lt;&gt;'steps'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='corridor' and [subclass]&lt;&gt;'steps' and [brunnel]='bridge'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='corridor' and [subclass]&lt;&gt;'steps' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='corridor' and [subclass]&lt;&gt;'steps'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='path' and [surface]='paved' and [brunnel]='bridge'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='path' and [surface]='paved' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='path' and [surface]='paved'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='steps' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(128,128,128)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="linear([view::zoom],14,0,14.01,1,14,1.4,15,1.5,16,1.8,18,6)+linear([view::zoom],14,0,14.01,1,16,1.5)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='pedestrian' and [brunnel]='bridge'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='pedestrian' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='pedestrian'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]&lt;&gt;'path' and [subclass]&lt;&gt;'steps' and [surface]='paved' and [brunnel]='bridge'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]&lt;&gt;'path' and [subclass]&lt;&gt;'steps' and [surface]='paved' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
-			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]&lt;&gt;'path' and [subclass]&lt;&gt;'steps' and [surface]='paved'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='steps' and [brunnel]='bridge'</Filter>
-			<LineSymbolizer stroke="rgba(0,0,0,0.5)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="linear([view::zoom],14,0,14.01,1,14,1.4,15,1.5,16,1.8,18,6)+linear([view::zoom],14,0,14.01,1,16,1.5)" />
+			<LineSymbolizer stroke="rgba(0,0,0,0.5)" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],14,0,14.01,1,14,1.4,15,1.5,16,1.8,18,6)+linear([view::zoom],14,0,14.01,1,16,1.5)" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]&lt;&gt;'path' and [brunnel]='bridge'</Filter>
-			<LineSymbolizer stroke="rgba(0,0,0,0.5)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
+			<LineSymbolizer stroke="rgba(0,0,0,0.5)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]&lt;&gt;'path' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="{linear([view::zoom],14,'rgba(204,170,0,0)',14.01,'rgb(204,170,0)')}" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
+			<LineSymbolizer stroke="{linear([view::zoom],14,'rgba(204,170,0,0)',14.01,'rgb(204,170,0)')}" stroke-dasharray="12,5" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
@@ -5321,37 +5231,37 @@
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [brunnel]='bridge' and [subclass]='footway' and ([sac_scale]=null or [surface]='paved') or ([mapnik::geometry_type]=2 and [class]='path' and [brunnel]='bridge' and [subclass]='platform' and [surface]='paved') or ([mapnik::geometry_type]=2 and [class]='path' and [brunnel]='bridge' and [subclass]='corridor' and [surface]='paved') or ([mapnik::geometry_type]=2 and [class]='path' and [brunnel]='bridge' and [subclass]='platform') or ([mapnik::geometry_type]=2 and [class]='path' and [brunnel]='bridge' and [subclass]='corridor')</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
+			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],16,0,16.01,1,18,2)" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [brunnel]='bridge' and [subclass]='path' and [sac_scale]&lt;&gt;null and [surface]='paved'</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
+			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [brunnel]='bridge' and [subclass]='path' and [sac_scale]&lt;&gt;null</Filter>
-			<LineSymbolizer stroke="rgba(0,0,0,0.5)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
+			<LineSymbolizer stroke="rgba(0,0,0,0.5)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [brunnel]='bridge' and [subclass]='pedestrian' or ([mapnik::geometry_type]=2 and [class]='path' and [brunnel]='bridge' and [subclass]&lt;&gt;'steps' and [surface]='paved')</Filter>
-			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
+			<LineSymbolizer stroke="rgb(214,217,230)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],15,-2,18,1.6))*linear([view::zoom],14,0,14.01,1)+0.5+linear([view::zoom],15,0,15.01,1,16,2)" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [brunnel]='bridge' and [subclass]='steps'</Filter>
-			<LineSymbolizer stroke="rgba(0,0,0,0.5)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="linear([view::zoom],14,0,14.01,1,14,1.4,15,1.5,16,1.8,18,6)+linear([view::zoom],14,0,14.01,1,16,1.5)" />
+			<LineSymbolizer stroke="rgba(0,0,0,0.5)" stroke-linecap="round" stroke-linejoin="round" stroke-width="linear([view::zoom],14,0,14.01,1,14,1.4,15,1.5,16,1.8,18,6)+linear([view::zoom],14,0,14.01,1,16,1.5)" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [brunnel]='bridge'</Filter>
-			<LineSymbolizer stroke="rgba(0,0,0,0.5)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
+			<LineSymbolizer stroke="rgba(0,0,0,0.5)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
@@ -5693,7 +5603,7 @@
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[brunnel]='tunnel' and ([mapnik::geometry_type]=2 and [class]='path' and [subclass]='path' and [surface]&lt;&gt;'paved' and [sac_scale]&lt;&gt;null or ([mapnik::geometry_type]=2 and [class]='path' and [subclass]='path' and [surface]&lt;&gt;'paved'))</Filter>
-			<LineSymbolizer stroke="{linear([view::zoom],14,'rgba(204,170,0,0)',14.01,'rgb(204,170,0)')}" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
+			<LineSymbolizer stroke="{linear([view::zoom],14,'rgba(204,170,0,0)',14.01,'rgb(204,170,0)')}" stroke-dasharray="12,5" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>17061.8359</MinScaleDenominator>
@@ -5705,25 +5615,25 @@
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='path' and [surface]&lt;&gt;'paved' and [sac_scale]&lt;&gt;null and [brunnel]='bridge'</Filter>
-			<LineSymbolizer stroke="rgba(0,0,0,0.5)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
+			<LineSymbolizer stroke="rgba(0,0,0,0.5)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='path' and [surface]&lt;&gt;'paved' and [sac_scale]&lt;&gt;null and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="{linear([view::zoom],14,'rgba(204,170,0,0)',14.01,'rgb(204,170,0)')}" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
+			<LineSymbolizer stroke="{linear([view::zoom],14,'rgba(204,170,0,0)',14.01,'rgb(204,170,0)')}" stroke-dasharray="12,5" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='path' and [surface]&lt;&gt;'paved' and [brunnel]='bridge'</Filter>
-			<LineSymbolizer stroke="rgba(0,0,0,0.5)" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
+			<LineSymbolizer stroke="rgba(0,0,0,0.5)" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>17061.8359</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='path' and [surface]&lt;&gt;'paved' and [brunnel]='tunnel'</Filter>
-			<LineSymbolizer stroke="{linear([view::zoom],14,'rgba(204,170,0,0)',14.01,'rgb(204,170,0)')}" stroke-dasharray="12,5" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
+			<LineSymbolizer stroke="{linear([view::zoom],14,'rgba(204,170,0,0)',14.01,'rgb(204,170,0)')}" stroke-dasharray="12,5" stroke-linecap="round" stroke-linejoin="round" stroke-width="pow(2.0,linear([view::zoom],12,-5,15,-2,18,1.6))+1+linear([view::zoom],14,0,14.01,1,16,1.5)" />
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
@@ -5843,7 +5753,7 @@
 			<MarkersSymbolizer fill="rgb(179,183,203)" height="5" marker-type="arrow" opacity="0.6" placement="line" stroke-width="0" width="6" />
 		</Rule>
 	</Style>
-	<Style name="housenumber" filter-mode="first">
+	<Style name="housenumber::label" filter-mode="first">
 		<Rule name="auto">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
@@ -5860,7 +5770,7 @@
 		<StyleName>poi</StyleName>
 	</Layer>
 	<Layer name="aerodrome_label">
-		<StyleName>aerodrome_label</StyleName>
+		<StyleName>aerodrome_label::label</StyleName>
 	</Layer>
 	<Layer name="landcover">
 		<StyleName>landcover</StyleName>
@@ -5894,16 +5804,16 @@
 		<StyleName>building</StyleName>
 	</Layer>
 	<Layer name="building_name">
-		<StyleName>building_name</StyleName>
+		<StyleName>building_name::label</StyleName>
 	</Layer>
 	<Layer name="aeroway">
 		<StyleName>aeroway</StyleName>
 	</Layer>
-	<Layer name="boundary">
-		<StyleName>boundary</StyleName>
-	</Layer>
 	<Layer name="water">
 		<StyleName>water</StyleName>
+	</Layer>
+	<Layer name="boundary">
+		<StyleName>boundary</StyleName>
 	</Layer>
 	<Layer name="water_name">
 		<StyleName>water_name</StyleName>
@@ -5940,6 +5850,6 @@
 		<StyleName>transportation</StyleName>
 	</Layer>
 	<Layer name="housenumber">
-		<StyleName>housenumber</StyleName>
+		<StyleName>housenumber::label</StyleName>
 	</Layer>
 </Map>

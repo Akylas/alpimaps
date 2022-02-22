@@ -6,6 +6,7 @@ import { setMapPosKeys } from '@nativescript-community/ui-carto/core';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
 // import DrawerElement from '@nativescript-community/ui-drawer/svelte';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
+import { install as installGestures } from '@nativescript-community/gesturehandler';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
 import installWebRTC from '@nativescript-community/ui-webview-rtc';
@@ -26,6 +27,7 @@ import { install as installLogging } from '~/utils/logging';
 import './app.scss';
 
 // startSentry();
+installGestures();
 installLogging();
 installMixins();
 installBottomSheets();
@@ -39,7 +41,7 @@ setGeoLocationKeys('lat', 'lon');
 
 class NestedScrollView extends ScrollView {
     createNativeView() {
-        if (global.isAndroid) {
+        if (__ANDROID__) {
             return new androidx.core.widget.NestedScrollView(this._context);
         }
         return super.createNativeView();
@@ -85,7 +87,7 @@ PagerElement.register();
 
 startThemeHelper();
 
-if (global.isIOS) {
+if (__IOS__) {
     const variables = require('~/variables');
     const primaryColor = variables.primaryColor;
     themer.setPrimaryColor(primaryColor);
@@ -113,7 +115,7 @@ Application.on(Application.launchEvent, () => {
 });
 Application.on(Application.exitEvent, () => {
     networkService.stop();
-    // if (global.isAndroid) {
+    // if (__ANDROID__) {
     // application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_ON);
     // application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_OFF);
     // }

@@ -58,7 +58,7 @@ export const navigationBarHeight = writable(parseFloat(locals.navigationBarHeigh
 
 export let globalMarginTop = 0;
 
-if (global.isAndroid) {
+if (__ANDROID__) {
     const resources = (ad.getApplicationContext() as android.content.Context).getResources();
     const id = resources.getIdentifier('config_showNavigationBar', 'bool', 'android');
     const resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
