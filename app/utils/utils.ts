@@ -34,7 +34,7 @@ export function arraySortOn(array, key) {
 
 export function getDataFolder() {
     let dataFolder;
-    if (global.isAndroid) {
+    if (__ANDROID__) {
         const checkExternalMedia = function () {
             let mExternalStorageAvailable = false;
             let mExternalStorageWriteable = false;
@@ -69,7 +69,7 @@ export function getDataFolder() {
     if (!dataFolder) {
         dataFolder = knownFolders.temp().path;
         // } else {
-        //     if (global.isAndroid && Folder.exists(path.join(dataFolder, '../../../..', 'alpimaps_mbtiles'))) {
+        //     if (__ANDROID__ && Folder.exists(path.join(dataFolder, '../../../..', 'alpimaps_mbtiles'))) {
         //         dataFolder = path.join(dataFolder, '../../../..', 'alpimaps_mbtiles');
         //     }
     }
@@ -89,7 +89,7 @@ function getTreeUri(context, uri) {
 }
 
 export function listFolder(folderPath: string): (Partial<FileSystemEntity> & { isFolder: boolean })[] {
-    if (global.isAndroid && sdkVersion() >= 30) {
+    if (__ANDROID__ && sdkVersion() >= 30) {
         // console.log('listFolder', folderPath);
 
         const uri = android.net.Uri.parse(folderPath);
@@ -131,7 +131,7 @@ let savedMBTilesDir = appSettings.getString('local_mbtiles_directory');
 export function getSavedMBTilesDir() {
     return savedMBTilesDir;
 }
-const sdkVersion = lazy(() => parseInt(Device.sdkVersion, 10));
+export const sdkVersion = lazy(() => parseInt(Device.sdkVersion, 10));
 
 export function getAndroidRealPath(src) {
     let filePath = '';
@@ -162,7 +162,7 @@ export function getAndroidRealPath(src) {
 
 export async function getDefaultMBTilesDir() {
     let localMbtilesSource = sdkVersion() >= 30 ? savedMBTilesDir : null;
-    if (global.isAndroid && localMbtilesSource && sdkVersion() >= 30) {
+    if (__ANDROID__ && localMbtilesSource && sdkVersion() >= 30) {
         const context: android.app.Activity = androidApp.foregroundActivity || androidApp.startActivity;
         const granted = context.getContentResolver().getPersistedUriPermissions();
         let found = false;
@@ -179,7 +179,7 @@ export async function getDefaultMBTilesDir() {
     }
     if (!localMbtilesSource) {
         let resultPath;
-        if (global.isAndroid) {
+        if (__ANDROID__) {
             if (sdkVersion() >= 30) {
                 const result = await pickFolder({
                     permissions: {
@@ -241,7 +241,7 @@ declare const top: any;
 let ColorPickerObserver;
 export async function pickColor(color: Color, view?: View) {
     return new Promise<Color>((resolve) => {
-        if (global.isAndroid) {
+        if (__ANDROID__) {
             const activity = Application.android.startActivity;
             const nView = view ? view.nativeView : activity.getWindow().getDecorView().getRootView();
             if (!(color instanceof Color)) {

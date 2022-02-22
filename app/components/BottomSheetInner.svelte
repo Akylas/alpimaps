@@ -134,7 +134,7 @@
                 if (props.address) {
                     name += ' ' + props.address.county;
                 }
-                if (global.isAndroid) {
+                if (__ANDROID__) {
                     const intent = new android.content.Intent(android.content.Intent.ACTION_WEB_SEARCH);
                     intent.putExtra(android.app.SearchManager.QUERY, name);
                     (Application.android.foregroundActivity as android.app.Activity).startActivity(intent);
@@ -254,9 +254,9 @@
         }
     }
     function searchItemWeb() {
-        if (global.isAndroid) {
+        if (__ANDROID__) {
             const query = formatter.getItemName(item);
-            if (global.isAndroid) {
+            if (__ANDROID__) {
                 const intent = new android.content.Intent(android.content.Intent.ACTION_WEB_SEARCH);
                 intent.putExtra(android.app.SearchManager.QUERY, query); // query contains search string
                 if (intent.resolveActivity(Application.android.context.getPackageManager()) !== null) {
