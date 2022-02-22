@@ -34,7 +34,7 @@ export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.B
         this.bounded = false;
         this.alwaysShowNotification = false;
         this.notificationManager = this.getSystemService(android.content.Context.NOTIFICATION_SERVICE);
-        NotificationHelper.createNotificationChannel(this);
+        NotificationHelper.createNotificationChannel();
     },
     onDestroy() {
         if (this.geoHandler) {
@@ -74,7 +74,7 @@ export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.B
     displayNotification(sessionRunning) {
         this.mNotificationBuilder = new androidx.core.app.NotificationCompat.Builder(this, NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL);
 
-        this.mNotification = NotificationHelper.getNotification(this, this.mNotificationBuilder, this.geoHandler.currentSession);
+        this.mNotification = NotificationHelper.getLocationNotification(this, this.mNotificationBuilder, this.geoHandler.currentSession);
         this.notificationManager.notify(NOTIFICATION_ID, this.mNotification); // todo check if necessary in pre Android O
     },
 

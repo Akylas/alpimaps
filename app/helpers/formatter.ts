@@ -50,17 +50,17 @@ export function convertDistance(meters) {
 
 export function formatDistance(meters) {
     const data = convertDistance(meters);
-    return `${data.value.toFixed(1)} ${data.unit}`;
+    return `${data.value.toFixed(data.value < 10 ? 0 : 1)} ${data.unit}`;
 }
 export function convertElevation(meters) {
     return convertValueToUnit(meters, UNITS.Distance).join(' ');
 }
 
-export function formatDuration(_time): string {
+export function formatDuration(_time, formatStr?): string {
     if (_time < 0) {
         return '';
     }
-    return convertDuration(_time);
+    return convertDuration(_time, formatStr);
 }
 export enum UNITS {
     InchHg = 'InchHg',

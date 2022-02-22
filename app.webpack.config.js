@@ -81,7 +81,7 @@ module.exports = (env, params = {}) => {
     env.appPath = appPath;
     env.appResourcesPath = appResourcesPath;
     env.appComponents = env.appComponents || [];
-    env.appComponents.push('~/services/android/BgService', '~/services/android/BgServiceBinder');
+    env.appComponents.push('~/services/android/BgService', '~/services/android/BgServiceBinder', '~/android/AppActivity');
     const config = webpackConfig(env, params);
     const mode = production ? 'production' : 'development';
     const platform = env && ((env.android && 'android') || (env.ios && 'ios'));
@@ -122,8 +122,8 @@ module.exports = (env, params = {}) => {
     //             __UI_USE_EXTERNAL_RENDERER__: true,
     //             __UI_USE_XML_PARSER__: false,
     //             'global.__AUTO_REGISTER_UI_MODULES__': false,
-    //             'global.isIOS': isIOS,
-    //             'global.isAndroid': isAndroid,
+    //             '__IOS__': isIOS,
+    //             '__ANDROID__': isAndroid,
     //             'global.autoLoadPolyfills': false,
     //             'gVars.internalApp': false,
     //             __CARTO_PACKAGESERVICE__: cartoLicense,
@@ -316,8 +316,8 @@ module.exports = (env, params = {}) => {
         __UI_USE_EXTERNAL_RENDERER__: true,
         __UI_USE_XML_PARSER__: false,
         'global.__AUTO_REGISTER_UI_MODULES__': false,
-        'global.isIOS': isIOS,
-        'global.isAndroid': isAndroid,
+        '__IOS__': isIOS,
+        '__ANDROID__': isAndroid,
         'global.autoLoadPolyfills': false,
         'gVars.internalApp': false,
         __CARTO_PACKAGESERVICE__: cartoLicense,
