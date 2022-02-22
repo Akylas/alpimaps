@@ -1,12 +1,21 @@
 project.ext.abiCodes = ['armeabi':1, 'armeabi-v7a':2, 'arm64-v8a':3, 'x86':4, 'x86_64':5]
+def BUILD_TOOLS_PATH = "$rootDir/build-tools"
 
 android { 
+  // we only enable split if specified as an arg or if in debug and abiFilters is used(through cli)
+  def splitEnabled = (gradle.startParameter.taskNames.contains("assembleDebug") && project.hasProperty('abiFilters')) || project.hasProperty('splitEnabled');
   defaultConfig {  
     minSdkVersion 19
     versionCode 216
     versionName "2.0.0"
     ndk {
-      abiFilters.clear()
+      if (splitEnabled || project.hasProperty('abiFilters')) {
+        abiFilters.clear()
+        if (!splitEnabled && project.hasProperty('abiFilters')) {
+          abiFilters.addAll(project.findProperty('abiFilters').split(',').collect{it as String})
+        }
+      }
+
     }
   }
   lintOptions {
@@ -17,11 +26,13 @@ android {
   }
   splits {
       abi {
-          // enable gradle.startParameter.taskNames.contains("assembleRelease")  !project.hasProperty('dbgBld')
-          enable project.hasProperty('splitEnabled')
-          reset()
-          include  'x86_64', 'arm64-v8a', 'armeabi-v7a'
-          universalApk false
+          enable splitEnabled
+          if (project.hasProperty('abiFilters')) {
+            def abis = project.findProperty('abiFilters')
+            reset()
+            include abis.split(',')
+          }
+          universalApk project.hasProperty('universalApk')
       }
   }
   aaptOptions {
@@ -46,7 +57,7 @@ android {
       def absolutePathToAppResources = getAppResourcesPath()
       proguardFiles getDefaultProguardFile(
         'proguard-android-optimize.txt'),
-        "$absolutePathToAppResources/Android/proguard-rules.pro"
+        "$BUILD_TOOLS_PATH/proguard-rules.pro"
 
       debuggable false
       jniDebuggable false
@@ -56,30 +67,7 @@ android {
       multiDexEnabled true
     }
   }
-  // packagingOptions {
-  //     exclude '/res/values-v21/<file_to_exclude>'
-  // }
 }
-dependencies {
-
-    implementation 'com.github.duanhong169:logger:1.0.0'
-    implementation 'com.github.duanhong169:checkerboarddrawable:1.0.2'
-    implementation 'com.github.duanhong169:colorpicker:1.1.6'
-}
-
-// final excludedModules = [
-//     'bottomappbar','appbar','badge','bottomnavigation', 'circularreveal', 'floatingactionbutton','imageview', 'radiobutton', 'tabs', 'textview', 'textfield'
-// ]
-/**
- * Exclude dependencies from all configurations.
- * This configuration solves an issue 
- * when the same transitive dependency is included by different libraries.
- */
-// configurations {
-//     [all, excludedModules].combinations { config, moduleToExclude ->
-//         config.exclude group: 'com.google.android.material', module: moduleToExclude
-//     }
-// }
 
 task createProguard {
     dependsOn 'buildMetadata'
@@ -90,6 +78,12 @@ task createProguard {
         }
     }
 }
+tasks.whenTaskAdded({ DefaultTask currentTask ->
+    if (currentTask =~ /buildMetadata/) {
+        currentTask.finalizedBy("createProguard")
+    }
+})
+
 android.applicationVariants.all { variant ->
     variant.outputs.each { output ->
         def baseAbiVersionCode = project.ext.abiCodes.get(output.getFilter("ABI"), 0)
@@ -98,4 +92,3 @@ android.applicationVariants.all { variant ->
         }
     }
 }
-
