@@ -11,7 +11,7 @@
     import { GeoHandler, GeoLocation, UserLocationdEventData } from '~/handlers/GeoHandler';
     import { l, lc } from '~/helpers/locale';
     import { getMapContext } from '~/mapModules/MapModule';
-    import UserLocationModule, { LocationEvent } from '~/mapModules/UserLocationModule';
+    import UserLocationModule from '~/mapModules/UserLocationModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
@@ -43,7 +43,7 @@
         applicationOn(backgroundEvent, onAppPause);
         applicationOn(foregroundEvent, onAppResume);
         userLocationModule = mapContext.mapModule('userLocation');
-        userLocationModule.on(LocationEvent, onNewLocation);
+        userLocationModule.on('location', onNewLocation);
         onNewLocation({ data: userLocationModule.lastUserLocation } as any);
         onServiceLoaded((handler: GeoHandler) => {
             geoHandler = handler;
@@ -52,7 +52,7 @@
     onDestroy(() => {
         applicationOff(backgroundEvent, onAppPause);
         applicationOff(foregroundEvent, onAppResume);
-        userLocationModule.off(LocationEvent, onNewLocation);
+        userLocationModule.off('location', onNewLocation);
         if (listeningForBarometer) {
             stopBarometerAltitudeUpdate();
         }
