@@ -102,13 +102,17 @@ export function isDark() {
     return theme === 'dark';
 }
 
+let started = false;
 export function start() {
+    if (started) {
+        return;
+    }
+    started = true;
     if (__IOS__ && iOSNativeHelper.MajorVersion < 13) {
         theme = 'light';
     } else {
-        theme = (getString('theme', 'auto') || 'auto') as Themes;
+        theme = getString('theme', DEFAULT_THEME) as Themes;
     }
-    // console.log('theme', theme);
 
     prefs.on('key:theme', () => {
         let newTheme = getString('theme') as Themes;
