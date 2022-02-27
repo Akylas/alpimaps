@@ -36,14 +36,14 @@ end
 
 desc 'Ensure deps are installed'
 lane :tns_install do |params| 
-  sh("tns", "install")
+  sh("devns", "install")
 
 end
 desc 'Prepare the application.'
 lane :prepare do |params| 
   platform = params[:platform]
   sh("rm", "-fr", "platforms/" + platform)
-  sh("tns", "prepare", platform, "--release", "--env.adhoc")
+  sh("devns", "prepare", platform, "--release", "--env.adhoc")
 
 end
 
@@ -189,12 +189,10 @@ end
 
   desc 'Build the Android application.'
     lane :build do
-      # prepare(platform:'android')
       sh("npm", "run", "build.android.production")
   end
   desc 'Build the Android application For Github.'
   lane :build_github do
-    # prepare(platform:'android')
     sh("npm", "run", "build.android.production.fdroid")
   end
 
