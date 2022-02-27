@@ -9,9 +9,10 @@ def truncate(string, length = 20)
 end
 
 fastlane_version '2.135.2'
-$app_id = 'akylas.alpi.maps'
 $lang = 'en-US'
 $ios_scheme = 'alpimaps'
+$repository_name = 'farfromrefug/alpimaps'
+
 
 desc 'test lane'
 lane :test do
@@ -71,12 +72,10 @@ lane :build_flavor do |params|
 
   sentry_create_release(
     version: version, # release version to create
-    app_identifier: $app_id, # pass in the bundle_identifer of your app
   )
   push_to_git_remote
   sentry_set_commits(
     version: version,
-    app_identifier: $app_id, # pass in the bundle_identifer of your app
     auto: true, # enable completely automated commit management
     # clear: false, # clear all current commits from the release
     # commit: '...', # commit spec, see `sentry-cli releases help set-commits` for more information
@@ -183,9 +182,7 @@ end
     write_changelog(version:params[:versionCode], changelog:params[:changelog]);
     upload_to_play_store(
       track: track,
-      package_name:$app_id,
       track_promote_to: track,
-      json_key: ENV["PLAYSTORE_JSON_KEY_DATA"],
       aab: './platforms/android/app/build/outputs/bundle/release/app-release.aab'
     )
   end
@@ -198,10 +195,7 @@ end
   desc 'Build the Android application For Github.'
   lane :build_github do
     # prepare(platform:'android')
-    sh("npm", "run", "build.android.production.fdroid",
-        "--env.noconsole",
-        "--gradle=\"-PsplitEnabled\""
-      )
+    sh("npm", "run", "build.android.production.fdroid")
   end
 
   desc 'Ship to Github.'
@@ -238,7 +232,7 @@ end
       tag_name: tag,
       description: changelog,
       commitish: "master",
-      upload_assets: Dir.glob("../platforms/android/app/build/outputs/apk/release/*.apk")
+      upload_assets: Dir.glob(File.expand_path("../platforms/android/app/build/outputs/apk/release/*.apk"))
     )
   end
 
