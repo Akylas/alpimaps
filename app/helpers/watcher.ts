@@ -9,7 +9,7 @@ function watcher<T>(initialValue, watchFunction) {
                 watchFunction(oldvalue, value);
                 return value;
             });
-        },
+        }
     } as Writable<T>;
 }
 
