@@ -1,4 +1,5 @@
 // (com as any).tns.Runtime.getCurrentRuntime().enableVerboseLogging();
+import { install as installGestures } from '@nativescript-community/gesturehandler';
 import { setGeoLocationKeys } from '@nativescript-community/gps';
 import { installMixins as installUIMixins } from '@nativescript-community/systemui';
 import { overrideSpanAndFormattedString } from '@nativescript-community/text';
@@ -6,29 +7,23 @@ import { setMapPosKeys } from '@nativescript-community/ui-carto/core';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
 // import DrawerElement from '@nativescript-community/ui-drawer/svelte';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
-import { install as installGestures } from '@nativescript-community/gesturehandler';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
 import installWebRTC from '@nativescript-community/ui-webview-rtc';
 import { Application } from '@nativescript/core';
 import { ScrollView } from '@nativescript/core/ui';
-import { svelteNative , svelteNativeNoFrame} from 'svelte-native';
+import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
-import Map from '~/components/Map.svelte';
-// import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
-// Trace.addCategories(Trace.categories.ViewHierarchy);
-// Trace.addCategories(CollectionViewTraceCategory);
-// Trace.enable();
 import { start as startThemeHelper } from '~/helpers/theme';
 import { BgService } from '~/services/BgService';
 import { networkService } from '~/services/NetworkService';
-import { install as installLogging } from '~/utils/logging';
 // import { startSentry } from '~/utils/sentry';
 import './app.scss';
+import Map from './components/Map.svelte';
 
 // startSentry();
 installGestures();
-installLogging();
+// installLogging();
 installMixins();
 installBottomSheets();
 installUIMixins();
@@ -85,6 +80,12 @@ CollectionViewElement.register();
 PagerElement.register();
 // DrawerElement.register();
 
+// Trace.addCategories(Trace.categories.NativeLifecycle);
+// Trace.addCategories(Trace.categories.Transition);
+// Trace.addCategories(Trace.categories.Animation);
+// Trace.addCategories(Trace.categories.All);
+// Trace.enable();
+
 startThemeHelper();
 
 if (__IOS__) {
@@ -105,20 +106,9 @@ themer.createShape('round', {
 const bgService = new BgService();
 Application.on(Application.launchEvent, () => {
     networkService.start();
-    // const receiverCallback = (androidContext, intent: android.content.Intent) => {
-    //     console.log('receiverCallback', intent.getAction(), intent.getAction() === android.content.Intent.ACTION_SCREEN_ON);
-    // (Vue.prototype.$getAppComponent() as App).$emit('screen', intent.getAction() === android.content.Intent.ACTION_SCREEN_ON);
-    // };
-    // application.android.registerBroadcastReceiver(android.content.Intent.ACTION_SCREEN_ON, receiverCallback);
-    // application.android.registerBroadcastReceiver(android.content.Intent.ACTION_SCREEN_OFF, receiverCallback);
-    // }
 });
 Application.on(Application.exitEvent, () => {
     networkService.stop();
-    // if (__ANDROID__) {
-    // application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_ON);
-    // application.android.unregisterBroadcastReceiver(android.content.Intent.ACTION_SCREEN_OFF);
-    // }
 });
 //@ts-ignore
 svelteNative(Map, {});
