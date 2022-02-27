@@ -1,0 +1,2 @@
+* Bug fixes
+* new directions option: you can select different algorithms which work better while hiking!
