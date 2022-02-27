@@ -67,6 +67,7 @@ module.exports = (env, params = {}) => {
         sentry,
         uploadSentry,
         uglify,
+        profile,
         noconsole,
         cartoLicense = false,
         devlog,
@@ -81,13 +82,18 @@ module.exports = (env, params = {}) => {
     env.appPath = appPath;
     env.appResourcesPath = appResourcesPath;
     env.appComponents = env.appComponents || [];
-    env.appComponents.push('~/services/android/BgService', '~/services/android/BgServiceBinder', '~/android/AppActivity');
+    env.appComponents.push('~/services/android/BgService', '~/services/android/BgServiceBinder');
     const config = webpackConfig(env, params);
     const mode = production ? 'production' : 'development';
     const platform = env && ((env.android && 'android') || (env.ios && 'ios'));
     const projectRoot = params.projectRoot || __dirname;
     const dist = nsWebpack.Utils.platform.getDistPath();
     const appResourcesFullPath = resolve(projectRoot, appResourcesPath);
+
+    if (profile) {
+        config.profile = true;
+        config.stats = { preset: 'minimal', chunkModules: true, modules: true };
+    }
 
     // nsWebpack.chainWebpack((config, env) => {
     //     config.externals([
@@ -263,7 +269,6 @@ module.exports = (env, params = {}) => {
     //         });
     //     });
     // });
-    // const config = nsWebpack.resolveConfig();
     config.externals.push('~/licenses.json');
     config.externals.push('~/osm_icons.json');
     config.externals.push(function ({ context, request }, cb) {
@@ -272,18 +277,12 @@ module.exports = (env, params = {}) => {
         }
         cb();
     });
-    // console.log('config.externals', config.externals);
 
     const coreModulesPackageName = fork ? '@akylas/nativescript' : '@nativescript/core';
     config.resolve.modules = [resolve(__dirname, `node_modules/${coreModulesPackageName}`), resolve(__dirname, 'node_modules'), `node_modules/${coreModulesPackageName}`, 'node_modules'];
     Object.assign(config.resolve.alias, {
         '@nativescript/core': `${coreModulesPackageName}`,
-        // 'svelte-native': '@akylas/svelte-native',
-        'tns-core-modules': `${coreModulesPackageName}`,
-        '@nativescript/core/accessibility$': '~/acessibilityShim',
-        '../../../accessibility$': '~/acessibilityShim',
-        '../../accessibility$': '~/acessibilityShim',
-        [`${coreModulesPackageName}/accessibility$`]: '~/acessibilityShim'
+        'tns-core-modules': `${coreModulesPackageName}`
     });
     let appVersion;
     let buildNumber;
@@ -316,15 +315,15 @@ module.exports = (env, params = {}) => {
         __UI_USE_EXTERNAL_RENDERER__: true,
         __UI_USE_XML_PARSER__: false,
         'global.__AUTO_REGISTER_UI_MODULES__': false,
-        '__IOS__': isIOS,
-        '__ANDROID__': isAndroid,
+        __IOS__: isIOS,
+        __ANDROID__: isAndroid,
         'global.autoLoadPolyfills': false,
         'gVars.internalApp': false,
-        __CARTO_PACKAGESERVICE__: cartoLicense,
+        TNS_ENV: JSON.stringify(mode),
         __APP_ID__: `"${nconfig.id}"`,
         __APP_VERSION__: `"${appVersion}"`,
         __APP_BUILD_NUMBER__: `"${buildNumber}"`,
-        TNS_ENV: JSON.stringify(mode),
+        __CARTO_PACKAGESERVICE__: cartoLicense,
         SUPPORTED_LOCALES: JSON.stringify(locales),
         DEFAULT_LOCALE: `"${locale}"`,
         DEFAULT_THEME: `"${theme}"`,
@@ -356,6 +355,7 @@ module.exports = (env, params = {}) => {
             defines[`gVars.${s}`] = apiKeys ? `'${keys[s]}'` : 'undefined';
         }
     });
+    Object.assign(config.plugins.find((p) => p.constructor.name === 'DefinePlugin').definitions, defines);
 
     const symbolsParser = require('scss-symbols-parser');
     const mdiSymbols = symbolsParser.parseSymbols(readFileSync(resolve(projectRoot, 'node_modules/@mdi/font/scss/_variables.scss')).toString());
@@ -469,42 +469,8 @@ module.exports = (env, params = {}) => {
             }
         ]
     });
-    if (!!production) {
-        config.module.rules.push({
-            // rules to replace mdi icons and not use nativescript-font-icon
-            test: /\.(js)$/,
-            use: [
-                {
-                    loader: 'string-replace-loader',
-                    options: {
-                        search: '__decorate\\(\\[((.|\n)*?)profile,((.|\n)*?)\\],.*?,.*?,.*?\\);?',
-                        replace: (match, p1, offset, string) => '',
-                        flags: 'g'
-                    }
-                }
-            ]
-        });
-        // rules to clean up all Trace in production
-        // we must run it for all files even node_modules
-        config.module.rules.push({
-            test: /\.(ts|js)$/,
-            use: [
-                {
-                    loader: 'string-replace-loader',
-                    options: {
-                        search: 'if\\s*\\(\\s*Trace.isEnabled\\(\\)\\s*\\)',
-                        replace: 'if (false)',
-                        flags: 'g'
-                    }
-                }
-            ]
-        });
-    }
     // we remove default rules
     config.plugins = config.plugins.filter((p) => ['CopyPlugin', 'ForkTsCheckerWebpackPlugin'].indexOf(p.constructor.name) === -1);
-    // console.log(config.plugins.map((s) => s.constructor.name));
-
-    // console.log('plugins after clean', config.plugins);
     // we add our rules
     const globOptions = { dot: false, ignore: [`**/${relative(appPath, appResourcesFullPath)}/**`] };
 
@@ -544,7 +510,7 @@ module.exports = (env, params = {}) => {
             from: 'css/osm.scss',
             to: 'osm_icons.json',
             globOptions,
-            transform: (manifestBuffer, path) => {
+            transform(manifestBuffer, path) {
                 const osmSymbols = symbolsParser.parseSymbols(manifestBuffer.toString());
                 // console.log('osmSymbols', osmSymbols);
                 const osmIcons = osmSymbols.variables.reduce(function (acc, value) {
@@ -565,6 +531,14 @@ module.exports = (env, params = {}) => {
 
     config.plugins.unshift(
         new webpack.ProvidePlugin({
+            svN: '~/svelteNamespace'
+        })
+    );
+
+    config.plugins.push(new SpeedMeasurePlugin());
+
+    config.plugins.unshift(
+        new webpack.ProvidePlugin({
             setTimeout: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'setTimeout'],
             clearTimeout: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'clearTimeout'],
             setInterval: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'setInterval'],
@@ -574,23 +548,98 @@ module.exports = (env, params = {}) => {
             cancelAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame'), 'cancelAnimationFrame']
         })
     );
+    config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${locales.join('|')})$`)));
 
+    config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|nativescript-carto|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
     config.plugins.push(new IgnoreNotFoundExportPlugin());
-    config.plugins.push(new SpeedMeasurePlugin());
 
-    // save as long as we dont use calc in css
+    const nativescriptReplace = '(NativeScript[\\/]dist[\\/]packages[\\/]core|@nativescript/core|node_modules)';
+    config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(/http$/, (resource) => {
+            if (resource.context.match(nativescriptReplace)) {
+                resource.request = '@nativescript-community/https';
+            }
+        })
+    );
+
+    config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(/accessibility$/, (resource) => {
+            if (resource.context.match(nativescriptReplace)) {
+                resource.request = '~/shims/accessibility';
+            }
+        })
+    );
+    config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(/action-bar$/, (resource) => {
+            if (resource.context.match(nativescriptReplace)) {
+                resource.request = '~/shims/action-bar';
+            }
+        })
+    );
     config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /reduce-css-calc$/ }));
     config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /punnycode$/ }));
     config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /^url$/ }));
-    // config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /polymer-expressions$/ }));
 
     if (!!production) {
-        config.plugins.unshift(
-            new webpack.ProvidePlugin({
-                svN: '~/svelteNamespace'
+        config.plugins.push(
+            new webpack.NormalModuleReplacementPlugin(/profiling$/, (resource) => {
+                if (resource.context.match(nativescriptReplace)) {
+                    resource.request = '~/shims/profile';
+                }
+            }),
+            new webpack.NormalModuleReplacementPlugin(/trace$/, (resource) => {
+                if (resource.context.match(nativescriptReplace)) {
+                    resource.request = '~/shims/trace';
+                }
             })
         );
+        config.module.rules.push(
+            {
+                // rules to replace mdi icons and not use nativescript-font-icon
+                test: /\.(js)$/,
+                use: [
+                    {
+                        loader: 'string-replace-loader',
+                        options: {
+                            search: '^__decorate\\(\\[((\\s|\\t|\\n)*?)profile((\\s|\\t|\\n)*?)\\],.*?,.*?,.*?\\);?',
+                            replace: (match, p1, offset, string) => '',
+                            flags: 'gm'
+                        }
+                    }
+                ]
+            },
+            {
+                // rules to replace mdi icons and not use nativescript-font-icon
+                test: /\.(ts)$/,
+                use: [
+                    {
+                        loader: 'string-replace-loader',
+                        options: {
+                            search: '@profile',
+                            replace: (match, p1, offset, string) => '',
+                            flags: ''
+                        }
+                    }
+                ]
+            },
+            // rules to clean up all Trace in production
+            // we must run it for all files even node_modules
+            {
+                test: /\.(ts|js)$/,
+                use: [
+                    {
+                        loader: 'string-replace-loader',
+                        options: {
+                            search: 'if\\s*\\(\\s*Trace.isEnabled\\(\\)\\s*\\)',
+                            replace: 'if (false)',
+                            flags: 'g'
+                        }
+                    }
+                ]
+            }
+        );
     }
+
     if (buildstyle) {
         config.plugins.unshift(
             new WebpackShellPluginNext({
@@ -610,13 +659,9 @@ module.exports = (env, params = {}) => {
         );
     }
 
-    Object.assign(config.plugins.find((p) => p.constructor.name === 'DefinePlugin').definitions, defines);
-
-    config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${locales.join('|')})$`)));
-
-    config.devtool = inlineSourceMap ? 'inline-cheap-source-map' : false;
-    if (!inlineSourceMap && (hiddenSourceMap || sourceMap)) {
+    if (hiddenSourceMap || sourceMap) {
         if (!!sentry && !!uploadSentry) {
+            config.devtool = false;
             config.plugins.push(
                 new webpack.SourceMapDevToolPlugin({
                     append: `\n//# sourceMappingURL=${process.env.SENTRY_PREFIX}[name].js.map`,
@@ -631,34 +676,20 @@ module.exports = (env, params = {}) => {
                     release: `${nconfig.id}@${appVersion}+${buildNumber}`,
                     dist: `${buildNumber}.${platform}`,
                     ignoreFile: '.sentrycliignore',
-                    setCommits: {
-                        auto: true,
-                        ignoreMissing: true,
-                        ignoreEmpty: true
-                    },
-                    include: [join(dist, process.env.SOURCEMAP_REL_DIR)]
+                    include: [dist, join(dist, process.env.SOURCEMAP_REL_DIR)]
                 })
             );
         } else {
-            config.plugins.push(
-                new webpack.SourceMapDevToolPlugin({
-                    filename: '[name].js.map'
-                })
-            );
+            config.devtool = 'inline-nosources-cheap-module-source-map';
         }
-    }
-    if (!!production) {
-        // config.plugins.push(new ForkTsCheckerWebpackPlugin());
-        // config.plugins.push(new ZipPlugin({
-        //     path: 'assets/styles',
-        // }));
+    } else {
+        config.devtool = false;
     }
 
     config.externalsPresets = { node: false };
     config.resolve.fallback = config.resolve.fallback || {};
-    config.resolve.fallback.timers = require.resolve('timers/');
-    config.resolve.fallback.stream = require.resolve('stream/');
-    config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|nativescript-carto|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
+    // config.resolve.fallback.timers = require.resolve('timers/');
+    // config.resolve.fallback.stream = require.resolve('stream/');
     // config.optimization.usedExports = true;
     config.optimization.minimize = uglify !== undefined ? !!uglify : production;
     const isAnySourceMapEnabled = !!sourceMap || !!hiddenSourceMap || !!inlineSourceMap;
@@ -669,8 +700,8 @@ module.exports = (env, params = {}) => {
                 ecma: isAndroid ? 2020 : 2017,
                 module: true,
                 toplevel: false,
-                keep_classnames: false,
-                keep_fnames: false,
+                keep_classnames: platform !== 'android',
+                keep_fnames: platform !== 'android',
                 output: {
                     comments: false,
                     semicolons: !isAnySourceMapEnabled
@@ -678,7 +709,7 @@ module.exports = (env, params = {}) => {
                 mangle: {
                     properties: {
                         reserved: ['__metadata'],
-                        regex: /^(m[A-Z]|nativeViewProtected$|nativeTextViewProtected$)/
+                        regex: /^(m[A-Z])/
                     }
                 },
                 compress: {
