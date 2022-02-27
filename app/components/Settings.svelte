@@ -1,5 +1,4 @@
 <script lang="ts">
-    import * as EInfo from '@nativescript-community/extendedinfo';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { ApplicationSettings, ObservableArray } from '@nativescript/core';
@@ -31,7 +30,7 @@
     //     collectionView && (collectionView.nativeView as CollectionView).refreshVisibleItems();
     // });
 
-    const appVersion = EInfo.getVersionNameSync() + '.' + EInfo.getBuildNumberSync();
+    const appVersion = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
     function getTitle(item) {
         switch (item.id) {
             case 'dark_mode':
@@ -106,7 +105,7 @@
             const value = geoSettings[k];
             newItems.push({
                 key: k,
-                rightValue: () => value.formatter(ApplicationSettings.getNumber(k, value.default)),
+                rightValue: value.formatter ? () => value.formatter(ApplicationSettings.getNumber(k, value.default)) : undefined,
                 ...value,
                 id: 'setting'
             });
@@ -220,12 +219,42 @@
         }
     }
     onLanguageChanged(refresh);
+
+    function selectTemplate(item, index, items) {
+        return item.type === 'switch' ? item.type : 'default';
+    }
+
+    function onCheckBox(item, value: boolean) {
+        try {
+            ApplicationSettings.setBoolean(item.key, value);
+        } catch (error) {
+            console.error(error);
+        }
+    }
 </script>
 
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*">
         <CActionBar canGoBack title={lc('settings')} />
-        <collectionview bind:this={collectionView} row={1} {items} rowHeight="70">
+        <collectionview bind:this={collectionView} row={1} {items} rowHeight="70" itemTemplateSelector={selectTemplate}>
+            <Template let:item key="switch">
+                <gridlayout columns="*, auto" padding="0 10 0 30">
+                    <stackLayout verticalAlignment="center">
+                        <label fontSize="17" text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines={2} lineBreak="end" />
+                        <label
+                            visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'}
+                            fontSize="14"
+                            class="subtitle"
+                            text={getSubtitle(item)}
+                            verticalTextAlignment="top"
+                            maxLines={2}
+                            lineBreak="end"
+                        />
+                    </stackLayout>
+                    <switch col={1} checked={item.value} on:checkedChange={(e) => onCheckBox(item, e.value)} verticalAlignment="center" />
+                    <absoluteLayout colSpan={2} backgroundColor={$borderColor} height="1" verticalAlignment="bottom" />
+                </gridlayout>
+            </Template>
             <Template let:item>
                 <gridLayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)}>
                     <label fontSize={36} text={item.icon} marginLeft="-10" width="40" verticalAlignment="center" fontFamily={mdiFontFamily} visibility={!!item.icon ? 'visible' : 'hidden'} />
@@ -251,9 +280,8 @@
                         marginRight={16}
                         marginLeft={16}
                     />
-                    <button
+                    <label
                         col={2}
-                        variant="text"
                         width="25"
                         height="25"
                         fontSize="20"
@@ -263,7 +291,6 @@
                         marginLeft={10}
                         marginRight={10}
                         text={item.rightBtnIcon}
-                        on:tap={() => onTap(item.id)}
                     />
                     <absoluteLayout row={2} col={1} colSpan={3} backgroundColor={$borderColor} height="1" verticalAlignment="bottom" />
                 </gridLayout>
