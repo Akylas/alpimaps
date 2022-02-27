@@ -388,6 +388,8 @@
   "stationery": "stationery",
   "statue": "statue",
   "stone": "stone",
+  "stop_gps_background": "stop GPS while in background",
+  "stop_gps_background_desc": "if you disable this the GPS will stay on while in background and watching for location",
   "stopped_watching_location": "stopped watching your location",
   "storage_tank": "storage tank",
   "suitcase": "suitcase",

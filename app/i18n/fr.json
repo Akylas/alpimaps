@@ -386,6 +386,8 @@
   "stationery": "papeterie",
   "statue": "statue",
   "stone": "pierre",
+  "stop_gps_background": "Désactiver le GPS en arrière-plan",
+  "stop_gps_background_desc": "si vous désactivez cela le GPS restera en arrière-plan et regarder pour l'emplacement",
   "stopped_watching_location": "a cessé de regarder votre position",
   "storage_tank": "réservoir de stockage",
   "suitcase": "valise",
