@@ -10,8 +10,7 @@ import { bind } from 'helpful-decorators/dist-src/bind';
 import { BgService } from '~/services/BgService';
 import { l, lc } from '~/helpers/locale';
 import { formatDistance, formatDuration } from '~/helpers/formatter';
-import AppActivity from '~/android/AppActivity';
-import { sdkVersion } from '~/utils/utils';
+import { sdkVersion } from '~/utils/utils.common';
 
 let geolocation: GPS;
 
@@ -86,7 +85,9 @@ export class GeoHandler extends Observable {
     launched = false;
 
     wasWatchingBeforePause = false;
-    dontWatchWhilePaused = ApplicationSettings.getBoolean('stopGPSWhilePaused', false);
+    get stopGpsBackground() {
+        return ApplicationSettings.getBoolean('stop_gps_background', true);
+    }
     gpsEnabled = true;
 
     constructor() {
@@ -158,7 +159,7 @@ export class GeoHandler extends Observable {
             }
         }
         if (!this.currentSession && this.isWatching()) {
-            if (this.dontWatchWhilePaused) {
+            if (this.stopGpsBackground) {
                 this.wasWatchingBeforePause = true;
                 this.stopWatch();
             } else {
@@ -403,20 +404,18 @@ export class GeoHandler extends Observable {
             //@ts-ignore
             options.activityType = ApplicationSettings.getNumber('gps_ios_activitytype', CLActivityType.Other);
         }
-        if (__ANDROID__ && !this.dontWatchWhilePaused) {
-            const activity = androidApp.startActivity as AppActivity;
-            activity.enableShowWhenLockedAndTurnScreenOn();
-            //     try {
-            //         (this.bgService as any).get().showForeground(true);
-            //     } catch (err) {
-            //         console.error('showForeground', err, err['stack']);
-            //     }
-        }
+
         this.watchId = await geolocation.watchLocation(this.onLocation, this.onLocationError, options);
     }
 
     getWatchSettings() {
         const options = {
+            stop_gps_background: {
+                title: lc('stop_gps_background'),
+                description: lc('stop_gps_background_desc'),
+                value: this.stopGpsBackground,
+                type: 'switch'
+            },
             gps_update_distance: {
                 title: lc('gps_update_distance'),
                 description: lc('gps_update_distance_desc'),
@@ -471,10 +470,6 @@ export class GeoHandler extends Observable {
         DEV_LOG && console.log('stopWatch', this.watchId);
         if (this.watchId) {
             if (__ANDROID__) {
-                if (!this.dontWatchWhilePaused) {
-                    const activity = androidApp.startActivity as AppActivity;
-                    activity.disableShowWhenLockedAndTurnScreenOn();
-                }
                 (this.bgService as any).get().removeForeground();
             }
             geolocation.clearWatch(this.watchId);
