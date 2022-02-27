@@ -1,0 +1,2 @@
+* Corrections de bugs
+* nouvelle option pour le calcul de direction: possibilité de choix d'algorithmes plus puissants pour la randonnée
