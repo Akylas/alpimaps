@@ -63,7 +63,7 @@ if (__ANDROID__) {
     const id = resources.getIdentifier('config_showNavigationBar', 'bool', 'android');
     const resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
     // wont work on emulator though!
-    if (id > 0 && resourceId > 0 && (resources.getBoolean(id) || isSimulator())) {
+    if (id > 0 && resourceId > 0 && (resources.getBoolean(id) || (!PRODUCTION && isSimulator()))) {
         navigationBarHeight.set(Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId)));
         // navigationBarHeight/ = Utils.layout.toDeviceIndependentPixels(48);
     }
