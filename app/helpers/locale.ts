@@ -59,7 +59,7 @@ $lang.subscribe((newLang: string) => {
         const localeData = require(`~/i18n/${lang}.json`);
         loadLocaleJSON(localeData);
     } catch (err) {
-        console.log('failed to load lang json', lang, `~/i18n/${lang}.json`, err);
+        console.error('failed to load lang json', lang, `~/i18n/${lang}.json`, err);
     }
     globalObservable.notify({ eventName: 'language', data: lang });
 });
@@ -161,7 +161,6 @@ export function convertDuration(date, formatStr: string = 'H [hrs], m [min]') {
 
 prefs.on('key:language', () => {
     const newLanguage = getString('language');
-    console.log('key language changed', newLanguage);
     // on pref change we are updating
     if (newLanguage === lang) {
         return;
