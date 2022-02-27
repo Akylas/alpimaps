@@ -57,19 +57,19 @@
     }
 
     // onMount(() => {
-        // console.log('onMount', !!vectorDataSource, !!dataSource, !!rasterDataSource);
-        // try {
-            // const vDataSource = vectorDataSource.getNative();
-            // webserver = new (akylas.alpi as any).maps.WebServer(8080, dataSource.getNative(), vDataSource, rasterDataSource?.getNative(), vDataSource);
-            // webserver.start();
-        // } catch (err) {
-            // console.error(err);
-        // }
+    // console.log('onMount', !!vectorDataSource, !!dataSource, !!rasterDataSource);
+    // try {
+    // const vDataSource = vectorDataSource.getNative();
+    // webserver = new (akylas.alpi as any).maps.WebServer(8080, dataSource.getNative(), vDataSource, rasterDataSource?.getNative(), vDataSource);
+    // webserver.start();
+    // } catch (err) {
+    // console.error(err);
+    // }
     // });
     // onDestroy(() => {
-        // if (webserver) {
-            // webserver.stop();
-        // }
+    // if (webserver) {
+    // webserver.stop();
+    // }
     // });
 
     $: currentAltitude = position.altitude + 10;
@@ -78,6 +78,6 @@
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout>
-        <awebview bind:this={webView} on:loaded={webviewLoaded} webConsoleEnabled={consoleEnabled} displayZoomControls={false} normalizeUrls={false}/>
+        <awebview bind:this={webView} on:loaded={webviewLoaded} webConsoleEnabled={consoleEnabled} displayZoomControls={false} normalizeUrls={false} />
     </gridlayout>
 </page>
