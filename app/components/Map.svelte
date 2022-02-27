@@ -1,6 +1,5 @@
 <script lang="ts">
     import { AppURL, handleOpenURL } from '@nativescript-community/appurl';
-    // import * as EInfo from '@nativescript-community/extendedinfo';
     import { GenericGeoLocation } from '@nativescript-community/gps';
     import { allowSleepAgain, keepAwake } from '@nativescript-community/insomnia';
     import * as perms from '@nativescript-community/perms';
@@ -52,6 +51,7 @@
     import mapStore from '~/stores/mapStore';
     import { showError } from '~/utils/error';
     import { getBoundsZoomLevel } from '~/utils/geo';
+    import { disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn } from '~/utils/utils.android';
     import { accentColor } from '~/variables';
     import { navigationBarHeight, primaryColor } from '../variables';
     import { isBottomSheetOpened, showBottomSheet } from './bottomsheet';
@@ -95,6 +95,7 @@
     let currentLanguage = appSettings.getString('language', 'en');
     let addedLayers: { layer: Layer<any, any>; layerId: LayerType }[] = [];
     let keepAwakeEnabled = appSettings.getBoolean(KEEP_AWAKE_KEY, false);
+    let showOnLockscreen = false;
     let currentMapRotation = 0;
     let shouldShowNavigationBarOverlay = false;
     let steps;
@@ -1455,7 +1456,6 @@
     }
 
     async function switchKeepAwake() {
-        console.log('switchKeepAwake');
         try {
             if (keepAwakeEnabled) {
                 await allowSleepAgain();
@@ -1463,6 +1463,19 @@
             } else {
                 await keepAwake();
                 keepAwakeEnabled = true;
+            }
+        } catch (err) {
+            showError(err);
+        }
+    }
+    async function switchShowOnLockscreen() {
+        try {
+            if (showOnLockscreen) {
+                disableShowWhenLockedAndTurnScreenOn();
+                showOnLockscreen = false;
+            } else {
+                enableShowWhenLockedAndTurnScreenOn();
+                showOnLockscreen = true;
             }
         } catch (err) {
             showError(err);
@@ -1676,8 +1689,6 @@
             useTextureView={false}
         />
         <stacklayout horizontalAlignment="left" verticalAlignment="middle">
-            <button variant="text" class="icon-btn" text={keepAwakeEnabled ? 'mdi-sleep' : 'mdi-sleep-off'} color={keepAwakeEnabled ? 'red' : 'gray'} on:tap={switchKeepAwake} />
-
             <button
                 variant="text"
                 class="icon-btn"
@@ -1703,6 +1714,8 @@
                 color={$mapStore.preloading ? primaryColor : 'gray'}
                 on:tap={() => (mapStore.preloading = !$mapStore.preloading)}
             />
+            <button variant="text" class="icon-btn" text={keepAwakeEnabled ? 'mdi-sleep' : 'mdi-sleep-off'} color={keepAwakeEnabled ? 'red' : 'gray'} on:tap={switchKeepAwake} />
+            <button variant="text" class="icon-btn" text="mdi-cellphone-lock" color={showOnLockscreen ? primaryColor : 'gray'} on:tap={switchShowOnLockscreen} />
             <!-- <button
                     variant="text"
                     class="icon-btn"
