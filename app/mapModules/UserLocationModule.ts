@@ -1,20 +1,17 @@
 import { lc } from '@nativescript-community/l';
-import { Tween } from '@nativescript-community/ui-chart/animation/Tween';
 import { MapPos, MapPosVector } from '@nativescript-community/ui-carto/core';
 import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
 import { VectorLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
 import { Polygon } from '@nativescript-community/ui-carto/vectorelements/polygon';
+import { Tween } from '@nativescript-community/ui-chart/animation/Tween';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
-import { ApplicationSettings, Color } from '@nativescript/core';
-import { ad } from '@nativescript/core/utils/utils';
+import { Color } from '@nativescript/core';
 import dayjs from 'dayjs';
 import { GeoHandler, GeoLocation, UserLocationdEvent, UserLocationdEventData } from '~/handlers/GeoHandler';
-import { NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
 import { packageService } from '~/services/PackageService';
 import mapStore from '~/stores/mapStore';
 import { EARTH_RADIUS } from '~/utils/geo';
-import { accentColor } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
 
 const LOCATION_ANIMATION_DURATION = 300;
@@ -212,7 +209,6 @@ export default class UserLocationModule extends MapModule {
     }
     onLocation(event: UserLocationdEventData) {
         if (mapStore.queryingLocation) {
-            this.geoHandler.dontWatchWhilePaused = ApplicationSettings.getBoolean('stopGPSWhilePaused', true);
             this.stopWatchLocation();
             mapStore.queryingLocation = false;
         }
@@ -238,7 +234,6 @@ export default class UserLocationModule extends MapModule {
     }
 
     async startWatchLocation() {
-        console.log('startWatchLocation', mapStore.watchingLocation, !!this.geoHandler);
         if (mapStore.watchingLocation || !this.geoHandler) {
             return;
         }
@@ -259,12 +254,9 @@ export default class UserLocationModule extends MapModule {
         });
     }
     async askUserLocation() {
-        console.log('askUserLocation', !!this.geoHandler);
         this.userFollow = true;
         await this.geoHandler.enableLocation();
-        console.log('set queryingLocation', !!this.geoHandler);
         mapStore.queryingLocation = true;
-        this.geoHandler.dontWatchWhilePaused = false;
         this.startWatchLocation();
     }
     onWatchLocation() {
