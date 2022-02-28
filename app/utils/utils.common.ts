@@ -159,7 +159,31 @@ export function getAndroidRealPath(src) {
         return filePath;
     }
 }
+export function getFileNameThatICanUseInNativeCode(context: android.app.Activity, filePath: string) {
+    if (__IOS__) {
+        return filePath;
+    }
+    const uri = android.net.Uri.parse(filePath);
+    console.log('getFileNameThatICanUseInNativeCode', filePath, uri);
+    const mParcelFileDescriptor = context.getContentResolver().openFileDescriptor(uri, 'r');
+    console.log('mParcelFileDescriptor', mParcelFileDescriptor);
+    if (mParcelFileDescriptor != null) {
+        const fd = mParcelFileDescriptor.getFd();
+        return '/proc/self/fd/' + fd;
+        const file = new java.io.File('/proc/self/fd/' + fd);
+        try {
+            if (sdkVersion() >= 21) {
+                return android.system.Os.readlink(file.getAbsolutePath()).toString();
+            }
+        } catch (e) {
+            console.error(e);
+        }
 
+        return filePath;
+    } else {
+        return null;
+    }
+}
 export async function getDefaultMBTilesDir() {
     let localMbtilesSource = sdkVersion() >= 30 ? savedMBTilesDir : null;
     if (__ANDROID__ && localMbtilesSource && sdkVersion() >= 30) {
@@ -168,6 +192,7 @@ export async function getDefaultMBTilesDir() {
         let found = false;
         for (let index = 0; index < granted.size(); index++) {
             if (localMbtilesSource === granted.get(index).getUri().toString()) {
+                // localMbtilesSource = getFileNameThatICanUseInNativeCode(context, granted.get(index).getUri());
                 found = true;
                 break;
             }
@@ -187,7 +212,7 @@ export async function getDefaultMBTilesDir() {
                         persistable: true
                     }
                 });
-                console.log('result', result);
+                console.log('result1', result);
                 resultPath = result.folders[0];
             } else {
                 const nArray = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
