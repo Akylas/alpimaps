@@ -7,6 +7,7 @@ android {
   def splitEnabled = (gradle.startParameter.taskNames.contains("assembleDebug") && project.hasProperty('abiFilters')) || project.hasProperty('splitEnabled');
   defaultConfig {  
     multiDexEnabled false
+    applicationId "akylas.alpi.maps"
     minSdkVersion 21
     versionCode 217
     versionName "2.0.0"
