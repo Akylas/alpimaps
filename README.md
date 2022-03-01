@@ -1,7 +1,6 @@
 <p align="center"><img src="fastlane/metadata/android/en-US/images/featureGraphic.png" width="100%"></a></p>
 
 <h1 align="center">You hiking companion</h1>
-<p align="center">EnRecipes is an open source, privacy-friendly digital cookbook that lets you create, manage and share your recipes.</p>
 <p align="center">
 <a href="https://www.gnu.org/licenses/gpl-3.0" alt="License: GPLv3"><img src="https://img.shields.io/badge/license-GPL%20v3-blue"></a> <a href="https://github.com/farfromrefug/alpimaps/releases" alt="Release version"><img src="https://img.shields.io/github/v/release/farfromrefug/alpimaps?color=ff5200"/></a>
 <p align="center">
