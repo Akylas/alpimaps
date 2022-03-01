@@ -67,7 +67,7 @@ Alpi Maps data is base on OpenStreetMap, which means you can access almost anyth
 
 ## Screenshots
 
-| <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png" width=276> | <img src="fastlane/metadata/android/en-GB/images/phoneScreenshots/2_en-US.png" width=276> | <img src="fastlane/metadata/android/en-GB/images/phoneScreenshots/3_en-US.png" width=276> |
+| <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png" width=276> | <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2_en-US.png" width=276> | <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3_en-US.png" width=276> |
 
 ### Having issues, suggestions and feedback?
 
