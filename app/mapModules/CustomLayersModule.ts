@@ -17,11 +17,12 @@ import { showBottomSheet } from '~/components/bottomsheet';
 import { Provider } from '~/data/tilesources';
 import { l } from '~/helpers/locale';
 import { packageService } from '~/services/PackageService';
-import { getAndroidRealPath, getDataFolder, getDefaultMBTilesDir, listFolder } from '~/utils/utils';
+import { getAndroidRealPath, getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
 import { toDegrees, toRadians } from '~/utils/geo';
 import MapModule, { getMapContext } from './MapModule';
 import { showError } from '~/utils/error';
 import mapStore from '~/stores/mapStore';
+import { android as androidApp } from '@nativescript/core/application';
 const mapContext = getMapContext();
 
 const DEFAULT_HILLSHADE_SHADER =
@@ -621,8 +622,8 @@ export default class CustomLayersModule extends MapModule {
         super.onMapReady(mapView);
         (async () => {
             try {
+                console.log('onMapReady');
                 const folderPath = await getDefaultMBTilesDir();
-                // console.log('folderPath', folderPath);
                 if (folderPath) {
                     await this.loadLocalMbtiles(folderPath);
                 }
@@ -713,13 +714,16 @@ export default class CustomLayersModule extends MapModule {
     }
     async loadLocalMbtiles(directory: string) {
         try {
+            const context: android.app.Activity = (__ANDROID__ && androidApp.foregroundActivity) || androidApp.startActivity;
             const entities = listFolder(directory);
             let worldMbtiles: MBTilesTileDataSource;
             const worldMbtilesIndex = entities.findIndex((e) => e.name === 'world.mbtiles');
             if (worldMbtilesIndex !== -1) {
                 const entity = entities.splice(worldMbtilesIndex, 1)[0];
+                const databasePath = getFileNameThatICanUseInNativeCode(context, entity.path);
+                console.log('databasePath', databasePath);
                 worldMbtiles = new MBTilesTileDataSource({
-                    databasePath: entity.path
+                    databasePath
                 });
                 // const data = this.createMergeMBtiles(
                 //     {
@@ -742,11 +746,15 @@ export default class CustomLayersModule extends MapModule {
                 const f = folders[i];
                 const subentities = listFolder(f.path);
                 if (subentities?.length > 0) {
+                    const databasePaths = subentities
+                        .map((e2) => e2.path)
+                        .filter((s) => s.endsWith('.mbtiles'))
+                        .map((s) => getFileNameThatICanUseInNativeCode(context, s));
                     const data = this.createMergeMBtiles(
                         {
                             legend: 'https://www.openstreetmap.org/key.html',
                             name: f.name,
-                            sources: subentities.map((e2) => e2.path).filter((s) => s.endsWith('.mbtiles'))
+                            sources: databasePaths
                         },
                         i === 0 ? worldMbtiles : undefined,
                         {
