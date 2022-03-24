@@ -160,29 +160,29 @@ export function getAndroidRealPath(src) {
     }
 }
 export function getFileNameThatICanUseInNativeCode(context: android.app.Activity, filePath: string) {
-    if (__IOS__) {
+    // if (__IOS__) {
         return filePath;
-    }
-    const uri = android.net.Uri.parse(filePath);
-    console.log('getFileNameThatICanUseInNativeCode', filePath, uri);
-    const mParcelFileDescriptor = context.getContentResolver().openFileDescriptor(uri, 'r');
-    console.log('mParcelFileDescriptor', mParcelFileDescriptor);
-    if (mParcelFileDescriptor != null) {
-        const fd = mParcelFileDescriptor.getFd();
-        return '/proc/self/fd/' + fd;
-        const file = new java.io.File('/proc/self/fd/' + fd);
-        try {
-            if (sdkVersion() >= 21) {
-                return android.system.Os.readlink(file.getAbsolutePath()).toString();
-            }
-        } catch (e) {
-            console.error(e);
-        }
+    // }
+    // const uri = android.net.Uri.parse(filePath);
+    // console.log('getFileNameThatICanUseInNativeCode', filePath, uri);
+    // const mParcelFileDescriptor = context.getContentResolver().openFileDescriptor(uri, 'r');
+    // console.log('mParcelFileDescriptor', mParcelFileDescriptor);
+    // if (mParcelFileDescriptor != null) {
+    //     const fd = mParcelFileDescriptor.getFd();
+    //     return '/proc/self/fd/' + fd;
+    //     const file = new java.io.File('/proc/self/fd/' + fd);
+    //     try {
+    //         if (sdkVersion() >= 21) {
+    //             return android.system.Os.readlink(file.getAbsolutePath()).toString();
+    //         }
+    //     } catch (e) {
+    //         console.error(e);
+    //     }
 
-        return filePath;
-    } else {
-        return null;
-    }
+    //     return filePath;
+    // } else {
+    //     return null;
+    // }
 }
 export async function getDefaultMBTilesDir() {
     let localMbtilesSource = sdkVersion() >= 30 ? savedMBTilesDir : null;
@@ -224,7 +224,7 @@ export async function getDefaultMBTilesDir() {
                     }
                 }
                 if (result.length > 1) {
-                    const sdcardFolder = result.at(-1).getAbsolutePath();
+                    const sdcardFolder = result[result.length -1].getAbsolutePath();
                     resultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
                 } else if (result.length > 0) {
                     const sdcardFolder = result[0].getAbsolutePath();
