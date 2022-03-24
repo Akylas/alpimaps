@@ -1,6 +1,7 @@
 {
     "whitelist-plugins-usages": true,
     "whitelist": [
+        "android.system:Os*",
         "android.hardware:GeomagneticField*",
         "androidx.core.widget:NestedScrollView*",
         "android.app:Notification*",
