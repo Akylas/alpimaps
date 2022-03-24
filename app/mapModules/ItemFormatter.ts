@@ -45,8 +45,8 @@ export default class ItemFormatter {
             properties.name ||
             properties.name_int ||
             (properties.address && properties.address.name) ||
-            (properties.subclass && lc(properties.subclass.replaceAll('-', '_'))) ||
-            (properties.class && lc(properties.class.replaceAll('-', '_')))
+            (properties.subclass && lc(properties.subclass.replace(/-/g, '_'))) ||
+            (properties.class && lc(properties.class.replace(/-/g, '_')))
         );
     }
     getItemPositionToString(item: Item) {
