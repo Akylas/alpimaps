@@ -151,7 +151,7 @@
                             maxZoom: 24
                         });
                         transitVectorTileDataSource.createLayer('lines');
-                        transitVectorTileDataSource.setLayerGeoJSONString(1, result.replaceAll('"geometry":{}', '"geometry":null'));
+                        transitVectorTileDataSource.setLayerGeoJSONString(1, result.replace(/"geometry":{}/g, '"geometry":null'));
                         if (!transitVectorTileLayer) {
                             transitVectorTileLayer = new VectorTileLayer({
                                 // preloading: true,
@@ -247,7 +247,7 @@
                 const geoTextRegexp = /([\d\.-]+),([\d\.-]+)\((.*?)\)/;
                 const query = appURL.params.get('q');
                 const match = query.match(geoTextRegexp);
-                const actualQuery = decodeURIComponent(query).replaceAll('+', ' ');
+                const actualQuery = decodeURIComponent(query).replace(/\+/g, ' ');
                 if (match) {
                     selectItem({
                         item: {
