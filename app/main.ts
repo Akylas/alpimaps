@@ -22,7 +22,7 @@ import './app.scss';
 import Map from './components/Map.svelte';
 
 // startSentry();
-installGestures();
+installGestures(true);
 // installLogging();
 installMixins();
 installBottomSheets();
