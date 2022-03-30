@@ -6,9 +6,8 @@
 </script>
 
 <script lang="ts">
-    import { Paint } from '@nativescript-community/ui-canvas';
     import { Template } from 'svelte-native/components';
-    import { closeBottomSheet } from './bottomsheet';
+    import { closeBottomSheet } from '~/utils/bottomsheet';
     import ListItem from './ListItem.svelte';
 
     export let options: OptionType[];
@@ -51,20 +50,19 @@
 
     function getSymbol(item) {
         const properties = item.route.featureData;
-        console.log('getSymbol',properties)
+        console.log('getSymbol', properties);
         if (properties.symbol) {
             return properties.symbol;
         } else {
             if (properties.class === 'hiking') {
-
                 switch (properties.network) {
-                case 4:
-                    return 'yellow:yellow:green_lower';
-                case 3:
-                    return 'yellow:white:yellow_lower';
-                default:
-                    return 'red:white:red_lower:50:black';
-            }
+                    case 4:
+                        return 'yellow:yellow:green_lower';
+                    case 3:
+                        return 'yellow:white:yellow_lower';
+                    default:
+                        return 'red:white:red_lower:50:black';
+                }
             }
         }
     }

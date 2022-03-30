@@ -32,7 +32,7 @@
     import { computeDistanceBetween } from '~/utils/geo';
     import { openLink } from '~/utils/ui';
     import { borderColor, screenHeightDips, statusBarHeight, textColor, widgetBackgroundColor } from '~/variables';
-    import { showBottomSheet } from './bottomsheet';
+    import { showBottomSheet } from '~/utils/bottomsheet';
     import BottomSheetInfoView from './BottomSheetInfoView.svelte';
 
     const LISTVIEW_HEIGHT = 200;

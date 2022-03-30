@@ -25,7 +25,7 @@
     import mapStore from '~/stores/mapStore';
     import { showError } from '~/utils/error';
     import { accentColor, alpimapsFontFamily, globalMarginTop, mdiFontFamily, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
-    import { resolveComponentElement, showBottomSheet } from './bottomsheet';
+    import { resolveComponentElement, showBottomSheet } from '~/utils/bottomsheet';
     import OptionPicker from './OptionPicker.svelte';
     import ScaleView from './ScaleView.svelte';
     function scale(node, { delay = 0, duration = 400, easing = AnimationCurve.easeOut }) {
@@ -346,7 +346,7 @@
             canvas.translate(10, h / 2 - staticLayout.getHeight() / 2);
             staticLayout.draw(canvas);
             canvas.restore();
-            if (navigationInstructions.distanceToNextInstruction> 0) {
+            if (navigationInstructions.distanceToNextInstruction > 0) {
                 const data = convertDistance(navigationInstructions.distanceToNextInstruction);
                 textPaint.setTextSize(11);
                 canvas.drawText(`${data.value.toFixed(data.unit === 'm' ? 0 : 1)} ${data.unit}`, 14, h / 2 + staticLayout.getHeight() / 2 + 15, textPaint);
