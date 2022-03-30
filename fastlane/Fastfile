@@ -159,21 +159,22 @@ platform :android do
   lane :sentry_upload do 
   end
 
-lane :write_changelog do |params| 
-  version = params[:version]
-  changelog = params[:changelog]
+  lane :write_changelog do |params| 
+    version = params[:version]
+    changelog = params[:changelog]
 
-  if (changelog && changelog.length > 500) 
-    changelog = changelog[0..499]
+    if (changelog && changelog.length > 500) 
+      changelog = changelog[0..499]
+    end
+
+    metadata_dir="metadata/android/#{$lang}/changelogs"
+    require 'fileutils'
+    system 'mkdir', '-p', metadata_dir
+    File.write("#{metadata_dir}/#{version}.txt", changelog)
+    # Create a new branch and upload a PR for it.
+    sh("git add #{metadata_dir}; git commit -m '#{version} release notes' --allow-empty")
   end
 
-  metadata_dir="metadata/android/#{$lang}/changelogs"
-  require 'fileutils'
-  system 'mkdir', '-p', metadata_dir
-  File.write("#{metadata_dir}/#{version}.txt", changelog)
-  # Create a new branch and upload a PR for it.
-  sh("git add #{metadata_dir}; git commit -m '#{version} release notes' --allow-empty")
-end
   lane :upload_store   do |params| 
     track = params[:flavor]
     if (track == 'beta') 
@@ -219,7 +220,7 @@ end
     build_github
 
     changelog = get_changelog(platform:platform, flavor:flavor)
-    write_changelog(version:params[:versionCode], changelog:params[:changelog]);
+    write_changelog(version:versionCode, changelog:changelog);
     tag  = "#{platform}/#{flavor}/#{version}/#{versionCode}";
     add_git_tag(tag: tag, force: true)
 
