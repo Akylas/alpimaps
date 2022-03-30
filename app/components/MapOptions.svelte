@@ -2,7 +2,7 @@
     import { Color } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
     import { mdiFontFamily, primaryColor, widgetBackgroundColor } from '~/variables';
-    import { closeBottomSheet } from './bottomsheet';
+    import { closeBottomSheet } from '~/utils/bottomsheet';
     export interface MapOptionType {
         title: string;
         color?: Color | string;
