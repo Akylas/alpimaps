@@ -12,7 +12,7 @@ import localizedFormat from 'dayjs/plugin/localizedFormat';
 import { derived, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
 const supportedLanguages = SUPPORTED_LOCALES;
-import { showBottomSheet } from '~/components/bottomsheet';
+import { showBottomSheet } from '~/utils/bottomsheet';
 import { createGlobalEventListener, globalObservable } from '~/variables';
 
 dayjs.extend(updateLocale);
