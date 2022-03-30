@@ -271,13 +271,11 @@ export async function pickColor(color: Color, view?: View) {
                 color = new Color(color as any);
             }
             const builder = new com.skydoves.colorpickerview.ColorPickerDialog.Builder(activity)
-                .setTitle('ColorPicker Dialog')
-                .setPreferenceName('MyColorPickerDialog')
+                .setTitle(lc('pick_color'))
                 .setPositiveButton(
                     lc('choose'),
                     new com.skydoves.colorpickerview.listeners.ColorListener({
                         onColorSelected(color: number) {
-                            console.log('onColorSelected', color, new Color(color));
                             resolve(new Color(color));
                         }
                     })
@@ -287,7 +285,6 @@ export async function pickColor(color: Color, view?: View) {
                     new android.content.DialogInterface.OnClickListener({
                         onClick(dialogInterface) {
                             dialogInterface.dismiss();
-                            console.log('dismiss');
                             resolve(null);
                         }
                     })
