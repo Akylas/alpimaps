@@ -220,7 +220,7 @@ end
 
     changelog = get_changelog(platform:platform, flavor:flavor)
     tag  = "#{platform}/#{flavor}/#{version}/#{versionCode}";
-    add_git_tag(tag: tag)
+    add_git_tag(tag: tag, force: true)
 
     push_git_tags(force:true)
     set_github_release(
