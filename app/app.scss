@@ -23,7 +23,6 @@
     height: $actionbar-button-height;
     font-size: 24;
 }
-
 .mdi {
     @extend %mdi;
 }
@@ -223,6 +222,20 @@ mdcardview {
 
     // margin: 0;
     // padding: 0;
+}
+.icon-label {
+    @extend %mdi;
+    
+    color: $text-color-light;
+    .ns-dark & {
+        color: $text-color-dark;
+        ripple-color: $text-color-dark;
+    }
+    width: $actionbar-button-height;
+    height: $actionbar-button-height;
+    text-align: center;
+    vertical-text-alignment: center;
+    font-size: 24;
 }
 
 .transitIconLabel {
