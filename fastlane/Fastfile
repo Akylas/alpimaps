@@ -219,6 +219,7 @@ end
     build_github
 
     changelog = get_changelog(platform:platform, flavor:flavor)
+    write_changelog(version:params[:versionCode], changelog:params[:changelog]);
     tag  = "#{platform}/#{flavor}/#{version}/#{versionCode}";
     add_git_tag(tag: tag, force: true)
 
