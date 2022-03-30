@@ -226,7 +226,7 @@ end
     set_github_release(
       repository_name: $repository_name,
       api_token: ENV["GH_TOKEN"],
-      name: "#{version} Build #{versionCode}",
+      name: "v#{version} Build #{versionCode}",
       tag_name: tag,
       description: changelog,
       commitish: "master",
