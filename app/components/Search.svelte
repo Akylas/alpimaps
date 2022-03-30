@@ -28,6 +28,7 @@
     import { globalMarginTop, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import { queryString } from '../utils/http';
     import deburr from 'deburr';
+import { dismissSoftInput } from '@nativescript/core/utils';
     const providerColors = {
         here: 'blue',
         carto: 'orange',
@@ -578,11 +579,10 @@
         on:blur={onBlur}
         on:return={onReturnKey}
         text={text} on:textChange={e => text = e['value']}
-        width="100%"
         backgroundColor="transparent"
         autocapitalizationType="none"
         floating="false"
-        verticalAlignment="center"
+        verticalTextAlignment="center"
     />
     <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} col={2} busy={true} width={20} height={20} />
     {#if loaded}

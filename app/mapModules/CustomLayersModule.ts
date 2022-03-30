@@ -13,7 +13,7 @@ import * as appSettings from '@nativescript/core/application-settings';
 import { ApplicationSettings, Color, profile } from '@nativescript/core';
 import { ChangeType, ChangedData, ObservableArray } from '@nativescript/core/data/observable-array';
 import { File, Folder, path } from '@nativescript/core/file-system';
-import { showBottomSheet } from '~/components/bottomsheet';
+import { showBottomSheet } from '~/utils/bottomsheet';
 import { Provider } from '~/data/tilesources';
 import { l } from '~/helpers/locale';
 import { packageService } from '~/services/PackageService';
@@ -245,7 +245,7 @@ export default class CustomLayersModule extends MapModule {
             opacity,
             decoder: mapContext.getVectorTileDecoder(),
             rendererLayerFilter,
-            clickHandlerLayerFilter: PRODUCTION ? undefined : '.*::(icon|label)',
+            clickHandlerLayerFilter: PRODUCTION ? undefined : '.*',
             // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_NONE,
             visible: opacity !== 0
         });
