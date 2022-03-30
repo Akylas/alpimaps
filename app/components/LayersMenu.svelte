@@ -13,7 +13,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import mapStore from '~/stores/mapStore';
     import { borderColor, navigationBarHeight, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
-    import { closeBottomSheet, showBottomSheet } from './bottomsheet';
+    import { closeBottomSheet, showBottomSheet } from '~/utils/bottomsheet';
 
     const mapContext = getMapContext();
     let gridLayout: NativeViewElementNode<GridLayout>;

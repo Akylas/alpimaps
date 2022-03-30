@@ -8,7 +8,7 @@
 
 <script lang="ts">
     import { Template } from 'svelte-native/components';
-    import { closeBottomSheet } from './bottomsheet';
+    import { closeBottomSheet } from '~/utils/bottomsheet';
     import ListItem from './ListItem.svelte';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
     import { File } from '@nativescript/core';
@@ -29,7 +29,7 @@
                     multipleSelection: false,
                     pickerMode: 0
                 });
-                console.log('openFilePicker', result, result.android.toString(), File.exists(result.files[0]))
+                console.log('openFilePicker', result, result.android.toString(), File.exists(result.files[0]));
                 if (File.exists(result.files[0])) {
                     const file = File.fromPath(result.files[0]);
                     close({ name: file.name, data: { url: file.path }, isPick: true });
