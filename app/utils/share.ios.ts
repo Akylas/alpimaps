@@ -1,30 +1,14 @@
 import { Color, View } from '@nativescript/core';
 import { ios as iosApp } from '@nativescript/core/application';
+import { Content, Options } from './share';
 
-export async function share(
-    content: {
-        title?: string;
-        message?: string;
-        url?: string;
-    },
-    options: {
-        dialogTitle?: string;
-        excludedActivityTypes?: string[];
-        tintColor?: string | Color;
-        subject?: string;
-        anchor?: View;
-        appearance?: 'light' | 'dark';
-    } = {}
-) {
+export async function share(content: Content, options: Options = {}) {
     if (content == null) {
         throw new Error('missing_content');
     }
 
     return new Promise((resolve, reject) => {
         const items = [];
-        if (content.message) {
-            items.push(content.message);
-        }
         if (content.url) {
             //@ts-ignore
             const url = NSURL.URLWithString(content.url);
@@ -38,7 +22,12 @@ export async function share(
             } else {
                 items.push(url);
             }
+        }
+        if (content.message) {
             items.push(content.message);
+        }
+        if (content.image) {
+            items.push(content.image.ios);
         }
         //@ts-ignore
         const shareController = UIActivityViewController.alloc().initWithActivityItemsApplicationActivities(items, null);
