@@ -13,7 +13,7 @@
     import { showError } from '~/utils/error';
     import { pickColor } from '~/utils/utils';
     import { textLightColor } from '~/variables';
-    import { closeBottomSheet } from './bottomsheet';
+    import { closeBottomSheet } from '~/utils/bottomsheet';
 
     const mapContext = getMapContext();
     let scrollView;
@@ -73,13 +73,14 @@
         item.layer[name] = newValue;
     }
     async function pickOptionColor(name, color: Color) {
-        // console.log('pickOptionColor', name, color, typeof color);
         try {
             const newColor = await pickColor(color, scrollView.nativeView);
+            if (!newColor) {
+                return;
+            }
             setString(`${item.name}_${name}`, newColor.hex);
             options[name].value = newColor.hex;
             item.layer[name] = newColor;
-            // console.log('item.layer', name, newColor, item.layer);
         } catch (err) {
             showError(err);
         }
@@ -151,7 +152,7 @@
 
 <gridlayout rows="auto,*,auto" height="240">
     <label text={getTitle()} fontWeight="bold" padding="10 10 0 20" fontSize="20" />
-    <scrollview row={1} bind:this={scrollView} height="200" id="scrollView">
+    <scrollview row={1} bind:this={scrollView} id="scrollView">
         <stacklayout>
             {#each Object.entries(options) as [name, option]}
                 {#if option.type === 'color'}
