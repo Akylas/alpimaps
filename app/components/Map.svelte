@@ -54,12 +54,13 @@
     import { disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn } from '~/utils/utils.android';
     import { accentColor } from '~/variables';
     import { navigationBarHeight, primaryColor } from '../variables';
-    import { isBottomSheetOpened, showBottomSheet } from './bottomsheet';
+    import { isBottomSheetOpened, showBottomSheet } from '~/utils/bottomsheet';
     import BottomSheetInner from './BottomSheetInner.svelte';
     import DirectionsPanel from './DirectionsPanel.svelte';
     import LocationInfoPanel from './LocationInfoPanel.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
     import Search from './Search.svelte';
+    import { share } from '~/utils/share';
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
@@ -1486,10 +1487,15 @@
         locationInfoPanel.switchLocationInfo();
     }
 
-    function shareScreenshot() {
-        cartoMap.captureRendering(true).then((result) => {
-            SocialShare.shareImage(result as any);
-        });
+    async function shareScreenshot() {
+        try {
+            const image = await cartoMap.captureRendering(true);
+            share({
+                image
+            });
+        } catch (error) {
+            showError(error);
+        }
     }
     function onTap(command: string) {
         switch (
