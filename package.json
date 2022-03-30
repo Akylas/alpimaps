@@ -3,10 +3,10 @@
     "license": "SEE LICENSE IN <your-license-filename>",
     "readme": "NativeScript Application",
     "author": "Martin Guillon<martin.guillon@akylas.fr>",
-    "repository": "https://github.com/farfromrefug/alpimaps",
+    "repository": "https://github.com/Akylas/alpimaps",
     "main": "app/main",
     "bugs": {
-        "url": "https://github.com/farfromrefug/alpimaps/issues"
+        "url": "https://github.com/Akylas/alpimaps/issues"
     },
     "scripts": {
         "run.android.timeline": "cross-var devns run android --config=nativescript.config.timeline.js --release --clean --key-store-path $KEYSTORE_PATH --key-store-password $KEYSTORE_PASSWORD --key-store-alias $KEYSTORE_ALIAS --key-store-alias-password $KEYSTORE_ALIAS_PASSWORD --env.timeline ",
