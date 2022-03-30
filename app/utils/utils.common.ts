@@ -90,8 +90,6 @@ function getTreeUri(context, uri) {
 
 export function listFolder(folderPath: string): (Partial<FileSystemEntity> & { isFolder: boolean })[] {
     if (__ANDROID__ && sdkVersion() >= 30) {
-        // console.log('listFolder', folderPath);
-
         const uri = android.net.Uri.parse(folderPath);
         const context: android.app.Activity = androidApp.foregroundActivity || androidApp.startActivity;
         const result = [];
@@ -161,7 +159,7 @@ export function getAndroidRealPath(src) {
 }
 export function getFileNameThatICanUseInNativeCode(context: android.app.Activity, filePath: string) {
     // if (__IOS__) {
-        return filePath;
+    return filePath;
     // }
     // const uri = android.net.Uri.parse(filePath);
     // console.log('getFileNameThatICanUseInNativeCode', filePath, uri);
@@ -224,7 +222,7 @@ export async function getDefaultMBTilesDir() {
                     }
                 }
                 if (result.length > 1) {
-                    const sdcardFolder = result[result.length -1].getAbsolutePath();
+                    const sdcardFolder = result[result.length - 1].getAbsolutePath();
                     resultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
                 } else if (result.length > 0) {
                     const sdcardFolder = result[0].getAbsolutePath();
@@ -272,42 +270,35 @@ export async function pickColor(color: Color, view?: View) {
             if (!(color instanceof Color)) {
                 color = new Color(color as any);
             }
-            if (!ColorPickerObserver) {
-                ColorPickerObserver = top.defaults.colorpicker.ColorPickerPopup.ColorPickerObserver.extend({
-                    onColorPicked(color) {
-                        // console.log('onColorPicked', color, new Color(color));
-                        this.resolve(new Color(color));
-                        this.resolve = null;
-                        popup.observer = null;
-                    },
-                    onColor(color, fromUser) {
-                        // console.log('onColor', color, fromUser);
-                    }
-                });
-            }
-            const observer = new ColorPickerObserver();
-            observer.resolve = resolve;
-            // console.log(
-            //     'pickColor',
-            //     color,
-            //     color instanceof Color,
-            //     color.android,
-            //     typeof color.android,
-            //     activity,
-            //     nView,
-            //     observer
-            // );
-            const builder = new top.defaults.colorpicker.ColorPickerPopup.Builder(activity)
-                .initialColor(color.android) // Set initial color
-                .enableBrightness(true) // Enable brightness slider or not
-                .enableAlpha(true) // Enable alpha slider or not
-                .okTitle(lc('choose'))
-                .cancelTitle(lc('cancel'))
-                .showIndicator(true)
-                .showValue(true);
-            const popup = builder.build();
-            popup.observer = observer;
-            popup.show(nView, observer);
+            const builder = new com.skydoves.colorpickerview.ColorPickerDialog.Builder(activity)
+                .setTitle('ColorPicker Dialog')
+                .setPreferenceName('MyColorPickerDialog')
+                .setPositiveButton(
+                    lc('choose'),
+                    new com.skydoves.colorpickerview.listeners.ColorListener({
+                        onColorSelected(color: number) {
+                            console.log('onColorSelected', color, new Color(color));
+                            resolve(new Color(color));
+                        }
+                    })
+                )
+                .setNegativeButton(
+                    lc('cancel'),
+                    new android.content.DialogInterface.OnClickListener({
+                        onClick(dialogInterface) {
+                            dialogInterface.dismiss();
+                            console.log('dismiss');
+                            resolve(null);
+                        }
+                    })
+                )
+                .attachAlphaSlideBar(true) // the default value is true.
+                .attachBrightnessSlideBar(true) // the default value is true.
+                .setBottomSpace(12); // set a bottom space between the last slidebar and buttons.
+
+            builder.getColorPickerView().setInitialColor(color.android);
+            const popup = builder.create();
+            popup.show();
         }
     });
 }
