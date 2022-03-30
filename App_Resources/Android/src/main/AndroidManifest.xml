@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" tools:node="replace" package="__PACKAGE__">
     <supports-screens android:smallScreens="true" android:normalScreens="true" android:largeScreens="true" android:xlargeScreens="true" />
     <uses-sdk tools:overrideLibrary="com.nativescript.documentpicker" />
-    <permission android:name="akylas.alpi.maps.broadcast" android:protectionLevel="signatureOrSystem"></permission>
+    <permission android:name="__PACKAGE__.broadcast" android:protectionLevel="signatureOrSystem"></permission>
     <uses-permission android:name="com.akylas.weather.broadcast" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -12,8 +12,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.WRITE_SETTINGS"
-        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.webkit.PermissionRequest" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.location.gps" />
@@ -62,6 +61,9 @@
         <activity android:name="com.tns.ErrorReportActivity" android:exported="false" />
         <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
         <meta-data android:name="io.sentry.anr.enable" android:value="false" />
-        <service android:name="akylas.alpi.maps.BgService" android:enabled="true" android:exported="false" android:stopWithTask="false" android:foregroundServiceType="location" />
+        <service android:name=".BgService" android:enabled="true" android:exported="false" android:stopWithTask="false" android:foregroundServiceType="location" />
+        <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.provider" android:exported="false" android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/provider_paths" />
+        </provider>
     </application>
 </manifest>
