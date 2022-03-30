@@ -128,3 +128,7 @@ android.applicationVariants.all { variant ->
 android.applicationVariants.all { variant ->
     
 }
+
+dependencies {
+    implementation "com.github.skydoves:colorpickerview:2.2.4"
+}
