@@ -15,9 +15,11 @@
         "android.app:Service*",
         "android.app:NotificationManager*",
         "android.app:NotificationChannel*",
-        "top.defaults.colorpicker.ColorPickerPopup:Builder*",
-        "top.defaults.colorpicker:ColorPickerPopup*",
-        "top.defaults.colorpicker.ColorPickerPopup:ColorPickerObserver*",
+        "com.skydoves.colorpickerview.ColorPickerDialog:Builder*",
+        "com.skydoves.colorpickerview:ColorPickerDialog*",
+        "com.skydoves.colorpickerview:ColorPickerView*",
+        "com.skydoves.colorpickerview.listeners:ColorListener*",
+        "com.skydoves.colorpickerview:ActionMode*",
         "com.caverock.androidsvg:SVG*",
         "com.caverock.androidsvg:PreserveAspectRatio*",
         "com.caverock.androidsvg:RenderOptions*",
@@ -29,7 +31,11 @@
         "com.google.android.material.datepicker:MaterialDatePicker*",
         "com.google.android.material.timepicker.MaterialTimePicker:Builder*",
         "com.google.android.material.timepicker:MaterialTimePicker*",
-        "java.lang:Long*"
+        "java.lang:Long*",
+
+        "androidx.core.content:FileProvider*",
+        "com.nativescript.popover.relativepopupwindow:RelativePopupWindow*", "android.widget:PopupWindow*","android.view.ViewGroup:LayoutParams*",
+        "android.graphics.Bitmap:CompressFormat*"
     ],
     "blacklist": [
         "org.nativescript.widgets:TabLayout*",
