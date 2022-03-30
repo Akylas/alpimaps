@@ -433,10 +433,16 @@
             text="mdi-directions"
             visibility={selectedItemHasPosition ? 'visible' : 'collapsed'}
         />
-        <mdcardview class={'floating-btn ' + locationButtonClass} on:tap={askUserLocation} on:longPress={onWatchLocation}>
-            <canvaslabel class={'mdi ' + locationButtonLabelClass} :isUserInteractionEnabled="false">
-                <cspan textAlignment="center" verticalAlignment="middle" text="mdi-crosshairs-gps" color={!$mapStore.queryingLocation && $mapStore.watchingLocation ? 'white' : accentColor} />
-            </canvaslabel>
+        <mdcardview class={'floating-btn ' + locationButtonClass}>
+            <label
+                class={'mdi ' + locationButtonLabelClass}
+                on:tap={askUserLocation}
+                on:longPress={onWatchLocation}
+                textAlignment="center"
+                verticalAlignment="middle"
+                text="mdi-crosshairs-gps"
+                color={!$mapStore.queryingLocation && $mapStore.watchingLocation ? 'white' : accentColor}
+            />
         </mdcardview>
     </stacklayout>
     <stacklayout marginTop="80" row={2} verticalAlignment="bottom" horizontalAlignment="left">
