@@ -7,7 +7,7 @@
     import { VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
     import type { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
     import { RoutingResult, RoutingService } from '@nativescript-community/ui-carto/routing';
-    import { Color, Device, GridLayout, ObservableArray, StackLayout, TextField } from '@nativescript/core';
+    import { ApplicationSettings, Color, Device, GridLayout, ObservableArray, StackLayout, TextField } from '@nativescript/core';
     import { executeOnMainThread } from '@nativescript/core/utils';
     import type { Feature, Point } from 'geojson';
     import { onDestroy } from 'svelte';
@@ -15,15 +15,18 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { formatDistance } from '~/helpers/formatter';
     import { getDistance } from '~/helpers/geolib';
-    import { lc } from '~/helpers/locale';
+    import { l, lc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item, RouteInstruction } from '~/models/Item';
     import { Route, RoutingAction } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
+    import { showPopover } from '~/utils/popoversvelte';
     import { showError } from '~/utils/error';
     import { globalMarginTop, mdiFontFamily, primaryColor } from '~/variables';
+
+    const DEFAULT_PROFILE_KEY = 'default_direction_profile';
 
     function routingResultToJSON(result: RoutingResult<LatLonKeys>, costing_options) {
         const rInstructions = result.getInstructions();
@@ -71,7 +74,7 @@
     }> = new ObservableArray([]);
     let nbWayPoints = 0;
     let features: Feature[] = [];
-    let profile: ValhallaProfile = 'pedestrian';
+    let profile = ApplicationSettings.getString(DEFAULT_PROFILE_KEY, 'pedestrian') as ValhallaProfile;
     let bicycle_type = 'Cross';
     let showOptions = true;
     let loading = false;
@@ -85,11 +88,11 @@
 
     const valhallaSettings = {
         use_hills: {
-            min: 0.25,
+            min: 0,
             max: 1
         },
         use_tracks: {
-            min: 0.25,
+            min: 0,
             max: 1
         },
         use_roads: {
@@ -109,8 +112,8 @@
             max: 1
         },
         step_penalty: {
-            min: 20,
-            max: 5
+            min: 5,
+            max: 20
         },
         bicycle_type: ['Road', 'Cross', 'Mountain'],
         weight: {
@@ -122,7 +125,7 @@
     let costingOptions = { use_ferry: 0, shortest: false };
     let profileCostingOptions = {
         pedestrian: { use_hills: 1, max_hiking_difficulty: 6, step_penalty: 5, driveway_factor: 10, use_roads: 0, use_tracks: 1, walking_speed: 4 },
-        bicycle: { bicycle_type: bicycle_type, use_hills: 0.25, avoid_bad_surfaces: 0, use_roads: 1, use_tracks: 1 },
+        bicycle: { bicycle_type: bicycle_type, use_hills: 0.25, avoid_bad_surfaces: 0.25, use_roads: 0.25, use_tracks: 0.5},
         auto: { use_roads: 1, use_tracks: 0 }
     };
 
@@ -172,7 +175,8 @@
                 const index = Math.max(settings.indexOf(options[key]), 0);
                 return new Color('white').setAlpha(((index + 1) / settings.length) * 255).hex;
             } else {
-                return options[key] === settings.max ? 'white' : '#ffffff55';
+                const perc = ((options[key] || settings.min) - settings.min) / (settings.max - settings.min);
+                return new Color('white').setAlpha(perc * 126 + 126).hex;
             }
         } catch (error) {
             console.error(key, error);
@@ -184,6 +188,7 @@
 
     function setProfile(p: ValhallaProfile) {
         profile = p;
+        ApplicationSettings.setString(DEFAULT_PROFILE_KEY, p);
         // to trigger an update
         profileCostingOptions = profileCostingOptions;
     }
@@ -587,7 +592,7 @@
                     sourceProjection: mapContext.getProjection()
                 });
             }
-            const id = Date.now() ;
+            const id = Date.now();
             const item: any = {
                 type: 'Feature',
                 // id,
@@ -624,6 +629,7 @@
                 if (profile === 'bicycle') {
                     const results: { route: Route; instructions: RouteInstruction[] }[] = await Promise.all([
                         computeAndAddRoute({ shortest: true }),
+                        computeAndAddRoute({ shortest: false, avoid_bad_surfaces: 1, use_hills: 0, use_roads: 0.25 }),
                         computeAndAddRoute({ shortest: false, bicycle_type: 'Cross', avoid_bad_surfaces: 1, use_hills: 1, use_roads: 0 }),
                         computeAndAddRoute({ shortest: false, bicycle_type: 'Moutain', avoid_bad_surfaces: 0, use_hills: 1, use_roads: 0 })
                     ]);
@@ -754,6 +760,33 @@
             console.error(error);
         }
     }
+
+    async function setSliderCostingOptions(key: string, options: any, event) {
+        try {
+            if (options === profileCostingOptions) {
+                options = profileCostingOptions[profile];
+            }
+            const settings = valhallaSettings[key];
+            const SliderPopover = (await import('./SliderPopover.svelte')).default;
+            showPopover({
+                view: SliderPopover,
+                anchor: event.object,
+                props: {
+                    title: lc(key),
+                    icon: event.object.text,
+                    ...settings,
+                    value: options[key],
+                    onChange(value) {
+                        options[key] = value;
+                        // to trigger an update
+                        profileCostingOptions = profileCostingOptions;
+                    }
+                }
+            });
+        } catch (err) {
+            showError(err);
+        }
+    }
 </script>
 
 <stacklayout bind:this={topLayout} {...$$restProps} backgroundColor={primaryColor} paddingTop={globalMarginTop} translateY={currentTranslationY}>
@@ -824,6 +857,7 @@
                     visibility={profile === 'auto' ? 'visible' : 'collapsed'}
                     color={valhallaSettingColor('use_ferry', costingOptions)}
                     on:tap={() => switchValhallaSetting('use_ferry', costingOptions)}
+                    on:longPress={(event) => setSliderCostingOptions('use_ferry', profileCostingOptions, event)}
                 />
                 <button
                     variant="text"
@@ -833,6 +867,7 @@
                     visibility={profile === 'bicycle' || profile === 'pedestrian' ? 'visible' : 'collapsed'}
                     color={valhallaSettingColor('use_roads', profileCostingOptions)}
                     on:tap={() => switchValhallaSetting('use_roads', profileCostingOptions)}
+                    on:longPress={(event) => setSliderCostingOptions('use_roads', profileCostingOptions, event)}
                 />
                 <button
                     variant="text"
@@ -842,6 +877,7 @@
                     visibility={profile === 'bicycle' || profile === 'pedestrian' ? 'visible' : 'collapsed'}
                     color={valhallaSettingColor('use_hills', profileCostingOptions)}
                     on:tap={() => switchValhallaSetting('use_hills', profileCostingOptions)}
+                    on:longPress={(event) => setSliderCostingOptions('use_hills', profileCostingOptions, event)}
                 />
 
                 <button
@@ -852,6 +888,7 @@
                     visibility={profile === 'bicycle' || profile === 'pedestrian' ? 'visible' : 'collapsed'}
                     color={valhallaSettingColor('weight', profileCostingOptions)}
                     on:tap={() => switchValhallaSetting('weight', profileCostingOptions)}
+                    on:longPress={(event) => setSliderCostingOptions('weight', profileCostingOptions, event)}
                 />
                 <button
                     variant="text"
@@ -861,6 +898,7 @@
                     visibility={profile === 'bicycle' ? 'visible' : 'collapsed'}
                     color={valhallaSettingColor('avoid_bad_surfaces', profileCostingOptions)}
                     on:tap={() => switchValhallaSetting('avoid_bad_surfaces', profileCostingOptions)}
+                    on:longPress={(event) => setSliderCostingOptions('avoid_bad_surfaces', profileCostingOptions, event)}
                 />
                 <button
                     variant="text"
@@ -879,6 +917,7 @@
                     visibility={profile === 'pedestrian' ? 'visible' : 'collapsed'}
                     color={valhallaSettingColor('step_penalty', profileCostingOptions)}
                     on:tap={() => switchValhallaSetting('step_penalty', profileCostingOptions)}
+                    on:longPress={(event) => setSliderCostingOptions('step_penalty', profileCostingOptions, event)}
                 />
                 <button
                     variant="text"
