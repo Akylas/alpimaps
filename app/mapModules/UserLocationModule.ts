@@ -118,8 +118,6 @@ export default class UserLocationModule extends MapModule {
             return;
         }
 
-        DEV_LOG && console.log('updateUserLocation');
-
         const altitude = await packageService.getElevation(geoPos);
         if (altitude !== null) {
             position.altitude = Math.round(altitude);
