@@ -1,0 +1,4 @@
+*Bug fixes*
+- location button hard to tap and longpress
+- *android:* longpress gestures not always recog
+- async search for faster results
