@@ -8,7 +8,7 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import type { Side } from '@nativescript-community/ui-drawer';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { GridLayout, Screen, TextField } from '@nativescript/core';
+    import { GridLayout, ObservableArray, Screen, TextField } from '@nativescript/core';
     import { getJSON } from '@nativescript/core/http';
     import { Point } from 'geojson';
     import { onDestroy } from 'svelte';
@@ -28,7 +28,7 @@
     import { globalMarginTop, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import { queryString } from '../utils/http';
     import deburr from 'deburr';
-import { dismissSoftInput } from '@nativescript/core/utils';
+    import { dismissSoftInput } from '@nativescript/core/utils';
     const providerColors = {
         here: 'blue',
         carto: 'orange',
@@ -136,7 +136,7 @@ import { dismissSoftInput } from '@nativescript/core/utils';
     let _searchLayer: ClusteredVectorLayer;
     let searchClusterStyle: PointStyleBuilder;
     let searchAsTypeTimer;
-    let dataItems: SearchItem[];
+    let dataItems: SearchItem[] | ObservableArray<SearchItem>;
     let filteredDataItems: SearchItem[] = dataItems as any;
     let loading = false;
     let filteringOSMKey = false;
@@ -371,6 +371,24 @@ import { dismissSoftInput } from '@nativescript/core/utils';
         });
     }
     let currentQuery;
+
+    async function addItems(r: GeoResult[]) {
+        if (!loading) {
+            // was cancelled
+            return;
+        }
+        if (r.length === 0) {
+            showSnack({ message: l('no_result_found') });
+        } else {
+            await loadView();
+        }
+        dataItems = dataItems.concat(
+            r.map((s: SearchItem) => {
+                return { ...s, color: getItemIconColor(s), icon: getItemIcon(s), title: getItemTitle(s), subtitle: getItemSubtitle(s) };
+            })
+        );
+        updateFilteredDataItems();
+    }
     async function instantSearch(_query) {
         // console.log('instantSearch', _query,loading) ;
         loading = true;
@@ -395,7 +413,8 @@ import { dismissSoftInput } from '@nativescript/core/utils';
 
         // TODO: dont fail when offline!!!
 
-        let result = [];
+        dataItems = [];
+
         try {
             await Promise.all([
                 // searchInVectorTiles({
@@ -410,35 +429,21 @@ import { dismissSoftInput } from '@nativescript/core/utils';
                 //         console.error('searchInVectorTiles', err);
                 //     }),
                 searchInGeocodingService(options)
-                    .then((r) => loading && r && result.push(...r))
+                    .then(addItems)
                     .catch((err) => {
                         console.error('searchInGeocodingService', err);
                     }),
                 herePlaceSearch(options)
-                    .then((r) => loading && r && result.push(...r))
+                    .then(addItems)
                     .catch((err) => {
                         console.error('herePlaceSearch', err, err.stack);
                     }),
                 photonSearch(options)
-                    .then((r) => loading && r && result.push(...r))
+                    .then(addItems)
                     .catch((err) => {
                         console.error('photonSearch', err, err.stack);
                     })
             ]);
-
-            // console.log('search done', result.length, JSON.stringify(result));
-            if (!loading) {
-                // was cancelled
-                return;
-            }
-            if (result.length === 0) {
-                showSnack({ message: l('no_result_found') });
-            } else {
-                await loadView();
-            }
-            let now = Date.now();
-            dataItems = result.map((s) => ({ ...s, color: getItemIconColor(s), icon: getItemIcon(s), title: getItemTitle(s), subtitle: getItemSubtitle(s) }));
-            updateFilteredDataItems();
         } catch (err) {
             showError(err);
         } finally {
@@ -578,7 +583,8 @@ import { dismissSoftInput } from '@nativescript/core/utils';
         on:focus={onFocus}
         on:blur={onBlur}
         on:return={onReturnKey}
-        text={text} on:textChange={e => text = e['value']}
+        {text}
+        on:textChange={(e) => (text = e['value'])}
         backgroundColor="transparent"
         autocapitalizationType="none"
         floating="false"
