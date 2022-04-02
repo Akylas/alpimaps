@@ -101,7 +101,7 @@ lane :get_changelog  do |params|
     ignorePlatform = "android"
   end
   isReleasable = analyze_commits(match: "#{platform}/#{flavor}*", ignore_scopes: [ignorePlatform])
-  logs = conventional_changelog(format: 'slack', title: "#{platform.capitalize} Beta", display_title:false, display_links:false, order:["feat", "fix", "refactor", "perf"])
+  logs = conventional_changelog(format: 'slack', title: "#{platform.capitalize} Beta", display_title:false, display_links:false, order:["feat", "fix", "refactor", "perf"], ignore_scopes: [ignorePlatform])
   puts logs
   logs
 end
