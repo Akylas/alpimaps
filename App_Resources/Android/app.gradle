@@ -112,23 +112,19 @@ tasks.whenTaskAdded({ DefaultTask currentTask ->
 })
 
 android.applicationVariants.all { variant ->
-    if (variant.buildType.name == "debug") {
-        variant.outputs.each { output ->
-            output.versionNameOverride = android.defaultConfig.versionName + "-dev";
-        }
-    } else {
-        variant.outputs.each { output ->
-            def baseAbiVersionCode = project.ext.abiCodes.get(output.getFilter("ABI"), 0)
-            if (baseAbiVersionCode != null) {
-                output.versionCodeOverride = baseAbiVersionCode * 10000000 + variant.versionCode
+    if (project.hasProperty('splitEnabled')) {
+        if (variant.buildType.name == "debug") {
+            variant.outputs.each { output ->
+                output.versionNameOverride = android.defaultConfig.versionName + "." + variant.versionCode + "-dev";
+            }
+        } else {
+            variant.outputs.each { output ->
+                output.versionNameOverride = android.defaultConfig.versionName + "." + variant.versionCode;
             }
         }
     }
-}
-android.applicationVariants.all { variant ->
     
 }
-
 dependencies {
     implementation "com.github.skydoves:colorpickerview:2.2.4"
 }
