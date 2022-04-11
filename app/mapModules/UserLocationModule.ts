@@ -11,7 +11,7 @@ import dayjs from 'dayjs';
 import { GeoHandler, GeoLocation, UserLocationdEvent, UserLocationdEventData } from '~/handlers/GeoHandler';
 import { packageService } from '~/services/PackageService';
 import mapStore from '~/stores/mapStore';
-import { EARTH_RADIUS } from '~/utils/geo';
+import { EARTH_RADIUS, PI_X2, TO_DEG, TO_RAD } from '~/utils/geo';
 import MapModule, { getMapContext } from './MapModule';
 
 const LOCATION_ANIMATION_DURATION = 300;
@@ -60,11 +60,11 @@ export default class UserLocationModule extends MapModule {
         const points = new MapPosVector<LatLonKeys>();
 
         for (let i = 0; i <= N; i++) {
-            const angle = (Math.PI * 2 * (i % N)) / N;
+            const angle = (PI_X2 * (i % N)) / N;
             const dx = radius * Math.cos(angle);
             const dy = radius * Math.sin(angle);
-            const lat = centerLat + (180 / Math.PI) * (dy / EARTH_RADIUS);
-            const lon = centerLon + ((180 / Math.PI) * (dx / EARTH_RADIUS)) / Math.cos((centerLat * Math.PI) / 180);
+            const lat = centerLat + TO_DEG * (dy / EARTH_RADIUS);
+            const lon = centerLon + (TO_DEG * (dx / EARTH_RADIUS)) / Math.cos(centerLat * TO_RAD);
             points.add({ lat, lon } as any);
         }
 
