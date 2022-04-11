@@ -2,6 +2,7 @@ import { lc } from '@nativescript-community/l';
 import { MapPos, MapPosVector } from '@nativescript-community/ui-carto/core';
 import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
 import { VectorLayer } from '@nativescript-community/ui-carto/layers/vector';
+import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
 import { Polygon } from '@nativescript-community/ui-carto/vectorelements/polygon';
 import { Tween } from '@nativescript-community/ui-chart/animation/Tween';
@@ -28,20 +29,15 @@ export default class UserLocationModule extends MapModule {
     userBackMarker: Point<LatLonKeys>;
     userMarker: Point<LatLonKeys>;
     accuracyMarker: Polygon<LatLonKeys>;
-    _userFollow = true;
+    mUserFollow = false;
     get userFollow() {
-        return this._userFollow;
+        return this.mUserFollow;
     }
     set userFollow(value: boolean) {
-        if (value !== this._userFollow) {
-            // console.log('set userFollow', value);
-            this._userFollow = value;
-            if (value) {
-                // this.mapComp.askUserLocation();
-            }
+        if (value !== this.mUserFollow) {
+            this.mUserFollow = value;
         }
     }
-
     onMapDestroyed() {
         super.onMapDestroyed();
         this.localVectorLayer = null;
@@ -92,7 +88,9 @@ export default class UserLocationModule extends MapModule {
         }
     }
     onMapMove(e) {
-        this.userFollow = !e.data.userAction;
+        if (e.data.userAction) {
+            this.userFollow = false;
+        }
     }
     public mLastUserLocation: MapPos<LatLonKeys> & { horizontalAccuracy: number; verticalAccuracy: number; speed: number } = null;
     get lastUserLocation() {
@@ -100,14 +98,19 @@ export default class UserLocationModule extends MapModule {
     }
     set lastUserLocation(value) {
         this.mLastUserLocation = value;
-        this.notify({
-            eventName: 'location',
-            object: this,
-            data: value
-        });
+        if (value) {
+            this.notify({
+                eventName: 'location',
+                object: this,
+                data: value
+            });
+        }
     }
 
     async updateUserLocation(geoPos: GeoLocation) {
+        if (!geoPos) {
+            return;
+        }
         const position = {
             ...geoPos
         };
@@ -200,10 +203,16 @@ export default class UserLocationModule extends MapModule {
             // this.accuracyMarker.positions = this.getCirclePoints(position);
         }
         if (this.userFollow) {
-            this.mapView.setZoom(Math.max(this.mapView.zoom, 16), LOCATION_ANIMATION_DURATION);
-            this.mapView.setFocusPos(position, LOCATION_ANIMATION_DURATION);
+            this.moveToUserLocation();
         }
         this.lastUserLocation = position;
+    }
+    moveToUserLocation() {
+        if (!this.mLastUserLocation) {
+            return;
+        }
+        this.mapView.setZoom(Math.max(this.mapView.zoom, 16), LOCATION_ANIMATION_DURATION);
+        this.mapView.setFocusPos(this.mLastUserLocation, LOCATION_ANIMATION_DURATION);
     }
     onLocation(event: UserLocationdEventData) {
         if (mapStore.queryingLocation) {
@@ -224,6 +233,7 @@ export default class UserLocationModule extends MapModule {
     geoHandler: GeoHandler;
     onServiceLoaded(geoHandler: GeoHandler) {
         this.geoHandler = geoHandler;
+        this.updateUserLocation(geoHandler.getLastKnownLocation());
         geoHandler.on(UserLocationdEvent, this.onLocation, this);
     }
     onServiceUnloaded(geoHandler: GeoHandler) {
@@ -252,7 +262,6 @@ export default class UserLocationModule extends MapModule {
         });
     }
     async askUserLocation() {
-        this.userFollow = true;
         await this.geoHandler.enableLocation();
         mapStore.queryingLocation = true;
         this.startWatchLocation();
