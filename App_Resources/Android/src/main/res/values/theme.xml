@@ -3,7 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- theme to use FOR launch screen-->
     <!-- theme to use FOR launch screen-->
-    <style name="LaunchScreenThemeBase" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="LaunchScreenThemeBase" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimaryDark">@android:color/transparent</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorOnPrimary">@color/buttonTextColor</item>
@@ -16,7 +16,7 @@
     <style name="LaunchScreenTheme" parent="LaunchScreenThemeBase">
     </style>
     <!-- theme to use AFTER launch screen is loaded-->
-    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorOnPrimary">@color/buttonTextColor</item>
