@@ -17,7 +17,6 @@
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
     import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
-    // import { Drawer } from '@nativescript-community/ui-drawer';
     import { action } from '@nativescript-community/ui-material-dialogs';
     import { Brightness } from '@nativescript/brightness';
     import { AndroidApplication, Application, Page, profile, Utils } from '@nativescript/core';
@@ -27,10 +26,9 @@
     import { Screen } from '@nativescript/core/platform';
     import { ad } from '@nativescript/core/utils/utils';
     import { Point as GeoJSONPoint } from 'geojson';
-    import * as SocialShare from 'nativescript-social-share';
     import { debounce } from 'push-it-to-the-limit/target/es6';
     import { onDestroy, onMount } from 'svelte';
-    import { navigate, showModal } from 'svelte-native';
+    import { navigate } from 'svelte-native';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { l, lc, onLanguageChanged } from '~/helpers/locale';
@@ -38,8 +36,7 @@
     import watcher from '~/helpers/watcher';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
-    import type { LayerType } from '~/mapModules/MapModule';
-    import { getMapContext, setMapContext } from '~/mapModules/MapModule';
+    import { getMapContext, handleMapAction, LayerType, setMapContext } from '~/mapModules/MapModule';
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import type { IItem } from '~/models/Item';
     import { RouteInstruction } from '~/models/Item';
@@ -49,18 +46,17 @@
     import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
     import mapStore from '~/stores/mapStore';
+    import { isBottomSheetOpened, showBottomSheet } from '~/utils/bottomsheet';
     import { showError } from '~/utils/error';
     import { getBoundsZoomLevel } from '~/utils/geo';
+    import { share } from '~/utils/share';
     import { disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn } from '~/utils/utils.android';
-    import { accentColor } from '~/variables';
     import { navigationBarHeight, primaryColor } from '../variables';
-    import { isBottomSheetOpened, showBottomSheet } from '~/utils/bottomsheet';
     import BottomSheetInner from './BottomSheetInner.svelte';
     import DirectionsPanel from './DirectionsPanel.svelte';
     import LocationInfoPanel from './LocationInfoPanel.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
     import Search from './Search.svelte';
-    import { share } from '~/utils/share';
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
@@ -362,7 +358,7 @@
             mapContext.runOnModules('onServiceUnloaded', handler);
         });
 
-        if (DEV_LOG) {
+        if (!PRODUCTION) {
             defaultLiveSync = global.__onLiveSync.bind(global);
             global.__onLiveSync = (...args) => {
                 console.log('__onLiveSync', args, currentLayerStyle);
@@ -399,6 +395,14 @@
         }
         selectedPosMarker = null;
     });
+
+    let inFront = false;
+    function onNavigatingTo() {
+        inFront = true;
+    }
+    function onNavigatingFrom() {
+        inFront = false;
+    }
     function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
         if (!inFront || isBottomSheetOpened()) {
             return;
@@ -1208,7 +1212,6 @@
                         liveReload: !PRODUCTION,
                         [mapStyle.endsWith('.zip') ? 'zipPath' : 'dirPath']: `~/assets/styles/${mapStyle}`
                     });
-                    // console.log('MBVectorTileDecoder', mapStyle, mapStyleLayer, Date.now() - start, 'ms');
                     mapContext.runOnModules('vectorTileDecoderChanged', oldVectorTileDecoder, vectorTileDecoder);
                 } catch (err) {
                     showError(err);
@@ -1543,116 +1546,106 @@
     }
 
     async function showOptions() {
-        const options = [
-            {
-                title: lc('select_style'),
-                id: 'select_style',
-                icon: 'mdi-layers'
-            },
-            {
-                title: lc('location_info'),
-                id: 'location_info',
-                icon: 'mdi-speedometer'
-            },
-            {
-                title: lc('share_screenshot'),
-                id: 'share_screenshot',
-                icon: 'mdi-cellphone-screenshot'
-            },
-            {
-                title: lc('keep_awake'),
-                color: keepAwakeEnabled ? 'red' : '#00ff00',
-                id: 'keep_awake',
-                icon: keepAwakeEnabled ? 'mdi-sleep' : 'mdi-sleep-off'
-            },
-            {
-                title: lc('compass'),
-                id: 'compass',
-                icon: 'mdi-compass'
-            },
+        try {
+            const options = [
+                {
+                    title: lc('select_style'),
+                    id: 'select_style',
+                    icon: 'mdi-layers'
+                },
+                {
+                    title: lc('location_info'),
+                    id: 'location_info',
+                    icon: 'mdi-speedometer'
+                },
+                {
+                    title: lc('share_screenshot'),
+                    id: 'share_screenshot',
+                    icon: 'mdi-cellphone-screenshot'
+                },
+                // {
+                //     title: lc('keep_awake'),
+                //     color: keepAwakeEnabled ? 'red' : '#00ff00',
+                //     id: 'keep_awake',
+                //     icon: keepAwakeEnabled ? 'mdi-sleep' : 'mdi-sleep-off'
+                // },
+                {
+                    title: lc('compass'),
+                    id: 'compass',
+                    icon: 'mdi-compass'
+                },
+                {
+                    title: lc('astronomy'),
+                    id: 'astronomy',
+                    icon: 'mdi-weather-night'
+                },
+                {
+                    title: lc('settings'),
+                    id: 'settings',
+                    icon: 'mdi-cogs'
+                },
 
-            {
-                title: lc('settings'),
-                id: 'settings',
-                icon: 'mdi-cogs'
-            },
+                {
+                    title: lc('dark_mode'),
+                    id: 'dark_mode',
+                    color: $sTheme === 'dark' ? primaryColor : undefined,
+                    icon: 'mdi-theme-light-dark'
+                }
+            ];
 
-            {
-                title: lc('dark_mode'),
-                id: 'dark_mode',
-                color: $sTheme === 'dark' ? primaryColor : undefined,
-                icon: 'mdi-theme-light-dark'
+            if (isSensorAvailable('barometer')) {
+                options.splice(options.length - 2, 0, {
+                    title: lc('altimeter'),
+                    id: 'altimeter',
+                    icon: 'mdi-altimeter'
+                });
             }
-        ];
 
-        if (isSensorAvailable('barometer')) {
-            options.splice(options.length - 2, 0, {
-                title: lc('altimeter'),
-                id: 'altimeter',
-                icon: 'mdi-altimeter'
-            });
-        }
-
-        if (packageServiceEnabled) {
-            options.unshift({
-                title: lc('offline_packages'),
-                id: 'offline_packages',
-                icon: 'mdi-earth'
-            });
-        }
-        const MapOptions = (await import('./MapOptions.svelte')).default;
-        const result = (await showBottomSheet({
-            parent: page,
-            view: MapOptions,
-            props: { options }
-            // transparent: true,
-            // disableDimBackground: true
-        })) as any;
-        if (result) {
-            switch (result.id) {
-                case 'select_style':
-                    selectStyle();
-                    break;
-                case 'location_info':
-                    switchLocationInfo();
-                    break;
-                case 'share_screenshot':
-                    shareScreenshot();
-                    break;
-                case 'keep_awake':
-                    switchKeepAwake();
-                    break;
-                case 'offline_packages':
-                    downloadPackages();
-                    break;
-                case 'dark_mode':
-                    toggleTheme(true);
-                    break;
-                case 'compass':
-                    try {
-                        const CompassView = (await import('./CompassView.svelte')).default;
-                        await showBottomSheet({ parent: page, view: CompassView, transparent: true });
-                    } catch (err) {
-                        console.error('showCompass', err, err['stack']);
-                    }
-                    break;
-                case 'altimeter':
-                    try {
-                        const AltimeterView = (await import('./AltimeterView.svelte')).default;
-                        await showBottomSheet({ parent: page, view: AltimeterView });
-                    } catch (err) {
-                        console.error('showAltimeter', err, err['stack']);
-                    }
-                    break;
-                case 'settings':
-                    try {
-                        const Settings = (await import('~/components/Settings.svelte')).default;
-                        navigate({ page: Settings });
-                    } catch (err) {
-                        console.error('showSettings', err, err['stack']);
-                    }
-                    break;
+            if (packageServiceEnabled) {
+                options.unshift({
+                    title: lc('offline_packages'),
+                    id: 'offline_packages',
+                    icon: 'mdi-earth'
+                });
             }
+            const MapOptions = (await import('./MapOptions.svelte')).default;
+            const result = (await showBottomSheet({
+                parent: page,
+                view: MapOptions,
+                props: { options }
+                // transparent: true,
+                // disableDimBackground: true
+            })) as any;
+            if (result) {
+                switch (result.id) {
+                    case 'select_style':
+                        selectStyle();
+                        break;
+                    case 'location_info':
+                        switchLocationInfo();
+                        break;
+                    case 'share_screenshot':
+                        shareScreenshot();
+                        break;
+                    case 'keep_awake':
+                        switchKeepAwake();
+                        break;
+                    case 'offline_packages':
+                        downloadPackages();
+                        break;
+                    case 'dark_mode':
+                        toggleTheme(true);
+                        break;
+                    case 'astronomy':
+                    case 'compass':
+                    case 'altimeter':
+                    case 'settings':
+                        handleMapAction(result.id);
+                        break;
+                }
+            }
+        } catch (err) {
+            console.error('showSettings', err, err['stack']);
         }
     }
 
@@ -1663,13 +1656,6 @@
         } catch (error) {
             showError(error);
         }
-    }
-    let inFront = false;
-    function onNavigatingTo() {
-        inFront = true;
-    }
-    function onNavigatingFrom() {
-        inFront = false;
     }
 </script>
 
