@@ -1,11 +1,11 @@
 import { MapBounds, MapPos, MapPosVector, ScreenBounds, fromNativeMapPos } from '@nativescript-community/ui-carto/core';
 
 const PI = Math.PI;
-const TO_RAD = PI / 180;
-const TO_DEG = 180 / PI;
-const PI_X2 = PI * 2;
-const PI_DIV2 = PI / 2;
-const PI_DIV4 = PI / 4;
+export const TO_RAD = PI / 180;
+export const TO_DEG = 180 / PI;
+export const PI_X2 = PI * 2;
+export const PI_DIV2 = PI / 2;
+export const PI_DIV4 = PI / 4;
 // export const EARTH_RADIUS = 6378137;
 export const EARTH_RADIUS = 6371009;
 export const DEFAULT_TOLERANCE = 0.1;

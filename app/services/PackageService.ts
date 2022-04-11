@@ -29,6 +29,7 @@ import * as appSettings from '@nativescript/core/application-settings';
 import { File, Folder, path } from '@nativescript/core/file-system';
 import { getMapContext } from '~/mapModules/MapModule';
 import { IItem as Item, RouteProfile } from '~/models/Item';
+import { EARTH_RADIUS, TO_RAD } from '~/utils/geo';
 import { getDataFolder, getDefaultMBTilesDir, getSavedMBTilesDir, listFolder } from '~/utils/utils';
 
 export type PackageType = 'geo' | 'routing' | 'map';
@@ -41,15 +42,12 @@ class MathFilter {
     }
 }
 
-const DEG_TO_RAD = Math.PI / 180;
-const EARTH_RADIUS = 6371000;
 
 function dist2d(latlng1, latlng2) {
-    const rad = Math.PI / 180,
-        lat1 = latlng1.lat * rad,
-        lat2 = latlng2.lat * rad,
-        sinDLat = Math.sin(((latlng2.lat - latlng1.lat) * rad) / 2),
-        sinDLon = Math.sin(((latlng2.lon - latlng1.lon) * rad) / 2),
+    const lat1 = latlng1.lat * TO_RAD,
+        lat2 = latlng2.lat * TO_RAD,
+        sinDLat = Math.sin(((latlng2.lat - latlng1.lat) * TO_RAD) / 2),
+        sinDLon = Math.sin(((latlng2.lon - latlng1.lon) * TO_RAD) / 2),
         a = sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLon * sinDLon,
         c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return EARTH_RADIUS * c;
@@ -457,7 +455,7 @@ class PackageService extends Observable {
     }
 
     convertFeatureCollection(features: VectorTileFeatureCollection, options: SearchRequest) {
-        const projection = this.vectorTileSearchService.options.layer.getDataSource().getProjection();
+        const projection = this.vectorTileSearchService.options.layer.dataSource.getProjection();
         let feature: VectorTileFeature;
         const count = features.getFeatureCount();
         const result = [];
