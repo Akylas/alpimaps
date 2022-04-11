@@ -314,10 +314,8 @@
     async function showMapRightMenu() {
         // mapContext.toggleMenu('bottom');
         const LayersMenu = (await import('~/components/LayersMenu.svelte')).default;
-        const results = await showBottomSheet({
+        return showBottomSheet({
             view: LayersMenu,
-            transparent: true,
-            disableDimBackground: true,
             trackingScrollView: 'trackingScrollView'
         });
     }
@@ -418,7 +416,7 @@
             on:tap={downloadSuggestion}
             on:longPress={customDownloadSuggestion}
             color="white"
-            :html={`<big
+            html={`<big
             ><big><font face="${mdiFontFamily}">mdi-download</font></big></big
         >${suggestionPackageName}`}
         />
@@ -447,7 +445,7 @@
     </stacklayout>
     <stacklayout marginTop="80" row={2} verticalAlignment="bottom" horizontalAlignment="left">
         <!-- <button on:tap={open3DMap} class="small-floating-btn" color={primaryColor} text="mdi-video-3d" /> -->
-        <button on:tap={showMapRightMenu} class="small-floating-btn" color={primaryColor} text="mdi-layers" />
+        <button id="layers" on:tap={showMapRightMenu} class="small-floating-btn" color={primaryColor} text="mdi-layers" />
     </stacklayout>
 
     <ScaleView bind:this={scaleView} col={1} row={2} horizontalAlignment="right" verticalAlignment="bottom" marginBottom="8" />
