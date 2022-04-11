@@ -221,8 +221,8 @@ export default class CustomLayersModule extends MapModule {
     }
 
     createMergeMBtiles(
-        { name, sources, legend, rendererLayerFilter }: { name: string; sources: string[]; legend?: string; rendererLayerFilter?: string },
-        worldMbtiles?: MBTilesTileDataSource,
+        { name, sources, legend, rendererLayerFilter, worldMbtiles }: { name: string; sources: string[]; legend?: string; rendererLayerFilter?: string; worldMbtiles?: MBTilesTileDataSource },
+
         options = {}
     ) {
         // console.log('createMergeMBtiles', sources, worldMbtiles);
@@ -230,7 +230,12 @@ export default class CustomLayersModule extends MapModule {
         //     sources = sources.map((s) => getAndroidRealPath(s));
         // }
         // console.log('createMergeMBtiles2', sources);
-        const dataSource: TileDataSource<any, any> = this.createMergeMBTilesDataSource(worldMbtiles ? [...sources, worldMbtiles] : sources);
+        let dataSource: TileDataSource<any, any> = this.createMergeMBTilesDataSource(sources);
+        if (worldMbtiles) {
+            dataSource = new OrderedTileDataSource({
+                dataSources: [dataSource, worldMbtiles]
+            });
+        }
         if (!dataSource) {
             console.error('failed to create merged mbTiles dataSource', sources);
             return;
@@ -754,9 +759,9 @@ export default class CustomLayersModule extends MapModule {
                         {
                             legend: 'https://www.openstreetmap.org/key.html',
                             name: f.name,
-                            sources: databasePaths
+                            sources: databasePaths,
+                            worldMbtiles
                         },
-                        i === 0 ? worldMbtiles : undefined,
                         {
                             local: true
                         }
