@@ -13,6 +13,7 @@
     import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
     import { transitService } from '~/services/TransitService';
     import { showError } from '~/utils/error';
+    import { pickDate, pickTime } from '~/utils/utils';
     import { accentColor, borderColor, mdiFontFamily, navigationBarHeight, subtitleColor, textColor } from '~/variables';
 
     export let line: any;
@@ -95,42 +96,6 @@
         return '|';
     }
 
-    async function pickDate(currentDate: Dayjs) {
-        return new Promise<number>((resolve, reject) => {
-            const datePicker = com.google.android.material.datepicker.MaterialDatePicker.Builder.datePicker()
-                .setTitleText(lc('pick_date'))
-                .setSelection(new java.lang.Long(currentDate.valueOf()))
-                .build();
-            datePicker.addOnDismissListener(
-                new android.content.DialogInterface.OnDismissListener({
-                    onDismiss: () => {
-                        resolve(datePicker.getSelection().longValue());
-                    }
-                })
-            );
-            datePicker.show((page.nativeView as any)._getRootFragmentManager(), 'datepicker');
-        });
-    }
-
-    async function pickTime(currentDate: Dayjs) {
-        return new Promise<[number, number]>((resolve, reject) => {
-            const timePicker = new (com.google.android.material as any).timepicker.MaterialTimePicker.Builder()
-                .setTimeFormat(1)
-                .setTitleText(lc('pick_time'))
-                .setHour(currentDate.get('h'))
-                .setMinute(currentDate.get('m'))
-                .build();
-
-            timePicker.addOnDismissListener(
-                new android.content.DialogInterface.OnDismissListener({
-                    onDismiss: () => {
-                        resolve([timePicker.getMinute(), timePicker.getHour()]);
-                    }
-                })
-            );
-            timePicker.show((page.nativeView as any)._getRootFragmentManager(), 'timepicker');
-        });
-    }
     async function selectDate() {
         try {
             const dayStart = currentTime.startOf('d');
