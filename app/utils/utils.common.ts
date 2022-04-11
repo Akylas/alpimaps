@@ -266,7 +266,6 @@ export async function pickColor(color: Color, view?: View) {
     return new Promise<Color>((resolve) => {
         if (__ANDROID__) {
             const activity = Application.android.startActivity;
-            const nView = view ? view.nativeView : activity.getWindow().getDecorView().getRootView();
             if (!(color instanceof Color)) {
                 color = new Color(color as any);
             }
