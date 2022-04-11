@@ -3318,7 +3318,7 @@
 			<MinScaleDenominator>545978.75</MinScaleDenominator>
 			<MaxScaleDenominator>2183915</MaxScaleDenominator>
 			<Filter>[class]='secondary'</Filter>
-			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],15,8,20,11)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],15,8,20,11)+1.0e-06">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>545978.75</MinScaleDenominator>
@@ -3330,7 +3330,7 @@
 			<MinScaleDenominator>136494.688</MinScaleDenominator>
 			<MaxScaleDenominator>545978.75</MaxScaleDenominator>
 			<Filter>[class]='tertiary' or [class]='secondary'</Filter>
-			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],15,8,20,11)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],15,8,20,11)+1.0e-06">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>272989.375</MinScaleDenominator>
@@ -3342,7 +3342,7 @@
 			<MinScaleDenominator>136494.688</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]='minor'</Filter>
-			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],15,8,20,11)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],15,8,20,11)+1.0e-06">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>136494.688</MinScaleDenominator>
@@ -3360,6 +3360,12 @@
 			<MinScaleDenominator>68247.3438</MinScaleDenominator>
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[class]='tertiary' or [class]='secondary' or [class]='minor' or [class]='aerialway'</Filter>
+			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],15,8,20,11)+1.0e-06">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>68247.3438</MinScaleDenominator>
+			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
+			<Filter>[class]='track'</Filter>
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],15,8,20,11)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -3367,12 +3373,6 @@
 			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
 			<Filter>[class]='motorway' or [class]='trunk' or [class]='primary'</Filter>
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],9,8,12,8,20,14)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>68247.3438</MinScaleDenominator>
-			<MaxScaleDenominator>136494.688</MaxScaleDenominator>
-			<Filter>[class]='track'</Filter>
-			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],15,8,20,11)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
@@ -3390,6 +3390,12 @@
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[class]='tertiary' or [class]='secondary' or [class]='minor' or [class]='aerialway'</Filter>
+			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],15,8,20,11)+1.0e-06">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="auto">
+			<MinScaleDenominator>34123.6719</MinScaleDenominator>
+			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
+			<Filter>[class]='track'</Filter>
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],15,8,20,11)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -3397,12 +3403,6 @@
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[class]='motorway' or [class]='trunk' or [class]='primary'</Filter>
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],9,8,12,8,20,14)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="auto">
-			<MinScaleDenominator>34123.6719</MinScaleDenominator>
-			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
-			<Filter>[class]='track'</Filter>
-			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],15,8,20,11)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
@@ -3414,6 +3414,12 @@
 			<MinScaleDenominator>4265.45898</MinScaleDenominator>
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[class]='tertiary' or [class]='secondary' or [class]='minor' or [class]='service' or [class]='aerialway'</Filter>
+			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],15,8,20,11)+1.0e-06">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>4265.45898</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<Filter>[class]='track' or [class]='path'</Filter>
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],15,8,20,11)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -3421,12 +3427,6 @@
 			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
 			<Filter>[class]='motorway' or [class]='trunk' or [class]='primary'</Filter>
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],9,8,12,8,20,14)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>4265.45898</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<Filter>[class]='track' or [class]='path'</Filter>
-			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],15,8,20,11)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
@@ -3438,6 +3438,12 @@
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]='tertiary' or [class]='secondary' or [class]='minor' or [class]='service' or [class]='aerialway'</Filter>
+			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],15,8,20,11)+1.0e-06">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
+		</Rule>
+		<Rule name="combined">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
+			<Filter>[class]='track' or [class]='path'</Filter>
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],15,8,20,11)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 		<Rule name="combined">
@@ -3445,12 +3451,6 @@
 			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
 			<Filter>[class]='motorway' or [class]='trunk' or [class]='primary'</Filter>
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],9,8,12,8,20,14)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-		<Rule name="combined">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>4265.45898</MaxScaleDenominator>
-			<Filter>[class]='track' or [class]='path'</Filter>
-			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(0,0,0)" halo-fill="rgb(242,245,248)" halo-radius="1" placement="line" size="linear([view::zoom],15,8,20,11)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 	</Style>
 	<Style name="contour" filter-mode="first">
