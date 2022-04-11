@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { l } from '@nativescript-community/l';
+    import { l, lc } from '@nativescript-community/l';
     import { Align, Canvas, DashPathEffect, LayoutAlignment, Paint, StaticLayout, Style } from '@nativescript-community/ui-canvas';
     import { fromNativeMapPos, GenericMapPos } from '@nativescript-community/ui-carto/core';
     import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
@@ -24,15 +24,15 @@
     import { slc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
-    import { getMapContext } from '~/mapModules/MapModule';
+    import { getMapContext, handleMapAction } from '~/mapModules/MapModule';
     import type { IItem, IItem as Item, ItemProperties, RouteInstruction } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
+    import { showBottomSheet } from '~/utils/bottomsheet';
     import { showError } from '~/utils/error';
     import { computeDistanceBetween } from '~/utils/geo';
     import { openLink } from '~/utils/ui';
     import { borderColor, screenHeightDips, statusBarHeight, textColor, widgetBackgroundColor } from '~/variables';
-    import { showBottomSheet } from '~/utils/bottomsheet';
     import BottomSheetInfoView from './BottomSheetInfoView.svelte';
 
     const LISTVIEW_HEIGHT = 200;
@@ -235,7 +235,15 @@
 
     function onNewLocation(e: any) {
         currentLocation = e.data;
-        this.updateRouteItemWithPosition(item, currentLocation);
+        updateRouteItemWithPosition(item, currentLocation);
+    }
+
+    function showAstronomy() {
+        console.log('showAstronomy');
+        if (item) {
+            const positions = item.geometry?.['coordinates'];
+            handleMapAction('astronomy', { lat: positions[1], lon: positions[0] });
+        }
     }
     function onChartHighlight(event: HighlightEventData) {
         const x = event.highlight.entryIndex;
@@ -493,10 +501,10 @@
 
     async function getTransitLines() {
         try {
-            const component = (await import('~/components/transit/TransitLinesBottomSheet.svelte')).default;
+            const TransitLinesBottomSheet = (await import('~/components/transit/TransitLinesBottomSheet.svelte')).default;
             const geometry = item.geometry as Point;
             const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0], altitude: geometry.coordinates[2] };
-            showBottomSheet({ parent: mapContext.getMainPage(), view: component, disableDimBackground: true, props: { name: formatter.getItemName(item), position } });
+            showBottomSheet({ parent: mapContext.getMainPage(), trackingScrollView: 'scrollView', view: TransitLinesBottomSheet, props: { name: formatter.getItemName(item), position } });
         } catch (err) {
             this.showError(err);
         }
@@ -747,7 +755,7 @@
             <button
                 variant="text"
                 on:tap={() => searchWeb()}
-                on:longPress={() => tooltip($slc('search_web'))}
+                on:longPress={() => tooltip(lc('search_web'))}
                 visibility={item && (!itemIsRoute || item.properties?.name) && !item.id ? 'visible' : 'collapsed'}
                 text="mdi-web"
                 class="icon-btn"
@@ -755,24 +763,17 @@
             <button
                 variant="text"
                 on:tap={() => getProfile()}
-                on:longPress={() => tooltip($slc('elevation_profile'))}
+                on:longPress={() => tooltip(lc('elevation_profile'))}
                 visibility={itemIsRoute && itemCanQueryProfile ? 'visible' : 'collapsed'}
                 text="mdi-chart-areaspline"
                 class="icon-btn"
             />
             <button variant="text" on:tap={() => saveItem()} on:longPress={() => tooltip($slc('save'))} visibility={item && !item.id ? 'visible' : 'collapsed'} text="mdi-map-plus" class="icon-btn" />
-            <button
-                variant="text"
-                on:tap={() => shareItem()}
-                on:longPress={() => tooltip($slc('share'))}
-                visibility={itemIsRoute ? 'visible' : 'collapsed'}
-                text="mdi-share-variant"
-                class="icon-btn"
-            />
+            <button variant="text" on:tap={() => shareItem()} on:longPress={() => tooltip(lc('share'))} visibility={itemIsRoute ? 'visible' : 'collapsed'} text="mdi-share-variant" class="icon-btn" />
             <button
                 variant="text"
                 on:tap={() => deleteItem()}
-                on:longPress={() => tooltip($slc('delete'))}
+                on:longPress={() => tooltip(lc('delete'))}
                 visibility={item && item.id ? 'visible' : 'collapsed'}
                 color="red"
                 text="mdi-delete"
@@ -781,7 +782,7 @@
             <button
                 variant="text"
                 on:tap={() => openWikipedia()}
-                on:longPress={() => tooltip($slc('wikipedia'))}
+                on:longPress={() => tooltip(lc('wikipedia'))}
                 visibility={item && item.properties && item.properties.wikipedia ? 'visible' : 'collapsed'}
                 text="mdi-wikipedia"
                 class="icon-btn"
@@ -796,15 +797,16 @@
             <button
                 variant="text"
                 on:tap={() => checkWeather()}
-                on:longPress={() => tooltip($slc('weather'))}
+                on:longPress={() => tooltip(lc('weather'))}
                 visibility={item && networkService.canCheckWeather ? 'visible' : 'collapsed'}
                 text="mdi-weather-partly-cloudy"
                 class="icon-btn"
             />
+            <button id="astronomy" variant="text" on:tap={() => showAstronomy()} on:longPress={() => tooltip(lc('astronomy'))} text="mdi-weather-night" class="icon-btn" />
             <button
                 variant="text"
                 on:tap={() => openPeakFinder()}
-                on:longPress={() => tooltip($slc('peaks'))}
+                on:longPress={() => tooltip(lc('peaks'))}
                 visibility={item && !itemIsRoute ? 'visible' : 'collapsed'}
                 text="mdi-summit"
                 class="icon-btn"
@@ -812,7 +814,7 @@
             <button
                 variant="text"
                 on:tap={() => getTransitLines()}
-                on:longPress={() => tooltip($slc('bus_stop_infos'))}
+                on:longPress={() => tooltip(lc('bus_stop_infos'))}
                 visibility={item && itemIsBusStop ? 'visible' : 'collapsed'}
                 text="mdi-bus"
                 class="icon-btn"
