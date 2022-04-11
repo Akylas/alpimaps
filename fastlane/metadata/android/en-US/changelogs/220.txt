@@ -1,4 +1,9 @@
+*Features*
+- new Astronomy sheet for sun/moon infos
+
 *Bug fixes*
-- location button hard to tap and longpress
-- *android:* longpress gestures not always recog
-- async search for faster results
+- new material3 theme
+- bottomSheets use native style
+- last position on start + info=>click to current position
+- worldMBTiles as orderedTileDatasource
+- changes to new map style
