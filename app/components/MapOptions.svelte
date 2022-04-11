@@ -25,7 +25,7 @@
     }
 </script>
 
-<collectionView items={options} {height} colWidth="20%" rowHeight="80" backgroundColor={$widgetBackgroundColor}>
+<collectionView items={options} {height} colWidth="20%" rowHeight="80">
     <Template let:item>
         <gridlayout backgroundColor={item.color} rippleColor={item.color || primaryColor} on:tap={() => onTap(item)}>
             <canvaslabel paddingTop="15">
