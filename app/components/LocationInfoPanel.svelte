@@ -49,6 +49,10 @@
         }
     }
 
+    function moveToUserLocation() {
+        mapContext.mapModule('userLocation')?.moveToUserLocation();
+    }
+
     export function getNativeView() {
         return gridLayout && gridLayout.nativeView;
     }
@@ -235,14 +239,13 @@
     backgroundColor="#00000077"
     padding="6"
     columns="auto,*,auto"
-    on:swipe={() => switchLocationInfo()}
+    on:tap={moveToUserLocation}
+    on:swipe={switchLocationInfo}
 >
     {#if loaded}
-        <canvaslabel bind:this={firstCanvas} width="60" height="60" borderRadius="30" borderWidth="4" borderColor={accentColor} backgroundColor="#ffffffaa">
-            <cgroup verticalAlignment="center" textAlignment="center">
-                <cspan text={currentLocation && currentLocation.speed !== undefined ? currentLocation.speed.toFixed() : ''} fontSize="26" fontWeight="bold" />
-                <cspan text={'\n' + 'km/h'} fontSize="10" />
-            </cgroup>
+        <canvaslabel bind:this={firstCanvas} width="60" height="60" borderRadius="30" borderWidth="4" borderColor={accentColor} backgroundColor="#000000aa"  color="#fff">
+            <cspan text={currentLocation && currentLocation.speed !== undefined ? currentLocation.speed.toFixed() : ''} fontSize="26" fontWeight="bold" textAlignment="center" verticalAlignment="center" paddingBottom="3"/>
+            <cspan text={'km/h'} fontSize="10" textAlignment="center" verticalAlignment="center" paddingTop="12"/>
         </canvaslabel>
         <canvaslabel col={1} marginLeft="5" color="#fff">
             <cspan text={lu('altitude') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'} fontSize="11" color={accentColor} verticalAlignment="top" />
