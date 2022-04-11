@@ -5,10 +5,11 @@
     import { executeOnMainThread } from '@nativescript/core/utils';
     import { convertDistance } from '~/helpers/formatter';
     import { getMapContext } from '~/mapModules/MapModule';
+    import { TO_RAD } from '~/utils/geo';
 
     const mapContext = getMapContext();
     function getMetersPerPixel(pos: MapPos<LatLonKeys>, zoom: number) {
-        return (156543.03392804097 * Math.cos((pos.lat * Math.PI) / 180)) / Math.pow(2, zoom);
+        return (156543.03392804097 * Math.cos(pos.lat * TO_RAD)) / Math.pow(2, zoom);
     }
 
     const DPI = Screen.mainScreen.widthDIPs;
@@ -20,16 +21,16 @@
     let scaleWidth = 80;
     function updateData() {
         // executeOnMainThread(() => {
-            const cartoMap = mapContext.getMap();
-            if (!cartoMap) {
-                return;
-            }
-            const zoom = cartoMap.zoom;
+        const cartoMap = mapContext.getMap();
+        if (!cartoMap) {
+            return;
+        }
+        const zoom = cartoMap.zoom;
 
-            const newMpp = Math.round(getMetersPerPixel(cartoMap.focusPos, zoom) * 100) / 100;
-            const metersPerCM = PX_PER_CM * newMpp;
-            const data = convertDistance(metersPerCM);
-            scaleText = `${data.value.toFixed(1)} ${data.unit} (${zoom.toFixed(1)})`;
+        const newMpp = Math.round(getMetersPerPixel(cartoMap.focusPos, zoom) * 100) / 100;
+        const metersPerCM = PX_PER_CM * newMpp;
+        const data = convertDistance(metersPerCM);
+        scaleText = `${data.value.toFixed(1)} ${data.unit} (${zoom.toFixed(1)})`;
         // });
     }
     mapContext.onMapReady((mapView: CartoMap<LatLonKeys>) => {
