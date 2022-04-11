@@ -10,9 +10,9 @@
 
     export let position;
     // export let terrarium: boolean = false;
-    export let dataSource: TileDataSource<any, any>;
-    export let vectorDataSource: MBTilesTileDataSource | MergedMBVTTileDataSource<any, any>;
-    export let rasterDataSource: TileDataSource<any, any>;
+    // export let dataSource: TileDataSource<any, any>;
+    // export let vectorDataSource: MBTilesTileDataSource | MergedMBVTTileDataSource<any, any>;
+    // export let rasterDataSource: TileDataSource<any, any>;
     let webView: NativeViewElementNode<AWebView>;
     let page: NativeViewElementNode<Page>;
     // let webserver;

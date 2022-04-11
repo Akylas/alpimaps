@@ -512,14 +512,12 @@ module.exports = (env, params = {}) => {
             globOptions,
             transform(manifestBuffer, path) {
                 const osmSymbols = symbolsParser.parseSymbols(manifestBuffer.toString());
-                // console.log('osmSymbols', osmSymbols);
                 const osmIcons = osmSymbols.variables.reduce(function (acc, value) {
                     if (value.name.startsWith('$osm-')) {
                         acc[value.name.slice(5)] = String.fromCharCode(parseInt(value.value.slice(2, -1), 16));
                     }
                     return acc;
                 }, {});
-                // console.log('osmIcons', osmIcons);
                 return Buffer.from(JSON.stringify(osmIcons));
             }
         }
