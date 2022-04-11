@@ -323,7 +323,19 @@
 }
 
 // we ignore footway names as the almost always duplicate the street name
-#transportation_name{
+#transportation_name {
+	
+	[class=motorway][zoom>=5],
+	[class=trunk][zoom>=5],
+	[class=primary][zoom>=7]{
+		text-name: @name;
+		text-placement: line;
+		text-face-name: @mont_md;
+		text-fill: @road_large_label_fill;
+		text-halo-fill: @road_label_halo;
+		text-halo-radius: @road_large_label_halo_radius;
+		text-size: @road_large_label_width;
+	}
 	[class=track][zoom>=13],
 	[class=path][subclass=path][zoom>=14],
 	[class=path][subclass=footway][zoom>=18],
@@ -339,20 +351,6 @@
 			text-dy:@track_path_text_dy;
 		}
 	}
-	
-	[class=motorway][zoom>=5],
-	[class=trunk][zoom>=5],
-	[class=primary][zoom>=7]{
-		text-name: @name;
-		text-placement: line;
-		text-face-name: @mont_md;
-		text-fill: @road_large_label_fill;
-		text-halo-fill: @road_label_halo;
-		text-halo-radius: @road_large_label_halo_radius;
-		text-size: @road_large_label_width;
-	}
-
-
 	[class=tertiary][zoom>=11],
 	[class=secondary][zoom>=9],
 	[class=minor][zoom>=12],
@@ -364,7 +362,7 @@
 		text-fill: @road_small_label_fill;
 		text-halo-fill: @road_label_halo;
 		text-halo-radius: @road_small_label_halo_radius;
-		text-size: @road_small_label_width;
+		text-size: @road_small_label_width + 0.000001;
 	}
 }
 
@@ -532,7 +530,6 @@
 			[class=shop],[class=groceries] {
 				text-fill: darken(@poi-shop-fill, 30%); 
 			}
-
 		}
 		
 	}
