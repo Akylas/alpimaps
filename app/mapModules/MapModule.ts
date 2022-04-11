@@ -1,3 +1,4 @@
+import { l } from '@nativescript-community/l';
 import Observable from '@nativescript-community/observable';
 import { Layer } from '@nativescript-community/ui-carto/layers';
 import { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
@@ -6,11 +7,15 @@ import { Projection } from '@nativescript-community/ui-carto/projections';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import { Drawer } from '@nativescript-community/ui-drawer';
-import { Page } from '@nativescript/core';
+import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { Frame, Page } from '@nativescript/core';
+import { getRootView } from '@nativescript/core/application';
 import { executeOnMainThread } from '@nativescript/core/utils';
+import { navigate } from 'svelte-native';
 import { NativeViewElementNode } from 'svelte-native/dom';
 import { GeoHandler } from '~/handlers/GeoHandler';
 import { IItem } from '~/models/Item';
+import { showBottomSheet } from '~/utils/bottomsheet';
 import { createGlobalEventListener, globalObservable } from '~/variables';
 import CustomLayersModule from './CustomLayersModule';
 import DirectionsPanel from './DirectionsPanel.svelte';
@@ -144,6 +149,49 @@ export function setMapContext(ctx) {
 
 export function getMapContext() {
     return mapContext;
+}
+
+export async function handleMapAction(action: string, options?) {
+    const parent = Frame.topmost() || getRootView();
+    switch (action) {
+        case 'astronomy':
+            const module = mapContext.mapModule('userLocation');
+            const location = module.lastUserLocation || options;
+            if (!location) {
+                showSnack({ message: `${l('no_location_yet')}` });
+                return;
+            }
+            const AstronomyView = (await import('~/components/AstronomyView.svelte')).default;
+            await showBottomSheet({
+                parent,
+                view: AstronomyView,
+                props: {
+                    location
+                }
+            });
+            break;
+        case 'compass':
+            try {
+                const CompassView = (await import('~/components/CompassView.svelte')).default;
+                await showBottomSheet({ parent, view: CompassView, transparent: true });
+            } catch (err) {
+                console.error('showCompass', err, err['stack']);
+            }
+            break;
+        case 'altimeter':
+            try {
+                const AltimeterView = (await import('~/components/AltimeterView.svelte')).default;
+                await showBottomSheet({ parent, view: AltimeterView });
+            } catch (err) {
+                console.error('showAltimeter', err, err['stack']);
+            }
+            break;
+        case 'settings':
+            const Settings = (await import('~/components/Settings.svelte')).default;
+            navigate({ page: Settings });
+
+            break;
+    }
 }
 
 export default abstract class MapModule extends Observable implements IMapModule {
