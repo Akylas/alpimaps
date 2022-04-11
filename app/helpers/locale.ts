@@ -5,7 +5,7 @@ import { Device } from '@nativescript/core/platform';
 import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
 import duration from 'dayjs/plugin/duration';
-import timezone from 'dayjs/plugin/timezone';
+// import timezone from 'dayjs/plugin/timezone';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import utc from 'dayjs/plugin/utc';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
@@ -16,7 +16,7 @@ import { showBottomSheet } from '~/utils/bottomsheet';
 import { createGlobalEventListener, globalObservable } from '~/variables';
 
 dayjs.extend(updateLocale);
-dayjs.extend(timezone);
+// dayjs.extend(timezone);
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
 dayjs.extend(localizedFormat);
@@ -139,7 +139,7 @@ export async function selectLanguage() {
         this.showError(err);
     }
 }
-export function convertTime(date: number | string | dayjs.Dayjs, formatStr: string) {
+export function convertTime(date: number | string | dayjs.Dayjs | Date, formatStr: string) {
     if (date) {
         if (!date['format']) {
             date = dayjs(date);
@@ -153,7 +153,6 @@ export function convertDuration(date, formatStr: string = 'H [hrs], m [min]') {
     const test = new Date(date);
     test.setTime(test.getTime() + test.getTimezoneOffset() * 60 * 1000);
     const result = dayjs(test).format(formatStr);
-    // console.log('convertDuration', date, formatStr, test, result);
     return result;
 }
 
