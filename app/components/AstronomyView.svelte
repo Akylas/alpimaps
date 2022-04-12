@@ -76,7 +76,6 @@
             xAxis.setDrawAxisLine(false);
             xAxis.setDrawGridLines(false);
             xAxis.ensureVisible = true;
-            // xAxis.setDrawMarkTicks(true);
             xAxis.setLabelTextAlign(Align.CENTER);
             xAxis.setDrawLabels(true);
             xAxis.setValueFormatter({
