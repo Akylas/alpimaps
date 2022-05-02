@@ -133,7 +133,7 @@
 @primary-tunnel-fill: @primary-fill;
 @primary-casing: #d8dbe8;
 @primary-casing-width: linear([view::zoom], (10,0), (10.01,2), (18, 4));
-@primary-width: pow(2.0, linear([view::zoom], (5, -2.3), (18, 4.2))) + 0.75;
+@primary-width: pow(2.0, linear([view::zoom], (5, -2.3), (18, 3.2))) + 0.75;
 
 @primary-link-width: pow(2.0, linear([view::zoom], (14, -2.8), (18, 3.2))) + 0.5;
 
@@ -141,14 +141,14 @@
 @tertiary-tunnel-fill: @tertiary-fill;
 @tertiary-casing: #d8dbe8;
 @tertiary-casing-width: linear([view::zoom], (10, 0), (101, 1.5), (12, 1.6), (14, 2), (15, 2.2), (16, 2.6), (17, 3.2), (18, 3));
-@tertiary-width: pow(2.0, linear([view::zoom], (10, -3.1), (18, 4.66))) + 0.75;
+@tertiary-width: pow(2.0, linear([view::zoom], (10, -4.1), (18, 3.66))) + 0.75;
 
 
 @secondary-fill: #ffffff;
 @secondary-tunnel-fill: @tertiary-fill;
 @secondary-casing: #d8dbe8;
 @secondary-casing-width: linear([view::zoom], (10, 0), (10.01, 1.5), (12, 1.6), (14, 2), (15, 2.2), (16, 2.6), (17, 3.2), (18, 3));
-@secondary-width: pow(2.0, linear([view::zoom], (10, -2.1), (18, 4.16))) + 0.75;
+@secondary-width: pow(2.0, linear([view::zoom], (10, -2.1), (18, 3.16))) + 0.75;
 
 
 
@@ -307,9 +307,6 @@
 
 @peak_icon:[nuti::osm-mountain];
 @saddle_icon:[nuti::osm-saddle];
-@peak_icon_width: @poi_icon_width;
-@peak_label_width: @poi_label_width;
-@peak_label_dy: @poi_label_dy;
 @peak_text_min_dist: linear([view::zoom], (5, 30), (10, 20), (18, 10));
 
 /* 6.3 Place labels */
@@ -387,10 +384,17 @@
 @poi-bakery-fill: #EF8000; 
 @poi-restaurant-fill: #BC7729; 
 @poi-shop-fill: #9F43A7; 
-@poi_icon_width:linear([view::zoom], (10, 10), (12, 11), (19, 13), (20, 17)) - 0.000001 * [rank];
 @poi_halo_radius:1;
+
+
+@poi_icon_width:linear([view::zoom], (10, 10), (20, 17)) - 0.000001 * [rank];
+
 @poi_label_width:linear([view::zoom], (10, 11), (18, 12)) - 0.000001 * [rank];
+@poi_label_wrap_width:step([view::zoom], (14, 50), (20, 100));
+@poi_label_dy: linear([view::zoom], (10, 10), (20, 16));
+
+@peak_icon_width: @poi_icon_width;
+@peak_label_width: @poi_label_width;
+@peak_label_dy: @poi_label_dy;
 @poi_national_park_label_width:@poi_icon_width;
 @poi_national_park_wrap_width:@poi_label_wrap_width;
-@poi_label_wrap_width:step([view::zoom], (14, 60), (18, 100));
-@poi_label_dy: linear([view::zoom], (10, 10), (12, 11), (18, 14), (19, 15), (20, 16));
