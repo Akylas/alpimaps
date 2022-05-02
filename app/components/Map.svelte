@@ -13,7 +13,7 @@
     import { BaseVectorTileLayer, CartoOnlineVectorTileLayer, VectorLayer, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
     import { Projection } from '@nativescript-community/ui-carto/projections';
     import { CartoMap, PanningMode, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
-    import { setShowDebug, setShowError, setShowInfo, setShowWarn } from '@nativescript-community/ui-carto/utils';
+    import { nativeVectorToArray, setShowDebug, setShowError, setShowInfo, setShowWarn, ZippedAssetPackage } from '@nativescript-community/ui-carto/utils';
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
     import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
@@ -487,6 +487,7 @@
                 }
                 transitService.start();
                 setMapStyle(PRODUCTION ? 'osm.zip~osm' : 'osm~osm', true);
+                // setMapStyle('osm.zip~osm', true);
             } catch (err) {
                 showError(err);
             }
@@ -1183,7 +1184,7 @@
     //             return CartoMapStyle.VOYAGER;
     //     }
     // }
-    const setMapStyle = profile('setMapStyle', function (layerStyle: string, force = false) {
+    function setMapStyle(layerStyle: string, force = false) {
         layerStyle = layerStyle.toLowerCase();
         let mapStyle = layerStyle;
         let mapStyleLayer = 'streets';
@@ -1223,18 +1224,28 @@
                 setCurrentLayer(currentLayerStyle);
             }
         }
-    });
+    };
 
     async function selectStyle() {
         let styles = [];
-        const entities = await Folder.fromPath(path.join(knownFolders.currentApp().path, 'assets', 'styles')).getEntities();
+        const stylePath = path.join(knownFolders.currentApp().path, 'assets', 'styles');
+        const entities = await Folder.fromPath(stylePath).getEntities();
         for (let index = 0; index < entities.length; index++) {
             const e = entities[index];
             if (Folder.exists(e.path)) {
                 const subs = await Folder.fromPath(e.path).getEntities();
                 styles.push(...subs.filter((s) => s.name.endsWith('.json') || s.name.endsWith('.xml')).map((s) => e.name + '~' + s.name.split('.')[0]));
             } else {
-                styles.push(e.name);
+                try {
+                    const assetsNames = nativeVectorToArray(new ZippedAssetPackage({ zipPath: e.path }).getAssetNames());
+                    styles.push(
+                        ...assetsNames
+                            .filter((s) => s.endsWith('.xml'))
+                            .map((s) => e.name + '~' + s.split('.')[0])
+                    );
+                } catch (error) {
+                    console.error(error);
+                }
             }
         }
         const actions = styles.concat('default');
