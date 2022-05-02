@@ -431,11 +431,9 @@
             text="mdi-directions"
             visibility={selectedItemHasPosition ? 'visible' : 'collapsed'}
         />
-        <mdcardview class={'floating-btn ' + locationButtonClass}>
+        <mdcardview class={'floating-btn ' + locationButtonClass} on:tap={askUserLocation} on:longPress={onWatchLocation}>
             <label
                 class={'mdi ' + locationButtonLabelClass}
-                on:tap={askUserLocation}
-                on:longPress={onWatchLocation}
                 textAlignment="center"
                 verticalAlignment="middle"
                 text="mdi-crosshairs-gps"
