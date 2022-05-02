@@ -138,7 +138,7 @@ const mapContext: MapContext = {
     },
     innerDecoder: new MBVectorTileDecoder({
         style: 'voyager',
-        liveReload: TNS_ENV !== 'production',
+        liveReload: !PRODUCTION,
         [PRODUCTION ? 'zipPath' : 'dirPath']: `~/assets/internal_styles/inner${PRODUCTION ? '.zip' : ''}`
     })
 } as any;
