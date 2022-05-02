@@ -104,5 +104,5 @@
             </cgroup>
         </canvaslabel>
     {/if}
-    <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} busy={true} horizontalAlignment="center" verticalAlignment="center" />
+    <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} busy={true} horizontalAlignment="right" verticalAlignment="center" />
 </gridlayout>
