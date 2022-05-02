@@ -23,6 +23,7 @@
 	['mapnik::geometry_type'=1][zoom>=12]{
 		// order is important for icon to take precedence over label and respect rank
 		::icon {
+			placement-priority: 10;
 			text-face-name: @osm;
 			text-feature-id: [name]+[ele];
 			text-size: @peak_icon_width; 
@@ -36,6 +37,7 @@
 			}
 		}
 		::label {
+			placement-priority: 9;
 			text-name: @name;
 			text-feature-id: [name]+[ele];
 			[zoom>=10] {
