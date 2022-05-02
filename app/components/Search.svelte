@@ -8,7 +8,7 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import type { Side } from '@nativescript-community/ui-drawer';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { GridLayout, ObservableArray, Screen, TextField } from '@nativescript/core';
+    import { GridLayout, ObservableArray, Screen, TextField, View } from '@nativescript/core';
     import { getJSON } from '@nativescript/core/http';
     import { Point } from 'geojson';
     import { onDestroy } from 'svelte';
@@ -28,7 +28,29 @@
     import { globalMarginTop, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import { queryString } from '../utils/http';
     import deburr from 'deburr';
-    import { dismissSoftInput } from '@nativescript/core/utils';
+    import { AdditiveTweening } from 'additween';
+    import { HereFeature, PhotonFeature } from './Features';
+
+    function animateView(view: View, to, duration) {
+        const from = {};
+        Object.keys(to).forEach((k) => {
+            from[k] = view[k];
+        });
+        // console.log('animateView', view, from, to);
+        const anim = new AdditiveTweening({
+            onRender: (state) => {
+                // console.log('onRender', state)
+                Object.assign(view, state);
+            }
+            // onFinish: (state) => {
+            // console.log('onFinish', state)
+            // Object.assign(view, state);
+            // }
+        });
+        anim.tween(from, to, duration);
+        return anim;
+    }
+
     const providerColors = {
         here: 'blue',
         carto: 'orange',
@@ -81,49 +103,6 @@
     //         return this.properties.city;
     //     }
     // }
-    class PhotonFeature {
-        properties: { [k: string]: any };
-        public geometry!: Point;
-        constructor(data) {
-            const properties = data.properties || {};
-            const actualName = properties.name === properties.city ? undefined : properties.name;
-            const { region, name, state, street, housenumber, postcode, city, country, neighbourhood, ...actualProperties } = properties;
-            actualProperties.address = {
-                state,
-                provider: 'photon',
-                county: region,
-                houseNumber: housenumber,
-                postcode,
-                city,
-                country,
-                street: properties['osm_key'] === 'highway' ? name : street,
-                neighbourhood
-            };
-            actualProperties.name = actualName;
-            this.properties = actualProperties;
-            this.geometry = data.geometry;
-        }
-    }
-    class HereFeature {
-        properties: { [k: string]: any };
-        public geometry!: Point;
-        constructor(data) {
-            this.properties = {
-                provider: 'here',
-                id: data.id,
-                name: data.title,
-                osm_key: data.category.id ? data.category.id.split('-')[0] : undefined,
-                // vicinity: data.vicinity,
-                // averageRating: data.averageRating,
-                categories: data.category.id.split('-'),
-                address: { name: data.vicinity }
-            };
-            this.geometry = {
-                type: 'Point',
-                coordinates: data.position.reverse()
-            };
-        }
-    }
 
     interface SearchItem extends Item {
         geometry: Point;
@@ -132,11 +111,12 @@
     let gridLayout: NativeViewElementNode<GridLayout>;
     let textField: NativeViewElementNode<TextField>;
     let collectionView: NativeViewElementNode<CollectionView>;
+    let collectionViewHolder: NativeViewElementNode<GridLayout>;
     let _searchDataSource: LocalVectorDataSource<LatLonKeys>;
     let _searchLayer: ClusteredVectorLayer;
     let searchClusterStyle: PointStyleBuilder;
     let searchAsTypeTimer;
-    let dataItems: SearchItem[] | ObservableArray<SearchItem>;
+    let dataItems: SearchItem[] | ObservableArray<SearchItem> = [];
     let filteredDataItems: SearchItem[] = dataItems as any;
     let loading = false;
     let filteringOSMKey = false;
@@ -221,6 +201,20 @@
     $: {
         searchResultsVisible = focused && searchResultsCount > 0;
     }
+    $: {
+        if (gridLayout?.nativeView) {
+            animateView(gridLayout.nativeView, { borderRadius: searchResultsVisible ? 10 : 25 }, 100);
+        }
+        if (collectionViewHolder?.nativeView) {
+            animateView(collectionViewHolder.nativeView, { height: searchResultsVisible ? 200 : 0 }, 100);
+        }
+    }
+
+    $: {
+        if (gridLayout?.nativeView) {
+            animateView(gridLayout.nativeView, { elevation: focused ? 10 : 0 }, 100);
+        }
+    }
 
     function getItemIcon(item: SearchItem) {
         const icons = formatter.geItemIcon(item);
@@ -293,11 +287,11 @@
                         instantSearch(query);
                     }, 1000);
                 } else {
-                    if (searchAsTypeTimer) {
-                        clearTimeout(searchAsTypeTimer);
-                        searchAsTypeTimer = null;
-                    }
-                    dataItems = [] as any;
+                    // the timeout is to allow svelte to see changes with $:
+                    setTimeout(() => {
+                        clearSearch(false);
+                    }, 0);
+
                     if (query.length === 0 && currentSearchText && currentSearchText.length > 0) {
                         unfocus();
                     }
@@ -450,17 +444,20 @@
             loading = false;
         }
     }
-    function clearSearch() {
+    function clearSearch(clearQuery = true) {
         loading = false;
         if (searchAsTypeTimer) {
             clearTimeout(searchAsTypeTimer);
             searchAsTypeTimer = null;
         }
-        dataItems = [] as any;
-        currentSearchText = null;
-        currentQuery = null;
-        textField.nativeView.text = null;
-        showingOnMap = false;
+        dataItems = [];
+        filteredDataItems = [];
+        if (clearQuery) {
+            currentSearchText = null;
+            currentQuery = null;
+            textField.nativeView.text = null;
+            showingOnMap = false;
+        }
         if (_searchDataSource) {
             mapContext.unselectItem(); // TODO: only if selected one!
             _searchDataSource.clear();
@@ -493,6 +490,7 @@
         mapContext.showOptions();
     }
     function onItemTap(item: SearchItem) {
+        console.log('onItemTap', item);
         if (!item) {
             return;
         }
@@ -559,6 +557,7 @@
             loadedListeners.forEach((l) => l());
         }
     }
+
 </script>
 
 <gridlayout
@@ -566,9 +565,9 @@
     bind:this={gridLayout}
     {...$$restProps}
     rows="auto,auto"
-    columns="auto,*,auto,auto,auto,auto,auto"
+    elevation={focused ? 6 : 0}
+    columns="auto,*,auto,auto,auto"
     backgroundColor={$widgetBackgroundColor}
-    borderRadius={searchResultsVisible ? 10 : 25}
     margin={`${globalMarginTop + 10} 10 10 10`}
 >
     <button variant="text" class="icon-btn" text="mdi-magnify" on:tap={() => showMenu('left')} />
@@ -591,45 +590,58 @@
         verticalTextAlignment="center"
     />
     <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} col={2} busy={true} width={20} height={20} />
-    {#if loaded}
-        <button
-            variant="text"
-            class="small-icon-btn"
-            visibility={searchResultsVisible ? 'visible' : 'collapsed'}
-            col={3}
-            text="mdi-shape"
-            on:tap={toggleFilterOSMKey}
-            color={filteringOSMKey ? primaryColor : $subtitleColor}
-        />
-        <button variant="text" class="small-icon-btn" visibility={searchResultsVisible ? 'visible' : 'collapsed'} col={4} text="mdi-map" on:tap={showResultsOnMap} color={$subtitleColor} />
-    {/if}
+
     <button
         variant="text"
         class="icon-btn"
         visibility={currentSearchText && currentSearchText.length > 0 ? 'visible' : 'collapsed'}
-        col={5}
+        col={3}
         text="mdi-close"
-        on:tap={clearSearch}
+        on:tap={() => clearSearch()}
         color={$subtitleColor}
     />
-    <button col={6} variant="text" class="icon-btn" text="mdi-dots-vertical" on:tap={showMapMenu} />
+    <button col={4} variant="text" class="icon-btn" text="mdi-dots-vertical" on:tap={showMapMenu} />
     {#if loaded}
-        <collectionview bind:this={collectionView} row={1} height="200" colSpan={7} rowHeight="49" items={filteredDataItems} visibility={searchResultsVisible ? 'visible' : 'collapsed'}>
-            <Template let:item>
-                <gridlayout columns="34,*" padding="0 10 0 10" rows="*,auto,auto,*" class="textRipple" on:tap={() => onItemTap(item)}>
-                    <label rowSpan={4} text={item.icon} color={item.color} class="osm" fontSize="20" verticalAlignment="center" textAlignment="center" />
-                    <label col={1} row={1} text={item.title} fontSize="14" fontWeight="bold" />
-                    <label
-                        col={1}
-                        row={2}
-                        text={item.subtitle || (item.distance && formatDistance(item.distance))}
-                        class="subtitle"
-                        fontSize="12"
-                        visibility={!!item.subtitle || 'distance' in item ? 'visible' : 'collapsed'}
-                    />
-                    <label col={1} rowSpan={2} text={item.provider} class="subtitle" textAlignment="right" fontSize="12" />
-                </gridlayout>
-            </Template>
-        </collectionview>
+        <absolutelayout bind:this={collectionViewHolder} row={1} height="0" colSpan={7} visibility={searchResultsVisible ? 'visible' : 'collapsed'} isUserInteractionEnabled={searchResultsVisible}>
+            <gridlayout height="200" width="100%" rows="*,auto" columns="auto,auto,*">
+                <button
+                    variant="text"
+                    class="small-icon-btn"
+                    row={1}
+                    visibility={searchResultsVisible ? 'visible' : 'collapsed'}
+                    text="mdi-shape"
+                    on:tap={toggleFilterOSMKey}
+                    color={filteringOSMKey ? primaryColor : $subtitleColor}
+                />
+                <button
+                    variant="text"
+                    class="small-icon-btn"
+                    visibility={searchResultsVisible ? 'visible' : 'collapsed'}
+                    col={1}
+                    row={1}
+                    text="mdi-map"
+                    on:tap={showResultsOnMap}
+                    color={$subtitleColor}
+                />
+                <collectionview colSpan={3} bind:this={collectionView} rowHeight="49" items={filteredDataItems}>
+                    <Template let:item>
+                        <canvaslabel columns="34,*" padding="0 10 0 10" rows="*,auto,auto,*" class="textRipple" on:tap={() => onItemTap(item)}>
+                            <cspan text={item.icon} color={item.color} fontFamily="osm" fontSize="20" verticalAlignment="center" />
+                            <cspan paddingLeft={34} verticalAlignment="center" paddingBottom={item.subtitle || item.distance ? 10 : 0} text={item.title} fontSize="14" fontWeight="bold" />
+                            <cspan
+                                paddingLeft={34}
+                                verticalAlignment="center"
+                                paddingTop={10}
+                                text={item.subtitle || (item.distance && formatDistance(item.distance))}
+                                color="#888888"
+                                fontSize="12"
+                                visibility={!!item.subtitle || 'distance' in item ? 'visible' : 'collapsed'}
+                            />
+                            <!-- <cspan col={1} rowSpan={2} text={item.provider} class="subtitle" textAlignment="right" fontSize="12" /> -->
+                        </canvaslabel>
+                    </Template>
+                </collectionview>
+            </gridlayout>
+        </absolutelayout>
     {/if}
 </gridlayout>
