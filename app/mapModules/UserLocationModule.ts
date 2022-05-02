@@ -118,6 +118,9 @@ export default class UserLocationModule extends MapModule {
             !this.mapView ||
             (this.lastUserLocation && this.lastUserLocation.lat === geoPos.lat && this.lastUserLocation.lon === geoPos.lon && this.lastUserLocation.horizontalAccuracy === geoPos.horizontalAccuracy)
         ) {
+            if (this.userFollow) {
+                this.moveToUserLocation();
+            }
             return;
         }
 
@@ -202,16 +205,16 @@ export default class UserLocationModule extends MapModule {
             // this.userMarker.position = position;
             // this.accuracyMarker.positions = this.getCirclePoints(position);
         }
+        this.lastUserLocation = position;
         if (this.userFollow) {
             this.moveToUserLocation();
         }
-        this.lastUserLocation = position;
     }
     moveToUserLocation() {
         if (!this.mLastUserLocation) {
             return;
         }
-        this.mapView.setZoom(Math.max(this.mapView.zoom, 16), LOCATION_ANIMATION_DURATION);
+        this.mapView.setZoom(Math.max(this.mapView.zoom, 14), LOCATION_ANIMATION_DURATION);
         this.mapView.setFocusPos(this.mLastUserLocation, LOCATION_ANIMATION_DURATION);
     }
     onLocation(event: UserLocationdEventData) {
@@ -221,7 +224,7 @@ export default class UserLocationModule extends MapModule {
         }
         // const { android, ios, ...toPrint } = data.location;
         // if (DEV_LOG) {
-        //     console.log('onLocation', this._userFollow, event.location, this.userFollow);
+        //     console.log('onLocation', this.mUserFollow, event.location, this.userFollow);
         // }
         if (event.error) {
             console.log(event.error);
@@ -249,22 +252,32 @@ export default class UserLocationModule extends MapModule {
         await this.geoHandler.enableLocation();
         await this.geoHandler.startWatch();
         mapStore.watchingLocation = true;
-        showSnack({
+        if (!mapStore.queryingLocation) {
+            showSnack({
             message: lc('watching_location')
         });
+    }
     }
     stopWatchLocation() {
         // console.log('stopWatchLocation');
         this.geoHandler.stopWatch();
         mapStore.watchingLocation = false;
-        showSnack({
-            message: lc('stopped_watching_location')
-        });
+        if (!mapStore.queryingLocation) {
+            showSnack({
+                message: lc('stopped_watching_location')
+            });
+        }
     }
     async askUserLocation() {
         await this.geoHandler.enableLocation();
-        mapStore.queryingLocation = true;
-        this.startWatchLocation();
+
+        if (!mapStore.watchingLocation) {
+            mapStore.queryingLocation = true;
+            this.startWatchLocation();
+        } else {
+            this.userFollow = true;
+            this.moveToUserLocation()
+        }
     }
     onWatchLocation() {
         mapStore.queryingLocation = false;
