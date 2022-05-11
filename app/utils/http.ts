@@ -1,10 +1,6 @@
 export function queryString(params: { [k: string]: any }, location: string): string {
-    let obj = {},
-        i,
-        parts,
-        len,
-        key,
-        value;
+    const obj = {};
+    let i, len, key, value;
 
     if (typeof params === 'string') {
         value = location.match(new RegExp('[?&]' + params + '=?([^&]*)[&#$]?'));
@@ -14,7 +10,7 @@ export function queryString(params: { [k: string]: any }, location: string): str
     const locSplit = location.split(/[?&]/);
     // _params[0] is the url
 
-    parts = [];
+    const parts = [];
     for (i = 0, len = locSplit.length; i < len; i++) {
         const theParts = locSplit[i].split('=');
         if (!theParts[0]) {
@@ -56,4 +52,14 @@ export function queryString(params: { [k: string]: any }, location: string): str
     }
 
     return parts.splice(0, 2).join('?') + (parts.length > 0 ? '&' + parts.join('&') : '');
+}
+
+export function parseUrlQueryParameters(url: string) {
+    const regex = /[?&]([^=#]+)=([^&#]*)/g,
+        params: Record<string, string> = {};
+    let match;
+    while ((match = regex.exec(url))) {
+        params[match[1]] = match[2];
+    }
+    return params;
 }
