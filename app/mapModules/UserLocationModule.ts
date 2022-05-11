@@ -254,9 +254,9 @@ export default class UserLocationModule extends MapModule {
         mapStore.watchingLocation = true;
         if (!mapStore.queryingLocation) {
             showSnack({
-            message: lc('watching_location')
-        });
-    }
+                message: lc('watching_location')
+            });
+        }
     }
     stopWatchLocation() {
         // console.log('stopWatchLocation');
@@ -276,7 +276,7 @@ export default class UserLocationModule extends MapModule {
             this.startWatchLocation();
         } else {
             this.userFollow = true;
-            this.moveToUserLocation()
+            this.moveToUserLocation();
         }
     }
     onWatchLocation() {
