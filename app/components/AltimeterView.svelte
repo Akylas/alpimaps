@@ -107,7 +107,6 @@
         }
     }
     function stopBarometerAltitudeUpdate() {
-        console.log('stopBarometerAltitudeUpdate');
         currentPressure = null;
         if (listeningForBarometer) {
             stopBarometer();

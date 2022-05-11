@@ -210,7 +210,6 @@ export async function getDefaultMBTilesDir() {
                         persistable: true
                     }
                 });
-                console.log('result1', result);
                 resultPath = result.folders[0];
             } else {
                 const nArray = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);

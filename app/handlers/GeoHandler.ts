@@ -334,7 +334,6 @@ export class GeoHandler extends Observable {
                 onDeferred: this.onDeferred,
                 ...options
             });
-            console.log('getLocation result', r);
             this.notify({
                 eventName: UserLocationdEvent,
                 object: this,

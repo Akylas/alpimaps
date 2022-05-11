@@ -250,14 +250,12 @@
         return focused;
     }
     function onFocus(e) {
-        console.log('onFocus')
         focused = true;
         if (currentSearchText && searchResultsCount === 0) {
             instantSearch(currentSearchText);
         }
     }
     function onBlur(e) {
-        console.log('onBlur')
         focused = false;
     }
 
@@ -359,9 +357,7 @@
             },
             'https://photon.komoot.io/api'
         );
-        DEV_LOG && console.log('photonSearch', url);
         const results = await getJSON<any>(url);
-        DEV_LOG && console.log('photonSearch result', JSON.stringify(results));
         return results.features.filter((r) => r.properties.osm_type !== 'R').map((f) => new PhotonFeature(f));
     }
     let currentQuery;
@@ -493,7 +489,6 @@
         mapContext.showOptions();
     }
     function onItemTap(item: SearchItem) {
-        console.log('onItemTap', item);
         if (!item) {
             return;
         }
@@ -501,7 +496,6 @@
         unfocus();
     }
     function updateFilteredDataItems() {
-        console.log('updateFilteredDataItems')
         if (filteringOSMKey) {
             filteredDataItems = dataItems.filter((d) => d.properties.osm_key === currentQuery);
         } else {

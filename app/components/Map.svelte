@@ -127,7 +127,6 @@
         }
     }
 
-
     // $: {
     //     if (showClickedFeatures === false) {
     //         currentClickedFeatures = null;
@@ -200,7 +199,6 @@
         }
     }
 
-    
     function onAppUrl(link: string) {
         // if (__ANDROID__) {
         //     const activity = Application.android.startActivity;
@@ -214,9 +212,7 @@
         //     }
         // }
         try {
-            if (DEV_LOG) {
-                console.log('Got the following appURL', link);
-            }
+            DEV_LOG && console.log('Got the following appURL', link);
             if (link.startsWith('geo')) {
                 const latlong = link.split(':')[1].split(',').map(parseFloat) as [number, number];
                 const loaded = !!cartoMap;
@@ -262,7 +258,6 @@
                 const params = parseUrlQueryParameters(link);
                 Object.keys(params).forEach((k) => {
                     const value = params[k];
-                    console.log(k, value);
                     if (k === 'saddr') {
                         // directions!
                         if (value) {
@@ -290,10 +285,9 @@
                     }
                 });
             } else if (link.endsWith('.gpx')) {
-                console.log('importing GPX', link);
             }
         } catch (err) {
-            console.log(err);
+            console.error(err);
         }
     }
 
@@ -363,7 +357,7 @@
         if (!PRODUCTION) {
             defaultLiveSync = global.__onLiveSync.bind(global);
             global.__onLiveSync = (...args) => {
-                console.log('__onLiveSync', args, currentLayerStyle);
+                DEV_LOG && console.log('__onLiveSync', args, currentLayerStyle);
                 const context = args[0];
                 if (!context && !!currentLayerStyle && !currentLayerStyle.endsWith('.zip')) {
                     reloadMapStyle && reloadMapStyle();
@@ -500,7 +494,6 @@
             if (current) {
                 onAppUrl(current);
             }
-            
         } catch (error) {
             console.error(error);
         }
@@ -540,9 +533,7 @@
 
     function onMainMapClicked(e) {
         const { clickType, position } = e.data;
-        if (DEV_LOG) {
-            console.log('onMainMapClicked', clickType, position);
-        }
+        DEV_LOG && console.log('onMainMapClicked', clickType, position);
         // handleClickedFeatures(position);
         if (ignoreNextMapClick) {
             ignoreNextMapClick = false;
@@ -586,15 +577,13 @@
         didIgnoreAlreadySelected = false;
         if (isFeatureInteresting) {
             let isCurrentItem = item === $selectedItem;
-            if (DEV_LOG) {
-                console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons);
-            }
+            DEV_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons);
             if (setSelected && isCurrentItem && !item) {
                 unselectItem(false);
             }
             const route = item?.properties?.route;
             if (setSelected && route) {
-                console.log('selected_id', typeof item.properties.route.osmid, item.properties.route.osmid, typeof item.properties.id, item.properties.id, setSelected);
+                DEV_LOG && console.log('selected_id', typeof item.properties.route.osmid, item.properties.route.osmid, typeof item.properties.id, item.properties.id, setSelected);
                 if (item.properties.id !== undefined) {
                     selectedId = item.properties.id;
                     if (typeof item.properties.id === 'string') {
@@ -930,9 +919,8 @@
     }
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, featureId, position, featureLayerName, featureData, featurePosition, featureGeometry, layer } = data;
-        if (DEV_LOG) {
-            console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, featurePosition);
-        }
+
+        DEV_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, featurePosition);
 
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
@@ -1026,9 +1014,7 @@
     }
     function onVectorElementClicked(data: VectorElementEventData<LatLonKeys>) {
         const { clickType, position, elementPos, metaData, element } = data;
-        if (DEV_LOG) {
-            console.log('onVectorElementClicked', clickType, position, metaData);
-        }
+        DEV_LOG && console.log('onVectorElementClicked', clickType, position, metaData);
         Object.keys(metaData).forEach((k) => {
             if (metaData[k][0] === '{' || metaData[k][0] === '[') {
                 metaData[k] = JSON.parse(metaData[k]);
@@ -1064,9 +1050,7 @@
     }
     function onVectorTileElementClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureData } = data;
-        if (DEV_LOG) {
-            console.log('onVectorTileElementClicked', clickType, position, featureData.id);
-        }
+        DEV_LOG && console.log('onVectorTileElementClicked', clickType, position, featureData.id);
         const itemModule = mapContext.mapModule('items');
         const feature = itemModule.getFeature(featureData.id);
         if (!feature) {
@@ -1121,7 +1105,7 @@
 
     function setCurrentLayer(id: string) {
         if (__CARTO_PACKAGESERVICE__) {
-            console.log('setCurrentLayer', id, $mapStore.preloading);
+            DEV_LOG && console.log('setCurrentLayer', id, $mapStore.preloading);
             // const cartoMap = cartoMap;
             if (currentLayer) {
                 removeLayer(currentLayer, 'map');
