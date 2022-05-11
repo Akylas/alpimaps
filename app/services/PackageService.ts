@@ -42,7 +42,6 @@ class MathFilter {
     }
 }
 
-
 function dist2d(latlng1, latlng2) {
     const lat1 = latlng1.lat * TO_RAD,
         lat2 = latlng2.lat * TO_RAD,
@@ -207,7 +206,7 @@ class PackageService extends Observable {
             }
             this.started = true;
             if (!Folder.exists(this.docPath)) {
-                console.log('creating doc folder', Folder.fromPath(this.docPath).path);
+                console.error('creating doc folder', Folder.fromPath(this.docPath).path);
             }
             const managerStarted = this.packageManager.start();
             const geoManagerStarted = this.geoPackageManager.start();
@@ -873,9 +872,7 @@ class PackageService extends Observable {
             // }
             const positions = this.getRouteItemPoses(item);
             const elevations = await this.getElevations(positions);
-            if (DEV_LOG) {
-                console.log('getElevations done', positions.size(), elevations.size(), elevations.get(0), positions.get(0));
-            }
+            DEV_LOG && console.log('getElevations done', positions.size(), elevations.size(), elevations.get(0), positions.get(0));
             return this.computeProfileFromHeights(positions, elevations);
         }
         return null;
