@@ -33,7 +33,7 @@
             loading = true;
             currentTime = time;
             lineData = await transitService.getLineTimeline(line.id, time?.utc(true).valueOf());
-            console.log('lineData', JSON.stringify(line.id, lineData));
+            DEV_LOG && console.log('lineData', JSON.stringify(line.id, lineData));
             // prevTime = lineData[lineDataIndex].prevTime;
             // nextTime = lineData[lineDataIndex].nextTime;
             timelineItems = lineData[lineDataIndex].arrets;
