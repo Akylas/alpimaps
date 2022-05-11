@@ -227,7 +227,7 @@ export default class UserLocationModule extends MapModule {
         //     console.log('onLocation', this.mUserFollow, event.location, this.userFollow);
         // }
         if (event.error) {
-            console.log(event.error);
+            console.error(event.error);
             return;
         } else if (event.location) {
             this.updateUserLocation(event.location);
