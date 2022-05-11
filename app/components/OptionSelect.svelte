@@ -29,7 +29,6 @@
                     multipleSelection: false,
                     pickerMode: 0
                 });
-                console.log('openFilePicker', result, result.android.toString(), File.exists(result.files[0]));
                 if (File.exists(result.files[0])) {
                     const file = File.fromPath(result.files[0]);
                     close({ name: file.name, data: { url: file.path }, isPick: true });

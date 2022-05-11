@@ -5,7 +5,6 @@ import { openUrl } from '@nativescript/core/utils/utils';
 export async function openLink(url) {
     try {
         const available = await InAppBrowser.isAvailable();
-        console.log('openLink', url, available);
         if (available) {
             const result = await InAppBrowser.open(url, {
                 // iOS Properties
@@ -23,7 +22,6 @@ export async function openLink(url) {
                 enableDefaultShare: true,
                 forceCloseOnRedirection: false
             });
-            console.log('result', result);
             return result;
         } else {
             openUrl(url);

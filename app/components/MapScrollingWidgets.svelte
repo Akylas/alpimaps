@@ -213,7 +213,6 @@
     }
     async function customDownloadSuggestion() {
         if (__CARTO_PACKAGESERVICE__) {
-            console.log('customDownloadSuggestion');
             if (!suggestionPackage) {
                 return;
             }
