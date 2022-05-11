@@ -741,7 +741,6 @@
             if (index >= 0) {
                 waypoints.splice(index, 1);
                 const fIndex = features.findIndex((f) => f.properties.id === item.properties.id);
-                console.log('clearWayPoint', item.properties.id, index, fIndex);
                 if (fIndex >= 0) {
                     features.splice(fIndex, 1);
                 }
