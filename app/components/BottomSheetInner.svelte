@@ -239,7 +239,6 @@
     }
 
     function showAstronomy() {
-        console.log('showAstronomy');
         if (item) {
             const positions = item.geometry?.['coordinates'];
             handleMapAction('astronomy', { lat: positions[1], lon: positions[0] });

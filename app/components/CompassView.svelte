@@ -94,9 +94,7 @@
                 // on android 0 - 4 with highest is best
                 const newAccuracy = __ANDROID__ ? 4 - data.accuracy : data.accuracy;
                 if (headingAccuracy !== newAccuracy) {
-                    if (DEV_LOG) {
-                        console.log('headingAccuracy', newAccuracy);
-                    }
+                    DEV_LOG && console.log('headingAccuracy', newAccuracy);
                     executeOnMainThread(() => {
                         headingAccuracy = newAccuracy;
                     });
