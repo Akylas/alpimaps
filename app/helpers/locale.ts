@@ -39,7 +39,7 @@ $lang.subscribe((newLang: string) => {
     try {
         require(`dayjs/locale/${newLang}`);
     } catch (err) {
-        console.log('failed to load dayjs locale', lang, `dayjs/locale/${newLang}`, err);
+        console.error('failed to load dayjs locale', lang, `dayjs/locale/${newLang}`, err);
     }
     dayjs.locale(lang); // switch back to default English locale globally
     if (lang === 'fr') {

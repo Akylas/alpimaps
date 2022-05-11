@@ -8,7 +8,6 @@
     const items = licences.dependencies;
 
     function onTap(item) {
-        console.log('onTap', item.moduleUrl);
         if (item.moduleUrl) {
             openLink(item.moduleUrl);
         }

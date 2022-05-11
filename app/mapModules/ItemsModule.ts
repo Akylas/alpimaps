@@ -47,7 +47,7 @@ export default class ItemsModule extends MapModule {
             const items = await this.itemRepository.searchItem();
             this.addItemsToLayer(items);
         } catch (err) {
-            console.log('err', err, err.stack);
+            console.error(err, err.stack);
 
             showError(err);
         }
@@ -275,7 +275,6 @@ export default class ItemsModule extends MapModule {
             )
         );
         const count = featureCollection.getFeatureCount();
-        console.log('found', featureCollection.getFeatureCount());
         if (count === 0) {
             return null;
         }

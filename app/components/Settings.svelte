@@ -166,7 +166,6 @@
                         });
                         dismissSoftInput();
                         if (result && !!result.result && result.text.length > 0) {
-                            console.log('value changed', result.text);
                             ApplicationSettings.setNumber(item.key, parseInt(result.text));
                             const index = items.findIndex((it) => it.key === item.key);
                             if (index !== -1) {
