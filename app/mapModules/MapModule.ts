@@ -202,9 +202,6 @@ export default abstract class MapModule extends Observable implements IMapModule
     onMapDestroyed() {
         this.mapView = null;
     }
-    log(...args) {
-        console.log(`[${this.constructor.name}]`, ...args);
-    }
     onServiceLoaded?(geoHandler: GeoHandler);
     onServiceUnloaded?(geoHandler: GeoHandler);
     onMapMove?(e);

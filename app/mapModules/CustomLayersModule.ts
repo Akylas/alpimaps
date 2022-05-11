@@ -627,7 +627,6 @@ export default class CustomLayersModule extends MapModule {
         super.onMapReady(mapView);
         (async () => {
             try {
-                console.log('onMapReady');
                 const folderPath = await getDefaultMBTilesDir();
                 if (folderPath) {
                     await this.loadLocalMbtiles(folderPath);
@@ -726,7 +725,6 @@ export default class CustomLayersModule extends MapModule {
             if (worldMbtilesIndex !== -1) {
                 const entity = entities.splice(worldMbtilesIndex, 1)[0];
                 const databasePath = getFileNameThatICanUseInNativeCode(context, entity.path);
-                console.log('databasePath', databasePath);
                 worldMbtiles = new MBTilesTileDataSource({
                     databasePath
                 });

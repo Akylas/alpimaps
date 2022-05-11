@@ -50,7 +50,6 @@
 
     function getSymbol(item) {
         const properties = item.route.featureData;
-        console.log('getSymbol', properties);
         if (properties.symbol) {
             return properties.symbol;
         } else {

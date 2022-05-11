@@ -600,9 +600,7 @@ export class NetworkService extends Observable {
                 content = await response.content.toStringAsync();
             }
             const isString = typeof content === 'string';
-            if (DEV_LOG) {
-                console.log('handleRequestResponse response', requestParams.url, statusCode, response.reason, response.headers, isString, typeof content, content);
-            }
+            DEV_LOG && console.log('handleRequestResponse response', requestParams.url, statusCode, response.reason, response.headers, isString, typeof content, content);
             if (Math.round(statusCode / 100) !== 2) {
                 let jsonReturn: {
                     data?: any;
