@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { AppURL, handleOpenURL } from '@nativescript-community/appurl';
+    import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
     import { GenericGeoLocation } from '@nativescript-community/gps';
     import { allowSleepAgain, keepAwake } from '@nativescript-community/insomnia';
     import * as perms from '@nativescript-community/perms';
@@ -57,6 +57,7 @@
     import LocationInfoPanel from './LocationInfoPanel.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
     import Search from './Search.svelte';
+    import { parseUrlQueryParameters } from '~/utils/http';
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
@@ -125,6 +126,7 @@
             bottomSheetStepIndex = Math.min(steps.length - 1, bottomSheetStepIndex);
         }
     }
+
 
     // $: {
     //     if (showClickedFeatures === false) {
@@ -198,103 +200,103 @@
         }
     }
 
-    handleOpenURL(onAppUrl);
-    function onAppUrl(appURL: AppURL, args) {
-        if (__ANDROID__) {
-            const activity = Application.android.startActivity;
-            const visible = activity && activity.getWindow().getDecorView().getRootView().isShown();
-            if (!visible) {
-                if (args && args.eventName === AndroidApplication.activityStartedEvent) {
-                    //ignoring newIntent in background as we already received start activity event with intent
-                    return;
-                } else {
-                }
-            }
-        }
+    
+    function onAppUrl(link: string) {
+        // if (__ANDROID__) {
+        //     const activity = Application.android.startActivity;
+        //     const visible = activity && activity.getWindow().getDecorView().getRootView().isShown();
+        //     if (!visible) {
+        //         if (args && args.eventName === AndroidApplication.activityStartedEvent) {
+        //             //ignoring newIntent in background as we already received start activity event with intent
+        //             return;
+        //         } else {
+        //         }
+        //     }
+        // }
         try {
-            handleReceivedAppUrl(appURL);
+            if (DEV_LOG) {
+                console.log('Got the following appURL', link);
+            }
+            if (link.startsWith('geo')) {
+                const latlong = link.split(':')[1].split(',').map(parseFloat) as [number, number];
+                const loaded = !!cartoMap;
+                if (latlong[0] !== 0 || latlong[1] !== 0) {
+                    if (loaded) {
+                        cartoMap.setFocusPos({ lat: latlong[0], lon: latlong[1] }, 0);
+                    } else {
+                        // happens before map ready
+                        appSettings.setString('mapFocusPos', `{"lat":${latlong[0]},"lon":${latlong[1]}}`);
+                    }
+                }
+                const params = parseUrlQueryParameters(link);
+                if (params.hasOwnProperty('z')) {
+                    const zoom = parseFloat(params.z);
+                    if (loaded) {
+                        cartoMap.setZoom(zoom, 0);
+                    } else {
+                        appSettings.setNumber('mapZoom', zoom);
+                    }
+                }
+                if (params.q) {
+                    const geoTextRegexp = /([\d\.-]+),([\d\.-]+)\((.*?)\)/;
+                    const query = params.q;
+                    const match = query.match(geoTextRegexp);
+                    const actualQuery = decodeURIComponent(query).replace(/\+/g, ' ');
+                    if (match) {
+                        selectItem({
+                            item: {
+                                properties: {
+                                    name: actualQuery
+                                },
+                                geometry: {
+                                    coordinates: [parseFloat(match[2]), parseFloat(match[1])]
+                                } as any
+                            },
+                            isFeatureInteresting: true
+                        });
+                    } else {
+                        searchView.searchForQuery(actualQuery);
+                    }
+                }
+            } else if (/(http(s?):\/\/)?((maps\.google\..*?\/)|((www\.)?google\..*?\/maps\/)|(goo.gl\/maps\/)).*/.test(link)) {
+                const params = parseUrlQueryParameters(link);
+                Object.keys(params).forEach((k) => {
+                    const value = params[k];
+                    console.log(k, value);
+                    if (k === 'saddr') {
+                        // directions!
+                        if (value) {
+                            if (/[\d.-]+,[\d.-]+/.test(value)) {
+                                const pos = value.split(',').map(parseFloat);
+                                cartoMap.setFocusPos({ lat: pos[0], lon: pos[1] }, 0);
+                                directionsPanel.addStartPoint({
+                                    lat: pos[0],
+                                    lon: pos[1]
+                                });
+                            }
+                        }
+                    } else if (k === 'daddr') {
+                        // directions!
+                        if (value) {
+                            if (/[\d.-]+,[\d.-]+/.test(value)) {
+                                const pos = value.split(',').map(parseFloat);
+                                cartoMap.setFocusPos({ lat: pos[0], lon: pos[1] }, 0);
+                                directionsPanel.addStopPoint({
+                                    lat: pos[0],
+                                    lon: pos[1]
+                                });
+                            }
+                        }
+                    }
+                });
+            } else if (link.endsWith('.gpx')) {
+                console.log('importing GPX', link);
+            }
         } catch (err) {
             console.log(err);
         }
     }
-    function handleReceivedAppUrl(appURL: AppURL) {
-        if (DEV_LOG) {
-            console.log('Got the following appURL', appURL.path, Array.from(appURL.params.entries()));
-        }
-        if (appURL.path.startsWith('geo')) {
-            const latlong = appURL.path.split(':')[1].split(',').map(parseFloat) as [number, number];
-            const loaded = !!cartoMap;
-            if (latlong[0] !== 0 || latlong[1] !== 0) {
-                if (loaded) {
-                    cartoMap.setFocusPos({ lat: latlong[0], lon: latlong[1] }, 0);
-                } else {
-                    // happens before map ready
-                    appSettings.setString('mapFocusPos', `{"lat":${latlong[0]},"lon":${latlong[1]}}`);
-                }
-            }
-            if (appURL.params.has('z')) {
-                const zoom = parseFloat(appURL.params.get('z'));
-                if (loaded) {
-                    cartoMap.setZoom(zoom, 0);
-                } else {
-                    appSettings.setNumber('mapZoom', zoom);
-                }
-            }
-            if (appURL.params.has('q')) {
-                const geoTextRegexp = /([\d\.-]+),([\d\.-]+)\((.*?)\)/;
-                const query = appURL.params.get('q');
-                const match = query.match(geoTextRegexp);
-                const actualQuery = decodeURIComponent(query).replace(/\+/g, ' ');
-                if (match) {
-                    selectItem({
-                        item: {
-                            properties: {
-                                name: actualQuery
-                            },
-                            geometry: {
-                                coordinates: [parseFloat(match[2]), parseFloat(match[1])]
-                            } as any
-                        },
-                        isFeatureInteresting: true
-                    });
-                } else {
-                    searchView.searchForQuery(actualQuery);
-                }
-            }
-        } else if (/(http(s?):\/\/)?((maps\.google\..*?\/)|((www\.)?google\..*?\/maps\/)|(goo.gl\/maps\/)).*/.test(appURL.path)) {
-            const params = Array.from(appURL.params.entries()) as any[];
-            params.forEach((element) => {
-                console.log(element, typeof element, element[0]);
-                if (element[0] === 'saddr') {
-                    // directions!
-                    if (element[1] !== undefined) {
-                        if (/[\d.-]+,[\d.-]+/.test(element[1])) {
-                            const pos = element[1].split(',').map(parseFloat);
-                            cartoMap.setFocusPos({ lat: pos[0], lon: pos[1] }, 0);
-                            directionsPanel.addStartPoint({
-                                lat: pos[0],
-                                lon: pos[1]
-                            });
-                        }
-                    }
-                } else if (element[0] === 'daddr') {
-                    // directions!
-                    if (element[1] !== undefined) {
-                        if (/[\d.-]+,[\d.-]+/.test(element[1])) {
-                            const pos = element[1].split(',').map(parseFloat);
-                            cartoMap.setFocusPos({ lat: pos[0], lon: pos[1] }, 0);
-                            directionsPanel.addStopPoint({
-                                lat: pos[0],
-                                lon: pos[1]
-                            });
-                        }
-                    }
-                }
-            });
-        } else if (appURL.path && appURL.path.endsWith('.gpx')) {
-            console.log('importing GPX', appURL.path);
-        }
-    }
+
     async function onNetworkChange(event: NetworkConnectionStateEventData) {
         networkConnected = event.data.connected;
     }
@@ -492,6 +494,13 @@
                 showError(err);
             }
             mapContext.runOnModules('onMapReady', cartoMap);
+
+            registerUniversalLinkCallback(onAppUrl);
+            const current = getUniversalLink();
+            if (current) {
+                onAppUrl(current);
+            }
+            
         } catch (error) {
             console.error(error);
         }
@@ -1224,7 +1233,7 @@
                 setCurrentLayer(currentLayerStyle);
             }
         }
-    };
+    }
 
     async function selectStyle() {
         let styles = [];
@@ -1238,11 +1247,7 @@
             } else {
                 try {
                     const assetsNames = nativeVectorToArray(new ZippedAssetPackage({ zipPath: e.path }).getAssetNames());
-                    styles.push(
-                        ...assetsNames
-                            .filter((s) => s.endsWith('.xml'))
-                            .map((s) => e.name + '~' + s.split('.')[0])
-                    );
+                    styles.push(...assetsNames.filter((s) => s.endsWith('.xml')).map((s) => e.name + '~' + s.split('.')[0]));
                 } catch (error) {
                     console.error(error);
                 }
