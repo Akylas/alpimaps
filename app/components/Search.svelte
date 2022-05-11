@@ -250,20 +250,19 @@
         return focused;
     }
     function onFocus(e) {
+        console.log('onFocus')
         focused = true;
         if (currentSearchText && searchResultsCount === 0) {
             instantSearch(currentSearchText);
         }
     }
     function onBlur(e) {
+        console.log('onBlur')
         focused = false;
     }
 
     export function searchForQuery(query) {
         textField.nativeView.text = query;
-        setTimeout(() => {
-            textField.nativeView.focus();
-        }, 100);
     }
 
     function onReturnKey() {
@@ -360,9 +359,10 @@
             },
             'https://photon.komoot.io/api'
         );
-        return getJSON(url).then(function (results: any) {
-            return results.features.filter((r) => r.properties.osm_type !== 'R').map((f) => new PhotonFeature(f));
-        });
+        DEV_LOG && console.log('photonSearch', url);
+        const results = await getJSON<any>(url);
+        DEV_LOG && console.log('photonSearch result', JSON.stringify(results));
+        return results.features.filter((r) => r.properties.osm_type !== 'R').map((f) => new PhotonFeature(f));
     }
     let currentQuery;
 
@@ -384,32 +384,32 @@
         updateFilteredDataItems();
     }
     async function instantSearch(_query) {
-        // console.log('instantSearch', _query,loading) ;
-        loading = true;
-        currentQuery = cleanUpString(_query);
-        const position = mapContext.getMap().focusPos;
-        const mpp = getMetersPerPixel(position, mapContext.getMap().getZoom());
-        const options = {
-            query: currentQuery,
-            projection: mapContext.getProjection(),
-            language: packageService.currentLanguage,
-            // regexFilter: `.*${currentQuery}.*`,
-            // filterExpression: `layer='transportation_name'`,
-            filterExpression: `regexp_ilike(name,'.*${currentQuery}.*')`,
-            // filterExpression: `class='bakery'`,
-            // `REGEXP_LIKE(name, '${_query}')`
-            location: position,
-            position,
-            searchRadius: Math.min(Math.max(mpp * Screen.mainScreen.widthPixels, mpp * Screen.mainScreen.heightPixels)) //meters
-            // locationRadius: 1000,
-        };
-        // console.log('instantSearch', position, mapContext.getMap().getZoom(), mpp, options);
-
-        // TODO: dont fail when offline!!!
-
-        dataItems = [];
-
         try {
+            DEV_LOG && console.log('instantSearch', _query, loading, networkService.connected);
+            loading = true;
+            currentQuery = cleanUpString(_query);
+            const position = mapContext.getMap().focusPos;
+            const mpp = getMetersPerPixel(position, mapContext.getMap().getZoom());
+            const options = {
+                query: currentQuery,
+                projection: mapContext.getProjection(),
+                language: packageService.currentLanguage,
+                // regexFilter: `.*${currentQuery}.*`,
+                // filterExpression: `layer='transportation_name'`,
+                filterExpression: `regexp_ilike(name,'.*${currentQuery}.*')`,
+                // filterExpression: `class='bakery'`,
+                // `REGEXP_LIKE(name, '${_query}')`
+                location: position,
+                position,
+                searchRadius: Math.min(Math.max(mpp * Screen.mainScreen.widthPixels, mpp * Screen.mainScreen.heightPixels)) //meters
+                // locationRadius: 1000,
+            };
+            // console.log('instantSearch', position, mapContext.getMap().getZoom(), mpp, options);
+
+            // TODO: dont fail when offline!!!
+
+            dataItems = [];
+
             await Promise.all([
                 // searchInVectorTiles({
                 //     ...options,
@@ -438,6 +438,9 @@
                         console.error('photonSearch', err, err.stack);
                     })
             ]);
+            if (searchResultsCount > 0) {
+                textField.nativeView.focus();
+            }
         } catch (err) {
             showError(err);
         } finally {
@@ -498,6 +501,7 @@
         unfocus();
     }
     function updateFilteredDataItems() {
+        console.log('updateFilteredDataItems')
         if (filteringOSMKey) {
             filteredDataItems = dataItems.filter((d) => d.properties.osm_key === currentQuery);
         } else {
@@ -557,7 +561,6 @@
             loadedListeners.forEach((l) => l());
         }
     }
-
 </script>
 
 <gridlayout
