@@ -22,4 +22,4 @@ keyMatchReg:
 
 
 # If set to true, only enables custom framework (will disable all built-in frameworks)
-monopoly: false
+monopoly: true
