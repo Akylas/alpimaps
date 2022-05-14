@@ -1,11 +1,8 @@
 <script lang="ts">
-    import { MergedMBVTTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
     import { AWebView } from '@nativescript-community/ui-webview';
     import { LoadEventData, Page } from '@nativescript/core';
     import type { Feature } from 'geojson';
     import { debounce } from 'push-it-to-the-limit/target/es6';
-    import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
 
     export let position;
