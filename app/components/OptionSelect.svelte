@@ -8,7 +8,7 @@
 
 <script lang="ts">
     import { Template } from 'svelte-native/components';
-    import { closeBottomSheet } from '~/utils/bottomsheet';
+    import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
     import ListItem from './ListItem.svelte';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
     import { File } from '@nativescript/core';

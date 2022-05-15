@@ -5,7 +5,7 @@
     import { dismissSoftInput, openUrl } from '@nativescript/core/utils/utils';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { showBottomSheet } from '~/utils/bottomsheet';
+    import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { getLocaleDisplayName, l, lc, onLanguageChanged, selectLanguage, slc } from '~/helpers/locale';
     import { getThemeDisplayName, onThemeChanged, selectTheme } from '~/helpers/theme';
