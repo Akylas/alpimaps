@@ -8,22 +8,21 @@
     import type { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
     import { RoutingResult, RoutingService } from '@nativescript-community/ui-carto/routing';
     import { ApplicationSettings, Color, Device, GridLayout, ObservableArray, StackLayout, TextField } from '@nativescript/core';
-    import { executeOnMainThread } from '@nativescript/core/utils';
     import type { Feature, Point } from 'geojson';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { formatDistance } from '~/helpers/formatter';
     import { getDistance } from '~/helpers/geolib';
-    import { l, lc } from '~/helpers/locale';
+    import { lc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item, RouteInstruction } from '~/models/Item';
     import { Route, RoutingAction } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
-    import { showPopover } from '~/utils/popoversvelte';
     import { showError } from '~/utils/error';
+    import { showPopover } from '~/utils/svelte/popover';
     import { globalMarginTop, mdiFontFamily, primaryColor } from '~/variables';
 
     const DEFAULT_PROFILE_KEY = 'default_direction_profile';
@@ -125,7 +124,7 @@
     let costingOptions = { use_ferry: 0, shortest: false };
     let profileCostingOptions = {
         pedestrian: { use_hills: 1, max_hiking_difficulty: 6, step_penalty: 5, driveway_factor: 10, use_roads: 0, use_tracks: 1, walking_speed: 4 },
-        bicycle: { bicycle_type: bicycle_type, use_hills: 0.25, avoid_bad_surfaces: 0.25, use_roads: 0.25, use_tracks: 0.5},
+        bicycle: { bicycle_type: bicycle_type, use_hills: 0.25, avoid_bad_surfaces: 0.25, use_roads: 0.25, use_tracks: 0.5 },
         auto: { use_roads: 1, use_tracks: 0 }
     };
 
