@@ -1,4 +1,10 @@
 {
+  "NNW": "NNO",
+  "NW": "NO",
+  "SW": "SO",
+  "W": "O",
+  "WNW": "ONO",
+  "WSW": "OSO",
   "add_source": "ajouter une source",
   "aerialway": "aerialway",
   "airfield": "aérodrome",

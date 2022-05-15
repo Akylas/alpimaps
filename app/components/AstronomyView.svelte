@@ -1,46 +1,42 @@
 <script lang="ts" context="module">
+    // import { getMoonIllumination, getMoonPosition, getPosition, getTimes } from 'suncalc';
+    import { moon, MoonPhase, MoonPosition, sun, SunPosition, SunTimes } from '@modern-dev/daylight';
     import { Align } from '@nativescript-community/ui-canvas';
     import { CanvasLabel } from '@nativescript-community/ui-canvaslabel/canvaslabel.common';
     import { LineChart } from '@nativescript-community/ui-chart/charts';
     import { AxisBase } from '@nativescript-community/ui-chart/components/AxisBase';
-    import { LimitLabelPosition, LimitLine } from '@nativescript-community/ui-chart/components/LimitLine';
+    import { LimitLine } from '@nativescript-community/ui-chart/components/LimitLine';
     import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
-    import { AxisDependency } from '@nativescript-community/ui-chart/components/YAxis';
     import { LineData } from '@nativescript-community/ui-chart/data/LineData';
-    import { LineDataSet, Mode } from '@nativescript-community/ui-chart/data/LineDataSet';
+    import { LineDataSet } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { ViewPortHandler } from '@nativescript-community/ui-chart/utils/ViewPortHandler';
     import { Color } from '@nativescript/core';
     import dayjs, { Dayjs } from 'dayjs';
-    import { getMoonIllumination, getMoonPosition, getPosition, getTimes } from 'suncalc';
-    import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { GeoLocation } from '~/handlers/GeoHandler';
-    import { getCompassInfo } from '~/helpers/geolib';
+    import type { GeoLocation } from '~/handlers/GeoHandler';
+    import { CompassInfo, getCompassInfo } from '~/helpers/geolib';
     import { convertTime } from '~/helpers/locale';
-    import { getMapContext } from '~/mapModules/MapModule';
     import { showError } from '~/utils/error';
-    import { TO_DEG, PI_DIV2 } from '~/utils/geo';
+    import { PI_DIV2, TO_DEG } from '~/utils/geo';
     import { VerticalPosition } from '~/utils/popover.common';
-    import { showPopover } from '~/utils/popoversvelte';
+    import { showPopover } from '~/utils/svelte/popover';
     import { pickDate } from '~/utils/utils';
-    import { mdiFontFamily, textColor, widgetBackgroundColor } from '~/variables';
+    import { mdiFontFamily, widgetBackgroundColor } from '~/variables';
 </script>
 
 <script lang="ts">
     let chart: NativeViewElementNode<LineChart>;
     export let height: number = 300;
 
-    const mapContext = getMapContext();
-    let items = [];
     let chartInitialized = false;
     export let location: GeoLocation;
     let startTime = dayjs();
     let limitLine: LimitLine;
-    let illumination: MoonIllumination;
-    let sunTimes: SunlightTimes;
-    let moonAzimuth: string;
-    let sun: any[];
-    let moon: any[];
+    let illumination: MoonPhase;
+    let sunTimes: SunTimes;
+    let moonAzimuth: CompassInfo;
+    let sunPoses: SunPosition[];
+    let moonPoses: MoonPosition[];
 
     let bottomLabel: NativeViewElementNode<CanvasLabel>;
     function updateChartData(startTime: Dayjs) {
@@ -50,13 +46,14 @@
         const computeStartTime = startTime.startOf('d');
         const chartView = chart.nativeView;
         const sets = [];
-        sun = [];
-        moon = [];
+        sunPoses = [];
+        moonPoses = [];
         for (let index = 0; index <= 24 * 60; index += 10) {
             const date = computeStartTime.add(index, 'minutes').toDate();
-            sun.push(getPosition(date, location.lat, location.lon));
-            moon.push(getMoonPosition(date, location.lat, location.lon));
+            sunPoses.push(sun.getPosition(date, location.lat, location.lon));
+            moonPoses.push(moon.getPosition(date, location.lat, location.lon));
         }
+        console.log('sunPoses');
         if (!chartInitialized) {
             chartInitialized = true;
             const leftAxis = chartView.getAxisLeft();
@@ -99,11 +96,11 @@
 
         const chartData = chartView.getData();
         if (!chartData) {
-            let set = new LineDataSet(sun, 'sun', undefined, 'altitude');
+            let set = new LineDataSet(sunPoses, 'sun', undefined, 'altitude');
             set.setColor('#ffdd55');
             set.setLineWidth(3);
             sets.push(set);
-            set = new LineDataSet(moon, 'moon', undefined, 'altitude');
+            set = new LineDataSet(moonPoses, 'moon', undefined, 'altitude');
             set.setColor('white');
             set.setLineWidth(3);
             sets.unshift(set);
@@ -143,7 +140,7 @@
         }
     }
 
-    function getMoonPhaseIcon(illumination: MoonIllumination) {
+    function getMoonPhaseIcon(illumination: MoonPhase) {
         switch (Math.round(illumination.phase * 7)) {
             case 0:
                 return 'mdi-moon-new';
@@ -166,9 +163,9 @@
     $: {
         try {
             const date = startTime.toDate();
-            illumination = getMoonIllumination(date);
-            moonAzimuth = getCompassInfo(getMoonPosition(date, location.lat, location.lon).azimuth * TO_DEG).exact;
-            sunTimes = getTimes(date, location.lat, location.lon);
+            illumination = moon.getPhase(date);
+            moonAzimuth = getCompassInfo(moon.getPosition(date, location.lat, location.lon).azimuth * TO_DEG);
+            sunTimes = sun.getTimes(date, location.lat, location.lon);
         } catch (err) {
             console.error(err);
         }
@@ -212,15 +209,15 @@
         <canvaslabel bind:this={bottomLabel} row={2} colSpan={3} fontSize="18" padding="0 10 0 10">
             <cgroup color="#ffa500" verticalAlignment="center">
                 <cspan fontFamily={mdiFontFamily} text="mdi-weather-sunset-up" />
-                <cspan text={' ' + convertTime(sunTimes.sunriseEnd, 'HH:mm')} />
+                <cspan text={' ' + convertTime(sunTimes.sunrise.end, 'HH:mm')} />
             </cgroup>
             <cgroup color="#ff7200" textAlignment="center" verticalAlignment="center">
                 <cspan fontFamily={mdiFontFamily} text="mdi-weather-sunset-down" />
-                <cspan text={' ' + convertTime(sunTimes.sunset, 'HH:mm')} />
+                <cspan text={' ' + convertTime(sunTimes.sunset.start, 'HH:mm')} />
             </cgroup>
             <cgroup textAlignment="right" verticalAlignment="center">
                 <cspan fontFamily={mdiFontFamily} text={getMoonPhaseIcon(illumination)} />
-                <cspan text={' ' + moonAzimuth + '(' + Math.round(illumination.fraction * 100) + '%)'} />
+                <cspan text={' ' + moonAzimuth.exact + '(' + Math.round(illumination.fraction * 100) + '%)'} />
             </cgroup>
         </canvaslabel>
     {/if}
