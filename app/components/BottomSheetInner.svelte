@@ -4,13 +4,13 @@
     import { fromNativeMapPos, GenericMapPos } from '@nativescript-community/ui-carto/core';
     import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
-    import { VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
+    import type { VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
     import { CartoMap } from '@nativescript-community/ui-carto/ui';
     import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
     import { LineChart } from '@nativescript-community/ui-chart/charts';
     import type { HighlightEventData } from '@nativescript-community/ui-chart/charts/Chart';
     import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
-    import { Entry } from '@nativescript-community/ui-chart/data/Entry';
+    import type { Entry } from '@nativescript-community/ui-chart/data/Entry';
     import { LineData } from '@nativescript-community/ui-chart/data/LineData';
     import { LineDataSet, Mode } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
@@ -20,6 +20,7 @@
     import type { Point } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode, navigate } from 'svelte-native/dom';
+    import BottomSheetInfoView from '~/components/BottomSheetInfoView.svelte';
     import { formatValueToUnit, UNITS } from '~/helpers/formatter';
     import { slc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
@@ -28,12 +29,11 @@
     import type { IItem, IItem as Item, ItemProperties, RouteInstruction } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
-    import { showBottomSheet } from '~/utils/bottomsheet';
     import { showError } from '~/utils/error';
     import { computeDistanceBetween } from '~/utils/geo';
+    import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
     import { borderColor, screenHeightDips, statusBarHeight, textColor, widgetBackgroundColor } from '~/variables';
-    import BottomSheetInfoView from './BottomSheetInfoView.svelte';
 
     const LISTVIEW_HEIGHT = 200;
     const PROFILE_HEIGHT = 150;

@@ -10,10 +10,13 @@
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { GridLayout, ObservableArray, Screen, TextField, View } from '@nativescript/core';
     import { getJSON } from '@nativescript/core/http';
-    import { Point } from 'geojson';
+    import { AdditiveTweening } from 'additween';
+    import deburr from 'deburr';
+    import type { Point } from 'geojson';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
+    import { HereFeature, PhotonFeature } from '~/components/Features';
     import { formatDistance, osmicon } from '~/helpers/formatter';
     import { getMetersPerPixel } from '~/helpers/geolib';
     import { l, slc } from '~/helpers/locale';
@@ -21,31 +24,40 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
-    import { GeoResult, packageService } from '~/services/PackageService';
+    import type { GeoResult } from '~/services/PackageService';
+    import { packageService } from '~/services/PackageService';
     import { showError } from '~/utils/error';
     import { computeDistanceBetween } from '~/utils/geo';
+    import { queryString } from '~/utils/http';
     import { arraySortOn } from '~/utils/utils';
     import { globalMarginTop, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
-    import { queryString } from '../utils/http';
-    import deburr from 'deburr';
-    import { AdditiveTweening } from 'additween';
-    import { HereFeature, PhotonFeature } from './Features';
 
-    function animateView(view: View, to, duration) {
+    async function animateView(view: View, to, duration) {
+        // console.log('animateView', view, view.nativeView, to, duration);
+        // try {
+        //     if (view.nativeView) {
+        //         await view.animate({
+        //             duration,
+        //             ...to
+        //         });
+        //     } else {
+        //         view._batchUpdate(() => {
+        //             Object.assign(view, to);
+        //         });
+        //     }
+        // } catch (error) {
+        //     console.error(error, error.stack);
+        // }
+
         const from = {};
         Object.keys(to).forEach((k) => {
             from[k] = view[k];
         });
-        // console.log('animateView', view, from, to);
         const anim = new AdditiveTweening({
             onRender: (state) => {
                 // console.log('onRender', state)
                 Object.assign(view, state);
             }
-            // onFinish: (state) => {
-            // console.log('onFinish', state)
-            // Object.assign(view, state);
-            // }
         });
         anim.tween(from, to, duration);
         return anim;
@@ -206,7 +218,7 @@
             animateView(gridLayout.nativeView, { borderRadius: searchResultsVisible ? 10 : 25 }, 100);
         }
         if (collectionViewHolder?.nativeView) {
-            animateView(collectionViewHolder.nativeView, { height: searchResultsVisible ? 200 : 0 }, 100);
+            animateView(collectionViewHolder.nativeView, { height: searchResultsVisible ? 200 : 0 }, 500);
         }
     }
 
