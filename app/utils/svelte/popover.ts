@@ -1,8 +1,9 @@
 import { GestureRootView } from '@nativescript-community/gesturehandler';
 import { View } from '@nativescript/core';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
-import { DocumentNode } from 'svelte-native/dom/basicdom';
-import { PopupWindowOptions, showPopupWindow } from './popover';
+// import { DocumentNode } from 'svelte-native/dom/basicdom';
+import type { PopupWindowOptions } from '~/utils/popover';
+import { showPopupWindow } from '~/utils/popover';
 
 type ViewSpec = typeof SvelteComponent;
 export interface PopoverOptions extends Omit<PopupWindowOptions, 'anchor'> {
@@ -15,10 +16,11 @@ interface ComponentInstanceInfo {
     viewInstance: SvelteComponent;
 }
 
+
 const modalStack: any[] = [];
 
 export function resolveComponentElement(viewSpec: ViewSpec, props?: any): ComponentInstanceInfo {
-    const dummy = createElement('fragment', window.document as unknown as DocumentNode);
+    const dummy = createElement('fragment', window.document as any);
     const viewInstance = new viewSpec({ target: dummy, props });
     const element = dummy.firstElement() as NativeViewElementNode<View>;
     return { element, viewInstance };

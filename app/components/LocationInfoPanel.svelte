@@ -2,7 +2,7 @@
     import { getAirportPressureAtLocation, isSensorAvailable, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
     import { getAltitude } from '@nativescript-community/sensors/sensors';
     import { CanvasLabel } from '@nativescript-community/ui-canvaslabel';
-    import { VectorElementEventData } from '@nativescript-community/ui-carto/layers/vector';
+    import type { VectorElementEventData } from '@nativescript-community/ui-carto/layers/vector';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { GridLayout } from '@nativescript/core';
     import type { ApplicationEventData } from '@nativescript/core/application';
@@ -243,9 +243,16 @@
     on:swipe={switchLocationInfo}
 >
     {#if loaded}
-        <canvaslabel bind:this={firstCanvas} width="60" height="60" borderRadius="30" borderWidth="4" borderColor={accentColor} backgroundColor="#000000aa"  color="#fff">
-            <cspan text={currentLocation && currentLocation.speed !== undefined ? currentLocation.speed.toFixed() : ''} fontSize="26" fontWeight="bold" textAlignment="center" verticalAlignment="center" paddingBottom="3"/>
-            <cspan text={'km/h'} fontSize="10" textAlignment="center" verticalAlignment="center" paddingTop="12"/>
+        <canvaslabel bind:this={firstCanvas} width="60" height="60" borderRadius="30" borderWidth="4" borderColor={accentColor} backgroundColor="#000000aa" color="#fff">
+            <cspan
+                text={currentLocation && currentLocation.speed !== undefined ? currentLocation.speed.toFixed() : ''}
+                fontSize="26"
+                fontWeight="bold"
+                textAlignment="center"
+                verticalAlignment="center"
+                paddingBottom="3"
+            />
+            <cspan text={'km/h'} fontSize="10" textAlignment="center" verticalAlignment="center" paddingTop="12" />
         </canvaslabel>
         <canvaslabel col={1} marginLeft="5" color="#fff">
             <cspan text={lu('altitude') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'} fontSize="11" color={accentColor} verticalAlignment="top" />

@@ -1,4 +1,4 @@
-import { Point } from 'geojson';
+import type { Point } from 'geojson';
 
 export class PhotonFeature {
     properties: { [k: string]: any };
