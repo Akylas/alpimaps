@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
-    import { GenericGeoLocation } from '@nativescript-community/gps';
+    import type { GenericGeoLocation } from '@nativescript-community/gps';
     import { allowSleepAgain, keepAwake } from '@nativescript-community/insomnia';
     import * as perms from '@nativescript-community/perms';
     import { isSensorAvailable } from '@nativescript-community/sensors';
-    import { ClickType, MapBounds, MapPos, toNativeMapRange, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
+    import type { MapPos } from '@nativescript-community/ui-carto/core';
+    import { ClickType, MapBounds, toNativeMapRange, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
     import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
     import { Layer } from '@nativescript-community/ui-carto/layers';
@@ -18,14 +18,15 @@
     import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
     import { action } from '@nativescript-community/ui-material-dialogs';
+    import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
     import { Brightness } from '@nativescript/brightness';
-    import { AndroidApplication, Application, Page, profile, Utils } from '@nativescript/core';
+    import { AndroidApplication, Application, Page, Utils } from '@nativescript/core';
     import * as appSettings from '@nativescript/core/application-settings';
     import type { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Screen } from '@nativescript/core/platform';
     import { ad } from '@nativescript/core/utils/utils';
-    import { Point as GeoJSONPoint } from 'geojson';
+    import type { Point as GeoJSONPoint } from 'geojson';
     import { debounce } from 'push-it-to-the-limit/target/es6';
     import { onDestroy, onMount } from 'svelte';
     import { navigate } from 'svelte-native';
@@ -36,19 +37,22 @@
     import watcher from '~/helpers/watcher';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
-    import { getMapContext, handleMapAction, LayerType, setMapContext } from '~/mapModules/MapModule';
+    import type { LayerType } from '~/mapModules/MapModule';
+    import { getMapContext, handleMapAction, setMapContext } from '~/mapModules/MapModule';
     import UserLocationModule from '~/mapModules/UserLocationModule';
-    import type { IItem } from '~/models/Item';
-    import { RouteInstruction } from '~/models/Item';
+    import type { IItem, RouteInstruction } from '~/models/Item';
     import { NotificationHelper, NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL } from '~/services/android/NotifcationHelper';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
-    import { NetworkConnectionStateEvent, NetworkConnectionStateEventData, networkService } from '~/services/NetworkService';
+    import type { NetworkConnectionStateEventData } from '~/services/NetworkService';
+    import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
     import mapStore from '~/stores/mapStore';
-    import { isBottomSheetOpened, showBottomSheet } from '~/utils/bottomsheet';
+    import { isBottomSheetOpened, showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { showError } from '~/utils/error';
     import { getBoundsZoomLevel } from '~/utils/geo';
+    import { parseUrlQueryParameters } from '~/utils/http';
+    import { Sentry } from '~/utils/sentry';
     import { share } from '~/utils/share';
     import { disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn } from '~/utils/utils.android';
     import { navigationBarHeight, primaryColor } from '../variables';
@@ -57,7 +61,6 @@
     import LocationInfoPanel from './LocationInfoPanel.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
     import Search from './Search.svelte';
-    import { parseUrlQueryParameters } from '~/utils/http';
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
@@ -1590,7 +1593,13 @@
                     id: 'dark_mode',
                     color: $sTheme === 'dark' ? primaryColor : undefined,
                     icon: 'mdi-theme-light-dark'
-                }
+                },
+
+                // {
+                //     title: lc('sentry'),
+                //     id: 'sentry',
+                //     icon: 'mdi-bug'
+                // }
             ];
 
             if (isSensorAvailable('barometer')) {
@@ -1636,6 +1645,11 @@
                     case 'dark_mode':
                         toggleTheme(true);
                         break;
+                    // case 'sentry':
+                    //     const error = new Error('test');
+                    //     console.log('captureException', error, error.stack);
+                    //     Sentry.captureException(error);
+                    //     break;
                     case 'astronomy':
                     case 'compass':
                     case 'altimeter':

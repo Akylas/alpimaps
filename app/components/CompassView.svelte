@@ -1,56 +1,15 @@
 <script lang="ts">
+    import { moon, sun } from '@modern-dev/daylight';
     import { startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
     import { estimateMagneticField } from '@nativescript-community/sensors/sensors';
-    import { MapPos } from '@nativescript-community/ui-carto/core';
+    import { Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
+    import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { executeOnMainThread } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
-    function wrap(value, min, max) {
-        let result;
-
-        const offset_value = value - min;
-        if (offset_value < 0.0) {
-            result = max - min - (Math.abs(offset_value) % (max - min)) + min;
-        } else {
-            result = (offset_value % (max - min)) + min;
-        }
-
-        if (result == max) {
-            result = min;
-        }
-
-        return result;
-    }
-    class SmoothCompassBehavior {
-        static DISTANCE_FACTOR: number = 0.0025;
-        static MAX_ACCELERATION: number = 0.0005;
-
-        distanceFactor;
-        maxAcceleration;
-
-        lastDistance = 0.0;
-
-        constructor(scale) {
-            this.distanceFactor = SmoothCompassBehavior.DISTANCE_FACTOR * (0.5 + scale * 1.5);
-            this.maxAcceleration = SmoothCompassBehavior.MAX_ACCELERATION * (0.5 + scale * 1.5);
-            // console.log('SmoothCompassBehavior', scale, this.distanceFactor, this.maxAcceleration);
-        }
-
-        public updateBearing(compassBearing, sensorBearing, timeDelta) {
-            for (let count = 0; count < timeDelta; count++) {
-                let distance = wrap(sensorBearing - compassBearing, -180.0, 180.0);
-                distance = distance * this.distanceFactor;
-                if (distance > 0.0 && distance > this.lastDistance + this.maxAcceleration) {
-                    distance = this.lastDistance + this.maxAcceleration;
-                } else if (distance < 0.0 && distance < this.lastDistance - this.maxAcceleration) {
-                    distance = this.lastDistance - this.maxAcceleration;
-                }
-                this.lastDistance = distance;
-                compassBearing += distance;
-            }
-
-            return compassBearing;
-        }
-    }
+    import { NativeViewElementNode } from 'svelte-native/dom';
+    import SmoothCompassBehavior, { wrap } from '~/components/SmoothCompassBehavior';
+    import { getCompassInfo } from '~/helpers/geolib';
+    import { TO_DEG } from '~/utils/geo';
 
     let currentHeading: number = 0;
     let lastHeadingTime: number = 0;
@@ -60,7 +19,11 @@
     export let height: number = 350;
     export let altitude: number = null;
     export let location: MapPos<LatLonKeys> = null;
+
+    let moonBearing = null;
+    let sunBearing = null;
     const behavior = new SmoothCompassBehavior(0.5);
+    let canvas: NativeViewElementNode<CanvasView>;
 
     function startHeadingListener() {
         if (!listeningForHeading) {
@@ -78,7 +41,7 @@
         switch (sensor) {
             case 'heading':
                 if (__ANDROID__ && !('trueHeading' in data) && location) {
-                    const res = estimateMagneticField(location.lat, location.lon, altitude);
+                    const res = estimateMagneticField(location.lat, location.lon, location.altitude);
                     if (res) {
                         data.trueHeading = data.heading + res.getDeclination();
                     }
@@ -117,10 +80,38 @@
             console.error('stopHeadingListener', err, err['stack']);
         }
     });
+
+    const paint = new Paint()
+    function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: Canvas }) {
+        let w = canvas.getWidth();
+        let h = canvas.getHeight();
+        canvas.translate(w/2, h/2);
+        canvas.save();
+        canvas.rotate(moonBearing + 180);
+        paint.setColor('gray')
+        canvas.drawCircle(0, h/2, 10, paint);
+        canvas.restore();
+        canvas.rotate(sunBearing + 180);
+        paint.setColor('#ffdd55')
+        canvas.drawCircle(0, h/2, 10, paint);
+    }
+
+    $: {
+        if (location) {
+            const date = new Date();
+            moonBearing = moon.getPosition(date, location.lat, location.lon).azimuth * TO_DEG;
+            sunBearing = sun.getPosition(date, location.lat, location.lon).azimuth * TO_DEG;
+            canvas?.nativeView.invalidate();
+        }
+    }
 </script>
 
 <gridLayout {height}>
-    <svgview src="~/assets/svgs/needle_background.svg" stretch="aspectFit" horizontalAlignment="center" />
+    <svgview src="~/assets/svgs/needle_background.svg" stretch="aspectFit" horizontalAlignment="center"  />
     <svgview src="~/assets/svgs/needle.svg" stretch="aspectFit" horizontalAlignment="center" rotate={-currentHeading} />
+    {#if moonBearing !== null}
+        <canvas bind:this={canvas} on:draw={onCanvasDraw} />
+    {/if}
     <label visibility={headingAccuracy >= 2 ? 'visible' : 'hidden'} class="alpimaps" text="alpimaps-compass-calibrate" horizontalAlignment="right" verticalAlignment="bottom" fontSize={60} />
 </gridLayout>
+>

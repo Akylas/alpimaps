@@ -19,11 +19,10 @@ import { BgService } from '~/services/BgService';
 import { networkService } from '~/services/NetworkService';
 // import { startSentry } from '~/utils/sentry';
 import './app.scss';
-import Map from './components/Map.svelte';
+import Map from '~/components/Map.svelte';
 
 // startSentry();
-installGestures(false);
-// installLogging();
+installGestures(true);
 installMixins();
 installBottomSheets();
 installUIMixins();
@@ -72,6 +71,7 @@ registerNativeViewElement('canvaslabel', () => require('@nativescript-community/
 registerNativeViewElement('cspan', () => require('@nativescript-community/ui-canvaslabel').Span);
 registerNativeViewElement('cgroup', () => require('@nativescript-community/ui-canvaslabel').Group);
 registerNativeViewElement('svgview', () => require('@nativescript-community/ui-svg').SVGView);
+registerNativeViewElement('svg', () => require('@nativescript-community/ui-svg').SVG);
 registerNativeViewElement('bottomsheet', () => require('@nativescript-community/ui-persistent-bottomsheet').PersistentBottomSheet);
 registerNativeViewElement('gesturerootview', () => require('@nativescript-community/gesturehandler').GestureRootView);
 registerNativeViewElement('symbolshape', () => require('~/components/SymbolShape').default);

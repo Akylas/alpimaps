@@ -1,11 +1,9 @@
 import { GestureRootView } from '@nativescript-community/gesturehandler';
-import { BottomSheetOptions } from '@nativescript-community/ui-material-bottomsheet';
+import type { BottomSheetOptions } from '@nativescript-community/ui-material-bottomsheet';
 import { View } from '@nativescript/core';
-import { View as View2 } from '@nativescript/core/ui/core/view';
 import { Frame } from '@nativescript/core/ui/frame';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
-import { DocumentNode } from 'svelte-native/dom/basicdom';
-import { PageSpec } from 'svelte-native/dom/navigation';
+import type { PageSpec } from 'svelte-native/dom/navigation';
 
 export interface ShowBottomSheetOptions extends Omit<BottomSheetOptions, 'view'> {
     view: PageSpec;
@@ -20,7 +18,7 @@ interface ComponentInstanceInfo {
 const modalStack: ComponentInstanceInfo[] = [];
 
 export function resolveComponentElement(viewSpec: PageSpec, props?: any): ComponentInstanceInfo {
-    const dummy = createElement('fragment', window.document as unknown as DocumentNode);
+    const dummy = createElement('fragment', window.document as any);
     const viewInstance = new viewSpec({ target: dummy, props });
     const element = dummy.firstElement() as NativeViewElementNode<View>;
     return { element, viewInstance };
@@ -29,7 +27,7 @@ export function resolveComponentElement(viewSpec: PageSpec, props?: any): Compon
 export function showBottomSheet<T>(modalOptions: ShowBottomSheetOptions): Promise<T> {
     const { view, parent, props = {}, ...options } = modalOptions;
     // Get this before any potential new frames are created by component below
-    const modalLauncher: View2 = (parent && (parent instanceof View ? parent : parent.nativeView)) || (Frame.topmost().currentPage as any);
+    const modalLauncher: View = (parent && (parent instanceof View ? parent : parent.nativeView)) || Frame.topmost().currentPage;
 
     const componentInstanceInfo = resolveComponentElement(view, props);
     let modalView: View = componentInstanceInfo.element.nativeView;
@@ -60,7 +58,7 @@ export function showBottomSheet<T>(modalOptions: ShowBottomSheetOptions): Promis
 }
 
 export function closeBottomSheet(result?: any): void {
-    const modalPageInstanceInfo = modalStack.at(-1);
+    const modalPageInstanceInfo = modalStack[modalStack.length - 1];
     if (modalPageInstanceInfo) {
         (modalPageInstanceInfo.element.nativeView as any).closeBottomSheet(result);
     }

@@ -1,17 +1,10 @@
 <script lang="ts" context="module">
-    import type {
-    CartoPackageManager,
-    PackageInfo,
-    PackageInfoVector,
-    PackageStatus
-    } from '@nativescript-community/ui-carto/packagemanager';
-    import {
-    PackageAction
-    } from '@nativescript-community/ui-carto/packagemanager';
+    import type { CartoPackageManager, PackageInfo, PackageInfoVector, PackageStatus } from '@nativescript-community/ui-carto/packagemanager';
+    import { PackageAction } from '@nativescript-community/ui-carto/packagemanager';
     import { ObservableArray } from '@nativescript/core/data/observable-array';
-    import { onDestroy,onMount } from 'svelte';
+    import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
-    import { PackageType } from '~/services/PackageService';
+    import type { PackageType } from '~/services/PackageService';
 
     class Package {
         id: string;
@@ -23,15 +16,7 @@
         public geoInfo?: PackageInfo;
         public routingInfo?: PackageInfo;
 
-        constructor(options: {
-            name: string;
-            info?: PackageInfo;
-            status?: PackageStatus;
-            geoStatus?: PackageStatus;
-            routingStatus?: PackageStatus;
-            geoInfo?: PackageInfo;
-            routingInfo?: PackageInfo;
-        }) {
+        constructor(options: { name: string; info?: PackageInfo; status?: PackageStatus; geoStatus?: PackageStatus; routingStatus?: PackageStatus; geoInfo?: PackageInfo; routingInfo?: PackageInfo }) {
             this.name = options.name;
             this.info = options.info;
             this.status = options.status;
@@ -144,11 +129,7 @@
             return status.getCurrentAction() === PackageAction.DOWNLOADING && !status.isPaused();
         }
         isDownloading() {
-            return (
-                Package.isDownloading(this.routingStatus) ||
-                Package.isDownloading(this.geoStatus) ||
-                Package.isDownloading(this.status)
-            );
+            return Package.isDownloading(this.routingStatus) || Package.isDownloading(this.geoStatus) || Package.isDownloading(this.status);
         }
         static getDownloadProgress(status: PackageStatus) {
             if (!status) {
@@ -282,7 +263,7 @@
             }
         }, 800);
     });
-    
+
     onDestroy(() => {
         const packageService = this.$packageService;
         if (packageService) {
@@ -371,12 +352,10 @@
                 if (this.currentServerPackages) {
                     return Promise.resolve(this.currentServerPackages);
                 }
-                return new Promise((resolve: (res: PackageInfoVector) => void) => manager.getServerPackages(resolve)).then(
-                    (res) => {
-                        this.currentServerPackages = res;
-                        return res;
-                    }
-                );
+                return new Promise((resolve: (res: PackageInfoVector) => void) => manager.getServerPackages(resolve)).then((res) => {
+                    this.currentServerPackages = res;
+                    return res;
+                });
             })
             .then((packages) => {
                 // const packages = this.currentServerPackages;
@@ -499,8 +478,8 @@
     }
 </script>
 
-<gridlayout rows="50,*,auto,2*" columns="*,auto,*" height="300" >
-    <stacklayout  colSpan={3} orientation="horizontal">
+<gridlayout rows="50,*,auto,2*" columns="*,auto,*" height="300">
+    <stacklayout colSpan={3} orientation="horizontal">
         <button
             class="mdi"
             shape="round"
@@ -510,56 +489,21 @@
             fontSize="20"
             text="mdi-arrow-left"
             visibility={currentFolder.length > 0 ? 'visible' : 'collapsed'}
-            on:tap={onBackButton} />
+            on:tap={onBackButton}
+        />
         <label padding="10" color="white" fontSize="20" fontWeight="bold" text="Download Packages" />
     </stacklayout>
-    <collectionview
-        ref="listView"
-        row={1}
-        
-        rowSpan={3}
-        colSpan={3}
-        rowHeight="49"
-        items={dataItems}
-        on:itemTap={onPackageClick}
-        separatorColor="darkgray">
+    <collectionview ref="listView" row={1} rowSpan={3} colSpan={3} rowHeight="49" items={dataItems} on:itemTap={onPackageClick} separatorColor="darkgray">
         <Template let:item>
             <!-- <StackLayout width="100%" height="100%" backgroundColor="red">
                         <Label text="item.name"  backgroundColor={gray}/>
                     </StackLayout> -->
-            <gridlayout
-                rows="*,auto,auto"
-                columns="*,auto,auto,auto"
-                padding="0 0 0 15"
-                on:tap={onPackageClick(item)}
-                rippleColor="white">
-                <label
-                    
-                    text={item.name.toUpperCase()}
-                    color="white"
-                    fontSize="13"
-                    fontWeight="bold"
-                    verticalAlignment="center" />
-                <label
-                    row={1}
-                    text="item.getStatusText()"
-                    color="#D0D0D0"
-                    fontSize="11"
-                    visibility={!item.isGroup() ? 'visible' : 'collapsed'}
-                    verticalAlignment="center" />
-                <label
-                    col={2}
-                    
-                    rowSpan={3}
-                    class="mdi"
-                    color="navyblue"
-                    text="mdi-chevron-right"
-                    fontSize="16"
-                    visibility={item.isGroup() ? 'visible' : 'collapsed'}
-                    verticalAlignment="center" />
+            <gridlayout rows="*,auto,auto" columns="*,auto,auto,auto" padding="0 0 0 15" on:tap={onPackageClick(item)} rippleColor="white">
+                <label text={item.name.toUpperCase()} color="white" fontSize="13" fontWeight="bold" verticalAlignment="center" />
+                <label row={1} text="item.getStatusText()" color="#D0D0D0" fontSize="11" visibility={!item.isGroup() ? 'visible' : 'collapsed'} verticalAlignment="center" />
+                <label col={2} rowSpan={3} class="mdi" color="navyblue" text="mdi-chevron-right" fontSize="16" visibility={item.isGroup() ? 'visible' : 'collapsed'} verticalAlignment="center" />
                 <button
                     col={1}
-                    
                     rowSpan={3}
                     variant="text"
                     margin="0"
@@ -569,10 +513,10 @@
                     horizontalAlignment="center"
                     visibility={!item.isGroup() ? 'visible' : 'collapsed'}
                     fontSize="12"
-                    on:tap={()=>handlePackageAction('map', item)} />
+                    on:tap={() => handlePackageAction('map', item)}
+                />
                 <button
                     col={2}
-                    
                     rowSpan={3}
                     variant="text"
                     margin="0"
@@ -581,10 +525,10 @@
                     verticalAlignment="center"
                     visibility={item.hasGeo() ? 'visible' : 'collapsed'}
                     fontSize="12"
-                    on:tap={()=>handlePackageAction('geo', item)} />
+                    on:tap={() => handlePackageAction('geo', item)}
+                />
                 <button
                     col={3}
-                    
                     rowSpan={3}
                     variant="text"
                     margin="0"
@@ -593,14 +537,9 @@
                     verticalAlignment="center"
                     visibility={item.hasRouting() ? 'visible' : 'collapsed'}
                     fontSize="12"
-                    on:tap={()=>handlePackageAction('routing', item)} />
-                <mdprogress
-                    row={2}
-                    
-                    colSpan={4}
-                    height="3"
-                    value={item.getDownloadProgress()}
-                    visibility={item.isDownloading() ? 'visible' : 'hidden'} />
+                    on:tap={() => handlePackageAction('routing', item)}
+                />
+                <mdprogress row={2} colSpan={4} height="3" value={item.getDownloadProgress()} visibility={item.isDownloading() ? 'visible' : 'hidden'} />
             </gridlayout>
         </Template>
     </collectionview>
