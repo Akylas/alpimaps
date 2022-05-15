@@ -11,9 +11,9 @@
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
     import { showError } from '~/utils/error';
+    import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
     import { pickColor } from '~/utils/utils';
     import { textLightColor } from '~/variables';
-    import { closeBottomSheet } from '~/utils/bottomsheet';
 
     const mapContext = getMapContext();
     let scrollView;

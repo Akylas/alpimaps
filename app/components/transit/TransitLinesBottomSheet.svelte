@@ -8,8 +8,8 @@
     import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
     import { transitService } from '~/services/TransitService';
     import { showError } from '~/utils/error';
+    import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
     import { mdiFontFamily, navigationBarHeight } from '~/variables';
-    import { closeBottomSheet } from '~/utils/bottomsheet';
 
     export let position: MapPos<LatLonKeys>;
     export let name: string;
