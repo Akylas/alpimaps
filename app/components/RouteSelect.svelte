@@ -7,7 +7,7 @@
 
 <script lang="ts">
     import { Template } from 'svelte-native/components';
-    import { closeBottomSheet } from '~/utils/bottomsheet';
+    import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
     import ListItem from './ListItem.svelte';
 
     export let options: OptionType[];

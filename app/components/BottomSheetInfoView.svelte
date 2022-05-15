@@ -2,7 +2,7 @@
     import dayjs from 'dayjs';
     import { convertElevation, convertValueToUnit, osmicon, UNITS } from '~/helpers/formatter';
     import { formatter } from '~/mapModules/ItemFormatter';
-    import { IItem as Item, ItemProperties } from '~/models/Item';
+    import type { IItem as Item, ItemProperties } from '~/models/Item';
     import { mdiFontFamily, subtitleColor, textColor } from '~/variables';
     const PROPS_TO_SHOW = ['ele'];
 

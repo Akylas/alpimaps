@@ -21,7 +21,7 @@
         "allowSyntheticDefaultImports": true,
         "resolveJsonModule": true,
         "lib": ["esnext", "es2017", "dom"],
-        "types": ["node", "svelte", "geojson", "offscreencanvas"],
+        "types": ["node", "svelte", "geojson", "offscreencanvas", "svelte-native"],
         "baseUrl": ".",
         "paths": {
             "~/*": ["app/*"]

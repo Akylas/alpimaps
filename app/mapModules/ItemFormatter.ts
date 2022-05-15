@@ -1,7 +1,7 @@
 import { formatAddress } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
-import { IItem as Item } from '~/models/Item';
-import MapModule, { getMapContext } from './MapModule';
+import { getMapContext } from '~/mapModules/MapModule';
+import type { IItem as Item } from '~/models/Item';
 const mapContext = getMapContext();
 
 export default class ItemFormatter {

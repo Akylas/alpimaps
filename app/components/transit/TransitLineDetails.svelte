@@ -1,9 +1,7 @@
 <script lang="ts">
     import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
     import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
     import { CartoMap, PanningMode } from '@nativescript-community/ui-carto/ui';
-    import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Page } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';

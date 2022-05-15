@@ -1,3 +1,4 @@
+import { lu } from '@nativescript-community/l';
 import { Screen } from '@nativescript/core/platform';
 declare global {
     interface Number {
@@ -688,108 +689,117 @@ export function getCompassDirection(originLL, destLL, bearingMode?) {
     }
     return getCompassInfo(bearing);
 }
+export interface CompassInfo {
+    exact: string;
+    rough: string;
+    bearing: number;
+}
+
 export function getCompassInfo(bearing) {
+    if (bearing < 0) {
+        bearing += 360;
+    }
     let result;
     switch (Math.round(bearing / 22.5)) {
         case 1:
             result = {
-                exact: 'NNE',
-                rough: 'N'
+                exact: lu('NNE'),
+                rough: lu('N')
             };
             break;
         case 2:
             result = {
-                exact: 'NE',
-                rough: 'N'
+                exact: lu('NE'),
+                rough: lu('N')
             };
             break;
         case 3:
             result = {
-                exact: 'ENE',
-                rough: 'E'
+                exact: lu('ENE'),
+                rough: lu('E')
             };
             break;
         case 4:
             result = {
-                exact: 'E',
-                rough: 'E'
+                exact: lu('E'),
+                rough: lu('E')
             };
             break;
         case 5:
             result = {
-                exact: 'ESE',
-                rough: 'E'
+                exact: lu('ESE'),
+                rough: lu('E')
             };
             break;
         case 6:
             result = {
-                exact: 'SE',
-                rough: 'E'
+                exact: lu('SE'),
+                rough: lu('E')
             };
             break;
         case 7:
             result = {
-                exact: 'SSE',
-                rough: 'S'
+                exact: lu('SSE'),
+                rough: lu('S')
             };
             break;
         case 8:
             result = {
-                exact: 'S',
-                rough: 'S'
+                exact: lu('S'),
+                rough: lu('S')
             };
             break;
         case 9:
             result = {
-                exact: 'SSW',
-                rough: 'S'
+                exact: lu('SSW'),
+                rough: lu('S')
             };
             break;
         case 10:
             result = {
-                exact: 'SW',
-                rough: 'S'
+                exact: lu('SW'),
+                rough: lu('S')
             };
             break;
         case 11:
             result = {
-                exact: 'WSW',
-                rough: 'W'
+                exact: lu('WSW'),
+                rough: lu('W')
             };
             break;
         case 12:
             result = {
-                exact: 'W',
-                rough: 'W'
+                exact: lu('W'),
+                rough: lu('W')
             };
             break;
         case 13:
             result = {
-                exact: 'WNW',
-                rough: 'W'
+                exact: lu('WNW'),
+                rough: lu('W')
             };
             break;
         case 14:
             result = {
-                exact: 'NW',
-                rough: 'W'
+                exact: lu('NW'),
+                rough: lu('W')
             };
             break;
         case 15:
             result = {
-                exact: 'NNW',
-                rough: 'N'
+                exact: lu('NNW'),
+                rough: lu('N')
             };
             break;
         default:
             result = {
-                exact: 'N',
-                rough: 'N'
+                exact: lu('N'),
+                rough: lu('N')
             };
     }
 
     result['bearing'] = bearing;
-    return result;
+    return result as CompassInfo;
 }
 export function getMppAtZoom(_zoom, pos) {
     const lat = latitude(pos);

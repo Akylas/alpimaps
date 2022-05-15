@@ -1,4 +1,5 @@
 <script lang="ts" context="module">
+    import { backgroundEvent, foregroundEvent } from '@akylas/nativescript/application';
     import { getAirportPressureAtLocation, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
     import { getAltitude } from '@nativescript-community/sensors/sensors';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
@@ -6,7 +7,6 @@
     import { ApplicationSettings } from '@nativescript/core';
     import type { ApplicationEventData } from '@nativescript/core/application';
     import { off as applicationOff, on as applicationOn } from '@nativescript/core/application';
-    import { backgroundEvent, foregroundEvent } from '@akylas/nativescript/application';
     import { onDestroy, onMount } from 'svelte';
     import { GeoHandler, GeoLocation, UserLocationdEventData } from '~/handlers/GeoHandler';
     import { l, lc } from '~/helpers/locale';

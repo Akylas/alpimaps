@@ -1,8 +1,9 @@
 import { l } from '@nativescript-community/l';
 import Observable from '@nativescript-community/observable';
 import { Layer } from '@nativescript-community/ui-carto/layers';
-import { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
-import { VectorElementEventData, VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
+import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
+import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
+import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { Projection } from '@nativescript-community/ui-carto/projections';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
@@ -13,14 +14,14 @@ import { getRootView } from '@nativescript/core/application';
 import { executeOnMainThread } from '@nativescript/core/utils';
 import { navigate } from 'svelte-native';
 import { NativeViewElementNode } from 'svelte-native/dom';
+import type DirectionsPanel from '~/components/DirectionsPanel.svelte';
 import { GeoHandler } from '~/handlers/GeoHandler';
-import { IItem } from '~/models/Item';
-import { showBottomSheet } from '~/utils/bottomsheet';
+import type CustomLayersModule from '~/mapModules/CustomLayersModule';
+import type ItemsModule from '~/mapModules/ItemsModule';
+import type UserLocationModule from '~/mapModules/UserLocationModule';
+import type { IItem } from '~/models/Item';
+import { showBottomSheet } from '~/utils/svelte/bottomsheet';
 import { createGlobalEventListener, globalObservable } from '~/variables';
-import CustomLayersModule from './CustomLayersModule';
-import DirectionsPanel from './DirectionsPanel.svelte';
-import ItemsModule from './ItemsModule';
-import UserLocationModule from './UserLocationModule';
 
 export interface IMapModule {
     onMapReady(mapView: CartoMap<LatLonKeys>);
@@ -172,8 +173,17 @@ export async function handleMapAction(action: string, options?) {
             break;
         case 'compass':
             try {
+                const module = mapContext.mapModule('userLocation');
+                const location = module.lastUserLocation || options;
                 const CompassView = (await import('~/components/CompassView.svelte')).default;
-                await showBottomSheet({ parent, view: CompassView, transparent: true });
+                await showBottomSheet({
+                    parent,
+                    view: CompassView,
+                    transparent: true,
+                    props: {
+                        location
+                    }
+                });
             } catch (err) {
                 console.error('showCompass', err, err['stack']);
             }

@@ -8,13 +8,14 @@
     import { PackageAction } from '@nativescript-community/ui-carto/packagemanager';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { GridLayout, ViewBase } from '@nativescript/core';
-    import { AnimationCurve } from '@nativescript/core/ui/enums';
-    import { Point } from 'geojson';
+    import { CoreTypes, GridLayout, ViewBase } from '@nativescript/core';
+    import type { Point } from 'geojson';
     import { debounce } from 'push-it-to-the-limit/target/es6';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode, navigate } from 'svelte-native/dom';
     import { asSvelteTransition } from 'svelte-native/transitions';
+    import OptionPicker from '~/components/OptionPicker.svelte';
+    import ScaleView from '~/components/ScaleView.svelte';
     import { convertDistance } from '~/helpers/formatter';
     import { onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
@@ -24,11 +25,9 @@
     import { packageService } from '~/services/PackageService';
     import mapStore from '~/stores/mapStore';
     import { showError } from '~/utils/error';
+    import { resolveComponentElement, showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { accentColor, alpimapsFontFamily, globalMarginTop, mdiFontFamily, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
-    import { resolveComponentElement, showBottomSheet } from '~/utils/bottomsheet';
-    import OptionPicker from './OptionPicker.svelte';
-    import ScaleView from './ScaleView.svelte';
-    function scale(node, { delay = 0, duration = 400, easing = AnimationCurve.easeOut }) {
+    function scale(node, { delay = 0, duration = 400, easing = CoreTypes.AnimationCurve.easeOut }) {
         const scaleX = node.nativeView.scaleX;
         const scaleY = node.nativeView.scaleY;
         return asSvelteTransition(node, delay, duration, easing, (t) => ({
