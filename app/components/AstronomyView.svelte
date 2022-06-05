@@ -109,9 +109,9 @@
             chartView.setData(lineData);
         } else {
             chartView.highlightValues(null);
-            chartData.getDataSetByIndex(1).setValues(sun);
+            chartData.getDataSetByIndex(1).setValues(sunPoses);
             chartData.getDataSetByIndex(1).notifyDataSetChanged();
-            chartData.getDataSetByIndex(0).setValues(moon);
+            chartData.getDataSetByIndex(0).setValues(moonPoses);
             chartData.getDataSetByIndex(0).notifyDataSetChanged();
             chartData.notifyDataChanged();
             chartView.notifyDataSetChanged();
