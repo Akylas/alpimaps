@@ -125,6 +125,10 @@ Map {
       polygon-fill: @leisure;
     }
 
+    [class=park] {
+      polygon-fill: @park;
+    }
+
     [class=cemetery][zoom>=10]{
         polygon-fill: @cemetery;
     }
@@ -249,8 +253,11 @@ Map {
   
   polygon-fill: @building-fill;
   polygon-opacity: @building-opacity;
-  line-color: @building-line;
-  line-width: @building-line-width;
+  ::line {
+
+    line-color: @building-line;
+    line-width: @building-line-width;
+  }
 }
 
 #aeroway['mapnik::geometry_type'=3]{

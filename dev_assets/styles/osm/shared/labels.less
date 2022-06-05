@@ -2,20 +2,34 @@
 @name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
 @osm_icon: [nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]]?[nuti::osm-[class]]:[nuti::osm-symbol-dot]);
 
-#landcover_name[class!=ice][zoom>=16],
-#landuse_name[class=quarry][zoom>=13],
-#landuse_name[zoom>=16]
+#landcover_name[class!=ice],
+#landuse_name
 {
+	[class=quarry][zoom>=13],
+	[way_pixels>100][zoom>=14],
+	[zoom>=16] {
+	
 	::label {
 		text-name: @name;
-		text-face-name: @mont;
-		text-fill: @building_label;
-		text-size: 10;
-		text-min-distance:150;
+		text-face-name: @mont_it;
+		text-fill: @hamlet_label;
+		text-placement: [nuti::texts3d];
 		text-wrap-width:@suburb-label-wrap-width;
-		text-halo-fill: @peak_halo;
-		text-halo-radius: 1;
+		text-size: @hamlet_label_width 
+		text-halo-fill: @place_halo;
+		text-halo-radius: @place_halo_radius;
+
+		[class=pedestrian] {
+			text-face-name: @mont;
+			text-fill: @building_label;
+			text-size: 10;
+			text-wrap-width:@suburb-label-wrap-width;
+			text-halo-fill: @place_halo;
+			text-halo-radius: @place_halo_radius;
+		}
 	}
+	}
+	
 }
 
 #water_name[class=ocean][zoom>=3][zoom<=9],
@@ -24,8 +38,9 @@
 	text-face-name: @mont_it;
 	text-wrap-width: 50;
 	text-fill: @marine_labels;
+	text-placement: [nuti::texts3d];
 	text-halo-fill: @marine_labels_halo;
-	text-halo-radius: 1;
+	text-halo-radius: @marine_labels_halo_radius;
 	text-line-spacing: -2;
 	text-character-spacing: 1.1;
 	text-size: linear([view::zoom], (2, 14.0), (5, 20.0));
@@ -40,6 +55,7 @@
 		text-name: @name;
 		text-fill: @continent_text;
 		text-face-name: @mont_md;
+		text-placement: [nuti::texts3d];
 		text-transform: uppercase;
 		text-wrap-character: '-';
 		text-halo-fill: @continent_halo;
@@ -110,7 +126,8 @@
 		text-halo-radius: @place_halo_radius;
 		text-size: @island_label_width;
 	}
-	[class=hamlet][zoom>=11][zoom<=14] {
+	[class=isolated_dwelling][zoom>=14][zoom<=16],
+	[class=hamlet][zoom>=12][zoom<=16] {
 		text-name: @name;
 		text-face-name: @mont_md;
 		text-placement: [nuti::texts3d];
@@ -123,7 +140,7 @@
 		text-size: @hamlet_label_width ;
 	}
 	
-	[class=village][zoom>=10][zoom<=14] {
+	[class=village][zoom>=11][zoom<=14] {
 		text-name: @name;
 		text-face-name: @mont_md;
 		text-placement: [nuti::texts3d];
@@ -216,13 +233,13 @@
 			}
 		}
 	}
-	[class=isolated_dwelling][zoom>=12][zoom<=16],
 	[class=locality][zoom>=13][zoom<=16] {
 		text-name: @name;
-		text-face-name: @mont;
+		text-face-name: @mont_md;
 		text-placement: [nuti::texts3d];
 		text-fill: @locality_label_fill;
 		text-halo-fill: @place_halo;
+		text-min-distance:@locality_min_dist;
 		text-wrap-character: '-';
 		text-halo-radius: @place_halo_radius;
 		text-line-spacing: @place_line_spacing;
@@ -243,7 +260,6 @@
 		text-halo-fill: @water_halo;
 		text-halo-radius: @water_halo_radius;
 		text-size: @glacier_label_width;
-		text-min-distance:20;
 		text-wrap-width: @glacier_label_wrap_width;
 	}
 	
@@ -273,6 +289,20 @@
 		text-size: @waterway_text_width;
 		[class=river] {
 			text-size: @river_text_width;
+		}
+	}
+}
+#transportation['mapnik::geometry_type'=3][name!=null] {
+	[brunnel=bridge][zoom>=14],[zoom>=16] {
+		::label {
+			text-name: @name;
+			text-face-name: @mont;
+			text-fill: @building_label;
+			text-size: 10;
+			text-min-distance:150;
+			text-wrap-width:@suburb-label-wrap-width;
+			text-halo-fill: @peak_halo;
+			text-halo-radius: 1;
 		}
 	}
 }
@@ -322,7 +352,6 @@
 	}
 }
 
-// we ignore footway names as the almost always duplicate the street name
 #transportation_name {
 	
 	[class=motorway][zoom>=5],
@@ -358,8 +387,8 @@
 	}
 	[class=track][zoom>=13],
 	[class=path][subclass=path][zoom>=14],
-	// [class=path][subclass=footway][zoom>=18],
-	// [class=path][subclass=pedestrian][zoom>=18],
+	[class=path][subclass=footway][zoom>=19],
+	[class=path][subclass=pedestrian][zoom>=19],
 	[class=path][subclass!=path][subclass!=footway][subclass!=pedestrian][zoom>=15] {
 		::_path {
 			text-name: @name;
@@ -459,8 +488,9 @@
 	}
 }
 #poi[class!=lodging][class!=spring][class!=campsite] {
-	[zoom=15][rank<=15][class!='restaurant'][class!='bar'][class!='parking'][class!='school'][class!='college'][subclass!='community_centre'][subclass!='station'],
-	[zoom=16][rank<=40],
+	[zoom=14][rank<=4][class!='restaurant'][class!='bar'][class!='parking'][class!='school'][class!='college'][subclass!='community_centre'][subclass!='station'][class!='bus'],
+	[zoom=15][rank<=10][class!='restaurant'][class!='bar'][class!='parking'][class!='school'][class!='college'][subclass!='community_centre'][subclass!='station'],
+	[zoom=16][rank<=30][class!='shop'],
 	[zoom=17][rank<=80],
 	[zoom>=18] {
 		::icon {
@@ -505,7 +535,8 @@
 			}
 		}
 
-		[class!=bus][class!=railway],
+		[class!=bus][class!=railway][class!=drinking_water][rank<=10],
+		[zoom=16][class!=bus][class!=railway][class!=drinking_water][rank<=20],
 		[zoom>=17] {
 			::label {
 				text-name: @name;

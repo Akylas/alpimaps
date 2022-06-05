@@ -8,7 +8,6 @@
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import SmoothCompassBehavior, { wrap } from '~/components/SmoothCompassBehavior';
-    import { getCompassInfo } from '~/helpers/geolib';
     import { TO_DEG } from '~/utils/geo';
 
     let currentHeading: number = 0;
@@ -17,7 +16,6 @@
     let listeningForHeading = false;
 
     export let height: number = 350;
-    export let altitude: number = null;
     export let location: MapPos<LatLonKeys> = null;
 
     let moonBearing = null;
@@ -81,19 +79,19 @@
         }
     });
 
-    const paint = new Paint()
+    const paint = new Paint();
     function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: Canvas }) {
         let w = canvas.getWidth();
         let h = canvas.getHeight();
-        canvas.translate(w/2, h/2);
+        canvas.translate(w / 2, h / 2);
         canvas.save();
         canvas.rotate(moonBearing + 180);
-        paint.setColor('gray')
-        canvas.drawCircle(0, h/2, 10, paint);
+        paint.setColor('gray');
+        canvas.drawCircle(0, h / 2, 10, paint);
         canvas.restore();
         canvas.rotate(sunBearing + 180);
-        paint.setColor('#ffdd55')
-        canvas.drawCircle(0, h/2, 10, paint);
+        paint.setColor('#ffdd55');
+        canvas.drawCircle(0, h / 2, 10, paint);
     }
 
     $: {
@@ -107,7 +105,7 @@
 </script>
 
 <gridLayout {height}>
-    <svgview src="~/assets/svgs/needle_background.svg" stretch="aspectFit" horizontalAlignment="center"  />
+    <svgview src="~/assets/svgs/needle_background.svg" stretch="aspectFit" horizontalAlignment="center" />
     <svgview src="~/assets/svgs/needle.svg" stretch="aspectFit" horizontalAlignment="center" rotate={-currentHeading} />
     {#if moonBearing !== null}
         <canvas bind:this={canvas} on:draw={onCanvasDraw} />
