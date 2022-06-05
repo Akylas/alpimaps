@@ -89,6 +89,14 @@ const HILLSHADE_OPTIONS = {
         max: 359,
         transform: (value) => [Math.sin(toRadians(value)), Math.cos(toRadians(value)), 0],
         transformBack: (value) => toDegrees(((value.x || value[0]) > 0 ? 1 : -1) * Math.acos(value.y || value[1]))
+    },
+    minVisibleZoom: {
+        min: 0,
+        max: 24
+    },
+    maxVisibleZoom: {
+        min: 0,
+        max: 24
     }
 };
 export interface SourceItem {
@@ -225,6 +233,12 @@ export default class CustomLayersModule extends MapModule {
 
         options = {}
     ) {
+        let routesSource;
+        let routeLayer: VectorTileLayer;
+        const routesSourceIndex = sources.findIndex((s) => s.endsWith('routes.mbtiles'));
+        if (routesSourceIndex >= 0) {
+            routesSource = sources.splice(routesSourceIndex, 1)[0];
+        }
         // console.log('createMergeMBtiles', sources, worldMbtiles);
         // if (__ANDROID__) {
         //     sources = sources.map((s) => getAndroidRealPath(s));
@@ -254,21 +268,23 @@ export default class CustomLayersModule extends MapModule {
             // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_NONE,
             visible: opacity !== 0
         });
-        const routeLayer = new VectorTileLayer({
-            dataSource,
-            layerBlendingSpeed: 0,
-            rendererLayerFilter: 'route.*',
-            clickHandlerLayerFilter: 'route.*',
-            visible: mapStore.showRoutes,
-            labelRenderOrder: VectorTileRenderOrder.LAYER,
-            decoder: mapContext.innerDecoder
-        });
-        routeLayer.setVectorTileEventListener<LatLonKeys>(
-            {
-                onVectorTileClicked: (e) => mapContext.vectorTileClicked(e)
-            },
-            mapContext.getProjection()
-        );
+        if (routesSource) {
+            routeLayer = new VectorTileLayer({
+                dataSource: new MBTilesTileDataSource({
+                    databasePath: routesSource
+                }),
+                layerBlendingSpeed: 0,
+                visible: mapStore.showRoutes,
+                labelRenderOrder: VectorTileRenderOrder.LAYER,
+                decoder: mapContext.innerDecoder
+            });
+            routeLayer.setVectorTileEventListener<LatLonKeys>(
+                {
+                    onVectorTileClicked: (e) => mapContext.vectorTileClicked(e)
+                },
+                mapContext.getProjection()
+            );
+        }
         layer.setVectorTileEventListener<LatLonKeys>(
             {
                 onVectorTileClicked: (e) => mapContext.vectorTileClicked(e)
@@ -303,6 +319,8 @@ export default class CustomLayersModule extends MapModule {
         const accentColor = new Color(appSettings.getString(`${name}_accentColor`, 'rgba(0,0,0,0)'));
         const shadowColor = new Color(appSettings.getString(`${name}_shadowColor`, '#583900a3'));
         const highlightColor = new Color(appSettings.getString(`${name}_highlightColor`, 'rgba(255, 255, 255,0)'));
+        const minVisibleZoom = appSettings.getNumber(`${name}_minVisibleZoom`, 3);
+        const maxVisibleZoom = appSettings.getNumber(`${name}_maxVisibleZoom`, 16);
 
         let tileFilterMode: RasterTileFilterMode;
         switch (tileFilterModeStr) {
@@ -319,8 +337,9 @@ export default class CustomLayersModule extends MapModule {
         return new HillshadeRasterTileLayer({
             decoder,
             tileFilterMode,
-            visibleZoomRange: [3, 16],
+            visibleZoomRange: [minVisibleZoom, maxVisibleZoom],
             contrast,
+
             // exagerateHeightScaleEnabled: false,
             normalMapLightingShader: DEFAULT_HILLSHADE_SHADER,
             illuminationDirection: [Math.sin(toRadians(illuminationDirection)), Math.cos(toRadians(illuminationDirection)), 0],
@@ -456,6 +475,7 @@ export default class CustomLayersModule extends MapModule {
         // }
 
         // console.log('createRasterLayer', id, opacity, provider.url, provider.sourceOptions, dataSource, dataSource.maxZoom, dataSource.minZoom);
+
         return {
             name: id,
             id,
@@ -667,7 +687,11 @@ export default class CustomLayersModule extends MapModule {
         mapContext.getLayers().forEach((data) => {
             if (data.layer instanceof VectorTileLayer) {
                 const decoder = data.layer.getTileDecoder();
-                decoder.reloadStyle();
+                try {
+                    decoder.reloadStyle();
+                } catch (error) {
+                    console.error(error);
+                }
             }
         });
     }

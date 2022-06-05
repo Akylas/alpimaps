@@ -276,9 +276,9 @@
 			}
 			line-width: @path-width + @path-casing-width;
 			line-color: @path-casing;
-			[brunnel=tunnel][zoom>=14] {
-				line-dasharray: @tunnel-dasharray;
-			}
+			// [brunnel=tunnel][zoom>=14] {
+			// 	line-dasharray: @tunnel-dasharray;
+			// }
 			[brunnel=bridge][zoom>=16]{
 				line-color: @bridge-casing;
 			}
@@ -290,8 +290,6 @@
 					line-dasharray: @tunnel-dasharray;
 				}
 			}
-			line-join: round;
-			line-cap: round;
 			::inner {
 				line-color: @path-fill;
 				line-width: @path-width;
@@ -301,6 +299,9 @@
 						line-color: @cycleway-inner-fill;
 						// line-width: @path-width;
 					}
+				}
+				[brunnel=tunnel][zoom>=14], [subclass=corridor] {
+					line-opacity: 0.5;
 				}
 				[subclass=steps] {
 					line-join: miter;
@@ -350,11 +351,9 @@
 			
 		}
 	}
-	[class=rail][brunnel=null]::transit, 
-	[class=transit][brunnel=null]::transit, 
-	[class=rail][brunnel=bridge]::transit,
-	[class=transit][brunnel=bridge]::transit, 
+	[class=rail][brunnel!=tunnel]::transit, 
 	[class=rail][brunnel=tunnel]::casing,
+	[class=transit][brunnel!=tunnel]::transit, 
 	[class=transit][brunnel=tunnel]::casing {
 		[brunnel=bridge][zoom>=15] {
 			line-color: @railway-bridge-casing;
@@ -380,13 +379,9 @@
 			line-color: @track-casing;
 		}
 		[brunnel=bridge][zoom>=16]{
-			line-cap: butt;
-			line-join: miter;
 			line-color: @bridge-casing;
 		}
 		[brunnel=tunnel][zoom>=14]{
-			line-cap: butt;
-			line-join: miter;
 			line-dasharray: @tunnel-dasharray;
 		}
 		line-join: @track_line_join;

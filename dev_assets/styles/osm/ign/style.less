@@ -17,8 +17,8 @@
 /* 3.1 Main natural */
 @contour_inner:#226600;
 @contour: fadeout(@contour_inner, 0.6);
-@contour_width: linear([view::zoom], (16, 0.6), (22, 1.6));
 @contour_low: fadeout(@contour_inner, 0.8);
+@contour_width: linear([view::zoom], (16, 0.6), (22, 1.6));
 @contour_semi: step([view::zoom], (12, @contour_low), (14,@contour));
 @contour_label: @contour_inner;
 @contour_label_size: linear([view::zoom], (12, 5), (16, 8), (20, 9));
@@ -26,7 +26,7 @@
 @contour_halo_radius: 1;
 
 @glacier: #e0f3fa88;
-@water: #AAD3DF;
+@water: #56C4ED;
 @water_stroke: darken(@water, 10%);
 @river: @water;
 
@@ -49,15 +49,11 @@
 
 // --- Parks, woods, other green things ---
 
-// @grass: linear([view::zoom], (6, fadeout(#cdebb0, 0.7)), (12,#cdebb0), (13,#cdebb0), (14,fadeout(#cdebb0, 0.5)));
 @grass: linear([view::zoom], (6, fadeout(#cdebb0, 0.7)), (12,#cdebb0));
-// @scrub: linear([view::zoom], (6, fadeout(#c8d7ab, 0.7)), (12,#c8d7ab), (13,#c8d7ab), (14,fadeout(#c8d7ab, 0.5)));
 @scrub: linear([view::zoom], (6, fadeout(#c8d7ab, 0.7)), (12,#c8d7ab));
-// @heath:  linear([view::zoom], (6, fadeout(#d6d99f, 0.7)), (12,#d6d99f), (13,#d6d99f), (14,fadeout(#d6d99f, 0.5)));
 @heath:  linear([view::zoom], (6, fadeout(#d6d99f, 0.7)), (12,#d6d99f));
 @fell: @heath
-// @forest: linear([view::zoom], (6, fadeout(#add19e, 0.7)), (12,#add19e), (13,#add19e), (14,fadeout(#add19e, 0.5)));
-@forest: linear([view::zoom], (6, fadeout(#add19e, 0.7)), (12,#add19e));
+@forest: linear([view::zoom], (6, fadeout(#ADD19E, 0.7)), (12, fadeout(#ADD19E, 0.3)), (14,#ADD19E));
 @forest_pattern:  url('symbols/leaftype_mixed.svg');
 @scrub_pattern:  url('symbols/scrub.png');
 @allotments: linear([view::zoom], (6, fadeout(#c9e1bf, 0.7)), (12,#c9e1bf)) ;
@@ -188,10 +184,10 @@
 
 @footway-casing-width: linear([view::zoom], (16,0), (16.01,1), (18, 2));
 
-@path-fill: linear([view::zoom], (13,#bb7979), (14,#bb6868));
+@path-fill: linear([view::zoom], (13,#713F86), (14,#713F86));
 @path-tunnel-fill: lighten(@pedestrian-fill, 5%);
 @path-casing: linear([view::zoom], (10, #ffffff00), (13, #ffffff77));
-@path-casing-width: linear([view::zoom], (14,0), (14.01,1), (16, 2.5));
+@path-casing-width: linear([view::zoom], (14,0), (14.01,0.5), (15,0.5), (16, 2.5));
 @cycleway-casing-width: linear([view::zoom], (14,0), (14.01,1), (16, 1.5));
 @path-width: @pedestrian-width;
 @path-dasharray: 7,1;
@@ -375,7 +371,7 @@
 @road_large_label_width: linear([view::zoom], (9, 8), (12, 8), (20, 14));
 @road_large_label_halo_radius: 1;
 
-@road_small_label_fill: #000;
+@road_small_label_fill: #444;
 @road_small_label_width: linear([view::zoom], (15, 8), (20, 11));
 @road_small_label_halo_radius: 1;
 

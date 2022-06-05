@@ -147,7 +147,7 @@
                     .getTransitLines()
                     .then((result) => {
                         transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
-                            simplifyTolerance: 0,
+                            // simplifyTolerance: 0,
                             minZoom: 0,
                             maxZoom: 24
                         });
@@ -1593,7 +1593,7 @@
                     id: 'dark_mode',
                     color: $sTheme === 'dark' ? primaryColor : undefined,
                     icon: 'mdi-theme-light-dark'
-                },
+                }
 
                 // {
                 //     title: lc('sentry'),
@@ -1671,6 +1671,16 @@
             showError(error);
         }
     }
+
+    let drawn = false;
+    function reportFullyDrawn() {
+        if (!drawn) {
+            drawn = true;
+            if (__ANDROID__) {
+                (Application.android.foregroundActivity as android.app.Activity).reportFullyDrawn();
+            }
+        }
+    }
 </script>
 
 <page bind:this={page} actionBarHidden={true} backgroundColor="#E3E1D3" on:navigatingTo={onNavigatingTo} on:navigatingFrom={onNavigatingFrom}>
@@ -1693,6 +1703,7 @@
             on:mapIdle={onMainMapIdle}
             on:mapClicked={onMainMapClicked}
             useTextureView={false}
+            on:layoutChanged={reportFullyDrawn}
         />
         <stacklayout horizontalAlignment="left" verticalAlignment="middle">
             <button
