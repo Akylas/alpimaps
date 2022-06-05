@@ -76,7 +76,7 @@ registerNativeViewElement('bottomsheet', () => require('@nativescript-community/
 registerNativeViewElement('gesturerootview', () => require('@nativescript-community/gesturehandler').GestureRootView);
 registerNativeViewElement('symbolshape', () => require('~/components/SymbolShape').default);
 registerNativeViewElement('awebview', () => require('@nativescript-community/ui-webview').AWebView);
-registerNativeViewElement('checkbox', () => require('@akylas/nativescript-checkbox').CheckBox);
+registerNativeViewElement('checkbox', () => require('@nativescript-community/ui-checkbox').CheckBox);
 CollectionViewElement.register();
 PagerElement.register();
 // DrawerElement.register();
