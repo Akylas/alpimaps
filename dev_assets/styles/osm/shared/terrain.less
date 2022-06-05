@@ -1,10 +1,11 @@
 
 #mountain_peak {
 	['mapnik::geometry_type'=2] {
-		[class=cliff][zoom>=12] { 
+		[class=cliff][zoom>=12],
+		[zoom>=14] { 
 			line-color: @cliff;
 			line-width: @cliff-width;
-			[zoom>=15] {
+			[class=cliff][zoom>=15] {
 			  line/line-offset: linear([view::zoom], (15, 0), (16,-2));
 			  line/line-color: @cliff; 
 			  line/line-dasharray: 1,8;
@@ -15,6 +16,7 @@
 				text-face-name: @mont;
 				text-fill: @building_label;
 				text-size: 9;
+				text-dy: 1;
 				text-placement: line;
 			}
 		}
@@ -29,10 +31,12 @@
 			text-size: @peak_icon_width; 
 			text-placement: [nuti::markers3d];
 			text-name: @peak_icon;
-			text-fill: @peak_label;
+			text-fill: @peak_icon_fill;
+			text-halo-fill: @poi_halo;
+			text-halo-radius: @poi_halo_radius;
 			[class=saddle] {
 				text-name: @saddle_icon;
-				text-fill: @sadle_label;
+				text-fill: @saddle_icon_fill;
 				text-size: @peak_icon_width - 0.000001; 
 			}
 		}
@@ -66,32 +70,21 @@
 	[div=10][zoom>=14],
 	[div=20][zoom>=14]{
 		line-color: @contour_low;
-		line-width: 0.6 ;
+		line-width: @contour_width ;
 	}
-	[div=50][zoom>=13][zoom<14] ,
+	[div=100][zoom>=12],
+	[div=200][zoom>=12],
+	[div=50][zoom>=13][zoom<14],
 	[div=50][zoom>=14]{
-		line-color: step([view::zoom], (13, @contour_semi), (14,@contour));
-		line-width: 0.6 ;
+		line-color: @contour_semi;
+		line-width: @contour_width;
 	}
+	
+	[div=1000][zoom>=12],
+	[div=500][zoom>=12],
 	[div=250][zoom>=13][zoom<14] {
 		line-color: @contour;
-		line-width: 0.6 ;
-	}
-	[div=100][zoom>=12] {
-		line-width: 0.6 ;
-		line-color:step([view::zoom], (12, @contour_semi), (14,@contour));
-	}
-	[div=200][zoom>=12] {
-		line-width: 0.6 ;
-		line-color:step([view::zoom], (12, @contour_semi), (14,@contour));
-	}
-	[div=500][zoom>=12]{
-		line-width: 0.6 ;
-		line-color: @contour;
-	}
-	[div=1000][zoom>=12],[div=500][zoom>=12] {
-		line-width: 0.6 ;
-		line-color: @contour;
+		line-width: @contour_width ;
 	}
 	
 	[div=1000][zoom>=12],
@@ -108,6 +101,6 @@
 		text-placement: line;
 		text-halo-radius: @contour_halo_radius;
 		text-halo-fill: @contour_halo;
-		text-size: linear([view::zoom], (12, 5), (16, 8), (20, 9));
+		text-size: @contour_label_size;
 	}
 }
