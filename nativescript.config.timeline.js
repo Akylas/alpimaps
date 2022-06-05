@@ -1,10 +1,5 @@
-const origin = require('./nativescript.config');
-module.exports = {
-    ...origin,
-    profiling: 'timeline',
-    forceLog: true,
-    android: {
-        maxLogcatObjectSize: 4096,
-        forceLog: true
-    }
-};
+const mergeOptions = require("./node_modules/merge-options");
+module.exports = mergeOptions(require("./nativescript.config.logging"), {
+    ignoredNativeDependencies: ['@nativescript-community/sentry'],
+    profiling: 'timeline'
+});

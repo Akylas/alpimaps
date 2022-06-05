@@ -75,7 +75,8 @@ export default class ItemsModule extends MapModule {
     getOrCreateLocalVectorLayer() {
         if (!this.localVectorLayer) {
             this.localVectorDataSource = new GeoJSONVectorTileDataSource({
-                simplifyTolerance: 0,
+                simplifyTolerance: 1.5,
+                // simplifyTolerance: 0,
                 minZoom: 0,
                 maxZoom: 24
             });
