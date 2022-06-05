@@ -17,9 +17,11 @@
 /* 3.1 Main natural */
 @contour_inner:#22660000;
 @contour: fadeout(@contour_inner, 0.6);
-@contour_semi: fadeout(@contour_inner, 0.8);
+@contour_width: linear([view::zoom], (16, 0.6), (22, 1.6));
 @contour_low: fadeout(@contour_inner, 0.8);
+@contour_semi: step([view::zoom], (12, @contour_low), (14,@contour));
 @contour_label: @contour_inner;
+@contour_label_size: linear([view::zoom], (12, 5), (16, 8), (20, 9));
 @contour_halo: #ffffff88;
 @contour_halo_radius: 0;
 
@@ -32,11 +34,9 @@
 @national_park_label: rgb(99, 150, 65);
 @park: #b6e69e; 
 @national_park_fill: linear([view::zoom], (6, fadeout(@park, 0.25)), (11, fadeout(@park, 0.6)), (12, fadeout(@park, 1)));
-@protected_area_fill: fadeout(@park, 1);
 @protected_area_line: #A9D991bb;
 @aboriginal_line: #D9B391;
 @park_line: #82bf5a;
-@park_line_width: 1;
 
 @park_font_size:linear([view::zoom], (12, 12), (14, 12), (14.0001, 8));
 @protected_area_font_size:linear([view::zoom], (12, 12), (14, 12), (14.0001, 8));
@@ -98,6 +98,7 @@
 
 @marine_labels: #fff;
 @marine_labels_halo: #98c2ca;
+@marine_labels_halo_radius: 2;
 
 @motorway_halo: #fff0c4;
 @primary_halo: #fefde1;
@@ -291,13 +292,16 @@
 @river_text_width: linear([view::zoom], (10, 6), (15, 10), (18, 12));
 @waterway_label_spacing: 0;
 
+@river-width: linear([view::zoom], (8, 0.5), (15, 2), (16, 4));
 @canal_width: linear([view::zoom], (13, 0.7), (14, 1), (15, 1.6));
 @stream-width: linear([view::zoom], (13, 0.7), (14, 1), (15, 1.6));
 
 @park_label: #3a7921;
 @halo_park_label: rgba(255, 255, 255, 0.45);
 
+@peak_icon_fill: #226600;
 @peak_label: #226600;
+@saddle_icon_fill: #666600;
 @sadle_label: #666600;
 @peak_halo: #ffffff;
 @peak_halo_radius: 1;
@@ -331,7 +335,8 @@
 @state_label: #000000;
 @district_label: #7f7f7f;
 @suburb_label: #3f4873;
-@suburb_min_dist: 15;
+@suburb_min_dist: 100;
+@locality_min_dist: 200;
 @suburb_label_width:linear([view::zoom], (12, 9), (13, 10), (16, 13)) - 0.000001 * [rank];
 @suburb-label-wrap-width: linear([view::zoom], (12, 40), (15, 60));
 @neighbourhood_label: #414a76;

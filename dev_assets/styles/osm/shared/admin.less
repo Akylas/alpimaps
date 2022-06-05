@@ -14,7 +14,7 @@
         line-opacity: linear([view::zoom], (5, 0.8), (6, 0.9));
         line-dasharray: 1.35, 0.9;
     }
-    [admin_level=5][zoom>=6][zoom<=14] {
+    [admin_level>=5][zoom>=7][zoom<=14] {
         line-color: @border_region;
         line-width: linear([view::zoom], (5, 0.7), (6, 0.8), (7, 0.9), (8, 0.9), (9, 1), (10, 1.2));
         line-opacity: linear([view::zoom], (5, 0.8), (6, 0.9));
@@ -44,7 +44,17 @@
     [class='national_park'] {
         polygon-fill: @national_park_fill;
     }
-    [zoom>=8][zoom <14]{
+    [zoom>=12][zoom <16]::inner{
+        text-name: [name];
+        text-face-name: @mont_bd;
+        text-wrap-width: 60;
+        text-placement: interior;
+        text-size: @protected_area_font_size;
+        text-halo-radius: @standard-halo-radius;
+        text-halo-fill: @protected-area_halo;
+        text-fill: @national_park_label;
+    }
+    [zoom>=8]{
         line-width: 1.2;
         line-width: linear([view::zoom], (9, 0.75), (12, 1));
         line-color: @protected_area_line;
@@ -52,20 +62,19 @@
             line-color: @aboriginal_line;
         }
     }
-    [zoom>=14] {
-        [way_pixels>750] {
-            line-color: @protected-area;
-            [class=aboriginal_lands] {
-                line-color: @aboriginal_line;
-            }
-            line-width: 3.6;
-            line-opacity: 0.15;
-            narrowline/line-opacity: 0.15;
-            narrowline/line-color: @protected-area;
-            [class=aboriginal_lands] {
-                narrowline/line-color: @aboriginal_line;
-            }
-        }
+    [zoom>=16] {
+        // [way_pixels>750] {
+        //     line-color: @protected_area_line;
+        //     [class=aboriginal_lands] {
+        //         line-color: @park;
+        //     }
+        //     line-width: 1;
+        //     // narrowline/line-opacity: 0.15;
+        //     // narrowline/line-color: @protected-area;
+        //     // [class=aboriginal_lands] {
+        //     //     narrowline/line-color: @aboriginal_line;
+        //     // }
+        // }
         text-size: @protected_area_font_size;
         [class='national_park'] {
             text-size: @park_font_size;

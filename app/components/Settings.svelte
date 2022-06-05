@@ -177,7 +177,6 @@
                         const result = await showBottomSheet<any>({
                             view: OptionSelect,
                             props: {
-                                title: lc('select_language'),
                                 options: item.values.map((k) => ({ name: k.title, data: k.value }))
                             },
                             trackingScrollView: 'collectionView'

@@ -35,6 +35,7 @@ module.exports = (env, params = {}) => {
                 buildpeakfinder: true,
                 buildstyle: true,
                 production: true,
+                noconsole: true,
                 sentry: false,
                 uploadSentry: false,
                 apiKeys: true,
@@ -49,14 +50,16 @@ module.exports = (env, params = {}) => {
             {
                 production: true,
                 sentry: false,
+                noconsole: false,
                 uploadSentry: false,
+                apiKeys: true,
                 sourceMap: false,
-                uglify: false
+                uglify: true
             },
             env
         );
     }
-    const nconfig = require('./nativescript.config.playstore');
+    const nconfig = require('./nativescript.config.js');
     const {
         appPath = nconfig.appPath,
         appResourcesPath = nconfig.appResourcesPath,
@@ -69,6 +72,7 @@ module.exports = (env, params = {}) => {
         uglify,
         profile,
         noconsole,
+        timeline,
         cartoLicense = false,
         devlog,
         fork = true,
@@ -79,6 +83,7 @@ module.exports = (env, params = {}) => {
         theme = 'auto',
         adhoc
     } = env;
+    console.log('env', env);
     env.appPath = appPath;
     env.appResourcesPath = appResourcesPath;
     env.appComponents = env.appComponents || [];
@@ -142,11 +147,11 @@ module.exports = (env, params = {}) => {
     //             GIT_URL: `"${package.repository}"`,
     //             SUPPORT_URL: `"${package.bugs.url}"`,
     //             CUSTOM_URL_SCHEME: `"${CUSTOM_URL_SCHEME}"`,
-    //             STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${nsconfig.id}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
+    //             STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${nconfig.id}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
     //             STORE_REVIEW_LINK: `"${
     //                 isIOS
     //                     ? ` itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=${APP_STORE_ID}&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+Software`
-    //                     : `market://details?id=${nsconfig.id}`
+    //                     : `market://details?id=${nconfig.id}`
     //             }"`,
     //             DEV_LOG: !!devlog,
     //             TEST_LOGS: !!adhoc || !production
@@ -299,7 +304,6 @@ module.exports = (env, params = {}) => {
     }
 
     const package = require('./package.json');
-    const nsconfig = require('./nativescript.config.playstore.js');
     const isIOS = platform === 'ios';
     const isAndroid = platform === 'android';
     const APP_STORE_ID = process.env.IOS_APP_ID;
@@ -334,11 +338,11 @@ module.exports = (env, params = {}) => {
         GIT_URL: `"${package.repository}"`,
         SUPPORT_URL: `"${package.bugs.url}"`,
         CUSTOM_URL_SCHEME: `"${CUSTOM_URL_SCHEME}"`,
-        STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${nsconfig.id}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
+        STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${nconfig.id}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
         STORE_REVIEW_LINK: `"${
             isIOS
                 ? ` itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=${APP_STORE_ID}&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+Software`
-                : `market://details?id=${nsconfig.id}`
+                : `market://details?id=${nconfig.id}`
         }"`,
         DEV_LOG: !!devlog,
         TEST_LOGS: !!adhoc || !production
@@ -579,7 +583,8 @@ module.exports = (env, params = {}) => {
     config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /punnycode$/ }));
     config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /^url$/ }));
 
-    if (!!production) {
+    if (!!production && !timeline) {
+        console.log('removing N profiling')
         config.plugins.push(
             new webpack.NormalModuleReplacementPlugin(/profiling$/, (resource) => {
                 if (resource.context.match(nativescriptReplace)) {
