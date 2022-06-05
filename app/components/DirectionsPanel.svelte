@@ -110,6 +110,14 @@
             min: 0,
             max: 1
         },
+        use_highways: {
+            min: 0,
+            max: 1
+        },
+        use_tolls: {
+            min: 0,
+            max: 1
+        },
         step_penalty: {
             min: 5,
             max: 20
@@ -125,7 +133,7 @@
     let profileCostingOptions = {
         pedestrian: { use_hills: 1, max_hiking_difficulty: 6, step_penalty: 5, driveway_factor: 10, use_roads: 0, use_tracks: 1, walking_speed: 4 },
         bicycle: { bicycle_type: bicycle_type, use_hills: 0.25, avoid_bad_surfaces: 0.25, use_roads: 0.25, use_tracks: 0.5 },
-        auto: { use_roads: 1, use_tracks: 0 }
+        auto: { use_roads: 1, use_tracks: 0, use_tolls: 1, use_highways: 1 }
     };
 
     function switchValhallaSetting(key: string, options?: any) {
@@ -212,7 +220,7 @@
     function getRouteDataSource() {
         if (!_routeDataSource) {
             _routeDataSource = new GeoJSONVectorTileDataSource({
-                simplifyTolerance: 0,
+                simplifyTolerance: 1.5,
                 minZoom: 0,
                 maxZoom: 24
             });
@@ -625,29 +633,32 @@
             clearWaypointLines(false);
             let itemToFocus;
             if (computeMultiple) {
+                let options = [];
                 if (profile === 'bicycle') {
-                    const results: { route: Route; instructions: RouteInstruction[] }[] = await Promise.all([
-                        computeAndAddRoute({ shortest: true }),
-                        computeAndAddRoute({ shortest: false, avoid_bad_surfaces: 1, use_hills: 0, use_roads: 0.25 }),
-                        computeAndAddRoute({ shortest: false, bicycle_type: 'Cross', avoid_bad_surfaces: 1, use_hills: 1, use_roads: 0 }),
-                        computeAndAddRoute({ shortest: false, bicycle_type: 'Moutain', avoid_bad_surfaces: 0, use_hills: 1, use_roads: 0 })
-                    ]);
-                    itemToFocus = results.reduce(function (prev, current) {
-                        return prev?.route?.totalTime > current?.route?.totalTime ? current : prev;
-                    });
+                    options = [
+                        { shortest: true },
+                        { shortest: false, avoid_bad_surfaces: 1, use_hills: 0, use_roads: 0.25 },
+                        { shortest: false, bicycle_type: 'Cross', avoid_bad_surfaces: 1, use_hills: 1, use_roads: 0 },
+                        { shortest: false, bicycle_type: 'Moutain', avoid_bad_surfaces: 0, use_hills: 1, use_roads: 0 }
+                    ];
                 } else if (profile === 'pedestrian') {
-                    const results: { route: Route; instructions: RouteInstruction[] }[] = await Promise.all([
-                        computeAndAddRoute({ shortest: true }),
-                        computeAndAddRoute({ shortest: false, use_hills: 1, use_roads: 0, step_penalty: 0 }),
-                        computeAndAddRoute({ shortest: false, use_hills: 0, use_roads: 0, step_penalty: 1 })
-                    ]);
-                    itemToFocus = results.reduce(function (prev, current) {
-                        return prev?.route?.totalTime > current?.route?.totalTime ? current : prev;
-                    });
+                    options = [
+                        ({ shortest: true }),
+                        ({ shortest: false, use_hills: 1, use_roads: 0, step_penalty: 0 }),
+                        ({ shortest: false, use_hills: 0, use_roads: 0, step_penalty: 1 })
+                    ];
                 } else {
-                    const results = await Promise.all([computeAndAddRoute({ shortest: true }), computeAndAddRoute({ shortest: false })]);
-                    itemToFocus = results[0];
+                    options = [
+                        ({ shortest: true }),
+                        ({ shortest: false, use_tolls: 1, use_highways: 1 }),
+                        ({ shortest: false, use_tolls: 0, use_highways: 1 }),
+                        ({ shortest: false, use_highways: 0 })
+                    ];
                 }
+                const results: { route: Route; instructions: RouteInstruction[] }[] = await Promise.all(options.map(computeAndAddRoute));
+                itemToFocus = results.reduce(function (prev, current) {
+                    return prev?.route?.totalTime > current?.route?.totalTime ? current : prev;
+                });
             } else {
                 itemToFocus = await computeAndAddRoute();
             }
@@ -860,6 +871,16 @@
                 <button
                     variant="text"
                     class="icon-btn-white"
+                    col={1}
+                    text="mdi-highway"
+                    visibility={profile === 'auto' ? 'visible' : 'collapsed'}
+                    color={valhallaSettingColor('use_highways', profileCostingOptions)}
+                    on:tap={() => switchValhallaSetting('use_highways', profileCostingOptions)}
+                    on:longPress={(event) => setSliderCostingOptions('use_highways', profileCostingOptions, event)}
+                />
+                <button
+                    variant="text"
+                    class="icon-btn-white"
                     text="mdi-road"
                     col={1}
                     visibility={profile === 'bicycle' || profile === 'pedestrian' ? 'visible' : 'collapsed'}
@@ -876,6 +897,16 @@
                     color={valhallaSettingColor('use_hills', profileCostingOptions)}
                     on:tap={() => switchValhallaSetting('use_hills', profileCostingOptions)}
                     on:longPress={(event) => setSliderCostingOptions('use_hills', profileCostingOptions, event)}
+                />
+                <button
+                    variant="text"
+                    class="icon-btn-white"
+                    text="mdi-credit-card-marker-outline"
+                    visibility={profile === 'auto' ? 'visible' : 'collapsed'}
+                    col={2}
+                    color={valhallaSettingColor('use_tolls', profileCostingOptions)}
+                    on:tap={() => switchValhallaSetting('use_tolls', profileCostingOptions)}
+                    on:longPress={(event) => setSliderCostingOptions('use_tolls', profileCostingOptions, event)}
                 />
 
                 <button
