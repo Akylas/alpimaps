@@ -42,6 +42,7 @@
 
 @park_font_size:linear([view::zoom], (12, 12), (14, 12), (14.0001, 8));
 @protected_area_font_size:12;
+@protected_area_line_width:linear([view::zoom], (9, 0.75), (12, 1), (15, 1), (18, 3));
 
 @protected-area: #09330c;
 @protected-area_halo: white;
@@ -108,11 +109,6 @@
 @marine_labels_halo_radius: 2;
 
 
-@motorway_halo: #fff0c4;
-@primary_halo: #fefde1;
-@minor_halo: #fff;
-@tunnel_halo: #faf9f7;
-@poi_halo: #f2f5f8;
 
 @housenumber: rgb(77, 76, 76);
 
@@ -189,7 +185,7 @@
 @path-casing: linear([view::zoom], (10, #ffffff00), (13, #ffffff77));
 @path-casing-width: linear([view::zoom], (14,0), (14.01,0.5), (15,0.5), (16, 2.5));
 @cycleway-casing-width: linear([view::zoom], (14,0), (14.01,1), (16, 1.5));
-@path-width: @pedestrian-width;
+@path-width: linear([view::zoom], (13,0.5), (14,1), (18,2), (20, 3));
 @path-dasharray: 7,1;
 @track_path_text_dy: linear([view::zoom], (13, 0), (16, 1), (18, 2));
 
@@ -396,6 +392,8 @@
 @poi-restaurant-fill: #BC7729; 
 @poi-shop-fill: #9F43A7; 
 @poi_halo_radius:1;
+@poi_halo: #f2f5f8;
+
 // @poi_label_dy: linear([view::zoom], (10, 10), (12, 11), (18, 15), (19, 16));
 @poi_label_dy: linear([view::zoom], (10, 10), (20, 16));
 

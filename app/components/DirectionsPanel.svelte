@@ -776,7 +776,7 @@
                 options = profileCostingOptions[profile];
             }
             const settings = valhallaSettings[key];
-            const SliderPopover = (await import('./SliderPopover.svelte')).default;
+            const SliderPopover = (await import('~/components/SliderPopover.svelte')).default;
             showPopover({
                 view: SliderPopover,
                 anchor: event.object,
