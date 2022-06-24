@@ -157,7 +157,7 @@
 </script>
 
 <gridlayout {...$$restProps} padding="5 10 4 10">
-    <flexlayout paddingLeft="40" marginBottom={propsToDraw.length > 0 ? 16 : 0} flexDirection="column">
+    <flexlayout paddingLeft="40" marginBottom={16} flexDirection="column">
         <label
             text={itemTitle}
             fontWeight="bold"
@@ -172,16 +172,16 @@
         <label visibility={itemSubtitle ? 'visible' : 'collapsed'} text={itemSubtitle} color={$subtitleColor} fontSize={13} maxLines={2} verticalTextAlignment="top" flexGrow={1} flexShrink={0} />
     </flexlayout>
     <canvaslabel {...$$restProps} fontSize="16">
-        <cgroup verticalAlignment="middle" paddingBottom={(itemSubtitle ? 4 : 0) + (propsToDraw.length > 0 ? 12 : 0)}>
-            <cspan visibility={itemIcon && itemIcon.length > 0 ? 'visible' : 'hidden'} paddingLeft="10" width="40" text={osmicon(itemIcon)} fontFamily="osm" fontSize={24} />
+        <cgroup verticalAlignment="middle" paddingBottom={(itemSubtitle ? 4 : 0) + 12}>
+            <cspan visibility={itemIcon && itemIcon.length > 0 ? 'visible' : 'hidden'} paddingLeft="10" width="40" text={osmicon(itemIcon)} fontFamily="osm" fontSize={24} color={(itemProps && itemProps.color) || $textColor }/>
         </cgroup>
         <symbolshape
             visibility={showSymbol && itemProps && (itemProps.symbol || itemProps.network) ? 'visible' : 'hidden'}
             symbol={getSymbol(itemProps)}
-            color={(itemProps && itemProps.color) || null}
+            color={(itemProps && itemProps.color) ||  $textColor}
             width="34"
             height="34"
-            top={propsToDraw.length > 0 ? 3 : 6}
+            top={3}
         />
 
         <cgroup fontSize="14" verticalAlignment="bottom" textAlignment="left" visibility={propsToDraw.length > 0 ? 'visible' : 'hidden'}>

@@ -15,6 +15,7 @@ import type { Feature } from 'geojson';
 import { getDistanceSimple } from '~/helpers/geolib';
 import { IItem, Item, ItemProperties, ItemRepository } from '~/models/Item';
 import { showError } from '~/utils/error';
+import { accentColor } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
 import NSQLDatabase from './NSQLDatabase';
 const mapContext = getMapContext();
@@ -374,7 +375,7 @@ export default class ItemsModule extends MapModule {
     }
     async saveItem(item: Mutable<IItem>, styleOptions?: MarkerStyleBuilderOptions | PointStyleBuilderOptions | LineStyleBuilderOptions) {
         try {
-            const properties = item.properties;
+            let properties = item.properties;
             if (properties?.route) {
                 if (!item.geometry && properties.route.osmid) {
                     item.geometry = await this.getRoutePositions(item);
@@ -382,6 +383,9 @@ export default class ItemsModule extends MapModule {
                         return item;
                     }
                 }
+            } else {
+                properties = item.properties = item.properties || {};
+                properties.color = accentColor.hex;
             }
             if (!item.id) {
                 const id = item.properties.id || Date.now();
