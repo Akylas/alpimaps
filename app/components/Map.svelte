@@ -462,8 +462,8 @@
             options.setWatermarkScale(0);
             options.setRestrictedPanning(true);
             options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
-            options.setEnvelopeThreadPoolSize(2);
-            options.setTileThreadPoolSize(2);
+            options.setEnvelopeThreadPoolSize(4);
+            options.setTileThreadPoolSize(4);
 
             options.setZoomGestures(true);
             options.setDoubleClickMaxDuration(0.3);
@@ -587,6 +587,7 @@
             const route = item?.properties?.route;
             if (setSelected && route) {
                 DEV_LOG && console.log('selected_id', typeof item.properties.route.osmid, item.properties.route.osmid, typeof item.properties.id, item.properties.id, setSelected);
+
                 if (item.properties.id !== undefined) {
                     selectedId = item.properties.id;
                     if (typeof item.properties.id === 'string') {
@@ -603,6 +604,7 @@
                     mapContext.innerDecoder.setStyleParameter('selected_id', '0');
                     mapContext.innerDecoder.setStyleParameter('selected_id_str', '0');
                 }
+
                 // console.log('selectedOSMId', selectedOSMId);
                 // if (!selectedRouteLine) {
                 //     getOrCreateLocalVectorLayer();
@@ -664,14 +666,28 @@
                     selectedPosMarker.position = position;
                     selectedPosMarker.visible = true;
                 }
-                if (setSelected && selectedOSMId !== undefined) {
-                    selectedOSMId = undefined;
-                    mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
-                }
-                if (setSelected && selectedId !== undefined) {
-                    selectedId = undefined;
-                    mapContext.innerDecoder.setStyleParameter('selected_id', '0');
-                    mapContext.innerDecoder.setStyleParameter('selected_id_str', '');
+                if (setSelected) {
+                    if (item.properties.id !== undefined) {
+                        selectedId = item.properties.id;
+                        if (typeof item.properties.id === 'string') {
+                            mapContext.innerDecoder.setStyleParameter('selected_id_str', selectedId + '');
+                            mapContext.innerDecoder.setStyleParameter('selected_id', '0');
+                        } else {
+                            mapContext.innerDecoder.setStyleParameter('selected_id', selectedId + '');
+                            mapContext.innerDecoder.setStyleParameter('selected_id_str', '0');
+                        }
+                        mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
+                    } else {
+                        if (selectedOSMId !== undefined) {
+                            selectedOSMId = undefined;
+                            mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
+                        }
+                        if (selectedId !== undefined) {
+                            selectedId = undefined;
+                            mapContext.innerDecoder.setStyleParameter('selected_id', '0');
+                            mapContext.innerDecoder.setStyleParameter('selected_id_str', '');
+                        }
+                    }
                 }
             }
             if (setSelected) {
@@ -1146,7 +1162,7 @@
         currentLanguage = newLang;
         packageService.currentLanguage = newLang;
         setStyleParameter('lang', newLang);
-        setStyleParameter('fallback_lang', 'latin');
+        // setStyleParameter('fallback_lang', 'en');
     }
     onLanguageChanged(handleNewLanguage);
 
