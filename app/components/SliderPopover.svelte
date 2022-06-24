@@ -24,10 +24,10 @@
 <gridLayout>
     <gridLayout rows="auto,auto" columns="auto,*,auto" padding="0 10 0 10" borderRadius="4" {backgroundColor} margin="2" elevation="2">
         {#if icon}
-            <label class="icon-label" text={icon}  marginTop="10"/>
+            <label class="icon-label" text={icon}  marginTop="0"/>
         {/if}
         {#if title}
-            <label text={title} col={1} verticalTextAlignment="center" marginTop="10"/>
+            <label text={title} col={1} verticalTextAlignment="center" marginTop="0"/>
         {/if}
         <label text={formatter(min)} row={1} verticalTextAlignment="center" textAlignment="center" />
         <label text={formatter(max)} row={1} col={2} verticalTextAlignment="center" textAlignment="center" />

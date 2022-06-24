@@ -1,6 +1,6 @@
 @hiking_route_fill: #8800ff;
 @hiking_route_dasharray: 6, 2;
-@route_width: linear([view::zoom], (4, 0.3), (14, 0.5), (15, 1), (18, 3));
+@route_width: linear([view::zoom], (4, 0.3), (14, 0.8), (15, 1.2), (18, 3));
 @route_casing_width: 2;
 @biking_route_fill: rgba(255, 65, 234, 1);
 @biking_route_dasharray: 5, 2;
@@ -32,19 +32,20 @@
 			casing/line-join: round;
 			casing/line-cap: round;
 
-			[zoom>=18] {
-				casing/line-geometry-transform: translate(0, @routeOffset*4);
-			}
+			//[class=hiking][zoom>=18] {
+				// casing/line-geometry-transform: translate(0, @routeOffset*4);
+			// }
 		}
-		[class=hiking][zoom>=18] {
-			line-geometry-transform: translate(0, @routeOffset*4);
-		}
+		// [class=hiking][zoom>=18] {
+		// 	line-geometry-transform: translate(0, @routeOffset*4);
+		// }
 
 		line-join: round;
 		line-cap: round;
 		// line-opacity:linear([view::zoom], (16, 1), (18, 0.4));
 		// line-opacity: [osmid] = [nuti::selected_osmid] ? linear([view::zoom], (14, 1), (15, 0.3), (17, 0.1)):0.5;
 		line-width: @route_width +([osmid]=[nuti::selected_osmid] ? 0.5 : 0);
+        // line-offset: @routeOffset * linear([view::zoom], (15, 0),  (16, 1), (18, 4));
 
 
 		// line-dasharray: [id] = [nuti::selected_id] ? (0,0) :  @biking_route_dasharray;
