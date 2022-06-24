@@ -10,7 +10,7 @@ const storeData = {
     showSlopePercentages: getBoolean('showSlopePercentages', false),
     showRoutes: getBoolean('showRoutes', false),
     contourLinesOpacity: getNumber('contourLinesOpacity', 1),
-    preloading: getBoolean('preloading', false),
+    preloading: getBoolean('preloading', true),
     rotateEnabled: getBoolean('mapRotateEnabled', false),
     pitchEnabled: getBoolean('mapPitchEnabled', false)
 };

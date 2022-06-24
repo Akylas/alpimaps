@@ -514,15 +514,18 @@ module.exports = (env, params = {}) => {
             from: 'css/osm.scss',
             to: 'osm_icons.json',
             globOptions,
-            transform(manifestBuffer, path) {
-                const osmSymbols = symbolsParser.parseSymbols(manifestBuffer.toString());
-                const osmIcons = osmSymbols.variables.reduce(function (acc, value) {
-                    if (value.name.startsWith('$osm-')) {
-                        acc[value.name.slice(5)] = String.fromCharCode(parseInt(value.value.slice(2, -1), 16));
-                    }
-                    return acc;
-                }, {});
-                return Buffer.from(JSON.stringify(osmIcons));
+            transform: {
+                cache: !production,
+                transformer(manifestBuffer, path) {
+                    const osmSymbols = symbolsParser.parseSymbols(manifestBuffer.toString());
+                    const osmIcons = osmSymbols.variables.reduce(function (acc, value) {
+                        if (value.name.startsWith('$osm-')) {
+                            acc[value.name.slice(5)] = String.fromCharCode(parseInt(value.value.slice(2, -1), 16));
+                        }
+                        return acc;
+                    }, {});
+                    return Buffer.from(JSON.stringify(osmIcons));
+                }
             }
         }
     ];
@@ -584,7 +587,7 @@ module.exports = (env, params = {}) => {
     config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /^url$/ }));
 
     if (!!production && !timeline) {
-        console.log('removing N profiling')
+        console.log('removing N profiling');
         config.plugins.push(
             new webpack.NormalModuleReplacementPlugin(/profiling$/, (resource) => {
                 if (resource.context.match(nativescriptReplace)) {
