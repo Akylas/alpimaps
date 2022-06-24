@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   fill="#ffffff"
+   viewBox="0 0 424 552"
+   version="1.1"
+   id="svg835"
+   sodipodi:docname="pin_selected.svg"
+   inkscape:version="1.0.1 (c497b03c, 2020-09-10)"
+   width="424"
+   height="552">
+  <metadata
+     id="metadata841">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs839" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1656"
+     inkscape:window-height="879"
+     id="namedview837"
+     showgrid="false"
+     inkscape:zoom="1.390625"
+     inkscape:cx="12.449438"
+     inkscape:cy="391.05618"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg835"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <path
+     d="M 212,20 C 106.125,20 20,106.135 20,212 c 0,141.646 177.146,310 184.688,317.104 2.062,1.927 4.687,2.896 7.312,2.896 2.625,0 5.25,-0.969 7.313,-2.896 C 226.854,522 404,353.646 404,212 404,106.135 317.875,20 212,20 Z m 0,298.667 c -58.813,0 -106.667,-47.854 -106.667,-106.667 0,-58.813 47.855,-106.667 106.667,-106.667 58.812,0 106.667,47.855 106.667,106.667 0,58.812 -47.854,106.667 -106.667,106.667 z"
+     id="path833"
+     style="stroke:#c8c8c8;stroke-width:40;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+</svg>

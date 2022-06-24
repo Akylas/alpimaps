@@ -8,5 +8,11 @@ module.exports = {
         codeCache: true,
         enableMultithreadedJavascript: false
     },
-    cssParser: 'rework'
+    cssParser: 'rework',
+    hooks: [
+        {
+          type: 'after-prepareNativeApp',
+          script: 'scripts/after-prepareNativeApp.js'
+        }
+      ]
 };
