@@ -41,7 +41,9 @@ export default class ItemFormatter {
     getItemName(item: Item) {
         const properties = item.properties || {};
         return (
-            properties[`name_${mapContext.getCurrentLanguage()}`] ||
+            properties[`name:${mapContext.getCurrentLanguage()}`] ||
+            properties['name:en'] ||
+            properties['name_latin'] ||
             properties.name ||
             properties.name_int ||
             (properties.address && properties.address.name) ||
