@@ -15,7 +15,7 @@ Map {
       polygon-fill: @glacier;
   }
 
-  [class=farmland][zoom>=12]{
+  [class=farmland]{
       polygon-fill: @farmland;
       [subclass=vineyard][zoom>=15] {
         polygon-pattern-file: url('symbols/vineyard.png');
@@ -25,7 +25,7 @@ Map {
     }
   }
   
-  [class=rock][zoom>=5]{
+  [class=rock]{
     polygon-fill: @rock;
     [subclass=bare_rock]  {
       [zoom>=13] {
@@ -42,18 +42,18 @@ Map {
     }
   }
   [class=grass]{
-    [subclass=golf_course]::grass,
-    [subclass=miniature_golf]::grass{
+    polygon-fill: @grass; 
+    [subclass=golf_course],
+    [subclass=miniature_golf]{
       polygon-fill: @golf_course;
     }
-    [subclass=grassland]::grass,
-    [subclass=meadow]::grass,
-    [subclass=grass]::grass,
-    [subclass=null]::grass,
-    [subclass=village_green]::grass,
-    [subclass=garden]::grass{
-      polygon-fill: @grass; 
-    }
+    // [subclass=grassland],
+    // [subclass=meadow],
+    // [subclass=grass],
+    // [subclass=null],
+    // [subclass=village_green],
+    // [subclass=garden]{
+    // }
     [subclass=park] {
       park/polygon-fill: @park;
     }
@@ -98,6 +98,7 @@ Map {
     }
   
     [subclass=wet_meadow],
+    [subclass=wetland],
     [subclass=saltmarsh],
     [subclass=marsh] {
         polygon-fill: @grass;
@@ -108,10 +109,10 @@ Map {
   }
 }
 
-#landuse {
-  [class=residential][zoom>=4][zoom<=10],
-  [class=quarter][zoom>=4],
-  [class=neighbourhood][zoom>=4][zoom<=10]{
+#landuse['mapnik::geometry_type'=3][zoom>=4] {
+  [class=residential],
+  [class=quarter],
+  [class=neighbourhood]{
        polygon-fill: @residential; 
   }
   ::top_of_residential {
