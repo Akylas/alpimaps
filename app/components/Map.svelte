@@ -1693,7 +1693,9 @@
         if (!drawn) {
             drawn = true;
             if (__ANDROID__) {
-                (Application.android.foregroundActivity as android.app.Activity).reportFullyDrawn();
+                try {
+                    (Application.android.foregroundActivity as android.app.Activity).reportFullyDrawn();
+                } catch(err){ }
             }
         }
     }
