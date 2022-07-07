@@ -631,7 +631,7 @@
                                     value={item.value * (item.decimalFactor || 1)}
                                     minValue={item.min * (item.decimalFactor || 1)}
                                     maxValue={item.max * (item.decimalFactor || 1)}
-                                    stepSize={item.stepSize || 0}
+                                    stepSize={item.stepSize || 0.1}
                                     on:valueChange={(e) => onSliderValue(listView1Items, item, e)}
                                 />
                                 <label text={itemValue(item)} row={1} col={1} on:tap={() => promptSliderValue(listView1Items, item)} />
@@ -652,7 +652,7 @@
                                     value={item.value * (item.decimalFactor || 1)}
                                     minValue={item.min * (item.decimalFactor || 1)}
                                     maxValue={item.max * (item.decimalFactor || 1)}
-                                    stepSize={item.stepSize || 0}
+                                    stepSize={item.stepSize || 0.1}
                                     on:valueChange={(e) => onSliderValue(listView2Items, item, e)}
                                 />
                                 <label text={itemValue(item)} row={1} col={1} on:tap={() => promptSliderValue(listView2Items, item)} />
