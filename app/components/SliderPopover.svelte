@@ -8,7 +8,7 @@
     export let title: string = null;
     export let min = 0;
     export let max = 1;
-    export let step = 1;
+    export let step = 0.01;
     export let value = 0;
     export let backgroundColor = $widgetBackgroundColor;
     export let onChange = null;
