@@ -462,8 +462,8 @@
             options.setWatermarkScale(0);
             options.setRestrictedPanning(true);
             options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
-            options.setEnvelopeThreadPoolSize(4);
-            options.setTileThreadPoolSize(4);
+            options.setEnvelopeThreadPoolSize(2);
+            options.setTileThreadPoolSize(2);
 
             options.setZoomGestures(true);
             options.setDoubleClickMaxDuration(0.3);

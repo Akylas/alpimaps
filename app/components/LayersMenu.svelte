@@ -83,6 +83,7 @@
                 view: LayerOptionsBottomSheet,
                 trackingScrollView: 'scrollView',
                 dismissOnBackgroundTap: true,
+                disableDimBackground:true, 
                 props: {
                     item
                 }
