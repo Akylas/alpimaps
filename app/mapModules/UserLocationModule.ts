@@ -254,7 +254,6 @@ export default class UserLocationModule extends MapModule {
         }
         await this.geoHandler.enableLocation();
         await this.geoHandler.startWatch();
-        mapStore.queryingLocation = true;
         this.userFollow = true;
         mapStore.watchingLocation = true;
         if (!mapStore.queryingLocation) {
@@ -278,6 +277,7 @@ export default class UserLocationModule extends MapModule {
         await this.geoHandler.enableLocation();
 
         if (!mapStore.watchingLocation) {
+            mapStore.queryingLocation = true;
             this.startWatchLocation();
         } else {
             this.userFollow = true;
