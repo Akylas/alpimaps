@@ -247,17 +247,17 @@ export default class CustomLayersModule extends MapModule {
     }
 
     createHillshadeTileLayer(name, dataSource, options: HillshadeRasterTileLayerOptions = {}, terrarium = false) {
-        const contrast = appSettings.getNumber(`${name}_contrast`, 0.58);
-        const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.11);
-        const illuminationDirection = appSettings.getNumber(`${name}_illuminationDirection`, 335);
+        const contrast = appSettings.getNumber(`${name}_contrast`, 0.57);
+        const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.22);
+        const illuminationDirection = appSettings.getNumber(`${name}_illuminationDirection`, 143);
         const opacity = appSettings.getNumber(`${name}_opacity`, 1);
         const decoder = terrarium ? new TerrariumElevationDataDecoder() : new MapBoxElevationDataDecoder();
         const tileFilterModeStr = appSettings.getString(`${name}_tileFilterMode`, 'bilinear');
 
-        const accentColor = new Color(appSettings.getString(`${name}_accentColor`, 'rgba(0,0,0,0)'));
-        const shadowColor = new Color(appSettings.getString(`${name}_shadowColor`, '#583900a3'));
-        const highlightColor = new Color(appSettings.getString(`${name}_highlightColor`, 'rgba(255, 255, 255,0)'));
-        const minVisibleZoom = appSettings.getNumber(`${name}_minVisibleZoom`, 5);
+        const accentColor = new Color(appSettings.getString(`${name}_accentColor`, '#000000aa'));
+        const shadowColor = new Color(appSettings.getString(`${name}_shadowColor`, '#00000000'));
+        const highlightColor = new Color(appSettings.getString(`${name}_highlightColor`, '#000000aa'));
+        const minVisibleZoom = appSettings.getNumber(`${name}_minVisibleZoom`, 0);
         const maxVisibleZoom = appSettings.getNumber(`${name}_maxVisibleZoom`, 16);
 
         let tileFilterMode: RasterTileFilterMode;
