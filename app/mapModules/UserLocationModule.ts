@@ -218,18 +218,22 @@ export default class UserLocationModule extends MapModule {
         this.mapView.setFocusPos(this.mLastUserLocation, LOCATION_ANIMATION_DURATION);
     }
     onLocation(event: UserLocationdEventData) {
-        if (mapStore.queryingLocation) {
-            this.stopWatchLocation();
-            mapStore.queryingLocation = false;
-        }
+        
         // const { android, ios, ...toPrint } = data.location;
         // if (DEV_LOG) {
         //     console.log('onLocation', this.mUserFollow, event.location, this.userFollow);
         // }
         if (event.error) {
+            this.stopWatchLocation();
+            showSnack({
+                message: lc('location_error', event.error.toString())
+            });
             console.error(event.error);
             return;
         } else if (event.location) {
+            if (mapStore.queryingLocation && event.location.horizontalAccuracy <= 20) {
+                this.stopWatchLocation();
+            }
             this.updateUserLocation(event.location);
         }
     }
@@ -248,9 +252,10 @@ export default class UserLocationModule extends MapModule {
         if (mapStore.watchingLocation || !this.geoHandler) {
             return;
         }
-        this.userFollow = true;
         await this.geoHandler.enableLocation();
         await this.geoHandler.startWatch();
+        mapStore.queryingLocation = true;
+        this.userFollow = true;
         mapStore.watchingLocation = true;
         if (!mapStore.queryingLocation) {
             showSnack({
@@ -262,6 +267,7 @@ export default class UserLocationModule extends MapModule {
         // console.log('stopWatchLocation');
         this.geoHandler.stopWatch();
         mapStore.watchingLocation = false;
+        mapStore.queryingLocation = false;
         if (!mapStore.queryingLocation) {
             showSnack({
                 message: lc('stopped_watching_location')
@@ -272,7 +278,6 @@ export default class UserLocationModule extends MapModule {
         await this.geoHandler.enableLocation();
 
         if (!mapStore.watchingLocation) {
-            mapStore.queryingLocation = true;
             this.startWatchLocation();
         } else {
             this.userFollow = true;

@@ -20,7 +20,7 @@
         "noFallthroughCasesInSwitch": true,
         "allowSyntheticDefaultImports": true,
         "resolveJsonModule": true,
-        "lib": ["esnext", "es2017", "dom"],
+        "lib": ["esnext", "es2017"],
         "types": ["node", "svelte", "geojson", "offscreencanvas", "svelte-native"],
         "baseUrl": ".",
         "paths": {
