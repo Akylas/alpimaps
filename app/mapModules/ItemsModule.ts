@@ -247,8 +247,8 @@ export default class ItemsModule extends MapModule {
         const projection = layer.dataSource.getProjection();
         const mapProjection = mapContext.getProjection();
         const searchService = new VectorTileSearchService({
-            minZoom: 14,
-            maxZoom: 14,
+            minZoom: layer.dataSource.maxZoom,
+            maxZoom: layer.dataSource.maxZoom,
             layer
         });
         let extent: [number, number, number, number] = item.properties.extent as any;
@@ -263,7 +263,7 @@ export default class ItemsModule extends MapModule {
                 { lat: extent[1], lon: extent[0] },
                 { lat: extent[3], lon: extent[0] },
                 { lat: extent[3], lon: extent[2] },
-                { lat: extent[1], lon: extent[2] }
+                { lat: extent[1],    lon: extent[2] }
             ]
         });
         const featureCollection = await new Promise<VectorTileFeatureCollection>((resolve) =>
@@ -277,6 +277,7 @@ export default class ItemsModule extends MapModule {
             )
         );
         const count = featureCollection.getFeatureCount();
+        console.log('getRoutePositions', layer.dataSource.getNative(), layer.dataSource.maxZoom, extent, properties.osmid, count);
         if (count === 0) {
             return null;
         }
@@ -377,6 +378,7 @@ export default class ItemsModule extends MapModule {
         try {
             let properties = item.properties;
             if (properties?.route) {
+                console.log('saveItem', properties.route.osmid, item.geometry);
                 if (!item.geometry && properties.route.osmid) {
                     item.geometry = await this.getRoutePositions(item);
                     if (!item.geometry) {
