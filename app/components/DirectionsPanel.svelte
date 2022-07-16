@@ -5,7 +5,7 @@
     import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
     import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
     import { VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
-    import type { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+    import { ValhallaOfflineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
     import { RoutingResult, RoutingService } from '@nativescript-community/ui-carto/routing';
     import { ApplicationSettings, Color, Device, GridLayout, ObservableArray, StackLayout, TextField } from '@nativescript/core';
     import type { Feature, Point } from 'geojson';
@@ -133,7 +133,8 @@
     let profileCostingOptions = {
         pedestrian: { use_hills: 1, max_hiking_difficulty: 6, step_penalty: 5, driveway_factor: 10, use_roads: 0, use_tracks: 1, walking_speed: 4 },
         bicycle: { bicycle_type: bicycle_type, use_hills: 0.25, avoid_bad_surfaces: 0.25, use_roads: 0.25, use_tracks: 0.5 },
-        auto: { use_roads: 1, use_tracks: 0, use_tolls: 1, use_highways: 1 }
+        auto: { use_roads: 1, use_tracks: 0, use_tolls: 1, use_highways: 1 },
+        motorcycle: { use_roads: 1, use_tracks: 0, use_tolls: 1, use_highways: 1 }
     };
 
     function switchValhallaSetting(key: string, options?: any) {
@@ -576,6 +577,7 @@
                 service = packageService.onlineRoutingSearchService();
             }
             (service as any).profile = profile;
+            const startTime = Date.now();
             const result = await service.calculateRoute<LatLonKeys>({
                 projection: mapContext.getProjection(),
                 points,
@@ -584,7 +586,18 @@
                     costing_options
                 }
             });
-            // console.log('got  route', result.getTotalDistance(), result.getTotalTime(), Date.now() - startTime, 'ms');
+            // console.log('got route', result.getTotalDistance(), result.getTotalTime(), Date.now() - startTime, 'ms');
+            // if (service instanceof ValhallaOfflineRoutingService) {
+            //     const matchResult = service.matchRoute({
+            //         projection: mapContext.getProjection(),
+            //         points: result.getPoints() as any,
+            //         customOptions: {
+            //             shape_match: 'edge_walk',
+            //             filters: { attributes: ['edge.surface', 'edge.road_class', 'edge.weighted_grade'], action: 'include' }
+            //         }
+            //     });
+            //     console.log('got trace attributes', result.getTotalDistance(), result.getTotalTime(), Date.now() - startTime, 'ms', matchResult);
+            // }
 
             route = routingResultToJSON(result, costing_options);
             positions = result.getPoints();
@@ -642,18 +655,9 @@
                         { shortest: false, bicycle_type: 'Moutain', avoid_bad_surfaces: 0, use_hills: 1, use_roads: 0 }
                     ];
                 } else if (profile === 'pedestrian') {
-                    options = [
-                        ({ shortest: true }),
-                        ({ shortest: false, use_hills: 1, use_roads: 0, step_penalty: 0 }),
-                        ({ shortest: false, use_hills: 0, use_roads: 0, step_penalty: 1 })
-                    ];
+                    options = [{ shortest: true }, { shortest: false, use_hills: 1, use_roads: 0, step_penalty: 0 }, { shortest: false, use_hills: 0, use_roads: 0, step_penalty: 1 }];
                 } else {
-                    options = [
-                        ({ shortest: true }),
-                        ({ shortest: false, use_tolls: 1, use_highways: 1 }),
-                        ({ shortest: false, use_tolls: 0, use_highways: 1 }),
-                        ({ shortest: false, use_highways: 0 })
-                    ];
+                    options = [{ shortest: true }, { shortest: false, use_tolls: 1, use_highways: 1 }, { shortest: false, use_tolls: 0, use_highways: 1 }, { shortest: false, use_highways: 0 }];
                 }
                 const results: { route: Route; instructions: RouteInstruction[] }[] = await Promise.all(options.map(computeAndAddRoute));
                 itemToFocus = results.reduce(function (prev, current) {
@@ -804,6 +808,7 @@
             <button horizontalAlignment="left" variant="text" class="icon-btn-white" text="mdi-arrow-left" on:tap={() => cancel()} />
             <stacklayout colSpan={2} orientation="horizontal" horizontalAlignment="center">
                 <button variant="text" class="icon-btn-white" text="mdi-car" on:tap={() => setProfile('auto')} color={profileColor(profile, 'auto')} />
+                <button variant="text" class="icon-btn-white" text="mdi-motorbike" on:tap={() => setProfile('motorcycle')} color={profileColor(profile, 'motorcycle')} />
                 <button variant="text" class="icon-btn-white" text="mdi-walk" on:tap={() => setProfile('pedestrian')} color={profileColor(profile, 'pedestrian')} />
                 <button variant="text" class="icon-btn-white" text="mdi-bike" on:tap={() => setProfile('bicycle')} color={profileColor(profile, 'bicycle')} />
                 <!-- <button variant="text" class="icon-btn-white" text="mdi-bus" on:tap={() => setProfile('bus')} color={profileColor(profile, 'bus')} /> -->

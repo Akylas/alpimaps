@@ -770,10 +770,15 @@ export default class CustomLayersModule extends MapModule {
                 mapContext.addLayer(layer, 'map');
             }
             if (routes.length) {
-                const dataSource = new MultiTileDataSource();
-                routes.forEach((s) => dataSource.add(s));
-                const layer = this.createRouteLayer(dataSource);
-                mapContext.addLayer(layer, 'routes');
+                if (routes.length > 1) {
+                    const dataSource = new MultiTileDataSource();
+                    routes.forEach((s) => dataSource.add(s));
+                    const layer = this.createRouteLayer(dataSource);
+                    mapContext.addLayer(layer, 'routes');
+                } else {
+                    const layer = this.createRouteLayer(routes[0]);
+                    mapContext.addLayer(layer, 'routes');
+                }
             }
             if (terrains.length) {
                 const name = 'Hillshade';
