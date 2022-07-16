@@ -240,7 +240,8 @@
 
     function showAstronomy() {
         if (item) {
-            const positions = item.geometry?.['coordinates'];
+            const positions = item.geometry.type === 'Point' ? item.geometry?.['coordinates']: item.geometry?.['coordinates'][0];
+            console.log('showAstronomy', positions)
             handleMapAction('astronomy', { lat: positions[1], lon: positions[0] });
         }
     }
