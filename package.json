@@ -117,7 +117,7 @@
         "cssnano-preset-advanced": "5.3.8",
         "esbuild": "^0.14.49",
         "esbuild-loader": "^2.19.0",
-        "eslint": "8.19.0",
+        "eslint": "8.20.0",
         "eslint-config-prettier": "^8.5.0",
         "eslint-plugin-prettier": "^4.2.1",
         "eslint-plugin-svelte3": "4.0.0",
