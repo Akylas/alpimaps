@@ -263,7 +263,7 @@ export default class ItemsModule extends MapModule {
                 { lat: extent[1], lon: extent[0] },
                 { lat: extent[3], lon: extent[0] },
                 { lat: extent[3], lon: extent[2] },
-                { lat: extent[1],    lon: extent[2] }
+                { lat: extent[1], lon: extent[2] }
             ]
         });
         const featureCollection = await new Promise<VectorTileFeatureCollection>((resolve) =>
@@ -303,7 +303,7 @@ export default class ItemsModule extends MapModule {
         });
         // const test = join_em(listCoordinates);
         const sorted = listCoordinates.slice();
-        const indexTest = new Array(sorted.length).fill(0).map((value, i) => i);
+        // const indexTest = new Array(sorted.length).fill(0).map((value, i) => i);
         listCoordinates.forEach((coords, i) => {
             // try to find the current sorted one where the end point is the closest to our start point.
             const start = coords[0];
@@ -326,36 +326,36 @@ export default class ItemsModule extends MapModule {
                 if (index !== -1) {
                     sorted.splice(index, 1);
                     sorted.splice(indexOther, 0, foundNearest);
-                    const removed = indexTest.splice(index, 1);
-                    indexTest.splice(indexOther, 0, removed[0]);
+                    // const removed = indexTest.splice(index, 1);
+                    // indexTest.splice(indexOther, 0, removed[0]);
                 }
             }
         });
-        listCoordinates.forEach((coords, i) => {
-            // try to find the current sorted one where the end point is the closest to our start point.
-            const end = coords[coords.length - 1];
-            let minDist = Number.MAX_SAFE_INTEGER;
-            let foundNearest;
-            listCoordinates.forEach((s2, j) => {
-                if (i === j) {
-                    return;
-                }
-                const start = s2[0];
-                const distance = getDistanceSimple([start[1], start[0]], [end[1], end[0]]);
-                if (distance < minDist) {
-                    minDist = distance;
-                    foundNearest = s2;
-                }
-            });
-            if (foundNearest) {
-                const index = sorted.indexOf(foundNearest);
-                const indexOther = sorted.indexOf(coords);
-                if (index !== -1) {
-                    sorted.splice(index, 1);
-                    sorted.splice(indexOther + 1, 0, foundNearest);
-                }
-            }
-        });
+        // listCoordinates.forEach((coords, i) => {
+        //     // try to find the current sorted one where the end point is the closest to our start point.
+        //     const end = coords[coords.length - 1];
+        //     let minDist = Number.MAX_SAFE_INTEGER;
+        //     let foundNearest;
+        //     listCoordinates.forEach((s2, j) => {
+        //         if (i === j) {
+        //             return;
+        //         }
+        //         const start = s2[0];
+        //         const distance = getDistanceSimple([start[1], start[0]], [end[1], end[0]]);
+        //         if (distance < minDist) {
+        //             minDist = distance;
+        //             foundNearest = s2;
+        //         }
+        //     });
+        //     if (foundNearest) {
+        //         const index = sorted.indexOf(foundNearest);
+        //         const indexOther = sorted.indexOf(coords);
+        //         if (index !== -1) {
+        //             sorted.splice(index, 1);
+        //             sorted.splice(indexOther + 1, 0, foundNearest);
+        //         }
+        //     }
+        // });
         // console.log(
         //     'test2',
         //     indexTest,
@@ -371,7 +371,8 @@ export default class ItemsModule extends MapModule {
 
         return {
             type: 'LineString' as any,
-            coordinates: sorted.flat()
+            coordinates: sorted.flat(),
+            // bbox: extent
         };
     }
     async saveItem(item: Mutable<IItem>, styleOptions?: MarkerStyleBuilderOptions | PointStyleBuilderOptions | LineStyleBuilderOptions) {
