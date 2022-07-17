@@ -727,7 +727,7 @@
         //     ]);
         // }
     }
-    let loaded = false;
+    let loaded = true;
     let loadedListeners = [];
     export async function loadView() {
         if (!loaded) {

@@ -137,23 +137,34 @@ module.exports = (env, params = {}) => {
                 },
                 {
                     test: /\.ts$/,
-                    loader: 'ts-loader',
+                    // loader: 'ts-loader',
+                    // options: {
+                    //     transpileOnly: true,
+                    //     allowTsInNodeModules: true,
+                    //     configFile: resolve(__dirname, 'tsconfig.peakfinder.json'),
+                    //     compilerOptions: {
+                    //         sourceMap: false,
+                    //         declaration: false
+                    //     }
+                    // }
+                    loader: 'swc-loader',
                     options: {
-                        transpileOnly: true,
-                        allowTsInNodeModules: true,
-                        configFile: resolve(__dirname, 'tsconfig.peakfinder.json'),
-                        compilerOptions: {
-                            sourceMap: false,
-                            declaration: false
+                        jsc: {
+                            target: 'es2019',
+                            parser: {
+                                syntax: 'typescript'
+                            }
                         }
                     }
                 },
                 {
                     test: /\.js$/,
-                    loader: 'esbuild-loader',
+                    loader: 'swc-loader',
                     options: {
-                        target: 'es2019',
-                        implementation: esbuild
+                        jsc: {
+                            target: 'es2019'
+                        }
+                        // implementation: esbuild
                         // sourceMaps: false,
                         // plugins: ['@babel/plugin-transform-runtime'],
                         // presets: [
