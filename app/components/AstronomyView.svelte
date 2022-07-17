@@ -18,7 +18,7 @@
     import { convertTime } from '~/helpers/locale';
     import { showError } from '~/utils/error';
     import { PI_DIV2, TO_DEG } from '~/utils/geo';
-    import { VerticalPosition } from '~/utils/popover.common';
+    import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '~/utils/svelte/popover';
     import { pickDate } from '~/utils/utils';
     import { mdiFontFamily, widgetBackgroundColor } from '~/variables';
