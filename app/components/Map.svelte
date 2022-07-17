@@ -17,6 +17,7 @@
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
     import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
+    import { isBottomSheetOpened, showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { action } from '@nativescript-community/ui-material-dialogs';
     import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
     import { Brightness } from '@nativescript/brightness';
@@ -48,11 +49,9 @@
     import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
     import mapStore from '~/stores/mapStore';
-    import { isBottomSheetOpened, showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { showError } from '~/utils/error';
     import { getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
-    import { Sentry } from '~/utils/sentry';
     import { share } from '~/utils/share';
     import { disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn } from '~/utils/utils.android';
     import { navigationBarHeight, primaryColor } from '../variables';
@@ -891,6 +890,7 @@
                 } else {
                     const RouteSelect = (await import('~/components/RouteSelect.svelte')).default;
                     const results = await showBottomSheet({
+                        parent: page,
                         view: RouteSelect,
                         ignoreTopSafeArea: true,
                         props: {
@@ -1633,7 +1633,7 @@
                     icon: 'mdi-earth'
                 });
             }
-            const MapOptions = (await import('./MapOptions.svelte')).default;
+            const MapOptions = (await import('~/components/MapOptions.svelte')).default;
             const result = (await showBottomSheet({
                 parent: page,
                 view: MapOptions,
@@ -1695,7 +1695,7 @@
             if (__ANDROID__) {
                 try {
                     (Application.android.foregroundActivity as android.app.Activity).reportFullyDrawn();
-                } catch(err){ }
+                } catch (err) {}
             }
         }
     }

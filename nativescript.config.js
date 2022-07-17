@@ -11,8 +11,8 @@ module.exports = {
     cssParser: 'rework',
     hooks: [
         {
-          type: 'after-prepareNativeApp',
-          script: 'scripts/after-prepareNativeApp.js'
+            type: 'after-prepareNativeApp',
+            script: 'scripts/after-prepareNativeApp.js'
         }
-      ]
+    ]
 };

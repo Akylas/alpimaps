@@ -31,6 +31,7 @@ export function showBottomSheet<T>(modalOptions: ShowBottomSheetOptions): Promis
 
     const componentInstanceInfo = resolveComponentElement(view, props);
     let modalView: View = componentInstanceInfo.element.nativeView;
+
     if (!(modalView instanceof GestureRootView)) {
         const gestureView = new GestureRootView();
         gestureView.height = modalView.height;

@@ -9,7 +9,7 @@ android {
     multiDexEnabled false
     applicationId "akylas.alpi.maps"
     minSdkVersion 21
-    versionCode 223
+    versionCode 224
     versionName "2.0.0"
 
     if (project.hasProperty('resConfigs')) {
@@ -29,7 +29,15 @@ android {
 
     }
   }
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_11
+    targetCompatibility JavaVersion.VERSION_11
+  }
+  // kotlinOptions {
+  //   jvmTarget = JavaVersion.VERSION_11
+  // }
   lintOptions {
+      // disable("LintError")
       checkReleaseBuilds false
       // Or, if you prefer, you can continue to check for errors in release builds,
       // but continue the build even when errors are found:
@@ -37,7 +45,7 @@ android {
   }
   bundle {
       language {
-          // We disable language split because FlorisBoard does not use
+          // We disable language split because we do not use
           // runtime Google Play Service APIs and thus cannot dynamically
           // request to download the language resources for a specific locale.
           enableSplit = false
