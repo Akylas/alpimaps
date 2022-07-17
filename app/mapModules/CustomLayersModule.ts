@@ -898,6 +898,7 @@ export default class CustomLayersModule extends MapModule {
         await this.getSourcesLibrary();
         const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
         const results = await showBottomSheet({
+            parent: null,
             view: OptionSelect as any,
             props: {
                 title: l('pick_source'),
