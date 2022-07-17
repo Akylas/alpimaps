@@ -175,6 +175,7 @@
                     } else {
                         const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
                         const result = await showBottomSheet<any>({
+                            parent: null,
                             view: OptionSelect,
                             props: {
                                 options: item.values.map((k) => ({ name: k.title, data: k.value }))

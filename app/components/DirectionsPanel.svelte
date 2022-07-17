@@ -539,10 +539,10 @@
         }
         let route: { route: Route; instructions: RouteInstruction[] };
         let positions;
-        const points = waypoints.map((r) => ({ lat: r.geometry.coordinates[1], lon: r.geometry.coordinates[0] }));
+        const points = waypoints['_array'].map((r) => ({ lat: r.geometry.coordinates[1], lon: r.geometry.coordinates[0] }));
         let costing_options;
         if (profile === 'bus') {
-            const positions = points.map((r) => `${r.lat.toFixed(6)},${r.lon.toFixed(6)}`);
+            const positions = points['_array'].map((r) => `${r.lat.toFixed(6)},${r.lon.toFixed(6)}`);
             const result = networkService.request({
                 url: 'http://data.mobilites-m.fr/otp/routers/default/plan',
                 method: 'GET',
