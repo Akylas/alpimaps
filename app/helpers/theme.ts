@@ -40,6 +40,7 @@ export async function selectTheme() {
         const actions: Themes[] = ['auto', 'light', 'dark'];
         const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
         const result = await showBottomSheet<any>({
+            parent: null,
             view: OptionSelect,
             props: {
                 title: lc('select_language'),

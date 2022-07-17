@@ -125,6 +125,7 @@ export async function selectLanguage() {
         const actions = SUPPORTED_LOCALES;
         const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
         const result = await showBottomSheet<any>({
+            parent: null,
             view: OptionSelect,
             props: {
                 title: lc('select_language'),
