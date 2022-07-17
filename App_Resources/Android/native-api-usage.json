@@ -32,7 +32,6 @@
         "java.lang:Long*",
 
         "androidx.core.content:FileProvider*",
-        "com.nativescript.popover.relativepopupwindow:RelativePopupWindow*", "android.widget:PopupWindow*","android.view.ViewGroup:LayoutParams*",
         "android.graphics.Bitmap:CompressFormat*"
     ],
     "blacklist": [
