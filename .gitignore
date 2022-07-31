@@ -42,7 +42,6 @@ yarn-error.log*
 .cloud
 .project
 tmp/
-typings/
 
 
 # Visual Studio Code
