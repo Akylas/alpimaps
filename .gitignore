@@ -25,7 +25,7 @@ firmwares
 # NativeScript Template
 *.js.map
 !webpack.config.js
-*.css
+
 
 # Logs
 logs
@@ -61,3 +61,4 @@ dist
 .history
 /app/assets/peakfinder/webapp.js
 /.vscode/settings.json
+app/assets/**/*.css

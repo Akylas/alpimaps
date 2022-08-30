@@ -1,0 +1,64 @@
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+video {
+    visibility: hidden;
+    position: fixed;
+    min-width: 100%;
+    min-height: 100%;
+}
+#camera_button {
+    position: absolute;
+    border: 0;
+    border-radius: 22px;
+    width: 44px;
+    height: 44px;
+    bottom: 8px;
+    right: 8px;
+    opacity:0.4;
+    background-color: black;
+    -webkit-mask-image: url(camera.svg);
+    mask-image: url(camera.svg);
+    mask-size: 30px;
+    mask-position: center;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 30px;
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+}
+
+
+#compass {
+    position: absolute;
+    z-index: 99;
+    top: 30px;
+    opacity:0.4;
+    right: 4px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: black;
+
+    -webkit-mask-image: url(compass.svg);
+    mask-image: url(compass.svg);
+}
+#compass_slice {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    position: absolute;
+}
+
+.canvas {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+}
+#canvas4 {
+    pointer-events: none;
+}
