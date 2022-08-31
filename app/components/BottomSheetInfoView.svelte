@@ -17,6 +17,7 @@
     let hasProfile = false;
     let routeDmin: string = null;
     let showSymbol: boolean = false;
+    let actualShowSymbol = false;
     let itemIsRoute = false;
     let itemProps: ItemProperties = null;
     // $: itemRouteNoProfile = item && !!item.route && (!item.route.profile || !item.route.profile.max);
@@ -135,25 +136,7 @@
         }
     }
 
-    function getSymbol(itemProps) {
-        if (!itemProps) {
-            return null;
-        }
-        if (itemProps.symbol) {
-            return itemProps.symbol;
-        } else {
-            if (itemProps.class === 'hiking') {
-                switch (itemProps.network) {
-                    case 4:
-                        return 'yellow:yellow:green_lower';
-                    case 3:
-                        return 'yellow:white:yellow_lower';
-                    default:
-                        return 'red:white:red_lower:50:black';
-                }
-            }
-        }
-    }
+    $: actualShowSymbol = showSymbol && itemProps && (itemProps.symbol || itemProps.network);
 </script>
 
 <gridlayout {...$$restProps} padding="5 10 4 10">
@@ -173,12 +156,20 @@
     </flexlayout>
     <canvaslabel {...$$restProps} fontSize="16">
         <cgroup verticalAlignment="middle" paddingBottom={(itemSubtitle ? 4 : 0) + 12}>
-            <cspan visibility={itemIcon && itemIcon.length > 0 ? 'visible' : 'hidden'} paddingLeft="10" width="40" text={osmicon(itemIcon)} fontFamily="osm" fontSize={24} color={(itemProps && itemProps.color) || $textColor }/>
+            <cspan
+                visibility={itemIcon && itemIcon.length > 0 ? 'visible' : 'hidden'}
+                paddingLeft="10"
+                width="40"
+                text={osmicon(itemIcon)}
+                fontFamily="osm"
+                fontSize={24}
+                color={(itemProps && itemProps.color) || $textColor}
+            />
         </cgroup>
         <symbolshape
-            visibility={showSymbol && itemProps && (itemProps.symbol || itemProps.network) ? 'visible' : 'hidden'}
-            symbol={getSymbol(itemProps)}
-            color={(itemProps && itemProps.color) ||  $textColor}
+            visibility={actualShowSymbol ? 'visible' : 'hidden'}
+            symbol={actualShowSymbol ? formatter.getSymbol(itemProps) : null}
+            color={itemProps?.color || $textColor}
             width="34"
             height="34"
             top={3}

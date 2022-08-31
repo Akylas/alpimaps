@@ -773,13 +773,6 @@
 			<TextSymbolizer face-name="DIN Pro Medium" fill="rgb(51,51,51)" halo-fill="rgba(242,245,248,0.666667)" halo-radius="2" minimum-distance="linear([view::zoom],10,200,13,50)" placement="[nuti::texts3d]" size="linear([view::zoom],10,10,18,16)-1.0e-06*[rank]" wrap-character="-" wrap-width="linear([view::zoom],12,20,15,40,18,60)">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 	</Style>
-	<Style name="aerodrome_label::label" filter-mode="first">
-		<Rule name="auto">
-			<MinScaleDenominator>33.3238983</MinScaleDenominator>
-			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
-			<TextSymbolizer face-name="DIN Pro Regular" fill="rgb(97,97,90)" size="9" wrap-width="100">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
-		</Rule>
-	</Style>
 	<Style name="landuse" filter-mode="first">
 		<Rule name="combined">
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
@@ -1890,7 +1883,7 @@
 			<MinScaleDenominator>33.3238983</MinScaleDenominator>
 			<MaxScaleDenominator>272989.375</MaxScaleDenominator>
 			<Filter>[class]&lt;&gt;'ocean'</Filter>
-			<PolygonSymbolizer fill="rgb(133,192,209)" geometry-transform="translate(-1.0,-1.0)" />
+			<PolygonSymbolizer fill="rgb(133,192,209)" geometry-transform="{translate(-1.0,-1.0)}" />
 			<PolygonSymbolizer fill="rgb(170,211,223)" />
 		</Rule>
 		<Rule name="auto">
@@ -3568,6 +3561,13 @@
 			<MaxScaleDenominator>8530.91797</MaxScaleDenominator>
 			<Filter>[nuti::buildings]&gt;0</Filter>
 			<TextSymbolizer face-name="DIN Pro Regular" fill="rgb(77,76,76)" line-spacing="-1" minimum-distance="linear([view::zoom],16,100,17,50,18,20)" size="linear([view::zoom],16,6.0,18,8.0,20,10)" wrap-width="10">[name]</TextSymbolizer>
+		</Rule>
+	</Style>
+	<Style name="aerodrome_label::label" filter-mode="first">
+		<Rule name="auto">
+			<MinScaleDenominator>33.3238983</MinScaleDenominator>
+			<MaxScaleDenominator>34123.6719</MaxScaleDenominator>
+			<TextSymbolizer face-name="DIN Pro Regular" fill="rgb(97,97,90)" size="9" wrap-width="100">{([nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name])}</TextSymbolizer>
 		</Rule>
 	</Style>
 	<Style name="transportation_name::major" filter-mode="first">
@@ -5628,13 +5628,13 @@
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='pedestrian' and [bicycle]='designated' and [surface]='paved'</Filter>
-			<LineSymbolizer stroke="rgb(0,0,255)" stroke-dasharray="none" stroke-width="linear([view::zoom],15,0.5,16,1,18,1,20,3)" />
+			<LineSymbolizer stroke="rgb(0,0,255)" stroke-dasharray="{null}" stroke-width="linear([view::zoom],15,0.5,16,1,18,1,20,3)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
 			<MaxScaleDenominator>68247.3438</MaxScaleDenominator>
 			<Filter>[mapnik::geometry_type]=2 and [class]='path' and [subclass]='pedestrian'</Filter>
-			<LineSymbolizer stroke="rgb(255,255,255)" stroke-dasharray="none" stroke-width="linear([view::zoom],15,0.5,16,1,18,1,20,3)" />
+			<LineSymbolizer stroke="rgb(255,255,255)" stroke-dasharray="{null}" stroke-width="linear([view::zoom],15,0.5,16,1,18,1,20,3)" />
 		</Rule>
 		<Rule name="auto">
 			<MinScaleDenominator>34123.6719</MinScaleDenominator>
@@ -6982,9 +6982,6 @@
 	<Layer name="place">
 		<StyleName>place::label</StyleName>
 	</Layer>
-	<Layer name="aerodrome_label">
-		<StyleName>aerodrome_label::label</StyleName>
-	</Layer>
 	<Layer name="landuse">
 		<StyleName>landuse</StyleName>
 		<StyleName>landuse::top_of_residential</StyleName>
@@ -7039,6 +7036,9 @@
 	</Layer>
 	<Layer name="building_name">
 		<StyleName>building_name::label</StyleName>
+	</Layer>
+	<Layer name="aerodrome_label">
+		<StyleName>aerodrome_label::label</StyleName>
 	</Layer>
 	<Layer name="transportation_name">
 		<StyleName>transportation_name::major</StyleName>
