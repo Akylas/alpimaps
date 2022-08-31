@@ -86,7 +86,7 @@ function prepareOSMWay(way, nodes) {
         start: points[0],
         startOnRoute: true,
         endOnRoute: true,
-        end: points.at(-1)
+        end: points[points.length -1]
     };
     Object.keys(OSMReplaceKeys).forEach(function (key) {
         if (way.tags[key]) {
@@ -739,14 +739,14 @@ export class NetworkService extends Observable {
                 for (let i = 0; i < ways.length; i++) {
                     const current = ways[i];
                     const start = current.nodes[0];
-                    const end = current.nodes.at(-1);
+                    const end = current.nodes[current.nodes.length -1];
                     for (wayId in resultingWays) {
                         comparing = resultingWays[wayId];
                         if (!comparing || !canMerge(comparing, current)) {
                             continue;
                         }
                         start2 = comparing.nodes[0];
-                        end2 = comparing.nodes.at(-1);
+                        end2 = comparing.nodes[comparing.nodes.length -1];
 
                         if (start2 === end) {
                             comparing.nodes = current.nodes.slice(0, -1).concat(comparing.nodes);
@@ -812,7 +812,6 @@ export class NetworkService extends Observable {
             method: 'POST',
             timeout: 60000
         }).then((e) => {
-            // console.debug('test', e);
             if (e.info.statuscode > 300 && e.info.statuscode < 600) {
                 return Promise.reject({
                     code: e.info.statuscode,
@@ -836,7 +835,7 @@ export class NetworkService extends Observable {
             // console.debug('semi', semi);
             const r = await this.actualMapquestElevationProfile(_points.slice(0, semi));
             const r2 = await this.actualMapquestElevationProfile(_points.slice(semi));
-            const firstDistanceTotal = r.elevationProfile.at(-1).distance;
+            const firstDistanceTotal = r.elevationProfile[r.elevationProfile.length -1].distance;
             res = {
                 elevationProfile: r.elevationProfile.concat(
                     r2.elevationProfile.map((e) => {
@@ -861,7 +860,6 @@ export class NetworkService extends Observable {
             data: []
         };
         profile.forEach(function (value, index) {
-            // console.log('test', index, value, last ? last.height : undefined, result.dplus, result.dmin);
             currentHeight = value.height;
             if (currentHeight === -32768) {
                 return;
@@ -904,7 +902,6 @@ export class NetworkService extends Observable {
         //     profile: _.reduce(
         //         profile,
         //         function(memo, value, index: number) {
-        //             console.log('test', index, value, last?last.height:undefined, memo.dplus);
         //             currentHeight = value.height;
         //             if (currentHeight === -32768) {
         //                 return memo;

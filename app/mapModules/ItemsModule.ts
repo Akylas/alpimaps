@@ -221,7 +221,6 @@ export default class ItemsModule extends MapModule {
                 }
             });
             this.currentLayerFeatures.splice(index, 1, { type: 'Feature', id: item.id, properties: sProps, geometry: item.geometry });
-            // console.log('test', k, item.properties[k]);
             this.updateGeoJSONLayer();
         }
         return item;
