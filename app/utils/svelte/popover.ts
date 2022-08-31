@@ -59,7 +59,7 @@ export function showPopover(modalOptions: PopoverSvelteOptions) {
 }
 
 export function closePopover(result?: any): void {
-    const modalPageInstanceInfo = modalStack.at(-1);
+    const modalPageInstanceInfo = modalStack[modalStack.length -1];
     if (modalPageInstanceInfo) {
         modalPageInstanceInfo.dismiss();
     }
