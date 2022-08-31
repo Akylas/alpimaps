@@ -705,7 +705,7 @@ class PackageService extends Observable {
             }
         }
         const dist = Math.max(Math.min(5, grades.length / 50), 50);
-        const lastDist = grades.at(-1).dist;
+        const lastDist = grades[grades.length -1].dist;
         const g = Math.min(lastDist / 50, 500);
         for (let index = 0; index < grades.length; index++) {
             let d = 0,
@@ -793,14 +793,15 @@ class PackageService extends Observable {
         }
         const colors = [];
         let grade;
-        let lastKm = 0;
+        let lastKm = 0.5;
         let gradesCounter = 0;
         let gradeSum = 0;
         let lastIndex = 0;
         lastAlt = result.data[0].a;
-        for (let i = 1; i < result.data.length; i++) {
-            let idelta = 1;
+        for (let i = 0; i < result.data.length; i++) {
             const pt1 = result.data[i];
+
+            let idelta = 1;
             let pt2 = result.data[Math.min(i + idelta, profile.length - 1)];
             if (pt2.d - pt1.d < 20) {
                 if (grade === undefined) {
@@ -812,9 +813,8 @@ class PackageService extends Observable {
                     pt1.g = grade;
                     continue;
                 }
-            } else {
-                grade = ((pt2.avg - pt1.avg) / (pt2.d - pt1.d)) * 100;
             }
+            grade = ((pt2.avg - pt1.avg) / (pt2.d - pt1.d)) * 100;
             pt1.g = grade;
             gradeSum += grade;
             gradesCounter += 1;
@@ -828,11 +828,14 @@ class PackageService extends Observable {
                     g: avgGrade,
                     color: getGradeColor(Math.abs(avgGrade))
                 });
+                for (let j = lastIndex; j <= i; j++) {
+                    result.data[j].avg = avgGrade;
+                }
                 lastIndex = i;
                 lastAlt = pt1.a;
             }
         }
-        if (colors.at(-1).lastIndex < result.data.length - 1) {
+        if (colors[colors.length -1].lastIndex < result.data.length - 1) {
             const avgGrade = gradeSum / gradesCounter;
             colors.push({
                 d: result.data.length - 1,

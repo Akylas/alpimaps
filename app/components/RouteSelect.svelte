@@ -7,8 +7,10 @@
 
 <script lang="ts">
     import { Template } from 'svelte-native/components';
+    import { formatter } from '~/mapModules/ItemFormatter';
     import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
     import ListItem from './ListItem.svelte';
+    import { textColor } from '~/variables';
 
     export let options: OptionType[];
 
@@ -17,54 +19,10 @@
     }
 
     function onTap(item: OptionType, args) {
+        console.log('selected route', item);
         close(item);
     }
-
-    // const paint = new Paint();
-    // paint.setFontFamily('osm');
-    // paint.setTextSize(34);
-    // function onDraw({ canvas, object, item }: { canvas: Canvas; object: CanvasView; item }) {
-    //     //red:white:red_lower:549:black
-    //     const route = item.route;
-    //     if (route.featureData.symbol) {
-    //         const array = route.featureData.symbol.split(':');
-    //         const length = array.length;
-    //         paint.setColor(array[1]);
-    //         canvas.drawRect(16, 19, 50, 48, paint);
-    //         if (length > 2) {
-    //             const foreground = array[2];
-    //             const foregroundArray = foreground.split('_');
-    //             const color = foregroundArray.length > 1 ? foregroundArray[0] : 'white';
-    //             paint.setColor(color);
-    //             const shape = foregroundArray.at(-1);
-    //             let icon = osmicon('symbol-' + shape);
-    //             if (icon) {
-    //                 canvas.drawText(icon, 0, 1, 16, 48, paint);
-    //             }
-    //         }
-    //     } else if (route.featureData.color) {
-    //         paint.setColor(route.featureData.color);
-    //         canvas.drawRect(16, 16, 50, 50, paint);
-    //     }
-    // }
-
-    function getSymbol(item) {
-        const properties = item.route.featureData;
-        if (properties.symbol) {
-            return properties.symbol;
-        } else {
-            if (properties.class === 'hiking') {
-                switch (properties.network) {
-                    case 4:
-                        return 'yellow:yellow:green_lower';
-                    case 3:
-                        return 'yellow:white:yellow_lower';
-                    default:
-                        return 'red:white:red_lower:50:black';
-                }
-            }
-        }
-    }
+    
 </script>
 
 <collectionView items={options} rowHeight="72" height="200">
@@ -76,8 +34,8 @@
             extraPaddingLeft={44}
             on:tap={(event) => onTap(item, event)}
             showSymbol
-            symbol={getSymbol(item)}
-            symbolColor={item.route.featureData.color || 0}
+            symbol={formatter.getSymbol(item.route.featureData)}
+            symbolColor={item.route.featureData?.color || $textColor}
         />
     </Template>
 </collectionView>

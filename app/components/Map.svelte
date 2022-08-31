@@ -894,7 +894,7 @@
                         view: RouteSelect,
                         ignoreTopSafeArea: true,
                         props: {
-                            title: l('pick_route'),
+                            // title: l('pick_route'),
                             options: selectedRoutes.map((s) => ({ name: s.featureData.name, route: s }))
                         }
                     });
