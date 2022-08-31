@@ -74,7 +74,7 @@
     let nbWayPoints = 0;
     let features: Feature[] = [];
     let profile = ApplicationSettings.getString(DEFAULT_PROFILE_KEY, 'pedestrian') as ValhallaProfile;
-    let bicycle_type = 'Cross';
+    let bicycle_type = 'Hybrid';
     let showOptions = true;
     let loading = false;
     let currentRoutes: Route[];
@@ -122,7 +122,7 @@
             min: 5,
             max: 20
         },
-        bicycle_type: ['Road', 'Cross', 'Mountain'],
+        bicycle_type: ['Road', 'Hybrid', 'Mountain'],
         weight: {
             min: 0,
             max: 1
@@ -167,7 +167,7 @@
         switch (bicycle_type) {
             case 'Mountain':
                 return 'mdi-bike';
-            case 'Cross':
+            case 'Hybrid':
                 return 'mdi-bicycle';
             default:
                 return 'mdi-bike-fast';
@@ -548,7 +548,7 @@
                 method: 'GET',
                 queryParams: {
                     fromPlace: positions[0],
-                    toPlace: positions.at(-1),
+                    toPlace: positions[positions.length-1],
                     date: new Date(),
                     time: new Date()
                 }
@@ -565,7 +565,7 @@
                         costing_options[profile]['walking_speed'] = 5.1 * (weight ? 0.6 : 1);
                         break;
                     case 'bicycle':
-                        costing_options[profile]['cycling_speed'] = (costing_options[profile]['bicycle_type'] === 'Mountain' ? 18 : 16) * (weight ? 0.6 : 1);
+                        costing_options[profile]['cycling_speed'] = (costing_options[profile]['bicycle_type'] === 'Road' ? 20 : 16) * (weight ? 0.6 : 1);
                         break;
                 }
             }
@@ -649,10 +649,10 @@
                 let options = [];
                 if (profile === 'bicycle') {
                     options = [
-                        { shortest: true },
-                        { shortest: false, avoid_bad_surfaces: 1, use_hills: 0, use_roads: 0.25 },
-                        { shortest: false, bicycle_type: 'Cross', avoid_bad_surfaces: 1, use_hills: 1, use_roads: 0 },
-                        { shortest: false, bicycle_type: 'Moutain', avoid_bad_surfaces: 0, use_hills: 1, use_roads: 0 }
+                        { shortest: true , bicycle_type: bicycle_type},
+                        { shortest: false, bicycle_type: bicycle_type , avoid_bad_surfaces: 1, use_hills: 0, use_roads: 0.25 },
+                        { shortest: false, bicycle_type: bicycle_type, avoid_bad_surfaces: 1, use_hills: 1, use_roads: 0 },
+                        { shortest: false, bicycle_type: bicycle_type, avoid_bad_surfaces: 0, use_hills: 1, use_roads: 0 }
                     ];
                 } else if (profile === 'pedestrian') {
                     options = [{ shortest: true }, { shortest: false, use_hills: 1, use_roads: 0, step_penalty: 0 }, { shortest: false, use_hills: 0, use_roads: 0, step_penalty: 1 }];

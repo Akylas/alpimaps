@@ -95,6 +95,29 @@ if (__IOS__) {
     themer.setPrimaryColor(primaryColor);
     themer.setAccentColor(primaryColor);
 }
+if (__ANDROID__) {
+    if (global.isAndroid) {
+        (global as any).setInterval = (handler, timeout, ...args) => {
+            timeout += 0;
+            const invoke = () => handler(...args);
+            const zoneBound = zonedCallback(invoke);
+            return (global as any).__setInterval(() => {
+                zoneBound();
+            }, timeout || 0);
+        };
+        (global as any).clearInterval = (global as any).__clearInterval;
+        (global as any).setTimeout = (handler, timeout, ...args) => {
+            timeout += 0;
+            const invoke = () => handler(...args);
+            const zoneBound = zonedCallback(invoke);
+            return (global as any).__setTimeout(() => {
+                zoneBound();
+            }, timeout || 0);
+        };
+
+        (global as any).clearTimeout = (global as any).__clearTimeout;
+    }
+}
 themer.createShape('round', {
     cornerFamily: 'rounded' as any,
     cornerSize: {
