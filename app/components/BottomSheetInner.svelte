@@ -571,20 +571,21 @@
                 chartView.getLegend().setEnabled(false);
                 const leftAxis = chartView.getAxisLeft();
                 leftAxis.setTextColor($textColor);
+                leftAxis.setDrawZeroLine(true);
                 leftAxis.setGridColor($borderColor);
+
                 leftAxis.setGridDashedLine(new DashPathEffect([6, 3], 0));
                 leftAxis.ensureLastLabel = true;
                 // leftAxis.setLabelCount(3);
 
                 xAxis.setPosition(XAxisPosition.BOTTOM);
                 xAxis.setLabelTextAlign(Align.CENTER);
+                xAxis.ensureLastLabel = true;
                 xAxis.setTextColor($textColor);
                 xAxis.setGridColor($borderColor);
                 xAxis.setDrawGridLines(false);
                 xAxis.setDrawMarkTicks(true);
-                // xAxis.ensureLastLabel = true;
                 xAxis.setValueFormatter({
-                    // getAxisLabel: (value, axis) => formatValueToUnit(value, UNITS.DistanceKm)
                     getAxisLabel: (value, axis, viewPortHandler) => Math.floor(value / 1000).toFixed()
                 });
 
@@ -594,15 +595,12 @@
                         const x = h.drawX;
                         const y = h.drawY;
                         const w = 50;
-
-                        highlightPaint.setColor('#8687A2');
-                        paint.setColor('#8687A2');
-                        paint.setStyle(Style.FILL);
-
-                        c.drawLine(x, 0, x, y - 5, highlightPaint);
                         highlightPaint.setColor('white');
                         const layout = new StaticLayout(
-                            h.entry.a.toFixed() + 'm' + '\n' + '~' + Math.abs(h.entry.g.toFixed()) + '%' + '\n' + formatValueToUnit(h.entry.d, UNITS.DistanceKm),
+                            h.entry.a.toFixed() + 'm' + '\n' 
+                            + Math.abs(h.entry.avg.toFixed()) + '%('  
+                            + '~' + Math.abs(h.entry.g.toFixed()) + '%)' 
+                            + '\n' + formatValueToUnit(h.entry.d, UNITS.DistanceKm),
                             highlightPaint,
                             w,
                             LayoutAlignment.ALIGN_CENTER,
@@ -610,47 +608,34 @@
                             0,
                             true
                         );
-                        c.drawRoundRect(x - w / 2, 0, x + w / 2, layout.getHeight(), 2, 2, paint);
+
+                        highlightPaint.setColor('#8687A2');
+                        paint.setColor('#8687A2');
+                        paint.setStyle(Style.FILL);
+
+                        let layoutyY = 0;
+                        const layoutHeight = layout.getHeight();
+                        if (y <= layoutHeight + 15) {
+                            layoutyY = y + 15;
+                            c.drawLine(x, y  + 2, x, layoutyY, highlightPaint);
+                        } else {
+                            c.drawLine(x, 0, x, y - 2, highlightPaint)
+                        }
+                        highlightPaint.setColor('white');
+                        c.drawRoundRect(x - w / 2, layoutyY,  x + w / 2, layoutyY  + layoutHeight, 2, 2, paint);
                         c.save();
-                        c.translate(x - w / 2, 0);
+                        c.translate(x - w / 2, layoutyY);
                         layout.draw(c);
                         c.restore();
                     }
                 });
-                // chartView.setMarker({
-                //     paint: new Paint(),
-                //     refreshContent(e: Entry, highlight: Highlight) {
-                //         this.entry = e;
-                //     },
-                //     draw(canvas: Canvas, posX: any, posY: any) {
-                //         const canvasHeight = canvas.getHeight();
-                //         const paint = this.paint as Paint;
-                //         paint.setColor('#FFBB73');
-                //         paint.setAntiAlias(true);
-                //         paint.setTextAlign(Align.CENTER);
-                //         paint.setStrokeWidth(1);
-                //         paint.setTextSize(10);
-                //         canvas.save();
-                //         canvas.translate(posX, posY);
-                //         canvas.drawLine(-5, 0, 5, 0, paint);
-                //         canvas.drawLine(0, -5, 0, 5, paint);
-                //         if (posY > canvasHeight - 20) {
-                //             canvas.translate(0, -20);
-                //         } else {
-                //             canvas.translate(0,10);
-                //         }
-                //         canvas.drawText(this.entry.a.toFixed() + 'm' + '\n' + this.entry.g.toFixed() + '%' , 0, 5, paint);
-                //         canvas.restore();
-                //     }
-                // } as any);
             } else {
                 chartView.highlightValues(null);
                 chartView.resetZoom();
             }
-            // xAxis.setLabelCount(Math.round(item.route.totalDistance) / 1000);
             const chartData = chartView.getData();
             if (!chartData) {
-                const set = new LineDataSet(profileData, 'a', 'd', 'avg');
+                const set = new LineDataSet(profileData, 'a', 'd', 'a');
                 set.setDrawValues(true);
                 set.setValueTextColor($textColor);
                 set.setValueTextSize(10);
