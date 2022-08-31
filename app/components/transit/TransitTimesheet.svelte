@@ -42,7 +42,7 @@
                 return;
             }
             // console.log('fetchLineTimeline', time.valueOf(), lineData[lineDataIndex].prevTime, lineData[lineDataIndex].nextTime);
-            directionText = timelineItems[0].stopName + '\n' + timelineItems.at(-1).stopName;
+            directionText = timelineItems[0].stopName + '\n' + timelineItems[timelineItems.length -1].stopName;
             if (line.stopIds) {
                 currentStopId = line.stopIds[lineDataIndex];
                 const index = timelineItems.findIndex((a) => a.stopId === currentStopId);
@@ -72,7 +72,7 @@
     function reverseTimesheet() {
         lineDataIndex = 1 - lineDataIndex;
         timelineItems = lineData[lineDataIndex].arrets;
-        directionText = timelineItems[0].stopName + '\n' + timelineItems.at(-1).stopName;
+        directionText = timelineItems[0].stopName + '\n' + timelineItems[timelineItems.length -1].stopName;
         if (line.stopIds) {
             currentStopId = line.stopIds[lineDataIndex];
             const index = timelineItems.findIndex((a) => a.stopId === currentStopId);
