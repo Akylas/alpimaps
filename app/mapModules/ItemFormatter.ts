@@ -2,6 +2,7 @@ import { formatAddress } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { getMapContext } from '~/mapModules/MapModule';
 import type { IItem as Item } from '~/models/Item';
+import { textColor } from '~/variables';
 const mapContext = getMapContext();
 
 export default class ItemFormatter {
@@ -78,6 +79,34 @@ export default class ItemFormatter {
             } else {
                 return this.getItemAddress(item, 2);
             }
+        }
+    }
+    getSymbol(itemProps) {
+        console.log('getSymbol', itemProps);
+        if (!itemProps) {
+            return null;
+        }
+        if (itemProps.symbol) {
+            return itemProps.symbol;
+        } else {
+            if (itemProps.class === 'hiking') {
+                switch (itemProps.network) {
+                    case 4:
+                        return 'yellow:yellow:green_lower';
+                    case 3:
+                        return 'yellow:white:yellow_lower';
+                    default:
+                        return 'red:white:red_lower:50:black';
+                }
+            } else if (itemProps.class === 'bicycle') {
+                switch (itemProps.network) {
+                    case 1:
+                        return '#c70000:white:#c70000_bar';
+                    default:
+                        return '#6000eb:white:#6000eb_bar';
+                }
+            }
+            return `blue:white:${itemProps.color || 'blue'}_bar`;
         }
     }
 }

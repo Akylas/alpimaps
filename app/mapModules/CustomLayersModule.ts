@@ -247,7 +247,7 @@ export default class CustomLayersModule extends MapModule {
     }
 
     createHillshadeTileLayer(name, dataSource, options: HillshadeRasterTileLayerOptions = {}, terrarium = false) {
-        const contrast = appSettings.getNumber(`${name}_contrast`, 0.57);
+        const contrast = appSettings.getNumber(`${name}_contrast`, 0.42);
         const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.22);
         const illuminationDirection = appSettings.getNumber(`${name}_illuminationDirection`, 143);
         const opacity = appSettings.getNumber(`${name}_opacity`, 1);
@@ -706,7 +706,7 @@ export default class CustomLayersModule extends MapModule {
                     databasePath: getFileNameThatICanUseInNativeCode(context, worldMbtilesEntity.path)
                 });
                 mbtiles.push(datasource);
-                routes.push(datasource);
+                routes.unshift(datasource);
             }
 
             // if (worldRouteMbtilesEntity) {
