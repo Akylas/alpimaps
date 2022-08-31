@@ -59,7 +59,6 @@ dist
 .history
 /app/assets/peakfinder/webapp.js
 /.vscode/settings.json
-
 app/assets/peakfinder/webapp.js.LICENSE.txt
-
 API_KEYS.js
+app/assets/**/*.css
