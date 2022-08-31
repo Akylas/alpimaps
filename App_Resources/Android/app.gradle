@@ -142,5 +142,5 @@ android.applicationVariants.all { variant ->
 }
 dependencies {
     implementation "com.github.skydoves:colorpickerview:2.2.4"
-    implementation 'androidx.core:core-splashscreen:1.0.0-rc01'
+    implementation 'androidx.core:core-splashscreen:1.0.0'
 }
