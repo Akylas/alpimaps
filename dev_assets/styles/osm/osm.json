@@ -4,6 +4,7 @@
         "transportation",
         "contour",
         "transportation_name",
+        "aerodrome_label",
         "building_name",
         "park",
         "landcover_name",
@@ -18,7 +19,6 @@
         "aeroway",
         "landcover",
         "landuse",
-        "aerodrome_label",
         "place"
     ],
     "styles": [
