@@ -11,6 +11,7 @@ width="-1"
 height="-1"
 density="-1"
 outputExt=""
+platform="all"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -28,6 +29,9 @@ while [ $# -gt 0 ]; do
       ;;
     -d|--density=*)
       density="$2"
+      ;;
+    -p|--platform=*)
+      platform="$2"
       ;;
     *)
 	  image="$1"
@@ -116,6 +120,7 @@ function opti() {
 }
 
 function androidConvertIcon() {
+	echo "androidConvertIcon"
 	drawables=drawable,drawable-ldpi,drawable-mdpi,drawable-hdpi,drawable-xhdpi,drawable-xxhdpi,drawable-xxxhdpi
 	eval mkdir -p "$output/Android/src/main/res/{$drawables}"
 
@@ -128,6 +133,7 @@ function androidConvertIcon() {
 }
 
 function iosConvertIcon() {
+	echo "iosConvertIcon $output"
 	convertImage "0.33" "$output/iOS/$name.$outputExt"
 	convertImage "0.66" "$output/iOS/$name@2x.$outputExt"
 	convertImage "1" "$output/iOS/$name@3x.$outputExt"
@@ -135,6 +141,10 @@ function iosConvertIcon() {
 if [ "$outputExt" = "" ]; then
 	outputExt="$extension"
 fi
-androidConvertIcon
 
-iosConvertIcon
+if [[ "$platform" == "all" || "$platform" == "android" ]]; then
+	androidConvertIcon
+fi
+if [[ "$platform" == "all" || "$platform" == "ios" ]]; then
+	iosConvertIcon
+fi
