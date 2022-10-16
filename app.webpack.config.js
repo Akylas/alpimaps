@@ -7,7 +7,7 @@ const CopyPlugin = require('copy-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const SentryCliPlugin = require('@sentry/webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
-const IgnoreNotFoundExportPlugin = require('./IgnoreNotFoundExportPlugin');
+const IgnoreNotFoundExportPlugin = require('./scripts/IgnoreNotFoundExportPlugin');
 const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 const Fontmin = require('@akylas/fontmin');
 const WebpackShellPluginNext = require('webpack-shell-plugin-next');
@@ -48,6 +48,8 @@ module.exports = (env, params = {}) => {
         env = Object.assign(
             {},
             {
+                buildpeakfinder: true,
+                buildstyle: true,
                 production: true,
                 sentry: false,
                 noconsole: false,
@@ -88,6 +90,24 @@ module.exports = (env, params = {}) => {
     env.appResourcesPath = appResourcesPath;
     env.appComponents = env.appComponents || [];
     env.appComponents.push('~/services/android/BgService', '~/services/android/BgServiceBinder');
+
+    nsWebpack.chainWebpack((config, env) => {
+        config.when(env.production, (config) => {
+            config.module
+                .rule('svelte')
+                .use('string-replace-loader')
+                .loader('string-replace-loader')
+                .before('svelte-loader')
+                .options({
+                    search: 'createElementNS\\("https:\\/\\/svelte.dev\\/docs#template-syntax-svelte-options"',
+                    replace: 'createElementNS(svN',
+                    flags: 'gm'
+                })
+                .end();
+        });
+
+        return config;
+    });
     const config = webpackConfig(env, params);
     const mode = production ? 'production' : 'development';
     const platform = env && ((env.android && 'android') || (env.ios && 'ios'));
@@ -308,7 +328,7 @@ module.exports = (env, params = {}) => {
     const isAndroid = platform === 'android';
     const APP_STORE_ID = process.env.IOS_APP_ID;
     const CUSTOM_URL_SCHEME = 'alpimaps';
-    const locales = readdirSync(join(projectRoot, appPath, 'i18n'))
+    const supportedLocales = readdirSync(join(projectRoot, appPath, 'i18n'))
         .filter((s) => s.endsWith('.json'))
         .map((s) => s.replace('.json', ''));
     const defines = {
@@ -328,7 +348,7 @@ module.exports = (env, params = {}) => {
         __APP_VERSION__: `"${appVersion}"`,
         __APP_BUILD_NUMBER__: `"${buildNumber}"`,
         __CARTO_PACKAGESERVICE__: cartoLicense,
-        SUPPORTED_LOCALES: JSON.stringify(locales),
+        SUPPORTED_LOCALES: JSON.stringify(supportedLocales),
         DEFAULT_LOCALE: `"${locale}"`,
         DEFAULT_THEME: `"${theme}"`,
         'gVars.sentry': !!sentry,
@@ -553,8 +573,8 @@ module.exports = (env, params = {}) => {
             cancelAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame'), 'cancelAnimationFrame']
         })
     );
-    console.log('locales', locales);
-    config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`^(${locales.join('|')})$`)));
+    console.log('locales', supportedLocales);
+    config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`^(${supportedLocales.join('|')})$`)));
 
     config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|nativescript-carto|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
     config.plugins.push(new IgnoreNotFoundExportPlugin());
