@@ -8,7 +8,7 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import type { Side } from '@nativescript-community/ui-drawer';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { GridLayout, ObservableArray, Screen, TextField, View } from '@nativescript/core';
+    import { GridLayout, Screen, TextField, Utils, View } from '@nativescript/core';
     import { getJSON } from '@nativescript/core/http';
     import { AdditiveTweening } from 'additween';
     import deburr from 'deburr';
@@ -20,6 +20,7 @@
     import { formatDistance, osmicon } from '~/helpers/formatter';
     import { getMetersPerPixel } from '~/helpers/geolib';
     import { l, slc } from '~/helpers/locale';
+    import { currentTheme } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item } from '~/models/Item';
@@ -33,34 +34,43 @@
     import { globalMarginTop, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
 
     async function animateView(view: View, to, duration) {
-        // console.log('animateView', view, view.nativeView, to, duration);
-        // try {
-        //     if (view.nativeView) {
-        //         await view.animate({
-        //             duration,
-        //             ...to
-        //         });
-        //     } else {
-        //         view._batchUpdate(() => {
-        //             Object.assign(view, to);
-        //         });
-        //     }
-        // } catch (error) {
-        //     console.error(error, error.stack);
-        // }
-
-        const from = {};
-        Object.keys(to).forEach((k) => {
-            from[k] = view[k];
-        });
-        const anim = new AdditiveTweening({
-            onRender: (state) => {
-                // console.log('onRender', state)
-                Object.assign(view, state);
+        let shouldAnimate = false;
+        Object.keys(to).some((k) => {
+            if (view[k] !== to[k]) {
+                shouldAnimate = true;
+                return true;
             }
         });
-        anim.tween(from, to, duration);
-        return anim;
+        if (!shouldAnimate) {
+            return;
+        }
+        // console.log('animateView', view, view.nativeView, to, duration);
+        try {
+            if (view.nativeView) {
+                await view.animate({
+                    duration,
+                    ...to
+                });
+            } else {
+                view._batchUpdate(() => {
+                    Object.assign(view, to);
+                });
+            }
+        } catch (error) {
+            console.error(error, error.stack);
+        }
+        // const from = {};
+        // Object.keys(to).forEach((k) => {
+        //     from[k] = view[k];
+        // });
+        // const anim = new AdditiveTweening({
+        //     onRender: (state) => {
+        //         // console.log('onRender', state)
+        //         Object.assign(view, state);
+        //     }
+        // });
+        // anim.tween(from, to, duration);
+        // return anim;
     }
 
     const providerColors = {
@@ -128,8 +138,8 @@
     let _searchLayer: ClusteredVectorLayer;
     let searchClusterStyle: PointStyleBuilder;
     let searchAsTypeTimer;
-    let dataItems: SearchItem[] | ObservableArray<SearchItem> = [];
-    let filteredDataItems: SearchItem[] = dataItems as any;
+    let dataItems: SearchItem[] = [];
+    let filteredDataItems: SearchItem[] = dataItems;
     let loading = false;
     let filteringOSMKey = false;
     let text: string = null;
@@ -209,22 +219,22 @@
     function ensureSearchLayer() {
         return getSearchLayer() !== null;
     }
+
     let searchResultsVisible = false;
     $: {
         searchResultsVisible = focused && searchResultsCount > 0;
     }
     $: {
-        if (gridLayout?.nativeView) {
-            animateView(gridLayout.nativeView, { borderRadius: searchResultsVisible ? 10 : 25 }, 100);
-        }
-        if (collectionViewHolder?.nativeView) {
-            animateView(collectionViewHolder.nativeView, { height: searchResultsVisible ? 200 : 0 }, 500);
+        const nGridLayout = gridLayout?.nativeView;
+        if (nGridLayout) {
+            animateView(nGridLayout, { elevation: $currentTheme !== 'dark' && focused ? 10 : 0, borderRadius: searchResultsVisible ? 10 : 25 }, 100);
         }
     }
-
+    
     $: {
-        if (gridLayout?.nativeView) {
-            animateView(gridLayout.nativeView, { elevation: focused ? 10 : 0 }, 100);
+        const nCollectionView = collectionViewHolder?.nativeView;
+        if (nCollectionView) {
+            animateView(nCollectionView, { height: searchResultsVisible ? 200 : 0 }, 100);
         }
     }
 
@@ -567,6 +577,7 @@
             loadedListeners.forEach((l) => l());
         }
     }
+
 </script>
 
 <gridlayout
@@ -574,7 +585,7 @@
     bind:this={gridLayout}
     {...$$restProps}
     rows="auto,auto"
-    elevation={focused ? 6 : 0}
+    elevation={$currentTheme !== 'dark' && focused ? 6 : 0}
     columns="auto,*,auto,auto,auto"
     backgroundColor={$widgetBackgroundColor}
     margin={`${globalMarginTop + 10} 10 10 10`}
@@ -611,7 +622,7 @@
     />
     <button col={4} variant="text" class="icon-btn" text="mdi-dots-vertical" on:tap={showMapMenu} />
     {#if loaded}
-        <absolutelayout bind:this={collectionViewHolder} row={1} height="0" colSpan={7} visibility={searchResultsVisible ? 'visible' : 'collapsed'} isUserInteractionEnabled={searchResultsVisible}>
+        <absolutelayout bind:this={collectionViewHolder} row={1} height="0" colSpan={7} isUserInteractionEnabled={searchResultsVisible}>
             <gridlayout height="200" width="100%" rows="*,auto" columns="auto,auto,*">
                 <button
                     variant="text"
