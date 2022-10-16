@@ -1,5 +1,5 @@
 /// <reference path="../node_modules/@nativescript/core/global-types.d.ts" />
-/// <reference path="../node_modules/@nativescript/types-android/lib/android-30.d.ts" />
+/// <reference path="../node_modules/@nativescript/types-android/lib/android-32.d.ts" />
 /// <reference path="../node_modules/@nativescript-community/ui-carto/typings/carto.android.d.ts" />
 
 // declare module '*.vue' {
@@ -101,6 +101,10 @@ namespace svelteNative.JSX {
     export interface ButtonAttributes {
         variant?: string;
         shape?: string;
+    }
+    export interface SpanAttributes {
+        verticalAlignment?: string;
+        verticalTextAlignment?: string;
     }
     export interface SliderAttributes {
         stepSize?: number;
