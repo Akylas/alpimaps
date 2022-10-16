@@ -10,7 +10,7 @@ import { install as installBottomSheets } from '@nativescript-community/ui-mater
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
 import installWebRTC from '@nativescript-community/ui-webview-rtc';
-import { Application } from '@nativescript/core';
+import { Application, Trace } from '@nativescript/core';
 import { ScrollView } from '@nativescript/core/ui';
 import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
@@ -51,9 +51,6 @@ registerNativeViewElement('flexlayout', () => require('@nativescript/core').Flex
 registerNativeViewElement('Switch', () => require('@nativescript/core').Switch);
 registerNativeViewElement('TextField', () => require('@nativescript/core').TextField);
 registerNativeViewElement('Span', () => require('@nativescript/core').Span);
-// registerNativeViewElement('WebView', () => require('@nativescript/core').WebView);
-
-// registerNativeViewElement('textfield', () => require('@nativescript-community/ui-material-textfield').TextField, null, {}, { override: true });
 registerNativeViewElement('button', () => require('@nativescript-community/ui-material-button').Button, null, {}, { override: true });
 registerNativeViewElement('label', () => require('@nativescript-community/ui-label').Label, null, {}, { override: true });
 registerNativeViewElement('mdactivityindicator', () => require('@nativescript-community/ui-material-activityindicator').ActivityIndicator);
@@ -95,29 +92,23 @@ if (__IOS__) {
     themer.setPrimaryColor(primaryColor);
     themer.setAccentColor(primaryColor);
 }
-if (__ANDROID__) {
-    if (global.isAndroid) {
-        (global as any).setInterval = (handler, timeout, ...args) => {
-            timeout += 0;
-            const invoke = () => handler(...args);
-            const zoneBound = zonedCallback(invoke);
-            return (global as any).__setInterval(() => {
-                zoneBound();
-            }, timeout || 0);
-        };
-        (global as any).clearInterval = (global as any).__clearInterval;
-        (global as any).setTimeout = (handler, timeout, ...args) => {
-            timeout += 0;
-            const invoke = () => handler(...args);
-            const zoneBound = zonedCallback(invoke);
-            return (global as any).__setTimeout(() => {
-                zoneBound();
-            }, timeout || 0);
-        };
-
-        (global as any).clearTimeout = (global as any).__clearTimeout;
-    }
-}
+// if (!global.window) {
+//     window = global.window = {
+//         requestAnimationFrame,
+//         cancelAnimationFrame,
+//         performance: {
+//             now: time
+//         } as any
+//     } as any;
+// } else if (!global.window.requestAnimationFrame) {
+//     global.window.requestAnimationFrame = requestAnimationFrame;
+//     global.window.cancelAnimationFrame = cancelAnimationFrame;
+//     if (!global.window.performance) {
+//         global.window.performance = {
+//             now: time
+//         } as any;
+//     }
+// }
 themer.createShape('round', {
     cornerFamily: 'rounded' as any,
     cornerSize: {
