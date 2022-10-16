@@ -1,4 +1,5 @@
 module.exports = {
+    ignoredNativeDependencies: ['@nativescript-community/sentry'],
     id: 'akylas.alpi.maps',
     appResourcesPath: 'App_Resources',
     webpackConfigPath: 'app.webpack.config.js',
