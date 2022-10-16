@@ -64,3 +64,4 @@ dist
 app/assets/peakfinder/webapp.js.LICENSE.txt
 API_KEYS.js
 app/assets/**/*.css
+dev_assets/styles/osmxml_cleaned/*.xml
