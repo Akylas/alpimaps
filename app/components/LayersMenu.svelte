@@ -119,7 +119,7 @@
     {#if loaded}
         <collectionview id="trackingScrollView" items={customSources} bind:this={collectionView} reorderEnabled={true} on:itemReordered={onItemReordered}>
             <Template let:item>
-                <gridlayout paddingLeft="15" paddingRight="5" rows="*" columns="100,*,auto" borderBottomColor={$borderColor} borderBottomWidth="1">
+                <gridlayout paddingLeft="15" paddingRight="5" rows="*" columns="130,*,auto" borderBottomColor={$borderColor} borderBottomWidth="1">
                     <label
                         color={item.layer.opacity === 0 ? $subtitleColor : $textColor}
                         text={item.name.toUpperCase()}
