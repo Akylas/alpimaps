@@ -122,6 +122,14 @@ export const data: { [k: string]: Provider } = {
                     minZoom: 6
                 }
             },
+            PlanV2: {
+                urlOptions: {
+                    variant: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2'
+                },
+                sourceOptions: {
+                    minZoom: 6
+                }
+            },
             Satellite: {
                 urlOptions: {
                     variant: 'ORTHOIMAGERY.ORTHOPHOTOS'
@@ -154,26 +162,26 @@ export const data: { [k: string]: Provider } = {
                 // TMSScheme:true
                 // }
             },
-            Slopes: {
-                urlOptions: {
-                    variant: 'GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN',
-                    format: 'image/png'
-                }
-            },
-            HillShading: {
-                isOverlay: true,
-                urlOptions: {
-                    variant: 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW',
-                    style: 'estompage_grayscale',
-                    format: 'image/png'
-                }
-            },
-            ELEVATION: {
-                urlOptions: {
-                    variant: 'ELEVATION.SLOPES'
-                    // format: 'image/png',
-                }
-            }
+            // Slopes: {
+            //     urlOptions: {
+            //         variant: 'GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN',
+            //         format: 'image/png'
+            //     }
+            // },
+            // HillShading: {
+            //     isOverlay: true,
+            //     urlOptions: {
+            //         variant: 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW',
+            //         style: 'estompage_grayscale',
+            //         format: 'image/png'
+            //     }
+            // },
+            // ELEVATION: {
+            //     urlOptions: {
+            //         variant: 'ELEVATION.SLOPES'
+            //         // format: 'image/png',
+            //     }
+            // }
         }
     },
     Avalanches: {
