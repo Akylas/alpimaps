@@ -801,6 +801,15 @@
             showError(err);
         }
     }
+
+    function onItemReordered(e) {
+        console.log('onItemReordered', e.index);
+        (e.view as ContentView).content.opacity = 1;
+    }
+    function onItemReorderStarting(e) {
+        console.log('onItemReorderStarting', e.index, e.view, (e.view as ContentView).content);
+        (e.view as ContentView).content.opacity = 0.8;
+    }
 </script>
 
 <stacklayout bind:this={topLayout} {...$$restProps} backgroundColor={primaryColor} paddingTop={globalMarginTop} translateY={currentTranslationY} style="z-index:1000;">
@@ -827,7 +836,17 @@
                 visibility={loading ? 'hidden' : 'visible'}
             />
             <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} horizontalAlignment="right" busy={true} width="40" height="40" color="white" />
-            <collectionview row={1} items={waypoints} rowHeight="50" itemIdGenerator={(item, i) => item.properties.id} animateItemUpdate={true}>
+            <collectionview
+                row={1}
+                items={waypoints}
+                rowHeight="50"
+                itemIdGenerator={(item, i) => item.properties.id}
+                animateItemUpdate={true}
+                reorderLongPressEnabled={true}
+                reorderEnabled={true}
+                on:itemReorderStarting={onItemReorderStarting}
+                on:itemReordered={onItemReordered}
+            >
                 <Template let:item>
                     <gridlayout>
                         <canvaslabel color="white" fontSize="16" paddingLeft="10" fontFamily={mdiFontFamily}>
