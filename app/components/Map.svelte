@@ -863,10 +863,16 @@
         mapContext?.mapModule('customLayers').toggleHillshadeSlope(value);
     }
     function toggleMapRotate(value: boolean) {
-        cartoMap?.getOptions().setRotatable(value);
+        if (cartoMap) {
+            console.log('toggleMapRotate', value);
+            cartoMap?.getOptions().setRotatable(value);
+        }
     }
     function toggleMapPitch(value: boolean) {
-        cartoMap?.getOptions().setTiltRange(toNativeMapRange([value ? 30 : 90, 90]));
+        if (cartoMap) {
+            console.log('toggleMapPitch', value);
+            cartoMap?.getOptions().setTiltRange(toNativeMapRange([value ? 30 : 90, 90]));
+        }
     }
 
     async function handleRouteSelection(featureData, layer: VectorTileLayer) {
