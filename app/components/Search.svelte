@@ -8,9 +8,8 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import type { Side } from '@nativescript-community/ui-drawer';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { GridLayout, Screen, TextField, Utils, View } from '@nativescript/core';
+    import { GridLayout, Screen, TextField, View } from '@nativescript/core';
     import { getJSON } from '@nativescript/core/http';
-    import { AdditiveTweening } from 'additween';
     import deburr from 'deburr';
     import type { Point } from 'geojson';
     import { onDestroy } from 'svelte';
@@ -230,7 +229,7 @@
             animateView(nGridLayout, { elevation: $currentTheme !== 'dark' && focused ? 10 : 0, borderRadius: searchResultsVisible ? 10 : 25 }, 100);
         }
     }
-    
+
     $: {
         const nCollectionView = collectionViewHolder?.nativeView;
         if (nCollectionView) {
@@ -511,9 +510,10 @@
         mapContext.showOptions();
     }
     function onItemTap(item: SearchItem) {
-        if (!item) {
+        if (!searchResultsVisible || !item) {
             return;
         }
+        
         mapContext.selectItem({ item, isFeatureInteresting: true, minZoom: 14, preventZoom: false });
         unfocus();
     }
@@ -577,7 +577,6 @@
             loadedListeners.forEach((l) => l());
         }
     }
-
 </script>
 
 <gridlayout
@@ -643,7 +642,7 @@
                     on:tap={showResultsOnMap}
                     color={$subtitleColor}
                 />
-                <collectionview colSpan={3} bind:this={collectionView} rowHeight="49" items={filteredDataItems}>
+                <collectionview colSpan={3} bind:this={collectionView} rowHeight="49" items={filteredDataItems} isUserInteractionEnabled={searchResultsVisible}>
                     <Template let:item>
                         <canvaslabel columns="34,*" padding="0 10 0 10" rows="*,auto,auto,*" class="textRipple" on:tap={() => onItemTap(item)}>
                             <cspan text={item.icon} color={item.color} fontFamily="osm" fontSize="20" verticalAlignment="center" />
