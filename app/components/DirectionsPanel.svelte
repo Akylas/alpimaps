@@ -5,9 +5,8 @@
     import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
     import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
     import { VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
-    import { ValhallaOfflineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
-    import { RoutingResult, RoutingService } from '@nativescript-community/ui-carto/routing';
-    import { ApplicationSettings, Color, Device, GridLayout, ObservableArray, StackLayout, TextField } from '@nativescript/core';
+    import { RoutingResult, RoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+    import { ApplicationSettings, Color, ContentView, Device, GridLayout, ObservableArray, StackLayout, TextField } from '@nativescript/core';
     import type { Feature, Point } from 'geojson';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
@@ -549,7 +548,7 @@
                 method: 'GET',
                 queryParams: {
                     fromPlace: positions[0],
-                    toPlace: positions[positions.length-1],
+                    toPlace: positions[positions.length - 1],
                     date: new Date(),
                     time: new Date()
                 }
@@ -650,8 +649,8 @@
                 let options = [];
                 if (profile === 'bicycle') {
                     options = [
-                        { shortest: true , bicycle_type: bicycle_type},
-                        { shortest: false, bicycle_type: bicycle_type , avoid_bad_surfaces: 1, use_hills: 0, use_roads: 0.25 },
+                        { shortest: true, bicycle_type: bicycle_type },
+                        { shortest: false, bicycle_type: bicycle_type, avoid_bad_surfaces: 1, use_hills: 0, use_roads: 0.25 },
                         { shortest: false, bicycle_type: bicycle_type, avoid_bad_surfaces: 1, use_hills: 1, use_roads: 0 },
                         { shortest: false, bicycle_type: bicycle_type, avoid_bad_surfaces: 0, use_hills: 1, use_roads: 0 }
                     ];
