@@ -67,6 +67,7 @@ export interface MapContext {
     }) => void;
     zoomToItem: (args: { item: IItem; zoom?: number; minZoom?: number; forceZoomOut?: boolean }) => void;
     unselectItem: () => void;
+    unFocusSearch: () => void;
     getCurrentLanguage: () => string;
     getSelectedItem: () => IItem;
     getLayers: (layerId?: LayerType) => { layer: VectorTileLayer; id: string }[];
