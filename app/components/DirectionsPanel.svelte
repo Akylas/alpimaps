@@ -437,6 +437,7 @@
         // const duration = e.data.clickInfo.duration;
 
         if (clickType === ClickType.LONG) {
+            mapContext.unFocusSearch();
             featureData.layer = featureLayerName;
             // executeOnMainThread(() => {
             addWayPoint(position, featureData);
@@ -802,7 +803,7 @@
     }
 </script>
 
-<stacklayout bind:this={topLayout} {...$$restProps} backgroundColor={primaryColor} paddingTop={globalMarginTop} translateY={currentTranslationY}>
+<stacklayout bind:this={topLayout} {...$$restProps} backgroundColor={primaryColor} paddingTop={globalMarginTop} translateY={currentTranslationY} style="z-index:1000;">
     {#if loaded}
         <gridlayout bind:this={gridLayout} on:tap={() => {}} rows="50,100,auto" columns="*,40">
             <button horizontalAlignment="left" variant="text" class="icon-btn-white" text="mdi-arrow-left" on:tap={() => cancel()} />
