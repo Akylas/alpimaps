@@ -467,7 +467,7 @@
 
             options.setZoomGestures(true);
             options.setDoubleClickMaxDuration(0.3);
-            options.setLongClickDuration(0.5);
+            options.setLongClickDuration(0.8);
             options.setKineticRotation(false);
             options.setRotatable($mapStore.rotateEnabled);
             toggleMapPitch($mapStore.pitchEnabled);
