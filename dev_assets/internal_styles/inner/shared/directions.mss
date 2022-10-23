@@ -50,7 +50,6 @@
 	marker-color: [isStart] ? 'green': ([isStop] ? 'red' : 'blue');
 	marker-width: 24;
 	marker-height: 24;
-	marker-transform: translate (0, -12);
 	marker-allow-overlap: true;
 	marker-clip: false;
 }
