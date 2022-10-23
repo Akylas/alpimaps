@@ -317,6 +317,7 @@
             getCurrentLayer,
             selectItem,
             unselectItem,
+            unFocusSearch,
             addLayer,
             insertLayer,
             getLayerIndex,
