@@ -10,6 +10,7 @@
     import { showError } from '~/utils/error';
     import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
     import { mdiFontFamily, navigationBarHeight } from '~/variables';
+    import IconButton from '../IconButton.svelte';
 
     export let position: MapPos<LatLonKeys>;
     export let name: string;
@@ -92,7 +93,7 @@
             <gridlayout rippleColor={item.color} columns="auto,*,auto" padding={10} on:tap={() => showTimesheet(item)}>
                 <label borderRadius={4} class="transitIconLabel" backgroundColor={item.color || 'black'} color={item.textColor} text={item.shortName} maxFontSize={30} autoFontSize={true} />
                 <label text={item.longName} col={1} fontSize={17} maxFontSize={17} paddingLeft={10} verticalTextAlignment="center" maxLines={2} autoFontSize={true} lineBreak="end" />
-                <button col={2} variant="text" class="icon-btn" text="mdi-information-outline" on:tap={() => showDetails(item)} />
+                <IconButton col={2} text="mdi-information-outline" on:tap={() => showDetails(item)} />
             </gridlayout>
         </Template>
     </collectionview>
