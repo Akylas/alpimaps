@@ -17,11 +17,11 @@ import { FrameElement, PageElement, registerElement, registerNativeViewElement }
 import { start as startThemeHelper } from '~/helpers/theme';
 import { BgService } from '~/services/BgService';
 import { networkService } from '~/services/NetworkService';
-// import { startSentry } from '~/utils/sentry';
+import { startSentry } from '~/utils/sentry';
 import './app.scss';
 import Map from '~/components/Map.svelte';
 
-// startSentry();
+startSentry();
 installGestures(true);
 installMixins();
 installBottomSheets();

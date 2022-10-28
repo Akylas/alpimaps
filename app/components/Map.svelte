@@ -17,7 +17,7 @@
     import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
     import { isBottomSheetOpened, showBottomSheet } from '~/utils/svelte/bottomsheet';
-    import { action } from '@nativescript-community/ui-material-dialogs';
+    import { action, prompt } from '@nativescript-community/ui-material-dialogs';
     import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
     import { Brightness } from '@nativescript/brightness';
     import { AndroidApplication, Application, Page, Utils } from '@nativescript/core';
@@ -32,7 +32,7 @@
     import { navigate } from 'svelte-native';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
-    import { l, lc, onLanguageChanged } from '~/helpers/locale';
+    import { l, lc, lt, onLanguageChanged } from '~/helpers/locale';
     import { sTheme, toggleTheme } from '~/helpers/theme';
     import watcher from '~/helpers/watcher';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
@@ -59,6 +59,8 @@
     import LocationInfoPanel from './LocationInfoPanel.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
     import Search from './Search.svelte';
+    import { isSentryEnabled, Sentry } from '~/utils/sentry';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
@@ -1614,13 +1616,14 @@
                     color: $sTheme === 'dark' ? primaryColor : undefined,
                     icon: 'mdi-theme-light-dark'
                 }
-
-                // {
-                //     title: lc('sentry'),
-                //     id: 'sentry',
-                //     icon: 'mdi-bug'
-                // }
             ];
+            if (SENTRY_ENABLED && isSentryEnabled) {
+                options.push({
+                    title: lc('bug_report'),
+                    id: 'sentry',
+                    icon: 'mdi-bug'
+                });
+            }
 
             if (isSensorAvailable('barometer')) {
                 options.splice(options.length - 2, 0, {
