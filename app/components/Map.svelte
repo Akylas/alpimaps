@@ -19,7 +19,7 @@
     import { isBottomSheetOpened, showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { action, prompt } from '@nativescript-community/ui-material-dialogs';
     import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
-    import { Brightness } from '@nativescript/brightness';
+    // import { Brightness } from '@nativescript/brightness';
     import { AndroidApplication, Application, Page, Utils } from '@nativescript/core';
     import * as appSettings from '@nativescript/core/application-settings';
     import type { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
@@ -68,8 +68,6 @@
     const KEEP_AWAKE_KEY = 'keepAwake';
     let defaultLiveSync = global.__onLiveSync;
 
-    const brightness = new Brightness();
-
     let page: NativeViewElementNode<Page>;
     let cartoMap: CartoMap<LatLonKeys>;
     let directionsPanel: DirectionsPanel;
@@ -95,7 +93,7 @@
     let projection: Projection = null;
     let currentLanguage = appSettings.getString('language', 'en');
     let addedLayers: { layer: Layer<any, any>; layerId: LayerType }[] = [];
-    let keepAwakeEnabled = appSettings.getBoolean(KEEP_AWAKE_KEY, false);
+    let keepScreenAwake = appSettings.getBoolean(KEEP_AWAKE_KEY, false);
     let showOnLockscreen = false;
     let currentMapRotation = 0;
     let shouldShowNavigationBarOverlay = false;
@@ -1453,16 +1451,11 @@
         }
     }
 
-    let lastBrightness = null;
     function showKeepAwakeNotification() {
-        lastBrightness = brightness.get();
-        brightness.set({
-            intensity: 100
-        });
         if (__ANDROID__) {
             const context: android.content.Context = ad.getApplicationContext();
             const builder = NotificationHelper.getNotification(context, {
-                title: 'Alpi Maps is keeping the screen awake',
+                title: lt('screen_awake_notification'),
                 channel: NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL
             });
 
@@ -1472,30 +1465,13 @@
     }
 
     function hideKeepAwakeNotification() {
-        if (lastBrightness === null) {
-            return;
-        }
-        brightness.set({
-            intensity: lastBrightness
-        });
-        lastBrightness = null;
         if (__ANDROID__) {
             NotificationHelper.hideNotification(KEEP_AWAKE_NOTIFICATION_ID);
         }
     }
 
     async function switchKeepAwake() {
-        try {
-            if (keepAwakeEnabled) {
-                await allowSleepAgain();
-                keepAwakeEnabled = false;
-            } else {
-                await keepAwake();
-                keepAwakeEnabled = true;
-            }
-        } catch (err) {
-            showError(err);
-        }
+        keepScreenAwake = !keepScreenAwake;
     }
     async function switchShowOnLockscreen() {
         try {
