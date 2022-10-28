@@ -3,7 +3,7 @@ import { confirm, alert as mdAlert } from '@nativescript-community/ui-material-d
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { BaseError } from 'make-error';
 import { l } from '~/helpers/locale';
-import { NoNetworkError } from '~/services/NetworkService';
+import { HTTPError, NoNetworkError, TimeoutError } from '~/services/NetworkService';
 import { Sentry, isSentryEnabled } from '~/utils/sentry';
 
 function evalTemplateString(resource: string, obj: {}) {
@@ -78,23 +78,21 @@ export class CustomError extends BaseError {
     getMessage() {}
 }
 
-export async function showError(err: Error | string, nonBugError = false) {
+export async function showError(err: Error | string, showAsSnack = false) {
     if (!err) {
         return;
     }
+    const reporterEnabled = this.sentryEnabled;
+    const realError = typeof err === 'string' ? null : err;
 
-    if (err instanceof NoNetworkError) {
-        showSnack({ message: l('no_network') });
+        const isString = realError === null || realError === undefined;
+        const message = isString ? (err as string) : realError.message || realError.toString();
+    if (showAsSnack || realError instanceof NoNetworkError || realError instanceof TimeoutError) {
+        showSnack({ message });
         return;
     }
-    const realError = typeof err === 'string' ? null : err;
-    const isString = realError === null;
-    const message = isString ? (err as string) : realError.message || realError.toString();
     const title = lc('error');
-    let showSendBugReport = isSentryEnabled && !isString && !!realError.stack;
-    if (realError instanceof NoNetworkError) {
-        showSendBugReport = false;
-    }
+    const showSendBugReport = reporterEnabled && !isString && !(realError instanceof HTTPError) && !!realError.stack;
     // if (!PRODUCTION) {
     // }
     const result = await confirm({
@@ -103,7 +101,7 @@ export async function showError(err: Error | string, nonBugError = false) {
         cancelButtonText: showSendBugReport ? lc('cancel') : lc('ok'),
         message
     });
-    if (gVars.sentry && result && isSentryEnabled) {
+    if (SENTRY_ENABLED && result && isSentryEnabled) {
         Sentry.captureException(err);
         this.$alert(l('bug_report_sent'));
     }
