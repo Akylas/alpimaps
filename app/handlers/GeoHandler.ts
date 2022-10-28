@@ -92,7 +92,6 @@ export class GeoHandler extends Observable {
 
     constructor() {
         super();
-        DEV_LOG && console.log('creating GPS Handler', !!geolocation, DEV_LOG);
         if (!geolocation) {
             geolocation = new GPS();
         }
@@ -223,7 +222,7 @@ export class GeoHandler extends Observable {
     }
 
     onGPSStateChange(e: GPSEvent) {
-        DEV_LOG && console.log('GPS state change', e.data);
+        TEST_LOG && console.log('GPS state change', e.data);
         const enabled = (this.gpsEnabled = e.data.enabled);
         if (!enabled) {
             this.stopSession();
@@ -374,7 +373,7 @@ export class GeoHandler extends Observable {
     }
     @bind
     onLocationError(err: Error) {
-        DEV_LOG && console.log(' location error: ', err);
+        TEST_LOG && console.log(' location error: ', err);
         this.currentWatcher && this.currentWatcher(err);
     }
     async startWatch(opts?: Partial<GeolocationOptions>) {
@@ -389,7 +388,7 @@ export class GeoHandler extends Observable {
             skipPermissionCheck: true,
             ...opts
         };
-        DEV_LOG && console.log('startWatch', options);
+        TEST_LOG && console.log('startWatch', options);
 
         if (__IOS__) {
             geolocation.iosChangeLocManager.showsBackgroundLocationIndicator = true;
@@ -466,7 +465,7 @@ export class GeoHandler extends Observable {
     }
 
     stopWatch() {
-        DEV_LOG && console.log('stopWatch', this.watchId);
+        TEST_LOG && console.log('stopWatch', this.watchId);
         if (this.watchId) {
             if (__ANDROID__) {
                 (this.bgService as any).get().removeForeground();
@@ -508,105 +507,105 @@ export class GeoHandler extends Observable {
             this.onUpdatedSession(this.currentSession);
         }
     }
-    onNewLoc = (err, loc: GeoLocation) => {
-        // ignore if we haven't moved or if same timestamp
-        if (err || loc.horizontalAccuracy >= 40 || (this.lastLoc && ((this.lastLoc.lat === loc.lat && this.lastLoc.lon === loc.lon) || this.lastLoc.timestamp === loc.timestamp))) {
-            return;
-        }
-        if (this.lastLoc) {
-            let shouldNotif = false;
-            const deltaDistance = this.getDistance(this.lastLoc, loc);
-            const deltaTime = loc.timestamp.valueOf() - this.lastLoc.timestamp.valueOf();
-            if (deltaTime < 0) {
-                // impossible ... but happens on ios!!!!
-                return;
-            }
-            if (deltaTime > maximumAge) {
-                // very old last loc, let's make it as if it was the first one
-                this.updateSessionWithLoc(loc);
-                return;
-            }
+    // onNewLoc = (err, loc: GeoLocation) => {
+    //     // ignore if we haven't moved or if same timestamp
+    //     if (err || loc.horizontalAccuracy >= 40 || (this.lastLoc && ((this.lastLoc.lat === loc.lat && this.lastLoc.lon === loc.lon) || this.lastLoc.timestamp === loc.timestamp))) {
+    //         return;
+    //     }
+    //     if (this.lastLoc) {
+    //         let shouldNotif = false;
+    //         const deltaDistance = this.getDistance(this.lastLoc, loc);
+    //         const deltaTime = loc.timestamp.valueOf() - this.lastLoc.timestamp.valueOf();
+    //         if (deltaTime < 0) {
+    //             // impossible ... but happens on ios!!!!
+    //             return;
+    //         }
+    //         if (deltaTime > maximumAge) {
+    //             // very old last loc, let's make it as if it was the first one
+    //             this.updateSessionWithLoc(loc);
+    //             return;
+    //         }
 
-            // check for altitude change
-            let deltaAlt = 0;
-            if (this.lastAlt !== undefined && loc.altitude !== undefined && loc.altitude >= 0) {
-                const newAlt = Math.round(loc.altitude);
-                deltaAlt = newAlt - this.lastAlt;
-                DEV_LOG && console.log('deltaAlt', deltaAlt, this.lastAlt, newAlt);
+    //         // check for altitude change
+    //         let deltaAlt = 0;
+    //         if (this.lastAlt !== undefined && loc.altitude !== undefined && loc.altitude >= 0) {
+    //             const newAlt = Math.round(loc.altitude);
+    //             deltaAlt = newAlt - this.lastAlt;
+    //             DEV_LOG && console.log('deltaAlt', deltaAlt, this.lastAlt, newAlt);
 
-                // we only look for positive altitude gain
-                // we ignore little variations as it might induce wrong readings
-                if (deltaAlt > 0) {
-                    // filter not to constantly increase
-                    this.currentSession.altitudeGain = Math.round(this.currentSession.altitudeGain + deltaAlt);
-                    this.lastAlt = newAlt;
-                    shouldNotif = true;
-                } else if (deltaAlt < 0) {
-                    this.currentSession.altitudeNegative = Math.round(this.currentSession.altitudeNegative - deltaAlt);
-                    this.lastAlt = newAlt;
-                }
-            }
+    //             // we only look for positive altitude gain
+    //             // we ignore little variations as it might induce wrong readings
+    //             if (deltaAlt > 0) {
+    //                 // filter not to constantly increase
+    //                 this.currentSession.altitudeGain = Math.round(this.currentSession.altitudeGain + deltaAlt);
+    //                 this.lastAlt = newAlt;
+    //                 shouldNotif = true;
+    //             } else if (deltaAlt < 0) {
+    //                 this.currentSession.altitudeNegative = Math.round(this.currentSession.altitudeNegative - deltaAlt);
+    //                 this.lastAlt = newAlt;
+    //             }
+    //         }
 
-            // check for new speed
-            let newSpeed;
-            if (loc.speed >= 0) {
-                newSpeed = loc.speed * 3.6; //  1m/s === 3.6 km/h
-            } else {
-                newSpeed = (deltaDistance / deltaTime) * 3600; // 1m/s === 3.6 km/h => 1m/ms === 1000m/s === 3600 km/h
-                DEV_LOG && console.log('new speed based on points', newSpeed, deltaDistance, deltaTime);
-                loc.speed = newSpeed;
-            }
+    //         // check for new speed
+    //         let newSpeed;
+    //         if (loc.speed >= 0) {
+    //             newSpeed = loc.speed * 3.6; //  1m/s === 3.6 km/h
+    //         } else {
+    //             newSpeed = (deltaDistance / deltaTime) * 3600; // 1m/s === 3.6 km/h => 1m/ms === 1000m/s === 3600 km/h
+    //             DEV_LOG && console.log('new speed based on points', newSpeed, deltaDistance, deltaTime);
+    //             loc.speed = newSpeed;
+    //         }
 
-            // newSpeed defined means we are still moving, should be taken into account then
-            if (newSpeed !== this.currentSession.currentSpeed) {
-                DEV_LOG && console.log('new loc based on speed', newSpeed, loc.speed);
-                // we also round the speed to 3 digits to prevent too small values
-                this.currentSession.currentSpeed = Math.round(newSpeed * 1000) / 1000;
-                shouldNotif = true;
-            }
+    //         // newSpeed defined means we are still moving, should be taken into account then
+    //         if (newSpeed !== this.currentSession.currentSpeed) {
+    //             DEV_LOG && console.log('new loc based on speed', newSpeed, loc.speed);
+    //             // we also round the speed to 3 digits to prevent too small values
+    //             this.currentSession.currentSpeed = Math.round(newSpeed * 1000) / 1000;
+    //             shouldNotif = true;
+    //         }
 
-            if (deltaDistance > 2 || shouldNotif) {
-                DEV_LOG && console.log('deltaDistance', deltaDistance, this.currentSession.distance);
-                this.currentSession.distance = this.currentSession.distance + deltaDistance;
-                shouldNotif = true;
-            }
+    //         if (deltaDistance > 2 || shouldNotif) {
+    //             DEV_LOG && console.log('deltaDistance', deltaDistance, this.currentSession.distance);
+    //             this.currentSession.distance = this.currentSession.distance + deltaDistance;
+    //             shouldNotif = true;
+    //         }
 
-            // wait to have a little more data to compugte / show average speed
-            const sessionDuration = loc.timestamp.valueOf() - this.currentSession.startTime.valueOf() - this.currentSession.pauseDuration;
-            DEV_LOG && console.log('sessionDuration', sessionDuration);
+    //         // wait to have a little more data to compugte / show average speed
+    //         const sessionDuration = loc.timestamp.valueOf() - this.currentSession.startTime.valueOf() - this.currentSession.pauseDuration;
+    //         DEV_LOG && console.log('sessionDuration', sessionDuration);
 
-            DEV_LOG && console.log('distance', this.currentSession.distance);
+    //         DEV_LOG && console.log('distance', this.currentSession.distance);
 
-            if (sessionDuration > 3000 && this.currentSession.distance > 10 && shouldNotif) {
-                const newAvg = Math.round((this.currentSession.distance / sessionDuration) * 3600); // 1m/s === 3.6 km/h => 1m/ms === 1000m/s === 3600 km/h
-                DEV_LOG && console.log('average Speed', newAvg);
+    //         if (sessionDuration > 3000 && this.currentSession.distance > 10 && shouldNotif) {
+    //             const newAvg = Math.round((this.currentSession.distance / sessionDuration) * 3600); // 1m/s === 3.6 km/h => 1m/ms === 1000m/s === 3600 km/h
+    //             DEV_LOG && console.log('average Speed', newAvg);
 
-                if (newAvg !== this.currentSession.averageSpeed) {
-                    this.currentSession.averageSpeed = newAvg;
-                    // console.log('new loc based on avg', newAvg);
-                    // shouldNotif = true;
-                }
-            }
-            DEV_LOG &&
-                console.log(
-                    'onNewLoc',
-                    `speed: ${loc.speed && loc.speed.toFixed(1)}, loc:${loc.lat.toFixed(2)},${loc.lon.toFixed(2)}, ${new Date(loc.timestamp).toLocaleTimeString()}, ${shouldNotif}, ${
-                        this.currentSession.currentSpeed && this.currentSession.currentSpeed.toFixed(1)
-                    }, ${deltaDistance}, ${deltaTime}, ${deltaAlt}`
-                );
+    //             if (newAvg !== this.currentSession.averageSpeed) {
+    //                 this.currentSession.averageSpeed = newAvg;
+    //                 // console.log('new loc based on avg', newAvg);
+    //                 // shouldNotif = true;
+    //             }
+    //         }
+    //         DEV_LOG &&
+    //             console.log(
+    //                 'onNewLoc',
+    //                 `speed: ${loc.speed && loc.speed.toFixed(1)}, loc:${loc.lat.toFixed(2)},${loc.lon.toFixed(2)}, ${new Date(loc.timestamp).toLocaleTimeString()}, ${shouldNotif}, ${
+    //                     this.currentSession.currentSpeed && this.currentSession.currentSpeed.toFixed(1)
+    //                 }, ${deltaDistance}, ${deltaTime}, ${deltaAlt}`
+    //             );
 
-            if (shouldNotif) {
-                this.updateSessionWithLoc(loc);
-            }
-        } else {
-            const deltaTime = Date.now() - loc.timestamp.valueOf();
-            if (deltaTime > maximumAge) {
-                // very old last loc, let's make it as if it was the first one
-                return;
-            }
-            this.updateSessionWithLoc(loc);
-        }
-    };
+    //         if (shouldNotif) {
+    //             this.updateSessionWithLoc(loc);
+    //         }
+    //     } else {
+    //         const deltaTime = Date.now() - loc.timestamp.valueOf();
+    //         if (deltaTime > maximumAge) {
+    //             // very old last loc, let's make it as if it was the first one
+    //             return;
+    //         }
+    //         this.updateSessionWithLoc(loc);
+    //     }
+    // };
     async askForSessionPerms() {
         await this.enableLocation();
         await this.checkBattery();

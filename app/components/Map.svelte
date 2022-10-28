@@ -214,7 +214,7 @@
         //     }
         // }
         try {
-            DEV_LOG && console.log('Got the following appURL', link);
+            TEST_LOG && console.log('Got the following appURL', link);
             if (link.startsWith('geo')) {
                 const latlong = link.split(':')[1].split(',').map(parseFloat) as [number, number];
                 const loaded = !!cartoMap;
@@ -536,7 +536,7 @@
 
     function onMainMapClicked(e) {
         const { clickType, position } = e.data;
-        DEV_LOG && console.log('onMainMapClicked', clickType, position);
+        TEST_LOG && console.log('onMainMapClicked', clickType, position);
         // handleClickedFeatures(position);
         if (ignoreNextMapClick) {
             ignoreNextMapClick = false;
@@ -580,13 +580,13 @@
         didIgnoreAlreadySelected = false;
         if (isFeatureInteresting) {
             let isCurrentItem = item === $selectedItem;
-            DEV_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons);
+            TEST_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons);
             if (setSelected && isCurrentItem && !item) {
                 unselectItem(false);
             }
             const route = item?.properties?.route;
             if (setSelected && route) {
-                DEV_LOG && console.log('selected_id', typeof item.properties.route.osmid, item.properties.route.osmid, typeof item.properties.id, item.properties.id, setSelected);
+                TEST_LOG && console.log('selected_id', typeof item.properties.route.osmid, item.properties.route.osmid, typeof item.properties.id, item.properties.id, setSelected);
 
                 if (item.properties.id !== undefined) {
                     selectedId = item.properties.id;
@@ -944,7 +944,7 @@
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, featureId, position, featureLayerName, featureData, featurePosition, featureGeometry, layer } = data;
 
-        DEV_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, featurePosition);
+        TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, featurePosition);
 
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
@@ -1038,7 +1038,7 @@
     }
     function onVectorElementClicked(data: VectorElementEventData<LatLonKeys>) {
         const { clickType, position, elementPos, metaData, element } = data;
-        DEV_LOG && console.log('onVectorElementClicked', clickType, position, metaData);
+        TEST_LOG && console.log('onVectorElementClicked', clickType, position, metaData);
         Object.keys(metaData).forEach((k) => {
             if (metaData[k][0] === '{' || metaData[k][0] === '[') {
                 metaData[k] = JSON.parse(metaData[k]);
@@ -1074,7 +1074,7 @@
     }
     function onVectorTileElementClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureData } = data;
-        DEV_LOG && console.log('onVectorTileElementClicked', clickType, position, featureData.id);
+        TEST_LOG && console.log('onVectorTileElementClicked', clickType, position, featureData.id);
         const itemModule = mapContext.mapModule('items');
         const feature = itemModule.getFeature(featureData.id);
         if (!feature) {
@@ -1129,7 +1129,7 @@
 
     function setCurrentLayer(id: string) {
         if (__CARTO_PACKAGESERVICE__) {
-            DEV_LOG && console.log('setCurrentLayer', id, $mapStore.preloading);
+            TEST_LOG && console.log('setCurrentLayer', id, $preloading);
             // const cartoMap = cartoMap;
             if (currentLayer) {
                 removeLayer(currentLayer, 'map');
@@ -1493,14 +1493,10 @@
     }
 
     async function shareScreenshot() {
-        try {
-            const image = await cartoMap.captureRendering(true);
-            share({
-                image
-            });
-        } catch (error) {
-            showError(error);
-        }
+        const image = await cartoMap.captureRendering(true);
+        return share({
+            image
+        });
     }
     function onTap(command: string) {
         switch (
@@ -1628,7 +1624,7 @@
             if (result) {
                 switch (result.id) {
                     case 'select_style':
-                        selectStyle();
+                        await selectStyle();
                         break;
                     case 'location_info':
                         switchLocationInfo();
@@ -1702,9 +1698,15 @@
     }
 </script>
 
-<page bind:this={page} actionBarHidden={true} backgroundColor="#E3E1D3" on:navigatingTo={onNavigatingTo} on:navigatingFrom={onNavigatingFrom}>
-    <!-- <drawer bind:this={drawer} translationFunction={drawerTranslationFunction} bottomOpenedDrawerAllowDraging={true} bottomClosedDrawerAllowDraging={false} backgroundColor="#E3E1D3"> -->
-    <!-- <gridlayout backgroundColor="#E3E1D3"> -->
+<page
+    bind:this={page}
+    actionBarHidden={true}
+    backgroundColor="#E3E1D3"
+    on:navigatingTo={onNavigatingTo}
+    on:navigatingFrom={onNavigatingFrom}
+    {keepScreenAwake}
+    screenBrightness={keepScreenAwake ? 1 : 0}
+>
     <bottomsheet
         android:marginBottom={$navigationBarHeight}
         backgroundColor="#01550000"
