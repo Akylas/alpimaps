@@ -1,6 +1,5 @@
 <script lang="ts">
     import type { GenericGeoLocation } from '@nativescript-community/gps';
-    import { allowSleepAgain, keepAwake } from '@nativescript-community/insomnia';
     import * as perms from '@nativescript-community/perms';
     import { isSensorAvailable } from '@nativescript-community/sensors';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
@@ -48,7 +47,7 @@
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
-    import mapStore from '~/stores/mapStore';
+    import { rotateEnabled, pitchEnabled, showGlobe, showContourLines, showRoutes, showSlopePercentages, show3DBuildings, contourLinesOpacity, preloading } from '~/stores/mapStore';
     import { showError } from '~/utils/error';
     import { getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
@@ -467,10 +466,10 @@
 
             options.setZoomGestures(true);
             options.setDoubleClickMaxDuration(0.3);
-            options.setLongClickDuration(0.8);
+            options.setLongClickDuration(0.5);
             options.setKineticRotation(false);
-            options.setRotatable($mapStore.rotateEnabled);
-            toggleMapPitch($mapStore.pitchEnabled);
+            options.setRotatable($rotateEnabled);
+            toggleMapPitch($pitchEnabled);
             // options.setClickTypeDetection(false);
             // options.setRotatable(true);
             const pos = JSON.parse(appSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos<LatLonKeys>;
@@ -831,29 +830,29 @@
         }
     }
 
-    $: setRenderProjectionMode($mapStore.showGlobe);
-    $: vectorTileDecoder && setStyleParameter('buildings', !!$mapStore.show3DBuildings ? '2' : '1');
-    $: vectorTileDecoder && setStyleParameter('contours', $mapStore.showContourLines ? '1' : '0');
-    // $: vectorTileDecoder && mapContext?.innerDecoder?.setStyleParameter('routes', $mapStore.showRoutes ? '1' : '0');
+    $: setRenderProjectionMode($showGlobe);
+    $: vectorTileDecoder && setStyleParameter('buildings', !!$show3DBuildings ? '2' : '1');
+    $: vectorTileDecoder && setStyleParameter('contours', $showContourLines ? '1' : '0');
+    // $: vectorTileDecoder && mapContext?.innerDecoder?.setStyleParameter('routes', $showRoutes ? '1' : '0');
     $: {
-        const visible = $mapStore.showRoutes;
+        const visible = $showRoutes;
         getLayers('routes').forEach((l) => {
             l.layer.visible = visible;
         });
         cartoMap && cartoMap.requestRedraw();
     }
-    $: vectorTileDecoder && setStyleParameter('contoursOpacity', $mapStore.contourLinesOpacity.toFixed(1));
-    $: vectorTileDecoder && toggleHillshadeSlope($mapStore.showSlopePercentages);
-    $: toggleMapRotate($mapStore.rotateEnabled);
-    $: toggleMapPitch($mapStore.pitchEnabled);
-    $: currentLayer && (currentLayer.preloading = $mapStore.preloading);
+    $: vectorTileDecoder && setStyleParameter('contoursOpacity', $contourLinesOpacity.toFixed(1));
+    $: vectorTileDecoder && toggleHillshadeSlope($showSlopePercentages);
+    $: toggleMapRotate($rotateEnabled);
+    $: toggleMapPitch($pitchEnabled);
+    $: currentLayer && (currentLayer.preloading = $preloading);
     // $: shouldShowNavigationBarOverlay = $navigationBarHeight !== 0 && !!selectedItem;
     $: bottomSheetStepIndex === 0 && unselectItem();
     $: cartoMap?.getOptions().setFocusPointOffset(toNativeScreenPos({ x: 0, y: Utils.layout.toDevicePixels(steps[bottomSheetStepIndex]) / 2 }));
 
     $: {
-        appSettings.setBoolean(KEEP_AWAKE_KEY, keepAwakeEnabled);
-        if (keepAwakeEnabled) {
+        appSettings.setBoolean(KEEP_AWAKE_KEY, keepScreenAwake);
+        if (keepScreenAwake) {
             showKeepAwakeNotification();
         } else {
             hideKeepAwakeNotification();
@@ -864,13 +863,11 @@
     }
     function toggleMapRotate(value: boolean) {
         if (cartoMap) {
-            console.log('toggleMapRotate', value);
             cartoMap?.getOptions().setRotatable(value);
         }
     }
     function toggleMapPitch(value: boolean) {
         if (cartoMap) {
-            console.log('toggleMapPitch', value);
             cartoMap?.getOptions().setTiltRange(toNativeMapRange([value ? 30 : 90, 90]));
         }
     }
@@ -1142,9 +1139,9 @@
             const decoder = getVectorTileDecoder();
 
             currentLayer = new VectorTileLayer({
-                preloading: $mapStore.preloading,
+                preloading: $preloading,
                 labelRenderOrder: VectorTileRenderOrder.LAST,
-                dataSource: packageService.getDataSource($mapStore.showContourLines),
+                dataSource: packageService.getDataSource($showContourLines),
                 decoder
             });
             handleNewLanguage(currentLanguage);
