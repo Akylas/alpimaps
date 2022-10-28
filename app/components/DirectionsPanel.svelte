@@ -20,9 +20,11 @@
     import { Route, RoutingAction } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
+    import { MOBILITY_URL } from '~/services/TransitService';
     import { showError } from '~/utils/error';
     import { showPopover } from '~/utils/svelte/popover';
     import { globalMarginTop, mdiFontFamily, primaryColor } from '~/variables';
+    import IconButton from './IconButton.svelte';
 
     const DEFAULT_PROFILE_KEY = 'default_direction_profile';
 
@@ -286,9 +288,9 @@
         toAdd.properties.name = formatter.getItemTitle(toAdd as Item);
         features.push(toAdd);
         if (metaData.isStart) {
-            waypoints.unshift(toAdd);
+            waypoints.unshift(toAdd as any);
         } else {
-            waypoints.push(toAdd);
+            waypoints.push(toAdd as any);
         }
         try {
             updateWayPointLines();
@@ -544,7 +546,7 @@
         if (profile === 'bus') {
             const positions = points['_array'].map((r) => `${r.lat.toFixed(6)},${r.lon.toFixed(6)}`);
             const result = networkService.request({
-                url: 'http://data.mobilites-m.fr/otp/routers/default/plan',
+                url: MOBILITY_URL + '/otp/routers/default/plan',
                 method: 'GET',
                 queryParams: {
                     fromPlace: positions[0],
@@ -775,13 +777,14 @@
     }
 
     async function setSliderCostingOptions(key: string, options: any, event) {
+        DEV_LOG && console.log('setSliderCostingOptions', key);
         try {
             if (options === profileCostingOptions) {
                 options = profileCostingOptions[profile];
             }
             const settings = valhallaSettings[key];
             const SliderPopover = (await import('~/components/SliderPopover.svelte')).default;
-            showPopover({
+            await showPopover({
                 view: SliderPopover,
                 anchor: event.object,
                 props: {
@@ -797,7 +800,7 @@
                 }
             });
         } catch (err) {
-            showError(err);
+            showError(err, err.stack);
         }
     }
 
@@ -814,31 +817,31 @@
 <stacklayout bind:this={topLayout} {...$$restProps} backgroundColor={primaryColor} paddingTop={globalMarginTop} translateY={currentTranslationY} style="z-index:1000;">
     {#if loaded}
         <gridlayout bind:this={gridLayout} on:tap={() => {}} rows="50,100,auto" columns="*,40">
-            <button horizontalAlignment="left" variant="text" class="icon-btn-white" text="mdi-arrow-left" on:tap={() => cancel()} />
+            <IconButton isSelected={true} white={true} horizontalAlignment="left" text="mdi-arrow-left" on:tap={() => cancel()} />
             <stacklayout colSpan={2} orientation="horizontal" horizontalAlignment="center">
-                <button variant="text" class="icon-btn-white" text="mdi-car" on:tap={() => setProfile('auto')} color={profileColor(profile, 'auto')} />
-                <button variant="text" class="icon-btn-white" text="mdi-motorbike" on:tap={() => setProfile('motorcycle')} color={profileColor(profile, 'motorcycle')} />
-                <button variant="text" class="icon-btn-white" text="mdi-walk" on:tap={() => setProfile('pedestrian')} color={profileColor(profile, 'pedestrian')} />
-                <button variant="text" class="icon-btn-white" text="mdi-bike" on:tap={() => setProfile('bicycle')} color={profileColor(profile, 'bicycle')} />
-                <!-- <button variant="text" class="icon-btn-white" text="mdi-bus" on:tap={() => setProfile('bus')} color={profileColor(profile, 'bus')} /> -->
+                <IconButton text="mdi-car" on:tap={() => setProfile('auto')} color={profileColor(profile, 'auto')} />
+                <IconButton text="mdi-motorbike" on:tap={() => setProfile('motorcycle')} color={profileColor(profile, 'motorcycle')} />
+                <IconButton text="mdi-walk" on:tap={() => setProfile('pedestrian')} color={profileColor(profile, 'pedestrian')} />
+                <IconButton text="mdi-bike" on:tap={() => setProfile('bicycle')} color={profileColor(profile, 'bicycle')} />
+                <!-- <IconButton white={true} text="mdi-bus" on:tap={() => setProfile('bus')} color={profileColor(profile, 'bus')} /> -->
             </stacklayout>
-            <button
+            <IconButton
                 colSpan={2}
                 horizontalAlignment="right"
-                class="icon-btn-text"
-                width={40}
-                height={40}
                 text="mdi-magnify"
                 on:tap={() => computeRoutes()}
-                isEnabled={nbWayPoints > 1}
+                isSelected={nbWayPoints > 1}
                 marginRight={10}
-                visibility={loading ? 'hidden' : 'visible'}
+                isVisible={!loading}
+                backgroundColor="white"
+                size={40}
+                selectedColor={primaryColor}
             />
-            <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} horizontalAlignment="right" busy={true} width="40" height="40" color="white" />
+            <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} horizontalAlignment="right" busy={true} width={40} height={40} color="white" />
             <collectionview
                 row={1}
                 items={waypoints}
-                rowHeight="50"
+                rowHeight={50}
                 itemIdGenerator={(item, i) => item.properties.id}
                 animateItemUpdate={true}
                 reorderLongPressEnabled={true}
@@ -853,134 +856,82 @@
                             <cspan text="mdi-dots-vertical" verticalAlignment="bottom" visibility={item.properties.isStop ? 'hidden' : 'visible'} fontSize="18" paddingBottom={-3} />
                             <cspan text={item.properties.isStop ? 'mdi-map-marker' : 'mdi-checkbox-blank-circle-outline'} verticalAlignment="center" />
                         </canvaslabel>
-                        <gridlayout borderRadius="2" backgroundColor="white" columns=" *,auto,auto" height="40" margin="0 0 0 40">
-                            <textfield
-                                marginLeft="15"
-                                hint={item.properties.isStart ? lc('start') : lc('end')}
-                                returnKeyType="search"
-                                width="100%"
-                                fontSize={15}
-                                editable={false}
-                                color="black"
-                                variant="none"
-                                backgroundColor="transparent"
-                                floating="false"
-                                verticalAlignment="center"
-                                text={item.properties.name}
-                            />
-                            <button
-                                variant="text"
-                                class="icon-btn"
-                                visibility={item.properties.name && item.properties.name.length > 0 ? 'visible' : 'collapsed'}
-                                col={2}
-                                text="mdi-close"
-                                on:tap={() => clearWayPoint(item)}
-                                color="gray"
-                            />
+                        <gridlayout borderRadius="2" backgroundColor="white" columns=" *,auto" height="40" margin="0 0 0 40">
+                            <label marginLeft={15} fontSize={15} verticalTextAlignment="center" text={item.properties.name} />
+                            <IconButton isVisible={item.properties.name && item.properties.name.length > 0} col={1} text="mdi-close" on:tap={() => clearWayPoint(item)} />
                         </gridlayout>
                     </gridlayout>
                 </Template>
             </collectionview>
-            <button row={1} col={1} variant="text" class="icon-btn-white" text="mdi-swap-vertical" on:tap={() => reversePoints()} isEnabled={nbWayPoints > 1} />
+            <IconButton isSelected={true} white={true} row={1} col={1} text="mdi-swap-vertical" on:tap={() => reversePoints()} isEnabled={nbWayPoints > 1} />
             <gridlayout colSpan={2} rows="45" columns="auto,auto,auto,auto,auto,auto,auto,*,auto,auto" row={2} visibility={showOptions ? 'visible' : 'collapsed'}>
-                <button
-                    variant="text"
-                    class="icon-btn-white"
+                <IconButton
                     text="mdi-ferry"
-                    visibility={profile === 'auto' ? 'visible' : 'collapsed'}
+                    isVisible={profile === 'auto'}
                     color={valhallaSettingColor('use_ferry', costingOptions)}
                     on:tap={() => switchValhallaSetting('use_ferry', costingOptions)}
-                    on:longPress={(event) => setSliderCostingOptions('use_ferry', profileCostingOptions, event)}
+                    onLongPress={(event) => setSliderCostingOptions('use_ferry', profileCostingOptions, event)}
                 />
-                <button
-                    variant="text"
-                    class="icon-btn-white"
+                <IconButton
                     col={1}
                     text="mdi-highway"
-                    visibility={profile === 'auto' ? 'visible' : 'collapsed'}
+                    isVisible={profile === 'auto'}
                     color={valhallaSettingColor('use_highways', profileCostingOptions)}
                     on:tap={() => switchValhallaSetting('use_highways', profileCostingOptions)}
-                    on:longPress={(event) => setSliderCostingOptions('use_highways', profileCostingOptions, event)}
+                    onLongPress={(event) => setSliderCostingOptions('use_highways', profileCostingOptions, event)}
                 />
-                <button
-                    variant="text"
-                    class="icon-btn-white"
+                <IconButton
                     text="mdi-road"
                     col={1}
-                    visibility={profile === 'bicycle' || profile === 'pedestrian' ? 'visible' : 'collapsed'}
+                    isVisible={profile === 'bicycle' || profile === 'pedestrian'}
                     color={valhallaSettingColor('use_roads', profileCostingOptions)}
                     on:tap={() => switchValhallaSetting('use_roads', profileCostingOptions)}
-                    on:longPress={(event) => setSliderCostingOptions('use_roads', profileCostingOptions, event)}
+                    onLongPress={(event) => setSliderCostingOptions('use_roads', profileCostingOptions, event)}
                 />
-                <button
-                    variant="text"
+                <IconButton
                     col={2}
-                    class="icon-btn-white"
                     text="mdi-chart-areaspline"
-                    visibility={profile === 'bicycle' || profile === 'pedestrian' ? 'visible' : 'collapsed'}
+                    isVisible={profile === 'bicycle' || profile === 'pedestrian'}
                     color={valhallaSettingColor('use_hills', profileCostingOptions)}
                     on:tap={() => switchValhallaSetting('use_hills', profileCostingOptions)}
-                    on:longPress={(event) => setSliderCostingOptions('use_hills', profileCostingOptions, event)}
+                    onLongPress={(event) => setSliderCostingOptions('use_hills', profileCostingOptions, event)}
                 />
-                <button
-                    variant="text"
-                    class="icon-btn-white"
+                <IconButton
                     text="mdi-credit-card-marker-outline"
-                    visibility={profile === 'auto' ? 'visible' : 'collapsed'}
+                    isVisible={profile === 'auto'}
                     col={2}
                     color={valhallaSettingColor('use_tolls', profileCostingOptions)}
                     on:tap={() => switchValhallaSetting('use_tolls', profileCostingOptions)}
-                    on:longPress={(event) => setSliderCostingOptions('use_tolls', profileCostingOptions, event)}
+                    onLongPress={(event) => setSliderCostingOptions('use_tolls', profileCostingOptions, event)}
                 />
 
-                <button
-                    variant="text"
+                <IconButton
                     col={3}
-                    class="icon-btn-white"
                     text="mdi-weight"
-                    visibility={profile === 'bicycle' || profile === 'pedestrian' ? 'visible' : 'collapsed'}
+                    isVisible={profile === 'bicycle' || profile === 'pedestrian'}
                     color={valhallaSettingColor('weight', profileCostingOptions)}
                     on:tap={() => switchValhallaSetting('weight', profileCostingOptions)}
-                    on:longPress={(event) => setSliderCostingOptions('weight', profileCostingOptions, event)}
+                    onLongPress={(event) => setSliderCostingOptions('weight', profileCostingOptions, event)}
                 />
-                <button
-                    variant="text"
-                    class="icon-btn-white"
+                <IconButton
                     col={4}
                     text="mdi-texture-box"
-                    visibility={profile === 'bicycle' ? 'visible' : 'collapsed'}
+                    isVisible={profile === 'bicycle'}
                     color={valhallaSettingColor('avoid_bad_surfaces', profileCostingOptions)}
                     on:tap={() => switchValhallaSetting('avoid_bad_surfaces', profileCostingOptions)}
-                    on:longPress={(event) => setSliderCostingOptions('avoid_bad_surfaces', profileCostingOptions, event)}
+                    onLongPress={(event) => setSliderCostingOptions('avoid_bad_surfaces', profileCostingOptions, event)}
                 />
-                <button
-                    variant="text"
-                    class="icon-btn-white"
-                    col={5}
-                    text={bicycleTypeIcon(bicycle_type)}
-                    visibility={profile === 'bicycle' ? 'visible' : 'collapsed'}
-                    color="white"
-                    on:tap={() => switchValhallaSetting('bicycle_type', profileCostingOptions)}
-                />
-                <button
-                    variant="text"
-                    class="icon-btn-white"
+                <IconButton col={5} text={bicycleTypeIcon(bicycle_type)} isVisible={profile === 'bicycle'} color="white" on:tap={() => switchValhallaSetting('bicycle_type', profileCostingOptions)} />
+                <IconButton
                     col={6}
                     text="mdi-stairs"
-                    visibility={profile === 'pedestrian' ? 'visible' : 'collapsed'}
+                    isVisible={profile === 'pedestrian'}
                     color={valhallaSettingColor('step_penalty', profileCostingOptions)}
                     on:tap={() => switchValhallaSetting('step_penalty', profileCostingOptions)}
-                    on:longPress={(event) => setSliderCostingOptions('step_penalty', profileCostingOptions, event)}
+                    onLongPress={(event) => setSliderCostingOptions('step_penalty', profileCostingOptions, event)}
                 />
-                <button
-                    variant="text"
-                    col={8}
-                    class="icon-btn-white"
-                    text="mdi-timer-outline"
-                    color={costingOptions.shortest ? 'white' : '#ffffff55'}
-                    on:tap={() => (costingOptions.shortest = !costingOptions.shortest)}
-                />
-                <button variant="text" col={9} class="icon-btn-white" text="mdi-arrow-decision" color={computeMultiple ? 'white' : '#ffffff55'} on:tap={() => (computeMultiple = !computeMultiple)} />
+                <IconButton col={8} text="mdi-timer-outline" color={costingOptions.shortest ? 'white' : '#ffffff55'} on:tap={() => (costingOptions.shortest = !costingOptions.shortest)} />
+                <IconButton col={9} text="mdi-arrow-decision" color={computeMultiple ? 'white' : '#ffffff55'} on:tap={() => (computeMultiple = !computeMultiple)} />
             </gridlayout>
         </gridlayout>
     {/if}
