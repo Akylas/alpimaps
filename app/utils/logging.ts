@@ -11,8 +11,11 @@ const originalConsole = {
 
 function convertArg(arg) {
     const type = typeof arg;
-    if (!arg) {
-        return;
+    if (arg === undefined) {
+        return 'undefined';
+    }
+    if (arg === null) {
+        return 'null';
     }
     if (type === 'function' || typeof arg.getClass === 'function' || typeof arg.class === 'function') {
         return (arg as Function).toString();
@@ -30,7 +33,7 @@ function convertArg(arg) {
     }
 }
 function actualLog(level: 'info' | 'log' | 'error' | 'warn' | 'debug', ...args) {
-    if (gVars.sentry && Sentry) {
+    if (SENTRY_ENABLED && Sentry) {
         Sentry.addBreadcrumb({
             category: 'console',
             message: args.map(convertArg).join(' '),
@@ -48,7 +51,7 @@ export function install() {
         return;
     }
     installed = true;
-    if (NO_CONSOLE !== true && gVars.sentry) {
+    if (NO_CONSOLE !== true && SENTRY_ENABLED) {
         console.log = (...args) => actualLog('log', ...args);
         console.info = (...args) => actualLog('info', ...args);
         console.error = (...args) => actualLog('error', ...args);

@@ -1,7 +1,7 @@
 [defaults]
 project=alpimaps
 org=akylas
-url=https://glitchtip.akylas.fr
+url=https://bugs.akylas.fr
 
 [auth]
-token=4183b56040706cf26a55182a50a96d86db69d2b1
+token=52e7dca57168469b979fc2affc7244a1f3f8f0ca435d476197bee0e72208e6ac
