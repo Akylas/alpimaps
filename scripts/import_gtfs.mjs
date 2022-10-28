@@ -54,7 +54,6 @@ Promise.resolve()
                 console.log('geojson', geojson.features.map(f=>f.properties.route_id))
                 features = features.concat(geojson.features)
             })
-        console.log('test',  features.length)
     },
             function(error) {
               console.error("something exploded", error);
