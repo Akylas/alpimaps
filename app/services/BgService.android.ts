@@ -5,9 +5,11 @@ import { BgServiceCommon, BgServiceLoadedEvent } from '~/services/BgService.comm
 
 export { BgServiceLoadedEvent };
 
+const Intent = android.content.Intent;
+
 export class BgService extends BgServiceCommon {
     private serviceConnection: android.content.ServiceConnection;
-    bgService: WeakRef<AndroidBgService>;
+    bgService: WeakRef<typeof AndroidBgService>;
     context: android.content.Context;
     constructor() {
         super();
@@ -36,7 +38,7 @@ export class BgService extends BgServiceCommon {
     }
 
     async start() {
-        const intent = new android.content.Intent(this.context, akylas.alpi.maps.BgService.class);
+        const intent = new Intent(this.context, akylas.alpi.maps.BgService.class);
         this.bindService(this.context, intent);
     }
 
@@ -44,7 +46,7 @@ export class BgService extends BgServiceCommon {
         await super.stop();
         if (this.bgService) {
             (this.bgService as any).get().removeForeground();
-            const intent = new android.content.Intent(this.context, akylas.alpi.maps.BgService.class);
+            const intent = new Intent(this.context, akylas.alpi.maps.BgService.class);
             this.context.stopService(intent);
             this.context.unbindService(this.serviceConnection);
             this._loaded = false;
