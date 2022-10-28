@@ -249,7 +249,7 @@
 
 <gridlayout rows="50,*,auto,2*" columns="*,auto,*" height="300">
     <stacklayout colSpan={3} orientation="horizontal">
-        <button
+        <mdbutton
             class="mdi"
             shape="round"
             width="48"
@@ -271,7 +271,7 @@
                 <label text={item.name.toUpperCase()} color="white" fontSize="13" fontWeight="bold" verticalAlignment="center" />
                 <label row={1} text="item.getStatusText()" color="#D0D0D0" fontSize="11" visibility={!item.isGroup() ? 'visible' : 'collapsed'} verticalAlignment="center" />
                 <label col={2} rowSpan={3} class="mdi" color="navyblue" text="mdi-chevron-right" fontSize="16" visibility={item.isGroup() ? 'visible' : 'collapsed'} verticalAlignment="center" />
-                <button
+                <mdbutton
                     col={1}
                     rowSpan={3}
                     variant="text"
@@ -284,7 +284,7 @@
                     fontSize="12"
                     on:tap={() => handlePackageAction('map', item)}
                 />
-                <button
+                <mdbutton
                     col={2}
                     rowSpan={3}
                     variant="text"
@@ -296,7 +296,7 @@
                     fontSize="12"
                     on:tap={() => handlePackageAction('geo', item)}
                 />
-                <button
+                <mdbutton
                     col={3}
                     rowSpan={3}
                     variant="text"
