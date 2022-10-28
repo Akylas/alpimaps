@@ -1,0 +1,6 @@
+*Bug fixes*
+- bring back sentry
+- improved map styles
+- *android:* cleanup channels
+- rewrote brightness and keep awake logic
+- moon position fix
