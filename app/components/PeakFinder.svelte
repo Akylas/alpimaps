@@ -595,12 +595,12 @@
                         <cspan text={selectedItem && ` ${selectedItem.properties.ele}m(${formatDistance(selectedItem.distance)})`} />
                     </cgroup>
                 </canvaslabel>
-                <button col={1} width={40} on:tap={(e) => callJSFunction('goToSelectedItem')} fontFamily={alpimapsFontFamily} variant="text" text="alpimaps-paper-plane" color="white" />
+                <mdbutton col={1} width={40} on:tap={(e) => callJSFunction('goToSelectedItem')} fontFamily={alpimapsFontFamily} variant="text" text="alpimaps-paper-plane" color="white" />
             </gridlayout>
             <stacklayout verticalAlignment="bottom" horizontalAlignment="left" orientation="horizontal" marginLeft={5}>
-                <button color={primaryColor} on:tap={(e) => toggleSetting('mapMap')} class="small-floating-btn" text="mdi-map" />
-                <button color={primaryColor} on:tap={(e) => (listeningForHeading ? stopHeadingListener() : startHeadingListener())} class="small-floating-btn" text="mdi-compass" />
-                <button color={primaryColor} on:tap={(e) => (bottomSheetStepIndex = 1 - bottomSheetStepIndex)} class="small-floating-btn" text="mdi-cog" />
+                <mdbutton color={primaryColor} on:tap={(e) => toggleSetting('mapMap')} class="small-floating-btn" text="mdi-map" />
+                <mdbutton color={primaryColor} on:tap={(e) => (listeningForHeading ? stopHeadingListener() : startHeadingListener())} class="small-floating-btn" text="mdi-compass" />
+                <mdbutton color={primaryColor} on:tap={(e) => (bottomSheetStepIndex = 1 - bottomSheetStepIndex)} class="small-floating-btn" text="mdi-cog" />
             </stacklayout>
             <mdactivityindicator visibility={listeningForHeading ? 'visible' : 'collapsed'} verticalAlignment="bottom" horizontalAlignment="right" busy={true} />
             <label text={currentAltitude?.toFixed(0) + 'm'} horizontalAlignment="right" verticalAlignment="bottom" fontSize="12" color={darkMode ? textColorDark : textColorLight} paddingRight={10} />
@@ -615,8 +615,8 @@
             />
         </gridLayout>
         <gridlayout prop:bottomSheet height={300} rows="30,*" columns="*,*" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
-            <button variant="text" class="mdi" fontSize={16} width={undefined} text="mdi-cog" on:tap={() => (selectedPageIndex = 0)} />
-            <button variant="text" col={1} class="mdi" fontSize={16} width={undefined} text="mdi-bug" on:tap={() => (selectedPageIndex = 1)} />
+            <mdbutton variant="text" class="mdi" fontSize={16} width={undefined} text="mdi-cog" on:tap={() => (selectedPageIndex = 0)} />
+            <mdbutton variant="text" col={1} class="mdi" fontSize={16} width={undefined} text="mdi-bug" on:tap={() => (selectedPageIndex = 1)} />
             <pager colSpan={2} row={1} disableSwipe={false} selectedIndex={selectedPageIndex} on:selectedIndexChange={(e) => (selectedPageIndex = e['value'])}>
                 <pageritem>
                     <collectionview bind:this={collectionView1} items={listView1Items} itemTemplateSelector={selectTemplate} {itemIdGenerator} android:marginBottom={$navigationBarHeight}>

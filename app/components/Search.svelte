@@ -31,6 +31,7 @@
     import { queryString } from '~/utils/http';
     import { arraySortOn } from '~/utils/utils';
     import { globalMarginTop, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
+    import IconButton from './IconButton.svelte';
 
     async function animateView(view: View, to, duration) {
         let shouldAnimate = false;
@@ -402,7 +403,7 @@
     }
     async function instantSearch(_query) {
         try {
-            DEV_LOG && console.log('instantSearch', _query, loading, networkService.connected);
+            TEST_LOG && console.log('instantSearch', _query, loading, networkService.connected);
             loading = true;
             currentQuery = cleanUpString(_query);
             const position = mapContext.getMap().focusPos;
@@ -494,7 +495,7 @@
             clearTimeout(searchAsTypeTimer);
             searchAsTypeTimer = null;
         }
-        textField.nativeView.clearFocus();
+        (textField.nativeView as any).clearFocus();
     }
 
     function focus() {
@@ -513,7 +514,7 @@
         if (!searchResultsVisible || !item) {
             return;
         }
-        
+
         mapContext.selectItem({ item, isFeatureInteresting: true, minZoom: 14, preventZoom: false });
         unfocus();
     }
@@ -589,7 +590,7 @@
     backgroundColor={$widgetBackgroundColor}
     margin={`${globalMarginTop + 10} 10 10 10`}
 >
-    <button variant="text" class="icon-btn" text="mdi-magnify" on:tap={() => showMenu('left')} />
+    <IconButton gray={true} text="mdi-magnify" on:tap={() => showMenu('left')} />
     <textfield
         bind:this={textField}
         variant="none"
@@ -610,38 +611,13 @@
     />
     <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} col={2} busy={true} width={20} height={20} />
 
-    <button
-        variant="text"
-        class="icon-btn"
-        visibility={currentSearchText && currentSearchText.length > 0 ? 'visible' : 'collapsed'}
-        col={3}
-        text="mdi-close"
-        on:tap={() => clearSearch()}
-        color={$subtitleColor}
-    />
-    <button col={4} variant="text" class="icon-btn" text="mdi-dots-vertical" on:tap={showMapMenu} />
+    <IconButton gray={true} isVisible={currentSearchText && currentSearchText.length > 0} col={3} text="mdi-close" on:tap={() => clearSearch()} />
+    <IconButton col={4} gray={true} text="mdi-dots-vertical" on:tap={showMapMenu} />
     {#if loaded}
         <absolutelayout bind:this={collectionViewHolder} row={1} height="0" colSpan={7} isUserInteractionEnabled={searchResultsVisible}>
             <gridlayout height="200" width="100%" rows="*,auto" columns="auto,auto,*">
-                <button
-                    variant="text"
-                    class="small-icon-btn"
-                    row={1}
-                    visibility={searchResultsVisible ? 'visible' : 'collapsed'}
-                    text="mdi-shape"
-                    on:tap={toggleFilterOSMKey}
-                    color={filteringOSMKey ? primaryColor : $subtitleColor}
-                />
-                <button
-                    variant="text"
-                    class="small-icon-btn"
-                    visibility={searchResultsVisible ? 'visible' : 'collapsed'}
-                    col={1}
-                    row={1}
-                    text="mdi-map"
-                    on:tap={showResultsOnMap}
-                    color={$subtitleColor}
-                />
+                <IconButton small={true} variant="text" row={1} isVisible={searchResultsVisible} text="mdi-shape" on:tap={toggleFilterOSMKey} isSelected={filteringOSMKey} />
+                <IconButton small={true} variant="text" isVisible={searchResultsVisible} col={1} row={1} text="mdi-map" on:tap={showResultsOnMap} />
                 <collectionview colSpan={3} bind:this={collectionView} rowHeight="49" items={filteredDataItems} isUserInteractionEnabled={searchResultsVisible}>
                     <Template let:item>
                         <canvaslabel columns="34,*" padding="0 10 0 10" rows="*,auto,auto,*" class="textRipple" on:tap={() => onItemTap(item)}>
