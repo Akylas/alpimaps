@@ -59,6 +59,7 @@
     import LocationInfoPanel from './LocationInfoPanel.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
     import Search from './Search.svelte';
+    import IconButton from './IconButton.svelte';
     import { isSentryEnabled, Sentry } from '~/utils/sentry';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
 
@@ -1707,53 +1708,17 @@
             on:layoutChanged={reportFullyDrawn}
         />
         <stacklayout horizontalAlignment="left" verticalAlignment="middle">
-            <button
-                variant="text"
-                class="icon-btn"
-                text="mdi-bullseye"
-                color={$mapStore.showContourLines ? primaryColor : 'gray'}
-                on:tap={() => (mapStore.showContourLines = !mapStore.showContourLines)}
-            />
-            <button
-                variant="text"
-                class="icon-btn"
-                text="mdi-signal"
-                color={$mapStore.showSlopePercentages ? primaryColor : 'gray'}
-                on:tap={() => (mapStore.showSlopePercentages = !mapStore.showSlopePercentages)}
-            />
-            <button variant="text" class="icon-btn" text="mdi-routes" color={$mapStore.showRoutes ? primaryColor : 'gray'} on:tap={() => (mapStore.showRoutes = !mapStore.showRoutes)} />
-            <button variant="text" class="icon-btn" text="mdi-speedometer" color="gray" on:tap={switchLocationInfo} />
-
-            <button
-                variant="text"
-                class="icon-btn"
-                text="mdi-map-clock"
-                visibility={packageServiceEnabled ? 'visible' : 'collapsed'}
-                color={$mapStore.preloading ? primaryColor : 'gray'}
-                on:tap={() => (mapStore.preloading = !$mapStore.preloading)}
-            />
-            <button variant="text" class="icon-btn" text={keepAwakeEnabled ? 'mdi-sleep' : 'mdi-sleep-off'} color={keepAwakeEnabled ? 'red' : 'gray'} on:tap={switchKeepAwake} />
-            <button variant="text" class="icon-btn" text="mdi-cellphone-lock" color={showOnLockscreen ? primaryColor : 'gray'} on:tap={switchShowOnLockscreen} />
-            <!-- <button
-                    variant="text"
-                    class="icon-btn"
-                    text="mdi-information-outline"
-                    color={showClickedFeatures ? primaryColor : 'gray'}
-                    on:tap={() => (showClickedFeatures = !showClickedFeatures)}
-                /> -->
-            <button
-                variant="text"
-                class="icon-btn"
-                text="mdi-bus-marker"
-                color={showTransitLines ? primaryColor : 'gray'}
-                on:tap={() => (showTransitLines = !showTransitLines)}
-                on:longPress={(event) => {
-                    if (event.ios && event.ios.state !== 3) {
-                        return;
-                    }
-                    showTransitLinesPage();
-                }}
-            />
+            <IconButton gray={true} text="mdi-bullseye" isSelected={$showContourLines} on:tap={() => showContourLines.set(!$showContourLines)} />
+            <IconButton gray={true} text="mdi-signal" isSelected={$showSlopePercentages} on:tap={() => showSlopePercentages.set(!$showSlopePercentages)} />
+            <IconButton gray={true} text="mdi-routes" isSelected={$showRoutes} on:tap={() => showRoutes.set(!$showRoutes)} />
+            <IconButton gray={true} text="mdi-speedometer" on:tap={switchLocationInfo} />
+            {#if packageServiceEnabled}
+                <IconButton gray={true} text="mdi-map-clock" isSelected={$preloading} on:tap={() => preloading.set(!$preloading)} />
+            {/if}
+            <IconButton gray={true} text={keepScreenAwake ? 'mdi-sleep' : 'mdi-sleep-off'} selectedColor={'red'} isSelected={keepScreenAwake} on:tap={switchKeepAwake} />
+            <IconButton gray={true} text="mdi-cellphone-lock" isSelected={showOnLockscreen} on:tap={switchShowOnLockscreen} />
+            <!-- <IconButton text="mdi-information-outline" isSelected={showClickedFeatures} on:tap={() => (showClickedFeatures = !showClickedFeatures)} /> -->
+            <IconButton gray={true} text="mdi-bus-marker" isSelected={showTransitLines} on:tap={() => (showTransitLines = !showTransitLines)} onLongPress={showTransitLinesPage} />
         </stacklayout>
         <Search bind:this={searchView} verticalAlignment="top" defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
         <LocationInfoPanel horizontalAlignment="left" verticalAlignment="top" marginLeft="20" marginTop="90" bind:this={locationInfoPanel} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
@@ -1771,7 +1736,7 @@
         >
             <cspan text="mdi-access-point-network-off" visibility={networkConnected ? 'collapsed' : 'visible'} textAlignment="left" verticalTextAlignement="top" />
         </canvaslabel>
-        <button
+        <mdbutton
             marginTop="90"
             visibility={currentMapRotation !== 0 ? 'visible' : 'collapsed'}
             on:tap={resetBearing}
@@ -1800,5 +1765,4 @@
                 </Template>
             </collectionview> -->
     </bottomsheet>
-    <!-- </gridlayout> -->
 </page>
