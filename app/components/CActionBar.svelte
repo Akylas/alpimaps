@@ -3,6 +3,7 @@
     import { onMount } from 'svelte';
     import { closeModal,goBack } from 'svelte-native';
     import { textColor } from '~/variables';
+    import IconButton from './IconButton.svelte';
 
     export let color: string = null;
     export let title: string = null;
@@ -13,7 +14,6 @@
     export let onClose: Function = null;
     let menuIcon: string;
     let menuIconVisible: boolean;
-    let menuIconVisibility: 'hidden' | 'visible' | 'collapse' | 'collapsed';
 
     onMount(() => {
         setTimeout(() => {
@@ -35,7 +35,6 @@
         }
     }
     $: menuIconVisible = ((canGoBack || modalWindow) && !disableBackButton) || showMenuIcon;
-    $: menuIconVisibility = menuIconVisible ? 'visible' : 'collapsed';
 </script>
 
 <gridLayout class="actionBar" columns="auto,*, auto" rows="*" paddingLeft="5" paddingRight="5" {...$$restProps} color={color || $textColor}>
@@ -43,7 +42,7 @@
     <slot name="center" />
     <stackLayout orientation="horizontal">
         <slot name="left" />
-        <button variant="text" visibility={menuIconVisibility} class="icon-btn" text={menuIcon} on:tap={onMenuIcon} />
+        <IconButton isVisible={menuIconVisible} text={menuIcon} on:tap={onMenuIcon} />
     </stackLayout>
     <stackLayout col={2} orientation="horizontal">
         <slot />
