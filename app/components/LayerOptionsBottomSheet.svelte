@@ -197,7 +197,7 @@
     <collectionview orientation="horizontal" row={2} height="40" items={actions} colWidth="auto">
         <Template let:item>
             <gridlayout>
-                <button variant="outline" padding="10" marginRight="10" text={l(item)} on:tap={() => handleAction(item)} />
+                <mdbutton variant="outline" padding="10" marginRight="10" text={l(item)} on:tap={() => handleAction(item)} />
             </gridlayout>
         </Template>
     </collectionview>
