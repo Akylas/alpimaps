@@ -1645,21 +1645,38 @@
                     case 'dark_mode':
                         toggleTheme(true);
                         break;
-                    // case 'sentry':
-                    //     const error = new Error('test');
-                    //     console.log('captureException', error, error.stack);
-                    //     Sentry.captureException(error);
-                    //     break;
+                    case 'sentry':
+                        await sendBugReport();
+                        break;
                     case 'astronomy':
                     case 'compass':
                     case 'altimeter':
                     case 'settings':
-                        handleMapAction(result.id);
+                        await handleMapAction(result.id);
                         break;
                 }
             }
         } catch (err) {
-            console.error('showSettings', err, err['stack']);
+            showError(err);
+        }
+    }
+
+    async function sendBugReport() {
+        if (SENTRY_ENABLED) {
+            const result = await prompt({
+                title: lc('send_bug_report'),
+                message: lc('send_bug_report_desc'),
+                okButtonText: l('send'),
+                cancelButtonText: l('cancel'),
+                autoFocus: true,
+                hintText: lc('description'),
+                helperText: lc('please_describe_error')
+            });
+            if (result.result) {
+                Sentry.captureMessage(result.text);
+                Sentry.flush()
+                showSnack({ message: l('bug_report_sent') });
+            }
         }
     }
 
