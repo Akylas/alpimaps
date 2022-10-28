@@ -34,7 +34,7 @@ export async function share(content: Content, options: Options = {}) {
         } else {
             shareableFileUri = android.net.Uri.fromFile(newFile);
         }
-        intent.putExtra(android.content.Intent.EXTRA_STREAM, shareableFileUri);
+        intent.putExtra(Intent.EXTRA_STREAM, shareableFileUri);
     }
 
     const chooser = Intent.createChooser(intent, options.dialogTitle);
