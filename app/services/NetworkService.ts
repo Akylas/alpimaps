@@ -582,12 +582,12 @@ export class NetworkService extends Observable {
             if (!requestParams.headers['Content-Type']) {
                 requestParams.headers['Content-Type'] = 'application/json';
             }
-            const response = await https.request({ ...requestParams, useLegacy: true });
+            const response = await https.request(requestParams);
             const statusCode = response.statusCode;
 
             let content: {
                 response?: any;
-            };
+            } | string;
             if (requestParams.toJSON !== false) {
                 try {
                     content = await response.content.toJSONAsync();
@@ -653,134 +653,134 @@ export class NetworkService extends Observable {
         }
     }
 
-    queryGeoFeatures(
-        query: {
-            type: 'node' | 'way';
-            recurse?: string;
-            features: string;
-            outType?: string;
-            options?: string[];
-        }[],
-        region: MapBounds<LatLonKeys>,
-        feature: {
-            outType?: string;
-            usingWays?: boolean;
-            filterFunc?: Function;
-        }
-    ) {
-        let data = '';
-        if (region) {
-            data += '[' + regionToOSMString(region) + ']';
-        }
-        data +=
-            '[out:json];(' +
-            query.reduce(function (result, value, index) {
-                // array
-                const type = value.type;
-                result += type;
-                if (value.options) {
-                    const options = value.options.reduce(function (result2, value2, key2) {
-                        result2 += '(' + key2 + ':' + value2 + ')';
-                        return result2;
-                    }, '');
-                    result += options;
-                }
-                if (value.hasOwnProperty('features')) {
-                    result += value.features;
-                }
-                // if (value.region) {
-                //     var region = regionToString(value.region);
-                //     result += region;
-                // }
-                if (value.recurse) {
-                    result += ';' + value.recurse;
-                }
-                return result + ';';
-            }, '');
+    // queryGeoFeatures(
+    //     query: {
+    //         type: 'node' | 'way';
+    //         recurse?: string;
+    //         features: string;
+    //         outType?: string;
+    //         options?: string[];
+    //     }[],
+    //     region: MapBounds<LatLonKeys>,
+    //     feature: {
+    //         outType?: string;
+    //         usingWays?: boolean;
+    //         filterFunc?: Function;
+    //     }
+    // ) {
+    //     let data = '';
+    //     if (region) {
+    //         data += '[' + regionToOSMString(region) + ']';
+    //     }
+    //     data +=
+    //         '[out:json];(' +
+    //         query.reduce(function (result, value, index) {
+    //             // array
+    //             const type = value.type;
+    //             result += type;
+    //             if (value.options) {
+    //                 const options = value.options.reduce(function (result2, value2, key2) {
+    //                     result2 += '(' + key2 + ':' + value2 + ')';
+    //                     return result2;
+    //                 }, '');
+    //                 result += options;
+    //             }
+    //             if (value.hasOwnProperty('features')) {
+    //                 result += value.features;
+    //             }
+    //             // if (value.region) {
+    //             //     var region = regionToString(value.region);
+    //             //     result += region;
+    //             // }
+    //             if (value.recurse) {
+    //                 result += ';' + value.recurse;
+    //             }
+    //             return result + ';';
+    //         }, '');
 
-        data += ');out ' + (feature.outType || 'center qt') + ' 200;';
-        return this.request({
-            url: osmOverpassUrl,
-            queryParams: {
-                data: escape(data),
-                contact: contactEmail
-            },
-            method: 'GET',
-            timeout: 60000
-        }).then((result) => {
-            let results;
-            if (feature.usingWays) {
-                const nodes = result.elements
-                    .filter(function (el) {
-                        return el.type === 'node';
-                    })
-                    .reduce((r, v, i, a, k = v.id) => ((r[k] || (r[k] = [])).push(v), r), {});
-                // var nodes = _.filter(result.elements, 'type', 'node');
-                const ways: any = result.elements.filter(function (el) {
-                    return el.type === 'way';
-                });
-                const resultingWays = ways.reduce((r, v, i, a, k = v.id) => ((r[k] || (r[k] = [])).push(v), r), {});
-                console.debug('ways', resultingWays);
-                const canMerge = function (way1, way2) {
-                    if (way1.id === way2.id) {
-                        return false;
-                    }
-                    const keys = [...new Set(Object.keys(way1.tags).concat(Object.keys(way2.tags)))];
-                    for (let i = 0; i < keys.length; i++) {
-                        const key = keys[i];
-                        if (way1[key] && way2[key] && way1[key] !== way2[key]) {
-                            return false;
-                        }
-                    }
-                    return true;
-                };
-                // console.debug('nodes', nodes);
-                let wayId, comparing, start2, end2;
-                for (let i = 0; i < ways.length; i++) {
-                    const current = ways[i];
-                    const start = current.nodes[0];
-                    const end = current.nodes[current.nodes.length -1];
-                    for (wayId in resultingWays) {
-                        comparing = resultingWays[wayId];
-                        if (!comparing || !canMerge(comparing, current)) {
-                            continue;
-                        }
-                        start2 = comparing.nodes[0];
-                        end2 = comparing.nodes[comparing.nodes.length -1];
+    //     data += ');out ' + (feature.outType || 'center qt') + ' 200;';
+    //     return this.request({
+    //         url: osmOverpassUrl,
+    //         queryParams: {
+    //             data: escape(data),
+    //             contact: contactEmail
+    //         },
+    //         method: 'GET',
+    //         timeout: 60000
+    //     }).then((result) => {
+    //         let results;
+    //         if (feature.usingWays) {
+    //             const nodes = result.elements
+    //                 .filter(function (el) {
+    //                     return el.type === 'node';
+    //                 })
+    //                 .reduce((r, v, i, a, k = v.id) => ((r[k] || (r[k] = [])).push(v), r), {});
+    //             // var nodes = _.filter(result.elements, 'type', 'node');
+    //             const ways: any = result.elements.filter(function (el) {
+    //                 return el.type === 'way';
+    //             });
+    //             const resultingWays = ways.reduce((r, v, i, a, k = v.id) => ((r[k] || (r[k] = [])).push(v), r), {});
+    //             console.debug('ways', resultingWays);
+    //             const canMerge = function (way1, way2) {
+    //                 if (way1.id === way2.id) {
+    //                     return false;
+    //                 }
+    //                 const keys = [...new Set(Object.keys(way1.tags).concat(Object.keys(way2.tags)))];
+    //                 for (let i = 0; i < keys.length; i++) {
+    //                     const key = keys[i];
+    //                     if (way1[key] && way2[key] && way1[key] !== way2[key]) {
+    //                         return false;
+    //                     }
+    //                 }
+    //                 return true;
+    //             };
+    //             // console.debug('nodes', nodes);
+    //             let wayId, comparing, start2, end2;
+    //             for (let i = 0; i < ways.length; i++) {
+    //                 const current = ways[i];
+    //                 const start = current.nodes[0];
+    //                 const end = current.nodes[current.nodes.length -1];
+    //                 for (wayId in resultingWays) {
+    //                     comparing = resultingWays[wayId];
+    //                     if (!comparing || !canMerge(comparing, current)) {
+    //                         continue;
+    //                     }
+    //                     start2 = comparing.nodes[0];
+    //                     end2 = comparing.nodes[comparing.nodes.length -1];
 
-                        if (start2 === end) {
-                            comparing.nodes = current.nodes.slice(0, -1).concat(comparing.nodes);
-                            comparing.geometry = current.geometry.slice(0, -1).concat(comparing.geometry);
-                            delete resultingWays[current.id + ''];
-                            comparing.tags = extend({}, current.tags, comparing.tags);
-                            break;
-                        } else if (end2 === start) {
-                            comparing.nodes = comparing.nodes.concat(current.nodes.slice(1));
-                            comparing.geometry = comparing.geometry.concat(current.geometry.slice(1));
-                            delete resultingWays[current.id + ''];
-                            comparing.tags = extend({}, current.tags, comparing.tags);
-                            break;
-                        }
-                    }
-                }
-                results = resultingWays.map((way) => prepareOSMWay(way, nodes));
-            } else {
-                results = result.elements.map(function (ele) {
-                    if (feature.filterFunc && !feature.filterFunc(ele)) {
-                        return;
-                    }
-                    if (ele.lat || ele.center) {
-                        return prepareOSMObject(ele, false, false);
-                        // if (item) {
-                        //     return _itemHandler.createAnnotItem(feature, item);
-                        // }
-                    }
-                });
-            }
+    //                     if (start2 === end) {
+    //                         comparing.nodes = current.nodes.slice(0, -1).concat(comparing.nodes);
+    //                         comparing.geometry = current.geometry.slice(0, -1).concat(comparing.geometry);
+    //                         delete resultingWays[current.id + ''];
+    //                         comparing.tags = extend({}, current.tags, comparing.tags);
+    //                         break;
+    //                     } else if (end2 === start) {
+    //                         comparing.nodes = comparing.nodes.concat(current.nodes.slice(1));
+    //                         comparing.geometry = comparing.geometry.concat(current.geometry.slice(1));
+    //                         delete resultingWays[current.id + ''];
+    //                         comparing.tags = extend({}, current.tags, comparing.tags);
+    //                         break;
+    //                     }
+    //                 }
+    //             }
+    //             results = resultingWays.map((way) => prepareOSMWay(way, nodes));
+    //         } else {
+    //             results = result.elements.map(function (ele) {
+    //                 if (feature.filterFunc && !feature.filterFunc(ele)) {
+    //                     return;
+    //                 }
+    //                 if (ele.lat || ele.center) {
+    //                     return prepareOSMObject(ele, false, false);
+    //                     // if (item) {
+    //                     //     return _itemHandler.createAnnotItem(feature, item);
+    //                     // }
+    //                 }
+    //             });
+    //         }
 
-            return results;
-        });
-    }
+    //         return results;
+    //     });
+    // }
     actualMapquestElevationProfile(_points: MapPos<LatLonKeys>[]) {
         const params = {
             key: gVars.MAPQUEST_TOKEN,
