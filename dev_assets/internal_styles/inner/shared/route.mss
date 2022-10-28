@@ -1,4 +1,4 @@
-@hiking_route_fill: #8800ff;
+@hiking_route_fill:[network] = 4 ? yellow:   [network] <= 3 ? red:   #8800ff;
 @hiking_route_dasharray: 6, 2;
 @route_width: linear([view::zoom], (4, 0.3), (14, 1.1), (15, 1.2), (18, 3));
 @route_casing_width: linear([view::zoom], (4, 1), (18, 3));
@@ -53,34 +53,22 @@
 		// line-dasharray: [id] = [nuti::selected_id] ? (0,0) :  @biking_route_dasharray;
 		[class=hiking],
 		[class=foot] {
-			[symbol=null] {
-				[network=4] {
-					line-color: yellow;
-				}
-
-				[network<=3] {
-					line-color: red;
-				}
-			}
-
-			[symbol !=null] {
-				line-color: (@symbolColor);
-			}
+			line-color: (@symbolColor);
 		}
 
 		[class=bicycle] {
 			line-width: @biking_route_width +([osmid]=[nuti::selected_osmid] ? 1 : 0);
-			line-color: @biking_route_fill;
-			[symbol !=null] {
-				line-color: @biking_symbolColor;
-			}
+			line-color: @biking_symbolColor;
 			[zoom>=14] {
 				line-dasharray: @biking_route_dasharray;
 			}
 		}
-
 		[ref !=null][zoom>=13] {
-			text-fill: ([symbol] ? @symbolColor : @route_label_fill);
+			text-fill:@symbolColor;
+
+			[class=bycicle] {
+				text-fill:@biking_symbolColor;
+			}
 			text-name: [ref];
 
 			[zoom>=15] {
