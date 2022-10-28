@@ -23,7 +23,7 @@
     import type { IItem } from '~/models/Item';
     import { RouteInstruction, RoutingAction } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
-    import mapStore from '~/stores/mapStore';
+    import { queryingLocation, watchingLocation } from '~/stores/mapStore';
     import { showError } from '~/utils/error';
     import { resolveComponentElement, showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { accentColor, alpimapsFontFamily, globalMarginTop, mdiFontFamily, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
@@ -115,8 +115,8 @@
         }
         // userLocationModule.on('location', onNewLocation);
     });
-    $: locationButtonClass = !$mapStore.queryingLocation && $mapStore.watchingLocation ? 'buttonthemed' : 'buttontext';
-    $: locationButtonLabelClass = $mapStore.queryingLocation ? 'fade-blink' : '';
+    $: locationButtonClass = !$queryingLocation && $watchingLocation ? 'buttonthemed' : 'buttontext';
+    $: locationButtonLabelClass = $queryingLocation ? 'fade-blink' : '';
     $: selectedItemHasPosition = selectedItem && !selectedItem.properties?.route && selectedItem.geometry.type === 'Point';
 
     export function onSelectedItem(item: IItem, oldItem: IItem) {
@@ -411,8 +411,8 @@
             marginBottom="30"
             fontSize="10"
             padding="4 2 4 4"
-            on:tap={downloadSuggestion}
             on:longPress={customDownloadSuggestion}
+            on:tap={downloadSuggestion}
             color="white"
             html={`<big
             ><big><font face="${mdiFontFamily}">mdi-download</font></big></big
@@ -420,7 +420,7 @@
         />
     {/if}
     <stacklayout col={2} row={2} verticalAlignment="bottom" padding="2">
-        <button
+        <mdbutton
             transition:scale={{ duration: 200 }}
             on:tap={startDirections}
             rowSpan={2}
@@ -435,13 +435,13 @@
                 textAlignment="center"
                 verticalAlignment="middle"
                 text="mdi-crosshairs-gps"
-                color={!$mapStore.queryingLocation && $mapStore.watchingLocation ? 'white' : accentColor}
+                color={!$queryingLocation && $watchingLocation ? 'white' : accentColor}
             />
         </mdcardview>
     </stacklayout>
     <stacklayout marginTop="80" row={2} verticalAlignment="bottom" horizontalAlignment="left">
-        <!-- <button on:tap={open3DMap} class="small-floating-btn" color={primaryColor} text="mdi-video-3d" /> -->
-        <button id="layers" on:tap={showMapRightMenu} class="small-floating-btn" color={primaryColor} text="mdi-layers" />
+        <!-- <mdbutton on:tap={open3DMap} class="small-floating-btn" color={primaryColor} text="mdi-video-3d" /> -->
+        <mdbutton id="layers" on:tap={showMapRightMenu} class="small-floating-btn" color={primaryColor} text="mdi-layers" />
     </stacklayout>
 
     <ScaleView bind:this={scaleView} col={1} row={2} horizontalAlignment="right" verticalAlignment="bottom" marginBottom="8" />
