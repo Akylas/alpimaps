@@ -11,7 +11,7 @@
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
-    import mapStore from '~/stores/mapStore';
+    import { pitchEnabled, preloading, rotateEnabled, showGlobe, show3DBuildings } from '~/stores/mapStore';
     import { closeBottomSheet, showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { borderColor, navigationBarHeight, primaryColor, subtitleColor, textColor } from '~/variables';
 
@@ -83,7 +83,7 @@
                 view: LayerOptionsBottomSheet,
                 trackingScrollView: 'scrollView',
                 dismissOnBackgroundTap: true,
-                disableDimBackground:true, 
+                disableDimBackground: true,
                 props: {
                     item
                 }
@@ -140,7 +140,7 @@
                         maxValue="1"
                         verticalAlignment="center"
                     />
-                    <button
+                    <mdbutton
                         col={2}
                         rowSpan={2}
                         variant="text"
@@ -153,44 +153,38 @@
             </Template>
         </collectionview>
         <stacklayout col={1} borderLeftColor={$borderColor} borderLeftWidth="1">
-            <button variant="text" class="icon-btn" text="mdi-plus" on:tap={addSource} />
-            <!-- <button variant="text" class="icon-btn" text="mdi-layers-off" on:tap={clearCache} /> -->
+            <mdbutton variant="text" class="icon-btn" text="mdi-plus" on:tap={addSource} />
+            <!-- <mdbutton variant="text" class="icon-btn" text="mdi-layers-off" on:tap={clearCache} /> -->
             <!-- <MDButton class="buttonthemed" @tap="addSource" text={l('add_source')} /> -->
             <!-- <MDButton class="buttonthemed" @tap="clearCache" text={l('clear_cache')} /> -->
             <!-- <MDButton class="buttonthemed" @tap="selectLocalMbtilesFolder" text={l('select_local_folder')} /> -->
-            <button variant="text" class="icon-btn" text="mdi-domain" color={$mapStore.show3DBuildings ? primaryColor : 'gray'} on:tap={() => (mapStore.show3DBuildings = !mapStore.show3DBuildings)} />
+            <mdbutton variant="text" class="icon-btn" text="mdi-domain" color={$show3DBuildings ? primaryColor : 'gray'} on:tap={() => show3DBuildings.set(!$show3DBuildings)} />
 
-            <!-- <button
+            <!-- <mdbutton
                 variant="text"
                 class="icon-btn"
                 text="mdi-signal"
-                color={$mapStore.showContourLines ? primaryColor : 'gray'}
-                on:tap={() => mapStore.setShowContourLines(!$mapStore.showContourLines)}
+                color={$showContourLines ? primaryColor : 'gray'}
+                on:tap={() => setShowContourLines(!$showContourLines)}
             /> -->
-            <!-- <button
+            <!-- <mdbutton
                 variant="text"
                 class="icon-btn"
                 text="mdi-map-marker-path"
-                color={$mapStore.showRoutes ? primaryColor : 'gray'}
-                on:tap={() => mapStore.setShowRoutes(!$mapStore.showRoutes)}
+                color={$showRoutes ? primaryColor : 'gray'}
+                on:tap={() => setShowRoutes(!$showRoutes)}
             /> -->
-            <button variant="text" class="icon-btn" text="mdi-globe-model" color={$mapStore.showGlobe ? primaryColor : 'gray'} on:tap={() => (mapStore.showGlobe = !mapStore.showGlobe)} />
-            <button
-                variant="text"
-                class="icon-btn"
-                text="mdi-rotate-3d-variant"
-                color={$mapStore.rotateEnabled ? primaryColor : 'gray'}
-                on:tap={() => (mapStore.rotateEnabled = !mapStore.rotateEnabled)}
-            />
-            <button variant="text" class="icon-btn" text="mdi-rotate-orbit" color={$mapStore.pitchEnabled ? primaryColor : 'gray'} on:tap={() => (mapStore.pitchEnabled = !mapStore.pitchEnabled)} />
+            <mdbutton variant="text" class="icon-btn" text="mdi-globe-model" color={$showGlobe ? primaryColor : 'gray'} on:tap={() => showGlobe.set(!$showGlobe)} />
+            <mdbutton variant="text" class="icon-btn" text="mdi-rotate-3d-variant" color={$rotateEnabled ? primaryColor : 'gray'} on:tap={() => rotateEnabled.set(!$rotateEnabled)} />
+            <mdbutton variant="text" class="icon-btn" text="mdi-rotate-orbit" color={$pitchEnabled ? primaryColor : 'gray'} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
 
-            <button
+            <mdbutton
                 variant="text"
                 class="icon-btn"
                 text="mdi-map-clock"
                 visibility={packageServiceEnabled ? 'visible' : 'collapsed'}
-                color={$mapStore.preloading ? primaryColor : 'gray'}
-                on:tap={() => (mapStore.preloading = !mapStore.preloading)}
+                color={$preloading ? primaryColor : 'gray'}
+                on:tap={() => preloading.set(!$preloading)}
             />
         </stacklayout>
     {/if}

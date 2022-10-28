@@ -15,8 +15,9 @@
     import { onServiceLoaded } from '~/services/BgService.common';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
-    import mapStore from '~/stores/mapStore';
+    import { watchingLocation, queryingLocation } from '~/stores/mapStore';
     import { primaryColor } from '~/variables';
+    import IconButton from './IconButton.svelte';
 </script>
 
 <script lang="ts">
@@ -218,9 +219,9 @@
     </canvaslabel>
 
     <stacklayout orientation="horizontal" horizontalAlignment="left" verticalAlignment="top">
-        <button variant="text" class="icon-btn" text="mdi-gauge" on:tap={switchBarometer} color={listeningForBarometer ? primaryColor : undefined} />
-        <button variant="text" class="icon-btn" text="mdi-airplane" on:tap={getNearestAirportPressure} />
-        <button variant="text" class="icon-btn" text="mdi-refresh" on:tap={resetReference} />
-        <button variant="text" class="icon-btn" text="mdi-crosshairs-gps" on:tap={askUserLocation} color={$mapStore.watchingLocation || $mapStore.queryingLocation ? primaryColor : undefined} />
+        <IconButton text="mdi-gauge" on:tap={switchBarometer} color={listeningForBarometer ? primaryColor : undefined} />
+        <IconButton text="mdi-airplane" on:tap={getNearestAirportPressure} />
+        <IconButton text="mdi-refresh" on:tap={resetReference} />
+        <IconButton text="mdi-crosshairs-gps" on:tap={askUserLocation} color={$watchingLocation || $queryingLocation ? primaryColor : undefined} />
     </stacklayout>
 </gridLayout>
