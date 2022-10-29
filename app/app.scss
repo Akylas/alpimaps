@@ -131,10 +131,6 @@ mdcardview {
     background-color: $text-color-dark;
     color: $primary-color;
     ripple-color: $dark-color;
-    .ns-dark & {
-        color: $primary-color;
-        ripple-color: $dark-color;
-    }
 }
 .icon-btn-text[isEnabled='false'] {
     background-color: lightGray;
@@ -220,8 +216,8 @@ mdcardview {
     @extend %mdi;
     @extend %icon-btn;
 
-    // margin: 0;
-    // padding: 0;
+    color: $primary-color;
+    ripple-color: $primary-color;
 }
 .icon-label {
     @extend %mdi;
