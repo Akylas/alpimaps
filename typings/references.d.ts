@@ -28,7 +28,6 @@ declare namespace akylas {
 }
 
 declare const gVars: {
-    sentry: boolean;
     platform: string;
     CARTO_TOKEN: string;
     IGN_TOKEN: string;
@@ -46,10 +45,11 @@ declare const gVars: {
 declare const TNS_ENV: string;
 declare const DEV_LOG: boolean;
 declare const NO_CONSOLE: boolean;
-declare const TEST_LOGS: boolean;
+declare const TEST_LOG: boolean;
 declare const PRODUCTION: boolean;
 declare const __CARTO_PACKAGESERVICE__: boolean;
 declare const LOCAL_MBTILES: string;
+declare const SENTRY_ENABLED: boolean;
 declare const SENTRY_DSN: string;
 declare const SENTRY_PREFIX: string;
 declare const SUPPORTED_LOCALES: string[];
@@ -93,6 +93,7 @@ interface LatLonKeys {
 
 namespace svelteNative.JSX {
     interface ViewAttributes {
+        disableCss?: boolean;
         rippleColor?: Color | string;
         verticalAlignment?: string;
         dynamicElevationOffset?: string | number;
@@ -108,6 +109,10 @@ namespace svelteNative.JSX {
     }
     export interface SliderAttributes {
         stepSize?: number;
+    }
+    export interface PageAttributes {
+        keepScreenAwake?: boolean;
+        screenBrightness?: number;
     }
     export interface LabelAttributes {
         autoFontSize?: boolean;

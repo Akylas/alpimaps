@@ -15,6 +15,7 @@
     import { showError } from '~/utils/error';
     import { pickDate, pickTime } from '~/utils/utils';
     import { accentColor, borderColor, mdiFontFamily, navigationBarHeight, subtitleColor, textColor } from '~/variables';
+    import IconButton from '../IconButton.svelte';
 
     export let line: any;
     let loading = false;
@@ -166,8 +167,8 @@
     <gridlayout rows="auto,auto,auto,*" columns="auto,*,auto">
         <CActionBar backgroundColor="transparent" colSpan={3}>
             <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={line.color} color={line.textColor} text={line.shortName} autoFontSize={true} />
-            <button variant="text" class="icon-btn" text="mdi-file-pdf-box" on:tap={() => downloadPDF()} />
-            <button variant="text" class="icon-btn" text="mdi-information-outline" on:tap={() => showDetails()} />
+            <IconButton text="mdi-file-pdf-box" on:tap={downloadPDF} />
+            <IconButton text="mdi-information-outline" on:tap={showDetails} />
         </CActionBar>
 
         <label
@@ -198,8 +199,8 @@
                 <label fontFamily={mdiFontFamily} fontSize={22} text="mdi-swap-vertical" verticalTextAlignment="center" />
                 <label fontSize={14} text={directionText} />
             </stacklayout>
-            <button row={1} colSpan={3} variant="text" class="icon-btn" text="mdi-chevron-left" horizontalAlignment="left" on:tap={() => previousDates()} />
-            <button row={1} colSpan={3} variant="text" class="icon-btn" text="mdi-chevron-right" horizontalAlignment="right" on:tap={() => nextDates()} />
+            <IconButton row={1} colSpan={3} text="mdi-chevron-left" horizontalAlignment="left" on:tap={previousDates} />
+            <IconButton row={1} colSpan={3} text="mdi-chevron-right" horizontalAlignment="right" on:tap={nextDates} />
         </gridlayout>
 
         <collectionview row={3} colSpan={3} bind:this={collectionView} items={timelineItems} itemIdGenerator={(item, i) => i} android:marginBottom={$navigationBarHeight} rowHeight="50">

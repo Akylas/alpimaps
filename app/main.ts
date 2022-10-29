@@ -17,11 +17,11 @@ import { FrameElement, PageElement, registerElement, registerNativeViewElement }
 import { start as startThemeHelper } from '~/helpers/theme';
 import { BgService } from '~/services/BgService';
 import { networkService } from '~/services/NetworkService';
-// import { startSentry } from '~/utils/sentry';
+import { startSentry } from '~/utils/sentry';
 import './app.scss';
 import Map from '~/components/Map.svelte';
 
-// startSentry();
+startSentry();
 installGestures(true);
 installMixins();
 installBottomSheets();
@@ -51,7 +51,7 @@ registerNativeViewElement('flexlayout', () => require('@nativescript/core').Flex
 registerNativeViewElement('Switch', () => require('@nativescript/core').Switch);
 registerNativeViewElement('TextField', () => require('@nativescript/core').TextField);
 registerNativeViewElement('Span', () => require('@nativescript/core').Span);
-registerNativeViewElement('button', () => require('@nativescript-community/ui-material-button').Button, null, {}, { override: true });
+registerNativeViewElement('mdbutton', () => require('@nativescript-community/ui-material-button').Button, null, {}, { override: true });
 registerNativeViewElement('label', () => require('@nativescript-community/ui-label').Label, null, {}, { override: true });
 registerNativeViewElement('mdactivityindicator', () => require('@nativescript-community/ui-material-activityindicator').ActivityIndicator);
 registerNativeViewElement('mdprogress', () => require('@nativescript-community/ui-material-progress').Progress);
