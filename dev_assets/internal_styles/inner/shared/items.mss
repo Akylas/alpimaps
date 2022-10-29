@@ -49,13 +49,11 @@
     marker-color: [color] ? [color] : #60A5F4;
     marker-placement: [nuti::markers3d];
     marker-file: url(symbols/pin.svg);
-    marker-height: 30;
-    marker-transform: translate (0, -15);
+    marker-width: 20;
     marker-allow-overlap: true;
     marker-clip: false;
     when ([nuti::selected_id]=[id]) {
-        marker-height: 34;
-        marker-transform: translate (0, -17);
+        marker-width: 24;
     }
 
 }
