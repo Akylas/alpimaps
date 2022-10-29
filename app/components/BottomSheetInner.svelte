@@ -15,7 +15,7 @@
     import { LineDataSet, Mode } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { Application } from '@nativescript/core';
+    import { Application, Utils } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
     import type { Point } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
@@ -34,6 +34,7 @@
     import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
     import { borderColor, screenHeightDips, statusBarHeight, textColor, widgetBackgroundColor } from '~/variables';
+    import IconButton from './IconButton.svelte';
 
     const LISTVIEW_HEIGHT = 200;
     const PROFILE_HEIGHT = 150;
@@ -47,6 +48,8 @@
     // highlightPaint.setTextAlign(Align.CENTER);
     highlightPaint.setStrokeWidth(1);
     highlightPaint.setTextSize(10);
+
+    const Intent = __ANDROID__ ? android.content.Intent : undefined;
 
     export let item: Item;
     let profileHeight = PROFILE_HEIGHT;
@@ -118,10 +121,6 @@
             showError(error);
         }
     }
-
-    function tooltip(text) {
-        showSnack({ message: text });
-    }
     function searchWeb() {
         let name;
         try {
@@ -135,7 +134,7 @@
                     name += ' ' + props.address.county;
                 }
                 if (__ANDROID__) {
-                    const intent = new android.content.Intent(android.content.Intent.ACTION_WEB_SEARCH);
+                    const intent = new Intent(Intent.ACTION_WEB_SEARCH);
                     intent.putExtra(android.app.SearchManager.QUERY, name);
                     (Application.android.foregroundActivity as android.app.Activity).startActivity(intent);
                 } else {
@@ -240,8 +239,8 @@
 
     function showAstronomy() {
         if (item) {
-            const positions = item.geometry.type === 'Point' ? item.geometry?.['coordinates']: item.geometry?.['coordinates'][0];
-            console.log('showAstronomy', positions)
+            const positions = item.geometry.type === 'Point' ? item.geometry?.['coordinates'] : item.geometry?.['coordinates'][0];
+            console.log('showAstronomy', positions);
             handleMapAction('astronomy', { lat: positions[1], lon: positions[0] });
         }
     }
@@ -265,9 +264,9 @@
         if (__ANDROID__) {
             const query = formatter.getItemName(item);
             if (__ANDROID__) {
-                const intent = new android.content.Intent(android.content.Intent.ACTION_WEB_SEARCH);
+                const intent = new Intent(Intent.ACTION_WEB_SEARCH);
                 intent.putExtra(android.app.SearchManager.QUERY, query); // query contains search string
-                if (intent.resolveActivity(Application.android.context.getPackageManager()) !== null) {
+                if (intent.resolveActivity(Utils.ad.getApplicationContext().getPackageManager()) !== null) {
                     (Application.android.foregroundActivity as android.app.Activity).startActivity(intent);
                 } else {
                     showSnack({ message: l('no_web_search_app') });
@@ -597,10 +596,16 @@
                         const w = 50;
                         highlightPaint.setColor('white');
                         const layout = new StaticLayout(
-                            h.entry.a.toFixed() + 'm' + '\n' 
-                            + Math.abs(h.entry.avg.toFixed()) + '%('  
-                            + '~' + Math.abs(h.entry.g.toFixed()) + '%)' 
-                            + '\n' + formatValueToUnit(h.entry.d, UNITS.DistanceKm),
+                            h.entry.a.toFixed() +
+                                'm' +
+                                '\n' +
+                                Math.abs(h.entry.avg.toFixed()) +
+                                '%(' +
+                                '~' +
+                                Math.abs(h.entry.g.toFixed()) +
+                                '%)' +
+                                '\n' +
+                                formatValueToUnit(h.entry.d, UNITS.DistanceKm),
                             highlightPaint,
                             w,
                             LayoutAlignment.ALIGN_CENTER,
@@ -617,12 +622,12 @@
                         const layoutHeight = layout.getHeight();
                         if (y <= layoutHeight + 15) {
                             layoutyY = y + 15;
-                            c.drawLine(x, y  + 2, x, layoutyY, highlightPaint);
+                            c.drawLine(x, y + 2, x, layoutyY, highlightPaint);
                         } else {
-                            c.drawLine(x, 0, x, y - 2, highlightPaint)
+                            c.drawLine(x, 0, x, y - 2, highlightPaint);
                         }
                         highlightPaint.setColor('white');
-                        c.drawRoundRect(x - w / 2, layoutyY,  x + w / 2, layoutyY  + layoutHeight, 2, 2, paint);
+                        c.drawRoundRect(x - w / 2, layoutyY, x + w / 2, layoutyY + layoutHeight, 2, 2, paint);
                         c.save();
                         c.translate(x - w / 2, layoutyY);
                         layout.draw(c);
@@ -661,7 +666,7 @@
                     set.setLineWidth(2);
                     set.setColors(profile.colors);
                 }
-                set.setMode(Mode.LINEAR);
+                // set.setMode(Mode.LINEAR);
                 sets.push(set);
                 const lineData = new LineData(sets);
                 chartView.setData(lineData);
@@ -712,7 +717,7 @@
         //     ]);
         // }
     }
-    let loaded = true;
+    let loaded = false;
     let loadedListeners = [];
     export async function loadView() {
         if (!loaded) {
@@ -735,75 +740,20 @@
         <BottomSheetInfoView bind:this={infoView} {item} />
 
         <mdactivityindicator visibility={updatingItem ? 'visible' : 'collapsed'} horizontalAligment="right" busy={true} width={20} height={20} />
-        <button col={1} variant="text" class="icon-btn" text="mdi-crosshairs-gps" visibility={itemIsRoute ? 'visible' : 'collapsed'} on:tap={zoomToItem} />
+        <IconButton col={1} text="mdi-crosshairs-gps" isVisible={itemIsRoute} on:tap={zoomToItem} />
         <stacklayout orientation="horizontal" row={1} colSpan={2} borderTopWidth="1" borderBottomWidth="1" borderColor={$borderColor}>
-            <button
-                variant="text"
-                on:tap={() => searchWeb()}
-                on:longPress={() => tooltip(lc('search_web'))}
-                visibility={item && (!itemIsRoute || item.properties?.name) && !item.id ? 'visible' : 'collapsed'}
-                text="mdi-web"
-                class="icon-btn"
-            />
-            <button
-                variant="text"
-                on:tap={() => getProfile()}
-                on:longPress={() => tooltip(lc('elevation_profile'))}
-                visibility={itemIsRoute && itemCanQueryProfile ? 'visible' : 'collapsed'}
-                text="mdi-chart-areaspline"
-                class="icon-btn"
-            />
-            <button variant="text" on:tap={() => saveItem()} on:longPress={() => tooltip($slc('save'))} visibility={item && !item.id ? 'visible' : 'collapsed'} text="mdi-map-plus" class="icon-btn" />
-            <button variant="text" on:tap={() => shareItem()} on:longPress={() => tooltip(lc('share'))} visibility={itemIsRoute ? 'visible' : 'collapsed'} text="mdi-share-variant" class="icon-btn" />
-            <button
-                variant="text"
-                on:tap={() => deleteItem()}
-                on:longPress={() => tooltip(lc('delete'))}
-                visibility={item && item.id ? 'visible' : 'collapsed'}
-                color="red"
-                text="mdi-delete"
-                class="icon-btn"
-            />
-            <button
-                variant="text"
-                on:tap={() => openWikipedia()}
-                on:longPress={() => tooltip(lc('wikipedia'))}
-                visibility={item && item.properties && item.properties.wikipedia ? 'visible' : 'collapsed'}
-                text="mdi-wikipedia"
-                class="icon-btn"
-            />
-            <!-- <button
-                variant="text"
-                fontSize="10"
-                on:tap={shareItem}
-                text="share item"
-                visibility={item && item.id ? 'visible' : 'collapsed'}
-            /> -->
-            <button
-                variant="text"
-                on:tap={() => checkWeather()}
-                on:longPress={() => tooltip(lc('weather'))}
-                visibility={item && networkService.canCheckWeather ? 'visible' : 'collapsed'}
-                text="mdi-weather-partly-cloudy"
-                class="icon-btn"
-            />
-            <button id="astronomy" variant="text" on:tap={() => showAstronomy()} on:longPress={() => tooltip(lc('astronomy'))} text="mdi-weather-night" class="icon-btn" />
-            <button
-                variant="text"
-                on:tap={() => openPeakFinder()}
-                on:longPress={() => tooltip(lc('peaks'))}
-                visibility={item && !itemIsRoute ? 'visible' : 'collapsed'}
-                text="mdi-summit"
-                class="icon-btn"
-            />
-            <button
-                variant="text"
-                on:tap={() => getTransitLines()}
-                on:longPress={() => tooltip(lc('bus_stop_infos'))}
-                visibility={item && itemIsBusStop ? 'visible' : 'collapsed'}
-                text="mdi-bus"
-                class="icon-btn"
-            />
+            <IconButton on:tap={searchWeb} tooltip={lc('search_web')} isVisible={item && (!itemIsRoute || item.properties?.name) && !item.id} text="mdi-web" rounded={false} />
+            <IconButton on:tap={() => getProfile()} tooltip={lc('elevation_profile')} isVisible={itemIsRoute && itemCanQueryProfile} text="mdi-chart-areaspline" rounded={false} />
+            <IconButton on:tap={() => saveItem()} tooltip={lc('save')} isVisible={item && !item.id} text="mdi-map-plus" rounded={false} />
+            <!-- <IconButton on:tap={shareItem} tooltip={lc('share')} isVisible={itemIsRoute} text="mdi-share-variant" rounded={false} /> -->
+            <IconButton on:tap={deleteItem} tooltip={lc('delete')} isVisible={item && item.id} color="red" text="mdi-delete" rounded={false} />
+            <IconButton on:tap={openWikipedia} tooltip={lc('wikipedia')} isVisible={item && item.properties && item.properties.wikipedia} text="mdi-wikipedia" rounded={false} />
+            {#if itemIsRoute && networkService.canCheckWeather}
+                <IconButton on:tap={checkWeather} tooltip={lc('weather')} text="mdi-weather-partly-cloudy" rounded={false} />
+            {/if}
+            <IconButton id="astronomy" on:tap={showAstronomy} tooltip={lc('astronomy')} text="mdi-weather-night" rounded={false} />
+            <IconButton on:tap={openPeakFinder} tooltip={lc('peaks')} isVisible={item && !itemIsRoute} text="mdi-summit" rounded={false} />
+            <IconButton on:tap={getTransitLines} tooltip={lc('bus_stop_infos')} isVisible={item && itemIsBusStop} text="mdi-bus" rounded={false} />
         </stacklayout>
         <linechart bind:this={chart} row={2} colSpan={2} height={profileHeight} visibility={graphAvailable ? 'visible' : 'hidden'} on:highlight={onChartHighlight} />
         <!-- <AWebView
@@ -819,8 +769,8 @@
         <!-- <CollectionView id="bottomsheetListView" row={3} bind:this="listView" rowHeight="40" items="routeInstructions" :visibility="showListView ? 'visible' : 'hidden'" isBounceEnabled="false" @scroll="onListViewScroll" :isScrollEnabled={scrollEnabled}>
             <v-template>
                 <GridLayout columns="30,*" rows="*,auto,auto,*" rippleColor="white"  @tap="onInstructionTap(item)">
-                    <Label  rowSpan={4} text="getRouteInstructionIcon(item) |fonticon" class="osm" color="white" fontSize="20" verticalAlignment="center" textAlignment={center} />
-                    <Label col={1} row={1} text="getRouteInstructionTitle(item)" color="white" fontSize="13" fontWeight={bold} textWrap={true} />
+                    <label  rowSpan={4} text="getRouteInstructionIcon(item) |fonticon" class="osm" color="white" fontSize="20" verticalAlignment="center" textAlignment={center} />
+                    <label col={1} row={1} text="getRouteInstructionTitle(item)" color="white" fontSize="13" fontWeight={bold} textWrap={true} />
                 </GridLayout>
             </v-template>
         </CollectionView> -->

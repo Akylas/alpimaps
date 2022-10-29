@@ -1,6 +1,5 @@
 <script lang="ts">
     import type { GenericGeoLocation } from '@nativescript-community/gps';
-    import { allowSleepAgain, keepAwake } from '@nativescript-community/insomnia';
     import * as perms from '@nativescript-community/perms';
     import { isSensorAvailable } from '@nativescript-community/sensors';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
@@ -18,9 +17,9 @@
     import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
     import { isBottomSheetOpened, showBottomSheet } from '~/utils/svelte/bottomsheet';
-    import { action } from '@nativescript-community/ui-material-dialogs';
+    import { action, prompt } from '@nativescript-community/ui-material-dialogs';
     import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
-    import { Brightness } from '@nativescript/brightness';
+    // import { Brightness } from '@nativescript/brightness';
     import { AndroidApplication, Application, Page, Utils } from '@nativescript/core';
     import * as appSettings from '@nativescript/core/application-settings';
     import type { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
@@ -33,7 +32,7 @@
     import { navigate } from 'svelte-native';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
-    import { l, lc, onLanguageChanged } from '~/helpers/locale';
+    import { l, lc, lt, onLanguageChanged } from '~/helpers/locale';
     import { sTheme, toggleTheme } from '~/helpers/theme';
     import watcher from '~/helpers/watcher';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
@@ -48,7 +47,7 @@
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
-    import mapStore from '~/stores/mapStore';
+    import { rotateEnabled, pitchEnabled, showGlobe, showContourLines, showRoutes, showSlopePercentages, show3DBuildings, contourLinesOpacity, preloading } from '~/stores/mapStore';
     import { showError } from '~/utils/error';
     import { getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
@@ -60,14 +59,15 @@
     import LocationInfoPanel from './LocationInfoPanel.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
     import Search from './Search.svelte';
+    import IconButton from './IconButton.svelte';
+    import { isSentryEnabled, Sentry } from '~/utils/sentry';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
     const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'routes', 'transit', 'hillshade', 'selection', 'items', 'directions', 'search', 'userLocation'];
     const KEEP_AWAKE_KEY = 'keepAwake';
     let defaultLiveSync = global.__onLiveSync;
-
-    const brightness = new Brightness();
 
     let page: NativeViewElementNode<Page>;
     let cartoMap: CartoMap<LatLonKeys>;
@@ -94,7 +94,7 @@
     let projection: Projection = null;
     let currentLanguage = appSettings.getString('language', 'en');
     let addedLayers: { layer: Layer<any, any>; layerId: LayerType }[] = [];
-    let keepAwakeEnabled = appSettings.getBoolean(KEEP_AWAKE_KEY, false);
+    let keepScreenAwake = appSettings.getBoolean(KEEP_AWAKE_KEY, false);
     let showOnLockscreen = false;
     let currentMapRotation = 0;
     let shouldShowNavigationBarOverlay = false;
@@ -214,7 +214,7 @@
         //     }
         // }
         try {
-            DEV_LOG && console.log('Got the following appURL', link);
+            TEST_LOG && console.log('Got the following appURL', link);
             if (link.startsWith('geo')) {
                 const latlong = link.split(':')[1].split(',').map(parseFloat) as [number, number];
                 const loaded = !!cartoMap;
@@ -467,10 +467,10 @@
 
             options.setZoomGestures(true);
             options.setDoubleClickMaxDuration(0.3);
-            options.setLongClickDuration(0.8);
+            options.setLongClickDuration(0.5);
             options.setKineticRotation(false);
-            options.setRotatable($mapStore.rotateEnabled);
-            toggleMapPitch($mapStore.pitchEnabled);
+            options.setRotatable($rotateEnabled);
+            toggleMapPitch($pitchEnabled);
             // options.setClickTypeDetection(false);
             // options.setRotatable(true);
             const pos = JSON.parse(appSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos<LatLonKeys>;
@@ -536,7 +536,7 @@
 
     function onMainMapClicked(e) {
         const { clickType, position } = e.data;
-        DEV_LOG && console.log('onMainMapClicked', clickType, position);
+        TEST_LOG && console.log('onMainMapClicked', clickType, position);
         // handleClickedFeatures(position);
         if (ignoreNextMapClick) {
             ignoreNextMapClick = false;
@@ -580,13 +580,13 @@
         didIgnoreAlreadySelected = false;
         if (isFeatureInteresting) {
             let isCurrentItem = item === $selectedItem;
-            DEV_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons);
+            TEST_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons);
             if (setSelected && isCurrentItem && !item) {
                 unselectItem(false);
             }
             const route = item?.properties?.route;
             if (setSelected && route) {
-                DEV_LOG && console.log('selected_id', typeof item.properties.route.osmid, item.properties.route.osmid, typeof item.properties.id, item.properties.id, setSelected);
+                TEST_LOG && console.log('selected_id', typeof item.properties.route.osmid, item.properties.route.osmid, typeof item.properties.id, item.properties.id, setSelected);
 
                 if (item.properties.id !== undefined) {
                     selectedId = item.properties.id;
@@ -831,29 +831,29 @@
         }
     }
 
-    $: setRenderProjectionMode($mapStore.showGlobe);
-    $: vectorTileDecoder && setStyleParameter('buildings', !!$mapStore.show3DBuildings ? '2' : '1');
-    $: vectorTileDecoder && setStyleParameter('contours', $mapStore.showContourLines ? '1' : '0');
-    // $: vectorTileDecoder && mapContext?.innerDecoder?.setStyleParameter('routes', $mapStore.showRoutes ? '1' : '0');
+    $: setRenderProjectionMode($showGlobe);
+    $: vectorTileDecoder && setStyleParameter('buildings', !!$show3DBuildings ? '2' : '1');
+    $: vectorTileDecoder && setStyleParameter('contours', $showContourLines ? '1' : '0');
+    // $: vectorTileDecoder && mapContext?.innerDecoder?.setStyleParameter('routes', $showRoutes ? '1' : '0');
     $: {
-        const visible = $mapStore.showRoutes;
+        const visible = $showRoutes;
         getLayers('routes').forEach((l) => {
             l.layer.visible = visible;
         });
         cartoMap && cartoMap.requestRedraw();
     }
-    $: vectorTileDecoder && setStyleParameter('contoursOpacity', $mapStore.contourLinesOpacity.toFixed(1));
-    $: vectorTileDecoder && toggleHillshadeSlope($mapStore.showSlopePercentages);
-    $: toggleMapRotate($mapStore.rotateEnabled);
-    $: toggleMapPitch($mapStore.pitchEnabled);
-    $: currentLayer && (currentLayer.preloading = $mapStore.preloading);
+    $: vectorTileDecoder && setStyleParameter('contoursOpacity', $contourLinesOpacity.toFixed(1));
+    $: vectorTileDecoder && toggleHillshadeSlope($showSlopePercentages);
+    $: toggleMapRotate($rotateEnabled);
+    $: toggleMapPitch($pitchEnabled);
+    $: currentLayer && (currentLayer.preloading = $preloading);
     // $: shouldShowNavigationBarOverlay = $navigationBarHeight !== 0 && !!selectedItem;
     $: bottomSheetStepIndex === 0 && unselectItem();
     $: cartoMap?.getOptions().setFocusPointOffset(toNativeScreenPos({ x: 0, y: Utils.layout.toDevicePixels(steps[bottomSheetStepIndex]) / 2 }));
 
     $: {
-        appSettings.setBoolean(KEEP_AWAKE_KEY, keepAwakeEnabled);
-        if (keepAwakeEnabled) {
+        appSettings.setBoolean(KEEP_AWAKE_KEY, keepScreenAwake);
+        if (keepScreenAwake) {
             showKeepAwakeNotification();
         } else {
             hideKeepAwakeNotification();
@@ -864,13 +864,11 @@
     }
     function toggleMapRotate(value: boolean) {
         if (cartoMap) {
-            console.log('toggleMapRotate', value);
             cartoMap?.getOptions().setRotatable(value);
         }
     }
     function toggleMapPitch(value: boolean) {
         if (cartoMap) {
-            console.log('toggleMapPitch', value);
             cartoMap?.getOptions().setTiltRange(toNativeMapRange([value ? 30 : 90, 90]));
         }
     }
@@ -946,7 +944,7 @@
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, featureId, position, featureLayerName, featureData, featurePosition, featureGeometry, layer } = data;
 
-        DEV_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, featurePosition);
+        TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, featurePosition);
 
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
@@ -1040,7 +1038,7 @@
     }
     function onVectorElementClicked(data: VectorElementEventData<LatLonKeys>) {
         const { clickType, position, elementPos, metaData, element } = data;
-        DEV_LOG && console.log('onVectorElementClicked', clickType, position, metaData);
+        TEST_LOG && console.log('onVectorElementClicked', clickType, position, metaData);
         Object.keys(metaData).forEach((k) => {
             if (metaData[k][0] === '{' || metaData[k][0] === '[') {
                 metaData[k] = JSON.parse(metaData[k]);
@@ -1076,7 +1074,7 @@
     }
     function onVectorTileElementClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, position, featureData } = data;
-        DEV_LOG && console.log('onVectorTileElementClicked', clickType, position, featureData.id);
+        TEST_LOG && console.log('onVectorTileElementClicked', clickType, position, featureData.id);
         const itemModule = mapContext.mapModule('items');
         const feature = itemModule.getFeature(featureData.id);
         if (!feature) {
@@ -1131,7 +1129,7 @@
 
     function setCurrentLayer(id: string) {
         if (__CARTO_PACKAGESERVICE__) {
-            DEV_LOG && console.log('setCurrentLayer', id, $mapStore.preloading);
+            TEST_LOG && console.log('setCurrentLayer', id, $preloading);
             // const cartoMap = cartoMap;
             if (currentLayer) {
                 removeLayer(currentLayer, 'map');
@@ -1142,9 +1140,9 @@
             const decoder = getVectorTileDecoder();
 
             currentLayer = new VectorTileLayer({
-                preloading: $mapStore.preloading,
+                preloading: $preloading,
                 labelRenderOrder: VectorTileRenderOrder.LAST,
-                dataSource: packageService.getDataSource($mapStore.showContourLines),
+                dataSource: packageService.getDataSource($showContourLines),
                 decoder
             });
             handleNewLanguage(currentLanguage);
@@ -1454,16 +1452,11 @@
         }
     }
 
-    let lastBrightness = null;
     function showKeepAwakeNotification() {
-        lastBrightness = brightness.get();
-        brightness.set({
-            intensity: 100
-        });
         if (__ANDROID__) {
             const context: android.content.Context = ad.getApplicationContext();
             const builder = NotificationHelper.getNotification(context, {
-                title: 'Alpi Maps is keeping the screen awake',
+                title: lt('screen_awake_notification'),
                 channel: NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL
             });
 
@@ -1473,30 +1466,13 @@
     }
 
     function hideKeepAwakeNotification() {
-        if (lastBrightness === null) {
-            return;
-        }
-        brightness.set({
-            intensity: lastBrightness
-        });
-        lastBrightness = null;
         if (__ANDROID__) {
             NotificationHelper.hideNotification(KEEP_AWAKE_NOTIFICATION_ID);
         }
     }
 
     async function switchKeepAwake() {
-        try {
-            if (keepAwakeEnabled) {
-                await allowSleepAgain();
-                keepAwakeEnabled = false;
-            } else {
-                await keepAwake();
-                keepAwakeEnabled = true;
-            }
-        } catch (err) {
-            showError(err);
-        }
+        keepScreenAwake = !keepScreenAwake;
     }
     async function switchShowOnLockscreen() {
         try {
@@ -1517,14 +1493,10 @@
     }
 
     async function shareScreenshot() {
-        try {
-            const image = await cartoMap.captureRendering(true);
-            share({
-                image
-            });
-        } catch (error) {
-            showError(error);
-        }
+        const image = await cartoMap.captureRendering(true);
+        return share({
+            image
+        });
     }
     function onTap(command: string) {
         switch (
@@ -1617,13 +1589,14 @@
                     color: $sTheme === 'dark' ? primaryColor : undefined,
                     icon: 'mdi-theme-light-dark'
                 }
-
-                // {
-                //     title: lc('sentry'),
-                //     id: 'sentry',
-                //     icon: 'mdi-bug'
-                // }
             ];
+            if (SENTRY_ENABLED && isSentryEnabled) {
+                options.push({
+                    title: lc('bug_report'),
+                    id: 'sentry',
+                    icon: 'mdi-bug'
+                });
+            }
 
             if (isSensorAvailable('barometer')) {
                 options.splice(options.length - 2, 0, {
@@ -1651,7 +1624,7 @@
             if (result) {
                 switch (result.id) {
                     case 'select_style':
-                        selectStyle();
+                        await selectStyle();
                         break;
                     case 'location_info':
                         switchLocationInfo();
@@ -1668,21 +1641,38 @@
                     case 'dark_mode':
                         toggleTheme(true);
                         break;
-                    // case 'sentry':
-                    //     const error = new Error('test');
-                    //     console.log('captureException', error, error.stack);
-                    //     Sentry.captureException(error);
-                    //     break;
+                    case 'sentry':
+                        await sendBugReport();
+                        break;
                     case 'astronomy':
                     case 'compass':
                     case 'altimeter':
                     case 'settings':
-                        handleMapAction(result.id);
+                        await handleMapAction(result.id);
                         break;
                 }
             }
         } catch (err) {
-            console.error('showSettings', err, err['stack']);
+            showError(err);
+        }
+    }
+
+    async function sendBugReport() {
+        if (SENTRY_ENABLED) {
+            const result = await prompt({
+                title: lc('send_bug_report'),
+                message: lc('send_bug_report_desc'),
+                okButtonText: l('send'),
+                cancelButtonText: l('cancel'),
+                autoFocus: true,
+                hintText: lc('description'),
+                helperText: lc('please_describe_error')
+            });
+            if (result.result) {
+                Sentry.captureMessage(result.text);
+                Sentry.flush()
+                showSnack({ message: l('bug_report_sent') });
+            }
         }
     }
 
@@ -1708,9 +1698,15 @@
     }
 </script>
 
-<page bind:this={page} actionBarHidden={true} backgroundColor="#E3E1D3" on:navigatingTo={onNavigatingTo} on:navigatingFrom={onNavigatingFrom}>
-    <!-- <drawer bind:this={drawer} translationFunction={drawerTranslationFunction} bottomOpenedDrawerAllowDraging={true} bottomClosedDrawerAllowDraging={false} backgroundColor="#E3E1D3"> -->
-    <!-- <gridlayout backgroundColor="#E3E1D3"> -->
+<page
+    bind:this={page}
+    actionBarHidden={true}
+    backgroundColor="#E3E1D3"
+    on:navigatingTo={onNavigatingTo}
+    on:navigatingFrom={onNavigatingFrom}
+    {keepScreenAwake}
+    screenBrightness={keepScreenAwake ? 1 : 0}
+>
     <bottomsheet
         android:marginBottom={$navigationBarHeight}
         backgroundColor="#01550000"
@@ -1731,53 +1727,17 @@
             on:layoutChanged={reportFullyDrawn}
         />
         <stacklayout horizontalAlignment="left" verticalAlignment="middle">
-            <button
-                variant="text"
-                class="icon-btn"
-                text="mdi-bullseye"
-                color={$mapStore.showContourLines ? primaryColor : 'gray'}
-                on:tap={() => (mapStore.showContourLines = !mapStore.showContourLines)}
-            />
-            <button
-                variant="text"
-                class="icon-btn"
-                text="mdi-signal"
-                color={$mapStore.showSlopePercentages ? primaryColor : 'gray'}
-                on:tap={() => (mapStore.showSlopePercentages = !mapStore.showSlopePercentages)}
-            />
-            <button variant="text" class="icon-btn" text="mdi-routes" color={$mapStore.showRoutes ? primaryColor : 'gray'} on:tap={() => (mapStore.showRoutes = !mapStore.showRoutes)} />
-            <button variant="text" class="icon-btn" text="mdi-speedometer" color="gray" on:tap={switchLocationInfo} />
-
-            <button
-                variant="text"
-                class="icon-btn"
-                text="mdi-map-clock"
-                visibility={packageServiceEnabled ? 'visible' : 'collapsed'}
-                color={$mapStore.preloading ? primaryColor : 'gray'}
-                on:tap={() => (mapStore.preloading = !$mapStore.preloading)}
-            />
-            <button variant="text" class="icon-btn" text={keepAwakeEnabled ? 'mdi-sleep' : 'mdi-sleep-off'} color={keepAwakeEnabled ? 'red' : 'gray'} on:tap={switchKeepAwake} />
-            <button variant="text" class="icon-btn" text="mdi-cellphone-lock" color={showOnLockscreen ? primaryColor : 'gray'} on:tap={switchShowOnLockscreen} />
-            <!-- <button
-                    variant="text"
-                    class="icon-btn"
-                    text="mdi-information-outline"
-                    color={showClickedFeatures ? primaryColor : 'gray'}
-                    on:tap={() => (showClickedFeatures = !showClickedFeatures)}
-                /> -->
-            <button
-                variant="text"
-                class="icon-btn"
-                text="mdi-bus-marker"
-                color={showTransitLines ? primaryColor : 'gray'}
-                on:tap={() => (showTransitLines = !showTransitLines)}
-                on:longPress={(event) => {
-                    if (event.ios && event.ios.state !== 3) {
-                        return;
-                    }
-                    showTransitLinesPage();
-                }}
-            />
+            <IconButton gray={true} text="mdi-bullseye" isSelected={$showContourLines} on:tap={() => showContourLines.set(!$showContourLines)} />
+            <IconButton gray={true} text="mdi-signal" isSelected={$showSlopePercentages} on:tap={() => showSlopePercentages.set(!$showSlopePercentages)} />
+            <IconButton gray={true} text="mdi-routes" isSelected={$showRoutes} on:tap={() => showRoutes.set(!$showRoutes)} />
+            <IconButton gray={true} text="mdi-speedometer" on:tap={switchLocationInfo} />
+            {#if packageServiceEnabled}
+                <IconButton gray={true} text="mdi-map-clock" isSelected={$preloading} on:tap={() => preloading.set(!$preloading)} />
+            {/if}
+            <IconButton gray={true} text={keepScreenAwake ? 'mdi-sleep' : 'mdi-sleep-off'} selectedColor={'red'} isSelected={keepScreenAwake} on:tap={switchKeepAwake} />
+            <IconButton gray={true} text="mdi-cellphone-lock" isSelected={showOnLockscreen} on:tap={switchShowOnLockscreen} />
+            <!-- <IconButton text="mdi-information-outline" isSelected={showClickedFeatures} on:tap={() => (showClickedFeatures = !showClickedFeatures)} /> -->
+            <IconButton gray={true} text="mdi-bus-marker" isSelected={showTransitLines} on:tap={() => (showTransitLines = !showTransitLines)} onLongPress={showTransitLinesPage} />
         </stacklayout>
         <Search bind:this={searchView} verticalAlignment="top" defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
         <LocationInfoPanel horizontalAlignment="left" verticalAlignment="top" marginLeft="20" marginTop="90" bind:this={locationInfoPanel} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
@@ -1795,7 +1755,7 @@
         >
             <cspan text="mdi-access-point-network-off" visibility={networkConnected ? 'collapsed' : 'visible'} textAlignment="left" verticalTextAlignement="top" />
         </canvaslabel>
-        <button
+        <mdbutton
             marginTop="90"
             visibility={currentMapRotation !== 0 ? 'visible' : 'collapsed'}
             on:tap={resetBearing}
@@ -1824,5 +1784,4 @@
                 </Template>
             </collectionview> -->
     </bottomsheet>
-    <!-- </gridlayout> -->
 </page>
