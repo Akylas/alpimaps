@@ -1,11 +1,10 @@
 import Observable from '@nativescript-community/observable';
-import { getCacheControl, networkService } from './NetworkService';
 import { GenericMapPos } from '@nativescript-community/ui-carto/core';
+import { getCacheControl, networkService } from './NetworkService';
 
-import { SQLiteDatabase, openOrCreate } from '@nativescript-community/sqlite';
-import { getDefaultMBTilesDir, getSavedMBTilesDir } from '~/utils/utils';
-import { Folder } from '@nativescript/core';
-
+import { SQLiteDatabase } from '@nativescript-community/sqlite';
+export const MOBILITY_URL ='https://data.mobilites-m.fr';
+export const MOBILITY_API_URL = MOBILITY_URL + '/api';
 // const navitiaAPIEndPoint = 'https://api.navitia.io/v1/';
 
 class TransitService extends Observable {
@@ -67,7 +66,7 @@ class TransitService extends Observable {
     async getMetroLinesData() {
         if (!this.metroLinesData) {
             const data = await networkService.request({
-                url: 'https://data.mobilites-m.fr/api/routers/default/index/routes',
+                url: MOBILITY_API_URL + '/routers/default/index/routes',
                 method: 'GET',
                 headers: {
                     'Cache-Control': getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1)
@@ -84,7 +83,7 @@ class TransitService extends Observable {
     }
     async findBusStop(position: GenericMapPos<LatLonKeys>) {
         return networkService.request({
-            url: 'http://data.mobilites-m.fr/api/linesNear/json',
+            url: MOBILITY_API_URL + '/linesNear/json',
             method: 'GET',
             headers: {
                 'Cache-Control': getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1)
@@ -99,7 +98,7 @@ class TransitService extends Observable {
     }
     async getLineTimeline(id, time?) {
         return networkService.request({
-            url: 'http://data.mobilites-m.fr/api/ficheHoraires/json',
+            url: MOBILITY_API_URL + '/ficheHoraires/json',
             method: 'GET',
             headers: {
                 'Cache-Control': getCacheControl(60 * 24)
