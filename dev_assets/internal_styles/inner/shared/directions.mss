@@ -49,7 +49,6 @@
 	marker-file: url('symbols/pin.svg');
 	marker-color: [isStart] ? 'green': ([isStop] ? 'red' : 'blue');
 	marker-width: 24;
-	marker-height: 24;
 	marker-allow-overlap: true;
 	marker-clip: false;
 }
