@@ -12,8 +12,7 @@ export function enableShowWhenLockedAndTurnScreenOn() {
         // this.setTurnScreenOn(true);
     } else {
         activity.getWindow().addFlags(
-            android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
-            // || android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+            524288 // android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
         );
     }
 }
@@ -24,8 +23,7 @@ export function disableShowWhenLockedAndTurnScreenOn() {
         // this.setTurnScreenOn(false);
     } else {
         activity.getWindow().clearFlags(
-            android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
-            // || android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+            524288 //android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
         );
     }
 }
