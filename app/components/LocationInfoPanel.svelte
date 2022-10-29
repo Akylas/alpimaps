@@ -17,6 +17,7 @@
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { accentColor } from '~/variables';
+    import IconButton from './IconButton.svelte';
 </script>
 
 <script lang="ts">
@@ -265,8 +266,8 @@
             <cspan text={airportRefName} verticalAlignment="bottom" textAlignment="right" color="#fff" fontSize="9" />
         </canvaslabel>
         <stacklayout visibility={hasBarometer ? 'visible' : 'collapsed'} col={2} verticalAlignment="center">
-            <button variant="text" class="small-icon-btn" text="mdi-gauge" on:tap={switchBarometer} color="white" />
-            <button variant="text" class="small-icon-btn" visibility={listeningForBarometer ? 'visible' : 'collapsed'} text="mdi-reflect-vertical" on:tap={getNearestAirportPressure} color="white" />
+            <IconButton small={true} white={true} text="mdi-gauge" on:tap={switchBarometer} />
+            <IconButton small={true} white={true} isVisible={listeningForBarometer} text="mdi-reflect-vertical" on:tap={getNearestAirportPressure} />
         </stacklayout>
     {/if}
 </gridlayout>

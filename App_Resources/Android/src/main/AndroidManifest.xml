@@ -12,7 +12,6 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.webkit.PermissionRequest" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.location.gps" />
@@ -59,11 +58,26 @@
             </intent-filter>
         </activity>
         <activity android:name="com.tns.ErrorReportActivity" android:exported="false" />
-        <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
-        <meta-data android:name="io.sentry.anr.enable" android:value="false" />
         <service android:name=".BgService" android:enabled="true" android:exported="false" android:stopWithTask="false" android:foregroundServiceType="location" />
         <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.provider" android:exported="false" android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/provider_paths" />
         </provider>
+        <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
+        <meta-data android:name="io.sentry.anr.enable" android:value="false" />
+        <!-- To disable the activity lifecycle breadcrumbs integration -->
+        <meta-data android:name="io.sentry.breadcrumbs.activity-lifecycle" android:value="false" />
+        <meta-data android:name="io.sentry.breadcrumbs.fragment-lifecycle" android:value="false" />
+
+        <!-- To disable the app lifecycle breadcrumbs integration -->
+        <meta-data android:name="io.sentry.breadcrumbs.app-lifecycle" android:value="false" />
+
+        <!-- To disable the system events breadcrumbs integration -->
+        <meta-data android:name="io.sentry.breadcrumbs.system-events" android:value="false" />
+
+        <!-- To disable the app components breadcrumbs integration -->
+        <meta-data android:name="io.sentry.breadcrumbs.app-components" android:value="false" />
+
+        <!-- To disable the user interaction breadcrumbs integration -->
+        <meta-data android:name="io.sentry.breadcrumbs.user-interaction" android:value="false" />
     </application>
 </manifest>
