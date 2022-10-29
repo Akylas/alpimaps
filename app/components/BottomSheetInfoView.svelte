@@ -154,9 +154,10 @@
         />
         <label visibility={itemSubtitle ? 'visible' : 'collapsed'} text={itemSubtitle} color={$subtitleColor} fontSize={13} maxLines={2} verticalTextAlignment="top" flexGrow={1} flexShrink={0} />
     </flexlayout>
-    <canvaslabel {...$$restProps} fontSize="16">
-        <cgroup verticalAlignment="middle" paddingBottom={(itemSubtitle ? 4 : 0) + 12}>
+    <canvaslabel fontSize="16">
+        <!-- <cgroup verticalAlignment="middle" paddingBottom={(itemSubtitle ? 4 : 0) + 12}> -->
             <cspan
+            verticalAlignment="middle" paddingBottom={(itemSubtitle ? 4 : 0) + 12}
                 visibility={itemIcon && itemIcon.length > 0 ? 'visible' : 'hidden'}
                 paddingLeft="10"
                 width="40"
@@ -165,7 +166,7 @@
                 fontSize={24}
                 color={(itemProps && itemProps.color) || $textColor}
             />
-        </cgroup>
+        <!-- </cgroup> -->
         <symbolshape
             visibility={actualShowSymbol ? 'visible' : 'hidden'}
             symbol={actualShowSymbol ? formatter.getSymbol(itemProps) : null}

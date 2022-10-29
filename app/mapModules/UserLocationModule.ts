@@ -9,9 +9,10 @@ import { Tween } from '@nativescript-community/ui-chart/animation/Tween';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { Color } from '@nativescript/core';
 import dayjs from 'dayjs';
+import { get } from 'svelte/store';
 import { GeoHandler, GeoLocation, UserLocationdEvent, UserLocationdEventData } from '~/handlers/GeoHandler';
 import { packageService } from '~/services/PackageService';
-import mapStore from '~/stores/mapStore';
+import { queryingLocation, watchingLocation } from '~/stores/mapStore';
 import { EARTH_RADIUS, PI_X2, TO_DEG, TO_RAD } from '~/utils/geo';
 import MapModule, { getMapContext } from './MapModule';
 
@@ -218,7 +219,6 @@ export default class UserLocationModule extends MapModule {
         this.mapView.setFocusPos(this.mLastUserLocation, LOCATION_ANIMATION_DURATION);
     }
     onLocation(event: UserLocationdEventData) {
-        
         // const { android, ios, ...toPrint } = data.location;
         // if (DEV_LOG) {
         //     console.log('onLocation', this.mUserFollow, event.location, this.userFollow);
@@ -231,7 +231,7 @@ export default class UserLocationModule extends MapModule {
             console.error(event.error);
             return;
         } else if (event.location) {
-            if (mapStore.queryingLocation && event.location.horizontalAccuracy <= 20) {
+            if (get(queryingLocation) && event.location.horizontalAccuracy <= 20) {
                 this.stopWatchLocation();
             }
             this.updateUserLocation(event.location);
@@ -249,14 +249,14 @@ export default class UserLocationModule extends MapModule {
     }
 
     async startWatchLocation() {
-        if (mapStore.watchingLocation || !this.geoHandler) {
+        if (get(watchingLocation) || !this.geoHandler) {
             return;
         }
         await this.geoHandler.enableLocation();
         await this.geoHandler.startWatch();
         this.userFollow = true;
-        mapStore.watchingLocation = true;
-        if (!mapStore.queryingLocation) {
+        watchingLocation.set(true);
+        if (!get(queryingLocation)) {
             showSnack({
                 message: lc('watching_location')
             });
@@ -265,9 +265,9 @@ export default class UserLocationModule extends MapModule {
     stopWatchLocation() {
         // console.log('stopWatchLocation');
         this.geoHandler.stopWatch();
-        mapStore.watchingLocation = false;
-        mapStore.queryingLocation = false;
-        if (!mapStore.queryingLocation) {
+        watchingLocation.set(false);
+        queryingLocation.set(false);
+        if (!queryingLocation) {
             showSnack({
                 message: lc('stopped_watching_location')
             });
@@ -276,8 +276,8 @@ export default class UserLocationModule extends MapModule {
     async askUserLocation() {
         await this.geoHandler.enableLocation();
 
-        if (!mapStore.watchingLocation) {
-            mapStore.queryingLocation = true;
+        if (!get(watchingLocation)) {
+            queryingLocation.set(true);
             this.startWatchLocation();
         } else {
             this.userFollow = true;
@@ -285,8 +285,8 @@ export default class UserLocationModule extends MapModule {
         }
     }
     onWatchLocation() {
-        mapStore.queryingLocation = false;
-        if (!mapStore.watchingLocation) {
+        queryingLocation.set(false);
+        if (!get(watchingLocation)) {
             this.startWatchLocation();
         } else {
             this.stopWatchLocation();

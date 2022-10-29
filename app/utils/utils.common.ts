@@ -220,12 +220,13 @@ export async function getDefaultMBTilesDir() {
                         result.push(element);
                     }
                 }
+                const sdcardLocalPath = '../../../../alpimaps_mbtiles'
                 if (result.length > 1) {
                     const sdcardFolder = result[result.length - 1].getAbsolutePath();
-                    resultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
+                    resultPath = path.join(sdcardFolder, sdcardLocalPath);
                 } else if (result.length > 0) {
                     const sdcardFolder = result[0].getAbsolutePath();
-                    resultPath = path.join(sdcardFolder, '../../../..', 'alpimaps_mbtiles');
+                    resultPath = path.join(sdcardFolder, sdcardLocalPath);
                 }
             }
         } else {

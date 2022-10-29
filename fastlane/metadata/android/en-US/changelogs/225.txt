@@ -1,0 +1,19 @@
+*Bug fixes*
+- layout fix
+- userFollow location fix
+- better map style
+- search widget fixes + animations
+- should fix tap on location button
+- read styles from production themes
+- universal link handling fix
+- navigation icons fix
+- regression fix
+- direction popover fix
+- peak finder fixes
+- crash fix on samsung 8.x
+- bunck of fixes
+- layout fix
+- faster layout
+- search animations fix
+- prevent search to get over directions
+- prevent hidden search to get clicked

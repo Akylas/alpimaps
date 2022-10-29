@@ -378,7 +378,7 @@ export default class ItemsModule extends MapModule {
         try {
             let properties = item.properties;
             if (properties?.route) {
-                console.log('saveItem', properties.route.osmid, item.geometry);
+                // console.log('saveItem', properties.route.osmid, item.geometry);
                 if (!item.geometry && properties.route.osmid) {
                     item.geometry = await this.getRoutePositions(item);
                     if (!item.geometry) {

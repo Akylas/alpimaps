@@ -17,6 +17,7 @@
     import { transitService } from '~/services/TransitService';
     import { showError } from '~/utils/error';
     import { mdiFontFamily, widgetBackgroundColor } from '~/variables';
+    import IconButton from '../IconButton.svelte';
 
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -170,8 +171,8 @@
         <CActionBar backgroundColor="transparent">
             <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={line.color} color={line.textColor} text={line.shortName} autoFontSize={true} />
 
-            <button variant="text" class="icon-btn" text="mdi-file-pdf-box" on:tap={() => downloadPDF()} />
-            <button variant="text" class="icon-btn" text="mdi-calendar-clock-outline" on:tap={() => showTimesheet()} />
+            <IconButton text="mdi-file-pdf-box" on:tap={() => downloadPDF()} />
+            <IconButton text="mdi-calendar-clock-outline" on:tap={() => showTimesheet()} />
         </CActionBar>
 
         <label
@@ -206,7 +207,7 @@
                     </canvas>
                     <label col={1} fontSize="16" text={item.name} verticalTextAlignment="bottom" />
                     <label row="1" col={1} fontSize="14" class="subtitle" text={item.city} verticalTextAlignment="top" />
-                    <button col={2} rowSpan={2} variant="text" class="icon-btn" text="mdi-map-marker-radius-outline" on:tap={() => backToMapOnPoint(item)} verticalAlignment="center" />
+                    <IconButton col={2} rowSpan={2} text="mdi-map-marker-radius-outline" on:tap={() => backToMapOnPoint(item)} verticalAlignment="center" />
                 </gridlayout>
             </Template>
         </collectionview>
