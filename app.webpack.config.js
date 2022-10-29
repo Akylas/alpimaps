@@ -28,7 +28,21 @@ module.exports = (env, params = {}) => {
             env[k] = true;
         }
     });
-    if (env.adhoc) {
+    if (env.adhoc_sentry) {
+        env = Object.assign(
+            {},
+            {
+                production: true,
+                sentry: true,
+                uploadSentry: true,
+                testlog: true,
+                noconsole: false,
+                sourceMap: true,
+                uglify: true
+            },
+            env
+        );
+    } else if (env.adhoc) {
         env = Object.assign(
             {},
             {
@@ -55,6 +69,7 @@ module.exports = (env, params = {}) => {
                 noconsole: false,
                 uploadSentry: false,
                 apiKeys: true,
+                keep_classnames_functionnames: true,
                 sourceMap: false,
                 uglify: true
             },
@@ -77,10 +92,12 @@ module.exports = (env, params = {}) => {
         timeline,
         cartoLicense = false,
         devlog,
+        testlog,
         fork = true,
         buildpeakfinder,
         buildstyle,
         apiKeys = true,
+        keep_classnames_functionnames = false,
         locale = 'auto',
         theme = 'auto',
         adhoc
@@ -160,7 +177,7 @@ module.exports = (env, params = {}) => {
     //             __CARTO_PACKAGESERVICE__: cartoLicense,
     //             TNS_ENV: JSON.stringify(mode),
     //             SUPPORTED_LOCALES: JSON.stringify(locales),
-    //             'gVars.sentry': !!sentry,
+    //             'SENTRY_ENABLED': !!sentry,
     //             NO_CONSOLE: noconsole,
     //             SENTRY_DSN: `"${process.env.SENTRY_DSN}"`,
     //             SENTRY_PREFIX: `"${!!sentry ? process.env.SENTRY_PREFIX : ''}"`,
@@ -174,7 +191,7 @@ module.exports = (env, params = {}) => {
     //                     : `market://details?id=${nconfig.id}`
     //             }"`,
     //             DEV_LOG: !!devlog,
-    //             TEST_LOGS: !!adhoc || !production
+    //             TEST_LOG: !!adhoc || !production
     //         });
     //         const keys = require(resolve(__dirname, 'API_KEYS')).keys;
     //         Object.keys(keys).forEach((s) => {
@@ -351,7 +368,7 @@ module.exports = (env, params = {}) => {
         SUPPORTED_LOCALES: JSON.stringify(supportedLocales),
         DEFAULT_LOCALE: `"${locale}"`,
         DEFAULT_THEME: `"${theme}"`,
-        'gVars.sentry': !!sentry,
+        SENTRY_ENABLED: !!sentry,
         NO_CONSOLE: noconsole,
         SENTRY_DSN: `"${process.env.SENTRY_DSN}"`,
         SENTRY_PREFIX: `"${!!sentry ? process.env.SENTRY_PREFIX : ''}"`,
@@ -365,7 +382,7 @@ module.exports = (env, params = {}) => {
                 : `market://details?id=${nconfig.id}`
         }"`,
         DEV_LOG: !!devlog,
-        TEST_LOGS: !!adhoc || !production
+        TEST_LOG: !!devlog || !!testlog
     };
     const keys = require(resolve(__dirname, 'API_KEYS')).keys;
     Object.keys(keys).forEach((s) => {
@@ -576,7 +593,7 @@ module.exports = (env, params = {}) => {
     console.log('locales', supportedLocales);
     config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`^(${supportedLocales.join('|')})$`)));
 
-    config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|nativescript-carto|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
+    config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|nativescript-carto|ui-carto|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
     config.plugins.push(new IgnoreNotFoundExportPlugin());
 
     const nativescriptReplace = '(NativeScript[\\/]dist[\\/]packages[\\/]core|@nativescript/core|node_modules)';
@@ -613,13 +630,17 @@ module.exports = (env, params = {}) => {
                 if (resource.context.match(nativescriptReplace)) {
                     resource.request = '~/shims/profile';
                 }
-            }),
-            new webpack.NormalModuleReplacementPlugin(/trace$/, (resource) => {
-                if (resource.context.match(nativescriptReplace)) {
-                    resource.request = '~/shims/trace';
-                }
             })
         );
+        if (!sentry){
+            config.plugins.push(
+                new webpack.NormalModuleReplacementPlugin(/trace$/, (resource) => {
+                    if (resource.context.match(nativescriptReplace)) {
+                        resource.request = '~/shims/trace';
+                    }
+                })
+            );
+        }
         config.module.rules.push(
             {
                 // rules to replace mdi icons and not use nativescript-font-icon
@@ -721,6 +742,7 @@ module.exports = (env, params = {}) => {
     // config.optimization.usedExports = true;
     config.optimization.minimize = uglify !== undefined ? !!uglify : production;
     const isAnySourceMapEnabled = !!sourceMap || !!hiddenSourceMap || !!inlineSourceMap;
+    const actual_keep_classnames_functionnames = keep_classnames_functionnames || platform !== 'android';
     config.optimization.minimizer = [
         new TerserPlugin({
             parallel: true,
@@ -728,8 +750,8 @@ module.exports = (env, params = {}) => {
                 ecma: isAndroid ? 2020 : 2017,
                 module: true,
                 toplevel: false,
-                keep_classnames: platform !== 'android',
-                keep_fnames: platform !== 'android',
+                keep_classnames: actual_keep_classnames_functionnames,
+                keep_fnames: actual_keep_classnames_functionnames,
                 output: {
                     comments: false,
                     semicolons: !isAnySourceMapEnabled
