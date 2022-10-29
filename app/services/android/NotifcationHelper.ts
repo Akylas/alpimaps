@@ -1,5 +1,5 @@
 import { Session, SessionState } from '~/handlers/GeoHandler';
-import { lc } from '~/helpers/locale';
+import { lc, lt } from '~/helpers/locale';
 import { ad } from '@nativescript/core/utils/utils';
 
 export const ACTION_START = 'akylas.alpi.maps.action.START';
@@ -8,7 +8,7 @@ export const ACTION_RESUME = 'akylas.alpi.maps.action.RESUME';
 export const ACTION_PAUSE = 'akylas.alpi.maps.action.PAUSE';
 export const NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL = 'alpimaps_service';
 export const NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL = 'alpimaps_keepawake';
-export const NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL = 'alpimaps_screenshot';
+// export const NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL = 'alpimaps_screenshot';
 
 import { primaryColor } from '~/variables';
 import { sdkVersion } from '~/utils/utils';
@@ -67,20 +67,20 @@ export namespace NotificationHelper {
         if (sdkVersion() >= 26) {
             const service = getNotificationManager();
             // create channel
-            let channel = new android.app.NotificationChannel(NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL, 'Alpi Maps Record Session', NotificationManager.IMPORTANCE_LOW);
-            channel.setDescription('Display current Map');
+            let channel = new android.app.NotificationChannel(NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL, lt('location_notification'), NotificationManager.IMPORTANCE_LOW);
+            channel.setDescription(lt('location_notification_desc'));
             channel.setLightColor(color);
             service.createNotificationChannel(channel);
 
-            channel = new android.app.NotificationChannel(NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, 'Alpi Maps Keep Awake', NotificationManager.IMPORTANCE_LOW);
-            channel.setDescription('Notify when Alpi Maps is keeping screen awake');
+            channel = new android.app.NotificationChannel(NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, lt('keepawake_notification'), NotificationManager.IMPORTANCE_LOW);
+            channel.setDescription(lt('keepawake_notification_desc'));
             channel.setLightColor(color);
             service.createNotificationChannel(channel);
 
-            channel = new android.app.NotificationChannel(NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL, 'Alpi Maps Map Notification', NotificationManager.IMPORTANCE_HIGH);
-            channel.setDescription('Show Notification on LockScreen');
-            channel.setLightColor(color);
-            service.createNotificationChannel(channel);
+            // channel = new android.app.NotificationChannel(NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL, 'Alpi Maps Map Notification', NotificationManager.IMPORTANCE_HIGH);
+            // channel.setDescription('Show Notification on LockScreen');
+            // channel.setLightColor(color);
+            // service.createNotificationChannel(channel);
             return true;
         } else {
             return false;

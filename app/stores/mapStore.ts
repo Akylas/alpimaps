@@ -1,50 +1,45 @@
 import { getBoolean, getNumber, getString, setBoolean, setNumber, setString } from '@nativescript/core/application-settings';
 import { get, writable } from 'svelte/store';
 
-const storeData = {
-    watchingLocation: false,
-    queryingLocation: false,
-    showGlobe: getBoolean('showGlobe', false),
-    show3DBuildings: getBoolean('show3DBuildings', false),
-    showContourLines: getBoolean('showContourLines', true),
-    showSlopePercentages: getBoolean('showSlopePercentages', false),
-    showRoutes: getBoolean('showRoutes', false),
-    contourLinesOpacity: getNumber('contourLinesOpacity', 1),
-    preloading: getBoolean('preloading', true),
-    rotateEnabled: getBoolean('mapRotateEnabled', false),
-    pitchEnabled: getBoolean('mapPitchEnabled', false)
-};
-const store = writable(storeData);
+function settingsStore(key, defaultValue) {
+    const tpof = typeof defaultValue;
+    let updateMethod;
+    let startValue;
+    switch (tpof) {
+        case 'boolean':
+            updateMethod = setBoolean;
+            startValue = getBoolean(key, defaultValue);
+            break;
+        case 'number':
+            updateMethod = setNumber;
+            startValue = getNumber(key, defaultValue);
+            break;
 
-const storeProperties = ['watchingLocation', 'queryingLocation'];
-
-class ProxyClass {
-    [k: string]: any;
-    subscribe = store.subscribe;
-    constructor() {
-        const proxy = new Proxy(store, this);
-        return proxy;
+        default:
+            updateMethod = setString;
+            startValue = getString(key, defaultValue);
+            break;
     }
-    get(internal, prop, receiver) {
-        if (storeData.hasOwnProperty(prop)) {
-            return get(internal)[prop];
+    const store = writable(startValue);
+    let ignoreUpdate = true;
+    store.subscribe((v) => {
+        if (ignoreUpdate) {
+            ignoreUpdate = false;
+            return;
         }
-        return Reflect.get(internal, prop, receiver);
-    }
-    set(internal, prop, value) {
-        internal.update((s) => {
-            s[prop] = value;
-            if (storeProperties.indexOf(prop) === -1) {
-                if (typeof value === 'boolean') {
-                    setBoolean(prop, value);
-                } else {
-                    setNumber(prop, value);
-                }
-            }
-            return s;
-        });
-        return true;
-    }
+        updateMethod(key, v);
+    });
+    return store;
 }
-const mapStore = new ProxyClass();
-export default mapStore;
+
+export const watchingLocation = writable(false);
+export const queryingLocation = writable(false);
+export const showGlobe = settingsStore('showGlobe', false);
+export const show3DBuildings = settingsStore('show3DBuildings', false);
+export const showContourLines = settingsStore('showContourLines', true);
+export const showSlopePercentages = settingsStore('showSlopePercentages', false);
+export const showRoutes = settingsStore('showRoutes', false);
+export const contourLinesOpacity = settingsStore('contourLinesOpacity', 1);
+export const preloading = settingsStore('preloading', true);
+export const rotateEnabled = settingsStore('mapRotateEnabled', false);
+export const pitchEnabled = settingsStore('mapPitchEnabled', false);

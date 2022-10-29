@@ -32,7 +32,9 @@
         "java.lang:Long*",
 
         "androidx.core.content:FileProvider*",
-        "android.graphics.Bitmap:CompressFormat*"
+        "android.graphics.Bitmap:CompressFormat*",
+
+        "android.widget:Toast*"
     ],
     "blacklist": [
         "org.nativescript.widgets:TabLayout*",

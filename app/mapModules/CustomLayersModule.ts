@@ -17,12 +17,13 @@ import { File, Folder, path } from '@nativescript/core/file-system';
 import type { Provider } from '~/data/tilesources';
 import { l } from '~/helpers/locale';
 import { packageService } from '~/services/PackageService';
-import mapStore from '~/stores/mapStore';
+import { preloading, showRoutes } from '~/stores/mapStore';
 import { showError } from '~/utils/error';
 import { toDegrees, toRadians } from '~/utils/geo';
 import { showBottomSheet } from '~/utils/svelte/bottomsheet';
 import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
 import MapModule, { getMapContext } from '~/mapModules/MapModule';
+import { get } from 'svelte/store';
 const mapContext = getMapContext();
 
 const DEFAULT_HILLSHADE_SHADER =
@@ -231,8 +232,8 @@ export default class CustomLayersModule extends MapModule {
         const routeLayer = new VectorTileLayer({
             dataSource,
             layerBlendingSpeed: 0,
-            preloading: mapStore.preloading,
-            visible: mapStore.showRoutes,
+            preloading: get(preloading),
+            visible: get(showRoutes),
             tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
             labelRenderOrder: VectorTileRenderOrder.LAYER,
             decoder: mapContext.innerDecoder
@@ -730,14 +731,13 @@ export default class CustomLayersModule extends MapModule {
                 mbtiles.forEach((s) => dataSource.add(s));
                 const opacity = appSettings.getNumber(name + '_opacity', 1);
                 // const zoomLevelBias = Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2);
-                console.log('preloading', mapStore.preloading);
                 const layer = new VectorTileLayer({
                     dataSource,
                     layerBlendingSpeed: 3,
                     labelBlendingSpeed: 3,
                     labelRenderOrder: VectorTileRenderOrder.LAST,
                     opacity,
-                    preloading: mapStore.preloading,
+                    preloading: get(preloading),
                     decoder: mapContext.getVectorTileDecoder(),
                     clickHandlerLayerFilter: PRODUCTION ? undefined : '.*',
                     tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
@@ -784,7 +784,7 @@ export default class CustomLayersModule extends MapModule {
                 const name = 'Hillshade';
                 const opacity = appSettings.getNumber(`${name}_opacity`, 1);
                 const dataSource = new MultiTileDataSource();
-                console.log(
+                TEST_LOG && console.log(
                     'terrains',
                     terrains.map((s) => s.options.databasePath)
                 );
@@ -837,7 +837,7 @@ export default class CustomLayersModule extends MapModule {
                     });
                     const bounds = new MapBounds(projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMin()) as any), projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMax()) as any));
 
-                    // console.log('startDownloadArea', provider, bounds, cartoMap.getZoom(), zoom);
+                    TEST_LOG && console.log('startDownloadArea', provider, bounds, cartoMap.getZoom(), zoom);
                     dataSource.startDownloadArea(bounds, cartoMap.getZoom(), zoom, {
                         onDownloadCompleted: () => {
                             this.currentlyDownloadindDataSource = null;

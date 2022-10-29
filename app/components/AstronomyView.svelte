@@ -1,6 +1,6 @@
 <script lang="ts" context="module">
-    // import { getMoonIllumination, getMoonPosition, getPosition, getTimes } from 'suncalc';
-    import { moon, MoonPhase, MoonPosition, sun, SunPosition, SunTimes } from '@modern-dev/daylight';
+    import { getMoonIllumination, getMoonPosition, getPosition, getTimes } from 'suncalc';
+    // import { moon, MoonPhase, MoonPosition, sun, SunPosition, SunTimes } from '@modern-dev/daylight/lib/es6';
     import { Align } from '@nativescript-community/ui-canvas';
     import { CanvasLabel } from '@nativescript-community/ui-canvaslabel/canvaslabel.common';
     import { LineChart } from '@nativescript-community/ui-chart/charts';
@@ -32,11 +32,11 @@
     export let location: GeoLocation;
     let startTime = dayjs();
     let limitLine: LimitLine;
-    let illumination: MoonPhase;
-    let sunTimes: SunTimes;
+    let illumination: any; // MoonPhase;
+    let sunTimes: any; // SunTimes;
     let moonAzimuth: CompassInfo;
-    let sunPoses: SunPosition[];
-    let moonPoses: MoonPosition[];
+    let sunPoses: any[]; // SunPosition[];
+    let moonPoses: any[]; // MoonPosition[];
 
     let bottomLabel: NativeViewElementNode<CanvasLabel>;
     function updateChartData(startTime: Dayjs) {
@@ -50,10 +50,9 @@
         moonPoses = [];
         for (let index = 0; index <= 24 * 60; index += 10) {
             const date = computeStartTime.add(index, 'minutes').toDate();
-            sunPoses.push(sun.getPosition(date, location.lat, location.lon));
-            moonPoses.push(moon.getPosition(date, location.lat, location.lon));
+            sunPoses.push(getPosition(date, location.lat, location.lon));
+            moonPoses.push(getMoonPosition(date, location.lat, location.lon));
         }
-        console.log('sunPoses');
         if (!chartInitialized) {
             chartInitialized = true;
             const leftAxis = chartView.getAxisLeft();
@@ -140,7 +139,7 @@
         }
     }
 
-    function getMoonPhaseIcon(illumination: MoonPhase) {
+    function getMoonPhaseIcon(illumination: any  /* MoonPhase */) {
         switch (Math.round(illumination.phase * 7)) {
             case 0:
                 return 'mdi-moon-new';
@@ -163,9 +162,9 @@
     $: {
         try {
             const date = startTime.toDate();
-            illumination = moon.getPhase(date);
-            moonAzimuth = getCompassInfo(moon.getPosition(date, location.lat, location.lon).azimuth * TO_DEG);
-            sunTimes = sun.getTimes(date, location.lat, location.lon);
+            illumination = getMoonIllumination(date);
+            moonAzimuth = getCompassInfo((getMoonPosition(date, location.lat, location.lon).azimuth * TO_DEG +180));
+            sunTimes = getTimes(date, location.lat, location.lon);
         } catch (err) {
             console.error(err);
         }
@@ -185,6 +184,11 @@
                     max: 24 * 60 - 1,
                     step: 1,
                     value: nowMinutes,
+                    formatter(value) {
+                        const hours = Math.floor(value / 60);
+                        const minutes = value % 60;
+                        return dayjs().set('h', hours).set('m', minutes).format('H[h]');
+                    },
                     onChange(value) {
                         const hours = Math.floor(value / 60);
                         const minutes = value % 60;
@@ -199,9 +203,9 @@
 </script>
 
 <gridLayout {height} rows="auto,200,*" columns="auto,*,auto">
-    <button variant="text" class="icon-btn" text="mdi-chevron-left" horizontalAlignment="left" on:tap={() => (startTime = startTime.subtract(1, 'd'))} />
+    <mdbutton variant="text" class="icon-btn" text="mdi-chevron-left" horizontalAlignment="left" on:tap={() => (startTime = startTime.subtract(1, 'd'))} />
     <label col={1} text={startTime.format('LL')} textAlignment="center" verticalTextAlignment="center" on:tap={selectDate} fontSize="17" />
-    <button col={2} variant="text" class="icon-btn" text="mdi-chevron-right" horizontalAlignment="right" on:tap={() => (startTime = startTime.add(1, 'd'))} />
+    <mdbutton col={2} variant="text" class="icon-btn" text="mdi-chevron-right" horizontalAlignment="right" on:tap={() => (startTime = startTime.add(1, 'd'))} />
     <linechart row={1} colSpan={3} bind:this={chart} backgroundColor="#222222" on:tap={setDateTime}>
         <rectangle fillColor="#a0caff" height="50%" width="100%" />
     </linechart>
@@ -209,11 +213,11 @@
         <canvaslabel bind:this={bottomLabel} row={2} colSpan={3} fontSize="18" padding="0 10 0 10">
             <cgroup color="#ffa500" verticalAlignment="center">
                 <cspan fontFamily={mdiFontFamily} text="mdi-weather-sunset-up" />
-                <cspan text={' ' + convertTime(sunTimes.sunrise.end, 'HH:mm')} />
+                <cspan text={' ' + convertTime(sunTimes.sunriseEnd, 'HH:mm')} />
             </cgroup>
             <cgroup color="#ff7200" textAlignment="center" verticalAlignment="center">
                 <cspan fontFamily={mdiFontFamily} text="mdi-weather-sunset-down" />
-                <cspan text={' ' + convertTime(sunTimes.sunset.start, 'HH:mm')} />
+                <cspan text={' ' + convertTime(sunTimes.sunsetStart, 'HH:mm')} />
             </cgroup>
             <cgroup textAlignment="right" verticalAlignment="center">
                 <cspan fontFamily={mdiFontFamily} text={getMoonPhaseIcon(illumination)} />
