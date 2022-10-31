@@ -1,7 +1,7 @@
 import { GPS, GenericGeoLocation, Options as GeolocationOptions, LocationMonitor } from '@nativescript-community/gps';
 import { check, request } from '@nativescript-community/perms';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
-import { ApplicationSettings, CoreTypes } from '@nativescript/core';
+import { ApplicationSettings, CoreTypes, Utils } from '@nativescript/core';
 import { AndroidApplication, ApplicationEventData, android as androidApp, off as applicationOff, on as applicationOn, launchEvent } from '@nativescript/core/application';
 import { backgroundEvent, foregroundEvent } from '@akylas/nativescript/application';
 import { AndroidActivityResultEventData } from '@nativescript/core/application/application-interfaces';
@@ -744,5 +744,95 @@ export class GeoHandler extends Observable {
             clearInterval(this.sessionChronoTimer);
             this.sessionChronoTimer = null;
         }
+    }
+}
+
+let androidLocationManager: android.location.LocationManager;
+
+declare class IGPSStatusCallback extends android.location.GnssStatus.Callback {
+    constructor(listener);
+}
+let GPSStatusCallback: typeof IGPSStatusCallback;
+
+function getAndroidLocationManager(): android.location.LocationManager {
+    if (!androidLocationManager) {
+        androidLocationManager = Utils.ad.getApplicationContext().getSystemService(android.content.Context.LOCATION_SERVICE) as android.location.LocationManager;
+    }
+    return androidLocationManager;
+}
+
+function initGPSStatusCallback() {
+    if (!GPSStatusCallback) {
+        @NativeClass
+        class GPSStatusCallbackImpl extends android.location.GnssStatus.Callback {
+            constructor(private listener: (sats) => void) {
+                super();
+                return global.__native(this);
+            }
+            onSatelliteStatusChanged(status: android.location.GnssStatus) {
+                const count = status.getSatelliteCount();
+                const sats = [];
+                for (let index = 0; index < count; index++) {
+                    const cid = status.getConstellationType(index);
+                    let svid = status.getSvid(index);
+                    // console.log('cid', cid, svid);
+                    if (cid === 3) svid += 65;
+                    if (cid === 5) svid += 200;
+                    if (cid === 6) svid += 300;
+                    sats.push({
+                        azimuth: status.getAzimuthDegrees(index),
+                        elevation: status.getElevationDegrees(index),
+                        snr: status.getCn0DbHz(index),
+                        usedInFix: status.usedInFix(index),
+                        nmeaID: svid
+                    });
+                }
+                this.listener(sats);
+            }
+        }
+        GPSStatusCallback = GPSStatusCallbackImpl as any;
+    }
+    return GPSStatusCallback;
+}
+
+let satlistener;
+export function listenForGpsStatus(listener) {
+    const locationManager = getAndroidLocationManager();
+    if (sdkVersion() > 24) {
+        initGPSStatusCallback();
+        satlistener = new GPSStatusCallback(listener);
+        locationManager.registerGnssStatusCallback(satlistener);
+    } else {
+        satlistener = new android.location.GpsStatus.Listener({
+            onGpsStatusChanged(s) {
+                const status = locationManager.getGpsStatus(null);
+                const sats = status.getSatellites();
+                const res = [];
+                const it = sats.iterator();
+                while (it.hasNext()) {
+                    const sat = it.next();
+                    res.push({
+                        azimuth: sat.getAzimuth(),
+                        elevation: sat.getElevation(),
+                        snr: sat.getSnr(),
+                        nmeaID: sat.getPrn(),
+                        usedInFix: sat.usedInFix()
+                    });
+                }
+                listener(res);
+            }
+        });
+        locationManager.addGpsStatusListener(satlistener);
+    }
+}
+export function stopListenForGpsStatus() {
+    if (satlistener) {
+        const locationManager = getAndroidLocationManager();
+        if (sdkVersion() > 24) {
+            locationManager.unregisterGnssStatusCallback(satlistener);
+        } else {
+            locationManager.removeGpsStatusListener(satlistener);
+        }
+        satlistener = null;
     }
 }
