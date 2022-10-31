@@ -1573,6 +1573,11 @@
                     icon: 'mdi-compass'
                 },
                 {
+                    title: lc('satellites_view'),
+                    id: 'gps_status',
+                    icon: 'mdi-satellite-variant'
+                },
+                {
                     title: lc('astronomy'),
                     id: 'astronomy',
                     icon: 'mdi-weather-night'
@@ -1644,10 +1649,7 @@
                     case 'sentry':
                         await sendBugReport();
                         break;
-                    case 'astronomy':
-                    case 'compass':
-                    case 'altimeter':
-                    case 'settings':
+                    default:
                         await handleMapAction(result.id);
                         break;
                 }
@@ -1670,7 +1672,7 @@
             });
             if (result.result) {
                 Sentry.captureMessage(result.text);
-                Sentry.flush()
+                Sentry.flush();
                 showSnack({ message: l('bug_report_sent') });
             }
         }
