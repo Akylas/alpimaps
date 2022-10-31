@@ -5,6 +5,7 @@
     import { Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { executeOnMainThread } from '@nativescript/core/utils';
+    import { getMoonPosition, getPosition } from 'suncalc';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import SmoothCompassBehavior, { wrap } from '~/components/SmoothCompassBehavior';
@@ -97,8 +98,8 @@
     $: {
         if (location) {
             const date = new Date();
-            moonBearing = moon.getPosition(date, location.lat, location.lon).azimuth * TO_DEG;
-            sunBearing = sun.getPosition(date, location.lat, location.lon).azimuth * TO_DEG;
+            moonBearing = getMoonPosition(date, location.lat, location.lon).azimuth * TO_DEG + 180;
+            sunBearing = getPosition(date, location.lat, location.lon).azimuth * TO_DEG + 180;
             canvas?.nativeView.invalidate();
         }
     }
