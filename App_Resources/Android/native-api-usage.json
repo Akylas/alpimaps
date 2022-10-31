@@ -34,7 +34,9 @@
         "androidx.core.content:FileProvider*",
         "android.graphics.Bitmap:CompressFormat*",
 
-        "android.widget:Toast*"
+        "android.widget:Toast*",
+
+        "android.location.GnssStatus:Callback*","android.location.GpsStatus:Listener*","android.location:GpsStatus*","java.lang:Iterable*","android.location:GpsSatellite*","android.location:GnssStatus*"
     ],
     "blacklist": [
         "org.nativescript.widgets:TabLayout*",
