@@ -1,46 +1,60 @@
-Alpi Maps est une application vous permettant de preparer votre randonnée afin d'avoir tout dans la main et hors-connexion!
-Alpi Maps vous aide à gérer votre GPS afin d'avoir toujours une localisation précise sans pour autant consommer toute la batterie de votre téléphone.
+Alpi Maps est une application compagnon de carte pour vos randonnées et vos voyages à vélo
 
-Les données d'Alpi Maps proviennent de la base de donnée collaborative OpenStreetMap ainsi que des sites de randonnée comme refuges.info ou camptocamp.org
+L'application est principalement conçue pour être utilisée avec des données hors ligne. Il existe de nombreux types de données hors ligne:
+• données de carte (fichiers `.mbtiles`). Ceci peut être généré avec [Planetiler](https://github.com/onthegomap/planetiler)
+• données d'altitude.(fichiers `.mbtiles` renommés en `.etiles`) Ce sont des carreaux de terrain rgb qui peuvent être générés avec (rio-mbtiles)[https://github.com/mapbox/rio-mbtiles]
+• données de routage (valhalla data `.mbtiles` renommés en `.vtiles`) qui peuvent être générées avec [ce](https://github.com/nutiteq/mobile-sdk-scripts#build-offline-valhalla-packages)
 
-Fonctionnalités de carte:
-• profitez de plus de 50 fonds de carte dont les cartes IGN
-• profitez de plus de 20 sur-couches de carte comme les pistes de skis!
-• activez / désactivez le mode HD pour chaque fond de carte (la HD demande plus de bande passante)
-• combinez les cartes avec transparence pour obtenir vos propres cartes
-• profitez aussi des cartes Google Maps avec traffic / bâtiments / intérieur
-• tournez la carte dans tous les sens et inclinez la
-• utilisez vos gestes préférés de Google Maps comme le "double-click-tirer" pour zoomer a un doigt!
+Vous pouvez placer ces données dans votre sdcard sous `alpimaps_mbtiles` et l'application les récupérera. Il est conseillé de créer des sous-répertoires par région/pays.
+N'hésitez pas à me contacter si vous voulez de l'aide pour générer ces fichiers.
 
-Fonctionnalités GPS:
-• suivez votre position sur la carte
-• choisissez entre un suivi continu de votre position et un demande de position seulement quand nécessaire pour limiter votre consommation de batterie
-• choisissez la precision du GPS pour une bien moindre consommation de batterie
-• accédez à toutes les informations sur votre position actuelle: altitude, orientation, levé et couché du soleil ... 
-• suivez votre position sur vos routes et itinéraires afin de toujours savoir précisément ou vous êtes
-• visualisez votre position par rapport à tout point de la carte: distance, altitude, orientation
-• partagez votre position avec une image de la carte correspondante
+Mais l'application peut également travailler avec de nombreuses sources de données en ligne comme OpenStreet Carte. Vous pouvez définir différentes clés API à travers l'application Paramètres
 
-Fonctionnalités marqueurs:
-• ajoutez un marqueur n'importe ou sur la carte
-• trouvez les points d’Intérêt géographique sur la carte afin de preparer votre randonnée
-• obtenez des informations détaillées sur les marqueur: description, heures d'ouvertures, photos, facebook, telephone... (provenance d' OpenStreetMap, Facebook, refuges.info, camptocamp)
-• calculez l'altitude en tout point de la carte
-• recherchez l'adresse
-• recherche Google rapide de point d’Intérêt
-• personnalisez vos marqueurs: icône, nom et couleur 
-• organisez vos marqueurs dans des listes pour un accès facile
-• face à une vue magnifique? créez simplement un marqueur à votre position en prenant une photo
+Alpi Maps vous aide également à gérer le GPS pour obtenir votre emplacement précis au besoin tout en gardant la consommation de la batterie au plus bas.
+L'utilisation continue du GPS en arrière-plan peut réduire considérablement la durée de vie de la batterie.
 
-Fonctionnalités hors-ligne:
-• tout ce que vous regardez est mis en cache. Préparez votre randonnée, regardez la ou vous allez et profitez de vos cartes en mode hors ligne
-• tous vos marqueurs, routes, itinéraires sont disponibles hors-ligne
-• calcul de profil d'altitude disponible hors-ligne
-• données météo disponible hors-ligne
+Les données d'Alpi Maps sont basées sur OpenStreetMap, ce qui signifie que vous pouvez accéder à presque n'importe où dans le monde!
 
-Fonctionnalités de recherche:
-• Alpi Maps utilise la base de donnée OpenStreetMap. Accédez à des points d’Intérêt géographiques, des commerces et bien plus dans le monde entier!
-• recherchez des images Panoramia partout dans le mode
-• recherchez le commerce / refuge ... le plus proche autour d'un point donné
-• utilisez la fonctionnalité de recherche rapide (pendant que vous tapez) pour accéder rapidement à vos marqueurs ainsi que tout autre point dans le monde
-• utilisez ensuite la fonction de recherche pour trouver les commerces, restaurants... dans la zone visible de la carte
+Caractéristiques de la carte:
+• profiter de plus de 50 styles de carte différents
+• Profitez de plus de 20 styles différents de overlay de carte comme les pistes de ski
+• activer / désactiver carte HD pour chaque style
+• combiner les styles de carte avec opacité pour créer votre propre carte
+• Profitez de Google Plans style, couches de trafic et bâtiments
+• profiter de la carte tournante et de tilting
+• utilisez les gestes Google Maps que vous aimez tant comme le double robinet et faites glisser pour zoomer!
+• voir les pourcentages de pentes (basés sur la source de données en forme de colline hors ligne/en ligne)
+
+Caractéristiques GPS:
+• Suivez votre emplacement sur la carte
+• choisissez wether pour suivre votre emplacement ou seulement demander votre emplacement si nécessaire pour la plus faible consommation de batterie
+• choisir la précision du GPS pour une consommation de batterie encore plus faible
+• accéder aux informations utiles sur votre position comme l'altitude, l'orientation, le coucher de soleil, le lever de soleil...
+• suivre votre position sur tout itinéraire calculé pour voir où vous êtes
+• voir où vous êtes de n'importe quel point sur la carte : distance, orientation et altitude
+• partager votre emplacement avec une capture d'écran de la carte
+• obtenir des directions de navigation
+
+Caractéristiques des marqueurs:
+• ajouter un marqueur de n'importe quel point sur la carte
+• trouver l'altitude de n'importe quel point sur la carte
+
+Caractéristiques hors ligne:
+• tout ce que vous voyez est mis en cache. Préparez votre randonnée à l'avance, regardez où vous allez et accédez à vos cartes hors ligne pendant la randonnée.
+• chaque marqueur et tous ses détails sont disponibles hors ligne
+• Profil d’itinéraire hors ligne
+• obtenir les directions de navigation des itinéraires enregistrés
+• utilisez votre mode d'avion de téléphone pour s'assurer que vous n'êtes pas sûr de trop de batterie (la recherche réseau peut drainer votre batterie), et toujours accéder à vos données.
+
+Caractéristiques de recherche:
+• Les cartes Alpi utilisent les API Here/Photon pour demander des données.
+• utilisez la fonction de recherche que vous tapez pour chercher rapidement quelque chose dans vos marqueurs ou partout dans le monde
+• puis utiliser la recherche pour chercher des entreprises, restaurants, ... dans la région que vous voyez actuellement
+
+Autres caractéristiques
+• Outil compas
+• Lune / Soleil informations
+• Outil de test de satellites GPS (utile pour comprendre pourquoi le signal GPS est lent)
+• Pression basée sur l'altitude
+• Mode écran de veille
+• Mode garder l'écran allumé

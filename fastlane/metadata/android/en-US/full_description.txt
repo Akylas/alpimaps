@@ -1,5 +1,14 @@
-Alpi Maps is a map application to help you prepare and enjoy your hike!
-Get all the info you need before you go, then enjoy all the data offline during your hike.
+Alpi Maps is a map companion application for your hikes and bicycle trips
+
+The app is principally made to be used with offline data. There are many kinds of offline data:
+• map data (`.mbtiles` files). This can be generated with [Planetiler](https://github.com/onthegomap/planetiler)
+• elevation data (`.mbtiles` renamed to `.etiles`). Those are rgb terrain tiles which can be generated with [rio-mbtiles](https://github.com/mapbox/rio-mbtiles)
+• routing data (valhalla data `.mbtiles` renamed to `.vtiles`) which can be generated with [this](https://github.com/nutiteq/mobile-sdk-scripts#build-offline-valhalla-packages)
+
+You can place those data in your sdcard under `alpimaps_mbtiles` and the app will pick them up. It is advised to create subdirectories per region/country.
+Don't hesitate to contact me if you want help generating those files.
+
+But the app can also with work with many online data sources like OpenStreetMap. You can set different API keys through the app Settings
 
 Alpi Maps also helps you in managing the GPS to get your precise location when needed while keeping the battery consumption to the lowest.
 Continued use of GPS running in the background can dramatically decrease battery life.
@@ -14,6 +23,7 @@ Map features:
 • enjoy Google Maps style, traffic layers and buildings
 • enjoy rotating and tilting map
 • use the Google Maps gestures you love so much like the double tap and drag to zoom!
+• see slopes percentages (based on hill-shading data source offline/online)
 
 GPS features:
 • follow your location on the map
@@ -23,28 +33,28 @@ GPS features:
 • track your position on any computed itinerary to see where you are at
 • see where you are from any point on the map : distance, orientation and altitude
 • share your location with a screenshot of the map
+• get navigation directions
 
 Markers features:
 • add a marker from any point on the map
-• find geo features around you  (visible map view) to prepare your hike
-• get details informations for map points like description, opening hours, photos, facebook, phones ... (coming from OpenStreetMap and Facebook)
 • find the altitude of any point on the map
-• query the adress
-• fast search any marker on Google
-• customise your markers with icon, name and color for ease of use
-• manage your markers in lists for offline storage
-• seeing an amazing scenery? easily create a marker at your location by taking a photo
 
 Offline features:
 • everything map you see is cached. Prepare your hike in advance, look where you are going and access your maps offline while hiking.
 • every single marker and all its details are available offline
 • offline itinerary profile
-• offline weather data (available for the time of the forecast)
+• get navigation directions of saved itineraries
 • use your phone airplane mode to make sure you don't sure too much battery (network search can drain your battery), and still access your data. 
 
 Search features:
-• Alpi Maps use the OpenStreetMap database for its search module. Access all geo features, all businesses, cities and much more!
-• search for Panoramia images around you!
-• search for business / refuge ... around a map point
+• Alpi Maps use the Here/Photon APIs to query data.
 • use the search as you type feature to quickly look for something in your markers or anywhere in the world
 • then use the search to look for businesses, restaurants, ... in the region you are currently seeing
+
+Other features
+• Compass tool
+• Moon / Sun information tool
+• GPS Satellites testing tool (useful to understand why you get a slow GPS fix)
+• Altitude based pressure
+• View on lockscreen mode
+• Keep screen alive mode
