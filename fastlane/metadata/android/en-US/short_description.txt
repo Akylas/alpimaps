@@ -1,1 +1,1 @@
-Your hiking companing
+Map companion application for your hikes and bicycle trips
