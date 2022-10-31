@@ -188,6 +188,17 @@ export async function handleMapAction(action: string, options?) {
                 console.error('showCompass', err, err['stack']);
             }
             break;
+        case 'gps_status':
+            try {
+                const GpsStatusView = (await import('~/components/GpsStatusView.svelte')).default;
+                await showBottomSheet({
+                    parent,
+                    view: GpsStatusView
+                });
+            } catch (err) {
+                console.error('showGpsStatus', err, err['stack']);
+            }
+            break;
         case 'altimeter':
             try {
                 const AltimeterView = (await import('~/components/AltimeterView.svelte')).default;
