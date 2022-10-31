@@ -19,6 +19,7 @@
 
     let scaleText = null;
     let scaleWidth = 80;
+    let currentZoom;
     function updateData() {
         // executeOnMainThread(() => {
         const cartoMap = mapContext.getMap();
@@ -26,6 +27,9 @@
             return;
         }
         const zoom = cartoMap.zoom;
+        if (currentZoom === zoom) {
+            return;
+        }
 
         const newMpp = Math.round(getMetersPerPixel(cartoMap.focusPos, zoom) * 100) / 100;
         const metersPerCM = PX_PER_CM * newMpp;
