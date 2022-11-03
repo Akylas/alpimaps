@@ -19,7 +19,7 @@
     import { showError } from '~/utils/error';
     import { PI_DIV2, TO_DEG } from '~/utils/geo';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { showPopover } from '~/utils/svelte/popover';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { pickDate } from '~/utils/utils';
     import { mdiFontFamily, widgetBackgroundColor } from '~/variables';
 </script>
