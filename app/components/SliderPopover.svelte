@@ -1,5 +1,4 @@
 <script lang="ts" context="module">
-    import UserLocationModule from '~/mapModules/UserLocationModule';
     import { widgetBackgroundColor } from '~/variables';
 </script>
 
