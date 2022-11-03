@@ -22,7 +22,7 @@
     import { packageService } from '~/services/PackageService';
     import { MOBILITY_URL } from '~/services/TransitService';
     import { showError } from '~/utils/error';
-    import { showPopover } from '~/utils/svelte/popover';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { globalMarginTop, mdiFontFamily, primaryColor } from '~/variables';
     import IconButton from './IconButton.svelte';
 
