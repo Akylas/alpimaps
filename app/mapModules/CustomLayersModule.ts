@@ -576,9 +576,10 @@ export default class CustomLayersModule extends MapModule {
         super.onMapReady(mapView);
         (async () => {
             try {
-                const folderPath = await getDefaultMBTilesDir();
-                if (folderPath) {
-                    await this.loadLocalMbtiles(folderPath);
+                if (!__DISABLE_OFFLINE__) {
+                    const folderPath = await getDefaultMBTilesDir();
+                    if (folderPath) {
+                        await this.loadLocalMbtiles(folderPath);
                 }
                 const savedSources: (string | Provider)[] = JSON.parse(appSettings.getString('added_providers', '[]'));
 
