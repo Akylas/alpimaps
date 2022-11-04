@@ -48,6 +48,7 @@ declare const NO_CONSOLE: boolean;
 declare const TEST_LOG: boolean;
 declare const PRODUCTION: boolean;
 declare const __CARTO_PACKAGESERVICE__: boolean;
+declare const __DISABLE_OFFLINE__: boolean;
 declare const LOCAL_MBTILES: string;
 declare const SENTRY_ENABLED: boolean;
 declare const SENTRY_DSN: string;
