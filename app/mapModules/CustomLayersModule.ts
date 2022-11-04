@@ -303,20 +303,35 @@ export default class CustomLayersModule extends MapModule {
             }
         }
     }
+    mDevMode = false;
 
-    public tokenKeys = {
-        carto: ApplicationSettings.getString('cartoToken', gVars.CARTO_TOKEN),
-        here_appid: ApplicationSettings.getString('here_appidToken', gVars.HER_APP_ID),
-        here_appcode: ApplicationSettings.getString('here_appcodeToken', gVars.HER_APP_CODE),
-        mapbox: ApplicationSettings.getString('mapboxToken', gVars.MAPBOX_TOKEN),
-        mapquest: ApplicationSettings.getString('mapquestToken', gVars.MAPQUEST_TOKEN),
-        maptiler: ApplicationSettings.getString('maptilerToken', gVars.MAPTILER_TOKEN),
-        google: ApplicationSettings.getString('googleToken', gVars.GOOGLE_TOKEN),
-        thunderforest: ApplicationSettings.getString('thunderforestToken', gVars.THUNDERFOREST_TOKEN),
-        ign: ApplicationSettings.getString('ignToken', gVars.IGN_TOKEN)
-    };
-
-    createRasterLayer(id: string, provider: Provider) {
+    getTokenKeys() {
+        return {
+            carto: ApplicationSettings.getString('cartoToken', this.devMode ? gVars.CARTO_TOKEN : undefined),
+            here_appid: ApplicationSettings.getString('here_appidToken', this.devMode ? gVars.HER_APP_ID : undefined),
+            here_appcode: ApplicationSettings.getString('here_appcodeToken', this.devMode ? gVars.HER_APP_CODE : undefined),
+            mapbox: ApplicationSettings.getString('mapboxToken', this.devMode ? gVars.MAPBOX_TOKEN : undefined),
+            mapquest: ApplicationSettings.getString('mapquestToken', this.devMode ? gVars.MAPQUEST_TOKEN : undefined),
+            maptiler: ApplicationSettings.getString('maptilerToken', this.devMode ? gVars.MAPTILER_TOKEN : undefined),
+            google: ApplicationSettings.getString('googleToken', this.devMode ? gVars.GOOGLE_TOKEN : undefined),
+            thunderforest: ApplicationSettings.getString('thunderforestToken', this.devMode ? gVars.THUNDERFOREST_TOKEN : undefined),
+            ign: ApplicationSettings.getString('ignToken', gVars.IGN_TOKEN)
+        };
+    }
+    set devMode(value: boolean) {
+        this.mDevMode = value;
+        ApplicationSettings.setBoolean('devMode', value);
+        this.tokenKeys = this.getTokenKeys();
+    }
+    get devMode() {
+        return this.mDevMode;
+    }
+    tokenKeys = this.getTokenKeys();
+    saveToken(key, value) {
+        ApplicationSettings.setString(key + 'Token', value);
+        this.tokenKeys[key] = value;
+    }
+    async createRasterLayer(id: string, provider: Provider) {
         const opacity = appSettings.getNumber(`${id}_opacity`, 1);
 
         // Apply zoom level bias to the raster layer.

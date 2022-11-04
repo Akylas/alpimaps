@@ -134,6 +134,8 @@
   "depth_multiplier": "depth multiplier",
   "description": "description",
   "description_required": "a description is required",
+  "devmode_off": "dev mode deactivated",
+  "devmode_on": "dev mode activated",
   "diamond": "diamond",
   "distance": "distance",
   "diy": "do it yourself",
