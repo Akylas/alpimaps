@@ -9,21 +9,22 @@ import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/
 import { MapBoxElevationDataDecoder, TerrariumElevationDataDecoder } from '@nativescript-community/ui-carto/rastertiles';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { openFilePicker } from '@nativescript-community/ui-document-picker';
+import { login, prompt } from '@nativescript-community/ui-material-dialogs';
 import { ApplicationSettings, Color, profile } from '@nativescript/core';
 import { android as androidApp } from '@nativescript/core/application';
 import * as appSettings from '@nativescript/core/application-settings';
 import { ChangeType, ChangedData, ObservableArray } from '@nativescript/core/data/observable-array';
 import { File, Folder, path } from '@nativescript/core/file-system';
+import { get } from 'svelte/store';
 import type { Provider } from '~/data/tilesources';
-import { l } from '~/helpers/locale';
+import { l, lc } from '~/helpers/locale';
+import MapModule, { getMapContext } from '~/mapModules/MapModule';
 import { packageService } from '~/services/PackageService';
 import { preloading, showRoutes } from '~/stores/mapStore';
 import { showError } from '~/utils/error';
 import { toDegrees, toRadians } from '~/utils/geo';
 import { showBottomSheet } from '~/utils/svelte/bottomsheet';
 import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
-import MapModule, { getMapContext } from '~/mapModules/MapModule';
-import { get } from 'svelte/store';
 const mapContext = getMapContext();
 
 const DEFAULT_HILLSHADE_SHADER =
@@ -362,6 +363,32 @@ export default class CustomLayersModule extends MapModule {
         let url = provider.url as string;
         if (provider.tokenKey) {
             const tokens = Array.isArray(provider.tokenKey) ? provider.tokenKey : [provider.tokenKey];
+            const needsToSet = tokens.some((s) => s === undefined);
+            if (needsToSet) {
+                if (tokens.length === 2) {
+                    const result = await login({
+                        title: lc('api_key'),
+                        message: lc('api_keys_needed', tokens.join(',')),
+                        autoFocus: true,
+                        userNameHint: tokens[0],
+                        passwordHint: tokens[1]
+                    });
+                    if (result?.result) {
+                        this.saveToken(tokens[0], result.userName);
+                        this.saveToken(tokens[1], result.password);
+                    }
+                } else {
+                    const result = await prompt({
+                        title: lc('api_key'),
+                        message: lc('api_key_needed', tokens[0]),
+                        autoFocus: true,
+                        hintText: tokens[0]
+                    });
+                    if (result?.result) {
+                        this.saveToken(tokens[0], result.text);
+                    }
+                }
+            }
             tokens.forEach((tok) => {
                 if (!this.tokenKeys[tok]) {
                     throw new Error('missing api token');
@@ -373,14 +400,14 @@ export default class CustomLayersModule extends MapModule {
             url,
             ...provider.sourceOptions
         });
-        if (provider.cacheable !== false) {
-            Object.assign(options, {
-                cacheSize: {
-                    min: 0,
-                    max: 2048
-                }
-            });
-        }
+        // if (provider.cacheable !== false) {
+        //     Object.assign(options, {
+        //         cacheSize: {
+        //             min: 0,
+        //             max: 2048
+        //         }
+        //     });
+        // }
         const cacheSize = appSettings.getNumber(`${id}_cacheSize`, 300);
         let layer: TileLayer<any, any>;
         if (provider.hillshade) {
@@ -430,7 +457,6 @@ export default class CustomLayersModule extends MapModule {
         // }
 
         // console.log('createRasterLayer', id, opacity, provider.url, provider.sourceOptions, dataSource, dataSource.maxZoom, dataSource.minZoom);
-
         return {
             name: id,
             id,
@@ -582,7 +608,7 @@ export default class CustomLayersModule extends MapModule {
         await this.getSourcesLibrary();
         const provider = this.baseProviders[s] || this.overlayProviders[s];
         if (provider) {
-            const data = this.createRasterLayer(s, provider);
+            const data = await this.createRasterLayer(s, provider);
             return data.layer.dataSource;
         }
     }
@@ -595,6 +621,7 @@ export default class CustomLayersModule extends MapModule {
                     const folderPath = await getDefaultMBTilesDir();
                     if (folderPath) {
                         await this.loadLocalMbtiles(folderPath);
+                    }
                 }
                 const savedSources: (string | Provider)[] = JSON.parse(appSettings.getString('added_providers', '[]'));
 
@@ -603,7 +630,8 @@ export default class CustomLayersModule extends MapModule {
                 }
                 if (savedSources.length > 0) {
                     await this.getSourcesLibrary();
-                    savedSources.forEach((s) => {
+                    for (let index = 0; index < savedSources.length; index++) {
+                        const s = savedSources[index];
                         let provider;
                         if (typeof s === 'string') {
                             provider = this.baseProviders[s] || this.overlayProviders[s];
@@ -612,14 +640,14 @@ export default class CustomLayersModule extends MapModule {
                         }
                         try {
                             if (provider) {
-                                const data = this.createRasterLayer(provider.id || provider.name, provider);
+                                const data = await this.createRasterLayer(provider.id || provider.name, provider);
                                 this.customSources.push(data);
                                 mapContext.addLayer(data.layer, 'customLayers');
                             }
                         } catch (err) {
                             console.error('createRasterLayer', err);
                         }
-                    });
+                    }
                 }
                 this.listenForSourceChanges = true;
             } catch (err) {
@@ -800,10 +828,11 @@ export default class CustomLayersModule extends MapModule {
                 const name = 'Hillshade';
                 const opacity = appSettings.getNumber(`${name}_opacity`, 1);
                 const dataSource = new MultiTileDataSource();
-                TEST_LOG && console.log(
-                    'terrains',
-                    terrains.map((s) => s.options.databasePath)
-                );
+                TEST_LOG &&
+                    console.log(
+                        'terrains',
+                        terrains.map((s) => s.options.databasePath)
+                    );
                 terrains.forEach((s) => dataSource.add(s));
                 const layer = (this.hillshadeLayer = packageService.hillshadeLayer = this.createHillshadeTileLayer(name, dataSource));
                 // layer.setRasterTileEventListener<LatLonKeys>(
@@ -926,12 +955,12 @@ export default class CustomLayersModule extends MapModule {
         const result = Array.isArray(results) ? results[0] : results;
         if (result) {
             const provider = result.data;
-            if (result.isPick) {
-                provider.name = File.fromPath(provider.url).name;
-                provider.id = provider.url;
-                provider.type = 'orux';
-            }
-            const data = this.createRasterLayer(provider.id || result.name, provider);
+            // if (result.isPick) {
+            //     provider.name = File.fromPath(provider.url).name;
+            //     provider.id = provider.url;
+            //     provider.type = 'orux';
+            // }
+            const data = await this.createRasterLayer(provider.id || result.name, provider);
             this.addDataSource(data);
         }
     }
