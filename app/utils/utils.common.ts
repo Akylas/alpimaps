@@ -183,8 +183,9 @@ export function getFileNameThatICanUseInNativeCode(context: android.app.Activity
     // }
 }
 export async function getDefaultMBTilesDir() {
-    let localMbtilesSource = sdkVersion() >= 30 ? savedMBTilesDir : null;
-    if (__ANDROID__ && localMbtilesSource && sdkVersion() >= 30) {
+    const ANDROID_30 = sdkVersion() >= 30;
+    let localMbtilesSource = savedMBTilesDir;
+    if (__ANDROID__ && localMbtilesSource && ANDROID_30) {
         const context: android.app.Activity = androidApp.foregroundActivity || androidApp.startActivity;
         const granted = context.getContentResolver().getPersistedUriPermissions();
         let found = false;
@@ -203,7 +204,7 @@ export async function getDefaultMBTilesDir() {
     if (!localMbtilesSource) {
         let resultPath;
         if (__ANDROID__) {
-            if (sdkVersion() >= 30) {
+            if (ANDROID_30) {
                 const result = await pickFolder({
                     permissions: {
                         read: true,
@@ -220,7 +221,7 @@ export async function getDefaultMBTilesDir() {
                         result.push(element);
                     }
                 }
-                const sdcardLocalPath = '../../../../alpimaps_mbtiles'
+                const sdcardLocalPath = '../../../../alpimaps_mbtiles';
                 if (result.length > 1) {
                     const sdcardFolder = result[result.length - 1].getAbsolutePath();
                     resultPath = path.join(sdcardFolder, sdcardLocalPath);
