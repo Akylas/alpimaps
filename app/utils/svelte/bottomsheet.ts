@@ -1,7 +1,6 @@
 import { GestureRootView } from '@nativescript-community/gesturehandler';
 import type { BottomSheetOptions } from '@nativescript-community/ui-material-bottomsheet';
-import { View } from '@nativescript/core';
-import { Frame } from '@nativescript/core/ui/frame';
+import { Frame, View } from '@nativescript/core';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import type { PageSpec } from 'svelte-native/dom/navigation';
 
