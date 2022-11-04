@@ -16,6 +16,9 @@
     import { borderColor, mdiFontFamily } from '~/variables';
     import CActionBar from './CActionBar.svelte';
     import ThirdPartySoftwareBottomSheet from './ThirdPartySoftwareBottomSheet.svelte';
+    import { pickFolder } from '@nativescript-community/ui-document-picker';
+    import CustomLayersModule from '~/mapModules/CustomLayersModule';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
 
     let collectionView: NativeViewElementNode<CollectionView>;
 
@@ -26,79 +29,86 @@
         geoHandler = handler;
         refresh();
     });
-    // onThemeChanged(() => {
-    //     collectionView && (collectionView.nativeView as CollectionView).refreshVisibleItems();
-    // });
 
-    const appVersion = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
+    let nbDevModeTap = 0;
+    let devModeClearTimer;
+    function onTouch(item, event) {
+        if (item.id !== 'version' || event.action !== 'down') {
+            return;
+        }
+        nbDevModeTap += 1;
+        if (devModeClearTimer) {
+            clearTimeout(devModeClearTimer);
+        }
+        if (nbDevModeTap === 6) {
+            const devMode = (customLayers.devMode = !customLayers.devMode);
+            nbDevModeTap = 0;
+            showSnack({ message: devMode ? lc('devmode_on') : lc('devmode_off') });
+            refresh()
+            return;
+        }
+        devModeClearTimer = setTimeout(() => {
+            devModeClearTimer = null;
+            nbDevModeTap = 0;
+        }, 500);
+    }
+
     function getTitle(item) {
         switch (item.id) {
-            case 'dark_mode':
-                return lc('dark_mode');
-            case 'language':
-                return lc('language');
-            case 'version':
-                return lc('version');
-            case 'github':
-                return lc('source_code');
-            case 'share':
-                return lc('share_application');
-
-            case 'review':
-                return lc('review_application');
-
-            case 'third_party':
-                return lc('third_parties');
             case 'token':
                 return lc(item.token);
-            case 'setting':
+            default:
                 return item.title;
         }
     }
     function getSubtitle(item) {
         switch (item.id) {
-            case 'version':
-                return appVersion;
             case 'token':
-                return item.value;
-            case 'github':
-                return lc('get_app_source_code');
-            case 'third_party':
-                return lc('list_used_third_parties');
-            case 'setting':
-                return item.description;
+                return item.value || '';
+            default:
+                return item.description || '';
         }
-        return '';
     }
     function refresh() {
         let newItems = [
             {
                 id: 'language',
-                rightValue: getLocaleDisplayName
+                rightValue: getLocaleDisplayName,
+                title: lc('language')
             },
             {
                 id: 'dark_mode',
-                rightValue: getThemeDisplayName
+                rightValue: getThemeDisplayName,
+                title: lc('dark_mode')
             },
             {
-                id: 'version'
+                id: 'version',
+                title: lc('version'),
+                description: __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__
             },
             {
                 id: 'github',
-                rightBtnIcon: 'mdi-chevron-right'
+                rightBtnIcon: 'mdi-chevron-right',
+                title: lc('source_code'),
+                description: lc('get_app_source_code')
             },
             {
                 id: 'third_party',
-                rightBtnIcon: 'mdi-chevron-right'
+                rightBtnIcon: 'mdi-chevron-right',
+                title: lc('third_parties'),
+                description: lc('list_used_third_parties')
             },
             {
                 id: 'share',
+                rightBtnIcon: 'mdi-chevron-right',
+                title: lc('share_application')
+            },
+            {
+                id: 'data_path',
+                title: lc('map_data_path'),
+                description: ApplicationSettings.getString('local_mbtiles_directory'),
                 rightBtnIcon: 'mdi-chevron-right'
             }
-            // {
-            //     id: 'review',
-            //     rightBtnIcon: 'mdi-chevron-right'
-            // }
         ];
         const geoSettings = geoHandler.getWatchSettings();
         Object.keys(geoSettings).forEach((k) => {
@@ -126,6 +136,12 @@
     }
 
     function onLongPress() {}
+    function updateItem(item) {
+        const index = items.findIndex((it) => it.key === item.key);
+        if (index !== -1) {
+            items.setItem(index, item);
+        }
+    }
     async function onTap(command, item?) {
         try {
             switch (command) {
@@ -155,6 +171,21 @@
                         trackingScrollView: 'trackingScrollView'
                     });
                     break;
+                case 'data_path': {
+                    const result = await pickFolder({
+                        permissions: {
+                            read: true,
+                            persistable: true
+                        }
+                    });
+                    const resultPath = result.folders[0];
+                    if (resultPath) {
+                        ApplicationSettings.setString('local_mbtiles_directory', resultPath);
+                        item.value = resultPath;
+                        updateItem(item);
+                    }
+                    break;
+                }
                 case 'setting': {
                     if (item.type === 'prompt') {
                         const result = await prompt({
@@ -166,11 +197,12 @@
                         });
                         dismissSoftInput();
                         if (result && !!result.result && result.text.length > 0) {
-                            ApplicationSettings.setNumber(item.key, parseInt(result.text));
-                            const index = items.findIndex((it) => it.key === item.key);
-                            if (index !== -1) {
-                                items.setItem(index, item);
+                            if (item.valueType === 'string') {
+                                ApplicationSettings.setString(item.key, result.text);
+                            } else {
+                                ApplicationSettings.setNumber(item.key, parseInt(result.text));
                             }
+                            updateItem(item);
                         }
                     } else {
                         const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
@@ -184,10 +216,7 @@
                         });
                         if (result) {
                             ApplicationSettings.setNumber(item.key, result.data);
-                            const index = items.findIndex((it) => it.key === item.key);
-                            if (index !== -1) {
-                                items.setItem(index, item);
-                            }
+                            updateItem(item);
                         }
                     }
 
@@ -203,13 +232,9 @@
                     });
                     dismissSoftInput();
                     if (result && !!result.result && result.text.length > 0) {
-                        customLayers.tokenKeys[item.token] = result.text;
+                        customLayers.saveToken(item.token, result.text);
                         item.value = result.text;
-                        ApplicationSettings.setString(item.token + 'Token', result.text);
-                        const index = items.findIndex((it) => it.token === item.token);
-                        if (index !== -1) {
-                            items.setItem(index, item);
-                        }
+                        updateItem(item);
                     }
                 }
             }
@@ -255,7 +280,7 @@
                 </gridlayout>
             </Template>
             <Template let:item>
-                <gridLayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)}>
+                <gridLayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)} on:touch={(event)=>onTouch(item, event)}>
                     <label fontSize={36} text={item.icon} marginLeft="-10" width="40" verticalAlignment="center" fontFamily={mdiFontFamily} visibility={!!item.icon ? 'visible' : 'hidden'} />
                     <stackLayout col={1} verticalAlignment="center">
                         <label fontSize="17" text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines={2} lineBreak="end" />
