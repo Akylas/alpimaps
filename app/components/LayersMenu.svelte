@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { lc } from '@nativescript-community/l';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { GridLayout } from '@nativescript/core';
     import { setNumber } from '@nativescript/core/application-settings';
@@ -14,6 +15,7 @@
     import { pitchEnabled, preloading, rotateEnabled, showGlobe, show3DBuildings } from '~/stores/mapStore';
     import { closeBottomSheet, showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { borderColor, navigationBarHeight, primaryColor, subtitleColor, textColor } from '~/variables';
+    import IconButton from './IconButton.svelte';
 
     const mapContext = getMapContext();
     let gridLayout: NativeViewElementNode<GridLayout>;
@@ -153,39 +155,12 @@
             </Template>
         </collectionview>
         <stacklayout col={1} borderLeftColor={$borderColor} borderLeftWidth="1">
-            <mdbutton variant="text" class="icon-btn" text="mdi-plus" on:tap={addSource} />
-            <!-- <mdbutton variant="text" class="icon-btn" text="mdi-layers-off" on:tap={clearCache} /> -->
-            <!-- <MDButton class="buttonthemed" @tap="addSource" text={l('add_source')} /> -->
-            <!-- <MDButton class="buttonthemed" @tap="clearCache" text={l('clear_cache')} /> -->
-            <!-- <MDButton class="buttonthemed" @tap="selectLocalMbtilesFolder" text={l('select_local_folder')} /> -->
-            <mdbutton variant="text" class="icon-btn" text="mdi-domain" color={$show3DBuildings ? primaryColor : 'gray'} on:tap={() => show3DBuildings.set(!$show3DBuildings)} />
-
-            <!-- <mdbutton
-                variant="text"
-                class="icon-btn"
-                text="mdi-signal"
-                color={$showContourLines ? primaryColor : 'gray'}
-                on:tap={() => setShowContourLines(!$showContourLines)}
-            /> -->
-            <!-- <mdbutton
-                variant="text"
-                class="icon-btn"
-                text="mdi-map-marker-path"
-                color={$showRoutes ? primaryColor : 'gray'}
-                on:tap={() => setShowRoutes(!$showRoutes)}
-            /> -->
-            <mdbutton variant="text" class="icon-btn" text="mdi-globe-model" color={$showGlobe ? primaryColor : 'gray'} on:tap={() => showGlobe.set(!$showGlobe)} />
-            <mdbutton variant="text" class="icon-btn" text="mdi-rotate-3d-variant" color={$rotateEnabled ? primaryColor : 'gray'} on:tap={() => rotateEnabled.set(!$rotateEnabled)} />
-            <mdbutton variant="text" class="icon-btn" text="mdi-rotate-orbit" color={$pitchEnabled ? primaryColor : 'gray'} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
-
-            <mdbutton
-                variant="text"
-                class="icon-btn"
-                text="mdi-map-clock"
-                visibility={packageServiceEnabled ? 'visible' : 'collapsed'}
-                color={$preloading ? primaryColor : 'gray'}
-                on:tap={() => preloading.set(!$preloading)}
-            />
+            <IconButton text="mdi-plus" on:tap={addSource} />
+            <IconButton gray={true} isSelected={$show3DBuildings} tooltip={lc('buildings_3d')} text="mdi-domain" on:tap={() => show3DBuildings.set(!$show3DBuildings)} />
+            <IconButton gray={true} isSelected={$showGlobe} tooltip={lc('globe_mode')} text="mdi-globe-model" on:tap={() => showGlobe.set(!$showGlobe)} />
+            <IconButton gray={true} isSelected={$rotateEnabled} tooltip={lc('map_rotation')} text="mdi-rotate-3d-variant" on:tap={() => rotateEnabled.set(!$rotateEnabled)} />
+            <IconButton gray={true} isSelected={$pitchEnabled} tooltip={lc('map_pitch')} text="mdi-rotate-orbit" on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
+            <IconButton gray={true} isSelected={$preloading} tooltip={lc('preloading')} text="mdi-map-clock" isVisible={packageServiceEnabled} on:tap={() => preloading.set(!$preloading)} />
         </stacklayout>
     {/if}
     <!-- <GridLayout visibility="(currentLegend)?'visible':'collapsed'" rows="auto,*" columns="auto,*" backgroundColor={white}>
