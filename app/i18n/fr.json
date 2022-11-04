@@ -141,6 +141,8 @@
   "depth_multiplier": "multiplicateur de profondeur",
   "description": "la description",
   "description_required": "une description est requise",
+  "devmode_off": "mode développeur désactivé",
+  "devmode_on": "mode développeur activé",
   "diamond": "diamant",
   "distance": "distance",
   "diy": "Fais-le toi-même.",
