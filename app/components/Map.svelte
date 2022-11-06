@@ -485,7 +485,7 @@
                     packageService.start();
                 }
                 transitService.start();
-                setMapStyle(PRODUCTION ? 'osm.zip~osm' : 'osm~osm', true);
+                setMapStyle(appSettings.getString('mapStyle',PRODUCTION ? 'osm.zip~osm' : 'osm~osm'), true);
                 // setMapStyle('osm.zip~osm', true);
             } catch (err) {
                 showError(err);
@@ -1210,7 +1210,7 @@
             mapStyle = array[0];
             mapStyleLayer = array[1];
         }
-        // console.log('setMapStyle', layerStyle, currentLayerStyle, mapStyle, mapStyleLayer);
+        DEV_LOG && console.log('setMapStyle', layerStyle, currentLayerStyle, mapStyle, mapStyleLayer, force);
         if (layerStyle !== currentLayerStyle || !!force) {
             currentLayerStyle = layerStyle;
             appSettings.setString('mapStyle', layerStyle);

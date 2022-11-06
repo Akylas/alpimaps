@@ -672,6 +672,7 @@ export default class CustomLayersModule extends MapModule {
     vectorTileDecoderChanged(oldVectorTileDecoder, newVectorTileDecoder) {
         this.customSources.forEach((s, i) => {
             if (s.layer instanceof VectorTileLayer && s.layer.getTileDecoder() === oldVectorTileDecoder) {
+                s.layer.options.decoder = newVectorTileDecoder;
                 const layer = new VectorTileLayer(s.layer.options);
                 layer.setVectorTileEventListener<LatLonKeys>(
                     {
@@ -854,9 +855,8 @@ export default class CustomLayersModule extends MapModule {
             }
         } catch (err) {
             console.error('loadLocalMbtiles', err);
-            setTimeout(() => {
-                throw err;
-            }, 0);
+            showError(err);
+            // throw err;
         }
     }
     currentlyDownloadindDataSource: PersistentCacheTileDataSource;
