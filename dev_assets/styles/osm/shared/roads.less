@@ -318,7 +318,9 @@
 				
 				line-color: @path-fill;
 				line-width: @path-width;
-				line-dasharray: @path-dasharray;
+				[sac_scale>0]{
+					line-dasharray: @path-dasharray;
+				}
 				[subclass=cycleway],[bicycle=designated][surface=paved] {
 					[zoom>=14] {
 						line-color: @cycleway-inner-fill;
