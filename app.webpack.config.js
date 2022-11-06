@@ -749,7 +749,7 @@ module.exports = (env, params = {}) => {
         new TerserPlugin({
             parallel: true,
             terserOptions: {
-                ecma: isAndroid ? 2020 : 2017,
+                ecma: isAndroid ? 2020 : 2020,
                 module: true,
                 toplevel: false,
                 keep_classnames: actual_keep_classnames_functionnames,
