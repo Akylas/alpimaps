@@ -291,7 +291,7 @@ export class GeoHandler extends Observable {
     isBatteryOptimized(context: android.content.Context) {
         const pwrm = context.getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager;
         const name = context.getPackageName();
-        if (sdkVersion() >= 23) {
+        if (sdkVersion >= 23) {
             return !pwrm.isIgnoringBatteryOptimizations(name);
         }
         return false;
@@ -798,7 +798,7 @@ function initGPSStatusCallback() {
 let satlistener;
 export function listenForGpsStatus(listener) {
     const locationManager = getAndroidLocationManager();
-    if (sdkVersion() > 24) {
+    if (sdkVersion > 24) {
         initGPSStatusCallback();
         satlistener = new GPSStatusCallback(listener);
         locationManager.registerGnssStatusCallback(satlistener);
@@ -828,7 +828,7 @@ export function listenForGpsStatus(listener) {
 export function stopListenForGpsStatus() {
     if (satlistener) {
         const locationManager = getAndroidLocationManager();
-        if (sdkVersion() > 24) {
+        if (sdkVersion > 24) {
             locationManager.unregisterGnssStatusCallback(satlistener);
         } else {
             locationManager.removeGpsStatusListener(satlistener);
