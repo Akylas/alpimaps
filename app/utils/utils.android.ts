@@ -7,7 +7,7 @@ import { lc } from '@nativescript-community/l';
 
 export function enableShowWhenLockedAndTurnScreenOn() {
     const activity = Application.android.startActivity as android.app.Activity;
-    if (sdkVersion() >= 27) {
+    if (sdkVersion >= 27) {
         activity.setShowWhenLocked(true);
         // this.setTurnScreenOn(true);
     } else {
@@ -18,7 +18,7 @@ export function enableShowWhenLockedAndTurnScreenOn() {
 }
 export function disableShowWhenLockedAndTurnScreenOn() {
     const activity = Application.android.startActivity as android.app.Activity;
-    if (sdkVersion() >= 27) {
+    if (sdkVersion >= 27) {
         activity.setShowWhenLocked(false);
         // this.setTurnScreenOn(false);
     } else {
