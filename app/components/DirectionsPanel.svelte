@@ -222,7 +222,7 @@
     function getRouteDataSource() {
         if (!_routeDataSource) {
             _routeDataSource = new GeoJSONVectorTileDataSource({
-                simplifyTolerance: 1.5,
+                simplifyTolerance: 2,
                 minZoom: 0,
                 maxZoom: 24
             });
