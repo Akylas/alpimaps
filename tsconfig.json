@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "target": "es2019",
+        "target": "es2020",
         "module": "esnext",
         "moduleResolution": "node",
         "declaration": false,
@@ -24,7 +24,9 @@
         "types": ["node", "svelte", "geojson", "offscreencanvas", "svelte-native"],
         "baseUrl": ".",
         "paths": {
-            "~/*": ["app/*"]
+            "~/*": ["app/*"],
+            "@nativescript/core": ["node_modules/@akylas/nativescript"],
+            "@nativescript/core/*": ["node_modules/@akylas/nativescript/*"]
         }
     },
     "include": ["app/**/*", "typings/*.d.ts"],
