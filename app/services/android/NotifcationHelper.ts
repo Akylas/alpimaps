@@ -64,7 +64,7 @@ export namespace NotificationHelper {
     /* Create a notification channel */
     export function createNotificationChannel() {
         const color = primaryColor.android;
-        if (sdkVersion() >= 26) {
+        if (sdkVersion >= 26) {
             const service = getNotificationManager();
             // create channel
             let channel = new android.app.NotificationChannel(NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL, lt('location_notification'), NotificationManager.IMPORTANCE_LOW);
