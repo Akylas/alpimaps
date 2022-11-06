@@ -5,7 +5,7 @@
     import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
     import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
     import { VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
-    import { RoutingResult, RoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+    import { RoutingResult, RoutingService, ValhallaOfflineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
     import { ApplicationSettings, Color, ContentView, Device, GridLayout, ObservableArray, StackLayout, TextField } from '@nativescript/core';
     import type { Feature, Point } from 'geojson';
     import { onDestroy } from 'svelte';
@@ -539,7 +539,7 @@
         if (waypoints.length <= 1) {
             return;
         }
-        let route: { route: Route; instructions: RouteInstruction[] };
+        let route: { route: Route; instructions: RouteInstruction[]; stats?: { [k: string]: { [k: string]: number } } };
         let positions;
         const points = waypoints['_array'].map((r) => ({ lat: r.geometry.coordinates[1], lon: r.geometry.coordinates[0] }));
         let costing_options;
@@ -580,29 +580,64 @@
             }
             (service as any).profile = profile;
             const startTime = Date.now();
+            const projection = mapContext.getProjection();
             const result = await service.calculateRoute<LatLonKeys>({
-                projection: mapContext.getProjection(),
+                projection,
                 points,
                 customOptions: {
                     directions_options: { language: Device.language },
                     costing_options
                 }
             });
-            // console.log('got route', result.getTotalDistance(), result.getTotalTime(), Date.now() - startTime, 'ms');
-            // if (service instanceof ValhallaOfflineRoutingService) {
-            //     const matchResult = service.matchRoute({
-            //         projection: mapContext.getProjection(),
-            //         points: result.getPoints() as any,
-            //         customOptions: {
-            //             shape_match: 'edge_walk',
-            //             filters: { attributes: ['edge.surface', 'edge.road_class', 'edge.weighted_grade'], action: 'include' }
-            //         }
-            //     });
-            //     console.log('got trace attributes', result.getTotalDistance(), result.getTotalTime(), Date.now() - startTime, 'ms', matchResult);
-            // }
+            positions = result.getPoints();
+            DEV_LOG && console.log('got route', result.getTotalDistance(), result.getTotalTime(), Date.now() - startTime, 'ms');
 
             route = routingResultToJSON(result, costing_options);
-            positions = result.getPoints();
+
+            if (service instanceof ValhallaOfflineRoutingService) {
+                DEV_LOG && console.log('match route!', result.getPoints());
+                const matchResult = await service.matchRoute({
+                    projection,
+                    points: positions,
+                    accuracy: 1,
+                    customOptions: {
+                        shape_match: 'edge_walk',
+                        filters: { attributes: ['edge.surface', 'edge.road_class', 'edge.sac_scale', 'edge.use', 'edge.length'], action: 'include' }
+                    }
+                });
+                DEV_LOG && console.log('got trace attributes', result.getTotalDistance(), result.getTotalTime(), Date.now() - startTime, 'ms', matchResult.getRawResult());
+                const edges = JSON.parse(matchResult.getRawResult()).edges;
+                const stats = { surface: {}, road: {} };
+                const totalDistanceKm = result.getTotalDistance() / 1000;
+                for (let index = 0; index < edges.length; index++) {
+                    const edge = edges[index];
+                    let key;
+                    if (edge.sac_scale > 0) {
+                        key = 'sac_scale_' + edge.sac_scale;
+                    } else if (edge.use === 'road') {
+                        key = edge.road_class;
+                    } else {
+                        key = edge.use;
+                    }
+                    stats.road[key] = stats.road[key] ? stats.road[key] + edge.length : edge.length;
+
+                    key = edge.surface;
+                    stats.surface[key] = stats.surface[key] ? stats.surface[key] + edge.length : edge.length;
+                }
+                let totalR = 0;
+                Object.keys(stats.road).forEach((k) => {
+                    totalR += stats.road[k];
+                    stats.road[k] = { perc: stats.road[k] / totalDistanceKm, dist: stats.road[k] };
+                });
+                let totalS = 0;
+                Object.keys(stats.surface).forEach((k) => {
+                    totalS += stats.surface[k];
+                    stats.surface[k] = { perc: stats.surface[k] / totalDistanceKm, dist: stats.surface[k] };
+                });
+                
+                DEV_LOG && console.log('stats', totalR, totalS, JSON.stringify(stats));
+                route.stats = stats;
+            }
         }
 
         if (route && positions) {
@@ -827,6 +862,7 @@
             </stacklayout>
             <IconButton
                 colSpan={2}
+                gray={true}
                 horizontalAlignment="right"
                 text="mdi-magnify"
                 on:tap={() => computeRoutes()}
@@ -858,7 +894,7 @@
                         </canvaslabel>
                         <gridlayout borderRadius="2" backgroundColor="white" columns=" *,auto" height="40" margin="0 0 0 40">
                             <label marginLeft={15} fontSize={15} verticalTextAlignment="center" text={item.properties.name} />
-                            <IconButton isVisible={item.properties.name && item.properties.name.length > 0} col={1} text="mdi-close" on:tap={() => clearWayPoint(item)} />
+                            <IconButton gray={true} isVisible={item.properties.name && item.properties.name.length > 0} col={1} text="mdi-close" on:tap={() => clearWayPoint(item)} />
                         </gridlayout>
                     </gridlayout>
                 </Template>
