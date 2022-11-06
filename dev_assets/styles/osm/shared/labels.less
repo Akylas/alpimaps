@@ -392,7 +392,21 @@
 				text-dy:@track_path_text_dy;
 			}
 		}
+		
 	}
+}
+
+#transportation['mapnik::geometry_type'=2][sac_scale>0][zoom>=15]::_sac{
+	text-name: 'S' + [sac_scale];
+	// text-placement-priority: 1;
+	text-fill: @path-fill;
+	text-size:@road_small_label_width;
+	text-halo-fill: @road_label_halo;
+	text-halo-radius: @road_small_label_halo_radius;
+	text-placement: line;
+	text-spacing: @waterway_label_spacing;
+	text-face-name: @mont_md;
+	text-dy:@track_path_text_dy * -2;
 }
 
 #poi[class=lodging][zoom>=12] {
