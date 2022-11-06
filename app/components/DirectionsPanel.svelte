@@ -120,8 +120,8 @@
             max: 1
         },
         step_penalty: {
-            min: 5,
-            max: 20
+            min: 1,
+            max: 200
         },
         bicycle_type: ['Road', 'Hybrid', 'Mountain'],
         weight: {
@@ -132,7 +132,7 @@
     let computeMultiple = false;
     let costingOptions = { use_ferry: 0, shortest: false };
     let profileCostingOptions = {
-        pedestrian: { use_hills: 1, max_hiking_difficulty: 6, step_penalty: 5, driveway_factor: 10, use_roads: 0, use_tracks: 1, walking_speed: 4 },
+        pedestrian: { use_hills: 1, max_hiking_difficulty: 6, step_penalty: 10, driveway_factor: 200, use_roads: 0, use_tracks: 1, walking_speed: 4, sidewalk_factor: 10 },
         bicycle: { bicycle_type: bicycle_type, use_hills: 0.25, avoid_bad_surfaces: 0.25, use_roads: 0.25, use_tracks: 0.5 },
         auto: { use_roads: 1, use_tracks: 0, use_tolls: 1, use_highways: 1 },
         motorcycle: { use_roads: 1, use_tracks: 0, use_tolls: 1, use_highways: 1 }
