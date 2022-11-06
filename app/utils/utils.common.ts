@@ -5,7 +5,11 @@ import * as appSettings from '@nativescript/core/application-settings';
 import { knownFolders, path } from '@nativescript/core/file-system';
 import { lc } from '~/helpers/locale';
 import { pickFolder } from '@nativescript-community/ui-document-picker';
-import lazy from '@nativescript/core/utils/lazy';
+
+let savedMBTilesDir = appSettings.getString('local_mbtiles_directory');
+
+export const sdkVersion = parseInt(Device.sdkVersion, 10);
+const ANDROID_30 = __ANDROID__ && sdkVersion >= 30;
 
 export function arraySortOn(array, key) {
     return array.sort(function (a, b) {
@@ -89,7 +93,7 @@ function getTreeUri(context, uri) {
 }
 
 export function listFolder(folderPath: string): (Partial<FileSystemEntity> & { isFolder: boolean })[] {
-    if (__ANDROID__ && sdkVersion() >= 30) {
+    if (ANDROID_30) {
         const uri = android.net.Uri.parse(folderPath);
         const context: android.app.Activity = androidApp.foregroundActivity || androidApp.startActivity;
         const result = [];
@@ -123,13 +127,9 @@ export function listFolder(folderPath: string): (Partial<FileSystemEntity> & { i
         });
     }
 }
-
-let savedMBTilesDir = appSettings.getString('local_mbtiles_directory');
-
 export function getSavedMBTilesDir() {
     return savedMBTilesDir;
 }
-export const sdkVersion = lazy(() => parseInt(Device.sdkVersion, 10));
 
 export function getAndroidRealPath(src) {
     let filePath = '';
@@ -170,7 +170,7 @@ export function getFileNameThatICanUseInNativeCode(context: android.app.Activity
     //     return '/proc/self/fd/' + fd;
     //     const file = new java.io.File('/proc/self/fd/' + fd);
     //     try {
-    //         if (sdkVersion() >= 21) {
+    //         if (sdkVersion >= 21) {
     //             return android.system.Os.readlink(file.getAbsolutePath()).toString();
     //         }
     //     } catch (e) {
@@ -183,7 +183,6 @@ export function getFileNameThatICanUseInNativeCode(context: android.app.Activity
     // }
 }
 export async function getDefaultMBTilesDir() {
-    const ANDROID_30 = sdkVersion() >= 30;
     let localMbtilesSource = savedMBTilesDir;
     if (__ANDROID__ && localMbtilesSource && ANDROID_30) {
         const context: android.app.Activity = androidApp.foregroundActivity || androidApp.startActivity;
@@ -203,44 +202,16 @@ export async function getDefaultMBTilesDir() {
     }
     if (!localMbtilesSource) {
         let resultPath;
-        if (__ANDROID__) {
-            if (ANDROID_30) {
-                const result = await pickFolder({
-                    permissions: {
-                        read: true,
-                        persistable: true
-                    }
-                });
-                resultPath = result.folders[0];
-            } else {
-                const nArray = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
-                const result = [];
-                for (let index = 0; index < nArray.length; index++) {
-                    const element = nArray[index];
-                    if (element) {
-                        result.push(element);
-                    }
+        if (ANDROID_30) {
+            const result = await pickFolder({
+                permissions: {
+                    read: true,
+                    persistable: true
                 }
-                const sdcardLocalPath = '../../../../alpimaps_mbtiles';
-                if (result.length > 1) {
-                    const sdcardFolder = result[result.length - 1].getAbsolutePath();
-                    resultPath = path.join(sdcardFolder, sdcardLocalPath);
-                } else if (result.length > 0) {
-                    const sdcardFolder = result[0].getAbsolutePath();
-                    resultPath = path.join(sdcardFolder, sdcardLocalPath);
-                }
-            }
+            });
+            resultPath = result.folders[0];
         } else {
-            try {
-                const docFolder = knownFolders.documents();
-                const folders = docFolder.getEntitiesSync();
-                const index = folders.findIndex((e) => e.path.endsWith('alpimaps_mbtiles'));
-                if (index !== -1) {
-                    resultPath = folders[index].path;
-                }
-            } catch (error) {
-                console.error(error);
-            }
+            resultPath = path.normalize(path.join(knownFolders.externalDocuments().path, '../../../../alpimaps_mbtiles'));
         }
         if (resultPath) {
             localMbtilesSource = resultPath;
