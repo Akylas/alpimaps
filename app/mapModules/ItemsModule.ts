@@ -76,8 +76,7 @@ export default class ItemsModule extends MapModule {
     getOrCreateLocalVectorLayer() {
         if (!this.localVectorLayer) {
             this.localVectorDataSource = new GeoJSONVectorTileDataSource({
-                simplifyTolerance: 1.5,
-                // simplifyTolerance: 0,
+                simplifyTolerance: 2,
                 minZoom: 0,
                 maxZoom: 24
             });
@@ -370,7 +369,7 @@ export default class ItemsModule extends MapModule {
 
         return {
             type: 'LineString' as any,
-            coordinates: sorted.flat(),
+            coordinates: sorted.flat()
             // bbox: extent
         };
     }
