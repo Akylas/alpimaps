@@ -3,11 +3,12 @@
     import { convertElevation, convertValueToUnit, osmicon, UNITS } from '~/helpers/formatter';
     import { formatter } from '~/mapModules/ItemFormatter';
     import type { IItem as Item, ItemProperties } from '~/models/Item';
-    import { mdiFontFamily, subtitleColor, textColor } from '~/variables';
+    import { alpimapsFontFamily, mdiFontFamily, subtitleColor, textColor } from '~/variables';
     const PROPS_TO_SHOW = ['ele'];
 
     export let item: Item;
     let itemIcon: string[] = null;
+    let itemIconFontFamily = 'osm';
     let itemTitle: string = null;
     let itemSubtitle: string = null;
     let propsToDraw = [];
@@ -20,7 +21,6 @@
     let actualShowSymbol = false;
     let itemIsRoute = false;
     let itemProps: ItemProperties = null;
-    // $: itemRouteNoProfile = item && !!item.route && (!item.route.profile || !item.route.profile.max);
 
     function propValue(prop) {
         switch (prop) {
@@ -42,13 +42,13 @@
         switch (prop) {
             case 'ele':
             case 'dplus':
-                return '↑';
+                return 'mdi-arrow-top-right';
             case 'dmin':
-                return '↓';
+                return 'mdi-arrow-bottom-right';
             case 'distance':
-                return 'mdi-map-marker-distance';
+                return 'mdi-arrow-left-right';
             case 'duration':
-                return 'mdi-timer';
+                return 'mdi-timer-outline';
         }
         return null;
     }
@@ -63,8 +63,14 @@
             return;
         }
         itemProps = item?.properties;
-        itemIsRoute = !!itemProps?.route;
-        itemIcon = formatter.geItemIcon(item);
+        itemIsRoute = !!item?.route;
+        if (itemIsRoute && (itemProps.route.type === 'pedestrian' || itemProps.route.type === 'bicycle')) {
+            itemIcon = [formatter.getRouteIcon(itemProps.route.type, itemProps.route.subtype)];
+            itemIconFontFamily = alpimapsFontFamily;
+        } else {
+            itemIcon = formatter.geItemIcon(item);
+            itemIconFontFamily = 'osm';
+        }
         itemTitle = formatter.getItemTitle(item);
         itemSubtitle = formatter.getItemSubtitle(item);
         showSymbol = itemIsRoute && itemProps && itemProps.layer === 'route';
@@ -81,7 +87,7 @@
             routeDistance = null;
             routeDuration = null;
         } else {
-            const route = itemProps.route;
+            const route = item.route;
             let result;
             if (route.totalDistance || (itemProps && itemProps.distance)) {
                 result = `${convertValueToUnit(route.totalDistance || itemProps.distance * 1000, UNITS.DistanceKm).join(' ')}`;
@@ -99,7 +105,7 @@
             }
         }
 
-        hasProfile = item && !!itemProps.profile && !!itemProps.profile.max;
+        hasProfile = !!item.profile?.max;
         if (!hasProfile) {
             if (itemProps && itemProps.ascent && itemProps.ascent > 0) {
                 routeDplus = `${convertElevation(itemProps.ascent)}`;
@@ -114,7 +120,7 @@
                 routeDmin = null;
             }
         } else {
-            const profile = itemProps.profile;
+            const profile = item.profile;
             if (profile.dplus > 0) {
                 routeDplus = `${convertElevation(profile.dplus)}`;
                 newPropsToDraw.push('dplus');
@@ -132,7 +138,7 @@
         try {
             updateItem(item);
         } catch (err) {
-            console.error('updateItem', err);
+            console.error('updateItem', err, err.stack);
         }
     }
 
@@ -156,16 +162,17 @@
     </flexlayout>
     <canvaslabel fontSize="16">
         <!-- <cgroup verticalAlignment="middle" paddingBottom={(itemSubtitle ? 4 : 0) + 12}> -->
-            <cspan
-            verticalAlignment="middle" paddingBottom={(itemSubtitle ? 4 : 0) + 12}
-                visibility={itemIcon && itemIcon.length > 0 ? 'visible' : 'hidden'}
-                paddingLeft="10"
-                width="40"
-                text={osmicon(itemIcon)}
-                fontFamily="osm"
-                fontSize={24}
-                color={(itemProps && itemProps.color) || $textColor}
-            />
+        <cspan
+            verticalAlignment="middle"
+            paddingBottom={(itemSubtitle ? 4 : 0) + 12}
+            visibility={itemIcon && itemIcon.length > 0 ? 'visible' : 'hidden'}
+            paddingLeft="10"
+            width="40"
+            text={osmicon(itemIcon)}
+            fontFamily={itemIconFontFamily}
+            fontSize={24}
+            color={(itemProps && itemProps.color) || $textColor}
+        />
         <!-- </cgroup> -->
         <symbolshape
             visibility={actualShowSymbol ? 'visible' : 'hidden'}
@@ -179,7 +186,7 @@
         <cgroup fontSize="14" verticalAlignment="bottom" textAlignment="left" visibility={propsToDraw.length > 0 ? 'visible' : 'hidden'}>
             {#each propsToDraw as prop, index}
                 <cgroup>
-                    <cspan fontFamily={mdiFontFamily} color="gray" text={propIcon(prop) + ' '} />
+                    <cspan fontSize={18} fontFamily={mdiFontFamily} color="gray" text={propIcon(prop) + ' '} />
                     <cspan text={propValue(prop) + '  '} />
                 </cgroup>
             {/each}
