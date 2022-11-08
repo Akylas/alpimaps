@@ -49,7 +49,7 @@
     import { transitService } from '~/services/TransitService';
     import { rotateEnabled, pitchEnabled, showGlobe, showContourLines, showRoutes, showSlopePercentages, show3DBuildings, contourLinesOpacity, preloading } from '~/stores/mapStore';
     import { showError } from '~/utils/error';
-    import { getBoundsZoomLevel } from '~/utils/geo';
+    import { computeDistanceBetween, getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
     import { share } from '~/utils/share';
     import { disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn } from '~/utils/utils.android';
@@ -61,6 +61,7 @@
     import Search from './Search.svelte';
     import IconButton from './IconButton.svelte';
     import { isSentryEnabled, Sentry } from '~/utils/sentry';
+    import { getFromLocation } from '@nativescript-community/geocoding';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
@@ -125,6 +126,7 @@
         if (steps) {
             // ensure bottomSheetStepIndex is not out of range when
             // steps changes
+            // DEV_LOG && console.log('steps changed', bottomSheetStepIndex, steps);
             bottomSheetStepIndex = Math.min(steps.length - 1, bottomSheetStepIndex);
         }
     }
@@ -328,6 +330,7 @@
             moveLayer,
             zoomToItem,
             setBottomSheetStepIndex: (index: number) => {
+                DEV_LOG && console.log('setBottomSheetStepIndex', bottomSheetStepIndex, steps);
                 bottomSheetStepIndex = index;
             },
             toggleMenu: async (side = 'left') => {
@@ -442,6 +445,7 @@
         if (!cartoMap) {
             return;
         }
+        DEV_LOG && console.log('saveSettings', cartoMap.focusPos);
         appSettings.setNumber('mapZoom', cartoMap.zoom);
         appSettings.setNumber('mapBearing', cartoMap.bearing);
         appSettings.setString('mapFocusPos', JSON.stringify(cartoMap.focusPos));
@@ -471,11 +475,10 @@
             options.setKineticRotation(false);
             options.setRotatable($rotateEnabled);
             toggleMapPitch($pitchEnabled);
-            // options.setClickTypeDetection(false);
-            // options.setRotatable(true);
             const pos = JSON.parse(appSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos<LatLonKeys>;
             const zoom = appSettings.getNumber('mapZoom', 10);
             const bearing = appSettings.getNumber('mapBearing', 0);
+            DEV_LOG && console.log('onMainMapReady', pos, zoom, bearing);
             cartoMap.setFocusPos(pos, 0);
             cartoMap.setZoom(zoom, 0);
             cartoMap.setBearing(bearing, 0);
@@ -485,7 +488,7 @@
                     packageService.start();
                 }
                 transitService.start();
-                setMapStyle(appSettings.getString('mapStyle',PRODUCTION ? 'osm.zip~osm' : 'osm~osm'), true);
+                setMapStyle(appSettings.getString('mapStyle', PRODUCTION ? 'osm.zip~osm' : 'osm~osm'), true);
                 // setMapStyle('osm.zip~osm', true);
             } catch (err) {
                 showError(err);
@@ -584,9 +587,9 @@
             if (setSelected && isCurrentItem && !item) {
                 unselectItem(false);
             }
-            const route = item?.properties?.route;
+            const route = item?.route;
             if (setSelected && route) {
-                TEST_LOG && console.log('selected_id', typeof item.properties.route.osmid, item.properties.route.osmid, typeof item.properties.id, item.properties.id, setSelected);
+                TEST_LOG && console.log('selected_id', typeof route.osmid, route.osmid, typeof item.properties.id, item.properties.id, setSelected);
 
                 if (item.properties.id !== undefined) {
                     selectedId = item.properties.id;
@@ -598,53 +601,12 @@
                         mapContext.innerDecoder.setStyleParameter('selected_id_str', '0');
                     }
                     mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
-                } else if (item.properties.route.osmid !== undefined) {
-                    selectedOSMId = item.properties.route.osmid;
+                } else if (route.osmid !== undefined) {
+                    selectedOSMId = route.osmid;
                     mapContext.innerDecoder.setStyleParameter('selected_osmid', selectedOSMId + '');
                     mapContext.innerDecoder.setStyleParameter('selected_id', '0');
                     mapContext.innerDecoder.setStyleParameter('selected_id_str', '0');
                 }
-
-                // console.log('selectedOSMId', selectedOSMId);
-                // if (!selectedRouteLine) {
-                //     getOrCreateLocalVectorLayer();
-                //     selectedRouteLine = mapContext.mapModule('items').createLocalLine(item, {
-                //         // color: '#55ff0000',
-                //         color: (darkColor as any).setAlpha(150),
-                //         joinType: LineJointType.ROUND,
-                //         endType: LineEndType.ROUND,
-                //         width: 3,
-                //         clickWidth: 10
-                //     });
-                //     localVectorDataSource.add(selectedRouteLine);
-                // } else {
-                //     selectedRouteLine.positions = item.route.positions;
-                //     selectedRouteLine.visible = true;
-                // }
-                // }
-                // if (route.instructions) {
-                //     if (!selectedRouteInstructionsGroup) {
-                //         selectedRouteInstructionsGroup = new Group();
-                //     }
-                //     selectedRouteInstructionsGroup.elements = iroute.instructions.map(
-                //         (i, index) =>
-                //             new Point({
-                //                 projection: mapContext.getProjection(),
-                //                 position: omit(item.route.positions.getPos(i.index), 'altitude'),
-                //                 styleBuilder: {
-                //                     size: 12,
-                //                     placementPriority: 10,
-                //                     hideIfOverlapped: false,
-                //                     scaleWithDPI: true,
-                //                     color: 'red'
-                //                 },
-                //                 metaData: { instruction: JSON.stringify(i) }
-                //             })
-                //     );
-                //     getOrCreateLocalVectorLayer();
-                //     // selectedRouteInstructionsGroup.elements.forEach(e=>localVectorDataSource.add(e))
-                //     localVectorDataSource.add(selectedRouteInstructionsGroup);
-                // }
 
                 if (selectedPosMarker) {
                     selectedPosMarker.visible = false;
@@ -659,7 +621,7 @@
                         color: primaryColor.setAlpha(178).hex,
                         clickSize: 0,
                         scaleWithDPI: true,
-                        size: 30
+                        size: 20
                     });
                     localVectorDataSource.add(selectedPosMarker);
                 } else {
@@ -694,50 +656,64 @@
                 $selectedItem = item;
             }
             if (setSelected && !route) {
-                // if (!item.properties.address || !item.properties.address['street']) {
-                //     const service = packageService.localOSMOfflineReverseGeocodingService;
-                //     if (service) {
-                //         itemLoading = true;
-                //         const radius = 200;
-
-                //         const geometry = item.geometry as GeoJSONPoint;
-                //         const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-                //         // use a promise not to "wait" for it
-                //         packageService
-                //             .searchInGeocodingService(service, {
-                //                 projection,
-                //                 location: position,
-                //                 searchRadius: radius
-                //             })
-                //             .then((res) => {
-                //                 if (res) {
-                //                     let bestFind;
-                //                     for (let index = 0; index < res.size(); index++) {
-                //                         const r = packageService.convertGeoCodingResult(res.get(index), true);
-                //                         if (r && r.properties.rank > 0.7 && computeDistanceBetween(position, r.properties.position) <= radius) {
-                //                             if (!bestFind || Object.keys(r.properties.address).length > Object.keys(bestFind.address).length) {
-                //                                 bestFind = r;
-                //                             } else if (bestFind && item.properties.address && item.properties.address['street']) {
-                //                                 break;
-                //                             }
-                //                         } else {
-                //                             break;
-                //                         }
-                //                     }
-                //                     if (bestFind && $selectedItem.geometry === item.geometry) {
-                //                         if (item.properties.layer === 'housenumber') {
-                //                             $selectedItem.properties.address = { ...bestFind.address, name: null, houseNumber: item.properties.housenumber } as any;
-                //                             $selectedItem = $selectedItem;
-                //                         } else {
-                //                             $selectedItem.properties.address = { ...bestFind.address, name: null } as any;
-                //                             $selectedItem = $selectedItem;
-                //                         }
-                //                     }
-                //                 }
-                //             })
-                //             .catch((err) => console.error('searchInGeocodingService', err, err['stack']));
-                //     }
-                // }
+                if (!item.properties.address || !item.properties.address['street']) {
+                    const service = packageService.localOSMOfflineReverseGeocodingService;
+                    const geometry = item.geometry as GeoJSONPoint;
+                    const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+                    if (service) {
+                        itemLoading = true;
+                        const radius = 200;
+                        // use a promise not to "wait" for it
+                        packageService
+                            .searchInGeocodingService(service, {
+                                projection,
+                                location: position,
+                                searchRadius: radius
+                            })
+                            .then((res) => {
+                                if (res) {
+                                    let bestFind;
+                                    for (let index = 0; index < res.size(); index++) {
+                                        const r = packageService.convertGeoCodingResult(res.get(index), true);
+                                        if (r && r.properties.rank > 0.7 && computeDistanceBetween(position, r.properties.position) <= radius) {
+                                            if (!bestFind || Object.keys(r.properties.address).length > Object.keys(bestFind.address).length) {
+                                                bestFind = r;
+                                            } else if (bestFind && item.properties.address && item.properties.address['street']) {
+                                                break;
+                                            }
+                                        } else {
+                                            break;
+                                        }
+                                    }
+                                    if (bestFind && $selectedItem.geometry === item.geometry) {
+                                        if (item.properties.layer === 'housenumber') {
+                                            $selectedItem.properties.address = { ...bestFind.address, name: null, houseNumber: item.properties.housenumber } as any;
+                                            $selectedItem = $selectedItem;
+                                        } else {
+                                            $selectedItem.properties.address = { ...bestFind.address, name: null } as any;
+                                            $selectedItem = $selectedItem;
+                                        }
+                                    }
+                                }
+                            })
+                            .catch((err) => console.error('searchInGeocodingService', err, err['stack']));
+                    } else {
+                        const results = await getFromLocation(position.lat, position.lon, 10);
+                        DEV_LOG && console.log('found addresses', results);
+                        if (results?.length > 0) {
+                            const result = results[0];
+                            $selectedItem.properties.address = {
+                                city: result.locality,
+                                country: result.country,
+                                state: result.administrativeArea,
+                                housenumber: result.subThoroughfare,
+                                postcode: result.postalCode,
+                                street: result.thoroughfare
+                            } as any;
+                            $selectedItem = $selectedItem;
+                        }
+                    }
+                }
 
                 if (item.properties && 'ele' in item.properties === false && packageService.hasElevation()) {
                     const geometry = item.geometry as GeoJSONPoint;
@@ -1080,11 +1056,11 @@
         if (!feature) {
             return false;
         }
-        Object.keys(feature.properties).forEach((k) => {
-            if (feature.properties[k][0] === '{' || feature.properties[k][0] === '[') {
-                feature.properties[k] = JSON.parse(feature.properties[k]);
-            }
-        });
+        // Object.keys(feature.properties).forEach((k) => {
+        //     if (feature.properties[k][0] === '{' || feature.properties[k][0] === '[') {
+        //         feature.properties[k] = JSON.parse(feature.properties[k]);
+        //     }
+        // });
         const handledByModules = mapContext.runOnModules('onVectorTileElementClicked', data);
         // if (DEV_LOG) {
         //     console.log('handledByModules', handledByModules);
@@ -1287,14 +1263,16 @@
     }
     function moveLayer(layer: Layer<any, any>, newIndex: number) {
         // const realLayerId = offset ? layerId + offset : layerId;
+        const layers = cartoMap.getLayers();
+        newIndex = Math.max(0, Math.min(newIndex, layers.count() - 1));
         const index = addedLayers.findIndex((d) => d.layer === layer);
         if (index !== -1 && index !== newIndex) {
             const val = addedLayers[index];
             addedLayers.splice(index, 1);
             addedLayers.splice(newIndex, 0, val);
         }
-        cartoMap.getLayers().remove(layer);
-        cartoMap.getLayers().insert(newIndex, layer);
+        layers.remove(layer);
+        layers.insert(newIndex, layer);
     }
     function getLayerIndex(layer: Layer<any, any>) {
         return addedLayers.findIndex((d) => d.layer === layer);
@@ -1382,13 +1360,14 @@
         };
     }
 
-    function bottomSheetTranslationFunction(maxTranslation, translation, progress) {
-        if (translation < 300) {
+    function bottomSheetTranslationFunction(translation, maxTranslation, progress) {
+        if (translation >= -300) {
             scrollingWidgetsOpacity = 1;
         } else {
-            scrollingWidgetsOpacity = 4 * (2 - 2 * progress) - 3;
+            scrollingWidgetsOpacity = Math.max(0, 1 - (-translation - 300) / 30);
         }
-        mapTranslation = -(maxTranslation - translation);
+        // DEV_LOG && console.log('bottomSheetTranslationFunction', translation, maxTranslation, scrollingWidgetsOpacity, progress);
+        mapTranslation = translation;
         const result = {
             bottomSheet: {
                 translateY: translation
@@ -1718,59 +1697,68 @@
         on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)}
         translationFunction={bottomSheetTranslationFunction}
     >
-        <cartomap
-            zoom="16"
-            on:mapReady={onMainMapReady}
-            on:mapMoved={onMainMapMove}
-            on:mapStable={onMainMapStable}
-            on:mapIdle={onMainMapIdle}
-            on:mapClicked={onMainMapClicked}
-            useTextureView={false}
-            on:layoutChanged={reportFullyDrawn}
-        />
-        <stacklayout horizontalAlignment="left" verticalAlignment="middle">
-            <IconButton gray={true} text="mdi-bullseye" isSelected={$showContourLines} on:tap={() => showContourLines.set(!$showContourLines)} />
-            <IconButton gray={true} text="mdi-signal" isSelected={$showSlopePercentages} on:tap={() => showSlopePercentages.set(!$showSlopePercentages)} />
-            <IconButton gray={true} text="mdi-routes" isSelected={$showRoutes} on:tap={() => showRoutes.set(!$showRoutes)} />
-            <IconButton gray={true} text="mdi-speedometer" on:tap={switchLocationInfo} />
-            {#if packageServiceEnabled}
-                <IconButton gray={true} text="mdi-map-clock" isSelected={$preloading} on:tap={() => preloading.set(!$preloading)} />
-            {/if}
-            <IconButton gray={true} text={keepScreenAwake ? 'mdi-sleep' : 'mdi-sleep-off'} selectedColor={'red'} isSelected={keepScreenAwake} on:tap={switchKeepAwake} />
-            <IconButton gray={true} text="mdi-cellphone-lock" isSelected={showOnLockscreen} on:tap={switchShowOnLockscreen} />
-            <!-- <IconButton text="mdi-information-outline" isSelected={showClickedFeatures} on:tap={() => (showClickedFeatures = !showClickedFeatures)} /> -->
-            <IconButton gray={true} text="mdi-bus-marker" isSelected={showTransitLines} on:tap={() => (showTransitLines = !showTransitLines)} onLongPress={showTransitLinesPage} />
-        </stacklayout>
-        <Search bind:this={searchView} verticalAlignment="top" defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
-        <LocationInfoPanel horizontalAlignment="left" verticalAlignment="top" marginLeft="20" marginTop="90" bind:this={locationInfoPanel} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
-        <canvaslabel
-            orientation="vertical"
-            verticalAlignment="middle"
-            horizontalAlignment="right"
-            isUserInteractionEnabled="false"
-            color="red"
-            fontSize="12"
-            width="20"
-            height="30"
-            class="mdi"
-            textAlignment="center"
-        >
-            <cspan text="mdi-access-point-network-off" visibility={networkConnected ? 'collapsed' : 'visible'} textAlignment="left" verticalTextAlignement="top" />
-        </canvaslabel>
-        <mdbutton
-            marginTop="90"
-            visibility={currentMapRotation !== 0 ? 'visible' : 'collapsed'}
-            on:tap={resetBearing}
-            class="small-floating-btn"
-            text="mdi-navigation"
-            color={primaryColor}
-            rotate={-currentMapRotation}
-            verticalAlignment="top"
-            horizontalAlignment="right"
-            translateY={Math.max(topTranslationY - 50, 0)}
-        />
-        <MapScrollingWidgets bind:this={mapScrollingWidgets} bind:navigationInstructions opacity={scrollingWidgetsOpacity} userInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
-        <DirectionsPanel bind:this={directionsPanel} bind:translationY={topTranslationY} width="100%" verticalAlignment="top" />
+        <gridlayout width="100%" height="100%">
+            <cartomap
+                zoom="16"
+                on:mapReady={onMainMapReady}
+                on:mapMoved={onMainMapMove}
+                on:mapStable={onMainMapStable}
+                on:mapIdle={onMainMapIdle}
+                on:mapClicked={onMainMapClicked}
+                useTextureView={false}
+                on:layoutChanged={reportFullyDrawn}
+            />
+            <stacklayout horizontalAlignment="left" verticalAlignment="middle">
+                <IconButton gray={true} text="mdi-bullseye" isSelected={$showContourLines} on:tap={() => showContourLines.set(!$showContourLines)} />
+                <IconButton gray={true} text="mdi-signal" isSelected={$showSlopePercentages} on:tap={() => showSlopePercentages.set(!$showSlopePercentages)} />
+                <IconButton gray={true} text="mdi-routes" isSelected={$showRoutes} on:tap={() => showRoutes.set(!$showRoutes)} />
+                <IconButton gray={true} text="mdi-speedometer" on:tap={switchLocationInfo} />
+                {#if packageServiceEnabled}
+                    <IconButton gray={true} text="mdi-map-clock" isSelected={$preloading} on:tap={() => preloading.set(!$preloading)} />
+                {/if}
+                <IconButton gray={true} text={keepScreenAwake ? 'mdi-sleep' : 'mdi-sleep-off'} selectedColor={'red'} isSelected={keepScreenAwake} on:tap={switchKeepAwake} />
+                <IconButton gray={true} text="mdi-cellphone-lock" isSelected={showOnLockscreen} on:tap={switchShowOnLockscreen} />
+                <!-- <IconButton text="mdi-information-outline" isSelected={showClickedFeatures} on:tap={() => (showClickedFeatures = !showClickedFeatures)} /> -->
+                <IconButton gray={true} text="mdi-bus-marker" isSelected={showTransitLines} on:tap={() => (showTransitLines = !showTransitLines)} onLongPress={showTransitLinesPage} />
+            </stacklayout>
+            <Search bind:this={searchView} verticalAlignment="top" defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
+            <LocationInfoPanel
+                horizontalAlignment="left"
+                verticalAlignment="top"
+                marginLeft="20"
+                marginTop="90"
+                bind:this={locationInfoPanel}
+                isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
+            />
+            <canvaslabel
+                orientation="vertical"
+                verticalAlignment="middle"
+                horizontalAlignment="right"
+                isUserInteractionEnabled="false"
+                color="red"
+                fontSize="12"
+                width="20"
+                height="30"
+                class="mdi"
+                textAlignment="center"
+            >
+                <cspan text="mdi-access-point-network-off" visibility={networkConnected ? 'collapsed' : 'visible'} textAlignment="left" verticalTextAlignement="top" />
+            </canvaslabel>
+            <mdbutton
+                marginTop="90"
+                visibility={currentMapRotation !== 0 ? 'visible' : 'collapsed'}
+                on:tap={resetBearing}
+                class="small-floating-btn"
+                text="mdi-navigation"
+                color={primaryColor}
+                rotate={-currentMapRotation}
+                verticalAlignment="top"
+                horizontalAlignment="right"
+                translateY={Math.max(topTranslationY - 50, 0)}
+            />
+            <MapScrollingWidgets bind:this={mapScrollingWidgets} bind:navigationInstructions opacity={scrollingWidgetsOpacity} userInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
+            <DirectionsPanel bind:this={directionsPanel} bind:translationY={topTranslationY} width="100%" verticalAlignment="top" />
+        </gridlayout>
         <BottomSheetInner bind:this={bottomSheetInner} bind:navigationInstructions bind:steps prop:bottomSheet updating={itemLoading} item={$selectedItem} />
         <!-- <collectionview
                 items={currentClickedFeatures}
