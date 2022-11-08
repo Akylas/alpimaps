@@ -9,15 +9,17 @@
     export let gray = false;
     export let isSelected = false;
     export let text = null;
+    export let fontFamily = mdiFontFamily;
     export let selectedColor = white ? 'white' : primaryColor;
-    export let color = !isEnabled || gray ? $subtitleColor : $textColor;
+    export let color = null;
     export let onLongPress: Function = null;
-    export let size = small ? 20 : actionBarButtonHeight;
+    export let fontSize = 0;
+    export let size = small ? 30 : actionBarButtonHeight;
     export let tooltip = null;
     export let rounded = true;
     // let actualColor = null;
     // $: actualColor = white ? 'white' : !isEnabled || gray ? $subtitleColor : color;
-
+    $: actualColor = color || (!isEnabled || gray ? $subtitleColor : $textColor);
     $: actualLongPress =
         onLongPress || tooltip
             ? (event) => {
@@ -35,6 +37,7 @@
                   }
               }
             : null;
+
 </script>
 
 <!-- <canvaslabel
@@ -61,14 +64,14 @@
     variant="text"
     shape={rounded ? 'round' : null}
     disableCss={true}
-    rippleColor={color}
-    fontFamily={mdiFontFamily}
+    rippleColor={actualColor}
+    {fontFamily}
     visibility={isVisible ? 'visible' : 'collapsed'}
-    color={isSelected ? selectedColor : color}
+    color={isSelected ? selectedColor : actualColor}
     {...$$restProps}
     on:tap
     on:longPress={actualLongPress}
     width={size}
     height={size}
-    fontSize={small ? 16 : 24}
+    fontSize={fontSize ? fontSize : small ? 16 : 24}
 />
