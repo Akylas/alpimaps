@@ -1,8 +1,8 @@
-const mergeOptions = require("./node_modules/merge-options");
+const mergeOptions = require('./node_modules/merge-options');
 module.exports = mergeOptions(require('./nativescript.config'), {
     forceLog: true,
     android: {
-        maxLogcatObjectSize: 4096,
+        maxLogcatObjectSize: 14096,
         forceLog: true
     }
 });
