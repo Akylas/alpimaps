@@ -1,6 +1,6 @@
 <script lang="ts">
     import { l, lc } from '@nativescript-community/l';
-    import { Align, Canvas, DashPathEffect, LayoutAlignment, Paint, StaticLayout, Style } from '@nativescript-community/ui-canvas';
+    import { Align, Canvas, CanvasView, DashPathEffect, LayoutAlignment, Paint, Rect, StaticLayout, Style } from '@nativescript-community/ui-canvas';
     import { fromNativeMapPos, GenericMapPos } from '@nativescript-community/ui-carto/core';
     import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
@@ -15,7 +15,7 @@
     import { LineDataSet, Mode } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { Application, Utils } from '@nativescript/core';
+    import { Application, ApplicationSettings, Utils } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
     import type { Point } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
@@ -33,11 +33,12 @@
     import { computeDistanceBetween } from '~/utils/geo';
     import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
-    import { borderColor, screenHeightDips, statusBarHeight, textColor, widgetBackgroundColor } from '~/variables';
+    import { borderColor, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import IconButton from './IconButton.svelte';
 
     const LISTVIEW_HEIGHT = 200;
     const PROFILE_HEIGHT = 150;
+    const STATS_HEIGHT = 180;
     const WEB_HEIGHT = 400;
     const INFOVIEW_HEIGHT = 80;
 
@@ -52,9 +53,10 @@
     const Intent = __ANDROID__ ? android.content.Intent : undefined;
 
     export let item: Item;
-    let profileHeight = PROFILE_HEIGHT;
     let graphAvailable = false;
+    let statsAvailable = false;
     let chart: NativeViewElementNode<LineChart>;
+    let statsCanvas: NativeViewElementNode<CanvasView>;
     let infoView: BottomSheetInfoView;
     let webViewSrc: string = null;
     let showListView = false;
@@ -62,6 +64,7 @@
     let itemIsRoute = false;
     let itemIsBusStop = false;
     let itemCanQueryProfile = false;
+    let itemCanQueryStats = false;
     let currentLocation: GenericMapPos<LatLonKeys> = null;
     let showProfileGrades = true;
 
@@ -113,6 +116,7 @@
     function openWikipedia() {
         try {
             const props = item && item.properties;
+            DEV_LOG && console.log('openWikipedia', props.wikipedia);
             if (props && props.wikipedia) {
                 const url = `https://en.wikipedia.org/wiki/${props.wikipedia}`;
                 openLink(url);
@@ -149,14 +153,23 @@
         }
     }
     function updateGraphAvailable() {
-        graphAvailable = itemIsRoute && !!item.properties.profile && !!item.properties.profile.data && item.properties.profile.data.length > 0;
+        graphAvailable = itemIsRoute && !!item.profile && !!item.profile.data && item.profile.data.length > 0;
+    }
+    function updateStatsAvailable() {
+        let old = statsAvailable;
+        statsAvailable = itemIsRoute && !!item.stats;
+        if (statsAvailable && statsCanvas) {
+            statsCanvas.nativeView.invalidate();
+        }
     }
     $: {
         try {
-            itemIsRoute = !!item?.properties?.route;
+            itemIsRoute = !!item?.route;
             itemIsBusStop = item && !itemIsRoute && (item.properties?.class === 'bus' || item.properties?.subclass === 'tram_stop');
             itemCanQueryProfile = itemIsRoute;
+            itemCanQueryStats = itemIsRoute;
             updateGraphAvailable();
+            updateStatsAvailable();
             if (graphAvailable) {
                 updateChartData();
             }
@@ -179,56 +192,60 @@
     }
 
     function updateRouteItemWithPosition(routeItem: Item, location: GenericMapPos<LatLonKeys>, updateNavigationInstruction = true, updateGraph = true) {
-        if (routeItem?.properties?.route) {
-            const props = routeItem.properties;
-            const route = props.route;
-            const positions = packageService.getRouteItemPoses(routeItem);
-            const onPathIndex = isLocationOnPath(location, positions, false, true, 2 * Math.pow(2, 2 * Math.max(0, 17 - mapContext.getMap().getZoom())));
-            if (props.instructions && onPathIndex !== -1 && updateNavigationInstruction) {
-                let routeInstruction;
-                for (let index = props.instructions.length - 1; index >= 0; index--) {
-                    const element = props.instructions[index];
-                    if (element.index < onPathIndex) {
-                        break;
+        try {
+            if (routeItem?.route) {
+                const props = routeItem.properties;
+                const route = routeItem.route;
+                const positions = packageService.getRouteItemPoses(routeItem);
+                const onPathIndex = isLocationOnPath(location, positions, false, true, 2 * Math.pow(2, 2 * Math.max(0, 17 - mapContext.getMap().getZoom())));
+                if (routeItem.instructions && onPathIndex !== -1 && updateNavigationInstruction) {
+                    let routeInstruction;
+                    for (let index = routeItem.instructions.length - 1; index >= 0; index--) {
+                        const element = routeItem.instructions[index];
+                        if (element.index < onPathIndex) {
+                            break;
+                        }
+                        routeInstruction = element;
                     }
-                    routeInstruction = element;
-                }
 
-                const distance = distanceToEnd(onPathIndex, positions);
-                let distanceToNextInstruction = computeDistanceBetween(location, fromNativeMapPos(positions.get(onPathIndex)));
-                for (let index = onPathIndex; index < routeInstruction.index; index++) {
-                    distanceToNextInstruction += computeDistanceBetween(fromNativeMapPos(positions.get(index)), fromNativeMapPos(positions.get(index + 1)));
+                    const distance = distanceToEnd(onPathIndex, positions);
+                    let distanceToNextInstruction = computeDistanceBetween(location, fromNativeMapPos(positions.get(onPathIndex)));
+                    for (let index = onPathIndex; index < routeInstruction.index; index++) {
+                        distanceToNextInstruction += computeDistanceBetween(fromNativeMapPos(positions.get(index)), fromNativeMapPos(positions.get(index + 1)));
+                    }
+                    navigationInstructions = {
+                        instruction: routeInstruction,
+                        remainingDistance: distance,
+                        distanceToNextInstruction,
+                        remainingTime: ((route.totalTime * distance) / route.totalDistance) * 1000
+                    };
                 }
-                navigationInstructions = {
-                    instruction: routeInstruction,
-                    remainingDistance: distance,
-                    distanceToNextInstruction,
-                    remainingTime: ((route.totalTime * distance) / route.totalDistance) * 1000
-                };
-            }
-            if (updateGraph && graphAvailable) {
-                if (onPathIndex === -1) {
-                    chart.nativeView.highlight(null);
-                } else {
-                    const profile = props.profile;
-                    const profileData = profile?.data;
-                    if (profileData) {
-                        const dataSet = chart.nativeView.getData().getDataSetByIndex(0);
-                        dataSet.setIgnoreFiltered(true);
-                        const item = profileData[onPathIndex];
-                        dataSet.setIgnoreFiltered(false);
-                        chart.nativeView.highlightValues([
-                            {
-                                dataSetIndex: 0,
-                                x: onPathIndex,
-                                entry: item
-                            } as any
-                        ]);
+                if (updateGraph && graphAvailable && chart.nativeView) {
+                    if (onPathIndex === -1) {
+                        chart.nativeView.highlight(null);
+                    } else {
+                        const profile = routeItem.profile;
+                        const profileData = profile?.data;
+                        if (profileData) {
+                            const dataSet = chart.nativeView.getData().getDataSetByIndex(0);
+                            dataSet.setIgnoreFiltered(true);
+                            const item = profileData[onPathIndex];
+                            dataSet.setIgnoreFiltered(false);
+                            chart.nativeView.highlightValues([
+                                {
+                                    dataSetIndex: 0,
+                                    x: onPathIndex,
+                                    entry: item
+                                } as any
+                            ]);
+                        }
                     }
                 }
+            } else if (updateNavigationInstruction) {
+                navigationInstructions = null;
             }
-        } else if (updateNavigationInstruction) {
-            navigationInstructions = null;
+        } catch (error) {
+            console.error(error);
         }
     }
 
@@ -309,6 +326,10 @@
             total += PROFILE_HEIGHT;
             result.push(total);
         }
+        if (statsAvailable) {
+            total += STATS_HEIGHT;
+            result.push(total);
+        }
         if (listViewAvailable) {
             total += WEB_HEIGHT;
             result.push(total);
@@ -330,7 +351,7 @@
                 if (item.id !== undefined) {
                     await updateItem(item, { profile });
                 } else {
-                    item.properties.profile = profile;
+                    item.profile = profile;
                     await saveItem(false);
                 }
                 updateGraphAvailable();
@@ -340,6 +361,32 @@
                 }
                 if (updateView) {
                     mapContext.setBottomSheetStepIndex(3);
+                }
+            }
+        } catch (err) {
+            showError(err);
+        } finally {
+            updatingItem = false;
+        }
+    }
+
+    async function getStats(updateView = true) {
+        try {
+            updatingItem = true;
+            const projection = mapContext.getProjection();
+            const stats = await packageService.fetchStats({ item, projection });
+            if (stats) {
+                // item.route.profile = profile;
+                if (item.id !== undefined) {
+                    await updateItem(item, { stats });
+                } else {
+                    item.stats = stats;
+                    await saveItem(false);
+                }
+                updateStatsAvailable();
+                updateSteps();
+                if (updateView) {
+                    mapContext.setBottomSheetStepIndex(graphAvailable ? 4 : 3);
                 }
             }
         } catch (err) {
@@ -404,6 +451,7 @@
     // }
 
     async function saveItem(peek = true) {
+        DEV_LOG && console.log('saveItem')
         try {
             updatingItem = true;
             const item = await mapContext.mapModule('items').saveItem(mapContext.getSelectedItem());
@@ -415,7 +463,7 @@
             updatingItem = false;
         }
     }
-    async function updateItem(item: IItem, data: Partial<ItemProperties>, peek = true) {
+    async function updateItem(item: IItem, data: Partial<IItem>, peek = true) {
         try {
             updatingItem = true;
             const savedItem = await mapContext.mapModule('items').updateItem(item, data);
@@ -431,8 +479,8 @@
         mapContext.mapModule('items').deleteItem(mapContext.getSelectedItem());
     }
     async function shareItem() {
-        if (item.properties?.route) {
-            if (!item.properties?.profile && itemCanQueryProfile) {
+        if (item?.route) {
+            if (!item.profile && itemCanQueryProfile) {
                 await getProfile(false);
             }
             // const gpx = await toGPX();
@@ -550,7 +598,7 @@
         }
         const chartView = chart.nativeView;
         const sets = [];
-        const profile = item.properties?.profile;
+        const profile = item.profile;
         const profileData = profile?.data;
         if (profileData) {
             const xAxis = chartView.getXAxis();
@@ -690,7 +738,7 @@
     }
     function routeInstructions() {
         if (listViewAvailable) {
-            return item.properties?.instructions;
+            return item.instructions;
         }
         return [];
     }
@@ -733,12 +781,95 @@
             loadedListeners = [];
         }
     }
+    let textPaint: Paint;
+    let bigTextPaint: Paint;
+    let barPaint: Paint;
+    const colors = {
+        highway: '#E6C264',
+        track: '#AD9067',
+        sac_scale_1: '#C9C1B2',
+        sac_scale_2: '#C9C1B2',
+        sac_scale_3: '#C9C1B2',
+        sac_scale_4: '#A6AF8F',
+        sac_scale_5: '#A6AF8F',
+        sac_scale_6: '#A6AF8F',
+        steps: '#CAD0D7',
+        road: '#A4ACB7',
+        street: '#B9C2C8',
+        cycleway: '#65AAA2',
+        paved_smooth: '#8B939E',
+        paved_rough: '#8B857B',
+        paved: '#D7D7D7',
+        gravel: '#A89070',
+        dirt: '#BA915E',
+        path: '#A6AF8F',
+        compacted: '#BA915E'
+    };
+    let statsKey = ApplicationSettings.getString('stats_key', 'waytypes');
+
+    function setStatsKey(value) {
+        statsKey = value;
+        ApplicationSettings.setString('stats_key', value);
+        statsCanvas?.nativeView?.invalidate();
+    }
+
+    function drawStats({ canvas, object }: { canvas: Canvas; object: Canvas }) {
+        try {
+            let w = canvas.getWidth();
+            let h = canvas.getHeight();
+
+            if (!barPaint) {
+                barPaint = new Paint();
+                barPaint.strokeWidth = 2;
+            }
+            if (!textPaint) {
+                textPaint = new Paint();
+                textPaint.textSize = 13;
+            }
+            if (!bigTextPaint) {
+                bigTextPaint = new Paint();
+                bigTextPaint.textSize = 16;
+                bigTextPaint.fontWeight = 'bold';
+            }
+            bigTextPaint.color = $subtitleColor;
+            textPaint.color = $textColor;
+
+            const usedWidth = w - 20;
+            let x = 10;
+            let labelx = 13;
+            let labely = 105;
+            const stats = item.stats[statsKey];
+            canvas.drawText(lc(statsKey), labelx, 20, bigTextPaint);
+            stats.forEach((s) => {
+                const rigthX = x + s.perc * usedWidth;
+                barPaint.color = 'white';
+                barPaint.style = Style.STROKE;
+                canvas.drawRect(x, 35, rigthX, 75, barPaint);
+                barPaint.color = colors[s.id] || '#000000';
+                barPaint.style = Style.FILL;
+                canvas.drawRect(x, 35, rigthX, 75, barPaint);
+                x = rigthX;
+                const text = lc(s.id);
+                // textPaint.getTextBounds(text, 0, text.length, rect);
+                // textWidth = rect.width;
+                canvas.drawCircle(labelx + 3, labely - 4, 6, barPaint);
+                canvas.drawText(text, labelx + 11, labely, textPaint);
+                if (labely < h - 20) {
+                    labely += 20;
+                } else {
+                    labely = 105;
+                    labelx += (1 / 3) * usedWidth;
+                }
+            });
+        } catch (error) {
+            console.error(error);
+        }
+    }
 </script>
 
-<gridlayout {...$$restProps} width="100%" rows={`${INFOVIEW_HEIGHT},50,${profileHeight},auto`} columns="*,auto" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
+<gridlayout {...$$restProps} width="100%" rows={`${INFOVIEW_HEIGHT},50,auto,auto,auto`} columns="*,auto" backgroundColor={$widgetBackgroundColor}>
     {#if loaded}
         <BottomSheetInfoView bind:this={infoView} {item} />
-
         <mdactivityindicator visibility={updatingItem ? 'visible' : 'collapsed'} horizontalAligment="right" busy={true} width={20} height={20} />
         <IconButton col={1} text="mdi-crosshairs-gps" isVisible={itemIsRoute} on:tap={zoomToItem} />
         <stacklayout orientation="horizontal" row={1} colSpan={2} borderTopWidth="1" borderBottomWidth="1" borderColor={$borderColor}>
@@ -747,15 +878,38 @@
             <IconButton on:tap={() => saveItem()} tooltip={lc('save')} isVisible={item && !item.id} text="mdi-map-plus" rounded={false} />
             <!-- <IconButton on:tap={shareItem} tooltip={lc('share')} isVisible={itemIsRoute} text="mdi-share-variant" rounded={false} /> -->
             <IconButton on:tap={deleteItem} tooltip={lc('delete')} isVisible={item && item.id} color="red" text="mdi-delete" rounded={false} />
-            <IconButton on:tap={openWikipedia} tooltip={lc('wikipedia')} isVisible={item && item.properties && item.properties.wikipedia} text="mdi-wikipedia" rounded={false} />
+            <IconButton on:tap={openWikipedia} tooltip={lc('wikipedia')} isVisible={item && item.properties && !!item.properties.wikipedia} text="mdi-wikipedia" rounded={false} />
             {#if itemIsRoute && networkService.canCheckWeather}
                 <IconButton on:tap={checkWeather} tooltip={lc('weather')} text="mdi-weather-partly-cloudy" rounded={false} />
             {/if}
-            <IconButton id="astronomy" on:tap={showAstronomy} tooltip={lc('astronomy')} text="mdi-weather-night" rounded={false} />
+            <IconButton id="astronomy" on:tap={showAstronomy} isVisible={item && !itemIsRoute} tooltip={lc('astronomy')} text="mdi-weather-night" rounded={false} />
             <IconButton on:tap={openPeakFinder} tooltip={lc('peaks')} isVisible={item && !itemIsRoute} text="mdi-summit" rounded={false} />
             <IconButton on:tap={getTransitLines} tooltip={lc('bus_stop_infos')} isVisible={item && itemIsBusStop} text="mdi-bus" rounded={false} />
         </stacklayout>
-        <linechart bind:this={chart} row={2} colSpan={2} height={profileHeight} visibility={graphAvailable ? 'visible' : 'hidden'} on:highlight={onChartHighlight} />
+        <linechart bind:this={chart} row={2} colSpan={2} height={PROFILE_HEIGHT} visibility={graphAvailable ? 'visible' : 'collapsed'} on:highlight={onChartHighlight} />
+        <gridlayout row={3} colSpan={2} height={STATS_HEIGHT} visibility={statsAvailable ? 'visible' : 'collapsed'}>
+            <canvas bind:this={statsCanvas} on:draw={drawStats} />
+            <IconButton
+                small={true}
+                fontSize={20}
+                text="mdi-chevron-right"
+                verticalAlignment="top"
+                horizontalAlignment="right"
+                isEnabled={statsKey === 'waytypes'}
+                on:tap={() => setStatsKey('surfaces')}
+            />
+            <IconButton
+                small={true}
+                fontSize={20}
+                text="mdi-chevron-left"
+                verticalAlignment="top"
+                horizontalAlignment="right"
+                marginRight={25}
+                isEnabled={statsKey === 'surfaces'}
+                on:tap={() => setStatsKey('waytypes')}
+            />
+        </gridlayout>
+
         <!-- <AWebView
             row={3}
             height={webViewHeight}
