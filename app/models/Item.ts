@@ -8,6 +8,19 @@ import NSQLDatabase from '../mapModules/NSQLDatabase';
 
 const sql = SqlQuery.createFromTemplateString;
 
+export function toJSONStringified(item: Partial<Item>) {
+    return {
+        type: item.type,
+        id: item.id,
+        properties: item.properties,
+        geometry: item.geometry,
+        route: item._route || JSON.stringify(item.route),
+        profile: item._profile || JSON.stringify(item.profile),
+        stats: item._stats || JSON.stringify(item.stats),
+        instructions: item._instructions || JSON.stringify(item.instructions)
+    };
+}
+
 export enum RoutingAction {
     HEAD_ON,
     FINISH,
@@ -50,8 +63,22 @@ export interface RouteProfile {
 }
 export interface Route {
     osmid?: string;
-    totalTime: number;
-    totalDistance: number;
+    costing_options?: any;
+    totalTime?: number;
+    totalDistance?: number;
+}
+
+export interface RouteStats {
+    waytypes: {
+        perc: number;
+        dist: number;
+        id: string;
+    }[];
+    surfaces: {
+        perc: number;
+        dist: number;
+        id: string;
+    }[];
 }
 
 export interface Address {
@@ -65,6 +92,7 @@ export interface Address {
     street?: string;
     houseNumber?: string;
 }
+
 export interface ItemProperties {
     [k: string]: any;
     name?: string;
@@ -77,19 +105,39 @@ export interface ItemProperties {
     provider?: 'photon' | 'here' | 'carto';
     categories?: string[];
     address?: Address;
-    route?: Route;
-    profile?: RouteProfile;
-    instructions?: RouteInstruction[];
+
+    route?: {
+        type?: string;
+        subtype?: string;
+        totalTime?: number;
+        totalDistance?: number;
+    };
+    profile?: {
+        dplus?: any;
+        dmin?: any;
+    };
     zoomBounds?: MapBounds<LatLonKeys>;
 }
 export class Item {
     public readonly id!: string;
+    type?: string;
 
     public properties!: ItemProperties | null;
     public _properties!: string;
     public geometry!: Geometry;
     public _geometry!: string;
     public _nativeGeometry!: any;
+
+    onMap: 1 | 0;
+
+    route?: Route;
+    public _route!: string;
+    profile?: RouteProfile;
+    public _profile!: string;
+    instructions?: RouteInstruction[];
+    public _instructions!: string;
+    stats?: RouteStats;
+    public _stats!: string;
 }
 export type IItem = Partial<Item> & {
     layer?: VectorTileLayer;
@@ -110,23 +158,49 @@ export class ItemRepository extends CrudRepository<Item> {
         return this.database.query(sql`
 			CREATE TABLE IF NOT EXISTS "Items" (
 				id BIGINT PRIMARY KEY NOT NULL,
+				onMap INTEGER,
 				properties TEXT,
+				route TEXT,
+				profile TEXT,
+				instructions TEXT,
+				stats TEXT,
                 geometry TEXT NOT NULL
 			);
 		`);
     }
-
     async createItem(item: IItem) {
+        DEV_LOG && console.log('createItem', item.onMap);
         await this.create({
             id: item.id,
+            onMap: item.onMap,
             properties: item._properties || JSON.stringify(item.properties),
+            route: item._route || JSON.stringify(item.route),
+            profile: item._profile || JSON.stringify(item.profile),
+            stats: item._stats || JSON.stringify(item.stats),
+            instructions: item._instructions || JSON.stringify(item.instructions),
             geometry: item._geometry || JSON.stringify(item.geometry)
         });
         return item as Item;
     }
-    async updateItem(item: Item, data: Partial<ItemProperties>) {
-        const updatedItem = { ...item, properties: extend(item.properties, data) };
-        await this.update(updatedItem, { properties: JSON.stringify(updatedItem.properties) });
+    async updateItem(item: Item, data: Partial<Item>) {
+        const toSave: Partial<Item> = {};
+        const toUpdate: any = {};
+        if (data.properties) {
+            toSave.properties = extend(item.properties, data.properties);
+            toUpdate.properties = JSON.stringify(toSave.properties);
+            delete data.properties;
+        }
+        Object.keys(data).forEach((k) => {
+            const value = data[k];
+            toSave[k] = value;
+            if (typeof value === 'object' || Array.isArray(value)) {
+                toUpdate[k] = JSON.stringify(value);
+            } else {
+                toUpdate[k] = value;
+            }
+        });
+        const updatedItem = { ...item, ...toSave };
+        await this.update(updatedItem, toUpdate);
         return updatedItem;
     }
 
@@ -134,7 +208,6 @@ export class ItemRepository extends CrudRepository<Item> {
         return {
             id: item.id,
             _properties: item.properties,
-            _geometry: item.geometry,
             get properties() {
                 if (!this._parsedProperties) {
                     this._parsedProperties = JSON.parse(this._properties);
@@ -146,11 +219,43 @@ export class ItemRepository extends CrudRepository<Item> {
                 delete this._properties;
                 this._parsedProperties = value;
             },
+            _geometry: item.geometry,
             get geometry() {
                 if (!this._parsedGeometry) {
                     this._parsedGeometry = JSON.parse(this._geometry);
                 }
                 return this._parsedGeometry;
+            },
+            _route: item.route,
+            get route() {
+                if (!this._parsedRoute) {
+                    this._parsedRoute = JSON.parse(this._route);
+                }
+                return this._parsedRoute;
+            },
+            _instructions: item.instructions,
+            get instructions() {
+                if (!this._parsedInstructions) {
+                    this._parsedInstructions = JSON.parse(this._instructions);
+                }
+                return this._parsedInstructions;
+            },
+            _profile: item.profile,
+            get profile() {
+                if (!this._parsedProfile) {
+                    this._parsedProfile = JSON.parse(this._profile);
+                }
+                return this._parsedProfile;
+            },
+            _stats: item.stats,
+            get stats() {
+                if (!this._parsedStats) {
+                    this._parsedStats = JSON.parse(this._stats);
+                }
+                return this._parsedStats;
+            },
+            toJSON() {
+                return { type: this.type, id: this.id, properties: this.properties, geometry: this.geometry, stats: this.stats, route: this.route, instructions: this.instructions };
             }
         };
     }

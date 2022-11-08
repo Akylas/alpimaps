@@ -117,7 +117,7 @@
     });
     $: locationButtonClass = !$queryingLocation && $watchingLocation ? 'buttonthemed' : 'buttontext';
     $: locationButtonLabelClass = $queryingLocation ? 'fade-blink' : '';
-    $: selectedItemHasPosition = selectedItem && !selectedItem.properties?.route && selectedItem.geometry.type === 'Point';
+    $: selectedItemHasPosition = selectedItem && !selectedItem.route && selectedItem.geometry.type === 'Point';
 
     export function onSelectedItem(item: IItem, oldItem: IItem) {
         selectedItem = item;
@@ -426,6 +426,7 @@
             rowSpan={2}
             col={2}
             class="floating-btn"
+            id="directions"
             text="mdi-directions"
             visibility={selectedItemHasPosition ? 'visible' : 'collapsed'}
         />

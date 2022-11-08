@@ -109,5 +109,32 @@ export default class ItemFormatter {
             return `blue:white:${itemProps.color || 'blue'}_bar`;
         }
     }
+
+    getRouteIcon(type, subtype) {
+        if (type === 'pedestrian') {
+            switch (subtype) {
+                case 'mountainairing':
+                    return 'alpimaps-mountainairing';
+                case 'running':
+                    return 'alpimaps-running';
+                default:
+                    return 'alpimaps-directions_walk';
+            }
+        }
+        if (type === 'bicycle') {
+            switch (subtype) {
+                case 'enduro':
+                    return 'alpimaps-enduro';
+                case 'gravel':
+                    return 'alpimaps-gravel';
+                case 'road':
+                    return 'alpimaps-road-cycling';
+                case 'mountain':
+                    return 'alpimaps-mountain-biking';
+                default:
+                    return 'alpimaps-touring';
+            }
+        }
+    }
 }
 export const formatter = new ItemFormatter();
