@@ -327,15 +327,18 @@
     }
     async function searchInVectorTiles(options: SearchRequest) {
         // console.log('searchInVectorTiles', options);
-        let result: any = await packageService.searchInVectorTiles(options);
+        let result: GeoResult[] = await packageService.searchInVectorTiles(options) as any;
         if (result) {
-            result = packageService.convertFeatureCollection(result, options) as any;
+            result = packageService.convertFeatureCollection(result as any, options);
         } else {
             result = [];
         }
         return arraySortOn(
             result.map((r) => {
-                r.distance = computeDistanceBetween(options.position, r.position);
+                r['distance'] = computeDistanceBetween(options.position, {
+                    lat:r.geometry.coordinates[1],
+                    lon:r.geometry.coordinates[0]
+                });
                 return r;
             }),
             'distance'

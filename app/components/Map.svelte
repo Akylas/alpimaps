@@ -45,7 +45,7 @@
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
     import type { NetworkConnectionStateEventData } from '~/services/NetworkService';
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
-    import { packageService } from '~/services/PackageService';
+    import { GeoResult, packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
     import { rotateEnabled, pitchEnabled, showGlobe, showContourLines, showRoutes, showSlopePercentages, show3DBuildings, contourLinesOpacity, preloading } from '~/stores/mapStore';
     import { showError } from '~/utils/error';
@@ -588,12 +588,13 @@
                 unselectItem(false);
             }
             const route = item?.route;
+            const props = item.properties;
             if (setSelected && route) {
-                TEST_LOG && console.log('selected_id', typeof route.osmid, route.osmid, typeof item.properties.id, item.properties.id, setSelected);
+                TEST_LOG && console.log('selected_id', typeof route.osmid, route.osmid, typeof props.id, props.id, setSelected);
 
-                if (item.properties.id !== undefined) {
-                    selectedId = item.properties.id;
-                    if (typeof item.properties.id === 'string') {
+                if (props.id !== undefined) {
+                    selectedId = props.id;
+                    if (typeof props.id === 'string') {
                         mapContext.innerDecoder.setStyleParameter('selected_id_str', selectedId + '');
                         mapContext.innerDecoder.setStyleParameter('selected_id', '0');
                     } else {
@@ -629,9 +630,9 @@
                     selectedPosMarker.visible = true;
                 }
                 if (setSelected) {
-                    if (item.properties.id !== undefined) {
-                        selectedId = item.properties.id;
-                        if (typeof item.properties.id === 'string') {
+                    if (props.id !== undefined) {
+                        selectedId = props.id;
+                        if (typeof props.id === 'string') {
                             mapContext.innerDecoder.setStyleParameter('selected_id_str', selectedId + '');
                             mapContext.innerDecoder.setStyleParameter('selected_id', '0');
                         } else {
@@ -656,29 +657,38 @@
                 $selectedItem = item;
             }
             if (setSelected && !route) {
-                if (!item.properties.address || !item.properties.address['street']) {
-                    const service = packageService.localOSMOfflineReverseGeocodingService;
-                    const geometry = item.geometry as GeoJSONPoint;
-                    const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-                    if (service) {
-                        itemLoading = true;
-                        const radius = 200;
-                        // use a promise not to "wait" for it
-                        packageService
-                            .searchInGeocodingService(service, {
-                                projection,
-                                location: position,
-                                searchRadius: radius
-                            })
-                            .then((res) => {
+                if (!props.address || !props.address['street']) {
+                    (async () => {
+                        try {
+                            const service = packageService.localOSMOfflineReverseGeocodingService;
+                            const geometry = item.geometry as GeoJSONPoint;
+                            const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+                            DEV_LOG && console.log('fetching addresses', !!service, position);
+                            if (service) {
+                                itemLoading = true;
+                                const radius = 200;
+                                // use a promise not to "wait" for it
+                                const res = await packageService.searchInGeocodingService(service, {
+                                    projection,
+                                    location: position,
+                                    searchRadius: radius
+                                });
                                 if (res) {
-                                    let bestFind;
+                                    let bestFind: GeoResult;
                                     for (let index = 0; index < res.size(); index++) {
                                         const r = packageService.convertGeoCodingResult(res.get(index), true);
-                                        if (r && r.properties.rank > 0.7 && computeDistanceBetween(position, r.properties.position) <= radius) {
-                                            if (!bestFind || Object.keys(r.properties.address).length > Object.keys(bestFind.address).length) {
+                                        
+                                        if (
+                                            r &&
+                                            r.properties.rank > 0.6 &&
+                                            computeDistanceBetween(position, {
+                                                lat: r.geometry.coordinates[1],
+                                                lon: r.geometry.coordinates[0]
+                                            }) <= radius
+                                        ) {
+                                            if (!bestFind || Object.keys(r.properties.address).length > Object.keys(bestFind.properties.address).length) {
                                                 bestFind = r;
-                                            } else if (bestFind && item.properties.address && item.properties.address['street']) {
+                                            } else if (bestFind && props.address && props.address['street']) {
                                                 break;
                                             }
                                         } else {
@@ -686,36 +696,39 @@
                                         }
                                     }
                                     if (bestFind && $selectedItem.geometry === item.geometry) {
-                                        if (item.properties.layer === 'housenumber') {
-                                            $selectedItem.properties.address = { ...bestFind.address, name: null, houseNumber: item.properties.housenumber } as any;
+
+                                        if (props.layer === 'housenumber') {
+                                            $selectedItem.properties.address = { ...bestFind.properties.address, name: null, houseNumber: props.housenumber } as any;
                                             $selectedItem = $selectedItem;
                                         } else {
-                                            $selectedItem.properties.address = { ...bestFind.address, name: null } as any;
+                                            $selectedItem.properties.address = { ...bestFind.properties.address, name: null } as any;
                                             $selectedItem = $selectedItem;
                                         }
                                     }
                                 }
-                            })
-                            .catch((err) => console.error('searchInGeocodingService', err, err['stack']));
-                    } else {
-                        const results = await getFromLocation(position.lat, position.lon, 10);
-                        DEV_LOG && console.log('found addresses', results);
-                        if (results?.length > 0) {
-                            const result = results[0];
-                            $selectedItem.properties.address = {
-                                city: result.locality,
-                                country: result.country,
-                                state: result.administrativeArea,
-                                housenumber: result.subThoroughfare,
-                                postcode: result.postalCode,
-                                street: result.thoroughfare
-                            } as any;
-                            $selectedItem = $selectedItem;
+                            } else {
+                                const results = await getFromLocation(position.lat, position.lon, 10);
+                                DEV_LOG && console.log('found addresses', results);
+                                if (results?.length > 0) {
+                                    const result = results[0];
+                                    $selectedItem.properties.address = {
+                                        city: result.locality,
+                                        country: result.country,
+                                        state: result.administrativeArea,
+                                        housenumber: result.subThoroughfare,
+                                        postcode: result.postalCode,
+                                        street: result.thoroughfare
+                                    } as any;
+                                    $selectedItem = $selectedItem;
+                                }
+                            }
+                        } catch (error) {
+                            console.error('error fetching address', error, error.stack);
                         }
-                    }
+                    })();
                 }
 
-                if (item.properties && 'ele' in item.properties === false && packageService.hasElevation()) {
+                if (props && 'ele' in props === false && packageService.hasElevation()) {
                     const geometry = item.geometry as GeoJSONPoint;
                     const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
                     packageService.getElevation(position).then((result) => {

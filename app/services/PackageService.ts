@@ -31,10 +31,13 @@ import { getMapContext } from '~/mapModules/MapModule';
 import { IItem as Item, Route, RouteProfile } from '~/models/Item';
 import { EARTH_RADIUS, TO_RAD } from '~/utils/geo';
 import { getDataFolder, getDefaultMBTilesDir, getSavedMBTilesDir, listFolder } from '~/utils/utils';
+import { Feature as GeoJSONFeature, Point } from 'geojson';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
-export interface GeoResult extends Item {}
+export interface GeoResult extends Item {
+    geometry: Point;
+}
 
 class MathFilter {
     filter(_newData): any {
@@ -457,12 +460,16 @@ class PackageService extends Observable {
         const projection = this.vectorTileSearchService.options.layer.dataSource.getProjection();
         let feature: VectorTileFeature;
         const count = features.getFeatureCount();
-        const result = [];
+        const result: GeoResult[] = [];
         for (let index = 0; index < count; index++) {
             feature = features.getFeature(index);
             result.push({
                 properties: { layer: feature.layerName, ...feature.properties } as any,
-                position: feature.geometry ? (projection.toWgs84(feature.geometry.getCenterPos()) as any) : undefined
+                geometry: feature.geometry
+                    ? {
+                          coordinates: projection.toWgs84(feature.geometry.getCenterPos()) as any
+                      }
+                    : undefined
             } as GeoResult);
         }
         return result;
@@ -475,8 +482,7 @@ class PackageService extends Observable {
             feature = features.getFeature(0);
             const position = fromNativeMapPos<LatLonKeys>(feature.geometry.getCenterPos());
             const r = {
-                rank,
-                properties: { ...feature.properties, address: result.getAddress() },
+                properties: { ...feature.properties, address: result.getAddress(), rank },
                 geometry: {
                     type: 'Point',
                     coordinates: [position.lon, position.lat]
