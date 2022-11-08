@@ -71,7 +71,7 @@
         }
         item.layer.opacity = opacity;
         setNumber(item.name + '_opacity', opacity);
-        item.layer.visible = opacity !== 0 ? true : false;
+        item.layer.visible = opacity > 0;
         mapContext.getMap().requestRedraw();
         updateItem(item);
     }
@@ -142,20 +142,19 @@
                         maxValue="1"
                         verticalAlignment="center"
                     />
-                    <mdbutton
+                    <IconButton
                         col={2}
                         rowSpan={2}
-                        variant="text"
-                        class="icon-btn"
+                        gray={true}
                         text="mdi-dots-vertical"
                         on:tap={() => showSourceOptions(item)}
-                        on:longPress={(event) => onButtonLongPress(item, event)}
+                        onLongPress={(event) => onButtonLongPress(item, event)}
                     />
                 </gridlayout>
             </Template>
         </collectionview>
         <stacklayout col={1} borderLeftColor={$borderColor} borderLeftWidth="1">
-            <IconButton text="mdi-plus" on:tap={addSource} />
+            <IconButton gray={true} text="mdi-plus" on:tap={addSource} />
             <IconButton gray={true} isSelected={$show3DBuildings} tooltip={lc('buildings_3d')} text="mdi-domain" on:tap={() => show3DBuildings.set(!$show3DBuildings)} />
             <IconButton gray={true} isSelected={$showGlobe} tooltip={lc('globe_mode')} text="mdi-globe-model" on:tap={() => showGlobe.set(!$showGlobe)} />
             <IconButton gray={true} isSelected={$rotateEnabled} tooltip={lc('map_rotation')} text="mdi-rotate-3d-variant" on:tap={() => rotateEnabled.set(!$rotateEnabled)} />
