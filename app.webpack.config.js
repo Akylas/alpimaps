@@ -477,7 +477,7 @@ module.exports = (env, params = {}) => {
     const usedMDIICons = [];
     config.module.rules.push({
         // rules to replace mdi icons and not use nativescript-font-icon
-        test: /\.svelte$/,
+        test: /\.(svelte|ts)$/,
         exclude: /node_modules/,
         use: [
             {
