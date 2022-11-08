@@ -262,6 +262,9 @@
         }
     }
     function onChartHighlight(event: HighlightEventData) {
+        if (!item) {
+            return;
+        }
         const x = event.highlight.entryIndex;
         const positions = item.geometry?.['coordinates'];
         const position = positions[Math.max(0, Math.min(x, positions.length - 1))];
@@ -867,7 +870,7 @@
     }
 </script>
 
-<gridlayout {...$$restProps} width="100%" rows={`${INFOVIEW_HEIGHT},50,auto,auto,auto`} columns="*,auto" backgroundColor={$widgetBackgroundColor}>
+<gridlayout {...$$restProps} width="100%" rows={`${INFOVIEW_HEIGHT},50,auto,auto,auto`} columns="*,auto" backgroundColor={$widgetBackgroundColor} on:tap={()=>{}}>
     {#if loaded}
         <BottomSheetInfoView bind:this={infoView} {item} />
         <mdactivityindicator visibility={updatingItem ? 'visible' : 'collapsed'} horizontalAligment="right" busy={true} width={20} height={20} />
