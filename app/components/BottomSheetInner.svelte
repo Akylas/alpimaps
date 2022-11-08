@@ -454,7 +454,7 @@
     // }
 
     async function saveItem(peek = true) {
-        DEV_LOG && console.log('saveItem')
+        DEV_LOG && console.log('saveItem');
         try {
             updatingItem = true;
             const item = await mapContext.mapModule('items').saveItem(mapContext.getSelectedItem());
@@ -870,7 +870,7 @@
     }
 </script>
 
-<gridlayout {...$$restProps} width="100%" rows={`${INFOVIEW_HEIGHT},50,auto,auto,auto`} columns="*,auto" backgroundColor={$widgetBackgroundColor} on:tap={()=>{}}>
+<gridlayout {...$$restProps} width="100%" rows={`${INFOVIEW_HEIGHT},50,auto,auto,auto`} columns="*,auto" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
     {#if loaded}
         <BottomSheetInfoView bind:this={infoView} {item} />
         <mdactivityindicator visibility={updatingItem ? 'visible' : 'collapsed'} horizontalAligment="right" busy={true} width={20} height={20} />
