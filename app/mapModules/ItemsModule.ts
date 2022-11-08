@@ -13,22 +13,30 @@ import { ShareFile } from '@nativescript-community/ui-share-file';
 import { knownFolders, path, profile } from '@nativescript/core';
 import type { Feature } from 'geojson';
 import { getDistanceSimple } from '~/helpers/geolib';
-import { IItem, Item, ItemProperties, ItemRepository } from '~/models/Item';
+import { IItem, Item, ItemProperties, ItemRepository, Route, RouteInstruction, RouteProfile, RouteStats, toJSONStringified } from '~/models/Item';
 import { showError } from '~/utils/error';
 import { accentColor } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
 import NSQLDatabase from './NSQLDatabase';
+import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 const mapContext = getMapContext();
 const filePath = path.join(knownFolders.documents().getFolder('db').path, 'db.sqlite');
 
 let writer: GeoJSONGeometryWriter<LatLonKeys>;
+
+export interface ItemFeature extends Feature {
+    route?: Route;
+    profile?: RouteProfile;
+    instructions?: RouteInstruction[];
+    stats?: RouteStats;
+}
 
 declare type Mutable<T extends object> = {
     -readonly [K in keyof T]: T[K];
 };
 export default class ItemsModule extends MapModule {
     localVectorDataSource: GeoJSONVectorTileDataSource;
-    currentLayerFeatures: Feature[] = [];
+    currentLayerFeatures: ItemFeature[] = [];
     currentItems: IItem[] = [];
     localVectorLayer: VectorTileLayer;
     db: NSQLDatabase;
@@ -45,7 +53,7 @@ export default class ItemsModule extends MapModule {
             this.itemRepository = new ItemRepository(this.db);
             await this.itemRepository.createTables();
             // await this.connection.synchronize(false);
-            const items = await this.itemRepository.searchItem();
+            const items = await this.itemRepository.searchItem(SqlQuery.createFromTemplateString`"onMap" = 1`);
             this.addItemsToLayer(items);
         } catch (err) {
             console.error(err, err.stack);
@@ -117,24 +125,24 @@ export default class ItemsModule extends MapModule {
         const styleBuilder = new PointStyleBuilder(options);
         return new Point({ position, projection: mapContext.getProjection(), styleBuilder });
     }
-    itemToMetaData(item: IItem) {
-        const result = {};
-        Object.keys(item)
-            .filter((k) => k !== 'vectorElement')
-            .forEach((k) => {
-                if (item[k] !== null && item[k] !== undefined) {
-                    if (k === 'route') {
-                        // ignore positions as it is native object.
-                        // we will get it back from the vectorElement
-                        const { positions, ...others } = item[k];
-                        result[k] = JSON.stringify(others);
-                    } else {
-                        result[k] = typeof item[k] === 'string' ? item[k] : JSON.stringify(item[k]);
-                    }
-                }
-            });
-        return result;
-    }
+    // itemToMetaData(item: IItem) {
+    //     const result = {};
+    //     Object.keys(item)
+    //         .filter((k) => k !== 'vectorElement')
+    //         .forEach((k) => {
+    //             if (item[k] !== null && item[k] !== undefined) {
+    //                 if (k === 'route') {
+    //                     // ignore positions as it is native object.
+    //                     // we will get it back from the vectorElement
+    //                     const { positions, ...others } = item[k];
+    //                     result[k] = JSON.stringify(others);
+    //                 } else {
+    //                     result[k] = typeof item[k] === 'string' ? item[k] : JSON.stringify(item[k]);
+    //                 }
+    //             }
+    //         });
+    //     return result;
+    // }
     // createLocalLine(item: IItem, options: LineStyleBuilderOptions) {
     //     // console.log('createLocalLine', options);
     //     Object.keys(options).forEach((k) => {
@@ -148,48 +156,18 @@ export default class ItemsModule extends MapModule {
     //     return new Line({ positions: item.route.positions, projection: mapContext.getProjection(), styleBuilder, metaData });
     // }
     addItemToLayer(item: IItem, autoUpdate = false) {
-        // this.getOrCreateLocalVectorLayer();
-        // if (!writer) {
-        //     const projection = this.localVectorLayer.getDataSource().getProjection();
-        //     writer = new GeoJSONGeometryWriter<LatLonKeys>({
-        //         sourceProjection: projection
-        //     });
-        // }
-
-        const sProps = {};
-        Object.keys(item.properties).forEach((k) => {
-            if (typeof item.properties[k] === 'object') {
-                sProps[k] = JSON.stringify(item.properties[k]);
-            } else {
-                sProps[k] = item.properties[k];
-            }
-        });
         this.currentItems.push(item);
-        this.currentLayerFeatures.push({ type: 'Feature', id: item.id, properties: sProps, geometry: item.geometry });
+        // this.currentLayerFeatures.push({ type: 'Feature', ...toJSONStringified(item) });
+        this.currentLayerFeatures.push({ type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
         if (autoUpdate) {
             this.updateGeoJSONLayer();
         }
-        // if (item.route) {
-        //     const line = this.createLocalLine(item, item.styleOptions);
-        //     this.currentLayerFeatures.push(line);
-        //     // item.vectorElement = line;
-        //     return line;
-        // } else {
-        //     const marker = this.createLocalMarker(item, item.styleOptions);
-        //     this.localVectorDataSource.add(marker);
-        //     item.vectorElement = marker;
-        //     return marker;
-        // }
     }
     getFeature(id: string) {
         return this.currentItems.find((d) => d.properties.id === id);
     }
     updateGeoJSONLayer() {
         this.getOrCreateLocalVectorLayer();
-        // console.log(
-        //     'updateGeoJSONLayer',
-        //     this.currentLayerFeatures.map((i) => [i.geometry.type, i.geometry.coordinates.length])
-        // );
         this.localVectorDataSource.setLayerGeoJSONString(
             1,
             JSON.stringify({
@@ -204,7 +182,7 @@ export default class ItemsModule extends MapModule {
             this.updateGeoJSONLayer();
         }
     }
-    async updateItem(item: IItem, data: Partial<ItemProperties>) {
+    async updateItem(item: IItem, data: Partial<IItem>) {
         if (Object.keys(data).length > 0) {
             item = await this.itemRepository.updateItem(item as Item, data);
         }
@@ -226,9 +204,6 @@ export default class ItemsModule extends MapModule {
     }
     async shareFile(content: string, fileName: string) {
         const file = knownFolders.temp().getFile(fileName);
-        // iOS: using writeText was not adding the file. Surely because it was too soon or something
-        // doing it sync works better but still needs a timeout
-        // showLoading('loading');
         await file.writeText(content);
         const shareFile = new ShareFile();
         await shareFile.open({
@@ -373,31 +348,29 @@ export default class ItemsModule extends MapModule {
             // bbox: extent
         };
     }
-    async saveItem(item: Mutable<IItem>, styleOptions?: MarkerStyleBuilderOptions | PointStyleBuilderOptions | LineStyleBuilderOptions) {
-        try {
-            let properties = item.properties;
-            if (properties?.route) {
-                // console.log('saveItem', properties.route.osmid, item.geometry);
-                if (!item.geometry && properties.route.osmid) {
-                    item.geometry = await this.getRoutePositions(item);
-                    if (!item.geometry) {
-                        return item;
-                    }
+    async saveItem(item: Mutable<IItem>, onMap = true, styleOptions?: MarkerStyleBuilderOptions | PointStyleBuilderOptions | LineStyleBuilderOptions) {
+        let properties = item.properties;
+        if (item.route) {
+            // console.log('saveItem', properties.route.osmid, item.geometry);
+            if (!item.geometry && item.route.osmid) {
+                item.geometry = await this.getRoutePositions(item);
+                if (!item.geometry) {
+                    return item;
                 }
-            } else {
-                properties = item.properties = item.properties || {};
-                properties.color = accentColor.hex;
             }
-            if (!item.id) {
-                const id = item.properties.id || Date.now();
-                item.properties.id = id;
-                item = await this.itemRepository.createItem({ ...item, id });
-            }
-            this.addItemToLayer(item, true);
-            return item; // return the first one
-        } catch (err) {
-            showError(err);
+        } else {
+            properties = item.properties = item.properties || {};
+            properties.color = accentColor.hex;
         }
+        if (!item.id) {
+            const id = item.properties.id || Date.now();
+            item.properties.id = id;
+            item = await this.itemRepository.createItem({ ...item, id, onMap: onMap ? 1 : 0 });
+        }
+        if (onMap) {
+            this.addItemToLayer(item, true);
+        }
+        return item; // return the first one
     }
     async deleteItem(item: IItem) {
         if (item === mapContext.getSelectedItem()) {
