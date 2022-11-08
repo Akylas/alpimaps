@@ -171,15 +171,15 @@
     //         styleBuilder: searchClusterStyle
     //     });
     // }
-    function itemToMetaData(item: Item) {
-        const result = {};
-        Object.keys(item).forEach((k) => {
-            if (item[k] !== null && item[k] !== undefined && k !== 'data') {
-                result[k] = JSON.stringify(item[k]);
-            }
-        });
-        return result;
-    }
+    // function itemToMetaData(item: Item) {
+    //     const result = {};
+    //     Object.keys(item).forEach((k) => {
+    //         if (item[k] !== null && item[k] !== undefined && k !== 'data') {
+    //             result[k] = JSON.stringify(item[k]);
+    //         }
+    //     });
+    //     return result;
+    // }
     // function createSearchMarker(item: SearchItem) {
     //     const metaData = itemToMetaData(item);
     //     return new Marker({
