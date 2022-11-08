@@ -14,9 +14,11 @@
     export let formatter = (value) => value + '';
 
     function onValueChange(event) {
+        value = event.value;
         if (onChange) {
             onChange(event.value);
         }
+
     }
 </script>
 
@@ -28,6 +30,7 @@
         {#if title}
             <label text={title} col={1} verticalTextAlignment="center" marginTop="0"/>
         {/if}
+        <label text={value.toFixed(1)} colSpan={3} verticalTextAlignment="center" textAlignment="right" />
         <label text={formatter(min)} row={1} verticalTextAlignment="center" textAlignment="center" />
         <label text={formatter(max)} row={1} col={2} verticalTextAlignment="center" textAlignment="center" />
         <slider row={1} col={1} {value} on:valueChange={onValueChange} minValue={min} maxValue={max} stepSize={step} />
