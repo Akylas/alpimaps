@@ -445,7 +445,6 @@
         if (!cartoMap) {
             return;
         }
-        DEV_LOG && console.log('saveSettings', cartoMap.focusPos);
         appSettings.setNumber('mapZoom', cartoMap.zoom);
         appSettings.setNumber('mapBearing', cartoMap.bearing);
         appSettings.setString('mapFocusPos', JSON.stringify(cartoMap.focusPos));
