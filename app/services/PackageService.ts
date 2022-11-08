@@ -28,7 +28,7 @@ import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortile
 import * as appSettings from '@nativescript/core/application-settings';
 import { File, Folder, path } from '@nativescript/core/file-system';
 import { getMapContext } from '~/mapModules/MapModule';
-import { IItem as Item, RouteProfile } from '~/models/Item';
+import { IItem as Item, Route, RouteProfile } from '~/models/Item';
 import { EARTH_RADIUS, TO_RAD } from '~/utils/geo';
 import { getDataFolder, getDefaultMBTilesDir, getSavedMBTilesDir, listFolder } from '~/utils/utils';
 
@@ -705,7 +705,7 @@ class PackageService extends Observable {
             }
         }
         const dist = Math.max(Math.min(5, grades.length / 50), 50);
-        const lastDist = grades[grades.length -1].dist;
+        const lastDist = grades[grades.length - 1].dist;
         const g = Math.min(lastDist / 50, 500);
         for (let index = 0; index < grades.length; index++) {
             let d = 0,
@@ -835,7 +835,7 @@ class PackageService extends Observable {
                 lastAlt = pt1.a;
             }
         }
-        if (colors[colors.length -1].lastIndex < result.data.length - 1) {
+        if (colors[colors.length - 1].lastIndex < result.data.length - 1) {
             const avgGrade = gradeSum / gradesCounter;
             colors.push({
                 d: result.data.length - 1,
@@ -868,17 +868,90 @@ class PackageService extends Observable {
         }
         return geometry.getPoses() as MapPosVector<LatLonKeys>;
     }
-    async getElevationProfile(item: Item) {
-        if (this.hillshadeLayer && (item.geometry.type === 'LineString' || item.geometry.type === 'MultiLineString')) {
-            // if (DEV_LOG) {
-            //     console.log('getElevationProfile', item.geometry);
-            // }
-            const positions = this.getRouteItemPoses(item);
+    async getElevationProfile(item: Item, positions?: MapPosVector<LatLonKeys>) {
+        if (this.hillshadeLayer && (!item || item.geometry.type === 'LineString' || item.geometry.type === 'MultiLineString')) {
+            const startTime = Date.now();
+            if (!positions) {
+                positions = this.getRouteItemPoses(item);
+            }
             const elevations = await this.getElevations(positions);
-            DEV_LOG && console.log('getElevations done', positions.size(), elevations.size(), elevations.get(0), positions.get(0));
-            return this.computeProfileFromHeights(positions, elevations);
+            const result = this.computeProfileFromHeights(positions, elevations);
+            DEV_LOG && console.log('getElevations done', Date.now() - startTime, 'ms');
+            return result;
         }
         return null;
+    }
+
+    async fetchStats({ projection, positions, item, route }: { projection; positions?; item?; route?: Route }) {
+        const service = this.offlineRoutingSearchService() || this.onlineRoutingSearchService();
+        if (!route) {
+            route = item.route;
+        }
+        if (service instanceof ValhallaOfflineRoutingService || service instanceof ValhallaOnlineRoutingService) {
+            const startTime = Date.now();
+            DEV_LOG && console.log('matchRoute', new MapPosVector(positions).toArray());
+            const matchResult = await service.matchRoute({
+                projection,
+                points: positions || this.getRouteItemPoses(item),
+                accuracy: 1,
+                customOptions: {
+                    shape_match: 'edge_walk',
+                    filters: { attributes: ['edge.surface', 'edge.road_class', 'edge.sac_scale', 'edge.use', 'edge.length'], action: 'include' }
+                }
+            });
+            DEV_LOG && console.log('got trace attributes', route.totalDistance, Date.now() - startTime, 'ms', matchResult.getRawResult());
+            const edges = JSON.parse(matchResult.getRawResult()).edges;
+            const stats: {
+                [k: string]: { [k: string]: number };
+            } = { surfaces: {}, waytypes: {} };
+            const totalDistanceKm = route.totalDistance / 1000;
+            try {
+                for (let index = 0; index < edges.length; index++) {
+                    const edge = edges[index];
+                    let key;
+                    if (edge.sac_scale > 0) {
+                        key = 'sac_scale_' + edge.sac_scale;
+                    } else if (!edge.use || edge.use === 'null' || edge.use === 'road') {
+                        key = edge.road_class;
+                    } else {
+                        key = edge.use;
+                    }
+                    if (key === 'service_other' || key === 'residential' || key === 'living_street' || key === 'driveway' || key === 'alley' || key === 'footway' || key === 'culdesac') {
+                        key = 'street';
+                    } else if (key === 'secondary' || key === 'tertiary' || key === 'unclassified') {
+                        key = 'road';
+                    } else if (key === 'motorway' || key === 'trunk' || key === 'primary') {
+                        key = 'highway';
+                    }
+                    stats.waytypes[key] = stats.waytypes[key] ? stats.waytypes[key] + edge.length : edge.length;
+                    key = edge.surface;
+                    stats.surfaces[key] = stats.surfaces[key] ? stats.surfaces[key] + edge.length : edge.length;
+                }
+            } catch (error) {
+                console.error(error, error.stack);
+            }
+
+            const resultStats = {
+                waytypes: Object.keys(stats.waytypes)
+                    .map((s) => ({ perc: stats.waytypes[s] / totalDistanceKm, dist: stats.waytypes[s], id: s }))
+                    .sort((a, b) => b.perc - a.perc),
+                surfaces: Object.keys(stats.surfaces)
+                    .map((s) => ({ perc: stats.surfaces[s] / totalDistanceKm, dist: stats.surfaces[s], id: s }))
+                    .sort((a, b) => b.perc - a.perc)
+            };
+
+            DEV_LOG &&
+                console.log(
+                    'stats',
+                    resultStats.waytypes.reduce((prev, current) => prev + current.dist, 0),
+                    resultStats.surfaces.reduce((prev, current) => prev + current.perc, 0),
+                    resultStats.waytypes.reduce((prev, current) => prev + current.perc, 0),
+                    JSON.stringify(resultStats),
+                    resultStats.waytypes.map((s) => s.id),
+                    resultStats.surfaces.map((s) => s.id)
+                );
+            return resultStats;
+        }
     }
 
     offlineRoutingSearchService() {
