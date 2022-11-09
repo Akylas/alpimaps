@@ -8,7 +8,6 @@
         "emitDecoratorMetadata": false,
         "experimentalDecorators": true,
         "sourceMap": true,
-        "skipLibCheck": true,
         "skipDefaultLibCheck": true,
         "allowUnreachableCode": false,
         "allowUnusedLabels": false,

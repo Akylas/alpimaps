@@ -1,7 +1,7 @@
 import * as https from '@nativescript-community/https';
 import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
 import * as appavailability from '@nativescript/appavailability';
-import { ApplicationEventData, EventData, Observable, knownFolders } from '@nativescript/core';
+import { ApplicationEventData, EventData, Folder, Observable, knownFolders } from '@nativescript/core';
 import { off as applicationOff, on as applicationOn, foregroundEvent } from '@nativescript/core/application';
 import * as connectivity from '@nativescript/core/connectivity';
 import { Headers } from '@nativescript/core/http';
@@ -11,6 +11,7 @@ import { BaseError } from 'make-error';
 import { getBounds, getPathLength } from '~/helpers/geolib';
 import { l } from '~/helpers/locale';
 import { RouteProfile } from '~/models/Item';
+import { getDataFolder } from '~/utils/utils.common';
 import { createGlobalEventListener, globalObservable } from '~/variables';
 
 export const onNetworkChanged = createGlobalEventListener('network');
@@ -86,7 +87,7 @@ function prepareOSMWay(way, nodes) {
         start: points[0],
         startOnRoute: true,
         endOnRoute: true,
-        end: points[points.length -1]
+        end: points[points.length - 1]
     };
     Object.keys(OSMReplaceKeys).forEach(function (key) {
         if (way.tags[key]) {
@@ -545,7 +546,7 @@ export class NetworkService extends Observable {
         connectivity.startMonitoring(this.onConnectionStateChange.bind(this));
         this.connectionType = connectivity.getConnectionType();
         this.canCheckWeather = await appavailability.available(__IOS__ ? 'weather://' : 'com.akylas.weather');
-        const folder = knownFolders.documents().getFolder('cache');
+        const folder = Folder.fromPath(getDataFolder()).getFolder('cache');
         const diskLocation = folder.path;
         const cacheSize = 10 * 1024 * 1024;
         DEV_LOG && console.log('setCache', diskLocation, cacheSize);
@@ -585,9 +586,11 @@ export class NetworkService extends Observable {
             const response = await https.request(requestParams);
             const statusCode = response.statusCode;
 
-            let content: {
-                response?: any;
-            } | string;
+            let content:
+                | {
+                      response?: any;
+                  }
+                | string;
             if (requestParams.toJSON !== false) {
                 try {
                     content = await response.content.toJSONAsync();
@@ -835,7 +838,7 @@ export class NetworkService extends Observable {
             // console.debug('semi', semi);
             const r = await this.actualMapquestElevationProfile(_points.slice(0, semi));
             const r2 = await this.actualMapquestElevationProfile(_points.slice(semi));
-            const firstDistanceTotal = r.elevationProfile[r.elevationProfile.length -1].distance;
+            const firstDistanceTotal = r.elevationProfile[r.elevationProfile.length - 1].distance;
             res = {
                 elevationProfile: r.elevationProfile.concat(
                     r2.elevationProfile.map((e) => {

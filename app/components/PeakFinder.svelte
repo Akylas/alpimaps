@@ -20,6 +20,7 @@
     import { formatDistance } from '~/helpers/formatter';
     import { lc } from '~/helpers/locale';
     import { showError } from '~/utils/error';
+    import { getDataFolder } from '~/utils/utils.common';
     import { alpimapsFontFamily, navigationBarHeight, primaryColor, textColorDark, textColorLight, widgetBackgroundColor } from '~/variables';
 
     export let position;
@@ -50,7 +51,7 @@
         return str.length > maxlength ? str.slice(0, maxlength - 1) + '…' : str;
     }
     function getDefaultDataSource() {
-        const cacheFolder = Folder.fromPath(path.join(knownFolders.documents().path, 'carto_cache'));
+        const cacheFolder = Folder.fromPath(path.join(getDataFolder(), 'carto_cache'));
         const dataSource = new PersistentCacheTileDataSource({
             dataSource: new MapTilerOnlineTileDataSource({ key: 'V7KGiDaKQBCWTYsgsmxh' }),
             capacity: 300 * 1024 * 1024,

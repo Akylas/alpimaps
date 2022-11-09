@@ -21,7 +21,7 @@ import type UserLocationModule from '~/mapModules/UserLocationModule';
 import type { IItem } from '~/models/Item';
 import { showBottomSheet } from '~/utils/svelte/bottomsheet';
 import { createGlobalEventListener, globalObservable } from '~/variables';
-
+import 'svelte';
 export interface IMapModule {
     onMapReady(mapView: CartoMap<LatLonKeys>);
     onMapDestroyed();
@@ -35,21 +35,23 @@ export interface IMapModule {
 }
 export type LayerType = 'map' | 'routes' | 'customLayers' | 'hillshade' | 'selection' | 'items' | 'directions' | 'userLocation' | 'search' | 'transit';
 
+export type ContextCallback<T = CartoMap<LatLonKeys>> = (data: T) => void;
+
 export interface MapContext {
     drawer: Drawer;
     mapModules: MapModules;
     innerDecoder: MBVectorTileDecoder;
-    toggleMenu(side: string);
     showOptions();
     mapModule<T extends keyof MapModules>(id: T): MapModules[T];
-    onMapReady(callback: (map: CartoMap<LatLonKeys>) => void);
-    onMapMove(callback: (map: CartoMap<LatLonKeys>) => void);
-    onMapStable(callback: (map: CartoMap<LatLonKeys>) => void);
-    onMapIdle(callback: (map: CartoMap<LatLonKeys>) => void);
-    onMapClicked(callback: (map: CartoMap<LatLonKeys>) => void);
-    onVectorElementClicked(callback: (data: VectorElementEventData<LatLonKeys>) => void);
-    onVectorTileClicked(callback: (data: VectorTileEventData<LatLonKeys>) => void);
-    onVectorTileElementClicked(callback: (data: VectorTileEventData<LatLonKeys>) => void);
+    onMapReady(callback: ContextCallback, once?: boolean);
+    onMapMove(callback: ContextCallback, once?: boolean);
+    onMapStable(callback: ContextCallback, once?: boolean);
+    getMapViewPort(): { left: number; width: number; top: number; height: number };
+    onMapIdle(callback: ContextCallback, once?: boolean);
+    onMapClicked(callback: ContextCallback, once?: boolean);
+    onVectorElementClicked(callback: ContextCallback<VectorElementEventData<LatLonKeys>>, once?: boolean);
+    onVectorTileClicked(callback: ContextCallback<VectorTileEventData<LatLonKeys>>, once?: boolean);
+    onVectorTileElementClicked(callback: ContextCallback<VectorTileEventData<LatLonKeys>>, once?: boolean);
     getMainPage: () => NativeViewElementNode<Page>;
     getMap: () => CartoMap<LatLonKeys>;
     getProjection: () => Projection;

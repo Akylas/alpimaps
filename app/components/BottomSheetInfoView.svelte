@@ -7,7 +7,7 @@
     const PROPS_TO_SHOW = ['ele'];
 
     export let item: Item;
-    let itemIcon: string[] = null;
+    let itemIcon: string = null;
     let itemIconFontFamily = 'osm';
     let itemTitle: string = null;
     let itemSubtitle: string = null;
@@ -65,12 +65,13 @@
         itemProps = item?.properties;
         itemIsRoute = !!item?.route;
         if (itemIsRoute && (itemProps.route.type === 'pedestrian' || itemProps.route.type === 'bicycle')) {
-            itemIcon = [formatter.getRouteIcon(itemProps.route.type, itemProps.route.subtype)];
+            itemIcon = formatter.getRouteIcon(itemProps.route.type, itemProps.route.subtype);
             itemIconFontFamily = alpimapsFontFamily;
         } else {
-            itemIcon = formatter.geItemIcon(item);
+            itemIcon = osmicon(formatter.geItemIcon(item));
             itemIconFontFamily = 'osm';
         }
+        console.log('updateItem', itemIconFontFamily, itemIcon, formatter.geItemIcon(item))
         itemTitle = formatter.getItemTitle(item);
         itemSubtitle = formatter.getItemSubtitle(item);
         showSymbol = itemIsRoute && itemProps && itemProps.layer === 'route';
@@ -146,40 +147,39 @@
 </script>
 
 <gridlayout {...$$restProps} padding="5 10 4 10">
-    <flexlayout paddingLeft="40" marginBottom={16} flexDirection="column">
-        <label
-            text={itemTitle}
-            fontWeight="bold"
-            color={routeDuration ? '#01B719' : $textColor}
-            fontSize={18}
-            autoFontSize={true}
-            flexGrow={1}
-            maxFontSize={18}
-            verticalTextAlignment="middle"
-            textWrap={true}
-        />
-        <label visibility={itemSubtitle ? 'visible' : 'collapsed'} text={itemSubtitle} color={$subtitleColor} fontSize={13} maxLines={2} verticalTextAlignment="top" flexGrow={1} flexShrink={0} />
-    </flexlayout>
+    <!-- <label
+            verticalAlignment="top"
+            horizontalAlignment="left"
+            paddingTop={12}
+            visibility={itemIcon  ? 'visible' : 'hidden'}
+            paddingLeft={5}
+            width={40}
+            text={itemIcon}
+            fontFamily={itemIconFontFamily}
+            fontSize={24}
+            color={(itemProps && itemProps.color) || $textColor}
+        /> -->
     <canvaslabel fontSize="16">
-        <!-- <cgroup verticalAlignment="middle" paddingBottom={(itemSubtitle ? 4 : 0) + 12}> -->
         <cspan
-            verticalAlignment="middle"
-            paddingBottom={(itemSubtitle ? 4 : 0) + 12}
-            visibility={itemIcon && itemIcon.length > 0 ? 'visible' : 'hidden'}
-            paddingLeft="10"
-            width="40"
-            text={osmicon(itemIcon)}
+            verticalAlignment="top"
+            paddingTop={12}
+            visibility={itemIcon  ? 'visible' : 'hidden'}
+            paddingLeft={5}
+            width={40}
+            text={itemIcon}
             fontFamily={itemIconFontFamily}
             fontSize={24}
             color={(itemProps && itemProps.color) || $textColor}
         />
+        <!-- <cgroup verticalAlignment="middle" paddingBottom={(itemSubtitle ? 4 : 0) + 12}> -->
+        
         <!-- </cgroup> -->
         <symbolshape
             visibility={actualShowSymbol ? 'visible' : 'hidden'}
             symbol={actualShowSymbol ? formatter.getSymbol(itemProps) : null}
             color={itemProps?.color || $textColor}
-            width="34"
-            height="34"
+            width={34}
+            height={34}
             top={3}
         />
 
@@ -192,4 +192,8 @@
             {/each}
         </cgroup>
     </canvaslabel>
+    <flexlayout marginLeft="40" marginBottom={20} flexDirection="column" >
+        <label text={itemTitle} fontWeight="bold" color={$textColor} fontSize={18} autoFontSize={true} flexGrow={1} maxFontSize={18} verticalTextAlignment="middle" textWrap={true} />
+        <label visibility={itemSubtitle ? 'visible' : 'collapsed'} text={itemSubtitle} color={$subtitleColor} fontSize={13} maxLines={2} verticalTextAlignment="top" flexGrow={1} flexShrink={0} />
+    </flexlayout>
 </gridlayout>
