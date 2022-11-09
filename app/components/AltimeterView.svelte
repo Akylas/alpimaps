@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-    import { backgroundEvent, foregroundEvent } from '@akylas/nativescript/application';
+    import { backgroundEvent, foregroundEvent } from '@nativescript/core/application';
     import { getAirportPressureAtLocation, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
     import { getAltitude } from '@nativescript-community/sensors/sensors';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
