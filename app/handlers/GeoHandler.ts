@@ -2,14 +2,22 @@ import { GPS, GenericGeoLocation, Options as GeolocationOptions, LocationMonitor
 import { check, request } from '@nativescript-community/perms';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
 import { ApplicationSettings, CoreTypes, Utils } from '@nativescript/core';
-import { AndroidApplication, ApplicationEventData, android as androidApp, off as applicationOff, on as applicationOn, launchEvent } from '@nativescript/core/application';
-import { backgroundEvent, foregroundEvent } from '@akylas/nativescript/application';
+import {
+    AndroidApplication,
+    ApplicationEventData,
+    android as androidApp,
+    off as applicationOff,
+    on as applicationOn,
+    backgroundEvent,
+    foregroundEvent,
+    launchEvent
+} from '@nativescript/core/application';
 import { AndroidActivityResultEventData } from '@nativescript/core/application/application-interfaces';
 import { EventData, Observable } from '@nativescript/core/data/observable';
 import { bind } from 'helpful-decorators/dist-src/bind';
-import { BgService } from '~/services/BgService';
-import { l, lc } from '~/helpers/locale';
 import { formatDistance, formatDuration } from '~/helpers/formatter';
+import { lc } from '~/helpers/locale';
+import { BgService } from '~/services/BgService';
 import { sdkVersion } from '~/utils/utils.common';
 
 let geolocation: GPS;

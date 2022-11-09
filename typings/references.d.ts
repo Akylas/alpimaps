@@ -2,6 +2,8 @@
 /// <reference path="../node_modules/@nativescript/types-android/lib/android-32.d.ts" />
 /// <reference path="../node_modules/@nativescript-community/ui-carto/typings/carto.android.d.ts" />
 
+// import type { Color } from '@nativescript/core';
+
 // declare module '*.vue' {
 //     import Vue from 'nativescript-vue';
 //     export default Vue;
@@ -70,18 +72,17 @@ declare namespace akylas {
             class VectorTileEventListener extends com.akylas.carto.additions.AKVectorTileEventListener {}
             class BgService extends globalAndroid.app.Service {}
             class BgServiceBinder extends globalAndroid.os.Binder {}
-            export namespace Three {
-                export class GetElevationMeshesCallback extends java.lang.Object {
-                    public static class: java.lang.Class<RoutingServiceRouteCallback>;
-                    /**
-                     * Constructs a new instance of the com.akylas.carto.additions.RoutingServiceRouteCallback interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
-                     */
-                    public constructor(implementation: { onResult(error, res: string): void });
-                    public constructor();
-                    public onResult(error, res: string): void;
-                }
-                function getElevationMeshesAsync(context: android.content.Context, dataSource: com.carto.datasources.TileDataSource, options: string, callback: GetElevationMeshesCallback);
-            }
+            // export namespace Three {
+            //     export class GetElevationMeshesCallback extends java.lang.Object {
+            //         /**
+            //          * Constructs a new instance of the com.akylas.carto.additions.RoutingServiceRouteCallback interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
+            //          */
+            //         public constructor(implementation: { onResult(error, res: string): void });
+            //         public constructor();
+            //         public onResult(error, res: string): void;
+            //     }
+            //     function getElevationMeshesAsync(context: android.content.Context, dataSource: com.carto.datasources.TileDataSource, options: string, callback: GetElevationMeshesCallback);
+            // }
         }
     }
 }
@@ -92,11 +93,11 @@ interface LatLonKeys {
     altitude?: number;
 }
 
-namespace svelteNative.JSX {
+declare namespace svelteNative.JSX {
     interface ViewAttributes {
         disableCss?: boolean;
+        // verticalAlignment: 'top' | 'center' | 'middle' | 'bottom';
         rippleColor?: Color | string;
-        verticalAlignment?: string;
         dynamicElevationOffset?: string | number;
         elevation?: string | number;
     }
