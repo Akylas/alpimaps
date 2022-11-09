@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { File, path } from '@nativescript/core/file-system';
+    import { knownFolders } from '@nativescript/core/file-system';
     import { l, lc } from '@nativescript-community/l';
     import { Align, Canvas, CanvasView, DashPathEffect, LayoutAlignment, Paint, Rect, StaticLayout, Style } from '@nativescript-community/ui-canvas';
     import { fromNativeMapPos, GenericMapPos } from '@nativescript-community/ui-carto/core';
@@ -15,7 +17,7 @@
     import { LineDataSet, Mode } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { Application, ApplicationSettings, Utils } from '@nativescript/core';
+    import { Application, ApplicationSettings, ImageSource, Utils } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
     import type { Point } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
@@ -31,6 +33,7 @@
     import { packageService } from '~/services/PackageService';
     import { showError } from '~/utils/error';
     import { computeDistanceBetween } from '~/utils/geo';
+    import { share } from '~/utils/share';
     import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
     import { borderColor, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
@@ -454,12 +457,45 @@
     // }
 
     async function saveItem(peek = true) {
-        DEV_LOG && console.log('saveItem');
+        // DEV_LOG && console.log('saveItem');
         try {
             updatingItem = true;
-            const item = await mapContext.mapModule('items').saveItem(mapContext.getSelectedItem());
+            const itemsModule = mapContext.mapModule('items');
+            let item = mapContext.getSelectedItem();
+            const isRoute = !!item.route;
+            const imagePath = path.join(itemsModule.imagesFolder.path, Date.now() + '.png');
+            if (isRoute) {
+                item.image_path = imagePath;
+            }
+
+            item = await itemsModule.saveItem(item);
             mapContext.mapModules.directionsPanel.cancel(false);
-            mapContext.selectItem({ item, isFeatureInteresting: true, peek });
+            mapContext.selectItem({ item, isFeatureInteresting: true, peek, preventZoom: false });
+            if (item.route) {
+                mapContext.onMapStable(async () => {
+                    try {
+                        // const startTime = Date.now();
+                        const viewPort = mapContext.getMapViewPort();
+                        const image = await mapContext.getMap().captureRendering(true);
+                        // image.saveToFile(path.join(itemsModule.imagesFolder.path, Date.now() + '_full.png'), 'png');
+                        // console.log('captureRendering', image.width, image.height, viewPort, Date.now() - startTime, 'ms');
+                        const canvas = new Canvas(500, 500);
+                        //we offset a bit to be sure we the whole trace
+                        const offset = 20;
+                        canvas.drawBitmap(
+                            image,
+                            new Rect(viewPort.left -offset, viewPort.top- offset, viewPort.left + viewPort.width+offset, viewPort.top + viewPort.height+offset),
+                            new Rect(0, 0, canvas.getWidth(), canvas.getHeight()),
+                            null
+                        );
+                        new ImageSource(canvas.getImage()).saveToFile(imagePath, 'png');
+                        // console.log('saved bitmap', imagePath, Date.now() - startTime, 'ms');
+                        canvas.release();
+                    } catch (error) {
+                        console.error(error);
+                    }
+                }, true);
+            }
         } catch (err) {
             showError(err);
         } finally {
@@ -479,7 +515,11 @@
         }
     }
     function deleteItem() {
-        mapContext.mapModule('items').deleteItem(mapContext.getSelectedItem());
+        const item = mapContext.getSelectedItem();
+        mapContext.mapModule('items').deleteItem(item);
+        if (item.image_path) {
+            File.fromPath(item.image_path).remove();
+        }
     }
     async function shareItem() {
         if (item?.route) {
