@@ -251,7 +251,6 @@ export default class ItemsModule extends MapModule {
             )
         );
         const count = featureCollection.getFeatureCount();
-        console.log('getRoutePositions', layer.dataSource.getNative(), layer.dataSource.maxZoom, extent, properties.osmid, count);
         if (count === 0) {
             return null;
         }
