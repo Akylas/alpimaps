@@ -71,7 +71,6 @@
             itemIcon = osmicon(formatter.geItemIcon(item));
             itemIconFontFamily = 'osm';
         }
-        console.log('updateItem', itemIconFontFamily, itemIcon, formatter.geItemIcon(item))
         itemTitle = formatter.getItemTitle(item);
         itemSubtitle = formatter.getItemSubtitle(item);
         showSymbol = itemIsRoute && itemProps && itemProps.layer === 'route';
