@@ -284,7 +284,6 @@
     }
 
     function addInternalWayPoint(position: MapPos<LatLonKeys>, metaData?) {
-        console.log('addInternalWayPoint', metaData);
         const id = Date.now() + '';
         const toAdd: ItemFeature = {
             type: 'Feature',
@@ -836,11 +835,9 @@
     }
 
     function onItemReordered(e) {
-        console.log('onItemReordered', e.index);
         (e.view as ContentView).content.opacity = 1;
     }
     function onItemReorderStarting(e) {
-        console.log('onItemReorderStarting', e.index, e.view, (e.view as ContentView).content);
         (e.view as ContentView).content.opacity = 0.8;
     }
     let pedestrianIcon = 'alpimaps-directions_walk';
