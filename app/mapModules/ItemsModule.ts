@@ -10,7 +10,7 @@ import { LineStyleBuilderOptions } from '@nativescript-community/ui-carto/vector
 import { MarkerStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/marker';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/point';
 import { ShareFile } from '@nativescript-community/ui-share-file';
-import { knownFolders, path, profile } from '@nativescript/core';
+import { Folder, ImageSource, knownFolders, path, profile } from '@nativescript/core';
 import type { Feature } from 'geojson';
 import { getDistanceSimple } from '~/helpers/geolib';
 import { IItem, Item, ItemProperties, ItemRepository, Route, RouteInstruction, RouteProfile, RouteStats, toJSONStringified } from '~/models/Item';
@@ -19,8 +19,8 @@ import { accentColor } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
 import NSQLDatabase from './NSQLDatabase';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
+import { getDataFolder } from '~/utils/utils.common';
 const mapContext = getMapContext();
-const filePath = path.join(knownFolders.documents().getFolder('db').path, 'db.sqlite');
 
 let writer: GeoJSONGeometryWriter<LatLonKeys>;
 
@@ -45,6 +45,7 @@ export default class ItemsModule extends MapModule {
     @profile
     async initDb() {
         try {
+            const filePath = path.join(Folder.fromPath(getDataFolder()).getFolder('db').path, 'db.sqlite');
             this.db = new NSQLDatabase(filePath, {
                 // for now it breaks
                 // threading: true,
@@ -393,4 +394,5 @@ export default class ItemsModule extends MapModule {
             await this.itemRepository.delete(item as Item);
         }
     }
+    imagesFolder = Folder.fromPath(path.join(getDataFolder(), 'item_images'));
 }

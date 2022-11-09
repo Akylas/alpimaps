@@ -13,6 +13,7 @@
 			text-wrap-before: true;
 			text-face-name: @mont;
 			text-size: 10;
+			text-allow-overlap: true;
 			text-halo-fill: @route_label_halo;
 			text-halo-radius: @route_label_halo_radius;
 			text-dy: @route_text_dy;

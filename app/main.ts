@@ -41,16 +41,18 @@ class NestedScrollView extends ScrollView {
         return super.createNativeView();
     }
 }
-registerNativeViewElement('AbsoluteLayout', () => require('@nativescript/core').AbsoluteLayout);
-registerElement('Frame', () => new FrameElement());
-registerElement('Page', () => new PageElement());
-registerNativeViewElement('GridLayout', () => require('@nativescript/core').GridLayout);
-registerNativeViewElement('ScrollView', () => NestedScrollView as any);
-registerNativeViewElement('StackLayout', () => require('@nativescript/core').StackLayout);
+registerNativeViewElement('absolutelayout', () => require('@nativescript/core').AbsoluteLayout);
+registerElement('frame', () => new FrameElement());
+registerElement('page', () => new PageElement());
+registerNativeViewElement('gridlayout', () => require('@nativescript/core').GridLayout);
+registerNativeViewElement('scrollview', () => NestedScrollView as any);
+registerNativeViewElement('stacklayout', () => require('@nativescript/core').StackLayout);
+registerNativeViewElement('image', () => require('@nativescript/core').Image);
 registerNativeViewElement('flexlayout', () => require('@nativescript/core').FlexboxLayout);
-registerNativeViewElement('Switch', () => require('@nativescript/core').Switch);
-registerNativeViewElement('TextField', () => require('@nativescript/core').TextField);
-registerNativeViewElement('Span', () => require('@nativescript/core').Span);
+registerNativeViewElement('switch', () => require('@nativescript/core').Switch);
+registerNativeViewElement('textfield', () => require('@nativescript/core').TextField);
+registerNativeViewElement('span', () => require('@nativescript/core').Span);
+
 registerNativeViewElement('mdbutton', () => require('@nativescript-community/ui-material-button').Button, null, {}, { override: true });
 registerNativeViewElement('label', () => require('@nativescript-community/ui-label').Label, null, {}, { override: true });
 registerNativeViewElement('mdactivityindicator', () => require('@nativescript-community/ui-material-activityindicator').ActivityIndicator);
