@@ -1,5 +1,6 @@
 <script lang="ts" context="module">
     import { widgetBackgroundColor } from '~/variables';
+    import SettingsSlider from './SettingsSlider.svelte';
 </script>
 
 <script lang="ts">
@@ -12,27 +13,8 @@
     export let backgroundColor = $widgetBackgroundColor;
     export let onChange = null;
     export let formatter = (value) => value + '';
-
-    function onValueChange(event) {
-        value = event.value;
-        if (onChange) {
-            onChange(event.value);
-        }
-
-    }
 </script>
 
 <gridLayout>
-    <gridLayout rows="auto,auto" columns="auto,*,auto" padding="0 10 0 10" borderRadius="4" {backgroundColor} margin="2" elevation="2">
-        {#if icon}
-            <label class="icon-label" text={icon}  marginTop="0"/>
-        {/if}
-        {#if title}
-            <label text={title} col={1} verticalTextAlignment="center" marginTop="0"/>
-        {/if}
-        <label text={value.toFixed(1)} colSpan={3} verticalTextAlignment="center" textAlignment="right" />
-        <label text={formatter(min)} row={1} verticalTextAlignment="center" textAlignment="center" />
-        <label text={formatter(max)} row={1} col={2} verticalTextAlignment="center" textAlignment="center" />
-        <slider row={1} col={1} {value} on:valueChange={onValueChange} minValue={min} maxValue={max} stepSize={step} />
-    </gridLayout>
+    <SettingsSlider borderRadius="4" {backgroundColor} margin="2" elevation="2" {icon} {title} {value} {min} {max} {step} {onChange} {formatter} />
 </gridLayout>

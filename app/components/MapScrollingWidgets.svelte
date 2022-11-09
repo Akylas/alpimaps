@@ -309,8 +309,11 @@
         }
     }
 
+    async function showRouteList() {
+        const RoutesList = (await import('~/components/RoutesList.svelte')).default;
+        navigate({ page: RoutesList });
+    }
     async function showMapRightMenu() {
-        // mapContext.toggleMenu('bottom');
         const LayersMenu = (await import('~/components/LayersMenu.svelte')).default;
         return showBottomSheet({
             view: LayersMenu,
@@ -442,6 +445,7 @@
     </stacklayout>
     <stacklayout marginTop="80" row={2} verticalAlignment="bottom" horizontalAlignment="left">
         <!-- <mdbutton on:tap={open3DMap} class="small-floating-btn" color={primaryColor} text="mdi-video-3d" /> -->
+        <mdbutton id="layers" on:tap={showRouteList} class="small-floating-btn" color={primaryColor} text="mdi-list-box-outline" />
         <mdbutton id="layers" on:tap={showMapRightMenu} class="small-floating-btn" color={primaryColor} text="mdi-layers" />
     </stacklayout>
 
