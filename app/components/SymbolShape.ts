@@ -81,7 +81,7 @@ export default class SymbolShape extends Shape {
                     try {
                         textpaint.setColor(others[textIndex + 1] || 'black');
                     } catch (error) {
-                        console.log('error setting text paint', error);
+                        console.error('error setting text paint', error);
 
                         textpaint.setColor('black');
                     }
