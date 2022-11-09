@@ -829,11 +829,6 @@ export default class CustomLayersModule extends MapModule {
                 const name = 'Hillshade';
                 const opacity = appSettings.getNumber(`${name}_opacity`, 1);
                 const dataSource = new MultiTileDataSource();
-                TEST_LOG &&
-                    console.log(
-                        'terrains',
-                        terrains.map((s) => s.options.databasePath)
-                    );
                 terrains.forEach((s) => dataSource.add(s));
                 const layer = (this.hillshadeLayer = packageService.hillshadeLayer = this.createHillshadeTileLayer(name, dataSource));
                 // layer.setRasterTileEventListener<LatLonKeys>(
