@@ -19,7 +19,6 @@
     }
 
     function onTap(item: OptionType, args) {
-        console.log('selected route', item);
         close(item);
     }
     

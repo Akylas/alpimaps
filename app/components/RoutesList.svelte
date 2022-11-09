@@ -37,6 +37,6 @@
                 </gridlayout>
             </Template>
         </collectionview>
-        <label row={1} text={lc('no_route')} color={$subtitleColor} visibility={items && items.length ? 'visible' : 'hidden'} textAlignment="center" verticalAlignment="middle" />
+        <label row={1} text={lc('no_route')} color={$subtitleColor} visibility={items && items.length ? 'hidden' : 'visible'} textAlignment="center" verticalAlignment="middle" />
     </gridlayout>
 </page>

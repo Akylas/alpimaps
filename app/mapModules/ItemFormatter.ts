@@ -82,7 +82,6 @@ export default class ItemFormatter {
         }
     }
     getSymbol(itemProps) {
-        console.log('getSymbol', itemProps);
         if (!itemProps) {
             return null;
         }
