@@ -10,11 +10,25 @@ const locals = CSSModule.locals;
 export const globalObservable = new Observable();
 
 const callbacks = {};
-
 export function createGlobalEventListener(eventName: string) {
-    return function (callback: Function) {
+    return function (callback: Function, once = false) {
         callbacks[eventName] = callbacks[eventName] || {};
+        let component;
+        try {
+            component = get_current_component();
+        } catch (error) {}
         const eventCallack = (event) => {
+            if (once) {
+                globalObservable.off(eventName, eventCallack);
+                delete callbacks[eventName][callback];
+
+                if (component) {
+                    const index = component.$$.on_destroy.indexOf(clean);
+                    if (index >= 0) {
+                        component.$$.on_destroy.splice(index, 1);
+                    }
+                }
+            }
             if (Array.isArray(event.data)) {
                 event.result = callback(...event.data);
             } else {
@@ -23,12 +37,12 @@ export function createGlobalEventListener(eventName: string) {
         };
         callbacks[eventName][callback] = eventCallack;
         globalObservable.on(eventName, eventCallack);
-        const component = get_current_component();
+        function clean() {
+            delete callbacks[eventName][callback];
+            globalObservable.off(eventName, eventCallack);
+        }
         if (component) {
-            component.$$.on_destroy.push(() => {
-                delete callbacks[eventName][callback];
-                globalObservable.off(eventName, eventCallack);
-            });
+            component.$$.on_destroy.push(clean);
         }
     };
 }
@@ -101,7 +115,7 @@ export function updateThemeColors(theme: string, force = false) {
         borderColor.set('#cccccc55');
         subtitleColor.set('#aaaaaa');
         iconColor.set('#aaaaaa');
-        widgetBackgroundColor.set('#000000aa');
+        widgetBackgroundColor.set('#000000bb');
     } else {
         textColor.set(textColorLight);
         textLightColor.set('#444444');
