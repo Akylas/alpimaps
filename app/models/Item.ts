@@ -119,8 +119,11 @@ export interface ItemProperties {
     zoomBounds?: MapBounds<LatLonKeys>;
 }
 export class Item {
-    public readonly id!: string;
+    public readonly id!: number;
     type?: string;
+
+    image_path?: string;
+    creation_date: number;
 
     public properties!: ItemProperties | null;
     public _properties!: string;
@@ -148,7 +151,7 @@ export class ItemRepository extends CrudRepository<Item> {
     constructor(database: NSQLDatabase) {
         super({
             database,
-            table: 'Items',
+            table: 'items',
             primaryKey: 'id',
             model: Item
         });
@@ -156,23 +159,27 @@ export class ItemRepository extends CrudRepository<Item> {
 
     async createTables() {
         return this.database.query(sql`
-			CREATE TABLE IF NOT EXISTS "Items" (
-				id BIGINT PRIMARY KEY NOT NULL,
-				onMap INTEGER,
-				properties TEXT,
-				route TEXT,
-				profile TEXT,
-				instructions TEXT,
-				stats TEXT,
-                geometry TEXT NOT NULL
-			);
-		`);
+            CREATE TABLE IF NOT EXISTS "Items" (
+                id BIGINT PRIMARY KEY NOT NULL,
+                geometry TEXT NOT NULL,
+                creation_date BIGINT,
+                onMap INTEGER,
+                properties TEXT,
+                route TEXT,
+                profile TEXT,
+                instructions TEXT,
+                stats TEXT,
+                image_path TEXT
+            );
+        `);
     }
     async createItem(item: IItem) {
-        DEV_LOG && console.log('createItem', item.onMap);
+        DEV_LOG && console.log('createItem', item.onMap, item.image_path);
         await this.create({
             id: item.id,
+            creation_date: item.creation_date || Date.now(),
             onMap: item.onMap,
+            image_path: item.image_path,
             properties: item._properties || JSON.stringify(item.properties),
             route: item._route || JSON.stringify(item.route),
             profile: item._profile || JSON.stringify(item.profile),
@@ -206,7 +213,7 @@ export class ItemRepository extends CrudRepository<Item> {
 
     prepareGetItem(item: Item) {
         return {
-            id: item.id,
+            ...item,
             _properties: item.properties,
             get properties() {
                 if (!this._parsedProperties) {
