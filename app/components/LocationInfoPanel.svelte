@@ -7,7 +7,7 @@
     import { GridLayout } from '@nativescript/core';
     import type { ApplicationEventData } from '@nativescript/core/application';
     import { off as applicationOff, on as applicationOn } from '@nativescript/core/application';
-    import { backgroundEvent, foregroundEvent } from '@akylas/nativescript/application';
+    import { backgroundEvent, foregroundEvent } from '@nativescript/core/application';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler, GeoLocation, UserLocationdEventData } from '~/handlers/GeoHandler';

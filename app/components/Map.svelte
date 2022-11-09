@@ -157,7 +157,7 @@
                         if (!transitVectorTileLayer) {
                             transitVectorTileLayer = new VectorTileLayer({
                                 // preloading: true,
-                                labelRenderOrder: VectorTileRenderOrder.LAST,
+                                labelRenderOrder: VectorTileRenderOrder.LAYER,
                                 dataSource: transitVectorTileDataSource,
                                 decoder: mapContext.innerDecoder
                             });
@@ -315,6 +315,7 @@
             vectorTileElementClicked: onVectorTileElementClicked,
             vectorTileClicked: onVectorTileClicked,
             rasterTileClicked: onRasterTileClicked,
+            getMapViewPort,
             getVectorTileDecoder,
             getCurrentLayer,
             selectItem,
@@ -333,23 +334,13 @@
                 DEV_LOG && console.log('setBottomSheetStepIndex', bottomSheetStepIndex, steps);
                 bottomSheetStepIndex = index;
             },
-            toggleMenu: async (side = 'left') => {
-                // if (side === 'bottom') {
-                //     await layersMenu.loadRightMenuView();
-                // }
-                // drawer.nativeView.toggle(side as any);
-            },
-
             showOptions: showOptions,
             mapModules: {
                 items: new ItemsModule(),
                 userLocation: new UserLocationModule(),
                 customLayers: new CustomLayersModule(),
                 directionsPanel: directionsPanel,
-                // search: searchView,
-                // rightMenu: rightMenu,
                 mapScrollingWidgets
-                // bottomSheet: bottomSheet
             }
         });
 
@@ -440,6 +431,23 @@
             return;
         }
         cartoMap.setBearing(0, 200);
+    }
+    function getMapViewPort() {
+        const width = cartoMap.getMeasuredWidth();
+        const height = cartoMap.getMeasuredHeight();
+        const left = Utils.layout.toDevicePixels(60);
+        const top = Utils.layout.toDevicePixels(90 + topTranslationY);
+        const bottom = Utils.layout.toDevicePixels($navigationBarHeight - mapTranslation + 100);
+        const min = Math.min(width - 2 * left, height - top - bottom);
+        const deltaX = (width - min) / 2;
+        const result = {
+            left: deltaX,
+            top: top + (height - top - bottom - min) / 2,
+            width: min,
+            height: min
+        };
+        DEV_LOG && console.log('getMapViewPort', width, height, mapTranslation, topTranslationY, result);
+        return result;
     }
     const saveSettings = debounce(function () {
         if (!cartoMap) {
@@ -676,7 +684,7 @@
                                     let bestFind: GeoResult;
                                     for (let index = 0; index < res.size(); index++) {
                                         const r = packageService.convertGeoCodingResult(res.get(index), true);
-                                        
+
                                         if (
                                             r &&
                                             r.properties.rank > 0.6 &&
@@ -695,7 +703,6 @@
                                         }
                                     }
                                     if (bestFind && $selectedItem.geometry === item.geometry) {
-
                                         if (props.layer === 'housenumber') {
                                             $selectedItem.properties.address = { ...bestFind.properties.address, name: null, houseNumber: props.housenumber } as any;
                                             $selectedItem = $selectedItem;
@@ -753,9 +760,11 @@
         }
     }
     export function zoomToItem({ item, zoom, minZoom, duration = 200, forceZoomOut = false }: { item: IItem; zoom?: number; minZoom?: number; duration?; forceZoomOut?: boolean }) {
+        const viewPort = getMapViewPort();
+        // we ensure the viewPort is squared for the screen captured
         const screenBounds = {
-            min: { x: 0, y: Utils.layout.toDevicePixels(90 + topTranslationY) },
-            max: { x: page.nativeView.getMeasuredWidth(), y: page.nativeView.getMeasuredHeight() - Utils.layout.toDevicePixels($navigationBarHeight - mapTranslation) }
+            min: { x: viewPort.left, y: viewPort.top },
+            max: { x: viewPort.left + viewPort.width, y: viewPort.top + viewPort.height }
         };
         if (item.properties?.zoomBounds) {
             const zoomLevel = getBoundsZoomLevel(item.properties.zoomBounds, {
@@ -1134,8 +1143,6 @@
                 decoder
             });
             handleNewLanguage(currentLanguage);
-            // console.log('currentLayer', !!currentLayer);
-            // currentLayer.setLabelRenderOrder(VectorTileRenderOrder.LAST);
             currentLayer.setVectorTileEventListener<LatLonKeys>(
                 {
                     onVectorTileClicked: (data) => onVectorTileClicked(data)
