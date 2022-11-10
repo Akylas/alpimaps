@@ -147,8 +147,8 @@
     }
     function valhallaSettingsDefaultValue(key) {
         //TODO: implement
-        return 0;
-    }
+                return 0;
+        }
     function switchValhallaSetting(key: string, options?: any) {
         try {
             if (options === profileCostingOptions) {
