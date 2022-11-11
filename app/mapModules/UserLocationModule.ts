@@ -2,7 +2,6 @@ import { lc } from '@nativescript-community/l';
 import { MapPos, MapPosVector } from '@nativescript-community/ui-carto/core';
 import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
 import { VectorLayer } from '@nativescript-community/ui-carto/layers/vector';
-import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
 import { Polygon } from '@nativescript-community/ui-carto/vectorelements/polygon';
 import { Tween } from '@nativescript-community/ui-chart/animation/Tween';
@@ -129,11 +128,7 @@ export default class UserLocationModule extends MapModule {
         if (altitude !== null) {
             position.altitude = Math.round(altitude);
         }
-
-        // if (!!this.userFollow) {
-        //     this.mapView.focusPos = position;
-        //     this.mapView.zoom = 16;
-        // }
+        // DEV_LOG && console.log('updateUserLocation', geoPos);
         let accuracyColor = '#0e7afe';
         const accuracy = geoPos.horizontalAccuracy || 0;
         const deltaMinutes = dayjs(new Date()).diff(dayjs(geoPos.timestamp), 'minute', true);
@@ -180,31 +175,34 @@ export default class UserLocationModule extends MapModule {
             this.localBackVectorDataSource.add(this.accuracyMarker);
             this.localVectorDataSource.add(this.userBackMarker);
             this.localVectorDataSource.add(this.userMarker);
-            // this.userBackMarker.position = position;
-            // this.userMarker.position = position;
         } else {
-            // const currentLocation = { lat: this.lastUserLocation.latitude, lon: this.lastUserLocation.longitude, horizontalAccuracy: this.lastUserLocation.horizontalAccuracy };
             this.userMarker.color = accuracyColor;
             this.accuracyMarker.visible = accuracy > 20;
 
-            const currentPosition = { ...this.lastUserLocation };
-            try {
-                new Tween({
-                    onRender: (newPos: any) => {
-                        if (this.userMarker) {
-                            this.accuracyMarker.positions = this.getCirclePoints(newPos);
-                            this.userBackMarker.position = newPos;
-                            this.userMarker.position = newPos;
-                        }
-                    }
-                }).tween({ lat: currentPosition.lat, lon: currentPosition.lon }, { lat: position.lat, lon: position.lon }, LOCATION_ANIMATION_DURATION);
-            } catch (err) {
-                console.error(err);
-            }
-
-            // this.userBackMarker.position = position;
-            // this.userMarker.position = position;
-            // this.accuracyMarker.positions = this.getCirclePoints(position);
+            const newPos = { lat: position.lat, lon: position.lon };
+            // TODO: fix tween animation which is only working once
+            // console.log('animating position', { lat: this.lastUserLocation.lat, lon: this.lastUserLocation.lon }, { lat: position.lat, lon: position.lon });
+            // try {
+            //     new Tween({
+            //         onRender: (newPos: any) => {
+            //             try {
+            //                 console.log('onRender', newPos);
+            //                 if (this.userMarker) {
+            //                     this.accuracyMarker.positions = this.getCirclePoints(newPos);
+            //                     this.userBackMarker.position = newPos;
+            //                     this.userMarker.position = newPos;
+            //                 }
+            //             } catch (error) {
+            //                 console.error(error);
+            //             }
+            //         }
+            //     }).tween({ lat: this.lastUserLocation.lat, lon: this.lastUserLocation.lon, time: 0 }, { lat: position.lat, lon: position.lon, time: 1 }, LOCATION_ANIMATION_DURATION);
+            // } catch (err) {
+            //     console.error(err);
+            // }
+            this.userBackMarker.position = newPos;
+            this.userMarker.position = newPos;
+            this.accuracyMarker.positions = this.getCirclePoints(newPos);
         }
         this.lastUserLocation = position;
         if (this.userFollow) {
