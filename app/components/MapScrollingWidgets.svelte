@@ -399,10 +399,10 @@
     }
 </script>
 
-<gridlayout id="scrollingWidgets" bind:this={gridLayout} {...$$restProps} rows="auto,*,auto" columns="70,*,70" isPassThroughParentEnabled={true} marginTop={globalMarginTop} {userInteractionEnabled}>
+<gridlayout id="scrollingWidgets" bind:this={gridLayout} {...$$restProps} rows="auto,*,auto" columns="60,*,70" isPassThroughParentEnabled={true} marginTop={globalMarginTop} {userInteractionEnabled}>
     {#if packageServiceEnabled}
         <label
-            borderRadius="6"
+            borderRadius={6}
             visibility={showSuggestionPackage ? 'visible' : 'collapsed'}
             col={1}
             row={2}
@@ -411,8 +411,8 @@
             verticalTextAlignment="middle"
             horizontalAlignment="center"
             textWrap={true}
-            marginBottom="30"
-            fontSize="10"
+            marginBottom={30}
+            fontSize={10}
             padding="4 2 4 4"
             on:longPress={customDownloadSuggestion}
             on:tap={downloadSuggestion}
@@ -422,7 +422,7 @@
         >${suggestionPackageName}`}
         />
     {/if}
-    <stacklayout col={2} row={2} verticalAlignment="bottom" padding="2">
+    <stacklayout col={2} row={2} verticalAlignment="bottom" padding={2}>
         <mdbutton
             transition:scale={{ duration: 200 }}
             on:tap={startDirections}
@@ -443,30 +443,26 @@
             />
         </mdcardview>
     </stacklayout>
-    <stacklayout marginTop="80" row={2} verticalAlignment="bottom" horizontalAlignment="left">
+    <stacklayout marginTop={80} row={2} verticalAlignment="bottom" horizontalAlignment="left">
         <!-- <mdbutton on:tap={open3DMap} class="small-floating-btn" color={primaryColor} text="mdi-video-3d" /> -->
         <mdbutton id="layers" on:tap={showRouteList} class="small-floating-btn" color={primaryColor} text="mdi-list-box-outline" />
         <mdbutton id="layers" on:tap={showMapRightMenu} class="small-floating-btn" color={primaryColor} text="mdi-layers" />
     </stacklayout>
 
-    <ScaleView bind:this={scaleView} col={1} row={2} horizontalAlignment="right" verticalAlignment="bottom" marginBottom="8" />
+    <ScaleView bind:this={scaleView} col={1} row={2} horizontalAlignment="right" verticalAlignment="bottom" marginBottom={8} />
     <mdprogress colSpan={3} row={2} value={totalDownloadProgress} visibility={totalDownloadProgress > 0 ? 'visible' : 'collapsed'} verticalAlignment="bottom" />
     <canvas
         bind:this={navigationCanvas}
         rowSpan={3}
-        antiAlias={true}
-        transition:scale={{ duration: 200 }}
         on:swipe={() => (navigationInstructions = null)}
         col={1}
         visibility={navigationInstructions ? 'visible' : 'collapsed'}
         verticalAlignment="bottom"
-        horizontalAlignment="center"
         backgroundColor={$widgetBackgroundColor}
-        borderRadius="6"
-        marginBottom="24"
-        elevation="2"
+        borderRadius={6}
+        marginBottom={24}
         width="70%"
-        height="100"
+        height={80}
         on:draw={drawNavigationInstruction}
     />
 </gridlayout>

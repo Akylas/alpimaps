@@ -56,7 +56,7 @@
     height={size}
     fontSize={small ? 20 : 28}
 >
-     <cspan verticalAlignment="center" {text} />
+     <cspan verticalAlignment="middle" {text} />
 </canvaslabel> -->
 <mdbutton
     {isEnabled}
