@@ -48,9 +48,9 @@ export function convertDistance(meters) {
     return humanUnit(meters, distancePreset);
 }
 
-export function formatDistance(meters) {
+export function formatDistance(meters, fractionDigits = 1) {
     const data = convertDistance(meters);
-    return `${data.value.toFixed(data.value < 10 ? 0 : 1)} ${data.unit}`;
+    return `${data.value.toFixed(fractionDigits)} ${data.unit}`;
 }
 export function convertElevation(meters) {
     return convertValueToUnit(meters, UNITS.Distance).join(' ');
