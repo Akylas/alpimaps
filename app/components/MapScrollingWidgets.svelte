@@ -1,5 +1,6 @@
 <script lang="ts">
     import { l, lc } from '@nativescript-community/l';
+    import { createNativeAttributedString } from '@nativescript-community/text';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
@@ -96,12 +97,10 @@
         } else {
             instructionIcon = null;
         }
-        navigationCanvas && navigationCanvas.nativeView.invalidate();
+        navigationCanvas?.nativeView.invalidate();
     }
 
-    onThemeChanged(() => {
-        navigationCanvas && navigationCanvas.nativeView.invalidate();
-    });
+    onThemeChanged(() => navigationCanvas?.nativeView.invalidate());
 
     export function getNativeView() {
         return gridLayout && gridLayout.nativeView;
@@ -328,12 +327,10 @@
         let h = canvas.getHeight();
         if (!iconPaint) {
             iconPaint = new Paint();
-            iconPaint.setAntiAlias(true);
             iconPaint.fontFamily = alpimapsFontFamily;
         }
         if (!textPaint) {
             textPaint = new Paint();
-            textPaint.setAntiAlias(true);
         }
         textPaint.setColor($textColor);
         iconPaint.setColor($textColor);
@@ -351,16 +348,39 @@
                 canvas.drawText(`${data.value.toFixed(data.unit === 'm' ? 0 : 1)} ${data.unit}`, 14, h / 2 + staticLayout.getHeight() / 2 + 15, textPaint);
             }
 
-            textPaint.setTextSize(13);
-            staticLayout = new StaticLayout(navigationInstructions.instruction.inst, textPaint, w - 20 - 50, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
-            canvas.translate(60, 10);
+            // textPaint.setTextSize(13);
+
+            const nString = createNativeAttributedString(
+                {
+                    spans: [
+                        {
+                            fontWeight: 'bold',
+                            fontSize: 15,
+                            text: navigationInstructions.instruction.inst
+                        }
+                    ].concat(
+                        navigationInstructions.instruction.name
+                            ? [
+                                  {
+                                      color: $subtitleColor,
+                                      fontSize: 13,
+                                      text: '\n' + navigationInstructions.instruction.name
+                                  }
+                              ]
+                            : ([] as any)
+                    )
+                },
+                null
+            );
+            staticLayout = new StaticLayout(nString, textPaint, w - 20 - 50, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+            canvas.translate(60, h / 2 - staticLayout.getHeight() / 2);
             staticLayout.draw(canvas);
-            if (navigationInstructions.instruction.name) {
-                let transH = staticLayout.getHeight();
-                textPaint.setTextSize(11);
-                textPaint.setColor($subtitleColor);
-                canvas.drawText(navigationInstructions.instruction.name, 0, transH + 10, textPaint);
-            }
+            // if (navigationInstructions.instruction.name) {
+            //     let transH = staticLayout.getHeight();
+            //     textPaint.setTextSize(11);
+            //     textPaint.setColor($subtitleColor);
+            //     canvas.drawText(navigationInstructions.instruction.name, 0, transH + 10, textPaint);
+            // }
         }
     }
 
