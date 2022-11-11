@@ -31,7 +31,7 @@
     import { onDestroy, onMount } from 'svelte';
     import { navigate } from 'svelte-native';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { GeoHandler } from '~/handlers/GeoHandler';
+    import { GeoHandler, GeoLocation } from '~/handlers/GeoHandler';
     import { l, lc, lt, onLanguageChanged } from '~/helpers/locale';
     import { sTheme, toggleTheme } from '~/helpers/theme';
     import watcher from '~/helpers/watcher';
@@ -874,10 +874,10 @@
         // console.log('handleRouteSelection', featureData);
         const item: IItem = {
             properties: {
-                ...featureData,
+                ...featureData
+            },
             route: {
                 osmid: featureData.osmid || featureData.ref || featureData.name
-                }
             },
             layer
         };
@@ -912,7 +912,7 @@
         selectedRoutes = null;
         handleSelectedRouteTimer = null;
     }
-    function handleClickedFeatures(position: GenericGeoLocation<LatLonKeys>) {
+    function handleClickedFeatures(position: GeoLocation) {
         let fakeIndex = 0;
         // currentClickedFeatures = [...new Map(clickedFeatures.map((item) => [JSON.stringify(item), item])).values()];
         if (!selectedClickMarker) {
@@ -1174,28 +1174,6 @@
         return currentLayer;
     }
 
-    // function getStyleFromCartoMapStyle(style: CartoMapStyle) {
-    //     switch (style) {
-    //         case CartoMapStyle.DARKMATTER:
-    //             return 'darkmatter';
-    //         case CartoMapStyle.POSITRON:
-    //             return 'positron';
-    //         case CartoMapStyle.VOYAGER:
-    //         default:
-    //             return 'voyager';
-    //     }
-    // }
-    // function geteCartoMapStyleFromStyle(style: string) {
-    //     switch (style) {
-    //         case 'darkmatter':
-    //             return CartoMapStyle.DARKMATTER;
-    //         case 'positron':
-    //             return CartoMapStyle.POSITRON;
-    //         case 'voyager':
-    //         default:
-    //             return CartoMapStyle.VOYAGER;
-    //     }
-    // }
     function setMapStyle(layerStyle: string, force = false) {
         layerStyle = layerStyle.toLowerCase();
         let mapStyle = layerStyle;
