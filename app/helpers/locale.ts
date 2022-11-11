@@ -10,6 +10,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import updateLocale from 'dayjs/plugin/updateLocale';
 import utc from 'dayjs/plugin/utc';
 import { derived, writable } from 'svelte/store';
+import { packageService } from '~/services/PackageService';
 import { prefs } from '~/services/preferences';
 import { showBottomSheet } from '~/utils/svelte/bottomsheet';
 import { createGlobalEventListener, globalObservable } from '~/variables';
@@ -171,6 +172,7 @@ prefs.on('key:language', () => {
 let currentLanguage = getString('language', DEFAULT_LOCALE);
 if (!currentLanguage) {
     currentLanguage = Device.language.split('-')[0].toLowerCase();
+    packageService.currentLanguage = currentLanguage;
     setString('language', currentLanguage);
 } else {
     setLang(currentLanguage);
