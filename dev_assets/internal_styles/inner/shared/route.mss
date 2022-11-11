@@ -51,10 +51,10 @@
 
 
 		// line-dasharray: [id] = [nuti::selected_id] ? (0,0) :  @biking_route_dasharray;
-		[class=hiking],
-		[class=foot] {
-			line-color: (@symbolColor);
-		}
+		// [class=hiking],
+		// [class=foot] {
+			line-color: @symbolColor;
+		// }
 
 		[class=bicycle] {
 			line-width: @biking_route_width +([osmid]=[nuti::selected_osmid] ? 1 : 0);
@@ -63,10 +63,11 @@
 				line-dasharray: @biking_route_dasharray;
 			}
 		}
-		[ref !=null][zoom>=13] {
+		[ref !=null][zoom>=13],
+		[name !=null][zoom>=15] {
 			text-fill:@symbolColor;
 
-			[class=bycicle] {
+			[class=bicycle] {
 				text-fill:@biking_symbolColor;
 			}
 			text-name: [ref];
@@ -77,7 +78,7 @@
 
 			text-placement: line;
 			text-wrap-before: true;
-			text-face-name: @mont;
+			text-face-name: @mont_bd;
 			text-size: @route_text_width;
 			text-halo-fill: @route_label_halo;
 			text-halo-radius: @route_label_halo_radius;
