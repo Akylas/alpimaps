@@ -64,7 +64,7 @@
         }
         itemProps = item?.properties;
         itemIsRoute = !!item?.route;
-        if (itemIsRoute && (itemProps.route.type === 'pedestrian' || itemProps.route.type === 'bicycle')) {
+        if (itemIsRoute && itemProps.route && (itemProps.route.type === 'pedestrian' || itemProps.route.type === 'bicycle')) {
             itemIcon = formatter.getRouteIcon(itemProps.route.type, itemProps.route.subtype);
             itemIconFontFamily = alpimapsFontFamily;
         } else {
@@ -158,7 +158,7 @@
             fontSize={24}
             color={(itemProps && itemProps.color) || $textColor}
         /> -->
-    <canvaslabel fontSize="16">
+    <canvaslabel fontSize={16}>
         <cspan
             verticalAlignment="top"
             paddingTop={12}
@@ -170,19 +170,16 @@
             fontSize={24}
             color={(itemProps && itemProps.color) || $textColor}
         />
-        <!-- <cgroup verticalAlignment="middle" paddingBottom={(itemSubtitle ? 4 : 0) + 12}> -->
-        
-        <!-- </cgroup> -->
         <symbolshape
             visibility={actualShowSymbol ? 'visible' : 'hidden'}
             symbol={actualShowSymbol ? formatter.getSymbol(itemProps) : null}
             color={itemProps?.color || $textColor}
             width={34}
             height={34}
-            top={3}
+            top={8}
         />
 
-        <cgroup fontSize="14" verticalAlignment="bottom" textAlignment="left" visibility={propsToDraw.length > 0 ? 'visible' : 'hidden'}>
+        <cgroup fontSize={14} verticalAlignment="bottom" textAlignment="left" visibility={propsToDraw.length > 0 ? 'visible' : 'hidden'}>
             {#each propsToDraw as prop, index}
                 <cgroup>
                     <cspan fontSize={18} fontFamily={mdiFontFamily} color="gray" text={propIcon(prop) + ' '} />
@@ -191,7 +188,7 @@
             {/each}
         </cgroup>
     </canvaslabel>
-    <flexlayout marginLeft="40" marginBottom={20} flexDirection="column" >
+    <flexlayout marginLeft={40} marginBottom={20} flexDirection="column" >
         <label text={itemTitle} fontWeight="bold" color={$textColor} fontSize={18} autoFontSize={true} flexGrow={1} maxFontSize={18} verticalTextAlignment="middle" textWrap={true} />
         <label visibility={itemSubtitle ? 'visible' : 'collapsed'} text={itemSubtitle} color={$subtitleColor} fontSize={13} maxLines={2} verticalTextAlignment="top" flexGrow={1} flexShrink={0} />
     </flexlayout>
