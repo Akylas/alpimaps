@@ -233,39 +233,39 @@
     {...$$restProps}
     bind:this={gridLayout}
     id="locationInfo"
-    width="200"
+    width={200}
     visibility={showLocationInfo ? 'visible' : 'collapsed'}
-    height="70"
-    borderRadius="40"
+    height={70}
+    borderRadius={40}
     backgroundColor="#00000077"
-    padding="6"
+    padding={6}
     columns="auto,*,auto"
     on:tap={moveToUserLocation}
     on:swipe={switchLocationInfo}
 >
     {#if loaded}
-        <canvaslabel bind:this={firstCanvas} width="60" height="60" borderRadius="30" borderWidth="4" borderColor={accentColor} backgroundColor="#000000aa" color="#fff">
+        <canvaslabel bind:this={firstCanvas} width={60} height={60} borderRadius={30} borderWidth={4} borderColor={accentColor} backgroundColor="#000000aa" color="#fff">
             <cspan
                 text={currentLocation && currentLocation.speed !== undefined ? currentLocation.speed.toFixed() : ''}
-                fontSize="26"
+                fontSize={26}
                 fontWeight="bold"
                 textAlignment="center"
-                verticalAlignment="center"
-                paddingBottom="3"
+                verticalAlignment="middle"
+                paddingBottom={3}
             />
-            <cspan text={'km/h'} fontSize="10" textAlignment="center" verticalAlignment="center" paddingTop="12" />
+            <cspan text={'km/h'} fontSize={10} textAlignment="center" verticalAlignment="middle" paddingTop={12} />
         </canvaslabel>
-        <canvaslabel col={1} marginLeft="5" color="#fff">
-            <cspan text={lu('altitude') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'} fontSize="11" color={accentColor} verticalAlignment="top" />
+        <canvaslabel col={1} marginLeft={5} color="#fff">
+            <cspan text={lu('altitude') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'} fontSize={11} color={accentColor} verticalAlignment="top" />
             <cgroup verticalAlignment="middle">
-                <cspan text={shownAltitude} fontSize="20" fontWeight="bold" />
-                <cspan text=" m" fontSize="12" />
+                <cspan text={shownAltitude} fontSize={20} fontWeight="bold" />
+                <cspan text=" m" fontSize={12} />
             </cgroup>
         </canvaslabel>
         <canvaslabel col={1} visibility={listeningForBarometer && airportRefName ? 'visible' : 'collapsed'}>
-            <cspan text={airportRefName} verticalAlignment="bottom" textAlignment="right" color="#fff" fontSize="9" />
+            <cspan text={airportRefName} verticalAlignment="bottom" textAlignment="right" color="#fff" fontSize={9} />
         </canvaslabel>
-        <stacklayout visibility={hasBarometer ? 'visible' : 'collapsed'} col={2} verticalAlignment="center">
+        <stacklayout visibility={hasBarometer ? 'visible' : 'collapsed'} col={2} verticalAlignment="middle">
             <IconButton small={true} white={true} text="mdi-gauge" on:tap={switchBarometer} />
             <IconButton small={true} white={true} isVisible={listeningForBarometer} text="mdi-reflect-vertical" on:tap={getNearestAirportPressure} />
         </stacklayout>
