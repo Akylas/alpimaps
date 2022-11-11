@@ -15,6 +15,7 @@
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
+    import type { Photon } from '~/photon';
     import { HereFeature, PhotonFeature } from '~/components/Features';
     import { formatDistance, osmicon } from '~/helpers/formatter';
     import { getMetersPerPixel } from '~/helpers/geolib';
@@ -327,7 +328,7 @@
     }
     async function searchInVectorTiles(options: SearchRequest) {
         // console.log('searchInVectorTiles', options);
-        let result: GeoResult[] = await packageService.searchInVectorTiles(options) as any;
+        let result: GeoResult[] = (await packageService.searchInVectorTiles(options)) as any;
         if (result) {
             result = packageService.convertFeatureCollection(result as any, options);
         } else {
@@ -336,8 +337,8 @@
         return arraySortOn(
             result.map((r) => {
                 r['distance'] = computeDistanceBetween(options.position, {
-                    lat:r.geometry.coordinates[1],
-                    lon:r.geometry.coordinates[0]
+                    lat: r.geometry.coordinates[1],
+                    lon: r.geometry.coordinates[0]
                 });
                 return r;
             }),
@@ -366,24 +367,46 @@
                 },
                 'https://places.cit.api.here.com/places/v1/discover/search'
             )
-        ).then((result: any) => result.results.items.map((f) => new HereFeature(f)));
+        ).then((result: any) =>
+            result.results.items.map((f) => {
+                const r = new HereFeature(f);
+                if (options.location) {
+                    r['distance'] = computeDistanceBetween(options.location, {
+                        lat: r.geometry.coordinates[1],
+                        lon: r.geometry.coordinates[0]
+                    });
+                }
+                return r;
+            })
+        );
     }
     async function photonSearch(options: { query: string; language?: string; location?: MapPos<LatLonKeys>; locationRadius?: number }) {
         if (!networkService.connected) {
             return [];
         }
-        const url = queryString(
-            {
+        const results = await networkService.request<Photon>({
+            url: 'https://photon.komoot.io/api',
+            method: 'GET',
+            queryParams: {
                 q: options.query,
                 lat: options.location && options.location.lat,
                 lon: options.location && options.location.lon,
                 lang: options.language,
                 limit: 40
-            },
-            'https://photon.komoot.io/api'
-        );
-        const results = await getJSON<any>(url);
-        return results.features.filter((r) => r.properties.osm_type !== 'R').map((f) => new PhotonFeature(f));
+            }
+        });
+        return results.features
+            .filter((r) => r.properties.osm_type !== 'R')
+            .map((f) => {
+                const r = new PhotonFeature(f);
+                if (options.location) {
+                    r['distance'] = computeDistanceBetween(options.location, {
+                        lat: r.geometry.coordinates[1],
+                        lon: r.geometry.coordinates[0]
+                    });
+                }
+                return r;
+            });
     }
     let currentQuery;
 
@@ -505,11 +528,6 @@
         textField.nativeView.focus();
     }
 
-    function showMenu(side: Side = 'left') {
-        unfocus();
-        mapContext.toggleMenu(side);
-    }
-
     function showMapMenu() {
         mapContext.showOptions();
     }
@@ -593,7 +611,7 @@
     backgroundColor={$widgetBackgroundColor}
     margin={`${globalMarginTop + 10} 10 10 10`}
 >
-    <IconButton gray={true} text="mdi-magnify" on:tap={() => showMenu('left')} />
+    <IconButton gray={true} text="mdi-magnify" />
     <textfield
         bind:this={textField}
         variant="none"
@@ -617,25 +635,34 @@
     <IconButton gray={true} isVisible={currentSearchText && currentSearchText.length > 0} col={3} text="mdi-close" on:tap={() => clearSearch()} />
     <IconButton col={4} gray={true} text="mdi-dots-vertical" on:tap={showMapMenu} />
     {#if loaded}
-        <absolutelayout bind:this={collectionViewHolder} row={1} height="0" colSpan={7} isUserInteractionEnabled={searchResultsVisible}>
-            <gridlayout height="200" width="100%" rows="*,auto" columns="auto,auto,*">
+        <absolutelayout bind:this={collectionViewHolder} row={1} height={0} colSpan={7} isUserInteractionEnabled={searchResultsVisible}>
+            <gridlayout height={200} width="100%" rows="*,auto" columns="auto,auto,*">
                 <IconButton small={true} variant="text" row={1} isVisible={searchResultsVisible} text="mdi-shape" on:tap={toggleFilterOSMKey} isSelected={filteringOSMKey} />
                 <IconButton small={true} variant="text" isVisible={searchResultsVisible} col={1} row={1} text="mdi-map" on:tap={showResultsOnMap} />
-                <collectionview colSpan={3} bind:this={collectionView} rowHeight="49" items={filteredDataItems} isUserInteractionEnabled={searchResultsVisible}>
+                <collectionview colSpan={3} bind:this={collectionView} rowHeight={49} items={filteredDataItems} isUserInteractionEnabled={searchResultsVisible}>
                     <Template let:item>
-                        <canvaslabel columns="34,*" padding="0 10 0 10" rows="*,auto,auto,*" class="textRipple" on:tap={() => onItemTap(item)}>
-                            <cspan text={item.icon} color={item.color} fontFamily="osm" fontSize="20" verticalAlignment="center" />
-                            <cspan paddingLeft={34} verticalAlignment="center" paddingBottom={item.subtitle || item.distance ? 10 : 0} text={item.title} fontSize="14" fontWeight="bold" />
+                        <canvaslabel columns="34,*" padding="0 10 0 10" rows="*,auto,auto,*" disableCss={true} rippleColor={$textColor} on:tap={() => onItemTap(item)}>
+                            <cspan text={item.icon} color={item.color} fontFamily="osm" fontSize={20} verticalAlignment="middle" />
+                            <cspan paddingLeft={34} verticalAlignment="middle" paddingBottom={item.subtitle ? 10 : 0} text={item.title} fontSize={14} fontWeight="bold" />
                             <cspan
                                 paddingLeft={34}
-                                verticalAlignment="center"
+                                verticalAlignment="middle"
                                 paddingTop={10}
-                                text={item.subtitle || (item.distance && formatDistance(item.distance))}
-                                color="#888888"
-                                fontSize="12"
-                                visibility={!!item.subtitle || 'distance' in item ? 'visible' : 'collapsed'}
+                                text={item.subtitle}
+                                color={$subtitleColor}
+                                fontSize={12}
+                                visibility={!!item.subtitle ? 'visible' : 'collapsed'}
                             />
-                            <!-- <cspan col={1} rowSpan={2} text={item.provider} class="subtitle" textAlignment="right" fontSize="12" /> -->
+                            <cspan
+                                textAlignment="right"
+                                verticalAlignment="middle"
+                                paddingTop={10}
+                                text={item.distance && formatDistance(item.distance)}
+                                color={$subtitleColor}
+                                fontSize={12}
+                                visibility={'distance' in item ? 'visible' : 'collapsed'}
+                            />
+                            <!-- <cspan col={1} rowSpan={2} text={item.provider} class="subtitle" textAlignment="right" fontSize={12} /> -->
                         </canvaslabel>
                     </Template>
                 </collectionview>
