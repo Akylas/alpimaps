@@ -895,17 +895,16 @@ class PackageService extends Observable {
         }
         if (service instanceof ValhallaOfflineRoutingService || service instanceof ValhallaOnlineRoutingService) {
             const startTime = Date.now();
-            DEV_LOG && console.log('matchRoute', new MapPosVector(positions).toArray());
             const matchResult = await service.matchRoute({
                 projection,
                 points: positions || this.getRouteItemPoses(item),
                 accuracy: 1,
                 customOptions: {
-                    shape_match: 'edge_walk',
+                    shape_match: 'walk_or_snap',
                     filters: { attributes: ['edge.surface', 'edge.road_class', 'edge.sac_scale', 'edge.use', 'edge.length'], action: 'include' }
                 }
             });
-            DEV_LOG && console.log('got trace attributes', route.totalDistance, Date.now() - startTime, 'ms', matchResult.getRawResult());
+            DEV_LOG && console.log('got trace attributes', route.totalDistance, Date.now() - startTime, 'ms');
             const edges = JSON.parse(matchResult.getRawResult()).edges;
             const stats: {
                 [k: string]: { [k: string]: number };
