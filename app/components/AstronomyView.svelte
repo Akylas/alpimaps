@@ -204,22 +204,22 @@
 
 <gridLayout {height} rows="auto,200,*" columns="auto,*,auto">
     <mdbutton variant="text" class="icon-btn" text="mdi-chevron-left" horizontalAlignment="left" on:tap={() => (startTime = startTime.subtract(1, 'd'))} />
-    <label col={1} text={startTime.format('LL')} textAlignment="center" verticalTextAlignment="center" on:tap={selectDate} fontSize="17" />
+    <label col={1} text={startTime.format('LL')} textAlignment="center" verticalTextAlignment="center" on:tap={selectDate} fontSize={17} />
     <mdbutton col={2} variant="text" class="icon-btn" text="mdi-chevron-right" horizontalAlignment="right" on:tap={() => (startTime = startTime.add(1, 'd'))} />
     <linechart row={1} colSpan={3} bind:this={chart} backgroundColor="#222222" on:tap={setDateTime}>
         <rectangle fillColor="#a0caff" height="50%" width="100%" />
     </linechart>
     {#if sunTimes}
-        <canvaslabel bind:this={bottomLabel} row={2} colSpan={3} fontSize="18" padding="0 10 0 10">
-            <cgroup color="#ffa500" verticalAlignment="center">
+        <canvaslabel bind:this={bottomLabel} row={2} colSpan={3} fontSize={18} padding="0 10 0 10">
+            <cgroup color="#ffa500" verticalAlignment="middle">
                 <cspan fontFamily={mdiFontFamily} text="mdi-weather-sunset-up" />
                 <cspan text={' ' + convertTime(sunTimes.sunriseEnd, 'HH:mm')} />
             </cgroup>
-            <cgroup color="#ff7200" textAlignment="center" verticalAlignment="center">
+            <cgroup color="#ff7200" textAlignment="center" verticalAlignment="middle">
                 <cspan fontFamily={mdiFontFamily} text="mdi-weather-sunset-down" />
                 <cspan text={' ' + convertTime(sunTimes.sunsetStart, 'HH:mm')} />
             </cgroup>
-            <cgroup textAlignment="right" verticalAlignment="center">
+            <cgroup textAlignment="right" verticalAlignment="middle">
                 <cspan fontFamily={mdiFontFamily} text={getMoonPhaseIcon(illumination)} />
                 <cspan text={' ' + moonAzimuth.exact + '(' + Math.round(illumination.fraction * 100) + '%)'} />
             </cgroup>

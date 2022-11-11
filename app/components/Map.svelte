@@ -875,8 +875,8 @@
         const item: IItem = {
             properties: {
                 ...featureData,
-                route: {
-                    osmid: featureData.osmid || featureData.ref || featureData.name
+            route: {
+                osmid: featureData.osmid || featureData.ref || featureData.name
                 }
             },
             layer
@@ -1718,7 +1718,7 @@
     >
         <gridlayout width="100%" height="100%">
             <cartomap
-                zoom="16"
+                zoom={16}
                 on:mapReady={onMainMapReady}
                 on:mapMoved={onMainMapMove}
                 on:mapStable={onMainMapStable}
@@ -1744,8 +1744,8 @@
             <LocationInfoPanel
                 horizontalAlignment="left"
                 verticalAlignment="top"
-                marginLeft="20"
-                marginTop="90"
+                marginLeft={20}
+                marginTop={90}
                 bind:this={locationInfoPanel}
                 isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
             />
@@ -1755,16 +1755,16 @@
                 horizontalAlignment="right"
                 isUserInteractionEnabled="false"
                 color="red"
-                fontSize="12"
-                width="20"
-                height="30"
+                fontSize={12}
+                width={20}
+                height={30}
                 class="mdi"
                 textAlignment="center"
             >
                 <cspan text="mdi-access-point-network-off" visibility={networkConnected ? 'collapsed' : 'visible'} textAlignment="left" verticalTextAlignement="top" />
             </canvaslabel>
             <mdbutton
-                marginTop="90"
+                marginTop={90}
                 visibility={currentMapRotation !== 0 ? 'visible' : 'collapsed'}
                 on:tap={resetBearing}
                 class="small-floating-btn"
@@ -1781,15 +1781,15 @@
         <BottomSheetInner bind:this={bottomSheetInner} bind:navigationInstructions bind:steps prop:bottomSheet updating={itemLoading} item={$selectedItem} />
         <!-- <collectionview
                 items={currentClickedFeatures}
-                height="80"
+                height={80}
                 margin="80 20 0 20"
                 verticalAlignment="top"
-                borderRadius="16"
+                borderRadius={16}
                 backgroundColor="#00000055"
                 visibility={currentClickedFeatures && currentClickedFeatures.length > 0 ? 'visible' : 'collapsed'}
             >
                 <Template let:item>
-                    <label padding="0 20 0 20" text={JSON.stringify(item)} verticalAlignment="center" fontSize="11" color="white" />
+                    <label padding="0 20 0 20" text={JSON.stringify(item)} verticalAlignment="middle" fontSize={11} color="white" />
                 </Template>
             </collectionview> -->
     </bottomsheet>
