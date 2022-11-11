@@ -1,24 +1,23 @@
 <script lang="ts">
     import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { pickFolder } from '@nativescript-community/ui-document-picker';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { ApplicationSettings, ObservableArray } from '@nativescript/core';
     import { dismissSoftInput, openUrl } from '@nativescript/core/utils/utils';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { GeoHandler } from '~/handlers/GeoHandler';
-    import { getLocaleDisplayName, l, lc, onLanguageChanged, selectLanguage, slc } from '~/helpers/locale';
-    import { getThemeDisplayName, onThemeChanged, selectTheme } from '~/helpers/theme';
+    import { getLocaleDisplayName, l, lc, onLanguageChanged, selectLanguage } from '~/helpers/locale';
+    import { getThemeDisplayName, selectTheme } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { share } from '~/utils/share';
+    import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
     import { borderColor, mdiFontFamily } from '~/variables';
     import CActionBar from './CActionBar.svelte';
     import ThirdPartySoftwareBottomSheet from './ThirdPartySoftwareBottomSheet.svelte';
-    import { pickFolder } from '@nativescript-community/ui-document-picker';
-    import CustomLayersModule from '~/mapModules/CustomLayersModule';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
 
     let collectionView: NativeViewElementNode<CollectionView>;
 
@@ -44,7 +43,7 @@
             const devMode = (customLayers.devMode = !customLayers.devMode);
             nbDevModeTap = 0;
             showSnack({ message: devMode ? lc('devmode_on') : lc('devmode_off') });
-            refresh()
+            refresh();
             return;
         }
         devModeClearTimer = setTimeout(() => {
@@ -260,14 +259,14 @@
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*">
         <CActionBar canGoBack title={lc('settings')} />
-        <collectionview bind:this={collectionView} row={1} {items} rowHeight="70" itemTemplateSelector={selectTemplate}>
+        <collectionview bind:this={collectionView} row={1} {items} rowHeight={70} itemTemplateSelector={selectTemplate}>
             <Template let:item key="switch">
                 <gridlayout columns="*, auto" padding="0 10 0 30">
-                    <stackLayout verticalAlignment="center">
-                        <label fontSize="17" text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines={2} lineBreak="end" />
+                    <stackLayout verticalAlignment="middle">
+                        <label fontSize={17} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines={2} lineBreak="end" />
                         <label
                             visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'}
-                            fontSize="14"
+                            fontSize={14}
                             class="subtitle"
                             text={getSubtitle(item)}
                             verticalTextAlignment="top"
@@ -275,18 +274,18 @@
                             lineBreak="end"
                         />
                     </stackLayout>
-                    <switch col={1} checked={item.value} on:checkedChange={(e) => onCheckBox(item, e.value)} verticalAlignment="center" />
-                    <absoluteLayout colSpan={2} backgroundColor={$borderColor} height="1" verticalAlignment="bottom" />
+                    <switch col={1} checked={item.value} on:checkedChange={(e) => onCheckBox(item, e.value)} verticalAlignment="middle" />
+                    <absoluteLayout colSpan={2} backgroundColor={$borderColor} height={1} verticalAlignment="bottom" />
                 </gridlayout>
             </Template>
             <Template let:item>
-                <gridLayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)} on:touch={(event)=>onTouch(item, event)}>
-                    <label fontSize={36} text={item.icon} marginLeft="-10" width="40" verticalAlignment="center" fontFamily={mdiFontFamily} visibility={!!item.icon ? 'visible' : 'hidden'} />
-                    <stackLayout col={1} verticalAlignment="center">
-                        <label fontSize="17" text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines={2} lineBreak="end" />
+                <gridLayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)} on:touch={(event) => onTouch(item, event)}>
+                    <label fontSize={36} text={item.icon} marginLeft="-10" width={40} verticalAlignment="middle" fontFamily={mdiFontFamily} visibility={!!item.icon ? 'visible' : 'hidden'} />
+                    <stackLayout col={1} verticalAlignment="middle">
+                        <label fontSize={17} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines={2} lineBreak="end" />
                         <label
                             visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'}
-                            fontSize="14"
+                            fontSize={14}
                             class="subtitle"
                             text={getSubtitle(item)}
                             verticalTextAlignment="top"
@@ -300,15 +299,15 @@
                         visibility={!!item.rightValue ? 'visible' : 'collapsed'}
                         text={item.rightValue && item.rightValue()}
                         class="subtitle"
-                        verticalAlignment="center"
+                        verticalAlignment="middle"
                         marginRight={16}
                         marginLeft={16}
                     />
                     <label
                         col={2}
-                        width="25"
-                        height="25"
-                        fontSize="20"
+                        width={25}
+                        height={25}
+                        fontSize={20}
                         horizontalAlignment="right"
                         visibility={!!item.rightBtnIcon ? 'visible' : 'hidden'}
                         class="icon-btn"
@@ -316,7 +315,7 @@
                         marginRight={10}
                         text={item.rightBtnIcon}
                     />
-                    <absoluteLayout row={2} col={1} colSpan={3} backgroundColor={$borderColor} height="1" verticalAlignment="bottom" />
+                    <absoluteLayout row={2} col={1} colSpan={3} backgroundColor={$borderColor} height={1} verticalAlignment="bottom" />
                 </gridLayout>
             </Template>
         </collectionview>
