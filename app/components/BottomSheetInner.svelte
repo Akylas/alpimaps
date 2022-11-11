@@ -23,7 +23,7 @@
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode, navigate } from 'svelte-native/dom';
     import BottomSheetInfoView from '~/components/BottomSheetInfoView.svelte';
-    import { formatValueToUnit, UNITS } from '~/helpers/formatter';
+    import { formatDistance, formatValueToUnit, UNITS } from '~/helpers/formatter';
     import { slc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
@@ -38,6 +38,7 @@
     import { openLink } from '~/utils/ui';
     import { borderColor, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import IconButton from './IconButton.svelte';
+    import { createNativeAttributedString } from '@nativescript-community/text';
 
     const LISTVIEW_HEIGHT = 200;
     const PROFILE_HEIGHT = 150;
@@ -48,7 +49,6 @@
     const mapContext = getMapContext();
     const highlightPaint = new Paint();
     highlightPaint.setColor('#8687A2');
-    highlightPaint.setAntiAlias(true);
     // highlightPaint.setTextAlign(Align.CENTER);
     highlightPaint.setStrokeWidth(1);
     highlightPaint.setTextSize(10);
@@ -200,7 +200,7 @@
                 const props = routeItem.properties;
                 const route = routeItem.route;
                 const positions = packageService.getRouteItemPoses(routeItem);
-                const onPathIndex = isLocationOnPath(location, positions, false, true, 2 * Math.pow(2, 2 * Math.max(0, 17 - mapContext.getMap().getZoom())));
+                const onPathIndex = isLocationOnPath(location, positions, false, true, 15);
                 if (routeItem.instructions && onPathIndex !== -1 && updateNavigationInstruction) {
                     let routeInstruction;
                     for (let index = routeItem.instructions.length - 1; index >= 0; index--) {
@@ -222,6 +222,8 @@
                         distanceToNextInstruction,
                         remainingTime: ((route.totalTime * distance) / route.totalDistance) * 1000
                     };
+                } else {
+                    navigationInstructions = null
                 }
                 if (updateGraph && graphAvailable && chart.nativeView) {
                     if (onPathIndex === -1) {
@@ -483,7 +485,7 @@
                         const offset = 20;
                         canvas.drawBitmap(
                             image,
-                            new Rect(viewPort.left -offset, viewPort.top- offset, viewPort.left + viewPort.width+offset, viewPort.top + viewPort.height+offset),
+                            new Rect(viewPort.left - offset, viewPort.top - offset, viewPort.left + viewPort.width + offset, viewPort.top + viewPort.height + offset),
                             new Rect(0, 0, canvas.getWidth(), canvas.getHeight()),
                             null
                         );
@@ -632,7 +634,7 @@
         const xAxis = chartView.getXAxis();
         xAxis.setTextColor($textColor);
         xAxis.setGridColor($borderColor);
-        const set = chartView.getData()?.getDataSetByIndex(0)?.setValueTextColor($textColor);
+        chartView.getData()?.getDataSetByIndex(0)?.setValueTextColor($textColor);
     });
     function updateChartData() {
         if (!chart) {
@@ -879,9 +881,12 @@
             const usedWidth = w - 20;
             let x = 10;
             let labelx = 13;
-            let labely = 105;
+            let labely = 95;
             const stats = item.stats[statsKey];
             canvas.drawText(lc(statsKey), labelx, 20, bigTextPaint);
+            const nbColumns = Math.round(stats.length / Math.floor((h - 105) / 20));
+            const availableWidth = usedWidth / nbColumns - 15;
+            let rigthX, nString, text, text2, layoutHeight, staticLayout;
             stats.forEach((s) => {
                 const rigthX = x + s.perc * usedWidth;
                 barPaint.color = 'white';
@@ -891,16 +896,36 @@
                 barPaint.style = Style.FILL;
                 canvas.drawRect(x, 35, rigthX, 75, barPaint);
                 x = rigthX;
-                const text = lc(s.id);
-                // textPaint.getTextBounds(text, 0, text.length, rect);
-                // textWidth = rect.width;
+                text = lc(s.id);
+                text2 = formatDistance(s.dist * 1000, s.dist < 1 ? 0 : 1);
                 canvas.drawCircle(labelx + 3, labely - 4, 6, barPaint);
-                canvas.drawText(text, labelx + 11, labely, textPaint);
-                if (labely < h - 20) {
-                    labely += 20;
+                nString = createNativeAttributedString(
+                    {
+                        spans: [
+                            {
+                                fontWeight: 'bold',
+                                text: text + ': '
+                            },
+                            {
+                                text: text2,
+                                color: $subtitleColor,
+                                fontSize: 12
+                            }
+                        ]
+                    },
+                    null
+                );
+                staticLayout = new StaticLayout(nString, textPaint, availableWidth, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+                layoutHeight = staticLayout.getHeight();
+                canvas.save();
+                canvas.translate(labelx + 15, labely - 14);
+                staticLayout.draw(canvas);
+                canvas.restore();
+                if (labely < h - layoutHeight) {
+                    labely += layoutHeight;
                 } else {
                     labely = 105;
-                    labelx += (1 / 3) * usedWidth;
+                    labelx += usedWidth / nbColumns;
                 }
             });
         } catch (error) {
@@ -914,7 +939,7 @@
         <BottomSheetInfoView bind:this={infoView} {item} />
         <mdactivityindicator visibility={updatingItem ? 'visible' : 'collapsed'} horizontalAligment="right" busy={true} width={20} height={20} />
         <IconButton col={1} text="mdi-crosshairs-gps" isVisible={itemIsRoute} on:tap={zoomToItem} />
-        <stacklayout orientation="horizontal" row={1} colSpan={2} borderTopWidth="1" borderBottomWidth="1" borderColor={$borderColor}>
+        <stacklayout orientation="horizontal" row={1} colSpan={2} borderTopWidth={1} borderBottomWidth={1} borderColor={$borderColor}>
             <IconButton on:tap={searchWeb} tooltip={lc('search_web')} isVisible={item && (!itemIsRoute || item.properties?.name) && !item.id} text="mdi-web" rounded={false} />
             <IconButton on:tap={() => getProfile()} tooltip={lc('elevation_profile')} isVisible={itemIsRoute && itemCanQueryProfile} text="mdi-chart-areaspline" rounded={false} />
             <IconButton on:tap={() => saveItem()} tooltip={lc('save')} isVisible={item && !item.id} text="mdi-map-plus" rounded={false} />
@@ -962,11 +987,11 @@
             isScrollEnabled={scrollEnabled}
             src={webViewSrc}
         /> -->
-        <!-- <CollectionView id="bottomsheetListView" row={3} bind:this="listView" rowHeight="40" items="routeInstructions" :visibility="showListView ? 'visible' : 'hidden'" isBounceEnabled="false" @scroll="onListViewScroll" :isScrollEnabled={scrollEnabled}>
+        <!-- <CollectionView id="bottomsheetListView" row={3} bind:this="listView" rowHeight={40} items="routeInstructions" :visibility="showListView ? 'visible' : 'hidden'" isBounceEnabled="false" @scroll="onListViewScroll" :isScrollEnabled={scrollEnabled}>
             <v-template>
                 <GridLayout columns="30,*" rows="*,auto,auto,*" rippleColor="white"  @tap="onInstructionTap(item)">
-                    <label  rowSpan={4} text="getRouteInstructionIcon(item) |fonticon" class="osm" color="white" fontSize="20" verticalAlignment="center" textAlignment={center} />
-                    <label col={1} row={1} text="getRouteInstructionTitle(item)" color="white" fontSize="13" fontWeight={bold} textWrap={true} />
+                    <label  rowSpan={4} text="getRouteInstructionIcon(item) |fonticon" class="osm" color="white" fontSize={20} verticalAlignment="middle" textAlignment={center} />
+                    <label col={1} row={1} text="getRouteInstructionTitle(item)" color="white" fontSize={13} fontWeight={bold} textWrap={true} />
                 </GridLayout>
             </v-template>
         </CollectionView> -->
