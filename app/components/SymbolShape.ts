@@ -13,7 +13,6 @@ shapepaint.setTextSize(34);
 const textpaint = new Paint();
 textpaint.setFontWeight('500');
 textpaint.setTextSize(18);
-textpaint.setAntiAlias(true);
 textpaint.setTextAlign(Align.CENTER);
 
 const path = new Path();
@@ -32,7 +31,7 @@ export default class SymbolShape extends Shape {
         const top = layout.toDeviceIndependentPixels(Length.toDevicePixels(this.top));
         const symbol = this.symbol || `blue:white:${this.color || 'blue'}_bar`;
         path.reset();
-        path.addRoundRect(left, top, left + width, height + top, 3, 3, Direction.CW);
+        path.addRoundRect(left, top, left + width, height + top, 6, 6, Direction.CW);
 
         canvas.clipPath(path);
         try {
