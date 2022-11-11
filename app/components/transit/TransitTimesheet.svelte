@@ -43,7 +43,7 @@
                 return;
             }
             // console.log('fetchLineTimeline', time.valueOf(), lineData[lineDataIndex].prevTime, lineData[lineDataIndex].nextTime);
-            directionText = timelineItems[0].stopName + '\n' + timelineItems[timelineItems.length -1].stopName;
+            directionText = timelineItems[0].stopName + '\n' + timelineItems[timelineItems.length - 1].stopName;
             if (line.stopIds) {
                 currentStopId = line.stopIds[lineDataIndex];
                 const index = timelineItems.findIndex((a) => a.stopId === currentStopId);
@@ -73,7 +73,7 @@
     function reverseTimesheet() {
         lineDataIndex = 1 - lineDataIndex;
         timelineItems = lineData[lineDataIndex].arrets;
-        directionText = timelineItems[0].stopName + '\n' + timelineItems[timelineItems.length -1].stopName;
+        directionText = timelineItems[0].stopName + '\n' + timelineItems[timelineItems.length - 1].stopName;
         if (line.stopIds) {
             currentStopId = line.stopIds[lineDataIndex];
             const index = timelineItems.findIndex((a) => a.stopId === currentStopId);
@@ -158,9 +158,7 @@
         fetchLineTimeline(currentTime);
     });
 
-    onThemeChanged(() => {
-        collectionView && (collectionView.nativeView as CollectionView).refreshVisibleItems();
-    });
+    onThemeChanged(() => collectionView?.nativeView.refreshVisibleItems());
 </script>
 
 <page bind:this={page} actionBarHidden={true}>
@@ -203,7 +201,7 @@
             <IconButton row={1} colSpan={3} text="mdi-chevron-right" horizontalAlignment="right" on:tap={nextDates} />
         </gridlayout>
 
-        <collectionview row={3} colSpan={3} bind:this={collectionView} items={timelineItems} itemIdGenerator={(item, i) => i} android:marginBottom={$navigationBarHeight} rowHeight="50">
+        <collectionview row={3} colSpan={3} bind:this={collectionView} items={timelineItems} itemIdGenerator={(item, i) => i} android:marginBottom={$navigationBarHeight} rowHeight={50}>
             <Template let:item>
                 <gridlayout rippleColor={item.color} columns="*,200" padding={4} borderBottomColor={$borderColor} borderBottomWidth={1}>
                     <label
@@ -216,19 +214,19 @@
                         maxLines={2}
                         paddingRight={10}
                     />
-                    <canvaslabel col="1" fontSize={12} color={item.stopId === currentStopId ? accentColor : $textColor} textAlignment="center">
-                        <cspan text={getTripTime(item, 0)} verticalAlignment="center" width="25%" />
-                        <cspan text={getTripTime(item, 1)} verticalAlignment="center" paddingLeft="25%" width="25%" />
-                        <cspan text={getTripTime(item, 2)} verticalAlignment="center" paddingLeft="50%" width="25%" />
-                        <cspan text={getTripTime(item, 3)} verticalAlignment="center" paddingLeft="75%" width="25%" />
+                    <canvaslabel col={1} fontSize={12} color={item.stopId === currentStopId ? accentColor : $textColor} textAlignment="center">
+                        <cspan text={getTripTime(item, 0)} verticalAlignment="middle" width="25%" />
+                        <cspan text={getTripTime(item, 1)} verticalAlignment="middle" paddingLeft="25%" width="25%" />
+                        <cspan text={getTripTime(item, 2)} verticalAlignment="middle" paddingLeft="50%" width="25%" />
+                        <cspan text={getTripTime(item, 3)} verticalAlignment="middle" paddingLeft="75%" width="25%" />
                     </canvaslabel>
                 </gridlayout>
             </Template>
         </collectionview>
-        <mdactivityindicator row={3} colSpan={3} visibility={loading ? 'visible' : 'collapsed'} busy={true} horizontalAlignment="center" verticalAlignment="center" />
+        <mdactivityindicator row={3} colSpan={3} visibility={loading ? 'visible' : 'collapsed'} busy={true} horizontalAlignment="center" verticalAlignment="middle" />
         {#if noNetworkAndNoData}
             <canvaslabel row={2} rowSpan={2} colSpan={3}>
-                <cgroup textAlignment="center" verticalAlignment="center">
+                <cgroup textAlignment="center" verticalAlignment="middle">
                     <cspan text="mdi-alert-circle-outline" fontSize={50} fontFamily={mdiFontFamily} />
                     <cspan text={'\n' + lc('no_network')} fontSize={20} />
                 </cgroup>
