@@ -112,48 +112,39 @@
     function onButtonLongPress(item, event) {
         collectionView.nativeView.startDragging(customSources.indexOf(item));
     }
-    onThemeChanged(() => {
-        collectionView && (collectionView.nativeView as CollectionView).refreshVisibleItems();
-    });
+    onThemeChanged(() => collectionView?.nativeView.refreshVisibleItems());
 </script>
 
 <gridlayout {...$$restProps} id="rightMenu" bind:this={gridLayout} columns="*,auto" height={240 + $navigationBarHeight} paddingBottom={$navigationBarHeight}>
     {#if loaded}
         <collectionview id="trackingScrollView" items={customSources} bind:this={collectionView} reorderEnabled={true} on:itemReordered={onItemReordered}>
             <Template let:item>
-                <gridlayout paddingLeft="15" paddingRight="5" rows="*" columns="130,*,auto" borderBottomColor={$borderColor} borderBottomWidth="1">
+                <gridlayout paddingLeft={15} paddingRight={5} rows="*" columns="130,*,auto" borderBottomColor={$borderColor} borderBottomWidth={1}>
                     <label
                         color={item.layer.opacity === 0 ? $subtitleColor : $textColor}
                         text={item.name.toUpperCase()}
-                        fontSize="13"
+                        fontSize={13}
                         fontWeight="bold"
                         lineBreak="end"
                         verticalTextAlignment="center"
                         maxLines={2}
-                        paddingTop="3"
+                        paddingTop={3}
                     />
                     <slider
-                        marginLeft="10"
-                        marginRight="10"
+                        marginLeft={10}
+                        marginRight={10}
                         col={1}
                         value={item.layer.opacity}
                         on:valueChange={(event) => onLayerOpacityChanged(item, event)}
-                        minValue="0"
-                        maxValue="1"
-                        verticalAlignment="center"
+                        minValue={0}
+                        maxValue={1}
+                        verticalAlignment="middle"
                     />
-                    <IconButton
-                        col={2}
-                        rowSpan={2}
-                        gray={true}
-                        text="mdi-dots-vertical"
-                        on:tap={() => showSourceOptions(item)}
-                        onLongPress={(event) => onButtonLongPress(item, event)}
-                    />
+                    <IconButton col={2} rowSpan={2} gray={true} text="mdi-dots-vertical" on:tap={() => showSourceOptions(item)} onLongPress={(event) => onButtonLongPress(item, event)} />
                 </gridlayout>
             </Template>
         </collectionview>
-        <stacklayout col={1} borderLeftColor={$borderColor} borderLeftWidth="1">
+        <stacklayout col={1} borderLeftColor={$borderColor} borderLeftWidth={1}>
             <IconButton gray={true} text="mdi-plus" on:tap={addSource} />
             <IconButton gray={true} isSelected={$show3DBuildings} tooltip={lc('buildings_3d')} text="mdi-domain" on:tap={() => show3DBuildings.set(!$show3DBuildings)} />
             <IconButton gray={true} isSelected={$showGlobe} tooltip={lc('globe_mode')} text="mdi-globe-model" on:tap={() => showGlobe.set(!$showGlobe)} />
