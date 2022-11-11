@@ -247,68 +247,68 @@
     }
 </script>
 
-<gridlayout rows="50,*,auto,2*" columns="*,auto,*" height="300">
+<gridlayout rows="50,*,auto,2*" columns="*,auto,*" height={300}>
     <stacklayout colSpan={3} orientation="horizontal">
         <mdbutton
             class="mdi"
             shape="round"
-            width="48"
-            height="48"
+            width={48}
+            height={48}
             variant="text"
-            fontSize="20"
+            fontSize={20}
             text="mdi-arrow-left"
             visibility={currentFolder.length > 0 ? 'visible' : 'collapsed'}
             on:tap={onBackButton}
         />
-        <label padding="10" color="white" fontSize="20" fontWeight="bold" text="Download Packages" />
+        <label padding={10} color="white" fontSize={20} fontWeight="bold" text="Download Packages" />
     </stacklayout>
-    <collectionview ref="listView" row={1} rowSpan={3} colSpan={3} rowHeight="49" items={dataItems} on:itemTap={onPackageClick} separatorColor="darkgray">
+    <collectionview ref="listView" row={1} rowSpan={3} colSpan={3} rowHeight={49} items={dataItems} on:itemTap={onPackageClick} separatorColor="darkgray">
         <Template let:item>
             <!-- <StackLayout width="100%" height="100%" backgroundColor="red">
                         <Label text="item.name"  backgroundColor={gray}/>
                     </StackLayout> -->
             <gridlayout rows="*,auto,auto" columns="*,auto,auto,auto" padding="0 0 0 15" on:tap={onPackageClick(item)} rippleColor="white">
-                <label text={item.name.toUpperCase()} color="white" fontSize="13" fontWeight="bold" verticalAlignment="center" />
-                <label row={1} text="item.getStatusText()" color="#D0D0D0" fontSize="11" visibility={!item.isGroup() ? 'visible' : 'collapsed'} verticalAlignment="center" />
-                <label col={2} rowSpan={3} class="mdi" color="navyblue" text="mdi-chevron-right" fontSize="16" visibility={item.isGroup() ? 'visible' : 'collapsed'} verticalAlignment="center" />
+                <label text={item.name.toUpperCase()} color="white" fontSize={13} fontWeight="bold" verticalAlignment="middle" />
+                <label row={1} text="item.getStatusText()" color="#D0D0D0" fontSize={11} visibility={!item.isGroup() ? 'visible' : 'collapsed'} verticalAlignment="middle" />
+                <label col={2} rowSpan={3} class="mdi" color="navyblue" text="mdi-chevron-right" fontSize={16} visibility={item.isGroup() ? 'visible' : 'collapsed'} verticalAlignment="middle" />
                 <mdbutton
                     col={1}
                     rowSpan={3}
                     variant="text"
-                    margin="0"
-                    padding="0"
+                    margin={0}
+                    padding={0}
                     text={item.getActionText('map')}
-                    verticalAlignment="center"
+                    verticalAlignment="middle"
                     horizontalAlignment="center"
                     visibility={!item.isGroup() ? 'visible' : 'collapsed'}
-                    fontSize="12"
+                    fontSize={12}
                     on:tap={() => handlePackageAction('map', item)}
                 />
                 <mdbutton
                     col={2}
                     rowSpan={3}
                     variant="text"
-                    margin="0"
-                    padding="0"
+                    margin={0}
+                    padding={0}
                     text={item.getGeoActionText()}
-                    verticalAlignment="center"
+                    verticalAlignment="middle"
                     visibility={item.hasGeo() ? 'visible' : 'collapsed'}
-                    fontSize="12"
+                    fontSize={12}
                     on:tap={() => handlePackageAction('geo', item)}
                 />
                 <mdbutton
                     col={3}
                     rowSpan={3}
                     variant="text"
-                    margin="0"
-                    padding="0"
+                    margin={0}
+                    padding={0}
                     text={item.getRoutingActionText()}
-                    verticalAlignment="center"
+                    verticalAlignment="middle"
                     visibility={item.hasRouting() ? 'visible' : 'collapsed'}
-                    fontSize="12"
+                    fontSize={12}
                     on:tap={() => handlePackageAction('routing', item)}
                 />
-                <mdprogress row={2} colSpan={4} height="3" value={item.getDownloadProgress()} visibility={item.isDownloading() ? 'visible' : 'hidden'} />
+                <mdprogress row={2} colSpan={4} height={3} value={item.getDownloadProgress()} visibility={item.isDownloading() ? 'visible' : 'hidden'} />
             </gridlayout>
         </Template>
     </collectionview>

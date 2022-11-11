@@ -44,11 +44,11 @@
     }
 </script>
 
-<collectionView row={1} items={options} {height} rowHeight="72">
+<collectionView row={1} items={options} {height} rowHeight={72}>
     <Template let:item>
-        <canvaslabel padding="16" rippleColor={primaryColor} on:tap={(event) => onTap(item, event)}>
-            <cspan verticalAlignment="middle" textAlignment="left" text={item.name} fontWeight="bold" fontSize="16" />
-            <line height="1" color={$borderColor} strokeWidth="1" startX="0" verticalAlignment="bottom" startY="0" stopX="100%" stopY="0" />
+        <canvaslabel padding={16} rippleColor={primaryColor} on:tap={(event) => onTap(item, event)}>
+            <cspan verticalAlignment="middle" textAlignment="left" text={item.name} fontWeight="bold" fontSize={16} />
+            <line height={1} color={$borderColor} strokeWidth={1} startX={0} verticalAlignment="bottom" startY={0} stopX="100%" stopY={0} />
         </canvaslabel>
     </Template>
 </collectionView>

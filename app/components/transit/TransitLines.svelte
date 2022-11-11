@@ -67,11 +67,9 @@
         let h = canvas.getHeight();
         if (!backgroundPaint) {
             backgroundPaint = new Paint();
-            backgroundPaint.setAntiAlias(true);
         }
         if (!textPaint) {
             textPaint = new Paint();
-            textPaint.setAntiAlias(true);
         }
         const rect = new Rect(0, 0, 0, 0);
         item.items.forEach((i, index) => {
@@ -122,15 +120,15 @@
         <collectionview row={1} items={dataItems}>
             <Template let:item>
                 <stacklayout>
-                    <label fontSize="18" text={item.type} padding={10} />
+                    <label fontSize={18} text={item.type} padding={10} />
                     <canvaslabel height={getItemHeight(item)} on:draw={(event) => drawItem(item, event)} on:tap={(event) => onTap(item, event)} />
                 </stacklayout>
             </Template>
         </collectionview>
-        <mdactivityindicator busy={loading} verticalAlignment="center" visibility={loading ? 'visible' : 'collapsed'} row={1} />
+        <mdactivityindicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapsed'} row={1} />
         {#if noNetworkAndNoData}
             <canvaslabel v- row={1}>
-                <cgroup textAlignment="center" verticalAlignment="center">
+                <cgroup textAlignment="center" verticalAlignment="middle">
                     <cspan text="mdi-alert-circle-outline" fontSize={50} fontFamily={mdiFontFamily} />
                     <cspan text={'\n' + lc('no_network')} fontSize={20} />
                 </cgroup>

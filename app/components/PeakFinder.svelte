@@ -568,11 +568,11 @@
             />
             <slider
                 horizontalAlignment="left"
-                verticalAlignment="center"
+                verticalAlignment="middle"
                 value={currentAltitude}
                 on:valueChange={(e) => (currentAltitude = e['value'])}
-                minValue="0"
-                maxValue="6000"
+                minValue={0}
+                maxValue={6000}
                 originX={0}
                 style={`transform: rotate(-90) translate(20,${sliderHeight * 0.5})`}
                 width={sliderHeight}
@@ -590,8 +590,8 @@
                 borderRadius={20}
                 height={40}
             >
-                <canvaslabel color="white" fontSize="13" paddingLeft={10} on:tap={(e) => callJSFunction('focusSelectedItem')}>
-                    <cgroup verticalAlignment="center" verticalTextAlignment="center">
+                <canvaslabel color="white" fontSize={13} paddingLeft={10} on:tap={(e) => callJSFunction('focusSelectedItem')}>
+                    <cgroup verticalAlignment="middle" verticalTextAlignment="center">
                         <cspan fontWeight="bold" text={selectedItem && truncate(selectedItem.properties.name, 25)} />
                         <cspan text={selectedItem && ` ${selectedItem.properties.ele}m(${formatDistance(selectedItem.distance)})`} />
                     </cgroup>
@@ -604,14 +604,14 @@
                 <mdbutton color={primaryColor} on:tap={(e) => (bottomSheetStepIndex = 1 - bottomSheetStepIndex)} class="small-floating-btn" text="mdi-cog" />
             </stacklayout>
             <mdactivityindicator visibility={listeningForHeading ? 'visible' : 'collapsed'} verticalAlignment="bottom" horizontalAlignment="right" busy={true} />
-            <label text={currentAltitude?.toFixed(0) + 'm'} horizontalAlignment="right" verticalAlignment="bottom" fontSize="12" color={darkMode ? textColorDark : textColorLight} paddingRight={10} />
+            <label text={currentAltitude?.toFixed(0) + 'm'} horizontalAlignment="right" verticalAlignment="bottom" fontSize={12} color={darkMode ? textColorDark : textColorLight} paddingRight={10} />
             <label
                 visibility={!listeningForHeading || headingAccuracy >= 2 ? 'hidden' : 'visible'}
                 class="alpimaps"
                 text="alpimaps-compass-calibrate"
                 horizontalAlignment="right"
                 verticalAlignment="bottom"
-                fontSize="80"
+                fontSize={80}
                 marginBottom={100}
             />
         </gridLayout>

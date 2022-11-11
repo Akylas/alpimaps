@@ -24,7 +24,7 @@
     
 </script>
 
-<collectionView items={options} rowHeight="72" height="200">
+<collectionView items={options} rowHeight={72} height={200}>
     <Template let:item>
         <ListItem
             title={item.name || item.route.featureData.class}
