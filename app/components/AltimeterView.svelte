@@ -205,17 +205,17 @@
 </script>
 
 <gridLayout {height}>
-    <canvaslabel padding="16">
-        <cspan text={currentPressure} fontSize="16" textAlignment="right" />
-        <cgroup visibility={!!referencePressure ? 'visible' : 'hidden'} verticalAlignment="bottom" fontSize="14" textAlignment="right">
-            <cspan text={referencePressure && referencePressure.toFixed(2)} fontSize="14" />
+    <canvaslabel padding={16}>
+        <cspan text={currentPressure} fontSize={16} textAlignment="right" />
+        <cgroup visibility={!!referencePressure ? 'visible' : 'hidden'} verticalAlignment="bottom" fontSize={14} textAlignment="right">
+            <cspan text={referencePressure && referencePressure.toFixed(2)} fontSize={14} />
             <cspan text={'\n' + (referenceAltitude && Math.round(referenceAltitude) + 'm')} />
         </cgroup>
-        <cgroup horizontalAlignment="center" textAlignment="center" verticalAlignment="center">
-            <cspan text={pressureAltitude || '-'} fontSize="30" />
-            <cspan text=" m" fontSize="20" />
+        <cgroup horizontalAlignment="center" textAlignment="center" verticalAlignment="middle">
+            <cspan text={pressureAltitude || '-'} fontSize={30} />
+            <cspan text=" m" fontSize={20} />
         </cgroup>
-        <cspan visibility={!!currentLocation ? 'visible' : 'hidden'} text={!!currentLocation && currentLocation.altitude + 'm'} fontSize="14" verticalAlignment="bottom" textAlignment="left" />
+        <cspan visibility={!!currentLocation ? 'visible' : 'hidden'} text={!!currentLocation && currentLocation.altitude + 'm'} fontSize={14} verticalAlignment="bottom" textAlignment="left" />
     </canvaslabel>
 
     <stacklayout orientation="horizontal" horizontalAlignment="left" verticalAlignment="top">

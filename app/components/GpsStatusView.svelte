@@ -523,5 +523,5 @@
 
 <gridLayout {height} rows="*,auto">
     <canvas bind:this={canvas} on:draw={onCanvasDraw} on:layoutChanged={refreshGeometries} />
-    <canvas bind:this={canvas2} on:draw={onCanvas2Draw} height={preferredHeight} row="1" />
+    <canvas bind:this={canvas2} on:draw={onCanvas2Draw} height={preferredHeight} row={1} />
 </gridLayout>
