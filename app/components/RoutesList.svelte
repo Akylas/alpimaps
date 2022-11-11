@@ -29,7 +29,7 @@
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*">
         <CActionBar canGoBack title={lc('routes')} />
-        <collectionview bind:this={collectionView} row={1} {items} rowHeight="80">
+        <collectionview bind:this={collectionView} row={1} {items} rowHeight={80}>
             <Template let:item>
                 <gridlayout columns="auto, *" padding="0 10 0 10">
                     <image src={item.image_path} borderRadius={8} width={70} height={70} />
