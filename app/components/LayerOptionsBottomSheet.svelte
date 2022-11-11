@@ -150,54 +150,54 @@
     }
 </script>
 
-<gridlayout rows="auto,*,auto" height="240">
-    <label text={getTitle()} fontWeight="bold" padding="10 10 0 20" fontSize="20" />
+<gridlayout rows="auto,*,auto" height={240}>
+    <label text={getTitle()} fontWeight="bold" padding="10 10 0 20" fontSize={20} />
     <scrollview row={1} bind:this={scrollView} id="scrollView">
         <stacklayout>
             {#each Object.entries(options) as [name, option]}
                 {#if option.type === 'color'}
-                    <gridlayout height="50" columsn="*" on:tap={pickOptionColor(name, optionValue(name))}>
-                        <canvaslabel fontSize="13" padding="10">
-                            <cspan text={name} verticalAlignment="center" paddingLeft="10" horizontalAlignment="left" width="100" />
-                            <circle strokeWidth="2" paintStyle="fill" fillColor={$textLightColor} radius="15" antiAlias={true} horizontalAlignment="right" verticalAlignment="middle" width="20" />
+                    <gridlayout height={50} columsn="*" on:tap={pickOptionColor(name, optionValue(name))}>
+                        <canvaslabel fontSize={13} padding={10}>
+                            <cspan text={name} verticalAlignment="middle" paddingLeft={10} horizontalAlignment="left" width={100} />
+                            <circle strokeWidth={2} paintStyle="fill" fillColor={$textLightColor} radius={15} antiAlias={true} horizontalAlignment="right" verticalAlignment="middle" width={20} />
                             <circle
-                                strokeWidth="2"
+                                strokeWidth={2}
                                 paintStyle="fill_and_stroke"
                                 strokeColor={$textLightColor}
                                 fillColor={optionValue(name)}
-                                radius="15"
+                                radius={15}
                                 antiAlias={true}
                                 horizontalAlignment="right"
                                 verticalAlignment="middle"
-                                width="20"
+                                width={20}
                             />
                         </canvaslabel>
                     </gridlayout>
                 {:else}
-                    <gridlayout height="50" columns="100,*,50">
-                        <canvaslabel colSpan={3} fontSize="13" padding="10">
-                            <cspan text={name} verticalAlignment="center" paddingLeft="10" horizontalAlignment="left" width="100" />
-                            <cspan text={optionValue(name) / 100 + ''} verticalAlignment="center" textAlignment="right" />
+                    <gridlayout height={50} columns="100,*,50">
+                        <canvaslabel colSpan={3} fontSize={13} padding={10}>
+                            <cspan text={name} verticalAlignment="middle" paddingLeft={10} horizontalAlignment="left" width={100} />
+                            <cspan text={optionValue(name) / 100 + ''} verticalAlignment="middle" textAlignment="right" />
                         </canvaslabel>
                         <slider
                             col={1}
-                            marginLeft="10"
-                            marginRight="10"
+                            marginLeft={10}
+                            marginRight={10}
                             value={optionValue(name)}
                             on:valueChange={(event) => onOptionChanged(name, event)}
                             minValue={option.min * 100}
                             maxValue={option.max * 100}
-                            verticalAlignment="center"
+                            verticalAlignment="middle"
                         />
                     </gridlayout>
                 {/if}
             {/each}
         </stacklayout>
     </scrollview>
-    <collectionview orientation="horizontal" row={2} height="40" items={actions} colWidth="auto">
+    <collectionview orientation="horizontal" row={2} height={40} items={actions} colWidth="auto">
         <Template let:item>
             <gridlayout>
-                <mdbutton variant="outline" padding="10" marginRight="10" text={l(item)} on:tap={() => handleAction(item)} />
+                <mdbutton variant="outline" padding={10} marginRight={10} text={l(item)} on:tap={() => handleAction(item)} />
             </gridlayout>
         </Template>
     </collectionview>

@@ -104,9 +104,7 @@
         }
     }
 
-    onThemeChanged(() => {
-        collectionView && (collectionView.nativeView as CollectionView).refreshVisibleItems();
-    });
+    onThemeChanged(() => collectionView?.nativeView.refreshVisibleItems());
     onNetworkChanged((connected) => {
         if (connected && noNetworkAndNoData) {
             refresh();
@@ -187,13 +185,13 @@
             textAlignment="center"
             verticalTextAlignment="center"
         />
-        <cartomap row={2} zoom="16" on:mapReady={onMapReady} useTextureView={false} />
+        <cartomap row={2} zoom={16} on:mapReady={onMapReady} useTextureView={false} />
         <collectionview bind:this={collectionView} row={3} items={dataItems}>
             <Template let:item>
                 <gridlayout columns="60,*,auto" rows="30,30" on:tap={() => selectStop(item)}>
                     <canvas rowSpan={2}>
-                        <line strokeColor={item.color} startX="30" stopX="30" startY="0" stopY="50%" strokeWidth={4} visibility={item.first ? 'hidden' : 'visible'} />
-                        <line strokeColor={item.color} startX="30" stopX="30" startY="50%" stopY="100%" strokeWidth={4} visibility={item.last ? 'hidden' : 'visible'} />
+                        <line strokeColor={item.color} startX={30} stopX={30} startY={0} stopY="50%" strokeWidth={4} visibility={item.first ? 'hidden' : 'visible'} />
+                        <line strokeColor={item.color} startX={30} stopX={30} startY="50%" stopY="100%" strokeWidth={4} visibility={item.last ? 'hidden' : 'visible'} />
                         <circle
                             strokeColor={item.color}
                             fillColor={item.first || item.last ? item.color : $widgetBackgroundColor}
@@ -205,16 +203,16 @@
                             strokeWidth={3}
                         />
                     </canvas>
-                    <label col={1} fontSize="16" text={item.name} verticalTextAlignment="bottom" />
-                    <label row="1" col={1} fontSize="14" class="subtitle" text={item.city} verticalTextAlignment="top" />
-                    <IconButton col={2} rowSpan={2} text="mdi-map-marker-radius-outline" on:tap={() => backToMapOnPoint(item)} verticalAlignment="center" />
+                    <label col={1} fontSize={16} text={item.name} verticalTextAlignment="bottom" />
+                    <label row={1} col={1} fontSize={14} class="subtitle" text={item.city} verticalTextAlignment="top" />
+                    <IconButton col={2} rowSpan={2} text="mdi-map-marker-radius-outline" on:tap={() => backToMapOnPoint(item)} verticalAlignment="middle" />
                 </gridlayout>
             </Template>
         </collectionview>
-        <mdactivityindicator busy={loading} verticalAlignment="center" visibility={loading ? 'visible' : 'collapsed'} row={3} />
+        <mdactivityindicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapsed'} row={3} />
         {#if noNetworkAndNoData}
             <canvaslabel row={3}>
-                <cgroup textAlignment="center" verticalAlignment="center">
+                <cgroup textAlignment="center" verticalAlignment="middle">
                     <cspan text="mdi-alert-circle-outline" fontSize={50} fontFamily={mdiFontFamily} />
                     <cspan text={'\n' + lc('no_network')} fontSize={20} />
                 </cgroup>
