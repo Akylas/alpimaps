@@ -24,11 +24,24 @@ dayjs.extend(localizedFormat);
 dayjs.extend(utc);
 
 export let lang;
+let default24Clock = false;
+if (__ANDROID__) {
+    default24Clock = android.text.format.DateFormat.is24HourFormat(ad.getApplicationContext());
+}
+export let clock_24 = ApplicationSettings.getBoolean('clock_24', default24Clock);
+console.log('clock_24', clock_24);
 let currentLocale = null;
-export const $lang = writable(null);
+export const langStore = writable(null);
+export const clock_24Store = writable(null);
 export const onLanguageChanged = createGlobalEventListener('language');
 
-$lang.subscribe((newLang: string) => {
+async function setLang(newLang) {
+    newLang = getActualLanguage(newLang);
+    if (supportedLanguages.indexOf(newLang) === -1) {
+        newLang = 'en';
+    }
+    DEV_LOG && console.log('changed lang', newLang, Device.region);
+    currentLocale = null;
     if (lang === newLang) {
         return;
     }
@@ -63,30 +76,20 @@ $lang.subscribe((newLang: string) => {
         console.error('failed to load lang json', lang, `~/i18n/${lang}.json`, err);
     }
     globalObservable.notify({ eventName: 'language', data: lang });
-});
-function setLang(newLang) {
-    newLang = getActualLanguage(newLang);
-    if (supportedLanguages.indexOf(newLang) === -1) {
-        newLang = 'en';
-    }
-    // console.log('changed lang', newLang, Device.region);
-    currentLocale = null;
-    $lang.set(newLang);
+    langStore.set(newLang);
 }
 function getActualLanguage(language) {
+    if (language === 'auto') {
+        language = Device.language;
+    }
+    language = language.split('-')[0].toLowerCase();
     switch (language) {
-        case 'en':
-            return 'en';
         case 'cs':
             return 'cz';
         case 'jp':
             return 'ja';
-        case 'kr':
-            return 'kr';
         case 'lv':
             return 'la';
-        case 'auto':
-            return Device.language.split('-')[0].toLowerCase();
         default:
             return language;
     }
@@ -130,11 +133,11 @@ export async function selectLanguage() {
             view: OptionSelect,
             props: {
                 title: lc('select_language'),
-                options: actions.map((k) => ({ name: getLocaleDisplayName(k), data: k }))
+                options: [{ name: lc('auto'), data: 'auto' }].concat(actions.map((k) => ({ name: getLocaleDisplayName(k), data: k })))
             },
             trackingScrollView: 'collectionView'
         });
-        if (result && actions.indexOf(result.data) !== -1) {
+        if (result && result.data) {
             ApplicationSettings.setString('language', result.data);
         }
     } catch (err) {
@@ -169,6 +172,13 @@ prefs.on('key:language', () => {
     setLang(newLanguage);
 });
 
+prefs.on('key:clock_24', () => {
+    const newValue = ApplicationSettings.getBoolean('clock_24', default24Clock);
+    DEV_LOG && console.log('clock_24 changed', newValue);
+    clock_24 = newValue;
+    clock_24Store.set(newValue);
+});
+
 let currentLanguage = getString('language', DEFAULT_LOCALE);
 if (!currentLanguage) {
     currentLanguage = Device.language.split('-')[0].toLowerCase();
@@ -179,10 +189,11 @@ if (!currentLanguage) {
 }
 
 export { l, lc, lu, lt };
-export const sl = derived([$lang], () => l);
-export const slc = derived([$lang], () => lc);
-export const slt = derived([$lang], () => lt);
-export const slu = derived([$lang], () => lu);
-export const sconvertDuration = derived([$lang], () => convertDuration);
-export const scconvertTime = derived([$lang], () => convertTime);
-export const sgetLocaleDisplayName = derived([$lang], () => getLocaleDisplayName);
+export const sl = derived(langStore, () => l);
+export const slc = derived(langStore, () => lc);
+export const slt = derived(langStore, () => lt);
+export const slu = derived(langStore, () => lu);
+export const sconvertDurationSeconds = derived(langStore, () => convertDurationSeconds);
+export const scformatDate = derived(langStore, () => formatDate);
+export const scformatTime = derived([langStore, clock_24Store], () => formatTime);
+export const sgetLocaleDisplayName = derived(langStore, () => getLocaleDisplayName);
