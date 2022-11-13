@@ -77,10 +77,6 @@ export namespace NotificationHelper {
             channel.setLightColor(color);
             service.createNotificationChannel(channel);
 
-            // channel = new android.app.NotificationChannel(NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL, 'Alpi Maps Map Notification', NotificationManager.IMPORTANCE_HIGH);
-            // channel.setDescription('Show Notification on LockScreen');
-            // channel.setLightColor(color);
-            // service.createNotificationChannel(channel);
             return true;
         } else {
             return false;
@@ -104,53 +100,4 @@ export namespace NotificationHelper {
         const service = getNotificationManager();
         service.cancel(id);
     }
-
-    /* Get station image for notification's large icon */
-    function getNotificationIconLarge(context, tracking) {
-        // get dimensions
-        // const resources = context.getResources();
-        // const height = resources.getDimension(android.R.dimen.notification_large_icon_height);
-        // const width = resources.getDimension(android.R.dimen.notification_large_icon_width);
-
-        let bitmap;
-        if (tracking) {
-            bitmap = ad.resources.getDrawableId('big_icon_tracking');
-        } else {
-            bitmap = ad.resources.getDrawableId('big_icon_not_tracking');
-        }
-        return bitmap;
-
-        // return android.graphics.Bitmap.createScaledBitmap(bitmap, width, height, false);
-    }
-
-    /* Return a bitmap for a given resource id of a vector drawable */
-    function getBitmap(context, resource) {
-        // const drawable = VectorDrawableCompat.create(context.getResources(), resource, null);
-        // if (drawable != null) {
-        //     Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-        //     Canvas canvas = new Canvas(bitmap);
-        //     drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-        //     drawable.draw(canvas);
-        //     return bitmap;
-        // } else {
-        return null;
-        // }
-    }
-
-    /* Build context text for notification builder */
-    // private static getSessionString(session: Session) {
-    //     if (session.state === SessionState.RUNNING) {
-    //         return `${localize('distance')}: ${formatValueToUnit(session.distance, UNITS.DistanceKm)} | ${localize('duration')}: ${convertDuration(
-    //             Date.now() - session.startTime.valueOf() - session.pauseDuration,
-    //             'HH:mm:ss'
-    //         )}`;
-    //     } else if (session.state === SessionState.PAUSED) {
-    //         return `${localize('distance')}: ${formatValueToUnit(session.distance, UNITS.DistanceKm)} | ${localize('duration')}: ${convertDuration(
-    //             session.lastPauseTime.valueOf() - session.startTime.valueOf() - session.pauseDuration,
-    //             'HH:mm:ss'
-    //         )}`;
-    //     } else {
-    //         return null;
-    //     }
-    // }
 }
