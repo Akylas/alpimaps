@@ -1,5 +1,4 @@
 <script lang="ts">
-    import dayjs from 'dayjs';
     import { convertDurationSeconds, convertElevation, convertValueToUnit, osmicon, UNITS } from '~/helpers/formatter';
     import { formatter } from '~/mapModules/ItemFormatter';
     import type { IItem as Item, ItemProperties } from '~/models/Item';
@@ -65,11 +64,11 @@
         itemProps = item?.properties;
         itemIsRoute = !!item?.route;
         if (itemIsRoute && itemProps.route && (itemProps.route.type === 'pedestrian' || itemProps.route.type === 'bicycle')) {
-            itemIcon = formatter.getRouteIcon(itemProps.route.type, itemProps.route.subtype);
             itemIconFontFamily = alpimapsFontFamily;
+            itemIcon = formatter.getRouteIcon(itemProps.route.type, itemProps.route.subtype);
         } else {
-            itemIcon = osmicon(formatter.geItemIcon(item));
             itemIconFontFamily = 'osm';
+            itemIcon = osmicon(formatter.geItemIcon(item));
         }
         itemTitle = formatter.getItemTitle(item);
         itemSubtitle = formatter.getItemSubtitle(item);
