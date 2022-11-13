@@ -8,7 +8,7 @@
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, navigate } from 'svelte-native/dom';
     import CActionBar from '~/components/CActionBar.svelte';
-    import { lc } from '~/helpers/locale';
+    import { formatTime, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
     import { transitService } from '~/services/TransitService';
