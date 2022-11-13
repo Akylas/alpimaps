@@ -1,7 +1,7 @@
-import { Align, Canvas, Direction, Paint, Path, Rect, RectF, Style, createRectF } from '@nativescript-community/ui-canvas';
-import Shape, { colorProperty, lengthProperty, numberProperty, percentLengthProperty, stringProperty } from '@nativescript-community/ui-canvas/shapes/shape';
-import { Length, PercentLength, zeroLength } from '@nativescript/core/ui/styling/style-properties';
+import { Align, Canvas, Direction, Paint, Path, Style } from '@nativescript-community/ui-canvas';
+import Shape, { colorProperty, lengthProperty, stringProperty } from '@nativescript-community/ui-canvas/shapes/shape';
 import { Color } from '@nativescript/core';
+import { Length, PercentLength, zeroLength } from '@nativescript/core/ui/styling/style-properties';
 import { layout } from '@nativescript/core/utils/utils';
 import { osmicon } from '~/helpers/formatter';
 
@@ -31,7 +31,7 @@ export default class SymbolShape extends Shape {
         const top = layout.toDeviceIndependentPixels(Length.toDevicePixels(this.top));
         const symbol = this.symbol || `blue:white:${this.color || 'blue'}_bar`;
         path.reset();
-        path.addRoundRect(left, top, left + width, height + top, 6, 6, Direction.CW);
+        path.addRoundRect(left, top, left + width, height + top, 3, 3, Direction.CW);
 
         canvas.clipPath(path);
         try {
