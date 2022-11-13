@@ -15,7 +15,7 @@ import {
 import { AndroidActivityResultEventData } from '@nativescript/core/application/application-interfaces';
 import { EventData, Observable } from '@nativescript/core/data/observable';
 import { bind } from 'helpful-decorators/dist-src/bind';
-import { formatDistance, formatDuration } from '~/helpers/formatter';
+import { convertDurationSeconds, formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { BgService } from '~/services/BgService';
 import { sdkVersion } from '~/utils/utils.common';
@@ -464,7 +464,7 @@ export class GeoHandler extends Observable {
                     title: lc('gps_update_minTime'),
                     description: lc('gps_update_minTime_desc'),
                     default: minimumUpdateTime,
-                    formatter: (n) => formatDuration(n * 1000, 's[s]'),
+                    formatter: (n) => convertDurationSeconds(n, 's[s]'),
                     type: 'prompt'
                 }
             });
