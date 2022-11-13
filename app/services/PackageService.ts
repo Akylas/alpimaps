@@ -841,7 +841,7 @@ class PackageService extends Observable {
                 lastAlt = pt1.a;
             }
         }
-        if (colors[colors.length - 1].lastIndex < result.data.length - 1) {
+        if (colors.length && colors[colors.length - 1].lastIndex < result.data.length - 1) {
             const avgGrade = gradeSum / gradesCounter;
             colors.push({
                 d: result.data.length - 1,
