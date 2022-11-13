@@ -8,7 +8,7 @@
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
-    import { getLocaleDisplayName, l, lc, onLanguageChanged, selectLanguage } from '~/helpers/locale';
+    import { clock_24, getLocaleDisplayName, l, lc, onLanguageChanged, selectLanguage, slc } from '~/helpers/locale';
     import { getThemeDisplayName, selectTheme } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
@@ -74,6 +74,12 @@
                 id: 'language',
                 rightValue: getLocaleDisplayName,
                 title: lc('language')
+            },
+            {
+                type:'switch',
+                key: 'clock_24',
+                value: clock_24,
+                title: lc('hours_24_clock')
             },
             {
                 id: 'dark_mode',
@@ -258,11 +264,11 @@
 
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*">
-        <CActionBar canGoBack title={lc('settings')} />
+        <CActionBar canGoBack title={$slc('settings')} />
         <collectionview bind:this={collectionView} row={1} {items} rowHeight={70} itemTemplateSelector={selectTemplate}>
             <Template let:item key="switch">
                 <gridlayout columns="*, auto" padding="0 10 0 30">
-                    <stackLayout verticalAlignment="middle">
+                    <stacklayout verticalAlignment="middle">
                         <label fontSize={17} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines={2} lineBreak="end" />
                         <label
                             visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'}
@@ -273,15 +279,15 @@
                             maxLines={2}
                             lineBreak="end"
                         />
-                    </stackLayout>
+                    </stacklayout>
                     <switch col={1} checked={item.value} on:checkedChange={(e) => onCheckBox(item, e.value)} verticalAlignment="middle" />
-                    <absoluteLayout colSpan={2} backgroundColor={$borderColor} height={1} verticalAlignment="bottom" />
+                    <absolutelayout colSpan={2} backgroundColor={$borderColor} height={1} verticalAlignment="bottom" />
                 </gridlayout>
             </Template>
             <Template let:item>
-                <gridLayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)} on:touch={(event) => onTouch(item, event)}>
+                <gridlayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)}>
                     <label fontSize={36} text={item.icon} marginLeft="-10" width={40} verticalAlignment="middle" fontFamily={mdiFontFamily} visibility={!!item.icon ? 'visible' : 'hidden'} />
-                    <stackLayout col={1} verticalAlignment="middle">
+                    <stacklayout col={1} verticalAlignment="middle">
                         <label fontSize={17} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines={2} lineBreak="end" />
                         <label
                             visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'}
@@ -292,7 +298,7 @@
                             maxLines={2}
                             lineBreak="end"
                         />
-                    </stackLayout>
+                    </stacklayout>
 
                     <label
                         col={2}
@@ -315,8 +321,8 @@
                         marginRight={10}
                         text={item.rightBtnIcon}
                     />
-                    <absoluteLayout row={2} col={1} colSpan={3} backgroundColor={$borderColor} height={1} verticalAlignment="bottom" />
-                </gridLayout>
+                    <absolutelayout row={2} col={1} colSpan={3} backgroundColor={$borderColor} height={1} verticalAlignment="bottom" />
+                </gridlayout>
             </Template>
         </collectionview>
     </gridlayout>
