@@ -15,6 +15,7 @@
     export let value = 0;
     export let onChange = null;
     export let formatter = (value) => value + '';
+    export let valueFormatter = (value) => value.toFixed(1);
     let canvas: NativeViewElementNode<CanvasView>;
 
     function onValueChange(event) {
@@ -50,9 +51,8 @@
                 canvas.drawText(title, leftPadding, topPadding, textPaint);
             }
             canvas.drawText(formatter(min), 10, h - 20, textPaint);
-
             textPaint.setTextAlign(Align.RIGHT);
-            canvas.drawText(value.toFixed(1), w-10, topPadding, textPaint);
+            canvas.drawText(valueFormatter(value), w-10, topPadding, textPaint);
             canvas.drawText(formatter(max), w-10, h - 20, textPaint);
         } catch (err) {
             console.error(err);
@@ -62,14 +62,5 @@
 
 <gridLayout {...$$restProps} height={80}>
     <canvas bind:this={canvas} on:draw={onDraw} />
-    <slider {value} on:valueChange={onValueChange} minValue={min} maxValue={max} stepSize={step} verticalAlignment="bottom" margin="0 50 0 50" />
-    <!-- {#if icon}
-        <label color={$textColor} class="icon-label" text={icon} />
-    {/if}
-    {#if title}
-        <label color={$textColor} text={title} col={1} backgroundColor="yellow" />
-    {/if}
-    <label color={$textColor} text={value.toFixed(1)} colSpan={3} horizontalAlignment="right" backgroundColor="red"/>
-    <label color={$textColor} text={formatter(min)} row={1} verticalTextAlignment="center" textAlignment="center" />
-    <label color={$textColor} text={formatter(max)} row={1} col={2} verticalTextAlignment="center" textAlignment="center" /> -->
+    <slider {value} on:valueChange={onValueChange} minValue={min} maxValue={max} stepSize={step} verticalAlignment="bottom" margin="0 60 0 60" />
 </gridLayout>
