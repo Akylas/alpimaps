@@ -1,6 +1,6 @@
 <script lang="ts">
     import dayjs from 'dayjs';
-    import { convertElevation, convertValueToUnit, osmicon, UNITS } from '~/helpers/formatter';
+    import { convertDurationSeconds, convertElevation, convertValueToUnit, osmicon, UNITS } from '~/helpers/formatter';
     import { formatter } from '~/mapModules/ItemFormatter';
     import type { IItem as Item, ItemProperties } from '~/models/Item';
     import { alpimapsFontFamily, mdiFontFamily, subtitleColor, textColor } from '~/variables';
@@ -96,11 +96,7 @@
             }
 
             if (route.totalTime) {
-                if (route.totalTime < 3600) {
-                    routeDuration = dayjs.duration(route.totalTime, 'seconds').format('m [min]');
-                } else {
-                    routeDuration = dayjs.duration(route.totalTime, 'seconds').format('H [h] m [min]');
-                }
+                routeDuration = convertDurationSeconds(route.totalTime);
                 newPropsToDraw.push('duration');
             }
         }
@@ -162,7 +158,7 @@
         <cspan
             verticalAlignment="top"
             paddingTop={12}
-            visibility={itemIcon  ? 'visible' : 'hidden'}
+            visibility={itemIcon ? 'visible' : 'hidden'}
             paddingLeft={5}
             width={40}
             text={itemIcon}
@@ -188,7 +184,7 @@
             {/each}
         </cgroup>
     </canvaslabel>
-    <flexlayout marginLeft={40} marginBottom={20} flexDirection="column" >
+    <flexlayout marginLeft={40} marginBottom={20} flexDirection="column">
         <label text={itemTitle} fontWeight="bold" color={$textColor} fontSize={18} autoFontSize={true} flexGrow={1} maxFontSize={18} verticalTextAlignment="middle" textWrap={true} />
         <label visibility={itemSubtitle ? 'visible' : 'collapsed'} text={itemSubtitle} color={$subtitleColor} fontSize={13} maxLines={2} verticalTextAlignment="top" flexGrow={1} flexShrink={0} />
     </flexlayout>

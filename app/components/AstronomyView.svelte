@@ -15,7 +15,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import type { GeoLocation } from '~/handlers/GeoHandler';
     import { CompassInfo, getCompassInfo } from '~/helpers/geolib';
-    import { convertTime } from '~/helpers/locale';
+    import { formatDate, formatTime } from '~/helpers/locale';
     import { showError } from '~/utils/error';
     import { PI_DIV2, TO_DEG } from '~/utils/geo';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
@@ -77,7 +77,7 @@
             xAxis.setValueFormatter({
                 getAxisLabel(value: any, axis: AxisBase, viewPortHandler: ViewPortHandler) {
                     const time = computeStartTime.add(value * 10, 'minutes');
-                    return time.format('H[h]');
+                    return formatTime(time);
                 }
             });
             if (!limitLine) {
@@ -90,7 +90,7 @@
             }
         }
         const nowMinutes = startTime.diff(computeStartTime, 'minutes');
-        limitLine.setLabel(startTime.format('LT'));
+        limitLine.setLabel(formatTime(startTime));
         limitLine.setLimit(nowMinutes / 10);
 
         const chartData = chartView.getData();
@@ -139,7 +139,7 @@
         }
     }
 
-    function getMoonPhaseIcon(illumination: any  /* MoonPhase */) {
+    function getMoonPhaseIcon(illumination: any /* MoonPhase */) {
         switch (Math.round(illumination.phase * 7)) {
             case 0:
                 return 'mdi-moon-new';
@@ -213,11 +213,11 @@
         <canvaslabel bind:this={bottomLabel} row={2} colSpan={3} fontSize={18} padding="0 10 0 10">
             <cgroup color="#ffa500" verticalAlignment="middle">
                 <cspan fontFamily={mdiFontFamily} text="mdi-weather-sunset-up" />
-                <cspan text={' ' + convertTime(sunTimes.sunriseEnd, 'HH:mm')} />
+                <cspan text={' ' + formatTime(sunTimes.sunriseEnd)} />
             </cgroup>
             <cgroup color="#ff7200" textAlignment="center" verticalAlignment="middle">
                 <cspan fontFamily={mdiFontFamily} text="mdi-weather-sunset-down" />
-                <cspan text={' ' + convertTime(sunTimes.sunsetStart, 'HH:mm')} />
+                <cspan text={' ' + formatTime(sunTimes.sunsetStart)} />
             </cgroup>
             <cgroup textAlignment="right" verticalAlignment="middle">
                 <cspan fontFamily={mdiFontFamily} text={getMoonPhaseIcon(illumination)} />

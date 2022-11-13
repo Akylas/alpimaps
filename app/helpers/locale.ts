@@ -141,7 +141,7 @@ export async function selectLanguage() {
         this.showError(err);
     }
 }
-export function convertTime(date: number | string | dayjs.Dayjs | Date, formatStr: string) {
+export function formatDate(date: number | string | Date, formatStr: string) {
     if (date) {
         if (!date['format']) {
             date = dayjs(date);
