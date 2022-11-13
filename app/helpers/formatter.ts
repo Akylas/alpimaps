@@ -1,7 +1,7 @@
 import humanUnit, { sizePreset } from 'human-unit';
 import { IItem } from '~/models/Item';
-import { convertDuration, convertTime } from './locale';
-export { convertDuration, convertTime } from './locale';
+import { formatDate } from './locale';
+export { convertDurationSeconds, formatDate } from './locale';
 const timePreset = {
     factors: [1000, 60, 60, 24],
     units: ['ms', 's', 'min', 'hour', 'day']
@@ -56,12 +56,6 @@ export function convertElevation(meters) {
     return convertValueToUnit(meters, UNITS.Distance).join(' ');
 }
 
-export function formatDuration(_time, formatStr?): string {
-    if (_time < 0) {
-        return '';
-    }
-    return convertDuration(_time, formatStr);
-}
 export enum UNITS {
     InchHg = 'InchHg',
     MMHg = 'MMHg',
@@ -105,7 +99,7 @@ export function convertValueToUnit(value: any, unit: UNITS, otherParam?): [strin
         case UNITS.Farenheit:
             return [celciusToFahrenheit(value).toFixed(1), '°'];
         case UNITS.Date:
-            return [convertTime(value, 'M/d/yy h:mm a'), ''];
+            return [formatDate(value, 'M/d/yy h:mm a'), ''];
         case UNITS.Distance:
             return [value.toFixed(), unit];
         case UNITS.DistanceKm:
