@@ -13,8 +13,9 @@
     export let backgroundColor = $widgetBackgroundColor;
     export let onChange = null;
     export let formatter = (value) => value + '';
+    export let valueFormatter = (value) => value.toFixed(1);
 </script>
 
 <gridLayout>
-    <SettingsSlider borderRadius={4} {backgroundColor} margin={2} elevation={2} {icon} {title} {value} {min} {max} {step} {onChange} {formatter} />
+    <SettingsSlider borderRadius={4} {backgroundColor} margin={2} elevation={2} {icon} {title} {value} {min} {max} {step} {onChange} {formatter} {valueFormatter} />
 </gridLayout>
