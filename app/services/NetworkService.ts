@@ -282,8 +282,7 @@ export interface NetworkConnectionStateEventData extends EventData {
     };
 }
 
-// mapquest algos
-function decompress(encoded, precision) {
+function decompress(encoded: string, precision: number) {
     precision = Math.pow(10, -precision);
     let index = 0,
         lat = 0,
@@ -315,7 +314,7 @@ function decompress(encoded, precision) {
     return array;
 }
 
-function encodeNumber(num) {
+function encodeNumber(num: number) {
     num = num << 1;
     if (num < 0) {
         num = ~num;
@@ -329,7 +328,7 @@ function encodeNumber(num) {
     return encoded;
 }
 
-function compress(points: MapPos<LatLonKeys>[], precision) {
+function compress(points: MapPos<LatLonKeys>[], precision: number) {
     let oldLat = 0,
         oldLng = 0,
         index = 0;
