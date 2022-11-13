@@ -180,7 +180,7 @@
             case 'use_hills':
                 return profile === 'bicycle' ? getBicycleUseHills() : getPedestrianUseHills();
             case 'max_hiking_difficulty':
-                return 1;
+                return 6;
             case 'step_penalty':
                 return getPedestrianStepPenalty();
             case 'driveway_factor':
@@ -905,7 +905,7 @@
                         } else {
                             pedestrian_type = value;
                             // we reapply default we want to change per activity
-                            ['walking_speed', 'use_hills', 'step_penalty'].forEach((k) => (profileCostingOptions[profile][k] = valhallaSettingsDefaultValue(profile, k)));
+                            ['walking_speed', 'use_hills', 'step_penalty', 'max_hiking_difficulty'].forEach((k) => (profileCostingOptions[profile][k] = valhallaSettingsDefaultValue(profile, k)));
                         }
                         return generateSettings();
                     },
@@ -1078,7 +1078,7 @@
                 size={40}
                 selectedColor={primaryColor}
             />
-            <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} horizontalAlignment="right" busy={true} width={40} height={40} color="white" />
+            <mdactivityindicator colSpan={2} visibility={loading ? 'visible' : 'collapsed'} horizontalAlignment="right" busy={true} width={40} height={40} color="white" />
             <collectionview
                 row={1}
                 items={waypoints}
