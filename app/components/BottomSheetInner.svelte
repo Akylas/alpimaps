@@ -1,7 +1,6 @@
 <script lang="ts">
-    import { File, path } from '@nativescript/core/file-system';
-    import { knownFolders } from '@nativescript/core/file-system';
     import { l, lc } from '@nativescript-community/l';
+    import { createNativeAttributedString } from '@nativescript-community/text';
     import { Align, Canvas, CanvasView, DashPathEffect, LayoutAlignment, Paint, Rect, StaticLayout, Style } from '@nativescript-community/ui-canvas';
     import { fromNativeMapPos, GenericMapPos } from '@nativescript-community/ui-carto/core';
     import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
@@ -14,31 +13,29 @@
     import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
     import type { Entry } from '@nativescript-community/ui-chart/data/Entry';
     import { LineData } from '@nativescript-community/ui-chart/data/LineData';
-    import { LineDataSet, Mode } from '@nativescript-community/ui-chart/data/LineDataSet';
+    import { LineDataSet } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Application, ApplicationSettings, ImageSource, Utils } from '@nativescript/core';
+    import { File, path } from '@nativescript/core/file-system';
     import { openUrl } from '@nativescript/core/utils';
     import type { Point } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode, navigate } from 'svelte-native/dom';
     import BottomSheetInfoView from '~/components/BottomSheetInfoView.svelte';
-    import { formatDistance, formatValueToUnit, UNITS } from '~/helpers/formatter';
-    import { slc } from '~/helpers/locale';
+    import { convertDurationSeconds, formatDistance } from '~/helpers/formatter';
     import { onThemeChanged } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext, handleMapAction } from '~/mapModules/MapModule';
-    import type { IItem, IItem as Item, ItemProperties, RouteInstruction } from '~/models/Item';
+    import type { IItem, IItem as Item, RouteInstruction } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { showError } from '~/utils/error';
     import { computeDistanceBetween } from '~/utils/geo';
-    import { share } from '~/utils/share';
     import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
-    import { borderColor, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
+    import { borderColor, mdiFontFamily, primaryColor, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import IconButton from './IconButton.svelte';
-    import { createNativeAttributedString } from '@nativescript-community/text';
 
     const LISTVIEW_HEIGHT = 200;
     const PROFILE_HEIGHT = 150;
@@ -48,10 +45,10 @@
 
     const mapContext = getMapContext();
     const highlightPaint = new Paint();
-    highlightPaint.setColor('#8687A2');
+    highlightPaint.setColor(primaryColor);
     // highlightPaint.setTextAlign(Align.CENTER);
     highlightPaint.setStrokeWidth(1);
-    highlightPaint.setTextSize(10);
+    highlightPaint.setTextSize(12);
 
     const Intent = __ANDROID__ ? android.content.Intent : undefined;
 
@@ -179,7 +176,6 @@
             updateSteps();
         } catch (err) {
             console.error('item changed', !!err, err, err.stack);
-            // showError(err);
         }
     }
 
@@ -194,37 +190,71 @@
         }
     }
 
-    function updateRouteItemWithPosition(routeItem: Item, location: GenericMapPos<LatLonKeys>, updateNavigationInstruction = true, updateGraph = true) {
+    function updateRouteItemWithPosition(routeItem: Item, location: GenericMapPos<LatLonKeys>, updateNavigationInstruction = true, updateGraph = true, highlight?: Highlight<Entry>) {
         try {
             if (routeItem?.route) {
                 const props = routeItem.properties;
                 const route = routeItem.route;
                 const positions = packageService.getRouteItemPoses(routeItem);
                 const onPathIndex = isLocationOnPath(location, positions, false, true, 15);
-                if (routeItem.instructions && onPathIndex !== -1 && updateNavigationInstruction) {
-                    let routeInstruction;
-                    for (let index = routeItem.instructions.length - 1; index >= 0; index--) {
-                        const element = routeItem.instructions[index];
-                        if (element.index < onPathIndex) {
-                            break;
+                if (onPathIndex !== -1 && (highlight || (routeItem.instructions && updateNavigationInstruction))) {
+                    const remainingDistance = distanceToEnd(onPathIndex, positions);
+                    const remainingTime = (route.totalTime * remainingDistance) / route.totalDistance;
+                    if (routeItem.instructions) {
+                        let routeInstruction;
+                        for (let index = routeItem.instructions.length - 1; index >= 0; index--) {
+                            const element = routeItem.instructions[index];
+                            if (element.index < onPathIndex) {
+                                break;
+                            }
+                            routeInstruction = element;
                         }
-                        routeInstruction = element;
-                    }
 
-                    const distance = distanceToEnd(onPathIndex, positions);
-                    let distanceToNextInstruction = computeDistanceBetween(location, fromNativeMapPos(positions.get(onPathIndex)));
-                    for (let index = onPathIndex; index < routeInstruction.index; index++) {
-                        distanceToNextInstruction += computeDistanceBetween(fromNativeMapPos(positions.get(index)), fromNativeMapPos(positions.get(index + 1)));
+                        let distanceToNextInstruction = computeDistanceBetween(location, fromNativeMapPos(positions.get(onPathIndex)));
+                        for (let index = onPathIndex; index < routeInstruction.index; index++) {
+                            distanceToNextInstruction += computeDistanceBetween(fromNativeMapPos(positions.get(index)), fromNativeMapPos(positions.get(index + 1)));
+                        }
+                        navigationInstructions = {
+                            instruction: routeInstruction,
+                            remainingDistance,
+                            distanceToNextInstruction,
+                            remainingTime
+                        };
+                    } else {
+                        navigationInstructions = null;
                     }
-                    navigationInstructions = {
-                        instruction: routeInstruction,
-                        remainingDistance: distance,
-                        distanceToNextInstruction,
-                        remainingTime: ((route.totalTime * distance) / route.totalDistance) * 1000
-                    };
-                } else {
-                    navigationInstructions = null
+                    if (highlight) {
+                        highlightNString = createNativeAttributedString(
+                            {
+                                spans: [
+                                    {
+                                        fontFamily: mdiFontFamily,
+                                        text: 'mdi-timer-outline'
+                                    },
+                                    {
+                                        text: convertDurationSeconds(remainingTime) + '  '
+                                    },
+                                    {
+                                        fontFamily: mdiFontFamily,
+                                        text: 'mdi-arrow-expand-right'
+                                    },
+                                    {
+                                        text: formatDistance(remainingDistance) + '  '
+                                    },
+                                    {
+                                        fontFamily: mdiFontFamily,
+                                        text: 'mdi-triangle-outline'
+                                    },
+                                    {
+                                        text: highlight.entry.a.toFixed() + 'm'
+                                    }
+                                ]
+                            },
+                            null
+                        );
+                    }
                 }
+
                 if (updateGraph && graphAvailable && chart.nativeView) {
                     if (onPathIndex === -1) {
                         chart.nativeView.highlight(null);
@@ -265,6 +295,7 @@
             handleMapAction('astronomy', { lat: positions[1], lon: positions[0] });
         }
     }
+    let highlightNString;
     function onChartHighlight(event: HighlightEventData) {
         if (!item) {
             return;
@@ -273,7 +304,7 @@
         const positions = item.geometry?.['coordinates'];
         const position = positions[Math.max(0, Math.min(x, positions.length - 1))];
         if (position) {
-            updateRouteItemWithPosition(item, { lat: position[1], lon: position[0] }, false, false);
+            updateRouteItemWithPosition(item, { lat: position[1], lon: position[0] }, false, false, event.highlight);
             mapContext.selectItem({
                 item: { geometry: { type: 'Point', coordinates: position } },
                 isFeatureInteresting: true,
@@ -644,6 +675,7 @@
         const sets = [];
         const profile = item.profile;
         const profileData = profile?.data;
+        const leftAxis = chartView.getAxisLeft();
         if (profileData) {
             const xAxis = chartView.getXAxis();
             if (!chartInitialized) {
@@ -655,12 +687,14 @@
                 chartView.setDoubleTapToZoomEnabled(true);
                 chartView.setDragEnabled(true);
                 chartView.clipHighlightToContent = false;
+                chartView.setClipDataToContent(false);
                 chartView.setClipValuesToContent(false);
+
                 // chartView.setExtraTopOffset(30);
-                chartView.setExtraOffsets(0, 0, 0, 0);
+                chartView.setMinOffset(0);
+                chartView.setExtraOffsets(0, 30, 0, 0);
                 chartView.getAxisRight().setEnabled(false);
                 chartView.getLegend().setEnabled(false);
-                const leftAxis = chartView.getAxisLeft();
                 leftAxis.setTextColor($textColor);
                 leftAxis.setDrawZeroLine(true);
                 leftAxis.setGridColor($borderColor);
@@ -669,67 +703,47 @@
                 leftAxis.ensureLastLabel = true;
                 // leftAxis.setLabelCount(3);
 
-                xAxis.setPosition(XAxisPosition.BOTTOM);
+                xAxis.setPosition(XAxisPosition.TOP);
                 xAxis.setLabelTextAlign(Align.CENTER);
-                xAxis.ensureLastLabel = true;
+                // xAxis.ensureLastLabel = true;
+                xAxis.setLabelCount(4);
                 xAxis.setTextColor($textColor);
                 xAxis.setGridColor($borderColor);
                 xAxis.setDrawGridLines(false);
                 xAxis.setDrawMarkTicks(true);
                 xAxis.setValueFormatter({
-                    getAxisLabel: (value, axis, viewPortHandler) => Math.floor(value / 1000).toFixed()
+                    getAxisLabel: (value) => formatDistance(value)
                 });
 
                 chartView.setCustomRenderer({
                     drawHighlight(c: Canvas, h: Highlight<Entry>, set: LineDataSet, paint: Paint) {
-                        // const canvasHeight = c.getHeight();
                         const x = h.drawX;
-                        const y = h.drawY;
-                        const w = 50;
-                        highlightPaint.setColor('white');
-                        const layout = new StaticLayout(
-                            h.entry.a.toFixed() +
-                                'm' +
-                                '\n' +
-                                Math.abs(h.entry.avg.toFixed()) +
-                                '%(' +
-                                '~' +
-                                Math.abs(h.entry.g.toFixed()) +
-                                '%)' +
-                                '\n' +
-                                formatValueToUnit(h.entry.d, UNITS.DistanceKm),
-                            highlightPaint,
-                            w,
-                            LayoutAlignment.ALIGN_CENTER,
-                            1,
-                            0,
-                            true
-                        );
-
-                        highlightPaint.setColor('#8687A2');
-                        paint.setColor('#8687A2');
-                        paint.setStyle(Style.FILL);
-
-                        let layoutyY = 0;
-                        const layoutHeight = layout.getHeight();
-                        if (y <= layoutHeight + 15) {
-                            layoutyY = y + 15;
-                            c.drawLine(x, y + 2, x, layoutyY, highlightPaint);
-                        } else {
-                            c.drawLine(x, 0, x, y - 2, highlightPaint);
+                        if (highlightNString) {
+                            const staticLayout = new StaticLayout(highlightNString, highlightPaint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+                            c.save();
+                            c.translate(10, 3);
+                            staticLayout.draw(c);
+                            c.restore();
                         }
-                        highlightPaint.setColor('white');
-                        c.drawRoundRect(x - w / 2, layoutyY, x + w / 2, layoutyY + layoutHeight, 2, 2, paint);
-                        c.save();
-                        c.translate(x - w / 2, layoutyY);
-                        layout.draw(c);
-                        c.restore();
+                        c.drawLine(x, 26, x, c.getHeight(), highlightPaint);
+                        c.drawCircle(x, 26, 4, highlightPaint);
                     }
                 });
             } else {
                 chartView.highlightValues(null);
                 chartView.resetZoom();
             }
+            const deltaA = profile.max[1] - profile.min[1];
+            let spaceMin = 0;
+            let spaceMax = 0;
+            if (deltaA < 100) {
+                const space = (100 - deltaA) / 2;
+                spaceMin += space;
+                spaceMax += space;
+            }
+            spaceMin += ((deltaA + spaceMin + spaceMax) / PROFILE_HEIGHT) * 30;
+            leftAxis.setSpaceMin(spaceMin);
+            leftAxis.setSpaceMax(spaceMax);
             const chartData = chartView.getData();
             if (!chartData) {
                 const set = new LineDataSet(profileData, 'a', 'd', 'a');
