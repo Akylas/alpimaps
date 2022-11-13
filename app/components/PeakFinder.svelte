@@ -18,7 +18,7 @@
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { formatDistance } from '~/helpers/formatter';
-    import { lc } from '~/helpers/locale';
+    import { formatTime, lc } from '~/helpers/locale';
     import { showError } from '~/utils/error';
     import { getDataFolder } from '~/utils/utils.common';
     import { alpimapsFontFamily, navigationBarHeight, primaryColor, textColorDark, textColorLight, widgetBackgroundColor } from '~/variables';
