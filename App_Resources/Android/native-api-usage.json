@@ -35,6 +35,7 @@
         "android.graphics.Bitmap:CompressFormat*",
 
         "android.widget:Toast*",
+        "android.text.format:DateFormat*",
 
         "android.location.GnssStatus:Callback*","android.location.GpsStatus:Listener*","android.location:GpsStatus*","java.lang:Iterable*","android.location:GpsSatellite*","android.location:GnssStatus*"
     ],
