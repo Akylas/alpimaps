@@ -1,7 +1,7 @@
 <script lang="ts">
     import { request } from '@nativescript-community/perms';
     import { estimateMagneticField, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
-    import { MergedMBVTTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
+    import { MergedMBVTTileDataSource, MultiTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
     import { MapTilerOnlineTileDataSource } from '@nativescript-community/ui-carto/datasources/maptiler';
     import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
@@ -27,7 +27,7 @@
     export let bearing;
     export let terrarium: boolean = false;
     export let dataSource: TileDataSource<any, any>;
-    export let vectorDataSource: MBTilesTileDataSource | MergedMBVTTileDataSource<any, any>;
+    export let vectorDataSource: MBTilesTileDataSource | MultiTileDataSource<any, any>;
     export let rasterDataSource: TileDataSource<any, any>;
     let webView: NativeViewElementNode<AWebView>;
     let page: NativeViewElementNode<Page>;
