@@ -187,7 +187,12 @@
                     formatter(value) {
                         const hours = Math.floor(value / 60);
                         const minutes = value % 60;
-                        return dayjs().set('h', hours).set('m', minutes).format('H[h]');
+                        return formatTime(dayjs().set('h', hours).set('m', minutes));
+                    },
+                    valueFormatter(value) {
+                        const hours = Math.floor(value / 60);
+                        const minutes = value % 60;
+                        return formatTime(dayjs().set('h', hours).set('m', minutes));
                     },
                     onChange(value) {
                         const hours = Math.floor(value / 60);
