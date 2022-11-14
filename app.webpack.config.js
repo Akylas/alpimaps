@@ -593,7 +593,7 @@ module.exports = (env, params = {}) => {
         })
     );
     console.log('locales', supportedLocales);
-    config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`^(${supportedLocales.join('|')})$`)));
+    config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${supportedLocales.join('|')}).\js`)));
 
     config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|nativescript-carto|ui-carto|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
     config.plugins.push(new IgnoreNotFoundExportPlugin());
@@ -634,7 +634,7 @@ module.exports = (env, params = {}) => {
                 }
             })
         );
-        if (!sentry){
+        if (!sentry) {
             config.plugins.push(
                 new webpack.NormalModuleReplacementPlugin(/trace$/, (resource) => {
                     if (resource.context.match(nativescriptReplace)) {
