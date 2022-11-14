@@ -2,8 +2,13 @@
     import { Template } from 'svelte-native/components';
     import { openLink } from '~/utils/ui';
     import { primaryColor } from '~/variables';
+    let licenses: any[] = [];
+    try {
+        licenses = require('~/licenses.json');
+    } catch (error) {
+        console.error(error, error.stack);
+    }
     //@ts-ignore
-    import licences from '~/licenses.json';
 
     const items = licences.dependencies;
 
