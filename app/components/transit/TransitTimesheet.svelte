@@ -92,7 +92,7 @@
             return data;
         }
         if (index !== undefined) {
-            return dayjs().startOf('d').add(data, 's').format('LT');
+            return formatTime(dayjs().startOf('d').add(data, 's'));
         }
         return '|';
     }
@@ -191,7 +191,7 @@
             <canvaslabel col={2} borderBottomColor={$borderColor} borderBottomWidth={1} marginRight={20} rippleColor={accentColor} on:tap={() => selectTime()}>
                 <cspan text={lc('time')} fontSize={11} color={$subtitleColor} verticalAlignment="top" />
                 <cspan text="mdi-calendar-clock" fontSize={22} fontFamily={mdiFontFamily} verticalAlignment="middle" textAlignment="right" />
-                <cspan text={currentTime.format('LT')} fontSize={14} verticalAlignment="middle" />
+                <cspan text={formatTime(currentTime)} fontSize={14} verticalAlignment="middle" />
             </canvaslabel>
             <stacklayout orientation="horizontal" horizontalAlignment="center" row={1} rippleColor={accentColor} on:tap={reverseTimesheet} colSpan={3} margin={20}>
                 <label fontFamily={mdiFontFamily} fontSize={22} text="mdi-swap-vertical" verticalTextAlignment="center" />

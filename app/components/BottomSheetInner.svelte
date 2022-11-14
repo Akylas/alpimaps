@@ -757,13 +757,13 @@
                         return dataProvider.getYChartMin();
                     }
                 });
-                set.setValueFormatter({
-                    getFormattedValue(value: number, entry: Entry, index, count, dataSetIndex: any, viewPortHandler: any) {
-                        if (index === 0 || index === count - 1 || value === profile.max[1]) {
-                            return value.toFixed();
-                        }
-                    }
-                } as any);
+                // set.setValueFormatter({
+                //     getFormattedValue(value: number, entry: Entry, index, count, dataSetIndex: any, viewPortHandler: any) {
+                //         if (index === 0 || index === count - 1 || value === profile.max[1] || value === profile.min[1]) {
+                //             return convertElevation(value);
+                //         }
+                //     }
+                // } as any);
                 set.setDrawFilled(true);
                 set.setColor('#60B3FC');
                 set.setLineWidth(1);
