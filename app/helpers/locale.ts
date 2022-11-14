@@ -1,3 +1,4 @@
+import { ad } from '@nativescript/core/utils';
 import { l, lc, loadLocaleJSON, lt, lu } from '@nativescript-community/l';
 import { ApplicationSettings } from '@nativescript/core';
 import { getString, setString } from '@nativescript/core/application-settings';
@@ -51,7 +52,7 @@ async function setLang(newLang) {
     }
     // console.log('changed lang', lang, newLang, Device.region);
     try {
-        require(`dayjs/locale/${newLang}`);
+        require(`dayjs/locale/${newLang}.js`);
     } catch (err) {
         console.error('failed to load dayjs locale', lang, `dayjs/locale/${newLang}`, err);
     }
@@ -144,7 +145,35 @@ export async function selectLanguage() {
         this.showError(err);
     }
 }
-export function formatDate(date: number | string | Date, formatStr: string) {
+
+export function formatTime(date: number | dayjs.Dayjs | string | Date, formatStr: string = 'LT') {
+    if (date) {
+        if (!date['format']) {
+            date = dayjs(date);
+        }
+        if (clock_24 && formatStr === 'LT') {
+            formatStr = 'HH:mm';
+        } else if (clock_24 && formatStr === 'LTS') {
+            formatStr = 'HH:mm:ss';
+        }
+        return (date as dayjs.Dayjs).format(formatStr);
+    }
+    return '';
+}
+
+export function convertDurationSeconds(seconds, formatStr?: string) {
+    const thedate = new Date(0, 0, 0, 0, 0, seconds);
+    if (!formatStr) {
+        if (thedate.getHours()) {
+            formatStr = 'H [h] m [m]';
+        } else {
+            formatStr = 'm [m]';
+        }
+    }
+    return dayjs(thedate).format(formatStr);
+}
+
+export function formatDate(date: number | string | dayjs.Dayjs | Date, formatStr: string) {
     if (date) {
         if (!date['format']) {
             date = dayjs(date);
@@ -154,12 +183,12 @@ export function formatDate(date: number | string | Date, formatStr: string) {
     return '';
 }
 
-export function convertDuration(date, formatStr: string = 'H [hrs], m [min]') {
-    const test = new Date(date);
-    test.setTime(test.getTime() + test.getTimezoneOffset() * 60 * 1000);
-    const result = dayjs(test).format(formatStr);
-    return result;
-}
+// export function convertDuration(date, formatStr: string = 'H [hrs], m [min]') {
+//     const test = new Date(date);
+//     test.setTime(test.getTime() + test.getTimezoneOffset() * 60 * 1000);
+//     const result = dayjs(test).format(formatStr);
+//     return result;
+// }
 
 // const rtf = new Intl.RelativeTimeFormat('es');
 
