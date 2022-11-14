@@ -2,7 +2,7 @@
     import { l, lc } from '@nativescript-community/l';
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Align, Canvas, CanvasView, DashPathEffect, LayoutAlignment, Paint, Rect, StaticLayout, Style } from '@nativescript-community/ui-canvas';
-    import { fromNativeMapPos, GenericMapPos } from '@nativescript-community/ui-carto/core';
+    import { fromNativeMapPos, GenericMapPos, MapBounds } from '@nativescript-community/ui-carto/core';
     import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
     import type { VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
@@ -11,6 +11,7 @@
     import { LineChart } from '@nativescript-community/ui-chart/charts';
     import type { HighlightEventData } from '@nativescript-community/ui-chart/charts/Chart';
     import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
+    import { Rounding } from '@nativescript-community/ui-chart/data/DataSet';
     import type { Entry } from '@nativescript-community/ui-chart/data/Entry';
     import { LineData } from '@nativescript-community/ui-chart/data/LineData';
     import { LineDataSet } from '@nativescript-community/ui-chart/data/LineDataSet';
@@ -23,7 +24,8 @@
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode, navigate } from 'svelte-native/dom';
     import BottomSheetInfoView from '~/components/BottomSheetInfoView.svelte';
-    import { convertDurationSeconds, formatDistance } from '~/helpers/formatter';
+    import { convertDurationSeconds, convertElevation, formatDistance } from '~/helpers/formatter';
+    import { getBounds } from '~/helpers/geolib';
     import { onThemeChanged } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext, handleMapAction } from '~/mapModules/MapModule';
@@ -34,7 +36,7 @@
     import { computeDistanceBetween } from '~/utils/geo';
     import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
-    import { borderColor, mdiFontFamily, primaryColor, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
+    import { alpimapsFontFamily, borderColor, mdiFontFamily, primaryColor, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import IconButton from './IconButton.svelte';
 
     const LISTVIEW_HEIGHT = 200;
@@ -45,7 +47,7 @@
 
     const mapContext = getMapContext();
     const highlightPaint = new Paint();
-    highlightPaint.setColor(primaryColor);
+    highlightPaint.setColor('#aaa');
     // highlightPaint.setTextAlign(Align.CENTER);
     highlightPaint.setStrokeWidth(1);
     highlightPaint.setTextSize(12);
@@ -229,6 +231,7 @@
                                 spans: [
                                     {
                                         fontFamily: mdiFontFamily,
+                                        color: primaryColor,
                                         text: 'mdi-timer-outline'
                                     },
                                     {
@@ -236,6 +239,7 @@
                                     },
                                     {
                                         fontFamily: mdiFontFamily,
+                                        color: primaryColor,
                                         text: 'mdi-arrow-expand-right'
                                     },
                                     {
@@ -243,10 +247,19 @@
                                     },
                                     {
                                         fontFamily: mdiFontFamily,
+                                        color: primaryColor,
                                         text: 'mdi-triangle-outline'
                                     },
                                     {
-                                        text: highlight.entry.a.toFixed() + 'm'
+                                        text: highlight.entry.a.toFixed() + 'm' + '  '
+                                    },
+                                    {
+                                        fontFamily: alpimapsFontFamily,
+                                        color: primaryColor,
+                                        text: 'alpimaps-angle'
+                                    },
+                                    {
+                                        text: '~' + highlight.entry.g.toFixed() + '%'
                                     }
                                 ]
                             },
@@ -296,6 +309,38 @@
         }
     }
     let highlightNString;
+    function onChartPanOrZoom(event) {
+        try {
+            const xAxisRender = chart.nativeView.getRendererXAxis();
+            const { min, max } = xAxisRender.getCurrentMinMax();
+            const dataSet = chart.nativeView.getData().getDataSetByIndex(0);
+            dataSet.setIgnoreFiltered(true);
+            const minX = dataSet.getEntryIndexForXValue(min, NaN, Rounding.CLOSEST);
+            const maxX = dataSet.getEntryIndexForXValue(max, NaN, Rounding.CLOSEST);
+            dataSet.setIgnoreFiltered(false);
+            const positions = (item.geometry?.['coordinates'] as any[]).slice(minX, maxX + 1);
+            const region = getBounds(positions);
+            mapContext.getMap().moveToFitBounds(
+                new MapBounds(
+                    {
+                        lat: region.maxLat,
+                        lon: region.maxLng
+                    },
+                    {
+                        lat: region.minLat,
+                        lon: region.minLng
+                    }
+                ),
+                undefined,
+                true,
+                false,
+                false,
+                0
+            );
+        } catch (error) {
+            console.error(error, error.stack);
+        }
+    }
     function onChartHighlight(event: HighlightEventData) {
         if (!item) {
             return;
@@ -569,13 +614,6 @@
             const query = formatter.getItemName(item);
             const geometry = item.geometry as Point;
             openUrl(`weather://query?lat=${geometry.coordinates[1]}&lon=${geometry.coordinates[0]}&name=${query}`);
-            // const result = await networkService.sendWeatherBroadcastQuery({ ...item.position, timeout: 10000 });
-            // const WeatherBottomSheet = (await import('./WeatherBottomSheet.svelte')).default;
-            // await showBottomSheet({
-            //     parent: mapContext.getMainPage(),
-            //     view: WeatherBottomSheet,
-            //     props: { item:result[0] }
-            // });
         } catch (err) {
             this.showError(err);
         } finally {
@@ -687,12 +725,13 @@
                 chartView.setDoubleTapToZoomEnabled(true);
                 chartView.setDragEnabled(true);
                 chartView.clipHighlightToContent = false;
-                chartView.setClipDataToContent(false);
-                chartView.setClipValuesToContent(false);
+                chartView.zoomedPanWith2Pointers = true;
+                chartView.setClipDataToContent(true);
+                // chartView.setClipValuesToContent(false);
 
                 // chartView.setExtraTopOffset(30);
                 chartView.setMinOffset(0);
-                chartView.setExtraOffsets(0, 30, 0, 0);
+                chartView.setExtraOffsets(0, 24, 0, 0);
                 chartView.getAxisRight().setEnabled(false);
                 chartView.getLegend().setEnabled(false);
                 leftAxis.setTextColor($textColor);
@@ -705,8 +744,8 @@
 
                 xAxis.setPosition(XAxisPosition.TOP);
                 xAxis.setLabelTextAlign(Align.CENTER);
-                // xAxis.ensureLastLabel = true;
-                xAxis.setLabelCount(4);
+                xAxis.ensureLastLabel = true;
+                // xAxis.setLabelCount(4);
                 xAxis.setTextColor($textColor);
                 xAxis.setGridColor($borderColor);
                 xAxis.setDrawGridLines(false);
@@ -721,12 +760,12 @@
                         if (highlightNString) {
                             const staticLayout = new StaticLayout(highlightNString, highlightPaint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                             c.save();
-                            c.translate(10, 3);
+                            c.translate(10, 0);
                             staticLayout.draw(c);
                             c.restore();
                         }
-                        c.drawLine(x, 26, x, c.getHeight(), highlightPaint);
-                        c.drawCircle(x, 26, 4, highlightPaint);
+                        c.drawLine(x, 22, x, c.getHeight(), highlightPaint);
+                        c.drawCircle(x, 22, 4, highlightPaint);
                     }
                 });
             } else {
@@ -747,10 +786,10 @@
             const chartData = chartView.getData();
             if (!chartData) {
                 const set = new LineDataSet(profileData, 'a', 'd', 'a');
-                set.setDrawValues(true);
-                set.setValueTextColor($textColor);
-                set.setValueTextSize(10);
-                set.setMaxFilterNumber(100);
+                // set.setDrawValues(false);
+                // set.setValueTextColor($textColor);
+                // set.setValueTextSize(10);
+                set.setMaxFilterNumber(50);
                 set.setUseColorsForFill(true);
                 set.setFillFormatter({
                     getFillLinePosition(dataSet: LineDataSet, dataProvider) {
@@ -967,7 +1006,16 @@
             <IconButton on:tap={openPeakFinder} tooltip={lc('peaks')} isVisible={item && !itemIsRoute} text="mdi-summit" rounded={false} />
             <IconButton on:tap={getTransitLines} tooltip={lc('bus_stop_infos')} isVisible={item && itemIsBusStop} text="mdi-bus" rounded={false} />
         </stacklayout>
-        <linechart bind:this={chart} row={2} colSpan={2} height={PROFILE_HEIGHT} visibility={graphAvailable ? 'visible' : 'collapsed'} on:highlight={onChartHighlight} />
+        <linechart
+            bind:this={chart}
+            row={2}
+            colSpan={2}
+            height={PROFILE_HEIGHT}
+            visibility={graphAvailable ? 'visible' : 'collapsed'}
+            on:highlight={onChartHighlight}
+            on:zoom={onChartPanOrZoom}
+            on:pan={onChartPanOrZoom}
+        />
         <gridlayout row={3} colSpan={2} height={STATS_HEIGHT} visibility={statsAvailable ? 'visible' : 'collapsed'}>
             <canvas bind:this={statsCanvas} on:draw={drawStats} />
             <IconButton
