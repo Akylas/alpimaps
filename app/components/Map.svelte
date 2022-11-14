@@ -446,7 +446,7 @@
             width: min,
             height: min
         };
-        DEV_LOG && console.log('getMapViewPort', width, height, mapTranslation, topTranslationY, result);
+        // DEV_LOG && console.log('getMapViewPort', width, height, mapTranslation, topTranslationY, result);
         return result;
     }
     const saveSettings = debounce(function () {
