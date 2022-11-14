@@ -387,9 +387,7 @@ export function getBounds(theCoords) {
         maxLat: -Infinity,
         minLat: Infinity,
         maxLng: -Infinity,
-        minLng: Infinity,
-        maxElev: -Infinity,
-        minElev: Infinity
+        minLng: Infinity
     };
 
     let coord;
@@ -399,10 +397,6 @@ export function getBounds(theCoords) {
         stats.minLat = Math.min(coord['latitude'], stats.minLat);
         stats.maxLng = Math.max(coord['longitude'], stats.maxLng);
         stats.minLng = Math.min(coord['longitude'], stats.minLng);
-        if (coord['altitude']) {
-            stats.maxElev = Math.max(coord['altitude'], stats.maxElev);
-            stats.minElev = Math.min(coord['altitude'], stats.minElev);
-        }
     }
     if (stats.maxLat === stats.minLat) {
         stats.maxLat += 0.002;
