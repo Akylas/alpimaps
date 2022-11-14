@@ -64,7 +64,7 @@
         const hours = Math.floor(value / 3600);
         const minutes = Math.floor((value - hours * 3600) / 60);
         const seconds = Math.floor(value - hours * 3600 - minutes * 60);
-        return dayjs().hour(hours).minute(minutes).second(seconds).format('LT');
+        return formatTime(dayjs().hour(hours).minute(minutes).second(seconds));
     }
 
     const updateElevation = debounce(function (elevation) {
