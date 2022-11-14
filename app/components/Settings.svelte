@@ -17,7 +17,6 @@
     import { openLink } from '~/utils/ui';
     import { borderColor, mdiFontFamily } from '~/variables';
     import CActionBar from './CActionBar.svelte';
-    import ThirdPartySoftwareBottomSheet from './ThirdPartySoftwareBottomSheet.svelte';
 
     let collectionView: NativeViewElementNode<CollectionView>;
 
@@ -76,7 +75,7 @@
                 title: lc('language')
             },
             {
-                type:'switch',
+                type: 'switch',
                 key: 'clock_24',
                 value: clock_24,
                 title: lc('hours_24_clock')
@@ -169,6 +168,7 @@
                     openUrl(STORE_REVIEW_LINK);
                     break;
                 case 'third_party':
+                    const ThirdPartySoftwareBottomSheet = (await import('~/components/ThirdPartySoftwareBottomSheet.svelte')).default;
                     showBottomSheet({
                         parent: this,
                         view: ThirdPartySoftwareBottomSheet,
