@@ -2,15 +2,15 @@
     import { Template } from 'svelte-native/components';
     import { openLink } from '~/utils/ui';
     import { primaryColor } from '~/variables';
-    let licenses: any[] = [];
+    let licenses: { dependencies?: any[] } = {};
+    let items;
     try {
         licenses = require('~/licenses.json');
+        items = licenses.dependencies;
     } catch (error) {
         console.error(error, error.stack);
     }
     //@ts-ignore
-
-    const items = licences.dependencies;
 
     function onTap(item) {
         if (item.moduleUrl) {
