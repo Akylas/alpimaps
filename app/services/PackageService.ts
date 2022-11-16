@@ -22,7 +22,7 @@ import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry
 import { HillshadeRasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
 import { CartoOnlineVectorTileLayer, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { CartoPackageManager, CartoPackageManagerListener, PackageErrorType, PackageManagerTileDataSource, PackageStatus } from '@nativescript-community/ui-carto/packagemanager';
-import { PackageManagerValhallaRoutingService, ValhallaOfflineRoutingService, ValhallaOnlineRoutingService } from '@nativescript-community/ui-carto/routing';
+import { PackageManagerValhallaRoutingService, ValhallaOfflineRoutingService, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
 import { SearchRequest, VectorTileSearchService } from '@nativescript-community/ui-carto/search';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import * as appSettings from '@nativescript/core/application-settings';
@@ -504,10 +504,8 @@ class PackageService extends Observable {
         return new Promise((resolve, reject) => {
             service.calculateAddresses(options, (err, result) => {
                 // console.log('calculateAddresses', options, err, result && result.size());
-                if (err) {
-                    reject(err);
-                    return;
-                }
+                if (err) reject(err);
+                else resolve(result);
                 resolve(result);
             });
         });
@@ -888,75 +886,97 @@ class PackageService extends Observable {
         return null;
     }
 
-    async fetchStats({ projection, positions, item, route }: { projection; positions?; item?; route?: Route }) {
+    async getStats({
+        projection,
+        points,
+        profile,
+        attributes = ['edge.surface', 'edge.road_class', 'edge.sac_scale', 'edge.use', 'edge.length'],
+        shape_match = 'walk_or_snap'
+    }: {
+        projection;
+        points;
+        profile?: ValhallaProfile;
+        attributes?: string[];
+        shape_match?: string;
+    }) {
         const service = this.offlineRoutingSearchService() || this.onlineRoutingSearchService();
+        if (service instanceof ValhallaOfflineRoutingService || service instanceof ValhallaOnlineRoutingService) {
+            const startTime = Date.now();
+            DEV_LOG && console.log('matchRoute', points);
+            const matchResult = await service.matchRoute(
+                {
+                    projection,
+                    points,
+                    accuracy: 1,
+                    customOptions: {
+                        shape_match,
+                        filters: { attributes, action: 'include' }
+                    }
+                },
+                profile
+            );
+            DEV_LOG && console.log('got trace attributes', Date.now() - startTime, 'ms');
+            return JSON.parse(matchResult.getRawResult()).edges;
+        }
+    }
+    async fetchStats({ projection, positions, item, route, profile }: { projection; positions?; item?; route?: Route; profile?: ValhallaProfile }) {
         if (!route) {
             route = item.route;
         }
-        if (service instanceof ValhallaOfflineRoutingService || service instanceof ValhallaOnlineRoutingService) {
-            const startTime = Date.now();
-            const matchResult = await service.matchRoute({
-                projection,
-                points: positions || this.getRouteItemPoses(item),
-                accuracy: 1,
-                customOptions: {
-                    shape_match: 'walk_or_snap',
-                    filters: { attributes: ['edge.surface', 'edge.road_class', 'edge.sac_scale', 'edge.use', 'edge.length'], action: 'include' }
-                }
-            });
-            DEV_LOG && console.log('got trace attributes', route.totalDistance, Date.now() - startTime, 'ms');
-            const edges = JSON.parse(matchResult.getRawResult()).edges;
-            const stats: {
-                [k: string]: { [k: string]: number };
-            } = { surfaces: {}, waytypes: {} };
-            const totalDistanceKm = route.totalDistance / 1000;
-            try {
-                for (let index = 0; index < edges.length; index++) {
-                    const edge = edges[index];
-                    let key;
-                    if (edge.sac_scale > 0) {
-                        key = 'sac_scale_' + edge.sac_scale;
-                    } else if (!edge.use || edge.use === 'null' || edge.use === 'road') {
-                        key = edge.road_class;
-                    } else {
-                        key = edge.use;
-                    }
-                    if (key === 'service_other' || key === 'residential' || key === 'living_street' || key === 'driveway' || key === 'alley' || key === 'footway' || key === 'culdesac') {
-                        key = 'street';
-                    } else if (key === 'secondary' || key === 'tertiary' || key === 'unclassified') {
-                        key = 'road';
-                    } else if (key === 'motorway' || key === 'trunk' || key === 'primary') {
-                        key = 'highway';
-                    }
-                    stats.waytypes[key] = stats.waytypes[key] ? stats.waytypes[key] + edge.length : edge.length;
-                    key = edge.surface;
-                    stats.surfaces[key] = stats.surfaces[key] ? stats.surfaces[key] + edge.length : edge.length;
-                }
-            } catch (error) {
-                console.error(error, error.stack);
-            }
-
-            const resultStats = {
-                waytypes: Object.keys(stats.waytypes)
-                    .map((s) => ({ perc: stats.waytypes[s] / totalDistanceKm, dist: stats.waytypes[s], id: s }))
-                    .sort((a, b) => b.perc - a.perc),
-                surfaces: Object.keys(stats.surfaces)
-                    .map((s) => ({ perc: stats.surfaces[s] / totalDistanceKm, dist: stats.surfaces[s], id: s }))
-                    .sort((a, b) => b.perc - a.perc)
-            };
-
-            DEV_LOG &&
-                console.log(
-                    'stats',
-                    resultStats.waytypes.reduce((prev, current) => prev + current.dist, 0),
-                    resultStats.surfaces.reduce((prev, current) => prev + current.perc, 0),
-                    resultStats.waytypes.reduce((prev, current) => prev + current.perc, 0),
-                    JSON.stringify(resultStats),
-                    resultStats.waytypes.map((s) => s.id),
-                    resultStats.surfaces.map((s) => s.id)
-                );
-            return resultStats;
+        const edges = await this.getStats({ projection, points: positions || this.getRouteItemPoses(item), profile });
+        if (!edges) {
+            return;
         }
+        const stats: {
+            [k: string]: { [k: string]: number };
+        } = { surfaces: {}, waytypes: {} };
+        const totalDistanceKm = route.totalDistance / 1000;
+        try {
+            for (let index = 0; index < edges.length; index++) {
+                const edge = edges[index];
+                let key;
+                if (edge.sac_scale > 0) {
+                    key = 'sac_scale_' + edge.sac_scale;
+                } else if (!edge.use || edge.use === 'null' || edge.use === 'road') {
+                    key = edge.road_class;
+                } else {
+                    key = edge.use;
+                }
+                if (key === 'service_other' || key === 'residential' || key === 'living_street' || key === 'driveway' || key === 'alley' || key === 'footway' || key === 'culdesac') {
+                    key = 'street';
+                } else if (key === 'secondary' || key === 'tertiary' || key === 'unclassified') {
+                    key = 'road';
+                } else if (key === 'motorway' || key === 'trunk' || key === 'primary') {
+                    key = 'highway';
+                }
+                stats.waytypes[key] = stats.waytypes[key] ? stats.waytypes[key] + edge.length : edge.length;
+                key = edge.surface;
+                stats.surfaces[key] = stats.surfaces[key] ? stats.surfaces[key] + edge.length : edge.length;
+            }
+        } catch (error) {
+            console.error(error, error.stack);
+        }
+
+        const resultStats = {
+            waytypes: Object.keys(stats.waytypes)
+                .map((s) => ({ perc: stats.waytypes[s] / totalDistanceKm, dist: stats.waytypes[s], id: s }))
+                .sort((a, b) => b.perc - a.perc),
+            surfaces: Object.keys(stats.surfaces)
+                .map((s) => ({ perc: stats.surfaces[s] / totalDistanceKm, dist: stats.surfaces[s], id: s }))
+                .sort((a, b) => b.perc - a.perc)
+        };
+
+        DEV_LOG &&
+            console.log(
+                'stats',
+                resultStats.waytypes.reduce((prev, current) => prev + current.dist, 0),
+                resultStats.surfaces.reduce((prev, current) => prev + current.perc, 0),
+                resultStats.waytypes.reduce((prev, current) => prev + current.perc, 0),
+                JSON.stringify(resultStats),
+                resultStats.waytypes.map((s) => s.id),
+                resultStats.surfaces.map((s) => s.id)
+            );
+        return resultStats;
     }
 
     offlineRoutingSearchService() {
