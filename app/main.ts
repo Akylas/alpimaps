@@ -10,16 +10,16 @@ import { install as installBottomSheets } from '@nativescript-community/ui-mater
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
 import installWebRTC from '@nativescript-community/ui-webview-rtc';
-import { Application, Trace } from '@nativescript/core';
+import { Application } from '@nativescript/core';
 import { ScrollView } from '@nativescript/core/ui';
 import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
+import Map from '~/components/Map.svelte';
 import { start as startThemeHelper } from '~/helpers/theme';
 import { BgService } from '~/services/BgService';
 import { networkService } from '~/services/NetworkService';
 import { startSentry } from '~/utils/sentry';
 import './app.scss';
-import Map from '~/components/Map.svelte';
 
 startSentry();
 installGestures(true);
@@ -94,23 +94,6 @@ if (__IOS__) {
     themer.setPrimaryColor(primaryColor);
     themer.setAccentColor(primaryColor);
 }
-// if (!global.window) {
-//     window = global.window = {
-//         requestAnimationFrame,
-//         cancelAnimationFrame,
-//         performance: {
-//             now: time
-//         } as any
-//     } as any;
-// } else if (!global.window.requestAnimationFrame) {
-//     global.window.requestAnimationFrame = requestAnimationFrame;
-//     global.window.cancelAnimationFrame = cancelAnimationFrame;
-//     if (!global.window.performance) {
-//         global.window.performance = {
-//             now: time
-//         } as any;
-//     }
-// }
 themer.createShape('round', {
     cornerFamily: 'rounded' as any,
     cornerSize: {
