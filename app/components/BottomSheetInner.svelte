@@ -85,15 +85,17 @@
     mapContext.onVectorTileElementClicked((data: VectorTileEventData<LatLonKeys>) => {
         const { clickType, position, feature, featureData } = data;
         if (item && item.id && featureData?.route && feature.properties?.id === item.id) {
-            updateRouteItemWithPosition(item, position, true, true);
+            // DEV_LOG && console.log('onVectorTileElementClicked updateRouteItemWithPosition', position);
+            updateRouteItemWithPosition(item, position);
         }
     });
 
-    $: {
-        if (itemIsRoute && currentLocation) {
-            updateRouteItemWithPosition(item, currentLocation);
-        }
-    }
+    // $: {
+    //     if (itemIsRoute && currentLocation) {
+    //         DEV_LOG && console.log('currentLocation', 'updateRouteItemWithPosition');
+    //         updateRouteItemWithPosition(item, currentLocation);
+    //     }
+    // }
     $: {
         if (!item) {
             navigationInstructions = null;
@@ -173,9 +175,14 @@
             updateGraphAvailable();
             updateStatsAvailable();
             if (graphAvailable) {
+                // console.log('updateChartData1')
                 updateChartData();
             }
             updateSteps();
+            if (currentLocation) {
+                // DEV_LOG && console.log('currentLocation', 'updateRouteItemWithPosition');
+                updateRouteItemWithPosition(item, currentLocation);
+            }
         } catch (err) {
             console.error('item changed', !!err, err, err.stack);
         }
@@ -183,23 +190,29 @@
 
     $: {
         try {
-            if (chart && graphAvailable) {
+            if (chart) {
+                console.log('updateChartData2');
                 updateChartData();
+                onChartLoadedCallbacks.forEach((c) => c());
+                onChartLoadedCallbacks = [];
             }
         } catch (err) {
             console.error('updateChartData', !!err, err, err.stack);
             showError(err);
         }
     }
+    let onChartLoadedCallbacks = [];
 
     function updateRouteItemWithPosition(routeItem: Item, location: GenericMapPos<LatLonKeys>, updateNavigationInstruction = true, updateGraph = true, highlight?: Highlight<Entry>) {
+        // DEV_LOG && console.log('updateRouteItemWithPosition1', location, updateNavigationInstruction, updateGraph, !!highlight);
         try {
             if (routeItem?.route) {
                 const props = routeItem.properties;
                 const route = routeItem.route;
                 const positions = packageService.getRouteItemPoses(routeItem);
                 const onPathIndex = isLocationOnPath(location, positions, false, true, 15);
-                if (onPathIndex !== -1 && (highlight || (routeItem.instructions && updateNavigationInstruction))) {
+                if (onPathIndex !== -1 && (highlight || (routeItem.instructions && updateNavigationInstruction && !graphAvailable))) {
+                    // DEV_LOG && console.log('updateRouteItemWithPosition navigation instruction', onPathIndex);
                     const remainingDistance = distanceToEnd(onPathIndex, positions);
                     const remainingTime = (route.totalTime * remainingDistance) / route.totalDistance;
                     if (routeItem.instructions) {
@@ -222,8 +235,7 @@
                             distanceToNextInstruction,
                             remainingTime
                         };
-                    } else {
-                        navigationInstructions = null;
+                        // DEV_LOG && console.log('navigationInstructions', JSON.stringify(navigationInstructions));
                     }
                     if (highlight) {
                         highlightNString = createNativeAttributedString(
@@ -266,26 +278,40 @@
                             null
                         );
                     }
+                } else {
+                    navigationInstructions = null;
                 }
 
-                if (updateGraph && graphAvailable && chart.nativeView) {
+                if (updateGraph && graphAvailable) {
+                    const nChart = chart?.nativeView;
                     if (onPathIndex === -1) {
-                        chart.nativeView.highlight(null);
+                        if (nChart) {
+                            nChart.highlight(null);
+                        }
                     } else {
-                        const profile = routeItem.profile;
-                        const profileData = profile?.data;
-                        if (profileData) {
-                            const dataSet = chart.nativeView.getData().getDataSetByIndex(0);
-                            dataSet.setIgnoreFiltered(true);
-                            const item = profileData[onPathIndex];
-                            dataSet.setIgnoreFiltered(false);
-                            chart.nativeView.highlightValues([
-                                {
+                        function highlight() {
+                            const nChart = chart?.nativeView;
+                            const profile = routeItem.profile;
+                            const profileData = profile?.data;
+                            if (profileData) {
+                                const dataSet = nChart.getData().getDataSetByIndex(0);
+                                dataSet.setIgnoreFiltered(true);
+                                const item = profileData[onPathIndex];
+                                dataSet.setIgnoreFiltered(false);
+                                // DEV_LOG && console.log('highlight', onPathIndex, item.d, item);
+                                const highlight = {
                                     dataSetIndex: 0,
-                                    x: onPathIndex,
+                                    entryIndex: onPathIndex,
                                     entry: item
-                                } as any
-                            ]);
+                                };
+                                nChart.highlightValues([highlight]);
+                                onChartHighlight({ eventName: 'highlight', highlight, object: nChart } as any);
+                            }
+                        }
+                        if (nChart) {
+                            highlight();
+                        } else {
+                            onChartLoadedCallbacks.push(highlight);
                         }
                     }
                 }
@@ -293,13 +319,13 @@
                 navigationInstructions = null;
             }
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
     }
 
     function onNewLocation(e: any) {
         currentLocation = e.data;
-        updateRouteItemWithPosition(item, currentLocation);
+        // console.log('onNewLocation', currentLocation);
     }
 
     function showAstronomy() {
@@ -341,24 +367,54 @@
             console.error(error, error.stack);
         }
     }
-    function onChartHighlight(event: HighlightEventData) {
+    async function onChartHighlight(event: HighlightEventData) {
+        // DEV_LOG && console.log('onChartHighlight', event.highlight);
         if (!item) {
             return;
         }
-        const x = event.highlight.entryIndex;
+        const shouldSelectItem = event.highlight.hasOwnProperty('xPx');
+        const entryIndex = event.highlight.entryIndex;
         const positions = item.geometry?.['coordinates'];
-        const position = positions[Math.max(0, Math.min(x, positions.length - 1))];
+        const actualIndex = Math.max(0, Math.min(entryIndex, positions.length - 1));
+        const position = positions[actualIndex];
+        // DEV_LOG && console.log('onChartHighlight', entryIndex, position, shouldSelectItem);
+
         if (position) {
             updateRouteItemWithPosition(item, { lat: position[1], lon: position[0] }, false, false, event.highlight);
-            mapContext.selectItem({
-                item: { geometry: { type: 'Point', coordinates: position } },
-                isFeatureInteresting: true,
-                setSelected: false,
-                peek: false,
-                zoomDuration: 100,
-                preventZoom: false
-            });
+            if (shouldSelectItem) {
+                mapContext.selectItem({
+                    item: { geometry: { type: 'Point', coordinates: position } },
+                    isFeatureInteresting: true,
+                    setSelected: false,
+                    peek: false,
+                    zoomDuration: 100,
+                    preventZoom: false
+                });
+            }
         }
+        // if (DEV_LOG) {
+        //     try {
+        //         const points = [{ lat: position[1], lon: position[0] }];
+        //         if (actualIndex < positions.length - 1) {
+        //             points.push({ lat: positions[actualIndex + 1][1], lon: positions[actualIndex + 1][0] });
+        //         } else {
+        //             points.unshift({ lat: positions[actualIndex - 1][1], lon: positions[actualIndex - 1][0] });
+        //         }
+
+        //         const projection = mapContext.getProjection();
+        //         packageService
+        //             .getStats({
+        //                 projection,
+        //                 points,
+        //                 profile: item.properties.route.type,
+        //                 attributes: ['edge.surface', 'edge.road_class', 'edge.sac_scale', 'edge.use'],
+        //                 shape_match: 'edge_walk'
+        //             })
+        //             .then((edges) => console.log('edges', edges));
+        //     } catch (error) {
+        //         console.error(error, error.stack);
+        //     }
+        // }
     }
     function searchItemWeb() {
         if (__ANDROID__) {
@@ -764,11 +820,12 @@
                             staticLayout.draw(c);
                             c.restore();
                         }
-                        c.drawLine(x, 22, x, c.getHeight(), highlightPaint);
-                        c.drawCircle(x, 22, 4, highlightPaint);
+                        c.drawLine(x, 20, x, c.getHeight(), highlightPaint);
+                        c.drawCircle(x, 20, 4, highlightPaint);
                     }
                 });
             } else {
+                // console.log('clearing highlight')
                 chartView.highlightValues(null);
                 chartView.resetZoom();
             }
@@ -816,6 +873,7 @@
                 const lineData = new LineData(sets);
                 chartView.setData(lineData);
             } else {
+                // console.log('clearing highlight1')
                 chartView.highlightValues(null);
                 const set = chartData.getDataSetByIndex(0);
                 if (showProfileGrades && profile.colors && profile.colors.length > 1) {
@@ -937,7 +995,7 @@
             let labely = 95;
             const stats = item.stats[statsKey];
             canvas.drawText(lc(statsKey), labelx, 20, bigTextPaint);
-            const nbColumns = Math.round(stats.length / Math.floor((h - 105) / 20));
+            const nbColumns = Math.max(1, Math.round(stats.length / Math.floor((h - 105) / 20)));
             const availableWidth = usedWidth / nbColumns - 15;
             let rigthX, nString, text, text2, layoutHeight, staticLayout;
             stats.forEach((s) => {
