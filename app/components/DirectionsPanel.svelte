@@ -5,7 +5,14 @@
     import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
     import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
     import { VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
-    import { RoutingResult, RoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+    import {
+        PackageManagerValhallaRoutingService,
+        RoutingResult,
+        RoutingService,
+        ValhallaOfflineRoutingService,
+        ValhallaOnlineRoutingService,
+        ValhallaProfile
+    } from '@nativescript-community/ui-carto/routing';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { ApplicationSettings, Color, ContentView, Device, GridLayout, ObservableArray, StackLayout, TextField } from '@nativescript/core';
@@ -655,9 +662,8 @@
                 }
             }
 
-            let service: RoutingService<any, any>;
+            let service: PackageManagerValhallaRoutingService | ValhallaOfflineRoutingService | ValhallaOnlineRoutingService;
             service = packageService.offlineRoutingSearchService() || packageService.onlineRoutingSearchService();
-            (service as any).profile = profile;
             let startTime = Date.now();
             const projection = mapContext.getProjection();
             const customOptions = {
@@ -669,14 +675,14 @@
                 projection,
                 points,
                 customOptions
-            });
+            }, profile);
             DEV_LOG && console.log('got route', result.getTotalDistance(), result.getTotalTime(), Date.now() - startTime, 'ms');
             positions = result.getPoints();
             startTime = Date.now();
             route = routingResultToJSON(result, costing_options);
             DEV_LOG && console.log('parsed route', Date.now() - startTime, 'ms');
             if (requestStats) {
-                route.stats = await packageService.fetchStats({ positions, projection, route: route.route });
+                route.stats = await packageService.fetchStats({ positions, projection, route: route.route, profile });
             }
             if (requestProfile) {
                 route.profile = await packageService.getElevationProfile(null, positions);
