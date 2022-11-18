@@ -30,11 +30,10 @@
         if (currentZoom === zoom) {
             return;
         }
-
-        const newMpp = Math.round(getMetersPerPixel(cartoMap.focusPos, zoom) * 100) / 100;
+        const newMpp = getMetersPerPixel(cartoMap.focusPos, zoom);
         const metersPerCM = PX_PER_CM * newMpp;
         const data = convertDistance(metersPerCM);
-        scaleText = `${data.value.toFixed(1)} ${data.unit} (${zoom.toFixed(1)})`;
+        scaleText = `${data.value.toFixed(data.value < 10 ? 1 : 0)} ${data.unit} (${zoom.toFixed(1)})`;
         // });
     }
     mapContext.onMapReady((mapView: CartoMap<LatLonKeys>) => {
