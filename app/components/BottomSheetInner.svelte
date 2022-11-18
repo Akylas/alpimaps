@@ -170,7 +170,7 @@
         try {
             itemIsRoute = !!item?.route;
             itemIsBusStop = item && !itemIsRoute && (item.properties?.class === 'bus' || item.properties?.subclass === 'tram_stop');
-            itemCanQueryProfile = itemIsRoute;
+            itemCanQueryProfile = itemIsRoute && !!item?.id;
             itemCanQueryStats = itemIsRoute;
             updateGraphAvailable();
             updateStatsAvailable();
@@ -191,7 +191,6 @@
     $: {
         try {
             if (chart) {
-                console.log('updateChartData2');
                 updateChartData();
                 onChartLoadedCallbacks.forEach((c) => c());
                 onChartLoadedCallbacks = [];
@@ -590,7 +589,7 @@
     // }
 
     async function saveItem(peek = true) {
-        // DEV_LOG && console.log('saveItem');
+        DEV_LOG && console.log('saveItem');
         try {
             updatingItem = true;
             const itemsModule = mapContext.mapModule('items');
@@ -605,35 +604,43 @@
             mapContext.mapModules.directionsPanel.cancel(false);
             mapContext.selectItem({ item, isFeatureInteresting: true, peek, preventZoom: false });
             if (item.route) {
-                mapContext.onMapStable(async () => {
-                    try {
-                        // const startTime = Date.now();
-                        const viewPort = mapContext.getMapViewPort();
-                        const image = await mapContext.getMap().captureRendering(true);
-                        // image.saveToFile(path.join(itemsModule.imagesFolder.path, Date.now() + '_full.png'), 'png');
-                        // console.log('captureRendering', image.width, image.height, viewPort, Date.now() - startTime, 'ms');
-                        const canvas = new Canvas(500, 500);
-                        //we offset a bit to be sure we the whole trace
-                        const offset = 20;
-                        canvas.drawBitmap(
-                            image,
-                            new Rect(viewPort.left - offset, viewPort.top - offset, viewPort.left + viewPort.width + offset, viewPort.top + viewPort.height + offset),
-                            new Rect(0, 0, canvas.getWidth(), canvas.getHeight()),
-                            null
-                        );
-                        new ImageSource(canvas.getImage()).saveToFile(imagePath, 'png');
-                        // console.log('saved bitmap', imagePath, Date.now() - startTime, 'ms');
-                        canvas.release();
-                    } catch (error) {
-                        console.error(error);
-                    }
-                }, true);
+                takeItemPicture(item);
             }
         } catch (err) {
             showError(err);
         } finally {
             updatingItem = false;
         }
+    }
+    async function takeItemPicture(item) {
+        //item needs to be already selected
+        // we hide other items before the screenshot
+        // and we show theme again after it
+        mapContext.innerDecoder.setStyleParameter('hide_unselected', '1');
+        mapContext.onMapStable(async () => {
+            try {
+                // const startTime = Date.now();
+                const viewPort = mapContext.getMapViewPort();
+                const image = await mapContext.getMap().captureRendering(true);
+                mapContext.innerDecoder.setStyleParameter('hide_unselected', '0');
+                // image.saveToFile(path.join(itemsModule.imagesFolder.path, Date.now() + '_full.png'), 'png');
+                // console.log('captureRendering', image.width, image.height, viewPort, Date.now() - startTime, 'ms');
+                const canvas = new Canvas(500, 500);
+                //we offset a bit to be sure we the whole trace
+                const offset = 20;
+                canvas.drawBitmap(
+                    image,
+                    new Rect(viewPort.left - offset, viewPort.top - offset, viewPort.left + viewPort.width + offset, viewPort.top + viewPort.height + offset),
+                    new Rect(0, 0, canvas.getWidth(), canvas.getHeight()),
+                    null
+                );
+                new ImageSource(canvas.getImage()).saveToFile(item.image_path, 'png');
+                // console.log('saved bitmap', imagePath, Date.now() - startTime, 'ms');
+                canvas.release();
+            } catch (error) {
+                console.error(error);
+            }
+        }, true);
     }
     async function updateItem(item: IItem, data: Partial<IItem>, peek = true) {
         try {
@@ -648,11 +655,10 @@
         }
     }
     function deleteItem() {
-        const item = mapContext.getSelectedItem();
-        mapContext.mapModule('items').deleteItem(item);
-        if (item.image_path) {
-            File.fromPath(item.image_path).remove();
-        }
+        mapContext.mapModule('items').deleteItem(mapContext.getSelectedItem());
+    }
+    function hideItem() {
+        mapContext.mapModule('items').hideItem(mapContext.getSelectedItem());
     }
     async function shareItem() {
         if (item?.route) {
@@ -1050,19 +1056,27 @@
         <BottomSheetInfoView bind:this={infoView} {item} />
         <mdactivityindicator visibility={updatingItem ? 'visible' : 'collapsed'} horizontalAligment="right" busy={true} width={20} height={20} />
         <IconButton col={1} text="mdi-crosshairs-gps" isVisible={itemIsRoute} on:tap={zoomToItem} />
-        <stacklayout orientation="horizontal" row={1} colSpan={2} borderTopWidth={1} borderBottomWidth={1} borderColor={$borderColor}>
+        <stacklayout orientation="horizontal" row={1} colSpan={2} borderTopWidth={1} borderBottomWidth={1} borderColor={$borderColor} id="bottomsheetbuttons">
+            <IconButton on:tap={deleteItem} tooltip={lc('delete')} isVisible={item && item.id} color="red" text="mdi-delete" rounded={false} />
+            <IconButton on:tap={hideItem} tooltip={lc('hide')} isVisible={item && item.id && itemIsRoute} text="mdi-eye-off" rounded={false} />
             <IconButton on:tap={searchWeb} tooltip={lc('search_web')} isVisible={item && (!itemIsRoute || item.properties?.name) && !item.id} text="mdi-web" rounded={false} />
-            <IconButton on:tap={() => getProfile()} tooltip={lc('elevation_profile')} isVisible={itemIsRoute && itemCanQueryProfile} text="mdi-chart-areaspline" rounded={false} />
+            {#if packageService.hasElevation()}
+                <IconButton on:tap={() => getProfile()} tooltip={lc('elevation_profile')} isVisible={itemIsRoute && itemCanQueryProfile} text="mdi-chart-areaspline" rounded={false} />
+            {/if}
             <IconButton on:tap={() => saveItem()} tooltip={lc('save')} isVisible={item && !item.id} text="mdi-map-plus" rounded={false} />
             <!-- <IconButton on:tap={shareItem} tooltip={lc('share')} isVisible={itemIsRoute} text="mdi-share-variant" rounded={false} /> -->
-            <IconButton on:tap={deleteItem} tooltip={lc('delete')} isVisible={item && item.id} color="red" text="mdi-delete" rounded={false} />
-            <IconButton on:tap={openWikipedia} tooltip={lc('wikipedia')} isVisible={item && item.properties && !!item.properties.wikipedia} text="mdi-wikipedia" rounded={false} />
-            {#if itemIsRoute && networkService.canCheckWeather}
+            {#if item && item.properties && !!item.properties.wikipedia}
+                <IconButton on:tap={openWikipedia} tooltip={lc('wikipedia')} text="mdi-wikipedia" rounded={false} />
+            {/if}
+            {#if !itemIsRoute && networkService.canCheckWeather}
                 <IconButton on:tap={checkWeather} tooltip={lc('weather')} text="mdi-weather-partly-cloudy" rounded={false} />
             {/if}
-            <IconButton id="astronomy" on:tap={showAstronomy} isVisible={item && !itemIsRoute} tooltip={lc('astronomy')} text="mdi-weather-night" rounded={false} />
-            <IconButton on:tap={openPeakFinder} tooltip={lc('peaks')} isVisible={item && !itemIsRoute} text="mdi-summit" rounded={false} />
-            <IconButton on:tap={getTransitLines} tooltip={lc('bus_stop_infos')} isVisible={item && itemIsBusStop} text="mdi-bus" rounded={false} />
+            <IconButton id="astronomy" on:tap={showAstronomy} isVisible={!itemIsRoute} tooltip={lc('astronomy')} text="mdi-weather-night" rounded={false} />
+            {#if packageService.hasElevation()}
+                <IconButton on:tap={openPeakFinder} tooltip={lc('peaks')} isVisible={!itemIsRoute} text="mdi-summit" rounded={false} />
+            {/if}
+
+            <IconButton on:tap={getTransitLines} tooltip={lc('bus_stop_infos')} isVisible={itemIsBusStop} text="mdi-bus" rounded={false} />
         </stacklayout>
         <linechart
             bind:this={chart}
