@@ -386,18 +386,22 @@ module.exports = (env, params = {}) => {
         DEV_LOG: !!devlog,
         TEST_LOG: !!devlog || !!testlog
     };
-    const keys = require(resolve(__dirname, 'API_KEYS')).keys;
-    Object.keys(keys).forEach((s) => {
-        if (s === 'ios' || s === 'android') {
-            if (s === platform) {
-                Object.keys(keys[s]).forEach((s2) => {
-                    defines[`gVars.${s2}`] = apiKeys ? `'${keys[s][s2]}'` : 'undefined';
-                });
+    try {
+        const keys = require(resolve(__dirname, 'API_KEYS')).keys;
+        Object.keys(keys).forEach((s) => {
+            if (s === 'ios' || s === 'android') {
+                if (s === platform) {
+                    Object.keys(keys[s]).forEach((s2) => {
+                        defines[`gVars.${s2}`] = apiKeys ? `'${keys[s][s2]}'` : 'undefined';
+                    });
+                }
+            } else {
+                defines[`gVars.${s}`] = apiKeys ? `'${keys[s]}'` : 'undefined';
             }
-        } else {
-            defines[`gVars.${s}`] = apiKeys ? `'${keys[s]}'` : 'undefined';
-        }
-    });
+        });
+    } catch (error) {
+        console.error('could not access API_KEYS.js');
+    }
     Object.assign(config.plugins.find((p) => p.constructor.name === 'DefinePlugin').definitions, defines);
 
     const symbolsParser = require('scss-symbols-parser');
