@@ -1,64 +1,39 @@
 <script lang="ts">
+    import { createNativeAttributedString } from '@nativescript-community/text';
+    import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import { convertDurationSeconds, convertElevation, convertValueToUnit, osmicon, UNITS } from '~/helpers/formatter';
     import { formatter } from '~/mapModules/ItemFormatter';
     import type { IItem as Item, ItemProperties } from '~/models/Item';
     import { alpimapsFontFamily, mdiFontFamily, subtitleColor, textColor } from '~/variables';
-    const PROPS_TO_SHOW = ['ele'];
 
     export let item: Item;
+    export let symbolSize = 34;
+    export let marginLeft = 40;
+    export let symbolLeft = 0;
+    export let symbolTop = 8;
+    export let propsLeft = 0;
+    export let iconColor = null;
+    export let iconSize = 24;
+    export let iconLeft = 5;
+    export let iconTop = 35;
+    export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
+    let canvas: NativeViewElementNode<CanvasView>;
+
     let itemIcon: string = null;
     let itemIconFontFamily = 'osm';
     let itemTitle: string = null;
     let itemSubtitle: string = null;
-    let propsToDraw = [];
-    let routeDistance = '';
-    let routeDuration: string = null;
-    let routeDplus: string = null;
-    let hasProfile = false;
-    let routeDmin: string = null;
     let showSymbol: boolean = false;
     let actualShowSymbol = false;
     let itemIsRoute = false;
     let itemProps: ItemProperties = null;
 
-    function propValue(prop) {
-        switch (prop) {
-            case 'ele':
-                return convertElevation(item.properties[prop]);
-            case 'dplus':
-                return routeDplus;
-            case 'dmin':
-                return routeDmin;
-            case 'distance':
-                return routeDistance;
-            case 'duration':
-                return routeDuration;
-        }
-        return item.properties[prop];
-    }
-    function propIcon(prop) {
-        // console.log('propIcon', prop);
-        switch (prop) {
-            case 'ele':
-            case 'dplus':
-                return 'mdi-arrow-top-right';
-            case 'dmin':
-                return 'mdi-arrow-bottom-right';
-            case 'distance':
-                return 'mdi-arrow-left-right';
-            case 'duration':
-                return 'mdi-timer-outline';
-        }
-        return null;
-    }
+    let nString;
 
     function updateItem(item: Item) {
         if (!item) {
-            routeDistance = null;
-            routeDuration = null;
-            routeDplus = null;
-            routeDmin = null;
-            propsToDraw = [];
+            nString = null;
             return;
         }
         itemProps = item?.properties;
@@ -72,62 +47,109 @@
         }
         itemTitle = formatter.getItemTitle(item);
         itemSubtitle = formatter.getItemSubtitle(item);
-        showSymbol = itemIsRoute && itemProps && itemProps.layer === 'route';
-        let newPropsToDraw = [];
-        if (!itemIsRoute) {
-            if (itemProps) {
-                newPropsToDraw = PROPS_TO_SHOW.filter((k) => k in itemProps);
-            } else {
-                newPropsToDraw = [];
-            }
+        showSymbol = itemIsRoute && itemProps?.layer === 'route';
+        actualShowSymbol = showSymbol && (itemProps.symbol || itemProps.network);
+        let spans = [];
+
+        if (!itemIsRoute && itemProps?.hasOwnProperty('ele')) {
+            spans.push(
+                {
+                    text: 'mdi-triangle-outline' + ' ',
+                    fontFamily: mdiFontFamily,
+                    color: $subtitleColor
+                },
+                {
+                    text: convertElevation(itemProps.ele) + ' '
+                }
+            );
         }
 
-        if (!itemIsRoute) {
-            routeDistance = null;
-            routeDuration = null;
-        } else {
+        if (itemIsRoute) {
             const route = item.route;
-            let result;
-            if (route.totalDistance || (itemProps && itemProps.distance)) {
-                result = `${convertValueToUnit(route.totalDistance || itemProps.distance * 1000, UNITS.DistanceKm).join(' ')}`;
-                routeDistance = result;
-                newPropsToDraw.push('distance');
+            if (route.totalDistance || itemProps?.hasOwnProperty('distance')) {
+                spans.push(
+                    {
+                        text: 'mdi-arrow-left-right' + ' ',
+                        fontFamily: mdiFontFamily,
+                        color: $subtitleColor
+                    },
+                    {
+                        text: `${convertValueToUnit(route.totalDistance || itemProps.distance * 1000, UNITS.DistanceKm).join(' ')}` + ' '
+                    }
+                );
             }
 
             if (route.totalTime) {
-                routeDuration = convertDurationSeconds(route.totalTime);
-                newPropsToDraw.push('duration');
+                spans.push(
+                    {
+                        text: 'mdi-timer-outline' + ' ',
+                        fontFamily: mdiFontFamily,
+                        color: $subtitleColor
+                    },
+                    {
+                        text: convertDurationSeconds(route.totalTime) + ' '
+                    }
+                );
             }
         }
-
-        hasProfile = !!item.profile?.max;
+        const profile = item.profile;
+        const hasProfile = !!profile?.max;
         if (!hasProfile) {
-            if (itemProps && itemProps.ascent && itemProps.ascent > 0) {
-                routeDplus = `${convertElevation(itemProps.ascent)}`;
-                newPropsToDraw.push('dplus');
-            } else {
-                routeDplus = null;
+            if (itemProps?.ascent > 0) {
+                spans.push(
+                    {
+                        text: 'mdi-arrow-top-right' + ' ',
+                        fontFamily: mdiFontFamily,
+                        color: $subtitleColor
+                    },
+                    {
+                        text: `${convertElevation(itemProps.ascent)}` + ' '
+                    }
+                );
             }
-            if (itemProps && itemProps.descent && itemProps.descent > 0) {
-                routeDmin = `${convertElevation(itemProps.descent)}`;
-                newPropsToDraw.push('dmin');
-            } else {
-                routeDmin = null;
+            if (itemProps?.descent > 0) {
+                spans.push(
+                    {
+                        text: 'mdi-arrow-bottom-right' + ' ',
+                        fontFamily: mdiFontFamily,
+                        color: $subtitleColor
+                    },
+                    {
+                        text: `${convertElevation(itemProps.descent)}` + ' '
+                    }
+                );
             }
         } else {
             const profile = item.profile;
             if (profile.dplus > 0) {
-                routeDplus = `${convertElevation(profile.dplus)}`;
-                newPropsToDraw.push('dplus');
+                spans.push(
+                    {
+                        text: 'mdi-arrow-top-right' + ' ',
+                        fontFamily: mdiFontFamily,
+                        color: $subtitleColor
+                    },
+                    {
+                        text: `${convertElevation(profile.dplus)}` + ' '
+                    }
+                );
             }
             if (profile.dmin < 0) {
-                routeDmin = `${convertElevation(-profile.dmin)}`;
-                newPropsToDraw.push('dmin');
+                spans.push(
+                    {
+                        text: 'mdi-arrow-bottom-right' + ' ',
+                        fontFamily: mdiFontFamily,
+                        color: $subtitleColor
+                    },
+                    {
+                        text: `${convertElevation(-profile.dmin)}` + ' '
+                    }
+                );
             }
         }
-        setTimeout(() => {
-            propsToDraw = newPropsToDraw;
-        }, 100);
+        if (spans.length > 0) {
+            nString = createNativeAttributedString({ spans });
+        }
+        canvas?.nativeView.invalidate();
     }
     $: {
         try {
@@ -136,54 +158,57 @@
             console.error('updateItem', err, err.stack);
         }
     }
+    let propsPaint: Paint;
+    let iconPaint: Paint;
+    function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
+        try {
+            let w = canvas.getWidth();
+            let h = canvas.getHeight();
+            if (onDraw) {
+                onDraw({ canvas, object });
+            }
+            if (itemIcon) {
+                if (!iconPaint) {
+                    iconPaint = new Paint();
+                    iconPaint.textSize = iconSize;
+                }
+                iconPaint.fontFamily = itemIconFontFamily;
+                iconPaint.color = itemProps?.color || iconColor || $textColor;
+                canvas.drawText(itemIcon, iconLeft, iconTop, iconPaint);
+            }
 
-    $: actualShowSymbol = showSymbol && itemProps && (itemProps.symbol || itemProps.network);
+            if (nString) {
+                if (!propsPaint) {
+                    propsPaint = new Paint();
+                    propsPaint.textSize = 14;
+                }
+                propsPaint.color = $textColor;
+                const staticLayout = new StaticLayout(nString, propsPaint, canvas.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+                canvas.save();
+                canvas.translate(propsLeft, h - 20);
+                staticLayout.draw(canvas);
+                canvas.restore();
+            }
+        } catch (err) {
+            console.error(err, err.stack);
+        }
+    }
 </script>
 
-<gridlayout {...$$restProps} padding="5 10 4 10">
-    <!-- <label
-            verticalAlignment="top"
-            horizontalAlignment="left"
-            paddingTop={12}
-            visibility={itemIcon  ? 'visible' : 'hidden'}
-            paddingLeft={5}
-            width={40}
-            text={itemIcon}
-            fontFamily={itemIconFontFamily}
-            fontSize={24}
-            color={(itemProps && itemProps.color) || $textColor}
-        /> -->
-    <canvaslabel fontSize={16}>
-        <cspan
-            verticalAlignment="top"
-            paddingTop={12}
-            visibility={itemIcon ? 'visible' : 'hidden'}
-            paddingLeft={5}
-            width={40}
-            text={itemIcon}
-            fontFamily={itemIconFontFamily}
-            fontSize={24}
-            color={(itemProps && itemProps.color) || $textColor}
-        />
+<gridlayout {...$$restProps} padding="4 10 4 10">
+    <slot />
+    <canvas bind:this={canvas} on:draw={onCanvasDraw}>
         <symbolshape
             visibility={actualShowSymbol ? 'visible' : 'hidden'}
             symbol={actualShowSymbol ? formatter.getSymbol(itemProps) : null}
             color={itemProps?.color || $textColor}
-            width={34}
-            height={34}
-            top={8}
+            width={symbolSize}
+            height={symbolSize}
+            top={symbolTop}
+            left={symbolLeft}
         />
-
-        <cgroup fontSize={14} verticalAlignment="bottom" textAlignment="left" visibility={propsToDraw.length > 0 ? 'visible' : 'hidden'}>
-            {#each propsToDraw as prop, index}
-                <cgroup>
-                    <cspan fontSize={18} fontFamily={mdiFontFamily} color="gray" text={propIcon(prop) + ' '} />
-                    <cspan text={propValue(prop) + '  '} />
-                </cgroup>
-            {/each}
-        </cgroup>
-    </canvaslabel>
-    <flexlayout marginLeft={40} marginBottom={20} flexDirection="column">
+    </canvas>
+    <flexlayout {marginLeft} marginBottom={20} flexDirection="column">
         <label text={itemTitle} fontWeight="bold" color={$textColor} fontSize={18} autoFontSize={true} flexGrow={1} maxFontSize={18} verticalTextAlignment="middle" textWrap={true} />
         <label visibility={itemSubtitle ? 'visible' : 'collapsed'} text={itemSubtitle} color={$subtitleColor} fontSize={13} maxLines={2} verticalTextAlignment="top" flexGrow={1} flexShrink={0} />
     </flexlayout>
