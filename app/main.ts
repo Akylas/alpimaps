@@ -5,7 +5,6 @@ import { installMixins as installUIMixins } from '@nativescript-community/system
 import { overrideSpanAndFormattedString } from '@nativescript-community/text';
 import { setMapPosKeys } from '@nativescript-community/ui-carto/core';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
-// import DrawerElement from '@nativescript-community/ui-drawer/svelte';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
@@ -106,9 +105,11 @@ themer.createShape('round', {
 const bgService = new BgService();
 Application.on(Application.launchEvent, () => {
     networkService.start();
+    bgService.start();
 });
 Application.on(Application.exitEvent, () => {
     networkService.stop();
+    bgService.stop();
 });
 //@ts-ignore
 svelteNative(Map, {});
