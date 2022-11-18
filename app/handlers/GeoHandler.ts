@@ -77,6 +77,8 @@ export interface SessionChronoEventData extends GPSEvent {
     data: number; // chrono
 }
 
+const TAG = '[GeoHandler]';
+
 export class GeoHandler extends Observable {
     watchId;
     bgService: WeakRef<BgService>;
@@ -90,7 +92,7 @@ export class GeoHandler extends Observable {
     lastAlt: number;
 
     sessionsHistory: Session[] = JSON.parse(ApplicationSettings.getString('sessionsHistory', '[]'));
-    launched = false;
+    started = false;
 
     wasWatchingBeforePause = false;
     get stopGpsBackground() {
@@ -117,7 +119,7 @@ export class GeoHandler extends Observable {
         applicationOn(foregroundEvent, this.onAppResume, this);
     }
     appOnLaunch() {
-        if (this.launched) {
+        if (this.started) {
             return;
         }
         this.currentSession = JSON.parse(ApplicationSettings.getString('pausedSession', null));
@@ -127,7 +129,7 @@ export class GeoHandler extends Observable {
             this.sessionState = SessionState.PAUSED;
             this.onUpdateSessionChrono();
         }
-        this.launched = true;
+        this.started = true;
         geolocation.on(GPS.gps_status_event, this.onGPSStateChange, this);
     }
     onAppResume(args: ApplicationEventData) {
@@ -177,7 +179,7 @@ export class GeoHandler extends Observable {
         }
     }
     onAppExit(args: ApplicationEventData) {
-        if (!this.launched) {
+        if (!this.started) {
             return;
         }
         if (this.currentSession && this.currentSession.state !== SessionState.STOPPED && this.currentSession.distance > 0) {
@@ -188,28 +190,32 @@ export class GeoHandler extends Observable {
             // store paused session to start it again after
         }
         this.stopSession();
-        this.launched = false;
+        this.started = false;
         geolocation && geolocation.off(GPS.gps_status_event, this.onGPSStateChange, this);
         applicationOff(backgroundEvent, this.onAppPause, this);
         applicationOff(foregroundEvent, this.onAppResume, this);
     }
 
-    stop() {
-        return Promise.resolve().then(() => {
-            if (this.currentSession && this.currentSession.state !== SessionState.STOPPED && this.currentSession.distance > 0) {
-                this.pauseSession();
-                // appSettings.setString('pausedSession', JSON.stringify(this.currentSession));
-                this.currentSession = null; // to prevent storing in history
-            }
-            this.stopSession();
-            this.launched = false;
-            geolocation.off(GPS.gps_status_event, this.onGPSStateChange, this);
-            applicationOff(backgroundEvent, this.onAppPause, this);
-            applicationOff(foregroundEvent, this.onAppResume, this);
-            // return this.dbHandler.stop();
-        });
+    async stop() {
+        if (!this.started) {
+            return;
+        }
+        this.started = false;
+        geolocation.off(GPS.gps_status_event, this.onGPSStateChange, this);
+        applicationOff(backgroundEvent, this.onAppPause, this);
+        applicationOff(foregroundEvent, this.onAppResume, this);
+
+        if (this.currentSession && this.currentSession.state !== SessionState.STOPPED && this.currentSession.distance > 0) {
+            this.pauseSession();
+            // appSettings.setString('pausedSession', JSON.stringify(this.currentSession));
+            this.currentSession = null; // to prevent storing in history
+        }
+        this.stopSession();
     }
     async start() {
+        if (this.started) {
+            return;
+        }
         // this.currentSession = JSON.parse(appSettings.getString('pausedSession', null));
         // if (this.currentSession) {
         //     this.currentSession.startTime = new Date(this.currentSession.startTime);
@@ -219,7 +225,8 @@ export class GeoHandler extends Observable {
         //     this.sessionState = SessionState.PAUSED;
         //     this.onUpdateSessionChrono();
         // }
-        this.launched = true;
+        DEV_LOG && console.log(TAG, 'start');
+        this.started = true;
         geolocation.on(GPS.gps_status_event, this.onGPSStateChange, this);
         applicationOn(backgroundEvent, this.onAppPause, this);
         applicationOn(foregroundEvent, this.onAppResume, this);

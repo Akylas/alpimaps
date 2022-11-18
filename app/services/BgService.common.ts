@@ -20,16 +20,12 @@ export function onServiceUnloaded(callback: (geoHandler: GeoHandler) => void) {
 
 export const BgServiceStartedEvent = 'BgServiceStartedEvent';
 export const BgServiceErrorEvent = 'BgServiceErrorEvent';
+
+const TAG = '[BgServiceCommon]';
 export abstract class BgServiceCommon extends Observable {
     abstract get geoHandler(): GeoHandler;
     protected _loaded = false;
     protected _started = false;
-
-    constructor() {
-        super();
-        applicationOn(exitEvent, this.onAppExit, this);
-        applicationOn(launchEvent, this.onAppLaunch, this);
-    }
     get loaded() {
         return this._loaded;
     }
@@ -50,36 +46,36 @@ export abstract class BgServiceCommon extends Observable {
     }
 
     async stop() {
-        this._started = false;
-        return Promise.all([this.geoHandler.stop()]) as Promise<any>;
+        try {
+            DEV_LOG && console.log(TAG, 'stop');
+            this._started = false;
+            await this.geoHandler.stop();
+        } catch (error) {
+            console.error(error);
+            this.notify({
+                eventName: BgServiceErrorEvent,
+                object: this,
+                error
+            });
+        }
     }
-    start() {
-        return Promise.all([this.geoHandler.start()]).then(() => {
+    async start() {
+        try {
+            DEV_LOG && console.log(TAG, 'start');
+            await this.geoHandler.start();
             this._started = true;
             this.notify({
                 eventName: BgServiceStartedEvent,
                 object: this
             });
-        });
-    }
-    onAppLaunch(args: ApplicationEventData) {
-        this.start().catch((error) => {
+        } catch (error) {
+            console.error(error);
             this.notify({
                 eventName: BgServiceErrorEvent,
                 object: this,
                 error
             });
-        });
-    }
-    onAppExit(args: ApplicationEventData) {
-        onServiceUnloadedListeners.forEach((l) => l(this.geoHandler));
-        this.stop().catch((error) => {
-            this.notify({
-                eventName: BgServiceErrorEvent,
-                object: this,
-                error
-            });
-        });
+        }
     }
     // updateNotifText(text: string) {}
 }
