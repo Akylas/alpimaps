@@ -6,15 +6,16 @@
 @color: #287bda;
 
 #items['mapnik::geometry_type'=2] {
-    when ([nuti::selected_id] !=[id]) {
-        line-color: @color;
-        line-join: round;
-        line-cap: round;
-        line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
-        line-width: @bicycle_line_width + 2;
-
-        [class=pedestrian] {
-            line-width: @pedestrian_line_width + 2;
+    ['nuti::hide_unselected'=0] {
+        when ([nuti::selected_id] !=[id]) {
+            line-color: @color;
+            line-join: round;
+            line-cap: round;
+            line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
+            line-width: @bicycle_line_width + 2;
+            [class=pedestrian] {
+                line-width: @pedestrian_line_width + 2;
+            }
         }
     }
 
@@ -24,11 +25,10 @@
         back/line-join: round;
         back/line-cap: round;
         back/line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
-        line-join: round;
+        line-join: miter;
         line-cap: round;
         line-color: @color;
         line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
-
         line-width: @bicycle_line_width+ 4;
 
         [zoom>=14] {
@@ -42,14 +42,14 @@
             marker-fill: white;
             marker-line-color: @color;
         }
-        [class=pedestrian] {
-            back/line-width: @pedestrian_line_width+ 8;
-            line-width: @pedestrian_line_width+ 4;
-        }
+        // [class=pedestrian] {
+        //     back/line-width: @pedestrian_line_width+ 8;
+        //     line-width: @pedestrian_line_width+ 4;
+        // }
     }
 }
 
-#items['mapnik::geometry_type'=1] {
+#items['mapnik::geometry_type'=1]['nuti::hide_unselected'=0] {
     marker-color: [color] ? [color]: #60A5F4;
     marker-placement: [nuti::markers3d];
     marker-file: url(symbols/pin.svg);
