@@ -20,7 +20,6 @@
 		}
 
 		[class !='waypointline'] {
-
 			when ([nuti::selected_id]=[id])::selected,
 			{
 			casing/line-color: [nuti::selected_id]=[id] ? #0F70DF: #787E7B;

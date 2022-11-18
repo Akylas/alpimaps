@@ -15,6 +15,7 @@
     "nutiparameters": {
         "lang": "en",
         "fallback_lang": "en",
+        "hide_unselected": 0,
         "selected_id": -1,
         "selected_id_str": "",
         "selected_osmid": -1,
