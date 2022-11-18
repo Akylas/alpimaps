@@ -10,7 +10,7 @@ import { LineStyleBuilderOptions } from '@nativescript-community/ui-carto/vector
 import { MarkerStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/marker';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/point';
 import { ShareFile } from '@nativescript-community/ui-share-file';
-import { Folder, ImageSource, knownFolders, path, profile } from '@nativescript/core';
+import { File, Folder, ImageSource, knownFolders, path, profile } from '@nativescript/core';
 import type { Feature } from 'geojson';
 import { getDistanceSimple } from '~/helpers/geolib';
 import { IItem, Item, ItemProperties, ItemRepository, Route, RouteInstruction, RouteProfile, RouteStats, toJSONStringified } from '~/models/Item';
@@ -372,6 +372,24 @@ export default class ItemsModule extends MapModule {
         }
         return item; // return the first one
     }
+    async showItem(item: IItem) {
+        if (item.onMap === 0) {
+            this.updateItem(item, { onMap: 1 });
+            this.addItemToLayer(item, true);
+        }
+    }
+    async hideItem(item: IItem) {
+        if (item === mapContext.getSelectedItem()) {
+            mapContext.unselectItem();
+        }
+        const index = this.currentLayerFeatures.findIndex((d) => d.id === item.id);
+        if (index > -1) {
+            this.currentLayerFeatures.splice(index, 1);
+            this.currentItems.splice(index, 1);
+            this.updateGeoJSONLayer();
+        }
+        this.updateItem(item, { onMap: 0 });
+    }
     async deleteItem(item: IItem) {
         if (item === mapContext.getSelectedItem()) {
             mapContext.unselectItem();
@@ -381,6 +399,10 @@ export default class ItemsModule extends MapModule {
             this.currentLayerFeatures.splice(index, 1);
             this.currentItems.splice(index, 1);
             this.updateGeoJSONLayer();
+        }
+
+        if (item.image_path) {
+            File.fromPath(item.image_path).remove();
         }
         // if (item.vectorElement) {
         //     this.localVectorDataSource.remove(item.vectorElement);
