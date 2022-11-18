@@ -215,7 +215,7 @@
                     // DEV_LOG && console.log('updateRouteItemWithPosition navigation instruction', onPathIndex);
                     const remainingDistance = distanceToEnd(onPathIndex, positions);
                     const remainingTime = (route.totalTime * remainingDistance) / route.totalDistance;
-                    if (routeItem.instructions) {
+                    if (!highlight && routeItem.instructions) {
                         let routeInstruction;
                         for (let index = routeItem.instructions.length - 1; index >= 0; index--) {
                             const element = routeItem.instructions[index];
