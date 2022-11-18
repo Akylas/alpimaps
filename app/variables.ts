@@ -60,7 +60,7 @@ export const accentColor = new Color(locals.accentColor);
 export const darkColor = new Color(locals.darkColor);
 export const textColorDark = locals.textColorDark;
 export const textColorLight = locals.textColorLight;
-export const backgroundColor = new Color(locals.backgroundColor);
+// export const backgroundColor = new Color(locals.backgroundColor);
 export const mdiFontFamily: string = locals.mdiFontFamily;
 export const alpimapsFontFamily: string = locals.alpimapsFontFamily;
 export const actionBarHeight: number = parseFloat(locals.actionBarHeight);
@@ -85,7 +85,7 @@ if (__ANDROID__) {
 } else {
     const onAppLaunch = function () {
         navigationBarHeight.set(Application.ios.window.safeAreaInsets.bottom);
-        console.log('navigationBarHeight', Application.ios.window.safeAreaInsets.bottomonBarHeight);
+        DEV_LOG && console.log('navigationBarHeight', Application.ios.window.safeAreaInsets.bottomonBarHeight);
         Application.off(Application.launchEvent, onAppLaunch);
     };
     Application.on(Application.launchEvent, onAppLaunch);
@@ -98,6 +98,7 @@ export const textLightColor = writable('');
 export const subtitleColor = writable('');
 export const iconColor = writable('');
 export const widgetBackgroundColor = writable('');
+export const backgroundColor = writable('');
 
 export function updateThemeColors(theme: string, force = false) {
     try {
@@ -116,6 +117,7 @@ export function updateThemeColors(theme: string, force = false) {
         subtitleColor.set('#aaaaaa');
         iconColor.set('#aaaaaa');
         widgetBackgroundColor.set('#000000bb');
+        backgroundColor.set('#1c1c1e');
     } else {
         textColor.set(textColorLight);
         textLightColor.set('#444444');
@@ -123,5 +125,6 @@ export function updateThemeColors(theme: string, force = false) {
         subtitleColor.set('#888888');
         iconColor.set('#444444');
         widgetBackgroundColor.set('#ffffff');
+        backgroundColor.set(textColorDark);
     }
 }
