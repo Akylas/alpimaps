@@ -706,7 +706,7 @@ export default class CustomLayersModule extends MapModule {
     }
     async loadLocalMbtiles(directory: string) {
         try {
-            const context: android.app.Activity = (__ANDROID__ && androidApp.foregroundActivity) || androidApp.startActivity;
+            const context: android.app.Activity = __ANDROID__ && (androidApp.foregroundActivity || androidApp.startActivity);
             const entities = listFolder(directory);
             let worldMbtiles: MBTilesTileDataSource;
 
