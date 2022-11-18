@@ -4,6 +4,7 @@ import { Application, Frame } from '@nativescript/core';
 import { Dayjs } from 'dayjs';
 import { getRootView } from '@nativescript/core/application';
 import { lc } from '@nativescript-community/l';
+import { clock_24 } from '~/helpers/locale';
 
 export function enableShowWhenLockedAndTurnScreenOn() {
     const activity = Application.android.startActivity as android.app.Activity;
@@ -46,7 +47,8 @@ export async function pickDate(currentDate: Dayjs) {
 export async function pickTime(currentDate: Dayjs) {
     return new Promise<[number, number]>((resolve, reject) => {
         const timePicker = new (com.google.android.material as any).timepicker.MaterialTimePicker.Builder()
-            .setTimeFormat(1)
+            .setTimeFormat(clock_24 ? 1 : 0)
+            .setInputMode(0)
             .setTitleText(lc('pick_time'))
             .setHour(currentDate.get('h'))
             .setMinute(currentDate.get('m'))
