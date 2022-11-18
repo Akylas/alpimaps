@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { ObservableArray } from '@nativescript/core';
     import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
@@ -6,15 +7,19 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { lc, onLanguageChanged } from '~/helpers/locale';
+    import { onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
+    import { Item } from '~/models/Item';
     import { onServiceLoaded } from '~/services/BgService.common';
-    import { subtitleColor } from '~/variables';
+    import { showError } from '~/utils/error';
+    import { backgroundColor, borderColor, subtitleColor, textColor } from '~/variables';
     import BottomSheetInfoView from './BottomSheetInfoView.svelte';
     import CActionBar from './CActionBar.svelte';
+    import IconButton from './IconButton.svelte';
 
     let collectionView: NativeViewElementNode<CollectionView>;
-
-    let items: ObservableArray<any>;
+    type RouteItem = Item & { selected?: boolean };
+    let items: ObservableArray<RouteItem>;
     const itemsModule = getMapContext().mapModule('items');
     onServiceLoaded(refresh);
 
@@ -23,17 +28,65 @@
         items = new ObservableArray(sqlItems);
     }
 
+    function setMenuVisible(item: RouteItem, visible: boolean) {
+        item.selected = visible;
+        const index = items.indexOf(item);
+        if (index !== -1) {
+            items.setItem(index, item);
+        }
+    }
+
+    function itemIsRoute(item: RouteItem) {
+        return !!item?.route;
+    }
+
+    function deleteItem(item: RouteItem) {
+        try {
+            const index = items.indexOf(item);
+            itemsModule.deleteItem(item);
+            if (index !== -1) {
+                items.splice(index, 1);
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
+
+    function showItemOnMap(item: RouteItem) {
+        if (item.onMap) {
+            itemsModule.hideItem(item);
+        } else {
+            itemsModule.showItem(item);
+        }
+        setMenuVisible(item, false);
+    }
+
     onLanguageChanged(refresh);
+    onThemeChanged(refresh);
+    const circlePaint = new Paint();
+    function onDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
+        try {
+            circlePaint.color = $textColor;
+            canvas.drawCircle(25, 58, 13, circlePaint);
+        } catch (error) {
+            console.error(error);
+        }
+    }
 </script>
 
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*">
         <CActionBar canGoBack title={lc('routes')} />
-        <collectionview bind:this={collectionView} row={1} {items} rowHeight={80}>
+        <collectionview bind:this={collectionView} row={1} {items}>
             <Template let:item>
-                <gridlayout columns="auto, *" padding="0 10 0 10">
-                    <image src={item.image_path} borderRadius={8} width={70} height={70} />
-                    <BottomSheetInfoView col={1} {item} />
+                <gridlayout rows="80,auto" on:longPress={() => setMenuVisible(item, !item.selected)} backgroundColor={$backgroundColor}>
+                    <BottomSheetInfoView {item} marginLeft={60} propsLeft={60} iconLeft={17} iconTop={64} iconColor={$backgroundColor} {onDraw} iconSize={16}>
+                        <image src={item.image_path} borderRadius={8} width={50} height={50} horizontalAlignment="left" verticalAlignment="top" marginTop={10}/>
+                    </BottomSheetInfoView>
+                    <stacklayout orientation="horizontal" row={1} colSpan={2} borderTopWidth={1} borderBottomWidth={1} borderColor={$borderColor} visibility={item.selected ? 'visible' : 'collapsed'}>
+                        <IconButton on:tap={() => deleteItem(item)} tooltip={lc('delete')} color="red" text="mdi-delete" rounded={false} />
+                        <IconButton on:tap={() => showItemOnMap(item)} tooltip={lc('show')} isVisible={itemIsRoute(item)} text={item.onMap ? 'mdi-eye-off' : 'mdi-eye'} rounded={false} />
+                    </stacklayout>
                 </gridlayout>
             </Template>
         </collectionview>
