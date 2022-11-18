@@ -63,6 +63,7 @@
     import { isSentryEnabled, Sentry } from '~/utils/sentry';
     import { getFromLocation } from '@nativescript-community/geocoding';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
+    import ButtonBar from './ButtonBar.svelte';
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
@@ -173,7 +174,7 @@
                                             },
                                             layer: transitVectorTileLayer
                                         };
-                                        selectItem({ item, isFeatureInteresting: true, preventZoom: true });
+                                        selectItem({ item, isFeatureInteresting: true });
                                         return true;
                                         // mapContext.vectorTileClicked(e);
                                     }
@@ -559,7 +560,7 @@
         const handledByModules = mapContext.runOnModules('onMapClicked', e);
         // console.log('mapTile', latLngToTileXY(position.lat, position.lon, cartoMap.zoom), clickType === ClickType.SINGLE, handledByModules, !!selectedItem);
         if (!handledByModules && clickType === ClickType.SINGLE) {
-            selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.lat] }, properties: {} }, isFeatureInteresting: !$selectedItem, preventZoom: true });
+            selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.lat] }, properties: {} }, isFeatureInteresting: !$selectedItem });
         }
         unFocusSearch();
     }
@@ -759,8 +760,10 @@
             unselectItem();
         }
     }
+
     export function zoomToItem({ item, zoom, minZoom, duration = 200, forceZoomOut = false }: { item: IItem; zoom?: number; minZoom?: number; duration?; forceZoomOut?: boolean }) {
         const viewPort = getMapViewPort();
+        DEV_LOG && console.log('zoomToItem', viewPort);
         // we ensure the viewPort is squared for the screen captured
         const screenBounds = {
             min: { x: viewPort.left, y: viewPort.top },
@@ -881,7 +884,7 @@
             },
             layer
         };
-        selectItem({ item, isFeatureInteresting: true, preventZoom: true });
+        selectItem({ item, isFeatureInteresting: true });
     }
     async function handleSelectedRoutes() {
         unFocusSearch();
@@ -1674,6 +1677,60 @@
             }
         }
     }
+
+    let sideButtons = [];
+    $: {
+        let newButtons: any[] = [
+            {
+                text: 'mdi-bullseye',
+                isSelected: $showContourLines,
+                onTap: () => showContourLines.set(!$showContourLines)
+            },
+            {
+                text: 'mdi-signal',
+                isSelected: $showSlopePercentages,
+                onTap: () => showSlopePercentages.set(!$showSlopePercentages)
+            },
+            {
+                text: 'mdi-routes',
+                isSelected: $showRoutes,
+                onTap: () => showRoutes.set(!$showRoutes)
+            },
+            {
+                text: 'mdi-speedometer',
+                onTap: switchLocationInfo
+            }
+        ];
+        if (packageServiceEnabled) {
+            newButtons.push({
+                text: 'mdi-map-clock',
+                isSelected: $preloading,
+                onTap: () => preloading.set(!$preloading)
+            });
+        }
+        newButtons.push(
+            {
+                text: keepScreenAwake ? 'mdi-sleep' : 'mdi-sleep-off',
+                isSelected: keepScreenAwake,
+                selectedColor: 'red',
+                onTap: switchKeepAwake
+            },
+            {
+                text: 'mdi-cellphone-lock',
+                isSelected: showOnLockscreen,
+                selectedColor: primaryColor,
+                onTap: switchShowOnLockscreen
+            },
+            {
+                text: 'mdi-bus-marker',
+                isSelected: showTransitLines,
+                selectedColor: primaryColor,
+                onTap: () => (showTransitLines = !showTransitLines),
+                onLongPress: showTransitLinesPage
+            }
+        );
+        sideButtons = newButtons;
+    }
 </script>
 
 <page
@@ -1705,7 +1762,7 @@
                 useTextureView={false}
                 on:layoutChanged={reportFullyDrawn}
             />
-            <stacklayout horizontalAlignment="left" verticalAlignment="middle">
+            <!-- <stacklayout horizontalAlignment="left" verticalAlignment="middle" id="mapButtons" backgroundColor="#ff000088">
                 <IconButton gray={true} text="mdi-bullseye" isSelected={$showContourLines} on:tap={() => showContourLines.set(!$showContourLines)} />
                 <IconButton gray={true} text="mdi-signal" isSelected={$showSlopePercentages} on:tap={() => showSlopePercentages.set(!$showSlopePercentages)} />
                 <IconButton gray={true} text="mdi-routes" isSelected={$showRoutes} on:tap={() => showRoutes.set(!$showRoutes)} />
@@ -1715,9 +1772,10 @@
                 {/if}
                 <IconButton gray={true} text={keepScreenAwake ? 'mdi-sleep' : 'mdi-sleep-off'} selectedColor={'red'} isSelected={keepScreenAwake} on:tap={switchKeepAwake} />
                 <IconButton gray={true} text="mdi-cellphone-lock" isSelected={showOnLockscreen} on:tap={switchShowOnLockscreen} />
-                <!-- <IconButton text="mdi-information-outline" isSelected={showClickedFeatures} on:tap={() => (showClickedFeatures = !showClickedFeatures)} /> -->
                 <IconButton gray={true} text="mdi-bus-marker" isSelected={showTransitLines} on:tap={() => (showTransitLines = !showTransitLines)} onLongPress={showTransitLinesPage} />
-            </stacklayout>
+            </stacklayout> -->
+            <ButtonBar gray={true} horizontalAlignment="left" verticalAlignment="middle" id="mapButtonsNew" buttons={sideButtons}/>
+
             <Search bind:this={searchView} verticalAlignment="top" defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
             <LocationInfoPanel
                 horizontalAlignment="left"
