@@ -93,8 +93,8 @@
     let nbWayPoints = 0;
     let features: ItemFeature[] = [];
     let profile = ApplicationSettings.getString(DEFAULT_PROFILE_KEY, 'pedestrian') as ValhallaProfile;
-    let bicycle_type: 'enduro' | 'road' | 'normal' | 'gravel' | 'mountain' = 'normal';
-    let pedestrian_type: 'normal' | 'mountainairing' | 'running' = 'normal';
+    let bicycle_type: 'enduro' | 'road' | 'normal' | 'gravel' | 'mountain' = ApplicationSettings.getString('bicycle_type', 'normal') as any;
+    let pedestrian_type: 'normal' | 'mountainairing' | 'running' = ApplicationSettings.getString('pedestrian_type', 'normal') as any;
     let showOptions = true;
     let loading = false;
     let writer: GeoJSONGeometryWriter<LatLonKeys>;
@@ -705,6 +705,7 @@
                 _parsedRoute: route.route,
                 _parsedInstructions: route.instructions,
                 _parsedStats: route.stats,
+                _parsedProfile: route.profile,
                 get stats() {
                     return this._parsedStats;
                 },
@@ -713,6 +714,9 @@
                 },
                 get route() {
                     return this._parsedRoute;
+                },
+                get profile() {
+                    return this._parsedProfile;
                 },
                 properties: {
                     name: formatter.getItemName(waypoints.getItem(0)) + ' - ' + formatter.getItemName(waypoints.getItem(waypoints.length - 1)),
@@ -904,12 +908,14 @@
                     onOptionChange: (value) => {
                         if (profile === 'bicycle') {
                             bicycle_type = value;
+                            ApplicationSettings.setString('bicycle_type',bicycle_type );
                             // in valhalla bicycle_type only changes speed, surface speed and worse quality surface allowed
 
                             // we reapply default we want to change per activity
                             ['cycling_speed', 'use_hills', 'avoid_bad_surfaces'].forEach((k) => (profileCostingOptions[profile][k] = valhallaSettingsDefaultValue(profile, k)));
                         } else {
                             pedestrian_type = value;
+                            ApplicationSettings.setString('pedestrian_type',pedestrian_type );
                             // we reapply default we want to change per activity
                             ['walking_speed', 'use_hills', 'step_penalty', 'max_hiking_difficulty'].forEach((k) => (profileCostingOptions[profile][k] = valhallaSettingsDefaultValue(profile, k)));
                         }
@@ -1111,7 +1117,7 @@
                 </Template>
             </collectionview>
             <IconButton isSelected={true} white={true} row={1} col={1} text="mdi-swap-vertical" on:tap={() => reversePoints()} isEnabled={nbWayPoints > 1} />
-            <stacklayout colSpan={2} row={2} orientation="horizontal" visibility={showOptions ? 'visible' : 'collapsed'}>
+            <stacklayout colSpan={2} row={2} orientation="horizontal" visibility={showOptions ? 'visible' : 'collapsed'} id="directionsbuttons">
                 {#if profile === 'auto'}
                     <IconButton
                         text="mdi-highway"
@@ -1192,7 +1198,7 @@
                 {/if}
             </stacklayout>
 
-            <stacklayout colSpan={3} row={2} orientation="horizontal" visibility={showOptions ? 'visible' : 'collapsed'} horizontalAlignment="right">
+            <stacklayout colSpan={3} row={2} orientation="horizontal" visibility={showOptions ? 'visible' : 'collapsed'} horizontalAlignment="right" id="directionsbuttons2">
                 <IconButton size={40} text="mdi-timer-outline" color={costingOptions.shortest ? 'white' : '#ffffff55'} on:tap={() => (costingOptions.shortest = !costingOptions.shortest)} />
                 <IconButton size={40} text="mdi-arrow-decision" color={computeMultiple ? 'white' : '#ffffff55'} on:tap={() => (computeMultiple = !computeMultiple)} />
                 <IconButton color="white" text="mdi-dots-vertical" size={40} on:tap={showMoreOptions} />
