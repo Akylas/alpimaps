@@ -14,9 +14,9 @@ import { primaryColor } from '~/variables';
 import { sdkVersion } from '~/utils/utils';
 
 export namespace NotificationHelper {
-    const NotificationManager = android.app.NotificationManager;
-    const NotificationCompat = androidx.core.app.NotificationCompat;
-    const Intent = android.content.Intent;
+    const NotificationManager = __ANDROID__ ? android.app.NotificationManager : null;
+    const NotificationCompat = __ANDROID__ ? androidx.core.app.NotificationCompat : null;
+    const Intent = __ANDROID__ ? android.content.Intent : null;
     /* Creates a notification builder */
     export function getNotification(context: android.content.Context, options: { title?: string; channel?: string; builder?: androidx.core.app.NotificationCompat.Builder } = {}) {
         const builder = options.builder || new NotificationCompat.Builder(context, options.channel);
