@@ -714,7 +714,7 @@ export default class CustomLayersModule extends MapModule {
             const terrains = [];
             const mbtiles = [];
             const worldMbtilesEntity = entities.find((e) => e.name === 'world.mbtiles');
-            const worldRouteMbtilesEntity = entities.find((e) => e.name === 'routes.mbtiles');
+            const worldRouteMbtilesEntity = entities.find((e) => e.name.endsWith('routes_9.mbtiles') || e.name.endsWith('routes.mbtiles'));
             const worldTerrainMbtilesEntity = entities.find((e) => e.name.endsWith('.etiles'));
 
             const folders = entities.filter((e) => e.isFolder).sort((a, b) => b.name.localeCompare(a.name));
@@ -732,7 +732,10 @@ export default class CustomLayersModule extends MapModule {
                             })
                         );
                     }
-
+                    DEV_LOG && console.log(
+                        'sources',
+                        sources.map((s) => s.path)
+                    );
                     const dataSource: TileDataSource<any, any> = this.createMergeMBTilesDataSource(sources.map((s) => getFileNameThatICanUseInNativeCode(context, s.path)));
                     mbtiles.push(dataSource);
 
@@ -747,21 +750,22 @@ export default class CustomLayersModule extends MapModule {
                 }
             }
 
+            if (worldRouteMbtilesEntity) {
+                routes.push(
+                    new MBTilesTileDataSource({
+                        databasePath: getFileNameThatICanUseInNativeCode(context, worldRouteMbtilesEntity.path)
+                    })
+                );
+            }
             if (worldMbtilesEntity) {
                 const datasource = new MBTilesTileDataSource({
                     databasePath: getFileNameThatICanUseInNativeCode(context, worldMbtilesEntity.path)
                 });
                 mbtiles.push(datasource);
-                routes.unshift(datasource);
+                if (!worldRouteMbtilesEntity) {
+                    routes.push(datasource);
+                }
             }
-
-            // if (worldRouteMbtilesEntity) {
-            //     routes.push(
-            //         new MBTilesTileDataSource({
-            //             databasePath: getFileNameThatICanUseInNativeCode(context, worldRouteMbtilesEntity.path)
-            //         })
-            //     );
-            // }
 
             if (worldTerrainMbtilesEntity) {
                 terrains.push(
@@ -773,6 +777,11 @@ export default class CustomLayersModule extends MapModule {
             if (mbtiles.length) {
                 const name = 'Local';
                 const dataSource = new MultiTileDataSource();
+                DEV_LOG &&
+                    console.log(
+                        'mbtiles',
+                        mbtiles.map((s) => s.options.databasePath)
+                    );
                 mbtiles.forEach((s) => dataSource.add(s));
                 const opacity = appSettings.getNumber(name + '_opacity', 1);
                 // const zoomLevelBias = Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2);
@@ -815,6 +824,11 @@ export default class CustomLayersModule extends MapModule {
                 mapContext.addLayer(layer, 'map');
             }
             if (routes.length) {
+                DEV_LOG &&
+                    console.log(
+                        'routes',
+                        routes.map((s) => s.options.databasePath)
+                    );
                 if (routes.length > 1) {
                     const dataSource = new MultiTileDataSource();
                     routes.forEach((s) => dataSource.add(s));
@@ -831,12 +845,6 @@ export default class CustomLayersModule extends MapModule {
                 const dataSource = new MultiTileDataSource();
                 terrains.forEach((s) => dataSource.add(s));
                 const layer = (this.hillshadeLayer = packageService.hillshadeLayer = this.createHillshadeTileLayer(name, dataSource));
-                // layer.setRasterTileEventListener<LatLonKeys>(
-                //     {
-                //         onRasterTileClicked: (e) => mapContext.rasterTileClicked(e)
-                //     },
-                //     mapContext.getProjection()
-                // );
                 const data = {
                     name,
                     opacity,
