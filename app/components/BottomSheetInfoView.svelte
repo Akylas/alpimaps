@@ -167,7 +167,7 @@
             if (onDraw) {
                 onDraw({ canvas, object });
             }
-            if (itemIcon) {
+            if (itemIcon && !actualShowSymbol) {
                 if (!iconPaint) {
                     iconPaint = new Paint();
                     iconPaint.textSize = iconSize;
