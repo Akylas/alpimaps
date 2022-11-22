@@ -100,7 +100,7 @@
         "@babel/core": "^7.20.2",
         "@babel/plugin-transform-runtime": "^7.19.6",
         "@babel/preset-env": "^7.20.2",
-        "@nativescript/android": "8.4.0-alpha.8",
+        "@nativescript/android": "8.4.0-dev.2",
         "@nativescript/core": "8.3.5",
         "@nativescript/ios": "8.3.3",
         "@nativescript/types-android": "8.3.1",
