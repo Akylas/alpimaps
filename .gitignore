@@ -66,3 +66,5 @@ API_KEYS.js
 app/assets/**/*.css
 dev_assets/styles/osmxml_cleaned/*.xml
 dev_assets/internal_styles/inner_cleaned/*.xml
+timeline*.json
+times*.html
