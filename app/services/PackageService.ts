@@ -1,18 +1,14 @@
 import Observable from '@nativescript-community/observable';
-import { CartoMapStyle, GenericMapPos, IntVector, MapBounds, MapPos, MapPosVector, fromNativeMapPos, nativeVectorToArray } from '@nativescript-community/ui-carto/core';
-import { MergedMBVTTileDataSource, OrderedTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
+import { GenericMapPos, IntVector, MapPos, MapPosVector, fromNativeMapPos, nativeVectorToArray } from '@nativescript-community/ui-carto/core';
+import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
 import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
-import { HTTPTileDataSource } from '@nativescript-community/ui-carto/datasources/http';
 import {
-    Address,
     GeocodingRequest,
     GeocodingResult,
     GeocodingResultVector,
     GeocodingService,
-    OSMOfflineGeocodingService,
-    OSMOfflineReverseGeocodingService,
-    PackageManagerGeocodingService,
-    PackageManagerReverseGeocodingService,
+    MultiOSMOfflineGeocodingService,
+    MultiOSMOfflineReverseGeocodingService,
     ReverseGeocodingRequest,
     ReverseGeocodingService
 } from '@nativescript-community/ui-carto/geocoding/service';
@@ -20,18 +16,17 @@ import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
 import { Feature, VectorTileFeature, VectorTileFeatureCollection } from '@nativescript-community/ui-carto/geometry/feature';
 import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
 import { HillshadeRasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
-import { CartoOnlineVectorTileLayer, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
-import { CartoPackageManager, CartoPackageManagerListener, PackageErrorType, PackageManagerTileDataSource, PackageStatus } from '@nativescript-community/ui-carto/packagemanager';
-import { PackageManagerValhallaRoutingService, ValhallaOfflineRoutingService, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
+import { MultiValhallaOfflineRoutingService, ValhallaOfflineRoutingService, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
 import { SearchRequest, VectorTileSearchService } from '@nativescript-community/ui-carto/search';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import * as appSettings from '@nativescript/core/application-settings';
-import { File, Folder, path } from '@nativescript/core/file-system';
+import { Folder } from '@nativescript/core/file-system';
+import { Point } from 'geojson';
 import { getMapContext } from '~/mapModules/MapModule';
 import { IItem as Item, Route, RouteProfile } from '~/models/Item';
 import { EARTH_RADIUS, TO_RAD } from '~/utils/geo';
-import { getDataFolder, getDefaultMBTilesDir, getSavedMBTilesDir, listFolder } from '~/utils/utils';
-import { Feature as GeoJSONFeature, Point } from 'geojson';
+import { getDataFolder, getSavedMBTilesDir, listFolder } from '~/utils/utils';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
@@ -114,45 +109,12 @@ function getGradeColor(grade) {
     }
 }
 
-const average = (arr) => arr.reduce((p, c) => p + c, 0) / arr.length;
-
-let PackageManagerListener;
-if (__CARTO_PACKAGESERVICE__) {
-    PackageManagerListener = class implements CartoPackageManagerListener {
-        constructor(private type: PackageType, public superThis: PackageService) {}
-        onPackageCancelled(id: string, version: number) {
-            this.superThis.onPackageCancelled.call(this.superThis, this.type, id, version);
-        }
-        onPackageFailed(arg1: string, version: number, errorType: PackageErrorType) {
-            this.superThis.onPackageFailed.call(this.superThis, this.type, arg1, version, errorType);
-        }
-        onPackageListFailed() {
-            this.superThis.onPackageListFailed.call(this.superThis, this.type);
-        }
-        onPackageListUpdated() {
-            this.superThis.onPackageListUpdated.call(this.superThis, this.type);
-        }
-        onPackageStatusChanged(arg1: string, version: number, status: PackageStatus) {
-            this.superThis.onPackageStatusChanged.call(this.superThis, this.type, arg1, version, status);
-        }
-        onPackageUpdated(arg1: string, version: number) {
-            this.superThis.onPackageUpdated.call(this.superThis, this.type, arg1, version);
-        }
-    };
-}
-
 class PackageService extends Observable {
-    _packageManager: CartoPackageManager;
-    _geoPackageManager: CartoPackageManager;
-    _routingPackageManager: CartoPackageManager;
-    dataSource: TileDataSource<any, any>;
     vectorTileDecoder: MBVectorTileDecoder;
-    downloadingPackages: { [k: string]: number } = {};
     hillshadeLayer?: HillshadeRasterTileLayer;
     localVectorTileLayer?: VectorTileLayer;
 
-    _offlineRoutingSearchService: PackageManagerValhallaRoutingService;
-    _localOfflineRoutingSearchService: ValhallaOfflineRoutingService;
+    _localOfflineRoutingSearchService: MultiValhallaOfflineRoutingService;
     _onlineRoutingSearchService: ValhallaOnlineRoutingService;
 
     _docPath;
@@ -162,160 +124,15 @@ class PackageService extends Observable {
         }
         return this._docPath;
     }
-    get dataFolder() {
-        return Folder.fromPath(path.join(this.docPath, 'packages'));
-    }
-    get geoDataFolder() {
-        return Folder.fromPath(path.join(this.docPath, 'geocodingpackages'));
-    }
-    get routingDataFolder() {
-        return Folder.fromPath(path.join(this.docPath, 'routingpackages'));
-    }
-    get packageManager() {
-        if (__CARTO_PACKAGESERVICE__ && !this._packageManager) {
-            this._packageManager = new CartoPackageManager({
-                source: 'carto.streets',
-                dataFolder: this.dataFolder.path,
-                listener: new PackageManagerListener('map', this)
-            });
-        }
-        return this._packageManager;
-    }
-    get geoPackageManager() {
-        if (__CARTO_PACKAGESERVICE__ && !this._geoPackageManager) {
-            this._geoPackageManager = new CartoPackageManager({
-                source: 'geocoding:carto.streets',
-                dataFolder: this.geoDataFolder.path,
-                listener: new PackageManagerListener('geo', this)
-            });
-        }
-        return this._geoPackageManager;
-    }
-    get routingPackageManager() {
-        if (__CARTO_PACKAGESERVICE__ && !this._routingPackageManager) {
-            this._routingPackageManager = new CartoPackageManager({
-                source: 'routing:carto.streets',
-                dataFolder: this.routingDataFolder.path,
-                listener: new PackageManagerListener('routing', this)
-            });
-        }
-        return this._routingPackageManager;
-    }
     started = false;
     start() {
-        if (__CARTO_PACKAGESERVICE__) {
-            if (this.started) {
-                return;
-            }
-            this.started = true;
-            if (!Folder.exists(this.docPath)) {
-                console.error('creating doc folder', Folder.fromPath(this.docPath).path);
-            }
-            const managerStarted = this.packageManager.start();
-            const geoManagerStarted = this.geoPackageManager.start();
-            const routingManagerStarted = this.routingPackageManager.start();
-            const packages = this._packageManager.getLocalPackages();
-            const geoPackages = this._geoPackageManager.getLocalPackages();
-            const routingPackages = this._routingPackageManager.getLocalPackages();
-            this.updatePackagesLists();
+        if (this.started) {
+            return;
         }
-    }
-    updatePackagesList(manager: CartoPackageManager) {
-        if (__CARTO_PACKAGESERVICE__) {
-            const age = manager.getServerPackageListAge();
-            if (age <= 0 || age > 3600 * 24 * 30) {
-                return manager.startPackageListDownload();
-            }
+        this.started = true;
+        if (!Folder.exists(this.docPath)) {
+            console.error('creating doc folder', Folder.fromPath(this.docPath).path);
         }
-        return false;
-    }
-    updatePackagesLists() {
-        if (__CARTO_PACKAGESERVICE__) {
-            return this.updatePackagesList(this.packageManager) || this.updatePackagesList(this.geoPackageManager) || this.updatePackagesList(this.routingPackageManager);
-        }
-    }
-    onPackageListUpdated(type: PackageType) {
-        this.notify({ eventName: 'onPackageListUpdated', type, object: this });
-    }
-    onPackageStatusChanged(type: PackageType, id: string, version: number, status: PackageStatus) {
-        const key = type + '_' + id;
-        this.downloadingPackages[key] = status.getProgress();
-        this.updateTotalProgress();
-        this.notify({
-            eventName: 'onPackageStatusChanged',
-            object: this,
-            type,
-            data: {
-                id,
-                version,
-                status
-            }
-        });
-    }
-    updateTotalProgress() {
-        const keys = Object.keys(this.downloadingPackages);
-        let totalProgress = keys.reduce((result, k) => (result += this.downloadingPackages[k]), 0);
-        if (keys.length > 0) {
-            totalProgress /= keys.length;
-        } else {
-            totalProgress = 100;
-        }
-        this.notify({
-            eventName: 'onProgress',
-            object: this,
-            data: totalProgress
-        });
-    }
-    onPackageCancelled(type: PackageType, id: string, version: number) {
-        const key = type + '_' + id;
-        delete this.downloadingPackages[key];
-        this.updateTotalProgress();
-        this.notify({
-            eventName: 'onPackageCancelled',
-            object: this,
-            type,
-            data: {
-                id,
-                version
-            }
-        });
-    }
-
-    onPackageFailed(type: PackageType, id: string, version: number, errorType: PackageErrorType) {
-        const key = type + '_' + id;
-        delete this.downloadingPackages[key];
-        this.updateTotalProgress();
-        this.notify({
-            eventName: 'onPackageFailed',
-            object: this,
-            type,
-            data: {
-                id,
-                version,
-                errorType
-            }
-        });
-    }
-
-    onPackageListFailed(type: PackageType) {
-        // console.log('onPackageListFailed');
-        this.notify({ eventName: 'onPackageListFailed', type, object: this });
-    }
-
-    onPackageUpdated(type: PackageType, id: string, version: number) {
-        const key = type + '_' + id;
-        delete this.downloadingPackages[key];
-        this.updateTotalProgress();
-        // console.log('onPackageFailed', id, version);
-        this.notify({
-            eventName: 'onPackageUpdated',
-            object: this,
-            type,
-            data: {
-                id,
-                version
-            }
-        });
     }
     clearCacheOnDataSource(dataSource: TileDataSource<any, any> & { dataSources?: TileDataSource<any, any>[] }) {
         if (dataSource instanceof PersistentCacheTileDataSource) {
@@ -325,80 +142,6 @@ class PackageService extends Observable {
             dataSource.dataSources.forEach((d) => this.clearCacheOnDataSource(d));
         }
     }
-    clearCache() {
-        this.dataSource && this.clearCacheOnDataSource(this.dataSource);
-    }
-    dataSourcehasContours = false;
-    getDataSource(withContour = false) {
-        if (__CARTO_PACKAGESERVICE__) {
-            if (this.dataSource && this.dataSourcehasContours !== withContour) {
-                this.dataSource = null;
-            }
-            this.dataSourcehasContours = withContour;
-            if (!this.dataSource) {
-                const maptileCacheFolder = File.fromPath(path.join(this.docPath, 'maptiler.db'));
-                // const tilezenCacheFolder = File.fromPath(path.join(this.docPath, 'tilezen.db'));
-                // const cacheFolder = File.fromPath(path.join(this.docPath, 'carto.db'));
-                const terrainCacheFolder = File.fromPath(path.join(this.docPath, 'terrain.db'));
-
-                // const realSource =new HTTPTileDataSource({
-                //     url: 'https://tile.nextzen.org/tilezen/vector/v1/all/{z}/{x}/{y}.mvt?api_key=O5iag8fiQIeqwgPFKMsrhA',
-                //     minZoom: 0,
-                //     maxZoom: 14
-                // });
-                const realSource = new OrderedTileDataSource({
-                    dataSources: [
-                        new PackageManagerTileDataSource({
-                            packageManager: this.packageManager
-                        }),
-                        new PersistentCacheTileDataSource({
-                            // dataSource: new CartoOnlineTileDataSource({
-                            //     source: 'carto.streets'
-                            // }),
-                            dataSource: new HTTPTileDataSource({
-                                url: `https://api.maptiler.com/tiles/v3/{z}/{x}/{y}.pbf?key=${gVars.MAPTILER_TOKEN}`,
-                                minZoom: 0,
-                                maxZoom: 14
-                            }),
-                            capacity: 100 * 1024 * 1024,
-                            databasePath: maptileCacheFolder.path
-                        })
-                    ]
-                });
-                if (withContour) {
-                    this.dataSource = new MergedMBVTTileDataSource({
-                        dataSources: [
-                            realSource,
-                            new PersistentCacheTileDataSource({
-                                dataSource: new HTTPTileDataSource({
-                                    minZoom: 9,
-                                    maxZoom: 14,
-                                    url: `https://api.maptiler.com/tiles/contours/tiles.json?key=${gVars.MAPTILER_TOKEN}`
-                                    // url: `https://a.tiles.mapbox.com/v4/mapbox.mapbox-terrain-v2/{zoom}/{x}/{y}.vector.pbf?access_token=${gVars.MAPBOX_TOKEN}`
-                                }),
-                                capacity: 100 * 1024 * 1024,
-                                databasePath: terrainCacheFolder.path
-                            })
-                        ]
-                    });
-                } else {
-                    this.dataSource = realSource;
-                }
-            }
-            return this.dataSource;
-        }
-    }
-    // getCartoCss() {
-    //     return Folder.fromPath(path.join(knownFolders.currentApp().path, 'assets'))
-    //         .getFile('style.mss')
-    //         .readTextSync();
-    // }
-    getVectorTileDecoder(style: string = 'voyager') {
-        if (__CARTO_PACKAGESERVICE__ && !this.vectorTileDecoder) {
-            this.vectorTileDecoder = new CartoOnlineVectorTileLayer({ style: CartoMapStyle.VOYAGER }).getTileDecoder();
-        }
-        return this.vectorTileDecoder;
-    }
     _currentLanguage = appSettings.getString('language', 'en');
     get currentLanguage() {
         return this._currentLanguage;
@@ -406,12 +149,6 @@ class PackageService extends Observable {
     set currentLanguage(value) {
         if (this._currentLanguage === value) {
             this._currentLanguage = value;
-            if (this._offlineSearchService) {
-                this._offlineSearchService.language = value;
-            }
-            if (this._offlineReverseSearchService) {
-                this._offlineReverseSearchService.language = value;
-            }
             if (this._localOSMOfflineGeocodingService) {
                 this._localOSMOfflineGeocodingService.language = value;
             }
@@ -419,26 +156,6 @@ class PackageService extends Observable {
                 this._localOSMOfflineReverseGeocodingService.language = value;
             }
         }
-    }
-    _offlineSearchService: PackageManagerGeocodingService;
-    get offlineSearchService() {
-        if (!this._offlineSearchService) {
-            this._offlineSearchService = new PackageManagerGeocodingService({
-                packageManager: this.geoPackageManager,
-                language: this.currentLanguage
-            });
-        }
-        return this._offlineSearchService;
-    }
-    _offlineReverseSearchService: PackageManagerReverseGeocodingService;
-    get offlineReverseSearchService() {
-        if (!this._offlineReverseSearchService) {
-            this._offlineReverseSearchService = new PackageManagerReverseGeocodingService({
-                packageManager: this.geoPackageManager,
-                language: this.currentLanguage
-            });
-        }
-        return this._offlineReverseSearchService;
     }
     convertGeoCodingResults(result: GeocodingResultVector, full = false) {
         const items: GeoResult[] = [];
@@ -511,43 +228,39 @@ class PackageService extends Observable {
         });
     }
 
-    _localOSMOfflineGeocodingService: OSMOfflineGeocodingService;
+    findFilesWithExtension(extension: string) {
+        const result = [];
+        const folderPath = getSavedMBTilesDir();
+        if (folderPath) {
+            const entities = listFolder(folderPath);
+            const folders = entities.filter((e) => e.isFolder);
+            folders.forEach((f) => {
+                const subentities = listFolder(f.path);
+                result.push(...subentities.filter((s) => s.path.endsWith(extension)));
+            });
+        }
+        return result;
+    }
+
+    _localOSMOfflineGeocodingService: MultiOSMOfflineGeocodingService;
     get localOSMOfflineGeocodingService() {
         if (!this._localOSMOfflineGeocodingService) {
-            const folderPath = getSavedMBTilesDir();
-            if (folderPath) {
-                const entities = listFolder(folderPath);
-                entities.some((s) => {
-                    if (s.name.endsWith('.nutigeodb')) {
-                        this._localOSMOfflineGeocodingService = new OSMOfflineGeocodingService({
-                            language: this.currentLanguage,
-                            maxResults: 100,
-                            autocomplete: true,
-                            path: s.path
-                        });
-                        return true;
-                    }
-                });
-            }
+            const files = this.findFilesWithExtension('.nutigeodb');
+            const source = (this._localOSMOfflineGeocodingService = new MultiOSMOfflineGeocodingService({
+                language: this.currentLanguage
+            }));
+            files.forEach((f) => source.add(f.path));
         }
         return this._localOSMOfflineGeocodingService;
     }
-    _localOSMOfflineReverseGeocodingService: OSMOfflineReverseGeocodingService;
+    _localOSMOfflineReverseGeocodingService: MultiOSMOfflineReverseGeocodingService;
     get localOSMOfflineReverseGeocodingService() {
         if (!this._localOSMOfflineReverseGeocodingService) {
-            const folderPath = getSavedMBTilesDir();
-            if (folderPath) {
-                const entities = listFolder(folderPath);
-                entities.some((s) => {
-                    if (s.name.endsWith('.nutigeodb')) {
-                        this._localOSMOfflineReverseGeocodingService = new OSMOfflineReverseGeocodingService({
-                            language: this.currentLanguage,
-                            path: s.path
-                        });
-                        return true;
-                    }
-                });
-            }
+            const files = this.findFilesWithExtension('.nutigeodb');
+            const source = (this._localOSMOfflineReverseGeocodingService = new MultiOSMOfflineReverseGeocodingService({
+                language: this.currentLanguage
+            }));
+            files.forEach((f) => source.add(f.path));
         }
         return this._localOSMOfflineReverseGeocodingService;
     }
@@ -563,18 +276,6 @@ class PackageService extends Observable {
             }
         }
         return this._vectorTileSearchService;
-    }
-    searchInPackageGeocodingService(options: GeocodingRequest<LatLonKeys>): Promise<GeocodingResultVector> {
-        if (!this.started) {
-            return Promise.resolve(null);
-        }
-        return this.searchInGeocodingService(this.offlineSearchService, options);
-    }
-    searchInPackageReverseGeocodingService(options: ReverseGeocodingRequest<LatLonKeys>): Promise<GeocodingResultVector> {
-        if (!this.started) {
-            return Promise.resolve(null);
-        }
-        return this.searchInGeocodingService(this.offlineReverseSearchService, options);
     }
     searchInLocalGeocodingService(options: GeocodingRequest<LatLonKeys>): Promise<GeocodingResultVector> {
         const service = this.localOSMOfflineGeocodingService;
@@ -980,31 +681,13 @@ class PackageService extends Observable {
     }
 
     offlineRoutingSearchService() {
-        if (__CARTO_PACKAGESERVICE__) {
-            if (!this._offlineRoutingSearchService) {
-                this._offlineRoutingSearchService = new PackageManagerValhallaRoutingService({
-                    packageManager: packageService.routingPackageManager
-                });
-            }
-            return this._offlineRoutingSearchService;
-        } else {
-            // console.log('offlineRoutingSearchService', !!this._localOfflineRoutingSearchService);
-            if (!this._localOfflineRoutingSearchService) {
-                const folderPath = getSavedMBTilesDir();
-                if (folderPath) {
-                    const entities = listFolder(folderPath);
-                    entities.some((s) => {
-                        if (s.name.endsWith('.vtiles')) {
-                            this._localOfflineRoutingSearchService = new ValhallaOfflineRoutingService({
-                                path: s.path
-                            });
-                            return true;
-                        }
-                    });
-                }
-            }
-            return this._localOfflineRoutingSearchService;
+        // console.log('offlineRoutingSearchService', !!this._localOfflineRoutingSearchService);
+        if (!this._localOfflineRoutingSearchService) {
+            const files = this.findFilesWithExtension('.vtiles');
+            const source = (this._localOfflineRoutingSearchService = new MultiValhallaOfflineRoutingService());
+            files.forEach((f) => source.add(f.path));
         }
+        return this._localOfflineRoutingSearchService;
     }
 
     onlineRoutingSearchService() {
