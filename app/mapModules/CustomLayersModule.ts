@@ -651,7 +651,7 @@ export default class CustomLayersModule extends MapModule {
                 }
                 this.listenForSourceChanges = true;
             } catch (err) {
-                console.error(TAG, 'onMapReady', err);
+                showError(err);
             }
         })();
     }
@@ -732,10 +732,12 @@ export default class CustomLayersModule extends MapModule {
                             })
                         );
                     }
-                    DEV_LOG && console.log(
-                        'sources',
-                        sources.map((s) => s.path)
-                    );
+
+                    DEV_LOG &&
+                        console.log(
+                            'sources',
+                            sources.map((s) => s.path)
+                        );
                     const dataSource: TileDataSource<any, any> = this.createMergeMBTilesDataSource(sources.map((s) => getFileNameThatICanUseInNativeCode(context, s.path)));
                     mbtiles.push(dataSource);
 
@@ -780,7 +782,8 @@ export default class CustomLayersModule extends MapModule {
                 DEV_LOG &&
                     console.log(
                         'mbtiles',
-                        mbtiles.map((s) => s.options.databasePath)
+                        mbtiles.map((s) => s.options.databasePath),
+                        get(preloading)
                     );
                 mbtiles.forEach((s) => dataSource.add(s));
                 const opacity = appSettings.getNumber(name + '_opacity', 1);
