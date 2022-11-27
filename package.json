@@ -21,7 +21,7 @@
         "peakfinder": "webpack --config peakfinder.webpack.config.js"
     },
     "dependencies": {
-        "@akylas/nativescript": "link:../NativeScript/dist/packages/core",
+        "@akylas/nativescript": "8.3.6",
         "@akylas/nativescript-inappbrowser": "3.1.6",
         "@mapbox/tilebelt": "1.0.2",
         "@mdi/font": "7.0.96",
@@ -45,13 +45,13 @@
         "@nativescript-community/text": "1.5.9",
         "@nativescript-community/ui-canvas": "4.4.4",
         "@nativescript-community/ui-canvaslabel": "1.1.7",
-        "@nativescript-community/ui-carto": "link:../ui-carto/packages/ui-carto",
+        "@nativescript-community/ui-carto": "1.8.14",
         "@nativescript-community/ui-chart": "1.2.23",
         "@nativescript-community/ui-checkbox": "2.0.8",
         "@nativescript-community/ui-collectionview": "4.0.63",
         "@nativescript-community/ui-document-picker": "1.1.12",
         "@nativescript-community/ui-drawer": "0.1.1",
-        "@nativescript-community/ui-label": "1.2.13",
+        "@nativescript-community/ui-label": "1.2.15",
         "@nativescript-community/ui-material-activityindicator": "7.0.30",
         "@nativescript-community/ui-material-bottomsheet": "7.0.30",
         "@nativescript-community/ui-material-button": "7.0.30",
@@ -156,5 +156,9 @@
         "typescript": "4.8.4",
         "webpack-shell-plugin-next": "^2.3.1",
         "xml2json": "^0.12.0"
+    },
+    "resolutions": {
+        "@nativescript-community/ui-carto": "portal:/home/mguillon/dev/nativescript/ui-carto/packages/ui-carto",
+        "@akylas/nativescript": "portal:/home/mguillon/dev/nativescript/NativeScript/dist/packages/core"
     }
 }
