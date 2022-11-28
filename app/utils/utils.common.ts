@@ -227,7 +227,6 @@ export async function askForManagePermission() {
 export async function getDefaultMBTilesDir() {
     let localMbtilesSource = savedMBTilesDir;
     const result = await request('storage');
-    DEV_LOG && console.log('result', result);
 
     if (!permResultCheck(result)) {
         throw new Error('missing_storage_permission');
