@@ -1,13 +1,14 @@
 <script lang="ts" context="module">
     import { getMoonIllumination, getMoonPosition, getPosition, getTimes } from 'suncalc';
     // import { moon, MoonPhase, MoonPosition, sun, SunPosition, SunTimes } from '@modern-dev/daylight/lib/es6';
-    import { Align } from '@nativescript-community/ui-canvas';
+    import { Align, Canvas, DashPathEffect, Paint } from '@nativescript-community/ui-canvas';
     import { CanvasLabel } from '@nativescript-community/ui-canvaslabel/canvaslabel.common';
     import { LineChart } from '@nativescript-community/ui-chart/charts';
     import { AxisBase } from '@nativescript-community/ui-chart/components/AxisBase';
     import { LimitLine } from '@nativescript-community/ui-chart/components/LimitLine';
     import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
     import { LineData } from '@nativescript-community/ui-chart/data/LineData';
+    import { Utils } from '@nativescript-community/ui-chart/utils/Utils';
     import { LineDataSet } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { ViewPortHandler } from '@nativescript-community/ui-chart/utils/ViewPortHandler';
     import { Color } from '@nativescript/core';
@@ -22,6 +23,8 @@
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { pickDate } from '~/utils/utils';
     import { mdiFontFamily, widgetBackgroundColor } from '~/variables';
+    import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
+    import { Entry } from '@nativescript-community/ui-chart/data/Entry';
 </script>
 
 <script lang="ts">
@@ -31,15 +34,22 @@
     let chartInitialized = false;
     export let location: GeoLocation;
     let startTime = dayjs();
-    let limitLine: LimitLine;
+    // let limitLine: LimitLine;
     let illumination: any; // MoonPhase;
     let sunTimes: any; // SunTimes;
     let moonAzimuth: CompassInfo;
     let sunPoses: any[]; // SunPosition[];
     let moonPoses: any[]; // MoonPosition[];
 
+    const highlightPaint = new Paint();
+    highlightPaint.setColor('white');
+    highlightPaint.setStrokeWidth(2);
+    highlightPaint.setPathEffect(new DashPathEffect([3, 3], 0));
+    highlightPaint.setTextAlign(Align.LEFT);
+    highlightPaint.setTextSize(10);
+
     let bottomLabel: NativeViewElementNode<CanvasLabel>;
-    function updateChartData(startTime: Dayjs) {
+    function updateChartData() {
         if (!chart) {
             return;
         }
@@ -60,6 +70,25 @@
             chartView.setExtraOffsets(0, 0, 0, 0);
             chartView.setMinOffset(0);
             chartView.setClipDataToContent(false);
+            chartView.setHighlightPerTapEnabled(true);
+            chartView.setHighlightPerDragEnabled(true);
+            chartView.setCustomRenderer({
+                drawHighlight(c: Canvas, h: Highlight<Entry>, set: LineDataSet, paint: Paint) {
+                    const hours = Math.floor(h.x / 6);
+                    const minutes = (h.x * 10) % 60;
+                    startTime = startTime.set('h', hours).set('m', minutes);
+                    c.drawLine(h.drawX, 0, h.drawX, c.getHeight(), highlightPaint);
+                    highlightPaint.setTextAlign(Align.LEFT);
+                    let x = h.drawX + 4;
+                    const text = formatTime(startTime);
+                    const size = Utils.calcTextSize(highlightPaint, text);
+                    if (x > c.getWidth() - size.width) {
+                        x = h.drawX - 4;
+                        highlightPaint.setTextAlign(Align.RIGHT);
+                    }
+                    c.drawText(text, x, 14, highlightPaint);
+                }
+            });
             leftAxis.setLabelCount(0);
             leftAxis.setDrawGridLines(false);
             leftAxis.setDrawAxisLine(false);
@@ -80,18 +109,18 @@
                     return formatTime(time);
                 }
             });
-            if (!limitLine) {
-                limitLine = new LimitLine(0, 'test');
-                limitLine.setLineColor('white');
-                limitLine.enableDashedLine(3, 3, 0);
-                limitLine.setTextColor('white');
-                limitLine.ensureVisible = true;
-                xAxis.addLimitLine(limitLine);
-            }
+            // if (!limitLine) {
+            //     limitLine = new LimitLine(0, 'test');
+            //     limitLine.setLineColor('white');
+            //     limitLine.enableDashedLine(3, 3, 0);
+            //     limitLine.setTextColor('white');
+            //     limitLine.ensureVisible = true;
+            //     xAxis.addLimitLine(limitLine);
+            // }
         }
-        const nowMinutes = startTime.diff(computeStartTime, 'minutes');
-        limitLine.setLabel(formatTime(startTime));
-        limitLine.setLimit(nowMinutes / 10);
+        // const nowMinutes = startTime.diff(computeStartTime, 'minutes');
+        // limitLine.setLabel(formatTime(startTime));
+        // limitLine.setLimit(nowMinutes / 10);
 
         const chartData = chartView.getData();
         if (!chartData) {
@@ -106,8 +135,11 @@
 
             const lineData = new LineData(sets);
             chartView.setData(lineData);
+
+            const nowMinutes = startTime.diff(computeStartTime, 'minutes');
+            const h = chartView.getHighlightByXValue(nowMinutes/10);
+            chartView.highlight(h[0])
         } else {
-            chartView.highlightValues(null);
             chartData.getDataSetByIndex(1).setValues(sunPoses);
             chartData.getDataSetByIndex(1).notifyDataSetChanged();
             chartData.getDataSetByIndex(0).setValues(moonPoses);
@@ -122,7 +154,7 @@
         try {
             const date = await pickDate(startTime);
             if (date && startTime.valueOf() !== date) {
-                startTime = dayjs(date);
+                updateStartTime(dayjs(date));
             }
         } catch (error) {
             showError(error);
@@ -132,11 +164,16 @@
     $: {
         try {
             if (chart) {
-                updateChartData(startTime);
+                updateChartData();
             }
         } catch (err) {
             showError(err);
         }
+    }
+
+    function updateStartTime(time:Dayjs) {
+        startTime = time;
+        updateChartData();
     }
 
     function getMoonPhaseIcon(illumination: any /* MoonPhase */) {
@@ -163,55 +200,55 @@
         try {
             const date = startTime.toDate();
             illumination = getMoonIllumination(date);
-            moonAzimuth = getCompassInfo((getMoonPosition(date, location.lat, location.lon).azimuth * TO_DEG +180));
+            moonAzimuth = getCompassInfo(getMoonPosition(date, location.lat, location.lon).azimuth * TO_DEG + 180);
             sunTimes = getTimes(date, location.lat, location.lon);
         } catch (err) {
             console.error(err);
         }
     }
 
-    async function setDateTime() {
-        try {
-            const SliderPopover = (await import('~/components/SliderPopover.svelte')).default;
-            const nowMinutes = startTime.diff(startTime.startOf('d'), 'minutes');
-            showPopover({
-                view: SliderPopover,
-                anchor: bottomLabel,
-                vertPos: VerticalPosition.ABOVE,
-                props: {
-                    backgroundColor: new Color($widgetBackgroundColor).setAlpha(200).hex,
-                    min: 0,
-                    max: 24 * 60 - 1,
-                    step: 1,
-                    value: nowMinutes,
-                    formatter(value) {
-                        const hours = Math.floor(value / 60);
-                        const minutes = value % 60;
-                        return formatTime(dayjs().set('h', hours).set('m', minutes));
-                    },
-                    valueFormatter(value) {
-                        const hours = Math.floor(value / 60);
-                        const minutes = value % 60;
-                        return formatTime(dayjs().set('h', hours).set('m', minutes));
-                    },
-                    onChange(value) {
-                        const hours = Math.floor(value / 60);
-                        const minutes = value % 60;
-                        startTime = startTime.set('h', hours).set('m', minutes);
-                    }
-                }
-            });
-        } catch (err) {
-            showError(err);
-        }
-    }
+    // async function setDateTime() {
+    //     try {
+    //         const SliderPopover = (await import('~/components/SliderPopover.svelte')).default;
+    //         const nowMinutes = startTime.diff(startTime.startOf('d'), 'minutes');
+    //         showPopover({
+    //             view: SliderPopover,
+    //             anchor: bottomLabel,
+    //             vertPos: VerticalPosition.ABOVE,
+    //             props: {
+    //                 backgroundColor: new Color($widgetBackgroundColor).setAlpha(200).hex,
+    //                 min: 0,
+    //                 max: 24 * 60 - 1,
+    //                 step: 1,
+    //                 value: nowMinutes,
+    //                 formatter(value) {
+    //                     const hours = Math.floor(value / 60);
+    //                     const minutes = value % 60;
+    //                     return formatTime(dayjs().set('h', hours).set('m', minutes));
+    //                 },
+    //                 valueFormatter(value) {
+    //                     const hours = Math.floor(value / 60);
+    //                     const minutes = value % 60;
+    //                     return formatTime(dayjs().set('h', hours).set('m', minutes));
+    //                 },
+    //                 onChange(value) {
+    //                     const hours = Math.floor(value / 60);
+    //                     const minutes = value % 60;
+    //                     startTime = startTime.set('h', hours).set('m', minutes);
+    //                 }
+    //             }
+    //         });
+    //     } catch (err) {
+    //         showError(err);
+    //     }
+    // }
 </script>
 
 <gridLayout {height} rows="auto,200,*" columns="auto,*,auto">
-    <mdbutton variant="text" class="icon-btn" text="mdi-chevron-left" horizontalAlignment="left" on:tap={() => (startTime = startTime.subtract(1, 'd'))} />
+    <mdbutton variant="text" class="icon-btn" text="mdi-chevron-left" horizontalAlignment="left" on:tap={() => (updateStartTime(startTime.subtract(1, 'd')))} />
     <label col={1} text={startTime.format('LL')} textAlignment="center" verticalTextAlignment="center" on:tap={selectDate} fontSize={17} />
-    <mdbutton col={2} variant="text" class="icon-btn" text="mdi-chevron-right" horizontalAlignment="right" on:tap={() => (startTime = startTime.add(1, 'd'))} />
-    <linechart row={1} colSpan={3} bind:this={chart} backgroundColor="#222222" on:tap={setDateTime}>
+    <mdbutton col={2} variant="text" class="icon-btn" text="mdi-chevron-right" horizontalAlignment="right" on:tap={() => (updateStartTime(startTime.add(1, 'd')))} />
+    <linechart row={1} colSpan={3} bind:this={chart} backgroundColor="#222222">
         <rectangle fillColor="#a0caff" height="50%" width="100%" />
     </linechart>
     {#if sunTimes}
