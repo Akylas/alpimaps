@@ -352,10 +352,11 @@
             }
         };
         toAdd.properties.name = metaData.title || formatter.getItemTitle(toAdd as Item);
-        features.push(toAdd);
         if (metaData.isStart) {
+            features.unshift(toAdd);
             waypoints.unshift(toAdd as any);
         } else {
+            features.push(toAdd);
             waypoints.push(toAdd as any);
         }
         try {
@@ -517,16 +518,12 @@
             mapContext.unselectItem();
         }
     }
+    export function getFeatures() {
+        return features;
+    }
     export function cancel(unselect = true) {
         clear(unselect);
         hide();
-    }
-    function secondsToHours(sec: number) {
-        const hours = sec / 3600;
-        const remainder = sec % 3600;
-        const minutes = remainder / 60;
-        const seconds = remainder % 60;
-        return (hours < 10 ? '0' : '') + hours + 'h' + (minutes < 10 ? '0' : '') + minutes + 'm' + (seconds < 10 ? '0' : '') + seconds + 's';
     }
     function walkingSpeed() {
         switch (pedestrian_type) {
@@ -664,16 +661,19 @@
                 costing_options
             };
             DEV_LOG && console.log('calculateRoute', profile, points, customOptions);
-            const result = await service.calculateRoute<LatLonKeys>({
+            const result = await service.calculateRoute<LatLonKeys>(
+                {
                     projection,
                     points,
                     customOptions
-            }, profile);
+                },
+                profile
+            );
             DEV_LOG && console.log('got route', result.getTotalDistance(), result.getTotalTime(), Date.now() - startTime, 'ms');
             positions = result.getPoints();
             startTime = Date.now();
             route = routingResultToJSON(result, costing_options);
-            DEV_LOG && console.log('parsed route', Date.now() - startTime, 'ms');
+            DEV_LOG && console.log('parsed route', requestStats, Date.now() - startTime, 'ms');
             if (requestStats) {
                 route.stats = await packageService.fetchStats({ positions, projection, route: route.route, profile });
             }
