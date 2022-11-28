@@ -176,6 +176,7 @@ export async function handleMapAction(action: string, options?) {
         case 'compass':
             try {
                 const module = mapContext.mapModule('userLocation');
+                const selected = mapContext.getSelectedItem();
                 const location = module.lastUserLocation || options;
                 const CompassView = (await import('~/components/CompassView.svelte')).default;
                 await showBottomSheet({
@@ -183,7 +184,8 @@ export async function handleMapAction(action: string, options?) {
                     view: CompassView,
                     transparent: true,
                     props: {
-                        location
+                        location,
+                        aimingItems: selected ? [selected] : []
                     }
                 });
             } catch (err) {
