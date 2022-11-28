@@ -17,7 +17,7 @@ import { Feature, VectorTileFeature, VectorTileFeatureCollection } from '@native
 import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
 import { HillshadeRasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
 import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
-import { MultiValhallaOfflineRoutingService, ValhallaOfflineRoutingService, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+import { MultiValhallaOfflineRoutingService, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
 import { SearchRequest, VectorTileSearchService } from '@nativescript-community/ui-carto/search';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import * as appSettings from '@nativescript/core/application-settings';
@@ -570,7 +570,7 @@ class PackageService extends Observable {
         }
         if (geometry['getGeometryCount']) {
             geometry = geometry['getGeometry'](0);
-        }
+    }
         return geometry.getPoses() as MapPosVector<LatLonKeys>;
     }
     async getElevationProfile(item: Item, positions?: MapPosVector<LatLonKeys>) {
@@ -601,7 +601,7 @@ class PackageService extends Observable {
         shape_match?: string;
     }) {
         const service = this.offlineRoutingSearchService() || this.onlineRoutingSearchService();
-        if (service instanceof ValhallaOfflineRoutingService || service instanceof ValhallaOnlineRoutingService) {
+        if (service instanceof MultiValhallaOfflineRoutingService || service instanceof ValhallaOnlineRoutingService) {
             const startTime = Date.now();
             DEV_LOG && console.log('matchRoute', points);
             const matchResult = await service.matchRoute(
