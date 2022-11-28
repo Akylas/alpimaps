@@ -1,6 +1,6 @@
 import { MapBounds } from '@nativescript-community/ui-carto/core';
 import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
-import { ValhallaOfflineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+import { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
 import type { Geometry } from 'geojson';
 import extend from 'just-extend';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
