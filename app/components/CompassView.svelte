@@ -2,14 +2,21 @@
     import { moon, sun } from '@modern-dev/daylight';
     import { startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
     import { estimateMagneticField } from '@nativescript-community/sensors/sensors';
-    import { Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
+    import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { executeOnMainThread } from '@nativescript/core/utils';
     import { getMoonPosition, getPosition } from 'suncalc';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import SmoothCompassBehavior, { wrap } from '~/components/SmoothCompassBehavior';
-    import { TO_DEG } from '~/utils/geo';
+    import { getBearing } from '~/helpers/geolib';
+    import { formatter } from '~/mapModules/ItemFormatter';
+    import { Item } from '~/models/Item';
+    import { packageService } from '~/services/PackageService';
+    import { TO_DEG, TO_RAD } from '~/utils/geo';
+    import { primaryColor } from '~/variables';
+    import CompassDialView from './CompassDialView.svelte';
+    import { Utils } from '@nativescript-community/ui-chart/utils/Utils';
 
     let currentHeading: number = 0;
     let lastHeadingTime: number = 0;
@@ -18,6 +25,7 @@
 
     export let height: number = 350;
     export let location: MapPos<LatLonKeys> = null;
+    export let aimingItems: Item[] = [];
 
     let moonBearing = null;
     let sunBearing = null;
@@ -36,14 +44,15 @@
             stopListeningForSensor('heading', onSensor);
         }
     }
+    let androidDeclination;
     function onSensor(data, sensor: string) {
         switch (sensor) {
             case 'heading':
                 if (__ANDROID__ && !('trueHeading' in data) && location) {
-                    const res = estimateMagneticField(location.lat, location.lon, location.altitude);
-                    if (res) {
-                        data.trueHeading = data.heading + res.getDeclination();
+                    if (androidDeclination === undefined) {
+                        androidDeclination = estimateMagneticField(location.lat, location.lon, location.altitude).getDeclination();
                     }
+                    data.trueHeading = data.heading + androidDeclination;
                 }
                 const newValue = 'trueHeading' in data ? data.trueHeading : data.heading;
                 const oldBearing = currentHeading;
@@ -81,20 +90,70 @@
     });
 
     const paint = new Paint();
-    function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: Canvas }) {
+    const textPaint = new Paint();
+    textPaint.textSize = 12;
+    textPaint.color = 'white';
+    function onCanvasDraw({ canvas, object, delta }: { canvas: Canvas; object: Canvas; delta }) {
         let w = canvas.getWidth();
         let h = canvas.getHeight();
-        canvas.translate(w / 2, h / 2);
-        canvas.save();
-        canvas.rotate(moonBearing + 180);
-        paint.setColor('gray');
-        canvas.drawCircle(0, h / 2, 10, paint);
-        canvas.restore();
-        canvas.rotate(sunBearing + 180);
-        paint.setColor('#ffdd55');
-        canvas.drawCircle(0, h / 2, 10, paint);
-    }
+        const rx = w / 2;
+        const ry = h / 2;
+        const radius = Math.min(rx, ry);
 
+        function getCenter(bearing) {
+            const rad = TO_RAD * ((bearing - 90) % 360);
+            const ryd = radius - delta;
+            const result = [rx + Math.cos(rad) * ryd, ry + +Math.sin(rad) * ryd];
+            return result;
+        }
+
+        if (moonBearing !== null) {
+            let center = getCenter(moonBearing);
+            paint.setColor('gray');
+            canvas.drawCircle(center[0], center[1], 10, paint);
+            paint.setColor('#ffdd55');
+            center = getCenter(sunBearing);
+            canvas.drawCircle(center[0], center[1], 10, paint);
+        }
+        if (location && aimingItems?.length) {
+            aimingItems.forEach((item) => {
+                const center = packageService.getItemCenter(item);
+                const bearing = getBearing(location, center);
+                let centerCanvas = getCenter(bearing);
+                paint.setColor(primaryColor);
+                canvas.drawCircle(centerCanvas[0], centerCanvas[1], 5, paint);
+
+                const text = formatter.getItemTitle(item);
+                const staticLayout = new StaticLayout(text, textPaint, radius, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+                const textW = Math.min(Utils.calcTextSize(textPaint, text).width, staticLayout.getWidth());
+                const textH = staticLayout.getHeight();
+                let textX = centerCanvas[0];
+                let textY = centerCanvas[1];
+                // textPaint.setTextAlign(Align.CENTER);
+                if (bearing > 340 || bearing < 20) {
+                    // textPaint.setTextAlign(Align.CENTER);
+                    textY += 10;
+                } else if (bearing > 160 && bearing < 200) {
+                    // textPaint.setTextAlign(Align.CENTER);
+                    textY -= 10 + textH;
+                } else if (bearing >= 200) {
+                    // textPaint.setTextAlign(Align.LEFT);
+                    textY -= textH/2;
+                    textX += 10 + textW/2;
+                } else  {
+                    // textPaint.setTextAlign(Align.RIGHT);
+                    textY -= textH/2;
+                    textX -= 10 + textW/2;
+                }
+                canvas.save();
+                canvas.translate(textX - textW/2, textY);
+                paint.setColor('#444444aa');
+                canvas.drawRoundRect(-2, -1, textW + 4, textH + 2, 2, 2, paint);
+                staticLayout.draw(canvas);
+                canvas.restore();
+            });
+        }
+    }
     $: {
         if (location) {
             const date = new Date();
@@ -106,11 +165,11 @@
 </script>
 
 <gridLayout {height}>
-    <svgview src="~/assets/svgs/needle_background.svg" stretch="aspectFit" horizontalAlignment="center" />
+    <CompassDialView onDraw={onCanvasDraw} />
     <svgview src="~/assets/svgs/needle.svg" stretch="aspectFit" horizontalAlignment="center" rotate={-currentHeading} />
-    {#if moonBearing !== null}
+    <!-- {#if moonBearing !== null}
         <canvas bind:this={canvas} on:draw={onCanvasDraw} />
-    {/if}
+    {/if} -->
     <label visibility={headingAccuracy >= 2 ? 'visible' : 'hidden'} class="alpimaps" text="alpimaps-compass-calibrate" horizontalAlignment="right" verticalAlignment="bottom" fontSize={60} />
 </gridLayout>
 >
