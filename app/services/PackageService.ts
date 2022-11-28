@@ -563,15 +563,26 @@ class PackageService extends Observable {
         return this._reader;
     }
 
-    getRouteItemPoses(item: Item) {
+    getRouteItemGeometry(item: Item) {
         let geometry = item._nativeGeometry || (packageService.getGeoJSONReader().readGeometry(item._geometry || JSON.stringify(item.geometry)) as LineGeometry<LatLonKeys>);
+        if (geometry['getGeometryCount']) {
+            geometry = geometry['getGeometry'](0);
+        }
         if (!item._nativeGeometry) {
             item._nativeGeometry = geometry.getNative?.() || geometry;
         }
-        if (geometry['getGeometryCount']) {
-            geometry = geometry['getGeometry'](0);
+        return item._nativeGeometry;
     }
+
+    getRouteItemPoses(item: Item) {
+        const geometry = this.getRouteItemGeometry(item);
         return geometry.getPoses() as MapPosVector<LatLonKeys>;
+    }
+    getItemCenter(item: Item) {
+        if (!!item?.route) {
+            return fromNativeMapPos(this.getRouteItemGeometry(item).getCenterPos());
+        }
+        return (item.geometry as Point).coordinates;
     }
     async getElevationProfile(item: Item, positions?: MapPosVector<LatLonKeys>) {
         if (this.hillshadeLayer && (!item || item.geometry.type === 'LineString' || item.geometry.type === 'MultiLineString')) {
