@@ -152,8 +152,8 @@
 
     function drawSat(canvas, mW, sat) {
         const r = ((90 - sat.elevation) * mW * 0.9) / 200;
-        const x = r * Math.sin((sat.azimuth * Math.PI) / 180);
-        const y = -(r * Math.cos((sat.azimuth * Math.PI) / 180));
+        const x = r * Math.sin((sat.azimuth * TO_RAD));
+        const y = -(r * Math.cos((sat.azimuth * TO_RAD)));
 
         canvas.drawCircle(x, y, sat.snr * snrScale, sat.usedInFix ? activePaint : inactivePaint);
     }
