@@ -13,7 +13,7 @@ import { ShareFile } from '@nativescript-community/ui-share-file';
 import { File, Folder, ImageSource, knownFolders, path, profile } from '@nativescript/core';
 import type { Feature } from 'geojson';
 import { getDistanceSimple } from '~/helpers/geolib';
-import { IItem, Item, ItemProperties, ItemRepository, Route, RouteInstruction, RouteProfile, RouteStats, toJSONStringified } from '~/models/Item';
+import { IItem, Item, ItemRepository, Route, RouteInstruction, RouteProfile, RouteStats, toJSONStringified } from '~/models/Item';
 import { showError } from '~/utils/error';
 import { accentColor } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
@@ -53,7 +53,6 @@ export default class ItemsModule extends MapModule {
             } as any);
             this.itemRepository = new ItemRepository(this.db);
             await this.itemRepository.createTables();
-            // await this.connection.synchronize(false);
             const items = await this.itemRepository.searchItem(SqlQuery.createFromTemplateString`"onMap" = 1`);
             this.addItemsToLayer(items);
         } catch (err) {
@@ -67,13 +66,10 @@ export default class ItemsModule extends MapModule {
         this.initDb();
     }
     onMapDestroyed() {
-        // console.log('onMapDestroyed');
         super.onMapDestroyed();
-        // this.connection && this.connection.close();
         this.db && this.db.disconnect();
 
         if (this.localVectorDataSource) {
-            // this.localVectorDataSource.clear();
             this.localVectorDataSource = null;
         }
         if (this.localVectorLayer) {
@@ -110,55 +106,12 @@ export default class ItemsModule extends MapModule {
             mapContext.addLayer(this.localVectorLayer, 'items');
         }
     }
-    // createLocalMarker(item: IItem, options: MarkerStyleBuilderOptions) {
-    //     // console.log('createLocalMarker', options);
-    //     Object.keys(options).forEach((k) => {
-    //         if (options[k] === undefined) {
-    //             delete options[k];
-    //         }
-    //     });
-    //     const styleBuilder = new MarkerStyleBuilder(options);
-    //     const metaData = this.itemToMetaData(item);
-    //     // console.log('metaData', metaData);
-    //     return new Marker({ position: item.position, projection: mapContext.getProjection(), styleBuilder, metaData });
-    // }
     createLocalPoint(position: GenericMapPos<LatLonKeys>, options: PointStyleBuilderOptions) {
         const styleBuilder = new PointStyleBuilder(options);
         return new Point({ position, projection: mapContext.getProjection(), styleBuilder });
     }
-    // itemToMetaData(item: IItem) {
-    //     const result = {};
-    //     Object.keys(item)
-    //         .filter((k) => k !== 'vectorElement')
-    //         .forEach((k) => {
-    //             if (item[k] !== null && item[k] !== undefined) {
-    //                 if (k === 'route') {
-    //                     // ignore positions as it is native object.
-    //                     // we will get it back from the vectorElement
-    //                     const { positions, ...others } = item[k];
-    //                     result[k] = JSON.stringify(others);
-    //                 } else {
-    //                     result[k] = typeof item[k] === 'string' ? item[k] : JSON.stringify(item[k]);
-    //                 }
-    //             }
-    //         });
-    //     return result;
-    // }
-    // createLocalLine(item: IItem, options: LineStyleBuilderOptions) {
-    //     // console.log('createLocalLine', options);
-    //     Object.keys(options).forEach((k) => {
-    //         if (options[k] === undefined) {
-    //             delete options[k];
-    //         }
-    //     });
-    //     const styleBuilder = new LineStyleBuilder(options);
-
-    //     const metaData = this.itemToMetaData(item);
-    //     return new Line({ positions: item.route.positions, projection: mapContext.getProjection(), styleBuilder, metaData });
-    // }
     addItemToLayer(item: IItem, autoUpdate = false) {
         this.currentItems.push(item);
-        // this.currentLayerFeatures.push({ type: 'Feature', ...toJSONStringified(item) });
         this.currentLayerFeatures.push({ type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
         if (autoUpdate) {
             this.updateGeoJSONLayer();
@@ -404,14 +357,7 @@ export default class ItemsModule extends MapModule {
         if (item.image_path) {
             File.fromPath(item.image_path).remove();
         }
-        // if (item.vectorElement) {
-        //     this.localVectorDataSource.remove(item.vectorElement);
-        //     item.vectorElement = null;
-        // }
         if (item.id) {
-            //     if (item.route && item.route.id) {
-            //         await this.routeRepository.delete(item.route);
-            //     }
             await this.itemRepository.delete(item as Item);
         }
     }
