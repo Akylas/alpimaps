@@ -2,6 +2,7 @@
     import { l, lc } from '@nativescript-community/l';
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Align, Canvas, CanvasView, DashPathEffect, LayoutAlignment, Paint, Rect, StaticLayout, Style } from '@nativescript-community/ui-canvas';
+    import { stringProperty } from '@nativescript-community/ui-canvas/shapes/shape';
     import { fromNativeMapPos, GenericMapPos, MapBounds } from '@nativescript-community/ui-carto/core';
     import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
@@ -206,7 +207,7 @@
         // DEV_LOG && console.log('updateRouteItemWithPosition1', location, updateNavigationInstruction, updateGraph, !!highlight);
         try {
             if (routeItem?.route) {
-                const props = routeItem.properties;
+                // const props = routeItem.properties;
                 const route = routeItem.route;
                 const positions = packageService.getRouteItemPoses(routeItem);
                 const onPathIndex = isLocationOnPath(location, positions, false, true, 15);
@@ -720,6 +721,31 @@
             this.showError(err);
         }
     }
+    async function openCompass() {
+        try {
+            const selected = mapContext.getSelectedItem();
+            let location: any = currentLocation;
+            let aimingItems: any = selected ? [selected] : [];
+            if (itemIsRoute && !item.id) {
+                const points = mapContext.mapModules.directionsPanel.getFeatures().filter(s=>s.geometry.type === 'Point');
+                location = {lat:(points[0].geometry as Point).coordinates[1],lon:(points[0].geometry as Point).coordinates[0]} ;
+                aimingItems = points.slice(1);
+                console.log('points', points.length, aimingItems.length)
+            }
+            const CompassView = (await import('~/components/CompassView.svelte')).default;
+            await showBottomSheet({
+                parent: mapContext.getMainPage(),
+                view: CompassView,
+                transparent: true,
+                props: {
+                    location,
+                    aimingItems
+                }
+            });
+        } catch (error) {
+            this.showError(error);
+        }
+    }
 
     async function getTransitLines() {
         try {
@@ -1063,7 +1089,8 @@
             {#if packageService.hasElevation()}
                 <IconButton on:tap={() => getProfile()} tooltip={lc('elevation_profile')} isVisible={itemIsRoute && itemCanQueryProfile} text="mdi-chart-areaspline" rounded={false} />
             {/if}
-            <IconButton on:tap={() => saveItem()} tooltip={lc('save')} isVisible={item && !item.id} text="mdi-map-plus" rounded={false} />
+            <IconButton on:tap={() => getProfile()} tooltip={lc('road_stats')} isVisible={itemIsRoute && itemCanQueryStats} text="mdi-chart-bar-stacked" rounded={false} />
+            <IconButton on:tap={() => getStats()} tooltip={lc('save')} isVisible={item && !item.id} text="mdi-map-plus" rounded={false} />
             <!-- <IconButton on:tap={shareItem} tooltip={lc('share')} isVisible={itemIsRoute} text="mdi-share-variant" rounded={false} /> -->
             {#if item && item.properties && !!item.properties.wikipedia}
                 <IconButton on:tap={openWikipedia} tooltip={lc('wikipedia')} text="mdi-wikipedia" rounded={false} />
@@ -1075,6 +1102,7 @@
             {#if packageService.hasElevation()}
                 <IconButton on:tap={openPeakFinder} tooltip={lc('peaks')} isVisible={!itemIsRoute} text="mdi-summit" rounded={false} />
             {/if}
+            <IconButton on:tap={openCompass} tooltip={lc('compass')} isVisible={(itemIsRoute && !item.id) || currentLocation} text="mdi-compass-outline" rounded={false} />
 
             <IconButton on:tap={getTransitLines} tooltip={lc('bus_stop_infos')} isVisible={itemIsBusStop} text="mdi-bus" rounded={false} />
         </stacklayout>
