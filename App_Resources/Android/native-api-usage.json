@@ -12,6 +12,7 @@
         "androidx.appcompat.app:AppCompatDelegate*",
         "android.content:ServiceConnection*",
         "android.os:Binder*",
+        "android.os:Environment*",
         "android.app:Service*",
         "android.app:NotificationManager*",
         "android.app:NotificationChannel*",

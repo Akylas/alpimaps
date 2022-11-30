@@ -47,8 +47,6 @@
         customSources = null;
     });
 
-    const packageServiceEnabled = __CARTO_PACKAGESERVICE__;
-
     function addSource() {
         customLayers.addSource();
     }
@@ -150,7 +148,7 @@
             <IconButton gray={true} isSelected={$showGlobe} tooltip={lc('globe_mode')} text="mdi-globe-model" on:tap={() => showGlobe.set(!$showGlobe)} />
             <IconButton gray={true} isSelected={$rotateEnabled} tooltip={lc('map_rotation')} text="mdi-rotate-3d-variant" on:tap={() => rotateEnabled.set(!$rotateEnabled)} />
             <IconButton gray={true} isSelected={$pitchEnabled} tooltip={lc('map_pitch')} text="mdi-rotate-orbit" on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
-            <IconButton gray={true} isSelected={$preloading} tooltip={lc('preloading')} text="mdi-map-clock" isVisible={packageServiceEnabled} on:tap={() => preloading.set(!$preloading)} />
+            <!-- <IconButton gray={true} isSelected={$preloading} tooltip={lc('preloading')} text="mdi-map-clock" on:tap={() => preloading.set(!$preloading)} /> -->
         </stacklayout>
     {/if}
     <!-- <GridLayout visibility="(currentLegend)?'visible':'collapsed'" rows="auto,*" columns="auto,*" backgroundColor={white}>
