@@ -5,14 +5,7 @@
     import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
     import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
     import { VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
-    import {
-        PackageManagerValhallaRoutingService,
-        RoutingResult,
-        RoutingService,
-        ValhallaOfflineRoutingService,
-        ValhallaOnlineRoutingService,
-        ValhallaProfile
-    } from '@nativescript-community/ui-carto/routing';
+    import { MultiValhallaOfflineRoutingService, RoutingResult, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { ApplicationSettings, Color, ContentView, Device, GridLayout, ObservableArray, StackLayout, TextField } from '@nativescript/core';
@@ -359,10 +352,11 @@
             }
         };
         toAdd.properties.name = metaData.title || formatter.getItemTitle(toAdd as Item);
-        features.push(toAdd);
         if (metaData.isStart) {
+            features.unshift(toAdd);
             waypoints.unshift(toAdd as any);
         } else {
+            features.push(toAdd);
             waypoints.push(toAdd as any);
         }
         try {
@@ -524,16 +518,12 @@
             mapContext.unselectItem();
         }
     }
+    export function getFeatures() {
+        return features;
+    }
     export function cancel(unselect = true) {
         clear(unselect);
         hide();
-    }
-    function secondsToHours(sec: number) {
-        const hours = sec / 3600;
-        const remainder = sec % 3600;
-        const minutes = remainder / 60;
-        const seconds = remainder % 60;
-        return (hours < 10 ? '0' : '') + hours + 'h' + (minutes < 10 ? '0' : '') + minutes + 'm' + (seconds < 10 ? '0' : '') + seconds + 's';
     }
     function walkingSpeed() {
         switch (pedestrian_type) {
@@ -662,7 +652,7 @@
                 }
             }
 
-            let service: PackageManagerValhallaRoutingService | ValhallaOfflineRoutingService | ValhallaOnlineRoutingService;
+            let service: MultiValhallaOfflineRoutingService | ValhallaOnlineRoutingService;
             service = packageService.offlineRoutingSearchService() || packageService.onlineRoutingSearchService();
             let startTime = Date.now();
             const projection = mapContext.getProjection();
@@ -671,16 +661,19 @@
                 costing_options
             };
             DEV_LOG && console.log('calculateRoute', profile, points, customOptions);
-            const result = await service.calculateRoute<LatLonKeys>({
-                projection,
-                points,
-                customOptions
-            }, profile);
+            const result = await service.calculateRoute<LatLonKeys>(
+                {
+                    projection,
+                    points,
+                    customOptions
+                },
+                profile
+            );
             DEV_LOG && console.log('got route', result.getTotalDistance(), result.getTotalTime(), Date.now() - startTime, 'ms');
             positions = result.getPoints();
             startTime = Date.now();
             route = routingResultToJSON(result, costing_options);
-            DEV_LOG && console.log('parsed route', Date.now() - startTime, 'ms');
+            DEV_LOG && console.log('parsed route', requestStats, Date.now() - startTime, 'ms');
             if (requestStats) {
                 route.stats = await packageService.fetchStats({ positions, projection, route: route.route, profile });
             }
@@ -908,14 +901,14 @@
                     onOptionChange: (value) => {
                         if (profile === 'bicycle') {
                             bicycle_type = value;
-                            ApplicationSettings.setString('bicycle_type',bicycle_type );
+                            ApplicationSettings.setString('bicycle_type', bicycle_type);
                             // in valhalla bicycle_type only changes speed, surface speed and worse quality surface allowed
 
                             // we reapply default we want to change per activity
                             ['cycling_speed', 'use_hills', 'avoid_bad_surfaces'].forEach((k) => (profileCostingOptions[profile][k] = valhallaSettingsDefaultValue(profile, k)));
                         } else {
                             pedestrian_type = value;
-                            ApplicationSettings.setString('pedestrian_type',pedestrian_type );
+                            ApplicationSettings.setString('pedestrian_type', pedestrian_type);
                             // we reapply default we want to change per activity
                             ['walking_speed', 'use_hills', 'step_penalty', 'max_hiking_difficulty'].forEach((k) => (profileCostingOptions[profile][k] = valhallaSettingsDefaultValue(profile, k)));
                         }
