@@ -42,14 +42,11 @@
     let currentMapZoom = 0;
     let totalDownloadProgress = 0;
     const mapContext = getMapContext();
-    let packageServiceEnabled = __CARTO_PACKAGESERVICE__;
 
     let selectedItem: IItem = null;
 
     export let userInteractionEnabled: boolean = true;
 
-    let suggestionPackage: { id: string; name: string; status: PackageStatus } = null;
-    let suggestionPackageName: string = null;
     let scaleView: ScaleView;
     let userLocationModule: UserLocationModule = null;
     let currentLocation: MapPos = null;
@@ -57,7 +54,6 @@
     let gridLayout: NativeViewElementNode<GridLayout>;
     let navigationCanvas: NativeViewElementNode<CanvasView>;
 
-    let showSuggestionPackage = false;
     let locationButtonClass = 'buttontext';
     let locationButtonLabelClass: string = '';
     let selectedItemHasPosition = false;
@@ -121,133 +117,15 @@
     export function onSelectedItem(item: IItem, oldItem: IItem) {
         selectedItem = item;
     }
-    $: {
-        showSuggestionPackage =
-            suggestionPackage &&
-            (!suggestionPackage.status || (suggestionPackage.status.getCurrentAction() !== PackageAction.READY && suggestionPackage.status.getCurrentAction() !== PackageAction.DOWNLOADING));
-    }
-    onMount(() => {
-        if (__CARTO_PACKAGESERVICE__) {
-            if (packageService) {
-                packageService.on('onProgress', onTotalDownloadProgress);
-                packageService.on('onPackageStatusChanged', onPackageStatusChanged);
-            }
-        }
-    });
     onDestroy(() => {
         userLocationModule = null;
-        if (__CARTO_PACKAGESERVICE__) {
-            if (packageService) {
-                packageService.off('onProgress', onTotalDownloadProgress);
-                packageService.off('onPackageStatusChanged', onPackageStatusChanged);
-            }
-        }
+
         const customLayers = mapContext.mapModule('customLayers');
         if (customLayers) {
             customLayers.off('onProgress', onTotalDownloadProgress);
         }
     });
-    if (__CARTO_PACKAGESERVICE__) {
-        const updateSuggestion = debounce((focusPos) => {
-            // console.log('updateSuggestion', focusPos);
-
-            // if (zoom < 8) {
-            //     suggestionPackage = null;
-            //     suggestionPackageName = null;
-            //     return;
-            // }
-            const suggestions = packageService.packageManager.suggestPackages(focusPos, mapContext.getProjection());
-            const sPackage = suggestions[0];
-            // console.log('test suggestion', focusPos, suggestionPackage && suggestionPackage.getPackageId(), suggestionPackage && suggestionPackage.getName());
-            if (sPackage) {
-                const status = packageService.packageManager.getLocalPackageStatus(sPackage.getPackageId(), -1);
-                // console.log('test suggestion status', status, status && status.getCurrentAction());
-                if (!status || status.getCurrentAction() !== PackageAction.READY) {
-                    suggestionPackage = {
-                        id: sPackage.getPackageId(),
-                        name: sPackage.getName(),
-                        status
-                    };
-                    suggestionPackageName = suggestionPackage.name.split('/').slice(-1)[0];
-                } else {
-                    suggestionPackage = null;
-                    suggestionPackageName = null;
-                }
-            } else {
-                suggestionPackage = null;
-                suggestionPackageName = null;
-            }
-
-            // console.log('onMapStable suggestions', !!suggestionPackage, suggestionPackageName, Date.now());
-        }, 2000);
-        let lastSuggestionKey;
-        mapContext.onMapStable((cartoMap) => {
-            const zoom = Math.round(cartoMap.zoom);
-            // currentMapRotation = Math.round(bearing * 100) / 100;
-            // if (zoom < 10) {
-            //     suggestionPackage = undefined;
-            //     suggestionPackageName = undefined;
-            // }
-            if (zoom >= 8) {
-                const focusPos = cartoMap.focusPos;
-                const suggestionKey = `${focusPos.lat.toFixed(5)}${focusPos.lat.toFixed(5)}${zoom}`;
-                if (suggestionKey !== lastSuggestionKey) {
-                    lastSuggestionKey = suggestionKey;
-                    updateSuggestion(focusPos);
-                }
-            } else {
-                suggestionPackage = null;
-                suggestionPackageName = null;
-            }
-        });
-    }
-    function downloadSuggestion() {
-        if (__CARTO_PACKAGESERVICE__) {
-            if (suggestionPackage) {
-                packageService.packageManager.startPackageDownload(suggestionPackage.id);
-            }
-            showSnack({ message: `${l('downloading')}  ${suggestionPackageName}` });
-        }
-    }
-    async function customDownloadSuggestion() {
-        if (__CARTO_PACKAGESERVICE__) {
-            if (!suggestionPackage) {
-                return;
-            }
-            const options = [
-                { name: lc('map_package'), checked: true },
-                { name: lc('search_package'), checked: false },
-                { name: lc('routing_package'), checked: false }
-            ];
-            const componentInstanceInfo = resolveComponentElement(OptionPicker, {
-                options
-            });
-            try {
-                const nView: ViewBase = componentInstanceInfo.element.nativeView;
-                const result = await confirm({
-                    title: `${lc('download_suggestion')}: ${suggestionPackageName}`,
-                    okButtonText: l('download'),
-                    cancelButtonText: l('cancel'),
-                    view: nView
-                });
-                if (result) {
-                    if (options[0].checked) {
-                        packageService.packageManager.startPackageDownload(suggestionPackage.id);
-                    }
-                    if (options[1].checked) {
-                        packageService.geoPackageManager.startPackageDownload(suggestionPackage.id);
-                    }
-                    if (options[2].checked) {
-                        packageService.routingPackageManager.startPackageDownload(suggestionPackage.id);
-                    }
-                }
-            } catch (err) {
-                showError(err);
-            } finally {
-                componentInstanceInfo.viewInstance.$destroy(); // don't let an exception in destroy kill the promise callback
-            }
-        }
-    }
+    
     // function onNewLocation(e: any) {
     //     currentLocation = e.data;
     // }
@@ -259,41 +137,7 @@
             totalDownloadProgress = e.data;
         }
     }
-    function onPackageStatusChanged(e) {
-        if (__CARTO_PACKAGESERVICE__) {
-            const { id, status } = e.data;
-            if (suggestionPackage && id === suggestionPackage.id) {
-                suggestionPackage.status = status;
-            }
 
-            // dataItems.some((d, index) => {
-            //     if (d.id === id) {
-            //         // console.log('updating item!', id, index);
-            //         switch (e.type as PackageType) {
-            //             case 'geo':
-            //                 d.geoStatus = status;
-            //                 break;
-            //             case 'routing':
-            //                 d.routingStatus = status;
-            //                 break;
-            //             default:
-            //                 d.status = status;
-            //         }
-            //         dataItems.setItem(index, d);
-            //         // d.status = status;
-            //         return true;
-            //     }
-            //     return false;
-            // });
-        }
-    }
-
-    // setCurrentLayerStyle(style: CartoMapStyle) {
-    //     currentLayerStyle = style;
-    //     if (vectorTileDecoder instanceof CartoOnlineVectorTileLayer) {
-    //         // vectorTileDecoder.style = getStyleFromCartoMapStyle(currentLayerStyle);
-    //     }
-    // }
     function askUserLocation() {
         return userLocationModule.askUserLocation();
     }
@@ -420,28 +264,6 @@
 </script>
 
 <gridlayout id="scrollingWidgets" bind:this={gridLayout} {...$$restProps} rows="auto,*,auto" columns="60,*,70" isPassThroughParentEnabled={true} marginTop={globalMarginTop} {userInteractionEnabled}>
-    {#if packageServiceEnabled}
-        <label
-            borderRadius={6}
-            visibility={showSuggestionPackage ? 'visible' : 'collapsed'}
-            col={1}
-            row={2}
-            backgroundColor="#00000055"
-            verticalAlignment="bottom"
-            verticalTextAlignment="middle"
-            horizontalAlignment="center"
-            textWrap={true}
-            marginBottom={30}
-            fontSize={10}
-            padding="4 2 4 4"
-            on:longPress={customDownloadSuggestion}
-            on:tap={downloadSuggestion}
-            color="white"
-            html={`<big
-            ><big><font face="${mdiFontFamily}">mdi-download</font></big></big
-        >${suggestionPackageName}`}
-        />
-    {/if}
     <stacklayout col={2} row={2} verticalAlignment="bottom" padding={2}>
         <mdbutton
             transition:scale={{ duration: 200 }}

@@ -84,8 +84,6 @@
     let selectedId: string;
     let selectedPosMarker: Point<LatLonKeys>;
     let selectedItem = watcher<IItem>(null, onSelectedItemChanged);
-    let packageServiceEnabled = __CARTO_PACKAGESERVICE__;
-    let licenseRegistered: boolean = false;
     let currentLayer: VectorTileLayer;
     let currentLayerStyle: string;
     let localVectorDataSource: LocalVectorDataSource;
@@ -491,10 +489,7 @@
             cartoMap.setZoom(zoom, 0);
             cartoMap.setBearing(bearing, 0);
             try {
-                await perms.request('storage');
-                if (__CARTO_PACKAGESERVICE__) {
-                    packageService.start();
-                }
+                packageService.start();
                 transitService.start();
                 setMapStyle(appSettings.getString('mapStyle', PRODUCTION ? 'osm.zip~osm' : 'osm~osm'), true);
                 // setMapStyle('osm.zip~osm', true);
@@ -1127,40 +1122,7 @@
         }
     }
 
-    function setCurrentLayer(id: string) {
-        if (__CARTO_PACKAGESERVICE__) {
-            TEST_LOG && console.log('setCurrentLayer', id, $preloading);
-            // const cartoMap = cartoMap;
-            if (currentLayer) {
-                removeLayer(currentLayer, 'map');
-                currentLayer.setVectorTileEventListener(null);
-                currentLayer = null;
-            }
-            currentLayerStyle = id;
-            const decoder = getVectorTileDecoder();
-
-            currentLayer = new VectorTileLayer({
-                preloading: $preloading,
-                labelRenderOrder: VectorTileRenderOrder.LAST,
-                dataSource: packageService.getDataSource($showContourLines),
-                decoder
-            });
-            handleNewLanguage(currentLanguage);
-            currentLayer.setVectorTileEventListener<LatLonKeys>(
-                {
-                    onVectorTileClicked: (data) => onVectorTileClicked(data)
-                },
-                projection,
-                akylas.alpi.maps.VectorTileEventListener
-            );
-            try {
-                addLayer(currentLayer, 'map');
-            } catch (err) {
-                showError(err);
-                vectorTileDecoder = null;
-            }
-        }
-    }
+    
     function handleNewLanguage(newLang) {
         currentLanguage = newLang;
         packageService.currentLanguage = newLang;
@@ -1170,7 +1132,7 @@
     onLanguageChanged(handleNewLanguage);
 
     function getVectorTileDecoder() {
-        return vectorTileDecoder || packageService.getVectorTileDecoder();
+        return vectorTileDecoder || packageService.vectorTileDecoder;
     }
 
     function getCurrentLayer() {
@@ -1213,9 +1175,6 @@
                 }
             }
             handleNewLanguage(currentLanguage);
-            if (__CARTO_PACKAGESERVICE__) {
-                setCurrentLayer(currentLayerStyle);
-            }
         }
     }
 
@@ -1248,11 +1207,6 @@
         });
     }
 
-    async function downloadPackages() {
-        // const PackagesDownloadComponent = (await import('./PackagesDownloadComponent.svelte'))['default'];
-        // const { PackagesDownloadComponent: component } = await import("~/components/PackagesDownloadComponent.svelte");
-        // showBottomSheet({ parent: page, view: PackagesDownloadComponent });
-    }
     function removeLayer(layer: Layer<any, any>, layerId: LayerType) {
         // const realLayerId = offset ? layerId + offset : layerId;
         const index = addedLayers.findIndex((d) => d.layer === layer);
@@ -1590,13 +1544,6 @@
                 });
             }
 
-            if (packageServiceEnabled) {
-                options.unshift({
-                    title: lc('offline_packages'),
-                    id: 'offline_packages',
-                    icon: 'mdi-earth'
-                });
-            }
             const MapOptions = (await import('~/components/MapOptions.svelte')).default;
             const result = (await showBottomSheet({
                 parent: page,
@@ -1618,9 +1565,6 @@
                         break;
                     case 'keep_awake':
                         switchKeepAwake();
-                        break;
-                    case 'offline_packages':
-                        downloadPackages();
                         break;
                     case 'dark_mode':
                         toggleTheme(true);
@@ -1701,13 +1645,12 @@
                 onTap: switchLocationInfo
             }
         ];
-        if (packageServiceEnabled) {
-            newButtons.push({
-                text: 'mdi-map-clock',
-                isSelected: $preloading,
-                onTap: () => preloading.set(!$preloading)
-            });
-        }
+        // newButtons.push({
+        //     text: 'mdi-map-clock',
+        //     isSelected: $preloading,
+        //     onTap: () => preloading.set(!$preloading)
+        // });
+
         newButtons.push(
             {
                 text: keepScreenAwake ? 'mdi-sleep' : 'mdi-sleep-off',
@@ -1762,19 +1705,7 @@
                 useTextureView={false}
                 on:layoutChanged={reportFullyDrawn}
             />
-            <!-- <stacklayout horizontalAlignment="left" verticalAlignment="middle" id="mapButtons" backgroundColor="#ff000088">
-                <IconButton gray={true} text="mdi-bullseye" isSelected={$showContourLines} on:tap={() => showContourLines.set(!$showContourLines)} />
-                <IconButton gray={true} text="mdi-signal" isSelected={$showSlopePercentages} on:tap={() => showSlopePercentages.set(!$showSlopePercentages)} />
-                <IconButton gray={true} text="mdi-routes" isSelected={$showRoutes} on:tap={() => showRoutes.set(!$showRoutes)} />
-                <IconButton gray={true} text="mdi-speedometer" on:tap={switchLocationInfo} />
-                {#if packageServiceEnabled}
-                    <IconButton gray={true} text="mdi-map-clock" isSelected={$preloading} on:tap={() => preloading.set(!$preloading)} />
-                {/if}
-                <IconButton gray={true} text={keepScreenAwake ? 'mdi-sleep' : 'mdi-sleep-off'} selectedColor={'red'} isSelected={keepScreenAwake} on:tap={switchKeepAwake} />
-                <IconButton gray={true} text="mdi-cellphone-lock" isSelected={showOnLockscreen} on:tap={switchShowOnLockscreen} />
-                <IconButton gray={true} text="mdi-bus-marker" isSelected={showTransitLines} on:tap={() => (showTransitLines = !showTransitLines)} onLongPress={showTransitLinesPage} />
-            </stacklayout> -->
-            <ButtonBar gray={true} horizontalAlignment="left" verticalAlignment="middle" id="mapButtonsNew" buttons={sideButtons}/>
+            <ButtonBar gray={true} horizontalAlignment="left" verticalAlignment="middle" id="mapButtonsNew" buttons={sideButtons} />
 
             <Search bind:this={searchView} verticalAlignment="top" defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
             <LocationInfoPanel
