@@ -5,6 +5,7 @@ import * as appSettings from '@nativescript/core/application-settings';
 import { knownFolders, path } from '@nativescript/core/file-system';
 import { lc } from '~/helpers/locale';
 import { pickFolder } from '@nativescript-community/ui-document-picker';
+import { PermsTraceCategory, request } from '@nativescript-community/perms';
 
 let savedMBTilesDir = appSettings.getString('local_mbtiles_directory');
 
@@ -93,39 +94,39 @@ function getTreeUri(context, uri) {
 }
 
 export function listFolder(folderPath: string): (Partial<FileSystemEntity> & { isFolder: boolean })[] {
-    if (ANDROID_30) {
-        const uri = android.net.Uri.parse(folderPath);
-        const context: android.app.Activity = androidApp.foregroundActivity || androidApp.startActivity;
-        const result = [];
-        const treeDocumentUri = getTreeUri(context, uri);
-        const childrenUri = android.provider.DocumentsContract.buildChildDocumentsUriUsingTree(treeDocumentUri, android.provider.DocumentsContract.getTreeDocumentId(treeDocumentUri));
-        const cursor = context.getContentResolver().query(childrenUri, null, null, null, null);
+    // if (ANDROID_30) {
+    //     const uri = android.net.Uri.parse(folderPath);
+    //     const context: android.app.Activity = androidApp.foregroundActivity || androidApp.startActivity;
+    //     const result = [];
+    //     const treeDocumentUri = getTreeUri(context, uri);
+    //     const childrenUri = android.provider.DocumentsContract.buildChildDocumentsUriUsingTree(treeDocumentUri, android.provider.DocumentsContract.getTreeDocumentId(treeDocumentUri));
+    //     const cursor = context.getContentResolver().query(childrenUri, null, null, null, null);
 
-        const idIndex = cursor.getColumnIndex(android.provider.DocumentsContract.Document.COLUMN_DOCUMENT_ID);
-        const nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
-        const mimeIndex = cursor.getColumnIndex('mime_type');
-        while (cursor?.moveToNext()) {
-            const name = cursor.getString(nameIndex);
-            const mimeType = cursor.getString(mimeIndex);
-            // const childUri = android.provider.DocumentsContract.buildChildDocumentsUriUsingTree(uri, docId);
-            // console.log('childUri', name, docId, childUri);
+    //     const idIndex = cursor.getColumnIndex(android.provider.DocumentsContract.Document.COLUMN_DOCUMENT_ID);
+    //     const nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
+    //     const mimeIndex = cursor.getColumnIndex('mime_type');
+    //     while (cursor?.moveToNext()) {
+    //         const name = cursor.getString(nameIndex);
+    //         const mimeType = cursor.getString(mimeIndex);
+    //         // const childUri = android.provider.DocumentsContract.buildChildDocumentsUriUsingTree(uri, docId);
+    //         // console.log('childUri', name, docId, childUri);
 
-            const documentUri = android.provider.DocumentsContract.buildDocumentUriUsingTree(treeDocumentUri, cursor.getString(idIndex));
-            result.push({
-                name,
-                mimeType,
-                isFolder: mimeType === 'vnd.android.document/directory', //android.provider.DocumentsContract.Document.MIME_TYPE_DIR
-                path: getTreeUri(context, documentUri).toString()
-            } as any);
-        }
-        return result;
-    } else {
-        const docFolder = Folder.fromPath(folderPath);
-        return docFolder.getEntitiesSync().map((f) => {
-            f['isFolder'] = Folder.exists(f.path);
-            return f as any;
-        });
-    }
+    //         const documentUri = android.provider.DocumentsContract.buildDocumentUriUsingTree(treeDocumentUri, cursor.getString(idIndex));
+    //         result.push({
+    //             name,
+    //             mimeType,
+    //             isFolder: mimeType === 'vnd.android.document/directory', //android.provider.DocumentsContract.Document.MIME_TYPE_DIR
+    //             path: getTreeUri(context, documentUri).toString()
+    //         } as any);
+    //     }
+    //     return result;
+    // } else {
+    const docFolder = Folder.fromPath(folderPath);
+    return docFolder.getEntitiesSync().map((f) => {
+        f['isFolder'] = Folder.exists(f.path);
+        return f as any;
+    });
+    // }
 }
 export function getSavedMBTilesDir() {
     return savedMBTilesDir;
@@ -182,37 +183,63 @@ export function getFileNameThatICanUseInNativeCode(context: android.app.Activity
     //     return null;
     // }
 }
+
+function permResultCheck(r) {
+    if (Array.isArray(r)) {
+        return r[0] === 'authorized';
+    } else {
+        const unauthorized = Object.keys(r).some((s) => r[s] !== 'authorized');
+        return !unauthorized;
+    }
+}
+
+export function checkManagePermission() {
+    if (__ANDROID__) {
+        return !ANDROID_30 || android.os.Environment.isExternalStorageManager();
+    }
+    return true;
+}
+export async function askForManagePermission() {
+    DEV_LOG && console.log('askForManagePermission');
+
+    if (__ANDROID__) {
+        const activity = Application.android.startActivity as androidx.appcompat.app.AppCompatActivity;
+        if (checkManagePermission()) {
+            return true;
+        }
+        //If the draw over permission is not available open the settings screen
+        //to grant the permission.
+        return new Promise<boolean>((resolve, reject) => {
+            const REQUEST_CODE = 6646;
+            const onActivityResultHandler = (data: app.AndroidActivityResultEventData) => {
+                if (data.requestCode === REQUEST_CODE) {
+                    Application.android.off(app.AndroidApplication.activityResultEvent, onActivityResultHandler);
+                    resolve(android.provider.Settings.canDrawOverlays(activity));
+                }
+            };
+            Application.android.on(app.AndroidApplication.activityResultEvent, onActivityResultHandler);
+            const intent = new android.content.Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, android.net.Uri.parse('package:' + __APP_ID__));
+            activity.startActivityForResult(intent, REQUEST_CODE);
+        });
+    }
+    return true;
+}
 export async function getDefaultMBTilesDir() {
     let localMbtilesSource = savedMBTilesDir;
-    if (__ANDROID__ && localMbtilesSource && ANDROID_30) {
-        const context: android.app.Activity = androidApp.foregroundActivity || androidApp.startActivity;
-        const granted = context.getContentResolver().getPersistedUriPermissions();
-        let found = false;
-        for (let index = 0; index < granted.size(); index++) {
-            if (localMbtilesSource === granted.get(index).getUri().toString()) {
-                // localMbtilesSource = getFileNameThatICanUseInNativeCode(context, granted.get(index).getUri());
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            localMbtilesSource = savedMBTilesDir = null;
-            appSettings.remove('local_mbtiles_directory');
+    const result = await request('storage');
+
+    if (!permResultCheck(result)) {
+        throw new Error('missing_storage_permission');
+    }
+
+    if (ANDROID_30) {
+        await askForManagePermission();
+        if (!checkManagePermission()) {
+            throw new Error('missing_manage_permission');
         }
     }
     if (!localMbtilesSource) {
-        let resultPath;
-        if (ANDROID_30) {
-            const result = await pickFolder({
-                permissions: {
-                    read: true,
-                    persistable: true
-                }
-            });
-            resultPath = result.folders[0];
-        } else {
-            resultPath = path.normalize(path.join(knownFolders.externalDocuments().path, '../../../../alpimaps_mbtiles'));
-        }
+        const resultPath = path.normalize(path.join(knownFolders.externalDocuments().path, '../../../../alpimaps_mbtiles'));
         if (resultPath) {
             localMbtilesSource = resultPath;
             savedMBTilesDir = localMbtilesSource;
