@@ -1,6 +1,6 @@
+import { Utils } from '@nativescript/core';
 import { InAppBrowser } from '@akylas/nativescript-inappbrowser';
 import { primaryColor } from '~/variables';
-import { openUrl } from '@nativescript/core/utils/utils';
 
 export async function openLink(url) {
     try {
@@ -24,7 +24,7 @@ export async function openLink(url) {
             });
             return result;
         } else {
-            openUrl(url);
+            Utils.openUrl(url);
         }
     } catch (error) {
         alert({
