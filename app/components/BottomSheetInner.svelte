@@ -172,7 +172,7 @@
             itemIsRoute = !!item?.route;
             itemIsBusStop = item && !itemIsRoute && (item.properties?.class === 'bus' || item.properties?.subclass === 'tram_stop');
             itemCanQueryProfile = itemIsRoute && !!item?.id;
-            itemCanQueryStats = itemIsRoute;
+            itemCanQueryStats = itemIsRoute && !!item?.id;
             updateGraphAvailable();
             updateStatsAvailable();
             if (graphAvailable) {
@@ -1089,8 +1089,8 @@
             {#if packageService.hasElevation()}
                 <IconButton on:tap={() => getProfile()} tooltip={lc('elevation_profile')} isVisible={itemIsRoute && itemCanQueryProfile} text="mdi-chart-areaspline" rounded={false} />
             {/if}
-            <IconButton on:tap={() => getProfile()} tooltip={lc('road_stats')} isVisible={itemIsRoute && itemCanQueryStats} text="mdi-chart-bar-stacked" rounded={false} />
-            <IconButton on:tap={() => getStats()} tooltip={lc('save')} isVisible={item && !item.id} text="mdi-map-plus" rounded={false} />
+            <IconButton on:tap={() => getStats()} tooltip={lc('road_stats')} isVisible={itemIsRoute && itemCanQueryStats} text="mdi-chart-bar-stacked" rounded={false} />
+            <IconButton on:tap={() => saveItem()} tooltip={lc('save')} isVisible={item && !item.id} text="mdi-map-plus" rounded={false} />
             <!-- <IconButton on:tap={shareItem} tooltip={lc('share')} isVisible={itemIsRoute} text="mdi-share-variant" rounded={false} /> -->
             {#if item && item.properties && !!item.properties.wikipedia}
                 <IconButton on:tap={openWikipedia} tooltip={lc('wikipedia')} text="mdi-wikipedia" rounded={false} />
