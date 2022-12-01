@@ -1,8 +1,7 @@
+import { layout } from '@nativescript/core/utils/layout-helper';
 import { Align, Canvas, Direction, Paint, Path, Style } from '@nativescript-community/ui-canvas';
 import Shape, { colorProperty, lengthProperty, stringProperty } from '@nativescript-community/ui-canvas/shapes/shape';
-import { Color } from '@nativescript/core';
-import { Length, PercentLength, zeroLength } from '@nativescript/core/ui/styling/style-properties';
-import { layout } from '@nativescript/core/utils/utils';
+import { Color, CoreTypes, Length, PercentLength } from '@nativescript/core';
 import { osmicon } from '~/helpers/formatter';
 
 const specialShapes = ['shell_modern', 'triangle_turned', 'triangle_line', 'rectangle_line', 'red_diamond', 'drop_line', 'diamond_line', 'urned_T', 'white_foot'];
@@ -20,8 +19,8 @@ const path = new Path();
 export default class SymbolShape extends Shape {
     @stringProperty symbol: string;
     @colorProperty({ nonPaintProp: true }) color: Color;
-    @lengthProperty left = zeroLength;
-    @lengthProperty top = zeroLength;
+    @lengthProperty left = CoreTypes.zeroLength;
+    @lengthProperty top = CoreTypes.zeroLength;
     drawOnCanvas(canvas: Canvas) {
         const availableWidth = layout.toDevicePixels(canvas.getWidth());
         const availableHeight = layout.toDevicePixels(canvas.getHeight());
