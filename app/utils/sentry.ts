@@ -1,5 +1,4 @@
 import * as SentryType from '@nativescript-community/sentry';
-import { Device } from '@nativescript/core/platform';
 import { install } from '~/utils/logging';
 
 export let Sentry: typeof SentryType;

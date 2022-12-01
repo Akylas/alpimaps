@@ -3,8 +3,7 @@
     import { pickFolder } from '@nativescript-community/ui-document-picker';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { ApplicationSettings, ObservableArray } from '@nativescript/core';
-    import { dismissSoftInput, openUrl } from '@nativescript/core/utils/utils';
+    import { ApplicationSettings, ObservableArray, Utils } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
@@ -165,7 +164,7 @@
                     });
                     break;
                 case 'review':
-                    openUrl(STORE_REVIEW_LINK);
+                    Utils.openUrl(STORE_REVIEW_LINK);
                     break;
                 case 'third_party':
                     const ThirdPartySoftwareBottomSheet = (await import('~/components/ThirdPartySoftwareBottomSheet.svelte')).default;
@@ -200,7 +199,7 @@
                             autoFocus: true,
                             defaultText: ApplicationSettings.getNumber(item.key, item.default) + ''
                         });
-                        dismissSoftInput();
+                        Utils.dismissSoftInput();
                         if (result && !!result.result && result.text.length > 0) {
                             if (item.valueType === 'string') {
                                 ApplicationSettings.setString(item.key, result.text);
@@ -235,7 +234,7 @@
                         autoFocus: true,
                         defaultText: item.value
                     });
-                    dismissSoftInput();
+                    Utils.dismissSoftInput();
                     if (result && !!result.result && result.text.length > 0) {
                         customLayers.saveToken(item.token, result.text);
                         item.value = result.text;
