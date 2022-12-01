@@ -1,4 +1,4 @@
-import * as utils from '@nativescript/core/utils/utils';
+import { Utils } from '@nativescript/core';
 import { BgService as AndroidBgService } from '~/services/android/BgService';
 import { BgServiceBinder, IBgServiceBinder } from '~/services/android/BgServiceBinder';
 import { BgServiceCommon, BgServiceLoadedEvent } from '~/services/BgService.common';
@@ -23,7 +23,7 @@ export class BgService extends BgServiceCommon {
             onNullBinding(param0: globalAndroid.content.ComponentName) {},
             onBindingDied(param0: globalAndroid.content.ComponentName) {}
         });
-        this.context = utils.ad.getApplicationContext();
+        this.context = Utils.android.getApplicationContext();
     }
 
     bindService(context: android.content.Context, intent) {

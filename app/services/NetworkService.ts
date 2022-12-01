@@ -1,12 +1,10 @@
 import * as https from '@nativescript-community/https';
 import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
 import * as appavailability from '@nativescript/appavailability';
-import { ApplicationEventData, EventData, Folder, Observable, knownFolders } from '@nativescript/core';
+import { ApplicationEventData, EventData, Folder, Observable, Utils } from '@nativescript/core';
 import { off as applicationOff, on as applicationOn, foregroundEvent } from '@nativescript/core/application';
 import * as connectivity from '@nativescript/core/connectivity';
 import { Headers } from '@nativescript/core/http';
-import { ad } from '@nativescript/core/utils/utils';
-import extend from 'just-extend';
 import { BaseError } from 'make-error';
 import { getBounds, getPathLength } from '~/helpers/geolib';
 import { l } from '~/helpers/locale';
@@ -982,7 +980,7 @@ export class NetworkService extends Observable {
             intent.putExtra('lon', lon);
             intent.putExtra('package', 'akylas.alpi.maps');
             intent.setPackage('com.akylas.weather');
-            const context: android.content.Context = ad.getApplicationContext();
+            const context: android.content.Context = Utils.android.getApplicationContext();
 
             context.sendBroadcast(intent);
         });
