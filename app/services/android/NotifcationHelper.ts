@@ -1,6 +1,5 @@
 import { Session, SessionState } from '~/handlers/GeoHandler';
 import { lc, lt } from '~/helpers/locale';
-import { ad } from '@nativescript/core/utils/utils';
 
 export const ACTION_START = 'akylas.alpi.maps.action.START';
 export const ACTION_STOP = 'akylas.alpi.maps.action.STOP';
@@ -12,6 +11,7 @@ export const NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL = 'alpimaps_keepawake';
 
 import { primaryColor } from '~/variables';
 import { sdkVersion } from '~/utils/utils';
+import { Utils } from '@nativescript/core';
 
 export namespace NotificationHelper {
     const NotificationManager = __ANDROID__ ? android.app.NotificationManager : null;
@@ -34,7 +34,7 @@ export namespace NotificationHelper {
         builder.setOnlyAlertOnce(true);
         builder.setPriority(NotificationCompat.PRIORITY_MIN);
         builder.setContentIntent(tapActionPendingIntent);
-        builder.setSmallIcon(ad.resources.getDrawableId('ic_stat_logo'));
+        builder.setSmallIcon(Utils.android.resources.getDrawableId('ic_stat_logo'));
         builder.setContentTitle(options.title || null);
         return builder;
     }
@@ -85,7 +85,7 @@ export namespace NotificationHelper {
     let notificationManager: android.app.NotificationManager;
     function getNotificationManager() {
         if (!notificationManager) {
-            const context: android.content.Context = ad.getApplicationContext();
+            const context: android.content.Context = Utils.android.getApplicationContext();
             notificationManager = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE);
         }
         return notificationManager;
