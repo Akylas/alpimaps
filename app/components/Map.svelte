@@ -25,7 +25,6 @@
     import type { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Screen } from '@nativescript/core/platform';
-    import { ad } from '@nativescript/core/utils/utils';
     import type { Point as GeoJSONPoint } from 'geojson';
     import { debounce } from 'push-it-to-the-limit/target/es6';
     import { onDestroy, onMount } from 'svelte';
@@ -1387,7 +1386,7 @@
 
     function showKeepAwakeNotification() {
         if (__ANDROID__) {
-            const context: android.content.Context = ad.getApplicationContext();
+            const context: android.content.Context = Utils.android.getApplicationContext();
             const builder = NotificationHelper.getNotification(context, {
                 title: lt('screen_awake_notification'),
                 channel: NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL
