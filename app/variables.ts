@@ -1,6 +1,5 @@
 import { isSimulator } from '@nativescript-community/extendedinfo';
 import { Application, Color, Observable, Screen, Utils } from '@nativescript/core';
-import { ad } from '@nativescript/core/utils/utils';
 import { writable } from 'svelte/store';
 import CSSModule from '~/variables.module.scss';
 import { currentTheme } from './helpers/theme';
@@ -73,7 +72,7 @@ export const navigationBarHeight = writable(parseFloat(locals.navigationBarHeigh
 export let globalMarginTop = 0;
 
 if (__ANDROID__) {
-    const resources = (ad.getApplicationContext() as android.content.Context).getResources();
+    const resources = (Utils.android.getApplicationContext() as android.content.Context).getResources();
     const id = resources.getIdentifier('config_showNavigationBar', 'bool', 'android');
     const resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
     // wont work on emulator though!
