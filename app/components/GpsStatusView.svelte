@@ -3,24 +3,14 @@
     import { primaryColor, textColor } from '~/variables';
 
     const density = Utils.layout.getDisplayDensity();
-    const snrScale = 0.1 * density;
-    const gridStrokeWidth = Math.max(0.5, density);
+    const snrScale = 0.2;
+    const gridStrokeWidth = 2;
 
     const activePaint = new Paint();
     activePaint.setStyle(Style.FILL);
 
     const inactivePaint = new Paint();
     inactivePaint.setStyle(Style.FILL);
-
-    const gridPaint = new Paint();
-    gridPaint.setStyle(Style.STROKE);
-    // gridPaint.setStrokeWidth(gridStrokeWidth);
-    const gridPaintStrong = new Paint(gridPaint);
-    gridPaintStrong.setStrokeWidth(gridStrokeWidth);
-    // gridPaintStrong.setColor(Color.parseColor('#FFFFFFFF'));
-
-    const gridBorderPaint = new Paint();
-    gridBorderPaint.setStyle(Style.STROKE);
 
     const northPaint = new Paint();
     northPaint.setStyle(Style.FILL);
@@ -29,8 +19,20 @@
     labelPaint.setStyle(Style.FILL);
     labelPaint.setTextAlign(Align.CENTER);
 
+    const gridPaint = new Paint();
+    gridPaint.setStyle(Style.STROKE);
+    const gridPaintStrong = new Paint(gridPaint);
+    gridPaintStrong.setStrokeWidth(gridStrokeWidth);
+
     const fontMetrics = labelPaint.getFontMetrics();
     const MAX_NMEA_ID = 336;
+
+    gridPaint.setColor('#888');
+    gridPaintStrong.setColor('#888');
+    activePaint.setColor(primaryColor);
+    inactivePaint.setColor('#F44336');
+    northPaint.setColor('#F44336');
+    labelPaint.setColor(get(textColor));
 
     /*
      * Get the total height of the text. Note that this is not the same as getTextSize/setTextSize.
@@ -46,10 +48,6 @@
     const preferredHeight = ((2 * labelPaint.getTextSize() + 18) * textHeight) / labelPaint.getTextSize();
 
     const northArrow = new Path();
-    const labelPathN = new Path();
-    const labelPathE = new Path();
-    const labelPathS = new Path();
-    const labelPathW = new Path();
 </script>
 
 <script lang="ts">
@@ -61,6 +59,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { watchingLocation } from '~/stores/mapStore';
     import { TO_RAD } from '~/utils/geo';
+    import CompassDialView from './CompassDialView.svelte';
 
     export let height: number = 350;
     let canvas: NativeViewElementNode<CanvasView>;
@@ -81,7 +80,7 @@
     let mSats;
     function onSatsChange(sats) {
         mSats = sats;
-        if (canvas.nativeView) {
+        if (canvas?.nativeView) {
             canvas.nativeView.invalidate();
             canvas2.nativeView.invalidate();
         }
@@ -111,38 +110,13 @@
         }
     });
 
-    function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
+    function onCanvasDraw({ canvas, object, delta, center, radius }: { canvas: Canvas; object: CanvasView; delta: number; radius: number; center: { x: number; y: number } }) {
         try {
-            let mW = canvas.getWidth();
-            let mH = canvas.getHeight();
-            const width = Math.min(mW, mH);
-            const cx = mW / 2;
-            const cy = mH / 2;
-
-            canvas.translate(cx, cy);
-            // canvas.rotate(-mRotation);
-
-            canvas.drawCircle(0, 0, width * 0.37125, gridBorderPaint);
-
-            canvas.drawLine(-width * 0.405, 0, width * 0.405, 0, gridPaintStrong);
-            canvas.drawLine(0, -width * 0.405, 0, width * 0.405, gridPaintStrong);
-
-            canvas.drawCircle(0, 0, width * 0.405, gridPaintStrong);
-            canvas.drawCircle(0, 0, width * 0.27, gridPaintStrong);
-            canvas.drawCircle(0, 0, width * 0.135, gridPaintStrong);
-
+            canvas.translate(center.x, center.y);
             canvas.drawPath(northArrow, northPaint);
-
-            const descent = fontMetrics.descent;
-
-            canvas.drawTextOnPath('N', labelPathN, -descent, 4, labelPaint);
-            canvas.drawTextOnPath('S', labelPathS, -descent, 4, labelPaint);
-            canvas.drawTextOnPath('E', labelPathE, -descent, 4, labelPaint);
-            canvas.drawTextOnPath('W', labelPathW, -descent, 4, labelPaint);
             if (mSats) {
                 for (let index = 0; index < mSats.length; index++) {
-                    const sat = mSats[index];
-                    drawSat(canvas, width, sat);
+                    drawSat(canvas, radius, mSats[index]);
                 }
             }
         } catch (error) {
@@ -150,10 +124,10 @@
         }
     }
 
-    function drawSat(canvas, mW, sat) {
-        const r = ((90 - sat.elevation) * mW * 0.9) / 200;
-        const x = r * Math.sin((sat.azimuth * TO_RAD));
-        const y = -(r * Math.cos((sat.azimuth * TO_RAD)));
+    function drawSat(canvas, radius, sat) {
+        const r = ((90 - sat.elevation) / 90) * radius;
+        const x = r * Math.sin(sat.azimuth * TO_RAD);
+        const y = -(r * Math.cos(sat.azimuth * TO_RAD));
 
         canvas.drawCircle(x, y, sat.snr * snrScale, sat.usedInFix ? activePaint : inactivePaint);
     }
@@ -161,21 +135,6 @@
     function refreshGeometries(e) {
         const mW = Utils.layout.toDeviceIndependentPixels(e.object.getMeasuredWidth());
         const mH = Utils.layout.toDeviceIndependentPixels(e.object.getMeasuredHeight());
-
-        const width = Math.min(mW, mH)
-
-        const txtColor = $textColor;
-        let mRotation = 0;
-        gridBorderPaint.setStrokeWidth(mW * 0.0625);
-
-        activePaint.setColor(primaryColor); // Teal 200
-        inactivePaint.setColor('#F44336'); // Red 500
-        gridPaintStrong.setColor(txtColor); // Orange 500
-        gridPaint.setColor(new Color(txtColor).setAlpha(100)); // Orange 500
-        gridBorderPaint.setColor(new Color(txtColor).setAlpha(100)); // Orange 500 @ 30%
-        northPaint.setColor('#F44336'); // Red 500
-        labelPaint.setColor(new Color(txtColor).setAlpha(100)); // Orange 500
-
         const arrowWidth = 2 * density;
 
         northArrow.reset();
@@ -185,27 +144,6 @@
         northArrow.close();
 
         labelPaint.setTextSize(mH * 0.045);
-
-        const offsetX = width * 0.0275 * Math.cos(TO_RAD * (mRotation + 90));
-        const offsetY = width * 0.0275 * Math.sin(TO_RAD * (mRotation + 90));
-        const relX = width * Math.cos(TO_RAD * mRotation);
-        const relY = width * Math.sin(TO_RAD * mRotation);
-
-        labelPathN.reset();
-        labelPathN.moveTo(offsetX - relX, -width * 0.4275 + offsetY - relY);
-        labelPathN.rLineTo(2 * relX, 2 * relY);
-
-        labelPathE.reset();
-        labelPathE.moveTo(width * 0.4275 + offsetX - relX, offsetY - relY);
-        labelPathE.rLineTo(2 * relX, 2 * relY);
-
-        labelPathS.reset();
-        labelPathS.moveTo(offsetX - relX, width * 0.4275 + offsetY - relY);
-        labelPathS.rLineTo(2 * relX, 2 * relY);
-
-        labelPathW.reset();
-        labelPathW.moveTo(-width * 0.4275 + offsetX - relX, offsetY - relY);
-        labelPathW.rLineTo(2 * relX, 2 * relY);
     }
 
     /**
@@ -318,7 +256,7 @@
      * @param snr The signal-to-noise ratio (SNR) for the satellite.
      * @param used Whether the satellite is used in the fix.
      */
-    function drawSat2(canvas: Canvas, w, h, { nmeaID, snr, usedInFix }) {
+    function drawSatHorizontal(canvas: Canvas, w, h, { nmeaID, snr, usedInFix }) {
         const i = getGridPos(nmeaID);
 
         const x0 = ((i - 1) * (w - gridStrokeWidth)) / getNumBars() + gridStrokeWidth / 2;
@@ -499,7 +437,7 @@
      * {@link #showSats(Iterable)} has been called to indicate new SNR data is
      * available.
      */
-    function onCanvas2Draw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
+    function onCanvasHorizontalDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
         try {
             let mW = canvas.getWidth();
             let mH = canvas.getHeight();
@@ -509,7 +447,7 @@
             if (mSats) {
                 for (let index = 0; index < mSats.length; index++) {
                     const sat = mSats[index];
-                    drawSat2(canvas, mW, mH, sat);
+                    drawSatHorizontal(canvas, mW, mH, sat);
                 }
             }
 
@@ -522,6 +460,6 @@
 </script>
 
 <gridLayout {height} rows="*,auto">
-    <canvas bind:this={canvas} on:draw={onCanvasDraw} on:layoutChanged={refreshGeometries} />
-    <canvas bind:this={canvas2} on:draw={onCanvas2Draw} height={preferredHeight} row={1} />
+    <CompassDialView drawInsideGrid={true} bind:canvas onDraw={onCanvasDraw} on:layoutChanged={refreshGeometries} />
+    <canvas bind:this={canvas2} on:draw={onCanvasHorizontalDraw} height={preferredHeight} row={1} backgroundColor="#171717" />
 </gridLayout>
