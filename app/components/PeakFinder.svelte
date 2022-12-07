@@ -532,7 +532,7 @@
     let currentHeight = 0;
     let sliderHeight = 0;
     function onLayoutChanged(event) {
-        currentHeight = layout.toDeviceIndependentPixels(event.object.getMeasuredHeight());
+        currentHeight = Utils.layout.toDeviceIndependentPixels(event.object.getMeasuredHeight());
         sliderHeight = 0.7 * currentHeight;
     }
     function createCustomWebViewClient(webview: AWebView, webClientClass) {
