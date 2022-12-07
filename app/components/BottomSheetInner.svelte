@@ -726,11 +726,13 @@
             const selected = mapContext.getSelectedItem();
             let location: any = currentLocation;
             let aimingItems: any = selected ? [selected] : [];
+            let updateWithUserLocation = true;
             if (itemIsRoute && !item.id) {
-                const points = mapContext.mapModules.directionsPanel.getFeatures().filter(s=>s.geometry.type === 'Point');
-                location = {lat:(points[0].geometry as Point).coordinates[1],lon:(points[0].geometry as Point).coordinates[0]} ;
+                updateWithUserLocation = false;
+                const points = mapContext.mapModules.directionsPanel.getFeatures().filter((s) => s.geometry.type === 'Point');
+                location = { lat: (points[0].geometry as Point).coordinates[1], lon: (points[0].geometry as Point).coordinates[0] };
                 aimingItems = points.slice(1);
-                console.log('points', points.length, aimingItems.length)
+                console.log('points', points.length, aimingItems.length);
             }
             const CompassView = (await import('~/components/CompassView.svelte')).default;
             await showBottomSheet({
@@ -739,6 +741,7 @@
                 transparent: true,
                 props: {
                     location,
+                    updateWithUserLocation,
                     aimingItems
                 }
             });
