@@ -1,4 +1,4 @@
-import { layout } from '@nativescript/core/utils/layout-helper';
+import { Utils } from '@nativescript/core';
 import { Align, Canvas, Direction, Paint, Path, Style } from '@nativescript-community/ui-canvas';
 import Shape, { colorProperty, lengthProperty, stringProperty } from '@nativescript-community/ui-canvas/shapes/shape';
 import { Color, CoreTypes, Length, PercentLength } from '@nativescript/core';
@@ -24,10 +24,10 @@ export default class SymbolShape extends Shape {
     drawOnCanvas(canvas: Canvas) {
         const availableWidth = layout.toDevicePixels(canvas.getWidth());
         const availableHeight = layout.toDevicePixels(canvas.getHeight());
-        const width = layout.toDeviceIndependentPixels(PercentLength.toDevicePixels(this.width, 0, availableWidth));
-        const height = layout.toDeviceIndependentPixels(PercentLength.toDevicePixels(this.height, 0, availableHeight));
-        const left = layout.toDeviceIndependentPixels(Length.toDevicePixels(this.left));
-        const top = layout.toDeviceIndependentPixels(Length.toDevicePixels(this.top));
+        const width = Utils.layout.toDeviceIndependentPixels(PercentLength.toDevicePixels(this.width, 0, availableWidth));
+        const height = Utils.layout.toDeviceIndependentPixels(PercentLength.toDevicePixels(this.height, 0, availableHeight));
+        const left = Utils.layout.toDeviceIndependentPixels(Length.toDevicePixels(this.left));
+        const top = Utils.layout.toDeviceIndependentPixels(Length.toDevicePixels(this.top));
         const symbol = this.symbol || `blue:white:${this.color || 'blue'}_bar`;
         path.reset();
         path.addRoundRect(left, top, left + width, height + top, 3, 3, Direction.CW);
