@@ -637,8 +637,8 @@
     {#if loaded}
         <absolutelayout bind:this={collectionViewHolder} row={1} height={0} colSpan={7} isUserInteractionEnabled={searchResultsVisible}>
             <gridlayout height={200} width="100%" rows="*,auto" columns="auto,auto,*">
-                <IconButton small={true} variant="text" row={1} isVisible={searchResultsVisible} text="mdi-shape" on:tap={toggleFilterOSMKey} isSelected={filteringOSMKey} />
-                <IconButton small={true} variant="text" isVisible={searchResultsVisible} col={1} row={1} text="mdi-map" on:tap={showResultsOnMap} />
+                <IconButton small={true} row={1} isVisible={searchResultsVisible} text="mdi-shape" on:tap={toggleFilterOSMKey} isSelected={filteringOSMKey} />
+                <IconButton small={true} isVisible={searchResultsVisible} col={1} row={1} text="mdi-map" on:tap={showResultsOnMap} />
                 <collectionview colSpan={3} bind:this={collectionView} rowHeight={49} items={filteredDataItems} isUserInteractionEnabled={searchResultsVisible}>
                     <Template let:item>
                         <canvaslabel columns="34,*" padding="0 10 0 10" rows="*,auto,auto,*" disableCss={true} rippleColor={$textColor} on:tap={() => onItemTap(item)}>

@@ -168,6 +168,7 @@ export async function handleMapAction(action: string, options?) {
             await showBottomSheet({
                 parent,
                 view: AstronomyView,
+                peekHeight: 300,
                 props: {
                     location
                 }
@@ -185,6 +186,7 @@ export async function handleMapAction(action: string, options?) {
                     transparent: true,
                     props: {
                         location,
+                        updateWithUserLocation: true,
                         aimingItems: selected ? [selected] : []
                     }
                 });
