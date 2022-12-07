@@ -269,7 +269,7 @@
     }
 
     // function peekHeight() {
-    //     return Math.round(layout.toDeviceIndependentPixels(nativeView.getMeasuredHeight()));
+    //     return Math.round(Utils.layout.toDeviceIndependentPixels(nativeView.getMeasuredHeight()));
     // }
 
     // let steps= [peekHeight];
