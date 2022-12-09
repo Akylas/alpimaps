@@ -128,11 +128,10 @@ export default class UserLocationModule extends MapModule {
         if (altitude !== null) {
             position.altitude = Math.round(altitude);
         }
-        // DEV_LOG && console.log('updateUserLocation', geoPos);
+        DEV_LOG && console.log('updateUserLocation', geoPos);
         let accuracyColor = '#0e7afe';
         const accuracy = geoPos.horizontalAccuracy || 0;
-        const deltaMinutes = dayjs(new Date()).diff(dayjs(geoPos.timestamp), 'minute', true);
-        if (deltaMinutes > 2) {
+        if (geoPos.age > 120000) {
             accuracyColor = 'gray';
         } else if (accuracy > 1000) {
             accuracyColor = 'red';
@@ -218,9 +217,9 @@ export default class UserLocationModule extends MapModule {
     }
     onLocation(event: UserLocationdEventData) {
         // const { android, ios, ...toPrint } = data.location;
-        // if (DEV_LOG) {
-        //     console.log('onLocation', this.mUserFollow, event.location, this.userFollow);
-        // }
+        if (DEV_LOG) {
+            console.log('onLocation', this.mUserFollow, event.location);
+        }
         if (event.error) {
             this.stopWatchLocation();
             showSnack({
@@ -229,7 +228,7 @@ export default class UserLocationModule extends MapModule {
             console.error(event.error);
             return;
         } else if (event.location) {
-            if (get(queryingLocation) && event.location.horizontalAccuracy <= 20) {
+            if (get(queryingLocation) && event.location.horizontalAccuracy <= 20 && event.location.age < 10000) {
                 this.stopWatchLocation();
             }
             this.updateUserLocation(event.location);
