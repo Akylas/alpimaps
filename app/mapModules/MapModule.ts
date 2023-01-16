@@ -6,7 +6,7 @@ import { VectorElementEventData, VectorTileEventData, VectorTileLayer } from '@n
 import { Projection } from '@nativescript-community/ui-carto/projections';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
-import { Drawer } from '@nativescript-community/ui-drawer';
+// import { Drawer } from '@nativescript-community/ui-drawer';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { Frame, Page } from '@nativescript/core';
 import { getRootView } from '@nativescript/core/application';
@@ -38,7 +38,7 @@ export type LayerType = 'map' | 'routes' | 'customLayers' | 'hillshade' | 'selec
 export type ContextCallback<T = CartoMap<LatLonKeys>> = (data: T) => void;
 
 export interface MapContext {
-    drawer: Drawer;
+    // drawer: Drawer;
     mapModules: MapModules;
     innerDecoder: MBVectorTileDecoder;
     showOptions();
@@ -102,7 +102,7 @@ export interface MapModules {
 }
 
 export function onNetworkChanged(callback: (theme) => void) {}
-export let drawer: Drawer;
+// export let drawer: Drawer;
 
 const mapContext: MapContext = {
     mapModules: {},
