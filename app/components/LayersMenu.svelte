@@ -4,7 +4,7 @@
     import { GridLayout } from '@nativescript/core';
     import { setNumber } from '@nativescript/core/application-settings';
     import { ObservableArray } from '@nativescript/core/data/observable-array';
-    import { debounce } from 'push-it-to-the-limit/target/es6';
+    import { debounce } from 'push-it-to-the-limit';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
