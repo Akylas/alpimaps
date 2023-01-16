@@ -6,7 +6,6 @@
     import type { SearchRequest } from '@nativescript-community/ui-carto/search';
     import { PointStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/point';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import type { Side } from '@nativescript-community/ui-drawer';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { GridLayout, Screen, TextField, View } from '@nativescript/core';
     import { getJSON } from '@nativescript/core/http';
@@ -15,7 +14,6 @@
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import type { Photon } from '~/photon';
     import { HereFeature, PhotonFeature } from '~/components/Features';
     import { formatDistance, osmicon } from '~/helpers/formatter';
     import { getMetersPerPixel } from '~/helpers/geolib';
@@ -24,6 +22,7 @@
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item } from '~/models/Item';
+    import type { Photon } from '~/photon';
     import { networkService } from '~/services/NetworkService';
     import type { GeoResult } from '~/services/PackageService';
     import { packageService } from '~/services/PackageService';
@@ -31,7 +30,7 @@
     import { computeDistanceBetween } from '~/utils/geo';
     import { queryString } from '~/utils/http';
     import { arraySortOn } from '~/utils/utils';
-    import { globalMarginTop, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
+    import { globalMarginTop, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import IconButton from './IconButton.svelte';
 
     async function animateView(view: View, to, duration) {
@@ -611,7 +610,7 @@
     backgroundColor={$widgetBackgroundColor}
     margin={`${globalMarginTop + 10} 10 10 10`}
 >
-    <IconButton gray={true} text="mdi-magnify" />
+    <label class="icon-label" text="mdi-magnify" color={$subtitleColor}/>
     <textfield
         bind:this={textField}
         variant="none"
