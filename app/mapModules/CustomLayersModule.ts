@@ -718,6 +718,7 @@ export default class CustomLayersModule extends MapModule {
             const worldTerrainMbtilesEntity = entities.find((e) => e.name.endsWith('.etiles'));
 
             const folders = entities.filter((e) => e.isFolder).sort((a, b) => b.name.localeCompare(a.name));
+            DEV_LOG && console.log('loadLocalMbtiles', folders);
             for (let i = 0; i < folders.length; i++) {
                 const f = folders[i];
                 const subentities = listFolder(f.path);
