@@ -26,7 +26,7 @@
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Screen } from '@nativescript/core/platform';
     import type { Point as GeoJSONPoint } from 'geojson';
-    import { debounce } from 'push-it-to-the-limit/target/es6';
+    import { debounce } from 'push-it-to-the-limit';
     import { onDestroy, onMount } from 'svelte';
     import { navigate } from 'svelte-native';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -66,7 +66,7 @@
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
-    const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'routes', 'transit', 'hillshade', 'selection', 'items', 'directions', 'search', 'userLocation'];
+    const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'routes', 'transit', 'hillshade', 'items', 'directions', 'search', 'selection', 'userLocation'];
     const KEEP_AWAKE_KEY = 'keepAwake';
     let defaultLiveSync = global.__onLiveSync;
 
@@ -471,8 +471,8 @@
             options.setWatermarkScale(0);
             options.setRestrictedPanning(true);
             options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
-            // options.setEnvelopeThreadPoolSize(2);
-            // options.setTileThreadPoolSize(2);
+            options.setEnvelopeThreadPoolSize(1);
+            options.setTileThreadPoolSize(1);
 
             options.setZoomGestures(true);
             options.setDoubleClickMaxDuration(0.3);
@@ -560,6 +560,11 @@
     }
     function onSelectedItemChanged(oldValue: IItem, value: IItem) {
         mapContext.runOnModules('onSelectedItem', value, oldValue);
+    }
+
+    function setSelectedItem(item) {
+        DEV_LOG && console.log('setSelectedItem', item?.id, new Error().stack);
+        $selectedItem = item;
     }
     async function selectItem({
         item,
@@ -656,7 +661,7 @@
                 }
             }
             if (setSelected) {
-                $selectedItem = item;
+                setSelectedItem(item);
             }
             if (setSelected && !route) {
                 if (!props.address || !props.address['street']) {
@@ -700,10 +705,10 @@
                                     if (bestFind && $selectedItem.geometry === item.geometry) {
                                         if (props.layer === 'housenumber') {
                                             $selectedItem.properties.address = { ...bestFind.properties.address, name: null, houseNumber: props.housenumber } as any;
-                                            $selectedItem = $selectedItem;
+                                            setSelectedItem($selectedItem);
                                         } else {
                                             $selectedItem.properties.address = { ...bestFind.properties.address, name: null } as any;
-                                            $selectedItem = $selectedItem;
+                                            setSelectedItem($selectedItem);
                                         }
                                     }
                                 }
@@ -720,7 +725,7 @@
                                         postcode: result.postalCode,
                                         street: result.thoroughfare
                                     } as any;
-                                    $selectedItem = $selectedItem;
+                                    setSelectedItem($selectedItem);
                                 }
                             }
                         } catch (error) {
@@ -736,7 +741,7 @@
                         if ($selectedItem.geometry === item.geometry) {
                             $selectedItem.properties = $selectedItem.properties || {};
                             $selectedItem.properties['ele'] = result;
-                            $selectedItem = $selectedItem;
+                            setSelectedItem($selectedItem);
                         }
                     });
                 }
@@ -792,9 +797,10 @@
         }
     }
     export function unselectItem(updateBottomSheet = true) {
+        TEST_LOG && console.log('unselectItem', updateBottomSheet);
         if (!!$selectedItem) {
             // const item = $selectedItem;
-            $selectedItem = null;
+            setSelectedItem(null);
             if (selectedPosMarker) {
                 selectedPosMarker.visible = false;
             }
@@ -1086,6 +1092,7 @@
         if (!!featureData.instruction) {
             return true;
         }
+        TEST_LOG && console.log('onVectorTileElementClicked2', clickType, position, featureData.id, handledByModules, $selectedItem?.id);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             const item: IItem = feature;
             // }
@@ -1121,7 +1128,6 @@
         }
     }
 
-    
     function handleNewLanguage(newLang) {
         currentLanguage = newLang;
         packageService.currentLanguage = newLang;
@@ -1727,7 +1733,7 @@
                 class="mdi"
                 textAlignment="center"
             >
-                <cspan text="mdi-access-point-network-off" visibility={networkConnected ? 'collapsed' : 'visible'} textAlignment="left" verticalTextAlignement="top" />
+                <cspan text="mdi-access-point-network-off" visibility={networkConnected ? 'collapsed' : 'visible'} textAlignment="left" verticalTextAlignment="top" />
             </canvaslabel>
             <mdbutton
                 marginTop={90}
