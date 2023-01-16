@@ -38,6 +38,7 @@
     import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
     import { alpimapsFontFamily, borderColor, mdiFontFamily, primaryColor, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
+    import ElevationChart from './ElevationChart.svelte';
     import IconButton from './IconButton.svelte';
 
     const LISTVIEW_HEIGHT = 200;
@@ -56,10 +57,12 @@
     const Intent = __ANDROID__ ? android.content.Intent : undefined;
 
     export let item: Item;
+
     let graphAvailable = false;
     let statsAvailable = false;
-    let chart: NativeViewElementNode<LineChart>;
     let statsCanvas: NativeViewElementNode<CanvasView>;
+    let elevationChart: ElevationChart;
+    let chartLoadHighlightData = null;
     let infoView: BottomSheetInfoView;
     let webViewSrc: string = null;
     let showListView = false;
@@ -83,11 +86,19 @@
         mapContext.mapModule('userLocation').on('location', onNewLocation);
     });
 
+    let dataToUpdateOnItemSelect = null;
+
     mapContext.onVectorTileElementClicked((data: VectorTileEventData<LatLonKeys>) => {
         const { clickType, position, feature, featureData } = data;
-        if (item && item.id && featureData?.route && feature.properties?.id === item.id) {
-            // DEV_LOG && console.log('onVectorTileElementClicked updateRouteItemWithPosition', position);
-            updateRouteItemWithPosition(item, position);
+        DEV_LOG && console.log('BottomSheetInner onVectorTileElementClicked', item?.id, featureData, feature.properties);
+        if (featureData?.route) {
+            if (item && item.id && feature.properties?.id === item.id) {
+                DEV_LOG && console.log('onVectorTileElementClicked updateRouteItemWithPosition', position);
+                updateRouteItemWithPosition(item, position, false);
+            } else {
+                // we can update with position once the item is selected
+                dataToUpdateOnItemSelect = { id: feature.properties?.id, position };
+            }
         }
     });
 
@@ -97,11 +108,11 @@
     //         updateRouteItemWithPosition(item, currentLocation);
     //     }
     // }
-    $: {
-        if (!item) {
-            navigationInstructions = null;
-        }
-    }
+    // $: {
+    //     if (!item) {
+    //         navigationInstructions = null;
+    //     }
+    // }
     // $: {
     //     const props = item && item.properties;
     //     if (props) {
@@ -118,6 +129,19 @@
     //         webViewSrc = null;
     //     }
     // }
+
+    $: {
+        if (elevationChart && chartLoadHighlightData) {
+            try {
+                const { onPathIndex, remainingDistance, remainingTime, highlight } = chartLoadHighlightData;
+                elevationChart.hilghlightPathIndex(onPathIndex, remainingDistance, remainingTime, highlight, false);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                chartLoadHighlightData = null;
+            }
+        }
+    }
     function openWikipedia() {
         try {
             const props = item && item.properties;
@@ -167,55 +191,53 @@
             statsCanvas.nativeView.invalidate();
         }
     }
-    $: {
+
+    function updateSelectedItem(item) {
         try {
-            itemIsRoute = !!item?.route;
-            itemIsBusStop = item && !itemIsRoute && (item.properties?.class === 'bus' || item.properties?.subclass === 'tram_stop');
-            itemCanQueryProfile = itemIsRoute && !!item?.id;
-            itemCanQueryStats = itemIsRoute && !!item?.id;
-            updateGraphAvailable();
-            updateStatsAvailable();
-            if (graphAvailable) {
-                // console.log('updateChartData1')
-                updateChartData();
-            }
-            updateSteps();
-            if (currentLocation) {
-                // DEV_LOG && console.log('currentLocation', 'updateRouteItemWithPosition');
-                updateRouteItemWithPosition(item, currentLocation);
+            if (item) {
+                console.log('updating item');
+                itemIsRoute = !!item?.route;
+                itemIsBusStop = item && !itemIsRoute && (item.properties?.class === 'bus' || item.properties?.subclass === 'tram_stop');
+                itemCanQueryProfile = itemIsRoute && !!item?.id;
+                itemCanQueryStats = itemIsRoute && !!item?.id;
+                updateGraphAvailable();
+                updateStatsAvailable();
+                if (elevationChart && graphAvailable) {
+                    // console.log('updateChartData1')
+                    elevationChart.updateChartData();
+                }
+                updateSteps();
+                console.log('test', item?.id, dataToUpdateOnItemSelect);
+                if (currentLocation) {
+                    // DEV_LOG && console.log('currentLocation', 'updateRouteItemWithPosition');
+                    updateRouteItemWithPosition(item, currentLocation);
+                } else if (dataToUpdateOnItemSelect && item && dataToUpdateOnItemSelect.id === item.id) {
+                    updateRouteItemWithPosition(item, dataToUpdateOnItemSelect.position, false);
+                }
+                dataToUpdateOnItemSelect = null;
+            } else {
+                navigationInstructions = null;
             }
         } catch (err) {
             console.error('item changed', !!err, err, err.stack);
         }
     }
-
-    $: {
-        try {
-            if (chart) {
-                updateChartData();
-                onChartLoadedCallbacks.forEach((c) => c());
-                onChartLoadedCallbacks = [];
-            }
-        } catch (err) {
-            console.error('updateChartData', !!err, err, err.stack);
-            showError(err);
-        }
-    }
-    let onChartLoadedCallbacks = [];
+    $: updateSelectedItem(item);
 
     function updateRouteItemWithPosition(routeItem: Item, location: GenericMapPos<LatLonKeys>, updateNavigationInstruction = true, updateGraph = true, highlight?: Highlight<Entry>) {
-        // DEV_LOG && console.log('updateRouteItemWithPosition1', location, updateNavigationInstruction, updateGraph, !!highlight);
+        DEV_LOG && console.log('updateRouteItemWithPosition', !!routeItem?.route, location, updateNavigationInstruction, updateGraph, !!highlight);
         try {
             if (routeItem?.route) {
                 // const props = routeItem.properties;
                 const route = routeItem.route;
                 const positions = packageService.getRouteItemPoses(routeItem);
                 const onPathIndex = isLocationOnPath(location, positions, false, true, 15);
-                if (onPathIndex !== -1 && (highlight || (routeItem.instructions && updateNavigationInstruction && !graphAvailable))) {
-                    // DEV_LOG && console.log('updateRouteItemWithPosition navigation instruction', onPathIndex);
-                    const remainingDistance = distanceToEnd(onPathIndex, positions);
-                    const remainingTime = (route.totalTime * remainingDistance) / route.totalDistance;
-                    if (!highlight && routeItem.instructions) {
+                let remainingDistance: number, remainingTime: number;
+                DEV_LOG && console.log('updateRouteItemWithPosition onPathIndex', onPathIndex);
+                if (onPathIndex !== -1 && (graphAvailable || highlight || (routeItem.instructions && updateNavigationInstruction && !graphAvailable))) {
+                    remainingDistance = distanceToEnd(onPathIndex, positions);
+                    remainingTime = (route.totalTime * remainingDistance) / route.totalDistance;
+                    if (!highlight && routeItem.instructions && updateNavigationInstruction) {
                         let routeInstruction;
                         for (let index = routeItem.instructions.length - 1; index >= 0; index--) {
                             const element = routeItem.instructions[index];
@@ -237,82 +259,16 @@
                         };
                         // DEV_LOG && console.log('navigationInstructions', JSON.stringify(navigationInstructions));
                     }
-                    if (highlight) {
-                        highlightNString = createNativeAttributedString(
-                            {
-                                spans: [
-                                    {
-                                        fontFamily: mdiFontFamily,
-                                        color: primaryColor,
-                                        text: 'mdi-timer-outline'
-                                    },
-                                    {
-                                        text: convertDurationSeconds(remainingTime) + '  '
-                                    },
-                                    {
-                                        fontFamily: mdiFontFamily,
-                                        color: primaryColor,
-                                        text: 'mdi-arrow-expand-right'
-                                    },
-                                    {
-                                        text: formatDistance(remainingDistance) + '  '
-                                    },
-                                    {
-                                        fontFamily: mdiFontFamily,
-                                        color: primaryColor,
-                                        text: 'mdi-triangle-outline'
-                                    },
-                                    {
-                                        text: highlight.entry.a.toFixed() + 'm' + '  '
-                                    },
-                                    {
-                                        fontFamily: alpimapsFontFamily,
-                                        color: primaryColor,
-                                        text: 'alpimaps-angle'
-                                    },
-                                    {
-                                        text: '~' + highlight.entry.g.toFixed() + '%'
-                                    }
-                                ]
-                            },
-                            null
-                        );
-                    }
                 } else {
                     navigationInstructions = null;
                 }
 
                 if (updateGraph && graphAvailable) {
-                    const nChart = chart?.nativeView;
-                    if (onPathIndex === -1) {
-                        if (nChart) {
-                            nChart.highlight(null);
-                        }
+                    if (elevationChart) {
+                        elevationChart.hilghlightPathIndex(onPathIndex, remainingDistance, remainingTime, highlight, false);
                     } else {
-                        function highlight() {
-                            const nChart = chart?.nativeView;
-                            const profile = routeItem.profile;
-                            const profileData = profile?.data;
-                            if (profileData) {
-                                const dataSet = nChart.getData().getDataSetByIndex(0);
-                                dataSet.setIgnoreFiltered(true);
-                                const item = profileData[onPathIndex];
-                                dataSet.setIgnoreFiltered(false);
-                                // DEV_LOG && console.log('highlight', onPathIndex, item.d, item);
-                                const highlight = {
-                                    dataSetIndex: 0,
-                                    entryIndex: onPathIndex,
-                                    entry: item
-                                };
-                                nChart.highlightValues([highlight]);
-                                onChartHighlight({ eventName: 'highlight', highlight, object: nChart } as any);
-                            }
-                        }
-                        if (nChart) {
-                            highlight();
-                        } else {
-                            onChartLoadedCallbacks.push(highlight);
-                        }
+                        // chart must be loading
+                        chartLoadHighlightData = { onPathIndex, remainingDistance, remainingTime, highlight };
                     }
                 }
             } else if (updateNavigationInstruction) {
@@ -333,88 +289,6 @@
             const positions = item.geometry.type === 'Point' ? item.geometry?.['coordinates'] : item.geometry?.['coordinates'][0];
             handleMapAction('astronomy', { lat: positions[1], lon: positions[0] });
         }
-    }
-    let highlightNString;
-    function onChartPanOrZoom(event) {
-        try {
-            const xAxisRender = chart.nativeView.getRendererXAxis();
-            const { min, max } = xAxisRender.getCurrentMinMax();
-            const dataSet = chart.nativeView.getData().getDataSetByIndex(0);
-            dataSet.setIgnoreFiltered(true);
-            const minX = dataSet.getEntryIndexForXValue(min, NaN, Rounding.CLOSEST);
-            const maxX = dataSet.getEntryIndexForXValue(max, NaN, Rounding.CLOSEST);
-            dataSet.setIgnoreFiltered(false);
-            const positions = (item.geometry?.['coordinates'] as any[]).slice(minX, maxX + 1);
-            const region = getBounds(positions);
-            mapContext.getMap().moveToFitBounds(
-                new MapBounds(
-                    {
-                        lat: region.maxLat,
-                        lon: region.maxLng
-                    },
-                    {
-                        lat: region.minLat,
-                        lon: region.minLng
-                    }
-                ),
-                undefined,
-                true,
-                false,
-                false,
-                0
-            );
-        } catch (error) {
-            console.error(error, error.stack);
-        }
-    }
-    async function onChartHighlight(event: HighlightEventData) {
-        // DEV_LOG && console.log('onChartHighlight', event.highlight);
-        if (!item) {
-            return;
-        }
-        const shouldSelectItem = event.highlight.hasOwnProperty('xPx');
-        const entryIndex = event.highlight.entryIndex;
-        const positions = item.geometry?.['coordinates'];
-        const actualIndex = Math.max(0, Math.min(entryIndex, positions.length - 1));
-        const position = positions[actualIndex];
-        // DEV_LOG && console.log('onChartHighlight', entryIndex, position, shouldSelectItem);
-
-        if (position) {
-            updateRouteItemWithPosition(item, { lat: position[1], lon: position[0] }, false, false, event.highlight);
-            if (shouldSelectItem) {
-                mapContext.selectItem({
-                    item: { geometry: { type: 'Point', coordinates: position } },
-                    isFeatureInteresting: true,
-                    setSelected: false,
-                    peek: false,
-                    zoomDuration: 100,
-                    preventZoom: false
-                });
-            }
-        }
-        // if (DEV_LOG) {
-        //     try {
-        //         const points = [{ lat: position[1], lon: position[0] }];
-        //         if (actualIndex < positions.length - 1) {
-        //             points.push({ lat: positions[actualIndex + 1][1], lon: positions[actualIndex + 1][0] });
-        //         } else {
-        //             points.unshift({ lat: positions[actualIndex - 1][1], lon: positions[actualIndex - 1][0] });
-        //         }
-
-        //         const projection = mapContext.getProjection();
-        //         packageService
-        //             .getStats({
-        //                 projection,
-        //                 points,
-        //                 profile: item.properties.route.type,
-        //                 attributes: ['edge.surface', 'edge.road_class', 'edge.sac_scale', 'edge.use'],
-        //                 shape_match: 'edge_walk'
-        //             })
-        //             .then((edges) => console.log('edges', edges));
-        //     } catch (error) {
-        //         console.error(error, error.stack);
-        //     }
-        // }
     }
     function searchItemWeb() {
         if (__ANDROID__) {
@@ -495,8 +369,8 @@
                 }
                 updateGraphAvailable();
                 updateSteps();
-                if (graphAvailable) {
-                    updateChartData();
+                if (elevationChart && graphAvailable) {
+                    elevationChart.updateChartData();
                 }
                 if (updateView) {
                     mapContext.setBottomSheetStepIndex(3);
@@ -507,6 +381,11 @@
         } finally {
             updatingItem = false;
         }
+    }
+
+    function onChartHighlight({ detail }) {
+        DEV_LOG && console.log('BottomSheetInner onChartHighlight', detail);
+        updateRouteItemWithPosition(item, { lat: detail.lat, lon: detail.lon }, false, true, detail.highlight);
     }
 
     async function getStats(updateView = true) {
@@ -780,152 +659,7 @@
     function getRouteInstructionSubtitle(item: RouteInstruction) {
         return item.name;
     }
-    let chartInitialized = false;
 
-    onThemeChanged(() => {
-        if (!chart) {
-            return;
-        }
-        const chartView = chart.nativeView;
-
-        const leftAxis = chartView.getAxisLeft();
-        leftAxis.setTextColor($textColor);
-        leftAxis.setGridColor($borderColor);
-        const xAxis = chartView.getXAxis();
-        xAxis.setTextColor($textColor);
-        xAxis.setGridColor($borderColor);
-        chartView.getData()?.getDataSetByIndex(0)?.setValueTextColor($textColor);
-    });
-    function updateChartData() {
-        if (!chart) {
-            return;
-        }
-        const chartView = chart.nativeView;
-        const sets = [];
-        const profile = item.profile;
-        const profileData = profile?.data;
-        const leftAxis = chartView.getAxisLeft();
-        if (profileData) {
-            const xAxis = chartView.getXAxis();
-            if (!chartInitialized) {
-                chartInitialized = true;
-                chartView.panGestureOptions = { minDist: 40, failOffsetYEnd: 20 };
-                chartView.setHighlightPerDragEnabled(true);
-                chartView.setHighlightPerTapEnabled(true);
-                chartView.setScaleXEnabled(true);
-                chartView.setDoubleTapToZoomEnabled(true);
-                chartView.setDragEnabled(true);
-                chartView.clipHighlightToContent = false;
-                chartView.zoomedPanWith2Pointers = true;
-                chartView.setClipDataToContent(true);
-                // chartView.setClipValuesToContent(false);
-
-                // chartView.setExtraTopOffset(30);
-                chartView.setMinOffset(0);
-                chartView.setExtraOffsets(0, 24, 0, 0);
-                chartView.getAxisRight().setEnabled(false);
-                chartView.getLegend().setEnabled(false);
-                leftAxis.setTextColor($textColor);
-                leftAxis.setDrawZeroLine(true);
-                leftAxis.setGridColor($borderColor);
-
-                leftAxis.setGridDashedLine(new DashPathEffect([6, 3], 0));
-                leftAxis.ensureLastLabel = true;
-                // leftAxis.setLabelCount(3);
-
-                xAxis.setPosition(XAxisPosition.TOP);
-                xAxis.setLabelTextAlign(Align.CENTER);
-                xAxis.ensureLastLabel = true;
-                // xAxis.setLabelCount(4);
-                xAxis.setTextColor($textColor);
-                xAxis.setGridColor($borderColor);
-                xAxis.setDrawGridLines(false);
-                xAxis.setDrawMarkTicks(true);
-                xAxis.setValueFormatter({
-                    getAxisLabel: (value) => formatDistance(value)
-                });
-
-                chartView.setCustomRenderer({
-                    drawHighlight(c: Canvas, h: Highlight<Entry>, set: LineDataSet, paint: Paint) {
-                        const x = h.drawX;
-                        if (highlightNString) {
-                            const staticLayout = new StaticLayout(highlightNString, highlightPaint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
-                            c.save();
-                            c.translate(10, 0);
-                            staticLayout.draw(c);
-                            c.restore();
-                        }
-                        c.drawLine(x, 20, x, c.getHeight(), highlightPaint);
-                        c.drawCircle(x, 20, 4, highlightPaint);
-                    }
-                });
-            } else {
-                // console.log('clearing highlight')
-                chartView.highlightValues(null);
-                chartView.resetZoom();
-            }
-            const deltaA = profile.max[1] - profile.min[1];
-            let spaceMin = 0;
-            let spaceMax = 0;
-            if (deltaA < 100) {
-                const space = (100 - deltaA) / 2;
-                spaceMin += space;
-                spaceMax += space;
-            }
-            spaceMin += ((deltaA + spaceMin + spaceMax) / PROFILE_HEIGHT) * 30;
-            leftAxis.setSpaceMin(spaceMin);
-            leftAxis.setSpaceMax(spaceMax);
-            const chartData = chartView.getData();
-            if (!chartData) {
-                const set = new LineDataSet(profileData, 'a', 'd', 'a');
-                // set.setDrawValues(false);
-                // set.setValueTextColor($textColor);
-                // set.setValueTextSize(10);
-                set.setMaxFilterNumber(50);
-                set.setUseColorsForFill(true);
-                set.setFillFormatter({
-                    getFillLinePosition(dataSet: LineDataSet, dataProvider) {
-                        return dataProvider.getYChartMin();
-                    }
-                });
-                // set.setValueFormatter({
-                //     getFormattedValue(value: number, entry: Entry, index, count, dataSetIndex: any, viewPortHandler: any) {
-                //         if (index === 0 || index === count - 1 || value === profile.max[1] || value === profile.min[1]) {
-                //             return convertElevation(value);
-                //         }
-                //     }
-                // } as any);
-                set.setDrawFilled(true);
-                set.setColor('#60B3FC');
-                set.setLineWidth(1);
-                set.setFillColor('#60B3FC80');
-                if (showProfileGrades && profile.colors && profile.colors.length > 1) {
-                    set.setLineWidth(2);
-                    set.setColors(profile.colors);
-                }
-                // set.setMode(Mode.LINEAR);
-                sets.push(set);
-                const lineData = new LineData(sets);
-                chartView.setData(lineData);
-            } else {
-                // console.log('clearing highlight1')
-                chartView.highlightValues(null);
-                const set = chartData.getDataSetByIndex(0);
-                if (showProfileGrades && profile.colors && profile.colors.length > 1) {
-                    set.setLineWidth(2);
-                    set.setColors(profile.colors);
-                } else {
-                    set.setLineWidth(1);
-                    set.setColor('#60B3FC');
-                }
-                set.setValues(profileData);
-                set.notifyDataSetChanged();
-                chartData.notifyDataChanged();
-                chartView.notifyDataSetChanged();
-            }
-            // chartView.zoomAndCenter(7, 1, 100, 0, AxisDependency.LEFT);
-        }
-    }
     function routeInstructions() {
         if (listViewAvailable) {
             return item.instructions;
@@ -1109,16 +843,7 @@
 
             <IconButton on:tap={getTransitLines} tooltip={lc('bus_stop_infos')} isVisible={itemIsBusStop} text="mdi-bus" rounded={false} />
         </stacklayout>
-        <linechart
-            bind:this={chart}
-            row={2}
-            colSpan={2}
-            height={PROFILE_HEIGHT}
-            visibility={graphAvailable ? 'visible' : 'collapsed'}
-            on:highlight={onChartHighlight}
-            on:zoom={onChartPanOrZoom}
-            on:pan={onChartPanOrZoom}
-        />
+        <ElevationChart bind:this={elevationChart} {item} row={2} colSpan={2} height={PROFILE_HEIGHT} visibility={graphAvailable ? 'visible' : 'collapsed'} on:highlight={onChartHighlight} />
         <gridlayout row={3} colSpan={2} height={STATS_HEIGHT} visibility={statsAvailable ? 'visible' : 'collapsed'}>
             <canvas bind:this={statsCanvas} on:draw={drawStats} />
             <IconButton
