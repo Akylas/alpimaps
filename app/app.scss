@@ -225,7 +225,6 @@ mdcardview {
     color: $text-color-light;
     .ns-dark & {
         color: $text-color-dark;
-        ripple-color: $text-color-dark;
     }
     width: $actionbar-button-height;
     height: $actionbar-button-height;
