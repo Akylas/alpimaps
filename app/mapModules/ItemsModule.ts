@@ -112,6 +112,7 @@ export default class ItemsModule extends MapModule {
     }
     addItemToLayer(item: IItem, autoUpdate = false) {
         this.currentItems.push(item);
+        // DEV_LOG && console.log('addItemToLayer', JSON.stringify(item.properties));
         this.currentLayerFeatures.push({ type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
         if (autoUpdate) {
             this.updateGeoJSONLayer();
@@ -122,13 +123,12 @@ export default class ItemsModule extends MapModule {
     }
     updateGeoJSONLayer() {
         this.getOrCreateLocalVectorLayer();
-        this.localVectorDataSource.setLayerGeoJSONString(
-            1,
-            JSON.stringify({
-                type: 'FeatureCollection',
-                features: this.currentLayerFeatures
-            })
-        );
+        const str = JSON.stringify({
+            type: 'FeatureCollection',
+            features: this.currentLayerFeatures
+        });
+        // DEV_LOG && console.log('updateGeoJSONLayer', str);
+        this.localVectorDataSource.setLayerGeoJSONString(1, str);
     }
     addItemsToLayer(items: readonly Item[]) {
         if (items.length > 0) {
@@ -143,15 +143,15 @@ export default class ItemsModule extends MapModule {
         const index = this.currentLayerFeatures.findIndex((d) => d.id === item.id);
         if (index !== -1) {
             this.currentItems.splice(index, 1, item);
-            const sProps = {};
-            Object.keys(item.properties).forEach((k) => {
-                if (typeof item.properties[k] === 'object') {
-                    sProps[k] = JSON.stringify(item.properties[k]);
-                } else {
-                    sProps[k] = item.properties[k];
-                }
-            });
-            this.currentLayerFeatures.splice(index, 1, { type: 'Feature', id: item.id, properties: sProps, geometry: item.geometry });
+            // const sProps = {};
+            // Object.keys(item.properties).forEach((k) => {
+            //     if (typeof item.properties[k] === 'object') {
+            //         sProps[k] = JSON.stringify(item.properties[k]);
+            //     } else {
+            //         sProps[k] = item.properties[k];
+            //     }
+            // });
+            this.currentLayerFeatures.splice(index, 1, { type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
             this.updateGeoJSONLayer();
         }
         return item;
@@ -344,6 +344,7 @@ export default class ItemsModule extends MapModule {
         this.updateItem(item, { onMap: 0 });
     }
     async deleteItem(item: IItem) {
+        DEV_LOG && console.log('deleteItem', item.id);
         if (item === mapContext.getSelectedItem()) {
             mapContext.unselectItem();
         }
