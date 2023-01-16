@@ -11,7 +11,7 @@
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { CoreTypes, GridLayout, ViewBase } from '@nativescript/core';
     import type { Point } from 'geojson';
-    import { debounce } from 'push-it-to-the-limit/target/es6';
+    import { debounce } from 'push-it-to-the-limit';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode, navigate } from 'svelte-native/dom';
     import { asSvelteTransition } from 'svelte-native/transitions';

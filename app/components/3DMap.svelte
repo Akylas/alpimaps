@@ -2,7 +2,7 @@
     import { AWebView } from '@nativescript-community/ui-webview';
     import { LoadEventData, Page } from '@nativescript/core';
     import type { Feature } from 'geojson';
-    import { debounce } from 'push-it-to-the-limit/target/es6';
+    import { debounce } from 'push-it-to-the-limit';
     import { NativeViewElementNode } from 'svelte-native/dom';
 
     export let position;

@@ -10,7 +10,7 @@
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { ApplicationSettings, Color, ContentView, Device, GridLayout, ObservableArray, StackLayout, TextField } from '@nativescript/core';
     import type { Feature, Point } from 'geojson';
-    import { debounce } from 'push-it-to-the-limit/target/es6';
+    import { debounce } from 'push-it-to-the-limit';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, showModal } from 'svelte-native/dom';
