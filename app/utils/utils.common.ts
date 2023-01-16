@@ -225,7 +225,8 @@ export async function askForManagePermission() {
     return true;
 }
 export async function getDefaultMBTilesDir() {
-    let localMbtilesSource = savedMBTilesDir;
+    // let localMbtilesSource = savedMBTilesDir;
+    let localMbtilesSource = null;
     const result = await request('storage');
 
     if (!permResultCheck(result)) {
@@ -240,12 +241,14 @@ export async function getDefaultMBTilesDir() {
     }
     if (!localMbtilesSource) {
         const resultPath = path.normalize(path.join(knownFolders.externalDocuments().path, '../../../../alpimaps_mbtiles'));
+        DEV_LOG && console.log('resultPath', resultPath);
         if (resultPath) {
             localMbtilesSource = resultPath;
             savedMBTilesDir = localMbtilesSource;
             appSettings.setString('local_mbtiles_directory', resultPath);
         }
     }
+    DEV_LOG && console.log('getDefaultMBTilesDir', localMbtilesSource);
     return localMbtilesSource;
 }
 
