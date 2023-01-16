@@ -92,6 +92,7 @@ export interface Address {
     postcode?: string;
     street?: string;
     houseNumber?: string;
+    getCategories?: Function;
 }
 
 export interface ItemProperties {
