@@ -109,6 +109,8 @@ function getGradeColor(grade) {
     }
 }
 
+const streetKeys = ['service_other', 'residential', 'living_street', 'driveway', 'alley', 'footway', 'culdesac', 'parking_aisle', 'turn_channel'];
+
 class PackageService extends Observable {
     vectorTileDecoder: MBVectorTileDecoder;
     hillshadeLayer?: HillshadeRasterTileLayer;
@@ -654,7 +656,7 @@ class PackageService extends Observable {
                 } else {
                     key = edge.use;
                 }
-                if (key === 'service_other' || key === 'residential' || key === 'living_street' || key === 'driveway' || key === 'alley' || key === 'footway' || key === 'culdesac') {
+                if (streetKeys.indexOf(key) !== -1) {
                     key = 'street';
                 } else if (key === 'secondary' || key === 'tertiary' || key === 'unclassified') {
                     key = 'road';
@@ -696,6 +698,7 @@ class PackageService extends Observable {
         if (!this._localOfflineRoutingSearchService) {
             const files = this.findFilesWithExtension('.vtiles');
             const source = (this._localOfflineRoutingSearchService = new MultiValhallaOfflineRoutingService());
+            source.setConfigurationParameter('service_limits.bicycle.max_distance', 255000);
             files.forEach((f) => source.add(f.path));
         }
         return this._localOfflineRoutingSearchService;

@@ -785,8 +785,7 @@
                 showButtons: true
             });
         } catch (error) {
-            console.error(error);
-            cancel();
+            // cancel();
             showError(error || 'failed to compute route');
         } finally {
             loading = false;
