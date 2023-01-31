@@ -1,21 +1,19 @@
 <script lang="ts" context="module">
-    import { backgroundEvent, foregroundEvent } from '@nativescript/core/application';
-    import { getAirportPressureAtLocation, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
-    import { getAltitude } from '@nativescript-community/sensors/sensors';
+    import { getAirportPressureAtLocation, getAltitude, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { ApplicationSettings } from '@nativescript/core';
     import type { ApplicationEventData } from '@nativescript/core/application';
-    import { off as applicationOff, on as applicationOn } from '@nativescript/core/application';
+    import { backgroundEvent, foregroundEvent, off as applicationOff, on as applicationOn } from '@nativescript/core/application';
     import { onDestroy, onMount } from 'svelte';
-    import { GeoHandler, GeoLocation, UserLocationdEventData } from '~/handlers/GeoHandler';
+    import type { GeoHandler, GeoLocation, UserLocationdEventData } from '~/handlers/GeoHandler';
     import { l, lc } from '~/helpers/locale';
     import { getMapContext } from '~/mapModules/MapModule';
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
-    import { watchingLocation, queryingLocation } from '~/stores/mapStore';
+    import { queryingLocation, watchingLocation } from '~/stores/mapStore';
     import { primaryColor } from '~/variables';
     import IconButton from './IconButton.svelte';
 </script>
