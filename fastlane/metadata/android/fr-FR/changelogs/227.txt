@@ -1,0 +1,19 @@
+*Features*
+- GPS satellites view
+- show surfaces/waytypes stats
+- * save route images
+- new 24 hour clock setting
+- compassview now can aim at selected locations
+
+*Bug fixes*
+- direction marker position
+- update scale view only when needed
+- compass view fix for moon/sun position
+- ask for api token if needed
+- settings fix
+- save data location + refactoring
+- improved pedestriant routing
+- mapStyle saved/load
+- should be T for hiking paths
+- *style:* larger halo for easier readability
+- showErr
