@@ -21,10 +21,10 @@
     import { PI_DIV2, TO_DEG } from '~/utils/geo';
     import { pickDate } from '~/utils/utils';
     import { mdiFontFamily } from '~/variables';
+    import CompassView from './CompassView.svelte';
 </script>
 
 <script lang="ts">
-    import CompassView from './CompassView.svelte';
 
     let chart: NativeViewElementNode<LineChart>;
 
