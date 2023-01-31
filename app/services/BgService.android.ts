@@ -9,7 +9,7 @@ const Intent = android.content.Intent;
 
 export class BgService extends BgServiceCommon {
     private serviceConnection: android.content.ServiceConnection;
-    bgService: WeakRef<typeof AndroidBgService>;
+    bgService: WeakRef<AndroidBgService>;
     context: android.content.Context;
     constructor() {
         super();
@@ -57,7 +57,7 @@ export class BgService extends BgServiceCommon {
         const localservice = bgBinder.getService();
         bgBinder.setService(null);
         this.bgService = new WeakRef(localservice);
-        localservice.onBounded();
+        localservice.onBounded(this);
         this._handlerLoaded();
         super.start();
     }

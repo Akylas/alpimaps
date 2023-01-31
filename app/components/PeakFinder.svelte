@@ -8,7 +8,7 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { AWebView, LoadFinishedEventData, WebViewEventData } from '@nativescript-community/ui-webview';
-    import { Folder, knownFolders, LoadEventData, ObservableArray, Page, path } from '@nativescript/core';
+    import { Folder, knownFolders, LoadEventData, ObservableArray, Page, path, Utils } from '@nativescript/core';
     import { getBoolean, getNumber, setBoolean, setNumber } from '@nativescript/core/application-settings';
     import { layout } from '@nativescript/core/utils';
     import dayjs from 'dayjs';
@@ -549,7 +549,7 @@
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <bottomsheet on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)} steps={[0, 300]} stepIndex={bottomSheetStepIndex} panGestureOptions={{ failOffsetXEnd: 50, minDist: 150 }} {shouldPan}>
-        <gridLayout android:marginBottom={$navigationBarHeight} on:layoutChanged={onLayoutChanged}>
+        <gridLayout android:marginBottom={$navigationBarHeight} on:layoutChanged={onLayoutChanged} width="100%" height="100%">
             <awebview
                 bind:this={webView}
                 on:loaded={webviewLoaded}
@@ -615,7 +615,7 @@
                 marginBottom={100}
             />
         </gridLayout>
-        <gridlayout prop:bottomSheet height={300} rows="30,*" columns="*,*" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
+        <gridlayout prop:bottomSheet height={300}  width="100%" rows="30,*" columns="*,*" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
             <mdbutton variant="text" class="mdi" fontSize={16} width={undefined} text="mdi-cog" on:tap={() => (selectedPageIndex = 0)} />
             <mdbutton variant="text" col={1} class="mdi" fontSize={16} width={undefined} text="mdi-bug" on:tap={() => (selectedPageIndex = 1)} />
             <pager colSpan={2} row={1} disableSwipe={false} selectedIndex={selectedPageIndex} on:selectedIndexChange={(e) => (selectedPageIndex = e['value'])}>
@@ -632,7 +632,7 @@
                                     value={item.value * (item.decimalFactor || 1)}
                                     minValue={item.min * (item.decimalFactor || 1)}
                                     maxValue={item.max * (item.decimalFactor || 1)}
-                                    stepSize={item.stepSize || 0.1}
+                                    stepSize={item.stepSize}
                                     on:valueChange={(e) => onSliderValue(listView1Items, item, e)}
                                 />
                                 <label text={itemValue(item)} row={1} col={1} on:tap={() => promptSliderValue(listView1Items, item)} />
