@@ -8,8 +8,8 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const SentryCliPlugin = require('@sentry/webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const IgnoreNotFoundExportPlugin = require('./scripts/IgnoreNotFoundExportPlugin');
-const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 const Fontmin = require('@akylas/fontmin');
+const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 const WebpackShellPluginNext = require('webpack-shell-plugin-next');
 
 function fixedFromCharCode(codePt) {
@@ -76,7 +76,7 @@ module.exports = (env, params = {}) => {
             env
         );
     }
-    const nconfig = require('./nativescript.config.js');
+    const nconfig = require('./nativescript.config');
     const {
         appPath = nconfig.appPath,
         appResourcesPath = nconfig.appResourcesPath,
@@ -107,7 +107,7 @@ module.exports = (env, params = {}) => {
     env.appPath = appPath;
     env.appResourcesPath = appResourcesPath;
     env.appComponents = env.appComponents || [];
-    env.appComponents.push('~/services/android/BgService', '~/services/android/BgServiceBinder');
+    // env.appComponents.push('~/services/android/BgService', '~/services/android/BgServiceBinder');
 
     nsWebpack.chainWebpack((config, env) => {
         config.when(env.production, (config) => {
@@ -134,8 +134,19 @@ module.exports = (env, params = {}) => {
     const appResourcesFullPath = resolve(projectRoot, appResourcesPath);
 
     if (profile) {
-        config.profile = true;
-        config.stats = { preset: 'minimal', chunkModules: true, modules: true };
+        const StatsPlugin = require('stats-webpack-plugin');
+
+        config.plugins.unshift(
+            new StatsPlugin(resolve(join(projectRoot, 'webpack.stats.json')), {
+                preset: 'minimal',
+                chunkModules: true,
+                modules: true,
+                usedExports: true
+            })
+        );
+        // config.profile = true;
+        // config.parallelism = 1;
+        // config.stats = { preset: 'minimal', chunkModules: true, modules: true, usedExports: true };
     }
 
     // nsWebpack.chainWebpack((config, env) => {
@@ -321,11 +332,13 @@ module.exports = (env, params = {}) => {
     });
 
     const coreModulesPackageName = fork ? '@akylas/nativescript' : '@nativescript/core';
-    config.resolve.modules = [resolve(__dirname, `node_modules/${coreModulesPackageName}`), resolve(__dirname, 'node_modules'), `node_modules/${coreModulesPackageName}`, 'node_modules'];
-    Object.assign(config.resolve.alias, {
-        '@nativescript/core': `${coreModulesPackageName}`,
-        'tns-core-modules': `${coreModulesPackageName}`
-    });
+    if (fork) {
+        config.resolve.modules = [resolve(__dirname, `node_modules/${coreModulesPackageName}`), resolve(__dirname, 'node_modules'), `node_modules/${coreModulesPackageName}`, 'node_modules'];
+        Object.assign(config.resolve.alias, {
+            '@nativescript/core': `${coreModulesPackageName}`,
+            'tns-core-modules': `${coreModulesPackageName}`
+        });
+    }
     let appVersion;
     let buildNumber;
     if (platform === 'android') {
@@ -479,7 +492,7 @@ module.exports = (env, params = {}) => {
     const usedMDIICons = [];
     config.module.rules.push({
         // rules to replace mdi icons and not use nativescript-font-icon
-        test: /\.(svelte|ts)$/,
+        test: /\.(ts|js|scss|css|svelte)$/,
         exclude: /node_modules/,
         use: [
             {
@@ -496,6 +509,14 @@ module.exports = (env, params = {}) => {
                         }
                         return match;
                     },
+                    flags: 'g'
+                }
+            },
+            {
+                loader: 'string-replace-loader',
+                options: {
+                    search: '__PACKAGE__',
+                    replace: nconfig.id,
                     flags: 'g'
                 }
             },
@@ -589,40 +610,41 @@ module.exports = (env, params = {}) => {
             clearTimeout: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'clearTimeout'],
             setInterval: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'setInterval'],
             clearInterval: [require.resolve(coreModulesPackageName + '/timer/index.' + platform), 'clearInterval'],
-            FormData: [require.resolve(coreModulesPackageName + '/polyfills/formdata'), 'FormData'],
+            // FormData: [require.resolve(coreModulesPackageName + '/polyfills/formdata'), 'FormData'],
             requestAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame'), 'requestAnimationFrame'],
             cancelAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame'), 'cancelAnimationFrame']
         })
     );
-    console.log('locales', supportedLocales);
     config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${supportedLocales.join('|')}).\js`)));
 
-    config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|nativescript-carto|ui-carto|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
+    config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|ui-carto|ui-chart|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
     config.plugins.push(new IgnoreNotFoundExportPlugin());
 
-    const nativescriptReplace = '(NativeScript[\\/]dist[\\/]packages[\\/]core|@nativescript/core|node_modules)';
+    const nativescriptReplace = '(NativeScript[\\/]dist[\\/]packages[\\/]core|@nativescript/core)';
     config.plugins.push(
         new webpack.NormalModuleReplacementPlugin(/http$/, (resource) => {
-            if (resource.context.match(nativescriptReplace)) {
+            if (resource.context.match(nativescriptReplace) || resource.request === '@nativescript/core/http') {
                 resource.request = '@nativescript-community/https';
             }
         })
     );
-
-    config.plugins.push(
-        new webpack.NormalModuleReplacementPlugin(/accessibility$/, (resource) => {
-            if (resource.context.match(nativescriptReplace)) {
-                resource.request = '~/shims/accessibility';
-            }
-        })
-    );
-    config.plugins.push(
-        new webpack.NormalModuleReplacementPlugin(/action-bar$/, (resource) => {
-            if (resource.context.match(nativescriptReplace)) {
-                resource.request = '~/shims/action-bar';
-            }
-        })
-    );
+    if (fork) {
+        config.plugins.push(
+            new webpack.NormalModuleReplacementPlugin(/accessibility$/, (resource) => {
+                if (resource.context.match(nativescriptReplace)) {
+                    resource.request = '~/shims/accessibility';
+                }
+            })
+        );
+        config.plugins.push(
+            new webpack.NormalModuleReplacementPlugin(/action-bar$/, (resource) => {
+                if (resource.context.match(nativescriptReplace)) {
+                    resource.request = '~/shims/action-bar';
+                }
+            })
+        );
+    }
+    // save as long as we dont use calc in css
     config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /reduce-css-calc$/ }));
     config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /punnycode$/ }));
     config.plugins.push(new webpack.IgnorePlugin({ resourceRegExp: /^url$/ }));
@@ -738,15 +760,12 @@ module.exports = (env, params = {}) => {
     } else {
         config.devtool = false;
     }
-
     config.externalsPresets = { node: false };
     config.resolve.fallback = config.resolve.fallback || {};
-    // config.resolve.fallback.timers = require.resolve('timers/');
-    // config.resolve.fallback.stream = require.resolve('stream/');
-    // config.optimization.usedExports = true;
     config.optimization.minimize = uglify !== undefined ? !!uglify : production;
     const isAnySourceMapEnabled = !!sourceMap || !!hiddenSourceMap || !!inlineSourceMap;
     const actual_keep_classnames_functionnames = keep_classnames_functionnames || platform !== 'android';
+    config.optimization.usedExports = true;
     config.optimization.minimizer = [
         new TerserPlugin({
             parallel: true,

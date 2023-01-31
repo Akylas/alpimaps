@@ -1,13 +1,9 @@
-import { Application, Color, Device, FileSystemEntity, Folder, View } from '@nativescript/core';
-import * as app from '@nativescript/core/application';
-import { android as androidApp } from '@nativescript/core/application';
-import * as appSettings from '@nativescript/core/application-settings';
-import { knownFolders, path } from '@nativescript/core/file-system';
+import { request } from '@nativescript-community/perms';
+import { Application, ApplicationSettings, Color, Device, FileSystemEntity, Folder, View, knownFolders, path } from '@nativescript/core';
+import { AndroidActivityResultEventData, AndroidApplication, android as androidApp } from '@nativescript/core/application';
 import { lc } from '~/helpers/locale';
-import { pickFolder } from '@nativescript-community/ui-document-picker';
-import { PermsTraceCategory, request } from '@nativescript-community/perms';
 
-let savedMBTilesDir = appSettings.getString('local_mbtiles_directory');
+let savedMBTilesDir = ApplicationSettings.getString('local_mbtiles_directory');
 
 export const sdkVersion = parseInt(Device.sdkVersion, 10);
 const ANDROID_30 = __ANDROID__ && sdkVersion >= 30;
@@ -37,47 +33,50 @@ export function arraySortOn(array, key) {
 //     };
 // }
 
+let dataFolder;
 export function getDataFolder() {
-    let dataFolder;
-    if (__ANDROID__) {
-        const checkExternalMedia = function () {
-            let mExternalStorageAvailable = false;
-            let mExternalStorageWriteable = false;
-            const state = android.os.Environment.getExternalStorageState();
+    if (!dataFolder) {
+        if (__ANDROID__) {
+            const checkExternalMedia = function () {
+                let mExternalStorageAvailable = false;
+                let mExternalStorageWriteable = false;
+                const state = android.os.Environment.getExternalStorageState();
 
-            if (android.os.Environment.MEDIA_MOUNTED === state) {
-                // Can read and write the media
-                mExternalStorageAvailable = mExternalStorageWriteable = true;
-            } else if (android.os.Environment.MEDIA_MOUNTED_READ_ONLY === state) {
-                // Can only read the media
-                mExternalStorageAvailable = true;
-                mExternalStorageWriteable = false;
-            } else {
-                // Can't read or write
-                mExternalStorageAvailable = mExternalStorageWriteable = false;
-            }
-            return mExternalStorageWriteable;
-        };
-        if (checkExternalMedia()) {
-            const nArray = (app.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
-            const count = nArray.length;
-            if (nArray.length > 1) {
-                for (let i = count - 1; i >= 0; i--) {
-                    dataFolder = nArray[i]?.getAbsolutePath();
-                    if (dataFolder) {
-                        break;
+                if (android.os.Environment.MEDIA_MOUNTED === state) {
+                    // Can read and write the media
+                    mExternalStorageAvailable = mExternalStorageWriteable = true;
+                } else if (android.os.Environment.MEDIA_MOUNTED_READ_ONLY === state) {
+                    // Can only read the media
+                    mExternalStorageAvailable = true;
+                    mExternalStorageWriteable = false;
+                } else {
+                    // Can't read or write
+                    mExternalStorageAvailable = mExternalStorageWriteable = false;
+                }
+                return mExternalStorageWriteable;
+            };
+            if (Application.android.startActivity && checkExternalMedia()) {
+                const nArray = (Application.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
+                const count = nArray.length;
+                if (nArray.length > 1) {
+                    for (let i = count - 1; i >= 0; i--) {
+                        dataFolder = nArray[i]?.getAbsolutePath();
+                        if (dataFolder) {
+                            break;
+                        }
                     }
                 }
             }
         }
+        if (!dataFolder) {
+            dataFolder = knownFolders.temp().path;
+            // } else {
+            //     if (__ANDROID__ && Folder.exists(path.join(dataFolder, '../../../..', 'alpimaps_mbtiles'))) {
+            //         dataFolder = path.join(dataFolder, '../../../..', 'alpimaps_mbtiles');
+            //     }
+        }
     }
-    if (!dataFolder) {
-        dataFolder = knownFolders.temp().path;
-        // } else {
-        //     if (__ANDROID__ && Folder.exists(path.join(dataFolder, '../../../..', 'alpimaps_mbtiles'))) {
-        //         dataFolder = path.join(dataFolder, '../../../..', 'alpimaps_mbtiles');
-        //     }
-    }
+
     // if (TNS_ENV !== 'production') {
     //     dataFolder = path.join(dataFolder, 'dev');
     // }
@@ -211,13 +210,13 @@ export async function askForManagePermission() {
         //to grant the permission.
         return new Promise<boolean>((resolve, reject) => {
             const REQUEST_CODE = 6646;
-            const onActivityResultHandler = (data: app.AndroidActivityResultEventData) => {
+            const onActivityResultHandler = (data: AndroidActivityResultEventData) => {
                 if (data.requestCode === REQUEST_CODE) {
-                    Application.android.off(app.AndroidApplication.activityResultEvent, onActivityResultHandler);
+                    Application.android.off(AndroidApplication.activityResultEvent, onActivityResultHandler);
                     resolve(android.provider.Settings.canDrawOverlays(activity));
                 }
             };
-            Application.android.on(app.AndroidApplication.activityResultEvent, onActivityResultHandler);
+            Application.android.on(AndroidApplication.activityResultEvent, onActivityResultHandler);
             const intent = new android.content.Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, android.net.Uri.parse('package:' + __APP_ID__));
             activity.startActivityForResult(intent, REQUEST_CODE);
         });
@@ -245,7 +244,7 @@ export async function getDefaultMBTilesDir() {
         if (resultPath) {
             localMbtilesSource = resultPath;
             savedMBTilesDir = localMbtilesSource;
-            appSettings.setString('local_mbtiles_directory', resultPath);
+            ApplicationSettings.setString('local_mbtiles_directory', resultPath);
         }
     }
     DEV_LOG && console.log('getDefaultMBTilesDir', localMbtilesSource);

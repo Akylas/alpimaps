@@ -11,7 +11,7 @@ export function join_em(src_segments: GeoJSON.Position[][], tolerance = 0.0001, 
     let flipped = false;
     while (src_segments.length > 0) {
         const start = seg[0];
-        const end = seg[seg.length -1];
+        const end = seg[seg.length - 1];
         //look for a segment adjact to the end point
         let res = find_closest(end, src_segments);
         // console.log('find_closest:', end, res);
@@ -40,12 +40,7 @@ export function join_em(src_segments: GeoJSON.Position[][], tolerance = 0.0001, 
                 seg = res.closest_segment;
                 flipped = false;
             } else {
-                console.error(
-                    "Can't find a segment adjacent. Closest distance to start:%f to end:%f",
-                    res.closest_distance,
-                    end_distance,
-                    flipped
-                );
+                console.error("Can't find a segment adjacent. Closest distance to start:%f to end:%f", res.closest_distance, end_distance, flipped);
                 if (flipped) {
                     console.error("Can't find a segment adjacent to start or end segment, giving up");
                     break;
@@ -56,7 +51,7 @@ export function join_em(src_segments: GeoJSON.Position[][], tolerance = 0.0001, 
                     //     s.reverse();
                     // }
 
-                    seg = segments_in_order[segments_in_order.length -1];
+                    seg = segments_in_order[segments_in_order.length - 1];
                 }
             }
         }
@@ -86,7 +81,7 @@ function find_closest(point: GeoJSON.Position, segments: GeoJSON.Position[][], h
     let start_distance: number, end_distance: number;
     for (const seg of segments) {
         const start = seg[0];
-        const end = seg[seg.length -1];
+        const end = seg[seg.length - 1];
         if (haversine_distance) {
             start_distance = getDistance([start[1], start[0]], [point[1], point[0]]);
             end_distance = getDistance([end[1], end[0]], [point[1], point[0]]);

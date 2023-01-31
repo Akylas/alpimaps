@@ -8,8 +8,10 @@
         "emitDecoratorMetadata": false,
         "experimentalDecorators": true,
         "sourceMap": true,
+        "skipLibCheck": true,
         "skipDefaultLibCheck": true,
         "allowUnreachableCode": false,
+        "allowSyntheticDefaultImports": true,
         "allowUnusedLabels": false,
         "noEmitHelpers": true,
         "noEmitOnError": false,
@@ -17,15 +19,12 @@
         "noImplicitReturns": false,
         "noImplicitUseStrict": false,
         "noFallthroughCasesInSwitch": true,
-        "allowSyntheticDefaultImports": true,
         "resolveJsonModule": true,
         "lib": ["esnext", "es2017"],
         "types": ["node", "svelte-native", "svelte", "geojson", "offscreencanvas"],
         "baseUrl": ".",
         "paths": {
-            "~/*": ["app/*"],
-            "@nativescript/core": ["node_modules/@akylas/nativescript"],
-            "@nativescript/core/*": ["node_modules/@akylas/nativescript/*"]
+            "~/*": ["app/*"]
         }
     },
     "include": ["app/**/*", "typings/*.d.ts"],

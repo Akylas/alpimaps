@@ -1,16 +1,14 @@
 <script lang="ts" context="module">
-    import { getAirportPressureAtLocation, isSensorAvailable, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
-    import { getAltitude } from '@nativescript-community/sensors/sensors';
-    import { CanvasLabel } from '@nativescript-community/ui-canvaslabel';
+    import { getAirportPressureAtLocation, getAltitude, isSensorAvailable, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
+    import type { CanvasLabel } from '@nativescript-community/ui-canvaslabel';
     import type { VectorElementEventData } from '@nativescript-community/ui-carto/layers/vector';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
-    import { GridLayout } from '@nativescript/core';
-    import type { ApplicationEventData } from '@nativescript/core/application';
-    import { off as applicationOff, on as applicationOn } from '@nativescript/core/application';
+    import type { ApplicationEventData, GridLayout } from '@nativescript/core';
+    import { Application } from '@nativescript/core';
     import { backgroundEvent, foregroundEvent } from '@nativescript/core/application';
     import { onDestroy, onMount } from 'svelte';
-    import { NativeViewElementNode } from 'svelte-native/dom';
-    import { GeoHandler, GeoLocation, UserLocationdEventData } from '~/handlers/GeoHandler';
+    import type { NativeViewElementNode } from 'svelte-native/dom';
+    import type { GeoHandler, GeoLocation, UserLocationdEventData } from '~/handlers/GeoHandler';
     import { l, lc, lu } from '~/helpers/locale';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
@@ -86,12 +84,12 @@
     }
 
     onMount(() => {
-        applicationOn(backgroundEvent, onAppPause);
-        applicationOn(foregroundEvent, onAppResume);
+        Application.on(backgroundEvent, onAppPause);
+        Application.on(foregroundEvent, onAppResume);
     });
     onDestroy(() => {
-        applicationOff(backgroundEvent, onAppPause);
-        applicationOff(foregroundEvent, onAppResume);
+        Application.off(backgroundEvent, onAppPause);
+        Application.off(foregroundEvent, onAppResume);
     });
 
     onServiceLoaded((handler: GeoHandler) => {

@@ -640,7 +640,7 @@
                 <IconButton small={true} isVisible={searchResultsVisible} col={1} row={1} text="mdi-map" on:tap={showResultsOnMap} />
                 <collectionview colSpan={3} bind:this={collectionView} rowHeight={49} items={filteredDataItems} isUserInteractionEnabled={searchResultsVisible}>
                     <Template let:item>
-                        <canvaslabel columns="34,*" padding="0 10 0 10" rows="*,auto,auto,*" disableCss={true} rippleColor={$textColor} on:tap={() => onItemTap(item)}>
+                        <canvaslabel columns="34,*" padding="0 10 0 10" rows="*,auto,auto,*" disableCss={true}  color={$textColor} rippleColor={$textColor} on:tap={() => onItemTap(item)}>
                             <cspan text={item.icon} color={item.color} fontFamily="osm" fontSize={20} verticalAlignment="middle" />
                             <cspan paddingLeft={34} verticalAlignment="middle" paddingBottom={item.subtitle ? 10 : 0} text={item.title} fontSize={14} fontWeight="bold" />
                             <cspan

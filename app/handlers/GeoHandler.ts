@@ -1,19 +1,8 @@
 import { GPS, GenericGeoLocation, Options as GeolocationOptions, LocationMonitor } from '@nativescript-community/gps';
 import { check, request } from '@nativescript-community/perms';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
-import { ApplicationSettings, CoreTypes, Utils } from '@nativescript/core';
-import {
-    AndroidApplication,
-    ApplicationEventData,
-    android as androidApp,
-    off as applicationOff,
-    on as applicationOn,
-    backgroundEvent,
-    foregroundEvent,
-    launchEvent
-} from '@nativescript/core/application';
-import { AndroidActivityResultEventData } from '@nativescript/core/application/application-interfaces';
-import { EventData, Observable } from '@nativescript/core/data/observable';
+import { AndroidActivityResultEventData, AndroidApplication, Application, ApplicationEventData, ApplicationSettings, CoreTypes, EventData, Observable, Utils } from '@nativescript/core';
+import { backgroundEvent, foregroundEvent, launchEvent } from '@nativescript/core/application';
 import { bind } from 'helpful-decorators/dist-src/bind';
 import { convertDurationSeconds, formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
@@ -106,17 +95,17 @@ export class GeoHandler extends Observable {
             geolocation = new GPS();
         }
         if (__ANDROID__) {
-            if (androidApp.nativeApp) {
+            if (Application.android.nativeApp) {
                 this.appOnLaunch();
             } else {
-                applicationOn(launchEvent, this.appOnLaunch, this);
+                Application.on(launchEvent, this.appOnLaunch, this);
             }
         }
         if (__IOS__) {
-            applicationOn(launchEvent, this.appOnLaunch, this);
+            Application.on(launchEvent, this.appOnLaunch, this);
         }
-        applicationOn(backgroundEvent, this.onAppPause, this);
-        applicationOn(foregroundEvent, this.onAppResume, this);
+        Application.on(backgroundEvent, this.onAppPause, this);
+        Application.on(foregroundEvent, this.onAppResume, this);
     }
     appOnLaunch() {
         if (this.started) {
@@ -192,8 +181,8 @@ export class GeoHandler extends Observable {
         this.stopSession();
         this.started = false;
         geolocation && geolocation.off(GPS.gps_status_event, this.onGPSStateChange, this);
-        applicationOff(backgroundEvent, this.onAppPause, this);
-        applicationOff(foregroundEvent, this.onAppResume, this);
+        Application.off(backgroundEvent, this.onAppPause, this);
+        Application.off(foregroundEvent, this.onAppResume, this);
     }
 
     async stop() {
@@ -202,8 +191,8 @@ export class GeoHandler extends Observable {
         }
         this.started = false;
         geolocation.off(GPS.gps_status_event, this.onGPSStateChange, this);
-        applicationOff(backgroundEvent, this.onAppPause, this);
-        applicationOff(foregroundEvent, this.onAppResume, this);
+        Application.off(backgroundEvent, this.onAppPause, this);
+        Application.off(foregroundEvent, this.onAppResume, this);
 
         if (this.currentSession && this.currentSession.state !== SessionState.STOPPED && this.currentSession.distance > 0) {
             this.pauseSession();
@@ -228,8 +217,8 @@ export class GeoHandler extends Observable {
         DEV_LOG && console.log(TAG, 'start');
         this.started = true;
         geolocation.on(GPS.gps_status_event, this.onGPSStateChange, this);
-        applicationOn(backgroundEvent, this.onAppPause, this);
-        applicationOn(foregroundEvent, this.onAppResume, this);
+        Application.on(backgroundEvent, this.onAppPause, this);
+        Application.on(foregroundEvent, this.onAppResume, this);
 
         const permCheck = await check('location');
         // set to true if not allowed yet for the UI
@@ -315,17 +304,17 @@ export class GeoHandler extends Observable {
         if (__IOS__) {
             return Promise.resolve();
         }
-        const activity = androidApp.foregroundActivity || androidApp.startActivity;
+        const activity = Application.android.startActivity;
         if (this.isBatteryOptimized(activity) && android.os.Build.VERSION.SDK_INT >= 22) {
             return new Promise<void>((resolve, reject) => {
                 const REQUEST_CODE = 6645;
                 const onActivityResultHandler = (data: AndroidActivityResultEventData) => {
                     if (data.requestCode === REQUEST_CODE) {
-                        androidApp.off(AndroidApplication.activityResultEvent, onActivityResultHandler);
+                        Application.android.off(AndroidApplication.activityResultEvent, onActivityResultHandler);
                         resolve();
                     }
                 };
-                androidApp.on(AndroidApplication.activityResultEvent, onActivityResultHandler);
+                Application.android.on(AndroidApplication.activityResultEvent, onActivityResultHandler);
                 const intent = new android.content.Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
                 intent.setData(android.net.Uri.parse('package:' + activity.getPackageName()));
                 activity.startActivityForResult(intent, REQUEST_CODE);
