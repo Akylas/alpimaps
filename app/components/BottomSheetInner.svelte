@@ -131,15 +131,19 @@
     // }
 
     $: {
-        if (elevationChart && chartLoadHighlightData) {
-            try {
-                const { onPathIndex, remainingDistance, remainingTime, highlight } = chartLoadHighlightData;
-                elevationChart.hilghlightPathIndex(onPathIndex, remainingDistance, remainingTime, highlight, false);
-            } catch (error) {
-                console.error(error);
-            } finally {
-                chartLoadHighlightData = null;
+        try {
+            if (elevationChart && chartLoadHighlightData) {
+                try {
+                    const { onPathIndex, remainingDistance, remainingTime, highlight } = chartLoadHighlightData;
+                    elevationChart.hilghlightPathIndex(onPathIndex, remainingDistance, remainingTime, highlight, false);
+                } catch (error) {
+                    console.error(error);
+                } finally {
+                    chartLoadHighlightData = null;
+                }
             }
+        } catch (error) {
+            console.error(error);
         }
     }
     function openWikipedia() {
@@ -193,9 +197,9 @@
     }
 
     function updateSelectedItem(item) {
+        console.log('updateSelectedItem', !!item);
         try {
             if (item) {
-                console.log('updating item');
                 itemIsRoute = !!item?.route;
                 itemIsBusStop = item && !itemIsRoute && (item.properties?.class === 'bus' || item.properties?.subclass === 'tram_stop');
                 itemCanQueryProfile = itemIsRoute && !!item?.id;
@@ -207,7 +211,6 @@
                     elevationChart.updateChartData();
                 }
                 updateSteps();
-                console.log('test', item?.id, dataToUpdateOnItemSelect);
                 if (currentLocation) {
                     // DEV_LOG && console.log('currentLocation', 'updateRouteItemWithPosition');
                     updateRouteItemWithPosition(item, currentLocation);
@@ -324,7 +327,6 @@
         distanceToNextInstruction: number;
         instruction: RouteInstruction;
     } = undefined;
-    // $: console.log('updateSteps changed', steps);
 
     function updateSteps() {
         if (!item) {
@@ -583,8 +585,8 @@
             if (!rasterDataSource) {
                 rasterDataSource = await mapContext.mapModules.customLayers.getDataSource('openstreetmap');
             }
-            const { default: component } = await import('~/components/PeakFinder.svelte');
-            // const component = (await import('~/components/PeakFinder.svelte')).default;
+            // const { default: component } = await import('~/components/PeakFinder.svelte');
+            const component = (await import('~/components/PeakFinder.svelte')).default;
             navigate({
                 page: component,
                 props: {
@@ -700,9 +702,13 @@
         }
     }
     $: {
-        if (infoView && loadedListeners.length > 0) {
-            loadedListeners.forEach((l) => l());
-            loadedListeners = [];
+        try {
+            if (infoView && loadedListeners.length > 0) {
+                loadedListeners.forEach((l) => l());
+                loadedListeners = [];
+            }
+        } catch (error) {
+            console.error(error);
         }
     }
     let textPaint: Paint;
@@ -839,7 +845,7 @@
             {#if packageService.hasElevation()}
                 <IconButton on:tap={openPeakFinder} tooltip={lc('peaks')} isVisible={!itemIsRoute} text="mdi-summit" rounded={false} />
             {/if}
-            <IconButton on:tap={openCompass} tooltip={lc('compass')} isVisible={(itemIsRoute && !item.id) || currentLocation} text="mdi-compass-outline" rounded={false} />
+            <IconButton on:tap={openCompass} tooltip={lc('compass')} isVisible={(itemIsRoute && !item?.id) || currentLocation} text="mdi-compass-outline" rounded={false} />
 
             <IconButton on:tap={getTransitLines} tooltip={lc('bus_stop_infos')} isVisible={itemIsBusStop} text="mdi-bus" rounded={false} />
         </stacklayout>

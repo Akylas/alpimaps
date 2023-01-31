@@ -1,6 +1,5 @@
-import { ad } from '@nativescript/core/utils';
 import { l, lc, loadLocaleJSON, lt, lu } from '@nativescript-community/l';
-import { ApplicationSettings } from '@nativescript/core';
+import { ApplicationSettings, Utils } from '@nativescript/core';
 import { getString, setString } from '@nativescript/core/application-settings';
 import { Device } from '@nativescript/core/platform';
 import dayjs from 'dayjs';
@@ -27,7 +26,7 @@ dayjs.extend(utc);
 export let lang;
 let default24Clock = false;
 if (__ANDROID__) {
-    default24Clock = android.text.format.DateFormat.is24HourFormat(ad.getApplicationContext());
+    default24Clock = android.text.format.DateFormat.is24HourFormat(Utils.android.getApplicationContext());
 }
 export let clock_24 = ApplicationSettings.getBoolean('clock_24', default24Clock);
 console.log('clock_24', clock_24);

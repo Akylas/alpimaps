@@ -563,7 +563,7 @@
     }
 
     function setSelectedItem(item) {
-        DEV_LOG && console.log('setSelectedItem', item?.id, new Error().stack);
+        DEV_LOG && console.log('setSelectedItem', item?.id);
         $selectedItem = item;
     }
     async function selectItem({
@@ -587,56 +587,19 @@
         zoom?: number;
         zoomDuration?: number;
     }) {
-        didIgnoreAlreadySelected = false;
-        if (isFeatureInteresting) {
-            let isCurrentItem = item === $selectedItem;
-            TEST_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons);
-            if (setSelected && isCurrentItem && !item) {
-                unselectItem(false);
-            }
-            const route = item?.route;
-            const props = item.properties;
-            if (setSelected && route) {
-                TEST_LOG && console.log('selected_id', typeof route.osmid, route.osmid, typeof props.id, props.id, setSelected);
+        try {
+            didIgnoreAlreadySelected = false;
+            if (isFeatureInteresting) {
+                let isCurrentItem = item === $selectedItem;
+                TEST_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons);
+                if (setSelected && isCurrentItem && !item) {
+                    unselectItem(false);
+                }
+                const route = item?.route;
+                const props = item.properties;
+                if (setSelected && route) {
+                    TEST_LOG && console.log('selected_id', typeof route.osmid, route.osmid, typeof props.id, props.id, setSelected);
 
-                if (props.id !== undefined) {
-                    selectedId = props.id;
-                    if (typeof props.id === 'string') {
-                        mapContext.innerDecoder.setStyleParameter('selected_id_str', selectedId + '');
-                        mapContext.innerDecoder.setStyleParameter('selected_id', '0');
-                    } else {
-                        mapContext.innerDecoder.setStyleParameter('selected_id', selectedId + '');
-                        mapContext.innerDecoder.setStyleParameter('selected_id_str', '0');
-                    }
-                    mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
-                } else if (route.osmid !== undefined) {
-                    selectedOSMId = route.osmid;
-                    mapContext.innerDecoder.setStyleParameter('selected_osmid', selectedOSMId + '');
-                    mapContext.innerDecoder.setStyleParameter('selected_id', '0');
-                    mapContext.innerDecoder.setStyleParameter('selected_id_str', '0');
-                }
-
-                if (selectedPosMarker) {
-                    selectedPosMarker.visible = false;
-                }
-            } else {
-                const geometry = item.geometry as GeoJSONPoint;
-                const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-                if (!selectedPosMarker) {
-                    getOrCreateLocalVectorLayer();
-                    const itemModule = mapContext.mapModule('items');
-                    selectedPosMarker = itemModule.createLocalPoint(position, {
-                        color: primaryColor.setAlpha(178).hex,
-                        clickSize: 0,
-                        scaleWithDPI: true,
-                        size: 20
-                    });
-                    localVectorDataSource.add(selectedPosMarker);
-                } else {
-                    selectedPosMarker.position = position;
-                    selectedPosMarker.visible = true;
-                }
-                if (setSelected) {
                     if (props.id !== undefined) {
                         selectedId = props.id;
                         if (typeof props.id === 'string') {
@@ -647,116 +610,157 @@
                             mapContext.innerDecoder.setStyleParameter('selected_id_str', '0');
                         }
                         mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
+                    } else if (route.osmid !== undefined) {
+                        selectedOSMId = route.osmid;
+                        mapContext.innerDecoder.setStyleParameter('selected_osmid', selectedOSMId + '');
+                        mapContext.innerDecoder.setStyleParameter('selected_id', '0');
+                        mapContext.innerDecoder.setStyleParameter('selected_id_str', '0');
+                    }
+
+                    if (selectedPosMarker) {
+                        selectedPosMarker.visible = false;
+                    }
+                } else {
+                    const geometry = item.geometry as GeoJSONPoint;
+                    const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+                    if (!selectedPosMarker) {
+                        getOrCreateLocalVectorLayer();
+                        const itemModule = mapContext.mapModule('items');
+                        selectedPosMarker = itemModule.createLocalPoint(position, {
+                            color: primaryColor.setAlpha(178).hex,
+                            clickSize: 0,
+                            scaleWithDPI: true,
+                            size: 20
+                        });
+                        localVectorDataSource.add(selectedPosMarker);
                     } else {
-                        if (selectedOSMId !== undefined) {
-                            selectedOSMId = undefined;
+                        selectedPosMarker.position = position;
+                        selectedPosMarker.visible = true;
+                    }
+                    if (setSelected) {
+                        if (props.id !== undefined) {
+                            selectedId = props.id;
+                            if (typeof props.id === 'string') {
+                                mapContext.innerDecoder.setStyleParameter('selected_id_str', selectedId + '');
+                                mapContext.innerDecoder.setStyleParameter('selected_id', '0');
+                            } else {
+                                mapContext.innerDecoder.setStyleParameter('selected_id', selectedId + '');
+                                mapContext.innerDecoder.setStyleParameter('selected_id_str', '0');
+                            }
                             mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
-                        }
-                        if (selectedId !== undefined) {
-                            selectedId = undefined;
-                            mapContext.innerDecoder.setStyleParameter('selected_id', '0');
-                            mapContext.innerDecoder.setStyleParameter('selected_id_str', '');
+                        } else {
+                            if (selectedOSMId !== undefined) {
+                                selectedOSMId = undefined;
+                                mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
+                            }
+                            if (selectedId !== undefined) {
+                                selectedId = undefined;
+                                mapContext.innerDecoder.setStyleParameter('selected_id', '0');
+                                mapContext.innerDecoder.setStyleParameter('selected_id_str', '');
+                            }
                         }
                     }
                 }
-            }
-            if (setSelected) {
-                setSelectedItem(item);
-            }
-            if (setSelected && !route) {
-                if (!props.address || !props.address['street']) {
-                    (async () => {
-                        try {
-                            const service = packageService.localOSMOfflineReverseGeocodingService;
-                            const geometry = item.geometry as GeoJSONPoint;
-                            const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-                            DEV_LOG && console.log('fetching addresses', !!service, position);
-                            if (service) {
-                                itemLoading = true;
-                                const radius = 200;
-                                // use a promise not to "wait" for it
-                                const res = await packageService.searchInGeocodingService(service, {
-                                    projection,
-                                    location: position,
-                                    searchRadius: radius
-                                });
-                                if (res) {
-                                    let bestFind: GeoResult;
-                                    for (let index = 0; index < res.size(); index++) {
-                                        const r = packageService.convertGeoCodingResult(res.get(index), true);
+                if (setSelected) {
+                    setSelectedItem(item);
+                }
+                if (setSelected && !route) {
+                    if (!props.address || !props.address['street']) {
+                        (async () => {
+                            try {
+                                const service = packageService.localOSMOfflineReverseGeocodingService;
+                                const geometry = item.geometry as GeoJSONPoint;
+                                const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+                                DEV_LOG && console.log('fetching addresses', !!service, position);
+                                if (service) {
+                                    itemLoading = true;
+                                    const radius = 200;
+                                    // use a promise not to "wait" for it
+                                    const res = await packageService.searchInGeocodingService(service, {
+                                        projection,
+                                        location: position,
+                                        searchRadius: radius
+                                    });
+                                    if (res) {
+                                        let bestFind: GeoResult;
+                                        for (let index = 0; index < res.size(); index++) {
+                                            const r = packageService.convertGeoCodingResult(res.get(index), true);
 
-                                        if (
-                                            r &&
-                                            r.properties.rank > 0.6 &&
-                                            computeDistanceBetween(position, {
-                                                lat: r.geometry.coordinates[1],
-                                                lon: r.geometry.coordinates[0]
-                                            }) <= radius
-                                        ) {
-                                            if (!bestFind || Object.keys(r.properties.address).length > Object.keys(bestFind.properties.address).length) {
-                                                bestFind = r;
-                                            } else if (bestFind && props.address && props.address['street']) {
+                                            if (
+                                                r &&
+                                                r.properties.rank > 0.6 &&
+                                                computeDistanceBetween(position, {
+                                                    lat: r.geometry.coordinates[1],
+                                                    lon: r.geometry.coordinates[0]
+                                                }) <= radius
+                                            ) {
+                                                if (!bestFind || Object.keys(r.properties.address).length > Object.keys(bestFind.properties.address).length) {
+                                                    bestFind = r;
+                                                } else if (bestFind && props.address && props.address['street']) {
+                                                    break;
+                                                }
+                                            } else {
                                                 break;
                                             }
-                                        } else {
-                                            break;
+                                        }
+                                        if (bestFind && $selectedItem.geometry === item.geometry) {
+                                            if (props.layer === 'housenumber') {
+                                                $selectedItem.properties.address = { ...bestFind.properties.address, name: null, houseNumber: props.housenumber } as any;
+                                                setSelectedItem($selectedItem);
+                                            } else {
+                                                $selectedItem.properties.address = { ...bestFind.properties.address, name: null } as any;
+                                                setSelectedItem($selectedItem);
+                                            }
                                         }
                                     }
-                                    if (bestFind && $selectedItem.geometry === item.geometry) {
-                                        if (props.layer === 'housenumber') {
-                                            $selectedItem.properties.address = { ...bestFind.properties.address, name: null, houseNumber: props.housenumber } as any;
-                                            setSelectedItem($selectedItem);
-                                        } else {
-                                            $selectedItem.properties.address = { ...bestFind.properties.address, name: null } as any;
-                                            setSelectedItem($selectedItem);
-                                        }
+                                } else {
+                                    const results = await getFromLocation(position.lat, position.lon, 10);
+                                    DEV_LOG && console.log('found addresses', results);
+                                    if (results?.length > 0) {
+                                        const result = results[0];
+                                        $selectedItem.properties.address = {
+                                            city: result.locality,
+                                            country: result.country,
+                                            state: result.administrativeArea,
+                                            housenumber: result.subThoroughfare,
+                                            postcode: result.postalCode,
+                                            street: result.thoroughfare
+                                        } as any;
+                                        setSelectedItem($selectedItem);
                                     }
                                 }
-                            } else {
-                                const results = await getFromLocation(position.lat, position.lon, 10);
-                                DEV_LOG && console.log('found addresses', results);
-                                if (results?.length > 0) {
-                                    const result = results[0];
-                                    $selectedItem.properties.address = {
-                                        city: result.locality,
-                                        country: result.country,
-                                        state: result.administrativeArea,
-                                        housenumber: result.subThoroughfare,
-                                        postcode: result.postalCode,
-                                        street: result.thoroughfare
-                                    } as any;
-                                    setSelectedItem($selectedItem);
-                                }
+                            } catch (error) {
+                                console.error('error fetching address', error, error.stack);
                             }
-                        } catch (error) {
-                            console.error('error fetching address', error, error.stack);
-                        }
-                    })();
+                        })();
+                    }
+
+                    if (props && 'ele' in props === false && packageService.hasElevation()) {
+                        const geometry = item.geometry as GeoJSONPoint;
+                        const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+                        packageService.getElevation(position).then((result) => {
+                            if ($selectedItem.geometry === item.geometry) {
+                                $selectedItem.properties = $selectedItem.properties || {};
+                                $selectedItem.properties['ele'] = result;
+                                setSelectedItem($selectedItem);
+                            }
+                        });
+                    }
                 }
 
-                if (props && 'ele' in props === false && packageService.hasElevation()) {
-                    const geometry = item.geometry as GeoJSONPoint;
-                    const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-                    packageService.getElevation(position).then((result) => {
-                        if ($selectedItem.geometry === item.geometry) {
-                            $selectedItem.properties = $selectedItem.properties || {};
-                            $selectedItem.properties['ele'] = result;
-                            setSelectedItem($selectedItem);
-                        }
-                    });
+                if (peek) {
+                    await bottomSheetInner.loadView();
+                    bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
                 }
+                if (preventZoom) {
+                    return;
+                }
+                zoomToItem({ item, zoom, minZoom, duration: zoomDuration });
+            } else {
+                unselectItem();
             }
-
-            if (peek) {
-                await bottomSheetInner.loadView();
-                bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
-            }
-            if (preventZoom) {
-                return;
-            }
-            zoomToItem({ item, zoom, minZoom, duration: zoomDuration });
-        } else {
-            unselectItem();
+        } catch (error) {
+            console.error(error);
         }
     }
 
@@ -799,32 +803,19 @@
     export function unselectItem(updateBottomSheet = true) {
         TEST_LOG && console.log('unselectItem', updateBottomSheet);
         if (!!$selectedItem) {
-            // const item = $selectedItem;
             setSelectedItem(null);
             if (selectedPosMarker) {
                 selectedPosMarker.visible = false;
             }
-            // if (selectedRouteInstructionsGroup) {
-            //     localVectorDataSource.remove(selectedRouteInstructionsGroup);
-            //     selectedRouteInstructionsGroup = null;
-            // }
             if (selectedOSMId !== undefined) {
                 selectedOSMId = undefined;
                 mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
-                // setStyleParameter('selected_id', '');
             }
             if (selectedId !== undefined) {
                 selectedId = undefined;
                 mapContext.innerDecoder.setStyleParameter('selected_id', '0');
                 mapContext.innerDecoder.setStyleParameter('selected_id_str', '');
             }
-            // if (item.route) {
-            //     const vectorElement = item.vectorElement as Line;
-            //     if (vectorElement) {
-            //         vectorElement.color = new Color(vectorElement.color as string).lighten(10);
-            //         vectorElement.width -= 2;
-            //     }
-            // }
             if (updateBottomSheet) {
                 bottomSheetStepIndex = 0;
             }
@@ -834,7 +825,6 @@
     $: setRenderProjectionMode($showGlobe);
     $: vectorTileDecoder && setStyleParameter('buildings', !!$show3DBuildings ? '2' : '1');
     $: vectorTileDecoder && setStyleParameter('contours', $showContourLines ? '1' : '0');
-    // $: vectorTileDecoder && mapContext?.innerDecoder?.setStyleParameter('routes', $showRoutes ? '1' : '0');
     $: {
         const visible = $showRoutes;
         getLayers('routes').forEach((l) => {
@@ -847,7 +837,6 @@
     $: toggleMapRotate($rotateEnabled);
     $: toggleMapPitch($pitchEnabled);
     $: currentLayer && (currentLayer.preloading = $preloading);
-    // $: shouldShowNavigationBarOverlay = $navigationBarHeight !== 0 && !!selectedItem;
     $: bottomSheetStepIndex === 0 && unselectItem();
     $: cartoMap?.getOptions().setFocusPointOffset(toNativeScreenPos({ x: 0, y: Utils.layout.toDevicePixels(steps[bottomSheetStepIndex]) / 2 }));
 
@@ -859,6 +848,8 @@
             hideKeepAwakeNotification();
         }
     }
+    // $: vectorTileDecoder && mapContext?.innerDecoder?.setStyleParameter('routes', $showRoutes ? '1' : '0');
+    // $: shouldShowNavigationBarOverlay = $navigationBarHeight !== 0 && !!selectedItem;
     function toggleHillshadeSlope(value: boolean) {
         mapContext?.mapModule('customLayers').toggleHillshadeSlope(value);
     }
