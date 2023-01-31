@@ -1,6 +1,7 @@
 import { Utils } from '@nativescript/core';
 import { InAppBrowser } from '@akylas/nativescript-inappbrowser';
 import { primaryColor } from '~/variables';
+import { alert } from '@nativescript-community/ui-material-dialogs';
 
 export async function openLink(url) {
     try {

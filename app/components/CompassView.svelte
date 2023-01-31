@@ -1,27 +1,25 @@
 <script lang="ts">
-    import { moon, sun } from '@modern-dev/daylight';
-    import { startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
-    import { estimateMagneticField } from '@nativescript-community/sensors/sensors';
-    import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { estimateMagneticField, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
+    import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
+    import { Utils } from '@nativescript-community/ui-chart/utils/Utils';
     import { executeOnMainThread } from '@nativescript/core/utils';
+    import dayjs, { Dayjs } from 'dayjs';
     import { getMoonPosition, GetMoonPositionResult, getPosition, GetSunPositionResult } from 'suncalc';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import SmoothCompassBehavior, { wrap } from '~/components/SmoothCompassBehavior';
+    import { formatDistance } from '~/helpers/formatter';
     import { getBearing, getDistanceSimple } from '~/helpers/geolib';
+    import { lc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
+    import { getMapContext } from '~/mapModules/MapModule';
     import { Item } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
     import { TO_DEG, TO_RAD } from '~/utils/geo';
-    import { lc } from '~/helpers/locale';
     import { primaryColor } from '~/variables';
     import CompassDialView from './CompassDialView.svelte';
-    import { Utils } from '@nativescript-community/ui-chart/utils/Utils';
-    import { getMapContext } from '~/mapModules/MapModule';
     import IconButton from './IconButton.svelte';
-    import { formatDistance } from '~/helpers/formatter';
-    import dayjs, { Dayjs } from 'dayjs';
 
     let currentHeading: number = 0;
     let lastHeadingTime: number = 0;
@@ -95,7 +93,6 @@
             console.error('startHeadingListener', err, err['stack']);
         }
     }
-
 
     $: {
         if (location) {
