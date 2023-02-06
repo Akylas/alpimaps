@@ -14,7 +14,7 @@
     import { CartoMap, PanningMode, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
     import { nativeVectorToArray, setShowDebug, setShowError, setShowInfo, setShowWarn, ZippedAssetPackage } from '@nativescript-community/ui-carto/utils';
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
-    import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
+    // import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
     import { isBottomSheetOpened, showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { action, prompt } from '@nativescript-community/ui-material-dialogs';
@@ -113,7 +113,7 @@
     let didIgnoreAlreadySelected = false;
 
     let showTransitLines = false;
-    let selectedClickMarker: Text<LatLonKeys>;
+    // let selectedClickMarker: Text<LatLonKeys>;
 
     let transitVectorTileDataSource: GeoJSONVectorTileDataSource;
     let transitVectorTileLayer: VectorTileLayer;
@@ -906,28 +906,28 @@
         selectedRoutes = null;
         handleSelectedRouteTimer = null;
     }
-    function handleClickedFeatures(position: GeoLocation) {
-        let fakeIndex = 0;
-        // currentClickedFeatures = [...new Map(clickedFeatures.map((item) => [JSON.stringify(item), item])).values()];
-        if (!selectedClickMarker) {
-            getOrCreateLocalVectorLayer();
-            const styleBuilder = new TextStyleBuilder({
-                color: 'black',
-                scaleWithDPI: true,
-                borderWidth: 0,
-                strokeWidth: 0,
-                fontSize: 20,
-                anchorPointX: 0.3,
-                anchorPointY: -0.1
-            });
-            selectedClickMarker = new Text<LatLonKeys>({ position, projection, styleBuilder, text: '+' });
-            localVectorDataSource.add(selectedClickMarker);
-        } else {
-            selectedClickMarker.position = position;
-            selectedClickMarker.visible = true;
-        }
-        // clickedFeatures = [];
-    }
+    // function handleClickedFeatures(position: GeoLocation) {
+    //     let fakeIndex = 0;
+    //     // currentClickedFeatures = [...new Map(clickedFeatures.map((item) => [JSON.stringify(item), item])).values()];
+    //     if (!selectedClickMarker) {
+    //         getOrCreateLocalVectorLayer();
+    //         const styleBuilder = new TextStyleBuilder({
+    //             color: 'black',
+    //             scaleWithDPI: true,
+    //             borderWidth: 0,
+    //             strokeWidth: 0,
+    //             fontSize: 20,
+    //             anchorPointX: 0.3,
+    //             anchorPointY: -0.1
+    //         });
+    //         selectedClickMarker = new Text<LatLonKeys>({ position, projection, styleBuilder, text: '+' });
+    //         localVectorDataSource.add(selectedClickMarker);
+    //     } else {
+    //         selectedClickMarker.position = position;
+    //         selectedClickMarker.visible = true;
+    //     }
+    //     // clickedFeatures = [];
+    // }
 
     function onRasterTileClicked(data: RasterTileClickInfo<LatLonKeys>) {
         const { clickType, position, nearestColor, layer } = data;

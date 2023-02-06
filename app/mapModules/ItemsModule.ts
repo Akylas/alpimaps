@@ -6,8 +6,6 @@ import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry
 import { VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { VectorTileSearchService } from '@nativescript-community/ui-carto/search';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
-import { LineStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/line';
-import { MarkerStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/marker';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/point';
 import { ShareFile } from '@nativescript-community/ui-share-file';
 import { File, Folder, ImageSource, knownFolders, path, profile } from '@nativescript/core';
@@ -301,7 +299,7 @@ export default class ItemsModule extends MapModule {
             // bbox: extent
         };
     }
-    async saveItem(item: Mutable<IItem>, onMap = true, styleOptions?: MarkerStyleBuilderOptions | PointStyleBuilderOptions | LineStyleBuilderOptions) {
+    async saveItem(item: Mutable<IItem>, onMap = true) {
         let properties = item.properties;
         if (item.route) {
             // console.log('saveItem', properties.route.osmid, item.geometry);
