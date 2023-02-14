@@ -1701,7 +1701,7 @@
                 useTextureView={false}
                 on:layoutChanged={reportFullyDrawn}
             />
-            <ButtonBar gray={true} horizontalAlignment="left" verticalAlignment="middle" id="mapButtonsNew" buttons={sideButtons} />
+            <ButtonBar marginLeft={5} gray={true} buttonSize={40} horizontalAlignment="left" verticalAlignment="middle" id="mapButtonsNew" buttons={sideButtons} />
 
             <Search bind:this={searchView} verticalAlignment="top" defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
             <LocationInfoPanel
