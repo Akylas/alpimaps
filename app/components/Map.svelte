@@ -1679,7 +1679,7 @@
     on:navigatingTo={onNavigatingTo}
     on:navigatingFrom={onNavigatingFrom}
     {keepScreenAwake}
-    screenBrightness={keepScreenAwake ? 1 : 0}
+    screenBrightness={keepScreenAwake ? 1 : -1}
 >
     <bottomsheet
         android:marginBottom={$navigationBarHeight}
