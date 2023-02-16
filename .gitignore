@@ -23,7 +23,6 @@ firmwares
 **/iOS/*.lproj/InfoPlist.strings
 
 # NativeScript Template
-*.js.map
 !webpack.config.js
 
 # Logs
@@ -52,8 +51,6 @@ tmp/
 !.vscode/launch.json
 !.vscode/extensions.json
 /.sentryclirc
-pnpm-lock.yaml
-/fastlane/report.xml
 *.zip
 dist
 /geojson
