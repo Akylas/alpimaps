@@ -1,0 +1,18 @@
+*Features*
+- info on click feature
+- light/dark theme
+- new peak finder
+- options to enable/disable map rotation / pitch
+- allow computing multiple directions at once
+- testing 3d terrain with mapbox
+- allow to change `stop_gps_background`
+- “show on lockscreen”
+- long press on direction params
+- new Astronomy sheet for sun/moon infos
+- GPS satellites view
+- show surfaces/waytypes stats
+- * save route images
+- new 24 hour clock setting
+- compassview now can aim at selected locations
+
+*Bug fixes*
