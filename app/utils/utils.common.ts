@@ -36,50 +36,8 @@ export function arraySortOn(array, key) {
 let dataFolder;
 export function getDataFolder() {
     if (!dataFolder) {
-        if (__ANDROID__) {
-            const checkExternalMedia = function () {
-                let mExternalStorageAvailable = false;
-                let mExternalStorageWriteable = false;
-                const state = android.os.Environment.getExternalStorageState();
-
-                if (android.os.Environment.MEDIA_MOUNTED === state) {
-                    // Can read and write the media
-                    mExternalStorageAvailable = mExternalStorageWriteable = true;
-                } else if (android.os.Environment.MEDIA_MOUNTED_READ_ONLY === state) {
-                    // Can only read the media
-                    mExternalStorageAvailable = true;
-                    mExternalStorageWriteable = false;
-                } else {
-                    // Can't read or write
-                    mExternalStorageAvailable = mExternalStorageWriteable = false;
-                }
-                return mExternalStorageWriteable;
-            };
-            if (Application.android.startActivity && checkExternalMedia()) {
-                const nArray = (Application.android.startActivity as android.app.Activity).getExternalFilesDirs(null);
-                const count = nArray.length;
-                if (nArray.length > 1) {
-                    for (let i = count - 1; i >= 0; i--) {
-                        dataFolder = nArray[i]?.getAbsolutePath();
-                        if (dataFolder) {
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        if (!dataFolder) {
-            dataFolder = knownFolders.temp().path;
-            // } else {
-            //     if (__ANDROID__ && Folder.exists(path.join(dataFolder, '../../../..', 'alpimaps_mbtiles'))) {
-            //         dataFolder = path.join(dataFolder, '../../../..', 'alpimaps_mbtiles');
-            //     }
-        }
+        dataFolder = knownFolders.externalDocuments().path;
     }
-
-    // if (TNS_ENV !== 'production') {
-    //     dataFolder = path.join(dataFolder, 'dev');
-    // }
     return dataFolder;
 }
 
@@ -131,32 +89,32 @@ export function getSavedMBTilesDir() {
     return savedMBTilesDir;
 }
 
-export function getAndroidRealPath(src) {
-    let filePath = '';
+// export function getAndroidRealPath(src) {
+//     let filePath = '';
 
-    // ExternalStorageProvider
-    // const uri  = android.net.Uri.parse(android.net.Uri.decode(src));
-    const docId = android.net.Uri.decode(src);
-    // console.log('docId', docId);
-    const split = docId.split(':');
-    const type = split[split.length - 2];
+//     // ExternalStorageProvider
+//     // const uri  = android.net.Uri.parse(android.net.Uri.decode(src));
+//     const docId = android.net.Uri.decode(src);
+//     // console.log('docId', docId);
+//     const split = docId.split(':');
+//     const type = split[split.length - 2];
 
-    if ('primary' === type) {
-        return android.os.Environment.getExternalStorageDirectory() + '/' + split[split.length - 1];
-    } else {
-        // if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
-        //getExternalMediaDirs() added in API 21
-        const external = androidApp.context.getExternalMediaDirs();
-        if (external.length > 1) {
-            filePath = external[1].getAbsolutePath();
-            filePath = filePath.substring(0, filePath.indexOf('Android')) + split[split.length - 1];
-        }
-        // } else {
-        //     filePath = "/storage/" + type + "/" + split[1];
-        // }
-        return filePath;
-    }
-}
+//     if ('primary' === type) {
+//         return android.os.Environment.getExternalStorageDirectory() + '/' + split[split.length - 1];
+//     } else {
+//         // if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
+//         //getExternalMediaDirs() added in API 21
+//         const external = androidApp.context.getExternalMediaDirs();
+//         if (external.length > 1) {
+//             filePath = external[1].getAbsolutePath();
+//             filePath = filePath.substring(0, filePath.indexOf('Android')) + split[split.length - 1];
+//         }
+//         // } else {
+//         //     filePath = "/storage/" + type + "/" + split[1];
+//         // }
+//         return filePath;
+//     }
+// }
 export function getFileNameThatICanUseInNativeCode(context: android.app.Activity, filePath: string) {
     // if (__IOS__) {
     return filePath;
@@ -199,8 +157,6 @@ export function checkManagePermission() {
     return true;
 }
 export async function askForManagePermission() {
-    DEV_LOG && console.log('askForManagePermission');
-
     if (__ANDROID__) {
         const activity = Application.android.startActivity as androidx.appcompat.app.AppCompatActivity;
         if (checkManagePermission()) {
@@ -239,7 +195,7 @@ export async function getDefaultMBTilesDir() {
         }
     }
     if (!localMbtilesSource) {
-        const resultPath = path.normalize(path.join(knownFolders.externalDocuments().path, '../../../../alpimaps_mbtiles'));
+        const resultPath = path.normalize(path.join(getDataFolder(), '../../../../alpimaps_mbtiles'));
         DEV_LOG && console.log('resultPath', resultPath);
         if (resultPath) {
             localMbtilesSource = resultPath;
