@@ -107,7 +107,7 @@ module.exports = (env, params = {}) => {
     env.appPath = appPath;
     env.appResourcesPath = appResourcesPath;
     env.appComponents = env.appComponents || [];
-    // env.appComponents.push('~/services/android/BgService', '~/services/android/BgServiceBinder');
+    env.appComponents.push('~/services/android/BgService', '~/services/android/BgServiceBinder');
 
     nsWebpack.chainWebpack((config, env) => {
         config.when(env.production, (config) => {
@@ -711,6 +711,13 @@ module.exports = (env, params = {}) => {
                     }
                 ]
             }
+        );
+    }
+    if (!!production) {
+        config.plugins.push(
+            new ForkTsCheckerWebpackPlugin({
+                async: false
+            })
         );
     }
 
