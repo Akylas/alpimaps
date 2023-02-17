@@ -1,4 +1,4 @@
-import RasterMapProvider from '../geo-three/source/providers/RasterMapProvider';
+import RasterMapProvider from '../../../geo-three/source/providers/RasterMapProvider';
 
 export default class ImageMapProvider extends RasterMapProvider {
     public buildURL(zoom: number, x: number, y: number): string {
