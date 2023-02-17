@@ -21,7 +21,6 @@ import type UserLocationModule from '~/mapModules/UserLocationModule';
 import type { IItem } from '~/models/Item';
 import { showBottomSheet } from '~/utils/svelte/bottomsheet';
 import { createGlobalEventListener, globalObservable } from '~/variables';
-import 'svelte';
 export interface IMapModule {
     onMapReady(mapView: CartoMap<LatLonKeys>);
     onMapDestroyed();
