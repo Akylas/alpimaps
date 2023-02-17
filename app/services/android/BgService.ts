@@ -1,22 +1,23 @@
 import { GeoHandler, SessionChronoEvent, SessionChronoEventData, SessionEventData, SessionState, SessionStateEvent } from '~/handlers/GeoHandler';
 import { lc } from '~/helpers/locale';
 import { BgServiceBinder } from '~/services/android/BgServiceBinder';
+import { BgServiceCommon } from '../BgService.common';
 import { ACTION_PAUSE, ACTION_RESUME, NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL, NotificationHelper } from './NotifcationHelper';
 
 const NOTIFICATION_ID = 3426124;
 
-// @NativeClass
-// @JavaProxy('akylas.alpi.maps.BgService')
-// export class BgService extends android.app.Service {
-export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.BgService', {
-    // currentNotifText: string;
-    // geoHandler: GeoHandler;
-    // bounded: boolean;
-    // mNotificationBuilder: androidx.core.app.NotificationCompat.Builder;
-    // mNotification: globalAndroid.app.Notification;
-    // notificationManager: any;
-    // recording: boolean;
-    // alwaysShowNotification: boolean;
+@NativeClass
+@JavaProxy('akylas.alpi.maps.BgService')
+export class BgService extends android.app.Service {
+    // export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.BgService', {
+    currentNotifText: string;
+    geoHandler: GeoHandler;
+    bounded: boolean;
+    mNotificationBuilder: androidx.core.app.NotificationCompat.Builder;
+    mNotification: globalAndroid.app.Notification;
+    notificationManager: any;
+    recording: boolean;
+    alwaysShowNotification: boolean;
 
     onStartCommand(intent: android.content.Intent, flags: number, startId: number) {
         super.onStartCommand(intent, flags, startId);
@@ -27,7 +28,7 @@ export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.B
             this.geoHandler.pauseSession();
         }
         return android.app.Service.START_STICKY;
-    },
+    }
     onCreate() {
         this.currentNotifText = lc('tap_to_open');
         this.recording = false;
@@ -35,14 +36,14 @@ export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.B
         this.alwaysShowNotification = false;
         this.notificationManager = this.getSystemService(android.content.Context.NOTIFICATION_SERVICE);
         NotificationHelper.createNotificationChannel();
-    },
+    }
     onDestroy() {
         if (this.geoHandler) {
             this.geoHandler.off(SessionStateEvent, this.onSessionStateEvent, this);
             this.geoHandler.off(SessionChronoEvent, this.onSessionChronoEvent, this);
             this.geoHandler = null;
         }
-    },
+    }
 
     onBind(intent: android.content.Intent) {
         // a client is binding to the service with bindService()
@@ -50,24 +51,22 @@ export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.B
         const result = new BgServiceBinder();
         result.setService(this);
         return result;
-    },
+    }
     onUnbind(intent: android.content.Intent) {
         this.bounded = false;
         this.removeForeground();
         // return true if you would like to have the service's onRebind(Intent) method later called when new clients bind to it.
         return true;
-    },
+    }
     onRebind(intent: android.content.Intent) {
         // a client is binding to the service with bindService(), after onUnbind() has already been called
-    },
+    }
 
-    onBounded() {
-        this.geoHandler = new GeoHandler();
-        this.geoHandler.bgService = new WeakRef(this);
-        // this.showForeground();
+    onBounded(commonService: BgServiceCommon) {
+        this.geoHandler = new GeoHandler(commonService);
         this.geoHandler.on(SessionStateEvent, this.onSessionStateEvent, this);
         this.geoHandler.on(SessionChronoEvent, this.onSessionChronoEvent, this);
-    },
+    }
 
     // private mNotification: android.app.Notification;
     // private mNotificationBuilder: androidx.core.app.NotificationCompat.Builder;
@@ -76,7 +75,7 @@ export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.B
 
         this.mNotification = NotificationHelper.getLocationNotification(this, this.mNotificationBuilder, this.geoHandler.currentSession);
         this.notificationManager.notify(NOTIFICATION_ID, this.mNotification); // todo check if necessary in pre Android O
-    },
+    }
 
     onSessionStateEvent(e: SessionEventData) {
         // const { positions, ...noLocs } = e.data;
@@ -90,7 +89,7 @@ export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.B
                 this.removeForeground();
                 break;
         }
-    },
+    }
     updateNotification() {
         if (!this.mNotificationBuilder) {
             this.displayNotification(this.recording);
@@ -98,10 +97,10 @@ export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.B
             this.mNotification = NotificationHelper.getUpdatedNotification(this, this.mNotificationBuilder, this.geoHandler.currentSession);
             this.notificationManager.notify(NOTIFICATION_ID, this.mNotification);
         }
-    },
+    }
     onSessionChronoEvent(e: SessionChronoEventData) {
         this.updateNotification();
-    },
+    }
 
     showForeground(force = false) {
         if (!this.bounded) {
@@ -117,7 +116,7 @@ export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.B
                 console.error('showForeground', err, err['stack']);
             }
         }
-    },
+    }
 
     removeForeground() {
         this.stopForeground(false);
@@ -136,4 +135,4 @@ export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.B
     //         }
     //     }
     // }
-});
+}

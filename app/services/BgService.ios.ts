@@ -7,8 +7,7 @@ export class BgService extends BgServiceCommon {
     readonly geoHandler: GeoHandler;
     constructor() {
         super();
-        this.geoHandler = new GeoHandler();
-        this.geoHandler.bgService = new WeakRef(this as any);
+        this.geoHandler = new GeoHandler(this);
         this._handlerLoaded();
     }
 }
