@@ -1,6 +1,7 @@
-import { GeoHandler } from '~/handlers/GeoHandler';
+import { Application } from '@nativescript/core';
+import { ApplicationEventData, backgroundEvent, foregroundEvent } from '@nativescript/core/application';
 import { Observable } from '@nativescript/core/data/observable';
-import { ApplicationEventData, off as applicationOff, on as applicationOn, exitEvent, launchEvent } from '@nativescript/core/application';
+import { GeoHandler } from '~/handlers/GeoHandler';
 
 export const BgServiceLoadedEvent = 'BgServiceLoadedEvent';
 
@@ -26,6 +27,12 @@ export abstract class BgServiceCommon extends Observable {
     abstract get geoHandler(): GeoHandler;
     protected _loaded = false;
     protected _started = false;
+    appInBackground = true;
+    bgService?: WeakRef<any>; //android only
+
+    constructor() {
+        super();
+    }
     get loaded() {
         return this._loaded;
     }
@@ -46,9 +53,15 @@ export abstract class BgServiceCommon extends Observable {
     }
 
     async stop() {
+        if (!this._started) {
+            return;
+        }
         try {
-            DEV_LOG && console.log(TAG, 'stop');
             this._started = false;
+
+            Application.off(backgroundEvent, this.onAppBackground, this);
+            Application.off(foregroundEvent, this.onAppForeground, this);
+            DEV_LOG && console.log(TAG, 'stop');
             await this.geoHandler.stop();
         } catch (error) {
             console.error(error);
@@ -60,10 +73,16 @@ export abstract class BgServiceCommon extends Observable {
         }
     }
     async start() {
+        if (this._started) {
+            return;
+        }
         try {
-            DEV_LOG && console.log(TAG, 'start');
-            await this.geoHandler.start();
             this._started = true;
+            DEV_LOG && console.log(TAG, 'start');
+
+            Application.on(backgroundEvent, this.onAppBackground, this);
+            Application.on(foregroundEvent, this.onAppForeground, this);
+            await this.geoHandler.start();
             this.notify({
                 eventName: BgServiceStartedEvent,
                 object: this
@@ -76,6 +95,20 @@ export abstract class BgServiceCommon extends Observable {
                 error
             });
         }
+    }
+    onAppForeground(args: ApplicationEventData) {
+        if (!this.appInBackground) {
+            return;
+        }
+        DEV_LOG && console.log(this.constructor.name, 'onAppForeground');
+        this.appInBackground = false;
+    }
+    onAppBackground(args: ApplicationEventData) {
+        if (this.appInBackground) {
+            return;
+        }
+        DEV_LOG && console.log(this.constructor.name, 'onAppBackground');
+        this.appInBackground = true;
     }
     // updateNotifText(text: string) {}
 }
