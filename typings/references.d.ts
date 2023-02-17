@@ -9,6 +9,10 @@
 //     export default Vue;
 // }
 
+declare module '*.svelte' {
+    export { SvelteComponent as default };
+}
+
 declare module '*.scss' {
     // const content: any;
 

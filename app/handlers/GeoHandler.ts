@@ -6,8 +6,10 @@ import { backgroundEvent, foregroundEvent, launchEvent } from '@nativescript/cor
 import { bind } from 'helpful-decorators/dist-src/bind';
 import { convertDurationSeconds, formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
-import { BgService } from '~/services/BgService';
+import { BgServiceCommon } from '~/services/BgService.common';
 import { sdkVersion } from '~/utils/utils.common';
+import { Handler } from './Handler';
+import type { BgService as AndroidBgService } from '~/services/android/BgService';
 
 let geolocation: GPS;
 
@@ -68,9 +70,8 @@ export interface SessionChronoEventData extends GPSEvent {
 
 const TAG = '[GeoHandler]';
 
-export class GeoHandler extends Observable {
+export class GeoHandler extends Handler {
     watchId;
-    bgService: WeakRef<BgService>;
     currentWatcher: Function;
     _isIOSBackgroundMode = false;
     _deferringUpdates = false;
@@ -89,37 +90,11 @@ export class GeoHandler extends Observable {
     }
     gpsEnabled = true;
 
-    constructor() {
-        super();
+    constructor(service: BgServiceCommon) {
+        super(service);
         if (!geolocation) {
             geolocation = new GPS();
         }
-        if (__ANDROID__) {
-            if (Application.android.nativeApp) {
-                this.appOnLaunch();
-            } else {
-                Application.on(launchEvent, this.appOnLaunch, this);
-            }
-        }
-        if (__IOS__) {
-            Application.on(launchEvent, this.appOnLaunch, this);
-        }
-        Application.on(backgroundEvent, this.onAppPause, this);
-        Application.on(foregroundEvent, this.onAppResume, this);
-    }
-    appOnLaunch() {
-        if (this.started) {
-            return;
-        }
-        this.currentSession = JSON.parse(ApplicationSettings.getString('pausedSession', null));
-        if (this.currentSession) {
-            this.currentSession.startTime = new Date(this.currentSession.startTime);
-            this.currentSession.lastPauseTime = new Date(this.currentSession.lastPauseTime);
-            this.sessionState = SessionState.PAUSED;
-            this.onUpdateSessionChrono();
-        }
-        this.started = true;
-        geolocation.on(GPS.gps_status_event, this.onGPSStateChange, this);
     }
     onAppResume(args: ApplicationEventData) {
         if (__IOS__) {
@@ -140,7 +115,7 @@ export class GeoHandler extends Observable {
                 this.wasWatchingBeforePause = false;
             } else if (this.isWatching()) {
                 if (__ANDROID__) {
-                    (this.bgService as any).get().removeForeground();
+                    (this.service.bgService as WeakRef<AndroidBgService>).get().removeForeground();
                 }
             }
         }
@@ -162,27 +137,10 @@ export class GeoHandler extends Observable {
                 this.stopWatch();
             } else {
                 if (__ANDROID__) {
-                    (this.bgService as any).get().showForeground(true);
+                    (this.service.bgService as WeakRef<AndroidBgService>).get().showForeground(true);
                 }
             }
         }
-    }
-    onAppExit(args: ApplicationEventData) {
-        if (!this.started) {
-            return;
-        }
-        if (this.currentSession && this.currentSession.state !== SessionState.STOPPED && this.currentSession.distance > 0) {
-            this.pauseSession();
-            ApplicationSettings.setString('pausedSession', JSON.stringify(this.currentSession));
-            this.currentSession = null; // to prevent storing in history
-
-            // store paused session to start it again after
-        }
-        this.stopSession();
-        this.started = false;
-        geolocation && geolocation.off(GPS.gps_status_event, this.onGPSStateChange, this);
-        Application.off(backgroundEvent, this.onAppPause, this);
-        Application.off(foregroundEvent, this.onAppResume, this);
     }
 
     async stop() {
@@ -196,7 +154,7 @@ export class GeoHandler extends Observable {
 
         if (this.currentSession && this.currentSession.state !== SessionState.STOPPED && this.currentSession.distance > 0) {
             this.pauseSession();
-            // appSettings.setString('pausedSession', JSON.stringify(this.currentSession));
+            ApplicationSettings.setString('pausedSession', JSON.stringify(this.currentSession));
             this.currentSession = null; // to prevent storing in history
         }
         this.stopSession();
@@ -205,15 +163,13 @@ export class GeoHandler extends Observable {
         if (this.started) {
             return;
         }
-        // this.currentSession = JSON.parse(appSettings.getString('pausedSession', null));
-        // if (this.currentSession) {
-        //     this.currentSession.startTime = new Date(this.currentSession.startTime);
-        //     if (this.currentSession.lastPauseTime) {
-        //         this.currentSession.lastPauseTime = new Date(this.currentSession.lastPauseTime);
-        //     }
-        //     this.sessionState = SessionState.PAUSED;
-        //     this.onUpdateSessionChrono();
-        // }
+        this.currentSession = JSON.parse(ApplicationSettings.getString('pausedSession', null));
+        if (this.currentSession) {
+            this.currentSession.startTime = new Date(this.currentSession.startTime);
+            this.currentSession.lastPauseTime = new Date(this.currentSession.lastPauseTime);
+            this.sessionState = SessionState.PAUSED;
+            this.onUpdateSessionChrono();
+        }
         DEV_LOG && console.log(TAG, 'start');
         this.started = true;
         geolocation.on(GPS.gps_status_event, this.onGPSStateChange, this);
@@ -472,7 +428,7 @@ export class GeoHandler extends Observable {
         TEST_LOG && console.log('stopWatch', this.watchId);
         if (this.watchId) {
             if (__ANDROID__) {
-                (this.bgService as any).get().removeForeground();
+                (this.service.bgService as WeakRef<AndroidBgService>).get().removeForeground();
             }
             geolocation.clearWatch(this.watchId);
             this.watchId = null;
