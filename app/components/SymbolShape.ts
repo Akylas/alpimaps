@@ -1,7 +1,6 @@
-import { Utils } from '@nativescript/core';
 import { Align, Canvas, Direction, Paint, Path, Style } from '@nativescript-community/ui-canvas';
 import Shape, { colorProperty, lengthProperty, stringProperty } from '@nativescript-community/ui-canvas/shapes/shape';
-import { Color, CoreTypes, Length, PercentLength } from '@nativescript/core';
+import { Color, CoreTypes, Length, PercentLength, Utils } from '@nativescript/core';
 import { osmicon } from '~/helpers/formatter';
 
 const specialShapes = ['shell_modern', 'triangle_turned', 'triangle_line', 'rectangle_line', 'red_diamond', 'drop_line', 'diamond_line', 'urned_T', 'white_foot'];
@@ -22,8 +21,8 @@ export default class SymbolShape extends Shape {
     @lengthProperty left = CoreTypes.zeroLength;
     @lengthProperty top = CoreTypes.zeroLength;
     drawOnCanvas(canvas: Canvas) {
-        const availableWidth = layout.toDevicePixels(canvas.getWidth());
-        const availableHeight = layout.toDevicePixels(canvas.getHeight());
+        const availableWidth = Utils.layout.toDevicePixels(canvas.getWidth());
+        const availableHeight = Utils.layout.toDevicePixels(canvas.getHeight());
         const width = Utils.layout.toDeviceIndependentPixels(PercentLength.toDevicePixels(this.width, 0, availableWidth));
         const height = Utils.layout.toDeviceIndependentPixels(PercentLength.toDevicePixels(this.height, 0, availableHeight));
         const left = Utils.layout.toDeviceIndependentPixels(Length.toDevicePixels(this.left));
