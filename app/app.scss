@@ -128,7 +128,6 @@ mdcardview {
 .icon-btn-text {
     @extend %mdi;
     @extend %icon-btn;
-    background-color: $text-color-dark;
     color: $primary-color;
     ripple-color: $dark-color;
 }
