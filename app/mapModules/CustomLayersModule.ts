@@ -321,7 +321,7 @@ export default class CustomLayersModule extends MapModule {
             maptiler: ApplicationSettings.getString('maptilerToken', this.devMode ? gVars.MAPTILER_TOKEN : undefined),
             google: ApplicationSettings.getString('googleToken', this.devMode ? gVars.GOOGLE_TOKEN : undefined),
             thunderforest: ApplicationSettings.getString('thunderforestToken', this.devMode ? gVars.THUNDERFOREST_TOKEN : undefined),
-            ign: ApplicationSettings.getString('ignToken', gVars.IGN_TOKEN)
+            ign: ApplicationSettings.getString('ignToken', this.devMode ? gVars.IGN_TOKEN : undefined)
         };
     }
     set devMode(value: boolean) {
@@ -573,7 +573,6 @@ export default class CustomLayersModule extends MapModule {
                 provider.url.map((url) => templateString(url, provider.urlOptions));
             }
         }
-
         // replace attribution placeholders with their values from toplevel provider attribution,
         // recursively
         const attributionReplacer = function (attr) {
@@ -715,6 +714,9 @@ export default class CustomLayersModule extends MapModule {
         }
         this.updateAttribution(item);
     }
+    hasLocalData = false;
+    hasTerrain = false;
+    hasRoute = false;
     async loadLocalMbtiles(directory: string) {
         try {
             const context: android.app.Activity = __ANDROID__ && (androidApp.foregroundActivity || androidApp.startActivity);
@@ -789,6 +791,7 @@ export default class CustomLayersModule extends MapModule {
                 );
             }
             if (mbtiles.length) {
+                this.hasLocalData = true;
                 const name = 'Local';
                 const dataSource = new MultiTileDataSource();
                 DEV_LOG &&
@@ -839,6 +842,7 @@ export default class CustomLayersModule extends MapModule {
                 mapContext.addLayer(layer, 'map');
             }
             if (routes.length) {
+                this.hasRoute = true;
                 DEV_LOG &&
                     console.log(
                         'routes',
@@ -855,6 +859,7 @@ export default class CustomLayersModule extends MapModule {
                 }
             }
             if (terrains.length) {
+                this.hasTerrain = true;
                 const name = 'Hillshade';
                 const opacity = appSettings.getNumber(`${name}_opacity`, 1);
                 const dataSource = new MultiTileDataSource();

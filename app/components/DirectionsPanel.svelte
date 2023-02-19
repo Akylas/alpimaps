@@ -607,7 +607,7 @@
         let positions;
         const points = waypoints['_array'].map((r) => ({ lat: r.geometry.coordinates[1], lon: r.geometry.coordinates[0] }));
         let costing_options;
-        if (profile === 'bus') {
+        if (WITH_BUS_SUPPORT && profile === 'bus') {
             const positions = points['_array'].map((r) => `${r.lat.toFixed(6)},${r.lon.toFixed(6)}`);
             const result = networkService.request({
                 url: MOBILITY_URL + '/otp/routers/default/plan',
