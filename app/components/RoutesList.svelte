@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { ObservableArray } from '@nativescript/core';
     import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
     import { Template } from 'svelte-native/components';
@@ -58,7 +59,13 @@
         } else {
             itemsModule.showItem(item);
         }
-        setMenuVisible(item, false);
+        item.onMap = item.onMap ? 0 : 1;
+        const index = items.indexOf(item);
+        if (index !== -1) {
+            items.setItem(index, item);
+        }
+        // setMenuVisible(item, false);
+        showSnack({message:item.onMap ? lc('route_now_visible'): lc('route_now_hidden')})
     }
 
     onLanguageChanged(refresh);
@@ -79,11 +86,11 @@
         <CActionBar canGoBack title={lc('routes')} />
         <collectionview bind:this={collectionView} row={1} {items}>
             <Template let:item>
-                <gridlayout rows="80,auto" on:longPress={() => setMenuVisible(item, !item.selected)} backgroundColor={$backgroundColor}>
+                <gridlayout rows="80,auto" on:tap={() => setMenuVisible(item, item.selected === false ? true: false)} backgroundColor={$backgroundColor}>
                     <BottomSheetInfoView {item} marginLeft={60} propsLeft={60} iconLeft={17} iconTop={64} iconColor={$backgroundColor} {onDraw} iconSize={16}>
                         <image src={item.image_path} borderRadius={8} width={50} height={50} horizontalAlignment="left" verticalAlignment="top" marginTop={10}/>
                     </BottomSheetInfoView>
-                    <stacklayout orientation="horizontal" row={1} colSpan={2} borderTopWidth={1} borderBottomWidth={1} borderColor={$borderColor} visibility={item.selected ? 'visible' : 'collapsed'}>
+                    <stacklayout orientation="horizontal" row={1} colSpan={2} borderTopWidth={1} borderBottomWidth={1} borderColor={$borderColor} visibility={item.selected === false ? 'collapsed' : 'visible'}>
                         <IconButton on:tap={() => deleteItem(item)} tooltip={lc('delete')} color="red" text="mdi-delete" rounded={false} />
                         <IconButton on:tap={() => showItemOnMap(item)} tooltip={lc('show')} isVisible={itemIsRoute(item)} text={item.onMap ? 'mdi-eye-off' : 'mdi-eye'} rounded={false} />
                     </stacklayout>
