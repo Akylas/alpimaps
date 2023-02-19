@@ -692,14 +692,18 @@ class PackageService extends Observable {
             );
         return resultStats;
     }
-
+    hasOfflineRouting = true;
     offlineRoutingSearchService() {
         // console.log('offlineRoutingSearchService', !!this._localOfflineRoutingSearchService);
-        if (!this._localOfflineRoutingSearchService) {
+        if (this.hasOfflineRouting && !this._localOfflineRoutingSearchService) {
             const files = this.findFilesWithExtension('.vtiles');
-            const source = (this._localOfflineRoutingSearchService = new MultiValhallaOfflineRoutingService());
-            source.setConfigurationParameter('service_limits.bicycle.max_distance', 255000);
-            files.forEach((f) => source.add(f.path));
+            if (files.length) {
+                const source = (this._localOfflineRoutingSearchService = new MultiValhallaOfflineRoutingService());
+                source.setConfigurationParameter('service_limits.bicycle.max_distance', 255000);
+                files.forEach((f) => source.add(f.path));
+            } else {
+                this.hasOfflineRouting = false;
+            }
         }
         return this._localOfflineRoutingSearchService;
     }
