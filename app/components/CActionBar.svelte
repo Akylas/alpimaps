@@ -37,7 +37,7 @@
     $: menuIconVisible = ((canGoBack || modalWindow) && !disableBackButton) || showMenuIcon;
 </script>
 
-<gridLayout class="actionBar" columns="auto,*, auto" rows="*" paddingLeft={5} paddingRight={5} {...$$restProps} color={color || $textColor}>
+<gridLayout class="actionBar" columns="auto,*, auto" rows="*" paddingLeft={5} paddingRight={5} {...$$restProps} color={color || $textColor} on:tap={()=>{}}>
     <label id="title" col={1} colSpan={3} class="actionBarTitle" textAlignment="left" visibility={!!title ? 'visible' : 'hidden'} text={title || ''} verticalTextAlignment="center" />
     <slot name="center" />
     <stackLayout orientation="horizontal">
