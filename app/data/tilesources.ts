@@ -60,7 +60,7 @@ export const data: { [k: string]: Provider } = {
     // ESRI_Vector: {
     //     url: "https://basemaps.arcgis.com/v1/arcgis/rest/services/{variant}/VectorTileServer/tile/{z}/{y}/{x}.pbf",
     //     urlOptions: {
-    //         attribution: "Tiles &copy; Esri",
+    //         attribution: "Tiles Esri",
     //         maxZoom: 15,
     //         variant: "World_Basemap"
     //     }
@@ -68,7 +68,7 @@ export const data: { [k: string]: Provider } = {
     RefugesInfo: {
         category: 'europe,topo',
         url: 'http://maps.refuges.info/hiking/{z}/{x}/{y}.png',
-        attribution: '&copy; <a href="http://www.refuges.info/wiki/licence">Refuges.info</a>, {attribution.OpenStreetMap}',
+        attribution: '<a href="http://www.refuges.info/wiki/licence">Refuges.info</a>, {attribution.OpenStreetMap}',
 
         sourceOptions: {
             maxZoom: 18
@@ -77,7 +77,7 @@ export const data: { [k: string]: Provider } = {
     OpenSkiMap: {
         category: 'ski',
         url: 'https://tiles.skimap.org/openskimap2x/{z}/{x}/{y}.png',
-        attribution: '&copy; <a href="http://www.openskimap.org">OpenSkiMap</a>, {attribution.OpenStreetMap}',
+        attribution: '<a href="http://www.openskimap.org">OpenSkiMap</a>, {attribution.OpenStreetMap}',
         isOverlay: true
     },
 
@@ -92,7 +92,7 @@ export const data: { [k: string]: Provider } = {
     //     url: "//www.opensnowmap.org/tiles-pistes/{z}/{x}/{y}.png",
     //     urlOptions: {
     //         opacity: 0.99,
-    //         attribution: '&copy; <a href="http://www.opensnowmap.org">OpenSnowMap</a>, {attribution.OpenStreetMap}',
+    //         attribution: '<a href="http://www.opensnowmap.org">OpenSnowMap</a>, {attribution.OpenStreetMap}',
     //         forceHTTP: true
     //     }
     // },
@@ -161,7 +161,7 @@ export const data: { [k: string]: Provider } = {
                 // sourceOptions:{
                 // TMSScheme:true
                 // }
-            },
+            }
             // Slopes: {
             //     urlOptions: {
             //         variant: 'GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN',
@@ -197,9 +197,7 @@ export const data: { [k: string]: Provider } = {
                 'User-Agent': 'AlpiMaps'
             }
         },
-        urlOptions: {
-            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        },
+        attribution: '<a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         variants: {
             BlackAndWhite: {
                 url: 'http://{s}.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png',
@@ -215,19 +213,19 @@ export const data: { [k: string]: Provider } = {
             },
             France: {
                 url: 'http://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
-                attribution: '&copy; Openstreetmap France | {attribution.OpenStreetMap}',
+                attribution: 'Openstreetmap France | {attribution.OpenStreetMap}',
                 sourceOptions: {
                     maxZoom: 18
                 }
             },
             HOT: {
                 url: 'http://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
-                attribution: '{attribution.OpenStreetMap}, Tiles courtesy of <a href="http://hot.openstreetmap.org/" target="_blank">Humanitarian OpenStreetMap Team</a>'
+                attribution: '{attribution.OpenStreetMap}, Tiles courtesy of <a href="http://hot.openstreetmap.org/">Humanitarian OpenStreetMap Team</a>'
             },
             Route500: {
                 url: 'http://{s}.tile.openstreetmap.fr/route500/{z}/{x}/{y}.png',
                 isOverlay: true,
-                attribution: '&copy; Openstreetmap France | {attribution.OpenStreetMap}',
+                attribution: 'Openstreetmap France | {attribution.OpenStreetMap}',
                 sourceOptions: {
                     maxZoom: 15
                 }
@@ -238,13 +236,13 @@ export const data: { [k: string]: Provider } = {
         category: 'sea',
         url: 'http://tiles.openseamap.org/seamark/{z}/{x}/{y}.png',
         isOverlay: true,
-        attribution: 'Map data: &copy; <a href="http://www.openseamap.org">OpenSeaMap</a> contributors'
+        attribution: 'Map data: <a href="http://www.openseamap.org">OpenSeaMap</a> contributors'
     },
     OpenTopoMap: {
         category: 'topo,europe',
         url: 'http://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
         attribution:
-            'Map data: {attribution.OpenStreetMap}, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
+            'Map data: {attribution.OpenStreetMap}, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
         sourceOptions: {
             maxZoom: 15
         }
@@ -285,7 +283,7 @@ export const data: { [k: string]: Provider } = {
     OpenCycleMap: {
         tokenKey: 'thunderforest',
         url: 'https://{s}.tile.thunderforest.com/{variant}/{z}/{x}/{y}@2x.png?apikey={thunderforest}',
-        attribution: '&copy; <a href="http://www.opencyclemap.org">OpenCycleMap</a>, {attribution.OpenStreetMap}',
+        attribution: '<a href="http://www.opencyclemap.org">OpenCycleMap</a>, {attribution.OpenStreetMap}',
         sourceOptions: {
             maxZoom: 18
         },
@@ -350,7 +348,7 @@ export const data: { [k: string]: Provider } = {
     },
     Hydda: {
         url: 'http://{s}.tile.openstreetmap.se/hydda/{variant}/{z}/{x}/{y}.png',
-        attribution: 'Tiles courtesy of <a href="http://openstreetmap.se/" target="_blank">OpenStreetMap Sweden</a> &mdash; Map data {attribution.OpenStreetMap}',
+        attribution: 'Tiles courtesy of <a href="http://openstreetmap.se/">OpenStreetMap Sweden</a> &mdash; Map data {attribution.OpenStreetMap}',
         sourceOptions: {
             maxZoom: 18
         },
@@ -505,7 +503,7 @@ export const data: { [k: string]: Provider } = {
     },
     Esri: {
         url: 'https://server.arcgisonline.com/ArcGIS/rest/services/{variant}/MapServer/tile/{z}/{y}/{x}',
-        attribution: 'Tiles &copy; Esri',
+        attribution: 'Tiles Esri',
         urlOptions: {
             variant: 'World_Street_Map'
         },
@@ -604,7 +602,7 @@ export const data: { [k: string]: Provider } = {
             maxZoom: 19
         },
         isOverlay: true,
-        attribution: 'Map data &copy; <a href="http://openweathermap.org">OpenWeatherMap</a>',
+        attribution: 'Map data <a href="http://openweathermap.org">OpenWeatherMap</a>',
         cacheable: false,
         variants: {
             Clouds: 'clouds',
@@ -633,7 +631,7 @@ export const data: { [k: string]: Provider } = {
         tokenKey: ['here_appcode', 'here_appid'],
 
         url: 'https://{s}.{base}.maps.cit.api.here.com/maptile/2.1/' + 'maptile/{mapID}/{variant}/{z}/{x}/{y}/256/png8?' + 'app_id={here_appid}&app_code={here_appcode}',
-        attribution: 'Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
+        attribution: 'Map 1987-2014 <a href="http://developer.here.com">HERE</a>',
         urlOptions: {
             mapID: 'newest',
             base: 'base',
@@ -728,7 +726,7 @@ export const data: { [k: string]: Provider } = {
     },
     CartoDB: {
         url: 'http://{s}.basemaps.cartocdn.com/{variant}/{z}/{x}/{y}.png',
-        attribution: '{attribution.OpenStreetMap} &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+        attribution: '{attribution.OpenStreetMap} <a href="http://cartodb.com/attributions">CartoDB</a>',
         sourceOptions: {
             subdomains: 'abcd',
             maxZoom: 18
@@ -824,13 +822,13 @@ export const data: { [k: string]: Provider } = {
     map1eu: {
         category: 'europe',
         url: 'http://beta.map1.eu/tiles/{z}/{x}/{y}.jpg',
-        attribution: '&copy; <a href="http://beta.map1.eu/">map1.eu</a>, {attribution.OpenStreetMap}',
+        attribution: '<a href="http://beta.map1.eu/">map1.eu</a>, {attribution.OpenStreetMap}',
         sourceOptions: {
             maxZoom: 15
         }
     },
     Geofabrik: {
-        attribution: '{attribution.OpenStreetMap} &copy; <a href="http://www.geofabrik.de/maps/tiles.html">Geofabrik</a>',
+        attribution: '{attribution.OpenStreetMap} <a href="http://www.geofabrik.de/maps/tiles.html">Geofabrik</a>',
         sourceOptions: {
             subdomains: 'abcd',
             maxZoom: 16
@@ -847,7 +845,7 @@ export const data: { [k: string]: Provider } = {
     },
     'Ride with GPS': {
         url: 'http://{s}.tile.ridewithgps.com/rwgps/{z}/{x}/{y}.png',
-        attribution: '{attribution.OpenStreetMap} &copy; <a href="http://ridewithgps.com/">Ride with GPS</a>',
+        attribution: '{attribution.OpenStreetMap} <a href="http://ridewithgps.com/">Ride with GPS</a>',
         sourceOptions: {
             subdomains: 'abcd',
             maxZoom: 16
@@ -855,7 +853,7 @@ export const data: { [k: string]: Provider } = {
     },
     Waze: {
         url: 'https://worldtiles{s}.waze.com/tiles/{z}/{x}/{y}.png',
-        attribution: '{attribution.OpenStreetMap} &copy; <a href="http://waze.com">Waze</a>',
+        attribution: '{attribution.OpenStreetMap} <a href="http://waze.com">Waze</a>',
         sourceOptions: {
             subdomains: '1234',
             maxZoom: 19
@@ -864,7 +862,7 @@ export const data: { [k: string]: Provider } = {
     Alltrails: {
         category: 'topo',
         url: 'http://alltrails.com/tiles/alltrailsOutdoors/{z}/{x}/{y}.png',
-        attribution: '{attribution.OpenStreetMap} &copy; <a href="http://alltrails.com">Alltrails</a>',
+        attribution: '{attribution.OpenStreetMap} <a href="http://alltrails.com">Alltrails</a>',
         sourceOptions: {
             maxZoom: 19
         }
@@ -872,7 +870,7 @@ export const data: { [k: string]: Provider } = {
     '4umaps': {
         category: 'europe,topo',
         url: 'http://4umaps.eu/{z}/{x}/{y}.png',
-        attribution: '{attribution.OpenStreetMap} &copy; <a href="http://4umaps.eu">4umaps</a>',
+        attribution: '{attribution.OpenStreetMap} <a href="http://4umaps.eu">4umaps</a>',
         sourceOptions: {
             minZoom: 1,
             maxZoom: 15
@@ -882,7 +880,7 @@ export const data: { [k: string]: Provider } = {
         category: 'europe',
         url: 'http://www.skitrack.fr/cgi-bin/mapserv.fcgi?map=/srv/d_vttrack/vttrack/skitrack/mapserver/WMS-{variant}.map&SERVICE=WMS&VERSION=1.1.1&LAYERS=slope&FORMAT={format}&TRANSPARENT=true&REQUEST=GetMap&STYLES=&SRS=EPSG%3A900913&BBOX={bbox}&WIDTH=512&HEIGHT=512',
         isOverlay: true,
-        attribution: '{attribution.OpenStreetMap} &copy; <a href="http://maptoolkit.net/">Maptoolkit</a>',
+        attribution: '{attribution.OpenStreetMap} <a href="http://maptoolkit.net/">Maptoolkit</a>',
         layerOptions: {
             zoomLevelBias: 0
         },

@@ -7,7 +7,7 @@
     import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
     import type { PackageStatus } from '@nativescript-community/ui-carto/packagemanager';
     import { PackageAction } from '@nativescript-community/ui-carto/packagemanager';
-    import { confirm } from '@nativescript-community/ui-material-dialogs';
+    import { alert, confirm } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { CoreTypes, GridLayout, ViewBase } from '@nativescript/core';
     import type { Point } from 'geojson';
@@ -28,6 +28,8 @@
     import { showError } from '~/utils/error';
     import { resolveComponentElement, showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { accentColor, alpimapsFontFamily, globalMarginTop, mdiFontFamily, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
+    import { Label } from '@nativescript-community/ui-label';
+    import { openLink } from '~/utils/ui';
     function scale(node, { delay = 0, duration = 400, easing = CoreTypes.AnimationCurve.easeOut }) {
         const scaleX = node.nativeView.scaleX;
         const scaleY = node.nativeView.scaleY;
@@ -41,6 +43,7 @@
 
     let currentMapZoom = 0;
     let totalDownloadProgress = 0;
+    let attributionVisible = false;
     const mapContext = getMapContext();
 
     let selectedItem: IItem = null;
@@ -107,6 +110,7 @@
         const customLayers = mapContext.mapModule('customLayers');
         if (customLayers) {
             customLayers.on('onProgress', onTotalDownloadProgress);
+            customLayers.on('attribution', onAttribution);
         }
         // userLocationModule.on('location', onNewLocation);
     });
@@ -125,7 +129,7 @@
             customLayers.off('onProgress', onTotalDownloadProgress);
         }
     });
-    
+
     // function onNewLocation(e: any) {
     //     currentLocation = e.data;
     // }
@@ -136,6 +140,9 @@
         } else {
             totalDownloadProgress = e.data;
         }
+    }
+    function onAttribution(e) {
+        attributionVisible = e.needsAttribution;
     }
 
     function askUserLocation() {
@@ -261,6 +268,23 @@
             this.showError(err);
         }
     }
+
+    function onAttributionTap() {
+        const customLayers = mapContext.mapModule('customLayers');
+        if (customLayers) {
+            const attributions = customLayers.getAllAtributions();
+            const label = new Label();
+            label.style.padding = '10 20 0 20';
+            label.color = $textColor as any;
+            label.html = attributions.join('<br/>');
+            label.on('linkTap', (e) => openLink(e['link']));
+            return alert({
+                title: lc('attributions'),
+                view: label,
+                okButtonText: lc('ok')
+            });
+        }
+    }
 </script>
 
 <gridlayout id="scrollingWidgets" bind:this={gridLayout} {...$$restProps} rows="auto,*,auto" columns="60,*,70" isPassThroughParentEnabled={true} marginTop={globalMarginTop} {userInteractionEnabled}>
@@ -292,6 +316,18 @@
     </stacklayout>
 
     <ScaleView bind:this={scaleView} col={1} row={2} horizontalAlignment="right" verticalAlignment="bottom" marginBottom={8} />
+    <mdbutton
+        visibility={attributionVisible ? 'visible' : 'hidden'}
+        variant="text"
+        class="icon-btn-text"
+        col={1}
+        row={2}
+        horizontalAlignment="left"
+        verticalAlignment="bottom"
+        text="mdi-information-outline"
+        on:tap={onAttributionTap}
+    />
+
     <mdprogress colSpan={3} row={2} value={totalDownloadProgress} visibility={totalDownloadProgress > 0 ? 'visible' : 'collapsed'} verticalAlignment="bottom" />
     <canvas
         bind:this={navigationCanvas}
