@@ -55,14 +55,15 @@
     $: {
         try {
             if (chart) {
-                updateChartData();
+                updateChartData(item);
             }
         } catch (err) {
             console.error('updateChartData', !!err, err, err.stack);
             showError(err);
         }
     }
-    let onChartLoadedCallbacks = [];
+    $: console.log('item changed', !!item);
+    let onChartDataUpdateCallbacks = [];
 
     let highlightNString;
     function onChartPanOrZoom(event) {
@@ -169,8 +170,14 @@
         if (!chart) {
             return;
         }
+        if (!item) {
+            onChartDataUpdateCallbacks.push(() => {
+                hilghlightPathIndex(onPathIndex, remainingDistance, remainingTime, highlight, sendEvent);
+            });
+            return;
+        }
         const nChart = chart?.nativeView;
-        DEV_LOG && console.log('hilghlightPathIndex', onPathIndex, remainingDistance, remainingTime, highlight, nChart);
+        DEV_LOG && console.log('hilghlightPathIndex', !!item, onPathIndex, remainingDistance, remainingTime, highlight, nChart, new Error().stack);
         if (onPathIndex === -1) {
             if (nChart) {
                 nChart.highlight(null);
@@ -216,9 +223,12 @@
                     },
                     null
                 );
-                return
+                return;
             }
             function highlightFunc() {
+                if (!item) {
+                    return;
+                }
                 const nChart = chart?.nativeView;
                 const profile = item.profile;
                 const profileData = profile?.data;
@@ -236,18 +246,17 @@
                     nChart.highlightValues([highlight]);
                     sendEvent && onChartHighlight({ eventName: 'highlight', highlight, object: nChart } as any);
                 }
-
             }
             if (nChart && nChart.getData()) {
                 highlightFunc();
             } else {
                 DEV_LOG && console.log('stacking highlight');
-                onChartLoadedCallbacks.push(highlightFunc);
+                onChartDataUpdateCallbacks.push(highlightFunc);
             }
         }
     }
 
-    export function updateChartData() {
+    export function updateChartData(item) {
         if (!chart || !item) {
             return;
         }
@@ -358,9 +367,7 @@
                 sets.push(set);
                 const lineData = new LineData(sets);
                 chartView.setData(lineData);
-                DEV_LOG && console.log('chart data set', new Error().stack)
-                onChartLoadedCallbacks.forEach((c) => c());
-                onChartLoadedCallbacks = [];
+                DEV_LOG && console.log('chart data set', new Error().stack);
             } else {
                 // console.log('clearing highlight1')
                 chartView.highlightValues(null);
@@ -377,6 +384,9 @@
                 chartData.notifyDataChanged();
                 chartView.notifyDataSetChanged();
             }
+
+            onChartDataUpdateCallbacks.forEach((c) => c());
+            onChartDataUpdateCallbacks = [];
             // chartView.zoomAndCenter(7, 1, 100, 0, AxisDependency.LEFT);
         }
     }
