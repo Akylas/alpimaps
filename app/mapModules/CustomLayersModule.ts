@@ -55,6 +55,11 @@ vec4 applyLighting(lowp vec4 color, mediump vec3 normal, mediump vec3 surfaceNor
    if (slope >= 30.0) {return vec4(0.9411764705882353* 0.5, 0.9019607843137255* 0.5, 0.3058823529411765* 0.5, 0.5); } \n \
    return vec4(0, 0, 0, 0.0); \n \
 } \n';
+
+function getProviderAttribution(pr) {
+    return pr.attribution || (pr.urlOptions && pr.urlOptions.attribution);
+}
+
 function templateString(str: string, data) {
     return str.replace(
         /{(\w*)}/g, // or /{(\w*)}/g for "{this} instead of %this%"
@@ -503,6 +508,7 @@ export default class CustomLayersModule extends MapModule {
                 maxZoom: 22,
                 ...data.sourceOptions
             },
+            attribution: data.attribution,
             tokenKey: data.tokenKey,
             urlOptions: data.urlOptions,
             layerOptions: data.layerOptions
@@ -541,6 +547,7 @@ export default class CustomLayersModule extends MapModule {
                 };
             } else {
                 provider.url = variant.url || provider.url;
+                provider.attribution = variant.attribution || provider.attribution;
                 provider.sourceOptions = { ...provider.sourceOptions, ...variant.sourceOptions };
                 provider.layerOptions = { ...provider.layerOptions, ...variant.layerOptions };
                 provider.urlOptions = { variant: variantName, ...provider.urlOptions, ...variant.urlOptions };
@@ -574,10 +581,10 @@ export default class CustomLayersModule extends MapModule {
                 return attr;
             }
             return attr.replace(/\{attribution.(\w*)\}/, function (match, attributionName) {
-                return attributionReplacer(providers[attributionName].attribution);
+                return attributionReplacer(getProviderAttribution(providers[attributionName]));
             });
         };
-        provider.attribution = attributionReplacer(provider.attribution);
+        provider.attribution = attributionReplacer(getProviderAttribution(provider));
 
         // Compute final options combining provider options with any user overrides
         if (this.isOverlay(arg, provider)) {
@@ -643,6 +650,7 @@ export default class CustomLayersModule extends MapModule {
                                 const data = await this.createRasterLayer(provider.id || provider.name, provider);
                                 this.customSources.push(data);
                                 mapContext.addLayer(data.layer, 'customLayers');
+                                this.updateAttribution(data);
                             }
                         } catch (err) {
                             console.error('createRasterLayer', err);
@@ -686,10 +694,12 @@ export default class CustomLayersModule extends MapModule {
         });
     }
     hillshadeLayer: HillshadeRasterTileLayer;
+    needsAttribution = false;
     addDataSource(item: SourceItem) {
         const name = this.getSourceItemId(item);
         const savedSources: (string | Provider)[] = JSON.parse(appSettings.getString('added_providers', '[]'));
         const layerIndex = savedSources.findIndex((s) => (typeof s === 'string' ? s : s?.id) === name);
+
         if (layerIndex === -1) {
             this.customSources.push(item);
             mapContext.addLayer(item.layer, 'customLayers');
@@ -703,6 +713,7 @@ export default class CustomLayersModule extends MapModule {
             this.customSources.splice(layerIndex, 0, item);
             mapContext.insertLayer(item.layer, 'customLayers', layerIndex);
         }
+        this.updateAttribution(item);
     }
     async loadLocalMbtiles(directory: string) {
         try {
@@ -975,6 +986,27 @@ export default class CustomLayersModule extends MapModule {
     getSourceItemId(item: SourceItem) {
         return item.id || item.name;
     }
+
+    getAllAtributions() {
+        return this.customSources.map((d) => getProviderAttribution(d.provider)).filter((a) => !!a);
+    }
+    updateAttribution(item: SourceItem, removed: boolean = false) {
+        if (getProviderAttribution(item.provider)) {
+            if (removed && this.needsAttribution) {
+                this.needsAttribution = this.customSources.some((d, i) => !!getProviderAttribution(d.provider));
+                this.notify({
+                    eventName: 'attribution',
+                    needsAttribution: this.needsAttribution
+                });
+            } else if (!removed && !this.needsAttribution) {
+                this.needsAttribution = true;
+                this.notify({
+                    eventName: 'attribution',
+                    needsAttribution: this.needsAttribution
+                });
+            }
+        }
+    }
     deleteSource(item: SourceItem) {
         let index = -1;
         const name = this.getSourceItemId(item);
@@ -989,6 +1021,7 @@ export default class CustomLayersModule extends MapModule {
         if (index !== -1) {
             mapContext.removeLayer(this.customSources.getItem(index).layer, 'customLayers');
             this.customSources.splice(index, 1);
+            this.updateAttribution(item, true);
         }
         const savedSources: (string | Provider)[] = JSON.parse(appSettings.getString('added_providers', '[]'));
         index = savedSources.findIndex((s) => (typeof s === 'string' ? s : s?.id) === name);
