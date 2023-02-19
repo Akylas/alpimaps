@@ -61,7 +61,7 @@
     function getSubtitle(item) {
         switch (item.id) {
             case 'token':
-                return item.value || '';
+                return item.value || lc('click_to_set_key');
             default:
                 return item.description || '';
         }
@@ -129,7 +129,7 @@
             tokenSettings.push({
                 id: 'token',
                 token: k,
-                value: customLayers.tokenKeys[k],
+                value: customLayers.tokenKeys[k], 
                 rightBtnIcon: 'mdi-chevron-right'
             });
         });
@@ -228,7 +228,7 @@
                 }
                 case 'token': {
                     const result = await prompt({
-                        title: lc('token_key', item.token),
+                        title: lc('token_key', lc(item.token)),
                         okButtonText: l('save'),
                         cancelButtonText: l('cancel'),
                         autoFocus: true,
