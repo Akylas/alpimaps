@@ -296,12 +296,14 @@
     async function onNetworkChange(event: NetworkConnectionStateEventData) {
         networkConnected = event.data.connected;
     }
+    let customLayersModule: CustomLayersModule;
     onMount(() => {
         networkService.on(NetworkConnectionStateEvent, onNetworkChange);
         networkConnected = networkService.connected;
         if (__ANDROID__) {
             Application.android.on(AndroidApplication.activityBackPressedEvent, onAndroidBackButton);
         }
+        customLayersModule = new CustomLayersModule();
         setMapContext({
             // drawer: drawer.nativeView,
             getMap: () => cartoMap,
@@ -336,7 +338,7 @@
             mapModules: {
                 items: new ItemsModule(),
                 userLocation: new UserLocationModule(),
-                customLayers: new CustomLayersModule(),
+                customLayers: customLayersModule,
                 directionsPanel: directionsPanel,
                 mapScrollingWidgets
             }
@@ -1476,11 +1478,6 @@
         try {
             const options = [
                 {
-                    title: lc('select_style'),
-                    id: 'select_style',
-                    icon: 'mdi-layers'
-                },
-                {
                     title: lc('location_info'),
                     id: 'location_info',
                     icon: 'mdi-speedometer'
@@ -1524,6 +1521,13 @@
                     icon: 'mdi-theme-light-dark'
                 }
             ];
+            if (customLayersModule.hasLocalData) {
+                options.unshift({
+                    title: lc('select_style'),
+                    id: 'select_style',
+                    icon: 'mdi-layers'
+                });
+            }
             if (SENTRY_ENABLED && isSentryEnabled) {
                 options.push({
                     title: lc('bug_report'),
@@ -1619,56 +1623,67 @@
     }
 
     let sideButtons = [];
+
     $: {
         let newButtons: any[] = [
-            {
-                text: 'mdi-bullseye',
-                isSelected: $showContourLines,
-                onTap: () => showContourLines.set(!$showContourLines)
-            },
-            {
-                text: 'mdi-signal',
-                isSelected: $showSlopePercentages,
-                onTap: () => showSlopePercentages.set(!$showSlopePercentages)
-            },
-            {
-                text: 'mdi-routes',
-                isSelected: $showRoutes,
-                onTap: () => showRoutes.set(!$showRoutes)
-            },
             {
                 text: 'mdi-speedometer',
                 onTap: switchLocationInfo
             }
         ];
-        // newButtons.push({
-        //     text: 'mdi-map-clock',
-        //     isSelected: $preloading,
-        //     onTap: () => preloading.set(!$preloading)
-        // });
-
-        newButtons.push(
-            {
-                text: keepScreenAwake ? 'mdi-sleep' : 'mdi-sleep-off',
-                isSelected: keepScreenAwake,
-                selectedColor: 'red',
-                onTap: switchKeepAwake
-            },
-            {
-                text: 'mdi-cellphone-lock',
-                isSelected: showOnLockscreen,
-                selectedColor: primaryColor,
-                onTap: switchShowOnLockscreen
-            },
-            {
-                text: 'mdi-bus-marker',
-                isSelected: showTransitLines,
-                selectedColor: primaryColor,
-                onTap: () => (showTransitLines = !showTransitLines),
-                onLongPress: showTransitLinesPage
+        if (customLayersModule) {
+            if (customLayersModule.hasRoute) {
+                newButtons.unshift({
+                    text: 'mdi-routes',
+                    isSelected: $showRoutes,
+                    onTap: () => showRoutes.set(!$showRoutes)
+                });
             }
-        );
-        sideButtons = newButtons;
+            if (customLayersModule.hasTerrain) {
+                newButtons.unshift({
+                    text: 'mdi-signal',
+                    isSelected: $showSlopePercentages,
+                    onTap: () => showSlopePercentages.set(!$showSlopePercentages)
+                });
+            }
+            if (customLayersModule.hasLocalData) {
+                newButtons.unshift({
+                    text: 'mdi-bullseye',
+                    isSelected: $showContourLines,
+                    onTap: () => showContourLines.set(!$showContourLines)
+                });
+            }
+            // newButtons.push({
+            //     text: 'mdi-map-clock',
+            //     isSelected: $preloading,
+            //     onTap: () => preloading.set(!$preloading)
+            // });
+
+            newButtons.push(
+                {
+                    text: keepScreenAwake ? 'mdi-sleep' : 'mdi-sleep-off',
+                    isSelected: keepScreenAwake,
+                    selectedColor: 'red',
+                    onTap: switchKeepAwake
+                },
+                {
+                    text: 'mdi-cellphone-lock',
+                    isSelected: showOnLockscreen,
+                    selectedColor: primaryColor,
+                    onTap: switchShowOnLockscreen
+                }
+            );
+            if (WITH_BUS_SUPPORT) {
+                newButtons.push({
+                    text: 'mdi-bus-marker',
+                    isSelected: showTransitLines,
+                    selectedColor: primaryColor,
+                    onTap: () => (showTransitLines = !showTransitLines),
+                    onLongPress: showTransitLinesPage
+                });
+            }
+            sideButtons = newButtons;
+        }
     }
 </script>
 
