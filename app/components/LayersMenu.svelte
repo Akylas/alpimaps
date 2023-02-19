@@ -14,6 +14,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { pitchEnabled, preloading, rotateEnabled, showGlobe, show3DBuildings } from '~/stores/mapStore';
     import { closeBottomSheet, showBottomSheet } from '~/utils/svelte/bottomsheet';
+    import { openLink } from '~/utils/ui';
     import { borderColor, navigationBarHeight, primaryColor, subtitleColor, textColor } from '~/variables';
     import IconButton from './IconButton.svelte';
 
@@ -110,6 +111,9 @@
     function onButtonLongPress(item, event) {
         collectionView.nativeView.startDragging(customSources.indexOf(item));
     }
+    function onLinkTap(e) {
+        openLink(e.link);
+    }
     onThemeChanged(() => collectionView?.nativeView.refreshVisibleItems());
 </script>
 
@@ -118,16 +122,18 @@
         <collectionview id="trackingScrollView" items={customSources} bind:this={collectionView} reorderEnabled={true} on:itemReordered={onItemReordered}>
             <Template let:item>
                 <gridlayout paddingLeft={15} paddingRight={5} rows="*" columns="130,*,auto" borderBottomColor={$borderColor} borderBottomWidth={1}>
-                    <label
-                        color={item.layer.opacity === 0 ? $subtitleColor : $textColor}
-                        text={item.name.toUpperCase()}
-                        fontSize={13}
-                        fontWeight="bold"
-                        lineBreak="end"
-                        verticalTextAlignment="center"
-                        maxLines={2}
-                        paddingTop={3}
-                    />
+                    <stacklayout verticalAlignment="center">
+                        <label color={item.layer.opacity === 0 ? $subtitleColor : $textColor} text={item.name.toUpperCase()} fontSize={13} fontWeight="bold" lineBreak="end" maxLines={2} />
+                        <label
+                            visibility={item.provider.attribution ? 'visible' : 'collapsed'}
+                            color={$subtitleColor}
+                            html={item.provider.attribution}
+                            fontSize={11}
+                            maxLines={2}
+                            paddingTop={3}
+                            on:linkTap={onLinkTap}
+                        />
+                    </stacklayout>
                     <slider
                         marginLeft={10}
                         marginRight={10}
