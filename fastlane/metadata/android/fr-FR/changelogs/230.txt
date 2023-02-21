@@ -1,0 +1,9 @@
+*Bug fixes*
+- prevent click through actionbars
+- show data source attributions on map (if needed)
+- show features only if local data is available
+- RouteList page show items menu by default for now
+- setting explains about API keys
+- show layers attributions in layers menu
+- elevation chart not updating on item selection
+- *android:* should fix crash on start
