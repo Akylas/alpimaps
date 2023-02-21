@@ -11,16 +11,13 @@ const originalConsole = {
 
 function convertArg(arg) {
     const type = typeof arg;
-    if (arg === undefined) {
-        return 'undefined';
-    }
     if (arg === null) {
         return 'null';
+    } else if (arg === undefined) {
+        return 'undefined';
     }
-    if (type === 'function' || typeof arg.getClass === 'function' || typeof arg.class === 'function') {
-        return (arg as Function).toString();
-    } else if (Array.isArray(arg)) {
-        return arg.map(convertArg);
+    if (Array.isArray(arg)) {
+        return JSON.stringify(arg);
     } else if (type === 'object') {
         const str = arg.toString();
         if (str === '[object Object]') {
@@ -28,9 +25,8 @@ function convertArg(arg) {
         } else {
             return str;
         }
-    } else {
-        return arg.toString();
     }
+    return arg;
 }
 function actualLog(level: 'info' | 'log' | 'error' | 'warn' | 'debug', ...args) {
     if (SENTRY_ENABLED && Sentry) {
