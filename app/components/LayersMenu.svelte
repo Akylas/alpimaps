@@ -145,6 +145,7 @@
                         verticalAlignment="middle"
                     />
                     <IconButton col={2} rowSpan={2} gray={true} text="mdi-dots-vertical" on:tap={() => showSourceOptions(item)} onLongPress={(event) => onButtonLongPress(item, event)} />
+                    <mdprogress colSpan={3} value={item.downloadProgress} visibility={item.downloading > 0 ? 'visible' : 'collapsed'} verticalAlignment="bottom" />
                 </gridlayout>
             </Template>
         </collectionview>
