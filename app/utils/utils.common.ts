@@ -6,7 +6,6 @@ import { lc } from '~/helpers/locale';
 let savedMBTilesDir = ApplicationSettings.getString('local_mbtiles_directory');
 
 export const sdkVersion = parseInt(Device.sdkVersion, 10);
-const ANDROID_30 = __ANDROID__ && sdkVersion >= 30;
 
 export function arraySortOn(array, key) {
     return array.sort(function (a, b) {
@@ -88,6 +87,9 @@ export function listFolder(folderPath: string): (Partial<FileSystemEntity> & { i
 export function getSavedMBTilesDir() {
     return savedMBTilesDir;
 }
+export function setSavedMBTilesDir(value) {
+    savedMBTilesDir = value;
+}
 
 // export function getAndroidRealPath(src) {
 //     let filePath = '';
@@ -141,70 +143,13 @@ export function getFileNameThatICanUseInNativeCode(context: android.app.Activity
     // }
 }
 
-function permResultCheck(r) {
+export function permResultCheck(r) {
     if (Array.isArray(r)) {
         return r[0] === 'authorized';
     } else {
         const unauthorized = Object.keys(r).some((s) => r[s] !== 'authorized');
         return !unauthorized;
     }
-}
-
-export function checkManagePermission() {
-    if (__ANDROID__) {
-        return !ANDROID_30 || android.os.Environment.isExternalStorageManager();
-    }
-    return true;
-}
-export async function askForManagePermission() {
-    if (__ANDROID__) {
-        const activity = Application.android.startActivity as androidx.appcompat.app.AppCompatActivity;
-        if (checkManagePermission()) {
-            return true;
-        }
-        //If the draw over permission is not available open the settings screen
-        //to grant the permission.
-        return new Promise<boolean>((resolve, reject) => {
-            const REQUEST_CODE = 6646;
-            const onActivityResultHandler = (data: AndroidActivityResultEventData) => {
-                if (data.requestCode === REQUEST_CODE) {
-                    Application.android.off(AndroidApplication.activityResultEvent, onActivityResultHandler);
-                    resolve(android.provider.Settings.canDrawOverlays(activity));
-                }
-            };
-            Application.android.on(AndroidApplication.activityResultEvent, onActivityResultHandler);
-            const intent = new android.content.Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, android.net.Uri.parse('package:' + __APP_ID__));
-            activity.startActivityForResult(intent, REQUEST_CODE);
-        });
-    }
-    return true;
-}
-export async function getDefaultMBTilesDir() {
-    // let localMbtilesSource = savedMBTilesDir;
-    let localMbtilesSource = null;
-    const result = await request('storage');
-
-    if (!permResultCheck(result)) {
-        throw new Error('missing_storage_permission');
-    }
-
-    if (ANDROID_30) {
-        await askForManagePermission();
-        if (!checkManagePermission()) {
-            throw new Error('missing_manage_permission');
-        }
-    }
-    if (!localMbtilesSource) {
-        const resultPath = path.normalize(path.join(getDataFolder(), '../../../../alpimaps_mbtiles'));
-        DEV_LOG && console.log('resultPath', resultPath);
-        if (resultPath) {
-            localMbtilesSource = resultPath;
-            savedMBTilesDir = localMbtilesSource;
-            ApplicationSettings.setString('local_mbtiles_directory', resultPath);
-        }
-    }
-    DEV_LOG && console.log('getDefaultMBTilesDir', localMbtilesSource);
-    return localMbtilesSource;
 }
 
 // type Many<T> = T | T[];
@@ -215,43 +160,4 @@ export function omit<T extends object, U extends keyof T>(object: T, ...props: U
     return Object.keys(object)
         .filter((key) => (props as string[]).indexOf(key) < 0)
         .reduce((newObj, key) => Object.assign(newObj, { [key]: object[key] }), {} as any);
-}
-
-declare const top: any;
-let ColorPickerObserver;
-export async function pickColor(color: Color, view?: View) {
-    return new Promise<Color>((resolve) => {
-        if (__ANDROID__) {
-            const activity = Application.android.startActivity;
-            if (!(color instanceof Color)) {
-                color = new Color(color as any);
-            }
-            const builder = new com.skydoves.colorpickerview.ColorPickerDialog.Builder(activity)
-                .setTitle(lc('pick_color'))
-                .setPositiveButton(
-                    lc('choose'),
-                    new com.skydoves.colorpickerview.listeners.ColorListener({
-                        onColorSelected(color: number) {
-                            resolve(new Color(color));
-                        }
-                    })
-                )
-                .setNegativeButton(
-                    lc('cancel'),
-                    new android.content.DialogInterface.OnClickListener({
-                        onClick(dialogInterface) {
-                            dialogInterface.dismiss();
-                            resolve(null);
-                        }
-                    })
-                )
-                .attachAlphaSlideBar(true) // the default value is true.
-                .attachBrightnessSlideBar(true) // the default value is true.
-                .setBottomSpace(12); // set a bottom space between the last slidebar and buttons.
-
-            builder.getColorPickerView().setInitialColor(color.android);
-            const popup = builder.create();
-            popup.show();
-        }
-    });
 }
