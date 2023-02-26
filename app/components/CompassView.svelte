@@ -18,6 +18,7 @@
     import { packageService } from '~/services/PackageService';
     import { TO_DEG, TO_RAD } from '~/utils/geo';
     import { primaryColor } from '~/variables';
+    import { SVG } from '@nativescript-community/ui-svg';
     import CompassDialView from './CompassDialView.svelte';
     import IconButton from './IconButton.svelte';
 
@@ -77,7 +78,6 @@
                         headingAccuracy = newAccuracy;
                     });
                 }
-
                 break;
         }
     }
@@ -134,6 +134,29 @@
     const textPaint = new Paint();
     textPaint.textSize = 12;
     textPaint.color = 'white';
+
+    const svg = new SVG();
+    svg.width = { unit: '%', value: 1 };
+    svg.height = { unit: '%', value: 1 };
+    svg.stretch = 'aspectFit';
+    svg.cache = true;
+    svg.src = '~/assets/svgs/needle.svg';
+
+    function onCanvasDrawBeforeText({ canvas, object, delta, rotation }: { canvas: Canvas; object: Canvas; delta: number; rotation: number }) {
+        let w = canvas.getWidth();
+        let h = canvas.getHeight();
+        const rx = w / 2;
+        const ry = h / 2;
+        if (updateWithSensor) {
+            canvas.save();
+            canvas.translate(rx, ry);
+            canvas.rotate(-rotation);
+            canvas.scale(0.9, 0.9);
+            canvas.translate(-rx, -ry);
+            svg.drawOnCanvas(canvas, null);
+            canvas.restore();
+        }
+    }
     function onCanvasDraw({ canvas, object, delta, rotation }: { canvas: Canvas; object: Canvas; delta: number; rotation: number }) {
         let w = canvas.getWidth();
         let h = canvas.getHeight();
@@ -206,8 +229,8 @@
 </script>
 
 <gridLayout {height} rows="*,auto" {...$$restProps}>
-    <CompassDialView bind:canvas onDraw={onCanvasDraw} rotation={updateWithSensor ? -currentHeading : 0} drawInsideGrid={moonBearing} />
-    <svgview visibility={updateWithSensor ? 'visible' : 'hidden'} src="~/assets/svgs/needle.svg" stretch="aspectFit" horizontalAlignment="center" margin="30" />
+    <CompassDialView bind:canvas onDraw={onCanvasDraw} onDrawBeforeText={onCanvasDrawBeforeText} rotation={updateWithSensor ? -currentHeading : 0} drawInsideGrid={moonBearing} />
+    <!-- <svgview visibility={updateWithSensor ? 'visible' : 'hidden'} src="~/assets/svgs/needle.svg" stretch="aspectFit" horizontalAlignment="center" margin="30" /> -->
     <IconButton small={true} text="mdi-rotate-orbit" on:tap={() => (updateWithSensor = !updateWithSensor)} isSelected={updateWithSensor} horizontalAlignment="left" verticalAlignment="bottom" />
     <label
         row={1}
