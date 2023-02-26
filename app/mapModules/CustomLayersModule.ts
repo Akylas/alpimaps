@@ -814,7 +814,8 @@ export default class CustomLayersModule extends MapModule {
                     opacity,
                     preloading: get(preloading),
                     decoder: mapContext.getVectorTileDecoder(),
-                    clickHandlerLayerFilter: PRODUCTION ? undefined : '.*',
+                    // clickHandlerLayerFilter: PRODUCTION ? undefined : '.*',
+                    clickHandlerLayerFilter: PRODUCTION ? '(.*::(icon|label)|waterway|transportation)' : '.*',
                     tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                     visible: opacity !== 0
                 });
