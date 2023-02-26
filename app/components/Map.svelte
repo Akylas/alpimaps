@@ -1596,7 +1596,9 @@
             });
             if (result.result) {
                 Sentry.captureMessage(result.text);
-                Sentry.flush();
+                // flush is not yet working on Android
+                // event will be sent on restart
+                setTimeout(() => Sentry.flush(0), 1000);
                 showSnack({ message: l('bug_report_sent') });
             }
         }
