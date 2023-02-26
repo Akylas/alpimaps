@@ -217,9 +217,7 @@ export default class UserLocationModule extends MapModule {
     }
     onLocation(event: UserLocationdEventData) {
         // const { android, ios, ...toPrint } = data.location;
-        if (DEV_LOG) {
-            console.log('onLocation', this.mUserFollow, event.location);
-        }
+        DEV_LOG && console.log('onLocation', this.mUserFollow, event.location);
         if (event.error) {
             this.stopWatchLocation();
             showSnack({
