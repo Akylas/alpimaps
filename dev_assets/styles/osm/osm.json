@@ -33,7 +33,7 @@
     "nutiparameters": {
         "font_face": "Noto Sans",
         "motorway_casing_start_zoom": 9,
-        "_clickhandlerlayerfilter":".*::(icon|label)",
+        "_clickhandlerlayerfilter":"(.*::(icon|label)|waterway|transportation)",
         "lang": "en",
         "zoomBiais": 0,
         "selected_id": "0",
