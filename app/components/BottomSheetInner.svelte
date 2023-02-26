@@ -197,7 +197,6 @@
     }
 
     function updateSelectedItem(item) {
-        console.log('updateSelectedItem', !!item);
         try {
             if (item) {
                 itemIsRoute = !!item?.route;
@@ -228,7 +227,7 @@
     $: updateSelectedItem(item);
 
     function updateRouteItemWithPosition(routeItem: Item, location: GenericMapPos<LatLonKeys>, updateNavigationInstruction = true, updateGraph = true, highlight?: Highlight<Entry>) {
-        DEV_LOG && console.log('updateRouteItemWithPosition', !!routeItem?.route, location, updateNavigationInstruction, updateGraph, !!highlight);
+        // DEV_LOG && console.log('updateRouteItemWithPosition', !!routeItem?.route, location, updateNavigationInstruction, updateGraph, !!highlight);
         try {
             if (routeItem?.route) {
                 // const props = routeItem.properties;
@@ -559,7 +558,7 @@
             const geometry = item.geometry as Point;
             openUrl(`weather://query?lat=${geometry.coordinates[1]}&lon=${geometry.coordinates[0]}&name=${query}`);
         } catch (err) {
-            this.showError(err);
+            showError(err);
         } finally {
             updatingItem = false;
         }
@@ -599,7 +598,7 @@
                 }
             });
         } catch (err) {
-            this.showError(err);
+            showError(err);
         }
     }
     async function openCompass() {
@@ -613,7 +612,6 @@
                 const points = mapContext.mapModules.directionsPanel.getFeatures().filter((s) => s.geometry.type === 'Point');
                 location = { lat: (points[0].geometry as Point).coordinates[1], lon: (points[0].geometry as Point).coordinates[0] };
                 aimingItems = points.slice(1);
-                console.log('points', points.length, aimingItems.length);
             }
             const CompassView = (await import('~/components/CompassView.svelte')).default;
             await showBottomSheet({
@@ -627,7 +625,7 @@
                 }
             });
         } catch (error) {
-            this.showError(error);
+            showError(error);
         }
     }
 
@@ -638,7 +636,7 @@
             const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0], altitude: geometry.coordinates[2] };
             showBottomSheet({ parent: mapContext.getMainPage(), trackingScrollView: 'scrollView', view: TransitLinesBottomSheet, props: { name: formatter.getItemName(item), position } });
         } catch (err) {
-            this.showError(err);
+            showError(err);
         }
     }
     // async function shareFile(content: string, fileName: string) {
