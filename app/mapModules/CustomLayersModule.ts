@@ -657,6 +657,7 @@ export default class CustomLayersModule extends MapModule {
                     }
                 }
                 this.listenForSourceChanges = true;
+                this.notify({ eventName: 'ready' });
             } catch (err) {
                 showError(err);
             }
