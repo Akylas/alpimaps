@@ -52,8 +52,8 @@
     function getItemTitle(item) {
         return formatter.getItemTitle(item);
     }
-    function getItemSubtitle(item) {
-        return formatter.getItemSubtitle(item);
+    function getItemSubtitle(item, title?: string) {
+        return formatter.getItemSubtitle(item, title);
     }
 
     async function search(q) {
@@ -84,7 +84,8 @@
                     return r;
                 })
                 .map((s) => {
-                    return { ...s, icon: getItemIcon(s), title: getItemTitle(s), subtitle: getItemSubtitle(s) };
+                    const title = getItemTitle(s);
+                    return { ...s, icon: getItemIcon(s), title, subtitle: getItemSubtitle(s, title) };
                 });
             // return results.features
             // .filter((r) => supportedOSMKeys.indexOf(r.properties.osm_key) !== -1 || supportedOSMValues.indexOf(r.properties.osm_value) !== -1)
@@ -130,12 +131,27 @@
         <textfield bind:this={textField} row={1} hint={lc('search')} floating="false" returnKeyType="search" on:textChange={onTextChange} on:loaded={focus} />
         <collectionview row={2} rowHeight={80} items={searchResults}>
             <Template let:item>
-                <canvaslabel columns="34,*" padding="0 10 0 10" rows="*,auto,auto,*" disableCss={true} rippleColor={$textColor} on:tap={() => close(item)}
+                <canvaslabel
+                    columns="34,*"
+                    padding="0 10 0 10"
+                    rows="*,auto,auto,*"
+                    disableCss={true}
+                    rippleColor={$textColor}
+                    on:tap={() => close(item)}
                     borderBottomColor={$borderColor}
-                    borderBottomWidth={1}>
+                    borderBottomWidth={1}
+                >
                     <cspan text={item.icon} color={$textColor} fontFamily="osm" fontSize={30} verticalAlignment="middle" />
                     <cspan paddingLeft={40} verticalAlignment="middle" paddingBottom={item.subtitle ? 10 : 0} text={item.title} fontSize={16} fontWeight="bold" color={$textColor} />
-                    <cspan paddingLeft={40} verticalAlignment="middle" paddingTop={10} text={item.subtitle} color={$subtitleColor} fontSize={14} visibility={!!item.subtitle ? 'visible' : 'collapsed'} />
+                    <cspan
+                        paddingLeft={40}
+                        verticalAlignment="middle"
+                        paddingTop={10}
+                        text={item.subtitle}
+                        color={$subtitleColor}
+                        fontSize={14}
+                        visibility={!!item.subtitle ? 'visible' : 'collapsed'}
+                    />
                     <cspan
                         textAlignment="right"
                         verticalAlignment="middle"
