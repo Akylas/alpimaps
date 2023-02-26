@@ -265,7 +265,7 @@
                 }
             });
         } catch (err) {
-            this.showError(err);
+            showError(err);
         }
     }
 

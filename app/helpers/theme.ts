@@ -7,6 +7,7 @@ import { createGlobalEventListener, globalObservable, updateThemeColors } from '
 import { showBottomSheet } from '~/utils/svelte/bottomsheet';
 import { lc } from '@nativescript-community/l';
 import { writable } from 'svelte/store';
+import { showError } from '~/utils/error';
 
 export type Themes = 'auto' | 'light' | 'dark';
 
@@ -52,7 +53,7 @@ export async function selectTheme() {
             ApplicationSettings.setString('theme', result.data);
         }
     } catch (err) {
-        this.showError(err);
+        showError(err);
     }
 }
 
