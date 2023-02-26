@@ -97,7 +97,7 @@ module.exports = (env, params = {}) => {
         buildpeakfinder,
         buildstyle,
         disableoffline = false,
-        busSupport = false,
+        busSupport = true,
         apiKeys = true,
         keep_classnames_functionnames = false,
         locale = 'auto',
@@ -128,6 +128,7 @@ module.exports = (env, params = {}) => {
         return config;
     });
     const config = webpackConfig(env, params);
+    // config.resolve.conditionNames.push('svelte');
     const mode = production ? 'production' : 'development';
     const platform = env && ((env.android && 'android') || (env.ios && 'ios'));
     const projectRoot = params.projectRoot || __dirname;
