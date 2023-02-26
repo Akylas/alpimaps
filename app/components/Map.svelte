@@ -31,7 +31,7 @@
     import { navigate } from 'svelte-native';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler, GeoLocation } from '~/handlers/GeoHandler';
-    import { l, lc, lt, onLanguageChanged } from '~/helpers/locale';
+    import { l, lc, lt, onLanguageChanged, onMapLanguageChanged } from '~/helpers/locale';
     import { sTheme, toggleTheme } from '~/helpers/theme';
     import watcher from '~/helpers/watcher';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
@@ -91,7 +91,7 @@
     let bottomSheetStepIndex = 0;
     let itemLoading = false;
     let projection: Projection = null;
-    let currentLanguage = appSettings.getString('language', 'en');
+    let currentLanguage = appSettings.getString('map_language', appSettings.getString('language', 'en'));
     let addedLayers: { layer: Layer<any, any>; layerId: LayerType }[] = [];
     let keepScreenAwake = appSettings.getBoolean(KEEP_AWAKE_KEY, false);
     let showOnLockscreen = false;
@@ -1128,6 +1128,7 @@
         // setStyleParameter('fallback_lang', 'en');
     }
     onLanguageChanged(handleNewLanguage);
+    onMapLanguageChanged(handleNewLanguage);
 
     function getVectorTileDecoder() {
         return vectorTileDecoder || packageService.vectorTileDecoder;
