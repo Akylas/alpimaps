@@ -12,6 +12,7 @@ import utc from 'dayjs/plugin/utc';
 import { derived, writable } from 'svelte/store';
 import { packageService } from '~/services/PackageService';
 import { prefs } from '~/services/preferences';
+import { showError } from '~/utils/error';
 import { showBottomSheet } from '~/utils/svelte/bottomsheet';
 import { createGlobalEventListener, globalObservable } from '~/variables';
 const supportedLanguages = SUPPORTED_LOCALES;
@@ -34,6 +35,7 @@ let currentLocale = null;
 export const langStore = writable(null);
 export const clock_24Store = writable(null);
 export const onLanguageChanged = createGlobalEventListener('language');
+export const onMapLanguageChanged = createGlobalEventListener('map_language');
 
 async function setLang(newLang) {
     newLang = getActualLanguage(newLang);
@@ -124,7 +126,7 @@ export function getLocaleDisplayName(locale?) {
     }
 }
 
-export async function selectLanguage() {
+async function internalSelectLanguage() {
     try {
         const actions = SUPPORTED_LOCALES;
         const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
@@ -137,11 +139,35 @@ export async function selectLanguage() {
             },
             trackingScrollView: 'collectionView'
         });
+        return result;
+    } catch (err) {
+        showError(err);
+    }
+}
+export async function selectLanguage() {
+    try {
+        const result = await internalSelectLanguage();
         if (result && result.data) {
             ApplicationSettings.setString('language', result.data);
         }
     } catch (err) {
-        this.showError(err);
+        showError(err);
+    }
+}
+export async function selectMapLanguage() {
+    try {
+        const result = await internalSelectLanguage();
+        if (result && result.data) {
+            if (result.data === 'auto') {
+                ApplicationSettings.remove('map_language');
+                globalObservable.notify({ eventName: 'map_language', data: lang });
+            } else {
+                ApplicationSettings.setString('map_language', result.data);
+                globalObservable.notify({ eventName: 'map_language', data: result.data });
+            }
+        }
+    } catch (err) {
+        showError(err);
     }
 }
 
