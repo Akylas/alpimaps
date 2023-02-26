@@ -1,0 +1,11 @@
+*Features*
+- allow setting language for map offline data
+
+*Bug fixes*
+- prevent error on error!
+- improved map style (offline data) for rivers rendering
+- improve compass readability (render dial under texts)
+- map side buttons update on offline data loaded
+- improved layer options bottomsheet and downloading area handling (still more to do)
+- show map language setting only if has offline data
+- allow bus mode (grenoble only) in devMode for now
