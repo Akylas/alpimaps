@@ -9,7 +9,7 @@ android {
     multiDexEnabled false
     applicationId "akylas.alpi.maps"
     minSdkVersion 21
-    versionCode 231
+    versionCode 232
     versionName "2.0.0"
 
     if (project.hasProperty('resConfigs')) {
