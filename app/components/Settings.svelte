@@ -74,11 +74,6 @@
                 title: lc('language')
             },
             {
-                id: 'map_language',
-                rightValue: () => getLocaleDisplayName(ApplicationSettings.getString('map_language')),
-                title: lc('map_language')
-            },
-            {
                 type: 'switch',
                 key: 'clock_24',
                 value: clock_24,
@@ -118,6 +113,13 @@
                 rightBtnIcon: 'mdi-chevron-right'
             }
         ];
+        if (customLayers.hasLocalData) {
+            newItems.splice(1, 0, {
+                id: 'map_language',
+                rightValue: () => getLocaleDisplayName(ApplicationSettings.getString('map_language')),
+                title: lc('map_language')
+            });
+        }
         const geoSettings = geoHandler.getWatchSettings();
         Object.keys(geoSettings).forEach((k) => {
             const value = geoSettings[k];
