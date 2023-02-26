@@ -46,6 +46,7 @@
     export let cardinalTickColor = primaryColor;
     export let rotation = 0;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView; delta: number; radius: number; center: { x: number; y: number }; rotation: number }) => void = null;
+    export let onDrawBeforeText: (event: { canvas: Canvas; object: CanvasView; delta: number; radius: number; center: { x: number; y: number }; rotation: number }) => void = null;
 
     export let canvas: NativeViewElementNode<CanvasView>;
     const tickThicknessDp = 1;
@@ -130,6 +131,7 @@
             // paint.setStrokeCap(Cap.ROUND)
             canvas.drawPath(cardinalTicks, paint);
 
+            onDrawBeforeText?.({ canvas, object, delta: delta + borderStrokedWidth, center, radius, rotation });
             drawText(canvas, lu('N'), center.x, center.y - radius + textHeight + tickDelta, rotation);
             drawText(canvas, lu('S'), center.x, center.y + radius - tickDelta, rotation);
             drawText(canvas, lu('W'), center.x - radius + textSize + textWidth / 2, center.y + textHeight / 2, rotation);
