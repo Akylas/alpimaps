@@ -1,6 +1,7 @@
 <script lang="ts">
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Utils } from '@nativescript/core';
+    import { showToolTip } from '~/utils/utils';
     import { actionBarButtonHeight, mdiFontFamily, primaryColor, subtitleColor, textColor } from '~/variables';
     export let isVisible = true;
     export let white = false;
@@ -29,15 +30,10 @@
                   if (onLongPress) {
                       onLongPress(event);
                   } else {
-                      if (__ANDROID__) {
-                          android.widget.Toast.makeText(Utils.ad.getApplicationContext(), tooltip, android.widget.Toast.LENGTH_SHORT).show();
-                      } else {
-                          showSnack({ message: tooltip });
-                      }
+                      showToolTip(tooltip);
                   }
               }
             : null;
-
 </script>
 
 <!-- <canvaslabel
