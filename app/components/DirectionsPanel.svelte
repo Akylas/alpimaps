@@ -1016,7 +1016,6 @@
             const Settings = (await import('~/components/SearchModal.svelte')).default;
             const position = mapContext.getMap().focusPos;
             const result: any = await showModal({ page: Settings, fullscreen: true, props: { position } });
-            console.log('result', result);
             if (result) {
                 const id = Date.now() + '';
                 const toAdd: ItemFeature = {
