@@ -62,7 +62,6 @@
             showError(err);
         }
     }
-    $: console.log('item changed', !!item);
     let onChartDataUpdateCallbacks = [];
 
     let highlightNString;
@@ -256,13 +255,13 @@
         }
     }
 
-    export function updateChartData(item) {
-        if (!chart || !item) {
+    export function updateChartData(it = item) {
+        if (!chart || !it) {
             return;
         }
         const chartView = chart.nativeView;
         const sets = [];
-        const profile = item.profile;
+        const profile = it.profile;
         const profileData = profile?.data;
         const leftAxis = chartView.getAxisLeft();
         if (profileData) {
