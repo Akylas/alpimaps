@@ -5,7 +5,7 @@ export function join_em(src_segments: GeoJSON.Position[][], tolerance = 0.0001, 
     // try and match up the ends and create one long linestring
     // const src_segments: GeoJSON.LineString[] = [];
     // geojson.features.forEach((f) => src_segments.push(f.geometry));
-    console.log('join_em', src_segments.length, JSON.stringify(src_segments));
+    DEV_LOG && console.log('join_em', src_segments.length, JSON.stringify(src_segments));
     let seg = src_segments.pop();
     let segments_in_order = [seg];
     let flipped = false;
@@ -16,10 +16,10 @@ export function join_em(src_segments: GeoJSON.Position[][], tolerance = 0.0001, 
         let res = find_closest(end, src_segments);
         // console.log('find_closest:', end, res);
         if (res.closest_segment && res.closest_distance < tolerance) {
-            console.log('Found segment adjacent to end, distance:', res.closest_distance, res.closest_location);
+            DEV_LOG && console.log('Found segment adjacent to end, distance:', res.closest_distance, res.closest_location);
             src_segments.splice(src_segments.indexOf(res.closest_segment), 1);
             if (res.closest_location === 'end') {
-                console.log('Flipping segment');
+                DEV_LOG && console.log('Flipping segment');
                 res.closest_segment = res.closest_segment.reverse();
             }
             segments_in_order.push(res.closest_segment);
@@ -30,10 +30,10 @@ export function join_em(src_segments: GeoJSON.Position[][], tolerance = 0.0001, 
             const end_distance = res.closest_distance;
             res = find_closest(start, src_segments);
             if (res.closest_segment && res.closest_distance < tolerance) {
-                console.log('Found segment adjacent to start, distance:%f to %s', res.closest_distance, res.closest_location);
+                DEV_LOG && console.log('Found segment adjacent to start, distance:%f to %s', res.closest_distance, res.closest_location);
                 src_segments.splice(src_segments.indexOf(res.closest_segment), 1);
                 if (res.closest_location === 'start') {
-                    console.log('Flipping segment');
+                    DEV_LOG && console.log('Flipping segment');
                     res.closest_segment = res.closest_segment.reverse();
                 }
                 segments_in_order.unshift(res.closest_segment);
@@ -56,10 +56,10 @@ export function join_em(src_segments: GeoJSON.Position[][], tolerance = 0.0001, 
             }
         }
     }
-    console.log(`finished, segments in order:${segments_in_order.length} remaining segments:${src_segments.length}`);
+    DEV_LOG && console.log(`finished, segments in order:${segments_in_order.length} remaining segments:${src_segments.length}`);
 
     if (combine) {
-        console.log('Concatenating list of points');
+        DEV_LOG && console.log('Concatenating list of points');
         const all_coords = [];
         for (const seg of segments_in_order) {
             all_coords.push(...seg);
@@ -74,7 +74,7 @@ export function join_em(src_segments: GeoJSON.Position[][], tolerance = 0.0001, 
 function find_closest(point: GeoJSON.Position, segments: GeoJSON.Position[][], haversine_distance = false) {
     //Find the linestring in segments that has a start or end point closest to point.
     //return (segment, start or end, distance)
-    console.log('find_closest', point);
+    DEV_LOG && console.log('find_closest', point);
     let closest_segment: GeoJSON.Position[] = null;
     let closest_distance = 0;
     let closest_location = null;
