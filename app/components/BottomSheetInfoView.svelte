@@ -3,7 +3,9 @@
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { convertDurationSeconds, convertElevation, convertValueToUnit, osmicon, UNITS } from '~/helpers/formatter';
+    import { onMapLanguageChanged } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
+    import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item, ItemProperties } from '~/models/Item';
     import { alpimapsFontFamily, mdiFontFamily, subtitleColor, textColor } from '~/variables';
 
@@ -31,22 +33,31 @@
 
     let nString;
 
-    function updateItem(item: Item) {
-        if (!item) {
+    onMapLanguageChanged((lang)=>updateItemText(item, lang))
+    function updateItemText(it: Item = item, lang?:string) {
+        if (!it) {
+            return;
+        }
+        // console.log('updateItemText1', getMapContext().getCurrentLanguage(), it)
+        itemTitle = formatter.getItemTitle(it, lang);
+        itemSubtitle = formatter.getItemSubtitle(it, itemTitle);
+    }
+    function updateItem(it: Item = item) {
+        if (!it) {
             nString = null;
             return;
         }
-        itemProps = item?.properties;
-        itemIsRoute = !!item?.route;
+        itemProps = it?.properties;
+        itemIsRoute = !!it?.route;
         if (itemIsRoute && itemProps.route && (itemProps.route.type === 'pedestrian' || itemProps.route.type === 'bicycle')) {
             itemIconFontFamily = alpimapsFontFamily;
             itemIcon = formatter.getRouteIcon(itemProps.route.type, itemProps.route.subtype);
         } else {
             itemIconFontFamily = 'osm';
-            itemIcon = osmicon(formatter.geItemIcon(item));
+            itemIcon = osmicon(formatter.geItemIcon(it));
         }
-        itemTitle = formatter.getItemTitle(item);
-        itemSubtitle = formatter.getItemSubtitle(item);
+        updateItemText(it);
+
         showSymbol = itemIsRoute && itemProps?.layer === 'route';
         actualShowSymbol = showSymbol && (itemProps.symbol || itemProps.network);
         let spans = [];
@@ -65,7 +76,7 @@
         }
 
         if (itemIsRoute) {
-            const route = item.route;
+            const route = it.route;
             if (route.totalDistance || itemProps?.hasOwnProperty('distance')) {
                 spans.push(
                     {
@@ -92,7 +103,7 @@
                 );
             }
         }
-        const profile = item.profile;
+        const profile = it.profile;
         const hasProfile = !!profile?.max;
         if (!hasProfile) {
             if (itemProps?.ascent > 0) {
@@ -120,7 +131,7 @@
                 );
             }
         } else {
-            const profile = item.profile;
+            const profile = it.profile;
             if (profile.dplus > 0) {
                 spans.push(
                     {
