@@ -175,5 +175,5 @@ export function formatAddress(item: IItem, part = 0) {
     // if (address.state) {
     //     result += address.state + ' ';
     // }
-    return result.trimRight();
+    return result.trim();
 }
