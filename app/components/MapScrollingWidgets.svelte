@@ -30,6 +30,7 @@
     import { accentColor, alpimapsFontFamily, globalMarginTop, mdiFontFamily, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import { Label } from '@nativescript-community/ui-label';
     import { openLink } from '~/utils/ui';
+    import IconButton from './IconButton.svelte';
     function scale(node, { delay = 0, duration = 400, easing = CoreTypes.AnimationCurve.easeOut }) {
         const scaleX = node.nativeView.scaleX;
         const scaleY = node.nativeView.scaleY;
@@ -316,14 +317,14 @@
     </stacklayout>
 
     <ScaleView bind:this={scaleView} col={1} row={2} horizontalAlignment="right" verticalAlignment="bottom" marginBottom={8} />
-    <mdbutton
-        visibility={attributionVisible ? 'visible' : 'hidden'}
-        variant="text"
-        class="icon-btn-text"
+    <IconButton
+        isVisible={attributionVisible}
+        isSelected={true}
         col={1}
         row={2}
         horizontalAlignment="left"
         verticalAlignment="bottom"
+        tooltip={lc('attributions')}
         text="mdi-information-outline"
         on:tap={onAttributionTap}
     />
