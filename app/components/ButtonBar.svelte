@@ -3,6 +3,7 @@
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { AbsoluteLayout, Utils } from '@nativescript/core';
     import { NativeViewElementNode } from 'svelte-native/dom';
+    import { showToolTip } from '~/utils/utils';
     import { actionBarButtonHeight, mdiFontFamily, primaryColor, subtitleColor, textColor } from '~/variables';
     export let orientation = 'vertical';
     export let buttons = [];
@@ -27,8 +28,7 @@
     $: defaultFontSize = small ? 16 : 24;
 
     $: {
-        buttonsLength = buttons.length;
-        // console.log('buttonsLength', buttonsLength);
+        buttonsLength = visibleButtons(buttons).length;
         canvas?.nativeView.invalidate();
     }
     $: width = orientation === 'vertical' ? buttonSize : buttonsLength * buttonSize;
@@ -37,11 +37,14 @@
 
     let iconPaint: Paint;
 
+    function visibleButtons(but = buttons) {
+        return but.filter((b) => b.visible !== false);
+    }
+
     function onDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
         try {
             let w = canvas.getWidth();
             let h = canvas.getHeight();
-            // console.log('onDraw', w, h, buttons);
             const buttonsFontSize = fontSize || defaultFontSize;
             if (!iconPaint) {
                 iconPaint = new Paint();
@@ -55,8 +58,11 @@
             const offsetX = orientation === 'vertical' ? 0 : buttonSize;
             const offsetY = orientation === 'vertical' ? buttonSize : 0;
 
-            for (let index = 0; index < buttonsLength; index++) {
+            for (let index = 0; index < buttons.length; index++) {
                 const button = buttons[index];
+                if (button.visible === false) {
+                    continue;
+                }
                 if (button.fontFamily) {
                     iconPaint.fontFamily = button.fontFamily;
                 } else {
@@ -86,7 +92,7 @@
         }
         // console.log('onTap', event.getX(), event.getY(), index);
         if (index >= 0) {
-            buttons[index].onTap?.(event);
+            visibleButtons()[index].onTap?.(event);
         }
     }
     function onLongPress(event) {
@@ -98,16 +104,20 @@
             index = Math.floor(event.getX() / buttonSize);
         }
         if (index >= 0) {
-            buttons[index].onLongPress?.(event);
+            const button = visibleButtons()[index];
+            if (button.onLongPress) {
+                button.onLongPress(event);
+            } else if (button.tooltip) {
+                showToolTip(button.tooltip)
+            }
         }
     }
     function onTouch(event) {
         if (event.action === 'down') {
             ripple.nativeView.left = Math.floor(event.getX() / buttonSize) * buttonSize;
             ripple.nativeView.top = Math.floor(event.getY() / buttonSize) * buttonSize;
-
             if (__ANDROID__) {
-                ripple.nativeView.nativeView.dispatchTouchEvent(event.android)
+                ripple.nativeView.nativeView.dispatchTouchEvent(event.android);
             } else if (__IOS__) {
                 ripple.nativeView.nativeView.touchesBeganWithEvent(event.ios.touches, event.ios.event);
             }
