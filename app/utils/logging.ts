@@ -11,12 +11,13 @@ const originalConsole = {
 
 function convertArg(arg) {
     const type = typeof arg;
-    if (arg === null) {
-        return 'null';
-    } else if (arg === undefined) {
+    if (type === 'undefined') {
         return 'undefined';
+    } else if (arg === null) {
+        return 'null';
     }
     if (Array.isArray(arg)) {
+        // one issue with JSON.stringify is that undefined will become null
         return JSON.stringify(arg);
     } else if (type === 'object') {
         const str = arg.toString();
