@@ -288,6 +288,7 @@
   "manor": "manor",
   "map": "map",
   "map_data_path": "map data path",
+  "map_language": "map language",
   "map_mode": "map mode",
   "map_outline": "map outline",
   "map_package": "map package",
