@@ -107,6 +107,8 @@ const HILLSHADE_OPTIONS = {
     }
 };
 export interface SourceItem {
+    downloading?: boolean;
+    downloadProgress?: number;
     opacity: number;
     legend?: string;
     name: string;
@@ -527,7 +529,7 @@ export default class CustomLayersModule extends MapModule {
             provider.terrarium = data.terrarium;
         }
         if (data.downloadable !== undefined) {
-            provider.downloadable = data.downloadable || !PRODUCTION;
+            provider.downloadable = data.downloadable || !PRODUCTION || this.devMode;
         } else {
             provider.downloadable = !PRODUCTION;
         }
@@ -883,20 +885,21 @@ export default class CustomLayersModule extends MapModule {
             // throw err;
         }
     }
-    currentlyDownloadindDataSource: PersistentCacheTileDataSource;
+    currentlyDownloadind: { dataSource: PersistentCacheTileDataSource; provider: Provider };
     async stopDownloads() {
-        if (this.currentlyDownloadindDataSource) {
-            this.currentlyDownloadindDataSource.stopAllDownloads();
+        if (this.currentlyDownloadind) {
+            this.currentlyDownloadind.dataSource.stopAllDownloads();
         }
     }
+
     async downloadDataSource(dataSource: TileDataSource<any, any>, provider: Provider) {
         try {
-            if (this.currentlyDownloadindDataSource) {
+            if (this.currentlyDownloadind) {
                 return;
             }
             if (dataSource instanceof PersistentCacheTileDataSource) {
                 await new Promise<void>((resolve, reject) => {
-                    this.currentlyDownloadindDataSource = dataSource;
+                    this.currentlyDownloadind = { dataSource, provider };
                     const zoom = provider.sourceOptions.maxZoom - 1;
                     const cartoMap = mapContext.getMap();
                     const projection = dataSource.getProjection();
@@ -906,27 +909,64 @@ export default class CustomLayersModule extends MapModule {
                     });
                     const bounds = new MapBounds(projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMin()) as any), projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMax()) as any));
 
-                    TEST_LOG && console.log('startDownloadArea', provider, bounds, cartoMap.getZoom(), zoom);
+                    TEST_LOG && console.log('startDownloadArea1', provider, bounds, cartoMap.getZoom(), zoom);
                     dataSource.startDownloadArea(bounds, cartoMap.getZoom(), zoom, {
                         onDownloadCompleted: () => {
-                            this.currentlyDownloadindDataSource = null;
+                            this.currentlyDownloadind = null;
+                            const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
+                            if (itemIndex) {
+                                const item = this.customSources.getItem(itemIndex);
+                                delete item.downloading;
+                                delete item.downloadProgress;
+                                this.customSources.setItem(itemIndex, item);
+                            }
                             // ensure we hide the progress
                             this.notify({
                                 eventName: 'onProgress',
                                 object: this,
                                 data: 0
                             });
+                            this.notify({
+                                eventName: 'dowload_finished',
+                                object: this,
+                                data: { provider, dataSource }
+                            });
                             resolve();
                         },
-                        onDownloadFailed(tile: { x: number; y: number; tileId: number }) {},
+                        onDownloadFailed(tile: { x: number; y: number; tileId: number }) {
+                            // this.notify({
+                            //     eventName: 'dowload_finished',
+                            //     object: this,
+                            //     data: {provider, dataSource}
+                            // });
+                        },
                         onDownloadProgress: (progress: number) => {
                             this.notify({
                                 eventName: 'onProgress',
                                 object: this,
                                 data: progress
                             });
+                            const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
+                            if (itemIndex) {
+                                const item = this.customSources.getItem(itemIndex);
+                                item.downloadProgress = progress;
+                                this.customSources.setItem(itemIndex, item);
+                            }
                         },
-                        onDownloadStarting(tileCount: number) {}
+                        onDownloadStarting: (tileCount: number) => {
+                            const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
+                            if (itemIndex) {
+                                const item = this.customSources.getItem(itemIndex);
+                                item.downloading = true;
+                                item.downloadProgress = 0;
+                                this.customSources.setItem(itemIndex, item);
+                            }
+                            this.notify({
+                                eventName: 'dowloading',
+                                object: this,
+                                data: { provider, dataSource }
+                            });
+                        }
                     });
                 });
             }
