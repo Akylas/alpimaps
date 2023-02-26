@@ -7,7 +7,7 @@
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
-    import { clock_24, getLocaleDisplayName, l, lc, onLanguageChanged, selectLanguage, slc } from '~/helpers/locale';
+    import { clock_24, getLocaleDisplayName, l, lc, onLanguageChanged, onMapLanguageChanged, selectLanguage, selectMapLanguage, slc } from '~/helpers/locale';
     import { getThemeDisplayName, selectTheme } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
@@ -74,6 +74,11 @@
                 title: lc('language')
             },
             {
+                id: 'map_language',
+                rightValue: () => getLocaleDisplayName(ApplicationSettings.getString('map_language')),
+                title: lc('map_language')
+            },
+            {
                 type: 'switch',
                 key: 'clock_24',
                 value: clock_24,
@@ -129,7 +134,7 @@
             tokenSettings.push({
                 id: 'token',
                 token: k,
-                value: customLayers.tokenKeys[k], 
+                value: customLayers.tokenKeys[k],
                 rightBtnIcon: 'mdi-chevron-right'
             });
         });
@@ -152,7 +157,10 @@
                     openLink(GIT_URL);
                     break;
                 case 'language':
-                    selectLanguage();
+                    await selectLanguage();
+                    break;
+                case 'map_language':
+                    await selectMapLanguage();
                     break;
                 case 'dark_mode':
                     await selectTheme();
@@ -247,6 +255,7 @@
         }
     }
     onLanguageChanged(refresh);
+    onMapLanguageChanged(refresh);
 
     function selectTemplate(item, index, items) {
         return item.type === 'switch' ? item.type : 'default';
@@ -284,7 +293,7 @@
                 </gridlayout>
             </Template>
             <Template let:item>
-                <gridlayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)}>
+                <gridlayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)} on:touch={(e) => onTouch(item, e)}>
                     <label fontSize={36} text={item.icon} marginLeft="-10" width={40} verticalAlignment="middle" fontFamily={mdiFontFamily} visibility={!!item.icon ? 'visible' : 'hidden'} />
                     <stacklayout col={1} verticalAlignment="middle">
                         <label fontSize={17} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines={2} lineBreak="end" />

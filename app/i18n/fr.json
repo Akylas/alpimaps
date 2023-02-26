@@ -273,6 +273,7 @@
   "manor": "manoir",
   "map": "carte",
   "map_data_path": "chemin de données de carte",
+  "map_language": "langue pour les données de la carte",
   "map_mode": "mode carte",
   "map_outline": "plan",
   "map_package": "paquet de carte",
