@@ -7,35 +7,19 @@
     import { onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { formatSize } from '~/helpers/formatter';
-    import { l } from '~/helpers/locale';
+    import { l, lc } from '~/helpers/locale';
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
     import { showError } from '~/utils/error';
     import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
     import { pickColor } from '~/utils/utils';
-    import { textLightColor } from '~/variables';
+    import { borderColor, textLightColor } from '~/variables';
+    import IconButton from './IconButton.svelte';
 
     const mapContext = getMapContext();
     let scrollView;
+    const devMode = mapContext.mapModule('customLayers').devMode;
     export let item: SourceItem;
-    let actions: string[] = [];
-    $: {
-        const res = ['delete'];
-        // console.log('actions', item.provider);
-        if (item.provider.cacheable !== false) {
-            res.push('clear_cache');
-        }
-        if (item.provider.downloadable === true) {
-            res.push('download');
-        }
-        // if (item.legend) {
-        //     res.push('legend');
-        // }
-        if (item.layer instanceof RasterTileLayer || item.layer instanceof HillshadeRasterTileLayer) {
-            res.push('tile_filter_mode');
-        }
-        actions = res;
-    }
     let options: {
         [k: string]: {
             type?: string;
@@ -101,7 +85,7 @@
                 layer.clearTileCaches(true);
                 break;
             }
-            case 'download': {
+            case 'download_area': {
                 const layer = item.layer;
                 const dataSource = layer.dataSource;
                 const customLayers = mapContext.mapModule('customLayers');
@@ -112,14 +96,11 @@
             }
             case 'tile_filter_mode':
                 if (item.layer instanceof RasterTileLayer || item.layer instanceof HillshadeRasterTileLayer) {
-                    action({
-                        title: 'Tile Filter Mode',
-                        message: 'Pick Action',
+                    const result = await action({
+                        title: lc('tile_filter_mode'),
                         actions: ['bicubic', 'bilinear', 'nearest']
-                    }).then((result) => {
-                        if (!result) {
-                            return;
-                        }
+                    });
+                    if (result) {
                         setString(`${item.name}_tileFilterMode`, result);
                         // use native for now
                         switch (result) {
@@ -133,7 +114,7 @@
                                 (item.layer as RasterTileLayer).tileFilterMode = RasterTileFilterMode.RASTER_TILE_FILTER_MODE_NEAREST;
                                 break;
                         }
-                    });
+                    }
                 }
         }
         closeBottomSheet();
@@ -150,8 +131,8 @@
     }
 </script>
 
-<gridlayout rows="auto,*,auto" height={240}>
-    <label text={getTitle()} fontWeight="bold" padding="10 10 0 20" fontSize={20} />
+<gridlayout rows="auto,*" columns="*,auto" height={240}>
+    <label text={getTitle()} fontWeight="bold" padding="10 10 0 20" fontSize={20} colSpan={2} />
     <scrollview row={1} bind:this={scrollView} id="scrollView">
         <stacklayout>
             {#each Object.entries(options) as [name, option]}
@@ -194,11 +175,29 @@
             {/each}
         </stacklayout>
     </scrollview>
-    <collectionview orientation="horizontal" row={2} height={40} items={actions} colWidth="auto">
+    <stacklayout row={1} col={1} borderLeftColor={$borderColor} borderLeftWidth={1}>
+        <IconButton gray={true} isVisible={item.provider.cacheable !== false} text="mdi-clock-remove-outline" tooltip={lc('clear_cache')} on:tap={() => handleAction('clear_cache')} />
+        <IconButton
+            gray={true}
+            isVisible={!item.local && (devMode || item.provider.downloadable === true) && !item.downloading}
+            text="mdi-download"
+            tooltip={lc('download_area')}
+            on:tap={() => handleAction('download_area')}
+        />
+        <IconButton
+            gray={true}
+            isVisible={item.layer instanceof RasterTileLayer || item.layer instanceof HillshadeRasterTileLayer}
+            text="mdi-filter-cog"
+            tooltip={lc('tile_filter_mode')}
+            on:tap={() => handleAction('tile_filter_mode')}
+        />
+        <IconButton color="red" text="mdi-delete" tooltip={lc('delete')} on:tap={() => handleAction('delete')} />
+    </stacklayout>
+    <!-- <collectionview orientation="horizontal" row={2} height={40} items={actions} colWidth="auto">
         <Template let:item>
             <gridlayout>
                 <mdbutton variant="outline" padding={10} marginRight={10} text={l(item)} on:tap={() => handleAction(item)} />
             </gridlayout>
         </Template>
-    </collectionview>
+    </collectionview> -->
 </gridlayout>
