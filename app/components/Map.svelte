@@ -304,6 +304,7 @@
             Application.android.on(AndroidApplication.activityBackPressedEvent, onAndroidBackButton);
         }
         customLayersModule = new CustomLayersModule();
+        customLayersModule.once('ready', updateSideButtons);
         setMapContext({
             // drawer: drawer.nativeView,
             getMap: () => cartoMap,
@@ -937,8 +938,7 @@
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, featureId, position, featureLayerName, featureData, featurePosition, featureGeometry, layer } = data;
 
-        TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, featurePosition);
-
+        TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, featurePosition, featureGeometry.constructor.name);
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             // if (showClickedFeatures) {
@@ -1014,7 +1014,7 @@
                     properties: featureData,
                     geometry: {
                         type: 'Point',
-                        coordinates: isFeatureInteresting ? [featurePosition.lon, featurePosition.lat] : [position.lon, position.lat]
+                        coordinates: (isFeatureInteresting && !/Line|Polygon/.test(featureGeometry.constructor.name)) ? [featurePosition.lon, featurePosition.lat] : [position.lon, position.lat]
                     }
                 };
                 selectItem({ item: result, isFeatureInteresting, showButtons: featureData.class === 'bus' || featureData.subclass === 'tram_stop' });
@@ -1122,6 +1122,7 @@
     }
 
     function handleNewLanguage(newLang) {
+        console.log('handleNewLanguage', newLang)
         currentLanguage = newLang;
         packageService.currentLanguage = newLang;
         setStyleParameter('lang', newLang);
@@ -1627,66 +1628,70 @@
 
     let sideButtons = [];
 
+    function updateSideButtons() {
+        sideButtons.find((b) => b.id === 'routes').visible = !!customLayersModule?.hasRoute;
+        sideButtons.find((b) => b.id === 'slopes').visible = !!customLayersModule?.hasTerrain;
+        sideButtons.find((b) => b.id === 'contours').visible = !!customLayersModule?.hasLocalData;
+        sideButtons = sideButtons;
+    }
+
     $: {
         let newButtons: any[] = [
             {
+                text: 'mdi-bullseye',
+                id: 'contours',
+                tooltip: lc('show_contour_lines'),
+                isSelected: $showContourLines,
+                visible: !!customLayersModule?.hasLocalData,
+                onTap: () => showContourLines.set(!$showContourLines)
+            },
+            {
+                text: 'mdi-signal',
+                id: 'slopes',
+                tooltip: lc('show_percentage_slopes'),
+                isSelected: $showSlopePercentages,
+                visible: !!customLayersModule?.hasTerrain,
+                onTap: () => showSlopePercentages.set(!$showSlopePercentages)
+            },
+            {
+                text: 'mdi-routes',
+                id: 'routes',
+                tooltip: lc('show_routes'),
+                isSelected: $showRoutes,
+                visible: !!customLayersModule?.hasRoute,
+                onTap: () => showRoutes.set(!$showRoutes)
+            },
+            {
                 text: 'mdi-speedometer',
+                tooltip: lc('speedometer'),
                 onTap: switchLocationInfo
+            },
+            {
+                text: keepScreenAwake ? 'mdi-sleep' : 'mdi-sleep-off',
+                isSelected: keepScreenAwake,
+                tooltip: lc('keep_screen_awake'),
+                selectedColor: 'red',
+                onTap: switchKeepAwake
+            },
+            {
+                text: 'mdi-cellphone-lock',
+                isSelected: showOnLockscreen,
+                tooltip: lc('show_screen_lock'),
+                visible: __ANDROID__,
+                selectedColor: primaryColor,
+                onTap: switchShowOnLockscreen
             }
         ];
-        if (customLayersModule) {
-            if (customLayersModule.hasRoute) {
-                newButtons.unshift({
-                    text: 'mdi-routes',
-                    isSelected: $showRoutes,
-                    onTap: () => showRoutes.set(!$showRoutes)
-                });
-            }
-            if (customLayersModule.hasTerrain) {
-                newButtons.unshift({
-                    text: 'mdi-signal',
-                    isSelected: $showSlopePercentages,
-                    onTap: () => showSlopePercentages.set(!$showSlopePercentages)
-                });
-            }
-            if (customLayersModule.hasLocalData) {
-                newButtons.unshift({
-                    text: 'mdi-bullseye',
-                    isSelected: $showContourLines,
-                    onTap: () => showContourLines.set(!$showContourLines)
-                });
-            }
-            // newButtons.push({
-            //     text: 'mdi-map-clock',
-            //     isSelected: $preloading,
-            //     onTap: () => preloading.set(!$preloading)
-            // });
-
-            newButtons.push(
-                {
-                    text: keepScreenAwake ? 'mdi-sleep' : 'mdi-sleep-off',
-                    isSelected: keepScreenAwake,
-                    selectedColor: 'red',
-                    onTap: switchKeepAwake
-                },
-                {
-                    text: 'mdi-cellphone-lock',
-                    isSelected: showOnLockscreen,
-                    selectedColor: primaryColor,
-                    onTap: switchShowOnLockscreen
-                }
-            );
-            if (WITH_BUS_SUPPORT) {
-                newButtons.push({
-                    text: 'mdi-bus-marker',
-                    isSelected: showTransitLines,
-                    selectedColor: primaryColor,
-                    onTap: () => (showTransitLines = !showTransitLines),
-                    onLongPress: showTransitLinesPage
-                });
-            }
-            sideButtons = newButtons;
+        if (WITH_BUS_SUPPORT) {
+            newButtons.push({
+                text: 'mdi-bus-marker',
+                isSelected: showTransitLines,
+                selectedColor: primaryColor,
+                onTap: () => (showTransitLines = !showTransitLines),
+                onLongPress: showTransitLinesPage
+            });
         }
+        sideButtons = newButtons;
     }
 </script>
 
