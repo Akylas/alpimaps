@@ -1682,7 +1682,6 @@
                 onTap: switchShowOnLockscreen
             }
         ];
-        console.log('WITH_BUS_SUPPORT', WITH_BUS_SUPPORT, customLayersModule?.devMode)
         if (WITH_BUS_SUPPORT && customLayersModule?.devMode) {
             newButtons.push({
                 text: 'mdi-bus-marker',
