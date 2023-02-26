@@ -39,10 +39,10 @@ export default class ItemFormatter {
         return result;
     }
 
-    getItemName(item: Item) {
+    getItemName(item: Item, lang = mapContext.getCurrentLanguage()) {
         const properties = item.properties || {};
         return (
-            properties[`name:${mapContext.getCurrentLanguage()}`] ||
+            properties[`name:${lang}`] ||
             properties['name:en'] ||
             properties['name_latin'] ||
             properties.name ||
@@ -53,7 +53,7 @@ export default class ItemFormatter {
         );
     }
     getItemPositionToString(item: Item) {
-        if (item.geometry.type === 'Point') {
+        if (item.geometry?.type === 'Point') {
             return `${item.geometry.coordinates[1].toFixed(3)}, ${item.geometry.coordinates[0].toFixed(3)}`;
         }
         return '';
@@ -63,18 +63,18 @@ export default class ItemFormatter {
             return formatAddress(item, part);
         }
     }
-    getItemTitle(item: Item) {
+    getItemTitle(item: Item, lang?: string) {
         if (item) {
-            return this.getItemName(item) || this.getItemAddress(item, 1) || this.getItemPositionToString(item);
+            return this.getItemName(item, lang) || this.getItemAddress(item, 1) || this.getItemPositionToString(item);
         }
         return '';
     }
-    getItemSubtitle(item: Item) {
+    getItemSubtitle(item: Item, itemTile?: string) {
         if (item) {
             if (item.properties && item.properties.ref) {
                 return item.properties.ref;
             }
-            if (this.getItemName(item)) {
+            if (itemTile) {
                 return this.getItemAddress(item);
             } else {
                 return this.getItemAddress(item, 2);

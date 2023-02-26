@@ -248,8 +248,8 @@
     function getItemTitle(item: SearchItem) {
         return formatter.getItemTitle(item);
     }
-    function getItemSubtitle(item: SearchItem) {
-        return formatter.getItemSubtitle(item);
+    function getItemSubtitle(item: SearchItem, title?: string) {
+        return formatter.getItemSubtitle(item, title);
     }
 
     onDestroy(() => {
@@ -421,7 +421,8 @@
         }
         dataItems = dataItems.concat(
             r.map((s: SearchItem) => {
-                return { ...s, color: getItemIconColor(s), icon: getItemIcon(s), title: getItemTitle(s), subtitle: getItemSubtitle(s) };
+                const title = getItemTitle(s);
+                return { ...s, color: getItemIconColor(s), icon: getItemIcon(s), title, subtitle: getItemSubtitle(s, title) };
             })
         );
         updateFilteredDataItems();
@@ -610,7 +611,7 @@
     backgroundColor={$widgetBackgroundColor}
     margin={`${globalMarginTop + 10} 10 10 10`}
 >
-    <label class="icon-label" text="mdi-magnify" color={$subtitleColor}/>
+    <label class="icon-label" text="mdi-magnify" color={$subtitleColor} />
     <textfield
         bind:this={textField}
         variant="none"
@@ -640,7 +641,7 @@
                 <IconButton small={true} isVisible={searchResultsVisible} col={1} row={1} text="mdi-map" on:tap={showResultsOnMap} />
                 <collectionview colSpan={3} bind:this={collectionView} rowHeight={49} items={filteredDataItems} isUserInteractionEnabled={searchResultsVisible}>
                     <Template let:item>
-                        <canvaslabel columns="34,*" padding="0 10 0 10" rows="*,auto,auto,*" disableCss={true}  color={$textColor} rippleColor={$textColor} on:tap={() => onItemTap(item)}>
+                        <canvaslabel columns="34,*" padding="0 10 0 10" rows="*,auto,auto,*" disableCss={true} color={$textColor} rippleColor={$textColor} on:tap={() => onItemTap(item)}>
                             <cspan text={item.icon} color={item.color} fontFamily="osm" fontSize={20} verticalAlignment="middle" />
                             <cspan paddingLeft={34} verticalAlignment="middle" paddingBottom={item.subtitle ? 10 : 0} text={item.title} fontSize={14} fontWeight="bold" />
                             <cspan
