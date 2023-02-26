@@ -938,7 +938,7 @@
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, featureId, position, featureLayerName, featureData, featurePosition, featureGeometry, layer } = data;
 
-        TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, featurePosition, featureGeometry.constructor.name);
+        TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, featurePosition, featureGeometry);
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             // if (showClickedFeatures) {
