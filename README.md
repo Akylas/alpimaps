@@ -15,11 +15,7 @@
 <p align="center">Please consider making a small donation to help fund the project. Developing an application, especially one that is open source and completely free, takes a lot of time and effort.
 <br>
 <br>
-<div style="text-align: center;">
-
-[:heart: Sponsor](https://github.com/sponsors/farfromrefug)
-
-</div>
+<p style="text-align: center;">[:heart: Sponsor](https://github.com/sponsors/farfromrefug</p>
 
 <hr>
 
