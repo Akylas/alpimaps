@@ -6,8 +6,7 @@
 <p align="center">
 <br>You can get the <a href="https://github.com/farfromrefug/alpimaps/releases/latest">latest release on GitHub</a>
 </p>
-<div style="text-align: center;">
-
+<div align="center">
 <img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" height="80">
 </div>
 
@@ -15,7 +14,10 @@
 <p align="center">Please consider making a small donation to help fund the project. Developing an application, especially one that is open source and completely free, takes a lot of time and effort.
 <br>
 <br>
-<p style="text-align: center;">[:heart: Sponsor](https://github.com/sponsors/farfromrefug</p>
+
+<div align="center">
+<a href="https://github.com/sponsors/farfromrefug">:heart: Sponsor</a>
+</div>
 
 <hr>
 
