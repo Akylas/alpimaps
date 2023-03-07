@@ -166,21 +166,19 @@ mdcardview {
 //     padding-right: 12;
 //     margin-bottom: 10;
 // }
-
+z
 .navigationBarOverlay {
-    height: $navigation-bar-height;
+    // height: $navigation-bar-height;
     width: 100%;
     background-color: #aa000000;
     vertical-alignment: bottom;
 }
 
 .actionBar {
-    padding-top: $status-bar-height;
     background-color: adjust-color(white, $lightness: -30%);
     .ns-dark & {
         background-color: adjust-color(black, $lightness: 30%);
     }
-    height: $actionbar-height + $status-bar-height;
 }
 
 .actionBarButton {
