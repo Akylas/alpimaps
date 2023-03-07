@@ -1,0 +1,3 @@
+*Bug fixes*
+- *android:* storage permission not needed on android 13
+- *android:* correctly compute status bar height
