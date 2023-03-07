@@ -63,24 +63,29 @@ export const textColorLight = locals.textColorLight;
 export const mdiFontFamily: string = locals.mdiFontFamily;
 export const alpimapsFontFamily: string = locals.alpimapsFontFamily;
 export const actionBarHeight: number = parseFloat(locals.actionBarHeight);
-export const statusBarHeight: number = parseFloat(locals.statusBarHeight);
+
+let innerStatusBarHeight = 20;
+export const statusBarHeight = writable(innerStatusBarHeight);
 export const actionBarButtonHeight: number = parseFloat(locals.actionBarButtonHeight);
 export const screenHeightDips = Screen.mainScreen.heightDIPs;
 export const screenWidthDips = Screen.mainScreen.widthDIPs;
-export const navigationBarHeight = writable(parseFloat(locals.navigationBarHeight));
+export const navigationBarHeight = writable(0);
 
 export let globalMarginTop = 0;
 
 if (__ANDROID__) {
     const resources = (Utils.android.getApplicationContext() as android.content.Context).getResources();
     const id = resources.getIdentifier('config_showNavigationBar', 'bool', 'android');
-    const resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
-    // wont work on emulator though!
-    if (id > 0 && resourceId > 0 && (resources.getBoolean(id) || (!PRODUCTION && isSimulator()))) {
+    let resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
+    if (id > 0 && resourceId > 0) {
         navigationBarHeight.set(Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId)));
-        // navigationBarHeight/ = Utils.layout.toDeviceIndependentPixels(48);
     }
-    globalMarginTop = statusBarHeight;
+    resourceId = resources.getIdentifier('status_bar_height', 'dimen', 'android');
+    if (id > 0 && resourceId > 0) {
+        innerStatusBarHeight = Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId));
+        statusBarHeight.set(innerStatusBarHeight);
+    }
+    globalMarginTop = innerStatusBarHeight;
 } else {
     const onAppLaunch = function () {
         navigationBarHeight.set(Application.ios.window.safeAreaInsets.bottom);
