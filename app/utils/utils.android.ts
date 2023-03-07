@@ -37,16 +37,20 @@ export async function askForManagePermission() {
 export async function getDefaultMBTilesDir() {
     // let localMbtilesSource = savedMBTilesDir;
     let localMbtilesSource = null;
-    const result = await request('storage');
+    if (!ANDROID_30) {
+        // storage permission is not needed
+        // and will report never_ask_again on >= 33
+        const result = await request('storage');
 
-    if (!permResultCheck(result)) {
-        throw new Error('missing_storage_permission');
+        DEV_LOG && console.log('storage', result);
+        if (!permResultCheck(result)) {
+            throw new Error(lc('missing_storage_permission'));
+        }
     }
-
     if (ANDROID_30) {
         await askForManagePermission();
         if (!checkManagePermission()) {
-            throw new Error('missing_manage_permission');
+            throw new Error(lc('missing_manage_permission'));
         }
     }
     if (!localMbtilesSource) {
