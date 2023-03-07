@@ -290,6 +290,8 @@
   "medical_supply": "Fournitures médicales",
   "memorial": "Monument commémoratif",
   "miniature_golf": "Golf miniature",
+  "missing_manage_permission": "la permission pour gérer tous les fichiers est manquante",
+  "missing_storage_permission": "l'autorisation de lecture/ecriture sur la carte SD est manquante",
   "mobile_phone": "mobile_phone",
   "monument": "monument",
   "motel": "motel",
