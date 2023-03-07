@@ -347,7 +347,7 @@
         if (listViewAvailable) {
             total += WEB_HEIGHT;
             result.push(total);
-            const delta = Math.floor(screenHeightDips - statusBarHeight - total);
+            const delta = Math.floor(screenHeightDips - $statusBarHeight - total);
             webViewHeight = WEB_HEIGHT + delta;
             total += delta;
             result.push(total);
