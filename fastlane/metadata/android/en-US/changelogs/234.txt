@@ -1,0 +1,8 @@
+*Features*
+- rewrote direction panel search on waypoint click
+
+*Bug fixes*
+- *android:* regression fix for computing actionbar height
+- *android:* android 30 fix to detect weather app
+- directions fix for waypoint order. Added support for reordering waypoints
+- if routes are selected ignore possible interesting points
