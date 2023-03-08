@@ -1002,7 +1002,8 @@
                 featureLayerName === 'poi' ||
                 featureLayerName === 'mountain_peak' ||
                 featureLayerName === 'housenumber' ||
-                (!!featureData.name && (featureData.class !== 'national_park' || cartoMap.zoom < 9) && (featureData.class !== 'protected_area' || cartoMap.zoom < 11));
+                (!!featureData.name && (featureData.class !== 'national_park' || cartoMap.zoom < 9) && (featureData.class !== 'protected_area' || cartoMap.zoom < 11) && !selectedRoutes);
+                console.log('isFeatureInteresting', featureLayerName, featureData.name, isFeatureInteresting)
             if (isFeatureInteresting) {
                 ignoreNextMapClick = false;
                 selectedRoutes = null;
