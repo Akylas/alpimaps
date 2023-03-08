@@ -77,7 +77,7 @@ if (__ANDROID__) {
     const resources = (Utils.android.getApplicationContext() as android.content.Context).getResources();
     const id = resources.getIdentifier('config_showNavigationBar', 'bool', 'android');
     let resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
-    if (id > 0 && resourceId > 0) {
+    if (id > 0 && resourceId > 0 && (resources.getBoolean(id) || (!PRODUCTION && isSimulator()))) {
         navigationBarHeight.set(Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId)));
     }
     resourceId = resources.getIdentifier('status_bar_height', 'dimen', 'android');
@@ -89,7 +89,6 @@ if (__ANDROID__) {
 } else {
     const onAppLaunch = function () {
         navigationBarHeight.set(Application.ios.window.safeAreaInsets.bottom);
-        DEV_LOG && console.log('navigationBarHeight', Application.ios.window.safeAreaInsets.bottomonBarHeight);
         Application.off(Application.launchEvent, onAppLaunch);
     };
     Application.on(Application.launchEvent, onAppLaunch);
