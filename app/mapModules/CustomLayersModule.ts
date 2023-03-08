@@ -175,7 +175,7 @@ export default class CustomLayersModule extends MapModule {
             }
         }
     }
-    createMergeMBTilesDataSource(sources: (string | TileDataSource<any, any>)[]) {
+    createMergeMBTilesDataSource(sources: (string | TileDataSource<any, any>)[], minZoom?: number) {
         if (sources.length === 1) {
             if (sources[0] instanceof TileDataSource) {
                 return sources[0];
@@ -188,6 +188,7 @@ export default class CustomLayersModule extends MapModule {
                 s instanceof TileDataSource
                     ? s
                     : new MBTilesTileDataSource({
+                          minZoom,
                           databasePath: s
                       })
             );
@@ -239,6 +240,8 @@ export default class CustomLayersModule extends MapModule {
     createRouteLayer(dataSource: TileDataSource<any, any>) {
         const routeLayer = new VectorTileLayer({
             dataSource,
+            // maxUnderzoomLevel: 0,
+            // maxOverzoomLevel: 0,
             layerBlendingSpeed: 0,
             preloading: get(preloading),
             visible: get(showRoutes),
@@ -730,7 +733,7 @@ export default class CustomLayersModule extends MapModule {
             const terrains = [];
             const mbtiles = [];
             const worldMbtilesEntity = entities.find((e) => e.name === 'world.mbtiles');
-            const worldRouteMbtilesEntity = entities.find((e) => e.name.endsWith('routes_9.mbtiles') || e.name.endsWith('routes.mbtiles'));
+            const worldRouteMbtilesEntity = entities.find((e) => e.name.endsWith('routes.mbtiles') || e.name.endsWith('routes.mbtiles'));
             const worldTerrainMbtilesEntity = entities.find((e) => e.name.endsWith('.etiles'));
 
             const folders = entities.filter((e) => e.isFolder).sort((a, b) => b.name.localeCompare(a.name));
@@ -745,6 +748,7 @@ export default class CustomLayersModule extends MapModule {
                         const routesSource = sources.splice(routesSourceIndex, 1)[0];
                         routes.push(
                             new MBTilesTileDataSource({
+                                minZoom: 5,
                                 databasePath: getFileNameThatICanUseInNativeCode(context, routesSource.path)
                             })
                         );
@@ -755,7 +759,10 @@ export default class CustomLayersModule extends MapModule {
                             'sources',
                             sources.map((s) => s.path)
                         );
-                    const dataSource: TileDataSource<any, any> = this.createMergeMBTilesDataSource(sources.map((s) => getFileNameThatICanUseInNativeCode(context, s.path)));
+                    const dataSource: TileDataSource<any, any> = this.createMergeMBTilesDataSource(
+                        sources.map((s) => getFileNameThatICanUseInNativeCode(context, s.path)),
+                        worldMbtilesEntity ? 5 : undefined
+                    );
                     mbtiles.push(dataSource);
 
                     const terrain = subentities.find((e) => e.name.endsWith('.etiles'));
@@ -772,6 +779,7 @@ export default class CustomLayersModule extends MapModule {
             if (worldRouteMbtilesEntity) {
                 routes.push(
                     new MBTilesTileDataSource({
+                        minZoom: 5,
                         databasePath: getFileNameThatICanUseInNativeCode(context, worldRouteMbtilesEntity.path)
                     })
                 );
@@ -781,9 +789,9 @@ export default class CustomLayersModule extends MapModule {
                     databasePath: getFileNameThatICanUseInNativeCode(context, worldMbtilesEntity.path)
                 });
                 mbtiles.push(datasource);
-                if (!worldRouteMbtilesEntity) {
-                    routes.push(datasource);
-                }
+                // if (!worldRouteMbtilesEntity) {
+                //     routes.push(datasource);
+                // }
             }
 
             if (worldTerrainMbtilesEntity) {
@@ -853,7 +861,10 @@ export default class CustomLayersModule extends MapModule {
                         routes.map((s) => s.options.databasePath)
                     );
                 if (routes.length > 1) {
-                    const dataSource = new MultiTileDataSource();
+                    const dataSource = new MultiTileDataSource({
+                        // maxOpenedPackages: 1,
+                        // reorderingCache: false
+                    });
                     routes.forEach((s) => dataSource.add(s));
                     const layer = this.createRouteLayer(dataSource);
                     mapContext.addLayer(layer, 'routes');
