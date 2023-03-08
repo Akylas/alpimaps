@@ -37,7 +37,7 @@
     import { computeDistanceBetween } from '~/utils/geo';
     import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
-    import { alpimapsFontFamily, borderColor, mdiFontFamily, primaryColor, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
+    import { alpimapsFontFamily, borderColor, mdiFontFamily, navigationBarHeight, primaryColor, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import ElevationChart from './ElevationChart.svelte';
     import IconButton from './IconButton.svelte';
 
