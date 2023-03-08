@@ -81,4 +81,7 @@
         <!-- To disable the user interaction breadcrumbs integration -->
         <meta-data android:name="io.sentry.breadcrumbs.user-interaction" android:value="false" />
     </application>
+    <queries>
+        <package android:name="com.akylas.weather" />
+    </queries>
 </manifest>
