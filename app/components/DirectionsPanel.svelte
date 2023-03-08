@@ -6,9 +6,9 @@
     import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
     import { VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
     import { MultiValhallaOfflineRoutingService, RoutingResult, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
-    import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { ApplicationSettings, Color, ContentView, Device, GridLayout, ObservableArray, StackLayout, TextField } from '@nativescript/core';
+    import { ApplicationSettings, Color, ContentView, Device, GridLayout, ObservableArray, StackLayout, TextField, Utils, View } from '@nativescript/core';
     import type { Feature, Point } from 'geojson';
     import { debounce } from 'push-it-to-the-limit';
     import { onDestroy } from 'svelte';
@@ -390,6 +390,7 @@
         });
     }
     export function addInternalStartPoint(position: MapPos<LatLonKeys>, metaData?) {
+        DEV_LOG && console.log('addInternalStartPoint');
         addInternalWayPoint(position, {
             isStart: true,
             isStop: false,
@@ -414,8 +415,8 @@
     }
 
     function addInternalStopPoint(position: MapPos<LatLonKeys>, metaData?) {
-        DEV_LOG && console.log('addInternalStopPoint', position);
         const lastPoint = waypoints.getItem(waypoints.length - 1);
+        DEV_LOG && console.log('addInternalStopPoint', position, lastPoint?.properties);
         if (lastPoint?.properties.isStop) {
             lastPoint.properties.isStop = false;
             lastPoint.properties.isStart = waypoints.length === 1;
@@ -473,6 +474,13 @@
     }
     export async function addStartPoint(position: MapPos<LatLonKeys>, metaData?) {
         addInternalStartPoint(position, metaData);
+    }
+    export async function addStartOrStopPoint(position: MapPos<LatLonKeys>, metaData?) {
+        if (waypoints.length === 0) {
+            addInternalStartPoint(position, metaData);
+        } else {
+            addInternalStopPoint(position, metaData);
+        }
     }
     export async function addStopPoint(position: MapPos<LatLonKeys>, metaData?) {
         addInternalStopPoint(position, metaData);
@@ -959,10 +967,22 @@
     }
 
     function onItemReordered(e) {
-        (e.view as ContentView).content.opacity = 1;
+        (e.view as ContentView).content.animate({ opacity: 1, duration: 150 });
+        // we need to reset waypoints isStart / isStop
+        const oldIndex = e.index;
+        const newIndex = e.data.targetIndex;
+        const length = waypoints.length;
+        waypoints.forEach((item, index) => {
+            item.properties.isStart = index === 0;
+            item.properties.isStop = index === length - 1;
+            waypoints.setItem(index, item);
+        });
+        DEV_LOG && console.log('onItemReordered', oldIndex, newIndex);
+        updateWayPointLines();
+        updateGeoJSONLayer();
     }
     function onItemReorderStarting(e) {
-        (e.view as ContentView).content.opacity = 0.8;
+        (e.view as ContentView).content.animate({ opacity: 0.8, duration: 150 });
     }
     let pedestrianIcon = 'alpimaps-directions_walk';
     $: pedestrianIcon = formatter.getRouteIcon('pedestrian', pedestrian_type);
@@ -1011,11 +1031,22 @@
         }
     }
 
-    async function openSearchFromItem(item: WayPoint) {
+    async function openSearchFromItem(event, item: WayPoint) {
         try {
-            const Settings = (await import('~/components/SearchModal.svelte')).default;
+            const SearchModal = (await import('~/components/SearchModal.svelte')).default;
             const position = mapContext.getMap().focusPos;
-            const result: any = await showModal({ page: Settings, fullscreen: true, props: { position } });
+            // const result: any = await showModal({ page: Settings, fullscreen: true, props: { position } });
+            const anchorView = event.object as View;
+            const result: any = await showPopover({
+                vertPos: VerticalPosition.ALIGN_TOP,
+                horizPos: HorizontalPosition.ALIGN_LEFT,
+                view: SearchModal,
+                anchor: anchorView,
+                props: {
+                    width: Utils.layout.toDeviceIndependentPixels(anchorView.getMeasuredWidth()),
+                    position
+                }
+            });
             if (result) {
                 const id = Date.now() + '';
                 const toAdd: ItemFeature = {
@@ -1100,9 +1131,9 @@
                             <cspan text="mdi-dots-vertical" verticalAlignment="bottom" visibility={item.properties.isStop ? 'hidden' : 'visible'} fontSize={14} paddingBottom={-2} />
                             <cspan text={item.properties.isStop ? 'mdi-map-marker' : 'mdi-checkbox-blank-circle-outline'} verticalAlignment="middle" />
                         </canvaslabel>
-                        <gridlayout borderRadius={8} backgroundColor={primaryColor.darken(20).hex} columns=" *,auto" height={30} margin="0 0 0 30" on:tap={() => openSearchFromItem(item)}>
+                        <gridlayout borderRadius={8} backgroundColor={primaryColor.darken(20).hex} columns=" *,auto" height={30} margin="0 0 0 30" on:tap={(event) => openSearchFromItem(event, item)}>
                             <label color="white" marginLeft={15} fontSize={15} verticalTextAlignment="center" text={item.properties.name} />
-                            <IconButton gray={true} isVisible={item.properties.name && item.properties.name.length > 0} col={1} text="mdi-close" on:tap={() => clearWayPoint(item)} />
+                            <IconButton color="white" small={true} isVisible={item.properties.name && item.properties.name.length > 0} col={1} text="mdi-delete" on:tap={() => clearWayPoint(item)} />
                         </gridlayout>
                     </gridlayout>
                 </Template>
