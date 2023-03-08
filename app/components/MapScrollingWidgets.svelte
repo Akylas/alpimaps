@@ -156,7 +156,7 @@
         if (selectedItem) {
             const module = mapContext.mapModule('directionsPanel');
             const geometry = selectedItem.geometry as Point;
-            module.addStopPoint({ lat: geometry.coordinates[1], lon: geometry.coordinates[0] }, selectedItem.properties);
+            module.addStartOrStopPoint({ lat: geometry.coordinates[1], lon: geometry.coordinates[0] }, selectedItem.properties);
         }
     }
 
