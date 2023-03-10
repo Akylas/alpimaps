@@ -13,6 +13,7 @@
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
     import { pitchEnabled, preloading, rotateEnabled, showGlobe, show3DBuildings } from '~/stores/mapStore';
+    import { showError } from '~/utils/error';
     import { closeBottomSheet, showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
     import { borderColor, navigationBarHeight, primaryColor, subtitleColor, textColor } from '~/variables';
@@ -48,8 +49,12 @@
         customSources = null;
     });
 
-    function addSource() {
-        customLayers.addSource();
+    async function addSource() {
+        try {
+            await customLayers.addSource();
+        } catch (error) {
+            showError(error);
+        }
     }
     function clearCache() {
         // clearCache();
