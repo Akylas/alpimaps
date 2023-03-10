@@ -18,10 +18,10 @@
     export let position: GeoLocation = undefined;
     export let width;
 
-    function focus() {
-        textField && textField.nativeView.requestFocus();
-        // alert('test')
-    }
+    // function focus() {
+    //     textField && textField.nativeView.requestFocus();
+    //     // alert('test')
+    // }
     function unfocus() {
         clearSearchTimeout();
     }
