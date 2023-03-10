@@ -312,8 +312,8 @@
     </stacklayout>
     <stacklayout marginTop={80} row={2} verticalAlignment="bottom" horizontalAlignment="left">
         <!-- <mdbutton on:tap={open3DMap} class="small-floating-btn" color={primaryColor} text="mdi-video-3d" /> -->
-        <mdbutton id="layers" on:tap={showRouteList} class="small-floating-btn" color={primaryColor} text="mdi-format-list-checkbox" />
-        <mdbutton id="layers" on:tap={showMapRightMenu} class="small-floating-btn" color={primaryColor} text="mdi-layers" />
+        <mdbutton id="layers" on:tap={showRouteList} class="small-floating-btn" text="mdi-format-list-checkbox" />
+        <mdbutton id="layers" on:tap={showMapRightMenu} class="small-floating-btn" text="mdi-layers" />
     </stacklayout>
 
     <ScaleView bind:this={scaleView} col={1} row={2} horizontalAlignment="right" verticalAlignment="bottom" marginBottom={8} />
