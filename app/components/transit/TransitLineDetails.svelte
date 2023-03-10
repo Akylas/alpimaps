@@ -166,12 +166,7 @@
 
 <page bind:this={page} actionBarHidden={true} on:navigatingTo={onNavigatingTo}>
     <gridLayout rows="auto,auto,*,2*">
-        <CActionBar backgroundColor="transparent">
-            <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={line.color} color={line.textColor} text={line.shortName} autoFontSize={true} />
-
-            <IconButton text="mdi-file-pdf-box" on:tap={() => downloadPDF()} />
-            <IconButton text="mdi-calendar-clock-outline" on:tap={() => showTimesheet()} />
-        </CActionBar>
+        
 
         <label
             row={1}
@@ -218,5 +213,11 @@
                 </cgroup>
             </canvaslabel>
         {/if}
+        <CActionBar backgroundColor="transparent">
+            <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={line.color} color={line.textColor} text={line.shortName} autoFontSize={true} />
+
+            <IconButton text="mdi-file-pdf-box" on:tap={() => downloadPDF()} />
+            <IconButton text="mdi-calendar-clock-outline" on:tap={() => showTimesheet()} />
+        </CActionBar>
     </gridLayout>
 </page>
