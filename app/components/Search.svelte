@@ -86,7 +86,7 @@
     let searchAsTypeTimer;
     let loading = false;
     let filteringOSMKey = false;
-    export let filteredDataItems: SearchItem[];
+    export let filteredDataItems: SearchItem[] = null;
     let text: string = null;
     let currentSearchText: string = null;
     const mapContext = getMapContext();
