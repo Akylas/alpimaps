@@ -734,7 +734,7 @@ export default class CustomLayersModule extends MapModule {
             const terrains = [];
             const mbtiles = [];
             const worldMbtilesEntity = entities.find((e) => e.name === 'world.mbtiles');
-            const worldRouteMbtilesEntity = entities.find((e) => e.name.endsWith('routes.mbtiles') || e.name.endsWith('routes.mbtiles'));
+            const worldRouteMbtilesEntity = entities.find((e) => e.name.endsWith('routes_9.mbtiles') || e.name.endsWith('routes.mbtiles'));
             const worldTerrainMbtilesEntity = entities.find((e) => e.name.endsWith('.etiles'));
 
             const folders = entities.filter((e) => e.isFolder).sort((a, b) => b.name.localeCompare(a.name));
