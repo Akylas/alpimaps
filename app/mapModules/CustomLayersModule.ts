@@ -242,6 +242,7 @@ export default class CustomLayersModule extends MapModule {
             dataSource,
             // maxUnderzoomLevel: 0,
             // maxOverzoomLevel: 0,
+            visibleZoomRange: [4, 24],
             layerBlendingSpeed: 0,
             preloading: get(preloading),
             visible: get(showRoutes),
