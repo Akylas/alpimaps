@@ -163,12 +163,6 @@
 
 <page bind:this={page} actionBarHidden={true}>
     <gridlayout rows="auto,auto,auto,*" columns="auto,*,auto">
-        <CActionBar backgroundColor="transparent" colSpan={3}>
-            <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={line.color} color={line.textColor} text={line.shortName} autoFontSize={true} />
-            <IconButton text="mdi-file-pdf-box" on:tap={downloadPDF} />
-            <IconButton text="mdi-information-outline" on:tap={showDetails} />
-        </CActionBar>
-
         <label
             row={1}
             colSpan={3}
@@ -232,5 +226,10 @@
                 </cgroup>
             </canvaslabel>
         {/if}
+        <CActionBar backgroundColor="transparent" colSpan={3}>
+            <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={line.color} color={line.textColor} text={line.shortName} autoFontSize={true} />
+            <IconButton text="mdi-file-pdf-box" on:tap={downloadPDF} />
+            <IconButton text="mdi-information-outline" on:tap={showDetails} />
+        </CActionBar>
     </gridlayout>
 </page>
