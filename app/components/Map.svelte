@@ -481,7 +481,7 @@
             options.setDoubleClickMaxDuration(0.3);
             options.setLongClickDuration(0.5);
             options.setKineticRotation(false);
-            options.setRotatable($rotateEnabled);
+            options.setRotationGestures($rotateEnabled);
             toggleMapPitch($pitchEnabled);
             const pos = JSON.parse(appSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos<LatLonKeys>;
             const zoom = appSettings.getNumber('mapZoom', 10);
@@ -858,7 +858,7 @@
     }
     function toggleMapRotate(value: boolean) {
         if (cartoMap) {
-            cartoMap?.getOptions().setRotatable(value);
+            cartoMap?.getOptions().setRotationGestures(value);
         }
     }
     function toggleMapPitch(value: boolean) {
