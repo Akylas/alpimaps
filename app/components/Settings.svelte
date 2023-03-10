@@ -274,7 +274,6 @@
 
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*">
-        <CActionBar canGoBack title={$slc('settings')} />
         <collectionview bind:this={collectionView} row={1} {items} rowHeight={70} itemTemplateSelector={selectTemplate}>
             <Template let:item key="switch">
                 <gridlayout columns="*, auto" padding="0 10 0 30">
@@ -335,5 +334,6 @@
                 </gridlayout>
             </Template>
         </collectionview>
+        <CActionBar canGoBack title={$slc('settings')} />
     </gridlayout>
 </page>
