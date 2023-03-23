@@ -7,7 +7,7 @@
 <br>You can get the <a href="https://github.com/farfromrefug/alpimaps/releases/latest">latest release on GitHub</a>
 </p>
 <div align="center">
-<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" height="80">
+<a href="https://apt.izzysoft.de/packages/akylas.alpi.maps/"><img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" height="80"></a>
 </div>
 
 <h2 align="center">Enjoying AlpiMaps?</h2>
