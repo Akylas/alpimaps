@@ -32,13 +32,13 @@ module.exports = (env, params = {}) => {
         env = Object.assign(
             {},
             {
-                production: true,
+                production: env.production !== false,
                 sentry: true,
                 uploadSentry: true,
                 testlog: true,
                 noconsole: false,
                 sourceMap: true,
-                uglify: true
+                uglify: env.production !== false
             },
             env
         );
