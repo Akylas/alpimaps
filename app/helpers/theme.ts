@@ -1,7 +1,7 @@
 import { getString, setString } from '@nativescript/core/application-settings';
 import { iOSNativeHelper } from '@nativescript/core/utils';
 import Theme from '@nativescript-community/css-theme';
-import { Application, ApplicationSettings } from '@nativescript/core';
+import { Application, ApplicationSettings, EventData } from '@nativescript/core';
 import { prefs } from '~/services/preferences';
 import { createGlobalEventListener, globalObservable, updateThemeColors } from '~/variables';
 import { showBottomSheet } from '~/utils/svelte/bottomsheet';
@@ -17,7 +17,7 @@ export let theme: Themes;
 export const currentTheme = writable('auto');
 export const sTheme = writable('auto');
 
-Application.on(Application.systemAppearanceChangedEvent, (event) => {
+Application.on(Application.systemAppearanceChangedEvent, (event: EventData & { newValue: string }) => {
     if (theme === 'auto') {
         currentTheme.set(event.newValue);
         updateThemeColors(event.newValue);
