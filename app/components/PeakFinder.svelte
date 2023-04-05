@@ -539,7 +539,8 @@
         const originalClient = new webClientClass(webview);
         const vDataSource = (vectorDataSource || getDefaultDataSource()).getNative();
         const client = new (akylas as any).alpi.maps.WebViewClient(originalClient, dataSource?.getNative(), vDataSource, vDataSource, rasterDataSource?.getNative());
-        client.originalClient = originalClient;
+        // this crashes in production saying no originalClient property ...
+        // client.originalClient = originalClient;
         return client;
     }
     function itemIdGenerator(item, i) {
@@ -548,10 +549,10 @@
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
-    <bottomsheet on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)} steps={[0, 300]} stepIndex={bottomSheetStepIndex} panGestureOptions={{ failOffsetXEnd: 50, minDist: 150 }} {shouldPan}>
-        <gridLayout android:marginBottom={$navigationBarHeight} on:layoutChanged={onLayoutChanged} width="100%" height="100%">
+    <bottomsheet on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)} steps={[0, 300]} stepIndex={bottomSheetStepIndex} panGestureOptions={{ failOffsetXEnd: 50, minDist: 150 }} {shouldPan} android:marginBottom={$navigationBarHeight}>
+        <gridLayout on:layoutChanged={onLayoutChanged} width="100%" height="100%">
             <awebview
-                bind:this={webView}
+                bind:this={webView} 
                 on:loaded={webviewLoaded}
                 createWebViewClient={createCustomWebViewClient}
                 webRTC={true}
