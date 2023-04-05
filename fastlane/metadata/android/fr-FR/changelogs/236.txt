@@ -1,0 +1,6 @@
+*Bug fixes*
+- prevent click to go through action bars
+- show errors while adding sources
+- prevent routes from showing below zoom 4
+- allow to reset map rotation while rotation is disabled
+- *android:* fix for on screen navigation bar
