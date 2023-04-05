@@ -14,7 +14,7 @@
     import { share } from '~/utils/share';
     import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
-    import { borderColor, mdiFontFamily } from '~/variables';
+    import { borderColor, mdiFontFamily, navigationBarHeight } from '~/variables';
     import CActionBar from './CActionBar.svelte';
 
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -274,7 +274,8 @@
 
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*">
-        <collectionview bind:this={collectionView} row={1} {items} rowHeight={70} itemTemplateSelector={selectTemplate}>
+        <collectionview bind:this={collectionView} row={1} {items} rowHeight={70} itemTemplateSelector={selectTemplate} android:paddingBottom={$navigationBarHeight}>
+            
             <Template let:item key="switch">
                 <gridlayout columns="*, auto" padding="0 10 0 30">
                     <stacklayout verticalAlignment="middle">
