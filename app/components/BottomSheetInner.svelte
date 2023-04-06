@@ -824,8 +824,8 @@
         <mdactivityindicator visibility={updatingItem ? 'visible' : 'collapsed'} horizontalAligment="right" busy={true} width={20} height={20} />
         <IconButton col={1} text="mdi-crosshairs-gps" isVisible={itemIsRoute} on:tap={zoomToItem} />
         <stacklayout orientation="horizontal" row={1} colSpan={2} borderTopWidth={1} borderBottomWidth={1} borderColor={$borderColor} id="bottomsheetbuttons">
-            <IconButton on:tap={deleteItem} tooltip={lc('delete')} isVisible={item && item.id} color="red" text="mdi-delete" rounded={false} />
-            <IconButton on:tap={hideItem} tooltip={lc('hide')} isVisible={item && item.id && itemIsRoute} text="mdi-eye-off" rounded={false} />
+            <IconButton on:tap={deleteItem} tooltip={lc('delete')} isVisible={!!item?.id} color="red" text="mdi-delete" rounded={false} />
+            <IconButton on:tap={hideItem} tooltip={lc('hide')} isVisible={!!item?.id && itemIsRoute} text="mdi-eye-off" rounded={false} />
             <IconButton on:tap={searchWeb} tooltip={lc('search_web')} isVisible={item && (!itemIsRoute || item.properties?.name) && !item.id} text="mdi-web" rounded={false} />
             {#if packageService.hasElevation()}
                 <IconButton on:tap={() => getProfile()} tooltip={lc('elevation_profile')} isVisible={itemIsRoute && itemCanQueryProfile} text="mdi-chart-areaspline" rounded={false} />
