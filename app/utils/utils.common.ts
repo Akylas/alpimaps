@@ -18,20 +18,6 @@ export function arraySortOn(array, key) {
     });
 }
 
-// export function throttle(fn, limit) {
-//     let waiting = false;
-//     return (...args) => {
-//         if (!waiting) {
-//             waiting = true;
-//             setTimeout(() => {
-//                 waiting = false;
-//             }, limit);
-//             return fn.apply(this, args);
-//         }
-//         return Promise.reject(undefined);
-//     };
-// }
-
 let dataFolder;
 export function getDataFolder() {
     if (!dataFolder) {
