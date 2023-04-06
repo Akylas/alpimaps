@@ -843,7 +843,7 @@
             {#if packageService.hasElevation()}
                 <IconButton on:tap={openPeakFinder} tooltip={lc('peaks')} isVisible={!itemIsRoute} text="mdi-summit" rounded={false} />
             {/if}
-            <IconButton on:tap={openCompass} tooltip={lc('compass')} isVisible={(itemIsRoute && !item?.id) || currentLocation} text="mdi-compass-outline" rounded={false} />
+            <IconButton on:tap={openCompass} tooltip={lc('compass')} isVisible={(itemIsRoute && !item?.id) || !!currentLocation} text="mdi-compass-outline" rounded={false} />
 
             <IconButton on:tap={getTransitLines} tooltip={lc('bus_stop_infos')} isVisible={itemIsBusStop} text="mdi-bus" rounded={false} />
         </stacklayout>
