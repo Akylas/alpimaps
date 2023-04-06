@@ -18,6 +18,7 @@
     export let size = small ? 30 : actionBarButtonHeight;
     export let tooltip = null;
     export let rounded = true;
+    
     // let actualColor = null;
     // $: actualColor = white ? 'white' : !isEnabled || gray ? $subtitleColor : color;
     $: actualColor = color || (!isEnabled || gray ? $subtitleColor : $textColor);
