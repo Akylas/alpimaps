@@ -1,0 +1,3 @@
+*Bug fixes*
+- dark mode for map buttons
+- prevent wrong buttons to show on first map select
