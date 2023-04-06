@@ -8,6 +8,7 @@
 %mdi {
     font-family: $mdi-fontFamily;
 }
+
 %alpimaps {
     font-family: $alpimaps-fontFamily;
 }
@@ -15,14 +16,17 @@
 %icon-btn {
     ripple-color: gray;
     color: $text-color-light;
+
     .ns-dark & {
         color: $text-color-dark;
         ripple-color: $text-color-dark;
     }
+
     width: $actionbar-button-height;
     height: $actionbar-button-height;
     font-size: 24;
 }
+
 .mdi {
     @extend %mdi;
 }
@@ -42,6 +46,7 @@ page {
         background-color: #1c1c1e;
     }
 }
+
 htmllabel,
 canvaslabel,
 label,
@@ -49,39 +54,49 @@ mdbutton,
 checkbox,
 button {
     color: $text-color-light;
+
     .ns-dark & {
         color: $text-color-dark;
     }
 }
+
 mdbutton,
 button {
     ripple-color: $text-color-light;
+
     .ns-dark & {
         ripple-color: $text-color-dark;
     }
 }
+
 mdbutton[variant=text] {
-    padding:0;
+    padding: 0;
 }
+
 mdtextfield,
 textfield {
     color: $text-color-light;
     backgroundcolor-color: $text-color-dark;
     placeholder-color: gray;
+
     .ns-dark & {
         color: $text-color-dark;
         backgroundcolor-color: $text-color-light;
         placeholder-color: lightgray;
     }
 }
+
 .textRipple {
     ripple-color: $text-color-light;
+
     .ns-dark & {
         ripple-color: $text-color-dark;
     }
 }
+
 .subtitle {
     color: #888888;
+
     .ns-dark & {
         color: #aaaaaa;
     }
@@ -96,10 +111,15 @@ mdcardview {
     background-color: $primary-color;
     color: $text-color-dark;
 }
+
 .buttontext {
     background-color: $text-color-dark;
     color: $primary-color;
     ripple-color: $dark-color;
+    .ns-dark & {
+        color: $primary-color;
+        ripple-color: $dark-color;
+    }
 }
 
 .maki {
@@ -131,6 +151,7 @@ mdcardview {
     color: $primary-color;
     ripple-color: $dark-color;
 }
+
 .icon-btn-text[isEnabled='false'] {
     background-color: lightGray;
     color: gray;
@@ -146,6 +167,7 @@ mdcardview {
     width: 54;
     height: 54;
 }
+
 .small-floating-btn {
     @extend %mdi;
     @extend .buttontext;
@@ -157,6 +179,7 @@ mdcardview {
     height: 40;
     margin: 8;
 }
+
 .section-title {
     font-size: 10;
 }
@@ -166,8 +189,7 @@ mdcardview {
 //     padding-right: 12;
 //     margin-bottom: 10;
 // }
-z
-.navigationBarOverlay {
+z .navigationBarOverlay {
     // height: $navigation-bar-height;
     width: 100%;
     background-color: #aa000000;
@@ -176,6 +198,7 @@ z
 
 .actionBar {
     background-color: adjust-color(white, $lightness: -30%);
+
     .ns-dark & {
         background-color: adjust-color(black, $lightness: 30%);
     }
@@ -186,9 +209,11 @@ z
     width: $actionbar-height;
     height: $actionbar-height;
     color: black;
+
     .ns-dark & {
         color: white;
     }
+
     margin: 0;
     padding: 0;
     font-size: 32;
@@ -199,6 +224,7 @@ z
     font-size: 20;
     font-weight: 500;
     color: black;
+
     .ns-dark & {
         color: white;
     }
@@ -216,13 +242,16 @@ z
     color: $primary-color;
     ripple-color: $primary-color;
 }
+
 .icon-label {
     @extend %mdi;
-    
+
     color: $text-color-light;
+
     .ns-dark & {
         color: $text-color-dark;
     }
+
     width: $actionbar-button-height;
     height: $actionbar-button-height;
     text-align: center;
