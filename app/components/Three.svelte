@@ -50,6 +50,7 @@
     import { MultiTileDataSource } from '../../../nativescript-carto/packages/ui-carto/datasources';
     import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
     import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
+    import { debounce, throttle } from '@nativescript/core/utils';
 </script>
 
 <script lang="ts">
@@ -619,38 +620,6 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
             }
         }
     });
-
-    function throttle(callback, limit) {
-        var waiting = false; // Initially, we're not waiting
-        return function () {
-            // We return a throttled function
-            if (!waiting) {
-                // If we're not waiting
-                // eslint-disable-next-line prefer-rest-params
-                callback.apply(this, arguments); // Execute users function
-                waiting = true; // Prevent future invocations
-                setTimeout(function () {
-                    // After a period of time
-                    waiting = false; // And allow future invocations
-                }, limit);
-            }
-        };
-    }
-    function debounce(callback, limit) {
-        var waitingId = null; // Initially, we're not waiting
-        return function () {
-            // We return a throttled function
-            if (waitingId) {
-                clearTimeout(waitingId);
-                waitingId = null;
-            }
-            waitingId = setTimeout(function (...args) {
-                // After a period of time
-                callback.apply(this, ...args); // Execute users function
-                waitingId = null; // And allow future invocations
-            }, limit);
-        };
-    }
     // console.log('isMobile', isMobile, navigator.userAgent);
     const devicePixelRatio = window.devicePixelRatio;
     // console.log('isMobile ' + isMobile + ' ' + devicePixelRatio + ' ' + navigator.userAgent);
@@ -1346,7 +1315,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
             sky.visible = false;
             sunLight.visible = false;
         }
-        sharedPointMaterial.uniforms.depthTexture.value = composer.depthTexture;
+        sharedPointMaterial.uniforms.depthTexture.value = composer['depthTexture'];
         applyOnNodes((node) => {
             const visible = node.isVisible();
             if (visible) {
