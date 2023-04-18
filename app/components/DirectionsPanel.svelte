@@ -1144,7 +1144,7 @@
                     <IconButton
                         text="mdi-highway"
                         size={40}
-                        color={valhallaSettingColor('use_highways')}
+                        color={valhallaSettingColor('use_highways', profileCostingOptions)}
                         on:tap={() => switchValhallaSetting('use_highways')}
                         onLongPress={(event) => setSliderCostingOptions('use_highways', event)}
                     />
@@ -1152,7 +1152,7 @@
                     <IconButton
                         text="mdi-credit-card-marker-outline"
                         size={40}
-                        color={valhallaSettingColor('use_tolls')}
+                        color={valhallaSettingColor('use_tolls', profileCostingOptions)}
                         on:tap={() => switchValhallaSetting('use_tolls')}
                         onLongPress={(event) => setSliderCostingOptions('use_tolls', event)}
                     />
@@ -1161,28 +1161,28 @@
                     <IconButton
                         text="mdi-road"
                         size={40}
-                        color={valhallaSettingColor('use_roads')}
+                        color={valhallaSettingColor('use_roads', profileCostingOptions)}
                         on:tap={() => switchValhallaSetting('use_roads')}
                         onLongPress={(event) => setSliderCostingOptions('use_roads', event)}
                     />
                     <IconButton
                         text="mdi-chart-areaspline"
                         size={40}
-                        color={valhallaSettingColor('use_hills')}
+                        color={valhallaSettingColor('use_hills', profileCostingOptions)}
                         on:tap={() => switchValhallaSetting('use_hills')}
                         onLongPress={(event) => setSliderCostingOptions('use_hills', event)}
                     />
                     <IconButton
                         text="mdi-weight"
                         size={40}
-                        color={valhallaSettingColor('weight')}
+                        color={valhallaSettingColor('weight', profileCostingOptions)}
                         on:tap={() => switchValhallaSetting('weight')}
                         onLongPress={(event) => setSliderCostingOptions('weight', event)}
                     />
                     <IconButton
                         text="mdi-texture-box"
                         size={40}
-                        color={valhallaSettingColor('avoid_bad_surfaces')}
+                        color={valhallaSettingColor('avoid_bad_surfaces', profileCostingOptions)}
                         on:tap={() => switchValhallaSetting('avoid_bad_surfaces')}
                         onLongPress={(event) => setSliderCostingOptions('avoid_bad_surfaces', event)}
                     />
@@ -1192,27 +1192,27 @@
                     <IconButton
                         text="mdi-road"
                         size={40}
-                        color={valhallaSettingColor('driveway_factor')}
+                        color={valhallaSettingColor('driveway_factor', profileCostingOptions)}
                         on:tap={() => switchValhallaSetting('driveway_factor')}
                         onLongPress={(event) => setSliderCostingOptions('driveway_factor', event)}
                     />
                     <IconButton
                         text="mdi-chart-areaspline"
                         size={40}
-                        color={valhallaSettingColor('use_hills')}
+                        color={valhallaSettingColor('use_hills', profileCostingOptions)}
                         on:tap={() => switchValhallaSetting('use_hills')}
                         onLongPress={(event) => setSliderCostingOptions('use_hills', event)}
                     />
                     <IconButton
                         text="mdi-weight"
-                        color={valhallaSettingColor('weight')}
+                        color={valhallaSettingColor('weight', profileCostingOptions)}
                         size={40}
                         on:tap={() => switchValhallaSetting('weight')}
                         onLongPress={(event) => setSliderCostingOptions('weight', event)}
                     />
                     <IconButton
                         text="mdi-stairs"
-                        color={valhallaSettingColor('step_penalty')}
+                        color={valhallaSettingColor('step_penalty', profileCostingOptions)}
                         size={40}
                         on:tap={() => switchValhallaSetting('step_penalty')}
                         onLongPress={(event) => setSliderCostingOptions('step_penalty', event)}
