@@ -1,0 +1,8 @@
+*Bug fixes*
+- ask for location permission before showing satellites view
+- missing locales
+- better directions panel popover layout for settings (activated through long press)
+- update settings icons color on setting change
+- better layout for directions profile settings (available through long press)
+- *android:* use material 3 switch
+- pass address and name when querying weather
