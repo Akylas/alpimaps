@@ -556,7 +556,11 @@
             updatingItem = true;
             const query = formatter.getItemName(item);
             const geometry = item.geometry as Point;
-            openUrl(`weather://query?lat=${geometry.coordinates[1]}&lon=${geometry.coordinates[0]}&name=${query}`);
+            let url = `weather://query?lat=${geometry.coordinates[1]}&lon=${geometry.coordinates[0]}&name=${query}`;
+            if (item.properties.address) {
+                url += `&address=${JSON.stringify(item.properties.address)}`
+            }
+            openUrl(url);
         } catch (err) {
             showError(err);
         } finally {
