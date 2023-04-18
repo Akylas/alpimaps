@@ -11,3 +11,11 @@ export class BgService extends BgServiceCommon {
         this._handlerLoaded();
     }
 }
+
+let bgService: BgService;
+export function getBGServiceInstance() {
+    if (!bgService) {
+        bgService = new BgService();
+    }
+    return bgService;
+}
