@@ -63,7 +63,6 @@
             bind:this={collectionView}
             row={1}
             items={settings}
-            rowHeight={80}
             height={Math.min(300, settings.length * 80)}
             itemTemplateSelector={(item) => (item.type === 'switch' ? item.type : 'default')}
         >
@@ -83,7 +82,7 @@
             <Template let:item key="switch">
                 <gridlayout columns="*, auto" padding="0 10 0 30">
                     <stackLayout verticalAlignment="middle">
-                        <label color={$textColor} fontSize={17} text={item.title} textWrap="true" verticalTextAlignment="top" maxLines={2} lineBreak="end" />
+                        <label color={$textColor} fontSize={17} text={item.title} textWrap={true} verticalTextAlignment="top" maxLines={2} lineBreak="end" />
                         <label
                             color={$subtitleColor}
                             visibility={item.subtitle && item.subtitle.length > 0 ? 'visible' : 'collapsed'}
