@@ -6,7 +6,6 @@ import { VectorElementEventData, VectorTileEventData, VectorTileLayer } from '@n
 import { Projection } from '@nativescript-community/ui-carto/projections';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
-// import { Drawer } from '@nativescript-community/ui-drawer';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { Frame, Page } from '@nativescript/core';
 import { getRootView } from '@nativescript/core/application';
@@ -19,6 +18,7 @@ import type CustomLayersModule from '~/mapModules/CustomLayersModule';
 import type ItemsModule from '~/mapModules/ItemsModule';
 import type UserLocationModule from '~/mapModules/UserLocationModule';
 import type { IItem } from '~/models/Item';
+import { getBGServiceInstance } from '~/services/BgService';
 import { showBottomSheet } from '~/utils/svelte/bottomsheet';
 import { createGlobalEventListener, globalObservable } from '~/variables';
 export interface IMapModule {
@@ -37,7 +37,6 @@ export type LayerType = 'map' | 'routes' | 'customLayers' | 'hillshade' | 'selec
 export type ContextCallback<T = CartoMap<LatLonKeys>> = (data: T) => void;
 
 export interface MapContext {
-    // drawer: Drawer;
     mapModules: MapModules;
     innerDecoder: MBVectorTileDecoder;
     showOptions();
@@ -90,18 +89,13 @@ export interface MapContext {
 }
 
 export interface MapModules {
-    // mapScrollingWidgets: MapScrollingWidgets;
-    // search: Search;
     customLayers: CustomLayersModule;
     directionsPanel: DirectionsPanel;
     userLocation: UserLocationModule;
     items: ItemsModule;
-    // rightMenu: MapRightMenu;
-    // bottomSheet: BottomSheetInner;
 }
 
 export function onNetworkChanged(callback: (theme) => void) {}
-// export let drawer: Drawer;
 
 const mapContext: MapContext = {
     mapModules: {},
@@ -195,13 +189,16 @@ export async function handleMapAction(action: string, options?) {
             break;
         case 'gps_status':
             try {
+                await getBGServiceInstance().geoHandler.enableLocation();
                 const GpsStatusView = (await import('~/components/GpsStatusView.svelte')).default;
                 await showBottomSheet({
                     parent,
                     view: GpsStatusView
                 });
             } catch (err) {
-                console.error('showGpsStatus', err, err['stack']);
+                if (err) {
+                    console.error('showGpsStatus', err, err.stack);
+                }
             }
             break;
         case 'altimeter':
