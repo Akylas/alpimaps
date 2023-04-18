@@ -16,7 +16,7 @@
     import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
     import { showError } from '~/utils/error';
-    import { mdiFontFamily, widgetBackgroundColor } from '~/variables';
+    import { mdiFontFamily, subtitleColor, widgetBackgroundColor } from '~/variables';
     import IconButton from '../IconButton.svelte';
 
     let page: NativeViewElementNode<Page>;
@@ -166,8 +166,6 @@
 
 <page bind:this={page} actionBarHidden={true} on:navigatingTo={onNavigatingTo}>
     <gridLayout rows="auto,auto,*,2*">
-        
-
         <label
             row={1}
             text={line.longName.replace(' / ', '\n')}
@@ -199,7 +197,7 @@
                         />
                     </canvas>
                     <label col={1} fontSize={16} text={item.name} verticalTextAlignment="bottom" />
-                    <label row={1} col={1} fontSize={14} class="subtitle" text={item.city} verticalTextAlignment="top" />
+                    <label row={1} col={1} fontSize={14} color={$subtitleColor} text={item.city} verticalTextAlignment="top" />
                     <IconButton col={2} rowSpan={2} text="mdi-map-marker-radius-outline" on:tap={() => backToMapOnPoint(item)} verticalAlignment="middle" />
                 </gridlayout>
             </Template>
