@@ -14,3 +14,4 @@ export class BgService extends Observable {
     showForeground(force?: boolean);
     removeForeground();
 }
+export function getBGServiceInstance(): BgService;
