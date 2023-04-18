@@ -70,6 +70,14 @@ export class BgService extends BgServiceCommon {
     }
 }
 
+let bgService: BgService;
+export function getBGServiceInstance() {
+    if (!bgService) {
+        bgService = new BgService();
+    }
+    return bgService;
+}
+
 // export class BgService extends BgServiceCommon {
 //     readonly geoHandler: GeoHandler;
 //     constructor() {

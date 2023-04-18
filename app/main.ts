@@ -102,7 +102,7 @@ themer.createShape('round', {
 });
 
 // we need to instantiate it to "start" it
-const bgService = new BgService();
+const bgService = getBGServiceInstance();
 Application.on(Application.launchEvent, () => {
     networkService.start();
     bgService.start();
