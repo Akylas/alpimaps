@@ -1,7 +1,7 @@
 <script lang="ts" context="module">
-    import { Align, Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
+    import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { mdiFontFamily, textColor, widgetBackgroundColor } from '~/variables';
+    import { mdiFontFamily, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     let iconPaint: Paint;
     let textPaint: Paint;
 </script>
@@ -9,6 +9,7 @@
 <script lang="ts">
     export let icon: string = null;
     export let title: string = null;
+    export let subtitle: string = null;
     export let min = 0;
     export let max = 1;
     export let step = null;
@@ -38,7 +39,7 @@
                     iconPaint.fontFamily = mdiFontFamily;
                 }
                 iconPaint.color = $textColor;
-                canvas.drawText(icon, leftPadding, topPadding+ 5, iconPaint);
+                canvas.drawText(icon, leftPadding, topPadding + 5, iconPaint);
                 leftPadding += 40;
             }
             if (!textPaint) {
@@ -47,20 +48,45 @@
             }
             textPaint.color = $textColor;
             textPaint.setTextAlign(Align.LEFT);
+
+            const valueText = valueFormatter(value);
+
             if (title) {
-                canvas.drawText(title, leftPadding, topPadding, textPaint);
+                const staticLayout = new StaticLayout(title, textPaint, canvas.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+                canvas.save();
+                canvas.translate(leftPadding, topPadding);
+                staticLayout.draw(canvas);
+                canvas.restore();
+                // canvas.drawText(title, leftPadding, topPadding, textPaint);
             }
             canvas.drawText(formatter(min), 10, h - 20, textPaint);
             textPaint.setTextAlign(Align.RIGHT);
-            canvas.drawText(valueFormatter(value), w-10, topPadding, textPaint);
-            canvas.drawText(formatter(max), w-10, h - 20, textPaint);
+            canvas.drawText(valueFormatter(value), w - 10, topPadding, textPaint);
+            canvas.drawText(formatter(max), w - 10, h - 20, textPaint);
         } catch (err) {
             console.error(err);
         }
     }
 </script>
 
-<gridLayout {...$$restProps} height={80}>
-    <canvas bind:this={canvas} on:draw={onDraw} />
-    <slider {value} on:valueChange={onValueChange} minValue={min} maxValue={max} stepSize={step} verticalAlignment="bottom" margin="0 60 0 60" />
+<gridLayout {...$$restProps} height="auto" rows="auto,auto, auto" columns="auto,*,auto" padding="10 10 10 10">
+    <!-- <canvas bind:this={canvas} on:draw={onDraw} /> -->
+
+    <label visibility={icon ? 'visible' : 'collapsed'} color={$textColor} fontSize={24} text={icon} verticalTextAlignment="center" fontFamily={mdiFontFamily} />
+    <label color={$textColor} fontSize={15} text={title} textWrap={true} verticalTextAlignment="center" maxLines={2} lineBreak="end" col={1} padding="0 10 0 10"/>
+    <label
+        row={1}
+        col={1}
+        color={$subtitleColor}
+        visibility={subtitle && subtitle.length > 0 ? 'visible' : 'collapsed'}
+        fontSize={14}
+        text={subtitle}
+        verticalTextAlignment="center"
+        maxLines={2}
+        lineBreak="end"
+    />
+    <label color={$textColor} fontSize={15} text={valueFormatter(value)} verticalTextAlignment="center" col={2}  textAlignment="right"/>
+    <label color={$textColor} fontSize={15} text={formatter(max)} verticalTextAlignment="center" row={2} col={2} textAlignment="right"/>
+    <label color={$textColor} fontSize={15} text={formatter(min)} verticalTextAlignment="center" row={2} />
+    <slider row={2} col={1} {value} on:valueChange={onValueChange} minValue={min} maxValue={max} stepSize={step} verticalAlignment="bottom" />
 </gridLayout>
