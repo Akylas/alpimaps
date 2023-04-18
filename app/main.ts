@@ -15,7 +15,7 @@ import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
 import Map from '~/components/Map.svelte';
 import { start as startThemeHelper } from '~/helpers/theme';
-import { BgService } from '~/services/BgService';
+import { BgService, getBGServiceInstance } from '~/services/BgService';
 import { networkService } from '~/services/NetworkService';
 import { startSentry } from '~/utils/sentry';
 import './app.scss';
@@ -48,7 +48,6 @@ registerNativeViewElement('scrollview', () => NestedScrollView as any);
 registerNativeViewElement('stacklayout', () => require('@nativescript/core').StackLayout);
 registerNativeViewElement('image', () => require('@nativescript/core').Image);
 registerNativeViewElement('flexlayout', () => require('@nativescript/core').FlexboxLayout);
-registerNativeViewElement('switch', () => require('@nativescript/core').Switch);
 registerNativeViewElement('textfield', () => require('@nativescript/core').TextField);
 registerNativeViewElement('span', () => require('@nativescript/core').Span);
 
@@ -58,6 +57,7 @@ registerNativeViewElement('mdactivityindicator', () => require('@nativescript-co
 registerNativeViewElement('mdprogress', () => require('@nativescript-community/ui-material-progress').Progress);
 registerNativeViewElement('mdcardview', () => require('@nativescript-community/ui-material-cardview').CardView);
 registerNativeViewElement('slider', () => require('@nativescript-community/ui-material-slider').Slider, null, {}, { override: true });
+registerNativeViewElement('switch', () => require('@nativescript-community/ui-material-switch').Switch, null, {}, { override: true });
 registerNativeViewElement('lineChart', () => require('@nativescript-community/ui-chart').LineChart);
 registerNativeViewElement('cartomap', () => require('@nativescript-community/ui-carto/ui').CartoMap);
 registerNativeViewElement('canvas', () => require('@nativescript-community/ui-canvas').CanvasView);
