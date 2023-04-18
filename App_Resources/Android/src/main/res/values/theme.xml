@@ -13,6 +13,9 @@
         <item name="android:windowActionBarOverlay">true</item>
         <item name="android:windowTranslucentStatus">false</item>
         <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowSplashScreenBackground">@color/colorPrimary</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/AppTheme</item>
     </style>
     <style name="LaunchScreenTheme" parent="LaunchScreenThemeBase"></style>
     <!-- theme to use AFTER launch screen is loaded-->
