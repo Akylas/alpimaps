@@ -14,7 +14,7 @@
     import { share } from '~/utils/share';
     import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
-    import { borderColor, mdiFontFamily, navigationBarHeight } from '~/variables';
+    import { borderColor, mdiFontFamily, navigationBarHeight, subtitleColor } from '~/variables';
     import CActionBar from './CActionBar.svelte';
 
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -279,11 +279,11 @@
             <Template let:item key="switch">
                 <gridlayout columns="*, auto" padding="0 10 0 30">
                     <stacklayout verticalAlignment="middle">
-                        <label fontSize={17} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines={2} lineBreak="end" />
+                        <label fontSize={17} text={getTitle(item)} verticalTextAlignment="top" maxLines={1} lineBreak="end" />
                         <label
                             visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'}
                             fontSize={14}
-                            class="subtitle"
+                            color={$subtitleColor}
                             text={getSubtitle(item)}
                             verticalTextAlignment="top"
                             maxLines={2}
@@ -298,11 +298,11 @@
                 <gridlayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)} on:touch={(e) => onTouch(item, e)}>
                     <label fontSize={36} text={item.icon} marginLeft="-10" width={40} verticalAlignment="middle" fontFamily={mdiFontFamily} visibility={!!item.icon ? 'visible' : 'hidden'} />
                     <stacklayout col={1} verticalAlignment="middle">
-                        <label fontSize={17} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines={2} lineBreak="end" />
+                        <label fontSize={17} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines={1} lineBreak="end" />
                         <label
                             visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'}
                             fontSize={14}
-                            class="subtitle"
+                            color={$subtitleColor}
                             text={getSubtitle(item)}
                             verticalTextAlignment="top"
                             maxLines={2}
@@ -314,7 +314,7 @@
                         col={2}
                         visibility={!!item.rightValue ? 'visible' : 'collapsed'}
                         text={item.rightValue && item.rightValue()}
-                        class="subtitle"
+                        color={$subtitleColor}
                         verticalAlignment="middle"
                         marginRight={16}
                         marginLeft={16}
@@ -323,10 +323,11 @@
                         col={2}
                         width={25}
                         height={25}
-                        fontSize={20}
+                        fontSize={30}
                         horizontalAlignment="right"
                         visibility={!!item.rightBtnIcon ? 'visible' : 'hidden'}
-                        class="icon-btn"
+                        class="mdi"
+                        color={$subtitleColor}
                         marginLeft={10}
                         marginRight={10}
                         text={item.rightBtnIcon}
