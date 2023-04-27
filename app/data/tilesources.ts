@@ -114,27 +114,19 @@ export const data: { [k: string]: Provider } = {
             maxZoom: 16
         },
         variants: {
-            Plan: {
-                urlOptions: {
-                    variant: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGN'
-                },
-                sourceOptions: {
-                    minZoom: 6
-                }
-            },
-            PlanV2: {
-                urlOptions: {
-                    variant: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2'
-                },
-                sourceOptions: {
-                    minZoom: 6
-                }
-            },
-            Satellite: {
-                urlOptions: {
-                    variant: 'ORTHOIMAGERY.ORTHOPHOTOS'
-                }
-            },
+            // PlanV2: {
+            //     urlOptions: {
+            //         variant: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2'
+            //     },
+            //     sourceOptions: {
+            //         minZoom: 6
+            //     }
+            // },
+            // Satellite: {
+            //     urlOptions: {
+            //         variant: 'ORTHOIMAGERY.ORTHOPHOTOS'
+            //     }
+            // },
             // Buildings: {
             //     urlOptions: {
             //         variant: "BUILDINGS.BUILDINGS",
@@ -147,12 +139,12 @@ export const data: { [k: string]: Provider } = {
             //         format: "image/png"
             //     }
             // },
-            ScanExpress: {
-                urlOptions: {
-                    variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD'
-                    // format: 'image/png',
-                }
-            },
+            // ScanExpress: {
+            //     urlOptions: {
+            //         variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD'
+            //         // format: 'image/png',
+            //     }
+            // },
             Scan25: {
                 urlOptions: {
                     variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN25TOUR'
@@ -160,6 +152,23 @@ export const data: { [k: string]: Provider } = {
                 }
                 // sourceOptions:{
                 // TMSScheme:true
+                // }
+            },
+            // Scan100: {
+            //     urlOptions: {
+            //         variant: 'SCAN100_PYR-JPEG_WLD_WM'
+            //         // format: 'image/png',
+            //     }
+            //     // sourceOptions:{
+            //     // TMSScheme:true
+            //     // }
+            // },
+            'SCAN OACI': {
+                urlOptions: {
+                    variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-OACI'
+                },
+                // sourceOptions: {
+                //     TMSScheme: true
                 // }
             }
             // Slopes: {
