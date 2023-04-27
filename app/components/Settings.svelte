@@ -101,11 +101,11 @@
                 title: lc('third_parties'),
                 description: lc('list_used_third_parties')
             },
-            {
-                id: 'share',
-                rightBtnIcon: 'mdi-chevron-right',
-                title: lc('share_application')
-            },
+            // {
+            //     id: 'share',
+            //     rightBtnIcon: 'mdi-chevron-right',
+            //     title: lc('share_application')
+            // },
             {
                 id: 'data_path',
                 title: lc('map_data_path'),
