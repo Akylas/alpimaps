@@ -9,8 +9,8 @@ android {
     multiDexEnabled false
     applicationId "akylas.alpi.maps"
     minSdkVersion 21
-    versionCode 238
-    versionName "2.0.6"
+    versionCode 239
+    versionName "2.0.7"
 
     if (project.hasProperty('resConfigs')) {
       def resConfigs = project.findProperty('resConfigs')
