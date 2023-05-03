@@ -5,7 +5,7 @@ import { AndroidActivityResultEventData, AndroidApplication, getRootView } from 
 import { lc } from '@nativescript-community/l';
 import { clock_24 } from '~/helpers/locale';
 import { request } from '@nativescript-community/perms';
-import { getDataFolder, permResultCheck, setSavedMBTilesDir } from './utils.common';
+import { getDataFolder, getSavedMBTilesDir, permResultCheck, setSavedMBTilesDir } from './utils.common';
 
 export const sdkVersion = parseInt(Device.sdkVersion, 10);
 const ANDROID_30 = __ANDROID__ && sdkVersion >= 30;
@@ -35,8 +35,8 @@ export async function askForManagePermission() {
 }
 
 export async function getDefaultMBTilesDir() {
-    // let localMbtilesSource = savedMBTilesDir;
-    let localMbtilesSource = null;
+    let localMbtilesSource = getSavedMBTilesDir();
+    // let localMbtilesSource = null;
     if (!ANDROID_30) {
         // storage permission is not needed
         // and will report never_ask_again on >= 33
