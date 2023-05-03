@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
     <style name="ModalBottomSheetDialog" parent="Widget.Material3.BottomSheet.Modal">
-        <item name="backgroundTint">@color/colorSurface</item>
-        <item name="android:background">@color/colorSurface</item>
+        <item name="android:background">@color/colorBackground</item>
     </style>
     <style name="ThemeOverlay.App.BottomSheetDialog" parent="ThemeOverlay.Material3.DayNight.BottomSheetDialog">
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowActionBarOverlay">true</item>
-        <item name="colorSurface">@color/colorSurface</item>
         <item name="android:windowTranslucentStatus">false</item>
+        <item name="elevationOverlayEnabled">false</item>
         <item name="bottomSheetStyle">@style/ModalBottomSheetDialog</item>
     </style>
     <style name="WindowAnimationTransition">
@@ -18,7 +17,6 @@
     <style name="ThemeOverlay.App.MaterialAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
         <item name="backgroundTint">@color/colorSurface</item>
         <item name="android:background">@color/colorSurface</item>
-        <item name="colorSurface">@color/colorSurface</item>
         <item name="materialAlertDialogTitleTextStyle">@style/MaterialAlertDialog.App.Title.Text</item>
         <item name="materialAlertDialogBodyTextStyle">@style/MaterialAlertDialog.App.Body.Text</item>
         <item name="buttonBarPositiveButtonStyle">@style/Widget.App.Button</item>
