@@ -1,5 +1,5 @@
 import { request } from '@nativescript-community/perms';
-import { Application, ApplicationSettings, Color, Device, FileSystemEntity, Folder, View, knownFolders, path } from '@nativescript/core';
+import { Application, ApplicationSettings, Color, Device, FileSystemEntity, Folder, Utils, View, knownFolders, path } from '@nativescript/core';
 import { AndroidActivityResultEventData, AndroidApplication, android as androidApp } from '@nativescript/core/application';
 import { lc } from '~/helpers/locale';
 
@@ -77,32 +77,35 @@ export function setSavedMBTilesDir(value) {
     savedMBTilesDir = value;
 }
 
-// export function getAndroidRealPath(src) {
-//     let filePath = '';
+export function getAndroidRealPath(src) {
+    if (__ANDROID__) {
+        let filePath = '';
 
-//     // ExternalStorageProvider
-//     // const uri  = android.net.Uri.parse(android.net.Uri.decode(src));
-//     const docId = android.net.Uri.decode(src);
-//     // console.log('docId', docId);
-//     const split = docId.split(':');
-//     const type = split[split.length - 2];
+        // ExternalStorageProvider
+        // const uri  = android.net.Uri.parse(android.net.Uri.decode(src));
+        const docId = android.net.Uri.decode(src);
+        // console.log('docId', docId);
+        const split = docId.split(':');
+        const type = split[split.length - 2];
 
-//     if ('primary' === type) {
-//         return android.os.Environment.getExternalStorageDirectory() + '/' + split[split.length - 1];
-//     } else {
-//         // if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
-//         //getExternalMediaDirs() added in API 21
-//         const external = androidApp.context.getExternalMediaDirs();
-//         if (external.length > 1) {
-//             filePath = external[1].getAbsolutePath();
-//             filePath = filePath.substring(0, filePath.indexOf('Android')) + split[split.length - 1];
-//         }
-//         // } else {
-//         //     filePath = "/storage/" + type + "/" + split[1];
-//         // }
-//         return filePath;
-//     }
-// }
+        if ('primary' === type) {
+            return android.os.Environment.getExternalStorageDirectory() + '/' + split[split.length - 1];
+        } else {
+            // if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
+            //getExternalMediaDirs() added in API 21
+            const external = (Utils.android.getApplicationContext() as android.content.Context).getExternalMediaDirs();
+            if (external.length > 1) {
+                filePath = external[1].getAbsolutePath();
+                filePath = filePath.substring(0, filePath.indexOf('Android')) + split[split.length - 1];
+            }
+            // } else {
+            //     filePath = "/storage/" + type + "/" + split[1];
+            // }
+            return filePath;
+        }
+    }
+    return src;
+}
 export function getFileNameThatICanUseInNativeCode(context: android.app.Activity, filePath: string) {
     // if (__IOS__) {
     return filePath;
