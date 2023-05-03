@@ -1,0 +1,9 @@
+*Features*
+- swipe menu to delete source
+
+*Bug fixes*
+- settings view fixes
+- ign data sources cleanup (removed those not available through free plan)
+- correctly update data path on setting change
+- show possible data sources sorted
+- *android:* correct bottomsheet/dialogs background color
