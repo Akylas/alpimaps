@@ -15,7 +15,7 @@
     let searchResults: PhotonFeature[] = [];
     let searchAsTypeTimer: NodeJS.Timeout;
     let currentSearchText: string;
-    export let position: GeoLocation = undefined;
+    // export let position: GeoLocation = undefined;
     export let width;
 
     // function focus() {
@@ -68,7 +68,7 @@
 </script>
 
 <!-- <page id="selectCity" actionBarHidden={true} on:navigatingTo={onNavigatingTo}> -->
-<gesturerootview>
+<gesturerootview columns="auto">
     <gridlayout rows="auto,auto,100" {width} backgroundColor="white" borderRadius={8}>
         <!-- <CActionBar title={lc('search')} modalWindow>
             <mdactivityIndicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapsed'} />
