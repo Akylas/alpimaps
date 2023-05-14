@@ -1,7 +1,7 @@
 <script lang="ts">
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { pickFolder } from '@nativescript-community/ui-document-picker';
-    import { prompt } from '@nativescript-community/ui-material-dialogs';
+    import { alert, prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { ApplicationSettings, ObservableArray, Utils } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
@@ -16,6 +16,7 @@
     import { openLink } from '~/utils/ui';
     import { borderColor, mdiFontFamily, navigationBarHeight, subtitleColor } from '~/variables';
     import CActionBar from './CActionBar.svelte';
+    import { getAndroidRealPath } from '~/utils/utils.common';
 
     let collectionView: NativeViewElementNode<CollectionView>;
 
@@ -194,9 +195,14 @@
                     });
                     const resultPath = result.folders[0];
                     if (resultPath) {
-                        ApplicationSettings.setString('local_mbtiles_directory', resultPath);
-                        item.value = resultPath;
+                        const toUsePath = getAndroidRealPath(resultPath)
+                        ApplicationSettings.setString('local_mbtiles_directory', toUsePath);
+                        item.description = toUsePath;
                         updateItem(item);
+                        alert({
+                            title: lc('setting_update'),
+                            message:lc('please_restart_app')
+                        })
                     }
                     break;
                 }

@@ -5,6 +5,7 @@ import { installMixins as installUIMixins } from '@nativescript-community/system
 import { overrideSpanAndFormattedString } from '@nativescript-community/text';
 import { setMapPosKeys } from '@nativescript-community/ui-carto/core';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
+import SwipeMenuElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
@@ -76,6 +77,7 @@ registerNativeViewElement('symbolshape', () => require('~/components/SymbolShape
 registerNativeViewElement('awebview', () => require('@nativescript-community/ui-webview').AWebView);
 registerNativeViewElement('checkbox', () => require('@nativescript-community/ui-checkbox').CheckBox);
 CollectionViewElement.register();
+SwipeMenuElement.register();
 PagerElement.register();
 // DrawerElement.register();
 
@@ -97,6 +99,13 @@ themer.createShape('round', {
     cornerFamily: 'rounded' as any,
     cornerSize: {
         value: 0.5,
+        unit: '%'
+    }
+});
+themer.createShape('none', {
+    cornerFamily: 'rounded' as any,
+    cornerSize: {
+        value: 0,
         unit: '%'
     }
 });
