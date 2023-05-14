@@ -44,7 +44,7 @@
     onThemeChanged(() => collectionView?.nativeView.refreshVisibleItems());
 </script>
 
-<gesturerootview>
+<gesturerootview columns="auto">
     <gridLayout rows="auto,*,auto" borderRadius={4} backgroundColor={$widgetBackgroundColor} margin={2} elevation={2}>
         {#if options}
             <stacklayout orientation="horizontal" horizontalAlignment="center" margin={5}>
