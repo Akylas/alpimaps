@@ -41,6 +41,7 @@
         "com.skydoves.colorpickerview:ColorPickerDialog",
         "com.skydoves.colorpickerview:ColorPickerDialog.Builder",
         "com.skydoves.colorpickerview:ColorPickerView",
+        "androidx.appcompat.widget:AppCompatRadioButton",
         "java.lang:Iterable",
         "java.lang:Long"
     ],
