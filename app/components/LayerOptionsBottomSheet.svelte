@@ -191,7 +191,13 @@
             tooltip={lc('tile_filter_mode')}
             on:tap={() => handleAction('tile_filter_mode')}
         />
-        <IconButton color="red" text="mdi-delete" tooltip={lc('delete')} on:tap={() => handleAction('delete')} />
+        <IconButton
+            color="red"
+            isVisible={!item.local}
+            text="mdi-delete"
+            tooltip={lc('delete')}
+            on:tap={() => handleAction('delete')}
+        />
     </stacklayout>
     <!-- <collectionview orientation="horizontal" row={2} height={40} items={actions} colWidth="auto">
         <Template let:item>

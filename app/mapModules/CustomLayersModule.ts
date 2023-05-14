@@ -1032,7 +1032,9 @@ export default class CustomLayersModule extends MapModule {
                 title: l('pick_source'),
                 options:
                     //  [{ name: l('pick'), isPick: true }].concat
-                    Object.keys(this.baseProviders).map((s) => ({ name: s, isPick: false, data: this.baseProviders[s] }))
+                    Object.keys(this.baseProviders)
+                        .sort()
+                        .map((s) => ({ name: s, isPick: false, data: this.baseProviders[s] }))
             }
         });
         const result = Array.isArray(results) ? results[0] : results;
