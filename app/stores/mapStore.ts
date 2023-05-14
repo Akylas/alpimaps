@@ -43,3 +43,4 @@ export const contourLinesOpacity = settingsStore('contourLinesOpacity', 1);
 export const preloading = settingsStore('preloading', true);
 export const rotateEnabled = settingsStore('mapRotateEnabled', false);
 export const pitchEnabled = settingsStore('mapPitchEnabled', false);
+export const routesType = settingsStore('routes_type', 0);
