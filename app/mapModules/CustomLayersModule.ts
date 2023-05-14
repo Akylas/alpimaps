@@ -27,6 +27,12 @@ import { showBottomSheet } from '~/utils/svelte/bottomsheet';
 import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
 const mapContext = getMapContext();
 
+export  enum RoutesType {
+    All = 0,
+    Bicycle = 1,
+    Hiking = 2
+}
+
 const DEFAULT_HILLSHADE_SHADER =
     'uniform vec4 u_shadowColor;\n \
 uniform vec4 u_highlightColor;\n \
