@@ -90,7 +90,6 @@
         } else {
             index = Math.floor(event.getX() / buttonSize);
         }
-        // console.log('onTap', event.getX(), event.getY(), index);
         if (index >= 0) {
             visibleButtons()[index].onTap?.(event);
         }
