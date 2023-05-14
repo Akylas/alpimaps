@@ -34,7 +34,7 @@
     import { l, lc, lt, onLanguageChanged, onMapLanguageChanged } from '~/helpers/locale';
     import { sTheme, toggleTheme } from '~/helpers/theme';
     import watcher from '~/helpers/watcher';
-    import CustomLayersModule from '~/mapModules/CustomLayersModule';
+    import CustomLayersModule, { RoutesType } from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
     import type { LayerType } from '~/mapModules/MapModule';
     import { getMapContext, handleMapAction, setMapContext } from '~/mapModules/MapModule';
@@ -46,7 +46,7 @@
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
     import { GeoResult, packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
-    import { rotateEnabled, pitchEnabled, showGlobe, showContourLines, showRoutes, showSlopePercentages, show3DBuildings, contourLinesOpacity, preloading } from '~/stores/mapStore';
+    import { rotateEnabled, pitchEnabled, showGlobe, showContourLines, showRoutes, showSlopePercentages, show3DBuildings, contourLinesOpacity, preloading, routesType } from '~/stores/mapStore';
     import { showError } from '~/utils/error';
     import { computeDistanceBetween, getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
@@ -63,6 +63,7 @@
     import { getFromLocation } from '@nativescript-community/geocoding';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import ButtonBar from './ButtonBar.svelte';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
@@ -824,7 +825,17 @@
             }
         }
     }
+    async function selectShownRoutes(event) {
+        try {
+            const component = (await import('~/components/RoutesTypePopover.svelte')).default;
+            await showPopover({
+                view: component,
+                anchor: event.object
+            });
+        } catch (error) {}
+    }
 
+    $: mapContext?.innerDecoder?.setStyleParameter('routes_type', $routesType);
     $: setRenderProjectionMode($showGlobe);
     $: vectorTileDecoder && setStyleParameter('buildings', !!$show3DBuildings ? '2' : '1');
     $: vectorTileDecoder && setStyleParameter('contours', $showContourLines ? '1' : '0');
@@ -1003,7 +1014,7 @@
                 featureLayerName === 'mountain_peak' ||
                 featureLayerName === 'housenumber' ||
                 (!!featureData.name && (featureData.class !== 'national_park' || cartoMap.zoom < 9) && (featureData.class !== 'protected_area' || cartoMap.zoom < 11) && !selectedRoutes);
-                console.log('isFeatureInteresting', featureLayerName, featureData.name, isFeatureInteresting)
+            console.log('isFeatureInteresting', featureLayerName, featureData.name, isFeatureInteresting);
             if (isFeatureInteresting) {
                 ignoreNextMapClick = false;
                 selectedRoutes = null;
@@ -1015,7 +1026,7 @@
                     properties: featureData,
                     geometry: {
                         type: 'Point',
-                        coordinates: (isFeatureInteresting && !/Line|Polygon/.test(featureGeometry.constructor.name)) ? [featurePosition.lon, featurePosition.lat] : [position.lon, position.lat]
+                        coordinates: isFeatureInteresting && !/Line|Polygon/.test(featureGeometry.constructor.name) ? [featurePosition.lon, featurePosition.lat] : [position.lon, position.lat]
                     }
                 };
                 selectItem({ item: result, isFeatureInteresting, showButtons: featureData.class === 'bus' || featureData.subclass === 'tram_stop' });
@@ -1123,7 +1134,7 @@
     }
 
     function handleNewLanguage(newLang) {
-        console.log('handleNewLanguage', newLang)
+        console.log('handleNewLanguage', newLang);
         currentLanguage = newLang;
         packageService.currentLanguage = newLang;
         setStyleParameter('lang', newLang);
@@ -1660,7 +1671,8 @@
                 tooltip: lc('show_routes'),
                 isSelected: $showRoutes,
                 visible: !!customLayersModule?.hasRoute,
-                onTap: () => showRoutes.set(!$showRoutes)
+                onTap: () => showRoutes.set(!$showRoutes),
+                onLongPress: selectShownRoutes
             },
             {
                 text: 'mdi-speedometer',
