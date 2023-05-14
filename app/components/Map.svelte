@@ -64,6 +64,7 @@
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import ButtonBar from './ButtonBar.svelte';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { VerticalPosition } from '@nativescript-community/ui-popover';
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
@@ -830,12 +831,18 @@
             const component = (await import('~/components/RoutesTypePopover.svelte')).default;
             await showPopover({
                 view: component,
-                anchor: event.object
+                anchor: event.object,
+                vertPos: VerticalPosition.ALIGN_TOP
             });
         } catch (error) {}
     }
-
-    $: mapContext?.innerDecoder?.setStyleParameter('routes_type', $routesType);
+    $: {
+        try {
+            cartoMap && mapContext?.innerDecoder?.setStyleParameter('routes_type', $routesType + '');
+        } catch (error) {
+            console.error(error, error.stack)
+        }
+    }
     $: setRenderProjectionMode($showGlobe);
     $: vectorTileDecoder && setStyleParameter('buildings', !!$show3DBuildings ? '2' : '1');
     $: vectorTileDecoder && setStyleParameter('contours', $showContourLines ? '1' : '0');
