@@ -18,7 +18,9 @@
 @biking_symbolColor: @symbolColorPrep = 'white' ? @biking_route_fill : @symbolColorPrep = '' ? @biking_route_fill : @symbolColorPrep;
 @routeOffset: [network] > 2 ? 2- [network] : [network];
 
-#route {
+#route['nuti::routes_type'=0],
+#route['nuti::routes_type'=1][class=bicycle] ,
+#route['nuti::routes_type'=2][class=hiking] {
 	[network=1][zoom>=5],
 	[network=2][class=bicycle][zoom>=6],
 	[network=2][zoom>=8],

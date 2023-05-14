@@ -15,6 +15,7 @@
     "nutiparameters": {
         "lang": "en",
         "fallback_lang": "en",
+        "routes_type": 0,
         "hide_unselected": 0,
         "selected_id": -1,
         "selected_id_str": "",
