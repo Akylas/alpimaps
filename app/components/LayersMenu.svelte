@@ -1,7 +1,7 @@
 <script lang="ts">
     import { lc } from '@nativescript-community/l';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { GridLayout } from '@nativescript/core';
+    import { ContentView, GridLayout } from '@nativescript/core';
     import { setNumber } from '@nativescript/core/application-settings';
     import { ObservableArray } from '@nativescript/core/data/observable-array';
     import { debounce } from 'push-it-to-the-limit';
@@ -16,12 +16,13 @@
     import { showError } from '~/utils/error';
     import { closeBottomSheet, showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
-    import { borderColor, navigationBarHeight, primaryColor, subtitleColor, textColor } from '~/variables';
+    import { backgroundColor, borderColor, navigationBarHeight, primaryColor, subtitleColor, textColor } from '~/variables';
     import IconButton from './IconButton.svelte';
+    import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
 
     const mapContext = getMapContext();
     let gridLayout: NativeViewElementNode<GridLayout>;
-    let collectionView: NativeViewElementNode<CollectionView>;
+    let collectionView: NativeViewElementNode<CollectionViewWithSwipeMenu>;
 
     export let customLayers: CustomLayersModule = null;
     export let customSources: ObservableArray<SourceItem> = [] as any;
@@ -96,7 +97,12 @@
             });
         }, 0);
     }
-    async function onItemReordered() {}
+    async function onItemReordered(e) {
+        (e.view as ContentView).content.opacity = 1;
+    }
+    async function onItemReorderStarting(e) {
+        (e.view as ContentView).content.opacity = 0.6;
+    }
 
     let loaded = true;
     let loadedListeners = [];
@@ -120,38 +126,91 @@
         openLink(e.link);
     }
     onThemeChanged(() => collectionView?.nativeView.refreshVisibleItems());
+
+    function drawerTranslationFunction(side, width, value, delta, progress) {
+        const result = {
+            mainContent: {
+                translateX: side === 'right' ? -delta : delta
+            },
+            backDrop: {
+                translateX: side === 'right' ? -delta : delta,
+                opacity: progress * 0.1
+            }
+        } as any;
+
+        return result;
+    }
+
+    function deleteSource(item) {
+        customLayers.deleteSource(item);
+    }
+    function onCloseBottomSheet() {
+        collectionView?.nativeView?.closeCurrentMenu();
+    }
 </script>
 
-<gridlayout {...$$restProps} id="rightMenu" bind:this={gridLayout} columns="*,auto" height={240 + $navigationBarHeight} paddingBottom={$navigationBarHeight}>
+<gesturerootview {...$$restProps} on:closedBottomSheet={onCloseBottomSheet} height={240 + $navigationBarHeight}>
+    <gridlayout bind:this={gridLayout} columns="*,auto" paddingBottom={$navigationBarHeight}>
     {#if loaded}
-        <collectionview id="trackingScrollView" items={customSources} bind:this={collectionView} reorderEnabled={true} on:itemReordered={onItemReordered}>
+        <collectionview
+            id="trackingScrollView"
+            items={customSources}
+            bind:this={collectionView}
+            reorderEnabled={true}
+            on:itemReordered={onItemReordered}
+            on:itemReorderStarting={onItemReorderStarting}
+            rowHeight={56}
+        >
             <Template let:item>
-                <gridlayout paddingLeft={15} paddingRight={5} rows="*" columns="130,*,auto" borderBottomColor={$borderColor} borderBottomWidth={1}>
-                    <stacklayout verticalAlignment="center">
-                        <label color={item.layer.opacity === 0 ? $subtitleColor : $textColor} text={item.name.toUpperCase()} fontSize={13} fontWeight="bold" lineBreak="end" maxLines={2} />
-                        <label
-                            visibility={item.provider.attribution ? 'visible' : 'collapsed'}
-                            color={$subtitleColor}
-                            html={item.provider.attribution}
-                            fontSize={11}
-                            maxLines={2}
-                            paddingTop={3}
-                            on:linkTap={onLinkTap}
+                <swipemenu
+                    id={item.name}
+                    leftSwipeDistance={item.local ? 0 : 200}
+                    startingSide={item.startingSide}
+                    translationFunction={drawerTranslationFunction}
+                    openAnimationDuration={100}
+                    closeAnimationDuration={100}
+                >
+                    <gridlayout prop:mainContent paddingLeft={15} paddingRight={5} rows="*" columns="130,*,auto" borderBottomColor={$borderColor} borderBottomWidth={1} backgroundColor={$backgroundColor}>
+                        <stacklayout verticalAlignment="center">
+                            <label color={item.layer.opacity === 0 ? $subtitleColor : $textColor} text={item.name.toUpperCase()} fontSize={13} fontWeight="bold" lineBreak="end" maxLines={2} />
+                            <label
+                                visibility={item.provider.attribution ? 'visible' : 'collapsed'}
+                                color={$subtitleColor}
+                                html={item.provider.attribution}
+                                fontSize={11}
+                                maxLines={2}
+                                paddingTop={3}
+                                on:linkTap={onLinkTap}
+                            />
+                        </stacklayout>
+                        <slider
+                            marginLeft={10}
+                            marginRight={10}
+                            col={1}
+                            value={item.layer.opacity}
+                            on:valueChange={(event) => onLayerOpacityChanged(item, event)}
+                            minValue={0}
+                            maxValue={1}
+                            verticalAlignment="middle"
                         />
-                    </stacklayout>
-                    <slider
-                        marginLeft={10}
-                        marginRight={10}
-                        col={1}
-                        value={item.layer.opacity}
-                        on:valueChange={(event) => onLayerOpacityChanged(item, event)}
-                        minValue={0}
-                        maxValue={1}
-                        verticalAlignment="middle"
-                    />
-                    <IconButton col={2} rowSpan={2} gray={true} text="mdi-dots-vertical" on:tap={() => showSourceOptions(item)} onLongPress={(event) => onButtonLongPress(item, event)} />
-                    <mdprogress colSpan={3} value={item.downloadProgress} visibility={item.downloading > 0 ? 'visible' : 'collapsed'} verticalAlignment="bottom" />
-                </gridlayout>
+                        <IconButton col={2} rowSpan={2} gray={true} text="mdi-dots-vertical" on:tap={() => showSourceOptions(item)} onLongPress={(event) => onButtonLongPress(item, event)} />
+                        <mdprogress colSpan={3} value={item.downloadProgress} visibility={item.downloading > 0 ? 'visible' : 'collapsed'} verticalAlignment="bottom" />
+                    </gridlayout>
+                        <mdbutton prop:leftDrawer
+                            id="deleteBtn"
+                            variant="text"
+                            class="icon-btn"
+                            width={60}
+                            height="100%"
+                            text="mdi-trash-can"
+                            color="white"
+                            backgroundColor="red"
+                            textAlignment="center"
+                            shape="none"
+                            verticalTextAlignment="middle"
+                            on:tap={deleteSource(item)}
+                        />
+                </swipemenu>
             </Template>
         </collectionview>
         <stacklayout col={1} borderLeftColor={$borderColor} borderLeftWidth={1}>
@@ -168,3 +227,4 @@
                 <MDButton variant="flat" class="icon-btn" text="mdi-arrow-left" @tap="currentLegend = null" />
             </GridLayout> -->
 </gridlayout>
+</gesturerootview>
