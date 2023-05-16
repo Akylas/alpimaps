@@ -221,8 +221,7 @@
                               ]
                             : ([] as any)
                     )
-                },
-                null
+                }
             );
             staticLayout = new StaticLayout(nString, textPaint, w - 20 - 50, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
             canvas.translate(60, h / 2 - staticLayout.getHeight() / 2);
