@@ -200,8 +200,7 @@
                                 text: '~' + highlight.entry.g.toFixed() + '%'
                             }
                         ]
-                    },
-                    null
+                    }
                 );
                 return;
             }
