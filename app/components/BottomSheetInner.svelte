@@ -558,7 +558,7 @@
             const geometry = item.geometry as Point;
             let url = `weather://query?lat=${geometry.coordinates[1]}&lon=${geometry.coordinates[0]}&name=${query}`;
             if (item.properties.address) {
-                url += `&address=${JSON.stringify(item.properties.address)}`
+                url += `&address=${JSON.stringify(item.properties.address)}`;
             }
             openUrl(url);
         } catch (err) {
@@ -800,8 +800,7 @@
                                 fontSize: 12
                             }
                         ]
-                    },
-                    null
+                    }
                 );
                 staticLayout = new StaticLayout(nString, textPaint, availableWidth, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                 layoutHeight = staticLayout.getHeight();
@@ -885,13 +884,20 @@
             isScrollEnabled={scrollEnabled}
             src={webViewSrc}
         /> -->
-        <!-- <CollectionView id="bottomsheetListView" row={3} bind:this="listView" rowHeight={40} items="routeInstructions" :visibility="showListView ? 'visible' : 'hidden'" isBounceEnabled="false" @scroll="onListViewScroll" :isScrollEnabled={scrollEnabled}>
+        <!-- <collectionView
+            id="bottomsheetListView"
+            row={3}
+            rowHeight={40}
+            items="routeInstructions"
+            visibility={showListView ? 'visible' : 'hidden'}
+            isBounceEnabled="false"
+        >
             <v-template>
-                <GridLayout columns="30,*" rows="*,auto,auto,*" rippleColor="white"  @tap="onInstructionTap(item)">
-                    <label  rowSpan={4} text="getRouteInstructionIcon(item) |fonticon" class="osm" color="white" fontSize={20} verticalAlignment="middle" textAlignment={center} />
-                    <label col={1} row={1} text="getRouteInstructionTitle(item)" color="white" fontSize={13} fontWeight={bold} textWrap={true} />
-                </GridLayout>
+                <gridLayout columns="30,*" rows="*,auto,auto,*" rippleColor="white" on:tap={onInstructionTap(item)}>
+                    <label rowSpan={4} text="getRouteInstructionIcon(item) |fonticon" class="osm" color="white" fontSize={20} verticalAlignment="middle" textAlignment='center' />
+                    <label col={1} row={1} text="getRouteInstructionTitle(item)" color="white" fontSize={13} fontWeight='bold' textWrap={true} />
+                </gridLayout>
             </v-template>
-        </CollectionView> -->
+        </collectionView> -->
     {/if}
 </gridlayout>
