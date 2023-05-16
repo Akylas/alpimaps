@@ -27,7 +27,7 @@
 
 <collectionView items={options} {height} colWidth="20%" rowHeight={80}>
     <Template let:item>
-        <canvaslabel backgroundColor={item.color} rippleColor={item.color || primaryColor} on:tap={() => onTap(item)} borderRadius={10} paddingTop={15}>
+        <canvaslabel backgroundColor={item.color} rippleColor={item.color || primaryColor} on:tap={() => onTap(item)} borderRadius={10} paddingTop={15} >
             <cgroup verticalAlignment="top" textAlignment="center">
                 <cspan fontFamily={mdiFontFamily} text={item.icon} fontSize={30} />
                 <cspan text={'\n' + item.title} fontSize={12} />
