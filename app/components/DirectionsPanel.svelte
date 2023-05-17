@@ -27,6 +27,7 @@
     import { showError } from '~/utils/error';
     import { alpimapsFontFamily, globalMarginTop, mdiFontFamily, primaryColor } from '~/variables';
     import IconButton from './IconButton.svelte';
+    import { getValhallaSettings, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
 
     const DEFAULT_PROFILE_KEY = 'default_direction_profile';
 
@@ -105,18 +106,7 @@
         auto: ['use_highways', 'use_distance', 'use_tolls', 'alley_factor'],
         motorcycle: ['use_highways', 'use_tolls', 'use_trails']
     };
-    const valhallaSettings = {
-        max_hiking_difficulty: {
-            min: 1,
-            max: 6
-        },
-        // bicycle_type: ['Road', 'Hybrid', 'Mountain'],
-        // pedestrian_type: ['normal', 'mountaineer'],
-        walking_speed: {
-            min: 1,
-            max: 20
-        }
-    };
+    
     let computeMultiple = false;
     let costingOptions = { use_ferry: 0, shortest: false };
 
@@ -147,23 +137,6 @@
     function resetProfileSettings(profile: ValhallaProfile) {
         profileCostingOptions[profile] = { ...defaultProfileCostingOptions[profile] };
         saveProfileSettings();
-    }
-    function getValhallaSettings(key) {
-        let settings = valhallaSettings[key];
-        if (!settings) {
-            if (key.endsWith('_factor') || key.endsWith('_penalty')) {
-                settings = {
-                    min: 0,
-                    max: 200
-                };
-            } else {
-                settings = {
-                    min: 0,
-                    max: 1
-                };
-            }
-        }
-        return settings;
     }
 
     function valhallaSettingsDefaultValue(profile: ValhallaProfile, key) {
@@ -239,26 +212,26 @@
             console.error(key, error);
         }
     }
-    function valhallaSettingColor(key: string, options: any = profileCostingOptions) {
-        try {
-            if (options === profileCostingOptions) {
-                options = profileCostingOptions[profile];
-            }
-            let settings = getValhallaSettings(key);
-            if (Array.isArray(settings)) {
-                const index = Math.max(settings.indexOf(options[key]), 0);
-                return new Color('white').setAlpha(((index + 1) / settings.length) * 255).hex;
-            } else {
-                let perc = ((options[key] || settings.min) - settings.min) / (settings.max - settings.min);
-                if (key.endsWith('_factor') || key.endsWith('_penalty')) {
-                    perc = 1 - perc;
-                }
-                return new Color('white').setAlpha(perc * 126 + 126).hex;
-            }
-        } catch (error) {
-            console.error(key, error);
-        }
-    }
+    // function valhallaSettingColor(key: string, options: any = profileCostingOptions) {
+    //     try {
+    //         if (options === profileCostingOptions) {
+    //             options = profileCostingOptions[profile];
+    //         }
+    //         let settings = getValhallaSettings(key);
+    //         if (Array.isArray(settings)) {
+    //             const index = Math.max(settings.indexOf(options[key]), 0);
+    //             return new Color('white').setAlpha(((index + 1) / settings.length) * 255).hex;
+    //         } else {
+    //             let perc = ((options[key] || settings.min) - settings.min) / (settings.max - settings.min);
+    //             if (key.endsWith('_factor') || key.endsWith('_penalty')) {
+    //                 perc = 1 - perc;
+    //             }
+    //             return new Color('white').setAlpha(perc * 126 + 126).hex;
+    //         }
+    //     } catch (error) {
+    //         console.error(key, error);
+    //     }
+    // }
     function profileColor(currentP, p) {
         return currentP === p ? '#fff' : '#ffffff55';
     }
@@ -609,12 +582,13 @@
         }
     }
 
-    async function computeAndAddRoute(options?) {
+    async function computeAndAddRoute(optionsWithStyle: { [k: string]: any; style?: any } = {}) {
         if (waypoints.length <= 1) {
             return;
         }
         let route: { route: Route; instructions: RouteInstruction[]; stats?: RouteStats; profile?: RouteProfile };
         let positions;
+        const { style, ...options } = optionsWithStyle;
         const points = waypoints['_array'].map((r) => ({ lat: r.geometry.coordinates[1], lon: r.geometry.coordinates[0] }));
         let costing_options;
         if (WITH_BUS_SUPPORT && profile === 'bus') {
@@ -731,12 +705,8 @@
                         type: profile,
                         subtype: profile === 'pedestrian' ? pedestrian_type : profile === 'bicycle' ? bicycle_type : undefined
                     },
-                    profile: route.profile
-                        ? {
-                              dplus: route.profile.dplus,
-                              dmin: route.profile.dmin
-                          }
-                        : undefined
+                    ...(style ? { style: { color: style.color } } : {}),
+                    ...(route.profile ? { profile: { dplus: route.profile.dplus, dmin: route.profile.dmin } } : {})
                 },
                 _geometry: writer.writeGeometry(geometry),
                 get geometry() {
@@ -765,9 +735,9 @@
                 if (profile === 'bicycle') {
                     options = [
                         { shortest: true },
-                        { shortest: false, avoid_bad_surfaces: 1, use_hills: 1, non_network_penalty:50 },
-                        { shortest: false, avoid_bad_surfaces: 1, use_hills: 0, non_network_penalty:50 },
-                        { shortest: false, avoid_bad_surfaces: 1, use_hills: 1, use_roads: 1, non_network_penalty:0 },
+                        { shortest: false, avoid_bad_surfaces: 1, use_hills: 1, use_roads: 1, non_network_penalty: 0, style: { color: '#AD5FC4' } },
+                        { shortest: false, avoid_bad_surfaces: 1, use_hills: 0, use_roads: 1, non_network_penalty: 25, style: { color: '#5FC476' } },
+                        { shortest: false, avoid_bad_surfaces: 1, use_hills: 1, use_roads: 1, non_network_penalty: 50, style: { color: '#C49F5F' } }
                     ];
                 } else if (profile === 'pedestrian') {
                     options = [
@@ -861,25 +831,31 @@
                 }
                 return false;
             });
+            console.log('clearWayPoint', index);
             if (index >= 0) {
                 waypoints.splice(index, 1);
                 const fIndex = features.findIndex((f) => f.properties.id === item.properties.id);
                 if (fIndex >= 0) {
                     features.splice(fIndex, 1);
                 }
-                if (index === waypoints.length) {
-                    const lastPoint = waypoints.getItem(waypoints.length - 1);
-                    if (!lastPoint?.properties.isStop) {
-                        lastPoint.properties.isStop = true;
-                        waypoints.setItem(waypoints.length - 1, lastPoint);
+                if (waypoints.length) {
+                    if (index === waypoints.length) {
+                        const lastPoint = waypoints.getItem(waypoints.length - 1);
+                        if (lastPoint.properties?.isStop) {
+                            lastPoint.properties.isStop = true;
+                            waypoints.setItem(waypoints.length - 1, lastPoint);
+                        }
                     }
+                    updateWayPointLines();
+                    clearCurrentRoutes(false);
+                    updateGeoJSONLayer();
+                } else {
+                    cancel(true);
                 }
-                updateWayPointLines();
-                clearCurrentRoutes(false);
-                updateGeoJSONLayer();
             }
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
+            showError(error);
         }
     }
 
@@ -1144,54 +1120,54 @@
             <stacklayout colSpan={2} row={2} orientation="horizontal" visibility={showOptions ? 'visible' : 'collapsed'} id="directionsbuttons">
                 {#if profile === 'auto'}
                     <IconButton
-                        text="mdi-highway"
+                        text={valhallaSettingIcon['use_highways']}
                         size={40}
-                        color={valhallaSettingColor('use_highways', profileCostingOptions)}
+                        color={valhallaSettingColor('use_highways', profile, profileCostingOptions)}
                         on:tap={() => switchValhallaSetting('use_highways')}
                         onLongPress={(event) => setSliderCostingOptions('use_highways', event)}
                     />
 
                     <IconButton
-                        text="mdi-credit-card-marker-outline"
+                        text={valhallaSettingIcon['use_tolls']}
                         size={40}
-                        color={valhallaSettingColor('use_tolls', profileCostingOptions)}
+                        color={valhallaSettingColor('use_tolls', profile, profileCostingOptions)}
                         on:tap={() => switchValhallaSetting('use_tolls')}
                         onLongPress={(event) => setSliderCostingOptions('use_tolls', event)}
                     />
                 {/if}
                 {#if profile === 'bicycle'}
                     <IconButton
-                        text="mdi-road"
+                        text={valhallaSettingIcon['use_roads']}
                         size={40}
-                        color={valhallaSettingColor('use_roads', profileCostingOptions)}
+                        color={valhallaSettingColor('use_roads', profile, profileCostingOptions)}
                         on:tap={() => switchValhallaSetting('use_roads')}
                         onLongPress={(event) => setSliderCostingOptions('use_roads', event)}
                     />
                     <IconButton
-                        text="mdi-chart-areaspline"
+                        text={valhallaSettingIcon['use_hills']}
                         size={40}
-                        color={valhallaSettingColor('use_hills', profileCostingOptions)}
+                        color={valhallaSettingColor('use_hills', profile, profileCostingOptions)}
                         on:tap={() => switchValhallaSetting('use_hills')}
                         onLongPress={(event) => setSliderCostingOptions('use_hills', event)}
                     />
                     <IconButton
-                        text="mdi-chart-gantt"
+                        text={valhallaSettingIcon['non_network_penalty']}
                         size={40}
-                        color={valhallaSettingColor('non_network_penalty', profileCostingOptions)}
+                        color={valhallaSettingColor('non_network_penalty', profile, profileCostingOptions)}
                         on:tap={() => switchValhallaSetting('non_network_penalty')}
                         onLongPress={(event) => setSliderCostingOptions('non_network_penalty', event)}
                     />
                     <IconButton
-                        text="mdi-weight"
+                        text={valhallaSettingIcon['weight']}
                         size={40}
-                        color={valhallaSettingColor('weight', profileCostingOptions)}
+                        color={valhallaSettingColor('weight', profile, profileCostingOptions)}
                         on:tap={() => switchValhallaSetting('weight')}
                         onLongPress={(event) => setSliderCostingOptions('weight', event)}
                     />
                     <IconButton
-                        text="mdi-texture-box"
+                        text={valhallaSettingIcon['avoid_bad_surfaces']}
                         size={40}
-                        color={valhallaSettingColor('avoid_bad_surfaces', profileCostingOptions)}
+                        color={valhallaSettingColor('avoid_bad_surfaces', profile, profileCostingOptions)}
                         on:tap={() => switchValhallaSetting('avoid_bad_surfaces')}
                         onLongPress={(event) => setSliderCostingOptions('avoid_bad_surfaces', event)}
                     />
@@ -1199,29 +1175,29 @@
                 {/if}
                 {#if profile === 'pedestrian'}
                     <IconButton
-                        text="mdi-road"
+                        text={valhallaSettingIcon['driveway_factor']}
                         size={40}
-                        color={valhallaSettingColor('driveway_factor', profileCostingOptions)}
+                        color={valhallaSettingColor('driveway_factor', profile, profileCostingOptions)}
                         on:tap={() => switchValhallaSetting('driveway_factor')}
                         onLongPress={(event) => setSliderCostingOptions('driveway_factor', event)}
                     />
                     <IconButton
-                        text="mdi-chart-areaspline"
+                        text={valhallaSettingIcon['use_hills']}
                         size={40}
-                        color={valhallaSettingColor('use_hills', profileCostingOptions)}
+                        color={valhallaSettingColor('use_hills', profile, profileCostingOptions)}
                         on:tap={() => switchValhallaSetting('use_hills')}
                         onLongPress={(event) => setSliderCostingOptions('use_hills', event)}
                     />
                     <IconButton
-                        text="mdi-weight"
-                        color={valhallaSettingColor('weight', profileCostingOptions)}
+                        text={valhallaSettingIcon['weight']}
+                        color={valhallaSettingColor('weight', profile, profileCostingOptions)}
                         size={40}
                         on:tap={() => switchValhallaSetting('weight')}
                         onLongPress={(event) => setSliderCostingOptions('weight', event)}
                     />
                     <IconButton
-                        text="mdi-stairs"
-                        color={valhallaSettingColor('step_penalty', profileCostingOptions)}
+                        text={valhallaSettingIcon['step_penalty']}
+                        color={valhallaSettingColor('step_penalty', profile, profileCostingOptions)}
                         size={40}
                         on:tap={() => switchValhallaSetting('step_penalty')}
                         onLongPress={(event) => setSliderCostingOptions('step_penalty', event)}
