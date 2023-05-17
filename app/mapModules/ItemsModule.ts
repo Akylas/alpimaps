@@ -314,8 +314,7 @@ export default class ItemsModule extends MapModule {
             properties.color = accentColor.hex;
         }
         if (!item.id) {
-            const id = item.properties.id || Date.now();
-            item.properties.id = id;
+            const id = (item.properties.id = item.properties.id || Date.now());
             item = await this.itemRepository.createItem({ ...item, id, onMap: onMap ? 1 : 0 });
         }
         if (onMap) {
