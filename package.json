@@ -162,6 +162,6 @@
     },
     "resolutions": {
         "@akylas/nativescript": "portal:../NativeScript/dist/packages/core",
-        "@nativescript-community/ui-carto": "portal:/Volumes/data/dev/nativescript/ui-carto/packages/ui-carto"
+        "@nativescript-community/ui-carto": "portal:..//ui-carto/packages/ui-carto"
     }
 }
