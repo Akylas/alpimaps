@@ -19,7 +19,7 @@
     import IconButton from './IconButton.svelte';
 
     let collectionView: NativeViewElementNode<CollectionView>;
-    type RouteItem = Item & { selected?: boolean };
+    type RouteItem = Item;
     let items: ObservableArray<RouteItem>;
     const itemsModule = getMapContext().mapModule('items');
     onServiceLoaded(refresh);
@@ -27,14 +27,6 @@
     async function refresh() {
         const sqlItems = await itemsModule.itemRepository.searchItem(SqlQuery.createFromTemplateString`"route" IS NOT NULL`);
         items = new ObservableArray(sqlItems);
-    }
-
-    function setMenuVisible(item: RouteItem, visible: boolean) {
-        item.selected = visible;
-        const index = items.indexOf(item);
-        if (index !== -1) {
-            items.setItem(index, item);
-        }
     }
 
     function itemIsRoute(item: RouteItem) {
@@ -65,7 +57,7 @@
             items.setItem(index, item);
         }
         // setMenuVisible(item, false);
-        showSnack({message:item.onMap ? lc('route_now_visible'): lc('route_now_hidden')})
+        showSnack({ message: item.onMap ? lc('route_now_visible') : lc('route_now_hidden') });
     }
 
     onLanguageChanged(refresh);
@@ -79,22 +71,57 @@
             console.error(error);
         }
     }
+    function drawerTranslationFunction(side, width, value, delta, progress) {
+        const result = {
+            mainContent: {
+                translateX: side === 'right' ? -delta : delta
+            },
+            backDrop: {
+                translateX: side === 'right' ? -delta : delta,
+                opacity: progress * 0.1
+            }
+        } as any;
+
+        return result;
+    }
 </script>
 
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*">
         <CActionBar canGoBack title={lc('routes')} />
-        <collectionview bind:this={collectionView} row={1} {items}>
+        <collectionview bind:this={collectionView} row={1} {items} rowHeight={80}>
             <Template let:item>
-                <gridlayout rows="80,auto" on:tap={() => setMenuVisible(item, item.selected === false ? true: false)} backgroundColor={$backgroundColor}>
-                    <BottomSheetInfoView {item} marginLeft={60} propsLeft={60} iconLeft={17} iconTop={64} iconColor={$backgroundColor} {onDraw} iconSize={16}>
-                        <image src={item.image_path} borderRadius={8} width={50} height={50} horizontalAlignment="left" verticalAlignment="top" marginTop={10}/>
-                    </BottomSheetInfoView>
-                    <stacklayout orientation="horizontal" row={1} colSpan={2} borderTopWidth={1} borderBottomWidth={1} borderColor={$borderColor} visibility={item.selected === false ? 'collapsed' : 'visible'}>
-                        <IconButton on:tap={() => deleteItem(item)} tooltip={lc('delete')} color="red" text="mdi-delete" rounded={false} />
-                        <IconButton on:tap={() => showItemOnMap(item)} tooltip={lc('show')} isVisible={itemIsRoute(item)} text={item.onMap ? 'mdi-eye-off' : 'mdi-eye'} rounded={false} />
+                <swipemenu
+                    id={item.name}
+                    leftSwipeDistance={200}
+                    rightSwipeDistance={200}
+                    startingSide={item.startingSide}
+                    translationFunction={drawerTranslationFunction}
+                    openAnimationDuration={100}
+                    closeAnimationDuration={100}
+                >
+                    <gridlayout prop:mainContent backgroundColor={$backgroundColor}>
+                        <BottomSheetInfoView {item} marginLeft={60} propsLeft={60} iconLeft={17} iconTop={64} iconColor={$backgroundColor} {onDraw} iconSize={16}>
+                            <image src={item.image_path} borderRadius={8} width={50} height={50} horizontalAlignment="left" verticalAlignment="top" marginTop={10} />
+                        </BottomSheetInfoView>
+                    </gridlayout>
+                    <stacklayout prop:leftDrawer orientation="horizontal" height="100%">
+                        <IconButton on:tap={() => deleteItem(item)} tooltip={lc('delete')} shape="none" width={60} height="100%" color="white" backgroundColor="red" text="mdi-trash-can" />
                     </stacklayout>
-                </gridlayout>
+                    <stacklayout prop:rightDrawer orientation="horizontal">
+                        <IconButton
+                            on:tap={() => showItemOnMap(item)}
+                            tooltip={lc('show')}
+                            isVisible={itemIsRoute(item)}
+                            text={item.onMap ? 'mdi-eye-off' : 'mdi-eye'}
+                            shape="none"
+                            width={60}
+                            height="100%"
+                            color="white"
+                            backgroundColor={item.onMap ? 'gray' : 'blue'}
+                        />
+                    </stacklayout>
+                </swipemenu>
             </Template>
         </collectionview>
         <label row={1} text={lc('no_route')} color={$subtitleColor} visibility={items && items.length ? 'hidden' : 'visible'} textAlignment="center" verticalAlignment="middle" />
