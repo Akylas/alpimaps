@@ -64,6 +64,7 @@ export interface RouteProfile {
 }
 export interface Route {
     osmid?: string;
+    type?: string;
     costing_options?: any;
     totalTime?: number;
     totalDistance?: number;

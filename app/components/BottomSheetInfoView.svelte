@@ -7,6 +7,7 @@
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item, ItemProperties } from '~/models/Item';
+    import { valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
     import { alpimapsFontFamily, mdiFontFamily, subtitleColor, textColor } from '~/variables';
 
     export let item: Item;
@@ -32,9 +33,10 @@
     let itemProps: ItemProperties = null;
 
     let nString;
+    let nString2;
 
-    onMapLanguageChanged((lang)=>updateItemText(item, lang))
-    function updateItemText(it: Item = item, lang?:string) {
+    onMapLanguageChanged((lang) => updateItemText(item, lang));
+    function updateItemText(it: Item = item, lang?: string) {
         if (!it) {
             return;
         }
@@ -45,6 +47,7 @@
     function updateItem(it: Item = item) {
         if (!it) {
             nString = null;
+            nString2 = null;
             return;
         }
         itemProps = it?.properties;
@@ -157,8 +160,28 @@
                 );
             }
         }
+        
         if (spans.length > 0) {
             nString = createNativeAttributedString({ spans });
+        }
+        if (itemIsRoute && item.route.costing_options) {
+            let options = item.route.costing_options;
+            const profile = item.properties.route.type;
+            options = options[profile] || options;
+            let spans2 = [];
+            Object.entries<number>(options).forEach((v) => {
+                const k = v[0];
+                if (valhallaSettingIcon[k] && v[1] > 0) {
+                    spans2.push({
+                        text: valhallaSettingIcon[k],
+                        fontFamily: mdiFontFamily,
+                        color: valhallaSettingColor(k, profile, options, $subtitleColor)
+                    });
+                }
+            });
+            if (spans2.length > 0) {
+            nString2 = createNativeAttributedString({ spans:spans2 });
+        }
         }
         canvas?.nativeView.invalidate();
     }
@@ -197,6 +220,18 @@
                 const staticLayout = new StaticLayout(nString, propsPaint, canvas.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                 canvas.save();
                 canvas.translate(propsLeft, h - 20);
+                staticLayout.draw(canvas);
+                canvas.restore();
+            }
+            if (nString2) {
+                if (!propsPaint) {
+                    propsPaint = new Paint();
+                    propsPaint.textSize = 14;
+                }
+                propsPaint.color = $textColor;
+                const staticLayout = new StaticLayout(nString2, propsPaint, canvas.getWidth(), LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
+                canvas.save();
+                canvas.translate(0, h - 20);
                 staticLayout.draw(canvas);
                 canvas.restore();
             }
