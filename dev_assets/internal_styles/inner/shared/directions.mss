@@ -23,13 +23,13 @@
 			when ([nuti::selected_id]=[id])::selected,
 			{
 			casing/line-color: [nuti::selected_id]=[id] ? #0F70DF: #787E7B;
-			casing/line-color: white;
 			casing/line-width: [class=auto] ? 7: 5;
 			casing/line-join: round;
 			casing/line-cap: round;
-			line-color: [nuti::selected_id]=[id] ? #60A5F4: #ACB0AE;
+			casing/line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
+			line-color: [nuti::selected_id]=[id] ? #60A5F4: ([style.color]? [style.color]:#ACB0AE);
 			line-width: [class=auto] ? 5: 3;
-			line-width: 5;
+			line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
 			line-join: round;
 			line-cap: round;
 			marker-placement: line;
