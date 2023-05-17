@@ -480,9 +480,14 @@
             if (isRoute) {
                 item.image_path = imagePath;
             }
-
+            // TODO: do we always remove it?
+            if (item.properties){
+                delete item.properties.style;
+            }
             item = await itemsModule.saveItem(item);
-            mapContext.mapModules.directionsPanel.cancel(false);
+            if (isRoute) {
+                mapContext.mapModules.directionsPanel.cancel(false);
+            }
             mapContext.selectItem({ item, isFeatureInteresting: true, peek, preventZoom: false });
             if (item.route) {
                 takeItemPicture(item);
