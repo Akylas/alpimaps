@@ -15,9 +15,12 @@
     export let color = null;
     export let onLongPress: Function = null;
     export let fontSize = 0;
-    export let size = small ? 30 : actionBarButtonHeight;
+    export let size:any = small ? 30 : actionBarButtonHeight;
     export let tooltip = null;
     export let rounded = true;
+    export let shape = null;
+    export let height = null;
+    export let width = null;
     
     // let actualColor = null;
     // $: actualColor = white ? 'white' : !isEnabled || gray ? $subtitleColor : color;
@@ -59,7 +62,7 @@
     {isEnabled}
     {text}
     variant="text"
-    shape={rounded ? 'round' : null}
+    shape={shape || (rounded ? 'round' : null)}
     disableCss={true}
     rippleColor={actualColor}
     {fontFamily}
@@ -68,7 +71,7 @@
     {...$$restProps}
     on:tap
     on:longPress={actualLongPress}
-    width={size}
-    height={size}
+    width={width || size}
+    height={height || size}
     fontSize={fontSize ? fontSize : small ? 16 : 24}
 />
