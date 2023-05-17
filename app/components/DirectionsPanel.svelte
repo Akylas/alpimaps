@@ -101,7 +101,7 @@
     const used_settings = {
         common: ['service_factor', 'service_penalty', 'use_living_streets', 'use_tracks'],
         pedestrian: ['walking_speed', 'weight', 'use_hills', 'max_hiking_difficulty', 'step_penalty', 'driveway_factor', 'walkway_factor', 'sidewalk_factor', 'alley_factor'],
-        bicycle: ['use_hills', 'avoid_bad_surfaces', 'use_roads', 'cycling_speed'],
+        bicycle: ['use_hills', 'avoid_bad_surfaces', 'use_roads', 'cycling_speed', 'non_network_penalty'],
         auto: ['use_highways', 'use_distance', 'use_tolls', 'alley_factor'],
         motorcycle: ['use_highways', 'use_tolls', 'use_trails']
     };
@@ -127,7 +127,7 @@
             use_tracks: 1,
             sidewalk_factor: 10
         },
-        bicycle: { use_roads: 0.25, use_tracks: 0.5 },
+        bicycle: { use_roads: 1, use_tracks: 0.5, non_network_penalty: 15 },
         auto: { use_tolls: 1, use_highways: 1 },
         motorcycle: { use_tolls: 1, use_trails: 0 }
     };
@@ -197,6 +197,8 @@
                 return profile === 'bicycle' ? getBicycleAvoidSurface() : 0.25;
             case 'use_roads':
                 return 0.25;
+            case 'non_network_penalty':
+                return 0;
             case 'cycling_speed':
                 return getBicycleSpeed();
             case 'use_highways':
@@ -763,9 +765,9 @@
                 if (profile === 'bicycle') {
                     options = [
                         { shortest: true },
-                        { shortest: false, avoid_bad_surfaces: 1, use_hills: 0, use_roads: 0.5 },
-                        { shortest: false, avoid_bad_surfaces: 1, use_hills: 1, use_roads: 0 },
-                        { shortest: false, avoid_bad_surfaces: 0, use_hills: 1, use_roads: 0 }
+                        { shortest: false, avoid_bad_surfaces: 1, use_hills: 1, non_network_penalty:50 },
+                        { shortest: false, avoid_bad_surfaces: 1, use_hills: 0, non_network_penalty:50 },
+                        { shortest: false, avoid_bad_surfaces: 1, use_hills: 1, use_roads: 1, non_network_penalty:0 },
                     ];
                 } else if (profile === 'pedestrian') {
                     options = [
@@ -1171,6 +1173,13 @@
                         color={valhallaSettingColor('use_hills', profileCostingOptions)}
                         on:tap={() => switchValhallaSetting('use_hills')}
                         onLongPress={(event) => setSliderCostingOptions('use_hills', event)}
+                    />
+                    <IconButton
+                        text="mdi-chart-gantt"
+                        size={40}
+                        color={valhallaSettingColor('non_network_penalty', profileCostingOptions)}
+                        on:tap={() => switchValhallaSetting('non_network_penalty')}
+                        onLongPress={(event) => setSliderCostingOptions('non_network_penalty', event)}
                     />
                     <IconButton
                         text="mdi-weight"
