@@ -94,7 +94,7 @@
         "stream": "0.0.2",
         "suncalc": "^1.9.0",
         "svelte-native": "1.0.6",
-        "three": "0.151.3",
+        "three": "0.152.2",
         "timers": "0.1.1",
         "xml2js": "0.5.0"
     },
