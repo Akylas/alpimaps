@@ -1142,7 +1142,7 @@
     }
 
     function handleNewLanguage(newLang) {
-        console.log('handleNewLanguage', newLang);
+        DEV_LOG && console.log('handleNewLanguage', newLang);
         currentLanguage = newLang;
         packageService.currentLanguage = newLang;
         setStyleParameter('lang', newLang);
@@ -1152,12 +1152,12 @@
     onMapLanguageChanged(handleNewLanguage);
 
     function getVectorTileDecoder() {
-        return vectorTileDecoder || packageService.vectorTileDecoder;
+        return vectorTileDecoder/*  || packageService.vectorTileDecoder */;
     }
 
-    function getCurrentLayer() {
-        return currentLayer;
-    }
+    // function getCurrentLayer() {
+    //     return currentLayer;
+    // }
 
     function setMapStyle(layerStyle: string, force = false) {
         layerStyle = layerStyle.toLowerCase();
@@ -1714,6 +1714,15 @@
         }
         sideButtons = newButtons;
     }
+    function onDirectionsCancel() {
+        selectedItem = null;
+    }
+    function startEditingItem(item: IItem) {
+        if (!!item.route) {
+            editingItem = item;
+            getMapContext().mapModule('items').hideItem(item);
+        }
+    }
 </script>
 
 <page
@@ -1783,7 +1792,7 @@
                 translateY={Math.max(topTranslationY - 50, 0)}
             />
             <MapScrollingWidgets bind:this={mapScrollingWidgets} bind:navigationInstructions opacity={scrollingWidgetsOpacity} userInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
-            <DirectionsPanel bind:this={directionsPanel} bind:translationY={topTranslationY} width="100%" verticalAlignment="top" />
+            <DirectionsPanel bind:this={directionsPanel} bind:translationY={topTranslationY} width="100%" verticalAlignment="top" editingItem={editingItem} on:cancel={onDirectionsCancel}/>
         </gridlayout>
         <BottomSheetInner bind:this={bottomSheetInner} bind:navigationInstructions bind:steps prop:bottomSheet updating={itemLoading} item={$selectedItem} />
         <!-- <collectionview

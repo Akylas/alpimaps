@@ -11,7 +11,7 @@
     import { ApplicationSettings, Color, ContentView, Device, GridLayout, ObservableArray, StackLayout, TextField, Utils, View } from '@nativescript/core';
     import type { Feature, Point } from 'geojson';
     import { debounce } from 'push-it-to-the-limit';
-    import { onDestroy } from 'svelte';
+    import { createEventDispatcher, onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, showModal } from 'svelte-native/dom';
     import { formatDistance } from '~/helpers/formatter';
@@ -19,7 +19,7 @@
     import { lc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
-    import type { IItem as Item, RouteInstruction, RouteProfile, RouteStats } from '~/models/Item';
+    import type { IItem, IItem as Item, RouteInstruction, RouteProfile, RouteStats, DirectionWayPoint as WayPoint } from '~/models/Item';
     import { Route, RoutingAction } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
@@ -30,6 +30,7 @@
     import { getValhallaSettings, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
 
     const DEFAULT_PROFILE_KEY = 'default_direction_profile';
+    const dispatch = createEventDispatcher();
 
     interface ItemFeature extends Feature {
         route?: Route;
@@ -65,22 +66,10 @@
         return { route, instructions };
     }
 
-    interface WayPoint {
-        geometry: Point;
-        properties: {
-            id: string;
-            color: string;
-            isStart: boolean;
-            isStop: boolean;
-            metaData: any;
-            text: string;
-        };
-    }
 </script>
 
 <script lang="ts">
     const mapContext = getMapContext();
-    export let translationFunction: Function = null;
     let _routeDataSource: GeoJSONVectorTileDataSource;
     let _routeLayer: VectorTileLayer;
     let waypoints: ObservableArray<WayPoint> = new ObservableArray([]);
@@ -95,9 +84,20 @@
     let loaded = false;
     let gridLayout: NativeViewElementNode<GridLayout>;
     let topLayout: NativeViewElementNode<StackLayout>;
-
+    let loadedListeners = [];
+    let currentTranslationY = -440;
+    let computeMultiple = false;
+    let costingOptions = { use_ferry: 0, shortest: false };
+    let shouldSaveSettings = true;
+    let firstUpdate = true;
+    let pedestrianIcon = 'alpimaps-directions_walk';
+    let bicycleIcon = 'alpimaps-touring';
     let requestProfile = ApplicationSettings.getBoolean('auto_fetch_profile', false);
     let requestStats = ApplicationSettings.getBoolean('auto_fetch_stats', false);
+
+    export let editingItem: IItem = null;
+    export let translationY = 0;
+    export let translationFunction: Function = null;
 
     const used_settings = {
         common: ['service_factor', 'service_penalty', 'use_living_streets', 'use_tracks'],
@@ -106,9 +106,6 @@
         auto: ['use_highways', 'use_distance', 'use_tolls', 'alley_factor'],
         motorcycle: ['use_highways', 'use_tolls', 'use_trails']
     };
-    
-    let computeMultiple = false;
-    let costingOptions = { use_ferry: 0, shortest: false };
 
     const defaultProfileCostingOptions = {
         pedestrian: {
@@ -121,17 +118,17 @@
         auto: { use_tolls: 1, use_highways: 1 },
         motorcycle: { use_tolls: 1, use_trails: 0 }
     };
-
     export let profileCostingOptions = JSON.parse(ApplicationSettings.getString('profileCostingOptions', 'false')) || {
         pedestrian: { ...defaultProfileCostingOptions.pedestrian },
         bicycle: { ...defaultProfileCostingOptions.bicycle },
         auto: { ...defaultProfileCostingOptions.auto },
         motorcycle: { ...defaultProfileCostingOptions.motorcycle }
     };
-
     const saveProfileSettings = debounce(() => {
-        profileCostingOptions = profileCostingOptions;
-        ApplicationSettings.setString('profileCostingOptions', JSON.stringify(profileCostingOptions));
+        if (shouldSaveSettings) {
+            profileCostingOptions = profileCostingOptions;
+            ApplicationSettings.setString('profileCostingOptions', JSON.stringify(profileCostingOptions));
+        }
     }, 500);
 
     function resetProfileSettings(profile: ValhallaProfile) {
@@ -374,7 +371,6 @@
         updateGeoJSONLayer();
         show();
     }
-    let loadedListeners = [];
     async function loadView() {
         if (!loaded) {
             await new Promise((resolve) => {
@@ -388,6 +384,14 @@
             loadedListeners.forEach((l) => l());
         }
     }
+
+    $: {
+        if (editingItem) {
+            show();
+        }
+    }
+    $: pedestrianIcon = formatter.getRouteIcon('pedestrian', pedestrian_type);
+    $: bicycleIcon = formatter.getRouteIcon('bicycle', bicycle_type);
 
     function addInternalStopPoint(position: MapPos<LatLonKeys>, metaData?) {
         const lastPoint = waypoints.getItem(waypoints.length - 1);
@@ -406,8 +410,6 @@
         updateGeoJSONLayer();
         show();
     }
-    let currentTranslationY = -440;
-    export let translationY = 0;
     async function show() {
         await loadView();
         const nView = topLayout.nativeView;
@@ -507,6 +509,7 @@
     export function cancel(unselect = true) {
         clear(unselect);
         hide();
+        dispatch('cancel');
     }
     function walkingSpeed() {
         switch (pedestrian_type) {
@@ -702,6 +705,7 @@
                     zoomBounds: geometry.getBounds(),
                     route: {
                         ...route.route,
+                        waypoints: waypoints.toJSON().slice(0),
                         type: profile,
                         subtype: profile === 'pedestrian' ? pedestrian_type : profile === 'bicycle' ? bicycle_type : undefined
                     },
@@ -774,7 +778,6 @@
     function ensureRouteLayer() {
         return getRouteLayer() !== null;
     }
-    let firstUpdate = true;
     function updateGeoJSONLayer() {
         ensureRouteLayer();
         if (__IOS__ && firstUpdate) {
@@ -831,7 +834,6 @@
                 }
                 return false;
             });
-            console.log('clearWayPoint', index);
             if (index >= 0) {
                 waypoints.splice(index, 1);
                 const fIndex = features.findIndex((f) => f.properties.id === item.properties.id);
@@ -962,10 +964,6 @@
     function onItemReorderStarting(e) {
         (e.view as ContentView).content.animate({ opacity: 0.8, duration: 150 });
     }
-    let pedestrianIcon = 'alpimaps-directions_walk';
-    $: pedestrianIcon = formatter.getRouteIcon('pedestrian', pedestrian_type);
-    let bicycleIcon = 'alpimaps-touring';
-    $: bicycleIcon = formatter.getRouteIcon('bicycle', bicycle_type);
 
     async function showMoreOptions(event) {
         try {
