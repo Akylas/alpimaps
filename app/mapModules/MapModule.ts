@@ -83,7 +83,7 @@ export interface MapContext {
     vectorTileElementClicked: (data: VectorTileEventData<LatLonKeys>) => boolean;
     rasterTileClicked: (data: RasterTileClickInfo<LatLonKeys>) => boolean;
     getVectorTileDecoder(): MBVectorTileDecoder;
-    getCurrentLayer(): VectorTileLayer;
+    // getCurrentLayer(): VectorTileLayer;
     runOnModulesOnMainThread(functionName: string, ...args);
     runOnModules(functionName: string, ...args);
 }
