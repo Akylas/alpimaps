@@ -85,7 +85,8 @@
     let selectedId: string;
     let selectedPosMarker: Point<LatLonKeys>;
     let selectedItem = watcher<IItem>(null, onSelectedItemChanged);
-    let currentLayer: VectorTileLayer;
+    let editingItem: IItem = null;
+    // let currentLayer: VectorTileLayer;
     let currentLayerStyle: string;
     let localVectorDataSource: LocalVectorDataSource;
     let localVectorLayer: VectorLayer;
@@ -320,7 +321,7 @@
             rasterTileClicked: onRasterTileClicked,
             getMapViewPort,
             getVectorTileDecoder,
-            getCurrentLayer,
+            // getCurrentLayer,
             selectItem,
             unselectItem,
             unFocusSearch,
@@ -857,7 +858,7 @@
     $: vectorTileDecoder && toggleHillshadeSlope($showSlopePercentages);
     $: toggleMapRotate($rotateEnabled);
     $: toggleMapPitch($pitchEnabled);
-    $: currentLayer && (currentLayer.preloading = $preloading);
+    // $: currentLayer && (currentLayer.preloading = $preloading);
     $: bottomSheetStepIndex === 0 && unselectItem();
     $: cartoMap?.getOptions().setFocusPointOffset(toNativeScreenPos({ x: 0, y: Utils.layout.toDevicePixels(steps[bottomSheetStepIndex]) / 2 }));
 
