@@ -112,7 +112,7 @@ function getGradeColor(grade) {
 const streetKeys = ['service_other', 'residential', 'living_street', 'driveway', 'alley', 'footway', 'culdesac', 'parking_aisle', 'turn_channel'];
 
 class PackageService extends Observable {
-    vectorTileDecoder: MBVectorTileDecoder;
+    // vectorTileDecoder: MBVectorTileDecoder;
     hillshadeLayer?: HillshadeRasterTileLayer;
     localVectorTileLayer?: VectorTileLayer;
 

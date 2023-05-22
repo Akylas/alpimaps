@@ -27,7 +27,7 @@ import { showBottomSheet } from '~/utils/svelte/bottomsheet';
 import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
 const mapContext = getMapContext();
 
-export  enum RoutesType {
+export enum RoutesType {
     All = 0,
     Bicycle = 1,
     Hiking = 2
