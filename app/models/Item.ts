@@ -1,7 +1,7 @@
 import { MapBounds } from '@nativescript-community/ui-carto/core';
 import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
-import type { Geometry } from 'geojson';
+import type { Geometry, Point } from 'geojson';
 import extend from 'just-extend';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
@@ -62,9 +62,21 @@ export interface RouteProfile {
     data: { d: number; a: number; avg: number; g }[];
     colors?: { d: number; color: string }[];
 }
+export interface DirectionWayPoint {
+    geometry: Point;
+    properties: {
+        id: string;
+        color: string;
+        isStart: boolean;
+        isStop: boolean;
+        metaData: any;
+        text: string;
+    };
+}
 export interface Route {
     osmid?: string;
     type?: string;
+    waypoints: DirectionWayPoint[];
     costing_options?: any;
     totalTime?: number;
     totalDistance?: number;
