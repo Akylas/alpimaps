@@ -368,9 +368,6 @@
             let item = mapContext.getSelectedItem();
             const isRoute = !!item.route;
             item.image_path = mapContext.getEditingItem().image_path;
-            //we need to clear cache for that image
-            console.log('cache test', getImagePipeline().isInDiskCache(item.image_path), getImagePipeline().isInBitmapMemoryCache(item.image_path))
-            getImagePipeline().evictFromMemoryCache(item.image_path);
             // TODO: do we always remove it?
             if (item.properties) {
                 delete item.properties.style;
