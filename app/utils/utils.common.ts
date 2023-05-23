@@ -18,7 +18,7 @@ export function arraySortOn(array, key) {
     });
 }
 
-let dataFolder;
+let dataFolder: string;
 export function getDataFolder() {
     if (!dataFolder) {
         dataFolder = knownFolders.externalDocuments().path;
@@ -26,7 +26,7 @@ export function getDataFolder() {
     return dataFolder;
 }
 
-let itemsDataFolder;
+let itemsDataFolder: string;
 export function getItemsDataFolder() {
     if (!itemsDataFolder) {
         itemsDataFolder = ApplicationSettings.getString('items_data_folder', knownFolders.externalDocuments().path);
@@ -85,7 +85,7 @@ export function setSavedMBTilesDir(value) {
     savedMBTilesDir = value;
 }
 
-export function getAndroidRealPath(src) {
+export function getAndroidRealPath(src: string) {
     if (__ANDROID__) {
         let filePath = '';
 
