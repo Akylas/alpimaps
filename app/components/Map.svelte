@@ -1026,7 +1026,7 @@
                 featureLayerName === 'mountain_peak' ||
                 featureLayerName === 'housenumber' ||
                 (!!featureData.name && (featureData.class !== 'national_park' || cartoMap.zoom < 9) && (featureData.class !== 'protected_area' || cartoMap.zoom < 11) && !selectedRoutes);
-            console.log('isFeatureInteresting', featureLayerName, featureData.name, isFeatureInteresting);
+            DEV_LOG && console.log('isFeatureInteresting', featureLayerName, featureData.name, isFeatureInteresting);
             if (isFeatureInteresting) {
                 ignoreNextMapClick = false;
                 selectedRoutes = null;
@@ -1723,7 +1723,7 @@
     }
     function startEditingItem(item: IItem) {
         if (!!item.route) {
-            console.log('startEditingItem', item.properties.id)
+            DEV_LOG && console.log('startEditingItem', item.properties.id)
             mapContext.innerDecoder.setStyleParameter('editing_id', item.properties.id + '');
             getMapContext().mapModule('items').showItem(item);
             editingItem = item;
