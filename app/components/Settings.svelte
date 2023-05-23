@@ -3,7 +3,7 @@
     import { pickFolder } from '@nativescript-community/ui-document-picker';
     import { alert, prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { ApplicationSettings, ObservableArray, Utils } from '@nativescript/core';
+    import { ApplicationSettings, Folder, ObservableArray, Utils } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
@@ -16,7 +16,7 @@
     import { openLink } from '~/utils/ui';
     import { borderColor, mdiFontFamily, navigationBarHeight, subtitleColor } from '~/variables';
     import CActionBar from './CActionBar.svelte';
-    import { getAndroidRealPath } from '~/utils/utils.common';
+    import { getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir } from '~/utils/utils.common';
 
     let collectionView: NativeViewElementNode<CollectionView>;
 
@@ -110,7 +110,13 @@
             {
                 id: 'data_path',
                 title: lc('map_data_path'),
-                description: ApplicationSettings.getString('local_mbtiles_directory'),
+                description: getSavedMBTilesDir(),
+                rightBtnIcon: 'mdi-chevron-right'
+            },
+            {
+                id: 'items_data_path',
+                title: lc('items_data_path'),
+                description: getItemsDataFolder(),
                 rightBtnIcon: 'mdi-chevron-right'
             }
         ];
@@ -195,14 +201,43 @@
                     });
                     const resultPath = result.folders[0];
                     if (resultPath) {
-                        const toUsePath = getAndroidRealPath(resultPath)
-                        ApplicationSettings.setString('local_mbtiles_directory', toUsePath);
-                        item.description = toUsePath;
-                        updateItem(item);
-                        alert({
-                            title: lc('setting_update'),
-                            message:lc('please_restart_app')
-                        })
+                        const toUsePath = getAndroidRealPath(resultPath);
+                        if (toUsePath !== getSavedMBTilesDir()) {
+                            ApplicationSettings.setString('local_mbtiles_directory', toUsePath);
+                            item.description = toUsePath;
+                            updateItem(item);
+                            alert({
+                                title: lc('setting_update'),
+                                message: lc('please_restart_app')
+                            });
+                        }
+                    }
+                    break;
+                }
+                case 'items_data_path': {
+                    const result = await pickFolder({
+                        permissions: {
+                            read: true,
+                            persistable: true
+                        }
+                    });
+                    const resultPath = result.folders[0];
+                    if (resultPath) {
+                        const toUsePath = getAndroidRealPath(resultPath);
+                        const current = getItemsDataFolder();
+                        if (toUsePath !== current) {
+                            ApplicationSettings.setString('items_data_folder', toUsePath);
+                            //TODO: we need to move files from current to new folder
+                            // Folder.fromPath(current).getEntitiesSync().forEach(e=>{
+                            //     e.
+                            // })
+                            item.description = toUsePath;
+                            updateItem(item);
+                            alert({
+                                title: lc('setting_update'),
+                                message: lc('please_restart_app')
+                            });
+                        }
                     }
                     break;
                 }
@@ -281,7 +316,6 @@
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*">
         <collectionview bind:this={collectionView} row={1} {items} rowHeight={70} itemTemplateSelector={selectTemplate} android:paddingBottom={$navigationBarHeight}>
-            
             <Template let:item key="switch">
                 <gridlayout columns="*, auto" padding="0 10 0 30">
                     <stacklayout verticalAlignment="middle">
