@@ -26,6 +26,14 @@ export function getDataFolder() {
     return dataFolder;
 }
 
+let itemsDataFolder;
+export function getItemsDataFolder() {
+    if (!itemsDataFolder) {
+        itemsDataFolder = ApplicationSettings.getString('items_data_folder', knownFolders.externalDocuments().path);
+    }
+    return itemsDataFolder;
+}
+
 function getTreeUri(context, uri) {
     let documentId = android.provider.DocumentsContract.getTreeDocumentId(uri);
     if (android.provider.DocumentsContract.isDocumentUri(context, uri)) {
