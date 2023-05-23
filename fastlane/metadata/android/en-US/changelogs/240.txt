@@ -1,0 +1,8 @@
+*Features*
+- filter routes type
+- non_network_penalty
+- route edition
+- allow to set items data path
+
+*Bug fixes*
+- improve directions
