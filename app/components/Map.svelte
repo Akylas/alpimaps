@@ -292,7 +292,7 @@
             } else if (link.endsWith('.gpx')) {
             }
         } catch (err) {
-            console.error(err);
+            console.error(err, err.stack);
         }
     }
 
@@ -315,6 +315,7 @@
             getProjection: () => projection,
             getCurrentLanguage: () => currentLanguage,
             getSelectedItem: () => $selectedItem,
+            getEditingItem: () => editingItem,
             vectorElementClicked: onVectorElementClicked,
             vectorTileElementClicked: onVectorTileElementClicked,
             vectorTileClicked: onVectorTileClicked,
@@ -332,6 +333,7 @@
             getLayerTypeFirstIndex,
             getLayers,
             removeLayer,
+            startEditingItem,
             moveLayer,
             zoomToItem,
             setBottomSheetStepIndex: (index: number) => {
@@ -509,7 +511,7 @@
                 onAppUrl(current);
             }
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
     }
     let mapMoved = false;
@@ -606,14 +608,16 @@
                 if (setSelected && route) {
                     TEST_LOG && console.log('selected_id', typeof route.osmid, route.osmid, typeof props.id, props.id, setSelected);
 
+
+                    // selected_osmid is for routes
                     if (props.id !== undefined) {
                         selectedId = props.id;
                         if (typeof props.id === 'string') {
                             mapContext.innerDecoder.setStyleParameter('selected_id_str', selectedId + '');
                             mapContext.innerDecoder.setStyleParameter('selected_id', '0');
                         } else {
-                            mapContext.innerDecoder.setStyleParameter('selected_id', selectedId + '');
                             mapContext.innerDecoder.setStyleParameter('selected_id_str', '0');
+                            mapContext.innerDecoder.setStyleParameter('selected_id', selectedId + '');
                         }
                         mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
                     } else if (route.osmid !== undefined) {
@@ -766,7 +770,7 @@
                 unselectItem();
             }
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
     }
 
@@ -807,7 +811,7 @@
         }
     }
     export function unselectItem(updateBottomSheet = true) {
-        TEST_LOG && console.log('unselectItem', updateBottomSheet);
+        TEST_LOG && console.log('unselectItem', updateBottomSheet, !!$selectedItem);
         if (!!$selectedItem) {
             setSelectedItem(null);
             if (selectedPosMarker) {
@@ -1715,12 +1719,25 @@
         sideButtons = newButtons;
     }
     function onDirectionsCancel() {
-        selectedItem = null;
+        endEditingItem();
     }
     function startEditingItem(item: IItem) {
         if (!!item.route) {
+            console.log('startEditingItem', item.properties.id)
+            mapContext.innerDecoder.setStyleParameter('editing_id', item.properties.id + '');
+            getMapContext().mapModule('items').showItem(item);
             editingItem = item;
-            getMapContext().mapModule('items').hideItem(item);
+            unselectItem();
+
+            // getMapContext().mapModule('items').hideItem(item);
+        }
+    }
+    function endEditingItem() {
+        if (editingItem) {
+            editingItem = null;
+            mapContext.innerDecoder.setStyleParameter('editing_id', '0');
+
+            // getMapContext().mapModule('items').hideItem(item);
         }
     }
 </script>
