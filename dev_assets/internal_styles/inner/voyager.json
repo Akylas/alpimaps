@@ -18,6 +18,7 @@
         "routes_type": 0,
         "hide_unselected": 0,
         "selected_id": -1,
+        "editing_id": -1,
         "selected_id_str": "",
         "selected_osmid": -1,
         "texts3d": {
