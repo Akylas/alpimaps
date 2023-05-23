@@ -30,7 +30,6 @@
     import { getValhallaSettings, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
 
     const DEFAULT_PROFILE_KEY = 'default_direction_profile';
-    const dispatch = createEventDispatcher();
 
     interface ItemFeature extends Feature {
         route?: Route;
@@ -39,7 +38,7 @@
         stats?: RouteStats;
     }
 
-    function routingResultToJSON(result: RoutingResult<LatLonKeys>, costing_options) {
+    function routingResultToJSON(result: RoutingResult<LatLonKeys>, costing_options, waypoints) {
         const rInstructions = result.getInstructions();
         const instructions: RouteInstruction[] = [];
         // const positions = getPointsFromResult(result);
@@ -59,17 +58,18 @@
         }
         const route = {
             costing_options,
+            waypoints,
             totalTime: result.getTotalTime(),
             totalDistance: result.getTotalDistance()
         } as Route;
 
         return { route, instructions };
     }
-
 </script>
 
 <script lang="ts">
     const mapContext = getMapContext();
+    const dispatch = createEventDispatcher();
     let _routeDataSource: GeoJSONVectorTileDataSource;
     let _routeLayer: VectorTileLayer;
     let waypoints: ObservableArray<WayPoint> = new ObservableArray([]);
@@ -379,17 +379,8 @@
             });
         }
     }
-    $: {
-        if (gridLayout) {
-            loadedListeners.forEach((l) => l());
-        }
-    }
-
-    $: {
-        if (editingItem) {
-            show();
-        }
-    }
+    $: gridLayout && loadedListeners.forEach((l) => l());
+    $: editingItem && show(editingItem);
     $: pedestrianIcon = formatter.getRouteIcon('pedestrian', pedestrian_type);
     $: bicycleIcon = formatter.getRouteIcon('bicycle', bicycle_type);
 
@@ -410,22 +401,34 @@
         updateGeoJSONLayer();
         show();
     }
-    async function show() {
-        await loadView();
-        const nView = topLayout.nativeView;
-        const height = nView.getMeasuredHeight();
-        const superParams = {
-            target: nView,
-            translate: {
-                x: 0,
-                y: 0
-            },
-            duration: 200
-        };
-        const params = translationFunction ? translationFunction(height, 0, 1, superParams) : superParams;
-        await nView.animate(params);
-        currentTranslationY = 0;
-        translationY = 220;
+    async function show(editingItem?: IItem) {
+        try {
+            if (editingItem) {
+                waypoints.splice(0, waypoints.length);
+                waypoints.push(...editingItem.route.waypoints);
+                features.splice(0, features.length);
+                features.push(...(editingItem.route.waypoints as any));
+                updateWayPointLines();
+                updateGeoJSONLayer();
+            }
+            await loadView();
+            const nView = topLayout.nativeView;
+            const height = nView.getMeasuredHeight();
+            const superParams = {
+                target: nView,
+                translate: {
+                    x: 0,
+                    y: 0
+                },
+                duration: 200
+            };
+            const params = translationFunction ? translationFunction(height, 0, 1, superParams) : superParams;
+            await nView.animate(params);
+            currentTranslationY = 0;
+            translationY = 220;
+        } catch (error) {
+            showError(error);
+        }
     }
     async function hide() {
         if (!loaded) {
@@ -495,19 +498,16 @@
         }
     }
 
-    function clear(unselect = true) {
+    export function getFeatures() {
+        return features;
+    }
+    export function cancel(unselect = true) {
         waypoints = new ObservableArray([]);
         nbWayPoints = 0;
         clearRouteDatasource();
         if (unselect) {
             mapContext.unselectItem();
         }
-    }
-    export function getFeatures() {
-        return features;
-    }
-    export function cancel(unselect = true) {
-        clear(unselect);
         hide();
         dispatch('cancel');
     }
@@ -647,25 +647,30 @@
                 directions_options: { language: Device.language },
                 costing_options
             };
-            DEV_LOG && console.log('calculateRoute', profile, points, customOptions);
-            const result = await service.calculateRoute<LatLonKeys>(
-                {
-                    projection,
-                    points,
-                    customOptions
-                },
-                profile
-            );
-            DEV_LOG && console.log('got route', result.getTotalDistance(), result.getTotalTime(), Date.now() - startTime, 'ms');
-            positions = result.getPoints();
-            startTime = Date.now();
-            route = routingResultToJSON(result, costing_options);
-            DEV_LOG && console.log('parsed route', requestStats, Date.now() - startTime, 'ms');
-            if (requestStats) {
-                route.stats = await packageService.fetchStats({ positions, projection, route: route.route, profile });
-            }
-            if (requestProfile) {
-                route.profile = await packageService.getElevationProfile(null, positions);
+            DEV_LOG && console.log('calculateRoute', profile, JSON.stringify(points), JSON.stringify(customOptions));
+            try {
+                const result = await service.calculateRoute<LatLonKeys>(
+                    {
+                        projection,
+                        points,
+                        customOptions
+                    },
+                    profile
+                );
+                DEV_LOG && console.log('got route', result.getTotalDistance(), result.getTotalTime(), Date.now() - startTime, 'ms');
+                positions = result.getPoints();
+                startTime = Date.now();
+                route = routingResultToJSON(result, costing_options, waypoints.toJSON().slice(0));
+                DEV_LOG && console.log('parsed route', requestStats, Date.now() - startTime, 'ms');
+                if (requestStats) {
+                    route.stats = await packageService.fetchStats({ positions, projection, route: route.route, profile });
+                }
+                if (requestProfile) {
+                    route.profile = await packageService.getElevationProfile(null, positions);
+                }
+            } catch (error) {
+                console.error('error computing route', profile, JSON.stringify(points), JSON.stringify(customOptions));
+                return;
             }
         }
 
@@ -705,7 +710,6 @@
                     zoomBounds: geometry.getBounds(),
                     route: {
                         ...route.route,
-                        waypoints: waypoints.toJSON().slice(0),
                         type: profile,
                         subtype: profile === 'pedestrian' ? pedestrian_type : profile === 'bicycle' ? bicycle_type : undefined
                     },
@@ -723,6 +727,10 @@
                     return { type: this.type, id: this.id, properties: this.properties, geometry: this.geometry, stats: this.stats, route: this.route, instructions: this.instructions };
                 }
             };
+            if (editingItem) {
+                item.id = editingItem.id;
+                // item.properties.id = editingItem.propertiesid;
+            }
             features.push(item);
             DEV_LOG && console.log('prepared route item', Date.now() - startTime, 'ms');
             return item as ItemFeature;
