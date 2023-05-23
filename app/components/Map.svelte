@@ -1212,7 +1212,7 @@
                     const assetsNames = nativeVectorToArray(new ZippedAssetPackage({ zipPath: e.path }).getAssetNames());
                     styles.push(...assetsNames.filter((s) => s.endsWith('.xml')).map((s) => e.name + '~' + s.split('.')[0]));
                 } catch (error) {
-                    console.error(error);
+                    console.error(error, error.stack);
                 }
             }
         }

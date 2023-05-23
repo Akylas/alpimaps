@@ -204,7 +204,7 @@
             sunriseEndAzimuth = getCompassInfo(getPosition(sunTimes.sunriseEnd, location.lat, location.lon).azimuth * TO_DEG + 180);
             sunsetStartAzimuth = getCompassInfo(getPosition(sunTimes.sunsetStart, location.lat, location.lon).azimuth * TO_DEG + 180);
         } catch (err) {
-            console.error(err);
+            console.error(err, err.stack);
         }
     }
 

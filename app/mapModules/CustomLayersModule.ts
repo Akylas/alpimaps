@@ -683,7 +683,7 @@ export default class CustomLayersModule extends MapModule {
                 try {
                     decoder.reloadStyle();
                 } catch (error) {
-                    console.error(error);
+                    console.error(error, error.stack);
                 }
             }
         });
