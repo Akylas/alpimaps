@@ -5,7 +5,7 @@
     import { ObservableArray } from '@nativescript/core';
     import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode, goBack } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { lc, onLanguageChanged } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
@@ -13,7 +13,7 @@
     import { Item } from '~/models/Item';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { showError } from '~/utils/error';
-    import { backgroundColor, borderColor, subtitleColor, textColor } from '~/variables';
+    import { backgroundColor, borderColor, primaryColor, subtitleColor, textColor } from '~/variables';
     import BottomSheetInfoView from './BottomSheetInfoView.svelte';
     import CActionBar from './CActionBar.svelte';
     import IconButton from './IconButton.svelte';
@@ -60,6 +60,11 @@
         showSnack({ message: item.onMap ? lc('route_now_visible') : lc('route_now_hidden') });
     }
 
+    function startEditingItem(item: RouteItem) {
+        getMapContext().startEditingItem(item);
+        goBack();
+    }
+
     onLanguageChanged(refresh);
     onThemeChanged(refresh);
     const circlePaint = new Paint();
@@ -68,7 +73,7 @@
             circlePaint.color = $textColor;
             canvas.drawCircle(25, 58, 13, circlePaint);
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
     }
     function drawerTranslationFunction(side, width, value, delta, progress) {
@@ -102,7 +107,7 @@
                 >
                     <gridlayout prop:mainContent backgroundColor={$backgroundColor}>
                         <BottomSheetInfoView {item} marginLeft={60} propsLeft={60} iconLeft={17} iconTop={64} iconColor={$backgroundColor} {onDraw} iconSize={16}>
-                            <image src={item.image_path} borderRadius={8} width={50} height={50} horizontalAlignment="left" verticalAlignment="top" marginTop={10} />
+                            <image noCache={true} src={item.image_path} borderRadius={8} width={50} height={50} horizontalAlignment="left" verticalAlignment="top" marginTop={10} />
                         </BottomSheetInfoView>
                     </gridlayout>
                     <stacklayout prop:leftDrawer orientation="horizontal" height="100%">
@@ -110,15 +115,26 @@
                     </stacklayout>
                     <stacklayout prop:rightDrawer orientation="horizontal">
                         <IconButton
-                            on:tap={() => showItemOnMap(item)}
-                            tooltip={lc('show')}
+                            on:tap={() => startEditingItem(item)}
+                            tooltip={lc('edit')}
                             isVisible={itemIsRoute(item)}
-                            text={item.onMap ? 'mdi-eye-off' : 'mdi-eye'}
+                            text={'mdi-pencil'}
                             shape="none"
                             width={60}
                             height="100%"
                             color="white"
-                            backgroundColor={item.onMap ? 'gray' : 'blue'}
+                            backgroundColor={primaryColor}
+                        />
+                        <IconButton
+                            on:tap={() => showItemOnMap(item)}
+                            tooltip={lc('show')}
+                            isVisible={itemIsRoute(item)}
+                            text={!item.onMap ? 'mdi-eye-off' : 'mdi-eye'}
+                            shape="none"
+                            width={60}
+                            height="100%"
+                            color="white"
+                            backgroundColor={!item.onMap ? 'gray' : 'blue'}
                         />
                     </stacklayout>
                 </swipemenu>

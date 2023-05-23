@@ -6,6 +6,7 @@
     import { fromNativeMapPos, GenericMapPos, MapBounds } from '@nativescript-community/ui-carto/core';
     import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
+    import { getImagePipeline } from '@nativescript-community/ui-image';
     import type { VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
     import { CartoMap } from '@nativescript-community/ui-carto/ui';
     import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
@@ -68,6 +69,7 @@
     let showListView = false;
     $: showListView = listViewAvailable && listViewVisible;
     let itemIsRoute = false;
+    let itemIsEditingItem = false;
     let itemIsBusStop = false;
     let itemCanQueryProfile = false;
     let itemCanQueryStats = false;
@@ -143,7 +145,7 @@
                 }
             }
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
     }
     function openWikipedia() {
@@ -200,6 +202,7 @@
         try {
             if (item) {
                 itemIsRoute = !!item?.route;
+                itemIsEditingItem = item?.id && item?.id === mapContext.getEditingItem()?.id;
                 itemIsBusStop = item && !itemIsRoute && (item.properties?.class === 'bus' || item.properties?.subclass === 'tram_stop');
                 itemCanQueryProfile = itemIsRoute && !!item?.id;
                 itemCanQueryStats = itemIsRoute && !!item?.id;
@@ -356,6 +359,50 @@
     }
 
     let updatingItem = false;
+
+    async function updateEditedItem() {
+        DEV_LOG && console.log('updateEditedItem1S');
+        try {
+            updatingItem = true;
+            const itemsModule = mapContext.mapModule('items');
+            let item = mapContext.getSelectedItem();
+            const isRoute = !!item.route;
+            item.image_path = mapContext.getEditingItem().image_path;
+            //we need to clear cache for that image
+            console.log('cache test', getImagePipeline().isInDiskCache(item.image_path), getImagePipeline().isInBitmapMemoryCache(item.image_path))
+            getImagePipeline().evictFromMemoryCache(item.image_path);
+            // TODO: do we always remove it?
+            if (item.properties) {
+                delete item.properties.style;
+            }
+            if (item.profile) {
+                const profile = await packageService.getElevationProfile(item);
+                item.profile = profile;
+            }
+            if (item.stats) {
+                const projection = mapContext.getProjection();
+                const stats = await packageService.fetchStats({ item, projection });
+                item.stats = stats;
+            }
+            item = await itemsModule.updateItem(item);
+            if (isRoute) {
+                mapContext.mapModules.directionsPanel.cancel(false);
+            }
+            mapContext.selectItem({ item, isFeatureInteresting: true, peek: true, preventZoom: false });
+            updateGraphAvailable();
+            updateSteps();
+            if (elevationChart && graphAvailable) {
+                elevationChart.updateChartData();
+            }
+            if (item.route) {
+                takeItemPicture(item);
+            }
+        } catch (err) {
+            showError(err);
+        } finally {
+            updatingItem = false;
+        }
+    }
     async function getProfile(updateView = true) {
         try {
             updatingItem = true;
@@ -470,7 +517,11 @@
     // }
 
     async function saveItem(peek = true) {
-        DEV_LOG && console.log('saveItem');
+        if (itemIsEditingItem) {
+            updateEditedItem();
+            return;
+        }
+        DEV_LOG && console.log('saveItem', item);
         try {
             updatingItem = true;
             const itemsModule = mapContext.mapModule('items');
@@ -481,7 +532,7 @@
                 item.image_path = imagePath;
             }
             // TODO: do we always remove it?
-            if (item.properties){
+            if (item.properties) {
                 delete item.properties.style;
             }
             item = await itemsModule.saveItem(item);
@@ -510,7 +561,7 @@
                 const image = await mapContext.getMap().captureRendering(true);
                 mapContext.innerDecoder.setStyleParameter('hide_unselected', '0');
                 // image.saveToFile(path.join(itemsModule.imagesFolder.path, Date.now() + '_full.png'), 'png');
-                // console.log('captureRendering', image.width, image.height, viewPort, Date.now() - startTime, 'ms');
+                console.log('captureRendering', item.image_path, image.width, image.height, viewPort);
                 const canvas = new Canvas(500, 500);
                 //we offset a bit to be sure we the whole trace
                 const offset = 20;
@@ -524,7 +575,7 @@
                 // console.log('saved bitmap', imagePath, Date.now() - startTime, 'ms');
                 canvas.release();
             } catch (error) {
-                console.error(error);
+                console.error(error, error.stack);
             }
         }, true);
     }
@@ -715,7 +766,7 @@
                 loadedListeners = [];
             }
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
     }
     let textPaint: Paint;
@@ -792,21 +843,19 @@
                 text = lc(s.id);
                 text2 = formatDistance(s.dist * 1000, s.dist < 1 ? 0 : 1);
                 canvas.drawCircle(labelx + 3, labely - 4, 6, barPaint);
-                nString = createNativeAttributedString(
-                    {
-                        spans: [
-                            {
-                                fontWeight: 'bold',
-                                text: text + ': '
-                            },
-                            {
-                                text: text2,
-                                color: $subtitleColor,
-                                fontSize: 12
-                            }
-                        ]
-                    }
-                );
+                nString = createNativeAttributedString({
+                    spans: [
+                        {
+                            fontWeight: 'bold',
+                            text: text + ': '
+                        },
+                        {
+                            text: text2,
+                            color: $subtitleColor,
+                            fontSize: 12
+                        }
+                    ]
+                });
                 staticLayout = new StaticLayout(nString, textPaint, availableWidth, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                 layoutHeight = staticLayout.getHeight();
                 canvas.save();
@@ -821,8 +870,11 @@
                 }
             });
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
+    }
+    function startEditingItem() {
+        mapContext.startEditingItem(item);
     }
 </script>
 
@@ -839,13 +891,13 @@
                 <IconButton on:tap={() => getProfile()} tooltip={lc('elevation_profile')} isVisible={itemIsRoute && itemCanQueryProfile} text="mdi-chart-areaspline" rounded={false} />
             {/if}
             <IconButton on:tap={() => getStats()} tooltip={lc('road_stats')} isVisible={itemIsRoute && itemCanQueryStats} text="mdi-chart-bar-stacked" rounded={false} />
-            <IconButton on:tap={() => saveItem()} tooltip={lc('save')} isVisible={item && !item.id} text="mdi-map-plus" rounded={false} />
-            <!-- <IconButton on:tap={shareItem} tooltip={lc('share')} isVisible={itemIsRoute} text="mdi-share-variant" rounded={false} /> -->
+            <IconButton on:tap={() => saveItem()} tooltip={lc('save')} isVisible={item && (!item.id || itemIsEditingItem)} text="mdi-map-plus" rounded={false} />
+            <IconButton on:tap={startEditingItem} tooltip={lc('edit')} isVisible={item && itemIsRoute && item.id && !itemIsEditingItem} text="mdi-pencil" rounded={false} />
             {#if item && item.properties && !!item.properties.wikipedia}
                 <IconButton on:tap={openWikipedia} tooltip={lc('wikipedia')} text="mdi-wikipedia" rounded={false} />
             {/if}
-            {#if !itemIsRoute && networkService.canCheckWeather}
-                <IconButton on:tap={checkWeather} tooltip={lc('weather')} text="mdi-weather-partly-cloudy" rounded={false} />
+            {#if networkService.canCheckWeather}
+                <IconButton on:tap={checkWeather} isVisible={!itemIsRoute} tooltip={lc('weather')} text="mdi-weather-partly-cloudy" rounded={false} />
             {/if}
             <IconButton id="astronomy" on:tap={showAstronomy} isVisible={!itemIsRoute} tooltip={lc('astronomy')} text="mdi-weather-night" rounded={false} />
             {#if packageService.hasElevation()}
