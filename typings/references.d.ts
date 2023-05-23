@@ -108,6 +108,9 @@ declare namespace svelteNative.JSX {
         variant?: string;
         shape?: string;
     }
+    export interface ImageAttributes {
+        noCache?: boolean;
+    }
     export interface SpanAttributes {
         verticalAlignment?: string;
         verticalTextAlignment?: string;

@@ -17,7 +17,7 @@ import { accentColor } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
 import NSQLDatabase from './NSQLDatabase';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
-import { getDataFolder } from '~/utils/utils.common';
+import { getDataFolder, getItemsDataFolder } from '~/utils/utils.common';
 const mapContext = getMapContext();
 
 let writer: GeoJSONGeometryWriter<LatLonKeys>;
@@ -43,7 +43,7 @@ export default class ItemsModule extends MapModule {
     @profile
     async initDb() {
         try {
-            const filePath = path.join(Folder.fromPath(getDataFolder()).getFolder('db').path, 'db.sqlite');
+            const filePath = path.join(Folder.fromPath(getItemsDataFolder()).getFolder('db').path, 'db.sqlite');
             this.db = new NSQLDatabase(filePath, {
                 // for now it breaks
                 // threading: true,
@@ -134,10 +134,10 @@ export default class ItemsModule extends MapModule {
             this.updateGeoJSONLayer();
         }
     }
-    async updateItem(item: IItem, data: Partial<IItem>) {
-        if (Object.keys(data).length > 0) {
-            item = await this.itemRepository.updateItem(item as Item, data);
-        }
+    async updateItem(item: IItem, data?: Partial<IItem>) {
+        // if (Object.keys(data).length > 0) {
+        item = await this.itemRepository.updateItem(item as Item, data);
+        // }
         const index = this.currentLayerFeatures.findIndex((d) => d.id === item.id);
         if (index !== -1) {
             this.currentItems.splice(index, 1, item);
@@ -316,9 +316,14 @@ export default class ItemsModule extends MapModule {
         if (!item.id) {
             const id = (item.properties.id = item.properties.id || Date.now());
             item = await this.itemRepository.createItem({ ...item, id, onMap: onMap ? 1 : 0 });
-        }
-        if (onMap) {
-            this.addItemToLayer(item, true);
+
+            if (onMap) {
+                this.addItemToLayer(item, true);
+            }
+        } else {
+            item.onMap = onMap ? 1 : 0;
+            DEV_LOG && console.log('updateItem full');
+            item = await this.itemRepository.updateItem(item as Item);
         }
         return item; // return the first one
     }
@@ -359,5 +364,5 @@ export default class ItemsModule extends MapModule {
             await this.itemRepository.delete(item as Item);
         }
     }
-    imagesFolder = Folder.fromPath(path.join(getDataFolder(), 'item_images'));
+    imagesFolder = Folder.fromPath(path.join(getItemsDataFolder(), 'item_images'));
 }

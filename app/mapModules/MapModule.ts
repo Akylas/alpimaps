@@ -54,6 +54,7 @@ export interface MapContext {
     getMap: () => CartoMap<LatLonKeys>;
     getProjection: () => Projection;
     setBottomSheetStepIndex: (value: number) => void;
+    startEditingItem: (item: IItem) => void;
     selectItem: (args: {
         item: IItem;
         showButtons?: boolean;
@@ -70,6 +71,7 @@ export interface MapContext {
     unFocusSearch: () => void;
     getCurrentLanguage: () => string;
     getSelectedItem: () => IItem;
+    getEditingItem: () => IItem;
     getLayers: (layerId?: LayerType) => { layer: VectorTileLayer; id: string }[];
     addLayer: (layer: Layer<any, any>, layerId: LayerType) => number;
     insertLayer: (layer: Layer<any, any>, layerId: LayerType, index: number) => void;

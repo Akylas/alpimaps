@@ -76,7 +76,7 @@ export interface DirectionWayPoint {
 export interface Route {
     osmid?: string;
     type?: string;
-    waypoints: DirectionWayPoint[];
+    waypoints?: DirectionWayPoint[];
     costing_options?: any;
     totalTime?: number;
     totalDistance?: number;
@@ -204,7 +204,22 @@ export class ItemRepository extends CrudRepository<Item> {
         });
         return item as Item;
     }
-    async updateItem(item: Item, data: Partial<Item>) {
+    async updateItem(item: Item, data?: Partial<Item>) {
+        if (!data) {
+            const toUpdate = {
+                creation_date: item.creation_date || Date.now(),
+                // onMap: item.onMap,
+                image_path: item.image_path,
+                properties: item._properties || JSON.stringify(item.properties),
+                route: item._route || JSON.stringify(item.route),
+                profile: item._profile || JSON.stringify(item.profile),
+                stats: item._stats || JSON.stringify(item.stats),
+                instructions: item._instructions || JSON.stringify(item.instructions),
+                geometry: item._geometry || JSON.stringify(item.geometry)
+            };
+            await this.update(item, toUpdate);
+            return item;
+        }
         const toSave: Partial<Item> = {};
         const toUpdate: any = {};
         if (data.properties) {
