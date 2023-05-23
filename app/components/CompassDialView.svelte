@@ -139,7 +139,7 @@
 
             onDraw?.({ canvas, object, delta: delta + borderStrokedWidth, center, radius, rotation });
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
     }
 </script>

@@ -261,7 +261,7 @@
             //     onAppUrl(current);
             // }
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
     }
     let mapMoved = false;
@@ -518,7 +518,7 @@
                 unselectItem();
             }
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
     }
 
