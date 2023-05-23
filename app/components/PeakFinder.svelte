@@ -196,7 +196,7 @@
             }
             saveItem(item, value);
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
     }
 
@@ -470,7 +470,7 @@
             item.value = newValue;
             items.setItem(index, item);
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
     }
 
