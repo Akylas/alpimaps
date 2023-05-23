@@ -1967,7 +1967,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
             updateControls();
             requestRenderIfNotRequested(true);
         } catch (err) {
-            console.error(err);
+            console.error(err, err.stack);
         }
     }
 
