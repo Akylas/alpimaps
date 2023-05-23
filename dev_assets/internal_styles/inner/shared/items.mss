@@ -4,11 +4,14 @@
 @bicycle_line_width: linear([view::zoom], (16, 2), (18, 2));
 
 @color: #287bda;
+@editing_dash: 12,8;
+@non_editing_dash: none;
 
 #items['mapnik::geometry_type'=2] {
     ['nuti::hide_unselected'=0] {
-        when ([nuti::selected_id] !=[id]) {
-            line-color: @color;
+        when ([nuti::selected_id]!=[id]) {
+            line-color: [nuti::editing_id]=[id] ? fadeout(@color, 0.4) : @color;
+            line-dasharray: [nuti::editing_id]=[id] ? @editing_dash : @non_editing_dash;
             line-join: round;
             line-cap: round;
             line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
@@ -17,6 +20,7 @@
                 line-width: @pedestrian_line_width + 2;
             }
         }
+        
     }
 
     when ([nuti::selected_id]=[id])::selected {
