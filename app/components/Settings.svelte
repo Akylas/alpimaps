@@ -259,7 +259,7 @@
                 }
             }
         } catch (err) {
-            console.error(err);
+            console.error(err, err.stack);
         }
     }
     onLanguageChanged(refresh);
@@ -273,7 +273,7 @@
         try {
             ApplicationSettings.setBoolean(item.key, value);
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
     }
 </script>
