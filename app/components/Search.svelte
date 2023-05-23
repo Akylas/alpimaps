@@ -269,7 +269,6 @@
         mapContext.showOptions();
     }
     function onItemTap(item: SearchItem) {
-        console.log('onItemTap', item);
         if (!searchResultsVisible || !item) {
             return;
         }
