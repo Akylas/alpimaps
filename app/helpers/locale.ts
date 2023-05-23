@@ -30,7 +30,7 @@ if (__ANDROID__) {
     default24Clock = android.text.format.DateFormat.is24HourFormat(Utils.android.getApplicationContext());
 }
 export let clock_24 = ApplicationSettings.getBoolean('clock_24', default24Clock);
-console.log('clock_24', clock_24);
+DEV_LOG && console.log('clock_24', clock_24);
 let currentLocale = null;
 export const langStore = writable(null);
 export const clock_24Store = writable(null);

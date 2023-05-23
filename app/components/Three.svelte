@@ -423,7 +423,7 @@
         onCompassNeedsCalibrationEventBound;
 
         onCompassNeedsCalibrationEvent() {
-            console.log('onCompassNeedsCalibrationEvent');
+            DEV_LOG && console.log('onCompassNeedsCalibrationEvent');
         }
 
         onScreenOrientationChangeEvent(event) {
