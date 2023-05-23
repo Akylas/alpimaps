@@ -64,7 +64,7 @@
             canvas.drawText(valueFormatter(value), w - 10, topPadding, textPaint);
             canvas.drawText(formatter(max), w - 10, h - 20, textPaint);
         } catch (err) {
-            console.error(err);
+            console.error(err, err.stack);
         }
     }
 </script>
