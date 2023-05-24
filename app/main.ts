@@ -2,7 +2,7 @@
 import { install as installGestures } from '@nativescript-community/gesturehandler';
 import { setGeoLocationKeys } from '@nativescript-community/gps';
 import { installMixins as installUIMixins } from '@nativescript-community/systemui';
-import { overrideSpanAndFormattedString } from '@nativescript-community/text';
+// import { overrideSpanAndFormattedString } from '@nativescript-community/text';
 import { setMapPosKeys } from '@nativescript-community/ui-carto/core';
 import SwipeMenuElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
@@ -27,7 +27,7 @@ installGestures(true);
 installMixins();
 installBottomSheets();
 installUIMixins();
-overrideSpanAndFormattedString();
+// overrideSpanAndFormattedString();
 installWebRTC();
 initialize();
 
