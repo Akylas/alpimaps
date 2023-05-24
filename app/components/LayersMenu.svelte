@@ -16,7 +16,7 @@
     import { showError } from '~/utils/error';
     import { closeBottomSheet, showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
-    import { backgroundColor, borderColor, navigationBarHeight, primaryColor, subtitleColor, textColor } from '~/variables';
+    import { backgroundColor, borderColor, navigationBarHeight, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import IconButton from './IconButton.svelte';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
 
@@ -149,8 +149,8 @@
     }
 </script>
 
-<gesturerootview {...$$restProps} on:closedBottomSheet={onCloseBottomSheet} height={240 + $navigationBarHeight}>
-    <gridlayout bind:this={gridLayout} columns="*,auto" paddingBottom={$navigationBarHeight}>
+<gesturerootview {...$$restProps} on:closedBottomSheet={onCloseBottomSheet} height={240}>
+    <gridlayout bind:this={gridLayout} columns="*,auto" backgroundColor={$backgroundColor}>
     {#if loaded}
         <collectionview
             id="trackingScrollView"
