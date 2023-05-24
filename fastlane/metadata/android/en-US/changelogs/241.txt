@@ -1,0 +1,2 @@
+*Bug fixes*
+- new build to ensure fdroid sees a fixed version
