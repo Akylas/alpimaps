@@ -5,7 +5,7 @@ const { dirname, join, relative, resolve } = require('path');
 const nsWebpack = require('@nativescript/webpack');
 const CopyPlugin = require('copy-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-const SentryCliPlugin = require('@sentry/webpack-plugin');
+const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const IgnoreNotFoundExportPlugin = require('./scripts/IgnoreNotFoundExportPlugin');
 const Fontmin = require('@akylas/fontmin');
@@ -754,14 +754,15 @@ module.exports = (env, params = {}) => {
                 })
             );
             config.plugins.push(
-                new SentryCliPlugin({
-                    release: appVersion,
-                    urlPrefix: 'app:///',
-                    rewrite: true,
-                    release: `${nconfig.id}@${appVersion}+${buildNumber}`,
-                    dist: `${buildNumber}.${platform}`,
-                    ignoreFile: '.sentrycliignore',
-                    include: [dist, join(dist, process.env.SOURCEMAP_REL_DIR)]
+                new sentryWebpackPlugin({
+                    release: {
+                        name: `${nconfig.id}@${appVersion}+${buildNumber}`,
+                        dist: `${buildNumber}.${platform}`
+                    },
+                    sourcemaps: {
+                        assets: [dist, join(dist, process.env.SOURCEMAP_REL_DIR)],
+                        ignore: ['tns-java-classes', 'hot-update']
+                    }
                 })
             );
         } else {
