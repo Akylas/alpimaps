@@ -13,7 +13,7 @@
     import { showError } from '~/utils/error';
     import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
     import { pickColor } from '~/utils/utils';
-    import { borderColor, textLightColor } from '~/variables';
+    import { backgroundColor, borderColor, textLightColor } from '~/variables';
     import IconButton from './IconButton.svelte';
 
     const mapContext = getMapContext();
@@ -131,79 +131,75 @@
     }
 </script>
 
-<gridlayout rows="auto,*" columns="*,auto" height={240}>
-    <label text={getTitle()} fontWeight="bold" padding="10 10 0 20" fontSize={20} colSpan={2} />
-    <scrollview row={1} bind:this={scrollView} id="scrollView">
-        <stacklayout>
-            {#each Object.entries(options) as [name, option]}
-                {#if option.type === 'color'}
-                    <gridlayout height={50} columsn="*" on:tap={pickOptionColor(name, optionValue(name))}>
-                        <canvaslabel fontSize={13} padding={10}>
-                            <cspan text={name} verticalAlignment="middle" paddingLeft={10} horizontalAlignment="left" width={100} />
-                            <circle strokeWidth={2} paintStyle="fill" fillColor={$textLightColor} radius={15} antiAlias={true} horizontalAlignment="right" verticalAlignment="middle" width={20} />
-                            <circle
-                                strokeWidth={2}
-                                paintStyle="fill_and_stroke"
-                                strokeColor={$textLightColor}
-                                fillColor={optionValue(name)}
-                                radius={15}
-                                antiAlias={true}
-                                horizontalAlignment="right"
+<gesturerootview {...$$restProps} height={240}>
+    <gridlayout rows="auto,*" columns="*,auto" backgroundColor={$backgroundColor}>
+        <label text={getTitle()} fontWeight="bold" padding="10 10 0 20" fontSize={20} colSpan={2} />
+        <scrollview row={1} bind:this={scrollView} id="scrollView">
+            <stacklayout>
+                {#each Object.entries(options) as [name, option]}
+                    {#if option.type === 'color'}
+                        <gridlayout height={50} columsn="*" on:tap={pickOptionColor(name, optionValue(name))}>
+                            <canvaslabel fontSize={13} padding={10}>
+                                <cspan text={name} verticalAlignment="middle" paddingLeft={10} horizontalAlignment="left" width={100} />
+                                <circle strokeWidth={2} paintStyle="fill" fillColor={$textLightColor} radius={15} antiAlias={true} horizontalAlignment="right" verticalAlignment="middle" width={20} />
+                                <circle
+                                    strokeWidth={2}
+                                    paintStyle="fill_and_stroke"
+                                    strokeColor={$textLightColor}
+                                    fillColor={optionValue(name)}
+                                    radius={15}
+                                    antiAlias={true}
+                                    horizontalAlignment="right"
+                                    verticalAlignment="middle"
+                                    width={20}
+                                />
+                            </canvaslabel>
+                        </gridlayout>
+                    {:else}
+                        <gridlayout height={50} columns="100,*,30">
+                            <canvaslabel colSpan={3} fontSize={13} padding={10}>
+                                <cspan text={name} verticalAlignment="middle" paddingLeft={10} horizontalAlignment="left" width={100} />
+                                <cspan text={optionValue(name) / 100 + ''} verticalAlignment="middle" textAlignment="right" />
+                            </canvaslabel>
+                            <slider
+                                col={1}
+                                marginLeft={10}
+                                marginRight={10}
+                                value={optionValue(name)}
+                                on:valueChange={(event) => onOptionChanged(name, event)}
+                                minValue={option.min * 100}
+                                maxValue={option.max * 100}
                                 verticalAlignment="middle"
-                                width={20}
                             />
-                        </canvaslabel>
-                    </gridlayout>
-                {:else}
-                    <gridlayout height={50} columns="100,*,50">
-                        <canvaslabel colSpan={3} fontSize={13} padding={10}>
-                            <cspan text={name} verticalAlignment="middle" paddingLeft={10} horizontalAlignment="left" width={100} />
-                            <cspan text={optionValue(name) / 100 + ''} verticalAlignment="middle" textAlignment="right" />
-                        </canvaslabel>
-                        <slider
-                            col={1}
-                            marginLeft={10}
-                            marginRight={10}
-                            value={optionValue(name)}
-                            on:valueChange={(event) => onOptionChanged(name, event)}
-                            minValue={option.min * 100}
-                            maxValue={option.max * 100}
-                            verticalAlignment="middle"
-                        />
-                    </gridlayout>
-                {/if}
-            {/each}
+                        </gridlayout>
+                    {/if}
+                {/each}
+            </stacklayout>
+        </scrollview>
+        <stacklayout row={1} col={1} borderLeftColor={$borderColor} borderLeftWidth={1}>
+            <IconButton gray={true} isVisible={item.provider.cacheable !== false} text="mdi-clock-remove-outline" tooltip={lc('clear_cache')} on:tap={() => handleAction('clear_cache')} />
+            <IconButton
+                gray={true}
+                isVisible={!item.local && (devMode || item.provider.downloadable === true) && !item.downloading}
+                text="mdi-download"
+                tooltip={lc('download_area')}
+                on:tap={() => handleAction('download_area')}
+            />
+            <IconButton
+                gray={true}
+                isVisible={item.layer instanceof RasterTileLayer || item.layer instanceof HillshadeRasterTileLayer}
+                text="mdi-filter-cog"
+                tooltip={lc('tile_filter_mode')}
+                on:tap={() => handleAction('tile_filter_mode')}
+            />
+            <IconButton color="red" isVisible={!item.local} text="mdi-delete" tooltip={lc('delete')} on:tap={() => handleAction('delete')} />
         </stacklayout>
-    </scrollview>
-    <stacklayout row={1} col={1} borderLeftColor={$borderColor} borderLeftWidth={1}>
-        <IconButton gray={true} isVisible={item.provider.cacheable !== false} text="mdi-clock-remove-outline" tooltip={lc('clear_cache')} on:tap={() => handleAction('clear_cache')} />
-        <IconButton
-            gray={true}
-            isVisible={!item.local && (devMode || item.provider.downloadable === true) && !item.downloading}
-            text="mdi-download"
-            tooltip={lc('download_area')}
-            on:tap={() => handleAction('download_area')}
-        />
-        <IconButton
-            gray={true}
-            isVisible={item.layer instanceof RasterTileLayer || item.layer instanceof HillshadeRasterTileLayer}
-            text="mdi-filter-cog"
-            tooltip={lc('tile_filter_mode')}
-            on:tap={() => handleAction('tile_filter_mode')}
-        />
-        <IconButton
-            color="red"
-            isVisible={!item.local}
-            text="mdi-delete"
-            tooltip={lc('delete')}
-            on:tap={() => handleAction('delete')}
-        />
-    </stacklayout>
-    <!-- <collectionview orientation="horizontal" row={2} height={40} items={actions} colWidth="auto">
+        <!-- <collectionview orientation="horizontal" row={2} height={40} items={actions} colWidth="auto">
         <Template let:item>
             <gridlayout>
                 <mdbutton variant="outline" padding={10} marginRight={10} text={l(item)} on:tap={() => handleAction(item)} />
             </gridlayout>
         </Template>
     </collectionview> -->
-</gridlayout>
+    </gridlayout>
+</gesturerootview>
