@@ -368,6 +368,7 @@ module.exports = (env, params = {}) => {
         process: 'global.process',
         'global.TNS_WEBPACK': 'true',
         'gVars.platform': `"${platform}"`,
+        __UI_LABEL_USE_LIGHT_FORMATTEDSTRING__: true,
         __UI_USE_EXTERNAL_RENDERER__: true,
         __UI_USE_XML_PARSER__: false,
         'global.__AUTO_REGISTER_UI_MODULES__': false,
