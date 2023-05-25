@@ -766,11 +766,13 @@ export default class CustomLayersModule extends MapModule {
                             'sources',
                             sources.map((s) => s.path)
                         );
-                    const dataSource: TileDataSource<any, any> = this.createMergeMBTilesDataSource(
-                        sources.map((s) => getFileNameThatICanUseInNativeCode(context, s.path)),
-                        worldMbtilesEntity ? 5 : undefined
-                    );
-                    mbtiles.push(dataSource);
+                    if (sources.length) {
+                        const dataSource: TileDataSource<any, any> = this.createMergeMBTilesDataSource(
+                            sources.map((s) => getFileNameThatICanUseInNativeCode(context, s.path)),
+                            worldMbtilesEntity ? 5 : undefined
+                        );
+                        mbtiles.push(dataSource);
+                    }
 
                     const terrain = subentities.find((e) => e.name.endsWith('.etiles'));
                     if (terrain) {
@@ -815,7 +817,8 @@ export default class CustomLayersModule extends MapModule {
                 DEV_LOG &&
                     console.log(
                         'mbtiles',
-                        mbtiles.map((s) => s.options.databasePath),
+                        mbtiles,
+                        mbtiles.map((s) => s?.options.databasePath),
                         get(preloading)
                     );
                 mbtiles.forEach((s) => dataSource.add(s));
