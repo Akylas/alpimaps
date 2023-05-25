@@ -33,6 +33,15 @@ export function getItemsDataFolder() {
     }
     return itemsDataFolder;
 }
+export function setItemsDataFolder(value: string) {
+    itemsDataFolder = value;
+    ApplicationSettings.setString('items_data_folder', value);
+}
+export function resetItemsDataFolder() {
+    ApplicationSettings.remove('items_data_folder');
+    itemsDataFolder = null;
+    return getItemsDataFolder();
+}
 
 function getTreeUri(context, uri) {
     let documentId = android.provider.DocumentsContract.getTreeDocumentId(uri);
@@ -83,6 +92,11 @@ export function getSavedMBTilesDir() {
 }
 export function setSavedMBTilesDir(value) {
     savedMBTilesDir = value;
+    if (value) {
+        ApplicationSettings.setString('local_mbtiles_directory', value);
+    } else {
+        ApplicationSettings.remove('local_mbtiles_directory');
+    }
 }
 
 export function getAndroidRealPath(src: string) {
