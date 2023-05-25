@@ -1,9 +1,9 @@
 <script lang="ts">
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { pickFolder } from '@nativescript-community/ui-document-picker';
-    import { alert, prompt } from '@nativescript-community/ui-material-dialogs';
+    import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { ApplicationSettings, Folder, ObservableArray, Utils } from '@nativescript/core';
+    import { ApplicationSettings, Folder, ObservableArray, Utils, path } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
@@ -16,7 +16,9 @@
     import { openLink } from '~/utils/ui';
     import { borderColor, mdiFontFamily, navigationBarHeight, subtitleColor } from '~/variables';
     import CActionBar from './CActionBar.svelte';
-    import { getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir } from '~/utils/utils.common';
+    import { getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, resetItemsDataFolder, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils.common';
+    import { getDefaultMBTilesDir, moveFileOrFolder } from '~/utils/utils';
+    import { showError } from '~/utils/error';
 
     let collectionView: NativeViewElementNode<CollectionView>;
 
@@ -152,9 +154,73 @@
         items = new ObservableArray(newItems);
     }
 
-    function onLongPress() {}
-    function updateItem(item) {
-        const index = items.findIndex((it) => it.key === item.key);
+    async function onLongPress(command, item?) {
+        try {
+            switch (command) {
+                case 'data_path': {
+                    let result = await confirm({
+                        message: lc('reset_setting', item.title),
+                        okButtonText: lc('ok'),
+                        cancelButtonText: lc('cancel')
+                    });
+                    if (!result) {
+                        return;
+                    }
+                    setSavedMBTilesDir(null);
+
+                    item.description = await getDefaultMBTilesDir();
+                    updateItem(item, 'id');
+                    break;
+                }
+                case 'items_data_path': {
+                    console.log('onLogngPress', command);
+                    let result = await confirm({
+                        message: lc('reset_setting', item.title),
+                        okButtonText: lc('ok'),
+                        cancelButtonText: lc('cancel')
+                    });
+                    if (!result) {
+                        return;
+                    }
+                    const current = getItemsDataFolder();
+                    const resultPath = resetItemsDataFolder();
+                    console.log('reset ', command, current, resultPath);
+                    if (resultPath && resultPath !== current) {
+                        console.log('new description', resultPath);
+                        item.description = resultPath;
+                        updateItem(item, 'id');
+
+                        result = await confirm({
+                            message: lc('move_items_data_files', current, resultPath),
+                            okButtonText: lc('ok'),
+                            cancelButtonText: lc('cancel')
+                        });
+                        if (result) {
+                            //we need to move files around
+                            Folder.fromPath(current)
+                                .getEntitiesSync()
+                                .forEach((entity) => {
+                                    if (entity.name === 'db' || entity.name === 'item_images') {
+                                        console.log('moving entity', entity.path);
+                                        moveFileOrFolder(entity.path, path.join(resultPath, entity.name));
+                                    }
+                                });
+                        }
+                        alert({
+                            title: lc('setting_update'),
+                            message: lc('please_restart_app')
+                        });
+                    }
+                    break;
+                }
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
+    function updateItem(item, key = 'key') {
+        const index = items.findIndex((it) => it[key] === item[key]);
+        console.log('updateItem', key, item[key], index);
         if (index !== -1) {
             items.setItem(index, item);
         }
@@ -203,9 +269,8 @@
                     if (resultPath) {
                         const toUsePath = getAndroidRealPath(resultPath);
                         if (toUsePath !== getSavedMBTilesDir()) {
-                            ApplicationSettings.setString('local_mbtiles_directory', toUsePath);
-                            item.description = toUsePath;
-                            updateItem(item);
+                            setSavedMBTilesDir(toUsePath);
+                            updateItem(item, 'id');
                             alert({
                                 title: lc('setting_update'),
                                 message: lc('please_restart_app')
@@ -226,13 +291,30 @@
                         const toUsePath = getAndroidRealPath(resultPath);
                         const current = getItemsDataFolder();
                         if (toUsePath !== current) {
-                            ApplicationSettings.setString('items_data_folder', toUsePath);
+                            setItemsDataFolder(toUsePath);
                             //TODO: we need to move files from current to new folder
                             // Folder.fromPath(current).getEntitiesSync().forEach(e=>{
                             //     e.
                             // })
                             item.description = toUsePath;
-                            updateItem(item);
+                            updateItem(item, 'id');
+
+                            const result = await confirm({
+                                message: lc('move_items_data_files', current, toUsePath),
+                                okButtonText: lc('ok'),
+                                cancelButtonText: lc('cancel')
+                            });
+                            if (result) {
+                                //we need to move files around
+                                Folder.fromPath(current)
+                                    .getEntitiesSync()
+                                    .forEach((entity) => {
+                                        if (entity.name === 'db' || entity.name === 'item_images') {
+                                            console.log('moving entity', entity.path);
+                                            moveFileOrFolder(entity.path, path.join(toUsePath, entity.name));
+                                        }
+                                    });
+                            }
                             alert({
                                 title: lc('setting_update'),
                                 message: lc('please_restart_app')
@@ -289,12 +371,12 @@
                     if (result && !!result.result && result.text.length > 0) {
                         customLayers.saveToken(item.token, result.text);
                         item.value = result.text;
-                        updateItem(item);
+                        updateItem(item, 'token');
                     }
                 }
             }
         } catch (err) {
-            console.error(err, err.stack);
+            showError(err);
         }
     }
     onLanguageChanged(refresh);
@@ -335,7 +417,7 @@
                 </gridlayout>
             </Template>
             <Template let:item>
-                <gridlayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)} on:touch={(e) => onTouch(item, e)}>
+                <gridlayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)} on:longPress={(event) => onLongPress(item.id, item)} on:touch={(e) => onTouch(item, e)}>
                     <label fontSize={36} text={item.icon} marginLeft="-10" width={40} verticalAlignment="middle" fontFamily={mdiFontFamily} visibility={!!item.icon ? 'visible' : 'hidden'} />
                     <stacklayout col={1} verticalAlignment="middle">
                         <label fontSize={17} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines={1} lineBreak="end" />

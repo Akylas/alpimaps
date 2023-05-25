@@ -40,7 +40,7 @@ export async function getDefaultMBTilesDir() {
     if (!ANDROID_30) {
         // storage permission is not needed
         // and will report never_ask_again on >= 33
-        const result = await request('storage');
+        const result = await request('storage', { read: true, write: true });
 
         DEV_LOG && console.log('storage', result);
         if (!permResultCheck(result)) {
@@ -59,7 +59,6 @@ export async function getDefaultMBTilesDir() {
         if (resultPath) {
             localMbtilesSource = resultPath;
             setSavedMBTilesDir(localMbtilesSource);
-            ApplicationSettings.setString('local_mbtiles_directory', resultPath);
         }
     }
     DEV_LOG && console.log('getDefaultMBTilesDir', localMbtilesSource);
@@ -163,4 +162,37 @@ export async function pickColor(color: Color, view?: View) {
 
 export function showToolTip(tooltip: string, view?: View) {
     android.widget.Toast.makeText(Utils.ad.getApplicationContext(), tooltip, android.widget.Toast.LENGTH_SHORT).show();
+}
+
+export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath: string) {
+    const sourceLocation = new java.io.File(sourceLocationPath);
+    const targetLocation = new java.io.File(targetLocationPath);
+    console.log('moveFileOrFolder', sourceLocationPath, sourceLocation.isDirectory(), targetLocationPath);
+    if (sourceLocation.isDirectory()) {
+        if (!targetLocation.exists()) {
+            const result = targetLocation.mkdirs();
+            console.log('creating folder', targetLocation.getAbsolutePath(), targetLocation.exists(), result);
+        }
+
+        const children = sourceLocation.list();
+        for (let i = 0; i < sourceLocation.listFiles().length; i++) {
+            moveFileOrFolder(path.join(sourceLocationPath, children[i]), path.join(targetLocationPath, children[i]));
+        }
+    } else {
+        if (targetLocation.exists()) {
+            targetLocation.delete();
+        }
+        const inStream = new java.io.FileInputStream(sourceLocation);
+
+        const out = new java.io.FileOutputStream(targetLocation);
+
+        // Copy the bits from instream to outstream
+        const buf = Array.create('byte', 1024);
+        let len;
+        while ((len = inStream.read(buf)) > 0) {
+            out.write(buf, 0, len);
+        }
+        inStream.close();
+        out.close();
+    }
 }
