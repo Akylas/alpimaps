@@ -91,3 +91,21 @@ export async function pickColor(color: Color, view?: View) {}
 export function showToolTip(tooltip: string, view?: View) {
     showSnack({ message: tooltip });
 }
+
+export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath: string, fileManager: NSFileManager = NSFileManager.defaultManager) {
+    if (fileManager.fileExistsAtPathIsDirectory(sourceLocationPath, true)) {
+        if (!fileManager.fileExistsAtPathIsDirectory(targetLocationPath, true)) {
+            fileManager.createDirectoryAtPathAttributes(targetLocationPath, null);
+        }
+
+        const children = fileManager.contentsOfDirectoryAtPathError(sourceLocationPath);
+        for (let i = 0; i < children.count; i++) {
+            moveFileOrFolder(path.join(sourceLocationPath, children.objectAtIndex(i)), path.join(targetLocationPath, children.objectAtIndex(i)));
+        }
+    } else {
+        if (fileManager.fileExistsAtPathIsDirectory(targetLocationPath, false)) {
+            fileManager.removeItemAtPathError(targetLocationPath);
+        }
+        fileManager.copyItemAtPathToPathError(sourceLocationPath, targetLocationPath);
+    }
+}

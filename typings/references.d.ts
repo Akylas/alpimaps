@@ -1,5 +1,6 @@
 /// <reference path="../node_modules/@nativescript/core/global-types.d.ts" />
 /// <reference path="../node_modules/@nativescript/types-android/lib/android-32.d.ts" />
+/// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!Foundation.d.ts" />
 /// <reference path="../node_modules/@nativescript-community/ui-carto/typings/carto.android.d.ts" />
 
 // import type { Color } from '@nativescript/core';
