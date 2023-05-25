@@ -314,6 +314,7 @@
   "motel": "motel",
   "motorcycle_parking": "Stationnement moto",
   "mountain": "montagne",
+  "move_items_data_files": "voulez-vous déplacer les fichiers de %1$s à %2$s ? si vous le faites tous les fichiers connexes existants en %2$s seront remplacés!",
   "museum": "musée",
   "music": "musique",
   "musical_instrument": "instrument musical",
