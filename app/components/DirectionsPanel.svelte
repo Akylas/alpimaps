@@ -771,11 +771,13 @@
                 itemToFocus = await computeAndAddRoute();
             }
             updateGeoJSONLayer();
-            mapContext.selectItem({
-                item: itemToFocus as Item,
-                isFeatureInteresting: true,
-                showButtons: true
-            });
+            if (itemToFocus) {
+                mapContext.selectItem({
+                    item: itemToFocus as Item,
+                    isFeatureInteresting: true,
+                    showButtons: true
+                });
+            }
         } catch (error) {
             // cancel();
             showError(error || 'failed to compute route');
