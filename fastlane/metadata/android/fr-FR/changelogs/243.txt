@@ -1,0 +1,2 @@
+*Bug fixes*
+- settings fixes and allow to move items data files while changing the path
