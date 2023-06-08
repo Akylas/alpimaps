@@ -164,11 +164,16 @@
             <Template let:item>
                 <swipemenu
                     id={item.name}
-                    leftSwipeDistance={item.local ? 0 : 200}
+                    leftSwipeDistance={item.local ? 0.0001 : 130}
                     startingSide={item.startingSide}
                     translationFunction={drawerTranslationFunction}
                     openAnimationDuration={100}
                     closeAnimationDuration={100}
+                    gestureHandlerOptions={{
+                        failOffsetYStart: -40,
+                        failOffsetYEnd: 40,
+                        minDist: 50
+                    }}
                 >
                     <gridlayout prop:mainContent paddingLeft={15} paddingRight={5} rows="*" columns="130,*,auto" borderBottomColor={$borderColor} borderBottomWidth={1} backgroundColor={$backgroundColor}>
                         <stacklayout verticalAlignment="center">
