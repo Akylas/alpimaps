@@ -106,7 +106,7 @@ export const backgroundColor = writable('');
 export function updateThemeColors(theme: string, force = false) {
     try {
         if (!force) {
-            theme = Application.systemAppearance();
+            theme = Application.systemAppearance;
             // console.log('systemAppearance', theme);
         }
     } catch (err) {
