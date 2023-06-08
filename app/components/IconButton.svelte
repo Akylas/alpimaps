@@ -4,6 +4,7 @@
     import { showToolTip } from '~/utils/utils';
     import { actionBarButtonHeight, mdiFontFamily, primaryColor, subtitleColor, textColor } from '~/variables';
     export let isVisible = true;
+    export let isHidden = false;
     export let white = false;
     export let isEnabled = true;
     export let small = false;
@@ -66,7 +67,7 @@
     disableCss={true}
     rippleColor={actualColor}
     {fontFamily}
-    visibility={isVisible ? 'visible' : 'collapsed'}
+    visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapsed'}
     color={isSelected ? selectedColor : actualColor}
     {...$$restProps}
     on:tap
