@@ -24,7 +24,9 @@
         "types": ["node", "svelte-native", "geojson", "offscreencanvas"],
         "baseUrl": ".",
         "paths": {
-            "~/*": ["app/*"]
+            "~/*": ["app/*"],
+            "@nativescript/core": ["node_modules/@akylas/nativescript"],
+            "@nativescript/core/*": ["node_modules/@akylas/nativescript/*"]
         }
     },
     "include": ["app/**/*", "typings/*.d.ts"],
