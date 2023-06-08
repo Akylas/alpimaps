@@ -885,43 +885,43 @@ export const data: { [k: string]: Provider } = {
             maxZoom: 15
         }
     },
-    'slopes > 30%': {
-        category: 'europe',
-        url: 'http://www.skitrack.fr/cgi-bin/mapserv.fcgi?map=/srv/d_vttrack/vttrack/skitrack/mapserver/WMS-{variant}.map&SERVICE=WMS&VERSION=1.1.1&LAYERS=slope&FORMAT={format}&TRANSPARENT=true&REQUEST=GetMap&STYLES=&SRS=EPSG%3A900913&BBOX={bbox}&WIDTH=512&HEIGHT=512',
-        isOverlay: true,
-        attribution: '{attribution.OpenStreetMap} <a href="http://maptoolkit.net/">Maptoolkit</a>',
-        layerOptions: {
-            zoomLevelBias: 0
-        },
-        devHidden: true,
-        sourceOptions: {
-            maxZoom: 15
-        },
-        urlOptions: {
-            format: 'image/png'
-        },
-        variants: {
-            IGN: {
-                urlOptions: {
-                    variant: 'slopeIGN75'
-                }
-            },
-            aster: {
-                urlOptions: {
-                    variant: 'slope-aster'
-                }
-            }
-        }
-        // },
-        // 'piemonte': {
-        //     category: 'italie',
-        //     url: '//www.webgis.csi.it/cataloghiradex_f/cataloghi_TMS/sfondi/sfondo_europa_piemonte/{z}/{x}/{y}.png',
-        //     urlOptions: {
-        //         attribution: 'http://www.regione.piemonte.it/sentgis/jsp/cartografia/mappa.do',
-        //         forceHTTP: true,
-        //         maxZoom: 18
-        //     }
-    },
+    // 'slopes > 30%': {
+    //     category: 'europe',
+    //     url: 'http://www.skitrack.fr/cgi-bin/mapserv.fcgi?map=/srv/d_vttrack/vttrack/skitrack/mapserver/WMS-{variant}.map&SERVICE=WMS&VERSION=1.1.1&LAYERS=slope&FORMAT={format}&TRANSPARENT=true&REQUEST=GetMap&STYLES=&SRS=EPSG%3A900913&BBOX={bbox}&WIDTH=512&HEIGHT=512',
+    //     isOverlay: true,
+    //     attribution: '{attribution.OpenStreetMap} <a href="http://maptoolkit.net/">Maptoolkit</a>',
+    //     layerOptions: {
+    //         zoomLevelBias: 0
+    //     },
+    //     devHidden: true,
+    //     sourceOptions: {
+    //         maxZoom: 15
+    //     },
+    //     urlOptions: {
+    //         format: 'image/png'
+    //     },
+    //     variants: {
+    //         IGN: {
+    //             urlOptions: {
+    //                 variant: 'slopeIGN75'
+    //             }
+    //         },
+    //         aster: {
+    //             urlOptions: {
+    //                 variant: 'slope-aster'
+    //             }
+    //         }
+    //     }
+    //     // },
+    //     // 'piemonte': {
+    //     //     category: 'italie',
+    //     //     url: '//www.webgis.csi.it/cataloghiradex_f/cataloghi_TMS/sfondi/sfondo_europa_piemonte/{z}/{x}/{y}.png',
+    //     //     urlOptions: {
+    //     //         attribution: 'http://www.regione.piemonte.it/sentgis/jsp/cartografia/mappa.do',
+    //     //         forceHTTP: true,
+    //     //         maxZoom: 18
+    //     //     }
+    // },
     USGS: {
         url: 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/WMTS/tile/1.0.0/USGSTopo/default/GoogleMapsCompatible/{zoom}/{y}/{x}',
         attribution:
