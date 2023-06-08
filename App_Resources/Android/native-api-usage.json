@@ -29,6 +29,7 @@
         "androidx.core.app:NotificationCompat.Builder",
         "androidx.core.content:FileProvider",
         "androidx.core.widget:NestedScrollView",
+        "androidx.documentfile.provider:DocumentFile",
         "com.caverock.androidsvg:PreserveAspectRatio",
         "com.caverock.androidsvg:RenderOptions",
         "com.caverock.androidsvg:SVG",
