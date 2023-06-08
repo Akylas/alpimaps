@@ -29,6 +29,8 @@
   "amusement_arcade": "amusement arcade",
   "amusement_park": "parc d'attractions",
   "apartment": "appartement",
+  "api_key": "Clé API",
+  "api_keys_needed": "une clé API est nécessaire pour utiliser cette source, merci de rentrer \"%1$s\" dans les paramètres",
   "app.name": "Alpi Maps",
   "approximate_accuracy": "précision approximative",
   "aquarium": "aquarium",
