@@ -1,5 +1,5 @@
 export * from './utils.common';
-import { Application, ApplicationSettings, Color, Device, Frame, Utils, View, path } from '@nativescript/core';
+import { Application, ApplicationSettings, Color, Device, Folder, Frame, Utils, View, path } from '@nativescript/core';
 import { Dayjs } from 'dayjs';
 import { AndroidActivityResultEventData, AndroidApplication, getRootView } from '@nativescript/core/application';
 import { lc } from '@nativescript-community/l';
@@ -8,7 +8,7 @@ import { request } from '@nativescript-community/perms';
 import { getDataFolder, getSavedMBTilesDir, permResultCheck, setSavedMBTilesDir } from './utils.common';
 
 export const sdkVersion = parseInt(Device.sdkVersion, 10);
-const ANDROID_30 = __ANDROID__ && sdkVersion >= 30;
+export const ANDROID_30 = __ANDROID__ && sdkVersion >= 30;
 
 export function checkManagePermission() {
     return !ANDROID_30 || android.os.Environment.isExternalStorageManager();
@@ -46,6 +46,27 @@ export async function getDefaultMBTilesDir() {
         if (!permResultCheck(result)) {
             throw new Error(lc('missing_storage_permission'));
         }
+
+        // if (__ANDROID__) {
+        //     (async function test() {
+        //         try {
+        //             console.log('localMbtilesSource', localMbtilesSource);
+        //             const file = new java.io.File(path.join(localMbtilesSource, '..'));
+        //             const document = androidx.documentfile.provider.DocumentFile.fromFile(file);
+        //             const result = document.createDirectory('test');
+        //             // const testFolder = Folder.fromPath(path.join(getDataFolder(), '..', 'test'));
+        //             // const result = file.mkdirs();
+        //             console.log('test', result, Folder.exists(file.getAbsolutePath()), file.exists(), file.getAbsolutePath());
+
+        //             if (!file.exists()) {
+        //                 const testFolder = Folder.fromPath(path.join(localMbtilesSource, '..', 'test'));
+        //                 console.log('testFolder', testFolder, Folder.exists(file.getAbsolutePath()), file.exists());
+        //             }
+        //         } catch (error) {
+        //             console.error(error, error.stack);
+        //         }
+        //     })();
+        // }
     }
     if (ANDROID_30) {
         await askForManagePermission();
@@ -61,6 +82,7 @@ export async function getDefaultMBTilesDir() {
             setSavedMBTilesDir(localMbtilesSource);
         }
     }
+
     DEV_LOG && console.log('getDefaultMBTilesDir', localMbtilesSource);
     return localMbtilesSource;
 }
@@ -164,27 +186,49 @@ export function showToolTip(tooltip: string, view?: View) {
     android.widget.Toast.makeText(Utils.ad.getApplicationContext(), tooltip, android.widget.Toast.LENGTH_SHORT).show();
 }
 
-export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath: string) {
+export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath: string, androidTargetLocationPath?: string) {
     const sourceLocation = new java.io.File(sourceLocationPath);
     const targetLocation = new java.io.File(targetLocationPath);
-    console.log('moveFileOrFolder', sourceLocationPath, sourceLocation.isDirectory(), targetLocationPath);
+    console.log('moveFileOrFolder', sourceLocationPath, sourceLocation.isDirectory(), androidTargetLocationPath);
     if (sourceLocation.isDirectory()) {
         if (!targetLocation.exists()) {
+            // const index = androidTargetLocationPath.lastIndexOf('/');
+            // const parentPath = androidTargetLocationPath.slice(0, index);
+            // const folderName = androidTargetLocationPath.slice(index + 1);
+            // const document = androidx.documentfile.provider.DocumentFile.fromTreeUri(Utils.android.getApplicationContext(), android.net.Uri.parse(parentPath));
+            // const result = document.createDirectory(folderName);
             const result = targetLocation.mkdirs();
-            console.log('creating folder', targetLocation.getAbsolutePath(), targetLocation.exists(), result);
+            // console.log('creating folder', parentPath, folderName, result, targetLocation.exists());
         }
 
         const children = sourceLocation.list();
         for (let i = 0; i < sourceLocation.listFiles().length; i++) {
-            moveFileOrFolder(path.join(sourceLocationPath, children[i]), path.join(targetLocationPath, children[i]));
+            moveFileOrFolder(path.join(sourceLocationPath, children[i]), path.join(targetLocationPath, children[i]), androidTargetLocationPath + '/' + children[i]);
         }
     } else {
         if (targetLocation.exists()) {
             targetLocation.delete();
         }
-        const inStream = new java.io.FileInputStream(sourceLocation);
+        const context = Utils.android.getApplicationContext() as android.content.Context;
+        // const index = androidTargetLocationPath.lastIndexOf('/');
+        // const parentPath = androidTargetLocationPath.slice(0, index);
+        // const folderName = androidTargetLocationPath.slice(index+1);
+        // const outdocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(Utils.android.getApplicationContext(), android.net.Uri.parse(parentPath));
 
+        const file = new java.io.File(sourceLocationPath);
+        let uri = null;
+        if (file.exists()) {
+            const packageName = context.getPackageName();
+            const authority = packageName + '.provider';
+
+            uri = android.net.Uri.parse('content://' + authority + '/' + file.getName());
+        }
+        // const sourcedocument = androidx.documentfile.provider.DocumentFile.fromTreeUri(Utils.android.getApplicationContext(), uri);
+        // const outfile = outdocument.createFile('', androidTargetLocationPath.slice(index + 1));
+        // const inStream = context.getContentResolver().openInputStream(sourcedocument.getUri());
+        // const out = context.getContentResolver().openOutputStream(outfile.getUri());
         const out = new java.io.FileOutputStream(targetLocation);
+        const inStream = new java.io.FileInputStream(sourceLocation);
 
         // Copy the bits from instream to outstream
         const buf = Array.create('byte', 1024);
