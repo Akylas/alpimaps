@@ -1,0 +1,8 @@
+*Features*
+- allow to filter sources when adding one
+
+*Bug fixes*
+- missing translations
+- swipe menu fix for layers bottomsheet
+- *android:* refactor settings for android 30
+- removed non working data sources
