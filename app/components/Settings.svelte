@@ -17,7 +17,7 @@
     import { borderColor, mdiFontFamily, navigationBarHeight, subtitleColor } from '~/variables';
     import CActionBar from './CActionBar.svelte';
     import { getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, resetItemsDataFolder, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils.common';
-    import { getDefaultMBTilesDir, moveFileOrFolder } from '~/utils/utils';
+    import { ANDROID_30, getDefaultMBTilesDir, moveFileOrFolder } from '~/utils/utils';
     import { showError } from '~/utils/error';
 
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -114,14 +114,18 @@
                 title: lc('map_data_path'),
                 description: getSavedMBTilesDir(),
                 rightBtnIcon: 'mdi-chevron-right'
-            },
-            {
+            }
+        ];
+
+        if (ANDROID_30) {
+         newItems.push({
                 id: 'items_data_path',
                 title: lc('items_data_path'),
                 description: getItemsDataFolder(),
                 rightBtnIcon: 'mdi-chevron-right'
+            })
+
             }
-        ];
         if (customLayers.hasLocalData) {
             newItems.splice(1, 0, {
                 id: 'map_language',
@@ -283,11 +287,14 @@
                     const result = await pickFolder({
                         permissions: {
                             read: true,
+                            write: true,
+                            recursive: true,
                             persistable: true
                         }
                     });
                     const resultPath = result.folders[0];
                     if (resultPath) {
+                        console.log('items_data_path', resultPath)
                         const toUsePath = getAndroidRealPath(resultPath);
                         const current = getItemsDataFolder();
                         if (toUsePath !== current) {
@@ -311,7 +318,7 @@
                                     .forEach((entity) => {
                                         if (entity.name === 'db' || entity.name === 'item_images') {
                                             console.log('moving entity', entity.path);
-                                            moveFileOrFolder(entity.path, path.join(toUsePath, entity.name));
+                                            moveFileOrFolder(entity.path, path.join(toUsePath, entity.name), resultPath + '/' + entity.name);
                                         }
                                     });
                             }
