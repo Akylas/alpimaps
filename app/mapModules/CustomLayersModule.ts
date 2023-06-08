@@ -375,7 +375,8 @@ export default class CustomLayersModule extends MapModule {
         //     });
         // } else {
         const rasterCachePath = Folder.fromPath(path.join(getDataFolder(), 'rastercache'));
-        const databasePath = File.fromPath(path.join(rasterCachePath.path, id)).path;
+        const idForPath = id.replaceAll(/[\\\?\*<":>\+\[\]\s\t\n\.]+/g, '_');
+        const databasePath = File.fromPath(path.join(rasterCachePath.path, idForPath)).path;
         const legend = provider.legend;
         let url = provider.url as string;
         if (provider.tokenKey) {
@@ -1033,6 +1034,7 @@ export default class CustomLayersModule extends MapModule {
             view: OptionSelect as any,
             props: {
                 title: l('pick_source'),
+                showFilter: true,
                 options:
                     //  [{ name: l('pick'), isPick: true }].concat
                     Object.keys(this.baseProviders)
