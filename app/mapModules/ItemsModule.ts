@@ -43,7 +43,14 @@ export default class ItemsModule extends MapModule {
     @profile
     async initDb() {
         try {
-            const filePath = path.join(Folder.fromPath(getItemsDataFolder()).getFolder('db').path, 'db.sqlite');
+            // console.log('initDb0', getItemsDataFolder());
+            // let filePath = getItemsDataFolder() + '/db/db.sqlite';
+            let filePath = path.join(Folder.fromPath(getItemsDataFolder()).getFolder('db').path, 'db.sqlite');
+            // console.log('initDb', filePath);
+            // if (filePath.startsWith('content:/') && !filePath.startsWith('content://')) {
+            //     filePath = 'content://' + filePath.slice(9);
+            // }
+            // console.log('initDb2', filePath);
             this.db = new NSQLDatabase(filePath, {
                 // for now it breaks
                 // threading: true,
