@@ -1,0 +1,3 @@
+*Bug fixes*
+- settings layout fix
+- prevent error on folder picker
