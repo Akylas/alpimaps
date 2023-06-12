@@ -406,7 +406,7 @@
     <gridlayout rows="auto,*">
         <collectionview bind:this={collectionView} row={1} {items} rowHeight={70} itemTemplateSelector={selectTemplate} android:paddingBottom={$navigationBarHeight}>
             <Template let:item key="switch">
-                <gridlayout columns="*, auto" padding="0 10 0 30">
+                <gridlayout columns="*,auto" padding="0 10 0 10">
                     <stacklayout verticalAlignment="middle">
                         <label fontSize={17} text={getTitle(item)} verticalTextAlignment="top" maxLines={1} lineBreak="end" />
                         <label
@@ -426,7 +426,7 @@
             <Template let:item>
                 <gridlayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)} on:longPress={(event) => onLongPress(item.id, item)} on:touch={(e) => onTouch(item, e)}>
                     <label fontSize={36} text={item.icon} marginLeft="-10" width={40} verticalAlignment="middle" fontFamily={mdiFontFamily} visibility={!!item.icon ? 'visible' : 'hidden'} />
-                    <stacklayout col={1} verticalAlignment="middle">
+                    <stacklayout col={1} verticalAlignment="middle"  marginLeft="10">
                         <label fontSize={17} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines={1} lineBreak="end" />
                         <label
                             visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'}
