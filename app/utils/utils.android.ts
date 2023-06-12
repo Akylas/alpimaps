@@ -14,7 +14,7 @@ export function checkManagePermission() {
     return !ANDROID_30 || android.os.Environment.isExternalStorageManager();
 }
 export async function askForManagePermission() {
-    const activity = Application.android.startActivity as androidx.appcompat.app.AppCompatActivity;
+    const activity = Application.android.startActivity;
     if (checkManagePermission()) {
         return true;
     }
@@ -209,7 +209,7 @@ export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath:
         if (targetLocation.exists()) {
             targetLocation.delete();
         }
-        const context = Utils.android.getApplicationContext() as android.content.Context;
+        const context = Utils.android.getApplicationContext();
         // const index = androidTargetLocationPath.lastIndexOf('/');
         // const parentPath = androidTargetLocationPath.slice(0, index);
         // const folderName = androidTargetLocationPath.slice(index+1);
