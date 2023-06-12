@@ -1,7 +1,6 @@
 import { getString, setString } from '@nativescript/core/application-settings';
-import { iOSNativeHelper } from '@nativescript/core/utils';
 import Theme from '@nativescript-community/css-theme';
-import { Application, ApplicationSettings, EventData } from '@nativescript/core';
+import { Application, ApplicationSettings, Device, EventData, Utils } from '@nativescript/core';
 import { prefs } from '~/services/preferences';
 import { createGlobalEventListener, globalObservable, updateThemeColors } from '~/variables';
 import { showBottomSheet } from '~/utils/svelte/bottomsheet';
@@ -10,6 +9,7 @@ import { writable } from 'svelte/store';
 import { showError } from '~/utils/error';
 
 export type Themes = 'auto' | 'light' | 'dark';
+export const sdkVersion = parseInt(Device.sdkVersion, 10);
 
 export const onThemeChanged = createGlobalEventListener('theme');
 
@@ -67,7 +67,7 @@ export function applyTheme(theme: Themes) {
             } else {
                 if (Application.ios.window) {
                     //@ts-ignore
-                    (Application.ios.window as UIWindow).overrideUserInterfaceStyle = UIUserInterfaceStyle.Unspecified;
+                    Application.ios.window.overrideUserInterfaceStyle = UIUserInterfaceStyle.Unspecified;
                 }
             }
             break;
@@ -78,7 +78,7 @@ export function applyTheme(theme: Themes) {
             } else {
                 if (Application.ios.window) {
                     //@ts-ignore
-                    (Application.ios.window as UIWindow).overrideUserInterfaceStyle = UIUserInterfaceStyle.Light;
+                    Application.ios.window.overrideUserInterfaceStyle = UIUserInterfaceStyle.Light;
                 }
             }
             break;
@@ -89,7 +89,7 @@ export function applyTheme(theme: Themes) {
             } else {
                 if (Application.ios.window) {
                     //@ts-ignore
-                    (Application.ios.window as UIWindow).overrideUserInterfaceStyle = UIUserInterfaceStyle.Dark;
+                    Application.ios.window.overrideUserInterfaceStyle = UIUserInterfaceStyle.Dark;
                 }
             }
             break;
@@ -110,7 +110,7 @@ export function start() {
         return;
     }
     started = true;
-    if (__IOS__ && iOSNativeHelper.MajorVersion < 13) {
+    if (__IOS__ && sdkVersion < 13) {
         theme = 'light';
     } else {
         theme = getString('theme', DEFAULT_THEME) as Themes;
@@ -118,7 +118,7 @@ export function start() {
 
     prefs.on('key:theme', () => {
         let newTheme = getString('theme') as Themes;
-        if (__IOS__ && iOSNativeHelper.MajorVersion < 13) {
+        if (__IOS__ && sdkVersion < 13) {
             newTheme = 'light';
         }
         // on pref change we are updating
@@ -135,7 +135,7 @@ export function start() {
     const force = theme !== 'auto';
     if (__ANDROID__) {
         applyTheme(theme);
-        if (Application.android && Application.android.context) {
+        if (Application.android && Utils.android.getApplicationContext()) {
             updateThemeColors(theme, force);
         } else {
             Application.on(Application.launchEvent, () => {
