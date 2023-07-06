@@ -1,34 +1,24 @@
 <script lang="ts">
     import { l, lc } from '@nativescript-community/l';
     import { createNativeAttributedString } from '@nativescript-community/text';
-    import { Align, Canvas, CanvasView, DashPathEffect, LayoutAlignment, Paint, Rect, StaticLayout, Style } from '@nativescript-community/ui-canvas';
-    import { stringProperty } from '@nativescript-community/ui-canvas/shapes/shape';
-    import { fromNativeMapPos, GenericMapPos, MapBounds } from '@nativescript-community/ui-carto/core';
+    import { Canvas, CanvasView, LayoutAlignment, Paint, Rect, StaticLayout, Style } from '@nativescript-community/ui-canvas';
+    import { GenericMapPos, fromNativeMapPos } from '@nativescript-community/ui-carto/core';
     import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
-    import { getImagePipeline } from '@nativescript-community/ui-image';
     import type { VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
     import { CartoMap } from '@nativescript-community/ui-carto/ui';
     import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
-    import { LineChart } from '@nativescript-community/ui-chart/charts';
-    import type { HighlightEventData } from '@nativescript-community/ui-chart/charts/Chart';
-    import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
-    import { Rounding } from '@nativescript-community/ui-chart/data/DataSet';
     import type { Entry } from '@nativescript-community/ui-chart/data/Entry';
-    import { LineData } from '@nativescript-community/ui-chart/data/LineData';
-    import { LineDataSet } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Application, ApplicationSettings, ImageSource, Utils } from '@nativescript/core';
-    import { File, path } from '@nativescript/core/file-system';
+    import { path } from '@nativescript/core/file-system';
     import { openUrl } from '@nativescript/core/utils';
     import type { Point } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode, navigate } from 'svelte-native/dom';
     import BottomSheetInfoView from '~/components/BottomSheetInfoView.svelte';
-    import { convertDurationSeconds, convertElevation, formatDistance } from '~/helpers/formatter';
-    import { getBounds } from '~/helpers/geolib';
-    import { onThemeChanged } from '~/helpers/theme';
+    import { formatDistance, osmicon } from '~/helpers/formatter';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext, handleMapAction } from '~/mapModules/MapModule';
     import type { IItem, IItem as Item, RouteInstruction } from '~/models/Item';
@@ -38,7 +28,7 @@
     import { computeDistanceBetween } from '~/utils/geo';
     import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
-    import { alpimapsFontFamily, borderColor, mdiFontFamily, navigationBarHeight, primaryColor, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
+    import { borderColor, mdiFontFamily, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import ElevationChart from './ElevationChart.svelte';
     import IconButton from './IconButton.svelte';
 
@@ -531,6 +521,13 @@
             // TODO: do we always remove it?
             if (item.properties) {
                 delete item.properties.style;
+
+                item.properties.iconSize = 20;
+                item.properties.fontFamily = mdiFontFamily;
+                item.properties.mapFontFamily = MATERIAL_MAP_FONT_FAMILY;
+                item.properties.iconDx = -2;
+                item.properties.icon = 'mdi-map-marker';
+                // item.properties.icon = osmicon(formatter.geItemIcon(item));
             }
             item = await itemsModule.saveItem(item);
             if (isRoute) {
@@ -642,7 +639,7 @@
                 rasterDataSource = await mapContext.mapModules.customLayers.getDataSource('openstreetmap');
             }
             // const { default: component } = await import('~/components/PeakFinder.svelte');
-            const component = (await import('~/components/PeakFinder.svelte')).default;
+            const component = (await import('~/components/PeakFinder.svelte')).default as any;
             navigate({
                 page: component,
                 props: {
@@ -670,7 +667,7 @@
                 location = { lat: (points[0].geometry as Point).coordinates[1], lon: (points[0].geometry as Point).coordinates[0] };
                 aimingItems = points.slice(1);
             }
-            const CompassView = (await import('~/components/CompassView.svelte')).default;
+            const CompassView = (await import('~/components/CompassView.svelte')).default as any;
             await showBottomSheet({
                 parent: mapContext.getMainPage(),
                 view: CompassView,
@@ -688,7 +685,7 @@
 
     async function getTransitLines() {
         try {
-            const TransitLinesBottomSheet = (await import('~/components/transit/TransitLinesBottomSheet.svelte')).default;
+            const TransitLinesBottomSheet = (await import('~/components/transit/TransitLinesBottomSheet.svelte')).default as any;
             const geometry = item.geometry as Point;
             const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0], altitude: geometry.coordinates[2] };
             showBottomSheet({ parent: mapContext.getMainPage(), trackingScrollView: 'scrollView', view: TransitLinesBottomSheet, props: { name: formatter.getItemName(item), position } });
@@ -870,8 +867,17 @@
             console.error(error, error.stack);
         }
     }
-    function startEditingItem() {
-        mapContext.startEditingItem(item);
+    async function startEditingItem() {
+        if (itemIsRoute) {
+            mapContext.startEditingItem(item);
+        } else {
+            try {
+                const RoutesList = (await import('~/components/ItemEdit.svelte')).default as any;
+                navigate({ page: RoutesList, props: { item } });
+            } catch (error) {
+                showError(error);
+            }
+        }
     }
 </script>
 
@@ -883,13 +889,13 @@
         <stacklayout orientation="horizontal" row={1} colSpan={2} borderTopWidth={1} borderBottomWidth={1} borderColor={$borderColor} id="bottomsheetbuttons">
             <IconButton on:tap={deleteItem} tooltip={lc('delete')} isVisible={!!item?.id} color="red" text="mdi-delete" rounded={false} />
             <IconButton on:tap={hideItem} tooltip={lc('hide')} isVisible={!!item?.id && itemIsRoute} text="mdi-eye-off" rounded={false} />
-            <IconButton on:tap={searchWeb} tooltip={lc('search_web')} isVisible={item && (!itemIsRoute || item.properties?.name) && !item.id} text="mdi-web" rounded={false} />
+            <IconButton on:tap={searchWeb} tooltip={lc('search_web')} isVisible={item && (!itemIsRoute || !!item.properties?.name)} text="mdi-web" rounded={false} />
             {#if packageService.hasElevation()}
                 <IconButton on:tap={() => getProfile()} tooltip={lc('elevation_profile')} isVisible={itemIsRoute && itemCanQueryProfile} text="mdi-chart-areaspline" rounded={false} />
             {/if}
             <IconButton on:tap={() => getStats()} tooltip={lc('road_stats')} isVisible={itemIsRoute && itemCanQueryStats} text="mdi-chart-bar-stacked" rounded={false} />
             <IconButton on:tap={() => saveItem()} tooltip={lc('save')} isVisible={item && (!item.id || itemIsEditingItem)} text="mdi-map-plus" rounded={false} />
-            <IconButton on:tap={startEditingItem} tooltip={lc('edit')} isVisible={item && itemIsRoute && item.id && !itemIsEditingItem} text="mdi-pencil" rounded={false} />
+            <IconButton on:tap={startEditingItem} tooltip={lc('edit')} isVisible={item && item.id && !itemIsEditingItem} text="mdi-pencil" rounded={false} />
             {#if item && item.properties && !!item.properties.wikipedia}
                 <IconButton on:tap={openWikipedia} tooltip={lc('wikipedia')} text="mdi-wikipedia" rounded={false} />
             {/if}
