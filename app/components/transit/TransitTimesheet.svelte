@@ -142,7 +142,7 @@
 
     async function showDetails() {
         try {
-            const component = (await import('~/components/transit/TransitLineDetails.svelte')).default;
+            const component = (await import('~/components/transit/TransitLineDetails.svelte')).default as any;
             await navigate({
                 page: component as any,
                 props: {

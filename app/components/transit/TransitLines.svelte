@@ -100,7 +100,7 @@
         }
         const line = item.items[index];
         try {
-            const component = (await import('~/components/transit/TransitLineDetails.svelte')).default;
+            const component = (await import('~/components/transit/TransitLineDetails.svelte')).default as any;
             await navigate({ page: component, props: { line } });
         } catch (error) {
             showError(error);
