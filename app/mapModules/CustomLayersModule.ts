@@ -25,6 +25,8 @@ import { showError } from '~/utils/error';
 import { toDegrees, toRadians } from '~/utils/geo';
 import { showBottomSheet } from '~/utils/svelte/bottomsheet';
 import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
+// eslint-disable-next-line no-duplicate-imports
+import { data as TileSourcesData } from '~/data/tilesources';
 const mapContext = getMapContext();
 
 export enum RoutesType {
@@ -609,14 +611,14 @@ export default class CustomLayersModule extends MapModule {
         if (this.sourcesLoaded) {
             return;
         }
-        const module = await import('~/data/tilesources');
+        // const module = import('~/data/tilesources');
         // })
-        const providers = module.data;
-        for (const provider in module.data) {
-            this.addProvider(provider, providers);
-            if (providers[provider].variants) {
-                for (const variant in providers[provider].variants) {
-                    this.addProvider(provider + '.' + variant, providers);
+        // const providers = module.data;
+        for (const provider in TileSourcesData) {
+            this.addProvider(provider, TileSourcesData);
+            if (TileSourcesData[provider].variants) {
+                for (const variant in TileSourcesData[provider].variants) {
+                    this.addProvider(provider + '.' + variant, TileSourcesData);
                 }
             }
         }
@@ -832,7 +834,7 @@ export default class CustomLayersModule extends MapModule {
                     labelRenderOrder: VectorTileRenderOrder.LAST,
                     opacity,
                     preloading: get(preloading),
-                    decoder: mapContext.getVectorTileDecoder(),
+                    decoder: mapContext.mapDecoder,
                     // clickHandlerLayerFilter: PRODUCTION ? undefined : '.*',
                     clickHandlerLayerFilter: PRODUCTION ? '(.*::(icon|label)|waterway|transportation)' : '.*',
                     tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
@@ -1028,10 +1030,10 @@ export default class CustomLayersModule extends MapModule {
 
     async addSource() {
         await this.getSourcesLibrary();
-        const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
+        const OptionSelect = (await import('~/components/OptionSelect.svelte')).default as any;
         const results = await showBottomSheet({
             parent: null,
-            view: OptionSelect as any,
+            view: OptionSelect,
             props: {
                 title: l('pick_source'),
                 showFilter: true,
