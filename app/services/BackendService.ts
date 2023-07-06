@@ -87,7 +87,7 @@ function nativePropertyGenerator<T>(target: Object, key: any, options: PropertyD
     const innerKey = '_' + actualkey;
     const savedValue = getFunc(actualkey);
     if ((savedValue === undefined || savedValue === null) && options.hasOwnProperty('default')) {
-        target[innerKey] = options.default;
+        target[innerKey] = options.default as any;
     } else {
         target[innerKey] = savedValue;
     }

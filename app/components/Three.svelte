@@ -47,7 +47,7 @@
     import { pointToTileFraction, tileToBBOX } from '@mapbox/tilebelt';
     import { isMobile, settings } from 'geo-three/webapp/settings';
     import { showError } from '~/utils/error';
-    import { MultiTileDataSource } from '../../../nativescript-carto/packages/ui-carto/datasources';
+    import { MultiTileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
     import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { debounce, throttle } from '@nativescript/core/utils';

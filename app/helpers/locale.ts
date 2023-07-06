@@ -129,7 +129,7 @@ export function getLocaleDisplayName(locale?) {
 async function internalSelectLanguage() {
     try {
         const actions = SUPPORTED_LOCALES;
-        const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
+        const OptionSelect = (await import('~/components/OptionSelect.svelte')).default as any;
         const result = await showBottomSheet<any>({
             parent: null,
             view: OptionSelect,
