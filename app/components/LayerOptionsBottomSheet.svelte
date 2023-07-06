@@ -58,7 +58,7 @@
     }
     async function pickOptionColor(name, color: Color) {
         try {
-            const newColor = await pickColor(color, scrollView.nativeView);
+            const newColor = await pickColor(color);
             if (!newColor) {
                 return;
             }
