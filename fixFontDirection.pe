@@ -1,0 +1,7 @@
+#!/usr/bin/fontforge
+Open($1)
+SelectAll()
+RemoveOverlap()
+Simplify()
+CorrectDirection()
+Generate($2)

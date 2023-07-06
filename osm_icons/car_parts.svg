@@ -1,1 +1,36 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"><path d="M9 3V1h3v2zM2 3V1h3v2zM0 3v10h14V3zm3.446 2H5v2h2v1.578H5V10.6l-1.563.033.025-2.104-2.07.016L1.421 7H3.43zM9 7h4v1.61l-4-.015z" fill-rule="evenodd"/></svg>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="14"
+   height="14"
+   version="1.1"
+   id="svg4"
+   sodipodi:docname="car_parts_filtered.svg"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs8" />
+  <sodipodi:namedview
+     id="namedview6"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="58.571429"
+     inkscape:cx="7.0085366"
+     inkscape:cy="7.0085366"
+     inkscape:window-width="1920"
+     inkscape:window-height="995"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg4" />
+  <path
+     id="path1429"
+     d="M 3.45,5 C 3.9666667,5 4.4833333,5 5,5 c 0,0.6666667 0,1.3333333 0,2 0.6666667,0 1.3333333,0 2,0 0,0.5266667 0,1.0533333 0,1.58 -0.6666667,0 -1.3333333,0 -2,0 C 5,9.2533333 5,9.9266667 5,10.6 4.48,10.61 3.96,10.62 3.44,10.63 3.45,9.93 3.46,9.23 3.47,8.53 2.78,8.5366667 2.09,8.5433333 1.4,8.55 1.4066667,8.0333333 1.4133333,7.5166667 1.42,7 2.09,7 2.76,7 3.43,7 3.4366667,6.3333333 3.4433333,5.6666667 3.45,5 Z M 9,7 c 1.333333,0 2.666667,0 4,0 0,0.5366667 0,1.0733333 0,1.61 C 11.666667,8.6033333 10.333333,8.5966667 9,8.59 9,8.06 9,7.53 9,7 Z M 2,1 V 3 H 0 V 13 H 14 V 3 H 12 V 1 H 9 V 3 H 5 V 1 Z" />
+</svg>
