@@ -52,7 +52,7 @@ registerNativeViewElement('scrollview', () => NestedScrollView as any);
 registerNativeViewElement('stacklayout', () => require('@nativescript/core').StackLayout);
 registerNativeViewElement('image', () => require('@nativescript-community/ui-image').Img);
 registerNativeViewElement('flexlayout', () => require('@nativescript/core').FlexboxLayout);
-registerNativeViewElement('textfield', () => require('@nativescript/core').TextField);
+// registerNativeViewElement('textfield', () => require('@nativescript/core').TextField);
 registerNativeViewElement('span', () => require('@nativescript/core').Span);
 
 registerNativeViewElement('mdbutton', () => require('@nativescript-community/ui-material-button').Button, null, {}, { override: true });
@@ -62,6 +62,8 @@ registerNativeViewElement('mdprogress', () => require('@nativescript-community/u
 registerNativeViewElement('mdcardview', () => require('@nativescript-community/ui-material-cardview').CardView);
 registerNativeViewElement('slider', () => require('@nativescript-community/ui-material-slider').Slider, null, {}, { override: true });
 registerNativeViewElement('switch', () => require('@nativescript-community/ui-material-switch').Switch, null, {}, { override: true });
+registerNativeViewElement('textfield', () => require('@nativescript-community/ui-material-textfield').TextField, null, {}, { override: true });
+registerNativeViewElement('textview', () => require('@nativescript-community/ui-material-textview').TextView, null, {}, { override: true });
 registerNativeViewElement('lineChart', () => require('@nativescript-community/ui-chart').LineChart);
 registerNativeViewElement('cartomap', () => require('@nativescript-community/ui-carto/ui').CartoMap);
 registerNativeViewElement('canvas', () => require('@nativescript-community/ui-canvas').CanvasView);
@@ -90,8 +92,6 @@ PagerElement.register();
 // Trace.addCategories(Trace.categories.All);
 // Trace.enable();
 
-startThemeHelper();
-
 if (__IOS__) {
     const variables = require('~/variables');
     const primaryColor = variables.primaryColor;
@@ -116,6 +116,7 @@ themer.createShape('none', {
 // we need to instantiate it to "start" it
 const bgService = getBGServiceInstance();
 Application.on(Application.launchEvent, () => {
+    startThemeHelper();
     networkService.start();
     bgService.start();
 });
