@@ -121,7 +121,7 @@
 
     async function showTimesheet() {
         try {
-            const component = (await import('~/components/transit/TransitTimesheet.svelte')).default;
+            const component = (await import('~/components/transit/TransitTimesheet.svelte')).default as any;
             await navigate({
                 page: component,
                 props: {
