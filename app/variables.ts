@@ -2,7 +2,7 @@ import { isSimulator } from '@nativescript-community/extendedinfo';
 import { Application, Color, Observable, Screen, Utils } from '@nativescript/core';
 import { writable } from 'svelte/store';
 import CSSModule from '~/variables.module.scss';
-import { currentTheme } from './helpers/theme';
+// import { currentTheme } from './helpers/theme';
 import { get_current_component } from 'svelte/internal';
 const locals = CSSModule.locals;
 
@@ -56,6 +56,7 @@ export function createUnregisterGlobalEventListener(eventName: string) {
 
 export const primaryColor = new Color(locals.primaryColor);
 export const accentColor = new Color(locals.accentColor);
+export const colorSecondary = new Color(locals.colorSecondary);
 export const darkColor = new Color(locals.darkColor);
 export const textColorDark = locals.textColorDark;
 export const textColorLight = locals.textColorLight;
@@ -74,7 +75,7 @@ export const navigationBarHeight = writable(0);
 export let globalMarginTop = 0;
 
 if (__ANDROID__) {
-    const resources = (Utils.android.getApplicationContext() as android.content.Context).getResources();
+    const resources = Utils.android.getApplicationContext().getResources();
     const id = resources.getIdentifier('config_showNavigationBar', 'bool', 'android');
     let resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
     if (id > 0 && resourceId > 0 && (resources.getBoolean(id) || (!PRODUCTION && isSimulator()))) {
@@ -102,17 +103,18 @@ export const subtitleColor = writable('');
 export const iconColor = writable('');
 export const widgetBackgroundColor = writable('');
 export const backgroundColor = writable('');
+export const lightBackgroundColor = writable('');
 
-export function updateThemeColors(theme: string, force = false) {
-    try {
-        if (!force) {
-            theme = Application.systemAppearance;
-            // console.log('systemAppearance', theme);
-        }
-    } catch (err) {
-        console.error('updateThemeColors', err);
-    }
-    currentTheme.set(theme);
+export function updateThemeColors(theme: string) {
+    // try {
+    //     if (!force) {
+    //         theme = Application.systemAppearance();
+    //         // console.log('systemAppearance', theme);
+    //     }
+    // } catch (err) {
+    //     console.error('updateThemeColors', err);
+    // }
+    // currentTheme.set(theme);
     if (theme === 'dark') {
         textColor.set(textColorDark);
         textLightColor.set('#aaaaaa');
@@ -121,6 +123,7 @@ export function updateThemeColors(theme: string, force = false) {
         iconColor.set('#aaaaaa');
         widgetBackgroundColor.set('#000000bb');
         backgroundColor.set('#1c1c1e');
+        lightBackgroundColor.set('#666666');
     } else {
         textColor.set(textColorLight);
         textLightColor.set('#444444');
@@ -129,5 +132,6 @@ export function updateThemeColors(theme: string, force = false) {
         iconColor.set('#444444');
         widgetBackgroundColor.set('#ffffff');
         backgroundColor.set(textColorDark);
+        lightBackgroundColor.set('#e3e3e3');
     }
 }
