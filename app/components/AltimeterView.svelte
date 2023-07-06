@@ -2,9 +2,8 @@
     import { getAirportPressureAtLocation, getAltitude, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { ApplicationSettings } from '@nativescript/core';
+    import { Application, ApplicationSettings } from '@nativescript/core';
     import type { ApplicationEventData } from '@nativescript/core/application';
-    import { backgroundEvent, foregroundEvent, off as applicationOff, on as applicationOn } from '@nativescript/core/application';
     import { onDestroy, onMount } from 'svelte';
     import type { GeoHandler, GeoLocation, UserLocationdEventData } from '~/handlers/GeoHandler';
     import { l, lc } from '~/helpers/locale';
@@ -39,8 +38,8 @@
             referenceAltitude = json.altitude;
             airportRefName = json.name;
         }
-        applicationOn(backgroundEvent, onAppPause);
-        applicationOn(foregroundEvent, onAppResume);
+        Application.on(Application.backgroundEvent, onAppPause);
+        Application.on(Application.foregroundEvent, onAppResume);
         userLocationModule = mapContext.mapModule('userLocation');
         userLocationModule.on('location', onNewLocation);
         onNewLocation({ data: userLocationModule.lastUserLocation } as any);
@@ -49,8 +48,8 @@
         });
     });
     onDestroy(() => {
-        applicationOff(backgroundEvent, onAppPause);
-        applicationOff(foregroundEvent, onAppResume);
+        Application.off(Application.backgroundEvent, onAppPause);
+        Application.off(Application.foregroundEvent, onAppResume);
         userLocationModule.off('location', onNewLocation);
         if (listeningForBarometer) {
             stopBarometerAltitudeUpdate();

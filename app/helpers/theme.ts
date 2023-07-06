@@ -42,6 +42,11 @@ export function getThemeDisplayName(toDisplay = theme) {
             return lc('light');
     }
 }
+
+export function toggleTheme(autoDark = false) {
+    const newTheme = theme === 'dark' ? (autoDark ? 'auto' : 'light') : 'dark';
+    setString('theme', newTheme);
+}
 export async function selectTheme() {
     try {
         const actions: Themes[] = ['auto', 'light', 'dark'];

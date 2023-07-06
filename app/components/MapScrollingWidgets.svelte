@@ -15,7 +15,6 @@
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode, navigate } from 'svelte-native/dom';
     import { asSvelteTransition } from 'svelte-native/transitions';
-    import OptionPicker from '~/components/OptionPicker.svelte';
     import ScaleView from '~/components/ScaleView.svelte';
     import { convertDistance } from '~/helpers/formatter';
     import { onThemeChanged } from '~/helpers/theme';
