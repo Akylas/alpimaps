@@ -1,14 +1,15 @@
 import { l } from '@nativescript-community/l';
 import Observable from '@nativescript-community/observable';
+import { arrayToNativeVector } from '@nativescript-community/ui-carto/core';
 import { Layer } from '@nativescript-community/ui-carto/layers';
 import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
 import { VectorElementEventData, VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { Projection } from '@nativescript-community/ui-carto/projections';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
+import { DirAssetPackage, ZippedAssetPackage } from '@nativescript-community/ui-carto/utils';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
-import { Frame, Page } from '@nativescript/core';
-import { getRootView } from '@nativescript/core/application';
+import { Application, File, Folder, Frame, Page, knownFolders, path } from '@nativescript/core';
 import { executeOnMainThread } from '@nativescript/core/utils';
 import { navigate } from 'svelte-native';
 import { NativeViewElementNode } from 'svelte-native/dom';
@@ -20,6 +21,7 @@ import type UserLocationModule from '~/mapModules/UserLocationModule';
 import type { IItem } from '~/models/Item';
 import { getBGServiceInstance } from '~/services/BgService';
 import { showBottomSheet } from '~/utils/svelte/bottomsheet';
+import { listFolderFiles } from '~/utils/utils.common';
 import { createGlobalEventListener, globalObservable } from '~/variables';
 export interface IMapModule {
     onMapReady(mapView: CartoMap<LatLonKeys>);
@@ -36,10 +38,39 @@ export type LayerType = 'map' | 'routes' | 'customLayers' | 'hillshade' | 'selec
 
 export type ContextCallback<T = CartoMap<LatLonKeys>> = (data: T) => void;
 
+const appPath = knownFolders.currentApp().path;
+const styleAssets = ['fonts/osm.ttf'];
+// console.log('styleAssets', styleAssets);
+
+function loadAsset(name) {
+    // console.log('loadAsset', name);
+    const filePath = path.join(appPath, name);
+    if (File.exists(filePath)) {
+        return new com.carto.core.BinaryData(File.fromPath(filePath).readSync());
+    }
+    return null;
+}
+
+function getAssetNames() {
+    return arrayToNativeVector(styleAssets);
+}
+function getAssetNamesWithMaterial() {
+    // console.log('getAssetNamesWithMaterial');
+    return arrayToNativeVector(styleAssets.concat('fonts/materialdesignicons-webfont.ttf'));
+}
+const basePack = new ZippedAssetPackage({
+    liveReload: !PRODUCTION,
+    zipPath: '~/assets/styles/base.zip',
+    loadAsset,
+    getAssetNames
+});
+
 export interface MapContext {
     mapModules: MapModules;
     innerDecoder: MBVectorTileDecoder;
+    mapDecoder: MBVectorTileDecoder;
     showOptions();
+    createMapDecoder(mapStyle, mapStyleLayer): MBVectorTileDecoder;
     mapModule<T extends keyof MapModules>(id: T): MapModules[T];
     onMapReady(callback: ContextCallback, once?: boolean);
     onMapMove(callback: ContextCallback, once?: boolean);
@@ -71,6 +102,7 @@ export interface MapContext {
     unFocusSearch: () => void;
     getCurrentLanguage: () => string;
     getSelectedItem: () => IItem;
+    setSelectedItem: (item: IItem) => void;
     getEditingItem: () => IItem;
     getLayers: (layerId?: LayerType) => { layer: VectorTileLayer; id: string }[];
     addLayer: (layer: Layer<any, any>, layerId: LayerType) => number;
@@ -84,7 +116,6 @@ export interface MapContext {
     vectorTileClicked: (data: VectorTileEventData<LatLonKeys>) => boolean;
     vectorTileElementClicked: (data: VectorTileEventData<LatLonKeys>) => boolean;
     rasterTileClicked: (data: RasterTileClickInfo<LatLonKeys>) => boolean;
-    getVectorTileDecoder(): MBVectorTileDecoder;
     // getCurrentLayer(): VectorTileLayer;
     runOnModulesOnMainThread(functionName: string, ...args);
     runOnModules(functionName: string, ...args);
@@ -134,10 +165,44 @@ const mapContext: MapContext = {
         }
         return result;
     },
+    createMapDecoder(mapStyle, mapStyleLayer) {
+        const oldDecoder = mapContext.mapDecoder;
+        console.log('createMapDecoder', mapStyle, mapStyleLayer);
+        mapContext.mapDecoder = new MBVectorTileDecoder({
+            style: mapStyleLayer,
+            liveReload: !PRODUCTION,
+            pack: mapStyle.endsWith('.zip')
+                ? new ZippedAssetPackage({
+                      liveReload: !PRODUCTION,
+                      zipPath: `~/assets/styles/${mapStyle}`,
+                      basePack
+                  })
+                : new DirAssetPackage({
+                      loadUsingNS: !PRODUCTION,
+                      dirPath: `~/assets/styles/${mapStyle}`
+                      // loadAsset,
+                      // getAssetNames: getAssetNamesWithMaterial
+                  })
+        });
+        mapContext.runOnModules('vectorTileDecoderChanged', oldDecoder, mapContext.mapDecoder);
+    },
     innerDecoder: new MBVectorTileDecoder({
         style: 'voyager',
-        liveReload: !PRODUCTION,
-        [PRODUCTION ? 'zipPath' : 'dirPath']: `~/assets/internal_styles/inner${PRODUCTION ? '.zip' : ''}`
+        pack:
+            PRODUCTION || TEST_ZIP_STYLES
+                ? new ZippedAssetPackage({
+                      liveReload: !PRODUCTION,
+                      zipPath: '~/assets/styles/inner.zip',
+                      loadAsset,
+                      basePack,
+                      getAssetNames: getAssetNamesWithMaterial
+                  })
+                : new DirAssetPackage({
+                      loadUsingNS: !PRODUCTION,
+                      dirPath: '~/assets/styles/inner'
+                      // loadAsset,
+                      // getAssetNames: getAssetNamesWithMaterial
+                  })
     })
 } as any;
 
@@ -150,7 +215,7 @@ export function getMapContext() {
 }
 
 export async function handleMapAction(action: string, options?) {
-    const parent = Frame.topmost() || getRootView();
+    const parent = Frame.topmost() || Application.getRootView();
     switch (action) {
         case 'astronomy':
             const module = mapContext.mapModule('userLocation');
@@ -159,7 +224,7 @@ export async function handleMapAction(action: string, options?) {
                 showSnack({ message: `${l('no_location_yet')}` });
                 return;
             }
-            const AstronomyView = (await import('~/components/AstronomyView.svelte')).default;
+            const AstronomyView = (await import('~/components/AstronomyView.svelte')).default as any;
             await showBottomSheet({
                 parent,
                 view: AstronomyView,
@@ -174,7 +239,7 @@ export async function handleMapAction(action: string, options?) {
                 const module = mapContext.mapModule('userLocation');
                 const selected = mapContext.getSelectedItem();
                 const location = module.lastUserLocation || options;
-                const CompassView = (await import('~/components/CompassView.svelte')).default;
+                const CompassView = (await import('~/components/CompassView.svelte')).default as any;
                 await showBottomSheet({
                     parent,
                     view: CompassView,
@@ -192,7 +257,7 @@ export async function handleMapAction(action: string, options?) {
         case 'gps_status':
             try {
                 await getBGServiceInstance().geoHandler.enableLocation();
-                const GpsStatusView = (await import('~/components/GpsStatusView.svelte')).default;
+                const GpsStatusView = (await import('~/components/GpsStatusView.svelte')).default as any;
                 await showBottomSheet({
                     parent,
                     view: GpsStatusView
@@ -205,14 +270,14 @@ export async function handleMapAction(action: string, options?) {
             break;
         case 'altimeter':
             try {
-                const AltimeterView = (await import('~/components/AltimeterView.svelte')).default;
+                const AltimeterView = (await import('~/components/AltimeterView.svelte')).default as any;
                 await showBottomSheet({ parent, view: AltimeterView });
             } catch (err) {
                 console.error('showAltimeter', err, err['stack']);
             }
             break;
         case 'settings':
-            const Settings = (await import('~/components/Settings.svelte')).default;
+            const Settings = (await import('~/components/Settings.svelte')).default as any;
             navigate({ page: Settings });
 
             break;

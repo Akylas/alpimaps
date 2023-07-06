@@ -1,1 +1,46 @@
-<svg xmlns="http://www.w3.org/2000/svg" height="14" width="14"><path d="M3.5 3.5H4v5h-.5zM5.5 3.5H6V9h-.5zM7.5 3.5H8v6h-.5zM9.5 3.5h.5v6h-.5z"/><path d="M1 5h10.5v.5H1zM1 7h10.5v.5H1z"/><g transform="translate(0 1)"><circle r="1" cy="11.2" cx="9.5"/><circle r="1" cy="11.2" cx="3.5"/></g><path d="M11 10v2H1.5a.5.5 0 110-1H10V9.5zM11.5 3l.268-1.25 1.482-.55a.553.553 0 11.35 1.05l-1 .35-.1.4"/><path d="M0 3h12.5L11 10 1 9m.167-5h10.119L10.25 8.9 1.9 8.1z" fill-rule="evenodd"/></svg>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   height="14"
+   width="14"
+   version="1.1"
+   id="svg16"
+   sodipodi:docname="supermarket_filtered.svg"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs20" />
+  <sodipodi:namedview
+     id="namedview18"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="58.571429"
+     inkscape:cx="8.9292683"
+     inkscape:cy="7.0085366"
+     inkscape:window-width="1920"
+     inkscape:window-height="995"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg16" />
+  <path
+     id="path14"
+     d="M 13.496094 1.1757812 A 0.55339859 0.55339859 0 0 0 13.25 1.1992188 L 11.769531 1.75 L 11.5 3 L 0 3 L 1 9 L 10 9.9003906 L 10 11 L 1.5 11 A 0.5 0.5 0 0 0 1.5 12 L 2.5234375 12 A 1 1 0 0 0 2.5 12.199219 A 1 1 0 0 0 3.5 13.199219 A 1 1 0 0 0 4.5 12.199219 A 1 1 0 0 0 4.4785156 12 L 8.5234375 12 A 1 1 0 0 0 8.5 12.199219 A 1 1 0 0 0 9.5 13.199219 A 1 1 0 0 0 10.5 12.199219 A 1 1 0 0 0 10.478516 12 L 11 12 L 11 10 L 12.5 3 L 12.599609 2.5996094 L 13.599609 2.25 A 0.55339859 0.55339859 0 0 0 13.496094 1.1757812 z M 1.1699219 4 L 3.5 4 L 3.5 5 L 1.3476562 5 L 1.1699219 4 z M 4 4 L 5.5 4 L 5.5 5 L 4 5 L 4 4 z M 6 4 L 7.5 4 L 7.5 5 L 6 5 L 6 4 z M 8 4 L 9.5 4 L 9.5 5 L 8 5 L 8 4 z M 10 4 L 11.289062 4 L 11.076172 5 L 10 5 L 10 4 z M 1.4375 5.5 L 3.5 5.5 L 3.5 7 L 1.7050781 7 L 1.4375 5.5 z M 4 5.5 L 5.5 5.5 L 5.5 7 L 4 7 L 4 5.5 z M 6 5.5 L 7.5 5.5 L 7.5 7 L 6 7 L 6 5.5 z M 8 5.5 L 9.5 5.5 L 9.5 7 L 8 7 L 8 5.5 z M 10 5.5 L 10.970703 5.5 L 10.652344 7 L 10 7 L 10 5.5 z M 1.7929688 7.5 L 3.5 7.5 L 3.5 8.2539062 L 1.9003906 8.0996094 L 1.7929688 7.5 z M 4 7.5 L 5.5 7.5 L 5.5 8.4453125 L 4 8.3007812 L 4 7.5 z M 6 7.5 L 7.5 7.5 L 7.5 8.6367188 L 6 8.4921875 L 6 7.5 z M 8 7.5 L 9.5 7.5 L 9.5 8.828125 L 8 8.6855469 L 8 7.5 z M 10 7.5 L 10.546875 7.5 L 10.25 8.9003906 L 10 8.8769531 L 10 7.5 z " />
+  <g
+     transform="translate(0,1)"
+     id="g10" />
+  <ellipse
+     style="fill:none;fill-opacity:0.986835;stroke-width:0.1"
+     id="path2903"
+     cx="11.007183"
+     cy="10.965988"
+     rx="1.0071827"
+     ry="0.03401199" />
+</svg>
