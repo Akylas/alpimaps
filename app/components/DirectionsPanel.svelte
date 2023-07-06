@@ -4,7 +4,7 @@
     import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
     import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
-    import { VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
+    import { VectorTileEventData, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
     import { MultiValhallaOfflineRoutingService, RoutingResult, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
@@ -25,9 +25,9 @@
     import { packageService } from '~/services/PackageService';
     import { MOBILITY_URL } from '~/services/TransitService';
     import { showError } from '~/utils/error';
-    import { alpimapsFontFamily, globalMarginTop, mdiFontFamily, primaryColor } from '~/variables';
+    import { accentColor, alpimapsFontFamily, globalMarginTop, mdiFontFamily, primaryColor } from '~/variables';
     import IconButton from './IconButton.svelte';
-    import { getValhallaSettings, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
+    import { defaultProfileCostingOptions, getSavedProfile, getValhallaSettings, removeSavedProfile, savedProfile, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
 
     const DEFAULT_PROFILE_KEY = 'default_direction_profile';
 
@@ -107,36 +107,26 @@
         motorcycle: ['use_highways', 'use_tolls', 'use_trails']
     };
 
-    const defaultProfileCostingOptions = {
-        pedestrian: {
-            driveway_factor: 200,
-            walkway_factor: 0.8,
-            use_tracks: 1,
-            sidewalk_factor: 10
-        },
-        bicycle: { use_roads: 1, use_tracks: 0.5, non_network_penalty: 15 },
-        auto: { use_tolls: 1, use_highways: 1 },
-        motorcycle: { use_tolls: 1, use_trails: 0 }
+    export let profileCostingOptions = {
+        pedestrian: getSavedProfile('pedestrian', 'default', { ...defaultProfileCostingOptions.pedestrian }),
+        bicycle: getSavedProfile('bicycle', 'default', { ...defaultProfileCostingOptions.bicycle }),
+        auto: getSavedProfile('auto', 'default', { ...defaultProfileCostingOptions.auto }),
+        motorcycle: getSavedProfile('motorcycle', 'default', { ...defaultProfileCostingOptions.motorcycle })
     };
-    export let profileCostingOptions = JSON.parse(ApplicationSettings.getString('profileCostingOptions', 'false')) || {
-        pedestrian: { ...defaultProfileCostingOptions.pedestrian },
-        bicycle: { ...defaultProfileCostingOptions.bicycle },
-        auto: { ...defaultProfileCostingOptions.auto },
-        motorcycle: { ...defaultProfileCostingOptions.motorcycle }
-    };
-    const saveProfileSettings = debounce(() => {
+    DEV_LOG && console.log('profileCostingOptions', JSON.stringify(profileCostingOptions));
+    const saveProfileSettings = debounce((profile: ValhallaProfile) => {
         if (shouldSaveSettings) {
             profileCostingOptions = profileCostingOptions;
-            ApplicationSettings.setString('profileCostingOptions', JSON.stringify(profileCostingOptions));
+            savedProfile(profile, 'default', profileCostingOptions[profile]);
         }
     }, 500);
 
     function resetProfileSettings(profile: ValhallaProfile) {
         profileCostingOptions[profile] = { ...defaultProfileCostingOptions[profile] };
-        saveProfileSettings();
+        removeSavedProfile(profile, 'default');
     }
 
-    function valhallaSettingsDefaultValue(profile: ValhallaProfile, key) {
+    function valhallaSettingsDefaultValue(profile: ValhallaProfile, key, currentOptions?) {
         //TODO: implement
         switch (key) {
             case 'service_factor':
@@ -150,7 +140,7 @@
             case 'use_hills':
                 return profile === 'bicycle' ? getBicycleUseHills() : getPedestrianUseHills();
             case 'max_hiking_difficulty':
-                return 6;
+                return pedestrian_type === 'mountainairing' ? 6 : 3;
             case 'step_penalty':
                 return getPedestrianStepPenalty();
             case 'driveway_factor':
@@ -160,6 +150,9 @@
             case 'walkway_factor':
                 return 1;
             case 'walking_speed':
+                if (currentOptions?.hasOwnProperty('weight')) {
+                    return walkingSpeed() * (1 - currentOptions['weight'] * 0.4);
+                }
                 return walkingSpeed();
             case 'sidewalk_factor':
                 return 1;
@@ -170,6 +163,9 @@
             case 'non_network_penalty':
                 return 0;
             case 'cycling_speed':
+                if (currentOptions?.hasOwnProperty('weight')) {
+                    return getBicycleSpeed() * (1 - currentOptions['weight'] * 0.4);
+                }
                 return getBicycleSpeed();
             case 'use_highways':
                 return 0.5;
@@ -181,6 +177,18 @@
                 return profile === 'auto' ? 1 : 2;
             case 'use_trails':
                 return 0;
+            case 'bicycle_type':
+                switch (bicycle_type) {
+                    case 'enduro':
+                    case 'mountain':
+                        return 'Mountain';
+                    case 'gravel':
+                        return 'Cross';
+                    case 'road':
+                        return 'Road';
+                    default:
+                        return 'Hybrid';
+                }
             case 'weight':
                 return 0;
         }
@@ -201,10 +209,7 @@
                     options[key] = settings.max;
                 }
             }
-
-            // to trigger an update
-            profileCostingOptions = profileCostingOptions;
-            saveProfileSettings();
+            saveProfileSettings(profile);
         } catch (error) {
             console.error(key, error);
         }
@@ -270,7 +275,14 @@
     }
     function getRouteLayer() {
         if (!_routeLayer) {
-            _routeLayer = new VectorTileLayer({ dataSource: getRouteDataSource(), decoder: mapContext.innerDecoder, layerBlendingSpeed: 0, labelBlendingSpeed: 0 });
+            _routeLayer = new VectorTileLayer({
+                dataSource: getRouteDataSource(),
+                decoder: mapContext.innerDecoder,
+                labelRenderOrder: VectorTileRenderOrder.LAST,
+                clickRadius: 6,
+                layerBlendingSpeed: 0,
+                labelBlendingSpeed: 0
+            });
             _routeLayer.setVectorTileEventListener<LatLonKeys>(
                 {
                     onVectorTileClicked(info: VectorTileEventData<LatLonKeys>) {
@@ -305,7 +317,7 @@
                 //     w.properties.color = index === 0 ? 'green' : index === waypoints.length - 1 ? 'red' : 'blue';
                 // }
             });
-            updateGeoJSONLayer();
+            setLayerGeoJSONString();
             show();
         }
     }
@@ -368,7 +380,7 @@
             isStop: false,
             ...metaData
         });
-        updateGeoJSONLayer();
+        setLayerGeoJSONString();
         show();
     }
     async function loadView() {
@@ -398,7 +410,7 @@
             isStop: true,
             ...metaData
         });
-        updateGeoJSONLayer();
+        setLayerGeoJSONString();
         show();
     }
     async function show(editingItem?: IItem) {
@@ -409,7 +421,7 @@
                 features.splice(0, features.length);
                 features.push(...(editingItem.route.waypoints as any));
                 updateWayPointLines();
-                updateGeoJSONLayer();
+                setLayerGeoJSONString();
             }
             await loadView();
             const nView = topLayout.nativeView;
@@ -610,14 +622,7 @@
             costing_options = {
                 [profile]: Object.assign({}, costingOptions, profileCostingOptions[profile], options || {})
             };
-            if (profile === 'pedestrian') {
-                if (!costing_options[profile].hasOwnProperty('max_hiking_difficulty')) {
-                    costing_options[profile]['max_hiking_difficulty'] = pedestrian_type === 'mountainairing' ? 6 : 3;
-                }
-                if (costing_options[profile].hasOwnProperty('weight') && !costing_options[profile]['walking_speed']) {
-                    costing_options[profile]['walking_speed'] = getWalkingSpeed() * (1 - costing_options[profile].hasOwnProperty('weight') * 0.4);
-                }
-            }
+
             if (profile === 'bicycle') {
                 switch (bicycle_type) {
                     case 'enduro':
@@ -634,10 +639,13 @@
                         costing_options[profile]['bicycle_type'] = 'Hybrid';
                         break;
                 }
-                if (costing_options[profile].hasOwnProperty('weight') && !costing_options[profile]['cycling_speed']) {
-                    costing_options[profile]['cycling_speed'] = getBicycleSpeed() * (1 - costing_options[profile].hasOwnProperty('weight') * 0.4);
-                }
             }
+            const profile_used_settings = used_settings[profile].concat(used_settings.common);
+            profile_used_settings.forEach((key) => {
+                if (!costing_options[profile].hasOwnProperty(key)) {
+                    costing_options[profile][key] = valhallaSettingsDefaultValue(profile, key, costing_options[profile]);
+                }
+            });
 
             let service: MultiValhallaOfflineRoutingService | ValhallaOnlineRoutingService;
             service = packageService.offlineRoutingSearchService() || packageService.onlineRoutingSearchService();
@@ -747,18 +755,18 @@
                 if (profile === 'bicycle') {
                     options = [
                         { shortest: true },
-                        { shortest: false, avoid_bad_surfaces: 1, use_hills: 1, use_roads: 1, non_network_penalty: 0, style: { color: '#AD5FC4' } },
-                        { shortest: false, avoid_bad_surfaces: 1, use_hills: 0, use_roads: 1, non_network_penalty: 25, style: { color: '#5FC476' } },
-                        { shortest: false, avoid_bad_surfaces: 1, use_hills: 1, use_roads: 1, non_network_penalty: 50, style: { color: '#C49F5F' } }
+                        { avoid_bad_surfaces: 1, use_hills: 1, use_roads: 1, non_network_penalty: 0, style: { color: '#AD5FC4' } },
+                        { avoid_bad_surfaces: 1, use_hills: 0, use_roads: 1, non_network_penalty: 25, style: { color: '#5FC476' } },
+                        { avoid_bad_surfaces: 1, use_hills: 1, use_roads: 1, non_network_penalty: 50, style: { color: '#C49F5F' } }
                     ];
                 } else if (profile === 'pedestrian') {
                     options = [
                         //shortest
                         { shortest: true },
                         // very steep
-                        {},
+                        { use_hills: 1, style: { color: '#AD5FC4' } },
                         // least steep
-                        { use_hills: 0 }
+                        { use_hills: 0.4, step_penalty: 60, style: { color: '#5FC476' } }
                     ];
                 } else {
                     options = [{ shortest: true }, { shortest: false, use_tolls: 1, use_highways: 1 }, { shortest: false, use_tolls: 0, use_highways: 1 }, { shortest: false, use_highways: 0 }];
@@ -770,7 +778,7 @@
             } else {
                 itemToFocus = await computeAndAddRoute();
             }
-            updateGeoJSONLayer();
+            setLayerGeoJSONString();
             if (itemToFocus) {
                 mapContext.selectItem({
                     item: itemToFocus as Item,
@@ -788,17 +796,17 @@
     function ensureRouteLayer() {
         return getRouteLayer() !== null;
     }
-    function updateGeoJSONLayer() {
+    function setLayerGeoJSONString() {
         ensureRouteLayer();
-        if (__IOS__ && firstUpdate) {
-            firstUpdate = false;
-            return setTimeout(updateGeoJSONLayer, 10);
-        }
+        // if (__IOS__ && firstUpdate) {
+        //     firstUpdate = false;
+        //     return setTimeout(setLayerGeoJSONString, 10);
+        // }
         _routeDataSource.setLayerGeoJSONString(
             1,
             JSON.stringify({
                 type: 'FeatureCollection',
-                features: features
+                features
             })
         );
     }
@@ -815,14 +823,14 @@
         if (lengthBefore !== features.length) {
             mapContext.unselectItem();
             if (shouldUpdateGeoJSONLayer) {
-                updateGeoJSONLayer();
+                setLayerGeoJSONString();
             }
         }
     }
     function clearWaypointLines(shouldUpdateGeoJSONLayer = true) {
         features = features.filter((f) => f.geometry.type !== 'LineString');
         if (shouldUpdateGeoJSONLayer) {
-            updateGeoJSONLayer();
+            setLayerGeoJSONString();
         }
     }
 
@@ -860,7 +868,7 @@
                     }
                     updateWayPointLines();
                     clearCurrentRoutes(false);
-                    updateGeoJSONLayer();
+                    setLayerGeoJSONString();
                 } else {
                     cancel(true);
                 }
@@ -878,17 +886,16 @@
             function generateSettings() {
                 return profile_used_settings.map((key) => ({
                     title: lc(key),
-                    value: profileCostingOptions[profile][key] || valhallaSettingsDefaultValue(profile, key),
+                    defaultValue: valhallaSettingsDefaultValue(profile, key),
+                    value: profileCostingOptions[profile][key],
                     ...getValhallaSettings(key),
                     onChange(value) {
                         profileCostingOptions[profile][key] = value;
-                        // to trigger an update
-                        profileCostingOptions = profileCostingOptions;
-                        saveProfileSettings();
+                        saveProfileSettings(profile);
                     }
                 }));
             }
-            const SliderPopover = (await import('~/components/DirectionsSettingsPopover.svelte')).default;
+            const SliderPopover = (await import('~/components/DirectionsSettingsPopover.svelte')).default as any;
             await showPopover({
                 view: SliderPopover,
                 anchor: event.object,
@@ -902,12 +909,12 @@
                             // in valhalla bicycle_type only changes speed, surface speed and worse quality surface allowed
 
                             // we reapply default we want to change per activity
-                            ['cycling_speed', 'use_hills', 'avoid_bad_surfaces'].forEach((k) => (profileCostingOptions[profile][k] = valhallaSettingsDefaultValue(profile, k)));
+                            // ['cycling_speed', 'use_hills', 'avoid_bad_surfaces'].forEach((k) => (profileCostingOptions[profile][k] = valhallaSettingsDefaultValue(profile, k)));
                         } else {
                             pedestrian_type = value;
                             ApplicationSettings.setString('pedestrian_type', pedestrian_type);
                             // we reapply default we want to change per activity
-                            ['walking_speed', 'use_hills', 'step_penalty', 'max_hiking_difficulty'].forEach((k) => (profileCostingOptions[profile][k] = valhallaSettingsDefaultValue(profile, k)));
+                            // ['walking_speed', 'use_hills', 'step_penalty', 'max_hiking_difficulty'].forEach((k) => (profileCostingOptions[profile][k] = valhallaSettingsDefaultValue(profile, k)));
                         }
                         return generateSettings();
                     },
@@ -934,7 +941,7 @@
                 options = profileCostingOptions[profile];
             }
             let settings = getValhallaSettings(key);
-            const SliderPopover = (await import('~/components/SliderPopover.svelte')).default;
+            const SliderPopover = (await import('~/components/SliderPopover.svelte')).default as any;
             await showPopover({
                 view: SliderPopover,
                 anchor: event.object,
@@ -945,9 +952,7 @@
                     value: options[key],
                     onChange(value) {
                         options[key] = value;
-                        // to trigger an update
-                        profileCostingOptions = profileCostingOptions;
-                        saveProfileSettings();
+                        saveProfileSettings(profile);
                     }
                 }
             });
@@ -969,7 +974,7 @@
         });
         DEV_LOG && console.log('onItemReordered', oldIndex, newIndex);
         updateWayPointLines();
-        updateGeoJSONLayer();
+        setLayerGeoJSONString();
     }
     function onItemReorderStarting(e) {
         (e.view as ContentView).content.animate({ opacity: 0.8, duration: 150 });
@@ -977,7 +982,7 @@
 
     async function showMoreOptions(event) {
         try {
-            const SliderPopover = (await import('~/components/DirectionsSettingsPopover.svelte')).default;
+            const SliderPopover = (await import('~/components/DirectionsSettingsPopover.svelte')).default as any;
             await showPopover({
                 view: SliderPopover,
                 anchor: event.object,
@@ -1019,7 +1024,7 @@
 
     async function openSearchFromItem(event, item: WayPoint) {
         try {
-            const SearchModal = (await import('~/components/SearchModal.svelte')).default;
+            const SearchModal = (await import('~/components/SearchModal.svelte')).default as any;
             const position = mapContext.getMap().focusPos;
             // const result: any = await showModal({ page: Settings, fullscreen: true, props: { position } });
             const anchorView = event.object as View;
@@ -1053,7 +1058,7 @@
                     features.splice(index2, 1, toAdd as any);
                     waypoints.splice(index, 1, toAdd as any);
                     updateWayPointLines();
-                    updateGeoJSONLayer();
+                    setLayerGeoJSONString();
                 }
             }
         } catch (error) {
@@ -1096,7 +1101,7 @@
                 isVisible={!loading}
                 backgroundColor="white"
                 size={40}
-                selectedColor={primaryColor}
+                selectedColor={accentColor}
             />
             <mdactivityindicator colSpan={2} visibility={loading ? 'visible' : 'collapsed'} horizontalAlignment="right" busy={true} width={40} height={40} color="white" />
             <collectionview
@@ -1118,7 +1123,7 @@
                             <cspan text={item.properties.isStop ? 'mdi-map-marker' : 'mdi-checkbox-blank-circle-outline'} verticalAlignment="middle" />
                         </canvaslabel>
                         <gridlayout borderRadius={8} backgroundColor={primaryColor.darken(20).hex} columns=" *,auto" height={30} margin="0 0 0 30" on:tap={(event) => openSearchFromItem(event, item)}>
-                            <label color="white" marginLeft={15} fontSize={15} verticalTextAlignment="center" text={item.properties.name} />
+                            <label color="white" marginLeft={15} fontSize={15} verticalTextAlignment="center" text={item.properties.name} maxLines={1} lineBreak="end"/>
                             <IconButton color="white" small={true} isVisible={item.properties.name && item.properties.name.length > 0} col={1} text="mdi-delete" on:tap={() => clearWayPoint(item)} />
                         </gridlayout>
                     </gridlayout>
