@@ -11,9 +11,10 @@
     import { File } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
     import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
-    import { backgroundColor, borderColor, primaryColor } from '~/variables';
-    import { slc } from '~/helpers/locale';
+    import { actionBarButtonHeight, backgroundColor, borderColor, primaryColor } from '~/variables';
+    import { lc, slc } from '~/helpers/locale';
     import IconButton from './IconButton.svelte';
+    import { debounce } from '@nativescript/core/utils';
 
     export let showFilter = false;
     export let options: OptionType[];
@@ -22,15 +23,16 @@
 
     export let height: number = 350;
 
-    function updateFiltered(filter) {
+    function updateFiltered (filter) {
         if (filter) {
             filteredOptions = options.filter((d) => d.name.indexOf(filter) !== -1);
         } else {
             filteredOptions = options;
         }
-    }
-
-    $: updateFiltered(filter);
+    };
+    const updateFilteredDebounce = debounce(updateFiltered, 500);
+    updateFiltered(filter);
+    $: updateFilteredDebounce(filter);
 
     function close(value?: OptionType) {
         closeBottomSheet(value);
@@ -61,23 +63,23 @@
 </script>
 
 <gridlayout {height} rows="auto,*" backgroundColor={$backgroundColor}>
-    <gridlayout columns="*,auto" margin={10} borderColor={$borderColor} visibility={showFilter ? 'visible' : 'collapsed'}>
+    <gridlayout margin="10 10 0 10" borderColor={$borderColor}  visibility={showFilter ? 'visible' : 'collapsed'}>
         <textfield
-            variant="none"
-            padding="0 15 0 0"
-            hint={$slc('search')}
-            placeholder={$slc('search')}
+            variant="outline"
+            padding="0 30 0 20"
+            hint={lc('search')}
+            placeholder={lc('search')}
             returnKeyType="search"
             on:return={blurTextField}
+            height={actionBarButtonHeight}
             text={filter}
             on:textChange={(e) => (filter = e['value'])}
             backgroundColor="transparent"
             autocapitalizationType="none"
-            floating="false"
             verticalTextAlignment="center"
         />
 
-        <IconButton gray={true} isHidden={filter && filter.length > 0} col={1} text="mdi-close" on:tap={() => (filter = null)} />
+        <IconButton gray={true} isHidden={!filter || filter.length === 0} col={1} text="mdi-close" on:tap={() => (filter = null)} verticalAlignment="middle" horizontalAlignment="right" size={40}/>
     </gridlayout>
     <collectionView row={1} items={filteredOptions} rowHeight={72}>
         <Template let:item>
