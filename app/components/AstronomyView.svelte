@@ -210,7 +210,7 @@
 
     // async function setDateTime() {
     //     try {
-    //         const SliderPopover = (await import('~/components/SliderPopover.svelte')).default;
+    //         const SliderPopover = (await import('~/components/SliderPopover.svelte')).default as any;
     //         const nowMinutes = startTime.diff(startTime.startOf('d'), 'minutes');
     //         showPopover({
     //             view: SliderPopover,

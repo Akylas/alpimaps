@@ -2,10 +2,11 @@ import { MapBounds } from '@nativescript-community/ui-carto/core';
 import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
 import type { Geometry, Point } from 'geojson';
-import extend from 'just-extend';
+// import extend from 'just-extend';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import NSQLDatabase from '../mapModules/NSQLDatabase';
+const extend = require('just-extend');
 
 const sql = SqlQuery.createFromTemplateString;
 
