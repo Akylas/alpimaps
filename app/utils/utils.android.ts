@@ -147,7 +147,7 @@ export async function pickTime(currentDate: Dayjs) {
     });
 }
 
-export async function pickColor(color: Color, view?: View) {
+export async function pickColor(color: Color, options: { alpha?: boolean } = {}) {
     return new Promise<Color>((resolve) => {
         const activity = Application.android.startActivity;
         if (!(color instanceof Color)) {
@@ -155,6 +155,7 @@ export async function pickColor(color: Color, view?: View) {
         }
         const builder = new com.skydoves.colorpickerview.ColorPickerDialog.Builder(activity)
             .setTitle(lc('pick_color'))
+            .attachAlphaSlideBar(options.alpha !== false)
             .setPositiveButton(
                 lc('choose'),
                 new com.skydoves.colorpickerview.listeners.ColorListener({
@@ -172,8 +173,6 @@ export async function pickColor(color: Color, view?: View) {
                     }
                 })
             )
-            .attachAlphaSlideBar(true) // the default value is true.
-            .attachBrightnessSlideBar(true) // the default value is true.
             .setBottomSpace(12); // set a bottom space between the last slidebar and buttons.
 
         builder.getColorPickerView().setInitialColor(color.android);
