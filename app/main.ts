@@ -21,6 +21,7 @@ import { getBGServiceInstance } from '~/services/BgService';
 import { networkService } from '~/services/NetworkService';
 import { startSentry } from '~/utils/sentry';
 import './app.scss';
+import { accentColor } from './variables';
 
 startSentry();
 installGestures(true);
@@ -95,7 +96,7 @@ if (__IOS__) {
     const variables = require('~/variables');
     const primaryColor = variables.primaryColor;
     themer.setPrimaryColor(primaryColor);
-    themer.setAccentColor(primaryColor);
+    themer.setAccentColor(accentColor);
 }
 themer.createShape('round', {
     cornerFamily: 'rounded' as any,
