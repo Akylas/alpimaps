@@ -160,12 +160,12 @@
         }
     }
 
-    async function showRouteList() {
-        const RoutesList = (await import('~/components/RoutesList.svelte')).default;
+    async function showItemsList() {
+        const RoutesList = (await import('~/components/ItemsList.svelte')).default as any;
         navigate({ page: RoutesList });
     }
     async function showMapRightMenu() {
-        const LayersMenu = (await import('~/components/LayersMenu.svelte')).default;
+        const LayersMenu = (await import('~/components/LayersMenu.svelte')).default as any;
         return showBottomSheet({
             view: LayersMenu,
             trackingScrollView: 'trackingScrollView'
@@ -254,7 +254,7 @@
             if (!rasterDataSource) {
                 rasterDataSource = await mapContext.mapModules.customLayers.getDataSource('openstreetmap');
             }
-            const component = (await import('~/components/3DMap.svelte')).default;
+            const component = (await import('~/components/3DMap.svelte')).default as any;
             navigate({
                 page: component,
                 props: {
@@ -311,7 +311,7 @@
     </stacklayout>
     <stacklayout marginTop={80} row={2} verticalAlignment="bottom" horizontalAlignment="left">
         <!-- <mdbutton on:tap={open3DMap} class="small-floating-btn" color={primaryColor} text="mdi-video-3d" /> -->
-        <mdbutton id="layers" on:tap={showRouteList} class="small-floating-btn" text="mdi-format-list-checkbox" />
+        <mdbutton id="layers" on:tap={showItemsList} class="small-floating-btn" text="mdi-format-list-checkbox" />
         <mdbutton id="layers" on:tap={showMapRightMenu} class="small-floating-btn" text="mdi-layers" />
     </stacklayout>
 
