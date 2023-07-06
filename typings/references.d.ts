@@ -68,6 +68,8 @@ declare const STORE_REVIEW_LINK: string;
 declare const __APP_ID__: string;
 declare const __APP_VERSION__: string;
 declare const __APP_BUILD_NUMBER__: string;
+declare const MATERIAL_MAP_FONT_FAMILY: string;
+declare const TEST_ZIP_STYLES: boolean;
 // declare const process: { env: any };
 
 declare namespace akylas {

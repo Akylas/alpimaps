@@ -304,7 +304,7 @@
         networkService.on(NetworkConnectionStateEvent, onNetworkChange);
         networkConnected = networkService.connected;
         if (__ANDROID__) {
-            Application.android.on(AndroidApplication.activityBackPressedEvent, onAndroidBackButton);
+            Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
         customLayersModule = new CustomLayersModule();
         customLayersModule.once('ready', updateSideButtons);
@@ -321,7 +321,6 @@
             vectorTileClicked: onVectorTileClicked,
             rasterTileClicked: onRasterTileClicked,
             getMapViewPort,
-            getVectorTileDecoder,
             // getCurrentLayer,
             selectItem,
             unselectItem,
@@ -334,6 +333,7 @@
             getLayers,
             removeLayer,
             startEditingItem,
+            setSelectedItem,
             moveLayer,
             zoomToItem,
             setBottomSheetStepIndex: (index: number) => {
@@ -498,7 +498,7 @@
             try {
                 packageService.start();
                 transitService.start();
-                setMapStyle(appSettings.getString('mapStyle', PRODUCTION ? 'osm.zip~osm' : 'osm~osm'), true);
+                setMapStyle(appSettings.getString('mapStyle', PRODUCTION || TEST_ZIP_STYLES ? 'osm.zip~osm' : 'osm~osm'), true);
                 // setMapStyle('osm.zip~osm', true);
             } catch (err) {
                 showError(err);
@@ -607,7 +607,6 @@
                 const props = item.properties;
                 if (setSelected && route) {
                     TEST_LOG && console.log('selected_id', typeof route.osmid, route.osmid, typeof props.id, props.id, setSelected);
-
 
                     // selected_osmid is for routes
                     if (props.id !== undefined) {
@@ -833,7 +832,7 @@
     }
     async function selectShownRoutes(event) {
         try {
-            const component = (await import('~/components/RoutesTypePopover.svelte')).default;
+            const component = (await import('~/components/RoutesTypePopover.svelte')).default as any;
             await showPopover({
                 view: component,
                 anchor: event.object,
@@ -845,7 +844,7 @@
         try {
             cartoMap && mapContext?.innerDecoder?.setStyleParameter('routes_type', $routesType + '');
         } catch (error) {
-            console.error(error, error.stack)
+            console.error(error, error.stack);
         }
     }
     $: setRenderProjectionMode($showGlobe);
@@ -910,7 +909,7 @@
                 if (selectedRoutes.length === 1) {
                     handleRouteSelection(selectedRoutes[0].featureData, selectedRoutes[0].layer);
                 } else {
-                    const RouteSelect = (await import('~/components/RouteSelect.svelte')).default;
+                    const RouteSelect = (await import('~/components/RouteSelect.svelte')).default as any;
                     const results = await showBottomSheet({
                         parent: page,
                         view: RouteSelect,
@@ -1139,7 +1138,7 @@
 
     function setStyleParameter(key: string, value: string) {
         // console.log('setStyleParameter', key, value);
-        let decoder = getVectorTileDecoder();
+        let decoder = mapContext.mapDecoder;
         if (!!decoder) {
             decoder.setStyleParameter(key, value);
         }
@@ -1154,10 +1153,6 @@
     }
     onLanguageChanged(handleNewLanguage);
     onMapLanguageChanged(handleNewLanguage);
-
-    function getVectorTileDecoder() {
-        return vectorTileDecoder/*  || packageService.vectorTileDecoder */;
-    }
 
     // function getCurrentLayer() {
     //     return currentLayer;
@@ -1176,28 +1171,22 @@
         if (layerStyle !== currentLayerStyle || !!force) {
             currentLayerStyle = layerStyle;
             appSettings.setString('mapStyle', layerStyle);
-            const oldVectorTileDecoder = vectorTileDecoder;
-            if (layerStyle === 'default') {
-                vectorTileDecoder = new CartoOnlineVectorTileLayer({
-                    style: mapStyleLayer
-                }).getTileDecoder();
-                // if (!PRODUCTION) {
-                //     vectorTileDecoder.setStyleParameter('debug', '1')
-                // }
-            } else {
-                try {
-                    // const start = Date.now();
-                    vectorTileDecoder = new MBVectorTileDecoder({
-                        style: mapStyleLayer,
-                        liveReload: !PRODUCTION,
-                        [mapStyle.endsWith('.zip') ? 'zipPath' : 'dirPath']: `~/assets/styles/${mapStyle}`
-                    });
-                    mapContext.runOnModules('vectorTileDecoderChanged', oldVectorTileDecoder, vectorTileDecoder);
-                } catch (err) {
-                    showError(err);
-                    vectorTileDecoder = null;
-                }
+            // if (layerStyle === 'default') {
+            //     vectorTileDecoder = new CartoOnlineVectorTileLayer({
+            //         style: mapStyleLayer
+            //     }).getTileDecoder();
+            //     // if (!PRODUCTION) {
+            //     //     vectorTileDecoder.setStyleParameter('debug', '1')
+            //     // }
+            // } else {
+            try {
+                // const start = Date.now();
+                vectorTileDecoder = mapContext.createMapDecoder(mapStyle, mapStyleLayer);
+            } catch (err) {
+                showError(err);
+                vectorTileDecoder = null;
             }
+            // }
             handleNewLanguage(currentLanguage);
         }
     }
@@ -1220,7 +1209,7 @@
                 }
             }
         }
-        const actions = styles.concat('default');
+        const actions = styles;
         action({
             title: lc('select_style'),
             actions
@@ -1570,7 +1559,7 @@
                 });
             }
 
-            const MapOptions = (await import('~/components/MapOptions.svelte')).default;
+            const MapOptions = (await import('~/components/MapOptions.svelte')).default as any;
             const result = (await showBottomSheet({
                 parent: page,
                 view: MapOptions,
@@ -1631,7 +1620,7 @@
 
     async function showTransitLinesPage() {
         try {
-            const component = (await import('~/components/transit/TransitLines.svelte')).default;
+            const component = (await import('~/components/transit/TransitLines.svelte')).default as any;
             await navigate({ page: component });
         } catch (error) {
             showError(error);
@@ -1723,7 +1712,7 @@
     }
     function startEditingItem(item: IItem) {
         if (!!item.route) {
-            DEV_LOG && console.log('startEditingItem', item.properties.id)
+            DEV_LOG && console.log('startEditingItem', item.properties.id);
             mapContext.innerDecoder.setStyleParameter('editing_id', item.properties.id + '');
             getMapContext().mapModule('items').showItem(item);
             editingItem = item;
@@ -1809,7 +1798,7 @@
                 translateY={Math.max(topTranslationY - 50, 0)}
             />
             <MapScrollingWidgets bind:this={mapScrollingWidgets} bind:navigationInstructions opacity={scrollingWidgetsOpacity} userInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
-            <DirectionsPanel bind:this={directionsPanel} bind:translationY={topTranslationY} width="100%" verticalAlignment="top" editingItem={editingItem} on:cancel={onDirectionsCancel}/>
+            <DirectionsPanel bind:this={directionsPanel} bind:translationY={topTranslationY} width="100%" verticalAlignment="top" {editingItem} on:cancel={onDirectionsCancel} />
         </gridlayout>
         <BottomSheetInner bind:this={bottomSheetInner} bind:navigationInstructions bind:steps prop:bottomSheet updating={itemLoading} item={$selectedItem} />
         <!-- <collectionview
