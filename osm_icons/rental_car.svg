@@ -1,1 +1,40 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"><path d="M3.5 0a2.5 2.5 0 100 5c.925 0 1.724-.503 2.156-1.25H7l1-1 1 1 1-1 1 1h.5L13 2.5l-1.5-1.25H5.656A2.484 2.484 0 003.5 0zm-1 2a.5.5 0 110 1 .5.5 0 010-1zM4 6L3 9c-.473 0-1 .384-1 1v3h1s0 1 1 1 1-1 1-1h4s0 1 1 1 1-1 1-1h1v-3c0-.52-.455-1-1-1l-1-3zm1 1h4l.625 2h-5.25zm-1 3.25a.75.75 0 110 1.5.75.75 0 010-1.5zm6 0a.75.75 0 110 1.5.75.75 0 010-1.5z"/></svg>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="14"
+   height="14"
+   version="1.1"
+   id="svg4"
+   sodipodi:docname="rental_car_filtered.svg"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs8" />
+  <sodipodi:namedview
+     id="namedview6"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="14.642857"
+     inkscape:cx="-5.6341463"
+     inkscape:cy="-1.1951219"
+     inkscape:window-width="1920"
+     inkscape:window-height="995"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg4" />
+  <path
+     id="path829-3"
+     d="m 3.2177127,10.301582 a 0.60519591,0.60519591 0 1 1 0,0.0067 z m 6.0519584,0 a 0.60519591,0.60519591 0 1 1 0,0.0067 z M 4.4953481,5.9307225 A 1.0086598,1.0086598 0 0 0 3.4866886,6.9393819 v 1.6811 H 3.1504687 a 1.0086598,1.0086598 0 0 0 -1.0086599,1.00866 v 2.0173191 a 1.0086598,1.0086598 0 0 0 0.67244,0.942992 v 1.410548 h 1.3448793 v -1.34488 h 5.379519 v 1.34488 h 1.3448799 v -1.410548 a 1.0086598,1.0086598 0 0 0 0.67244,-0.942992 V 9.6291419 a 1.0086598,1.0086598 0 0 0 -1.00866,-1.00866 h -0.33622 v -1.6811 A 1.0086598,1.0086598 0 0 0 9.2024271,5.9307225 Z m 0.67244,1.0086594 h 3.3622 a 0.6724399,0.6724399 0 0 1 0.672439,0.67244 v 1.00866 h -4.707079 v -1.00866 a 0.6724399,0.6724399 0 0 1 0.67244,-0.67244 z"
+     style="stroke-width:0.67244" />
+  <path
+     id="path2"
+     d="m 3.5,0 a 2.5,2.5 0 1 0 0,5 C 4.43,5 5.22,4.5 5.66,3.75 H 7 l 1,-1 1,1 1,-1 1,1 h 0.5 L 13,2.5 11.5,1.25 H 5.66 A 2.48,2.48 0 0 0 3.5,0 Z m -1,2 a 0.5,0.5 0 1 1 0,1 0.5,0.5 0 0 1 0,-1 z" />
+</svg>

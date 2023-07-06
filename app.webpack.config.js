@@ -100,6 +100,7 @@ module.exports = (env, params = {}) => {
         busSupport = true,
         apiKeys = true,
         keep_classnames_functionnames = false,
+        testZipStyles = false,
         locale = 'auto',
         theme = 'auto',
         adhoc
@@ -326,6 +327,7 @@ module.exports = (env, params = {}) => {
     // });
     config.externals.push('~/licenses.json');
     config.externals.push('~/osm_icons.json');
+    config.externals.push('~/material_icons.json');
     config.externals.push(function ({ context, request }, cb) {
         if (/i18n$/i.test(context)) {
             return cb(null, './i18n/' + request);
@@ -386,6 +388,8 @@ module.exports = (env, params = {}) => {
         WITH_BUS_SUPPORT: busSupport,
         DEFAULT_THEME: `"${theme}"`,
         SENTRY_ENABLED: !!sentry,
+        MATERIAL_MAP_FONT_FAMILY: "'Material Design Icons'",
+        TEST_ZIP_STYLES: testZipStyles,
         NO_CONSOLE: noconsole,
         SENTRY_DSN: `"${process.env.SENTRY_DSN}"`,
         SENTRY_PREFIX: `"${!!sentry ? process.env.SENTRY_PREFIX : ''}"`,
@@ -553,29 +557,29 @@ module.exports = (env, params = {}) => {
         { context, from: '**/*.png', noErrorOnMissing: true, globOptions },
         { context, from: 'assets/**/*', noErrorOnMissing: true, globOptions },
         { context, from: 'i18n/**/*', globOptions },
-        {
-            from: 'node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf',
-            to: 'fonts',
-            globOptions,
-            transform: !!production
-                ? {
-                      transformer(content, path) {
-                          return new Promise((resolve, reject) => {
-                              new Fontmin()
-                                  .src(content)
-                                  .use(Fontmin.glyph({ subset: usedMDIICons }))
-                                  .run(function (err, files) {
-                                      if (err) {
-                                          reject(err);
-                                      } else {
-                                          resolve(files[0].contents);
-                                      }
-                                  });
-                          });
-                      }
-                  }
-                : undefined
-        },
+        // {
+        //     from: 'node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf',
+        //     to: 'fonts',
+        //     globOptions
+        // transform: !!production
+        //     ? {
+        //           transformer(content, path) {
+        //               return new Promise((resolve, reject) => {
+        //                   new Fontmin()
+        //                       .src(content)
+        //                       .use(Fontmin.glyph({ subset: usedMDIICons }))
+        //                       .run(function (err, files) {
+        //                           if (err) {
+        //                               reject(err);
+        //                           } else {
+        //                               resolve(files[0].contents);
+        //                           }
+        //                       });
+        //               });
+        //           }
+        //       }
+        //     : undefined
+        // },
         {
             from: 'css/osm.scss',
             to: 'osm_icons.json',
@@ -583,14 +587,34 @@ module.exports = (env, params = {}) => {
             transform: {
                 cache: !production,
                 transformer(manifestBuffer, path) {
-                    const osmSymbols = symbolsParser.parseSymbols(manifestBuffer.toString());
-                    const osmIcons = osmSymbols.variables.reduce(function (acc, value) {
+                    const symbols = symbolsParser.parseSymbols(manifestBuffer.toString());
+                    const icons = symbols.variables.reduce(function (acc, value) {
                         if (value.name.startsWith('$osm-')) {
                             acc[value.name.slice(5)] = String.fromCharCode(parseInt(value.value.slice(2, -1), 16));
                         }
                         return acc;
                     }, {});
-                    return Buffer.from(JSON.stringify(osmIcons));
+                    return Buffer.from(JSON.stringify(icons));
+                }
+            }
+        },
+        {
+            from: 'css/variables.scss',
+            to: 'material_icons.json',
+            globOptions,
+            transform: {
+                cache: !production,
+                transformer(manifestBuffer, path) {
+                    return Buffer.from(
+                        JSON.stringify(
+                            Object.keys(mdiIcons).reduce(function (result, key) {
+                                const numericValue = parseInt(mdiIcons[key], 16);
+                                const character = fixedFromCharCode(numericValue);
+                                result[key] = character;
+                                return result;
+                            }, {})
+                        )
+                    );
                 }
             }
         }
@@ -735,8 +759,8 @@ module.exports = (env, params = {}) => {
                         `./${css2xmlBin} dev_assets/styles/osm/osm.json dev_assets/styles/osmxml_cleaned/osm.xml`,
                         `./${css2xmlBin} dev_assets/styles/osm/outdoors.json dev_assets/styles/osmxml_cleaned/outdoors.xml`,
                         'cd ./dev_assets/styles/osmxml_cleaned && zip -r ../../../app/assets/styles/osm.zip ./* && cd -',
-                        `./${css2xmlBin} dev_assets/internal_styles/inner/voyager.json dev_assets/internal_styles/inner_cleaned/voyager.xml`,
-                        'cd ./dev_assets/internal_styles/inner_cleaned && zip -r ../../../app/assets/internal_styles/inner.zip ./* && cd -'
+                        `./${css2xmlBin} dev_assets/styles/inner/voyager.json dev_assets/styles/inner_cleaned/voyager.xml`,
+                        'cd ./dev_assets/styles/inner_cleaned && zip -r ../../../app/assets/styles/inner.zip ./* && cd -'
                     ],
                     blocking: true,
                     parallel: false
@@ -744,6 +768,27 @@ module.exports = (env, params = {}) => {
             })
         );
     }
+
+    config.plugins.unshift(
+        new WebpackShellPluginNext({
+            onBuildExit: {
+                scripts: [
+                    `./fixFontDirection.pe app/fonts/osm.ttf ${join(dist, 'fonts', 'osm.ttf')}`,
+                    `./fixFontDirection.pe node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf ${join(dist, 'fonts', 'materialdesignicons-webfont.ttf')}`
+                ].concat(
+                    production
+                        ? []
+                        : [
+                              `cp ${join(dist, 'fonts', 'materialdesignicons-webfont.ttf')} ${join(dist, 'assets/styles/inner/fonts')}`,
+                              `cp ${join(dist, 'fonts', 'osm.ttf')} ${join(dist, 'assets/styles/inner/fonts')}`,
+                              `cp ${join(dist, 'fonts', 'osm.ttf')} ${join(dist, 'assets/styles/osm/fonts')}`
+                          ]
+                ),
+                blocking: true,
+                parallel: false
+            }
+        })
+    );
 
     if (hiddenSourceMap || sourceMap) {
         if (!!sentry && !!uploadSentry) {
