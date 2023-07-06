@@ -208,6 +208,7 @@
                 } else {
                     dataItems = dataItems.concat(items);
                 }
+                updateFilteredDataItems(filteringOSMKey);
             }
 
             await Promise.all([
@@ -237,7 +238,6 @@
                 // } else {
                 // await loadView();
             } else {
-                updateFilteredDataItems(filteringOSMKey);
             }
         } catch (err) {
             throw err;
@@ -255,15 +255,18 @@
     }
 </script>
 
-<collectionview rowHeight={49} items={filteredDataItems} {...$$restProps}>
+<collectionview rowHeight={52} items={filteredDataItems} {...$$restProps}>
     <Template let:item>
         <canvaslabel columns="34,*" padding="0 10 0 10" rows="*,auto,auto,*" disableCss={true} color={$textColor} rippleColor={$textColor} on:tap={(event) => dispatch('tap', item)}>
             <cspan text={item.icon} color={item.color} fontFamily="osm" fontSize={20} verticalAlignment="middle" />
-            <cspan paddingLeft={34} verticalAlignment="middle" paddingBottom={item.subtitle ? 10 : 0} text={item.title} fontSize={14} fontWeight="bold" />
-            <cspan paddingLeft={34} verticalAlignment="middle" paddingTop={10} text={item.subtitle} color={$subtitleColor} fontSize={12} visibility={!!item.subtitle ? 'visible' : 'collapsed'} />
+            <cgroup  paddingLeft={34}  paddingRight={34}  verticalAlignment="middle" lineBreak="end">
+                <cspan text={item.title} fontSize={13} fontWeight="bold" />
+                <cspan text={!!item.subtitle ? '\n' + item.subtitle : null} color={$subtitleColor} fontSize={11} visibility={!!item.subtitle ? 'visible' : 'collapsed'} />
+                
+            </cgroup>
             <cspan
                 textAlignment="right"
-                verticalAlignment="middle"
+                verticalAlignment="top"
                 paddingTop={10}
                 text={item.distance && formatDistance(item.distance)}
                 color={$subtitleColor}
