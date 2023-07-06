@@ -1,1 +1,36 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"><path d="M5.969 0C5.429 0 5 .488 5 1l-.031 1H3L1.75 6C.99 6 0 6.497 0 8v4h2v1s0 1 1 1 1-1 1-1v-1l6-.031V13s0 1 1 1 1-1 1-1v-1h2V8c0-1.527-1-2-2-2l-1-4H9V1c0-.566-.434-1-1-1H5.969zM6 1h2v1H6V1zM4 3.5h6l.594 2.5H3.313L4 3.5zM3 8a1 1 0 110 2 1 1 0 010-2zm8 0a1 1 0 110 2 1 1 0 010-2z"/></svg>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="14"
+   height="14"
+   version="1.1"
+   id="svg4"
+   sodipodi:docname="taxi_filtered.svg"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs8" />
+  <sodipodi:namedview
+     id="namedview6"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="20.708127"
+     inkscape:cx="2.197205"
+     inkscape:cy="1.3762712"
+     inkscape:window-width="1920"
+     inkscape:window-height="995"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg4" />
+  <path
+     id="path829"
+     d="m 1.5595346,8.4982765 a 0.9,0.9 0 1 1 0,0.01 z m 9.0000004,0 a 0.9,0.9 0 1 1 0,0.01 z m -7.1000004,-6.5 a 1.5,1.5 0 0 0 -1.5,1.5 v 2.5 h -0.5 a 1.5,1.5 0 0 0 -1.49999997,1.5 v 2.9999995 a 1.5,1.5 0 0 0 1,1.402344 v 2.097656 H 2.9595346 v -2 h 8.0000004 v 2 h 2 V 11.90062 a 1.5,1.5 0 0 0 1,-1.402344 V 7.4982765 a 1.5,1.5 0 0 0 -1.5,-1.5 h -0.5 v -2.5 a 1.5,1.5 0 0 0 -1.5,-1.5 z m 1,1.5 h 4.9999999 a 1,1 0 0 1 1.0000005,1 v 1.5 H 3.4595346 v -1.5 a 1,1 0 0 1 1,-1 z M 5.97,0 C 5.43,0 5,0.49 5,1 L 4.97,2 C 6,2 8,2 9,2 V 1 C 9,0.43 8.57,0 8,0 Z M 6,1 H 8 V 2 H 6 Z" />
+</svg>
