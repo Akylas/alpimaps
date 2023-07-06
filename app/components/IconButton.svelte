@@ -1,6 +1,4 @@
 <script lang="ts">
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { Utils } from '@nativescript/core';
     import { showToolTip } from '~/utils/utils';
     import { actionBarButtonHeight, mdiFontFamily, primaryColor, subtitleColor, textColor } from '~/variables';
     export let isVisible = true;
@@ -16,13 +14,13 @@
     export let color = null;
     export let onLongPress: Function = null;
     export let fontSize = 0;
-    export let size:any = small ? 30 : actionBarButtonHeight;
+    export let size: any = small ? 30 : actionBarButtonHeight;
     export let tooltip = null;
     export let rounded = true;
     export let shape = null;
     export let height = null;
     export let width = null;
-    
+
     // let actualColor = null;
     // $: actualColor = white ? 'white' : !isEnabled || gray ? $subtitleColor : color;
     $: actualColor = color || (!isEnabled || gray ? $subtitleColor : $textColor);
