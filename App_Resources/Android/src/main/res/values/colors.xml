@@ -4,7 +4,7 @@
     <color name="buttonTextColor">#ffffff</color>
     <color name="colorPrimary">#29B6F6</color>
 	<color name="colorPrimaryDark">#0288D1</color>
-	<color name="colorAccent">#29B6F6</color>
-	<color name="colorSecondary">#29B6F6</color>
+	<color name="colorAccent">#2393dc</color>
+	<color name="colorSecondary">#294ff6</color>
 	<color name="colorSurface">#ffffff</color>
 </resources>
