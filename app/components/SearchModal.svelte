@@ -8,6 +8,7 @@
     import { showError } from '~/utils/error';
     import { PhotonFeature } from './Features';
     import SearchCollectionView from './SearchCollectionView.svelte';
+    import { widgetBackgroundColor } from '~/variables';
 
     let textField: NativeViewElementNode<TextField>;
     let loading = false;
@@ -62,6 +63,9 @@
         clearSearchTimeout();
         closePopover(item);
     }
+    function focus() {
+        textField && textField.nativeView.requestFocus();
+    }
     onMount(() => {
         focus();
     });
@@ -69,12 +73,12 @@
 
 <!-- <page id="selectCity" actionBarHidden={true} on:navigatingTo={onNavigatingTo}> -->
 <gesturerootview columns="auto">
-    <gridlayout rows="auto,auto,100" {width} backgroundColor="white" borderRadius={8}>
+    <gridlayout rows="auto,auto,240" {width} backgroundColor={$widgetBackgroundColor} borderRadius={8}>
         <!-- <CActionBar title={lc('search')} modalWindow>
             <mdactivityIndicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapsed'} />
         </CActionBar> -->
-        <textfield bind:this={textField} row={1} hint={lc('search')} floating="false" returnKeyType="search" on:textChange={onTextChange} on:loaded={focus} />
-        <SearchCollectionView bind:this={collectionView} row={2} on:tap={(event) => close(event.detail)} rowHeight={56} />
+        <textfield bind:this={textField} row={1} hint={lc('search')} floating="false" returnKeyType="search" on:textChange={onTextChange} on:loaded={focus} height={40} padding="3 10 3 10"/>
+        <SearchCollectionView bind:this={collectionView} row={2} on:tap={(event) => close(event.detail.detail)}/>
     </gridlayout>
 </gesturerootview>
 <!-- </page> -->

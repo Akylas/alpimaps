@@ -13,9 +13,11 @@
     import type { IItem as Item } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
     import { showError } from '~/utils/error';
-    import { globalMarginTop, subtitleColor, widgetBackgroundColor } from '~/variables';
+    import { actionBarButtonHeight, globalMarginTop, subtitleColor, widgetBackgroundColor } from '~/variables';
     import IconButton from './IconButton.svelte';
     import SearchCollectionView from './SearchCollectionView.svelte';
+
+    const SEARCH_COLLECTIONVIEW_HEIGHT = 250;
 
     async function animateView(view: View, to, duration) {
         let shouldAnimate = false;
@@ -125,7 +127,7 @@
     $: {
         const nCollectionView = collectionViewHolder?.nativeView;
         if (nCollectionView) {
-            animateView(nCollectionView, { height: searchResultsVisible ? 200 : 0 }, 100);
+            animateView(nCollectionView, { height: searchResultsVisible ? SEARCH_COLLECTIONVIEW_HEIGHT : 0 }, 100);
         }
     }
 
@@ -255,7 +257,6 @@
         if (!searchResultsVisible || !item) {
             return;
         }
-
         mapContext.selectItem({ item, isFeatureInteresting: true, minZoom: 14, preventZoom: false });
         unfocus();
     }
@@ -330,6 +331,7 @@
     bind:this={gridLayout}
     {...$$restProps}
     rows="auto,auto"
+    on:tap={()=>{}}
     elevation={$currentTheme !== 'dark' && focused ? 6 : 0}
     columns="auto,*,auto,auto,auto"
     backgroundColor={$widgetBackgroundColor}
@@ -340,7 +342,8 @@
         bind:this={textField}
         variant="none"
         col={1}
-        padding="0 15 0 0"
+        margin="0 15 0 0"
+        height={actionBarButtonHeight}
         hint={$slc('search')}
         placeholder={$slc('search')}
         returnKeyType="search"
@@ -349,7 +352,6 @@
         on:return={onReturnKey}
         {text}
         on:textChange={(e) => (text = e['value'])}
-        backgroundColor="transparent"
         autocapitalizationType="none"
         floating="false"
         verticalTextAlignment="center"
@@ -360,7 +362,7 @@
     <IconButton col={4} gray={true} text="mdi-dots-vertical" on:tap={showMapMenu} />
     {#if loaded}
         <absolutelayout bind:this={collectionViewHolder} row={1} height={0} colSpan={7} isUserInteractionEnabled={searchResultsVisible}>
-            <gridlayout height={200} width="100%" rows="*,auto" columns="auto,auto,*">
+            <gridlayout height={SEARCH_COLLECTIONVIEW_HEIGHT} width="100%" rows="*,auto" columns="auto,auto,*">
                 <SearchCollectionView
                     bind:this={collectionView}
                     bind:filteringOSMKey
@@ -368,7 +370,7 @@
                     bind:filteredDataItems
                     colSpan={3}
                     isUserInteractionEnabled={searchResultsVisible}
-                    on:tap={(event) => onItemTap(event.detail)}
+                    on:tap={(event) => onItemTap(event.detail.detail)}
                 />
                 <stacklayout row={1} orientation="horizontal" on:tap={() => {}} width="100%">
                     <IconButton small={true} isVisible={searchResultsVisible} text="mdi-shape" on:tap={toggleFilterOSMKey} isSelected={filteringOSMKey} />
