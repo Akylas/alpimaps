@@ -16,7 +16,7 @@ const distancePreset = {
 //     units: ['m']
 // };
 
-const osmIcons = require('~/osm_icons.json');
+export const osmIcons = require('~/osm_icons.json');
 export function osmicon(values: string[] | string) {
     if (!values) {
         return undefined;
