@@ -54,7 +54,7 @@
     async function showTimesheet(item) {
         try {
             closeBottomSheet();
-            const component = (await import('~/components/transit/TransitTimesheet.svelte')).default;
+            const component = (await import('~/components/transit/TransitTimesheet.svelte')).default as any;
             await navigate({
                 page: component,
                 props: {
@@ -69,7 +69,7 @@
     async function showDetails(item) {
         try {
             closeBottomSheet();
-            const component = (await import('~/components/transit/TransitLineDetails.svelte')).default;
+            const component = (await import('~/components/transit/TransitLineDetails.svelte')).default as any;
             await navigate({
                 page: component,
                 props: {
