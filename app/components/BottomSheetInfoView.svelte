@@ -56,8 +56,13 @@
             itemIconFontFamily = alpimapsFontFamily;
             itemIcon = formatter.getRouteIcon(itemProps.route.type, itemProps.route.subtype);
         } else {
-            itemIconFontFamily = 'osm';
-            itemIcon = osmicon(formatter.geItemIcon(it));
+            if (itemProps?.fontFamily) {
+                itemIconFontFamily = itemProps.fontFamily;
+                itemIcon = itemProps.icon;
+            } else {
+                itemIconFontFamily = 'osm';
+                itemIcon = osmicon(formatter.geItemIcon(it));
+            }
         }
         updateItemText(it);
 
@@ -207,7 +212,7 @@
                     iconPaint.textSize = iconSize;
                 }
                 iconPaint.fontFamily = itemIconFontFamily;
-                iconPaint.color = itemProps?.color || iconColor || $textColor;
+                iconPaint.color = iconColor || $textColor;
                 canvas.drawText(itemIcon, iconLeft, iconTop, iconPaint);
             }
 
