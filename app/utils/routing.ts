@@ -1,4 +1,4 @@
-import { Color } from '@nativescript/core';
+import { ApplicationSettings, Color } from '@nativescript/core';
 
 export const valhallaSettingIcon = {
     driveway_factor: 'mdi-road',
@@ -63,3 +63,24 @@ export function getValhallaSettings(key) {
     }
     return settings;
 }
+
+export function getSavedProfile(profile: string, key: string, defaultValue?: any) {
+    return JSON.parse(ApplicationSettings.getString(`profile_${profile}_${key}`, 'false')) || defaultValue;
+}
+export function removeSavedProfile(profile: string, key: string) {
+    return ApplicationSettings.remove(`profile_${profile}_${key}`);
+}
+export function savedProfile(profile: string, key: string, value) {
+    return ApplicationSettings.setString(`profile_${profile}_${key}`, JSON.stringify(value));
+}
+export const defaultProfileCostingOptions = {
+    pedestrian: {
+        driveway_factor: 200,
+        walkway_factor: 0.8,
+        use_tracks: 1,
+        sidewalk_factor: 10
+    },
+    bicycle: { use_roads: 1, use_tracks: 0.5, non_network_penalty: 15 },
+    auto: { use_tolls: 1, use_highways: 1 },
+    motorcycle: { use_tolls: 1, use_trails: 0 }
+};
