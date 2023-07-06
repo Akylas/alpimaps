@@ -1,0 +1,8 @@
+*Features*
+- new edit marker / route window. For now accessible from the items list window
+
+*Bug fixes*
+- improved osm map style
+- faster map routes/items loading
+- refactor theme handling to prevent issues with system theme
+- search layout improvements
