@@ -87,6 +87,21 @@ export function listFolder(folderPath: string): (Partial<FileSystemEntity> & { i
     });
     // }
 }
+
+export function listFolderFiles(folderPath: string, prefix?: string, currentValues?: string[]): string[] {
+    const docFolder = Folder.fromPath(folderPath);
+    currentValues = currentValues || [];
+    docFolder.getEntitiesSync().forEach((f) => {
+        console.log('entity', f.path)
+        if (Folder.exists(f.path)) {
+            f['isFolder'] = true;
+            listFolderFiles(f.path, f.name, currentValues);
+        } else {
+            currentValues.push(prefix ? path.join(prefix, f.name) : f.name);
+        }
+    });
+    return currentValues;
+}
 export function getSavedMBTilesDir() {
     return savedMBTilesDir;
 }
@@ -115,7 +130,7 @@ export function getAndroidRealPath(src: string) {
         } else {
             // if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
             //getExternalMediaDirs() added in API 21
-            const external = (Utils.android.getApplicationContext() as android.content.Context).getExternalMediaDirs();
+            const external = Utils.android.getApplicationContext().getExternalMediaDirs();
             if (external.length > 1) {
                 filePath = external[1].getAbsolutePath();
                 filePath = filePath.substring(0, filePath.indexOf('Android')) + split[split.length - 1];
