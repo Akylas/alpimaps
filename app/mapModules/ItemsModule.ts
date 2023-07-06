@@ -3,7 +3,7 @@ import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/da
 import { PolygonGeometry } from '@nativescript-community/ui-carto/geometry';
 import { VectorTileFeatureCollection } from '@nativescript-community/ui-carto/geometry/feature';
 import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
-import { VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
+import { VectorTileEventData, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
 import { VectorTileSearchService } from '@nativescript-community/ui-carto/search';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/point';
@@ -34,7 +34,7 @@ declare type Mutable<T extends object> = {
 };
 export default class ItemsModule extends MapModule {
     localVectorDataSource: GeoJSONVectorTileDataSource;
-    currentLayerFeatures: ItemFeature[] = [];
+    // currentLayerFeatures: ItemFeature[] = [];
     currentItems: IItem[] = [];
     localVectorLayer: VectorTileLayer;
     db: NSQLDatabase;
@@ -45,7 +45,7 @@ export default class ItemsModule extends MapModule {
         try {
             // console.log('initDb0', getItemsDataFolder());
             // let filePath = getItemsDataFolder() + '/db/db.sqlite';
-            let filePath = path.join(Folder.fromPath(getItemsDataFolder()).getFolder('db').path, 'db.sqlite');
+            const filePath = path.join(Folder.fromPath(getItemsDataFolder()).getFolder('db').path, 'db.sqlite');
             // console.log('initDb', filePath);
             // if (filePath.startsWith('content:/') && !filePath.startsWith('content://')) {
             //     filePath = 'content://' + filePath.slice(9);
@@ -59,7 +59,10 @@ export default class ItemsModule extends MapModule {
             this.itemRepository = new ItemRepository(this.db);
             await this.itemRepository.createTables();
             const items = await this.itemRepository.searchItem(SqlQuery.createFromTemplateString`"onMap" = 1`);
-            this.addItemsToLayer(items);
+            if (items.length > 0) {
+                items.forEach((i) => this.addItemToLayer(i), this);
+                this.setLayerGeoJSONString();
+            }
         } catch (err) {
             console.error(err, err.stack);
 
@@ -95,6 +98,7 @@ export default class ItemsModule extends MapModule {
             this.localVectorLayer = new VectorTileLayer({
                 labelBlendingSpeed: 0,
                 layerBlendingSpeed: 0,
+                labelRenderOrder: VectorTileRenderOrder.LAST,
                 clickRadius: 6,
                 dataSource: this.localVectorDataSource,
                 decoder: mapContext.innerDecoder
@@ -117,35 +121,34 @@ export default class ItemsModule extends MapModule {
     }
     addItemToLayer(item: IItem, autoUpdate = false) {
         this.currentItems.push(item);
-        // DEV_LOG && console.log('addItemToLayer', JSON.stringify(item.properties));
-        this.currentLayerFeatures.push({ type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
+        // DEV_LOG && console.log('addItemToLayer', `${item.properties.color}`, JSON.stringify(item.properties));
+        // this.currentLayerFeatures.push({ type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
         if (autoUpdate) {
-            this.updateGeoJSONLayer();
+            this.getLocalVectorDataSource().addGeoJSONStringFeature(1, JSON.stringify({ type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry }));
+            // this.updateGeoJSONLayer();
         }
     }
     getFeature(id: string) {
         return this.currentItems.find((d) => d.properties.id === id);
     }
-    updateGeoJSONLayer() {
+    getLocalVectorDataSource() {
+        this.getOrCreateLocalVectorLayer();
+        return this.localVectorDataSource;
+    }
+    setLayerGeoJSONString() {
         this.getOrCreateLocalVectorLayer();
         const str = JSON.stringify({
             type: 'FeatureCollection',
-            features: this.currentLayerFeatures
+            features: this.currentItems.map((item) => ({ type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry }))
         });
         // DEV_LOG && console.log('updateGeoJSONLayer', str);
-        this.localVectorDataSource.setLayerGeoJSONString(1, str);
+        this.getLocalVectorDataSource().setLayerGeoJSONString(1, str);
     }
-    addItemsToLayer(items: readonly Item[]) {
-        if (items.length > 0) {
-            items.forEach((i) => this.addItemToLayer(i), this);
-            this.updateGeoJSONLayer();
-        }
-    }
-    async updateItem(item: IItem, data?: Partial<IItem>) {
+    async updateItem(item: IItem, data?: Partial<IItem>, autoUpdateLayer = true) {
         // if (Object.keys(data).length > 0) {
         item = await this.itemRepository.updateItem(item as Item, data);
         // }
-        const index = this.currentLayerFeatures.findIndex((d) => d.id === item.id);
+        const index = this.currentItems.findIndex((d) => d.id === item.id);
         if (index !== -1) {
             this.currentItems.splice(index, 1, item);
             // const sProps = {};
@@ -156,8 +159,11 @@ export default class ItemsModule extends MapModule {
             //         sProps[k] = item.properties[k];
             //     }
             // });
-            this.currentLayerFeatures.splice(index, 1, { type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
-            this.updateGeoJSONLayer();
+            if (autoUpdateLayer && item.onMap) {
+                this.getLocalVectorDataSource().updateGeoJSONStringFeature(1, JSON.stringify({ type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry }));
+            }
+            // this.currentLayerFeatures.splice(index, 1, { type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
+            // this.updateGeoJSONLayer();
         }
         return item;
     }
@@ -329,14 +335,13 @@ export default class ItemsModule extends MapModule {
             }
         } else {
             item.onMap = onMap ? 1 : 0;
-            DEV_LOG && console.log('updateItem full');
             item = await this.itemRepository.updateItem(item as Item);
         }
         return item; // return the first one
     }
     async showItem(item: IItem) {
         if (item.onMap === 0) {
-            this.updateItem(item, { onMap: 1 });
+            this.updateItem(item, { onMap: 1 }, false);
             this.addItemToLayer(item, true);
         }
     }
@@ -344,11 +349,12 @@ export default class ItemsModule extends MapModule {
         if (item === mapContext.getSelectedItem()) {
             mapContext.unselectItem();
         }
-        const index = this.currentLayerFeatures.findIndex((d) => d.id === item.id);
+        const index = this.currentItems.findIndex((d) => d.id === item.id);
         if (index > -1) {
-            this.currentLayerFeatures.splice(index, 1);
+            // this.currentLayerFeatures.splice(index, 1);
             this.currentItems.splice(index, 1);
-            this.updateGeoJSONLayer();
+            this.getLocalVectorDataSource().removeGeoJSONFeature(1, item.id);
+            // this.updateGeoJSONLayer();
         }
         this.updateItem(item, { onMap: 0 });
     }
@@ -357,11 +363,12 @@ export default class ItemsModule extends MapModule {
         if (item === mapContext.getSelectedItem()) {
             mapContext.unselectItem();
         }
-        const index = this.currentLayerFeatures.findIndex((d) => d.id === item.id);
+        const index = this.currentItems.findIndex((d) => d.id === item.id);
         if (index > -1) {
-            this.currentLayerFeatures.splice(index, 1);
+            // this.currentLayerFeatures.splice(index, 1);
             this.currentItems.splice(index, 1);
-            this.updateGeoJSONLayer();
+            this.getLocalVectorDataSource().removeGeoJSONFeature(1, item.id);
+            // this.updateGeoJSONLayer();
         }
 
         if (item.image_path) {
