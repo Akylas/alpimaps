@@ -49,9 +49,7 @@ page {
 
 htmllabel,
 canvaslabel,
-label,
-mdbutton,
-button {
+label{
     color: $text-color-light;
 
     .ns-dark & {
@@ -59,14 +57,14 @@ button {
     }
 }
 
-mdbutton,
-button {
-    ripple-color: $text-color-light;
+// mdbutton,
+// button {
+//     ripple-color: $text-color-light;
 
-    .ns-dark & {
-        ripple-color: $text-color-dark;
-    }
-}
+//     .ns-dark & {
+//         ripple-color: $text-color-dark;
+//     }
+// }
 
 mdbutton[variant=text] {
     padding: 0;
@@ -75,12 +73,12 @@ mdbutton[variant=text] {
 mdtextfield,
 textfield {
     color: $text-color-light;
-    backgroundcolor-color: $text-color-dark;
+    // backgroundcolor-color: $text-color-dark;
     placeholder-color: gray;
 
     .ns-dark & {
         color: $text-color-dark;
-        backgroundcolor-color: $text-color-light;
+        // backgroun    dcolor-color: $text-color-light;
         placeholder-color: lightgray;
     }
 }
@@ -188,22 +186,23 @@ z .navigationBarOverlay {
 }
 
 .actionBar {
-    background-color: adjust-color(white, $lightness: -30%);
+    background-color: $primary-color;
+    // background-color: adjust-color(white, $lightness: -30%);
 
-    .ns-dark & {
-        background-color: adjust-color(black, $lightness: 30%);
-    }
+    // .ns-dark & {
+    //     background-color: adjust-color(black, $lightness: 30%);
+    // }
 }
 
 .actionBarButton {
     @extend .mdi;
     width: $actionbar-height;
     height: $actionbar-height;
-    color: black;
+    // color: black;
 
-    .ns-dark & {
+    // .ns-dark & {
         color: white;
-    }
+    // }
 
     margin: 0;
     padding: 0;
@@ -214,11 +213,11 @@ z .navigationBarOverlay {
     // @extend .lato;
     font-size: 20;
     font-weight: 500;
-    color: black;
+    // color: black;
 
-    .ns-dark & {
+    // .ns-dark & {
         color: white;
-    }
+    // }
 }
 
 .actionBarSubtitle {
