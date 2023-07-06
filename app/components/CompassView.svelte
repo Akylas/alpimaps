@@ -142,7 +142,7 @@
     svg.cache = true;
     svg.src = '~/assets/svgs/needle.svg';
 
-    function onCanvasDrawBeforeText({ canvas, object, delta, rotation }: { canvas: Canvas; object: Canvas; delta: number; rotation: number }) {
+    function onCanvasDrawBeforeText({ canvas, object, delta, rotation }: { canvas: Canvas; object: CanvasView; delta: number; rotation: number }) {
         let w = canvas.getWidth();
         let h = canvas.getHeight();
         const rx = w / 2;
@@ -157,7 +157,7 @@
             canvas.restore();
         }
     }
-    function onCanvasDraw({ canvas, object, delta, rotation }: { canvas: Canvas; object: Canvas; delta: number; rotation: number }) {
+    function onCanvasDraw({ canvas, object, delta, rotation }: { canvas: Canvas; object: CanvasView; delta: number; rotation: number }) {
         let w = canvas.getWidth();
         let h = canvas.getHeight();
         const rx = w / 2;
@@ -229,7 +229,7 @@
 </script>
 
 <gridLayout {height} rows="*,auto" {...$$restProps}>
-    <CompassDialView bind:canvas onDraw={onCanvasDraw} onDrawBeforeText={onCanvasDrawBeforeText} rotation={updateWithSensor ? -currentHeading : 0} drawInsideGrid={moonBearing} />
+    <CompassDialView bind:canvas onDraw={onCanvasDraw} onDrawBeforeText={onCanvasDrawBeforeText} rotation={updateWithSensor ? -currentHeading : 0} drawInsideGrid={!!moonBearing} />
     <!-- <svgview visibility={updateWithSensor ? 'visible' : 'hidden'} src="~/assets/svgs/needle.svg" stretch="aspectFit" horizontalAlignment="center" margin="30" /> -->
     <IconButton small={true} text="mdi-rotate-orbit" on:tap={() => (updateWithSensor = !updateWithSensor)} isSelected={updateWithSensor} horizontalAlignment="left" verticalAlignment="bottom" />
     <label

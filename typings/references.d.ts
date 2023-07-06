@@ -106,6 +106,8 @@ declare namespace svelteNative.JSX {
         rippleColor?: Color | string;
         dynamicElevationOffset?: string | number;
         elevation?: string | number;
+        'on:layoutChanged'?: (args: EventData) => void;
+        onlayoutChanged?: (args: EventData) => void;
     }
     export interface ButtonAttributes {
         variant?: string;
@@ -120,6 +122,7 @@ declare namespace svelteNative.JSX {
     }
     export interface SliderAttributes {
         stepSize?: number;
+        trackBackgroundColor?: string;
     }
     export interface PageAttributes {
         keepScreenAwake?: boolean;
