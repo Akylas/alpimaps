@@ -346,7 +346,6 @@
                 sets.push(set);
                 const lineData = new LineData(sets);
                 chartView.setData(lineData);
-                DEV_LOG && console.log('chart data set', new Error().stack);
             } else {
                 // console.log('clearing highlight1')
                 chartView.highlightValues(null);
