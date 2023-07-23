@@ -38,7 +38,7 @@ export const onLanguageChanged = createGlobalEventListener('language');
 export const onMapLanguageChanged = createGlobalEventListener('map_language');
 
 async function setLang(newLang) {
-    newLang = getActualLanguage(newLang);
+    newLang = getCountryCode(newLang);
     if (supportedLanguages.indexOf(newLang) === -1) {
         newLang = 'en';
     }
@@ -80,7 +80,7 @@ async function setLang(newLang) {
     globalObservable.notify({ eventName: 'language', data: lang });
     langStore.set(newLang);
 }
-function getActualLanguage(language) {
+export function getCountryCode(language) {
     if (language === 'auto') {
         language = Device.language;
     }

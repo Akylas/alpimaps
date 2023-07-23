@@ -58,14 +58,14 @@ export default class ItemFormatter {
         }
         return '';
     }
-    getItemAddress(item: Item, part = 0) {
+    getItemAddress(item: Item, startIndex?, endIndex?) {
         if (item.properties?.address) {
-            return formatAddress(item, part);
+            return formatAddress(item, startIndex, endIndex);
         }
     }
     getItemTitle(item: Item, lang?: string) {
         if (item) {
-            return this.getItemName(item, lang) || this.getItemAddress(item, 1) || this.getItemPositionToString(item);
+            return this.getItemName(item, lang) || this.getItemAddress(item, 0, 1) || this.getItemPositionToString(item);
         }
         return '';
     }
@@ -77,7 +77,7 @@ export default class ItemFormatter {
             if (itemTile) {
                 return this.getItemAddress(item);
             } else {
-                return this.getItemAddress(item, 2);
+                return this.getItemAddress(item, 1);
             }
         }
     }
