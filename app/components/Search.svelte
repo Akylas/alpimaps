@@ -3,7 +3,7 @@
     import { ClusterElementBuilder } from '@nativescript-community/ui-carto/layers/cluster';
     import { ClusteredVectorLayer } from '@nativescript-community/ui-carto/layers/vector';
     import { PointStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/point';
-    import { GridLayout, TextField, View } from '@nativescript/core';
+    import { Animation, GridLayout, TextField, View } from '@nativescript/core';
     import type { Point } from 'geojson';
     import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -18,44 +18,27 @@
     import SearchCollectionView from './SearchCollectionView.svelte';
 
     const SEARCH_COLLECTIONVIEW_HEIGHT = 250;
-
-    async function animateView(view: View, to, duration) {
-        let shouldAnimate = false;
-        Object.keys(to).some((k) => {
-            if (view[k] !== to[k]) {
-                shouldAnimate = true;
-                return true;
-            }
-        });
-        if (!shouldAnimate) {
-            return;
-        }
+    let animating = false;
+    async function animateTargets(animations: any[]) {
+        animations = animations.filter(a=>!!a.target);
+        let shouldAnimate = true;
         try {
-            if (view.nativeView) {
-                await view.animate({
-                    duration,
-                    ...to
-                });
+            if (shouldAnimate && animations[0].target.nativeView) {
+                animating = true;
+                await new Animation(animations).play();
             } else {
-                view._batchUpdate(() => {
-                    Object.assign(view, to);
+                animations.forEach((animation) => {
+                    const { target, ...props } = animation;
+                    target._batchUpdate(() => {
+                        Object.assign(target, props);
+                    });
                 });
             }
         } catch (error) {
             console.error(error, error.stack);
+        } finally {
+            animating = false;
         }
-        // const from = {};
-        // Object.keys(to).forEach((k) => {
-        //     from[k] = view[k];
-        // });
-        // const anim = new AdditiveTweening({
-        //     onRender: (state) => {
-        //         // console.log('onRender', state)
-        //         Object.assign(view, state);
-        //     }
-        // });
-        // anim.tween(from, to, duration);
-        // return anim;
     }
 
     interface SearchItem extends Item {
@@ -117,17 +100,21 @@
     $: {
         searchResultsVisible = focused && searchResultsCount > 0;
     }
-    $: {
-        const nGridLayout = gridLayout?.nativeView;
-        if (nGridLayout) {
-            animateView(nGridLayout, { elevation: $currentTheme !== 'dark' && focused ? 10 : 0, borderRadius: searchResultsVisible ? 10 : 25 }, 100);
-        }
-    }
+    // $: {
+    //     if (nGridLayout) {
+    //         animateView(nGridLayout, { elevation: $currentTheme !== 'dark' && focused ? 10 : 0, borderRadius: searchResultsVisible ? 10 : 25 }, 100);
+    //     }
+    // }
 
     $: {
         const nCollectionView = collectionViewHolder?.nativeView;
-        if (nCollectionView) {
-            animateView(nCollectionView, { height: searchResultsVisible ? SEARCH_COLLECTIONVIEW_HEIGHT : 0 }, 100);
+        const nGridLayout = gridLayout?.nativeView;
+        if (nCollectionView || nGridLayout) {
+            animateTargets([
+                { target: nCollectionView, height: searchResultsVisible ? SEARCH_COLLECTIONVIEW_HEIGHT : 0, duration: 100 },
+                { target: nGridLayout, elevation: $currentTheme !== 'dark' && focused ? 10 : 0, borderRadius: searchResultsVisible ? 10 : 25, duration: 100 }
+            ]);
+            // animateView(nCollectionView, { height: searchResultsVisible ? SEARCH_COLLECTIONVIEW_HEIGHT : 0 }, 100);
         }
     }
 
@@ -143,6 +130,8 @@
     });
 
     let searchResultsCount;
+
+    $: if (searchResultsCount) needToShowOnResult = false;
     let focused = false;
     export function hasFocus() {
         return focused;
@@ -195,16 +184,17 @@
             currentSearchText = query;
         }
     }
-
+    let needToShowOnResult = false;
     async function instantSearch(_query) {
         try {
             loading = true;
             if (!loaded) {
                 await loadView();
             }
+            needToShowOnResult = true;
             await collectionView?.instantSearch(_query);
 
-            if (searchResultsCount > 0) {
+            if (needToShowOnResult && searchResultsCount > 0) {
                 textField.nativeView.focus();
             }
         } catch (err) {
@@ -243,11 +233,9 @@
             clearTimeout(searchAsTypeTimer);
             searchAsTypeTimer = null;
         }
-        (textField.nativeView as any).clearFocus();
-    }
-
-    function focus() {
-        textField.nativeView.focus();
+        if (!animating) {
+            (textField.nativeView as any).clearFocus();
+        }
     }
 
     function showMapMenu() {
@@ -331,7 +319,7 @@
     bind:this={gridLayout}
     {...$$restProps}
     rows="auto,auto"
-    on:tap={()=>{}}
+    on:tap={() => {}}
     elevation={$currentTheme !== 'dark' && focused ? 6 : 0}
     columns="auto,*,auto,auto,auto"
     backgroundColor={$widgetBackgroundColor}
