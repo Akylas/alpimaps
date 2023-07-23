@@ -157,51 +157,54 @@
             return;
         }
         const nChart = chart?.nativeView;
-        DEV_LOG && console.log('hilghlightPathIndex', !!item, onPathIndex, remainingDistance, remainingTime, highlight, nChart, new Error().stack);
+        DEV_LOG && console.log('hilghlightPathIndex', !!item, onPathIndex, remainingDistance, remainingTime, highlight, nChart);
         if (onPathIndex === -1) {
             if (nChart) {
                 nChart.highlight(null);
             }
         } else {
             if (highlight) {
-                highlightNString = createNativeAttributedString(
+                const spans = [
                     {
-                        spans: [
-                            {
-                                fontFamily: mdiFontFamily,
-                                color: primaryColor,
-                                text: 'mdi-timer-outline'
-                            },
-                            {
-                                text: convertDurationSeconds(remainingTime) + '  '
-                            },
-                            {
-                                fontFamily: mdiFontFamily,
-                                color: primaryColor,
-                                text: 'mdi-arrow-expand-right'
-                            },
-                            {
-                                text: formatDistance(remainingDistance) + '  '
-                            },
-                            {
-                                fontFamily: mdiFontFamily,
-                                color: primaryColor,
-                                text: 'mdi-triangle-outline'
-                            },
-                            {
-                                text: highlight.entry.a.toFixed() + 'm' + '  '
-                            },
-                            {
-                                fontFamily: alpimapsFontFamily,
-                                color: primaryColor,
-                                text: 'alpimaps-angle'
-                            },
-                            {
-                                text: '~' + highlight.entry.g.toFixed() + '%'
-                            }
-                        ]
+                        fontFamily: mdiFontFamily,
+                        color: primaryColor,
+                        text: 'mdi-arrow-expand-right'
+                    },
+                    {
+                        text: formatDistance(remainingDistance) + '  '
+                    },
+                    {
+                        fontFamily: mdiFontFamily,
+                        color: primaryColor,
+                        text: 'mdi-triangle-outline'
+                    },
+                    {
+                        text: highlight.entry.a.toFixed() + 'm' + '  '
+                    },
+                    {
+                        fontFamily: alpimapsFontFamily,
+                        color: primaryColor,
+                        text: 'alpimaps-angle'
+                    },
+                    {
+                        text: '~' + highlight.entry.g.toFixed() + '%'
                     }
-                );
+                ];
+                if (!isNaN(remainingTime)) {
+                    spans.unshift(
+                        {
+                            fontFamily: mdiFontFamily,
+                            color: primaryColor,
+                            text: 'mdi-timer-outline'
+                        },
+                        {
+                            text: convertDurationSeconds(remainingTime) + '  '
+                        }
+                    );
+                }
+                highlightNString = createNativeAttributedString({
+                    spans
+                });
                 return;
             }
             function highlightFunc() {
