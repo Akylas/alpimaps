@@ -11,7 +11,7 @@ import { ShareFile } from '@nativescript-community/ui-share-file';
 import { File, Folder, ImageSource, knownFolders, path, profile } from '@nativescript/core';
 import type { Feature } from 'geojson';
 import { getDistanceSimple } from '~/helpers/geolib';
-import { IItem, Item, ItemRepository, Route, RouteInstruction, RouteProfile, RouteStats, toJSONStringified } from '~/models/Item';
+import { GroupRepository, IItem, Item, ItemRepository, Route, RouteInstruction, RouteProfile, RouteStats, toJSONStringified } from '~/models/Item';
 import { showError } from '~/utils/error';
 import { accentColor } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
@@ -19,6 +19,7 @@ import NSQLDatabase from './NSQLDatabase';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import { getDataFolder, getItemsDataFolder } from '~/utils/utils.common';
 import { importGPXToGeojson } from '~/utils/gpx';
+import { Canvas, Rect } from '@nativescript-community/ui-canvas';
 const mapContext = getMapContext();
 
 let writer: GeoJSONGeometryWriter<LatLonKeys>;
@@ -40,6 +41,7 @@ export default class ItemsModule extends MapModule {
     localVectorLayer: VectorTileLayer;
     db: NSQLDatabase;
     itemRepository: ItemRepository;
+    groupsRepository: GroupRepository;
     imagesFolder = Folder.fromPath(path.join(getItemsDataFolder(), 'item_images'));
 
     @profile
@@ -58,11 +60,14 @@ export default class ItemsModule extends MapModule {
                 // threading: true,
                 transformBlobs: false
             } as any);
-            this.itemRepository = new ItemRepository(this.db);
+            this.groupsRepository = new GroupRepository(this.db);
+            this.itemRepository = new ItemRepository(this.db, this.groupsRepository);
+            await this.groupsRepository.createTables();
             await this.itemRepository.createTables();
-            const items = await this.itemRepository.searchItem(SqlQuery.createFromTemplateString`"onMap" = 1`);
+            const items = await this.itemRepository.searchItem({where: SqlQuery.createFromTemplateString`"onMap" = 1`});
             if (items.length > 0) {
-                items.forEach((i) => this.addItemToLayer(i), this);
+                items.forEach((i) => {
+                this.addItemToLayer(i);}, this);
                 this.setLayerGeoJSONString();
             }
         } catch (err) {
@@ -153,14 +158,6 @@ export default class ItemsModule extends MapModule {
         const index = this.currentItems.findIndex((d) => d.id === item.id);
         if (index !== -1) {
             this.currentItems.splice(index, 1, item);
-            // const sProps = {};
-            // Object.keys(item.properties).forEach((k) => {
-            //     if (typeof item.properties[k] === 'object') {
-            //         sProps[k] = JSON.stringify(item.properties[k]);
-            //     } else {
-            //         sProps[k] = item.properties[k];
-            //     }
-            // });
             if (autoUpdateLayer && item.onMap) {
                 this.getLocalVectorDataSource().updateGeoJSONStringFeature(1, JSON.stringify({ type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry }));
             }
@@ -322,12 +319,12 @@ export default class ItemsModule extends MapModule {
             if (!item.geometry && item.route.osmid) {
                 item.geometry = await this.getRoutePositions(item);
                 if (!item.geometry) {
-                    return item;
+                    return item as Item;
                 }
             }
         } else {
             properties = item.properties = item.properties || {};
-            properties.color = accentColor.hex;
+            properties.color = properties.color || accentColor.hex;
         }
         if (!item.id) {
             const id = (item.properties.id = item.properties.id || Date.now());
@@ -340,7 +337,7 @@ export default class ItemsModule extends MapModule {
             item.onMap = onMap ? 1 : 0;
             item = await this.itemRepository.updateItem(item as Item);
         }
-        return item; // return the first one
+        return item as Item; // return the first one
     }
     async showItem(item: IItem) {
         if (item.onMap === 0) {

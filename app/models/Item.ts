@@ -2,7 +2,6 @@ import { MapBounds } from '@nativescript-community/ui-carto/core';
 import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
 import type { Geometry, Point } from 'geojson';
-// import extend from 'just-extend';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import NSQLDatabase from '../mapModules/NSQLDatabase';
@@ -134,6 +133,12 @@ export interface ItemProperties {
     };
     zoomBounds?: MapBounds<LatLonKeys>;
 }
+
+export class Group {
+    public readonly id!: string;
+    public name: string;
+    onMap: 1 | 0;
+}
 export class Item {
     public readonly id!: number;
     type?: string;
@@ -157,24 +162,46 @@ export class Item {
     public _instructions!: string;
     stats?: RouteStats;
     public _stats!: string;
+
+    public groups?: string[];
 }
 export type IItem = Partial<Item> & {
     layer?: VectorTileLayer;
     // vectorElement?: VectorElement<any, any>;
 };
 
-export class ItemRepository extends CrudRepository<Item> {
+
+export class GroupRepository  extends CrudRepository<Group> {
     constructor(database: NSQLDatabase) {
         super({
             database,
-            table: 'items',
+            table: 'Groups',
+            primaryKey: 'id',
+            model: Group
+        });
+    }
+    async createTables() {
+        return this.database.query(sql`
+        CREATE TABLE IF NOT EXISTS "Groups" (
+            id TEXT PRIMARY KEY NOT NULL,
+            onMap INTEGER,
+            name TEXT
+        );
+    `);
+    }
+}
+export class ItemRepository extends CrudRepository<Item> {
+    constructor(database: NSQLDatabase, public groupsRepository: GroupRepository) {
+        super({
+            database,
+            table: 'Items',
             primaryKey: 'id',
             model: Item
         });
     }
 
     async createTables() {
-        return this.database.query(sql`
+        return Promise.all([this.groupsRepository.createTables(), this.database.query(sql`
             CREATE TABLE IF NOT EXISTS "Items" (
                 id BIGINT PRIMARY KEY NOT NULL,
                 geometry TEXT NOT NULL,
@@ -187,11 +214,31 @@ export class ItemRepository extends CrudRepository<Item> {
                 stats TEXT,
                 image_path TEXT
             );
-        `);
+        `), this.database.query(sql`
+        CREATE TABLE IF NOT EXISTS "ItemsGroups" (
+            item_id BIGINT,
+            group_id TEXT,
+            PRIMARY KEY(item_id, group_id),
+            FOREIGN KEY(item_id) REFERENCES Items(id) ON DELETE CASCADE,
+            FOREIGN KEY(group_id) REFERENCES Groups(id) ON DELETE CASCADE
+        );
+    `)]);
+    }
+    async loadGroupsRelationship(item: Item): Promise<Item> {
+        const groups  = await (this.groupsRepository).search({where:sql`
+            "id" IN (
+                SELECT "group_id"
+                FROM "ItemsGroups"
+                WHERE "item_id" = ${item.id}
+            )
+        `})
+        item.groups = groups.map(g=>g.id)
+        return item;
+        
     }
     async createItem(item: IItem) {
-        DEV_LOG && console.log('createItem', item.onMap, item.image_path);
-        await this.create({
+        // DEV_LOG && console.log('createItem', item.onMap, item.image_path);
+        const res = await this.create({
             id: item.id,
             creation_date: item.creation_date || Date.now(),
             onMap: item.onMap,
@@ -241,10 +288,33 @@ export class ItemRepository extends CrudRepository<Item> {
         await this.update(updatedItem, toUpdate);
         return updatedItem;
     }
+    async addGroupToItem(item: Item, groupId: string) {
+        try {
+            let group;
+            try {
+                group = await this.groupsRepository.get(groupId);
+            } catch (error) {
+                
+            }
+            console.log('addGroupToItem', group)
+            if (!group) {
+                group = await this.groupsRepository.create({id:groupId, name:groupId, onMap:1})
+            }
+            const relation =  await this.database.query(sql` SELECT * FROM ItemsGroups WHERE "item_id" = ${item.id} AND "group_id" = ${groupId}`)
+            if (relation.length === 0) {
+                await this.database.query(sql` INSERT INTO ItemsGroups ( item_id, group_id ) VALUES(${item.id}, ${groupId})`)
+            }
+            item.groups = item.groups || [];
+            item.groups.push(groupId);
+        } catch (error) {
+            console.error(error)
+        }
+    }
 
     prepareGetItem(item: Item) {
         return {
             ...item,
+            groups: item.groups? (item.groups as any as string).split(',') : item.groups,
             _properties: item.properties,
             get properties() {
                 if (!this._parsedProperties) {
@@ -293,7 +363,7 @@ export class ItemRepository extends CrudRepository<Item> {
                 return this._parsedStats;
             },
             toJSON() {
-                return { type: this.type, id: this.id, properties: this.properties, geometry: this.geometry, stats: this.stats, route: this.route, instructions: this.instructions };
+                return { type: this.type, id: this.id, properties: this.properties, geometry: this.geometry, stats: this.stats, route: this.route, instructions: this.instructions, groups :this.groups };
             }
         };
     }
@@ -301,8 +371,13 @@ export class ItemRepository extends CrudRepository<Item> {
         const element = await this.get(itemId);
         return this.prepareGetItem(element);
     }
-    async searchItem(where?: SqlQuery | null, orderBy?: SqlQuery | null) {
-        const result = (await this.search(where, orderBy)).slice();
+    async searchItem(args: {
+        postfix?: SqlQuery;
+        select?: SqlQuery;
+        where?: SqlQuery;
+        orderBy?: SqlQuery;
+    }) {
+        const result = (await this.search(args)).slice();
         for (let index = 0; index < result.length; index++) {
             const element = this.prepareGetItem(result[index]);
             result[index] = element as any;
