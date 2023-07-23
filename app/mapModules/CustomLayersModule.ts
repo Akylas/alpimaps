@@ -10,8 +10,7 @@ import { MapBoxElevationDataDecoder, TerrariumElevationDataDecoder } from '@nati
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { openFilePicker } from '@nativescript-community/ui-document-picker';
 import { login, prompt } from '@nativescript-community/ui-material-dialogs';
-import { ApplicationSettings, Color, profile } from '@nativescript/core';
-import { android as androidApp } from '@nativescript/core/application';
+import { Application, ApplicationSettings, Color, profile } from '@nativescript/core';
 import * as appSettings from '@nativescript/core/application-settings';
 import { ChangeType, ChangedData, ObservableArray } from '@nativescript/core/data/observable-array';
 import { File, Folder, path } from '@nativescript/core/file-system';
@@ -735,7 +734,7 @@ export default class CustomLayersModule extends MapModule {
     hasRoute = false;
     async loadLocalMbtiles(directory: string) {
         try {
-            const context: android.app.Activity = __ANDROID__ && (androidApp.foregroundActivity || androidApp.startActivity);
+            const context: android.app.Activity = __ANDROID__ && (Application.android.startActivity);
             const entities = listFolder(directory);
             let worldMbtiles: MBTilesTileDataSource;
 
