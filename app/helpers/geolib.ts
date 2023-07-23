@@ -1201,3 +1201,47 @@ function round(value, n) {
     const decPlace = Math.pow(10, n);
     return Math.round(value * decPlace) / decPlace;
 }
+
+export function getBoundsAndDistance(theCoords) {
+    if (!theCoords.length) {
+        return undefined;
+    }
+    const bounds = {
+        maxLat: -Infinity,
+        minLat: Infinity,
+        maxLng: -Infinity,
+        minLng: Infinity
+    };
+
+    let distance = 0;
+    let coord, last;
+    for (let i = 0, l = theCoords.length; i < l; ++i) {
+        coord = coords(theCoords[i]);
+        if (last) {
+            distance += getDistanceSimple(coord, last);
+        }
+        last = coord;
+        bounds.maxLat = Math.max(coord['latitude'], bounds.maxLat);
+        bounds.minLat = Math.min(coord['latitude'], bounds.minLat);
+        bounds.maxLng = Math.max(coord['longitude'], bounds.maxLng);
+        bounds.minLng = Math.min(coord['longitude'], bounds.minLng);
+    }
+    if (bounds.maxLat === bounds.minLat) {
+        bounds.maxLat += 0.002;
+        bounds.minLat -= 0.002;
+    }
+    if (bounds.maxLng === bounds.minLng) {
+        bounds.maxLng += 0.002;
+        bounds.minLng -= 0.002;
+    }
+    return {bounds: {
+        northeast: {
+            lat: bounds.maxLat,
+            lon: bounds.maxLng
+        },
+        southwest: {
+            lat: bounds.minLat,
+            lon: bounds.minLng
+        }
+    }, distance};
+}

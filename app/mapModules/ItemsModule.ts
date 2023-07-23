@@ -18,6 +18,7 @@ import MapModule, { getMapContext } from './MapModule';
 import NSQLDatabase from './NSQLDatabase';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import { getDataFolder, getItemsDataFolder } from '~/utils/utils.common';
+import { importGPXToGeojson } from '~/utils/gpx';
 const mapContext = getMapContext();
 
 let writer: GeoJSONGeometryWriter<LatLonKeys>;
@@ -39,6 +40,7 @@ export default class ItemsModule extends MapModule {
     localVectorLayer: VectorTileLayer;
     db: NSQLDatabase;
     itemRepository: ItemRepository;
+    imagesFolder = Folder.fromPath(path.join(getItemsDataFolder(), 'item_images'));
 
     @profile
     async initDb() {
@@ -162,8 +164,9 @@ export default class ItemsModule extends MapModule {
             if (autoUpdateLayer && item.onMap) {
                 this.getLocalVectorDataSource().updateGeoJSONStringFeature(1, JSON.stringify({ type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry }));
             }
-            // this.currentLayerFeatures.splice(index, 1, { type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
-            // this.updateGeoJSONLayer();
+            if (item.route) {
+                this.takeItemPicture(item);
+            }
         }
         return item;
     }
@@ -378,5 +381,51 @@ export default class ItemsModule extends MapModule {
             await this.itemRepository.delete(item as Item);
         }
     }
-    imagesFolder = Folder.fromPath(path.join(getItemsDataFolder(), 'item_images'));
+    async takeItemPicture(item) {
+        //item needs to be already selected
+        // we hide other items before the screenshot
+        // and we show theme again after it
+        mapContext.selectItem({ item, isFeatureInteresting: true, preventZoom: false });
+        mapContext.innerDecoder.setStyleParameter('hide_unselected', '1');
+        return new Promise<void>(resolve=>{
+            mapContext.onMapStable(async () => {
+                try {
+                    // const startTime = Date.now();
+                    const viewPort = mapContext.getMapViewPort();
+                    const image = await mapContext.getMap().captureRendering(true);
+                    mapContext.innerDecoder.setStyleParameter('hide_unselected', '0');
+                    // image.saveToFile(path.join(itemsModule.imagesFolder.path, Date.now() + '_full.png'), 'png');
+                    const canvas = new Canvas(500, 500);
+                    console.log('captureRendering', item.image_path, image.width, image.height, viewPort, canvas.getWidth(), canvas.getHeight());
+                    //we offset a bit to be sure we the whole trace
+                    const offset = 20;
+                    canvas.drawBitmap(
+                        image,
+                        new Rect(viewPort.left - offset, viewPort.top - offset, viewPort.left + viewPort.width + offset, viewPort.top + viewPort.height + offset),
+                        new Rect(0, 0, 500, 500),
+                        null
+                    );
+                    new ImageSource(canvas.getImage()).saveToFile(item.image_path, 'png');
+                    // console.log('saved bitmap', imagePath, Date.now() - startTime, 'ms');
+                    canvas.release();
+                    resolve();
+                } catch (error) {
+                    console.error(error, error.stack);
+                }
+            }, true);
+        })
+        
+    }
+    async importGPXFile(link: string) {
+        let items = await importGPXToGeojson(link)
+        for (let index = 0; index < items.length; index++) {
+            let item = items[index];
+            item.image_path = path.join(this.imagesFolder.path, Date.now() + '.png');
+            const dbItem = await this.saveItem(item)
+            await this.itemRepository.addGroupToItem(dbItem, 'gpx')
+            mapContext.selectItem({ item:dbItem, isFeatureInteresting: true, peek:true, preventZoom: false, forceZoomOut:true, zoomDuration:0 });
+            await this.takeItemPicture(dbItem);
+            
+        }
+    }
 }
