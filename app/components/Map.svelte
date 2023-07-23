@@ -22,8 +22,7 @@
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { Application, Page, Utils } from '@nativescript/core';
-    import * as appSettings from '@nativescript/core/application-settings';
+    import { Application, ApplicationSettings, File, Page, Utils } from '@nativescript/core';
     import type { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Screen } from '@nativescript/core/platform';
@@ -62,6 +61,7 @@
     import LocationInfoPanel from './LocationInfoPanel.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
     import Search from './Search.svelte';
+    import { openFilePicker } from '@nativescript-community/ui-document-picker';
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
@@ -91,9 +91,9 @@
     let bottomSheetStepIndex = 0;
     let itemLoading = false;
     let projection: Projection = null;
-    let currentLanguage = appSettings.getString('map_language', appSettings.getString('language', 'en'));
+    let currentLanguage = ApplicationSettings.getString('map_language', ApplicationSettings.getString('language', 'en'));
     let addedLayers: { layer: Layer<any, any>; layerId: LayerType }[] = [];
-    let keepScreenAwake = appSettings.getBoolean(KEEP_AWAKE_KEY, false);
+    let keepScreenAwake = ApplicationSettings.getBoolean(KEEP_AWAKE_KEY, false);
     let showOnLockscreen = false;
     let currentMapRotation = 0;
     let shouldShowNavigationBarOverlay = false;
@@ -117,8 +117,6 @@
 
     let transitVectorTileDataSource: GeoJSONVectorTileDataSource;
     let transitVectorTileLayer: VectorTileLayer;
-
-    const bottomSheetPanGestureOptions = { failOffsetXEnd: 20, minDist: 40 };
 
     $: {
         if (steps) {
@@ -201,7 +199,7 @@
         }
     }
 
-    function onAppUrl(link: string) {
+    async function onAppUrl(link: string) {
         // if (__ANDROID__) {
         //     const activity = Application.android.startActivity;
         //     const visible = activity && activity.getWindow().getDecorView().getRootView().isShown();
@@ -223,7 +221,7 @@
                         cartoMap.setFocusPos({ lat: latlong[0], lon: latlong[1] }, 0);
                     } else {
                         // happens before map ready
-                        appSettings.setString('mapFocusPos', `{"lat":${latlong[0]},"lon":${latlong[1]}}`);
+                        ApplicationSettings.setString('mapFocusPos', `{"lat":${latlong[0]},"lon":${latlong[1]}}`);
                     }
                 }
                 const params = parseUrlQueryParameters(link);
@@ -232,7 +230,7 @@
                     if (loaded) {
                         cartoMap.setZoom(zoom, 0);
                     } else {
-                        appSettings.setNumber('mapZoom', zoom);
+                        ApplicationSettings.setNumber('mapZoom', zoom);
                     }
                 }
                 if (params.q) {
@@ -287,9 +285,12 @@
                     }
                 });
             } else if (link.endsWith('.gpx')) {
+                const itemModule = mapContext.mapModule('items');
+                await itemModule.importGPXFile(link);
             }
         } catch (err) {
             console.error(err, err.stack);
+            showError(err);
         }
     }
 
@@ -456,9 +457,9 @@
         if (!cartoMap) {
             return;
         }
-        appSettings.setNumber('mapZoom', cartoMap.zoom);
-        appSettings.setNumber('mapBearing', cartoMap.bearing);
-        appSettings.setString('mapFocusPos', JSON.stringify(cartoMap.focusPos));
+        ApplicationSettings.setNumber('mapZoom', cartoMap.zoom);
+        ApplicationSettings.setNumber('mapBearing', cartoMap.bearing);
+        ApplicationSettings.setString('mapFocusPos', JSON.stringify(cartoMap.focusPos));
     }, 500);
 
     async function onMainMapReady(e) {
@@ -485,9 +486,9 @@
             options.setKineticRotation(false);
             options.setRotationGestures($rotateEnabled);
             toggleMapPitch($pitchEnabled);
-            const pos = JSON.parse(appSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos<LatLonKeys>;
-            const zoom = appSettings.getNumber('mapZoom', 10);
-            const bearing = appSettings.getNumber('mapBearing', 0);
+            const pos = JSON.parse(ApplicationSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos<LatLonKeys>;
+            const zoom = ApplicationSettings.getNumber('mapZoom', 10);
+            const bearing = ApplicationSettings.getNumber('mapBearing', 0);
             DEV_LOG && console.log('onMainMapReady', pos, zoom, bearing);
             cartoMap.setFocusPos(pos, 0);
             cartoMap.setZoom(zoom, 0);
@@ -495,7 +496,7 @@
             try {
                 packageService.start();
                 transitService.start();
-                setMapStyle(appSettings.getString('mapStyle', PRODUCTION || TEST_ZIP_STYLES ? 'osm.zip~osm' : 'osm~osm'), true);
+                setMapStyle(ApplicationSettings.getString('mapStyle', PRODUCTION || TEST_ZIP_STYLES ? 'osm.zip~osm' : 'osm~osm'), true);
                 // setMapStyle('osm.zip~osm', true);
             } catch (err) {
                 showError(err);
@@ -516,6 +517,9 @@
         if (!cartoMap) {
             return;
         }
+        if (!mapMoved) {
+            unFocusSearch();
+        }
         mapMoved = true;
         // console.log('onMapMove');
         // const bearing = cartoMap.bearing;
@@ -525,7 +529,6 @@
         // executeOnMainThread(function () {
         currentMapRotation = Math.round(cartoMap.bearing * 100) / 100;
         // });
-        unFocusSearch();
     }
     function onMainMapIdle(e) {
         if (!cartoMap) {
@@ -580,7 +583,8 @@
         preventZoom = true,
         minZoom,
         zoom,
-        zoomDuration
+        zoomDuration,
+        forceZoomOut = false
     }: {
         item: IItem;
         showButtons?: boolean;
@@ -591,6 +595,7 @@
         minZoom?: number;
         zoom?: number;
         zoomDuration?: number;
+        forceZoomOut?: boolean;
     }) {
         try {
             didIgnoreAlreadySelected = false;
@@ -761,7 +766,7 @@
                 if (preventZoom) {
                     return;
                 }
-                zoomToItem({ item, zoom, minZoom, duration: zoomDuration });
+                await zoomToItem({ item, zoom, minZoom, duration: zoomDuration, forceZoomOut });
             } else {
                 unselectItem();
             }
@@ -863,7 +868,7 @@
     $: cartoMap?.getOptions().setFocusPointOffset(toNativeScreenPos({ x: 0, y: Utils.layout.toDevicePixels(steps[bottomSheetStepIndex]) / 2 }));
 
     $: {
-        appSettings.setBoolean(KEEP_AWAKE_KEY, keepScreenAwake);
+        ApplicationSettings.setBoolean(KEEP_AWAKE_KEY, keepScreenAwake);
         if (keepScreenAwake) {
             showKeepAwakeNotification();
         } else {
@@ -1167,7 +1172,7 @@
         DEV_LOG && console.log('setMapStyle', layerStyle, currentLayerStyle, mapStyle, mapStyleLayer, force);
         if (layerStyle !== currentLayerStyle || !!force) {
             currentLayerStyle = layerStyle;
-            appSettings.setString('mapStyle', layerStyle);
+            ApplicationSettings.setString('mapStyle', layerStyle);
             // if (layerStyle === 'default') {
             //     vectorTileDecoder = new CartoOnlineVectorTileLayer({
             //         style: mapStyleLayer
@@ -1531,6 +1536,12 @@
                     id: 'dark_mode',
                     color: $sTheme === 'dark' ? primaryColor : undefined,
                     icon: 'mdi-theme-light-dark'
+                },
+
+                {
+                    title: lc('import_gpx'),
+                    id: 'import_gpx',
+                    icon: 'mdi-import'
                 }
             ];
             if (customLayersModule.hasLocalData) {
@@ -1584,6 +1595,17 @@
                     case 'sentry':
                         await sendBugReport();
                         break;
+                    case 'import_gpx': {
+                        const result = await openFilePicker({
+                            extensions: __IOS__ ? ['com.microoled.gpx'] : ['application/gpx+xml'],
+                            multipleSelection: false,
+                            pickerMode: 0
+                        });
+                        if (File.exists(result.files[0])) {
+                            await getMapContext().mapModule('items').importGPXFile(result.files[0]);
+                        }
+                        break;
+                    }
                     default:
                         await handleMapAction(result.id);
                         break;
@@ -1740,7 +1762,7 @@
     <bottomsheet
         android:marginBottom={$navigationBarHeight}
         backgroundColor="#01550000"
-        panGestureOptions={bottomSheetPanGestureOptions}
+        panGestureOptions={{ failOffsetXEnd: 20, minDist: 40 }}
         {steps}
         stepIndex={bottomSheetStepIndex}
         on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)}

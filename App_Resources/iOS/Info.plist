@@ -21,11 +21,11 @@
     <key>CFBundleVersion</key>
     <string>217</string>
     <key>LSRequiresIPhoneOS</key>
-    <true/>
+    <true />
     <key>UILaunchStoryboardName</key>
     <string>LaunchScreen</string>
     <key>UIRequiresFullScreen</key>
-    <true/>
+    <true />
     <key>UIRequiredDeviceCapabilities</key>
     <array>
       <string>bluetooth-le</string>
@@ -54,7 +54,7 @@
     <key>UIStatusBarStyle</key>
     <string>UIStatusBarStyleLightContent</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
-    <false/>
+    <false />
     <key>CFBundleURLTypes</key>
     <array>
       <dict>
@@ -69,15 +69,52 @@
       </dict>
     </array>
     <key>UIFileSharingEnabled</key>
-    <true/>
+    <true />
     <key>UISupportsDocumentBrowser</key>
-    <true/>
+    <true />
     <key>LSSupportsOpeningDocumentsInPlace</key>
-    <true/>
+    <true />
     <key>NSAppTransportSecurity</key>
     <dict>
       <key>NSAllowsArbitraryLoads</key>
-      <true/>
+      <true />
     </dict>
+    <key>CFBundleDocumentTypes</key>
+    <array>
+      
+      <dict>
+        <key>CFBundleTypeRole</key>
+        <string>Viewer</string>
+        <key>LSHandlerRank</key>
+        <string>Alternate</string>
+        <key>LSItemContentTypes</key>
+        <array>
+          <string>com.akylas.gpx</string>
+        </array>
+        <key>CFBundleTypeName</key>
+        <string>GPX file</string>
+      </dict>
+    </array>
+    <key>UTImportedTypeDeclarations</key>
+    <array>
+      <dict>
+        <key>UTTypeConformsTo</key>
+        <array>
+          <string>public.xml</string>
+          <string>public.data</string>
+        </array>
+        <key>UTTypeDescription</key>
+        <string>GPX Document</string>
+        <key>UTTypeIdentifier</key>
+        <string>com.akylas.gpx</string>
+        <key>UTTypeTagSpecification</key>
+        <dict>
+          <key>public.filename-extension</key>
+          <array>
+            <string>gpx</string>
+          </array>
+        </dict>
+      </dict>
+    </array>
   </dict>
 </plist>
