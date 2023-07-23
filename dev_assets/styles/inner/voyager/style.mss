@@ -6,3 +6,4 @@
 
 @standard-halo-radius: 2;
 @standard-halo-fill: #f2f5f8;
+@wrap_characters: '-_';

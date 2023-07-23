@@ -1,10 +1,3 @@
-//CARTO Fonts
-@mont: 'DIN Pro Regular';
-@mont_md: 'DIN Pro Medium';
-@mont_bd: 'DIN Pro Bold';
-@mont_it: 'DIN Pro Italic';
-@osm: 'osm';
-
 @background: #e6e4e0;
 
 /* 2.BOUNDARY */
@@ -21,7 +14,6 @@
 @contour_low: fadeout(@contour_inner, 0.8);
 @contour_semi: step([view::zoom], (12, @contour_low), (14,@contour));
 @contour_label: @contour_inner;
-@contour_label_size: linear([view::zoom], (12, 5), (16, 8), (20, 9));
 @contour_halo: #ffffff88;
 @contour_halo_radius: 1;
 
@@ -40,8 +32,6 @@
 @aboriginal_line: #D9B391;
 @park_line: #82bf5a;
 
-@park_font_size:linear([view::zoom], (12, 12), (14, 12), (14.0001, 8));
-@protected_area_font_size:linear([view::zoom], (12, 12), (14, 12), (14.0001, 8));
 @protected_area_line_width:linear([view::zoom], (9, 0.75), (12, 1), (15, 1), (18, 3));
 
 @protected-area: #09330c;
@@ -281,15 +271,12 @@
 /* 6.2 Natural labels */
 
 @glacier_label: #1C88AF;
-@glacier_label_width: linear([view::zoom], (12, 9), (18, 13)) - 0.000001 * [rank];
 @glacier_label_wrap_width: 20;
 @water_label: #3a4ca6;
 @water_halo: #ffffff88;
 @water_halo_radius: 1;
 
 @waterway_label_dy:0;
-@waterway_text_width: linear([view::zoom], (10, 6.0), (15, 7.0), (16, 9.0), (17, 10));
-@river_text_width: linear([view::zoom], (10, 6), (15, 10), (18, 12));
 @waterway_label_spacing: 0;
 
 @river-width: linear([view::zoom], (8, 0.5), (15, 2), (16, 4));
@@ -308,46 +295,32 @@
 
 @peak_icon:[nuti::osm-mountain];
 @saddle_icon:[nuti::osm-saddle];
-@peak_text_min_dist: linear([view::zoom], (5, 30), (10, 20), (18, 10));
 
 /* 6.3 Place labels */
 
 @city-label-icon-size: 4;
 @city-label-dy: linear([view::zoom], (4, -5), (7.99, -9), (8, 0));
-@city-label-width: linear([view::zoom], (4, 10), (5, 11), (6, 12), (7, 13), (12, 18))- 0.000001 * [rank];
-@city-label-wrap-width: step([view::zoom], (4, 40), (5, 50), (6, 60));
 @city_label_min_dist: 1;
 @town-label-icon-size: 3;
-@town-label-wrap-width: linear([view::zoom], (12, 70), (14, 180));
 @town_label_min_dist: 20;
 @town_label: #000000;
-@town_label_width:linear([view::zoom], (7, 8), (15, 18)) - 0.000001 * [rank];
 
 @place_line_spacing:-2;
 @city_label: #000000;
 @country_label: #000000;
 @village_label: #333333;
-@village_label_width: linear([view::zoom], (7, 7), (10, 11), (16, 15)) - 0.000001 * [rank];
 @hamlet_label: #333333;
-@hamlet_label_width: linear([view::zoom], (12, 9), (15, 14)) - 0.000001 * [rank];
 @island_label: #333333;
-@island_label_width: linear([view::zoom], (10, 11), (18, 16)) - 0.000001 * [rank];
 @state_label: #000000;
 @district_label: #7f7f7f;
 @suburb_label: #3f4873;
 @suburb_min_dist: 100;
 @locality_min_dist: 200;
-@suburb_label_width:linear([view::zoom], (12, 9), (13, 10), (16, 13)) - 0.000001 * [rank];
-@suburb-label-wrap-width: linear([view::zoom], (12, 40), (15, 60));
 @neighbourhood_label: #414a76;
-@neighbourhood_label_width: linear([view::zoom], (12, 10), (16, 12)) - 0.000001 * [rank];
-@neighbourhood_label_wrap_width: linear([view::zoom], (13, 44), (17, 80));
 @housename: #000000;
 @building_label: #61615a;
 @poi_label: #444444;
 @locality_label_fill: #333;
-@locality_label_width: linear([view::zoom], (14, 8), (17, 12)) - 0.000001 * [rank];
-@locality_label_wrap_width: linear([view::zoom], (14, 32), (17, 60));
 
 @continent_text: #405c78;
 @continent_halo: #fbf8f3;
@@ -359,11 +332,9 @@
 
 @road_label_halo: #f2f5f8;
 @road_large_label_fill: #000;
-@road_large_label_width: linear([view::zoom], (9, 8), (12, 8), (20, 14));
 @road_large_label_halo_radius: 1;
 
 @road_small_label_fill: #000;
-@road_small_label_width: linear([view::zoom], (15, 8), (20, 11));
 @road_small_label_halo_radius: 1;
 
 // POis
@@ -388,15 +359,4 @@
 @poi-shop-fill: #9F43A7; 
 @poi_halo_radius:1;
 
-
-@poi_icon_width:linear([view::zoom], (10, 10), (20, 17)) - 0.000001 * [rank];
-
-@poi_label_width:linear([view::zoom], (10, 11), (18, 12)) - 0.000001 * [rank];
-@poi_label_wrap_width:step([view::zoom], (14, 50), (20, 100));
-@poi_label_dy: linear([view::zoom], (10, 10), (20, 16));
-
-@peak_icon_width: @poi_icon_width;
-@peak_label_width: @poi_label_width;
-@peak_label_dy: @poi_label_dy;
-@poi_national_park_label_width:@poi_icon_width;
-@poi_national_park_wrap_width:@poi_label_wrap_width;
+@poi_min_dist:1;
