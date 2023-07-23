@@ -39,7 +39,9 @@ setGeoLocationKeys('lat', 'lon');
 class NestedScrollView extends ScrollView {
     createNativeView() {
         if (__ANDROID__) {
-            return new androidx.core.widget.NestedScrollView(this._context);
+            if (this.orientation !== 'horizontal') {
+                return new androidx.core.widget.NestedScrollView(this._context);
+            }
         }
         return super.createNativeView();
     }
@@ -124,5 +126,6 @@ Application.on(Application.exitEvent, () => {
     networkService.stop();
     bgService.stop();
 });
+
 //@ts-ignore
 svelteNative(Map, {});
