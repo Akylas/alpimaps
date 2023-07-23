@@ -382,7 +382,7 @@
                 elevationChart.updateChartData();
             }
             if (item.route) {
-                takeItemPicture(item);
+                itemsModule.takeItemPicture(item);
             }
         } catch (err) {
             showError(err);
