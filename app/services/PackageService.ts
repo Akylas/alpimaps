@@ -111,6 +111,18 @@ function getGradeColor(grade) {
 
 const streetKeys = ['service_other', 'residential', 'living_street', 'driveway', 'alley', 'footway', 'culdesac', 'parking_aisle', 'turn_channel'];
 
+const geocodingMapping = [
+    ['name', 'getName'],
+    ['country', 'getCountry'],
+    ['city', 'getLocality'],
+    ['neighbourhood', 'getNeighbourhood'],
+    ['state', 'getRegion'],
+    ['postcode', 'getPostcode'],
+    ['street', 'getStreet'],
+    ['houseNumber', 'getHouseNumber'],
+    ['county', 'getCounty']
+];
+
 class PackageService extends Observable {
     // vectorTileDecoder: MBVectorTileDecoder;
     hillshadeLayer?: HillshadeRasterTileLayer;
@@ -303,17 +315,7 @@ class PackageService extends Observable {
     prepareGeoCodingResult(geoRes: GeoResult, onlyAddress = false) {
         const address: any = {};
 
-        [
-            ['name', 'getName'],
-            ['country', 'getCountry'],
-            ['city', 'getLocality'],
-            ['neighbourhood', 'getNeighbourhood'],
-            ['state', 'getRegion'],
-            ['postcode', 'getPostcode'],
-            ['street', 'getStreet'],
-            ['houseNumber', 'getHouseNumber'],
-            ['county', 'getCounty']
-        ].forEach((d) => {
+        geocodingMapping.forEach((d) => {
             if (!address[d[0]] && d[1] in geoRes.properties.address) {
                 try {
                     const value = geoRes.properties.address[d[1]]();
