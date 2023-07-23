@@ -31,6 +31,11 @@
     import { borderColor, mdiFontFamily, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import ElevationChart from './ElevationChart.svelte';
     import IconButton from './IconButton.svelte';
+    import { Clipboard } from '@nativescript-use/nativescript-clipboard';
+    import  addressFormatter from '@fragaria/address-formatter';
+    import { langStore } from '~/helpers/locale';
+    import { get } from 'svelte/store';
+    const clipboard = new Clipboard();
 
     const LISTVIEW_HEIGHT = 200;
     const PROFILE_HEIGHT = 150;
@@ -226,6 +231,7 @@
                 // const props = routeItem.properties;
                 const route = routeItem.route;
                 const positions = packageService.getRouteItemPoses(routeItem);
+                DEV_LOG && console.log('updateRouteItemWithPosition', location, JSON.stringify(positions));
                 const onPathIndex = isLocationOnPath(location, positions, false, true, 15);
                 let remainingDistance: number, remainingTime: number;
                 DEV_LOG && console.log('updateRouteItemWithPosition onPathIndex', onPathIndex);
