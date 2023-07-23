@@ -702,6 +702,7 @@ class PackageService extends Observable {
             if (files.length) {
                 const source = (this._localOfflineRoutingSearchService = new MultiValhallaOfflineRoutingService());
                 source.setConfigurationParameter('service_limits.bicycle.max_distance', 255000);
+                source.setConfigurationParameter('service_limits.trace.max_distance', 500000);
                 files.forEach((f) => source.add(f.path));
             } else {
                 this.hasOfflineRouting = false;
