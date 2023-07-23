@@ -1,0 +1,49 @@
+//Fonts
+@font_face:'DIN Pro';
+@mont: @font_face + ' Regular';
+@mont_md: @font_face + ' Medium';
+@mont_bd: @font_face + ' Bold';
+@mont_it: @font_face + ' Medium Italic';
+@osm: 'osm';
+
+@contour_label_size: linear([view::zoom], (12, 5), (16, 8), (20, 9));
+@park_font_size:linear([view::zoom], (12, 12), (14, 12));
+@protected_area_font_size:@park_font_size;
+@marine_labels_size: linear([view::zoom], (1, 11),  (2, 13), (5, 14));
+@ocean_labels_size: linear([view::zoom], (1, 12), (2, 14), (5, 20));
+@glacier_label_width: linear([view::zoom], (12, 9), (18, 13)) - 0.000001 * [rank];
+@waterway_text_width: linear([view::zoom], (10, 6), (15, 11), (16, 11), (17, 14));
+@river_text_width: linear([view::zoom], (10, 8), (15, 10), (18, 12));
+@peak_label_width: linear([view::zoom], (5, 8), (10, 9), (18, 12));
+@peak_text_min_dist: linear([view::zoom], (5, 30), (10, 20), (18, 10));
+@city-label-width: linear([view::zoom], (4, 10), (5, 11), (6, 12), (7, 13), (12, 18))- 0.000001 * [rank];
+@city-label-wrap-width: step([view::zoom], (4, 40), (5, 50), (6, 60));
+@town-label-wrap-width: linear([view::zoom], (12, 70), (14, 180));
+@town_label_min_dist: 100;
+@town_label_width:linear([view::zoom], (7, 11), (10, 13), (15, 18)) - 0.000001 * [rank];
+@village_label_width: linear([view::zoom], (7, 10), (10, 10.5), (16, 15)) - 0.000001 * [rank];
+@hamlet_label_width: linear([view::zoom], (12, 9), (15, 14)) - 0.000001 * [rank];
+@island_label_width: linear([view::zoom], (10, 10), (18, 16)) - 0.000001 * [rank];
+@suburb_min_dist: linear([view::zoom], (10, 200), (13, 50));
+@locality_min_dist: @suburb_min_dist;
+@suburb_label_width:linear([view::zoom], (12, 9), (13, 10), (16, 13)) - 0.000001 * [rank];
+@suburb-label-wrap-width: linear([view::zoom], (12, 20), (15, 40), (18, 60));
+@neighbourhood_label_width: linear([view::zoom], (12, 10), (16, 12)) - 0.000001 * [rank];
+@neighbourhood_label_wrap_width: linear([view::zoom], (13, 44), (17, 80));
+@locality_label_width: linear([view::zoom], (14, 8), (17, 12)) - 0.000001 * [rank];
+@locality_label_wrap_width: linear([view::zoom], (14, 32), (17, 60));
+
+@road_large_label_width: linear([view::zoom], (9, 8), (12, 8), (20, 14));
+@road_small_label_width: linear([view::zoom], (15, 8), (20, 11));
+
+@poi_label_width:linear([view::zoom], (10, 10), (16, 10), (18, 12)) - 0.000001 * [rank];
+@poi_icon_width:linear([view::zoom], (10, 10), (20, 17)) - 0.000001 * [rank];
+@poi_label_wrap_width:linear([view::zoom], (7, 30), (18, 30), (20, 200));
+@poi_label_dy: linear([view::zoom], (10, 10), (20, 12));
+@peak_label_dy: @poi_label_dy;
+@peak_label_width: @poi_label_width;
+@wrap_characters: '-_ ';
+@peak_icon_width: @poi_icon_width;
+
+@poi_national_park_label_width:@poi_icon_width;
+@poi_national_park_wrap_width:@poi_label_wrap_width;

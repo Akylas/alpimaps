@@ -15,14 +15,15 @@
         "boundary",
         "poi",
         "mountain_peak",
+        "place",
         "water",
         "aeroway",
         "landcover",
-        "landuse",
-        "place"
+        "landuse"
     ],
     "styles": [
         "osm/style.less",
+        "shared/style.less",
         "shared/admin.less",
         "shared/terrain.less",
         "shared/hydro.less",
