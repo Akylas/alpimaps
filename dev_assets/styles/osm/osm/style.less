@@ -1,11 +1,3 @@
-//Fonts
-@font_face:'DIN Pro';
-@mont: @font_face + ' Regular';
-@mont_md: @font_face + ' Medium';
-@mont_bd: @font_face + ' Bold';
-@mont_it: @font_face + ' Medium Italic';
-@osm: 'osm';
-
 @background: #e6e4e0;
 
 @border_country: #787b8c;
@@ -18,7 +10,6 @@
 @contour_low: fadeout(@contour_inner, 0.8);
 @contour_semi: step([view::zoom], (12, @contour_low), (14,@contour));
 @contour_label: @contour_inner;
-@contour_label_size: linear([view::zoom], (12, 5), (16, 8), (20, 9));
 @contour_halo: #f2f5f866;
 @contour_halo_radius: 1;
 
@@ -36,8 +27,6 @@
 @aboriginal_line: #D9B391;
 @park_line: #82bf5a;
 
-@park_font_size:linear([view::zoom], (12, 12), (14, 12));
-@protected_area_font_size:@park_font_size;
 @protected_area_line_width:linear([view::zoom], (9, 0.75), (12, 2), (15, 2), (18, 3));
 
 @protected-area: #09330c;
@@ -96,8 +85,6 @@
 @marine_labels: @water_label;
 @marine_labels_halo: @water_halo;
 @marine_labels_halo_radius: 2;
-@marine_labels_size: linear([view::zoom], (1, 11),  (2, 13), (5, 14));
-@ocean_labels_size: linear([view::zoom], (1, 12), (2, 14), (5, 20));
 
 
 
@@ -122,11 +109,11 @@
 @trunk-casing-width: linear([view::zoom], (4,0), (4.01,1), (10,1), (18, 2));
 @trunk-link-width: linear([view::zoom], (12, 0), (12.01, 0.5),  (14, 2), (15, 4), (17, 8.4), (18, 16));
 
-@primary-fill: linear([view::zoom], (7, #f3c380),(11,#fcd6a4));
+@primary-fill: linear([view::zoom], (7, #f3ba5c), (11, #f3ba5c),(12,#fcd6a4));
 @primary-tunnel-fill: @primary-fill;
-@primary-casing: linear([view::zoom], (11, #a0740000), (12, #a07400));
+@primary-casing: linear([view::zoom], (11, #a0740000), (11.01, #a07400));
 @primary-casing-width: linear([view::zoom], (10,0), (10.01,1), (18, 2));
-@primary-width: linear([view::zoom], (7, 0), (7.01, 0.5), (8, 0.7), (9, 0.9), (10, 0.9), (11, 1.25), (12, 2), (13, 2), (15, 4.3), (16, 8), (17, 9.5), (18, 12.5));
+@primary-width: linear([view::zoom], (7, 0), (7.01, 0.5), (8, 1), (10, 2), (13, 3), (15, 4.3), (16, 8), (17, 9.5), (18, 12.5));
 
 @primary-link-width: linear([view::zoom], (7, 0), (7.01, 0.5), (8, 0.7), (9, 0.9), (10, 0.9), (11, 1.25), (12, 1.5), (13, 1.5), (15, 3.3), (16, 5.2), (17, 5.7), (18, 7.2));
 @tertiary-fill: linear([view::zoom], (10.5,#bbbbbb), (10.6, #FFFFFF));
@@ -135,11 +122,11 @@
 @tertiary-casing-width: linear([view::zoom], (11, 0), (11.01, 1.5), (12, 1.6), (16, 2.6), (17, 3.2), (18, 3));
 @tertiary-width: linear([view::zoom], (10, 0), (10.01, 0.35), (11, 0.95), (12, 1.5), (13, 1.95), (14, 3.9), (15, 4.4), (16, 8.2), (17, 9.7), (18, 12.7));
 
-@secondary-fill: linear([view::zoom], (10.5,#bbbbbb), (10.6, #f7fabf));
+@secondary-fill: linear([view::zoom], (10.5,#f7fabf), (10.6, #f7fabf));
 @secondary-tunnel-fill: @tertiary-fill;
 @secondary-casing: linear([view::zoom], (11,#9eae23), (12, #707d05));
 @secondary-casing-width: linear([view::zoom], (11, 0), (11.01, 0.6), (15, 0.7),(18, 2));
-@secondary-width: linear([view::zoom], (9, 0), (9.01, 0.55), (10, 0.55), (11, 1.45), (12, 2.15), (13, 2.15), (14, 3.8), (15, 4.3), (16, 8), (17, 9.5), (18, 12.5));
+@secondary-width: linear([view::zoom], (9, 0), (9.01, 1), (10, 2), (12, 2.15), (14, 3.8), (15, 4.3), (16, 8), (17, 9.5), (18, 12.5));
 
 @residential-fill: linear([view::zoom], (12,#d3d3d3), (13, #fff));
 @noaccess-opacity:0.8;
@@ -267,14 +254,11 @@
 
 
 @glacier_label: #1C88AF;
-@glacier_label_width: linear([view::zoom], (12, 9), (18, 13)) - 0.000001 * [rank];
 @glacier_label_wrap_width: 20;
 @water_label: #4d80b3;
 @water_halo: #ffffffaa;
 @water_halo_radius: 2;
 @waterway_label_dy:0;
-@waterway_text_width: linear([view::zoom], (10, 6), (15, 11), (16, 11), (17, 14));
-@river_text_width: linear([view::zoom], (10, 8), (15, 10), (18, 12));
 @waterway_label_spacing: 0;
 
 @river-width: linear([view::zoom], (8, 0.9), (15, 2), (16, 4));
@@ -285,69 +269,49 @@
 @halo_park_label: rgba(255, 255, 255, 0.45);
 
 @peak_icon_fill: #ae874d;
-@peak_label: #454545;
+@peak_label: #684a1e;
 @saddle_icon_fill: #666600;
 @sadle_label: #454545;
-@peak_halo: #ffffff88;
+@peak_halo: #f2f5f8;
 @peak_halo_radius: 2;
 
 @peak_icon:[nuti::osm-mountain];
 @saddle_icon:[nuti::osm-saddle];
-@peak_label_width: linear([view::zoom], (5, 8), (10, 9), (18, 12));
-@peak_text_min_dist: linear([view::zoom], (5, 30), (10, 20), (18, 10));
 
 @city-label-icon-size: 4;
 @city-label-dy: linear([view::zoom], (4, -5), (7.99, -10), (8, 0));
-@city-label-width: linear([view::zoom], (4, 10), (5, 11), (6, 12), (7, 13), (12, 18))- 0.000001 * [rank];
-@city-label-wrap-width: step([view::zoom], (4, 40), (5, 50), (6, 60));
 @city_label_min_dist: 1;
 @town-label-icon-size: 3;
-@town-label-wrap-width: linear([view::zoom], (12, 70), (14, 180));
-@town_label_min_dist: 100;
 @town_label: #000000;
-@town_label_width:linear([view::zoom], (7, 8), (10, 13), (15, 18)) - 0.000001 * [rank];
 
 @place_line_spacing:-2;
 @city_label: #000000;
 @country_label: #000000;
 @village_label: #333333;
-@village_label_width: linear([view::zoom], (7, 7), (10, 10.5), (16, 15)) - 0.000001 * [rank];
-@hamlet_label: step([view::zoom], (11, #333333), (14, #777777));
-@hamlet_label_width: linear([view::zoom], (12, 9), (15, 14)) - 0.000001 * [rank];
 @island_label: #333333;
-@island_label_width: linear([view::zoom], (10, 10), (18, 16)) - 0.000001 * [rank];
 @state_label: #666;
 @district_label: #7f7f7f;
 @suburb_label: #3f4873;
-@suburb_min_dist: linear([view::zoom], (10, 200), (13, 50));
-@locality_min_dist: @suburb_min_dist;
-@suburb_label_width:linear([view::zoom], (12, 9), (13, 10), (16, 13)) - 0.000001 * [rank];
-@suburb-label-wrap-width: linear([view::zoom], (12, 20), (15, 40), (18, 60));
 @neighbourhood_label: #7f7f7f;
-@neighbourhood_label_width: linear([view::zoom], (12, 10), (16, 12)) - 0.000001 * [rank];
-@neighbourhood_label_wrap_width: linear([view::zoom], (13, 44), (17, 80));
 @housename: #000000;
 @building_label: #61615a;
 @poi_label: #444444;
 @locality_label_fill: #777777;
-@locality_label_width: linear([view::zoom], (14, 8), (17, 12)) - 0.000001 * [rank];
-@locality_label_wrap_width: linear([view::zoom], (14, 32), (17, 60));
+@hamlet_label: step([view::zoom], (11, #333333), (14, #777777));
 
 @continent_text: #405c78;
 @continent_halo: #fbf8f3;
 @country_halo: #fbf8f3;
 @state_halo: #fbf8f388;
-@place_halo: #f2f5f8aa;
+@place_halo: #f2f5f8;
 @place_halo_radius: 2; 
 @road_label: #303030;
 
 @road_label_halo: #f2f5f888;
 @road_large_label_fill: #000;
-@road_large_label_width: linear([view::zoom], (9, 8), (12, 8), (20, 14));
 @road_large_label_halo_radius: 2;
 
 @road_small_label_fill: #000;
-@road_small_label_width: linear([view::zoom], (15, 8), (20, 11));
 @road_small_label_halo_radius: 2;
 
 @poi-fill: #956e50;
@@ -371,22 +335,7 @@
 @poi-shop-fill: #9F43A7; 
 @poi_halo_radius:2;
 @poi_halo: #f2f5f8;
-// @poi_label_dy: linear([view::zoom], (10, 10), (12, 11), (18, 15), (19, 16));
-
-// @poi_label_width:linear([view::zoom], (5, 5), (10, 8), (17, 10), (18, 12)) - 0.000001 * [rank];
-@poi_label_width:linear([view::zoom], (10, 10), (16, 10), (18, 12)) - 0.000001 * [rank];
-// @poi_icon_width:linear([view::zoom], (10, 10), (12, 11), (19, 13), (20, 17)) - 0.000001 * [rank];
-@poi_icon_width:linear([view::zoom], (10, 10), (20, 17)) - 0.000001 * [rank];
-@poi_label_wrap_width:step([view::zoom], (7, 40), (20, 100));
-@poi_label_dy: linear([view::zoom], (10, 11), (20, 20));
 
 
-// @peak_label_width: linear([view::zoom], (5, 8), (10, 9), (18, 12)) + 0.000001 * [ele] - 0.000001 * [rank];
 
-// @peak_label_width: linear([view::zoom], (5, 5), (10, 7), (18, 10)) - 0.000001 * [rank];
-@peak_label_width: @poi_label_width;
-@peak_label_dy: @poi_label_dy;
 @peak_icon_width: @poi_icon_width + 0.00000001 * [ele];
-
-@poi_national_park_label_width:@poi_icon_width;
-@poi_national_park_wrap_width:@poi_label_wrap_width;

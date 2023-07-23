@@ -3,6 +3,7 @@
     
     "styles": [
         "outdoors/style.less",
+        "shared/style.less",
         "shared/admin.less",
         "shared/terrain.less",
         "shared/hydro.less",
