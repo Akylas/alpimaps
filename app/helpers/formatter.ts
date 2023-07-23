@@ -1,7 +1,9 @@
+import addressFormatter from '@fragaria/address-formatter';
 import humanUnit, { sizePreset } from 'human-unit';
+import { get } from 'svelte/store';
+import { formatDate, langStore } from '~/helpers/locale';
 import { IItem } from '~/models/Item';
-import { formatDate } from './locale';
-export { convertDurationSeconds, formatDate } from './locale';
+export { convertDurationSeconds, formatDate } from '~/helpers/locale';
 const timePreset = {
     factors: [1000, 60, 60, 24],
     units: ['ms', 's', 'min', 'hour', 'day']
@@ -137,43 +139,54 @@ export function formatValueToUnit(value: any, unit, options?: { prefix?: string;
     return result;
 }
 
-export function formatAddress(item: IItem, part = 0) {
-    const properties = item.properties;
-    const address = properties.address;
-    let result = '';
-    // if ((properties.layer === 'housenumber' || properties.name || properties.osm_value || properties.osm_key || properties.class) && address && address.houseNumber) {
-    if (address && address.houseNumber) {
-        result += address.houseNumber + ' ';
+export function formatAddress(item: IItem, startIndex = -1, endIndex = -1) {
+    const address = { ...item.properties.address };
+    // if (!address.name) {
+    //     address.name = item.properties.name;
+    // }
+    const result = addressFormatter.format(address, {
+        fallbackCountryCode: get(langStore)
+    });
+    if (startIndex >=0 || endIndex >= 0) {
+        return result.split('\n').slice(startIndex, endIndex).join(' ');
     }
-    if (address.street) {
-        result += address.street + ' ';
-    }
+    return result.split('\n').join(' ');
+    // const properties = item.properties;
+    // const address = properties.address;
+    // let result = '';
+    // // if ((properties.layer === 'housenumber' || properties.name || properties.osm_value || properties.osm_key || properties.class) && address && address.houseNumber) {
+    // if (address && address.houseNumber) {
+    //     result += address.houseNumber + ' ';
+    // }
+    // if (address.street) {
+    //     result += address.street + ' ';
+    // }
 
-    if (part === 1 && result.length > 0) {
-        return result;
-    }
-    if (part === 2) {
-        if (result.length === 0) {
-            return undefined;
-        } else {
-            result = '';
-        }
-    }
-    if (address.postcode) {
-        result += address.postcode + ' ';
-    }
-    if (address.city) {
-        result += address.city;
-        if (address.county && address.county !== address.city) {
-            result += '(' + address.county + ')';
-        }
-        result += ' ';
-    }
+    // if (part === 1 && result.length > 0) {
+    //     return result;
+    // }
+    // if (part === 2) {
+    //     if (result.length === 0) {
+    //         return undefined;
+    //     } else {
+    //         result = '';
+    //     }
+    // }
+    // if (address.postcode) {
+    //     result += address.postcode + ' ';
+    // }
+    // if (address.city) {
+    //     result += address.city;
+    //     if (address.county && address.county !== address.city) {
+    //         result += '(' + address.county + ')';
+    //     }
+    //     result += ' ';
+    // }
     // if (address.county) {
     //     result += address.county + ' ';
     // }
     // if (address.state) {
     //     result += address.state + ' ';
     // }
-    return result.trim();
+    // return result.trim();
 }
