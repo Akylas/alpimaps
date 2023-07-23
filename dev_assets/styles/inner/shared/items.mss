@@ -10,15 +10,21 @@
 #items['mapnik::geometry_type'=2] {
     ['nuti::hide_unselected'=0] {
         when ([nuti::selected_id] !=[id]) {
+
+            back/line-color: white;
+            back/line-width: @bicycle_line_width + 2;
+            back/line-join: round;
+            back/line-cap: round;
+            back/line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
             line-color: [color] ? [color] : #287bda;
             line-dasharray: [nuti::editing_id]=[id] ? @editing_dash : @non_editing_dash;
             line-join: round;
             line-cap: round;
             line-opacity: linear([view::zoom], (16, 1), (18, 0.3)) *([nuti::editing_id]=[id] ? 0.5 :1);
-            line-width: @bicycle_line_width + 2;
+            line-width: @bicycle_line_width;
 
             [class=pedestrian] {
-                line-width: @pedestrian_line_width + 2;
+                line-width: @pedestrian_line_width;
             }
         }
 
@@ -26,7 +32,7 @@
 
     when ([nuti::selected_id]=[id])::selected {
         back/line-color: white;
-        back/line-width: @bicycle_line_width + 2+ 8;
+        back/line-width: @bicycle_line_width + 8;
         back/line-join: round;
         back/line-cap: round;
         back/line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
@@ -34,7 +40,7 @@
         line-cap: round;
         line-color: [color] ? [color] : #287bda;
         line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
-        line-width: @bicycle_line_width+ 4;
+        line-width: @bicycle_line_width+ 2;
 
         [zoom>=14] {
             marker-placement: line;

@@ -3,83 +3,79 @@
 	['mapnik::geometry_type'=1][class=peak][rank<=2],
 	['mapnik::geometry_type'=1][class=volcano][rank<=2],
 	['mapnik::geometry_type'=1][zoom>=12] {
-		::label {
-
-			shield-file: url(shields/[class].png);
-			shield-name: " ";
-			shield-feature-id: [name]+[ele];
-
-			[rank=1][zoom>=4],
-			[rank=2][zoom>=11],
-			[zoom>=14] {
-				shield-name: @name;
-
-				[zoom>=10] {
-					shield-name: @name ? ([ele] ? @name + ' ' +[ele] + 'm': @name): '';
-				}
-			}
-
-			shield-unlock-image: true;
-			shield-face-name: @mont_md;
-			// shield-placement-priority: [ele];
-			shield-size: @peak_label_width + 0.0000001 *[ele];
-			shield-line-spacing: -1;
-			shield-placement: [nuti::texts3d];
-			shield-fill: @peak_label;
-			shield-text-dy: @peak_label_dy;
-
-			[class="saddle"] {
-				shield-fill: @sadle_label;
-				shield-size: @peak_label_width - 0.0001;
-			}
-
-			shield-wrap-width: @poi_label_wrap_width;
-			shield-halo-fill: @peak_halo;
-			shield-halo-radius: @peak_halo_radius;
-		}
-
-		// shield-min-distance: @peak_text_min_dist;
-
-		// order is important for icon to take precedence over label and respect rank
-		// [rank=1][zoom>=7]::label,
-		// 	[rank<=2][zoom>=10]::label,
-		// 	[zoom>=14]::label {
-		// 	text-name: @name;
-		// 	text-feature-id: [name]+[ele];
-		// 	[zoom>=10] {
-		// 		text-name: @name ?  ( [ele] ? @name  + ', ' +[ele] + 'm': @name): '';
-		// 	}
-		// 	// text-name: ['mapnik::feature_id'];
-		// 	text-face-name: @mont_md;
-		// 	text-size: @peak_label_width + 0.0000001 * [ele]  + [rank]; 
-		// 	text-line-spacing: -1;
-		// 	text-placement: [nuti::texts3d];
-		// 	text-fill: @peak_label;
-		// 	[class="saddle"] {
-		// 		text-fill: @sadle_label;
-		// 		text-size: @peak_label_width - 0.000001; 
-		// 	}
-		// 	text-dy: @peak_label_dy; 
-		// 	text-wrap-width: @poi_label_wrap_width;
-		// 	text-halo-fill: @peak_halo;
-		// 	text-halo-radius: @peak_halo_radius;
-		// 	text-min-distance: @peak_text_min_dist;
-		// }
 		// ::icon {
-		// 	text-face-name: @osm;
-		// 	text-feature-id: [name]+[ele];
-		// 	text-size: @peak_icon_width + 0.0000001 * [ele]; 
 		// 	text-placement: [nuti::markers3d];
 		// 	text-name: @peak_icon;
-		// 	text-fill: @peak_icon_fill;
+		// 	text-feature-id: [name]+[ele];
+		// 	// text-placement-priority: [ele];
+		// 	text-size: @peak_icon_width + 0.0000001 * [ele] + 0.000001 * [rank]; 
+		// 	text-face-name: @osm;
 		// 	text-halo-fill: @poi_halo;
 		// 	text-halo-radius: @poi_halo_radius;
-		// 	[class=saddle] {
-		// 		text-name: @saddle_icon;
-		// 		text-fill: @saddle_icon_fill;
-		// 		text-size: @peak_icon_width - 0.000001; 
-		// 	}
+		// 	text-fill: @peak_icon_fill;
+		// 	text-allow-overlap-same-feature-id: true;
 		// }
+		// [rank=1][zoom>=4],
+		// [rank=2][zoom>=11],
+		// [zoom>=14]::label {
+		// 	// text-placement-priority: [ele];
+		// 	text-name: @name;
+		// 	[zoom>=10] {
+		// 		text-name: @name ? ([ele] ? @name + ' ' +[ele] + 'm': @name): '';
+		// 	}
+		// 	text-feature-id: [name]+[ele];
+		// 	text-face-name: @mont_md;
+		// 	text-placement: [nuti::texts3d];
+		// 	text-halo-fill: @peak_halo;
+		// 	text-halo-radius: @peak_halo_radius;
+		// 	text-size: @peak_label_width + 0.0000001 *[ele] + 0.000001 * [rank];
+		// 	text-wrap-character: @wrap_characters;
+		// 	text-dy: @poi_label_dy;
+		// 	text-fill: @peak_label;
+
+		// 	[class="saddle"] {
+		// 		text-fill: @sadle_label;
+		// 		text-size: @peak_label_width + 0.0000001 *[ele] + 0.000001 * [rank] - 0.0001;
+		// 	}
+		// 	text-wrap-width: @poi_label_wrap_width;
+		// 	text-allow-overlap-same-feature-id: true;
+		// 	text-same-feature-id-dependent: true;
+		// }
+			::label {
+
+				shield-file: url(shields/[class].png);
+				shield-name: " ";
+				shield-feature-id: [name]+[ele];
+
+				[rank=1][zoom>=4],
+				[rank=2][zoom>=11],
+				[zoom>=14] {
+					shield-name: @name;
+
+					[zoom>=10] {
+						shield-name: @name ? ([ele] ? @name + ' ' +[ele] + 'm': @name): '';
+					}
+				}
+
+				shield-unlock-image: true;
+				shield-face-name: @mont_md;
+				// shield-placement-priority: [ele];
+				shield-size: @peak_label_width + 0.0000001 *[ele];
+				shield-line-spacing: -1;
+				shield-placement: [nuti::texts3d];
+				shield-text-dy: @peak_label_dy;
+				shield-fill: @peak_label;
+
+				[class="saddle"] {
+					shield-fill: @sadle_label;
+					shield-size: @peak_label_width - 0.0001;
+				}
+
+				shield-wrap-width: @poi_label_wrap_width;
+				shield-halo-fill: @peak_halo;
+				shield-halo-radius: @peak_halo_radius;
+			}
+
 	}
 	['mapnik::geometry_type'=2] {
 		[class=cliff][zoom>=12],
