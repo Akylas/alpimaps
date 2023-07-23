@@ -25,6 +25,8 @@
         "baseUrl": ".",
         "paths": {
             "~/*": ["app/*"],
+            "kiss-orm": ["node_modules/@akylas/kiss-orm"],
+            "kiss-orm/*": ["node_modules/@akylas/kiss-orm/*"],
             "@nativescript/core": ["node_modules/@akylas/nativescript"],
             "@nativescript/core/*": ["node_modules/@akylas/nativescript/*"]
         }

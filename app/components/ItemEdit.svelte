@@ -3,8 +3,8 @@
     import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
     import { CartoMap, PanningMode } from '@nativescript-community/ui-carto/ui';
-    import { Color, Utils } from '@nativescript/core';
-    import type { Point as GeoJSONPoint } from 'geojson';
+    import { Color, Utils, View } from '@nativescript/core';
+    import type { Point as GeoJSONPoint, Point } from 'geojson';
     import { goBack, showModal } from 'svelte-native/dom';
     import { osmicon } from '~/helpers/formatter';
     import { lc } from '~/helpers/locale';
@@ -15,6 +15,8 @@
     import { pickColor } from '~/utils/utils';
     import { lightBackgroundColor, mdiFontFamily, navigationBarHeight, subtitleColor, textLightColor } from '~/variables';
     import CActionBar from './CActionBar.svelte';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
 
     export let item: Item;
     let itemColor: Color;
@@ -206,6 +208,35 @@
             showError(error);
         }
     }
+
+    async function featchAddress(event) {
+        try {
+            const SearchModal = (await import('~/components/SearchModal.svelte')).default as any;
+            const geometry = item.geometry as Point;
+            const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0], altitude: geometry.coordinates[2] };
+            console.log('position', position)
+            // const result: any = await showModal({ page: Settings, fullscreen: true, props: { position } });
+            const anchorView = event.object as View;
+            const result: any = await showPopover({
+                vertPos: VerticalPosition.ALIGN_TOP,
+                horizPos: HorizontalPosition.ALIGN_LEFT,
+                view: SearchModal,
+                anchor: anchorView,
+                props: {
+                    height: 56,
+                    elevation: 4,
+                    margin: 10,
+                    width: Utils.layout.toDeviceIndependentPixels(anchorView.getMeasuredWidth()),
+                    position
+                }
+            });
+            if (result) {
+                console.log(result);
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
 </script>
 
 <page actionBarHidden={true}>
@@ -292,7 +323,7 @@
                 </label>
             </gridlayout>
         {/if}
-        <gridlayout row={2} padding="0 10 0 10" rows="auto,auto,auto,*">
+        <flexlayout row={2} padding="0 10 0 10" flexDirection="column">
             <textfield
                 variant="outline"
                 margin="10 0 0 0"
@@ -304,8 +335,19 @@
                 on:textChange={(e) => onTextChange('name', e)}
             />
 
+            <textfield
+                visibility={itemIsRoute ? 'collapsed' : 'visible'}
+                variant="outline"
+                margin="10 0 0 0"
+                hint={lc('address')}
+                editable={false}
+                placeholder={lc('address')}
+                text={formatter.getItemAddress(item)}
+                on:tap={featchAddress}
+            />
+
             <textview
-                row={3}
+                flexGrow={1}
                 variant="outline"
                 margin="10 0 0 0"
                 hint={lc('notes')}
@@ -315,7 +357,7 @@
                 text={item.properties['notes']}
                 on:textChange={(e) => onTextChange('notes', e)}
             />
-        </gridlayout>
+        </flexlayout>
         <mdbutton row={3} on:tap={(e) => updateItem()} text={lc('save')} marginBottom={20} />
     </gridlayout>
 </page>
