@@ -89,13 +89,14 @@ export interface MapContext {
     selectItem: (args: {
         item: IItem;
         showButtons?: boolean;
-        isFeatureInteresting: boolean;
+        isFeatureInteresting?: boolean;
         peek?: boolean;
         setSelected?: boolean;
         minZoom?: number;
         zoom?: number;
         zoomDuration?: number;
         preventZoom?: boolean;
+        forceZoomOut?: boolean;
     }) => void;
     zoomToItem: (args: { item: IItem; zoom?: number; minZoom?: number; forceZoomOut?: boolean }) => void;
     unselectItem: () => void;

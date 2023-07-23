@@ -89,7 +89,6 @@
     let computeMultiple = false;
     let costingOptions = { use_ferry: 0, shortest: false };
     let shouldSaveSettings = true;
-    let firstUpdate = true;
     let pedestrianIcon = 'alpimaps-directions_walk';
     let bicycleIcon = 'alpimaps-touring';
     let requestProfile = ApplicationSettings.getBoolean('auto_fetch_profile', false);
@@ -127,7 +126,6 @@
     }
 
     function valhallaSettingsDefaultValue(profile: ValhallaProfile, key, currentOptions?) {
-        //TODO: implement
         switch (key) {
             case 'service_factor':
                 return 1;
