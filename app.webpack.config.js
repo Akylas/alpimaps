@@ -343,6 +343,9 @@ module.exports = (env, params = {}) => {
             'tns-core-modules': `${coreModulesPackageName}`
         });
     }
+    Object.assign(config.resolve.alias, {
+        'kiss-orm': `@akylas/kiss-orm`
+    });
     let appVersion;
     let buildNumber;
     if (platform === 'android') {
