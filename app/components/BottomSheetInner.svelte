@@ -535,7 +535,7 @@
             }
             mapContext.selectItem({ item, isFeatureInteresting: true, peek, preventZoom: false });
             if (item.route) {
-                takeItemPicture(item);
+                itemsModule.takeItemPicture(item);
             }
         } catch (err) {
             showError(err);
@@ -543,36 +543,7 @@
             updatingItem = false;
         }
     }
-    async function takeItemPicture(item) {
-        //item needs to be already selected
-        // we hide other items before the screenshot
-        // and we show theme again after it
-        mapContext.innerDecoder.setStyleParameter('hide_unselected', '1');
-        mapContext.onMapStable(async () => {
-            try {
-                // const startTime = Date.now();
-                const viewPort = mapContext.getMapViewPort();
-                const image = await mapContext.getMap().captureRendering(true);
-                mapContext.innerDecoder.setStyleParameter('hide_unselected', '0');
-                // image.saveToFile(path.join(itemsModule.imagesFolder.path, Date.now() + '_full.png'), 'png');
-                console.log('captureRendering', item.image_path, image.width, image.height, viewPort);
-                const canvas = new Canvas(500, 500);
-                //we offset a bit to be sure we the whole trace
-                const offset = 20;
-                canvas.drawBitmap(
-                    image,
-                    new Rect(viewPort.left - offset, viewPort.top - offset, viewPort.left + viewPort.width + offset, viewPort.top + viewPort.height + offset),
-                    new Rect(0, 0, canvas.getWidth(), canvas.getHeight()),
-                    null
-                );
-                new ImageSource(canvas.getImage()).saveToFile(item.image_path, 'png');
-                // console.log('saved bitmap', imagePath, Date.now() - startTime, 'ms');
-                canvas.release();
-            } catch (error) {
-                console.error(error, error.stack);
-            }
-        }, true);
-    }
+    
     async function updateItem(item: IItem, data: Partial<IItem>, peek = true) {
         try {
             updatingItem = true;
@@ -592,19 +563,62 @@
         mapContext.mapModule('items').hideItem(mapContext.getSelectedItem());
     }
     async function shareItem() {
-        if (item?.route) {
-            if (!item.profile && itemCanQueryProfile) {
-                await getProfile(false);
+        // if (item?.route) {
+        //     if (!item.profile && itemCanQueryProfile) {
+        //         await getProfile(false);
+        //     }
+        //     // const gpx = await toGPX();
+        //     // mapContext.mapModules.items.shareFile(gpx.string, `${gpx.name.replace(/[\s\t]/g, '_')}.gpx`);
+        // }
+        try {
+            if (item.properties?.address) {
+                const OptionSelect = (await import('~/components/OptionSelect.svelte')).default as any;
+                const result = await showBottomSheet<any>({
+                    parent: null,
+                    view: OptionSelect,
+                    props: {
+                        title: lc('share'),
+                        options: [
+                            { name: lc('address'), data: 'address' },
+                            { name: lc('position'), data: 'position' }
+                        ]
+                    },
+                    trackingScrollView: 'collectionView'
+                });
+                if (result) {
+                    switch (result.data) {
+                        case 'address':
+                            const address = {...item.properties.address}
+                            if (!address.name) {
+                                address.name = item.properties.name;
+                            }
+                            // console.log('item', JSON.stringify(item));
+                            // console.log('address', JSON.stringify(address));
+                            // console.log('test1', addressFormatter.format(address, {
+                            //     fallbackCountryCode:get(langStore)
+                            // }));
+                            // console.log('test2', formatter.getItemName(item) + ',' + formatter.getItemAddress(item));
+                            clipboard.copy(addressFormatter.format(address, {
+                                fallbackCountryCode:get(langStore)
+                            }));
+                            break;
+                        case 'position':
+                            clipboard.copy(formatter.getItemPositionToString(item));
+                            break;
+                    }
+                }
+            } else {
+                clipboard.copy(formatter.getItemPositionToString(item));
             }
-            // const gpx = await toGPX();
-            // mapContext.mapModules.items.shareFile(gpx.string, `${gpx.name.replace(/[\s\t]/g, '_')}.gpx`);
+        } catch (error) {
+            showError(error);
         }
         // shareFile(JSON.stringify(itemToShare), 'sharedItem.json');
     }
     async function checkWeather() {
         try {
             updatingItem = true;
-            const query = formatter.getItemName(item);
+            const query = formatter.getItemTitle(item);
             const geometry = item.geometry as Point;
             let url = `weather://query?lat=${geometry.coordinates[1]}&lon=${geometry.coordinates[0]}&name=${query}`;
             if (item.properties.address) {
@@ -868,7 +882,7 @@
         }
     }
     async function startEditingItem() {
-        if (itemIsRoute) {
+        if (itemIsRoute && item.route.waypoints) {
             mapContext.startEditingItem(item);
         } else {
             try {

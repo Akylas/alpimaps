@@ -21,7 +21,6 @@ export default class NSQLDatabase implements DatabaseInterface {
             flags?: number;
         }
     ) {
-        DEV_LOG && console.log('NSQLDatabase', filePath);
         this.db = openOrCreate(filePath, options);
     }
 

@@ -68,13 +68,37 @@
                 <action android:name="com.google.android.gms.actions.SEARCH_ACTION" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="application/gpx" android:host="*"
-                    android:pathPattern=".*\\.gpx" />
-            </intent-filter>
+            <intent-filter
+				android:label="@string/app_name"
+				android:priority="50">
+				<action android:name="android.intent.action.VIEW" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<category android:name="android.intent.category.BROWSABLE" />
+				<data android:scheme="file"/>
+				<data android:scheme="content"/>
+				<data android:host="*"/>
+				<data android:pathPattern="/.*\\.gpx" />
+				<data android:pathPattern="/.*\\..*\\.gpx" />
+				<data android:pathPattern="/.*\\..*\\..*\\.gpx" />
+				<data android:pathPattern="/.*\\..*\\..*\\..*\\.gpx" />
+				<data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\.gpx" />
+			</intent-filter>
+			<intent-filter
+				android:label="@string/app_name"
+				android:priority="50">
+				<action android:name="android.intent.action.VIEW" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<category android:name="android.intent.category.BROWSABLE" />
+				<data android:scheme="file"/>
+				<data android:scheme="content"/>
+				<data android:host="*"/>
+				<data android:mimeType="*/*"/>
+				<data android:pathPattern="/.*\\.gpx" />
+				<data android:pathPattern="/.*\\..*\\.gpx" />
+				<data android:pathPattern="/.*\\..*\\..*\\.gpx" />
+				<data android:pathPattern="/.*\\..*\\..*\\..*\\.gpx" />
+				<data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\.gpx" />
+			</intent-filter>
         </activity>
         <activity android:name="com.tns.ErrorReportActivity" android:exported="false" />
         <service android:name=".BgService" android:enabled="true" android:exported="false"
