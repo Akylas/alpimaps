@@ -420,7 +420,7 @@
 
     function onChartHighlight({ detail }) {
         DEV_LOG && console.log('BottomSheetInner onChartHighlight', detail);
-        updateRouteItemWithPosition(item, { lat: detail.lat, lon: detail.lon }, false, true, detail.highlight);
+        updateRouteItemWithPosition(item, { lat: detail.detail.lat, lon: detail.detail.lon }, false, true, detail.detail.highlight);
     }
 
     async function getStats(updateView = true) {
