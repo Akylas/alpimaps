@@ -70,7 +70,7 @@
             hint={lc('search')}
             placeholder={lc('search')}
             returnKeyType="search"
-            on:return={blurTextField}
+            on:returnPress={blurTextField}
             height={actionBarButtonHeight}
             text={filter}
             on:textChange={(e) => (filter = e['value'])}

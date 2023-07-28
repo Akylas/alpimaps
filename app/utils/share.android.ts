@@ -1,5 +1,6 @@
 import { Application, Device, ImageSource, knownFolders, path } from '@nativescript/core';
 import { Content, Options } from './share';
+export * from   './share.common';
 
 let numberOfImagesCreated = 0;
 export async function share(content: Content, options: Options = {}) {
