@@ -264,7 +264,7 @@
 
                 // chartView.setExtraTopOffset(30);
                 chartView.setMinOffset(0);
-                chartView.setExtraOffsets(0, 24, 0, 0);
+                chartView.setExtraOffsets(0, 24, 0, 10);
                 chartView.getAxisRight().setEnabled(false);
                 chartView.getLegend().setEnabled(false);
                 leftAxis.setTextColor($textColor);
