@@ -149,7 +149,8 @@
         }
 
         if (itemIsRoute) {
-            mapContext.mapModules['items'].takeItemPicture(item, true);
+            // TODO: update image if there is none (testing file existence?)
+            // mapContext.mapModules['items'].takeItemPicture(item, true);
             const margin = Utils.layout.toDevicePixels(20);
             const screenBounds = {
                 min: { x: margin, y: margin },
