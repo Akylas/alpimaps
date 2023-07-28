@@ -49,10 +49,10 @@ export default class NSQLDatabase implements DatabaseInterface {
     async insertAndGet(standardInsertQuery: SqlQuery): Promise<number[] | string[] | any[]> {
         const compiledQuery = standardInsertQuery.compile(this.indexToPlaceholder, formatIdentifier);
         const sqlQuery = compiledQuery.sql.trim();
-        let result = (await this.db.execute(sqlQuery, compiledQuery.params)) as any;
+        let result = await this.db.execute(sqlQuery, compiledQuery.params);
         if (!result) {
             // create await an array result.
-            result = [{}];
+            result = [undefined];
         }
         return result as any[];
     }

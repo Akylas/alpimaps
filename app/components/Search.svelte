@@ -337,7 +337,7 @@
         returnKeyType="search"
         on:focus={onFocus}
         on:blur={onBlur}
-        on:return={onReturnKey}
+        on:returnPress={onReturnKey}
         {text}
         on:textChange={(e) => (text = e['value'])}
         autocapitalizationType="none"
