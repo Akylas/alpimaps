@@ -92,7 +92,7 @@ export function listFolderFiles(folderPath: string, prefix?: string, currentValu
     const docFolder = Folder.fromPath(folderPath);
     currentValues = currentValues || [];
     docFolder.getEntitiesSync().forEach((f) => {
-        console.log('entity', f.path)
+        console.log('entity', f.path);
         if (Folder.exists(f.path)) {
             f['isFolder'] = true;
             listFolderFiles(f.path, f.name, currentValues);
@@ -186,4 +186,13 @@ export function omit<T extends object, U extends keyof T>(object: T, ...props: U
     return Object.keys(object)
         .filter((key) => (props as string[]).indexOf(key) < 0)
         .reduce((newObj, key) => Object.assign(newObj, { [key]: object[key] }), {} as any);
+}
+
+export function groupBy<T>(items: readonly T[], keyGetter: (item: T) => string) {
+    const result = {};
+    items.forEach((item) => {
+        const key = keyGetter(item);
+        result[key] = item;
+    });
+    return result;
 }
