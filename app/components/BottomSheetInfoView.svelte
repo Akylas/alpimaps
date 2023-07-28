@@ -21,6 +21,7 @@
     export let iconLeft = 5;
     export let iconTop = 35;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
+    export let rightTextPadding = 0;
     let canvas: NativeViewElementNode<CanvasView>;
 
     let itemIcon: string = null;
@@ -259,7 +260,7 @@
             left={symbolLeft}
         />
     </canvas>
-    <flexlayout {marginLeft} marginBottom={20} flexDirection="column">
+    <flexlayout {marginLeft} marginBottom={20} flexDirection="column" marginRight={rightTextPadding}>
         <label text={itemTitle} fontWeight="bold" color={$textColor} fontSize={18} autoFontSize={true} flexGrow={1} maxFontSize={18} verticalTextAlignment="middle" textWrap={true} />
         <label visibility={itemSubtitle ? 'visible' : 'collapsed'} text={itemSubtitle} color={$subtitleColor} fontSize={13} maxLines={2} verticalTextAlignment="top" flexGrow={1} flexShrink={0} />
     </flexlayout>
