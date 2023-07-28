@@ -3,9 +3,13 @@
     import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
     import { CartoMap, PanningMode } from '@nativescript-community/ui-carto/ui';
-    import { Color, Utils, View } from '@nativescript/core';
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { Color, ObservableArray, Utils, View } from '@nativescript/core';
     import type { Point as GeoJSONPoint, Point } from 'geojson';
-    import { goBack, showModal } from 'svelte-native/dom';
+    import { Template } from 'svelte-native/components';
+    import { NativeViewElementNode, goBack, showModal } from 'svelte-native/dom';
     import { osmicon } from '~/helpers/formatter';
     import { lc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
@@ -15,8 +19,8 @@
     import { pickColor } from '~/utils/utils';
     import { lightBackgroundColor, mdiFontFamily, navigationBarHeight, subtitleColor, textLightColor } from '~/variables';
     import CActionBar from './CActionBar.svelte';
-    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { showPopover } from '@nativescript-community/ui-popover/svelte';
+    import IconButton from './IconButton.svelte';
+    import TagView from './TagView.svelte';
 
     export let item: Item;
     let itemColor: Color;
@@ -26,11 +30,16 @@
     let itemIconFontFamily: string = null;
     let itemUsingMdi = false;
     let osmIcon = null;
+
+    function getStyleProperty(properties, k: string) {
+        return properties['style']?.[k];
+    }
+
     $: itemIsRoute = !!item?.route;
-    $: itemColor = updatedProperties['color'] || item.properties['color'] || (itemIsRoute ? '#287bda' : '#60A5F4');
-    $: itemIcon = updatedProperties['icon'] || item.properties['icon'];
+    $: itemColor = getStyleProperty(updatedProperties, 'color') || getStyleProperty(item.properties, 'color') || (itemIsRoute ? '#287bda' : '#60A5F4');
+    $: itemIcon = getStyleProperty(updatedProperties, 'icon') || getStyleProperty(item.properties, 'icon');
     $: osmIcon = osmicon(formatter.geItemIcon(item));
-    $: itemIconFontFamily = updatedProperties['fontFamily'] || item.properties['fontFamily'];
+    $: itemIconFontFamily = getStyleProperty(updatedProperties, 'fontFamily') || getStyleProperty(item.properties, 'fontFamily');
     $: itemUsingMdi = itemIconFontFamily === mdiFontFamily;
     $: itemUsingDefault = itemUsingMdi && itemIcon === 'mdi-map-marker';
     $: itemUsingOsm = itemIcon === osmIcon && itemIconFontFamily === 'osm';
@@ -43,6 +52,7 @@
     async function updateItem() {
         try {
             updatingItem = true;
+            // console.log('updateItem', updatedProperties);
             const savedItem = await mapContext.mapModule('items').updateItem(item, { properties: { ...item.properties, ...updatedProperties } });
             if (mapContext.getSelectedItem()?.id === item.id) {
                 mapContext.setSelectedItem(savedItem);
@@ -54,22 +64,32 @@
             updatingItem = false;
         }
     }
-    function onTextChange(property, e) {
-        updatedProperties[property] = e['value'];
-        updatePreview();
+
+    function onItemTextChange(item, e) {
+        if (!updatedProperties[item.id] && e.value === '') {
+            return;
+        }
+        // console.log('onTextChange', item.id, e.value);
+        updatedProperties[item.id] = item.value = e.value;
+        updatePreview(false);
     }
+
     let cartoMap: CartoMap<LatLonKeys>;
     let vectorTileDataSource: GeoJSONVectorTileDataSource;
     let vectorTileLayer: VectorTileLayer;
 
-    function updatePreview() {
-        updatedProperties = updatedProperties;
-        const str = JSON.stringify({
-            type: 'FeatureCollection',
-            features: [{ type: 'Feature', id: item.id, properties: Object.assign({}, item.properties, updatedProperties), geometry: item.geometry }]
-        });
-        // DEV_LOG && console.log('updateGeoJSONLayer', str);
-        vectorTileDataSource.setLayerGeoJSONString(1, str);
+    function updatePreview(updateForSvelte = true) {
+        if (vectorTileDataSource) {
+            if (updateForSvelte) {
+                updatedProperties = updatedProperties;
+            }
+            const str = JSON.stringify({
+                type: 'FeatureCollection',
+                features: [{ type: 'Feature', id: item.id, properties: Object.assign({}, item.properties, updatedProperties), geometry: item.geometry }]
+            });
+            // DEV_LOG && console.log('updateGeoJSONLayer', str);
+            vectorTileDataSource.setLayerGeoJSONString(1, str);
+        }
     }
     async function onMapReady(e) {
         cartoMap = e.object as CartoMap<LatLonKeys>;
@@ -104,7 +124,7 @@
                 maxZoom: 24
             });
             vectorTileDataSource.createLayer('items');
-            updatePreview();
+            updatePreview(false);
             vectorTileLayer = new VectorTileLayer({
                 labelBlendingSpeed: 0,
                 layerBlendingSpeed: 0,
@@ -127,7 +147,9 @@
         if (!cartoMap) {
             return;
         }
+
         if (itemIsRoute) {
+            mapContext.mapModules['items'].takeItemPicture(item, true);
             const margin = Utils.layout.toDevicePixels(20);
             const screenBounds = {
                 min: { x: margin, y: margin },
@@ -158,24 +180,27 @@
             if (!newColor) {
                 return;
             }
-            updatedProperties['color'] = newColor.hex;
+            const style = (updatedProperties['style'] = updatedProperties['style'] || {});
+            style['color'] = newColor.hex;
             updatePreview();
         } catch (err) {
             showError(err);
         }
     }
     function setOSMIcon() {
-        updatedProperties['fontFamily'] = 'osm';
-        updatedProperties['mapFontFamily'] = 'osm';
-        updatedProperties['iconDx'] = 0;
-        updatedProperties['icon'] = osmIcon;
+        const style = (updatedProperties['style'] = updatedProperties['style'] || {});
+        style['fontFamily'] = 'osm';
+        style['mapFontFamily'] = 'osm';
+        style['iconDx'] = 0;
+        style['icon'] = osmIcon;
         updatePreview();
     }
     function setDefaultIcon() {
-        updatedProperties['fontFamily'] = mdiFontFamily;
-        updatedProperties['mapFontFamily'] = MATERIAL_MAP_FONT_FAMILY;
-        updatedProperties['iconDx'] = -2;
-        updatedProperties['icon'] = 'mdi-map-marker';
+        const style = (updatedProperties['style'] = updatedProperties['style'] || {});
+        style['fontFamily'] = mdiFontFamily;
+        style['mapFontFamily'] = MATERIAL_MAP_FONT_FAMILY;
+        style['iconDx'] = -2;
+        style['icon'] = 'mdi-map-marker';
         updatePreview();
     }
 
@@ -188,12 +213,13 @@
             });
             const result = Array.isArray(results) ? results[0] : results;
             if (result) {
-                console.log('result', result);
-                updatedProperties['fontFamily'] = result.fontFamily;
+                // console.log('result', result);
+                const style = (updatedProperties['style'] = updatedProperties['style'] || {});
+                style['fontFamily'] = result.fontFamily;
                 itemUsingMdi = result.fontFamily === mdiFontFamily;
-                updatedProperties['mapFontFamily'] = itemUsingMdi ? MATERIAL_MAP_FONT_FAMILY : 'osm';
-                updatedProperties['iconDx'] = itemUsingMdi ? -2 : 0;
-                updatedProperties['icon'] = result.icon;
+                style['mapFontFamily'] = itemUsingMdi ? MATERIAL_MAP_FONT_FAMILY : 'osm';
+                style['iconDx'] = itemUsingMdi ? -2 : 0;
+                style['icon'] = result.icon;
                 updatePreview();
                 // const provider = result.data;
                 // if (result.isPick) {
@@ -209,12 +235,11 @@
         }
     }
 
-    async function featchAddress(event) {
+    async function featchAddress(listItem, event) {
         try {
             const SearchModal = (await import('~/components/SearchModal.svelte')).default as any;
             const geometry = item.geometry as Point;
             const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0], altitude: geometry.coordinates[2] };
-            console.log('position', position)
             // const result: any = await showModal({ page: Settings, fullscreen: true, props: { position } });
             const anchorView = event.object as View;
             const result: any = await showPopover({
@@ -226,22 +251,98 @@
                     height: 56,
                     elevation: 4,
                     margin: 10,
+                    query: event.object.text,
                     width: Utils.layout.toDeviceIndependentPixels(anchorView.getMeasuredWidth()),
                     position
                 }
             });
             if (result) {
-                console.log(result);
+                updatedProperties['address'] = result.properties.address;
+                listItem.value = formatter.getItemAddress({ properties: { ...item.properties, ...updatedProperties } });
+                const index = items.indexOf(listItem);
+                if (index >= 0) {
+                    items.splice(index, 1, listItem);
+                }
             }
         } catch (error) {
             showError(error);
         }
     }
+    let items: ObservableArray<any>;
+    const propsToFilter = [
+        'notes',
+        'name',
+        'address',
+        'extent',
+        'profile',
+        'zoomBounds',
+        'osm_value',
+        'osm_key',
+        'class',
+        'layer',
+        'rank',
+        'provider',
+        'categories',
+        'route',
+        'profile',
+        'ele',
+        'style',
+        'id'
+    ];
+    function refreshItems() {
+        // because of svelte async way itemIsRoute might not be set on opening
+        itemIsRoute = !!item.route;
+        const props = { ...item.properties, ...updatedProperties };
+        const propsKeys = Object.keys(props).filter((s) => propsToFilter.indexOf(s) === -1);
+        items = new ObservableArray(
+            ([{ name: lc('name'), id: 'name', value: formatter.getItemTitle({ ...item, properties: { ...item.properties, ...updatedProperties } }) }] as any[])
+                .concat(
+                    itemIsRoute
+                        ? []
+                        : [
+                              {
+                                  editable: false,
+                                  onTap: featchAddress,
+                                  name: lc('address'),
+                                  id: 'address',
+                                  value: updatedProperties['address'] ? formatter.getItemAddress({ properties: updatedProperties }) : formatter.getItemAddress(item)
+                              }
+                          ]
+                )
+                .concat(
+                    propsKeys.map((k) => ({
+                        name: lc(k),
+                        id: k,
+                        value: props[k]
+                    }))
+                )
+                .concat([{ type: 'textview', name: lc('notes'), id: 'notes', value: updatedProperties['notes'] || item.properties['notes'] }])
+        );
+    }
+    refreshItems();
+    let collectionView: NativeViewElementNode<CollectionView>;
+
+    async function addField() {}
+    async function onTagViewSelectedGroup(event) {
+        const groupName = event.detail.detail.group;
+        // console.log('onTagViewSelectedGroup', groupName);
+        try {
+            updatingItem = true;
+            await mapContext.mapModule('items').setItemGroup(item, groupName);
+            item = item;
+        } catch (err) {
+            showError(err);
+        } finally {
+            updatingItem = false;
+        }
+    }
 </script>
 
 <page actionBarHidden={true}>
-    <gridlayout rows="auto,*,3*,auto" android:paddingBottom={$navigationBarHeight}>
-        <CActionBar canGoBack title={lc('edit')} />
+    <gridlayout rows="auto,*,auto,2.5*,auto" android:paddingBottom={$navigationBarHeight}>
+        <CActionBar canGoBack title={lc('edit')}>
+            <IconButton text="mdi-playlist-plus" on:tap={addField} color="white" />
+        </CActionBar>
         <cartomap row={1} zoom={16} on:mapReady={onMapReady} useTextureView={false} on:layoutChanged={onLayoutChanged} />
         <canvaslabel row={1} fontSize={16} height={50} width={50} on:tap={pickOptionColor(itemColor)} horizontalAlignment="right" verticalAlignment="bottom">
             <circle strokeWidth={2} paintStyle="fill" fillColor={$textLightColor} radius={15} antiAlias={true} horizontalAlignment="right" verticalAlignment="middle" width={20} />
@@ -323,41 +424,87 @@
                 </label>
             </gridlayout>
         {/if}
-        <flexlayout row={2} padding="0 10 0 10" flexDirection="column">
-            <textfield
-                variant="outline"
-                margin="10 0 0 0"
-                hint={lc('name')}
-                placeholder={lc('name')}
-                returnKeyType="done"
-                on:return={blurTextField}
-                text={formatter.getItemTitle(item)}
-                on:textChange={(e) => onTextChange('name', e)}
-            />
+        <TagView row={2} showDefaultGroups={false} padding="5 10 0 10" on:groupSelected={onTagViewSelectedGroup} topGroup={item.groups?.[0]}/>
+        <collectionview row={3} {items} bind:this={collectionView} itemTemplateSelector={(item) => item.type || 'textfield'}>
+            <Template key="textfield" let:item>
+                <gridlayout padding="10 10 0 10">
+                    <textfield
+                        variant="outline"
+                        hint={item.name}
+                        placeholder={item.name}
+                        returnKeyType="done"
+                        on:returnPress={blurTextField}
+                        text={item.value}
+                        editable={item.editable ?? true}
+                        on:textChange={(e) => onItemTextChange(item, e)}
+                        on:tap={(e) => item.onTap?.(item, e)}
+                    />
+                </gridlayout>
+            </Template>
+            <Template key="textview" let:item>
+                <gridlayout padding="10 10 0 10">
+                    <textview
+                        height={item.height || 150}
+                        variant="outline"
+                        hint={item.name}
+                        placeholder={item.name}
+                        returnKeyType="done"
+                        on:returnPress={blurTextField}
+                        text={item.value}
+                        on:textChange={(e) => onItemTextChange(item, e)}
+                    />
+                </gridlayout>
+            </Template>
+        </collectionview>
+        <!-- <scrollview row={2}>
+            <stacklayout>
+                <textfield
+                    variant="outline"
+                    margin="10 0 0 0"
+                    hint={lc('name')}
+                    placeholder={lc('name')}
+                    returnKeyType="done"
+                    on:returnPress={blurTextField}
+                    text={formatter.getItemTitle({ ...item, properties: { ...item.properties, ...updatedProperties } })}
+                    on:textChange={(e) => onTextChange('name', e)}
+                />
+                <textfield
+                    visibility={itemIsRoute ? 'collapsed' : 'visible'}
+                    variant="outline"
+                    margin="10 0 0 0"
+                    hint={lc('address')}
+                    editable={false}
+                    placeholder={lc('address')}
+                    text={updatedProperties['address'] ? formatter.getItemAddress({ properties: updatedProperties }) : formatter.getItemAddress(item)}
+                    on:tap={featchAddress}
+                />
 
-            <textfield
-                visibility={itemIsRoute ? 'collapsed' : 'visible'}
-                variant="outline"
-                margin="10 0 0 0"
-                hint={lc('address')}
-                editable={false}
-                placeholder={lc('address')}
-                text={formatter.getItemAddress(item)}
-                on:tap={featchAddress}
-            />
+                <textview
+                    height={150}
+                    variant="outline"
+                    margin="10 0 0 0"
+                    hint={lc('notes')}
+                    placeholder={lc('notes')}
+                    returnKeyType="done"
+                    on:returnPress={blurTextField}
+                    text={item.properties['notes']}
+                    on:textChange={(e) => onTextChange('notes', e)}
+                />
+            </stacklayout>
+        </scrollview> -->
 
-            <textview
-                flexGrow={1}
-                variant="outline"
-                margin="10 0 0 0"
-                hint={lc('notes')}
-                placeholder={lc('notes')}
-                returnKeyType="done"
-                on:return={blurTextField}
-                text={item.properties['notes']}
-                on:textChange={(e) => onTextChange('notes', e)}
+        <gridlayout row={4} marginBottom={5} columns="*,*">
+            <mdbutton on:tap={(e) => updateItem()} text={lc('save')} isEnabled={Object.keys(updatedProperties).length > 0} />
+            <mdbutton
+                variant="text"
+                col={1}
+                on:tap={(e) => {
+                    updatedProperties = {};
+                    refreshItems();
+                    updatePreview(false);
+                }}
+                text={lc('cancel')}
             />
-        </flexlayout>
-        <mdbutton row={3} on:tap={(e) => updateItem()} text={lc('save')} marginBottom={20} />
+        </gridlayout>
     </gridlayout>
 </page>

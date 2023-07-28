@@ -1,5 +1,5 @@
 import { Application } from '@nativescript/core';
-import { ApplicationEventData, backgroundEvent, foregroundEvent } from '@nativescript/core/application';
+import { ApplicationEventData } from '@nativescript/core/application';
 import { Observable } from '@nativescript/core/data/observable';
 import { GeoHandler } from '~/handlers/GeoHandler';
 
@@ -12,6 +12,14 @@ export function onServiceLoaded(callback: (geoHandler: GeoHandler) => void) {
         callback(_sharedInstance.geoHandler);
     } else {
         onServiceLoadedListeners.push(callback);
+    }
+}
+let onServiceStartedListeners = [];
+export function onServiceStarted(callback: (geoHandler: GeoHandler) => void) {
+    if (_sharedInstance.started) {
+        callback(_sharedInstance.geoHandler);
+    } else {
+        onServiceStartedListeners.push(callback);
     }
 }
 const onServiceUnloadedListeners = [];
@@ -59,8 +67,8 @@ export abstract class BgServiceCommon extends Observable {
         try {
             this._started = false;
 
-            Application.off(backgroundEvent, this.onAppBackground, this);
-            Application.off(foregroundEvent, this.onAppForeground, this);
+            Application.off(Application.backgroundEvent, this.onAppBackground, this);
+            Application.off(Application.foregroundEvent, this.onAppForeground, this);
             DEV_LOG && console.log(TAG, 'stop');
             await this.geoHandler.stop();
         } catch (error) {
@@ -80,13 +88,16 @@ export abstract class BgServiceCommon extends Observable {
             this._started = true;
             DEV_LOG && console.log(TAG, 'start');
 
-            Application.on(backgroundEvent, this.onAppBackground, this);
-            Application.on(foregroundEvent, this.onAppForeground, this);
+            Application.on(Application.backgroundEvent, this.onAppBackground, this);
+            Application.on(Application.foregroundEvent, this.onAppForeground, this);
             await this.geoHandler.start();
             this.notify({
                 eventName: BgServiceStartedEvent,
                 object: this
             });
+
+            onServiceStartedListeners.forEach((l) => l(this.geoHandler));
+            onServiceStartedListeners = [];
         } catch (error) {
             console.error(error);
             this.notify({

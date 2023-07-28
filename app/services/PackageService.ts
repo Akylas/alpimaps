@@ -660,7 +660,7 @@ class PackageService extends Observable {
                 }
                 if (streetKeys.indexOf(key) !== -1) {
                     key = 'street';
-                } else if (key === 'secondary' || key === 'tertiary' || key === 'unclassified') {
+                } else if (key === 'secondary' || key === 'tertiary' || key === 'unclassified' || key === 'service_road' || key === 'pedestrian_crossing') {
                     key = 'road';
                 } else if (key === 'motorway' || key === 'trunk' || key === 'primary') {
                     key = 'highway';
