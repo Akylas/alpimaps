@@ -28,7 +28,7 @@
     import { computeDistanceBetween } from '~/utils/geo';
     import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
-    import { borderColor, mdiFontFamily, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
+    import { actionBarButtonHeight, borderColor, mdiFontFamily, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import ElevationChart from './ElevationChart.svelte';
     import IconButton from './IconButton.svelte';
     import { Clipboard } from '@nativescript-use/nativescript-clipboard';
@@ -938,21 +938,21 @@
 
 <gridlayout {...$$restProps} width="100%" rows={`${INFOVIEW_HEIGHT},50,auto,auto,auto`} columns="*,auto" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
     {#if loaded}
-        <BottomSheetInfoView bind:this={infoView} {item} />
+        <BottomSheetInfoView bind:this={infoView} {item} colSpan={2} rightTextPadding={itemIsRoute ? actionBarButtonHeight : 0}/>
         <mdactivityindicator visibility={updatingItem ? 'visible' : 'collapsed'} horizontalAligment="right" busy={true} width={20} height={20} />
-        <IconButton col={1} text="mdi-crosshairs-gps" isVisible={itemIsRoute} on:tap={zoomToItem} />
+        <IconButton col={1} text="mdi-crosshairs-gps" isVisible={itemIsRoute} on:tap={zoomToItem} marginBottom={10}/>
         <scrollview orientation="horizontal" row={1} colSpan={2} borderTopWidth={1} borderBottomWidth={1} borderColor={$borderColor}>
             <gridlayout rows="*" columns="auto">
                 <stacklayout orientation="horizontal" id="bottomsheetbuttons">
-                    <IconButton on:tap={deleteItem} tooltip={lc('delete')} isVisible={!!item?.id} color="red" text="mdi-delete" rounded={false} />
-                    <IconButton on:tap={hideItem} tooltip={lc('hide')} isVisible={!!item?.id && itemIsRoute} text="mdi-eye-off" rounded={false} />
                     <IconButton on:tap={searchWeb} tooltip={lc('search_web')} isVisible={item && (!itemIsRoute || !!item.properties?.name)} text="mdi-web" rounded={false} />
                     {#if packageService.hasElevation()}
                         <IconButton on:tap={() => getProfile()} tooltip={lc('elevation_profile')} isVisible={itemIsRoute && itemCanQueryProfile} text="mdi-chart-areaspline" rounded={false} />
                     {/if}
                     <IconButton on:tap={() => getStats()} tooltip={lc('road_stats')} isVisible={itemIsRoute && itemCanQueryStats} text="mdi-chart-bar-stacked" rounded={false} />
-                    <IconButton on:tap={() => saveItem()} tooltip={lc('save')} isVisible={item && (!item.id || itemIsEditingItem)} text="mdi-map-plus" rounded={false} />
+                        <IconButton on:tap={hideItem} tooltip={lc('hide')} isVisible={!!item?.id && itemIsRoute} text="mdi-eye-off" rounded={false} />
+                        <IconButton on:tap={() => saveItem()} tooltip={lc('save')} isVisible={item && (!item.id || itemIsEditingItem)} text={itemIsEditingItem?"mdi-content-save-outline":"mdi-map-plus"} rounded={false} />
                     <IconButton on:tap={startEditingItem} tooltip={lc('edit')} isVisible={item && item.id && !itemIsEditingItem} text="mdi-pencil" rounded={false} />
+                    <IconButton on:tap={deleteItem} tooltip={lc('delete')} isVisible={!!item?.id} color="red" text="mdi-delete" rounded={false} />
                     {#if item && item.properties && !!item.properties.wikipedia}
                         <IconButton on:tap={openWikipedia} tooltip={lc('wikipedia')} text="mdi-wikipedia" rounded={false} />
                     {/if}
