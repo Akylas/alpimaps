@@ -198,7 +198,7 @@
         try {
             if (item) {
                 itemIsRoute = !!item?.route;
-                itemIsEditingItem = item?.properties.id && item?.properties.id === mapContext.getEditingItem()?.id;
+                itemIsEditingItem = item?.properties.editingId && item?.properties.editingId === mapContext.getEditingItem()?.id;
                 itemIsBusStop = item && !itemIsRoute && (item.properties?.class === 'bus' || item.properties?.subclass === 'tram_stop');
                 itemCanQueryProfile = itemIsRoute && !!item?.id;
                 itemCanQueryStats = itemIsRoute && !!item?.id;
@@ -366,6 +366,7 @@
             const editingItem = mapContext.getEditingItem();
             item.image_path = editingItem.image_path;
             item.id = editingItem.id;
+            delete item.properties.editingId;
             // TODO: do we always remove it?
             if (item.properties) {
                 delete item.properties.style;
