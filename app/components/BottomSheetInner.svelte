@@ -32,9 +32,10 @@
     import ElevationChart from './ElevationChart.svelte';
     import IconButton from './IconButton.svelte';
     import { Clipboard } from '@nativescript-use/nativescript-clipboard';
-    import  addressFormatter from '@fragaria/address-formatter';
+    import addressFormatter from '@fragaria/address-formatter';
     import { langStore } from '~/helpers/locale';
     import { get } from 'svelte/store';
+    import { share, shareFile } from '~/utils/share';
     const clipboard = new Clipboard();
 
     const LISTVIEW_HEIGHT = 200;
@@ -105,11 +106,11 @@
     //         updateRouteItemWithPosition(item, currentLocation);
     //     }
     // }
-    // $: {
-    //     if (!item) {
-    //         navigationInstructions = null;
-    //     }
-    // }
+    $: {
+        if (item) {
+            console.log('selected item ', item.id);
+        }
+    }
     // $: {
     //     const props = item && item.properties;
     //     if (props) {
@@ -197,7 +198,7 @@
         try {
             if (item) {
                 itemIsRoute = !!item?.route;
-                itemIsEditingItem = item?.id && item?.id === mapContext.getEditingItem()?.id;
+                itemIsEditingItem = item?.properties.id && item?.properties.id === mapContext.getEditingItem()?.id;
                 itemIsBusStop = item && !itemIsRoute && (item.properties?.class === 'bus' || item.properties?.subclass === 'tram_stop');
                 itemCanQueryProfile = itemIsRoute && !!item?.id;
                 itemCanQueryStats = itemIsRoute && !!item?.id;
@@ -357,25 +358,27 @@
     let updatingItem = false;
 
     async function updateEditedItem() {
-        DEV_LOG && console.log('updateEditedItem1S');
         try {
             updatingItem = true;
             const itemsModule = mapContext.mapModule('items');
             let item = mapContext.getSelectedItem();
             const isRoute = !!item.route;
-            item.image_path = mapContext.getEditingItem().image_path;
+            const editingItem = mapContext.getEditingItem();
+            item.image_path = editingItem.image_path;
+            item.id = editingItem.id;
             // TODO: do we always remove it?
             if (item.properties) {
                 delete item.properties.style;
             }
-            if (item.profile) {
+            DEV_LOG && console.log('updateEditedItem1', item.id, editingItem.id, !!editingItem.profile, !!editingItem.stats);
+            if (editingItem.profile) {
                 const profile = await packageService.getElevationProfile(item);
-                item.profile = profile;
+                item['_parsedProfile'] = profile;
             }
-            if (item.stats) {
+            if (editingItem.stats) {
                 const projection = mapContext.getProjection();
                 const stats = await packageService.fetchStats({ item, projection });
-                item.stats = stats;
+                item['_parsedStats'] = stats;
             }
             item = await itemsModule.updateItem(item);
             if (isRoute) {
@@ -510,6 +513,7 @@
     // }
 
     async function saveItem(peek = true) {
+        console.log('saveItem', itemIsEditingItem);
         if (itemIsEditingItem) {
             updateEditedItem();
             return;
@@ -520,19 +524,21 @@
             const itemsModule = mapContext.mapModule('items');
             let item = mapContext.getSelectedItem();
             const isRoute = !!item.route;
-            const imagePath = path.join(itemsModule.imagesFolder.path, Date.now() + '.png');
+            const imagePath = path.join(itemsModule.imagesFolder.path, Date.now() + '.jpg');
             if (isRoute) {
                 item.image_path = imagePath;
             }
             // TODO: do we always remove it?
             if (item.properties) {
                 delete item.properties.style;
+                item.properties.style = {
+                    iconSize: 20,
+                    fontFamily: mdiFontFamily,
+                    mapFontFamily: MATERIAL_MAP_FONT_FAMILY,
+                    iconDx: -2,
+                    icon: 'mdi-map-marker'
+                };
 
-                item.properties.iconSize = 20;
-                item.properties.fontFamily = mdiFontFamily;
-                item.properties.mapFontFamily = MATERIAL_MAP_FONT_FAMILY;
-                item.properties.iconDx = -2;
-                item.properties.icon = 'mdi-map-marker';
                 // item.properties.icon = osmicon(formatter.geItemIcon(item));
             }
             item = await itemsModule.saveItem(item);
@@ -549,7 +555,7 @@
             updatingItem = false;
         }
     }
-    
+
     async function updateItem(item: IItem, data: Partial<IItem>, peek = true) {
         try {
             updatingItem = true;
@@ -577,44 +583,72 @@
         //     // mapContext.mapModules.items.shareFile(gpx.string, `${gpx.name.replace(/[\s\t]/g, '_')}.gpx`);
         // }
         try {
+            const OptionSelect = (await import('~/components/OptionSelect.svelte')).default as any;
+            const options = [{ name: lc('geoson'), data: 'geojson' }];
             if (item.properties?.address) {
-                const OptionSelect = (await import('~/components/OptionSelect.svelte')).default as any;
-                const result = await showBottomSheet<any>({
-                    parent: null,
-                    view: OptionSelect,
-                    props: {
-                        title: lc('share'),
-                        options: [
-                            { name: lc('address'), data: 'address' },
-                            { name: lc('position'), data: 'position' }
-                        ]
-                    },
-                    trackingScrollView: 'collectionView'
-                });
-                if (result) {
-                    switch (result.data) {
-                        case 'address':
-                            const address = {...item.properties.address}
-                            if (!address.name) {
-                                address.name = item.properties.name;
-                            }
-                            // console.log('item', JSON.stringify(item));
-                            // console.log('address', JSON.stringify(address));
-                            // console.log('test1', addressFormatter.format(address, {
-                            //     fallbackCountryCode:get(langStore)
-                            // }));
-                            // console.log('test2', formatter.getItemName(item) + ',' + formatter.getItemAddress(item));
-                            clipboard.copy(addressFormatter.format(address, {
-                                fallbackCountryCode:get(langStore)
-                            }));
-                            break;
-                        case 'position':
-                            clipboard.copy(formatter.getItemPositionToString(item));
-                            break;
-                    }
-                }
+                options.unshift({ name: lc('address'), data: 'address' });
+            }
+            if (itemIsRoute) {
+                options.push({ name: lc('gpx'), data: 'gpx' });
             } else {
-                clipboard.copy(formatter.getItemPositionToString(item));
+                options.push({ name: lc('position'), data: 'position' });
+            }
+            const result = await showBottomSheet<any>({
+                parent: null,
+                view: OptionSelect,
+                props: {
+                    title: lc('share'),
+                    options
+                },
+                trackingScrollView: 'collectionView'
+            });
+            if (result) {
+                switch (result.data) {
+                    case 'address':
+                        const address = { ...item.properties.address };
+                        if (!address.name) {
+                            address.name = item.properties.name;
+                        }
+                        // console.log('item', JSON.stringify(item));
+                        // console.log('address', JSON.stringify(address));
+                        // console.log('test1', addressFormatter.format(address, {
+                        //     fallbackCountryCode:get(langStore)
+                        // }));
+                        // console.log('test2', formatter.getItemName(item) + ',' + formatter.getItemAddress(item));
+                        // clipboard.copy(
+                        // addressFormatter.format(address, {
+                        //     fallbackCountryCode: get(langStore)
+                        // })
+                        // );
+                        share(
+                            {
+                                message: addressFormatter.format(address, {
+                                    fallbackCountryCode: get(langStore)
+                                })
+                            },
+                            {
+                                dialogTitle: lc('share')
+                            }
+                        );
+                        break;
+                    case 'position':
+                        // clipboard.copy(formatter.getItemPositionToString(item));
+
+                        share(
+                            {
+                                message: formatter.getItemPositionToString(item)
+                            },
+                            {
+                                dialogTitle: lc('share')
+                            }
+                        );
+                        break;
+                    case 'geojson':
+                        await mapContext.mapModule('items').shareItemsAsGeoJSON([item]);
+                        break;
+                    default:
+                        throw new Error('command not found');
+                }
             }
         } catch (error) {
             showError(error);
@@ -842,7 +876,7 @@
             let labely = 95;
             const stats = item.stats[statsKey];
             canvas.drawText(lc(statsKey), labelx, 20, bigTextPaint);
-            const nbColumns = Math.max(1, Math.round(stats.length / Math.floor((h - 105) / 20)));
+            const nbColumns = Math.max(1, Math.round(stats.length / Math.floor((h - 95) / 20)));
             const availableWidth = usedWidth / nbColumns - 15;
             let rigthX, nString, text, text2, layoutHeight, staticLayout;
             stats.forEach((s) => {
@@ -879,7 +913,7 @@
                 if (labely < h - layoutHeight) {
                     labely += layoutHeight;
                 } else {
-                    labely = 105;
+                    labely = 95;
                     labelx += usedWidth / nbColumns;
                 }
             });
@@ -908,7 +942,7 @@
         <IconButton col={1} text="mdi-crosshairs-gps" isVisible={itemIsRoute} on:tap={zoomToItem} />
         <scrollview orientation="horizontal" row={1} colSpan={2} borderTopWidth={1} borderBottomWidth={1} borderColor={$borderColor}>
             <gridlayout rows="*" columns="auto">
-                <stacklayout orientation="horizontal"  id="bottomsheetbuttons">
+                <stacklayout orientation="horizontal" id="bottomsheetbuttons">
                     <IconButton on:tap={deleteItem} tooltip={lc('delete')} isVisible={!!item?.id} color="red" text="mdi-delete" rounded={false} />
                     <IconButton on:tap={hideItem} tooltip={lc('hide')} isVisible={!!item?.id && itemIsRoute} text="mdi-eye-off" rounded={false} />
                     <IconButton on:tap={searchWeb} tooltip={lc('search_web')} isVisible={item && (!itemIsRoute || !!item.properties?.name)} text="mdi-web" rounded={false} />
@@ -929,15 +963,14 @@
                         <IconButton on:tap={openPeakFinder} tooltip={lc('peaks')} isVisible={!itemIsRoute} text="mdi-summit" rounded={false} />
                     {/if}
                     <IconButton on:tap={openCompass} tooltip={lc('compass')} isVisible={(itemIsRoute && !item?.id) || !!currentLocation} text="mdi-compass-outline" rounded={false} />
-        
+
                     <IconButton on:tap={getTransitLines} tooltip={lc('bus_stop_infos')} isVisible={itemIsBusStop} text="mdi-bus" rounded={false} />
-                    <IconButton on:tap={shareItem} tooltip={lc('share')} isVisible={!itemIsRoute} text="mdi-share-variant" rounded={false} />
+                    <IconButton on:tap={shareItem} tooltip={lc('share')} text="mdi-share-variant" rounded={false} />
                 </stacklayout>
             </gridlayout>
-            
         </scrollview>
-        
-        <ElevationChart bind:this={elevationChart} {item} row={2} colSpan={2} height={PROFILE_HEIGHT} visibility={graphAvailable ? 'visible' : 'collapsed'} on:highlight={onChartHighlight}/>
+
+        <ElevationChart bind:this={elevationChart} {item} row={2} colSpan={2} height={PROFILE_HEIGHT} visibility={graphAvailable ? 'visible' : 'collapsed'} on:highlight={onChartHighlight} />
         <gridlayout row={3} colSpan={2} height={STATS_HEIGHT} visibility={statsAvailable ? 'visible' : 'collapsed'}>
             <canvas bind:this={statsCanvas} on:draw={drawStats} />
             <IconButton

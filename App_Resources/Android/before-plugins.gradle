@@ -3,7 +3,7 @@ ext {
     targetSdk = 33
     androidBuildToolsVersion = "7.3.0"
     buildToolsVersion = "33.0.1"
-    androidxVersion = "1.11.0-beta01"
+    androidxVersion = "1.11.0-beta02"
     androidXAppCompat = "1.6.1"
     androidXAppCompatVersion = "1.6.1"
     androidXFragment = "1.6.0-alpha04"

@@ -27,6 +27,8 @@
         "androidx.appcompat.app:AppCompatDelegate",
         "androidx.core.app:NotificationCompat",
         "androidx.core.app:NotificationCompat.Builder",
+        "androidx.core.app:ShareCompat",
+        "androidx.core.app:ShareCompat.IntentBuilder",
         "androidx.core.content:FileProvider",
         "androidx.core.widget:NestedScrollView",
         "androidx.documentfile.provider:DocumentFile",

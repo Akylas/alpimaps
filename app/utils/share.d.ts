@@ -1,4 +1,5 @@
 import { Color } from '@nativescript/core';
+export * from   './share.common';
 
 export interface Content {
     title?: string;
