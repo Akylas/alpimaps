@@ -4,37 +4,46 @@
     import { closeModal, goBack } from 'svelte-native';
     import { actionBarHeight, statusBarHeight, textColor } from '~/variables';
     import IconButton from './IconButton.svelte';
+    import { showError } from '~/utils/error';
 
     export let color: string = null;
     export let title: string = null;
     export let showMenuIcon: boolean = false;
     export let canGoBack: boolean = false;
+    export let forceCanGoBack: boolean = false;
     export let modalWindow: boolean = false;
     export let disableBackButton: boolean = false;
     export let onClose: Function = null;
+    export let onGoBack: Function = null;
     let menuIcon: string;
     let menuIconVisible: boolean;
 
     onMount(() => {
-        setTimeout(() => {
-            canGoBack = Frame.topmost() && Frame.topmost().canGoBack();
-        }, 0);
+        // setTimeout(() => {
+            canGoBack = Frame.topmost() && (Frame.topmost().canGoBack() || !!Frame.topmost().currentEntry);
+        // }, 0);
     });
     function onMenuIcon() {
-        if (modalWindow) {
-            onClose ? onClose() : closeModal(undefined);
-        } else {
-            goBack();
+        try {
+            if (onGoBack) {
+                onGoBack();
+            } else if (modalWindow) {
+                onClose ? onClose() : closeModal(undefined);
+            } else {
+                goBack();
+            }
+        } catch (error) {
+            showError(error);
         }
     }
     $: {
         if (modalWindow) {
             menuIcon = 'mdi-close';
         } else {
-            menuIcon = canGoBack ? (__IOS__ ? 'mdi-chevron-left' : 'mdi-arrow-left') : 'mdi-menu';
+            menuIcon = forceCanGoBack || canGoBack ? (__IOS__ ? 'mdi-chevron-left' : 'mdi-arrow-left') : 'mdi-menu';
         }
     }
-    $: menuIconVisible = ((canGoBack || modalWindow) && !disableBackButton) || showMenuIcon;
+    $: menuIconVisible = ((forceCanGoBack || canGoBack || modalWindow) && !disableBackButton) || showMenuIcon;
 </script>
 
 <gridLayout class="actionBar" columns="auto,*,auto" rows={`${actionBarHeight},auto`} {...$$restProps} color={color || $textColor} on:tap={() => {}} paddingTop={$statusBarHeight}>

@@ -16,7 +16,7 @@
             back/line-join: round;
             back/line-cap: round;
             back/line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
-            line-color: [color] ? [color] : #287bda;
+            line-color: [style.color] ? [style.color] : #287bda;
             line-dasharray: [nuti::editing_id]=[id] ? @editing_dash : @non_editing_dash;
             line-join: round;
             line-cap: round;
@@ -38,7 +38,7 @@
         back/line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
         line-join: miter;
         line-cap: round;
-        line-color: [color] ? [color] : #287bda;
+        line-color: [style.color] ? [style.color] : #287bda;
         line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
         line-width: @bicycle_line_width+ 2;
 
@@ -51,7 +51,7 @@
             marker-height: 9;
             marker-spacing: 50;
             marker-fill: white;
-            marker-line-color: [color] ? [color] : #287bda;
+            marker-line-color: [style.color] ? [style.color] : #287bda;
         }
 
         // [class=pedestrian] {
@@ -62,21 +62,21 @@
 }
 
 #items['mapnik::geometry_type'=1]['nuti::hide_unselected'=0] {
-        text-fill: [color] ? [color] : #60A5F4;
+        text-fill: [style.color] ? [style.color] : #60A5F4;
         text-placement: [nuti::markers3d];
-        text-name: [icon] ? [icon] : '';
+        text-name: [style.icon] ? [style.icon] : '';
         text-allow-overlap: true;
         text-clip: false;
-        text-face-name: [mapFontFamily] ? [mapFontFamily] : 'osm';
-        text-size: linear([view::zoom], (10, 10), (16, 10), (18, 12))+ ([iconSize] ? [iconSize]: 10);
+        text-face-name: [style.mapFontFamily] ? [style.mapFontFamily] : 'osm';
+        text-size: linear([view::zoom], (10, 10), (16, 10), (18, 12))+ ([style.iconSize] ? [style.iconSize]: 10);
         text-halo-fill: @standard-halo-fill;
         text-halo-radius: @standard-halo-radius;
-        text-horizontal-alignment: [horizontalAlignment] ? [horizontalAlignment] : middle;
-        text-vertical-alignment: [verticalAlignment] ? [verticalAlignment] : bottom;
-        text-dx:[iconDx] ? [iconDx] :0;
-        text-dy:[iconDy] ? [iconDy] :0;
+        text-horizontal-alignment: [style.horizontalAlignment] ? [style.horizontalAlignment] : middle;
+        text-vertical-alignment: [style.verticalAlignment] ? [style.verticalAlignment] : bottom;
+        text-dx:[style.iconDx] ? [style.iconDx] :0;
+        text-dy:[style.iconDy] ? [style.iconDy] :0;
         when ([nuti::selected_id]=[id]) {
-            text-size: linear([view::zoom], (10, 10), (16, 10), (18, 12))+ ([iconSize] ? [iconSize]: 15)
+            text-size: linear([view::zoom], (10, 10), (16, 10), (18, 12))+ ([style.iconSize] ? [style.iconSize]: 15)
         }
 
 }

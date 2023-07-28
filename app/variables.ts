@@ -43,6 +43,7 @@ export function createGlobalEventListener(eventName: string) {
         if (component) {
             component.$$.on_destroy.push(clean);
         }
+        return clean;
     };
 }
 export function createUnregisterGlobalEventListener(eventName: string) {

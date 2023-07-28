@@ -1,6 +1,6 @@
-import { Color, View } from '@nativescript/core';
-import { ios as iosApp } from '@nativescript/core/application';
+import { Application, Color, View } from '@nativescript/core';
 import { Content, Options } from './share';
+export * from   './share.common';
 
 export async function share(content: Content, options: Options = {}) {
     if (content == null) {
@@ -52,7 +52,7 @@ export async function share(content: Content, options: Options = {}) {
         //@ts-ignore
         shareController.modalPresentationStyle = UIModalPresentationStyle.Popover;
 
-        const appearance = options.appearance || iosApp.systemAppearance;
+        const appearance = options.appearance || Application.ios.systemAppearance;
         if (appearance === 'dark') {
             //@ts-ignore
             shareController.overrideUserInterfaceStyle = UIUserInterfaceStyle.Dark;

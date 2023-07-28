@@ -21,6 +21,7 @@
     export let height = 40;
     export let elevation = 0;
     export let margin = 0;
+    export let query: string = null;
 
     // function focus() {
     //     textField && textField.nativeView.requestFocus();
@@ -60,7 +61,7 @@
     }
 
     function close(item: PhotonFeature) {
-        unfocus()
+        unfocus();
         clearSearchTimeout();
         closePopover(item);
     }
@@ -72,6 +73,9 @@
     }
     onMount(() => {
         focus();
+        if (query) {
+            search(query);
+        }
     });
     onDestroy(() => {
         unfocus();
@@ -84,7 +88,7 @@
         <!-- <CActionBar title={lc('search')} modalWindow>
             <mdactivityIndicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapsed'} />
         </CActionBar> -->
-        <textfield bind:this={textField} row={1} hint={lc('search')} floating="false" returnKeyType="search" on:textChange={onTextChange} on:loaded={focus} {height} padding="3 10 3 10" />
+        <textfield bind:this={textField} row={1} hint={lc('search')} floating="false" returnKeyType="search" on:textChange={onTextChange} on:loaded={focus} {height} padding="3 10 3 10" text={query}/>
         <SearchCollectionView bind:this={collectionView} row={2} on:tap={(event) => close(event.detail.detail)} />
     </gridlayout>
 </gesturerootview>

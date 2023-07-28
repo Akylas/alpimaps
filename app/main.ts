@@ -52,6 +52,7 @@ registerElement('page', () => new PageElement());
 registerNativeViewElement('gridlayout', () => require('@nativescript/core').GridLayout);
 registerNativeViewElement('scrollview', () => NestedScrollView as any);
 registerNativeViewElement('stacklayout', () => require('@nativescript/core').StackLayout);
+registerNativeViewElement('wraplayout', () => require('@nativescript/core').WrapLayout);
 registerNativeViewElement('image', () => require('@nativescript-community/ui-image').Img);
 registerNativeViewElement('flexlayout', () => require('@nativescript/core').FlexboxLayout);
 // registerNativeViewElement('textfield', () => require('@nativescript/core').TextField);
