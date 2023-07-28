@@ -467,9 +467,9 @@
     }
     export async function addStartOrStopPoint(position: MapPos<LatLonKeys>, metaData?) {
         if (waypoints.length === 0) {
-            addInternalStartPoint(position, metaData);
-        } else {
             addInternalStopPoint(position, metaData);
+        } else {
+            addInternalStartPoint(position, metaData);
         }
     }
     export async function addStopPoint(position: MapPos<LatLonKeys>, metaData?) {
