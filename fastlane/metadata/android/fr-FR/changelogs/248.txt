@@ -1,0 +1,13 @@
+*Features*
+- allow to import gpx
+- allow grouping items/routes (not finished yet).
+- adding support for grouping items (each item can be set a group). Also added support for exporting/importing items
+
+*Bug fixes*
+- themes update
+- better address formatting
+- use scrollview for action buttons in case there are too many
+- svelte 4 fixes
+- elevation chart dont show time info if there is none
+- allow route surface computation on longer routes
+- a lot of fixes for the search component
