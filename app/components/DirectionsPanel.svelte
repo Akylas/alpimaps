@@ -734,7 +734,7 @@
                 }
             };
             if (editingItem) {
-                item.id = editingItem.id;
+                item.properties.id = editingItem.id;
                 // item.properties.id = editingItem.propertiesid;
             }
             features.push(item);
