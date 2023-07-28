@@ -137,10 +137,10 @@ export interface ItemProperties {
 export class Group {
     public readonly id!: string;
     public name: string;
-    onMap: 1 | 0;
+    public onMap: 1 | 0;
 }
 export class Item {
-    public readonly id!: number;
+    public id!: number;
     type?: string;
 
     image_path?: string;
@@ -170,8 +170,7 @@ export type IItem = Partial<Item> & {
     // vectorElement?: VectorElement<any, any>;
 };
 
-
-export class GroupRepository  extends CrudRepository<Group> {
+export class GroupRepository extends CrudRepository<Group> {
     constructor(database: NSQLDatabase) {
         super({
             database,
@@ -183,7 +182,7 @@ export class GroupRepository  extends CrudRepository<Group> {
     async createTables() {
         return this.database.query(sql`
         CREATE TABLE IF NOT EXISTS "Groups" (
-            id TEXT PRIMARY KEY NOT NULL,
+            id BIGINT PRIMARY KEY NOT NULL,
             onMap INTEGER,
             name TEXT
         );
@@ -191,7 +190,10 @@ export class GroupRepository  extends CrudRepository<Group> {
     }
 }
 export class ItemRepository extends CrudRepository<Item> {
-    constructor(database: NSQLDatabase, public groupsRepository: GroupRepository) {
+    constructor(
+        database: NSQLDatabase,
+        public groupsRepository: GroupRepository
+    ) {
         super({
             database,
             table: 'Items',
@@ -201,7 +203,9 @@ export class ItemRepository extends CrudRepository<Item> {
     }
 
     async createTables() {
-        return Promise.all([this.groupsRepository.createTables(), this.database.query(sql`
+        return Promise.all([
+            this.groupsRepository.createTables(),
+            this.database.query(sql`
             CREATE TABLE IF NOT EXISTS "Items" (
                 id BIGINT PRIMARY KEY NOT NULL,
                 geometry TEXT NOT NULL,
@@ -214,7 +218,8 @@ export class ItemRepository extends CrudRepository<Item> {
                 stats TEXT,
                 image_path TEXT
             );
-        `), this.database.query(sql`
+        `),
+            this.database.query(sql`
         CREATE TABLE IF NOT EXISTS "ItemsGroups" (
             item_id BIGINT,
             group_id TEXT,
@@ -222,19 +227,21 @@ export class ItemRepository extends CrudRepository<Item> {
             FOREIGN KEY(item_id) REFERENCES Items(id) ON DELETE CASCADE,
             FOREIGN KEY(group_id) REFERENCES Groups(id) ON DELETE CASCADE
         );
-    `)]);
+    `)
+        ]);
     }
     async loadGroupsRelationship(item: Item): Promise<Item> {
-        const groups  = await (this.groupsRepository).search({where:sql`
+        const groups = await this.groupsRepository.search({
+            where: sql`
             "id" IN (
                 SELECT "group_id"
                 FROM "ItemsGroups"
                 WHERE "item_id" = ${item.id}
             )
-        `})
-        item.groups = groups.map(g=>g.id)
+        `
+        });
+        item.groups = groups.map((g) => g.id);
         return item;
-        
     }
     async createItem(item: IItem) {
         // DEV_LOG && console.log('createItem', item.onMap, item.image_path);
@@ -272,6 +279,7 @@ export class ItemRepository extends CrudRepository<Item> {
         const toUpdate: any = {};
         if (data.properties) {
             toSave.properties = extend(item.properties, data.properties);
+            // console.log('toSave', item.id, JSON.stringify(data.properties), JSON.stringify(toSave.properties));
             toUpdate.properties = JSON.stringify(toSave.properties);
             delete data.properties;
         }
@@ -285,6 +293,7 @@ export class ItemRepository extends CrudRepository<Item> {
             }
         });
         const updatedItem = { ...item, ...toSave };
+        // console.log('update', item.id, JSON.stringify(toUpdate), JSON.stringify(toSave));
         await this.update(updatedItem, toUpdate);
         return updatedItem;
     }
@@ -293,28 +302,56 @@ export class ItemRepository extends CrudRepository<Item> {
             let group;
             try {
                 group = await this.groupsRepository.get(groupId);
-            } catch (error) {
-                
-            }
-            console.log('addGroupToItem', group)
+            } catch (error) {}
+            // console.log('addGroupToItem', group);
             if (!group) {
-                group = await this.groupsRepository.create({id:groupId, name:groupId, onMap:1})
+                group = await this.groupsRepository.create({ id: groupId, name: groupId, onMap: 1 });
             }
-            const relation =  await this.database.query(sql` SELECT * FROM ItemsGroups WHERE "item_id" = ${item.id} AND "group_id" = ${groupId}`)
+            const relation = await this.database.query(sql` SELECT * FROM ItemsGroups WHERE "item_id" = ${item.id} AND "group_id" = ${groupId}`);
             if (relation.length === 0) {
-                await this.database.query(sql` INSERT INTO ItemsGroups ( item_id, group_id ) VALUES(${item.id}, ${groupId})`)
+                await this.database.query(sql` INSERT INTO ItemsGroups ( item_id, group_id ) VALUES(${item.id}, ${groupId})`);
             }
             item.groups = item.groups || [];
             item.groups.push(groupId);
         } catch (error) {
-            console.error(error)
+            console.error(error);
+        }
+    }
+    async setItemGroup(item: Item, groupName: string) {
+        try {
+            // console.log('setItemGroup', groupName, item.id);
+            let group;
+            if (groupName?.length) {
+                try {
+                    group = (await this.groupsRepository.search({ where: sql`name=${groupName}` }))[0];
+                } catch (error) {}
+                // console.log('addGroupToItem', group);
+                if (!group) {
+                    group = await this.groupsRepository.create({ id: Date.now(), name: groupName, onMap: 1 });
+                }
+            }
+
+            if (groupName?.length) {
+                // console.log('group', group.id, group.name);
+                await this.database.query(sql` DELETE FROM ItemsGroups where item_id=${item.id} AND group_id IS NOT ${group.id}`);
+                const relation = await this.database.query(sql` SELECT * FROM ItemsGroups WHERE "item_id" = ${item.id} AND "group_id" = ${group.id}`);
+                if (relation.length === 0) {
+                    await this.database.query(sql` INSERT INTO ItemsGroups ( item_id, group_id ) VALUES(${item.id}, ${group.id})`);
+                }
+                item.groups = [groupName];
+            } else {
+                await this.database.query(sql` DELETE FROM ItemsGroups where item_id=${item.id}`);
+                delete item.groups;
+            }
+        } catch (error) {
+            console.error(error, error.stack);
         }
     }
 
     prepareGetItem(item: Item) {
         return {
             ...item,
-            groups: item.groups? (item.groups as any as string).split(',') : item.groups,
+            groups: item.groups ? (item.groups as any as string).split(',') : item.groups,
             _properties: item.properties,
             get properties() {
                 if (!this._parsedProperties) {
@@ -363,7 +400,16 @@ export class ItemRepository extends CrudRepository<Item> {
                 return this._parsedStats;
             },
             toJSON() {
-                return { type: this.type, id: this.id, properties: this.properties, geometry: this.geometry, stats: this.stats, route: this.route, instructions: this.instructions, groups :this.groups };
+                return {
+                    type: this.type,
+                    id: this.id,
+                    properties: this.properties,
+                    geometry: this.geometry,
+                    stats: this.stats,
+                    route: this.route,
+                    instructions: this.instructions,
+                    groups: this.groups
+                };
             }
         };
     }
@@ -371,12 +417,7 @@ export class ItemRepository extends CrudRepository<Item> {
         const element = await this.get(itemId);
         return this.prepareGetItem(element);
     }
-    async searchItem(args: {
-        postfix?: SqlQuery;
-        select?: SqlQuery;
-        where?: SqlQuery;
-        orderBy?: SqlQuery;
-    }) {
+    async searchItem(args: { postfix?: SqlQuery; select?: SqlQuery; where?: SqlQuery; orderBy?: SqlQuery }) {
         const result = (await this.search(args)).slice();
         for (let index = 0; index < result.length; index++) {
             const element = this.prepareGetItem(result[index]);

@@ -287,6 +287,9 @@
             } else if (link.endsWith('.gpx')) {
                 const itemModule = mapContext.mapModule('items');
                 await itemModule.importGPXFile(link);
+            } else if (link.endsWith('.geojson')) {
+                const itemModule = mapContext.mapModule('items');
+                await itemModule.importGeoJSONFile(link);
             }
         } catch (err) {
             console.error(err, err.stack);
@@ -441,7 +444,7 @@
         const height = cartoMap.getMeasuredHeight();
         const left = Utils.layout.toDevicePixels(60);
         const top = Utils.layout.toDevicePixels(90 + topTranslationY);
-        const bottom = Utils.layout.toDevicePixels($navigationBarHeight - mapTranslation + 100);
+        const bottom = Utils.layout.toDevicePixels($navigationBarHeight - mapTranslation + 0);
         const min = Math.min(width - 2 * left, height - top - bottom);
         const deltaX = (width - min) / 2;
         const result = {
@@ -464,6 +467,9 @@
 
     async function onMainMapReady(e) {
         try {
+            if (!PRODUCTION) {
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
             cartoMap = e.object as CartoMap<LatLonKeys>;
             CartoMap.setRunOnMainThread(true);
             if (DEV_LOG) {
@@ -676,7 +682,7 @@
                     setSelectedItem(item);
                 }
                 if (setSelected && !route) {
-                    if (!props.address || !props.address['street']) {
+                    if (!props.address || !props.address['city']) {
                         (async () => {
                             try {
                                 const service = packageService.localOSMOfflineReverseGeocodingService;
@@ -1539,8 +1545,8 @@
                 },
 
                 {
-                    title: lc('import_gpx'),
-                    id: 'import_gpx',
+                    title: lc('import'),
+                    id: 'import',
                     icon: 'mdi-import'
                 }
             ];
@@ -1595,14 +1601,19 @@
                     case 'sentry':
                         await sendBugReport();
                         break;
-                    case 'import_gpx': {
+                    case 'import': {
                         const result = await openFilePicker({
-                            extensions: __IOS__ ? ['com.microoled.gpx'] : ['application/gpx+xml'],
+                            extensions: __IOS__ ? ['com.microoled.gpx'] : ['application/gpx+xml', 'application/json', 'application/geo+json'],
                             multipleSelection: false,
                             pickerMode: 0
                         });
-                        if (File.exists(result.files[0])) {
-                            await getMapContext().mapModule('items').importGPXFile(result.files[0]);
+                        const filePath = result.files[0];
+                        if (filePath && File.exists(filePath)) {
+                            if (filePath.endsWith('gpx')) {
+                                await getMapContext().mapModule('items').importGPXFile(filePath);
+                            } else {
+                                await getMapContext().mapModule('items').importGeoJSONFile(filePath);
+                            }
                         }
                         break;
                     }
