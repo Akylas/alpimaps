@@ -66,6 +66,9 @@ label{
 //     }
 // }
 
+mdbutton {
+    padding: 4 10 4 10;
+}
 mdbutton[variant=text] {
     padding: 0;
 }
@@ -106,6 +109,7 @@ mdcardview {
     color: $primary-color;
     ripple-color: $dark-color;
     .ns-dark & {
+        background-color: #1c1c1e;
         color: $primary-color;
         ripple-color: $dark-color;
     }

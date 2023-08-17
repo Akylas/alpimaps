@@ -6,7 +6,7 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { Color, ObservableArray, Utils, View } from '@nativescript/core';
+    import { Color, File, ObservableArray, Utils, View } from '@nativescript/core';
     import type { Point as GeoJSONPoint, Point } from 'geojson';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, goBack, showModal } from 'svelte-native/dom';
@@ -149,8 +149,11 @@
         }
 
         if (itemIsRoute) {
+            if (item.image_path && (!item.image_path || !File.exists(item.image_path))) {
+                item.image_path = this.getItemImagePath();
+                mapContext.mapModules['items'].takeItemPicture(item, true);
+            }
             // TODO: update image if there is none (testing file existence?)
-            // mapContext.mapModules['items'].takeItemPicture(item, true);
             const margin = Utils.layout.toDevicePixels(20);
             const screenBounds = {
                 min: { x: margin, y: margin },
@@ -295,8 +298,14 @@
         itemIsRoute = !!item.route;
         const props = { ...item.properties, ...updatedProperties };
         const propsKeys = Object.keys(props).filter((s) => propsToFilter.indexOf(s) === -1);
+        const {route, profile, ...toPrint} = props;
         items = new ObservableArray(
-            ([{ name: lc('name'), id: 'name', value: formatter.getItemTitle({ ...item, properties: { ...item.properties, ...updatedProperties } }) }] as any[])
+            (
+                [
+                    { type: 'taggroup', groups: item.groups },
+                    { name: lc('name'), id: 'name', value: formatter.getItemTitle({ ...item, properties: { ...item.properties, ...updatedProperties } }) }
+                ] as any[]
+            )
                 .concat(
                     itemIsRoute
                         ? []
@@ -331,11 +340,16 @@
             updatingItem = true;
             await mapContext.mapModule('items').setItemGroup(item, groupName);
             item = item;
+            items.setItem(0, { ...items.getItem(0), groups: item.groups });
         } catch (err) {
             showError(err);
         } finally {
             updatingItem = false;
         }
+    }
+
+    async function fetchOSMDetails() {
+        await mapContext.mapModule('items').getOSMDetails(item, mapContext.getMap().zoom);
     }
 </script>
 
@@ -343,6 +357,7 @@
     <gridlayout rows="auto,*,auto,2.5*,auto" android:paddingBottom={$navigationBarHeight}>
         <CActionBar canGoBack title={lc('edit')}>
             <IconButton text="mdi-playlist-plus" on:tap={addField} color="white" />
+            <IconButton text="mdi-web-sync" on:tap={fetchOSMDetails} color="white" isVisible={!itemIsRoute} />
         </CActionBar>
         <cartomap row={1} zoom={16} on:mapReady={onMapReady} useTextureView={false} on:layoutChanged={onLayoutChanged} />
         <canvaslabel row={1} fontSize={16} height={50} width={50} on:tap={pickOptionColor(itemColor)} horizontalAlignment="right" verticalAlignment="bottom">
@@ -360,7 +375,7 @@
             />
         </canvaslabel>
         {#if !itemIsRoute}
-            <gridlayout row={1} columns="auto,auto,auto" height={50} horizontalAlignment="left" verticalAlignment="bottom" margin={5}>
+            <gridlayout row={1} columns="auto,auto" height={50} horizontalAlignment="left" verticalAlignment="bottom" margin={5}>
                 <label
                     visibility={itemUsingDefault ? 'collapse' : 'visible'}
                     on:tap={setDefaultIcon}
@@ -425,8 +440,10 @@
                 </label>
             </gridlayout>
         {/if}
-        <TagView row={2} showDefaultGroups={false} padding="5 10 0 10" on:groupSelected={onTagViewSelectedGroup} topGroup={item.groups?.[0]}/>
         <collectionview row={3} {items} bind:this={collectionView} itemTemplateSelector={(item) => item.type || 'textfield'}>
+            <Template key="taggroup" let:item>
+                <TagView showDefaultGroups={false} padding="5 10 0 10" on:groupSelected={onTagViewSelectedGroup} topGroup={item.groups?.[0]} />
+            </Template>
             <Template key="textfield" let:item>
                 <gridlayout padding="10 10 0 10">
                     <textfield

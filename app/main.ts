@@ -6,12 +6,12 @@ import { installMixins as installUIMixins } from '@nativescript-community/system
 import { setMapPosKeys } from '@nativescript-community/ui-carto/core';
 import SwipeMenuElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
-import { initialize } from '@nativescript-community/ui-image';
+import { ImageViewTraceCategory, initialize } from '@nativescript-community/ui-image';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
 import installWebRTC from '@nativescript-community/ui-webview-rtc';
-import { Application } from '@nativescript/core';
+import { Application, Trace } from '@nativescript/core';
 import { ScrollView } from '@nativescript/core/ui';
 import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
@@ -53,10 +53,12 @@ registerNativeViewElement('gridlayout', () => require('@nativescript/core').Grid
 registerNativeViewElement('scrollview', () => NestedScrollView as any);
 registerNativeViewElement('stacklayout', () => require('@nativescript/core').StackLayout);
 registerNativeViewElement('wraplayout', () => require('@nativescript/core').WrapLayout);
-registerNativeViewElement('image', () => require('@nativescript-community/ui-image').Img);
+// registerNativeViewElement('image', () => require('@nativescript-community/ui-image').Img);
 registerNativeViewElement('flexlayout', () => require('@nativescript/core').FlexboxLayout);
 // registerNativeViewElement('textfield', () => require('@nativescript/core').TextField);
+registerNativeViewElement('image', () => require('@nativescript/core').Image);
 registerNativeViewElement('span', () => require('@nativescript/core').Span);
+registerNativeViewElement('button', () => require('@nativescript/core').Button);
 
 registerNativeViewElement('mdbutton', () => require('@nativescript-community/ui-material-button').Button, null, {}, { override: true });
 registerNativeViewElement('label', () => require('@nativescript-community/ui-label').Label, null, {}, { override: true });
@@ -92,7 +94,7 @@ PagerElement.register();
 // Trace.addCategories(Trace.categories.NativeLifecycle);
 // Trace.addCategories(Trace.categories.Transition);
 // Trace.addCategories(Trace.categories.Animation);
-// Trace.addCategories(Trace.categories.All);
+// Trace.addCategories(ImageViewTraceCategory);
 // Trace.enable();
 
 if (__IOS__) {
