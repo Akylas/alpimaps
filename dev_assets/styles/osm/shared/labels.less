@@ -1,6 +1,7 @@
 
 @name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
 @osm_icon: [nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]]?[nuti::osm-[class]]:[nuti::osm-symbol-dot]);
+@featureId: [name]+[subclass];
 
 #landcover_name[class!=ice],
 #landuse_name
@@ -415,7 +416,7 @@
 	[zoom>=18] {
 		::icon {
 			text-placement: [nuti::markers3d];
-			text-feature-id: [name]+[subclass];
+			text-feature-id: @featureId;
 			text-name: @osm_icon;
 			text-size: @poi_icon_width;
 			text-face-name: @osm;
@@ -426,7 +427,7 @@
 		}
 		::label {
 			text-name: @name;
-			text-feature-id: [name]+[subclass];
+			text-feature-id: @featureId;
 			text-face-name: @mont_md;
 			text-placement: [nuti::texts3d];
 			text-halo-fill: @poi_halo;
@@ -447,7 +448,7 @@
 		::icon {
 			text-placement: [nuti::markers3d];
 			text-name: @osm_icon;
-			text-feature-id: [name]+[subclass];
+			text-feature-id: @featureId;
 			text-size: @poi_icon_width;
 			text-face-name: @osm;
 			text-halo-fill: @poi_halo;
@@ -458,7 +459,7 @@
 		}
 		::label[zoom>=17] {
 			text-name: @name;
-			text-feature-id: [name]+[subclass];
+			text-feature-id: @featureId;
 			text-face-name: @mont_md;
 			text-placement: [nuti::texts3d];
 			text-halo-fill: @poi_halo;
@@ -477,7 +478,7 @@
 	::icon {
 		text-placement: [nuti::markers3d];
 		text-name: @osm_icon;
-		text-feature-id: [name]+[subclass];
+		text-feature-id: @featureId;
 		text-face-name: @osm;
 		text-halo-fill: @poi_halo;
 		text-halo-radius: @poi-spring_halo_radius;
@@ -487,7 +488,7 @@
 	}
 	[zoom>=17]::label {
 		text-name: @name;
-		text-feature-id: [name]+[subclass];
+		text-feature-id: @featureId;
 		text-face-name: @mont_md;
 		text-placement: [nuti::texts3d];
 		text-halo-fill: @poi_halo;
@@ -508,10 +509,10 @@
 	[zoom=17][rank<=70],
 	[zoom>=18] {
 		::icon {
-			// text-placement-priority:10;
+			text-placement-priority:[nuti::selected_id] = @featureId ? 1000 : 0;
 			text-placement: [nuti::markers3d];
 			text-name: @osm_icon;
-			text-feature-id: [name]+[subclass];
+			text-feature-id: @featureId;
 			text-size: @poi_icon_width;
 			text-face-name: @osm;
 			text-halo-fill: @poi_halo;
@@ -555,8 +556,9 @@
 		[zoom=17][rank<=50],
 		[zoom>=18] {
 			::label {
+				text-placement-priority:[nuti::selected_id] = @featureId ? 1000 : 0;
 				text-name: @name;
-				text-feature-id: [name]+[subclass];
+				text-feature-id: @featureId;
 				text-face-name: @mont_md;
 				text-placement: [nuti::texts3d];
 				text-fill: @poi-fill;
@@ -609,7 +611,7 @@
 	::icon {
 		text-placement: [nuti::markers3d];
 		text-name: [nuti::osm-park];
-		text-feature-id: [name]+[subclass];
+		text-feature-id: @featureId;
 		text-size: @poi_icon_width;
 		text-face-name: @osm;
 		text-halo-fill: @poi_halo;
@@ -619,7 +621,7 @@
 	}
 	[zoom>=8]::label {
 		text-name: @name;
-		text-feature-id: [name]+[subclass];
+		text-feature-id: @featureId;
 		text-face-name: @mont_md;
 		text-placement: [nuti::texts3d];
 		text-halo-fill: @poi_halo;
