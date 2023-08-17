@@ -1,0 +1,12 @@
+*Features*
+- allow requesting osm point details. Added support for opening_hours
+- draw moon position in astronomy view
+- option to choose whether to start directions with destination or start point
+
+*Bug fixes*
+- editing route rendering fix
+- item bottomsheet rendering fixes
+- when starting direction, start with destination point and not start point. Seems like it is what we most commonly do
+- search improvements. Allow searching vector tiles when offline
+- make map left buttons more visible
+- 
