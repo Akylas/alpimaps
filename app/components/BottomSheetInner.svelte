@@ -28,7 +28,7 @@
     import { computeDistanceBetween } from '~/utils/geo';
     import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
-    import { actionBarButtonHeight, borderColor, mdiFontFamily, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
+    import { actionBarButtonHeight, borderColor, mdiFontFamily, primaryColor, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import ElevationChart from './ElevationChart.svelte';
     import IconButton from './IconButton.svelte';
     import { Clipboard } from '@nativescript-use/nativescript-clipboard';
@@ -36,13 +36,14 @@
     import { langStore } from '~/helpers/locale';
     import { get } from 'svelte/store';
     import { share, shareFile } from '~/utils/share';
+    import { SwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     const clipboard = new Clipboard();
 
     const LISTVIEW_HEIGHT = 200;
     const PROFILE_HEIGHT = 150;
     const STATS_HEIGHT = 180;
     const WEB_HEIGHT = 400;
-    const INFOVIEW_HEIGHT = 80;
+    const INFOVIEW_HEIGHT = 86;
 
     const mapContext = getMapContext();
     const highlightPaint = new Paint();
@@ -61,6 +62,7 @@
     let elevationChart: ElevationChart;
     let chartLoadHighlightData = null;
     let infoView: BottomSheetInfoView;
+    let swipemenu: NativeViewElementNode<SwipeMenu>;
     let webViewSrc: string = null;
     let showListView = false;
     $: showListView = listViewAvailable && listViewVisible;
@@ -106,11 +108,11 @@
     //         updateRouteItemWithPosition(item, currentLocation);
     //     }
     // }
-    $: {
-        if (item) {
-            console.log('selected item ', item.id);
-        }
-    }
+    // $: {
+    //     if (item) {
+    //         console.log('selected item ', item.id, item.properties?.address, item.geometry);
+    //     }
+    // }
     // $: {
     //     const props = item && item.properties;
     //     if (props) {
@@ -156,29 +158,35 @@
             showError(error);
         }
     }
-    function searchWeb() {
-        let name;
+    function searchWeb(canUseWebsite = true) {
+        let query;
         try {
             const props = item && item.properties;
             if (props) {
-                name = props.name;
-                if (props.wikipedia) {
-                    name = props.wikipedia.split(':')[1];
+                query = props.name;
+                if (canUseWebsite && props.website) {
+                    query = props.website;
+                } else {
+                    if (props.wikipedia) {
+                        query = props.wikipedia.split(':')[1];
+                    }
+                    if (props.address) {
+                        query += ' ' + props.address.county;
+                    }
                 }
-                if (props.address) {
-                    name += ' ' + props.address.county;
-                }
+
                 if (__ANDROID__) {
                     const intent = new Intent(Intent.ACTION_WEB_SEARCH);
-                    intent.putExtra(android.app.SearchManager.QUERY, name);
-                    (Application.android.foregroundActivity as android.app.Activity).startActivity(intent);
+                    intent.putExtra('query', query);
+                    Application.android.startActivity.startActivity(intent);
                 } else {
                     throw new Error();
                 }
             }
         } catch (err) {
-            if (name) {
-                const url = `https://duckduckgo.com/?kae=d&ks=s&ko=-2&kaj=m&k1=-1&q=${encodeURIComponent(name).toLowerCase().replace('/s+/g', '+')}`;
+            console.error(err);
+            if (query) {
+                const url = `https://duckduckgo.com/?kae=d&ks=s&ko=-2&kaj=m&k1=-1&q=${encodeURIComponent(query).toLowerCase().replace('/s+/g', '+')}`;
                 openLink(url);
             }
         }
@@ -212,6 +220,7 @@
     function updateSelectedItem(item) {
         try {
             if (item) {
+                swipemenu?.nativeView?.close('right', 0);
                 itemIsRoute = !!item?.route;
                 itemIsEditingItem = item?.properties.editingId && item?.properties.editingId === mapContext.getEditingItem()?.id;
                 itemIsBusStop = item && !itemIsRoute && (item.properties?.class === 'bus' || item.properties?.subclass === 'tram_stop');
@@ -321,7 +330,11 @@
             }
         }
     }
+    function closeSwipeMenu(animated = true) {
+        swipemenu?.nativeView?.close(undefined, animated ? undefined : 0);
+    }
     function zoomToItem() {
+        closeSwipeMenu();
         mapContext.zoomToItem({ item, forceZoomOut: true });
     }
     function openWebView() {
@@ -529,7 +542,6 @@
     // }
 
     async function saveItem(peek = true) {
-        console.log('saveItem', itemIsEditingItem);
         if (itemIsEditingItem) {
             updateEditedItem();
             return;
@@ -539,26 +551,9 @@
             updatingItem = true;
             const itemsModule = mapContext.mapModule('items');
             let item = mapContext.getSelectedItem();
-            const isRoute = !!item.route;
-            const imagePath = path.join(itemsModule.imagesFolder.path, Date.now() + '.jpg');
-            if (isRoute) {
-                item.image_path = imagePath;
-            }
-            // TODO: do we always remove it?
-            if (item.properties) {
-                delete item.properties.style;
-                item.properties.style = {
-                    iconSize: 20,
-                    fontFamily: mdiFontFamily,
-                    mapFontFamily: MATERIAL_MAP_FONT_FAMILY,
-                    iconDx: -2,
-                    icon: 'mdi-map-marker'
-                };
 
-                // item.properties.icon = osmicon(formatter.geItemIcon(item));
-            }
             item = await itemsModule.saveItem(item);
-            if (isRoute) {
+            if (item.route) {
                 mapContext.mapModules.directionsPanel.cancel(false);
             }
             mapContext.selectItem({ item, isFeatureInteresting: true, peek, preventZoom: false });
@@ -949,25 +944,67 @@
             }
         }
     }
+    function drawerTranslationFunction(side, width, value, delta, progress) {
+        const result = {
+            mainContent: {
+                translateX: side === 'right' ? -delta : delta
+            },
+            rightDrawer: {
+                translateX: width + (side === 'right' ? -delta : delta)
+            },
+            leftDrawer: {
+                translateX: (side === 'right' ? -delta : delta) - width
+            },
+            backDrop: {
+                translateX: side === 'right' ? -delta : delta,
+                opacity: progress * 0.1
+            }
+        } as any;
+
+        return result;
+    }
 </script>
 
-<gridlayout {...$$restProps} width="100%" rows={`${INFOVIEW_HEIGHT},50,auto,auto,auto`} columns="*,auto" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
+<gridlayout {...$$restProps} width="100%" rows={`${INFOVIEW_HEIGHT},50,auto,auto,auto`} backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
     {#if loaded}
-        <BottomSheetInfoView bind:this={infoView} {item} colSpan={2} rightTextPadding={itemIsRoute ? actionBarButtonHeight : 0}/>
-        <mdactivityindicator visibility={updatingItem ? 'visible' : 'collapsed'} horizontalAligment="right" busy={true} width={20} height={20} />
-        <IconButton col={1} text="mdi-crosshairs-gps" isVisible={itemIsRoute} on:tap={zoomToItem} marginBottom={10}/>
+        <swipemenu bind:this={swipemenu} height={INFOVIEW_HEIGHT} rightSwipeDistance={0} leftSwipeDistance={0} translationFunction={drawerTranslationFunction} openAnimationDuration={100} closeAnimationDuration={100}>
+            <!-- svelte-ignore illegal-attribute-character -->
+            <BottomSheetInfoView bind:this={infoView} prop:mainContent {item} colSpan={2} rightTextPadding={itemIsRoute ? actionBarButtonHeight : 0}>
+                <mdactivityindicator slot="above" visibility={updatingItem ? 'visible' : 'hidden'} horizontalAligment="right" busy={true} width={20} height={20} />
+            </BottomSheetInfoView>
+            <!-- svelte-ignore illegal-attribute-character -->
+            <IconButton prop:leftDrawer on:tap={deleteItem} tooltip={lc('delete')} shape="none" width={60} height="100%" color="white" backgroundColor="red" text="mdi-trash-can" />
+
+            <!-- <stacklayout prop:rightDrawer orientation="horizontal"> -->
+            <!-- svelte-ignore illegal-attribute-character -->
+            <IconButton prop:rightDrawer text="mdi-crosshairs-gps" on:tap={zoomToItem} shape="none" width={60} height="100%" color="white" backgroundColor={primaryColor.setAlpha(180).hex} />
+            <!-- </stacklayout> -->
+        </swipemenu>
+
         <scrollview orientation="horizontal" row={1} colSpan={2} borderTopWidth={1} borderBottomWidth={1} borderColor={$borderColor}>
             <gridlayout rows="*" columns="auto">
                 <stacklayout orientation="horizontal" id="bottomsheetbuttons">
-                    <IconButton on:tap={searchWeb} tooltip={lc('search_web')} isVisible={item && (!itemIsRoute || !!item.properties?.name)} text="mdi-web" rounded={false} />
+                    <IconButton on:tap={() => showInformation()} tooltip={lc('information')} text="mdi-information-outline" isVisible={item && !itemIsRoute} rounded={false} />
+                    <IconButton
+                        on:tap={() => searchWeb()}
+                        onLongPress={() => searchWeb(false)}
+                        tooltip={lc('search_web')}
+                        isVisible={item && (!itemIsRoute || !!item.properties?.name)}
+                        text="mdi-web"
+                        rounded={false}
+                    />
                     {#if packageService.hasElevation()}
                         <IconButton on:tap={() => getProfile()} tooltip={lc('elevation_profile')} isVisible={itemIsRoute && itemCanQueryProfile} text="mdi-chart-areaspline" rounded={false} />
                     {/if}
                     <IconButton on:tap={() => getStats()} tooltip={lc('road_stats')} isVisible={itemIsRoute && itemCanQueryStats} text="mdi-chart-bar-stacked" rounded={false} />
-                        <IconButton on:tap={hideItem} tooltip={lc('hide')} isVisible={!!item?.id && itemIsRoute} text="mdi-eye-off" rounded={false} />
-                        <IconButton on:tap={() => saveItem()} tooltip={lc('save')} isVisible={item && (!item.id || itemIsEditingItem)} text={itemIsEditingItem?"mdi-content-save-outline":"mdi-map-plus"} rounded={false} />
-                    <IconButton on:tap={startEditingItem} tooltip={lc('edit')} isVisible={item && item.id && !itemIsEditingItem} text="mdi-pencil" rounded={false} />
-                    <IconButton on:tap={deleteItem} tooltip={lc('delete')} isVisible={!!item?.id} color="red" text="mdi-delete" rounded={false} />
+                    <IconButton on:tap={hideItem} tooltip={lc('hide')} isVisible={!!item?.id && itemIsRoute} text="mdi-eye-off" rounded={false} />
+                    <IconButton
+                        on:tap={() => saveItem()}
+                        tooltip={lc('save')}
+                        isVisible={item && (!item.id || itemIsEditingItem)}
+                        text={itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus'}
+                        rounded={false}
+                    />
                     {#if item && item.properties && !!item.properties.wikipedia}
                         <IconButton on:tap={openWikipedia} tooltip={lc('wikipedia')} text="mdi-wikipedia" rounded={false} />
                     {/if}
@@ -982,6 +1019,9 @@
 
                     <IconButton on:tap={getTransitLines} tooltip={lc('bus_stop_infos')} isVisible={itemIsBusStop} text="mdi-bus" rounded={false} />
                     <IconButton on:tap={shareItem} tooltip={lc('share')} text="mdi-share-variant" rounded={false} />
+                    <IconButton on:tap={startEditingItem} tooltip={lc('edit')} isVisible={item && item.id && !itemIsEditingItem} text="mdi-pencil" rounded={false} />
+
+                    <!-- <IconButton on:tap={deleteItem} tooltip={lc('delete')} isVisible={!!item?.id} color="red" text="mdi-delete" rounded={false} /> -->
                 </stacklayout>
             </gridlayout>
         </scrollview>
