@@ -14,6 +14,8 @@
     import { actionBarHeight, backgroundColor, borderColor, mdiFontFamily, textColor } from '~/variables';
     import IconButton from './IconButton.svelte';
     import ListItem2 from './ListItem2.svelte';
+    import { openUrl } from '@akylas/nativescript/utils';
+    import { compose } from '@nativescript/email';
 
     export let item: Item;
     export let height: number | string = '100%';
@@ -90,7 +92,7 @@
         }
         if (itemProperties.phone) {
             newItems.push({
-                id: 'email',
+                id: 'phone',
                 title: lc('phone'),
                 subtitle: itemProperties.phone,
                 leftIcon: 'mdi-phone',
@@ -106,11 +108,13 @@
             });
         }
         if (itemProperties.website) {
-            newItems.push({
-                id: 'website',
-                title: lc('website'),
-                subtitle: itemProperties.website,
-                leftIcon: 'mdi-web'
+            itemProperties.website.split(';').forEach((i) => {
+                newItems.push({
+                    id: 'website',
+                    title: lc('website'),
+                    subtitle: i,
+                    leftIcon: 'mdi-web'
+                });
             });
         }
         if (itemProperties.wikipedia) {
@@ -219,7 +223,7 @@
         try {
             let w = canvas.getWidth();
             let h = canvas.getHeight();
-            const iconsTop = 20;
+            const iconsTop = 10;
             const iconsLeft = 34;
             topItemsToDraw.forEach((c, index) => {
                 let x = index * 75 + iconsLeft;
@@ -230,12 +234,12 @@
                 }
                 paint.setColor(c.color || $textColor);
                 if (c.icon) {
-                    paint.setTextSize(c.iconFontSize || 30);
+                    paint.setTextSize(c.iconFontSize || 24);
                     canvas.drawText(c.icon, x, iconsTop + 20, paint);
                 }
                 if (c.value) {
                     textIconPaint.setTextSize(12);
-                    textIconPaint.setFontWeight('bold');
+                    // textIconPaint.setFontWeight('bold');
                     // textIconPaint.setColor(c.color || $textColor);
                     canvas.drawText(c.value + '', x, iconsTop + 20 + 19, textIconPaint);
                 }
@@ -246,7 +250,8 @@
                     canvas.drawText(c.subvalue + '', x, iconsTop + 20 + 30, textIconPaint);
                 }
             });
-            canvas.drawLine(15, h - 1, w - 15, h - 1, borderPaint);
+            canvas.drawLine(0, 0, w - 0, 0, borderPaint);
+            canvas.drawLine(0, h - 1, w - 0, h - 1, borderPaint);
         } catch (err) {
             console.error(err, err.stack);
         }
@@ -275,15 +280,23 @@
         try {
             switch (listItem.id) {
                 case 'website':
-                    openLink(listItem.subtitle);
+                    await openLink(listItem.subtitle);
+                    break;
+                case 'phone':
+                    openUrl('tel:' + listItem.subtitle);
+                    break;
+                case 'email':
+                    await compose({
+                        to:[listItem.subtitle]
+                    })
                     break;
                 case 'wikipedia':
                     const url = `https://en.wikipedia.org/wiki/${listItem.subtitle}`;
-                    openLink(url);
+                    await openLink(url);
                     break;
-                    default:
+                default:
                     if (listItem.expandable) {
-                        expandItem(event, listItem)
+                        expandItem(event, listItem);
                     }
                     break;
             }
@@ -293,31 +306,31 @@
     }
 
     function expandItem(event, listItem) {
-            let collapseButton = event.object as View;
-            if (collapseButton instanceof LayoutBase) {
-                collapseButton = collapseButton.getViewById('rightButton');
-            }
-            DEV_LOG && console.log('expandItem', collapseButton, listItem.expanded)
-            listItem.expanded = !listItem.expanded;
-            collapseButton.animate({
-                duration: 200,
-                rotate: listItem.expanded ? 180 : 0
-            });
-            const index = items.indexOf(listItem);
-            if (index >= 0) {
-                items.setItem(index, listItem);
-            }
+        let collapseButton = event.object as View;
+        if (collapseButton instanceof LayoutBase) {
+            collapseButton = collapseButton.getViewById('rightButton');
+        }
+        DEV_LOG && console.log('expandItem', collapseButton, listItem.expanded);
+        listItem.expanded = !listItem.expanded;
+        collapseButton.animate({
+            duration: 200,
+            rotate: listItem.expanded ? 180 : 0
+        });
+        const index = items.indexOf(listItem);
+        if (index >= 0) {
+            items.setItem(index, listItem);
+        }
     }
     async function onItemRightTap(event, listItem) {
         DEV_LOG && console.log('onItemRightTap', listItem);
         try {
             switch (listItem.id) {
                 case 'phone':
-                    // openLink(listItem.subtitle);
+                openUrl('sms:' + listItem.subtitle);
                     break;
                 default:
                     if (listItem.expandable) {
-                        expandItem(event, listItem)
+                        expandItem(event, listItem);
                     }
                     break;
             }
@@ -332,19 +345,19 @@
 </script>
 
 <gridlayout {height} rows="auto,auto,*" {...$$restProps} backgroundColor={$backgroundColor}>
-    <gridLayout class="actionBar" columns="auto,*,auto" rows={`${actionBarHeight}`} {...$$restProps} color={$textColor}>
-        <label id="title" col={1} colSpan={3} class="actionBarTitle" textAlignment="left" text={formatter.getItemTitle(item) || ''} verticalTextAlignment="center" />
+    <gridLayout columns="auto,*,auto" rows={`${actionBarHeight}`} {...$$restProps} color={$textColor}>
+        <label id="title" col={1} fontSize={20} fontWeight="bold" textAlignment="left" text={formatter.getItemTitle(item) || ''} verticalTextAlignment="center" />
         <IconButton text={osmicon(formatter.geItemIcon(item))} color="white" fontFamily="osm" />
         <stackLayout col={2} orientation="horizontal">
             <IconButton text="mdi-content-save-outline" color="white" isVisible={Object.keys(extraProps).length > 0} on:tap={() => saveItem()} />
             <IconButton text="mdi-autorenew" color="white" isVisible={canRefresh} />
         </stackLayout>
     </gridLayout>
-    <canvas row={1} visibility={topItemsToDraw.length ? 'visible' : 'collapsed'} on:draw={onTopDraw} height={80} />
+    <canvas row={1} visibility={topItemsToDraw.length ? 'visible' : 'collapsed'} on:draw={onTopDraw} height={60} />
     <collectionview row={2} {items} bind:this={collectionView}>
         <Template let:item>
-            <gridlayout  on:tap={(e) => onItemTap(e, item)} >
-                <ListItem2 height={item.expanded ? item.expandedHeight : 70} {...item}/>
+            <gridlayout on:tap={(e) => onItemTap(e, item)}>
+                <ListItem2 height={item.expanded ? item.expandedHeight : 70} {...item} />
                 <IconButton
                     id="rightButton"
                     text={item.rightIcon || 'mdi-chevron-down'}
