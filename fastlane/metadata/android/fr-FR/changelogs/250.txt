@@ -1,0 +1,2 @@
+*Bug fixes*
+- item info view improvements
