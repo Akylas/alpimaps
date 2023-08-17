@@ -549,10 +549,18 @@
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
-    <bottomsheet on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)} steps={[0, 300]} stepIndex={bottomSheetStepIndex} panGestureOptions={{ failOffsetXEnd: 50, minDist: 150 }} {shouldPan} android:marginBottom={$navigationBarHeight}>
+    <!-- svelte-ignore illegal-attribute-character -->
+    <bottomsheet
+        on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)}
+        steps={[0, 300]}
+        stepIndex={bottomSheetStepIndex}
+        panGestureOptions={{ failOffsetXEnd: 50, minDist: 150 }}
+        {shouldPan}
+        android:marginBottom={$navigationBarHeight}
+    >
         <gridLayout on:layoutChanged={onLayoutChanged} width="100%" height="100%">
             <awebview
-                bind:this={webView} 
+                bind:this={webView}
                 on:loaded={webviewLoaded}
                 createWebViewClient={createCustomWebViewClient}
                 webRTC={true}
@@ -604,7 +612,7 @@
                 <mdbutton color={primaryColor} on:tap={(e) => (listeningForHeading ? stopHeadingListener() : startHeadingListener())} class="small-floating-btn" text="mdi-compass" />
                 <mdbutton color={primaryColor} on:tap={(e) => (bottomSheetStepIndex = 1 - bottomSheetStepIndex)} class="small-floating-btn" text="mdi-cog" />
             </stacklayout>
-            <mdactivityindicator visibility={listeningForHeading ? 'visible' : 'collapsed'} verticalAlignment="bottom" horizontalAlignment="right" busy={true} />
+            <mdactivityindicator visibility={listeningForHeading ? 'visible' : 'hidden'} verticalAlignment="bottom" horizontalAlignment="right" busy={true} />
             <label text={currentAltitude?.toFixed(0) + 'm'} horizontalAlignment="right" verticalAlignment="bottom" fontSize={12} color={darkMode ? textColorDark : textColorLight} paddingRight={10} />
             <label
                 visibility={!listeningForHeading || headingAccuracy >= 2 ? 'hidden' : 'visible'}
@@ -616,11 +624,12 @@
                 marginBottom={100}
             />
         </gridLayout>
-        <gridlayout prop:bottomSheet height={300}  width="100%" rows="30,*" columns="*,*" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
+        <gridlayout prop:bottomSheet height={300} width="100%" rows="30,*" columns="*,*" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
             <mdbutton variant="text" class="mdi" fontSize={16} width={undefined} text="mdi-cog" on:tap={() => (selectedPageIndex = 0)} />
             <mdbutton variant="text" col={1} class="mdi" fontSize={16} width={undefined} text="mdi-bug" on:tap={() => (selectedPageIndex = 1)} />
             <pager colSpan={2} row={1} disableSwipe={false} selectedIndex={selectedPageIndex} on:selectedIndexChange={(e) => (selectedPageIndex = e['value'])}>
                 <pageritem>
+                    <!-- svelte-ignore illegal-attribute-character -->
                     <collectionview bind:this={collectionView1} items={listView1Items} itemTemplateSelector={selectTemplate} {itemIdGenerator} android:marginBottom={$navigationBarHeight}>
                         <Template let:item key="checkbox">
                             <checkbox text={item.title} checked={item.value} on:checkedChange={(e) => onCheckBox(item, e.value)} />
@@ -642,6 +651,7 @@
                     </collectionview>
                 </pageritem>
                 <pageritem>
+                    <!-- svelte-ignore illegal-attribute-character -->
                     <collectionview bind:this={collectionView2} items={listView2Items} itemTemplateSelector={selectTemplate} {itemIdGenerator} android:marginBottom={$navigationBarHeight}>
                         <Template let:item key="checkbox">
                             <checkbox text={item.title} checked={item.value} on:checkedChange={(e) => onCheckBox(item, e.value)} />
