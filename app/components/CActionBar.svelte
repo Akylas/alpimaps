@@ -9,6 +9,8 @@
     export let color: string = null;
     export let title: string = null;
     export let showMenuIcon: boolean = false;
+    export let height = actionBarHeight;
+    export let paddingTop = $statusBarHeight;
     export let canGoBack: boolean = false;
     export let forceCanGoBack: boolean = false;
     export let modalWindow: boolean = false;
@@ -46,7 +48,7 @@
     $: menuIconVisible = ((forceCanGoBack || canGoBack || modalWindow) && !disableBackButton) || showMenuIcon;
 </script>
 
-<gridLayout class="actionBar" columns="auto,*,auto" rows={`${actionBarHeight},auto`} {...$$restProps} color={color || $textColor} on:tap={() => {}} paddingTop={$statusBarHeight}>
+<gridLayout class="actionBar" columns="auto,*,auto" rows={`${height},auto`} {...$$restProps} color={color || $textColor} on:tap={() => {}} paddingTop={paddingTop}>
     <label id="title" col={1} colSpan={3} class="actionBarTitle" textAlignment="left" visibility={!!title ? 'visible' : 'hidden'} text={title || ''} verticalTextAlignment="center" />
     <slot name="center" />
     <stackLayout orientation="horizontal">
