@@ -88,6 +88,7 @@
 
 <gridlayout rows="auto,*" class="bottomsheet" height={300}>
     <label text={name} fontWeight="bold" padding="15 10 15 20" fontSize={20} />
+    <!-- svelte-ignore illegal-attribute-character -->
     <collectionview bind:this={collectionView} id="scrollView" row={1} items={linesItems} itemIdGenerator={(item, i) => i} android:marginBottom={$navigationBarHeight} rowHeight={70}>
         <Template let:item>
             <gridlayout rippleColor={item.color} columns="auto,*,auto" padding={10} on:tap={() => showTimesheet(item)}>
@@ -105,5 +106,5 @@
             </cgroup>
         </canvaslabel>
     {/if}
-    <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} busy={true} horizontalAlignment="right" verticalAlignment="middle" />
+    <mdactivityindicator visibility={loading ? 'visible' : 'hidden'} busy={true} horizontalAlignment="right" verticalAlignment="middle" />
 </gridlayout>
