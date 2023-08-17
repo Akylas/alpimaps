@@ -168,7 +168,6 @@ const mapContext: MapContext = {
     },
     createMapDecoder(mapStyle, mapStyleLayer) {
         const oldDecoder = mapContext.mapDecoder;
-        console.log('createMapDecoder', mapStyle, mapStyleLayer);
         mapContext.mapDecoder = new MBVectorTileDecoder({
             style: mapStyleLayer,
             liveReload: !PRODUCTION,
