@@ -1,7 +1,13 @@
 import addressFormatter from '@fragaria/address-formatter';
+// import getIsOpenNow from '@wojtekmaj/opening-hours-utils/src/get_is_open_now';
+// import getNextClosedAt from '@wojtekmaj/opening-hours-utils/src/get_next_closed_at';
+// import getNextOpenAt from '@wojtekmaj/opening-hours-utils/src/get_next_open_at';
+// import * as opening_hours from 'opening_hours';
+import SimpleOpeningHours from '~/helpers/SimpleOpeningHours';
+import dayjs from 'dayjs';
 import humanUnit, { sizePreset } from 'human-unit';
 import { get } from 'svelte/store';
-import { formatDate, langStore } from '~/helpers/locale';
+import { formatDate, langStore, lc } from '~/helpers/locale';
 import { IItem } from '~/models/Item';
 export { convertDurationSeconds, formatDate } from '~/helpers/locale';
 const timePreset = {
@@ -139,7 +145,7 @@ export function formatValueToUnit(value: any, unit, options?: { prefix?: string;
     return result;
 }
 
-export function formatAddress(item: IItem, startIndex = -1, endIndex = -1) {
+export function getAddress(item: IItem, startIndex = -1, endIndex = -1) {
     const address = { ...item.properties.address };
     // if (!address.name) {
     //     address.name = item.properties.name;
@@ -147,10 +153,18 @@ export function formatAddress(item: IItem, startIndex = -1, endIndex = -1) {
     const result = addressFormatter.format(address, {
         fallbackCountryCode: get(langStore)
     });
-    if (startIndex >=0 || endIndex >= 0) {
-        return result.split('\n').slice(startIndex, endIndex).join(' ');
+    if (startIndex >= 0 || endIndex >= 0) {
+        return result.split('\n').slice(startIndex, endIndex);
     }
-    return result.split('\n').join(' ');
+    return result.split('\n');
+}
+
+export function formatAddress(item: IItem, startIndex = -1, endIndex = -1) {
+    // if (!address.name) {
+    //     address.name = item.properties.name;
+    // }
+    const result = getAddress(item, startIndex, endIndex);
+    return result.join(' ');
     // const properties = item.properties;
     // const address = properties.address;
     // let result = '';
@@ -189,4 +203,19 @@ export function formatAddress(item: IItem, startIndex = -1, endIndex = -1) {
     //     result += address.state + ' ';
     // }
     // return result.trim();
+}
+
+export function openingHoursText(item: IItem) {
+    const openingHours = item.properties['opening_hours'];
+    if (!openingHours) {
+        return null;
+    }
+    const oh = new SimpleOpeningHours(openingHours);
+    const isOpened = oh.isOpen();
+    let text = isOpened ? lc('open') : lc('closed');
+    const nextTime = oh.nextTime();
+    if (nextTime && (isOpened || nextTime.getDate() === new Date().getDate())) {
+        text += ' - ' + (isOpened ? lc('until') : lc('opening_at')) + ' ' + dayjs(nextTime).format('LT');
+    }
+    return { text, isOpened, color: isOpened ? '#4ba787' : '#f90000', oh };
 }
