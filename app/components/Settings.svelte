@@ -88,6 +88,23 @@
                 title: lc('dark_mode')
             },
             {
+                type: 'switch',
+                key: 'startDirDest',
+                value: ApplicationSettings.getBoolean('startDirDest', false),
+                title: lc('start_direction_dest')
+            },
+            // {
+            //     id: 'share',
+            //     rightBtnIcon: 'mdi-chevron-right',
+            //     title: lc('share_application')
+            // },
+            {
+                id: 'data_path',
+                title: lc('map_data_path'),
+                description: getSavedMBTilesDir(),
+                rightBtnIcon: 'mdi-chevron-right'
+            },
+            {
                 id: 'version',
                 title: lc('version'),
                 description: __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__
@@ -103,29 +120,17 @@
                 rightBtnIcon: 'mdi-chevron-right',
                 title: lc('third_parties'),
                 description: lc('list_used_third_parties')
-            },
-            // {
-            //     id: 'share',
-            //     rightBtnIcon: 'mdi-chevron-right',
-            //     title: lc('share_application')
-            // },
-            {
-                id: 'data_path',
-                title: lc('map_data_path'),
-                description: getSavedMBTilesDir(),
-                rightBtnIcon: 'mdi-chevron-right'
             }
         ];
 
         if (ANDROID_30) {
-         newItems.push({
+            newItems.push({
                 id: 'items_data_path',
                 title: lc('items_data_path'),
                 description: getItemsDataFolder(),
                 rightBtnIcon: 'mdi-chevron-right'
-            })
-
-            }
+            });
+        }
         if (customLayers.hasLocalData) {
             newItems.splice(1, 0, {
                 id: 'map_language',
@@ -177,7 +182,6 @@
                     break;
                 }
                 case 'items_data_path': {
-                    console.log('onLogngPress', command);
                     let result = await confirm({
                         message: lc('reset_setting', item.title),
                         okButtonText: lc('ok'),
@@ -188,9 +192,7 @@
                     }
                     const current = getItemsDataFolder();
                     const resultPath = resetItemsDataFolder();
-                    console.log('reset ', command, current, resultPath);
                     if (resultPath && resultPath !== current) {
-                        console.log('new description', resultPath);
                         item.description = resultPath;
                         updateItem(item, 'id');
 
@@ -205,7 +207,6 @@
                                 .getEntitiesSync()
                                 .forEach((entity) => {
                                     if (entity.name === 'db' || entity.name === 'item_images') {
-                                        console.log('moving entity', entity.path);
                                         moveFileOrFolder(entity.path, path.join(resultPath, entity.name));
                                     }
                                 });
@@ -224,7 +225,6 @@
     }
     function updateItem(item, key = 'key') {
         const index = items.findIndex((it) => it[key] === item[key]);
-        console.log('updateItem', key, item[key], index);
         if (index !== -1) {
             items.setItem(index, item);
         }
@@ -294,7 +294,6 @@
                     });
                     const resultPath = result.folders[0];
                     if (resultPath) {
-                        console.log('items_data_path', resultPath)
                         const toUsePath = getAndroidRealPath(resultPath);
                         const current = getItemsDataFolder();
                         if (toUsePath !== current) {
@@ -317,7 +316,6 @@
                                     .getEntitiesSync()
                                     .forEach((entity) => {
                                         if (entity.name === 'db' || entity.name === 'item_images') {
-                                            console.log('moving entity', entity.path);
                                             moveFileOrFolder(entity.path, path.join(toUsePath, entity.name), resultPath + '/' + entity.name);
                                         }
                                     });
@@ -426,7 +424,7 @@
             <Template let:item>
                 <gridlayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)} on:longPress={(event) => onLongPress(item.id, item)} on:touch={(e) => onTouch(item, e)}>
                     <label fontSize={36} text={item.icon} marginLeft="-10" width={40} verticalAlignment="middle" fontFamily={mdiFontFamily} visibility={!!item.icon ? 'visible' : 'hidden'} />
-                    <stacklayout col={1} verticalAlignment="middle"  marginLeft="10">
+                    <stacklayout col={1} verticalAlignment="middle" marginLeft="10">
                         <label fontSize={17} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines={1} lineBreak="end" />
                         <label
                             visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'}
