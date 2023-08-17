@@ -37,7 +37,7 @@
         "_clickhandlerlayerfilter":"(.*::(icon|label)|waterway|transportation)",
         "lang": "en",
         "zoomBiais": 0,
-        "selected_id": "0",
+        "selected_id": "",
         "buildings": 1,
         "contours": 1,
         "contoursOpacity": 1.0,
