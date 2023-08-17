@@ -62,6 +62,7 @@
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
     import Search from './Search.svelte';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
+    import { hideLoading, showLoading } from '~/utils/ui';
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
@@ -286,14 +287,18 @@
                 });
             } else if (link.endsWith('.gpx')) {
                 const itemModule = mapContext.mapModule('items');
+                showLoading();
                 await itemModule.importGPXFile(link);
             } else if (link.endsWith('.geojson')) {
                 const itemModule = mapContext.mapModule('items');
+                showLoading();
                 await itemModule.importGeoJSONFile(link);
             }
         } catch (err) {
             console.error(err, err.stack);
             showError(err);
+        } finally {
+            hideLoading();
         }
     }
 
@@ -434,6 +439,7 @@
     }
 
     function resetBearing() {
+        console.log('resetBearing');
         if (!cartoMap) {
             return;
         }
@@ -617,10 +623,12 @@
                     TEST_LOG && console.log('selected_id', typeof route.osmid, route.osmid, typeof props.id, props.id, setSelected);
 
                     // selected_osmid is for routes
+
+                    // mapContext.mapDecoder.setStyleParameter('selected_id', '');
                     if (props.id !== undefined) {
                         selectedId = props.id;
                         if (typeof props.id === 'string') {
-                            mapContext.innerDecoder.setStyleParameter('selected_id_str', selectedId + '');
+                            mapContext.innerDecoder.setStyleParameter('selected_id_str', selectedId);
                             mapContext.innerDecoder.setStyleParameter('selected_id', '0');
                         } else {
                             mapContext.innerDecoder.setStyleParameter('selected_id_str', '0');
@@ -655,6 +663,12 @@
                         selectedPosMarker.visible = true;
                     }
                     if (setSelected) {
+                        // TODO: not enabled for now as really slow
+                        // if (props.subclass) {
+                        //     mapContext.mapDecoder.setStyleParameter('selected_id', props.name + props.subclass);
+                        // } else {
+                        //     mapContext.mapDecoder.setStyleParameter('selected_id', '');
+                        // }
                         if (props.id !== undefined) {
                             selectedId = props.id;
                             if (typeof props.id === 'string') {
@@ -682,7 +696,7 @@
                     setSelectedItem(item);
                 }
                 if (setSelected && !route) {
-                    if (!props.address || !props.address['city']) {
+                    if (!props.address?.['city']) {
                         (async () => {
                             try {
                                 const service = packageService.localOSMOfflineReverseGeocodingService;
@@ -720,14 +734,10 @@
                                                 break;
                                             }
                                         }
+                                        DEV_LOG && console.log('fetched addresses', bestFind, $selectedItem.geometry === item.geometry);
                                         if (bestFind && $selectedItem.geometry === item.geometry) {
-                                            if (props.layer === 'housenumber') {
-                                                $selectedItem.properties.address = { ...bestFind.properties.address, name: null, houseNumber: props.housenumber } as any;
-                                                setSelectedItem($selectedItem);
-                                            } else {
-                                                $selectedItem.properties.address = { ...bestFind.properties.address, name: null } as any;
-                                                setSelectedItem($selectedItem);
-                                            }
+                                            $selectedItem.properties.address = { ...bestFind.properties.address, name: null, ...(props.housenumber ? { houseNumber: props.housenumber } : {}) } as any;
+                                            setSelectedItem($selectedItem);
                                         }
                                     }
                                 } else {
@@ -820,6 +830,7 @@
     export function unselectItem(updateBottomSheet = true) {
         TEST_LOG && console.log('unselectItem', updateBottomSheet, !!$selectedItem);
         if (!!$selectedItem) {
+            // mapContext.mapDecoder.setStyleParameter('selected_id', '');
             setSelectedItem(null);
             if (selectedPosMarker) {
                 selectedPosMarker.visible = false;
@@ -968,7 +979,7 @@
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, featureId, position, featureLayerName, featureData, featurePosition, featureGeometry, layer } = data;
 
-        TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, featurePosition, featureGeometry);
+        TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, position, featurePosition, featureGeometry);
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             // if (showClickedFeatures) {
@@ -1097,8 +1108,8 @@
         return !!handledByModules;
     }
     function onVectorTileElementClicked(data: VectorTileEventData<LatLonKeys>) {
-        const { clickType, position, featureData } = data;
-        TEST_LOG && console.log('onVectorTileElementClicked', clickType, position, featureData.id);
+        const { clickType, position, featurePosition, featureData } = data;
+        TEST_LOG && console.log('onVectorTileElementClicked', clickType, position, featurePosition, featureData.id);
         const itemModule = mapContext.mapModule('items');
         const feature = itemModule.getFeature(featureData.id);
         if (!feature) {
@@ -1116,7 +1127,7 @@
         if (!!featureData.instruction) {
             return true;
         }
-        TEST_LOG && console.log('onVectorTileElementClicked2', clickType, position, featureData.id, handledByModules, $selectedItem?.id);
+        TEST_LOG && console.log('onVectorTileElementClicked2', clickType, position, featurePosition, featureData.id, handledByModules, $selectedItem?.id);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             const item: IItem = feature;
             // }
@@ -1531,11 +1542,6 @@
                     id: 'astronomy',
                     icon: 'mdi-weather-night'
                 },
-                {
-                    title: lc('settings'),
-                    id: 'settings',
-                    icon: 'mdi-cogs'
-                },
 
                 {
                     title: lc('dark_mode'),
@@ -1548,6 +1554,11 @@
                     title: lc('import'),
                     id: 'import',
                     icon: 'mdi-import'
+                },
+                {
+                    title: lc('settings'),
+                    id: 'settings',
+                    icon: 'mdi-cogs'
                 }
             ];
             if (customLayersModule.hasLocalData) {
@@ -1609,6 +1620,7 @@
                         });
                         const filePath = result.files[0];
                         if (filePath && File.exists(filePath)) {
+                showLoading();
                             if (filePath.endsWith('gpx')) {
                                 await getMapContext().mapModule('items').importGPXFile(filePath);
                             } else {
@@ -1624,6 +1636,8 @@
             }
         } catch (err) {
             showError(err);
+        } finally {
+            hideLoading();
         }
     }
 
@@ -1790,7 +1804,18 @@
                 useTextureView={false}
                 on:layoutChanged={reportFullyDrawn}
             />
-            <ButtonBar marginLeft={5} gray={true} buttonSize={40} horizontalAlignment="left" verticalAlignment="middle" id="mapButtonsNew" buttons={sideButtons} />
+            <ButtonBar
+                marginLeft={5}
+                gray={true}
+                color="#666"
+                buttonSize={40}
+                horizontalAlignment="left"
+                verticalAlignment="top"
+                id="mapButtonsNew"
+                buttons={sideButtons}
+                marginTop={90}
+                translateY={Math.max(topTranslationY - 50, 0)}
+            />
 
             <Search bind:this={searchView} verticalAlignment="top" defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
             <LocationInfoPanel
@@ -1815,18 +1840,28 @@
             >
                 <cspan text="mdi-access-point-network-off" visibility={networkConnected ? 'collapsed' : 'visible'} textAlignment="left" verticalTextAlignment="top" />
             </canvaslabel>
-            <mdbutton
-                marginTop={90}
+            <mdcardview
+                class="small-floating-btn"
+                on:tap={resetBearing}
                 visibility={currentMapRotation !== 0 ? 'visible' : 'collapsed'}
+                marginTop={90}
+                verticalAlignment="top"
+                horizontalAlignment="right"
+                translateY={Math.max(topTranslationY - 50, 0)}
+            >
+                <label class="mdi" textAlignment="center" rotate={-currentMapRotation} verticalAlignment="middle" text="mdi-navigation" color={primaryColor} />
+            </mdcardview>
+            <!-- <mdbutton
+                
+                
                 on:tap={resetBearing}
                 class="small-floating-btn"
                 text="mdi-navigation"
-                color={primaryColor}
                 rotate={-currentMapRotation}
                 verticalAlignment="top"
                 horizontalAlignment="right"
                 translateY={Math.max(topTranslationY - 50, 0)}
-            />
+            /> -->
             <MapScrollingWidgets bind:this={mapScrollingWidgets} bind:navigationInstructions opacity={scrollingWidgetsOpacity} userInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
             <DirectionsPanel bind:this={directionsPanel} bind:translationY={topTranslationY} width="100%" verticalAlignment="top" {editingItem} on:cancel={onDirectionsCancel} />
         </gridlayout>
