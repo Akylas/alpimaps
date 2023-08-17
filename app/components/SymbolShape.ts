@@ -21,13 +21,24 @@ export default class SymbolShape extends Shape {
     @lengthProperty left = CoreTypes.zeroLength;
     @lengthProperty top = CoreTypes.zeroLength;
     drawOnCanvas(canvas: Canvas) {
+        SymbolShape.drawSymbolOnCanvas(canvas, {
+            width: this.width,
+            height: this.height,
+            left: this.left,
+            top: this.top,
+            color: this.color,
+            symbol: this.symbol
+        });
+    }
+
+    static drawSymbolOnCanvas(canvas: Canvas, args: { symbol; left; top; width; height; color }) {
         const availableWidth = Utils.layout.toDevicePixels(canvas.getWidth());
         const availableHeight = Utils.layout.toDevicePixels(canvas.getHeight());
-        const width = Utils.layout.toDeviceIndependentPixels(PercentLength.toDevicePixels(this.width, 0, availableWidth));
-        const height = Utils.layout.toDeviceIndependentPixels(PercentLength.toDevicePixels(this.height, 0, availableHeight));
-        const left = Utils.layout.toDeviceIndependentPixels(Length.toDevicePixels(this.left));
-        const top = Utils.layout.toDeviceIndependentPixels(Length.toDevicePixels(this.top));
-        const symbol = this.symbol || `blue:white:${this.color || 'blue'}_bar`;
+        const width = Utils.layout.toDeviceIndependentPixels(PercentLength.toDevicePixels(args.width, 0, availableWidth));
+        const height = Utils.layout.toDeviceIndependentPixels(PercentLength.toDevicePixels(args.height, 0, availableHeight));
+        const left = Utils.layout.toDeviceIndependentPixels(Length.toDevicePixels(args.left));
+        const top = Utils.layout.toDeviceIndependentPixels(Length.toDevicePixels(args.top));
+        const symbol = args.symbol || `blue:white:${args.color || 'blue'}_bar`;
         path.reset();
         path.addRoundRect(left, top, left + width, height + top, 3, 3, Direction.CW);
 
