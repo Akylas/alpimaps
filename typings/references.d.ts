@@ -37,6 +37,7 @@ declare namespace akylas {
 declare const gVars: {
     platform: string;
     CARTO_TOKEN: string;
+    // FACEBOOK_TOKEN: string;
     IGN_TOKEN: string;
     THUNDERFOREST_TOKEN: string;
     MAPBOX_TOKEN: string;
