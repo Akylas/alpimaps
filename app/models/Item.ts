@@ -5,6 +5,7 @@ import type { Geometry, Point } from 'geojson';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 import NSQLDatabase from '../mapModules/NSQLDatabase';
+// import SimpleOpeningHours from '~/helpers/SimpleOpeningHours';
 const extend = require('just-extend');
 
 const sql = SqlQuery.createFromTemplateString;
@@ -179,14 +180,27 @@ export class GroupRepository extends CrudRepository<Group> {
             model: Group
         });
     }
+    static migrations = {
+        addGroupName: sql`ALTER TABLE Groups ADD COLUMN name TEXT`,
+        addGroupOnMap: sql`ALTER TABLE Groups ADD COLUMN onMap INTEGER`
+    };
     async createTables() {
-        return this.database.query(sql`
+        await this.database.query(sql`
         CREATE TABLE IF NOT EXISTS "Groups" (
-            id BIGINT PRIMARY KEY NOT NULL,
-            onMap INTEGER,
-            name TEXT
+            id BIGINT PRIMARY KEY NOT NULL
         );
-    `);
+        `);
+        const migrationKeys = Object.keys(GroupRepository.migrations);
+        for (let index = 0; index < migrationKeys.length; index++) {
+            const key = migrationKeys[index];
+            try {
+                await this.database.migrate({
+                    [key]: GroupRepository.migrations[key]
+                });
+            } catch (error) {
+                console.error(error);
+            }
+        }
     }
 }
 export class ItemRepository extends CrudRepository<Item> {
@@ -204,7 +218,6 @@ export class ItemRepository extends CrudRepository<Item> {
 
     async createTables() {
         return Promise.all([
-            this.groupsRepository.createTables(),
             this.database.query(sql`
             CREATE TABLE IF NOT EXISTS "Items" (
                 id BIGINT PRIMARY KEY NOT NULL,
@@ -324,15 +337,15 @@ export class ItemRepository extends CrudRepository<Item> {
             if (groupName?.length) {
                 try {
                     group = (await this.groupsRepository.search({ where: sql`name=${groupName}` }))[0];
-                } catch (error) {}
-                // console.log('addGroupToItem', group);
+                } catch (error) {
+                    console.error('setItemGroup', error, error.stack);
+                }
                 if (!group) {
                     group = await this.groupsRepository.create({ id: Date.now(), name: groupName, onMap: 1 });
                 }
             }
 
             if (groupName?.length) {
-                // console.log('group', group.id, group.name);
                 await this.database.query(sql` DELETE FROM ItemsGroups where item_id=${item.id} AND group_id IS NOT ${group.id}`);
                 const relation = await this.database.query(sql` SELECT * FROM ItemsGroups WHERE "item_id" = ${item.id} AND "group_id" = ${group.id}`);
                 if (relation.length === 0) {
@@ -426,3 +439,27 @@ export class ItemRepository extends CrudRepository<Item> {
         return result;
     }
 }
+
+// export function itemOHInfos(_item: Item) {
+//     if (_item.properties?.opening_hours) {
+//         const result: any = {};
+//         const oh = new SimpleOpeningHours(_item.properties.opening_hours);
+//         // var it = oh.getIterator();
+//         // var state = it.getState();
+//         result.opened = oh.isOpenNow();
+//         result.oh = oh;
+//         // it.advance();
+//         // var endDate = it.getDate();
+//         // if (endDate) {
+//         //     endDate = moment(endDate);
+//         //     console.debug(endDate.valueOf());
+//         //     console.debug(now.valueOf());
+//         //     var delta = Math.floor((endDate.valueOf() - now.valueOf()) / 1000);
+//         //     console.debug(delta);
+//         //     if (0 < delta && delta < 12 * 3600) {
+//         //         result.nextTime = endDate;
+//         //     }
+//         // }
+//         return result;
+//     }
+// }
