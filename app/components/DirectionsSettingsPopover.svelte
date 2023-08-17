@@ -3,7 +3,6 @@
 
 <script lang="ts">
     import DirectionSettings from './DirectionSettings.svelte';
-
 </script>
 
 <gesturerootview columns="auto">
