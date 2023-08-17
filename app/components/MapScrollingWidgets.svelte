@@ -160,15 +160,29 @@
     }
 
     async function showItemsList() {
-        const RoutesList = (await import('~/components/ItemsList.svelte')).default as any;
-        navigate({ page: RoutesList });
+        try {
+            const RoutesList = (await import('~/components/ItemsList.svelte')).default as any;
+            navigate({ page: RoutesList });
+        } catch (error) {
+            showError(error);
+        }
     }
     async function showMapRightMenu() {
-        const LayersMenu = (await import('~/components/LayersMenu.svelte')).default as any;
-        return showBottomSheet({
-            view: LayersMenu,
-            trackingScrollView: 'trackingScrollView'
-        });
+        // try {
+        //     const RoutesList = (await import('~/components/Testpage.svelte')).default as any;
+        //     navigate({ page: RoutesList });
+        // } catch (error) {
+        //     showError(error);
+        // }
+        try {
+            const LayersMenu = (await import('~/components/LayersMenu.svelte')).default as any;
+            return showBottomSheet({
+                view: LayersMenu,
+                trackingScrollView: 'trackingScrollView'
+            });
+        } catch (error) {
+            showError(error);
+        }
     }
 
     let iconPaint: Paint;
@@ -201,27 +215,25 @@
 
             // textPaint.setTextSize(13);
 
-            const nString = createNativeAttributedString(
-                {
-                    spans: [
-                        {
-                            fontWeight: 'bold',
-                            fontSize: 15,
-                            text: navigationInstructions.instruction.inst
-                        }
-                    ].concat(
-                        navigationInstructions.instruction.name
-                            ? [
-                                  {
-                                      color: $subtitleColor,
-                                      fontSize: 13,
-                                      text: '\n' + navigationInstructions.instruction.name
-                                  }
-                              ]
-                            : ([] as any)
-                    )
-                }
-            );
+            const nString = createNativeAttributedString({
+                spans: [
+                    {
+                        fontWeight: 'bold',
+                        fontSize: 15,
+                        text: navigationInstructions.instruction.inst
+                    }
+                ].concat(
+                    navigationInstructions.instruction.name
+                        ? [
+                              {
+                                  color: $subtitleColor,
+                                  fontSize: 13,
+                                  text: '\n' + navigationInstructions.instruction.name
+                              }
+                          ]
+                        : ([] as any)
+                )
+            });
             staticLayout = new StaticLayout(nString, textPaint, w - 20 - 50, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
             canvas.translate(60, h / 2 - staticLayout.getHeight() / 2);
             staticLayout.draw(canvas);
