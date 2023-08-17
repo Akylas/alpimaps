@@ -5,22 +5,25 @@ import { GeoHandler } from '~/handlers/GeoHandler';
 
 export const BgServiceLoadedEvent = 'BgServiceLoadedEvent';
 
-let _sharedInstance: BgServiceCommon;
+let mSharedInstance: BgServiceCommon;
 let onServiceLoadedListeners = [];
 export function onServiceLoaded(callback: (geoHandler: GeoHandler) => void) {
-    if (_sharedInstance) {
-        callback(_sharedInstance.geoHandler);
+    if (mSharedInstance) {
+        callback(mSharedInstance.geoHandler);
     } else {
         onServiceLoadedListeners.push(callback);
     }
 }
 let onServiceStartedListeners = [];
 export function onServiceStarted(callback: (geoHandler: GeoHandler) => void) {
-    if (_sharedInstance.started) {
-        callback(_sharedInstance.geoHandler);
+    if (mSharedInstance.started) {
+        callback(mSharedInstance.geoHandler);
     } else {
         onServiceStartedListeners.push(callback);
     }
+}
+export function isServiceStarted() {
+    return mSharedInstance.started;
 }
 const onServiceUnloadedListeners = [];
 export function onServiceUnloaded(callback: (geoHandler: GeoHandler) => void) {
@@ -50,7 +53,7 @@ export abstract class BgServiceCommon extends Observable {
     protected _handlerLoaded() {
         if (!this._loaded) {
             this._loaded = true;
-            _sharedInstance = this;
+            mSharedInstance = this;
             onServiceLoadedListeners.forEach((l) => l(this.geoHandler));
             onServiceLoadedListeners = [];
             this.notify({
