@@ -124,7 +124,7 @@
                 </stacklayout>
             </Template>
         </collectionview>
-        <mdactivityindicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapsed'} row={1} />
+        <mdactivityindicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} row={1} />
         {#if noNetworkAndNoData}
             <canvaslabel v- row={1}>
                 <cgroup textAlignment="center" verticalAlignment="middle">
