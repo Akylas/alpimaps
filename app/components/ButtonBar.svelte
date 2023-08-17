@@ -13,6 +13,7 @@
     export let small = false;
     export let gray = false;
     export let white = false;
+    export let color = null;
     export let fontSize = null;
     export let buttonSize = small ? 30 : actionBarButtonHeight;
     export let selectedColor = white ? 'white' : primaryColor;
@@ -33,7 +34,7 @@
     }
     $: width = orientation === 'vertical' ? buttonSize : buttonsLength * buttonSize;
     $: height = orientation === 'vertical' ? buttonsLength * buttonSize : buttonSize;
-    $: rippleColor = gray ? $subtitleColor : $textColor;
+    $: rippleColor = color || gray ? $subtitleColor : $textColor;
 
     let iconPaint: Paint;
 
@@ -68,13 +69,13 @@
                 } else {
                     iconPaint.fontFamily = fontFamily;
                 }
-                let color;
+                let btcolor;
                 if (button.isSelected) {
-                    color = button.selectedColor || selectedColor;
+                    btcolor = button.selectedColor || selectedColor;
                 } else {
-                    color = button.color || (!button.isEnabled || button.gray || gray ? $subtitleColor : $textColor);
+                    btcolor = button.color || color || (!button.isEnabled || button.gray || gray ? $subtitleColor : $textColor);
                 }
-                iconPaint.color = color;
+                iconPaint.color = btcolor;
                 deltaX += offsetX;
                 deltaY += offsetY;
                 canvas.drawText(button.text, deltaX, deltaY, iconPaint);
