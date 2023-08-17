@@ -1,31 +1,39 @@
-<script lang="ts">
-    import { Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
+<script lang="ts" context="module">
+    import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { AndroidActivityBackPressedEventData, Application, EventData, LayoutBase, ObservableArray, View } from '@nativescript/core';
+    import { AndroidActivityBackPressedEventData, Application, LayoutBase, NavigatedData, ObservableArray, View } from '@nativescript/core';
     import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
+    import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, goBack, navigate } from 'svelte-native/dom';
-    import { GeoHandler } from '~/handlers/GeoHandler';
-    import { lc, lu, onLanguageChanged } from '~/helpers/locale';
+    import { convertDurationSeconds, lc, lu, onLanguageChanged } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import { Group, Item } from '~/models/Item';
-    import { onServiceLoaded, onServiceStarted } from '~/services/BgService.common';
+    import { isServiceStarted, onServiceStarted } from '~/services/BgService.common';
     import { showError } from '~/utils/error';
-    import { actionBarButtonHeight, actionBarHeight, backgroundColor, borderColor, navigationBarHeight, primaryColor, subtitleColor, textColor } from '~/variables';
+    import { hideLoading, promptForGroup, showLoading } from '~/utils/ui';
+    import { backgroundColor, borderColor, lightBackgroundColor, mdiFontFamily, navigationBarHeight, primaryColor, subtitleColor, textColor } from '~/variables';
     import BottomSheetInfoView from './BottomSheetInfoView.svelte';
     import CActionBar from './CActionBar.svelte';
     import IconButton from './IconButton.svelte';
-    import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
-    import { onDestroy, onMount } from 'svelte';
     import SelectedIndicator from './SelectedIndicator.svelte';
-    import { promptForGroup } from '~/utils/ui';
-
-    let collectionView: NativeViewElementNode<CollectionView>;
+    import { confirm } from '@nativescript-community/ui-material-dialogs';
+    import { UNITS, convertElevation, convertValueToUnit } from '~/helpers/formatter';
+    import { createNativeAttributedString } from '@nativescript-community/text';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
+    import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
     type MapGroup = Group & { collapsed: boolean };
-    type CollectionGroup = MapGroup & { type: 'group'; count: number; selected?: boolean };
+    type CollectionGroup = MapGroup & { type: 'group'; count: number; selected?: boolean; totalTime?: number; totalDistance?: number };
     type CollectionItem = (Item & { groupOnMap?: 0 | 1; selected?: boolean }) | CollectionGroup;
+
+    const groupPaint = new Paint();
+    groupPaint.textSize = 12;
+</script>
+
+<script lang="ts">
+    let collectionView: NativeViewElementNode<CollectionView>;
     let items: ObservableArray<CollectionItem>;
     let groupedItems: { [k: string]: Item[] };
     let groups: { [k: string]: MapGroup };
@@ -33,7 +41,23 @@
     let tabIndex = 0;
     let nbSelected = 0;
     const itemsModule = getMapContext().mapModule('items');
-    onServiceStarted(refresh);
+    let needsFirstRefresh = true;
+    let navigatedTo = false;
+    let loading = false;
+
+    function onNavigatedTo(args: NavigatedData) {
+        if (!args.isBackNavigation && !navigatedTo) {
+            navigatedTo = true;
+            if (isServiceStarted()) {
+                refresh();
+            }
+        }
+    }
+    onServiceStarted(() => {
+        if (navigatedTo && needsFirstRefresh) {
+            refresh();
+        }
+    });
 
     function groupBy<T>(items: readonly T[], keyGetter: (item: T) => string) {
         const result = {};
@@ -59,7 +83,41 @@
         return result;
     }
 
+    function updateGroupItemData(groupItem: CollectionGroup, group?: MapGroup) {
+        let totalDistance = 0;
+        let totalTime = 0;
+        let dplus = 0;
+        let dmin = 0;
+        const subItems = groupedItems[groupItem.name];
+
+        subItems.forEach((item) => {
+            if (group) {
+                item['groupOnMap'] = group.onMap;
+            }
+            const profile = item.profile;
+            const itemProps = item.properties;
+            const hasProfile = !!profile?.max;
+            totalDistance += item.route?.totalDistance || (itemProps?.hasOwnProperty('distance') ? itemProps.distance * 1000 : 0);
+            totalTime += item.route?.totalTime || 0;
+            if (!hasProfile) {
+                if (itemProps?.ascent > 0) {
+                    dplus += itemProps.ascent;
+                }
+                if (itemProps?.descent > 0) {
+                    dmin += itemProps.descent;
+                }
+            } else {
+                const profile = item.profile;
+                dplus += profile.dplus;
+                dmin += profile.dmin;
+            }
+        });
+        Object.assign(groupItem, { totalDistance, totalTime, dplus, dmin });
+    }
+
     async function refresh() {
+        needsFirstRefresh = false;
+        loading = true;
         // if itemslist is opened too fast the db might not be fully initialized
         itemsModule.onDbInit(async () => {
             try {
@@ -76,21 +134,33 @@ LEFT JOIN  (
    ) t USING (id)`
                 };
                 const sqlItems = (await itemsModule.itemRepository.searchItem(searchArgs)).map((i) => ({ ...i, groupOnMap: 1 }));
+                const oldGroups = groups;
                 groups = groupBy<Group>(await itemsModule.groupsRepository.search(), (i) => i.name);
+                if (oldGroups) {
+                    Object.keys(oldGroups).forEach((k) => {
+                        if (groups[k]) {
+                            groups[k].collapsed = oldGroups[k].collapsed;
+                        }
+                    });
+                }
                 groupedItems = groupByArray<Item>(sqlItems, (i) => i.groups);
                 const noneGroupItems: Array<CollectionItem> = groupedItems['none'] || [];
                 delete groupedItems['none'];
                 items = new ObservableArray(
                     Object.keys(groupedItems).reduce((acc, key) => {
                         const group = groups[key];
-                        const subItems = groupedItems[key].map((i) => ({ ...i, groupOnMap: group.onMap }));
-                        acc.push({ type: 'group', ...group, count: subItems.length }, ...(group.collapsed ? [] : subItems));
+                        const subItems = groupedItems[key];
+                        const groupItem = { type: 'group', ...group, count: subItems.length } as CollectionGroup;
+                        updateGroupItemData(groupItem, group);
+                        acc.push(groupItem, ...(group.collapsed ? [] : subItems));
                         return acc;
                     }, noneGroupItems)
                 );
                 itemsCount = items.length;
             } catch (error) {
                 showError(error);
+            } finally {
+                loading = false;
             }
         });
     }
@@ -165,11 +235,18 @@ LEFT JOIN  (
                 items.splice(index, 1);
             }
             if (item.groups?.length) {
-                const group = groups[item.groups[0]];
+                const itemGroup = item.groups[0];
+                const group = groups[itemGroup];
                 if (group) {
-                    const groupIndex = items.findIndex((i) => i.type === 'group' && i.id === group.id);
+                    const groupedForItem = groupedItems[itemGroup];
+                    let groupIndex = groupedForItem.findIndex((i) => i === item);
                     if (groupIndex >= 0) {
-                        const groupItem = items.getItem(groupIndex);
+                        groupedForItem.splice(groupIndex, 1);
+                    }
+                    groupIndex = items.findIndex((i) => i.type === 'group' && i.id === group.id);
+                    if (groupIndex >= 0) {
+                        const groupItem = items.getItem(groupIndex) as CollectionGroup;
+                        updateGroupItemData(groupItem);
                         items.setItem(groupIndex, groupItem);
                     }
                 }
@@ -404,6 +481,30 @@ LEFT JOIN  (
             showError(error);
         }
     }
+    async function deleteSelectedItems() {
+        if (nbSelected > 0) {
+            try {
+                const result = await confirm({
+                    title: lc('delete'),
+                    message: lc('confirm_delete_documents', nbSelected),
+                    okButtonText: lc('delete'),
+                    cancelButtonText: lc('cancel')
+                });
+                showLoading();
+                if (result) {
+                    const selected = getSelected();
+                    for (let index = 0; index < selected.length; index++) {
+                        await deleteItem(selected[index]);
+                    }
+                    unselectAll();
+                }
+            } catch (error) {
+                showError(error);
+            } finally {
+                hideLoading();
+            }
+        }
+    }
 
     onMount(() => {
         if (__ANDROID__) {
@@ -428,7 +529,6 @@ LEFT JOIN  (
                 defaultGroup = selected[0].groups?.[0];
             }
             const group = await promptForGroup(defaultGroup, Object.values(groups));
-            // console.log('group', typeof group, `"${group}"`);
             if (typeof group === 'string') {
                 const itemsModule = getMapContext().mapModules['items'];
                 // console.log('group2', typeof group, `"${group}"`, selected.length);
@@ -444,23 +544,195 @@ LEFT JOIN  (
             // hideLoading();
         }
     }
+
+    function onDrawGroup(item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
+        let w = canvas.getWidth();
+        let h = canvas.getHeight();
+        let spans: any[] = [
+            {
+                text: item.name + ` (${item.count})` + '\n',
+                fontWeight: 'bold',
+                fontSize: 17
+            }
+        ];
+        if (item.totalDistance) {
+            spans.push(
+                {
+                    text: 'mdi-arrow-left-right' + ' ',
+                    fontFamily: mdiFontFamily,
+                    color: $subtitleColor
+                },
+                {
+                    text: `${convertValueToUnit(item.totalDistance, UNITS.DistanceKm).join(' ')}` + ' '
+                }
+            );
+        }
+
+        if (item.totalTime) {
+            spans.push(
+                {
+                    text: 'mdi-timer-outline' + ' ',
+                    fontFamily: mdiFontFamily,
+                    color: $subtitleColor
+                },
+                {
+                    text: convertDurationSeconds(item.totalTime) + ' '
+                }
+            );
+        }
+        if (item.dplus > 0) {
+            spans.push(
+                {
+                    text: 'mdi-arrow-top-right' + ' ',
+                    fontFamily: mdiFontFamily,
+                    color: $subtitleColor
+                },
+                {
+                    text: `${convertElevation(item.dplus)}` + ' '
+                }
+            );
+        }
+        if (item.dmin < 0) {
+            spans.push(
+                {
+                    text: 'mdi-arrow-bottom-right' + ' ',
+                    fontFamily: mdiFontFamily,
+                    color: $subtitleColor
+                },
+                {
+                    text: `${convertElevation(-item.dmin)}` + ' '
+                }
+            );
+        }
+        const nString = createNativeAttributedString({ spans });
+        // propsPaint.setTextAlign(Align.LEFT);
+        groupPaint.color = $textColor;
+        const staticLayout = new StaticLayout(nString, groupPaint, canvas.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+        // canvas.save();
+        // canvas.translate(0, h - staticLayout.getHeight());
+        staticLayout.draw(canvas);
+        // canvas.restore();
+    }
+
+    function onCollectionSwipe(event) {
+        if (event.direction === 1 && tabIndex === 1) {
+            setTabIndex(0);
+        } else if (event.direction === 2 && tabIndex === 0) {
+            setTabIndex(1);
+        }
+    }
+    async function showItemMoreMenu(item: Item, event) {
+        try {
+            const actions: any[] = [
+                {
+                    icon: item.onMap ? 'mdi-eye-off' : 'mdi-eye',
+                    name: !item.onMap ? lc('show') : lc('hide'),
+                    id: 'show_hide_on_map'
+                },
+                {
+                    icon: 'mdi-share-variant',
+                    name: lc('share'),
+                    id: 'share'
+                },
+                {
+                    color: 'red',
+                    icon: 'mdi-delete',
+                    name: lc('delete'),
+                    id: 'delete'
+                }
+            ];
+            if (!!item.route) {
+                actions.splice(actions.length - 2, 0, {
+                    icon: 'mdi-pencil',
+                    name: lc('edit'),
+                    id: 'edit'
+                });
+            }
+            const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
+            const result = await showPopover<any>({
+                vertPos: VerticalPosition.ALIGN_TOP,
+                horizPos: HorizontalPosition.ALIGN_LEFT,
+                view: OptionSelect as any,
+                fitInScreen: true,
+                anchor: event.object,
+                props: {
+                    showBorders: false,
+                    backgroundColor: $lightBackgroundColor,
+                    options: actions,
+                    borderRadius: 6,
+                    rowHeight: 50,
+                    onClose: closePopover,
+                    fontWeight: 'normal',
+                    width: 200
+                }
+            });
+            if (result) {
+                switch (result.id) {
+                    case 'delete':
+                        await deleteItem(item as Item);
+                        break;
+                    case 'show_hide_on_map':
+                        showItemOnMap(item);
+                        break;
+                    case 'share':
+                        await getMapContext().mapModule('items').shareItemsAsGeoJSON([item]);
+                        break;
+                    case 'edit':
+                        startEditingItem(item);
+                        break;
+                }
+            }
+        } catch (err) {
+            showError(err);
+        }
+    }
 </script>
 
-<page actionBarHidden={true}>
+<page actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout rows="auto,*">
         <CActionBar title={nbSelected ? lc('selected', nbSelected) : lc('items')} onGoBack={nbSelected ? unselectAll : null} forceCanGoBack={nbSelected > 0}>
+            <IconButton text="mdi-delete" color="red" on:tap={deleteSelectedItems} isVisible={nbSelected > 0} />
             <IconButton text="mdi-share-variant" color="white" on:tap={shareSelectedItems} isVisible={nbSelected > 0} />
             <IconButton text="mdi-tag-plus-outline" color="white" on:tap={setSelectedGroup} isVisible={nbSelected > 0} />
             <gridlayout slot="bottom" columns="*,*" height={48}>
-                <label text={lu('routes')} textAlignment="center" verticalTextAlignment="center" fontWeight="500" color="white" on:tap={() => setTabIndex(0)} rippleColor="white" />
-                <label text={lu('markers')} col={1} textAlignment="center" verticalTextAlignment="center" fontWeight="500" color="white" on:tap={() => setTabIndex(1)} rippleColor="white" />
+                <canvaslabel
+                    fontSize={15}
+                    fontWeight="500"
+                    disableCss={true}
+                    text={lu('routes')}
+                    textAlignment="center"
+                    verticalTextAlignment="center"
+                    color="white"
+                    on:tap={() => setTabIndex(0)}
+                    rippleColor="white"
+                />
+                <canvaslabel
+                    disableCss={true}
+                    text={lu('markers')}
+                    col={1}
+                    textAlignment="center"
+                    verticalTextAlignment="center"
+                    fontSize={15}
+                    fontWeight="500"
+                    color="white"
+                    on:tap={() => setTabIndex(1)}
+                    rippleColor="white"
+                />
                 <absolutelayout colSpan={2} width="50%" height={3} backgroundColor="white" verticalAlignment="bottom" horizontalAlignment={tabIndex === 1 ? 'right' : 'left'} />
             </gridlayout>
         </CActionBar>
-        <collectionview bind:this={collectionView} row={1} {items} itemTemplateSelector={(item) => item.type || (!!item.route ? 'route' : 'default')} android:paddingBottom={$navigationBarHeight}>
+        <!-- svelte-ignore illegal-attribute-character -->
+        <collectionview
+            bind:this={collectionView}
+            row={1}
+            {items}
+            itemTemplateSelector={(item) => item.type || (!!item.route ? 'route' : 'default')}
+            android:paddingBottom={$navigationBarHeight}
+            on:swipe={onCollectionSwipe}
+        >
             <Template let:item key="group">
-                <gridlayout height={40} on:tap={(e) => onItemTap(item, e)} on:longPress={(e) => onItemLongPress(item, e)} backgroundColor={$borderColor} rippleColor={primaryColor}>
-                    <label padding={10} text={item.name + ` (${item.count})`} horizontalAlignment="left" verticalAlignment="middle" />
+                <gridlayout height={50} on:tap={(e) => onItemTap(item, e)} on:longPress={(e) => onItemLongPress(item, e)} backgroundColor={$borderColor} rippleColor={primaryColor}>
+                    <canvas margin="5 30 5 10" on:draw={(e) => onDrawGroup(item, e)} />
                     <IconButton
                         on:tap={(e) => switchGroupCollapsed(item, e)}
                         marginRight={10}
@@ -476,42 +748,57 @@ LEFT JOIN  (
                 </gridlayout>
             </Template>
             <Template let:item key="route">
-                <swipemenu
+                <!-- <swipemenu
                     id={item.name}
-                    height={80}
+                    height={100}
+                    disableCss={true}
                     leftSwipeDistance={nbSelected > 0 ? -1 : 0}
                     rightSwipeDistance={nbSelected > 0 ? -1 : 0}
                     startingSide={item.startingSide}
                     translationFunction={drawerTranslationFunction}
+                    backDropEnabled={false}
                     openAnimationDuration={100}
                     closeAnimationDuration={100}
                     borderBottomWidth={1}
                     borderBottomColor={$borderColor}
+                > -->
+                <!-- svelte-ignore illegal-attribute-character -->
+                <BottomSheetInfoView
+                    {item}
+                    height={80}
+                    marginLeft={60}
+                    marginBottom={34}
+                    padding="4 0 2 10"
+                    propsLeft={60}
+                    rightTextPadding={40}
+                    propsBottom={34}
+                    iconLeft={17}
+                    iconTop={63}
+                    titleVerticalTextAlignment="middle"
+                    subtitleEnabled={false}
+                    iconColor={$backgroundColor}
+                    {onDraw}
+                    iconSize={16}
+                    opacity={(item.onMap && item.groupOnMap) || 0.6}
+                    prop:mainContent
+                    backgroundColor={$backgroundColor}
+                    on:tap={(e) => onItemTap(item, e)}
+                    on:longPress={(e) => onItemLongPress(item, e)}
+                    rippleColor={primaryColor}
+                    borderBottomWidth={1}
+                    borderBottomColor={$borderColor}
                 >
-                    <gridlayout prop:mainContent backgroundColor={$backgroundColor} on:tap={(e) => onItemTap(item, e)} on:longPress={(e) => onItemLongPress(item, e)} rippleColor={primaryColor}>
-                        <BottomSheetInfoView
-                            {item}
-                            marginLeft={60}
-                            propsLeft={60}
-                            iconLeft={17}
-                            iconTop={63}
-                            iconColor={$backgroundColor}
-                            {onDraw}
-                            iconSize={16}
-                            opacity={(item.onMap && item.groupOnMap) || 0.6}
-                        >
-                            <image noCache={true} src={item.image_path} borderRadius={8} width={50} height={50} horizontalAlignment="left" verticalAlignment="top" marginTop={10} />
-                        </BottomSheetInfoView>
-                        <SelectedIndicator selected={item.selected} />
-                    </gridlayout>
-                    <stacklayout prop:leftDrawer orientation="horizontal" height="100%">
-                        <IconButton on:tap={() => deleteItem(item)} tooltip={lc('delete')} shape="none" width={60} height="100%" color="white" backgroundColor="red" text="mdi-trash-can" />
-                    </stacklayout>
-                    <stacklayout prop:rightDrawer orientation="horizontal">
-                        <IconButton on:tap={() => startEditingItem(item)} tooltip={lc('edit')} text={'mdi-pencil'} shape="none" width={60} height="100%" color="white" backgroundColor={primaryColor} />
+                    <image disableCss={true} src={item.image_path} width={50} height={50} borderRadius={8} horizontalAlignment="left" verticalAlignment="top" marginTop={6} />
+                    <SelectedIndicator selected={item.selected} />
+                    <IconButton text="mdi-dots-vertical" gray={true} slot="above" horizontalAlignment="right" verticalAlignment="top" on:tap={(e) => showItemMoreMenu(item, e)} />
+                </BottomSheetInfoView>
+                <!-- svelte-ignore illegal-attribute-character -->
+                <!-- <IconButton prop:leftDrawer on:tap={() => deleteItem(item)} shape="none" width={60} height="100%" color="white" backgroundColor="red" text="mdi-trash-can" /> -->
+                <!-- svelte-ignore illegal-attribute-character -->
+                <!-- <stacklayout prop:rightDrawer orientation="horizontal">
+                        <IconButton on:tap={() => startEditingItem(item)} text={'mdi-pencil'} shape="none" width={60} height="100%" color="white" backgroundColor={primaryColor} />
                         <IconButton
                             on:tap={() => showItemOnMap(item)}
-                            tooltip={lc('show')}
                             text={!item.onMap ? 'mdi-eye-off' : 'mdi-eye'}
                             shape="none"
                             width={60}
@@ -519,11 +806,11 @@ LEFT JOIN  (
                             color="white"
                             backgroundColor={!item.onMap ? 'gray' : 'blue'}
                         />
-                    </stacklayout>
-                </swipemenu>
+                    </stacklayout> -->
+                <!-- </swipemenu> -->
             </Template>
             <Template let:item>
-                <swipemenu
+                <!-- <swipemenu
                     id={item.name}
                     height={80}
                     leftSwipeDistance={nbSelected > 0 ? -1 : 0}
@@ -534,36 +821,53 @@ LEFT JOIN  (
                     closeAnimationDuration={100}
                     borderBottomWidth={1}
                     borderBottomColor={$borderColor}
+                > -->
+                <!-- svelte-ignore illegal-attribute-character -->
+                <BottomSheetInfoView
+                    {item}
+                    height={80}
+                    opacity={(item.onMap && item.groupOnMap) || 0.6}
+                    prop:mainContent
+                    backgroundColor={$backgroundColor}
+                    on:tap={(e) => onItemTap(item, e)}
+                    on:longPress={(e) => onItemLongPress(item, e)}
+                    rippleColor={primaryColor}
+                    borderBottomWidth={1}
+                    borderBottomColor={$borderColor}
                 >
-                    <gridlayout prop:mainContent backgroundColor={$backgroundColor} on:tap={(e) => onItemTap(item, e)} on:longPress={(e) => onItemLongPress(item, e)} rippleColor={primaryColor}>
-                        <BottomSheetInfoView {item} opacity={(item.onMap && item.groupOnMap) || 0.6} />
-                        <SelectedIndicator selected={item.selected} />
-                    </gridlayout>
-                    <stacklayout prop:leftDrawer orientation="horizontal" height="100%">
+                    <SelectedIndicator selected={item.selected} />
+                    <IconButton text="mdi-dots-vertical" gray={true} slot="above" horizontalAlignment="right" verticalAlignment="top" on:tap={(e) => showItemMoreMenu(item, e)} />
+                </BottomSheetInfoView>
+
+                <!-- svelte-ignore illegal-attribute-character -->
+                <!-- <stacklayout prop:leftDrawer orientation="horizontal" height="100%">
                         <IconButton on:tap={() => deleteItem(item)} tooltip={lc('delete')} shape="none" width={60} height="100%" color="white" backgroundColor="red" text="mdi-trash-can" />
                     </stacklayout>
-                    <stacklayout prop:rightDrawer orientation="horizontal">
-                        <IconButton
-                            on:tap={() => showItemOnMap(item)}
-                            tooltip={lc('show')}
-                            text={!item.onMap ? 'mdi-eye-off' : 'mdi-eye'}
-                            shape="none"
-                            width={60}
-                            height="100%"
-                            color="white"
-                            backgroundColor={!item.onMap ? 'gray' : 'blue'}
-                        />
-                    </stacklayout>
-                </swipemenu>
+                    <!-- svelte-ignore illegal-attribute-character -->
+                <stacklayout prop:rightDrawer orientation="horizontal">
+                    <IconButton
+                        on:tap={() => showItemOnMap(item)}
+                        tooltip={lc('show')}
+                        text={!item.onMap ? 'mdi-eye-off' : 'mdi-eye'}
+                        shape="none"
+                        width={60}
+                        height="100%"
+                        color="white"
+                        backgroundColor={!item.onMap ? 'gray' : 'blue'}
+                    />
+                </stacklayout>
+                -->
+                <!-- </swipemenu> -->
             </Template>
         </collectionview>
-        <label
+        <canvaslabel
             row={1}
             text={tabIndex === 1 ? lc('no_marker') : lc('no_route')}
             color={$subtitleColor}
-            visibility={itemsCount ? 'hidden' : 'visible'}
+            visibility={loading || itemsCount ? 'hidden' : 'visible'}
             textAlignment="center"
-            verticalAlignment="middle"
+            verticalTextAlignment="middle"
         />
+        <mdactivityindicator row={1} visibility={loading ? 'visible' : 'hidden'} busy={true} horizontalAlignment="center" verticalAlignment="middle" />
     </gridlayout>
 </page>

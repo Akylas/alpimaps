@@ -1,8 +1,6 @@
 <script lang="ts">
     import { Canvas, CanvasView } from '@nativescript-community/ui-canvas';
-    import { createEventDispatcher } from 'svelte';
     import { borderColor, mdiFontFamily, primaryColor, subtitleColor } from '~/variables';
-    const dispatch = createEventDispatcher();
 
     export let showBottomLine: boolean = true;
     export let showSymbol: boolean = false;
@@ -16,7 +14,7 @@
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
 </script>
 
-<gridlayout rippleColor={primaryColor} on:tap={(event) => dispatch('tap', event)}>
+<gridlayout rippleColor={primaryColor} on:tap>
     <canvaslabel padding={16} on:draw={onDraw}>
         <symbolshape visibility={showSymbol ? 'visible' : 'hidden'} {symbol} color={symbolColor} width={34} height={34} verticalAligment="middle" />
         <cgroup verticalAlignment="middle" paddingBottom={subtitle ? 10 : 0}>

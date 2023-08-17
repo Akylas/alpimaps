@@ -1,6 +1,14 @@
-<script lang="ts">
+<script lang="ts" context="module">
+    import { profile } from '@nativescript/core';
+    import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { showToolTip } from '~/utils/utils';
     import { actionBarButtonHeight, mdiFontFamily, primaryColor, subtitleColor, textColor } from '~/variables';
+    const iconPaint = new Paint();
+    iconPaint.fontFamily = mdiFontFamily;
+    // iconPaint.setTextAlign(Align.CENTER);
+</script>
+
+<script lang="ts">
     export let isVisible = true;
     export let isHidden = false;
     export let white = false;
@@ -37,27 +45,50 @@
                   }
               }
             : null;
+
+    function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
+        iconPaint.fontFamily = fontFamily;
+        iconPaint.textSize = fontSize ? fontSize : small ? 16 : 24;
+        iconPaint.color = isEnabled ? (isSelected ? selectedColor : actualColor) : 'lightgray';
+        let w = canvas.getWidth();
+        let w2 = w / 2;
+        let h2 = canvas.getHeight() / 2;
+        const staticLayout = new StaticLayout(text, iconPaint, w, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
+        canvas.translate(0, h2 - staticLayout.getHeight() / 2);
+        staticLayout.draw(canvas);
+        // canvas.drawText(text, w2, w2+ textSize/3, iconPaint);
+    }
+
+    function conditionalEvent(node, { condition, event, callback }) {
+        let toRemove
+        if (condition) {
+            toRemove = callback;
+            node.addEventListener(event, callback);
+        }
+
+        return {
+            destroy() {
+                if (toRemove) {
+                    node.removeEventListener(event, toRemove);
+                }
+            }
+        };
+    }
 </script>
 
-<!-- <canvaslabel
-    {isEnabled}
-    textAlignment="center"
-    borderRadius={rounded ? size / 2 : null}
+<canvas
+    on:draw={onCanvasDraw}
+    borderRadius={shape === 'round' || (rounded && !shape) ? size / 2 : null}
     disableCss={true}
-    rippleColor={color}
-    fontFamily={mdiFontFamily}
-    visibility={isVisible ? 'visible' : 'collapsed'}
-    color={isSelected ? selectedColor : color}
+    rippleColor={actualColor}
+    visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapsed'}
     {...$$restProps}
     on:tap
-    on:longPress={actualLongPress}
-    width={size}
-    height={size}
-    fontSize={small ? 20 : 28}
->
-     <cspan verticalAlignment="middle" {text} />
-</canvaslabel> -->
-<mdbutton
+    use:conditionalEvent={{ condition: !!actualLongPress, event: 'longPress', callback: actualLongPress }}
+    width={width || size}
+    height={height || size}
+/>
+<!-- <mdbutton
     {isEnabled}
     {text}
     variant="text"
@@ -73,4 +104,4 @@
     width={width || size}
     height={height || size}
     fontSize={fontSize ? fontSize : small ? 16 : 24}
-/>
+/> -->
