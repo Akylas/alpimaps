@@ -194,13 +194,20 @@ class PackageService extends Observable {
         const result: GeoResult[] = [];
         for (let index = 0; index < count; index++) {
             feature = features.getFeature(index);
+            if (!feature.geometry) {
+                continue;
+            }
+            const position = projection.toWgs84(feature.geometry.getCenterPos());
+            // if (result.findIndex((i) => i.geometry.coordinates[0] === position.lon && i.geometry.coordinates[1] === position.lat) >= 0) {
+            //     continue;
+            // }
             result.push({
                 properties: { layer: feature.layerName, ...feature.properties } as any,
-                geometry: feature.geometry
-                    ? {
-                          coordinates: projection.toWgs84(feature.geometry.getCenterPos()) as any
-                      }
-                    : undefined
+                geometry: {
+                    type: 'Point',
+                    coordinates: [position.lon, position.lat]
+                },
+                distance: feature.distance
             } as GeoResult);
         }
         return result;
@@ -285,6 +292,9 @@ class PackageService extends Observable {
                 this._vectorTileSearchService = new VectorTileSearchService({
                     minZoom: 14,
                     maxZoom: 14,
+                    preventDuplicates: true,
+                    sortByDistance: true,
+                    layers: ['poi', 'place', 'mountain_peak', 'transportation_name', 'landcover_name', 'landuse_name', 'park', 'water_name', 'building_name'],
                     layer: this.localVectorTileLayer
                 });
             }
