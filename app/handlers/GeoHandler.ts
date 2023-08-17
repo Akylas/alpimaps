@@ -2,7 +2,6 @@ import { GPS, GenericGeoLocation, Options as GeolocationOptions, LocationMonitor
 import { check, request } from '@nativescript-community/perms';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
 import { AndroidActivityResultEventData, AndroidApplication, Application, ApplicationEventData, ApplicationSettings, CoreTypes, EventData, Observable, Utils } from '@nativescript/core';
-import { backgroundEvent, foregroundEvent, launchEvent } from '@nativescript/core/application';
 import { bind } from 'helpful-decorators/dist-src/bind';
 import { convertDurationSeconds, formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
@@ -149,8 +148,8 @@ export class GeoHandler extends Handler {
         }
         this.started = false;
         geolocation.off(GPS.gps_status_event, this.onGPSStateChange, this);
-        Application.off(backgroundEvent, this.onAppPause, this);
-        Application.off(foregroundEvent, this.onAppResume, this);
+        Application.off(Application.backgroundEvent, this.onAppPause, this);
+        Application.off(Application.foregroundEvent, this.onAppResume, this);
 
         if (this.currentSession && this.currentSession.state !== SessionState.STOPPED && this.currentSession.distance > 0) {
             this.pauseSession();
@@ -173,8 +172,8 @@ export class GeoHandler extends Handler {
         DEV_LOG && console.log(TAG, 'start');
         this.started = true;
         geolocation.on(GPS.gps_status_event, this.onGPSStateChange, this);
-        Application.on(backgroundEvent, this.onAppPause, this);
-        Application.on(foregroundEvent, this.onAppResume, this);
+        Application.on(Application.backgroundEvent, this.onAppPause, this);
+        Application.on(Application.foregroundEvent, this.onAppResume, this);
 
         const permCheck = await check('location');
         // set to true if not allowed yet for the UI
