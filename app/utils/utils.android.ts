@@ -188,7 +188,6 @@ export function showToolTip(tooltip: string, view?: View) {
 export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath: string, androidTargetLocationPath?: string) {
     const sourceLocation = new java.io.File(sourceLocationPath);
     const targetLocation = new java.io.File(targetLocationPath);
-    console.log('moveFileOrFolder', sourceLocationPath, sourceLocation.isDirectory(), androidTargetLocationPath);
     if (sourceLocation.isDirectory()) {
         if (!targetLocation.exists()) {
             // const index = androidTargetLocationPath.lastIndexOf('/');

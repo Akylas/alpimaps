@@ -1,7 +1,4 @@
-import { request } from '@nativescript-community/perms';
-import { Application, ApplicationSettings, Color, Device, FileSystemEntity, Folder, Utils, View, knownFolders, path } from '@nativescript/core';
-import { AndroidActivityResultEventData, AndroidApplication, android as androidApp } from '@nativescript/core/application';
-import { lc } from '~/helpers/locale';
+import { ApplicationSettings, Device, FileSystemEntity, Folder, Utils, knownFolders, path } from '@nativescript/core';
 
 let savedMBTilesDir = ApplicationSettings.getString('local_mbtiles_directory');
 
@@ -92,7 +89,6 @@ export function listFolderFiles(folderPath: string, prefix?: string, currentValu
     const docFolder = Folder.fromPath(folderPath);
     currentValues = currentValues || [];
     docFolder.getEntitiesSync().forEach((f) => {
-        console.log('entity', f.path);
         if (Folder.exists(f.path)) {
             f['isFolder'] = true;
             listFolderFiles(f.path, f.name, currentValues);
