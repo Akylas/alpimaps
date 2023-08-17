@@ -53,7 +53,7 @@
     let _searchLayer: ClusteredVectorLayer;
     let searchAsTypeTimer;
     let loading = false;
-    let filteringOSMKey = false;
+    // let filteringOSMKey = false;
     export let filteredDataItems: SearchItem[] = null;
     let text: string = null;
     let currentSearchText: string = null;
@@ -214,7 +214,7 @@
         }
         if (clearQuery) {
             currentSearchText = null;
-            textField.nativeView.text = null;
+            textField.nativeView.text = '';
             showingOnMap = false;
         }
         if (_searchDataSource) {
@@ -254,12 +254,12 @@
             showResultsOnMap(filteredDataItems);
         }
     }
-    function toggleFilterOSMKey() {
-        filteringOSMKey = !filteringOSMKey;
+    // function toggleFilterOSMKey() {
+        // filteringOSMKey = !filteringOSMKey;
         // if (showingOnMap) {
         //     showResultsOnMap();
         // }
-    }
+    // }
     function toggleShowResultsOnMap() {
         showResultsOnMap(filteredDataItems);
     }
@@ -344,7 +344,7 @@
         floating="false"
         verticalTextAlignment="center"
     />
-    <mdactivityindicator visibility={loading ? 'visible' : 'collapsed'} col={2} busy={true} width={20} height={20} />
+    <mdactivityindicator visibility={loading ? 'visible' : 'hidden'} col={2} busy={true} width={20} height={20} />
 
     <IconButton gray={true} isVisible={currentSearchText && currentSearchText.length > 0} col={3} text="mdi-close" on:tap={() => clearSearch()} />
     <IconButton col={4} gray={true} text="mdi-dots-vertical" on:tap={showMapMenu} />
@@ -353,7 +353,6 @@
             <gridlayout height={SEARCH_COLLECTIONVIEW_HEIGHT} width="100%" rows="*,auto" columns="auto,auto,*">
                 <SearchCollectionView
                     bind:this={collectionView}
-                    bind:filteringOSMKey
                     bind:searchResultsCount
                     bind:filteredDataItems
                     colSpan={3}
@@ -361,7 +360,7 @@
                     on:tap={(event) => onItemTap(event.detail.detail)}
                 />
                 <stacklayout row={1} orientation="horizontal" on:tap={() => {}} width="100%">
-                    <IconButton small={true} isVisible={searchResultsVisible} text="mdi-shape" on:tap={toggleFilterOSMKey} isSelected={filteringOSMKey} />
+                    <!-- <IconButton small={true} isVisible={searchResultsVisible} text="mdi-shape" on:tap={toggleFilterOSMKey} isSelected={filteringOSMKey} /> -->
                     <IconButton small={true} isVisible={searchResultsVisible} text="mdi-map" on:tap={toggleShowResultsOnMap} /></stacklayout
                 >
             </gridlayout>
