@@ -202,7 +202,7 @@
                 </gridlayout>
             </Template>
         </collectionview>
-        <mdactivityindicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapsed'} row={3} />
+        <mdactivityindicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} row={3} />
         {#if noNetworkAndNoData}
             <canvaslabel row={3}>
                 <cgroup textAlignment="center" verticalAlignment="middle">
