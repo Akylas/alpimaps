@@ -373,6 +373,12 @@
     }
     export function addInternalStartPoint(position: MapPos<LatLonKeys>, metaData?) {
         DEV_LOG && console.log('addInternalStartPoint');
+        const firstPoint = waypoints.getItem(0);
+        if (firstPoint?.properties.isStart) {
+            firstPoint.properties.isStart = false;
+            firstPoint.properties.isStop = waypoints.length === 1;
+            waypoints.setItem(0, firstPoint);
+        }
         addInternalWayPoint(position, {
             isStart: true,
             isStop: false,
@@ -465,24 +471,42 @@
     export async function addStartPoint(position: MapPos<LatLonKeys>, metaData?) {
         addInternalStartPoint(position, metaData);
     }
+    export const START_DIRECTION_DEST = 'startDirDest';
     export async function addStartOrStopPoint(position: MapPos<LatLonKeys>, metaData?) {
+        const startDirectionWithDestination = ApplicationSettings.getBoolean(START_DIRECTION_DEST, false); // if (waypoints.length === 0 ) {
         if (waypoints.length === 0) {
-            addInternalStopPoint(position, metaData);
+            if (startDirectionWithDestination) {
+                addInternalStopPoint(position, metaData);
+            } else {
+                addInternalStartPoint(position, metaData);
+            }
         } else {
-            addInternalStartPoint(position, metaData);
+            if (startDirectionWithDestination) {
+                addInternalStartPoint(position, metaData);
+            } else {
+                addInternalStopPoint(position, metaData);
+            }
         }
     }
     export async function addStopPoint(position: MapPos<LatLonKeys>, metaData?) {
         addInternalStopPoint(position, metaData);
     }
-    export async function addWayPoint(position: MapPos<LatLonKeys>, metaData?, canBeStart = true) {
-        // if (waypoints.length === 0 ) {
+    export async function addWayPoint(position: MapPos<LatLonKeys>, metaData?, canBeStartStop = true) {
+        const startDirectionWithDestination = ApplicationSettings.getBoolean(START_DIRECTION_DEST, false); // if (waypoints.length === 0 ) {
         // mapContext.getMap().getOptions().setClickTypeDetection(true);
         // }
-        if (waypoints.length === 0 || (canBeStart && waypoints.getItem(0).properties.isStart === false)) {
-            addInternalStartPoint(position, metaData);
+        if (startDirectionWithDestination) {
+            if (waypoints.length === 0 || (canBeStartStop && waypoints.getItem(waypoints.length - 1).properties.isStop === false)) {
+                addInternalStopPoint(position, metaData);
+            } else {
+                addInternalStartPoint(position, metaData);
+            }
         } else {
-            addInternalStopPoint(position, metaData);
+            if (waypoints.length === 0 || (canBeStartStop && waypoints.getItem(0).properties.isStart === false)) {
+                addInternalStartPoint(position, metaData);
+            } else {
+                addInternalStopPoint(position, metaData);
+            }
         }
     }
 
@@ -1101,7 +1125,7 @@
                 size={40}
                 selectedColor={accentColor}
             />
-            <mdactivityindicator colSpan={2} visibility={loading ? 'visible' : 'collapsed'} horizontalAlignment="right" busy={true} width={40} height={40} color="white" />
+            <mdactivityindicator colSpan={2} visibility={loading ? 'visible' : 'hidden'} horizontalAlignment="right" busy={true} width={40} height={40} color="white" />
             <collectionview
                 row={1}
                 items={waypoints}
@@ -1121,7 +1145,7 @@
                             <cspan text={item.properties.isStop ? 'mdi-map-marker' : 'mdi-checkbox-blank-circle-outline'} verticalAlignment="middle" />
                         </canvaslabel>
                         <gridlayout borderRadius={8} backgroundColor={primaryColor.darken(20).hex} columns=" *,auto" height={30} margin="0 0 0 30" on:tap={(event) => openSearchFromItem(event, item)}>
-                            <label color="white" marginLeft={15} fontSize={15} verticalTextAlignment="center" text={item.properties.name} maxLines={1} lineBreak="end"/>
+                            <label color="white" marginLeft={15} fontSize={15} verticalTextAlignment="center" text={item.properties.name} maxLines={1} lineBreak="end" />
                             <IconButton color="white" small={true} isVisible={item.properties.name && item.properties.name.length > 0} col={1} text="mdi-delete" on:tap={() => clearWayPoint(item)} />
                         </gridlayout>
                     </gridlayout>
