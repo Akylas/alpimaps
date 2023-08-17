@@ -9,21 +9,38 @@ import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/point';
 import { ShareFile } from '@nativescript-community/ui-share-file';
 import { File, Folder, ImageSource, knownFolders, path, profile } from '@nativescript/core';
-import type { Feature, FeatureCollection } from 'geojson';
+import type { Feature, FeatureCollection, Point as GeometryPoint } from 'geojson';
 import { getDistanceSimple } from '~/helpers/geolib';
 import { GroupRepository, IItem, Item, ItemRepository, Route, RouteInstruction, RouteProfile, RouteStats, toJSONStringified } from '~/models/Item';
 import { showError } from '~/utils/error';
-import { accentColor } from '~/variables';
+import { accentColor, mdiFontFamily } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
 import NSQLDatabase from './NSQLDatabase';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
-import { getDataFolder, getItemsDataFolder } from '~/utils/utils.common';
+import { getDataFolder, getItemsDataFolder, pick } from '~/utils/utils.common';
 import { importGPXToGeojson } from '~/utils/gpx';
 import { Canvas, Rect } from '@nativescript-community/ui-canvas';
 import { shareFile } from '~/utils/share';
+import { networkService } from '~/services/NetworkService';
+import { getImagePipeline } from '@nativescript-community/ui-image';
 const mapContext = getMapContext();
 
 let writer: GeoJSONGeometryWriter<LatLonKeys>;
+
+// var osmOverpassUrls = [
+//     // 'http://this.openstreetmap.fr/oapi/',
+//     'http://overpass-api.de/api/',
+//     'https://maps.mail.ru/osm/tools/overpass/api/',
+//     'https://overpass.openstreetmap.ru/api/',
+//     'https://overpass.osm.ch/api/',
+//     // 'http://overpass.osm.rambler.ru/cgi/'
+// ];
+// var index = 0;
+function overpassAPIURL() {
+    return 'http://overpass-api.de/api/';
+    // index = (index + 1) % osmOverpassUrls.length;
+    // return osmOverpassUrls[index];
+}
 
 export interface ItemFeature extends Feature {
     route?: Route;
@@ -166,7 +183,7 @@ export default class ItemsModule extends MapModule {
     async updateItem(item: IItem, data?: Partial<IItem>, autoUpdateLayer = true) {
         item = await this.itemRepository.updateItem(item as Item, data);
         const index = this.currentItems.findIndex((d) => d.id === item.id);
-        console.log('updateItem', item.id, index, autoUpdateLayer, item.onMap);
+        // console.log('updateItem', item.id, index, autoUpdateLayer, item.onMap);
         if (index !== -1) {
             this.currentItems.splice(index, 1, item);
             if (autoUpdateLayer && item.onMap !== 0) {
@@ -336,10 +353,24 @@ export default class ItemsModule extends MapModule {
             }
         } else {
             properties = item.properties = item.properties || {};
+            // TODO: do we always remove it?
+            delete item.properties.style;
+            item.properties.style = {
+                iconSize: 20,
+                fontFamily: mdiFontFamily,
+                mapFontFamily: MATERIAL_MAP_FONT_FAMILY,
+                iconDx: -2,
+                icon: 'mdi-map-marker'
+            };
             const style = (properties.style = properties.style || {});
             style.color = style.color || accentColor.hex;
         }
+
         if (!item.id) {
+            const isRoute = !!item.route;
+            if (isRoute) {
+                item.image_path = this.getItemImagePath();
+            }
             const id = (item.properties.id = Date.now());
             item = await this.itemRepository.createItem({ ...item, id, onMap: onMap ? 1 : 0 });
 
@@ -402,12 +433,16 @@ export default class ItemsModule extends MapModule {
             oldItem = mapContext.getSelectedItem();
             mapBounds = mapContext.getMap().getMapBounds();
         }
+        if (File.exists(item.image_path)) {
+            // we need to evict from image cache
+            getImagePipeline().evictFromCache(item.image_path);
+        }
         mapContext.selectItem({ item, isFeatureInteresting: true, preventZoom: false });
         mapContext.innerDecoder.setStyleParameter('hide_unselected', '1');
         return new Promise<void>((resolve) => {
             mapContext.onMapStable(async () => {
                 try {
-                    console.log('takeItemPicture', 'onMapStable');
+                    // console.log('takeItemPicture', 'onMapStable');
                     // const startTime = Date.now();
                     const viewPort = mapContext.getMapViewPort();
                     const image = await mapContext.getMap().captureRendering(true);
@@ -415,7 +450,7 @@ export default class ItemsModule extends MapModule {
                     // restore everyting
                     mapContext.innerDecoder.setStyleParameter('hide_unselected', '0');
                     if (restore) {
-                        console.log('takeItemPicture', 'restore', !!oldItem, mapBounds);
+                        // console.log('takeItemPicture', 'restore', !!oldItem, mapBounds);
                         if (oldItem) {
                             mapContext.selectItem({ item: oldItem, isFeatureInteresting: true, preventZoom: true });
                         }
@@ -443,12 +478,16 @@ export default class ItemsModule extends MapModule {
             }, true);
         });
     }
+
+    getItemImagePath() {
+        return path.join(this.imagesFolder.path, Date.now() + '.jpg');
+    }
     async importGPXFile(link: string) {
         const items = importGPXToGeojson(link);
         for (let index = 0; index < items.length; index++) {
             const item = items[index];
             if (item.route) {
-                item.image_path = path.join(this.imagesFolder.path, Date.now() + '.jpg');
+                item.image_path = this.getItemImagePath();
             }
             const dbItem = await this.saveItem(item);
             await this.itemRepository.setItemGroup(dbItem, dbItem.groups?.[0] || 'gpx');
@@ -472,15 +511,31 @@ export default class ItemsModule extends MapModule {
         let dbItem: Item;
         for (let index = 0; index < featuresToImport.length; index++) {
             const item = featuresToImport[index];
+            const props = item.properties;
+            if (props.mapFontFamily) {
+                const filtered = pick(props, 'mapFontFamily', 'fontFamily', 'iconSize', 'iconDx', 'icon', 'color');
+                // old style we need to clear it
+                props.style = { ...(props.style || {}), ...filtered };
+                Object.keys(filtered).forEach((k) => delete props[k]);
+            }
             if (typeof item.image === 'string') {
                 const image = await ImageSource.fromBase64(item.image);
                 delete item.image;
-                item.image_path = path.join(this.imagesFolder.path, Date.now() + '.jpg');
+                item.image_path = this.getItemImagePath();
                 await image.saveToFileAsync(item.image_path, 'jpg');
+            } else if (!item.image_path || !File.exists(dbItem.image_path)) {
+                if (item.route) {
+                    item.image_path = this.getItemImagePath();
+                } else {
+                    delete item.image_path;
+                }
             }
             dbItem = await this.saveItem(item);
             if (dbItem.groups?.length) {
                 await this.itemRepository.setItemGroup(dbItem, dbItem.groups[0]);
+            }
+            if (dbItem.route && !File.exists(dbItem.image_path)) {
+                await this.takeItemPicture(dbItem);
             }
             // await this.itemRepository.addGroupToItem(dbItem, 'gpx')
         }
@@ -498,6 +553,7 @@ export default class ItemsModule extends MapModule {
             if (!itemIsRoute && image_path) {
                 toShare['image'] = await (await ImageSource.fromFile(image_path)).toBase64StringAsync('jpg');
             }
+            // in case of routes the image will be created on import
             features.push(toShare);
         }
 
@@ -510,4 +566,56 @@ export default class ItemsModule extends MapModule {
         await this.itemRepository.setItemGroup(item, groupName);
         this.notify({ eventName: 'itemChanged', item });
     }
+
+    async getOSMDetails(item: Item, mapZoom?: number) {
+        const coordinates = (item.geometry as GeometryPoint).coordinates;
+        const distance = mapZoom ? Math.max(14 - mapZoom, 1) * 20 : item.properties.class === 'country' ? 500 : 40;
+        const types = ['way', 'node'];
+        const data = `[out:json][timeout:25];${types.map((t) => `${t}['name'](around:${distance},${coordinates[1]},${coordinates[0]});out tags;`).join('')}`;
+        const results = await networkService.request({
+            url: overpassAPIURL() + 'interpreter',
+            method: 'GET',
+            queryParams: {
+                data
+            }
+        });
+        const properties = item.properties;
+        const matches = results.elements.filter((e) => e.tags && e.tags.name === properties.name);
+        const nb = matches.length;
+        if (nb) {
+            if (nb === 1) {
+                return matches[0];
+            }
+            // TODO: try to find the one with the same class / subclass
+            return matches[0];
+        }
+        // for (let index = 0; index < results.elements.length; index++) {
+        //     const result = results.elements[index];
+        //     if (!result.tags) {
+        //         continue;
+        //     }
+        //     // checking the name should be enough
+        //     if (result.tags.name === properties.name) {
+        //         return result;
+        //     }
+        // }
+    }
+    // async getFacebookDetails(item: Item, mapZoom?: number) {
+    //     const coordinates = (item.geometry as GeometryPoint).coordinates;
+    //     const distance = mapZoom ? Math.max(14 - mapZoom, 1) * 20 : item.properties.class === 'country' ? 500 : 40;
+    //     const types = ['node', 'way'];
+    //     const result = await networkService.request({
+    //         url: 'https://graph.facebook.com/search',
+    //         method: 'GET',
+    //         queryParams: {
+    //             access_token: gVars.FACEBOOK_TOKEN,
+    //             fields: 'hours,phone,name,location,cover,about,description,emails,food_styles,restaurant_services,restaurant_specialties,payment_options,link,price_range,website',
+    //             type: 'page',
+    //             q: item.properties.name,
+    //             center: coordinates[1] + ',' + coordinates[0],
+    //             distance: 20
+    //         }
+    //     });
+    //     console.log('result', result);
+    // }
 }
