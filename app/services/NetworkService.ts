@@ -36,7 +36,7 @@ export function getCacheControl(maxAge = 60, stale = 59) {
 
 const contactEmail = 'contact%40akylas.fr';
 
-const osmOverpassUrl = 'http://overpass-api.de/api/';
+// const osmOverpassUrl = 'http://overpass-api.de/api/';
 const OSMReplaceKeys = {
     'contact:phone': 'phone',
     via_ferrata_scale: 'difficulty'
