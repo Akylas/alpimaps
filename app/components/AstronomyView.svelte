@@ -1,7 +1,7 @@
 <script lang="ts" context="module">
     import { getMoonIllumination, GetMoonIlluminationResult, getMoonPosition, getPosition, getTimes, GetTimesResult } from 'suncalc';
     // import { moon, MoonPhase, MoonPosition, sun, SunPosition, SunTimes } from '@modern-dev/daylight/lib/es6';
-    import { Align, Canvas, DashPathEffect, Paint } from '@nativescript-community/ui-canvas';
+    import { Align, Canvas, DashPathEffect, Paint, Style } from '@nativescript-community/ui-canvas';
     import { CanvasLabel } from '@nativescript-community/ui-canvaslabel/canvaslabel.common';
     import { LineChart } from '@nativescript-community/ui-chart/charts';
     import { AxisBase } from '@nativescript-community/ui-chart/components/AxisBase';
@@ -18,14 +18,13 @@
     import { CompassInfo, getCompassInfo } from '~/helpers/geolib';
     import { formatTime, lc } from '~/helpers/locale';
     import { showError } from '~/utils/error';
-    import { PI_DIV2, TO_DEG } from '~/utils/geo';
+    import { PI_DIV2, TO_DEG, TO_RAD } from '~/utils/geo';
     import { pickDate } from '~/utils/utils';
-    import { mdiFontFamily } from '~/variables';
+    import { mdiFontFamily, textColor } from '~/variables';
     import CompassView from './CompassView.svelte';
 </script>
 
 <script lang="ts">
-
     let chart: NativeViewElementNode<LineChart>;
 
     let chartInitialized = false;
@@ -37,8 +36,12 @@
     let sunriseEndAzimuth: CompassInfo; // SunTimes;
     let sunsetStartAzimuth: CompassInfo; // SunTimes;
     let moonAzimuth: CompassInfo;
+    let sunAzimuth: CompassInfo; // SunTimes;
     let sunPoses: any[]; // SunPosition[];
     let moonPoses: any[]; // MoonPosition[];
+
+    const moonPaint = new Paint();
+    moonPaint.strokeWidth = 1.5;
 
     const highlightPaint = new Paint();
     highlightPaint.setColor('white');
@@ -73,7 +76,7 @@
             chartView.setHighlightPerDragEnabled(true);
             chartView.setCustomRenderer({
                 drawHighlight(c: Canvas, h: Highlight<Entry>, set: LineDataSet, paint: Paint) {
-                    const hours = Math.floor(h.x / 6);
+                    const hours = Math.min(Math.floor(h.x / 6), 23);
                     const minutes = (h.x * 10) % 60;
                     startTime = startTime.set('h', hours).set('m', minutes);
                     c.drawLine(h.drawX, 0, h.drawX, c.getHeight(), highlightPaint);
@@ -86,6 +89,7 @@
                         highlightPaint.setTextAlign(Align.RIGHT);
                     }
                     c.drawText(text, x, 14, highlightPaint);
+                    bottomLabel?.nativeView?.redraw();
                 }
             });
             leftAxis.setLabelCount(0);
@@ -201,8 +205,9 @@
             illumination = getMoonIllumination(date);
             moonAzimuth = getCompassInfo(getMoonPosition(date, location.lat, location.lon).azimuth * TO_DEG + 180);
             sunTimes = getTimes(date, location.lat, location.lon);
-            sunriseEndAzimuth = getCompassInfo(getPosition(sunTimes.sunriseEnd, location.lat, location.lon).azimuth * TO_DEG + 180);
-            sunsetStartAzimuth = getCompassInfo(getPosition(sunTimes.sunsetStart, location.lat, location.lon).azimuth * TO_DEG + 180);
+            sunAzimuth = getCompassInfo(getPosition(date, location.lat, location.lon).azimuth * TO_DEG + 180);
+            // sunriseEndAzimuth = getCompassInfo(getPosition(sunTimes.sunriseEnd, location.lat, location.lon).azimuth * TO_DEG + 180);
+            // sunsetStartAzimuth = getCompassInfo(getPosition(sunTimes.sunsetStart, location.lat, location.lon).azimuth * TO_DEG + 180);
         } catch (err) {
             console.error(err, err.stack);
         }
@@ -243,6 +248,34 @@
     //         showError(err);
     //     }
     // }
+    function drawMoonPosition({ canvas }: { canvas: Canvas }) {
+        const w = canvas.getWidth();
+        const h = canvas.getHeight();
+
+        moonPaint.setColor($textColor);
+
+        const cx = w - 60;
+        const cy = h / 2;
+        const cr = 14;
+
+        function getCenter(bearing, altitude?) {
+            const rad = TO_RAD * ((bearing - 90) % 360);
+            // const ryd = (cr) * (1 - Math.max(0, altitude) / 90);
+            const ryd = cr;
+            const result = [cx + Math.cos(rad) * ryd, cy + +Math.sin(rad) * ryd];
+            return result;
+        }
+        moonPaint.setColor('darkgray');
+        moonPaint.style = Style.STROKE;
+        canvas.drawCircle(cx, cy, cr, moonPaint);
+        moonPaint.style = Style.FILL;
+        moonPaint.setColor('gray');
+        let center = getCenter(moonAzimuth.bearing);
+        canvas.drawCircle(center[0], center[1], 5, moonPaint);
+        moonPaint.setColor('#ffdd55');
+        center = getCenter(sunAzimuth.bearing);
+        canvas.drawCircle(center[0], center[1], 5, moonPaint);
+    }
 </script>
 
 <gridLayout height={500} rows="50,200,50,200" columns="*,*">
@@ -253,7 +286,7 @@
         <rectangle fillColor="#a0caff" height="50%" width="100%" />
     </linechart>
     {#if sunTimes}
-        <canvaslabel bind:this={bottomLabel} row={2} colSpan={3} fontSize={18} padding="0 10 0 10">
+        <canvaslabel bind:this={bottomLabel} row={2} colSpan={3} fontSize={18} padding="0 10 0 10" on:draw={drawMoonPosition}>
             <cgroup color="#ffa500" verticalAlignment="middle">
                 <cspan fontFamily={mdiFontFamily} text="mdi-weather-sunset-up" />
                 <cspan text={' ' + formatTime(sunTimes.sunriseEnd)} />
@@ -263,23 +296,23 @@
                 <cspan text={' ' + formatTime(sunTimes.sunsetStart)} />
             </cgroup>
             <cgroup textAlignment="right" verticalAlignment="middle">
-                <cspan text={moonAzimuth.exact + '(' + Math.round(illumination.fraction * 100) + '%) '} />
+                <!-- <cspan text={moonAzimuth.exact + '(' + Math.round(illumination.fraction * 100) + '%) '} /> -->
                 <cspan fontFamily={mdiFontFamily} text={getMoonPhaseIcon(illumination)} />
             </cgroup>
         </canvaslabel>
     {/if}
-    
+
     <CompassView row={3} {location} updateWithSensor={false} date={startTime} />
-    <canvaslabel row={3} col={1}  fontSize={13} padding={10}>
+    <canvaslabel row={3} col={1} fontSize={13} padding={10}>
         <cgroup paddingTop={10}>
             <cspan fontFamily={mdiFontFamily} text="mdi-weather-sunset-up" color="#ffa500" />
             <cspan text={lc('sunrise')} />
         </cgroup>
-        <cspan text={formatTime(sunTimes.sunriseEnd) + ' ' + sunriseEndAzimuth.exact} textAlignment="right" paddingTop={10}/>
+        <cspan text={formatTime(sunTimes.sunriseEnd)} textAlignment="right" paddingTop={10} />
         <cgroup paddingTop={40}>
             <cspan fontFamily={mdiFontFamily} text="mdi-weather-sunset-down" color="#ff7200" />
             <cspan text={lc('sunset')} />
         </cgroup>
-        <cspan text={formatTime(sunTimes.sunsetStart) + ' ' + sunsetStartAzimuth.exact} textAlignment="right" paddingTop={40}/>
+        <cspan text={formatTime(sunTimes.sunsetStart)} textAlignment="right" paddingTop={40} />
     </canvaslabel>
 </gridLayout>
