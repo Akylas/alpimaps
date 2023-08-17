@@ -24,11 +24,9 @@
     });
 
     onMount(async () => {
-        console.log('onMount', groups);
         if (!groups) {
             groups = await getMapContext().mapModules['items'].groupsRepository.search();
         }
-        console.log('onMount1', groups);
         if (showDefaultGroups) {
             foundGroups = groups.slice(0, 4);
         }
@@ -46,24 +44,23 @@
         }
     }
 
-    function setGroupName(name:string) {
+    function setGroupName(name: string) {
         currentGroupText = name;
         closeCallback?.(true);
-        dispatch('groupSelected', {group:currentGroupText})
-        currentGroupText = null;
+        dispatch('groupSelected', { group: currentGroupText });
+        // currentGroupText = null;
         foundGroups = [];
     }
     function onGroupTap(group) {
-        setGroupName(group.name)
+        setGroupName(group.name);
     }
     function onKeyboardReturn() {
-        console.log('onKeyboardReturn')
-        setGroupName(currentGroupText)
+        setGroupName(currentGroupText);
     }
 </script>
 
-<gesturerootview {...$$restProps} rows="auto,auto,auto" {padding} on:layoutChanged={(e) => (closeCallback = e.object['bindingContext']?.closeCallback)}>
-    <mdbutton text={topGroup} height={30} margin="2" visibility={topGroup?'visible':'collapsed'} horizontalAlignment="left"/>
+<gesturerootview {...$$restProps} rows="auto,auto,auto,auto" {padding} on:layoutChanged={(e) => (closeCallback = e.object['bindingContext']?.closeCallback)}>
+    <mdbutton text={topGroup} height={30} margin="2" visibility={topGroup ? 'visible' : 'collapsed'} horizontalAlignment="left" />
     <textfield
         row={1}
         variant="outline"
@@ -75,9 +72,12 @@
         on:textChange={onTextChange}
         on:returnPress={onKeyboardReturn}
     />
-    <wraplayout row={2} margin={5} on:tap={() => console.log('tap2')}>
-        {#each foundGroups as group}
-            <mdbutton text={group.name} height={30} margin="2" on:tap={() => onGroupTap(group)} />
-        {/each}
-    </wraplayout>
+    {#if foundGroups.length > 0}
+        <label row={2} text={lc('existing_groups')} />
+        <wraplayout row={3} margin={5}>
+            {#each foundGroups as group}
+                <mdbutton text={group.name} height={30} margin="2" on:tap={() => onGroupTap(group)} />
+            {/each}
+        </wraplayout>
+    {/if}
 </gesturerootview>
