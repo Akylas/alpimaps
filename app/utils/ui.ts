@@ -1,14 +1,11 @@
 import { InAppBrowser } from '@akylas/nativescript-inappbrowser';
-import { isString } from '@akylas/nativescript/utils';
+import { lc } from '@nativescript-community/l';
 import { Label } from '@nativescript-community/ui-label';
-import { AlertDialog, MDCAlertControlerOptions, PromptOptions, alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-import { TextField } from '@nativescript-community/ui-material-textfield';
-import { ActivityIndicator, DialogStrings, PromptResult, StackLayout, Utils, View, capitalizationType, inputType } from '@nativescript/core';
+import { AlertDialog, alert, confirm } from '@nativescript-community/ui-material-dialogs';
+import { ActivityIndicator, StackLayout, Utils, View } from '@nativescript/core';
 import { Group } from '~/models/Item';
 import { primaryColor } from '~/variables';
 import { resolveComponentElement } from './svelte/bottomsheet';
-import { lc } from '@nativescript-community/l';
-import TagView from '~/components/TagView.svelte';
 
 export async function openLink(url) {
     try {
@@ -68,9 +65,9 @@ function getLoadingIndicator() {
     }
     return loadingIndicator;
 }
-export function showLoading(msg: string) {
+export function showLoading(msg: string = lc('loading')) {
     const loadingIndicator = getLoadingIndicator();
-    console.log('showLoading', msg, !!loadingIndicator);
+    // console.log('showLoading', msg, !!loadingIndicator);
     loadingIndicator.label.text = msg + '...';
     showLoadingStartTime = Date.now();
     loadingIndicator.show();
@@ -93,7 +90,6 @@ export async function promptForGroup(defaultGroup: string, groups?: Group[]): Pr
     const modalView: View = componentInstanceInfo.element.nativeView;
     const result = await confirm({ view: modalView, okButtonText: lc('set'), cancelButtonText: lc('cancel') });
     const currentGroupText = componentInstanceInfo.viewInstance['currentGroupText'];
-    console.log('done', currentGroupText);
     try {
         modalView._tearDownUI();
         componentInstanceInfo.viewInstance.$destroy(); // don't let an exception in destroy kill the promise callback
