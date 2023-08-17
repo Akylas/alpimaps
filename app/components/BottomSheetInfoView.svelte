@@ -1,25 +1,43 @@
-<script lang="ts">
+<script lang="ts" context="module">
     import { createNativeAttributedString } from '@nativescript-community/text';
-    import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { createEventDispatcher } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { convertDurationSeconds, convertElevation, convertValueToUnit, osmicon, UNITS } from '~/helpers/formatter';
+    import { convertDurationSeconds, convertElevation, convertValueToUnit, openingHoursText, osmicon, UNITS } from '~/helpers/formatter';
     import { onMapLanguageChanged } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item, ItemProperties } from '~/models/Item';
     import { valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
     import { alpimapsFontFamily, mdiFontFamily, subtitleColor, textColor } from '~/variables';
+    import SymbolShape from './SymbolShape';
 
+    const propsPaint = new Paint();
+    propsPaint.textSize = 14;
+    propsPaint.setTextAlign(Align.LEFT);
+
+    const iconPaint = new Paint();
+    iconPaint.setTextAlign(Align.LEFT);
+</script>
+
+<script lang="ts">
+    const dispatch = createEventDispatcher();
     export let item: Item;
     export let symbolSize = 34;
+    export let subtitleEnabled = true;
     export let marginLeft = 40;
+    export let marginTop = null;
+    export let marginBottom = 18;
+    export let titleVerticalTextAlignment = null;
     export let symbolLeft = 0;
     export let symbolTop = 8;
     export let propsLeft = 0;
+    export let propsBottom = 18;
+    export let props2Bottom = 18;
     export let iconColor = null;
     export let iconSize = 24;
     export let iconLeft = 5;
-    export let iconTop = 35;
+    export let iconTop = 42;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
     export let rightTextPadding = 0;
     let canvas: NativeViewElementNode<CanvasView>;
@@ -166,9 +184,11 @@
                 );
             }
         }
-        
+
         if (spans.length > 0) {
             nString = createNativeAttributedString({ spans });
+        } else {
+            nString = null;
         }
         if (itemIsRoute && item.route.costing_options) {
             let options = item.route.costing_options;
@@ -186,8 +206,12 @@
                 }
             });
             if (spans2.length > 0) {
-            nString2 = createNativeAttributedString({ spans:spans2 });
-        }
+                nString2 = createNativeAttributedString({ spans: spans2 });
+            } else {
+                nString2 = null;
+            }
+        } else {
+            nString2 = null;
         }
         canvas?.nativeView.invalidate();
     }
@@ -198,8 +222,6 @@
             console.error('updateItem', err, err.stack);
         }
     }
-    let propsPaint: Paint;
-    let iconPaint: Paint;
     function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
         try {
             let w = canvas.getWidth();
@@ -208,38 +230,46 @@
                 onDraw({ canvas, object });
             }
             if (itemIcon && !actualShowSymbol) {
-                if (!iconPaint) {
-                    iconPaint = new Paint();
-                    iconPaint.textSize = iconSize;
-                }
+                iconPaint.textSize = iconSize;
                 iconPaint.fontFamily = itemIconFontFamily;
                 iconPaint.color = iconColor || $textColor;
                 canvas.drawText(itemIcon, iconLeft, iconTop, iconPaint);
             }
 
             if (nString) {
-                if (!propsPaint) {
-                    propsPaint = new Paint();
-                    propsPaint.textSize = 14;
-                }
+                propsPaint.setTextAlign(Align.LEFT);
                 propsPaint.color = $textColor;
                 const staticLayout = new StaticLayout(nString, propsPaint, canvas.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                 canvas.save();
-                canvas.translate(propsLeft, h - 20);
+                canvas.translate(propsLeft, h - propsBottom);
                 staticLayout.draw(canvas);
                 canvas.restore();
             }
             if (nString2) {
-                if (!propsPaint) {
-                    propsPaint = new Paint();
-                    propsPaint.textSize = 14;
-                }
+                propsPaint.setTextAlign(Align.LEFT);
                 propsPaint.color = $textColor;
                 const staticLayout = new StaticLayout(nString2, propsPaint, canvas.getWidth(), LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
                 canvas.save();
-                canvas.translate(0, h - 20);
+                canvas.translate(0, h - props2Bottom);
                 staticLayout.draw(canvas);
                 canvas.restore();
+            }
+
+            if (item.properties?.['opening_hours']) {
+                const data = openingHoursText(item);
+                propsPaint.color = data.color;
+                propsPaint.setTextAlign(Align.RIGHT);
+                canvas.drawText(data.text, w, h - 3, propsPaint);
+            }
+            if (actualShowSymbol) {
+                SymbolShape.drawSymbolOnCanvas(canvas, {
+                    width: symbolSize,
+                    height: symbolSize,
+                    left: symbolLeft,
+                    top: symbolTop,
+                    color: itemProps?.color || $textColor,
+                    symbol: formatter.getSymbol(itemProps)
+                });
             }
         } catch (err) {
             console.error(err, err.stack);
@@ -247,21 +277,35 @@
     }
 </script>
 
-<gridlayout {...$$restProps} padding="4 10 4 10">
+<gridlayout padding="4 10 2 10"  {...$$restProps} on:tap on:longPress disableCss={true}>
     <slot />
-    <canvas bind:this={canvas} on:draw={onCanvasDraw}>
-        <symbolshape
-            visibility={actualShowSymbol ? 'visible' : 'hidden'}
-            symbol={actualShowSymbol ? formatter.getSymbol(itemProps) : null}
-            color={itemProps?.color || $textColor}
-            width={symbolSize}
-            height={symbolSize}
-            top={symbolTop}
-            left={symbolLeft}
+    <canvas disableCss={true} bind:this={canvas} on:draw={onCanvasDraw} />
+    <flexlayout disableCss={true} {marginLeft} {marginTop} {marginBottom} flexDirection="column" marginRight={rightTextPadding}>
+        <label
+            disableCss={true}
+            text={itemTitle}
+            fontWeight="bold"
+            color={$textColor}
+            fontSize={18}
+            autoFontSize={true}
+            flexGrow={1}
+            maxFontSize={18}
+            verticalTextAlignment={titleVerticalTextAlignment || (itemSubtitle ? 'bottom' : 'middle')}
+            textWrap={true}
         />
-    </canvas>
-    <flexlayout {marginLeft} marginBottom={20} flexDirection="column" marginRight={rightTextPadding}>
-        <label text={itemTitle} fontWeight="bold" color={$textColor} fontSize={18} autoFontSize={true} flexGrow={1} maxFontSize={18} verticalTextAlignment="middle" textWrap={true} />
-        <label visibility={itemSubtitle ? 'visible' : 'collapsed'} text={itemSubtitle} color={$subtitleColor} fontSize={13} maxLines={2} verticalTextAlignment="top" flexGrow={1} flexShrink={0} />
+        {#if subtitleEnabled}
+            <label
+                disableCss={true}
+                visibility={itemSubtitle ? 'visible' : 'collapsed'}
+                text={itemSubtitle}
+                color={$subtitleColor}
+                fontSize={13}
+                maxLines={2}
+                verticalTextAlignment="top"
+                flexGrow={1}
+                flexShrink={0}
+            />
+        {/if}
     </flexlayout>
+    <slot name="above" />
 </gridlayout>
