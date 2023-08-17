@@ -3,7 +3,7 @@
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { SearchRequest } from '@nativescript-community/ui-carto/search';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { Screen } from '@nativescript/core';
+    import { ObservableArray, Screen } from '@nativescript/core';
     import { getJSON } from '@nativescript/core/http';
     import deburr from 'deburr';
     import type { Point } from 'geojson';
@@ -11,6 +11,7 @@
     import { Template } from 'svelte-native/components';
     import { formatDistance, osmicon } from '~/helpers/formatter';
     import { getMetersPerPixel } from '~/helpers/geolib';
+    import { lc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item } from '~/models/Item';
@@ -24,15 +25,17 @@
     import { subtitleColor, textColor } from '~/variables';
     import { HereFeature, PhotonFeature } from './Features';
     const dispatch = createEventDispatcher();
-    let dataItems: SearchItem[] = [];
-    export let filteringOSMKey = false;
-    export let filteredDataItems: SearchItem[] = dataItems;
+    let dataItems: ObservableArray<SearchItem> = new ObservableArray();
+    // export let filteringOSMKey = false;
+    // export let filteredDataItems: SearchItem[] = dataItems;
     export let loading = false;
+    export let searchInTiles = true;
+    export let searchOffline = false;
     const mapContext = getMapContext();
 
-    export function getFilteredDataItems() {
-        return filteredDataItems;
-    }
+    // export function getFilteredDataItems() {
+    //     return filteredDataItems;
+    // }
 
     const providerColors = {
         here: 'blue',
@@ -49,6 +52,7 @@
 
     interface SearchItem extends Item {
         geometry: Point;
+        distance: number;
     }
     let currentQuery;
 
@@ -56,15 +60,15 @@
     $: {
         searchResultsCount = dataItems ? dataItems.length : 0;
     }
-    $: updateFilteredDataItems(filteringOSMKey);
+    // $: updateFilteredDataItems(filteringOSMKey);
 
-    export function updateFilteredDataItems(filter) {
-        if (filter) {
-            filteredDataItems = dataItems.filter((d) => d.properties.osm_key === currentQuery);
-        } else {
-            filteredDataItems = dataItems as any;
-        }
-    }
+    // export function updateFilteredDataItems(filter) {
+    //     if (filter) {
+    //         filteredDataItems = dataItems.filter((d) => d.properties.osm_key === currentQuery);
+    //     } else {
+    //         filteredDataItems = dataItems as any;
+    //     }
+    // }
     function getItemIcon(item: SearchItem) {
         const icons = formatter.geItemIcon(item);
         return osmicon(icons);
@@ -78,7 +82,7 @@
     function getItemSubtitle(item: SearchItem, title?: string) {
         return formatter.getItemSubtitle(item, title);
     }
-    async function addItems(r: GeoResult[], callback) {
+    async function prepareItems(r: GeoResult[], callback) {
         if (!loading || r.length === 0) {
             // was cancelled
             return;
@@ -86,7 +90,7 @@
         callback(
             r.map((s: SearchItem) => {
                 const title = getItemTitle(s);
-                return { ...s, color: getItemIconColor(s), icon: getItemIcon(s), title, subtitle: getItemSubtitle(s, title) };
+                return { ...s, color: getItemIconColor(s), icon: getItemIcon(s), title, subtitle: getItemSubtitle(s, title) || lc(s.properties.class) };
             })
         );
     }
@@ -94,15 +98,6 @@
     async function searchInGeocodingService(options) {
         let result: any = await packageService.searchInLocalGeocodingService(options);
         result = packageService.convertGeoCodingResults(result, true) as any;
-        return arraySortOn(result, 'rank').reverse() as any as GeoResult[];
-    }
-    async function searchInVectorTiles(options: SearchRequest) {
-        let result: GeoResult[] = (await packageService.searchInVectorTiles(options)) as any;
-        if (result) {
-            result = packageService.convertFeatureCollection(result as any, options);
-        } else {
-            result = [];
-        }
         return arraySortOn(
             result.map((r) => {
                 r['distance'] = computeDistanceBetween(options.position, {
@@ -113,6 +108,27 @@
             }),
             'distance'
         ) as any as GeoResult[];
+    }
+    async function searchInVectorTiles(options: SearchRequest) {
+        // console.log('searchInVectorTiles', options)
+        let result: GeoResult[] = (await packageService.searchInVectorTiles(options)) as any;
+        if (result) {
+            result = packageService.convertFeatureCollection(result as any, options);
+        } else {
+            result = [];
+        }
+        return result;
+        // console.log('searchInVectorTiles result', result)
+        // return arraySortOn(
+        //     result.map((r) => {
+        //         r['distance'] = computeDistanceBetween(options.position, {
+        //             lat: r.geometry.coordinates[1],
+        //             lon: r.geometry.coordinates[0]
+        //         });
+        //         return r;
+        //     }),
+        //     'distance'
+        // ) as any as GeoResult[];
     }
 
     async function herePlaceSearch(options: { query: string; language?: string; location?: MapPos<LatLonKeys>; locationRadius?: number }) {
@@ -129,7 +145,7 @@
                     tf: 'plain',
                     show_content: 'wikipedia',
                     lang: options.language,
-                    // rankby: 'distance',
+                    rankby: 'distance',
                     limit: 40,
                     at: !options.locationRadius ? options.location.lat + ',' + options.location.lon + ';' + options.locationRadius : undefined,
                     in: options.locationRadius ? options.location.lat + ',' + options.location.lon + ';' + options.locationRadius : undefined
@@ -164,18 +180,21 @@
                 limit: 40
             }
         });
-        return results.features
-            .filter((r) => r.properties.osm_type !== 'R')
-            .map((f) => {
-                const r = new PhotonFeature(f);
-                if (options.location) {
-                    r['distance'] = computeDistanceBetween(options.location, {
-                        lat: r.geometry.coordinates[1],
-                        lon: r.geometry.coordinates[0]
-                    });
-                }
-                return r;
-            });
+        return arraySortOn(
+            results.features
+                .filter((r) => r.properties.osm_type !== 'R')
+                .map((f) => {
+                    const r = new PhotonFeature(f);
+                    if (options.location) {
+                        r['distance'] = computeDistanceBetween(options.location, {
+                            lat: r.geometry.coordinates[1],
+                            lon: r.geometry.coordinates[0]
+                        });
+                    }
+                    return r;
+                }),
+            'distance'
+        );
     }
     export async function instantSearch(_query, position = mapContext.getMap().focusPos) {
         try {
@@ -188,7 +207,7 @@
                 language: packageService.currentLanguage,
                 // regexFilter: `.*${currentQuery}.*`,
                 // filterExpression: `layer='transportation_name'`,
-                filterExpression: `regexp_ilike(name,'.*${currentQuery}.*')`,
+                filterExpression: `regexp_ilike(name,'.*${currentQuery}.*') OR regexp_ilike(class,'.*${currentQuery}.*')`,
                 // filterExpression: `class='bakery'`,
                 // `REGEXP_LIKE(name, '${_query}')`
                 location: position,
@@ -200,39 +219,62 @@
 
             // TODO: dont fail when offline!!!
 
-            let newItems;
-
-            function onItemAdded(items) {
-                if (!newItems) {
-                    dataItems = newItems = items;
+            function addItems(items: SearchItem[]) {
+                if (dataItems.length === 0) {
+                    dataItems = new ObservableArray(items);
                 } else {
+                    items.forEach((item) => {
+                        const index = dataItems.findIndex((i) => i.distance > item.distance);
+                        if (index >= 0) {
+                            dataItems.splice(index, 0, item);
+                        } else {
+                            dataItems.push(item);
+                        }
+                    });
                     dataItems = dataItems.concat(items);
                 }
-                updateFilteredDataItems(filteringOSMKey);
+                // updateFilteredDataItems(filteringOSMKey);
             }
 
-            await Promise.all([
-                // searchInVectorTiles({
-                //     ...options,
-                //     filterExpression: undefined,
-                //     // filterExpression: `layer='poi'`,
-                //     regexFilter: currentQuery,
-                //     searchRadius: Math.min(options.searchRadius, 10000) //meters
-                // })
-                //     .then((r) => loading && r && result.push(...r))
-                //     .catch((err) => {
-                //         console.error('searchInVectorTiles', err);
-                //     }),
-                searchInGeocodingService(options)
-                    .then((r) => addItems(r, onItemAdded))
-                    .catch((err) => console.error('searchInGeocodingService', err)),
-                herePlaceSearch(options)
-                    .then((r) => addItems(r, onItemAdded))
-                    .catch((err) => console.error('herePlaceSearch', err, err.stack)),
-                photonSearch(options)
-                    .then((r) => addItems(r, onItemAdded))
-                    .catch((err) => console.error('photonSearch', err, err.stack))
-            ]);
+            await Promise.all(
+                [
+                    // searchInVectorTiles({
+                    //     ...options,
+                    //     filterExpression: undefined,
+                    //     // filterExpression: `layer::name='poi'`,
+                    //     regexFilter: currentQuery,
+                    //     searchRadius: Math.min(options.searchRadius, 10000) //meters
+                    // })
+                    //     .then((r) => loading && r && result.push(...r))
+                    //     .catch((err) => {
+                    //         console.error('searchInVectorTiles', err);
+                    //     }),
+                    searchInGeocodingService(options)
+                        .then((r) => prepareItems(r, addItems))
+                        .catch((err) => console.error('searchInGeocodingService', err))
+                ]
+                    .concat(
+                        searchInTiles
+                            ? [
+                                  searchInVectorTiles({ ...options, searchRadius: Math.min(options.searchRadius, 50000) })
+                                      .then((r) => prepareItems(r, addItems))
+                                      .catch((err) => console.error('searchInVectorTiles', err, err.stack))
+                              ]
+                            : []
+                    )
+                    .concat(
+                        !searchOffline && networkService.connected
+                            ? [
+                                  herePlaceSearch(options)
+                                      .then((r) => prepareItems(r, addItems))
+                                      .catch((err) => console.error('herePlaceSearch', err, err.stack)),
+                                  photonSearch(options)
+                                      .then((r) => prepareItems(r, addItems))
+                                      .catch((err) => console.error('photonSearch', err, err.stack))
+                              ]
+                            : []
+                    )
+            );
             if (dataItems.length === 0) {
                 showSnack({ message: l('no_result_found') });
                 // } else {
@@ -247,22 +289,21 @@
     }
     export function clearSearch(clearQuery = true) {
         loading = false;
-        dataItems = [];
-        filteredDataItems = [];
+        dataItems = new ObservableArray();
+        // filteredDataItems = [];
         if (clearQuery) {
             currentQuery = null;
         }
     }
 </script>
 
-<collectionview rowHeight={52} items={filteredDataItems} {...$$restProps}>
+<collectionview rowHeight={52} items={dataItems} {...$$restProps}>
     <Template let:item>
         <canvaslabel columns="34,*" padding="0 10 0 10" rows="*,auto,auto,*" disableCss={true} color={$textColor} rippleColor={$textColor} on:tap={(event) => dispatch('tap', item)}>
             <cspan text={item.icon} color={item.color} fontFamily="osm" fontSize={20} verticalAlignment="middle" />
-            <cgroup  paddingLeft={34}  paddingRight={34}  verticalAlignment="middle" lineBreak="end">
+            <cgroup paddingLeft={34} paddingRight={34} verticalAlignment="middle" lineBreak="end">
                 <cspan text={item.title} fontSize={13} fontWeight="bold" />
                 <cspan text={!!item.subtitle ? '\n' + item.subtitle : null} color={$subtitleColor} fontSize={11} visibility={!!item.subtitle ? 'visible' : 'collapsed'} />
-                
             </cgroup>
             <cspan
                 textAlignment="right"
