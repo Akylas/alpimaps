@@ -194,12 +194,15 @@
     async function showInformation() {
         try {
             const ItemInfo = (await import('~/components/ItemInfo.svelte')).default as any;
+            // const hasOpenHours = !!item.properties?.opening_hours;
+            const hasOpenHours = true;
             await showBottomSheet({
                 parent: mapContext.getMainPage(),
                 view: ItemInfo,
-                peekHeight: 422,
+                peekHeight: hasOpenHours ? 422 : undefined,
                 props: {
-                    item
+                    item,
+                    height: hasOpenHours ? undefined : 300
                 }
             });
         } catch (error) {
@@ -967,7 +970,15 @@
 
 <gridlayout {...$$restProps} width="100%" rows={`${INFOVIEW_HEIGHT},50,auto,auto,auto`} backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
     {#if loaded}
-        <swipemenu bind:this={swipemenu} height={INFOVIEW_HEIGHT} rightSwipeDistance={0} leftSwipeDistance={0} translationFunction={drawerTranslationFunction} openAnimationDuration={100} closeAnimationDuration={100}>
+        <swipemenu
+            bind:this={swipemenu}
+            height={INFOVIEW_HEIGHT}
+            rightSwipeDistance={0}
+            leftSwipeDistance={0}
+            translationFunction={drawerTranslationFunction}
+            openAnimationDuration={100}
+            closeAnimationDuration={100}
+        >
             <!-- svelte-ignore illegal-attribute-character -->
             <BottomSheetInfoView bind:this={infoView} prop:mainContent {item} colSpan={2} rightTextPadding={itemIsRoute ? actionBarButtonHeight : 0}>
                 <mdactivityindicator slot="above" visibility={updatingItem ? 'visible' : 'hidden'} horizontalAligment="right" busy={true} width={20} height={20} />
