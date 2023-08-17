@@ -79,6 +79,7 @@
         "@nativescript-community/universal-links": "3.0.1",
         "@nativescript-use/nativescript-clipboard": "^0.0.3",
         "@nativescript/appavailability": "2.0.0",
+        "@nativescript/email": "^2.1.0",
         "@tmcw/togeojson": "^5.8.1",
         "@wojtekmaj/opening-hours-utils": "git@github.com:whubsch/opening-hours-utils.git",
         "additween": "3.0.0",
