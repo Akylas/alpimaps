@@ -183,6 +183,21 @@
             }
         }
     }
+    async function showInformation() {
+        try {
+            const ItemInfo = (await import('~/components/ItemInfo.svelte')).default as any;
+            await showBottomSheet({
+                parent: mapContext.getMainPage(),
+                view: ItemInfo,
+                peekHeight: 422,
+                props: {
+                    item
+                }
+            });
+        } catch (error) {
+            showError(error);
+        }
+    }
     function updateGraphAvailable() {
         graphAvailable = itemIsRoute && !!item.profile && !!item.profile.data && item.profile.data.length > 0;
     }
