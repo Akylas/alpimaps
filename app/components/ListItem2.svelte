@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" context="module">
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { createEventDispatcher } from 'svelte';
@@ -8,10 +8,16 @@
     import SimpleOpeningHours from '~/helpers/SimpleOpeningHours';
     import { lc } from '~/helpers/locale';
     import dayjs from 'dayjs';
-    const dispatch = createEventDispatcher();
-
     const sectionsMatch = { su: 'sunday', mo: 'monday', tu: 'tuesday', we: 'wednesday', th: 'thursday', fr: 'friday', sa: 'saturday' };
+    const textPaint: Paint = new Paint();
+    textPaint.textSize = 16;
+    const iconPaint = new Paint();
+    iconPaint.textSize = 24;
+    iconPaint.fontFamily = mdiFontFamily;
+    iconPaint.setTextAlign(Align.CENTER);
+</script>
 
+<script lang="ts">
     export let height: string | number = '100%';
     export let title: string = null;
     export let subtitle: string = null;
@@ -26,9 +32,6 @@
 
     let canvas: NativeViewElementNode<CanvasView>;
     // console.log('test', title, subtitle, leftIcon);
-    let textPaint: Paint = new Paint();
-    textPaint.textSize = 16;
-    let iconPaint: Paint;
     let nString;
     const padding = 16;
     function onDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
@@ -40,12 +43,6 @@
             let rightPadding = padding;
             if (leftIcon) {
                 leftPadding += 40;
-                if (!iconPaint) {
-                    iconPaint = new Paint();
-                    iconPaint.textSize = 24;
-                    iconPaint.fontFamily = mdiFontFamily;
-                    iconPaint.setTextAlign(Align.CENTER);
-                }
                 iconPaint.color = $textColor;
                 canvas.drawText(leftIcon, 30, smallH / 2 + 10, iconPaint);
             }
@@ -77,6 +74,7 @@
             }
             textPaint.setTextAlign(Align.LEFT);
             textPaint.color = $textColor;
+            textPaint.textSize = 16;
             // console.log('onDraw', title, subtitle, leftIcon, nString);
             const staticLayout = new StaticLayout(nString, textPaint, w - leftPadding - rightPadding, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
             const layoutHeight = staticLayout.getHeight();
@@ -101,6 +99,7 @@
                         } else {
                             textPaint.setFontWeight('normal');
                         }
+                        textPaint.textSize = 14;
                         textPaint.setTextAlign(Align.LEFT);
                         canvas.drawText(sectionsMatch[k], padding, dy, textPaint);
                         textPaint.setTextAlign(Align.RIGHT);
