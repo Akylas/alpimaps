@@ -499,60 +499,6 @@
         }
     }
 
-    // async function toGPX() {
-    //     const name = 'test';
-    //     const builder = new xml2js.Builder({
-    //         rootName: 'gpx'
-    //     });
-    //     const profile = item.route.profile.data;
-    //     return {
-    //         name,
-    //         // eslint-disable-next-line id-blacklist
-    //         string: builder.buildObject({
-    //             $: {
-    //                 version: '1.1',
-    //                 xmlns: 'http://www.topografix.com/GPX/1/1',
-    //                 'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-    //                 'xsi:schemaLocation':
-    //                     'http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 https://www8.garmin.com/xmlschemas/TrackPointExtensionv1.xsd',
-    //                 creator: `AlpiMaps`,
-    //                 'xmlns:gpxx': 'http://www.garmin.com/xmlschemas/GpxExtensions/v3',
-    //                 'xmlns:gpxtpx': 'http://www.garmin.com/xmlschemas/TrackPointExtension/v1'
-    //             },
-    //             metadata: {
-    //                 name,
-    //                 bounds: item.zoomBounds
-    //                     ? {
-    //                           minlat: item.zoomBounds.southwest.lat,
-    //                           minlon: item.zoomBounds.southwest.lon,
-    //                           maxlat: item.zoomBounds.northeast.lat,
-    //                           maxlon: item.zoomBounds.northeast.lon
-    //                       }
-    //                     : undefined,
-    //                 copyright: {
-    //                     author: 'AlpiMaps',
-    //                     year: 2021
-    //                 }
-    //             },
-    //             trk: {
-    //                 trkseg: {
-    //                     trkpt: item.route.positions.toArray().map((l, index) => {
-    //                         const result = {
-    //                             $: {
-    //                                 lat: Math.round(l.lat * 1000000) / 1000000,
-    //                                 lon: Math.round(l.lon * 1000000) / 1000000
-    //                             },
-    //                             ele: profile[index].a,
-    //                             grade: profile[index].g
-    //                         } as any;
-    //                         return result;
-    //                     })
-    //                 }
-    //             }
-    //         })
-    //     };
-    // }
-
     async function saveItem(peek = true) {
         if (itemIsEditingItem) {
             updateEditedItem();
