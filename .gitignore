@@ -65,3 +65,4 @@ dev_assets/styles/osmxml_cleaned/*.xml
 dev_assets/styles/inner_cleaned/*.xml
 timeline*.json
 times*.html
+dev_assets/styles/mobile-sdk-styles
