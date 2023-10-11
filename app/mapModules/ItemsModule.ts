@@ -18,7 +18,7 @@ import MapModule, { getMapContext } from './MapModule';
 import NSQLDatabase from './NSQLDatabase';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import { getDataFolder, getItemsDataFolder, pick } from '~/utils/utils.common';
-import { importGPXToGeojson } from '~/utils/gpx';
+import { JSONtoXML, importGPXToGeojson } from '~/utils/gpx';
 import { Canvas, Rect } from '@nativescript-community/ui-canvas';
 import { shareFile } from '~/utils/share';
 import { networkService } from '~/services/NetworkService';
@@ -558,6 +558,85 @@ export default class ItemsModule extends MapModule {
         }
 
         await shareFile(JSON.stringify({ type: 'FeatureCollection', features } as FeatureCollection), name + '.geojson', {
+            // type: 'text/json'
+        });
+    }
+    async shareItemsAsGPX(items: IItem[], name = 'items') {
+        // all items are routes!
+        const mapBounds = {
+            northeast: {
+                lat: Number.MAX_SAFE_INTEGER,
+                lon: Number.MAX_SAFE_INTEGER
+            },
+            southwest: {
+                lat: -Number.MAX_SAFE_INTEGER,
+                lon: -Number.MAX_SAFE_INTEGER
+            }
+        } as any as MapBounds<LatLonKeys>;
+        const tracks = [];
+        items.forEach((item) => {
+            const bounds = item.properties.zoomBounds;
+            if (bounds.northeast.lon < mapBounds.northeast.lon) {
+                mapBounds.northeast.lon = bounds.northeast.lon;
+            }
+            if (bounds.southwest.lon > mapBounds.southwest.lon) {
+                mapBounds.southwest.lon = bounds.southwest.lon;
+            }
+            if (bounds.northeast.lat < mapBounds.northeast.lat) {
+                mapBounds.northeast.lat = bounds.northeast.lat;
+            }
+            if (bounds.southwest.lat > mapBounds.southwest.lat) {
+                mapBounds.southwest.lat = bounds.southwest.lat;
+            }
+            const profile = item.profile?.data;
+            tracks.push({
+                trkseg: (item.geometry as GeoJSON.LineString).coordinates.map((l, index) => {
+                    const trkpt = {
+                        trkpt: {
+                            _attrs: {
+                                lat: Math.round(l[1] * 1000000) / 1000000,
+                                lon: Math.round(l[0] * 1000000) / 1000000
+                            }
+                        }
+                    } as any;
+                    if (profile) {
+                        trkpt.ele = profile?.[index].a;
+                        trkpt.grade = profile?.[index].g;
+                    }
+                    return trkpt;
+                })
+            });
+        });
+        const gpx = JSONtoXML({
+            gpx: {
+                _attrs: {
+                    version: '1.1',
+                    xmlns: 'http://www.topografix.com/GPX/1/1',
+                    'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+                    'xsi:schemaLocation':
+                        'http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 https://www8.garmin.com/xmlschemas/TrackPointExtensionv1.xsd',
+                    creator: 'AlpiMaps',
+                    'xmlns:gpxx': 'http://www.garmin.com/xmlschemas/GpxExtensions/v3',
+                    'xmlns:gpxtpx': 'http://www.garmin.com/xmlschemas/TrackPointExtension/v1'
+                },
+                metadata: {
+                    name,
+                    bounds: {
+                        minlat: Math.round(mapBounds.southwest.lat * 1000000) / 1000000,
+                        minlon: Math.round(mapBounds.southwest.lon * 1000000) / 1000000,
+                        maxlat: Math.round(mapBounds.northeast.lat * 1000000) / 1000000,
+                        maxlon: Math.round(mapBounds.northeast.lon * 1000000) / 1000000
+                    },
+                    copyright: {
+                        author: 'AlpiMaps',
+                        year: 2021
+                    }
+                },
+                trk: tracks
+            }
+        });
+        console.log('gpx', gpx);
+        await shareFile(gpx, name + '.gpx', {
             // type: 'text/json'
         });
     }
