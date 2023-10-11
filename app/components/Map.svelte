@@ -1557,7 +1557,12 @@
                     color: $sTheme === 'dark' ? primaryColor : undefined,
                     icon: 'mdi-theme-light-dark'
                 },
-
+                {
+                    title: lc('offline_mode'),
+                    id: 'offline_mode',
+                    color: networkService.forcedOffline ? 'red' : undefined,
+                    icon: 'mdi-wifi-strength-off-outline'
+                },
                 {
                     title: lc('import'),
                     id: 'import',
@@ -1616,6 +1621,9 @@
                         break;
                     case 'dark_mode':
                         toggleTheme(true);
+                        break;
+                    case 'offline_mode':
+                        networkService.forcedOffline = !networkService.forcedOffline;
                         break;
                     case 'sentry':
                         await sendBugReport();
