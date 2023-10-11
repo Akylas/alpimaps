@@ -14,6 +14,7 @@ import { packageService } from '~/services/PackageService';
 import { queryingLocation, watchingLocation } from '~/stores/mapStore';
 import { EARTH_RADIUS, PI_X2, TO_DEG, TO_RAD } from '~/utils/geo';
 import MapModule, { getMapContext } from './MapModule';
+import { MapInteractionInfo } from '@nativescript-community/ui-carto/ui';
 
 const LOCATION_ANIMATION_DURATION = 300;
 
@@ -87,8 +88,8 @@ export default class UserLocationModule extends MapModule {
             mapContext.addLayer(this.localVectorLayer, 'userLocation');
         }
     }
-    onMapMove(e) {
-        if (e.data.userAction) {
+    onMapInteraction(interaction: MapInteractionInfo) {
+        if (interaction.isPanAction && interaction.userAction) {
             this.userFollow = false;
         }
     }
