@@ -851,6 +851,13 @@
                 extent = JSON.parse(extent as any);
             }
             cartoMap.moveToFitBounds(new MapBounds({ lat: extent[1], lon: extent[0] }, { lat: extent[3], lon: extent[2] }), screenBounds, true, true, false, 200);
+        } else if (item.route) {
+            const geometry = packageService.getRouteItemGeometry(item);
+            //we need to convert geometry bounds to wgs84
+            //not perfect as vectorTile geometry might not represent the whole entier route at higher zoom levels
+            const bounds = geometry?.getBounds();
+            const projection = new EPSG3857();
+            cartoMap.moveToFitBounds(new MapBounds(projection.toWgs84(bounds.getMin()), projection.toWgs84(bounds.getMax())), screenBounds, true, true, false, 200);
         } else {
             if (zoom) {
                 cartoMap.setZoom(zoom, duration);
