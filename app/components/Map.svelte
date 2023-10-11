@@ -660,7 +660,6 @@
                             styleParameters['selected_id_str'] = '0';
                             styleParameters['selected_id'] = selectedId + '';
                         }
-                        mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
                     } else if (route.osmid !== undefined) {
                         if (typeof route.osmid === 'string') {
                             selectedId = route.osmid;
