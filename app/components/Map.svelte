@@ -1819,6 +1819,7 @@
                 zoom={16}
                 on:mapReady={onMainMapReady}
                 on:mapMoved={onMainMapMove}
+                on:mapInteraction={onMainMapInteraction}
                 on:mapStable={onMainMapStable}
                 on:mapIdle={onMainMapIdle}
                 on:mapClicked={onMainMapClicked}
