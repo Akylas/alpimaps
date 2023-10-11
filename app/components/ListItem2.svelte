@@ -19,15 +19,16 @@
 
 <script lang="ts">
     export let height: string | number = '100%';
+    export let smallHeight: number = 70;
     export let title: string = null;
     export let subtitle: string = null;
     export let leftIcon: string = null;
     export let subtitleColor = null;
     export let titleColor = null;
-    export let id = null;
-    export let rightIcon = null;
+    // export let id = null;
+    // export let rightIcon = null;
     export let opening_hours: SimpleOpeningHours = null;
-    export let expandable = false;
+    // export let expandable = false;
     export let expanded = false;
 
     let canvas: NativeViewElementNode<CanvasView>;
@@ -38,7 +39,8 @@
         try {
             let w = canvas.getWidth();
             let h = canvas.getHeight();
-            const smallH = 70;
+            textPaint.setFontWeight('normal');
+            const smallH = smallHeight;
             let leftPadding = padding;
             let rightPadding = padding;
             if (leftIcon) {
@@ -137,7 +139,7 @@
     $: redraw(title, subtitle, leftIcon);
 </script>
 
-<canvas {height} bind:this={canvas} rippleColor={primaryColor} on:draw={onDraw} backgroundColor={$backgroundColor}>
+<canvas {height} bind:this={canvas} rippleColor={primaryColor} backgroundColor={$backgroundColor}>
     <!-- <canvaslabel padding={16}>
         <cgroup c="middle" paddingBottom={subtitle ? 10 : 0}>
             <cspan visibility={leftIcon ? 'visible' : 'hidden'} paddingLeft={10} width={40} text={leftIcon} fontFamily={leftIconFonFamily} fontSize={24} />
