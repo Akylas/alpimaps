@@ -276,7 +276,8 @@ export const NetworkConnectionStateEvent = 'NetworkConnectionStateEvent';
 export interface NetworkConnectionStateEventData extends EventData {
     data: {
         connected: boolean;
-        connectionType: connectivity.connectionType;
+        forcedOffline: boolean;
+        connectionType: Connectivity.connectionType;
     };
 }
 
@@ -500,38 +501,49 @@ export class FakeError extends CustomError {
 }
 
 export class NetworkService extends Observable {
-    _connectionType: connectivity.connectionType = connectivity.connectionType.none;
+    _connectionType: Connectivity.connectionType = Connectivity.connectionType.none;
     _connected = false;
+    _forcedOffline = ApplicationSettings.getBoolean('forceOffline', false);
     get connected() {
-        return this._connected;
+        return this._connected && !this._forcedOffline;
     }
     set connected(value: boolean) {
         if (this._connected !== value) {
-            globalObservable.notify({ eventName: 'network', data: value });
             this._connected = value;
-            this.notify({
-                eventName: NetworkConnectionStateEvent,
-                object: this,
-                data: {
-                    connected: value,
-                    connectionType: this._connectionType
-                }
-            } as NetworkConnectionStateEventData);
+            this.notifyNetworkChange();
         }
+    }
+    get forcedOffline() {
+        return this._forcedOffline;
+    }
+    set forcedOffline(value: boolean) {
+        this._forcedOffline = value;
+        ApplicationSettings.setBoolean('forceOffline', value);
+        this.notifyNetworkChange();
     }
     get connectionType() {
         return this._connectionType;
     }
-    set connectionType(value: connectivity.connectionType) {
+    set connectionType(value: Connectivity.connectionType) {
         if (this._connectionType !== value) {
             this._connectionType = value;
-            this.connected = value !== connectivity.connectionType.none;
+            this.connected = value !== Connectivity.connectionType.none;
         }
     }
-    constructor() {
-        super();
-        // console.log('creating NetworkHandler Handler');
+
+    notifyNetworkChange() {
+        globalObservable.notify({ eventName: 'network', data: this.connected });
+        this.notify({
+            eventName: NetworkConnectionStateEvent,
+            object: this,
+            data: {
+                connected: this.connected,
+                forcedOffline: this._forcedOffline,
+                connectionType: this._connectionType
+            }
+        } as NetworkConnectionStateEventData);
     }
+
     monitoring = false;
     canCheckWeather = false;
     async start() {
@@ -562,9 +574,9 @@ export class NetworkService extends Observable {
         connectivity.stopMonitoring();
     }
     onAppResume(args: ApplicationEventData) {
-        this.connectionType = connectivity.getConnectionType();
+        this.connectionType = Connectivity.getConnectionType();
     }
-    onConnectionStateChange(newConnectionType: connectivity.connectionType) {
+    onConnectionStateChange(newConnectionType: Connectivity.connectionType) {
         this.connectionType = newConnectionType;
     }
     async request<T = any>(requestParams: HttpRequestOptions, retry = 0): Promise<T> {
@@ -647,6 +659,7 @@ export class NetworkService extends Observable {
                 if (!this._connected) {
                     throw new NoNetworkError();
                 }
+                throw error;
             } else {
                 throw error;
             }
