@@ -1,4 +1,4 @@
-import { ApplicationSettings, Device, FileSystemEntity, Folder, Utils, knownFolders, path } from '@nativescript/core';
+import { Application, ApplicationSettings, Device, FileSystemEntity, Folder, Utils, knownFolders, path } from '@nativescript/core';
 
 let savedMBTilesDir = ApplicationSettings.getString('local_mbtiles_directory');
 
@@ -191,4 +191,46 @@ export function groupBy<T>(items: readonly T[], keyGetter: (item: T) => string) 
         result[key] = item;
     });
     return result;
+}
+
+export async function openApp(appID, storeUrl?) {
+    // DEV_LOG && console.log('openApp', appID, await available(appID));
+    // if (await available(appID)) {
+    if (__ANDROID__) {
+        const context = Utils.android.getApplicationContext();
+        const intent = context.getPackageManager().getLaunchIntentForPackage(appID);
+        if (intent) {
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+            return true;
+        }
+    } else {
+        return Utils.openUrl(appID);
+    }
+    // } else {
+    //     if (__ANDROID__) {
+    //         const Intent = android.content.Intent;
+    //         const intent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse('market://details?id=' + appID));
+    //         const activity = Application.android.foregroundActivity || Application.android.startActivity;
+    //         activity.startActivity(intent);
+    //     } else if (storeUrl) {
+    //         DEV_LOG && console.log('openUrl', storeUrl);
+    //         Utils.openUrl(storeUrl);
+    //     }
+    // }
+    return false;
+}
+
+export async function showApp() {
+    return openApp(__APP_ID__);
+    // if (__ANDROID__) {
+    //     const context = Utils.android.getApplicationContext();
+    //     const activityClass = (com as any).tns.NativeScriptActivity.class;
+    //     const intent = new android.content.Intent(context, activityClass);
+    //     if (intent) {
+    //         intent.setAction(android.content.Intent.ACTION_MAIN);
+    //         intent.addCategory(android.content.Intent.CATEGORY_LAUNCHER);
+    //         context.startActivity(intent);
+    //     }
+    // }
 }
