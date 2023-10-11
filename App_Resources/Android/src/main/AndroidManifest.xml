@@ -100,6 +100,13 @@
 				<data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\.geojson" />
 			</intent-filter>
         </activity>
+        <activity android:name=".ProcessTextActivity" android:theme="@style/FloatingActivityTheme" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|locale|uiMode" android:windowSoftInputMode="stateHidden|adjustResize" android:launchMode="singleInstance" android:noHistory="true" android:taskAffinity="" android:excludeFromRecents="true" tools:ignore="ExportedActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
         <activity android:name="com.tns.ErrorReportActivity" android:exported="false" />
         <service android:name=".BgService" android:enabled="true" android:exported="false"
             android:stopWithTask="false" android:foregroundServiceType="location" />
