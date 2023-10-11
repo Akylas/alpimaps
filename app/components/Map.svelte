@@ -2,12 +2,12 @@
     import { isSensorAvailable } from '@nativescript-community/sensors';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { ClickType, MapBounds, toNativeMapRange, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
-    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
+    import { MergedMBVTTileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
-    import { Layer } from '@nativescript-community/ui-carto/layers';
+    import { Layer, TileSubstitutionPolicy } from '@nativescript-community/ui-carto/layers';
     import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
     import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
-    import { BaseVectorTileLayer, VectorLayer, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
+    import { VectorLayer, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
     import { Projection } from '@nativescript-community/ui-carto/projections';
     import { CartoMap, MapInteractionInfo, PanningMode, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
     import { ZippedAssetPackage, nativeVectorToArray, setShowDebug, setShowError, setShowInfo, setShowWarn } from '@nativescript-community/ui-carto/utils';
