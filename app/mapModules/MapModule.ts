@@ -5,7 +5,7 @@ import { Layer } from '@nativescript-community/ui-carto/layers';
 import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
 import { VectorElementEventData, VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { Projection } from '@nativescript-community/ui-carto/projections';
-import { CartoMap } from '@nativescript-community/ui-carto/ui';
+import { CartoMap, MapInteractionInfo } from '@nativescript-community/ui-carto/ui';
 import { DirAssetPackage, ZippedAssetPackage } from '@nativescript-community/ui-carto/utils';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
@@ -29,6 +29,7 @@ export interface IMapModule {
     onServiceLoaded?(geoHandler: GeoHandler);
     onServiceUnloaded?(geoHandler: GeoHandler);
     onMapMove?(e);
+    onMapInteraction?(e);
     onMapClicked?(e);
     onVectorTileClicked?(data: VectorTileEventData<LatLonKeys>);
     onVectorElementClicked?(data: VectorElementEventData<LatLonKeys>);
@@ -75,6 +76,7 @@ export interface MapContext {
     onOtherAppTextSelected(callback: ContextCallback, once?: boolean);
     onMapReady(callback: ContextCallback, once?: boolean);
     onMapMove(callback: ContextCallback, once?: boolean);
+    onMapInteraction(callback: ContextCallback<MapInteractionInfo>, once?: boolean);
     onMapStable(callback: ContextCallback, once?: boolean);
     getMapViewPort(): { left: number; width: number; top: number; height: number };
     onMapIdle(callback: ContextCallback, once?: boolean);
@@ -137,6 +139,7 @@ const mapContext: MapContext = {
     onOtherAppTextSelected: createGlobalEventListener('onOtherAppTextSelected'),
     onMapReady: createGlobalEventListener('onMapReady'),
     onMapMove: createGlobalEventListener('onMapMove'),
+    onMapInteraction: createGlobalEventListener('onMapInteraction'),
     onMapStable: createGlobalEventListener('onMapStable'),
     onMapIdle: createGlobalEventListener('onMapIdle'),
     onMapClicked: createGlobalEventListener('onMapClicked'),
@@ -297,6 +300,7 @@ export default abstract class MapModule extends Observable implements IMapModule
     onServiceLoaded?(geoHandler: GeoHandler);
     onServiceUnloaded?(geoHandler: GeoHandler);
     onMapMove?(e);
+    onMapInteraction?(e);
     onMapClicked?(e);
     onVectorTileClicked?(data: VectorTileEventData<LatLonKeys>);
     onVectorElementClicked?(data: VectorElementEventData<LatLonKeys>);
