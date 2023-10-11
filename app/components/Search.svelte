@@ -3,24 +3,26 @@
     import { ClusterElementBuilder } from '@nativescript-community/ui-carto/layers/cluster';
     import { ClusteredVectorLayer } from '@nativescript-community/ui-carto/layers/vector';
     import { PointStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/point';
-    import { Animation, GridLayout, TextField, View } from '@nativescript/core';
+    import { Animation, ApplicationSettings, GridLayout, ObservableArray, TextField, View } from '@nativescript/core';
     import type { Point } from 'geojson';
     import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { slc } from '~/helpers/locale';
+    import { lc, slc } from '~/helpers/locale';
     import { currentTheme } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
     import { showError } from '~/utils/error';
-    import { actionBarButtonHeight, globalMarginTop, subtitleColor, widgetBackgroundColor } from '~/variables';
+    import { actionBarButtonHeight, globalMarginTop, lightBackgroundColor, subtitleColor, widgetBackgroundColor } from '~/variables';
     import IconButton from './IconButton.svelte';
     import SearchCollectionView from './SearchCollectionView.svelte';
+    import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
 
     const SEARCH_COLLECTIONVIEW_HEIGHT = 250;
     let animating = false;
     async function animateTargets(animations: any[]) {
-        animations = animations.filter(a=>!!a.target);
+        animations = animations.filter((a) => !!a.target);
         let shouldAnimate = true;
         try {
             if (shouldAnimate && animations[0].target.nativeView) {
@@ -43,6 +45,7 @@
 
     interface SearchItem extends Item {
         geometry: Point;
+        distance: number;
     }
 
     let gridLayout: NativeViewElementNode<GridLayout>;
@@ -54,7 +57,7 @@
     let searchAsTypeTimer;
     let loading = false;
     // let filteringOSMKey = false;
-    export let filteredDataItems: SearchItem[] = null;
+    export let dataItems: ObservableArray<SearchItem> = null;
     let text: string = null;
     let currentSearchText: string = null;
     const mapContext = getMapContext();
@@ -79,7 +82,7 @@
                 builder: new ClusterElementBuilder({
                     color: 'red',
                     // textColor: 'white',
-                    textSize: 15,
+                    // textSize: 15,
                     size: 20,
                     bbox: true,
                     shape: 'point'
@@ -97,9 +100,9 @@
     }
 
     let searchResultsVisible = false;
-    $: {
-        searchResultsVisible = focused && searchResultsCount > 0;
-    }
+    let focused = false;
+    let searchResultsCount;
+    $: searchResultsVisible = focused && searchResultsCount > 0;
     // $: {
     //     if (nGridLayout) {
     //         animateView(nGridLayout, { elevation: $currentTheme !== 'dark' && focused ? 10 : 0, borderRadius: searchResultsVisible ? 10 : 25 }, 100);
@@ -129,10 +132,6 @@
         }
     });
 
-    let searchResultsCount;
-
-    $: if (searchResultsCount) needToShowOnResult = false;
-    let focused = false;
     export function hasFocus() {
         return focused;
     }
@@ -147,7 +146,10 @@
     }
 
     export function searchForQuery(query) {
+        clearSearch();
+        currentSearchText = query;
         textField.nativeView.text = query;
+        instantSearch(query);
     }
 
     function onReturnKey() {
@@ -157,8 +159,16 @@
         }
         instantSearch(text);
     }
+
+    function reloadSearch() {
+        if (text && !loading && !searchAsTypeTimer) {
+            instantSearch(text);
+        }
+    }
+
     $: {
         const query = text;
+        console.log('text changed', query, currentSearchText);
         if (query !== currentSearchText) {
             if (query) {
                 if (searchAsTypeTimer) {
@@ -166,6 +176,8 @@
                     searchAsTypeTimer = null;
                 }
                 if (query && query.length > 2) {
+                    didSearch = false;
+                    console.log('will instantSerach', query);
                     searchAsTypeTimer = setTimeout(() => {
                         searchAsTypeTimer = null;
                         instantSearch(query);
@@ -184,7 +196,12 @@
             currentSearchText = query;
         }
     }
+    $: if (needToShowOnResult && searchResultsCount > 0) {
+        needToShowOnResult = false;
+        textField.nativeView.requestFocus();
+    }
     let needToShowOnResult = false;
+    let didSearch = false;
     async function instantSearch(_query) {
         try {
             loading = true;
@@ -193,17 +210,16 @@
             }
             needToShowOnResult = true;
             await collectionView?.instantSearch(_query);
-
-            if (needToShowOnResult && searchResultsCount > 0) {
-                textField.nativeView.focus();
-            }
+            didSearch = true;
         } catch (err) {
+            needToShowOnResult = false;
             showError(err);
         } finally {
             loading = false;
         }
     }
     function clearSearch(clearQuery = true) {
+        didSearch = false;
         loading = false;
         if (collectionView) {
             collectionView.clearSearch(clearQuery);
@@ -248,53 +264,61 @@
         mapContext.selectItem({ item, isFeatureInteresting: true, minZoom: 14, preventZoom: false });
         unfocus();
     }
-
-    $: {
-        if (showingOnMap) {
-            showResultsOnMap(filteredDataItems);
-        }
-    }
     // function toggleFilterOSMKey() {
-        // filteringOSMKey = !filteringOSMKey;
-        // if (showingOnMap) {
-        //     showResultsOnMap();
-        // }
+    // filteringOSMKey = !filteringOSMKey;
+    // if (showingOnMap) {
+    //     showResultsOnMap();
+    // }
     // }
     function toggleShowResultsOnMap() {
-        showResultsOnMap(filteredDataItems);
+        if (showingOnMap) {
+            showingOnMap = false;
+            getSearchLayer().visible = false;
+        } else {
+            showResultsOnMap(dataItems);
+        }
     }
     let showingOnMap = false;
     let searchStyle: PointStyleBuilder;
     function showResultsOnMap(items) {
-        if (!items || items.length === 0) {
-            return;
+        try {
+            if (!items || items.length === 0) {
+                return;
+            }
+            showingOnMap = true;
+            if (!_searchDataSource) {
+                const dataSource = getSearchDataSource();
+                // const items = filteredDataItems.filter(
+                //     // (d) => !!d && (d.provider === 'here' || (d.provider === 'carto' && d.properties.layer === 'poi'))
+                //     (d) => !!d && (d.properties.provider === 'here' || d.properties.provider === 'carto')
+                // );
+                // if (items.length === 0) {
+                //     return;
+                // }
+                const geojson = {
+                    type: 'FeatureCollection',
+                    features: items.map((s) => ({ type: 'Feature', ...s }))
+                };
+                if (!searchStyle) {
+                    searchStyle = new PointStyleBuilder({ color: 'red', size: 10 });
+                }
+                const featureCollection = packageService.getGeoJSONReader().readFeatureCollection(geojson);
+                dataSource.clear();
+                dataSource.addFeatureCollection(featureCollection, searchStyle);
+                // items.forEach((d) => {
+                //     dataSource.add(createSearchMarker(d));
+                // });
+                ensureSearchLayer();
+                const mapBounds = featureCollection.getBounds();
+                mapContext.getMap().moveToFitBounds(mapBounds, undefined, false, false, false, 100);
+            } else {
+                getSearchLayer().visible = true;
+            }
+
+            unfocus();
+        } catch (error) {
+            showError(error);
         }
-        const dataSource = getSearchDataSource();
-        showingOnMap = true;
-        // const items = filteredDataItems.filter(
-        //     // (d) => !!d && (d.provider === 'here' || (d.provider === 'carto' && d.properties.layer === 'poi'))
-        //     (d) => !!d && (d.properties.provider === 'here' || d.properties.provider === 'carto')
-        // );
-        // if (items.length === 0) {
-        //     return;
-        // }
-        const geojson = {
-            type: 'FeatureCollection',
-            features: items.map((s) => ({ type: 'Feature', ...s }))
-        };
-        if (!searchStyle) {
-            searchStyle = new PointStyleBuilder({ color: 'red', size: 10 });
-        }
-        const featureCollection = packageService.getGeoJSONReader().readFeatureCollection(JSON.stringify(geojson));
-        dataSource.clear();
-        dataSource.addFeatureCollection(featureCollection, searchStyle);
-        // items.forEach((d) => {
-        //     dataSource.add(createSearchMarker(d));
-        // });
-        ensureSearchLayer();
-        unfocus();
-        const mapBounds = featureCollection.getBounds();
-        mapContext.getMap().moveToFitBounds(mapBounds, undefined, false, false, false, 100);
     }
 
     let loaded = false;
@@ -312,6 +336,66 @@
             loadedListeners.forEach((l) => l());
         }
     }
+
+    async function showSearchOptions(event) {
+        try {
+            const actions: any[] = [
+                {
+                    type: 'checkbox',
+                    name: lc('search_using_geocoding'),
+                    value: ApplicationSettings.getBoolean('searchInGeocoding', true),
+                    id: 'searchInGeocoding'
+                },
+                {
+                    type: 'checkbox',
+                    name: lc('search_in_vectortiles'),
+                    value: ApplicationSettings.getBoolean('searchInTiles', true),
+                    id: 'searchInTiles'
+                },
+                {
+                    type: 'checkbox',
+                    name: lc('search_using_here'),
+                    value: ApplicationSettings.getBoolean('searchUsingHere', false),
+                    id: 'searchUsingHere'
+                },
+                {
+                    type: 'checkbox',
+                    name: lc('search_using_photon'),
+                    value: ApplicationSettings.getBoolean('searchUsingPhoton', true),
+                    id: 'searchUsingPhoton'
+                }
+            ];
+            const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
+            const result = await showPopover<any>({
+                vertPos: VerticalPosition.BELOW,
+                horizPos: HorizontalPosition.ALIGN_LEFT,
+                view: OptionSelect ,
+                fitInScreen: true,
+                anchor: event.object,
+                props: {
+                    showBorders: false,
+                    backgroundColor: $lightBackgroundColor,
+                    options: actions,
+                    borderRadius: 6,
+                    rowHeight: 50,
+                    onClose: closePopover,
+                    width: 300,
+                    fontWeight: 'normal',
+                    onCheckBox(item, value) {
+                        ApplicationSettings.setBoolean(item.id, value);
+                    }
+                }
+            });
+            if (result) {
+                switch (result.id) {
+                    case 'delete':
+                        break;
+                }
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
 </script>
 
 <gridlayout
@@ -325,7 +409,8 @@
     backgroundColor={$widgetBackgroundColor}
     margin={`${globalMarginTop + 10} 10 10 10`}
 >
-    <label class="icon-label" text="mdi-magnify" color={$subtitleColor} />
+    <IconButton gray={true} text="mdi-magnify" on:tap={showSearchOptions} />
+    <!-- <label class="icon-label" text="mdi-magnify" color={$subtitleColor} /> -->
     <textfield
         bind:this={textField}
         variant="none"
@@ -345,7 +430,7 @@
         verticalTextAlignment="center"
     />
     <mdactivityindicator visibility={loading ? 'visible' : 'hidden'} col={2} busy={true} width={20} height={20} />
-
+    <IconButton gray={true} isVisible={currentSearchText && currentSearchText.length > 0 && !loading && didSearch} col={2} text="mdi-refresh" on:tap={reloadSearch} />
     <IconButton gray={true} isVisible={currentSearchText && currentSearchText.length > 0} col={3} text="mdi-close" on:tap={() => clearSearch()} />
     <IconButton col={4} gray={true} text="mdi-dots-vertical" on:tap={showMapMenu} />
     {#if loaded}
@@ -354,15 +439,15 @@
                 <SearchCollectionView
                     bind:this={collectionView}
                     bind:searchResultsCount
-                    bind:filteredDataItems
+                    bind:dataItems
                     colSpan={3}
                     isUserInteractionEnabled={searchResultsVisible}
                     on:tap={(event) => onItemTap(event.detail.detail)}
                 />
                 <stacklayout row={1} orientation="horizontal" on:tap={() => {}} width="100%">
                     <!-- <IconButton small={true} isVisible={searchResultsVisible} text="mdi-shape" on:tap={toggleFilterOSMKey} isSelected={filteringOSMKey} /> -->
-                    <IconButton small={true} isVisible={searchResultsVisible} text="mdi-map" on:tap={toggleShowResultsOnMap} /></stacklayout
-                >
+                    <IconButton small={true} isVisible={searchResultsVisible} text="mdi-map" on:tap={toggleShowResultsOnMap} />
+                </stacklayout>
             </gridlayout>
         </absolutelayout>
     {/if}
