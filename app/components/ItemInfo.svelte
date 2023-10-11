@@ -11,15 +11,20 @@
     import { Item } from '~/models/Item';
     import { showError } from '~/utils/error';
     import { openLink } from '~/utils/ui';
-    import { actionBarHeight, backgroundColor, borderColor, mdiFontFamily, textColor } from '~/variables';
+    import { actionBarButtonHeight, actionBarHeight, backgroundColor, borderColor, mdiFontFamily, textColor } from '~/variables';
     import IconButton from './IconButton.svelte';
     import ListItem2 from './ListItem2.svelte';
     import { openUrl } from '@akylas/nativescript/utils';
     import { compose } from '@nativescript/email';
+    import { share } from '~/utils/share';
+    import JsonViewer from './JSONViewer.svelte';
+    import { networkService } from '~/services/NetworkService';
+    // import JSONViewer from '~/components/JSONViewer.svelte';
 
     export let item: Item;
     export let height: number | string = '100%';
     let extraProps = {};
+    const mapContext = getMapContext();
     const borderPaint = new Paint();
     borderPaint.setColor($borderColor);
     // paint.setStyle(Style.STROKE)
@@ -125,6 +130,26 @@
                 leftIcon: 'mdi-wikipedia'
             });
         }
+        const devMode = mapContext.mapModule('customLayers').devMode;
+        if (devMode) {
+            newItems.push({
+                type: 'json',
+                id: 'json',
+                src: JSON.stringify(item, null, 4)
+            });
+            // const existing = newItems.map((i) => i.id);
+            // const toAdd = Object.keys(itemProperties).filter((s) => existing.indexOf(s) === -1);
+            // for (let index = 0; index < toAdd.length; index++) {
+            //     const key = toAdd[index];
+            //     newItems.push({
+            //         id: key,
+            //         height: 50,
+            //         title: lc(key),
+            //         subtitle: itemProperties[key] + '',
+            //         leftIcon: 'mdi-tag-outline'
+            //     });
+            // }
+        }
         items = new ObservableArray(newItems);
 
         const toDraw = [];
@@ -177,18 +202,21 @@
         });
         topItemsToDraw = toDraw;
     }
-    const itemsModule = getMapContext().mapModule('items');
+    const itemsModule = mapContext.mapModule('items');
 
     const topProps = ['population', 'wheelchair', 'atm', 'change_machine', 'copy_facility', 'stamping_machine', 'currency', 'ele'];
-    const ignoredKeys = ['source', 'building', 'wall', 'bench', 'shelter_type', 'amenity', 'check_date', 'note', 'comment', 'ele', 'tourism'];
 
     let canRefresh = false;
+    let loading = false;
     async function refresh() {
         try {
+            const ignoredKeys = itemsModule.ignoredOSMKeys;
             const itemProperties = { ...item.properties };
             DEV_LOG && console.log('refresh', item);
-            if (!itemProperties.osmid) {
-                const result = await itemsModule.getOSMDetails(item, getMapContext().getMap().zoom);
+            if (!itemProperties.osmid && networkService.connected) {
+                refreshItems();
+                loading = true;
+                const result = await itemsModule.getOSMDetails(item, mapContext.getMap().zoom);
                 DEV_LOG && console.log('result', result);
                 if (result) {
                     const newProps = {};
@@ -202,7 +230,7 @@
                     extraProps = newProps;
                 }
                 // if (!item.properties.opening_hours) {
-                //     const result = await itemsModule.getFacebookDetails(item, getMapContext().getMap().zoom);
+                //     const result = await itemsModule.getFacebookDetails(item, mapContext.getMap().zoom);
                 // }
                 canRefresh = false;
             } else {
@@ -213,6 +241,8 @@
             refreshItems();
         } catch (error) {
             console.error(error, error.stack);
+        } finally {
+            loading = false;
         }
     }
 
@@ -223,7 +253,7 @@
         try {
             let w = canvas.getWidth();
             let h = canvas.getHeight();
-            const iconsTop = 10;
+            const iconsTop = 5;
             const iconsLeft = 34;
             topItemsToDraw.forEach((c, index) => {
                 let x = index * 75 + iconsLeft;
@@ -265,9 +295,9 @@
             extraProps = {};
             refreshItems();
             if (item.route) {
-                getMapContext().mapModules.directionsPanel.cancel(false);
+                mapContext.mapModules.directionsPanel.cancel(false);
             }
-            getMapContext().selectItem({ item, isFeatureInteresting: true, peek, preventZoom: false });
+            mapContext.selectItem({ item, isFeatureInteresting: true, peek, preventZoom: false });
             if (item.route) {
                 itemsModule.takeItemPicture(item);
             }
@@ -287,8 +317,8 @@
                     break;
                 case 'email':
                     await compose({
-                        to:[listItem.subtitle]
-                    })
+                        to: [listItem.subtitle]
+                    });
                     break;
                 case 'wikipedia':
                     const url = `https://en.wikipedia.org/wiki/${listItem.subtitle}`;
@@ -297,6 +327,15 @@
                 default:
                     if (listItem.expandable) {
                         expandItem(event, listItem);
+                    } else {
+                        share(
+                            {
+                                message: listItem.subtitle
+                            },
+                            {
+                                dialogTitle: lc('share')
+                            }
+                        );
                     }
                     break;
             }
@@ -319,6 +358,10 @@
         const index = items.indexOf(listItem);
         if (index >= 0) {
             items.setItem(index, listItem);
+            // setTimeout(() => {
+            // collectionView.nativeView.scrollToIndex(index +1, true);
+
+            // }, 10);
         }
     }
     async function onItemRightTap(event, listItem) {
@@ -326,7 +369,7 @@
         try {
             switch (listItem.id) {
                 case 'phone':
-                openUrl('sms:' + listItem.subtitle);
+                    openUrl('sms:' + listItem.subtitle);
                     break;
                 default:
                     if (listItem.expandable) {
@@ -338,26 +381,32 @@
             showError(err);
         }
     }
+
     // function redraw(...args) {
     //     nString = null;
     //     canvas?.nativeView?.redraw();
     // }
 </script>
 
-<gridlayout {height} rows="auto,auto,*" {...$$restProps} backgroundColor={$backgroundColor}>
-    <gridLayout columns="auto,*,auto" rows={`${actionBarHeight}`} {...$$restProps} color={$textColor}>
-        <label id="title" col={1} fontSize={20} fontWeight="bold" textAlignment="left" text={formatter.getItemTitle(item) || ''} verticalTextAlignment="center" />
-        <IconButton text={osmicon(formatter.geItemIcon(item))} color="white" fontFamily="osm" />
-        <stackLayout col={2} orientation="horizontal">
+<gesturerootview {height} rows="auto,auto,*" {...$$restProps} backgroundColor={$backgroundColor}>
+    <gridlayout columns="auto,*,auto" rows={`${actionBarHeight}`} {...$$restProps} color={$textColor}>
+        <!-- <label id="title" fontSize={40} text={itemIcon} fontFamily={itemIconFontFamily} verticalTextAlignment="center" /> -->
+        <IconButton text={osmicon(formatter.geItemIcon(item))} fontFamily="osm" />
+        <label id="title" col={1} fontSize={20} fontWeight="bold" text={formatter.getItemTitle(item) || ''} verticalTextAlignment="center" />
+        <stacklayout col={2} orientation="horizontal">
             <IconButton text="mdi-content-save-outline" color="white" isVisible={Object.keys(extraProps).length > 0} on:tap={() => saveItem()} />
             <IconButton text="mdi-autorenew" color="white" isVisible={canRefresh} />
-        </stackLayout>
-    </gridLayout>
+            <mdactivityindicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapse'}  width={actionBarButtonHeight} height={actionBarButtonHeight}/>
+        </stacklayout>
+    </gridlayout>
     <canvas row={1} visibility={topItemsToDraw.length ? 'visible' : 'collapsed'} on:draw={onTopDraw} height={60} />
-    <collectionview row={2} {items} bind:this={collectionView}>
+    <collectionview row={2} {items} bind:this={collectionView} itemTemplateSelector={(item) => item.type || 'default'}>
+        <Template let:item key="json">
+            <JsonViewer jsonText={item.src} padding={10}  backgroundColor={$backgroundColor}/>
+        </Template>
         <Template let:item>
             <gridlayout on:tap={(e) => onItemTap(e, item)}>
-                <ListItem2 height={item.expanded ? item.expandedHeight : 70} {...item} />
+                <ListItem2 smallHeight={item.height || 70} height={item.expanded ? item.expandedHeight : item.height || 70} {...item} />
                 <IconButton
                     id="rightButton"
                     text={item.rightIcon || 'mdi-chevron-down'}
@@ -373,4 +422,4 @@
             </gridlayout>
         </Template>
     </collectionview>
-</gridlayout>
+</gesturerootview>
