@@ -26,8 +26,8 @@
     import type { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Screen } from '@nativescript/core/platform';
+    import { debounce } from '@nativescript/core/utils';
     import type { Point as GeoJSONPoint } from 'geojson';
-    import { debounce } from 'push-it-to-the-limit';
     import { onDestroy, onMount } from 'svelte';
     import { navigate } from 'svelte-native';
     import { NativeViewElementNode } from 'svelte-native/dom';
