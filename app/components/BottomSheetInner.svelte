@@ -1038,8 +1038,7 @@
         </scrollview>
 
         <ElevationChart bind:this={elevationChart} {item} row={2} colSpan={2} height={PROFILE_HEIGHT} visibility={graphAvailable ? 'visible' : 'collapsed'} on:highlight={onChartHighlight} />
-        <gridlayout row={3} colSpan={2} height={STATS_HEIGHT} visibility={statsAvailable ? 'visible' : 'collapsed'}>
-            <canvas bind:this={statsCanvas} on:draw={drawStats} />
+        <canvas bind:this={statsCanvas} on:draw={drawStats} row={3} colSpan={2} height={STATS_HEIGHT} visibility={statsAvailable ? 'visible' : 'collapsed'}>
             <IconButton
                 small={true}
                 fontSize={20}
@@ -1059,7 +1058,7 @@
                 isEnabled={statsKey === 'surfaces'}
                 on:tap={() => setStatsKey('waytypes')}
             />
-        </gridlayout>
+        </canvas>
 
         <!-- <AWebView
             row={3}

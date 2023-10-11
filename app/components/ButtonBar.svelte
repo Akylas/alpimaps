@@ -128,7 +128,16 @@
     let rippleY = 0;
 </script>
 
-<absolutelayout {width} {height} {...$$restProps} on:tap={() => {}} on:touch={onTouch} on:tap={onTap} on:longPress={onLongPress}>
-    <canvas bind:this={canvas} width="100%" height="100%" on:draw={onDraw} />
-    <absolutelayout bind:this={ripple} left={rippleX} top={rippleY} width={buttonSize} height={buttonSize} {rippleColor} borderRadius="{buttonSize / 2}}" />
-</absolutelayout>
+<canvas bind:this={canvas} on:draw={onDraw} {width} {height} {...$$restProps} on:tap={() => {}} on:touch={onTouch} on:tap={onTap} on:longPress={onLongPress}>
+    <absolutelayout
+        bind:this={ripple}
+        horizontalAlignment="left"
+        verticalAlignment="top"
+        marginLeft={rippleX}
+        marginTop={rippleY}
+        width={buttonSize}
+        height={buttonSize}
+        {rippleColor}
+        borderRadius="{buttonSize / 2}}"
+    />
+</canvas>

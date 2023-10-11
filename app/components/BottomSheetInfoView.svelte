@@ -277,9 +277,8 @@
     }
 </script>
 
-<gridlayout padding="4 10 2 10"  {...$$restProps} on:tap on:longPress disableCss={true}>
+<canvas bind:this={canvas} on:draw={onCanvasDraw} padding="4 10 2 10" {...$$restProps} on:tap on:longPress disableCss={true}>
     <slot />
-    <canvas disableCss={true} bind:this={canvas} on:draw={onCanvasDraw} />
     <flexlayout disableCss={true} {marginLeft} {marginTop} {marginBottom} flexDirection="column" marginRight={rightTextPadding}>
         <label
             disableCss={true}
@@ -308,4 +307,4 @@
         {/if}
     </flexlayout>
     <slot name="above" />
-</gridlayout>
+</canvas>
