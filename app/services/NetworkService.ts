@@ -554,12 +554,11 @@ export class NetworkService extends Observable {
         this.canCheckWeather = await appavailability.available(__IOS__ ? 'weather://' : 'com.akylas.weather');
         const folder = Folder.fromPath(getDataFolder()).getFolder('cache');
         const diskLocation = folder.path;
-        const cacheSize = 10 * 1024 * 1024;
-        DEV_LOG && console.log('setCache', diskLocation, cacheSize);
+        DEV_LOG && console.log('setCache', diskLocation);
         https.setCache({
             diskLocation,
-            diskSize: cacheSize,
-            memorySize: cacheSize
+            diskSize: 40 * 1024 * 1024,
+            memorySize: 10 * 1024 * 1024
         });
     }
     stop() {
