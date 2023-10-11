@@ -219,20 +219,32 @@ export default class ItemsModule extends MapModule {
             layer
         });
         let extent: [number, number, number, number] = item.properties.extent as any;
-        if (typeof extent === 'string') {
-            if (extent[0] !== '[') {
-                extent = `[${extent}]` as any;
+        let boundsGeo;
+        if (extent) {
+            if (typeof extent === 'string') {
+                if (extent[0] !== '[') {
+                    extent = `[${extent}]` as any;
+                }
+                extent = JSON.parse(extent as any);
             }
-            extent = JSON.parse(extent as any);
+            boundsGeo = new PolygonGeometry<LatLonKeys>({
+                poses: [
+                    { lat: extent[1], lon: extent[0] },
+                    { lat: extent[3], lon: extent[0] },
+                    { lat: extent[3], lon: extent[2] },
+                    { lat: extent[1], lon: extent[2] }
+                ]
+            });
+        } else {
+            const position = getMapContext().getMap().getFocusPos();
+            const mpp = getMetersPerPixel(position, mapContext.getMap().getZoom());
+            const searchRadius = Math.min(Math.max(mpp * Screen.mainScreen.widthPixels * 2, mpp * Screen.mainScreen.heightPixels * 2), 50000); //meters;
+            const bounds = getBoundsOfDistance(position, searchRadius);
+            boundsGeo = new PolygonGeometry<LatLonKeys>({
+                poses: [bounds.northeast, { lat: bounds.northeast.lat, lon: bounds.southwest.lon }, bounds.southwest, { lat: bounds.southwest.lat, lon: bounds.northeast.lon }]
+            });
         }
-        const boundsGeo = new PolygonGeometry<LatLonKeys>({
-            poses: [
-                { lat: extent[1], lon: extent[0] },
-                { lat: extent[3], lon: extent[0] },
-                { lat: extent[3], lon: extent[2] },
-                { lat: extent[1], lon: extent[2] }
-            ]
-        });
+        const key = ['route_id', 'osmid', 'id'].find((k) => properties.hasOwnProperty(k));
         const featureCollection = await new Promise<VectorTileFeatureCollection>((resolve) =>
             searchService.findFeatures(
                 {
