@@ -1071,8 +1071,16 @@
                 }
                 selectedRoutes = selectedRoutes || [];
                 handleSelectedRouteTimer = setTimeout(handleSelectedRoutes, 10);
-                if (selectedRoutes.findIndex((s) => s.featureData.osmid === featureData.osmid) === -1) {
-                    selectedRoutes.push({ featurePosition, featureData, layer });
+                if (selectedRoutes.findIndex((s) => s.route.osmid === featureData.osmid) === -1) {
+                    selectedRoutes.push({
+                        properties: {
+                            ...featureData
+                        },
+                        route: {
+                            osmid: featureData.osmid || featureData.ref || featureData.name
+                        },
+                        layer
+                    });
                     ignoreNextMapClick = true;
                 }
                 return false;
