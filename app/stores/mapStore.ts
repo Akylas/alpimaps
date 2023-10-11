@@ -1,26 +1,26 @@
 import { getBoolean, getNumber, getString, setBoolean, setNumber, setString } from '@nativescript/core/application-settings';
 import { get, writable } from 'svelte/store';
 
-function settingsStore(key, defaultValue) {
+function settingsStore<T = any>(key, defaultValue: T) {
     const tpof = typeof defaultValue;
     let updateMethod;
     let startValue;
     switch (tpof) {
         case 'boolean':
             updateMethod = setBoolean;
-            startValue = getBoolean(key, defaultValue);
+            startValue = getBoolean(key, defaultValue as boolean);
             break;
         case 'number':
             updateMethod = setNumber;
-            startValue = getNumber(key, defaultValue);
+            startValue = getNumber(key, defaultValue as number);
             break;
 
         default:
             updateMethod = setString;
-            startValue = getString(key, defaultValue);
+            startValue = getString(key, defaultValue as string);
             break;
     }
-    const store = writable(startValue);
+    const store = writable<T>(startValue);
     let ignoreUpdate = true;
     store.subscribe((v) => {
         if (ignoreUpdate) {
