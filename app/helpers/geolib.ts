@@ -7,17 +7,17 @@ declare global {
     }
 }
 
-// if (typeof Number.prototype.toRad === 'undefined') {
-Number.prototype.toRad = function () {
-    return this * TO_RAD;
-};
-// }
+if (typeof Number.prototype.toRad === 'undefined') {
+    Number.prototype.toRad = function () {
+        return this * TO_RAD;
+    };
+}
 
-// if (typeof Number.prototype.toDeg === 'undefined') {
-Number.prototype.toDeg = function () {
-    return this * TO_DEG;
-};
-// }
+if (typeof Number.prototype.toDeg === 'undefined') {
+    Number.prototype.toDeg = function () {
+        return this * TO_DEG;
+    };
+}
 
 function _getRoundNum(t) {
     const e = Math.pow(10, (Math.floor(t) + '').length - 1);
@@ -50,14 +50,14 @@ export function getNiceNumber(n: number) {
 }
 
 // Setting readonly defaults
-export function version() {
-    return '$version$';
-}
+// export function version() {
+//     return '$version$';
+// }
 export const earthRadius = 6378137;
-export const minLat = -90;
-export const maxLat = 90;
-export const minLon = -180;
-export const maxLon = 180;
+export const MIN_LAT = -90;
+export const MAX_LAT = 90;
+export const MIN_LON = -180;
+export const MAX_LON = 180;
 
 export const measures = {
     m: 1,
@@ -71,14 +71,6 @@ export const measures = {
     yd: 1 / 0.9144
 };
 // }
-
-// Here comes the magic
-
-const decimal = {};
-
-const sexagesimal = {};
-
-const metrics = true;
 
 export function getValue(point, index, possibleValues, raw) {
     let result;
@@ -97,7 +89,8 @@ export function getValue(point, index, possibleValues, raw) {
     } else {
         result = parseFloat(point);
     }
-    return raw !== false ? result : useDecimal(result);
+    // return raw !== false ? result : useDecimal(result);
+    return result;
 }
 // returns latitude of a given point, converted to decimal
 // set raw to true to avoid conversion
@@ -149,31 +142,31 @@ export function ll(point, raw) {
 }
 
 // checks if a variable contains a valid latlong object
-export function validate(point) {
-    if (typeof point.latitude === 'undefined' || point.longitude === 'undefined') {
-        return false;
-    }
+// export function validate(point) {
+//     if (typeof point.latitude === 'undefined' || point.longitude === 'undefined') {
+//         return false;
+//     }
 
-    let lat = getLat(point);
-    let lng = getLon(point);
+//     let lat = getLat(point);
+//     let lng = getLon(point);
 
-    if (typeof lat === 'undefined' || (!isDecimal(lat) && !isSexagesimal(lat))) {
-        return false;
-    }
+//     if (typeof lat === 'undefined' || (!isDecimal(lat) && !isSexagesimal(lat))) {
+//         return false;
+//     }
 
-    if (typeof lng === 'undefined' || (!isDecimal(lng) && !isSexagesimal(lng))) {
-        return false;
-    }
+//     if (typeof lng === 'undefined' || (!isDecimal(lng) && !isSexagesimal(lng))) {
+//         return false;
+//     }
 
-    lat = useDecimal(lat);
-    lng = useDecimal(lng);
+//     lat = useDecimal(lat);
+//     lng = useDecimal(lng);
 
-    if (lat < minLat || lat > maxLat || lng < minLon || lng > maxLon) {
-        return false;
-    }
+//     if (lat < minLat || lat > maxLat || lng < minLon || lng > maxLon) {
+//         return false;
+//     }
 
-    return true;
-}
+//     return true;
+// }
 
 /**
  * Calculates geodetic distance between two points specified by latitude/longitude using
@@ -329,33 +322,33 @@ export function getCenter(theCoords) {
     };
 }
 
-export function getBoundsZoomLevel(bounds, mapDim, worldDim) {
-    worldDim = worldDim || 256;
-    const zoomMax = 22;
+// export function getBoundsZoomLevel(bounds, mapDim, worldDim) {
+//     worldDim = worldDim || 256;
+//     const zoomMax = 22;
 
-    function latRad(lat) {
-        const sin = Math.sin((lat * Math.PI) / 180);
-        const radX2 = Math.log((1 + sin) / (1 - sin)) / 2;
-        return Math.max(Math.min(radX2, Math.PI), -Math.PI) / 2;
-    }
+//     function latRad(lat) {
+//         const sin = Math.sin((lat * Math.PI) / 180);
+//         const radX2 = Math.log((1 + sin) / (1 - sin)) / 2;
+//         return Math.max(Math.min(radX2, Math.PI), -Math.PI) / 2;
+//     }
 
-    function zoom(mapPx, worldPx, fraction) {
-        return Math.round(Math.log(mapPx / worldPx / fraction) / Math.LN2);
-    }
+//     function zoom(mapPx, worldPx, fraction) {
+//         return Math.round(Math.log(mapPx / worldPx / fraction) / Math.LN2);
+//     }
 
-    const ne = bounds.ne;
-    const sw = bounds.sw;
+//     const ne = bounds.ne;
+//     const sw = bounds.sw;
 
-    const latFraction = (latRad(ne.latitude) - latRad(sw.latitude)) / Math.PI;
+//     const latFraction = (latRad(ne.latitude) - latRad(sw.latitude)) / Math.PI;
 
-    const lngDiff = ne.longitude - sw.longitude;
-    const lngFraction = (lngDiff < 0 ? lngDiff + 360 : lngDiff) / 360;
+//     const lngDiff = ne.longitude - sw.longitude;
+//     const lngFraction = (lngDiff < 0 ? lngDiff + 360 : lngDiff) / 360;
 
-    const latZoom = zoom(mapDim.height, worldDim, latFraction);
-    const lngZoom = zoom(mapDim.width, worldDim, lngFraction);
+//     const latZoom = zoom(mapDim.height, worldDim, latFraction);
+//     const lngZoom = zoom(mapDim.width, worldDim, lngFraction);
 
-    return Math.min(Math.min(latZoom, lngZoom), zoomMax);
-}
+//     return Math.min(Math.min(latZoom, lngZoom), zoomMax);
+// }
 // getZoom(longDelta, pixelWidth) {
 //     var zoomScale = longDelta * 85445659.44705395 * Math.PI / 180.0 / pixelWidth;
 //     var regionZoom = 20 - Math.log(zoomScale);
@@ -421,7 +414,6 @@ export function scaleBounds(_region, _deltaFactor) {
 }
 export function getAroundData(bounds) {
     const center = getCenter([bounds.sw, bounds.ne]);
-    console.debug('center', center);
     const distance = Math.max(
         getDistance(
             {
@@ -438,7 +430,6 @@ export function getAroundData(bounds) {
             center
         )
     );
-    console.debug('radius', distance);
     return {
         centerCoordinate: center,
         radius: distance
@@ -452,18 +443,17 @@ export function getBoundsOfDistance(point, distance) {
     const radLon = lon.toRad();
 
     const radDist = distance / earthRadius;
-    let minLat = radLat - radDist;
-    let maxLat = radLat + radDist;
+    let boundsMinLat = radLat - radDist;
+    let boundsMaxLat = radLat + radDist;
 
-    const MAX_LAT_RAD = maxLat.toRad();
-    const MIN_LAT_RAD = minLat.toRad();
-    const MAX_LON_RAD = maxLon.toRad();
-    const MIN_LON_RAD = minLon.toRad();
+    const MAX_LAT_RAD = MAX_LAT.toRad();
+    const MIN_LAT_RAD = MIN_LAT.toRad();
+    const MAX_LON_RAD = MAX_LON.toRad();
+    const MIN_LON_RAD = MIN_LON.toRad();
 
     let minLng;
     let maxLng;
-
-    if (minLat > MIN_LAT_RAD && maxLat < MAX_LAT_RAD) {
+    if (boundsMinLat > MIN_LAT_RAD && boundsMaxLat < MAX_LAT_RAD) {
         const deltaLon = Math.asin(Math.sin(radDist) / Math.cos(radLat));
         minLng = radLon - deltaLon;
 
@@ -478,20 +468,20 @@ export function getBoundsOfDistance(point, distance) {
         }
     } else {
         // A pole is within the distance.
-        minLat = Math.max(minLat, MIN_LAT_RAD);
-        maxLat = Math.min(maxLat, MAX_LAT_RAD);
+        boundsMinLat = Math.max(MIN_LAT, MIN_LAT_RAD);
+        boundsMaxLat = Math.min(MAX_LAT, MAX_LAT_RAD);
         minLng = MIN_LON_RAD;
         maxLng = MAX_LON_RAD;
     }
 
     return {
-        sw: {
-            latitude: minLat.toDeg(),
-            longitude: minLon.toDeg()
+        southwest: {
+            lat: boundsMinLat.toDeg(),
+            lon: minLng.toDeg()
         },
-        ne: {
-            latitude: maxLat.toDeg(),
-            longitude: maxLon.toDeg()
+        northeast: {
+            lat: boundsMaxLat.toDeg(),
+            lon: maxLng.toDeg()
         }
     };
 }
@@ -671,18 +661,18 @@ export function getBearing(originLL, destLL) {
  * @param        string      Bearing mode. Can be either circle or rhumbline
  * @return       object      Returns an object with a rough (NESW) and an exact direction (NNE, NE, ENE, E, ESE, etc).
  */
-export function getCompassDirection(originLL, destLL, bearingMode?) {
-    let bearing;
+// export function getCompassDirection(originLL, destLL, bearingMode?) {
+//     let bearing;
 
-    if (bearingMode === 'circle') {
-        // use great circle bearing
-        bearing = getBearing(originLL, destLL);
-    } else {
-        // default is rhumb line bearing
-        bearing = getRhumbLineBearing(originLL, destLL);
-    }
-    return getCompassInfo(bearing);
-}
+//     if (bearingMode === 'circle') {
+//         // use great circle bearing
+//         bearing = getBearing(originLL, destLL);
+//     } else {
+//         // default is rhumb line bearing
+//         bearing = getRhumbLineBearing(originLL, destLL);
+//     }
+//     return getCompassInfo(bearing);
+// }
 export interface CompassInfo {
     exact: string;
     rough: string;
@@ -799,38 +789,38 @@ export function getMppAtZoom(_zoom, pos) {
     const lat = latitude(pos);
     return (156543.03392 * Math.cos((lat * Math.PI) / 180)) / Math.pow(2, _zoom);
 }
-export function getMapScale(_mpp, _maxWidth) {
-    const distance = _mpp * _maxWidth;
-    const round = _getRoundNum(distance);
-    const realMetersPerScreenCM = _mpp * PX_PER_CM * 100;
-    const roundMeters = _getRoundNum(realMetersPerScreenCM);
-    const result = {
-        width: (_maxWidth * round) / distance,
-        distance,
-        scale: roundMeters,
-        realScale: realMetersPerScreenCM,
-        scaleWidth: (_maxWidth * roundMeters) / realMetersPerScreenCM,
-        text: formatter.distance(round)
-    };
-    return result;
-}
-export function getMapScaleAtZoom(_zoom, pos) {
-    const mpp = getMppAtZoom(_zoom, pos);
-    const realMetersPerScreenCM = mpp * PX_PER_CM * 100;
-    const roundMeters = _getRoundNum(realMetersPerScreenCM);
-    const result = {
-        scale: roundMeters,
-        realScale: realMetersPerScreenCM
-    };
-    // console.debug('getMapScaleAtZoom', _zoom, pos, mpp, result);
-    return result;
-}
+// export function getMapScale(_mpp, _maxWidth) {
+//     const distance = _mpp * _maxWidth;
+//     const round = _getRoundNum(distance);
+//     const realMetersPerScreenCM = _mpp * PX_PER_CM * 100;
+//     const roundMeters = _getRoundNum(realMetersPerScreenCM);
+//     const result = {
+//         width: (_maxWidth * round) / distance,
+//         distance,
+//         scale: roundMeters,
+//         realScale: realMetersPerScreenCM,
+//         scaleWidth: (_maxWidth * roundMeters) / realMetersPerScreenCM,
+//         text: formatter.distance(round)
+//     };
+//     return result;
+// }
+// export function getMapScaleAtZoom(_zoom, pos) {
+//     const mpp = getMppAtZoom(_zoom, pos);
+//     const realMetersPerScreenCM = mpp * PX_PER_CM * 100;
+//     const roundMeters = _getRoundNum(realMetersPerScreenCM);
+//     const result = {
+//         scale: roundMeters,
+//         realScale: realMetersPerScreenCM
+//     };
+//     // console.debug('getMapScaleAtZoom', _zoom, pos, mpp, result);
+//     return result;
+// }
 /**
  * Shortcut for getCompassDirection
  */
-export function getDirection(originLL, destLL, bearingMode) {
-    return getCompassDirection(originLL, destLL, bearingMode);
-}
+// export function getDirection(originLL, destLL, bearingMode) {
+//     return getCompassDirection(originLL, destLL, bearingMode);
+// }
 
 /**
  * Sorts an array of coords by distance from a reference coordinate
@@ -907,21 +897,21 @@ export function getPathLength(cs) {
  * @param        object      options (currently "unit" is the only option. Default: km(h));
  * @return       float       speed in unit per hour
  */
-export function getSpeed(start, end, options) {
-    let unit = (options && options.unit) || (metrics ? 'km' : 'mi');
+// export function getSpeed(start, end, options) {
+//     let unit = (options && options.unit) || (metrics ? 'km' : 'mi');
 
-    if (unit === 'mph') {
-        unit = 'mi';
-    } else if (unit === 'kmh') {
-        unit = 'km';
-    }
+//     if (unit === 'mph') {
+//         unit = 'mi';
+//     } else if (unit === 'kmh') {
+//         unit = 'km';
+//     }
 
-    const distance = getDistance(start, end);
-    const time = (end.timestamp * 1) / 1000 - (start.timestamp * 1) / 1000;
-    const mPerHr = (distance / time) * 3600;
-    const speed = Math.round(mPerHr * measures[unit] * 10000) / 10000;
-    return speed;
-}
+//     const distance = getDistance(start, end);
+//     const time = (end.timestamp * 1) / 1000 - (start.timestamp * 1) / 1000;
+//     const mPerHr = (distance / time) * 3600;
+//     const speed = Math.round(mPerHr * measures[unit] * 10000) / 10000;
+//     return speed;
+// }
 
 /**
  * Converts a distance from meters to km, mm, cm, mi, ft, in or yd
@@ -931,39 +921,39 @@ export function getSpeed(start, end, options) {
  * @param        float       Decimal places for rounding (default: 4)
  * @return       float       Converted distance
  */
-export function convertUnit(distance, unit, round) {
-    if (distance === 0) {
-        return 0;
-    }
+// export function convertUnit(distance, unit, round) {
+//     if (distance === 0) {
+//         return 0;
+//     }
 
-    unit = unit || (metrics ? 'm' : 'ft');
+//     unit = unit || (metrics ? 'm' : 'ft');
 
-    if (typeof measures[unit] !== 'undefined') {
-        let result = distance * measures[unit];
-        if (round !== undefined) {
-            result = round(result, round);
-        }
-        return result;
-    } else {
-        throw new Error('Unknown unit for conversion.');
-    }
-}
-export function getFormattedDistance(_ll1, _ll2) {
-    if (_ll1 && _ll2) {
-        const distance = getDistanceSimple(_ll1, _ll2);
-        return formatter.distance(distance);
-    }
-    return '';
-}
+//     if (typeof measures[unit] !== 'undefined') {
+//         let result = distance * measures[unit];
+//         if (round !== undefined) {
+//             result = round(result, round);
+//         }
+//         return result;
+//     } else {
+//         throw new Error('Unknown unit for conversion.');
+//     }
+// }
+// export function getFormattedDistance(_ll1, _ll2) {
+//     if (_ll1 && _ll2) {
+//         const distance = getDistanceSimple(_ll1, _ll2);
+//         return formatter.distance(distance);
+//     }
+//     return '';
+// }
 export function getMetersPerPixel(_pos, _zoom) {
     // 156543.03392804097 == 2 * Math.PI * 6378137 / 256
     // return dpi undependant pixels
     return (156543.03392804097 * Math.cos((_pos.lat * Math.PI) / 180)) / Math.pow(2, _zoom);
 }
-function altitudeStr(_altitude, _unit?) {
-    _unit = _unit || (metrics ? 'm' : 'ft');
-    return (_altitude * measures[_unit]).toFixed() + ' ' + _unit;
-}
+// function altitudeStr(_altitude, _unit?) {
+//     _unit = _unit || (metrics ? 'm' : 'ft');
+//     return (_altitude * measures[_unit]).toFixed() + ' ' + _unit;
+// }
 function latLng(_obj, _format) {
     const c = coords(_obj);
     const result = {
@@ -976,14 +966,14 @@ function latLng(_obj, _format) {
             result.latitude = c.latitude.toFixed(4) + '° N';
             result.longitude = c.longitude.toFixed(4) + '° E';
             break;
-        case 1:
-            result.latitude = decimal2sexagesimal(c.latitude);
-            result.longitude = decimal2sexagesimal(c.longitude);
-            break;
+        // case 1:
+        //     result.latitude = decimal2sexagesimal(c.latitude);
+        //     result.longitude = decimal2sexagesimal(c.longitude);
+        //     break;
         default:
         case 0:
-            result.latitude = c.latitude.toFixed(4);
-            result.longitude = c.longitude.toFixed(4);
+            result.latitude = c.latitude.toFixed(6);
+            result.longitude = c.longitude.toFixed(6);
             break;
     }
     return result;
@@ -993,125 +983,125 @@ export function latLngString(_obj, _format, _join?) {
 
     return result.latitude + (_join || ' ') + result.longitude;
 }
-export function distanceStr(_distance, _unit?, _factor?) {
-    // input in meters!
-    _unit = _unit || (metrics ? 'm' : 'ft');
-    // var newunit = _unit;
-    // console.debug('distance', _distance, _unit);
-    _factor = _factor || 1;
-    let dec = 0;
+// export function distanceStr(_distance, _unit?, _factor?) {
+//     // input in meters!
+//     _unit = _unit || (metrics ? 'm' : 'ft');
+//     // var newunit = _unit;
+//     // console.debug('distance', _distance, _unit);
+//     _factor = _factor || 1;
+//     let dec = 0;
 
-    if (_unit === 'm' && _distance >= _factor * 1000) {
-        dec = 1;
-        _unit = 'km';
-    } else if (_unit === 'yd' && _distance >= _factor * 1760) {
-        dec = 1;
-        _unit = 'mi';
-    } else if (_unit === 'ft' && _distance >= _factor * 5280) {
-        dec = 1;
-        _unit = 'mi';
-    }
-    let result = _distance * measures[_unit];
-    // console.debug('distance2', result, dec);
-    if (result >= 100) {
-        dec = 0;
-    } else if (result < 10) {
-        dec *= 2;
-        result = Math.round(result * 100) / 100;
-        const decimal = result - Math.floor(result);
-        // console.debug('decimal', decimal);
-        if (decimal < 0.1) {
-            dec = 0;
-        }
-    }
+//     if (_unit === 'm' && _distance >= _factor * 1000) {
+//         dec = 1;
+//         _unit = 'km';
+//     } else if (_unit === 'yd' && _distance >= _factor * 1760) {
+//         dec = 1;
+//         _unit = 'mi';
+//     } else if (_unit === 'ft' && _distance >= _factor * 5280) {
+//         dec = 1;
+//         _unit = 'mi';
+//     }
+//     let result = _distance * measures[_unit];
+//     // console.debug('distance2', result, dec);
+//     if (result >= 100) {
+//         dec = 0;
+//     } else if (result < 10) {
+//         dec *= 2;
+//         result = Math.round(result * 100) / 100;
+//         const decimal = result - Math.floor(result);
+//         // console.debug('decimal', decimal);
+//         if (decimal < 0.1) {
+//             dec = 0;
+//         }
+//     }
 
-    return result.toFixed(dec) + ' ' + _unit;
-}
-export function address(_address, _multiline) {
-    if (!!_multiline) {
-        return _address.display_name.replace(', ', '\n');
-    }
-    return _address.display_name;
-}
-export function speed(_speed, _unit?) {
-    _unit = _unit || (metrics ? 'km' : 'mi');
+//     return result.toFixed(dec) + ' ' + _unit;
+// }
+// export function address(_address, _multiline) {
+//     if (!!_multiline) {
+//         return _address.display_name.replace(', ', '\n');
+//     }
+//     return _address.display_name;
+// }
+// export function speed(_speed, _unit?) {
+//     _unit = _unit || (metrics ? 'km' : 'mi');
 
-    let dec = 0;
-    if (_unit === 'mph') {
-        _unit = 'mi';
-    } else if (_unit === 'kmh') {
-        _unit = 'km';
-    }
-    let result = 1000 * _speed * measures[_unit];
-    if (result >= 100) {
-        dec = 0;
-    } else if (result < 10) {
-        dec *= 2;
-        result = Math.round(result * 100) / 100;
-        const decimal = result - Math.floor(result);
-        // console.debug('decimal', decimal);
-        if (decimal < 0.1) {
-            dec = 0;
-        }
-    }
-    return result.toFixed(dec) + ' ' + _unit.replace('mi', 'mp') + '/h';
-}
-export const formatter = {
-    altitude: altitudeStr,
-    latLng,
-    latLngString,
-    distance: distanceStr,
-    address,
-    speed
-};
+//     let dec = 0;
+//     if (_unit === 'mph') {
+//         _unit = 'mi';
+//     } else if (_unit === 'kmh') {
+//         _unit = 'km';
+//     }
+//     let result = 1000 * _speed * measures[_unit];
+//     if (result >= 100) {
+//         dec = 0;
+//     } else if (result < 10) {
+//         dec *= 2;
+//         result = Math.round(result * 100) / 100;
+//         const decimal = result - Math.floor(result);
+//         // console.debug('decimal', decimal);
+//         if (decimal < 0.1) {
+//             dec = 0;
+//         }
+//     }
+//     return result.toFixed(dec) + ' ' + _unit.replace('mi', 'mp') + '/h';
+// }
+// export const formatter = {
+//     altitude: altitudeStr,
+//     latLng,
+//     latLngString,
+//     distance: distanceStr,
+//     address,
+//     speed
+// };
 /**
  * Checks if a value is in decimal format or, if neccessary, converts to decimal
  *
  * @param        mixed       Value(s) to be checked/converted (array of latlng objects, latlng object, sexagesimal string, float)
  * @return       float       Input data in decimal format
  */
-export function useDecimal(value) {
-    if (Object.prototype.toString.call(value) === '[object Array]') {
-        value = value.map(function (val) {
-            // if(!isNaN(parseFloat(val))) {
-            if (isDecimal(val)) {
-                return useDecimal(val);
-            } else if (typeof val === 'object') {
-                if (validate(val)) {
-                    return coords(val);
-                } else {
-                    for (const prop in val) {
-                        val[prop] = useDecimal(val[prop]);
-                    }
+// export function useDecimal(value) {
+//     if (Object.prototype.toString.call(value) === '[object Array]') {
+//         value = value.map(function (val) {
+//             // if(!isNaN(parseFloat(val))) {
+//             if (isDecimal(val)) {
+//                 return useDecimal(val);
+//             } else if (typeof val === 'object') {
+//                 if (validate(val)) {
+//                     return coords(val);
+//                 } else {
+//                     for (const prop in val) {
+//                         val[prop] = useDecimal(val[prop]);
+//                     }
 
-                    return val;
-                }
-            } else if (isSexagesimal(val)) {
-                return sexagesimal2decimal(val);
-            } else {
-                return val;
-            }
-        });
+//                     return val;
+//                 }
+//             } else if (isSexagesimal(val)) {
+//                 return sexagesimal2decimal(val);
+//             } else {
+//                 return val;
+//             }
+//         });
 
-        return value;
-    } else if (typeof value === 'object' && validate(value)) {
-        return coords(value);
-    } else if (typeof value === 'object') {
-        for (const prop in value) {
-            value[prop] = useDecimal(value[prop]);
-        }
+//         return value;
+//     } else if (typeof value === 'object' && validate(value)) {
+//         return coords(value);
+//     } else if (typeof value === 'object') {
+//         for (const prop in value) {
+//             value[prop] = useDecimal(value[prop]);
+//         }
 
-        return value;
-    }
+//         return value;
+//     }
 
-    if (isDecimal(value)) {
-        return parseFloat(value);
-    } else if (isSexagesimal(value) === true) {
-        return parseFloat(sexagesimal2decimal(value));
-    }
+//     if (isDecimal(value)) {
+//         return parseFloat(value);
+//     } else if (isSexagesimal(value) === true) {
+//         return parseFloat(sexagesimal2decimal(value));
+//     }
 
-    throw new Error('Unknown format.');
-}
+//     throw new Error('Unknown format.');
+// }
 
 /**
  * Converts a decimal coordinate value to sexagesimal format
@@ -1119,24 +1109,24 @@ export function useDecimal(value) {
  * @param        float       decimal
  * @return       string      Sexagesimal value (XX° YY' ZZ")
  */
-export function decimal2sexagesimal(dec: number) {
-    if (dec in sexagesimal) {
-        return sexagesimal[dec];
-    }
+// export function decimal2sexagesimal(dec: number) {
+//     if (dec in sexagesimal) {
+//         return sexagesimal[dec];
+//     }
 
-    const tmp = dec.toString().split('.');
+//     const tmp = dec.toString().split('.');
 
-    const deg = Math.abs(parseInt(tmp[0], 10));
-    let min = parseFloat('0.' + tmp[1]) * 60;
-    let sec: any = min.toString().split('.');
+//     const deg = Math.abs(parseInt(tmp[0], 10));
+//     let min = parseFloat('0.' + tmp[1]) * 60;
+//     let sec: any = min.toString().split('.');
 
-    min = Math.floor(min);
-    sec = (parseFloat('0.' + sec[1]) * 60).toFixed(2);
+//     min = Math.floor(min);
+//     sec = (parseFloat('0.' + sec[1]) * 60).toFixed(2);
 
-    sexagesimal[dec] = deg + '° ' + min + "' " + sec + '"';
+//     sexagesimal[dec] = deg + '° ' + min + "' " + sec + '"';
 
-    return sexagesimal[dec];
-}
+//     return sexagesimal[dec];
+// }
 
 /**
  * Converts a sexagesimal coordinate to decimal format
@@ -1144,32 +1134,32 @@ export function decimal2sexagesimal(dec: number) {
  * @param        float       Sexagesimal coordinate
  * @return       string      Decimal value (XX.XXXXXXXX)
  */
-export function sexagesimal2decimal(sexagesimal) {
-    if (sexagesimal in decimal) {
-        return decimal[sexagesimal];
-    }
+// export function sexagesimal2decimal(sexagesimal) {
+//     if (sexagesimal in decimal) {
+//         return decimal[sexagesimal];
+//     }
 
-    const regEx = sexagesimalPattern;
-    const data = regEx.exec(sexagesimal);
-    let min = 0,
-        sec = 0;
+//     const regEx = sexagesimalPattern;
+//     const data = regEx.exec(sexagesimal);
+//     let min = 0,
+//         sec = 0;
 
-    if (data) {
-        min = parseFloat(data[2]) / 60;
-        sec = (parseFloat(data[4]) || 0) / 3600;
-    }
+//     if (data) {
+//         min = parseFloat(data[2]) / 60;
+//         sec = (parseFloat(data[4]) || 0) / 3600;
+//     }
 
-    let dec: any = (parseFloat(data[1]) + min + sec).toFixed(8);
-    // var   dec = ((parseFloat(data[1]) + min + sec));
+//     let dec: any = (parseFloat(data[1]) + min + sec).toFixed(8);
+//     // var   dec = ((parseFloat(data[1]) + min + sec));
 
-    // South and West are negative decimals
-    dec = data[7] === 'S' || data[7] === 'W' ? -parseFloat(dec) : parseFloat(dec);
-    // dec = (data[7] == 'S' || data[7] == 'W') ? -dec : dec;
+//     // South and West are negative decimals
+//     dec = data[7] === 'S' || data[7] === 'W' ? -parseFloat(dec) : parseFloat(dec);
+//     // dec = (data[7] == 'S' || data[7] == 'W') ? -dec : dec;
 
-    decimal[sexagesimal] = dec;
+//     decimal[sexagesimal] = dec;
 
-    return dec;
-}
+//     return dec;
+// }
 
 /**
  * Checks if a value is in decimal format
@@ -1234,14 +1224,17 @@ export function getBoundsAndDistance(theCoords) {
         bounds.maxLng += 0.002;
         bounds.minLng -= 0.002;
     }
-    return {bounds: {
-        northeast: {
-            lat: bounds.maxLat,
-            lon: bounds.maxLng
+    return {
+        bounds: {
+            northeast: {
+                lat: bounds.maxLat,
+                lon: bounds.maxLng
+            },
+            southwest: {
+                lat: bounds.minLat,
+                lon: bounds.minLng
+            }
         },
-        southwest: {
-            lat: bounds.minLat,
-            lon: bounds.minLng
-        }
-    }, distance};
+        distance
+    };
 }
