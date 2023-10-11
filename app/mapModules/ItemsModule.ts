@@ -1,4 +1,4 @@
-import { GenericMapPos } from '@nativescript-community/ui-carto/core';
+import { GenericMapPos, MapBounds } from '@nativescript-community/ui-carto/core';
 import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
 import { PolygonGeometry } from '@nativescript-community/ui-carto/geometry';
 import { VectorTileFeatureCollection } from '@nativescript-community/ui-carto/geometry/feature';
@@ -8,9 +8,9 @@ import { VectorTileSearchService } from '@nativescript-community/ui-carto/search
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/point';
 import { ShareFile } from '@nativescript-community/ui-share-file';
-import { File, Folder, ImageSource, knownFolders, path, profile } from '@nativescript/core';
+import { File, Folder, ImageSource, Screen, knownFolders, path, profile } from '@nativescript/core';
 import type { Feature, FeatureCollection, Point as GeometryPoint } from 'geojson';
-import { getDistanceSimple } from '~/helpers/geolib';
+import { getBoundsOfDistance, getDistanceSimple, getMetersPerPixel } from '~/helpers/geolib';
 import { GroupRepository, IItem, Item, ItemRepository, Route, RouteInstruction, RouteProfile, RouteStats, toJSONStringified } from '~/models/Item';
 import { showError } from '~/utils/error';
 import { accentColor, mdiFontFamily } from '~/variables';
@@ -660,6 +660,7 @@ export default class ItemsModule extends MapModule {
         await this.itemRepository.setItemGroup(item, groupName);
         this.notify({ eventName: 'itemChanged', item });
     }
+    ignoredOSMKeys = ['source', 'building', 'wall', 'bench', 'shelter_type', 'amenity', 'check_date', 'note', 'comment', 'ele', 'tourism'];
 
     async getOSMDetails(item: Item, mapZoom?: number) {
         const coordinates = (item.geometry as GeometryPoint).coordinates;
@@ -669,6 +670,9 @@ export default class ItemsModule extends MapModule {
         const results = await networkService.request({
             url: overpassAPIURL() + 'interpreter',
             method: 'GET',
+            headers: {
+                'Cache-Control': networkService.getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1)
+            },
             queryParams: {
                 data
             }
