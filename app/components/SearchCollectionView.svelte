@@ -1,22 +1,22 @@
 <script lang="ts">
     import { l } from '@nativescript-community/l';
-    import type { MapPos } from '@nativescript-community/ui-carto/core';
+    import type { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
     import { SearchRequest } from '@nativescript-community/ui-carto/search';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { ObservableArray, Screen } from '@nativescript/core';
+    import { ApplicationSettings, ObservableArray, Screen } from '@nativescript/core';
     import { getJSON } from '@nativescript/core/http';
     import deburr from 'deburr';
     import type { Point } from 'geojson';
     import { createEventDispatcher } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { formatDistance, osmicon } from '~/helpers/formatter';
-    import { getMetersPerPixel } from '~/helpers/geolib';
+    import { getBoundsOfDistance, getMetersPerPixel } from '~/helpers/geolib';
     import { lc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item } from '~/models/Item';
     import type { Photon } from '~/photon';
-    import { networkService } from '~/services/NetworkService';
+    import { networkService, regionToOSMString } from '~/services/NetworkService';
     import type { GeoResult } from '~/services/PackageService';
     import { packageService } from '~/services/PackageService';
     import { computeDistanceBetween } from '~/utils/geo';
@@ -25,12 +25,12 @@
     import { subtitleColor, textColor } from '~/variables';
     import { HereFeature, PhotonFeature } from './Features';
     const dispatch = createEventDispatcher();
-    let dataItems: ObservableArray<SearchItem> = new ObservableArray();
+    export let dataItems: ObservableArray<SearchItem> = new ObservableArray();
     // export let filteringOSMKey = false;
     // export let filteredDataItems: SearchItem[] = dataItems;
     export let loading = false;
-    export let searchInTiles = true;
-    export let searchOffline = false;
+    let currentQuery;
+    export let searchResultsCount = 0;
     const mapContext = getMapContext();
 
     // export function getFilteredDataItems() {
@@ -46,6 +46,7 @@
         return new deburr.Deburr(s)
             .toString()
             .toLowerCase()
+            .replace(/["'`]/g, ' ')
             .replace(/^(the|le|la|el)\s/, '')
             .trim();
     }
@@ -54,12 +55,8 @@
         geometry: Point;
         distance: number;
     }
-    let currentQuery;
 
-    export let searchResultsCount = 0;
-    $: {
-        searchResultsCount = dataItems ? dataItems.length : 0;
-    }
+    $: searchResultsCount = dataItems ? dataItems.length : 0;
     // $: updateFilteredDataItems(filteringOSMKey);
 
     // export function updateFilteredDataItems(filter) {
@@ -95,7 +92,10 @@
         );
     }
 
-    async function searchInGeocodingService(options) {
+    async function searchInGeocodingService(enabled: boolean, options) {
+        if (!enabled) {
+            return [];
+        }
         let result: any = await packageService.searchInLocalGeocodingService(options);
         result = packageService.convertGeoCodingResults(result, true) as any;
         return arraySortOn(
@@ -109,7 +109,10 @@
             'distance'
         ) as any as GeoResult[];
     }
-    async function searchInVectorTiles(options: SearchRequest) {
+    async function searchInVectorTiles(enabled: boolean, options: SearchRequest) {
+        if (!enabled) {
+            return [];
+        }
         // console.log('searchInVectorTiles', options)
         let result: GeoResult[] = (await packageService.searchInVectorTiles(options)) as any;
         if (result) {
@@ -131,29 +134,29 @@
         // ) as any as GeoResult[];
     }
 
-    async function herePlaceSearch(options: { query: string; language?: string; location?: MapPos<LatLonKeys>; locationRadius?: number }) {
-        if (!networkService.connected) {
+    async function herePlaceSearch(enabled: boolean, options: { query: string; language?: string; location?: MapPos<LatLonKeys>; locationRadius?: number }) {
+        if (!enabled) {
             return [];
         }
-        return getJSON(
-            queryString(
-                {
-                    q: options.query,
-                    app_id: gVars.HER_APP_ID,
-                    app_code: gVars.HER_APP_CODE,
-                    radius: options.locationRadius,
-                    tf: 'plain',
-                    show_content: 'wikipedia',
-                    lang: options.language,
-                    rankby: 'distance',
-                    limit: 40,
-                    at: !options.locationRadius ? options.location.lat + ',' + options.location.lon + ';' + options.locationRadius : undefined,
-                    in: options.locationRadius ? options.location.lat + ',' + options.location.lon + ';' + options.locationRadius : undefined
-                },
-                'https://places.cit.api.here.com/places/v1/discover/search'
-            )
-        ).then((result: any) =>
-            result.results.items.map((f) => {
+        const result = await networkService.request({
+            url: 'https://places.cit.api.here.com/places/v1/discover/search',
+            method: 'GET',
+            queryParams: {
+                q: options.query,
+                app_id: gVars.HER_APP_ID,
+                app_code: gVars.HER_APP_CODE,
+                radius: options.locationRadius,
+                tf: 'plain',
+                show_content: 'wikipedia',
+                lang: options.language,
+                rankby: 'distance',
+                limit: 40,
+                at: options.location.lat + ',' + options.location.lon
+                // in: options.locationRadius ? options.location.lat + ',' + options.location.lon + ';' + options.locationRadius : undefined
+            }
+        });
+        if (result) {
+            return result.results.items.map((f) => {
                 const r = new HereFeature(f);
                 if (options.location) {
                     r['distance'] = computeDistanceBetween(options.location, {
@@ -162,11 +165,12 @@
                     });
                 }
                 return r;
-            })
-        );
+            });
+        }
+        return [];
     }
-    async function photonSearch(options: { query: string; language?: string; location?: MapPos<LatLonKeys>; locationRadius?: number }) {
-        if (!networkService.connected) {
+    async function photonSearch(enabled: boolean, options: { query: string; language?: string; location?: MapPos<LatLonKeys>; locationRadius?: number; bounds?: MapBounds<LatLonKeys> }) {
+        if (!enabled) {
             return [];
         }
         const results = await networkService.request<Photon>({
@@ -177,7 +181,8 @@
                 lat: options.location && options.location.lat,
                 lon: options.location && options.location.lon,
                 lang: options.language,
-                limit: 40
+                limit: 40,
+                bbox: options.bounds ? regionToOSMString(options.bounds) : undefined
             }
         });
         return arraySortOn(
@@ -201,6 +206,8 @@
             loading = true;
             currentQuery = cleanUpString(_query);
             const mpp = getMetersPerPixel(position, mapContext.getMap().getZoom());
+            const searchRadius = Math.min(Math.max(mpp * Screen.mainScreen.widthPixels * 2, mpp * Screen.mainScreen.heightPixels * 2), 50000); //meters;
+
             const options = {
                 query: currentQuery,
                 projection: mapContext.getProjection(),
@@ -212,10 +219,13 @@
                 // `REGEXP_LIKE(name, '${_query}')`
                 location: position,
                 position,
-                searchRadius: Math.min(Math.max(mpp * Screen.mainScreen.widthPixels, mpp * Screen.mainScreen.heightPixels)) //meters
+                locationRadius: searchRadius,
+                searchRadius,
+                bounds: getBoundsOfDistance(position, searchRadius)
                 // locationRadius: 1000,
             };
-            // console.log('instantSearch', position, mapContext.getMap().getZoom(), mpp, options);
+            DEV_LOG && console.log('instantSearch', position, mapContext.getMap().getZoom(), mpp, options);
+            dataItems = new ObservableArray();
 
             // TODO: dont fail when offline!!!
 
@@ -231,50 +241,29 @@
                             dataItems.push(item);
                         }
                     });
-                    dataItems = dataItems.concat(items);
+                    searchResultsCount = dataItems ? dataItems.length : 0
+                    // dataItems = dataItems.concat(items);
                 }
                 // updateFilteredDataItems(filteringOSMKey);
             }
-
-            await Promise.all(
-                [
-                    // searchInVectorTiles({
-                    //     ...options,
-                    //     filterExpression: undefined,
-                    //     // filterExpression: `layer::name='poi'`,
-                    //     regexFilter: currentQuery,
-                    //     searchRadius: Math.min(options.searchRadius, 10000) //meters
-                    // })
-                    //     .then((r) => loading && r && result.push(...r))
-                    //     .catch((err) => {
-                    //         console.error('searchInVectorTiles', err);
-                    //     }),
-                    searchInGeocodingService(options)
-                        .then((r) => prepareItems(r, addItems))
-                        .catch((err) => console.error('searchInGeocodingService', err))
-                ]
-                    .concat(
-                        searchInTiles
-                            ? [
-                                  searchInVectorTiles({ ...options, searchRadius: Math.min(options.searchRadius, 50000) })
-                                      .then((r) => prepareItems(r, addItems))
-                                      .catch((err) => console.error('searchInVectorTiles', err, err.stack))
-                              ]
-                            : []
-                    )
-                    .concat(
-                        !searchOffline && networkService.connected
-                            ? [
-                                  herePlaceSearch(options)
-                                      .then((r) => prepareItems(r, addItems))
-                                      .catch((err) => console.error('herePlaceSearch', err, err.stack)),
-                                  photonSearch(options)
-                                      .then((r) => prepareItems(r, addItems))
-                                      .catch((err) => console.error('photonSearch', err, err.stack))
-                              ]
-                            : []
-                    )
-            );
+            let searchInTiles = ApplicationSettings.getBoolean('searchInTiles', true);
+            let searchInGeocoding = ApplicationSettings.getBoolean('searchInGeocoding', true);
+            let searchUsingHere = networkService.connected && ApplicationSettings.getBoolean('searchUsingHere', false);
+            let searchUsingPhoton = networkService.connected && ApplicationSettings.getBoolean('searchUsingPhoton', true);
+            await Promise.all([
+                searchInGeocodingService(searchInGeocoding, options)
+                    .then((r) => prepareItems(r, addItems))
+                    .catch((err) => console.error('searchInGeocodingService', err)),
+                searchInVectorTiles(searchInTiles, { ...options, searchRadius: Math.min(options.searchRadius, 50000) })
+                    .then((r) => prepareItems(r, addItems))
+                    .catch((err) => console.error('searchInVectorTiles', err, err.stack)),
+                herePlaceSearch(searchUsingHere, options)
+                    .then((r) => prepareItems(r, addItems))
+                    .catch((err) => console.error('herePlaceSearch', err, err.stack)),
+                photonSearch(searchUsingPhoton, options as any)
+                    .then((r) => prepareItems(r, addItems))
+                    .catch((err) => console.error('photonSearch', err, err.stack))
+            ]);
             if (dataItems.length === 0) {
                 showSnack({ message: l('no_result_found') });
                 // } else {
