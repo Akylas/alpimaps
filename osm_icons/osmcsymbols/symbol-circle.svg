@@ -1,9 +1,45 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Generator: Adobe Illustrator 24.3.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 15 15" style="enable-background:new 0 0 15 15;" xml:space="preserve">
-<g id="surface296">
-	<path d="M7.5,14C4.3,14,1,11.8,1,7.5C1,3.2,4.3,1,7.5,1S14,3.2,14,7.5C14,11.8,10.7,14,7.5,14z M7.5,4.1c-1.3,0-3.4,0.7-3.4,3.4
-		s2.1,3.4,3.4,3.4c1.3,0,3.4-0.7,3.4-3.4S8.8,4.1,7.5,4.1z"/>
-</g>
+
+<svg
+   version="1.1"
+   id="Layer_1"
+   x="0px"
+   y="0px"
+   viewBox="0 0 15 15"
+   style="enable-background:new 0 0 15 15;"
+   xml:space="preserve"
+   sodipodi:docname="symbol-circle.svg"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+   id="defs8" /><sodipodi:namedview
+   id="namedview6"
+   pagecolor="#ffffff"
+   bordercolor="#666666"
+   borderopacity="1.0"
+   inkscape:pageshadow="2"
+   inkscape:pageopacity="0.0"
+   inkscape:pagecheckerboard="0"
+   showgrid="false"
+   inkscape:zoom="54.666667"
+   inkscape:cx="7.4908537"
+   inkscape:cy="5.570122"
+   inkscape:window-width="1920"
+   inkscape:window-height="995"
+   inkscape:window-x="0"
+   inkscape:window-y="0"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="surface296" />
+<g
+   id="surface296">
+	
+<g
+   id="g829"
+   transform="translate(-10.785756,1.2385905)"><path
+     id="path8564-5-6-4"
+     d="m 18.285756,-0.00282507 c 3.459695,0 6.264235,2.80453977 6.264235,6.26423477 0,3.4596942 -2.80454,6.2642343 -6.264235,6.2642343 -3.459695,0 -6.264235,-2.8045401 -6.264235,-6.2642343 0,-3.459695 2.80454,-6.26423477 6.264235,-6.26423477 z m 0,1.39199647 c -2.690865,0 -4.872155,2.1813737 -4.872155,4.8722383 0,2.690865 2.18129,4.8722373 4.872155,4.8722373 2.690864,0 4.872155,-2.1813723 4.872155,-4.8722373 0,-2.6908646 -2.181291,-4.8722383 -4.872155,-4.8722383 z"
+     style="stroke-width:0.835232" /></g></g>
 </svg>
