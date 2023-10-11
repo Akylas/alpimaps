@@ -113,12 +113,16 @@
         motorcycle: getSavedProfile('motorcycle', 'default', { ...defaultProfileCostingOptions.motorcycle })
     };
     DEV_LOG && console.log('profileCostingOptions', JSON.stringify(profileCostingOptions));
-    const saveProfileSettings = debounce((profile: ValhallaProfile) => {
-        if (shouldSaveSettings) {
-            profileCostingOptions = profileCostingOptions;
-            savedProfile(profile, 'default', profileCostingOptions[profile]);
-        }
-    }, 500);
+    const saveProfileSettings = debounce(
+        (profile: ValhallaProfile) => {
+            if (shouldSaveSettings) {
+                profileCostingOptions = profileCostingOptions;
+                savedProfile(profile, 'default', profileCostingOptions[profile]);
+            }
+        },
+        500,
+        { leading: true }
+    );
 
     function resetProfileSettings(profile: ValhallaProfile) {
         profileCostingOptions[profile] = { ...defaultProfileCostingOptions[profile] };
