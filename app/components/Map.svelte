@@ -914,7 +914,7 @@
         getLayers('routes').forEach((l) => {
             l.layer.visible = visible;
         });
-        cartoMap && cartoMap.requestRedraw();
+        cartoMap?.requestRedraw();
     }
     $: customLayersModule?.toggleHillshadeSlope($showSlopePercentages);
     $: cartoMap?.getOptions().setRotationGestures($rotateEnabled);
