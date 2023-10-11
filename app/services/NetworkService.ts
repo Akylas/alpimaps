@@ -37,179 +37,179 @@ export function getCacheControl(maxAge = 60, stale = 59) {
 const contactEmail = 'contact%40akylas.fr';
 
 // const osmOverpassUrl = 'http://overpass-api.de/api/';
-const OSMReplaceKeys = {
-    'contact:phone': 'phone',
-    via_ferrata_scale: 'difficulty'
-};
-const OSMIgnoredSubtypes = ['parking_entrance', 'tram_stop', 'platform', 'bus_stop', 'tram', 'track'];
-const OSMClassProps = ['amenity', 'natural', 'leisure', 'shop', 'sport', 'place', 'highway', 'waterway', 'historic', 'railway', 'landuse', 'aeroway', 'boundary', 'office', 'tourism'];
-function prepareOSMWay(way, nodes) {
-    const points = [];
-    if (Object.keys(nodes).length > 0) {
-        way.nodes.forEach(function (node) {
-            // console.debug('handling', node);
-            node = nodes[node + ''][0];
-            points.push([node.lat, node.lon]);
-        });
-    } else {
-        way.geometry.forEach(function (node) {
-            // console.debug('handling', node);
-            // node = nodes[node +
-            //     ''][0];
-            points.push([node.lat, node.lon]);
-        });
-    }
+// const OSMReplaceKeys = {
+//     'contact:phone': 'phone',
+//     via_ferrata_scale: 'difficulty'
+// };
+// const OSMIgnoredSubtypes = ['parking_entrance', 'tram_stop', 'platform', 'bus_stop', 'tram', 'track'];
+// const OSMClassProps = ['amenity', 'natural', 'leisure', 'shop', 'sport', 'place', 'highway', 'waterway', 'historic', 'railway', 'landuse', 'aeroway', 'boundary', 'office', 'tourism'];
+// function prepareOSMWay(way, nodes) {
+//     const points = [];
+//     if (Object.keys(nodes).length > 0) {
+//         way.nodes.forEach(function (node) {
+//             // console.debug('handling', node);
+//             node = nodes[node + ''][0];
+//             points.push([node.lat, node.lon]);
+//         });
+//     } else {
+//         way.geometry.forEach(function (node) {
+//             // console.debug('handling', node);
+//             // node = nodes[node +
+//             //     ''][0];
+//             points.push([node.lat, node.lon]);
+//         });
+//     }
 
-    const region = getBounds(points);
-    const result: any = {
-        route: {
-            distance: getPathLength(points),
-            region: {
-                northeast: {
-                    lat: region.maxLat,
-                    lon: region.maxLng
-                },
-                southwest: {
-                    lat: region.minLat,
-                    lon: region.minLng
-                }
-            },
-            points
-        },
-        id: way.id,
-        osm: {
-            id: way.id,
-            type: way.type
-        },
-        tags: way.tags,
-        start: points[0],
-        startOnRoute: true,
-        endOnRoute: true,
-        end: points[points.length - 1]
-    };
-    Object.keys(OSMReplaceKeys).forEach(function (key) {
-        if (way.tags[key]) {
-            way.tags[OSMReplaceKeys[key]] = way.tags[key];
-            delete way.tags[key];
-        }
-    });
-    if (way.tags) {
-        result.title = way.tags.name;
-        if (way.tags.note) {
-            if (way.tags.description) {
-                result.description = way.tags.description;
-                result.notes = [
-                    {
-                        title: 'note',
-                        text: way.tags.note
-                    }
-                ];
-            } else {
-                result.description = way.tags.note;
-            }
-        } else {
-            result.description = way.tags.description;
-        }
-        result.tags = {};
-        Object.keys(way.tags).forEach(function (k) {
-            if (k !== 'source' && !k.startsWith('addr:')) {
-                result.tags[k] = way.tags[k];
-            }
-        });
-        // const osmClass = result.osm.class;
-        // const osmSub = result.osm.subtype;
-        // result.icon = osmIcon(osmClass, osmSub, result.tags[osmSub]);
-    }
-    return result;
-}
+//     const region = getBounds(points);
+//     const result: any = {
+//         route: {
+//             distance: getPathLength(points),
+//             region: {
+//                 northeast: {
+//                     lat: region.maxLat,
+//                     lon: region.maxLng
+//                 },
+//                 southwest: {
+//                     lat: region.minLat,
+//                     lon: region.minLng
+//                 }
+//             },
+//             points
+//         },
+//         id: way.id,
+//         osm: {
+//             id: way.id,
+//             type: way.type
+//         },
+//         tags: way.tags,
+//         start: points[0],
+//         startOnRoute: true,
+//         endOnRoute: true,
+//         end: points[points.length - 1]
+//     };
+//     Object.keys(OSMReplaceKeys).forEach(function (key) {
+//         if (way.tags[key]) {
+//             way.tags[OSMReplaceKeys[key]] = way.tags[key];
+//             delete way.tags[key];
+//         }
+//     });
+//     if (way.tags) {
+//         result.title = way.tags.name;
+//         if (way.tags.note) {
+//             if (way.tags.description) {
+//                 result.description = way.tags.description;
+//                 result.notes = [
+//                     {
+//                         title: 'note',
+//                         text: way.tags.note
+//                     }
+//                 ];
+//             } else {
+//                 result.description = way.tags.note;
+//             }
+//         } else {
+//             result.description = way.tags.description;
+//         }
+//         result.tags = {};
+//         Object.keys(way.tags).forEach(function (k) {
+//             if (k !== 'source' && !k.startsWith('addr:')) {
+//                 result.tags[k] = way.tags[k];
+//             }
+//         });
+//         // const osmClass = result.osm.class;
+//         // const osmSub = result.osm.subtype;
+//         // result.icon = osmIcon(osmClass, osmSub, result.tags[osmSub]);
+//     }
+//     return result;
+// }
 
-function filterTag(tag, key, tags) {
-    if (OSMReplaceKeys[key]) {
-        tags[tag] = tags[key];
-        delete tags[key];
-    }
-    if (key.startsWith('addr:')) {
-        delete tags[key];
-    }
-}
-function prepareOSMObject(ele, _withIcon?, _testForGeoFeature?) {
-    const tags = ele.tags;
-    const id = isNaN(ele.id) ? ele.id : ele.id.toString();
-    const result = {
-        osm: {
-            id: ele.id,
-            type: ele.type
-        } as any,
-        id,
-        tags: ele.tags
-    } as any;
-    OSMClassProps.forEach(function (key) {
-        if (ele.tags[key]) {
-            result.osm.class = key;
-            result.osm.subtype = ele.tags[key];
-            return false;
-        }
-    });
-    // ignores
-    if (OSMIgnoredSubtypes.indexOf(result.osm.subtype) !== -1) {
-        return;
-    }
-    if (ele.center) {
-        result.lat = ele.center.lat;
-        result.lon = ele.center.lon;
-    } else if (ele.hasOwnProperty('lat')) {
-        result.lat = ele.lat;
-        result.lon = ele.lon;
-    } else if (ele.type === 'relation' && ele.members) {
-        const index = ele.members.findIndex(function (member: any) {
-            return /centre/.test(member.role);
-        });
-        if (index !== -1) {
-            const realCenter = ele.members[index];
-            result.lat = realCenter.lat;
-            result.lon = realCenter.lon;
-        } else if (ele.bounds) {
-            const bounds = ele.bounds;
-            result.lat = (bounds.maxlat + bounds.minlat) / 2;
-            result.lon = (bounds.maxlon + bounds.minlon) / 2;
-        }
-    }
+// function filterTag(tag, key, tags) {
+//     if (OSMReplaceKeys[key]) {
+//         tags[tag] = tags[key];
+//         delete tags[key];
+//     }
+//     if (key.startsWith('addr:')) {
+//         delete tags[key];
+//     }
+// }
+// function prepareOSMObject(ele, _withIcon?, _testForGeoFeature?) {
+//     const tags = ele.tags;
+//     const id = isNaN(ele.id) ? ele.id : ele.id.toString();
+//     const result = {
+//         osm: {
+//             id: ele.id,
+//             type: ele.type
+//         } as any,
+//         id,
+//         tags: ele.tags
+//     } as any;
+//     OSMClassProps.forEach(function (key) {
+//         if (ele.tags[key]) {
+//             result.osm.class = key;
+//             result.osm.subtype = ele.tags[key];
+//             return false;
+//         }
+//     });
+//     // ignores
+//     if (OSMIgnoredSubtypes.indexOf(result.osm.subtype) !== -1) {
+//         return;
+//     }
+//     if (ele.center) {
+//         result.lat = ele.center.lat;
+//         result.lon = ele.center.lon;
+//     } else if (ele.hasOwnProperty('lat')) {
+//         result.lat = ele.lat;
+//         result.lon = ele.lon;
+//     } else if (ele.type === 'relation' && ele.members) {
+//         const index = ele.members.findIndex(function (member: any) {
+//             return /centre/.test(member.role);
+//         });
+//         if (index !== -1) {
+//             const realCenter = ele.members[index];
+//             result.lat = realCenter.lat;
+//             result.lon = realCenter.lon;
+//         } else if (ele.bounds) {
+//             const bounds = ele.bounds;
+//             result.lat = (bounds.maxlat + bounds.minlat) / 2;
+//             result.lon = (bounds.maxlon + bounds.minlon) / 2;
+//         }
+//     }
 
-    if (ele.tags) {
-        ele.tags.forEach(filterTag);
-        if (ele.tags.ele) {
-            result.altitude = parseFloat(ele.tags.ele);
-        }
-        result.title = ele.tags.name;
-        if (ele.tags.note) {
-            if (ele.tags.description) {
-                result.description = ele.tags.description;
-                result.notes = [
-                    {
-                        title: 'note',
-                        text: ele.tags.note
-                    }
-                ];
-            } else {
-                result.description = ele.tags.note;
-            }
-        } else if (ele.tags.description) {
-            result.description = ele.tags.description;
-        }
-        // var osmClass = result.osm.class;
-        // var osmSub = result.osm.subtype;
-        // if (_withIcon !== false) {
-        //     result.icon = osmIcon(osmClass, osmSub, result.tags[osmSub]);
-        // }
-        // if (_testForGeoFeature !== false) {
-        //     result.settings = {
-        //         geofeature: osmIsGeoFeature(osmClass, osmSub)
-        //     };
-        // }
-    }
-    console.debug('prepareOSMObject done ', result);
-    return result;
-}
+//     if (ele.tags) {
+//         ele.tags.forEach(filterTag);
+//         if (ele.tags.ele) {
+//             result.altitude = parseFloat(ele.tags.ele);
+//         }
+//         result.title = ele.tags.name;
+//         if (ele.tags.note) {
+//             if (ele.tags.description) {
+//                 result.description = ele.tags.description;
+//                 result.notes = [
+//                     {
+//                         title: 'note',
+//                         text: ele.tags.note
+//                     }
+//                 ];
+//             } else {
+//                 result.description = ele.tags.note;
+//             }
+//         } else if (ele.tags.description) {
+//             result.description = ele.tags.description;
+//         }
+//         // var osmClass = result.osm.class;
+//         // var osmSub = result.osm.subtype;
+//         // if (_withIcon !== false) {
+//         //     result.icon = osmIcon(osmClass, osmSub, result.tags[osmSub]);
+//         // }
+//         // if (_testForGeoFeature !== false) {
+//         //     result.settings = {
+//         //         geofeature: osmIsGeoFeature(osmClass, osmSub)
+//         //     };
+//         // }
+//     }
+//     console.debug('prepareOSMObject done ', result);
+//     return result;
+// }
 
 export interface HttpRequestOptions extends HTTPOptions {
     toJSON?: boolean;
@@ -281,74 +281,74 @@ export interface NetworkConnectionStateEventData extends EventData {
     };
 }
 
-function decompress(encoded: string, precision: number) {
-    precision = Math.pow(10, -precision);
-    let index = 0,
-        lat = 0,
-        lng = 0;
-    const len = encoded.length,
-        array: MapPos<LatLonKeys>[] = [];
-    while (index < len) {
-        let b,
-            shift = 0,
-            result = 0;
-        do {
-            b = encoded.charCodeAt(index++) - 63;
-            result |= (b & 0x1f) << shift;
-            shift += 5;
-        } while (b >= 0x20);
-        const dlat = result & 1 ? ~(result >> 1) : result >> 1;
-        lat += dlat;
-        shift = 0;
-        result = 0;
-        do {
-            b = encoded.charCodeAt(index++) - 63;
-            result |= (b & 0x1f) << shift;
-            shift += 5;
-        } while (b >= 0x20);
-        const dlng = result & 1 ? ~(result >> 1) : result >> 1;
-        lng += dlng;
-        array.push({ lat: lat * precision, lon: lng * precision });
-    }
-    return array;
-}
+// function decompress(encoded: string, precision: number) {
+//     precision = Math.pow(10, -precision);
+//     let index = 0,
+//         lat = 0,
+//         lng = 0;
+//     const len = encoded.length,
+//         array: MapPos<LatLonKeys>[] = [];
+//     while (index < len) {
+//         let b,
+//             shift = 0,
+//             result = 0;
+//         do {
+//             b = encoded.charCodeAt(index++) - 63;
+//             result |= (b & 0x1f) << shift;
+//             shift += 5;
+//         } while (b >= 0x20);
+//         const dlat = result & 1 ? ~(result >> 1) : result >> 1;
+//         lat += dlat;
+//         shift = 0;
+//         result = 0;
+//         do {
+//             b = encoded.charCodeAt(index++) - 63;
+//             result |= (b & 0x1f) << shift;
+//             shift += 5;
+//         } while (b >= 0x20);
+//         const dlng = result & 1 ? ~(result >> 1) : result >> 1;
+//         lng += dlng;
+//         array.push({ lat: lat * precision, lon: lng * precision });
+//     }
+//     return array;
+// }
 
-function encodeNumber(num: number) {
-    num = num << 1;
-    if (num < 0) {
-        num = ~num;
-    }
-    let encoded = '';
-    while (num >= 0x20) {
-        encoded += String.fromCharCode((0x20 | (num & 0x1f)) + 63);
-        num >>= 5;
-    }
-    encoded += String.fromCharCode(num + 63);
-    return encoded;
-}
+// function encodeNumber(num: number) {
+//     num = num << 1;
+//     if (num < 0) {
+//         num = ~num;
+//     }
+//     let encoded = '';
+//     while (num >= 0x20) {
+//         encoded += String.fromCharCode((0x20 | (num & 0x1f)) + 63);
+//         num >>= 5;
+//     }
+//     encoded += String.fromCharCode(num + 63);
+//     return encoded;
+// }
 
-function compress(points: MapPos<LatLonKeys>[], precision: number) {
-    let oldLat = 0,
-        oldLng = 0,
-        index = 0;
-    let encoded = '';
-    const len = points.length;
-    precision = Math.pow(10, precision);
-    while (index < len) {
-        const pt = points[index++];
-        //  Round to N decimal places
-        const lat = Math.round(pt.lat * precision);
-        const lng = Math.round(pt.lon * precision);
+// function compress(points: MapPos<LatLonKeys>[], precision: number) {
+//     let oldLat = 0,
+//         oldLng = 0,
+//         index = 0;
+//     let encoded = '';
+//     const len = points.length;
+//     precision = Math.pow(10, precision);
+//     while (index < len) {
+//         const pt = points[index++];
+//         //  Round to N decimal places
+//         const lat = Math.round(pt.lat * precision);
+//         const lng = Math.round(pt.lon * precision);
 
-        //  Encode the differences between the points
-        encoded += encodeNumber(lat - oldLat);
-        encoded += encodeNumber(lng - oldLng);
+//         //  Encode the differences between the points
+//         encoded += encodeNumber(lat - oldLat);
+//         encoded += encodeNumber(lng - oldLng);
 
-        oldLat = lat;
-        oldLng = lng;
-    }
-    return encoded;
-}
+//         oldLat = lat;
+//         oldLng = lng;
+//     }
+//     return encoded;
+// }
 
 function latlongToOSMString(_point: MapPos<LatLonKeys>) {
     return _point.lat.toFixed(4) + ',' + _point.lon.toFixed(4);
@@ -794,183 +794,183 @@ export class NetworkService extends Observable {
     //         return results;
     //     });
     // }
-    actualMapquestElevationProfile(_points: MapPos<LatLonKeys>[]) {
-        const params = {
-            key: gVars.MAPQUEST_TOKEN,
-            inFormat: 'json',
-            outFormat: 'json'
-        };
-        // const postParams = {
-        //     json: JSON.stringify({
-        //         // routeType: 'pedestrian',
-        //         unit: 'm',
-        //         useFilter: true,
-        //         // cyclingRoadFactor:0.1,
-        //         shapeFormat: 'cmp6',
-        //         latLngCollection: compress(_points, 6)
-        //     })
-        // };
-        return this.request({
-            url: 'http://open.mapquestapi.com/elevation/v1/profile',
-            queryParams: params,
-            content: JSON.stringify({
-                // routeType: 'pedestrian',
-                unit: 'm',
-                useFilter: true,
-                // cyclingRoadFactor:0.1,
-                shapeFormat: 'cmp6',
-                latLngCollection: compress(_points, 6)
-            }),
-            // silent:_params.silent,
-            method: 'POST',
-            timeout: 60000
-        }).then((e) => {
-            if (e.info.statuscode > 300 && e.info.statuscode < 600) {
-                return Promise.reject({
-                    code: e.info.statuscode,
-                    error: e.info.messages.join(', ')
-                });
-            } else {
-                return e;
-            }
-        });
-    }
-    async mapquestElevationProfile(_points: MapPos<LatLonKeys>[]) {
-        const distance = getPathLength(_points);
-        let res: {
-            elevationProfile;
-            shapePoints;
-        };
-        // console.log('mapquestElevationProfile', distance);
-        if (distance > 300000) {
-            const totalPoints = _points.length;
-            const semi = Math.floor(totalPoints / 2);
-            // console.debug('semi', semi);
-            const r = await this.actualMapquestElevationProfile(_points.slice(0, semi));
-            const r2 = await this.actualMapquestElevationProfile(_points.slice(semi));
-            const firstDistanceTotal = r.elevationProfile[r.elevationProfile.length - 1].distance;
-            res = {
-                elevationProfile: r.elevationProfile.concat(
-                    r2.elevationProfile.map((e) => {
-                        e.distance += firstDistanceTotal;
-                        return e;
-                    })
-                ),
-                shapePoints: r.shapePoints.concat(r2.shapePoints)
-            };
-        } else {
-            res = await this.actualMapquestElevationProfile(_points);
-        }
-        let last, currentHeight: number, coordIndex: number, currentDistance: number;
-        const profile = res.elevationProfile;
-        const coords = res.shapePoints;
+    // actualMapquestElevationProfile(_points: MapPos<LatLonKeys>[]) {
+    //     const params = {
+    //         key: gVars.MAPQUEST_TOKEN,
+    //         inFormat: 'json',
+    //         outFormat: 'json'
+    //     };
+    //     // const postParams = {
+    //     //     json: JSON.stringify({
+    //     //         // routeType: 'pedestrian',
+    //     //         unit: 'm',
+    //     //         useFilter: true,
+    //     //         // cyclingRoadFactor:0.1,
+    //     //         shapeFormat: 'cmp6',
+    //     //         latLngCollection: compress(_points, 6)
+    //     //     })
+    //     // };
+    //     return this.request({
+    //         url: 'http://open.mapquestapi.com/elevation/v1/profile',
+    //         queryParams: params,
+    //         content: JSON.stringify({
+    //             // routeType: 'pedestrian',
+    //             unit: 'm',
+    //             useFilter: true,
+    //             // cyclingRoadFactor:0.1,
+    //             shapeFormat: 'cmp6',
+    //             latLngCollection: compress(_points, 6)
+    //         }),
+    //         // silent:_params.silent,
+    //         method: 'POST',
+    //         timeout: 60000
+    //     }).then((e) => {
+    //         if (e.info.statuscode > 300 && e.info.statuscode < 600) {
+    //             return Promise.reject({
+    //                 code: e.info.statuscode,
+    //                 error: e.info.messages.join(', ')
+    //             });
+    //         } else {
+    //             return e;
+    //         }
+    //     });
+    // }
+    // async mapquestElevationProfile(_points: MapPos<LatLonKeys>[]) {
+    //     const distance = getPathLength(_points);
+    //     let res: {
+    //         elevationProfile;
+    //         shapePoints;
+    //     };
+    //     // console.log('mapquestElevationProfile', distance);
+    //     if (distance > 300000) {
+    //         const totalPoints = _points.length;
+    //         const semi = Math.floor(totalPoints / 2);
+    //         // console.debug('semi', semi);
+    //         const r = await this.actualMapquestElevationProfile(_points.slice(0, semi));
+    //         const r2 = await this.actualMapquestElevationProfile(_points.slice(semi));
+    //         const firstDistanceTotal = r.elevationProfile[r.elevationProfile.length - 1].distance;
+    //         res = {
+    //             elevationProfile: r.elevationProfile.concat(
+    //                 r2.elevationProfile.map((e) => {
+    //                     e.distance += firstDistanceTotal;
+    //                     return e;
+    //                 })
+    //             ),
+    //             shapePoints: r.shapePoints.concat(r2.shapePoints)
+    //         };
+    //     } else {
+    //         res = await this.actualMapquestElevationProfile(_points);
+    //     }
+    //     let last, currentHeight: number, coordIndex: number, currentDistance: number;
+    //     const profile = res.elevationProfile;
+    //     const coords = res.shapePoints;
 
-        const result: RouteProfile = {
-            max: [-1000, -1000],
-            min: [100000, 100000],
-            dplus: 0,
-            dmin: 0,
-            data: []
-        };
-        profile.forEach(function (value, index) {
-            currentHeight = value.height;
-            if (currentHeight === -32768) {
-                return;
-            }
-            currentDistance = value.distance = Math.floor(value.distance * 1000);
+    //     const result: RouteProfile = {
+    //         max: [-1000, -1000],
+    //         min: [100000, 100000],
+    //         dplus: 0,
+    //         dmin: 0,
+    //         data: []
+    //     };
+    //     profile.forEach(function (value, index) {
+    //         currentHeight = value.height;
+    //         if (currentHeight === -32768) {
+    //             return;
+    //         }
+    //         currentDistance = value.distance = Math.floor(value.distance * 1000);
 
-            if (last) {
-                // if (currentDistance - last.distance < 100) {
-                //     console.log('ignore point as too close');
-                //     return;
-                // }
-                const deltaz = currentHeight - last.height;
-                if (deltaz > 0) {
-                    result.dplus += deltaz;
-                } else if (deltaz < 0) {
-                    result.dmin += deltaz;
-                }
-            }
-            if (currentDistance > result.max[0]) {
-                result.max[0] = currentDistance;
-            }
-            if (currentDistance < result.min[0]) {
-                result.min[0] = currentDistance;
-            }
-            if (currentHeight > result.max[1]) {
-                result.max[1] = currentHeight;
-            }
-            if (currentHeight < result.min[1]) {
-                result.min[1] = currentHeight;
-            }
+    //         if (last) {
+    //             // if (currentDistance - last.distance < 100) {
+    //             //     console.log('ignore point as too close');
+    //             //     return;
+    //             // }
+    //             const deltaz = currentHeight - last.height;
+    //             if (deltaz > 0) {
+    //                 result.dplus += deltaz;
+    //             } else if (deltaz < 0) {
+    //                 result.dmin += deltaz;
+    //             }
+    //         }
+    //         if (currentDistance > result.max[0]) {
+    //             result.max[0] = currentDistance;
+    //         }
+    //         if (currentDistance < result.min[0]) {
+    //             result.min[0] = currentDistance;
+    //         }
+    //         if (currentHeight > result.max[1]) {
+    //             result.max[1] = currentHeight;
+    //         }
+    //         if (currentHeight < result.min[1]) {
+    //             result.min[1] = currentHeight;
+    //         }
 
-            result.data.push({ d: currentDistance, a: currentHeight, avg: currentHeight, g: 0 });
-            coordIndex = index * 2;
-            // result.points.push({ lat: coords[coordIndex], lon: coords[coordIndex + 1] });
-            last = value;
-            // console.log('setting last', last, result.dplus, result.dmin);
-            // return memo;
-        });
-        // var result = {
-        //     profile: _.reduce(
-        //         profile,
-        //         function(memo, value, index: number) {
-        //             currentHeight = value.height;
-        //             if (currentHeight === -32768) {
-        //                 return memo;
-        //             }
-        //             currentDistance = value.distance = value.distance * 1000;
+    //         result.data.push({ d: currentDistance, a: currentHeight, avg: currentHeight, g: 0 });
+    //         coordIndex = index * 2;
+    //         // result.points.push({ lat: coords[coordIndex], lon: coords[coordIndex + 1] });
+    //         last = value;
+    //         // console.log('setting last', last, result.dplus, result.dmin);
+    //         // return memo;
+    //     });
+    //     // var result = {
+    //     //     profile: _.reduce(
+    //     //         profile,
+    //     //         function(memo, value, index: number) {
+    //     //             currentHeight = value.height;
+    //     //             if (currentHeight === -32768) {
+    //     //                 return memo;
+    //     //             }
+    //     //             currentDistance = value.distance = value.distance * 1000;
 
-        //             if (last) {
-        //                 if (currentDistance - last.distance < 100 ) {
-        //                     console.log('ignore point as too close');
-        //                     return memo;
-        //                 }
-        //                 const deltaz = currentHeight - last.height;
-        //                 if (deltaz > 0) {
-        //                     memo.dplus += deltaz;
-        //                 } else if (distance < 0) {
-        //                     memo.dmin += deltaz;
-        //                 }
-        //             }
-        //             if (currentDistance > memo.max[0]) {
-        //                 memo.max[0] = currentDistance;
-        //             }
-        //             if (currentDistance < memo.min[0]) {
-        //                 memo.min[0] = currentDistance;
-        //             }
-        //             if (currentHeight > memo.max[1]) {
-        //                 memo.max[1] = currentHeight;
-        //             }
-        //             if (currentHeight < memo.min[1]) {
-        //                 memo.min[1] = currentHeight;
-        //             }
+    //     //             if (last) {
+    //     //                 if (currentDistance - last.distance < 100 ) {
+    //     //                     console.log('ignore point as too close');
+    //     //                     return memo;
+    //     //                 }
+    //     //                 const deltaz = currentHeight - last.height;
+    //     //                 if (deltaz > 0) {
+    //     //                     memo.dplus += deltaz;
+    //     //                 } else if (distance < 0) {
+    //     //                     memo.dmin += deltaz;
+    //     //                 }
+    //     //             }
+    //     //             if (currentDistance > memo.max[0]) {
+    //     //                 memo.max[0] = currentDistance;
+    //     //             }
+    //     //             if (currentDistance < memo.min[0]) {
+    //     //                 memo.min[0] = currentDistance;
+    //     //             }
+    //     //             if (currentHeight > memo.max[1]) {
+    //     //                 memo.max[1] = currentHeight;
+    //     //             }
+    //     //             if (currentHeight < memo.min[1]) {
+    //     //                 memo.min[1] = currentHeight;
+    //     //             }
 
-        //             memo.data[0].push(currentDistance);
-        //             memo.data[1].push(currentHeight);
-        //             coordIndex = index * 2;
-        //             memo.points.push([coords[coordIndex], coords[coordIndex + 1]]);
-        //             last = value;
-        //             console.log('setting last', last);
-        //             return memo;
-        //         },
-        //         {
-        //             max: [-1000, -1000],
-        //             min: [100000, 100000],
-        //             dplus: 0,
-        //             dmin: 0,
-        //             points: [],
-        //             data: [[], []]
-        //         }
-        //     )
-        // };
-        result.dmin = Math.round(result.dmin);
-        result.dplus = Math.round(result.dplus);
-        // console.log('got profile', result);
-        return result;
-    }
+    //     //             memo.data[0].push(currentDistance);
+    //     //             memo.data[1].push(currentHeight);
+    //     //             coordIndex = index * 2;
+    //     //             memo.points.push([coords[coordIndex], coords[coordIndex + 1]]);
+    //     //             last = value;
+    //     //             console.log('setting last', last);
+    //     //             return memo;
+    //     //         },
+    //     //         {
+    //     //             max: [-1000, -1000],
+    //     //             min: [100000, 100000],
+    //     //             dplus: 0,
+    //     //             dmin: 0,
+    //     //             points: [],
+    //     //             data: [[], []]
+    //     //         }
+    //     //     )
+    //     // };
+    //     result.dmin = Math.round(result.dmin);
+    //     result.dplus = Math.round(result.dplus);
+    //     // console.log('got profile', result);
+    //     return result;
+    // }
 
-    broadcastPromises: { [key: string]: { resolve: Function; reject: Function; timeoutTimer: NodeJS.Timer }[] } = {};
+    broadcastPromises: { [key: string]: { resolve: Function; reject: Function; timeoutTimer: number }[] } = {};
     sendWeatherBroadcastQuery({ lat, lon, timeout = 0 }) {
         return new Promise((resolve, reject) => {
             const id = Date.now() + '';
