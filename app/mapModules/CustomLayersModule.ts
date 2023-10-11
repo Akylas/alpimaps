@@ -250,7 +250,7 @@ export default class CustomLayersModule extends MapModule {
             preloading: get(preloading),
             visible: get(showRoutes),
             tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
-            labelRenderOrder: VectorTileRenderOrder.LAYER,
+            labelRenderOrder: VectorTileRenderOrder.LAST,
             decoder: mapContext.innerDecoder
         });
         routeLayer.setVectorTileEventListener<LatLonKeys>(
