@@ -2,7 +2,7 @@
   "metadata": {
     "name": "osm",
     "lastOpened": 0,
-    "created": 1626359346032
+    "created": 1659797068910
   },
   "iconSets": [
     {
@@ -56,11 +56,19 @@
       "selection": [
         {
           "order": 1,
+          "id": 2,
+          "name": "flag-checkered",
+          "prevSize": 28,
+          "code": 60027,
+          "tempChar": ""
+        },
+        {
+          "order": 1,
           "id": 1,
           "name": "bathroom_furnishing",
           "prevSize": 28,
           "code": 60044,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1,
@@ -68,7 +76,7 @@
           "name": "herbalist",
           "prevSize": 28,
           "code": 60045,
-          "tempChar": ""
+          "tempChar": ""
         }
       ],
       "id": 5,
@@ -81,13 +89,29 @@
         "licenseURL": "https://github.com/FortAwesome/Font-Awesome#license",
         "iconsHash": 309851062,
         "importSize": {
-          "width": 28,
+          "width": 29,
           "height": 28
         }
       },
       "height": 1024,
       "prevSize": 28,
       "icons": [
+        {
+          "id": 2,
+          "paths": [
+            "M475.429 571.429v-109.714c-69.714 6.286-153.714 34.286-219.429 66.857v105.714c66.286-30.857 148.571-57.143 219.429-62.857zM475.429 332.571v-112.571c-72 3.429-156.571 37.143-219.429 72v108c67.429-34.857 148.571-64.571 219.429-67.429zM950.857 597.143v-105.143c-52 25.714-142.857 64-219.429 40.571v-128c-7.429-2.286-14.857-5.143-22.286-8.571-65.714-33.143-119.429-64-205.714-64-9.143 0-18.286 0.571-28 1.714v126.857h10.857c86.286 0 157.143 30.857 222.857 63.429 7.429 3.429 14.857 6.286 22.286 8.571v107.429c15.429 6.286 32.571 9.714 52 9.714 63.429 0 132-33.714 167.429-52.571zM950.857 353.143v-108c-45.714 24.571-109.714 52-174.857 52v0c-15.429 0-30.286-1.143-44.571-4.571v112c76.571 21.714 167.429-22.286 219.429-51.429zM182.857 146.286c0 26.857-14.857 50.286-36.571 62.857v723.429c0 10.286-8 18.286-18.286 18.286h-36.571c-10.286 0-18.286-8-18.286-18.286v-723.429c-21.714-12.571-36.571-36-36.571-62.857 0-40.571 32.571-73.143 73.143-73.143s73.143 32.571 73.143 73.143zM1024 182.857v436c0 13.714-8 26.286-20 32.571-2.286 1.143-5.714 2.857-9.714 5.143-36.571 19.429-122.857 66.286-210.857 66.286-33.714 0-64-6.857-90.286-20l-16-8c-57.714-29.143-103.429-52-173.714-52-82.286 0-198.286 42.857-265.143 83.429-5.714 3.429-12.571 5.143-18.857 5.143s-12.571-1.714-18.286-4.571c-11.429-6.857-18.286-18.857-18.286-32v-424c0-12.571 6.857-24.571 17.714-31.429 36.571-21.714 165.714-93.143 285.714-93.143 95.429 0 173.143 34.857 238.857 66.857 14.857 7.429 32 10.857 50.857 10.857 67.429 0 141.714-42.857 177.143-64 7.429-4 13.714-7.429 17.714-9.714 11.429-5.714 24.571-5.143 35.429 1.143 10.857 6.857 17.714 18.857 17.714 31.429z"
+          ],
+          "attrs": [
+            {}
+          ],
+          "width": 1061,
+          "isMulticolor": false,
+          "isMulticolor2": false,
+          "tags": [
+            "flag-checkered"
+          ],
+          "grid": 14
+        },
         {
           "id": 1,
           "paths": [
@@ -269,11 +293,19 @@
       "selection": [
         {
           "order": 1,
+          "id": 2,
+          "name": "location_on, place, room",
+          "prevSize": 24,
+          "code": 60043,
+          "tempChar": ""
+        },
+        {
+          "order": 1,
           "id": 1,
           "name": "baby_goods",
           "prevSize": 24,
           "code": 60046,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1,
@@ -281,7 +313,7 @@
           "name": "subway, subway_entrance",
           "prevSize": 24,
           "code": 60035,
-          "tempChar": ""
+          "tempChar": ""
         }
       ],
       "id": 2,
@@ -301,6 +333,23 @@
       "height": 1024,
       "prevSize": 24,
       "icons": [
+        {
+          "id": 2,
+          "paths": [
+            "M512 490q44 0 75-31t31-75-31-75-75-31-75 31-31 75 31 75 75 31zM512 86q124 0 211 87t87 211q0 62-31 142t-75 150-87 131-73 97l-32 34q-12-14-32-37t-72-92-91-134-71-147-32-144q0-124 87-211t211-87z"
+          ],
+          "attrs": [
+            {}
+          ],
+          "isMulticolor": false,
+          "isMulticolor2": false,
+          "tags": [
+            "location_on",
+            "place",
+            "room"
+          ],
+          "grid": 24
+        },
         {
           "id": 1,
           "paths": [
@@ -344,7 +393,7 @@
           "name": "post_jp",
           "prevSize": 32,
           "code": 59660,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1299,
@@ -352,7 +401,7 @@
           "name": "post",
           "prevSize": 32,
           "code": 59662,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1300,
@@ -360,7 +409,7 @@
           "name": "racetrack_boat",
           "prevSize": 32,
           "code": 59663,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1301,
@@ -368,7 +417,7 @@
           "name": "racetrack_cycling",
           "prevSize": 32,
           "code": 59664,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1302,
@@ -376,7 +425,7 @@
           "name": "racetrack_horse",
           "prevSize": 32,
           "code": 59761,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1303,
@@ -384,7 +433,7 @@
           "name": "racetrack",
           "prevSize": 32,
           "code": 59909,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1304,
@@ -392,7 +441,7 @@
           "name": "rail_light",
           "prevSize": 32,
           "code": 59910,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1305,
@@ -400,7 +449,7 @@
           "name": "rail_metro",
           "prevSize": 32,
           "code": 59911,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1436,
@@ -408,7 +457,7 @@
           "name": "rail, railway",
           "prevSize": 32,
           "code": 59912,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1307,
@@ -416,7 +465,7 @@
           "name": "ranger_station",
           "prevSize": 32,
           "code": 59913,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1308,
@@ -424,7 +473,7 @@
           "name": "religious_buddhist",
           "prevSize": 32,
           "code": 59914,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1309,
@@ -432,7 +481,7 @@
           "name": "religious_christian, christian",
           "prevSize": 32,
           "code": 59915,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1310,
@@ -440,7 +489,7 @@
           "name": "religious_jewish, jewish",
           "prevSize": 32,
           "code": 59916,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1311,
@@ -448,7 +497,7 @@
           "name": "religious_muslim, muslim",
           "prevSize": 32,
           "code": 59917,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1312,
@@ -456,7 +505,7 @@
           "name": "religious_shinto, shinto",
           "prevSize": 32,
           "code": 59918,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1313,
@@ -464,7 +513,7 @@
           "name": "residential_community",
           "prevSize": 32,
           "code": 59919,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1314,
@@ -472,7 +521,7 @@
           "name": "restaurant_bbq",
           "prevSize": 32,
           "code": 59920,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1315,
@@ -480,7 +529,7 @@
           "name": "restaurant_noodle",
           "prevSize": 32,
           "code": 59921,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1316,
@@ -488,7 +537,7 @@
           "name": "restaurant_pizza",
           "prevSize": 32,
           "code": 59922,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1317,
@@ -496,7 +545,7 @@
           "name": "restaurant_seafood",
           "prevSize": 32,
           "code": 59923,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1318,
@@ -504,7 +553,7 @@
           "name": "restaurant_sushi",
           "prevSize": 32,
           "code": 59924,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1319,
@@ -512,7 +561,7 @@
           "name": "road_accident",
           "prevSize": 32,
           "code": 59925,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1320,
@@ -520,7 +569,7 @@
           "name": "roadblock",
           "prevSize": 32,
           "code": 59926,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1321,
@@ -528,7 +577,7 @@
           "name": "rocket, hackerspace",
           "prevSize": 32,
           "code": 59927,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1322,
@@ -536,7 +585,7 @@
           "name": "school_jp",
           "prevSize": 32,
           "code": 59928,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1323,
@@ -544,7 +593,7 @@
           "name": "scooter",
           "prevSize": 32,
           "code": 59929,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1324,
@@ -552,7 +601,7 @@
           "name": "shoe",
           "prevSize": 32,
           "code": 59930,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1325,
@@ -560,7 +609,7 @@
           "name": "shop",
           "prevSize": 32,
           "code": 59931,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1326,
@@ -568,7 +617,7 @@
           "name": "skateboard",
           "prevSize": 32,
           "code": 59932,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1327,
@@ -576,7 +625,7 @@
           "name": "skiing",
           "prevSize": 32,
           "code": 59933,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1328,
@@ -584,7 +633,7 @@
           "name": "slaughterhouse",
           "prevSize": 32,
           "code": 59934,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1329,
@@ -592,7 +641,7 @@
           "name": "snowmobile",
           "prevSize": 32,
           "code": 59935,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1330,
@@ -600,7 +649,7 @@
           "name": "soccer",
           "prevSize": 32,
           "code": 59936,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1331,
@@ -608,7 +657,7 @@
           "name": "square_stroked",
           "prevSize": 32,
           "code": 59937,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1332,
@@ -616,7 +665,7 @@
           "name": "square",
           "prevSize": 32,
           "code": 59938,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1333,
@@ -624,7 +673,7 @@
           "name": "stadium",
           "prevSize": 32,
           "code": 59939,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1334,
@@ -632,7 +681,7 @@
           "name": "star_stroked",
           "prevSize": 32,
           "code": 59940,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1335,
@@ -640,7 +689,7 @@
           "name": "star",
           "prevSize": 32,
           "code": 59941,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1336,
@@ -648,7 +697,7 @@
           "name": "suitcase",
           "prevSize": 32,
           "code": 59942,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1337,
@@ -656,7 +705,7 @@
           "name": "swimming",
           "prevSize": 32,
           "code": 59943,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1338,
@@ -664,7 +713,7 @@
           "name": "table_tennis",
           "prevSize": 32,
           "code": 59944,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1339,
@@ -672,7 +721,7 @@
           "name": "teahouse",
           "prevSize": 32,
           "code": 59945,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1340,
@@ -680,7 +729,7 @@
           "name": "tennis",
           "prevSize": 32,
           "code": 59946,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1341,
@@ -688,7 +737,7 @@
           "name": "toilet",
           "prevSize": 32,
           "code": 59947,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1342,
@@ -696,7 +745,7 @@
           "name": "town",
           "prevSize": 32,
           "code": 59948,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1343,
@@ -704,7 +753,7 @@
           "name": "triangle_stroked",
           "prevSize": 32,
           "code": 59949,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1344,
@@ -712,7 +761,7 @@
           "name": "triangle",
           "prevSize": 32,
           "code": 59950,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1345,
@@ -720,7 +769,7 @@
           "name": "village",
           "prevSize": 32,
           "code": 59951,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1346,
@@ -728,7 +777,7 @@
           "name": "volcano",
           "prevSize": 32,
           "code": 59952,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1347,
@@ -736,7 +785,7 @@
           "name": "volleyball",
           "prevSize": 32,
           "code": 59953,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1348,
@@ -744,7 +793,7 @@
           "name": "warehouse",
           "prevSize": 32,
           "code": 59954,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1349,
@@ -752,7 +801,7 @@
           "name": "aerialway",
           "prevSize": 32,
           "code": 59955,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1350,
@@ -760,7 +809,7 @@
           "name": "airfield",
           "prevSize": 32,
           "code": 59956,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1351,
@@ -768,7 +817,7 @@
           "name": "airport",
           "prevSize": 32,
           "code": 59957,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1352,
@@ -776,7 +825,7 @@
           "name": "alcohol_shop",
           "prevSize": 32,
           "code": 59958,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1353,
@@ -784,7 +833,7 @@
           "name": "american_football",
           "prevSize": 32,
           "code": 59959,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1354,
@@ -792,7 +841,7 @@
           "name": "amusement_park, theme_park",
           "prevSize": 32,
           "code": 59960,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1355,
@@ -800,7 +849,7 @@
           "name": "aquarium",
           "prevSize": 32,
           "code": 59961,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1356,
@@ -808,7 +857,7 @@
           "name": "arrow",
           "prevSize": 32,
           "code": 59962,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1357,
@@ -816,7 +865,7 @@
           "name": "art_gallery",
           "prevSize": 32,
           "code": 59963,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1358,
@@ -824,7 +873,7 @@
           "name": "attraction",
           "prevSize": 32,
           "code": 59964,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1359,
@@ -832,7 +881,7 @@
           "name": "bank_jp",
           "prevSize": 32,
           "code": 59965,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1360,
@@ -840,7 +889,7 @@
           "name": "barrier",
           "prevSize": 32,
           "code": 59966,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1361,
@@ -848,7 +897,7 @@
           "name": "baseball",
           "prevSize": 32,
           "code": 59967,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1435,
@@ -856,7 +905,7 @@
           "name": "basketball",
           "prevSize": 32,
           "code": 59968,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1363,
@@ -864,7 +913,7 @@
           "name": "beach",
           "prevSize": 32,
           "code": 59969,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1364,
@@ -872,7 +921,7 @@
           "name": "beer",
           "prevSize": 32,
           "code": 59970,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1365,
@@ -880,7 +929,7 @@
           "name": "bicycle_share",
           "prevSize": 32,
           "code": 59971,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1366,
@@ -888,7 +937,7 @@
           "name": "blood_bank",
           "prevSize": 32,
           "code": 59972,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1367,
@@ -896,7 +945,7 @@
           "name": "bridge",
           "prevSize": 32,
           "code": 59973,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1368,
@@ -904,7 +953,7 @@
           "name": "building_alt1",
           "prevSize": 32,
           "code": 59974,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1369,
@@ -912,7 +961,7 @@
           "name": "building",
           "prevSize": 32,
           "code": 59975,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1370,
@@ -920,7 +969,7 @@
           "name": "bus",
           "prevSize": 32,
           "code": 59976,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1371,
@@ -928,7 +977,7 @@
           "name": "campsite1",
           "prevSize": 32,
           "code": 59977,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1372,
@@ -936,7 +985,7 @@
           "name": "car_rental",
           "prevSize": 32,
           "code": 59978,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1373,
@@ -944,7 +993,7 @@
           "name": "castle_jp",
           "prevSize": 32,
           "code": 59979,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1374,
@@ -952,7 +1001,7 @@
           "name": "caution",
           "prevSize": 32,
           "code": 59980,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1375,
@@ -960,7 +1009,7 @@
           "name": "cemetery_jp",
           "prevSize": 32,
           "code": 59981,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1376,
@@ -968,15 +1017,15 @@
           "name": "cemetery",
           "prevSize": 32,
           "code": 59982,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
-          "order": 1377,
+          "order": 1439,
           "id": 53,
           "name": "circle_stroked",
           "prevSize": 32,
           "code": 59983,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1438,
@@ -984,7 +1033,7 @@
           "name": "circle",
           "prevSize": 32,
           "code": 59984,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1379,
@@ -992,7 +1041,7 @@
           "name": "city",
           "prevSize": 32,
           "code": 59985,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1380,
@@ -1000,7 +1049,7 @@
           "name": "clothing_store",
           "prevSize": 32,
           "code": 59986,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1381,
@@ -1008,7 +1057,7 @@
           "name": "college_jp",
           "prevSize": 32,
           "code": 59987,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1382,
@@ -1016,7 +1065,7 @@
           "name": "commercial",
           "prevSize": 32,
           "code": 59988,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1383,
@@ -1024,7 +1073,7 @@
           "name": "construction",
           "prevSize": 32,
           "code": 59989,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1384,
@@ -1032,7 +1081,7 @@
           "name": "cricket",
           "prevSize": 32,
           "code": 59990,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1385,
@@ -1040,7 +1089,7 @@
           "name": "dam",
           "prevSize": 32,
           "code": 59991,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1386,
@@ -1048,7 +1097,7 @@
           "name": "danger",
           "prevSize": 32,
           "code": 59992,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1387,
@@ -1056,7 +1105,7 @@
           "name": "defibrillator",
           "prevSize": 32,
           "code": 59993,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1388,
@@ -1064,7 +1113,7 @@
           "name": "diamond",
           "prevSize": 32,
           "code": 59994,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1389,
@@ -1072,7 +1121,7 @@
           "name": "doctor",
           "prevSize": 32,
           "code": 59995,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1390,
@@ -1080,7 +1129,7 @@
           "name": "dog_park",
           "prevSize": 32,
           "code": 59996,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1391,
@@ -1088,7 +1137,7 @@
           "name": "elevator",
           "prevSize": 32,
           "code": 59997,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1392,
@@ -1096,7 +1145,7 @@
           "name": "entrance_alt1",
           "prevSize": 32,
           "code": 59998,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1393,
@@ -1104,7 +1153,7 @@
           "name": "farm",
           "prevSize": 32,
           "code": 59999,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1394,
@@ -1112,7 +1161,7 @@
           "name": "fence",
           "prevSize": 32,
           "code": 60000,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1395,
@@ -1120,7 +1169,7 @@
           "name": "ferry_jp",
           "prevSize": 32,
           "code": 60001,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1396,
@@ -1128,7 +1177,7 @@
           "name": "fire_station_jp",
           "prevSize": 32,
           "code": 60002,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1397,
@@ -1136,7 +1185,7 @@
           "name": "fire_station",
           "prevSize": 32,
           "code": 60003,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1398,
@@ -1144,7 +1193,7 @@
           "name": "fitness_centre",
           "prevSize": 32,
           "code": 60004,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1399,
@@ -1152,7 +1201,7 @@
           "name": "gaming",
           "prevSize": 32,
           "code": 60005,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1400,
@@ -1160,7 +1209,7 @@
           "name": "garden",
           "prevSize": 32,
           "code": 60006,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1401,
@@ -1168,7 +1217,7 @@
           "name": "globe, diplomatic",
           "prevSize": 32,
           "code": 60007,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1402,
@@ -1176,7 +1225,7 @@
           "name": "harbor",
           "prevSize": 32,
           "code": 60008,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1403,
@@ -1184,7 +1233,7 @@
           "name": "hardware",
           "prevSize": 32,
           "code": 60009,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1404,
@@ -1192,7 +1241,7 @@
           "name": "heart",
           "prevSize": 32,
           "code": 60010,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1405,
@@ -1200,7 +1249,7 @@
           "name": "heliport",
           "prevSize": 32,
           "code": 60011,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1406,
@@ -1208,7 +1257,7 @@
           "name": "highway_rest_area",
           "prevSize": 32,
           "code": 60012,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1407,
@@ -1216,7 +1265,7 @@
           "name": "home",
           "prevSize": 32,
           "code": 60013,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1408,
@@ -1224,7 +1273,7 @@
           "name": "horse_riding",
           "prevSize": 32,
           "code": 60014,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1409,
@@ -1232,7 +1281,7 @@
           "name": "hospital_jp",
           "prevSize": 32,
           "code": 60015,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1410,
@@ -1240,7 +1289,7 @@
           "name": "hot_spring",
           "prevSize": 32,
           "code": 60016,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1411,
@@ -1248,7 +1297,7 @@
           "name": "industry",
           "prevSize": 32,
           "code": 60017,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1412,
@@ -1256,7 +1305,7 @@
           "name": "jewelry_store",
           "prevSize": 32,
           "code": 60018,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1413,
@@ -1264,7 +1313,7 @@
           "name": "karaoke",
           "prevSize": 32,
           "code": 60019,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1414,
@@ -1272,7 +1321,7 @@
           "name": "landmark_jp",
           "prevSize": 32,
           "code": 60020,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1415,
@@ -1280,7 +1329,7 @@
           "name": "landmark",
           "prevSize": 32,
           "code": 60021,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1416,
@@ -1288,7 +1337,7 @@
           "name": "landuse",
           "prevSize": 32,
           "code": 60022,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1417,
@@ -1296,7 +1345,7 @@
           "name": "lighthouse_jp",
           "prevSize": 32,
           "code": 60023,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1418,
@@ -1304,7 +1353,7 @@
           "name": "lodging",
           "prevSize": 32,
           "code": 60024,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1419,
@@ -1312,7 +1361,7 @@
           "name": "logging",
           "prevSize": 32,
           "code": 60025,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1420,
@@ -1320,15 +1369,15 @@
           "name": "marker_stroked",
           "prevSize": 32,
           "code": 60026,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1421,
           "id": 9,
           "name": "marker",
           "prevSize": 32,
-          "code": 60027,
-          "tempChar": ""
+          "code": 116,
+          "tempChar": ""
         },
         {
           "order": 1422,
@@ -1336,7 +1385,7 @@
           "name": "monument_jp",
           "prevSize": 32,
           "code": 60028,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1423,
@@ -1344,7 +1393,7 @@
           "name": "mountain",
           "prevSize": 32,
           "code": 60029,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1424,
@@ -1352,7 +1401,7 @@
           "name": "natural",
           "prevSize": 32,
           "code": 60030,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1425,
@@ -1360,7 +1409,7 @@
           "name": "observation_tower",
           "prevSize": 32,
           "code": 60031,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1426,
@@ -1368,7 +1417,7 @@
           "name": "park_alt1",
           "prevSize": 32,
           "code": 60032,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1427,
@@ -1376,7 +1425,7 @@
           "name": "parking_garage",
           "prevSize": 32,
           "code": 60033,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1428,
@@ -1384,7 +1433,7 @@
           "name": "picnic_site",
           "prevSize": 32,
           "code": 60034,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 0,
@@ -1400,7 +1449,7 @@
           "name": "police_jp",
           "prevSize": 32,
           "code": 60036,
-          "tempChar": ""
+          "tempChar": ""
         }
       ],
       "id": 1,
@@ -3445,7 +3494,7 @@
           "name": "climbing",
           "prevSize": 32,
           "code": 60037,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1041,
@@ -3453,7 +3502,7 @@
           "name": "perfumery",
           "prevSize": 32,
           "code": 59648,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1042,
@@ -3461,7 +3510,7 @@
           "name": "pet",
           "prevSize": 32,
           "code": 59649,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1043,
@@ -3469,7 +3518,7 @@
           "name": "pharmacy",
           "prevSize": 32,
           "code": 59650,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1044,
@@ -3477,7 +3526,7 @@
           "name": "photo",
           "prevSize": 32,
           "code": 59651,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1045,
@@ -3485,7 +3534,7 @@
           "name": "picnic",
           "prevSize": 32,
           "code": 59652,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1046,
@@ -3493,7 +3542,7 @@
           "name": "place_of_worship",
           "prevSize": 32,
           "code": 59653,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1047,
@@ -3501,7 +3550,7 @@
           "name": "plaque",
           "prevSize": 32,
           "code": 59654,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1048,
@@ -3509,7 +3558,7 @@
           "name": "playground",
           "prevSize": 32,
           "code": 59655,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1049,
@@ -3517,7 +3566,7 @@
           "name": "police",
           "prevSize": 32,
           "code": 59656,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1050,
@@ -3525,7 +3574,7 @@
           "name": "post_box",
           "prevSize": 32,
           "code": 59657,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1051,
@@ -3533,7 +3582,7 @@
           "name": "post_office",
           "prevSize": 32,
           "code": 59658,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1052,
@@ -3545,7 +3594,7 @@
             59659,
             59660
           ],
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1053,
@@ -3559,7 +3608,7 @@
             59663,
             59664
           ],
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1054,
@@ -3567,7 +3616,7 @@
           "name": "prison",
           "prevSize": 32,
           "code": 59665,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1055,
@@ -3575,7 +3624,7 @@
           "name": "pub",
           "prevSize": 32,
           "code": 59666,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1056,
@@ -3583,7 +3632,7 @@
           "name": "public_bath",
           "prevSize": 32,
           "code": 59667,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1057,
@@ -3591,7 +3640,7 @@
           "name": "public_bookcase",
           "prevSize": 32,
           "code": 59668,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1058,
@@ -3599,7 +3648,7 @@
           "name": "public_transport_tickets",
           "prevSize": 32,
           "code": 59669,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1059,
@@ -3607,7 +3656,7 @@
           "name": "recycling",
           "prevSize": 32,
           "code": 59670,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1060,
@@ -3615,7 +3664,7 @@
           "name": "rental_bicycle",
           "prevSize": 32,
           "code": 59671,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1061,
@@ -3623,7 +3672,7 @@
           "name": "rental_car",
           "prevSize": 32,
           "code": 59672,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1062,
@@ -3631,7 +3680,7 @@
           "name": "restaurant",
           "prevSize": 32,
           "code": 59673,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1063,
@@ -3639,7 +3688,7 @@
           "name": "saddle",
           "prevSize": 32,
           "code": 59674,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1064,
@@ -3647,7 +3696,7 @@
           "name": "sauna",
           "prevSize": 32,
           "code": 59675,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1065,
@@ -3655,7 +3704,7 @@
           "name": "school",
           "prevSize": 32,
           "code": 59676,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1066,
@@ -3663,7 +3712,7 @@
           "name": "seafood",
           "prevSize": 32,
           "code": 59677,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1067,
@@ -3671,7 +3720,7 @@
           "name": "second_hand",
           "prevSize": 32,
           "code": 59678,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1068,
@@ -3679,7 +3728,7 @@
           "name": "shelter",
           "prevSize": 32,
           "code": 59679,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1069,
@@ -3687,7 +3736,7 @@
           "name": "shoes",
           "prevSize": 32,
           "code": 59680,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1070,
@@ -3695,7 +3744,7 @@
           "name": "shower",
           "prevSize": 32,
           "code": 59681,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1071,
@@ -3703,7 +3752,7 @@
           "name": "shrine",
           "prevSize": 32,
           "code": 59682,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1072,
@@ -3711,7 +3760,7 @@
           "name": "slipway",
           "prevSize": 32,
           "code": 59683,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1073,
@@ -3719,7 +3768,7 @@
           "name": "social_facility",
           "prevSize": 32,
           "code": 59684,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1074,
@@ -3727,7 +3776,7 @@
           "name": "sports, pitch",
           "prevSize": 32,
           "code": 59685,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1075,
@@ -3735,7 +3784,7 @@
           "name": "spring",
           "prevSize": 32,
           "code": 59686,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1076,
@@ -3743,7 +3792,7 @@
           "name": "stationery",
           "prevSize": 32,
           "code": 59687,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1077,
@@ -3751,7 +3800,7 @@
           "name": "statue",
           "prevSize": 32,
           "code": 59688,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1078,
@@ -3759,7 +3808,7 @@
           "name": "stone, rock",
           "prevSize": 32,
           "code": 59689,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1079,
@@ -3767,7 +3816,7 @@
           "name": "storage_tank",
           "prevSize": 32,
           "code": 59690,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1080,
@@ -3775,7 +3824,7 @@
           "name": "supermarket, mall",
           "prevSize": 32,
           "code": 59691,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1081,
@@ -3783,7 +3832,7 @@
           "name": "symbol-arch",
           "prevSize": 32,
           "code": 59692,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1082,
@@ -3791,7 +3840,7 @@
           "name": "symbol-backslash",
           "prevSize": 32,
           "code": 59693,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1083,
@@ -3799,7 +3848,7 @@
           "name": "symbol-bar",
           "prevSize": 32,
           "code": 59694,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1084,
@@ -3807,7 +3856,7 @@
           "name": "symbol-circle",
           "prevSize": 32,
           "code": 59695,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1085,
@@ -3815,7 +3864,7 @@
           "name": "symbol-corner",
           "prevSize": 32,
           "code": 59696,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1086,
@@ -3823,7 +3872,7 @@
           "name": "symbol-cross",
           "prevSize": 32,
           "code": 59697,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1087,
@@ -3831,7 +3880,7 @@
           "name": "symbol-diamond_line",
           "prevSize": 32,
           "code": 59698,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1088,
@@ -3839,7 +3888,7 @@
           "name": "symbol-diamond",
           "prevSize": 32,
           "code": 59699,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1089,
@@ -3847,7 +3896,7 @@
           "name": "symbol-dot",
           "prevSize": 32,
           "code": 59700,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1090,
@@ -3855,7 +3904,7 @@
           "name": "symbol-fork",
           "prevSize": 32,
           "code": 59701,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1091,
@@ -3863,7 +3912,7 @@
           "name": "symbol-hexagon",
           "prevSize": 32,
           "code": 59702,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1092,
@@ -3871,7 +3920,7 @@
           "name": "symbol-hiker",
           "prevSize": 32,
           "code": 59703,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1093,
@@ -3879,7 +3928,7 @@
           "name": "symbol-lower",
           "prevSize": 32,
           "code": 59704,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1094,
@@ -3887,7 +3936,7 @@
           "name": "symbol-pointer",
           "prevSize": 32,
           "code": 59705,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1095,
@@ -3895,7 +3944,7 @@
           "name": "symbol-rectangle_line",
           "prevSize": 32,
           "code": 59706,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1096,
@@ -3903,7 +3952,7 @@
           "name": "symbol-rectangle",
           "prevSize": 32,
           "code": 59707,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1097,
@@ -3911,7 +3960,7 @@
           "name": "symbol-right",
           "prevSize": 32,
           "code": 59708,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1098,
@@ -3919,7 +3968,7 @@
           "name": "symbol-shell_modern",
           "prevSize": 32,
           "code": 59709,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1099,
@@ -3927,7 +3976,7 @@
           "name": "symbol-shell",
           "prevSize": 32,
           "code": 59710,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1100,
@@ -3935,7 +3984,7 @@
           "name": "symbol-slash",
           "prevSize": 32,
           "code": 59711,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1101,
@@ -3943,7 +3992,7 @@
           "name": "symbol-stripe",
           "prevSize": 32,
           "code": 59712,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1102,
@@ -3951,7 +4000,7 @@
           "name": "symbol-triangle_line",
           "prevSize": 32,
           "code": 59713,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1103,
@@ -3959,7 +4008,7 @@
           "name": "symbol-triangle_turned",
           "prevSize": 32,
           "code": 59714,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1104,
@@ -3967,7 +4016,7 @@
           "name": "symbol-triangle",
           "prevSize": 32,
           "code": 59715,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1105,
@@ -3975,7 +4024,7 @@
           "name": "symbol-turned_t",
           "prevSize": 32,
           "code": 59716,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1106,
@@ -3983,7 +4032,7 @@
           "name": "symbol-wheel",
           "prevSize": 32,
           "code": 59717,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1107,
@@ -3991,7 +4040,7 @@
           "name": "symbol-x",
           "prevSize": 32,
           "code": 59718,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1108,
@@ -3999,7 +4048,7 @@
           "name": "taxi",
           "prevSize": 32,
           "code": 59719,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1109,
@@ -4007,7 +4056,7 @@
           "name": "tea",
           "prevSize": 32,
           "code": 59720,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1110,
@@ -4015,7 +4064,7 @@
           "name": "telephone, phone",
           "prevSize": 32,
           "code": 59721,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1111,
@@ -4023,7 +4072,7 @@
           "name": "telescope_dish",
           "prevSize": 32,
           "code": 59722,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1112,
@@ -4031,7 +4080,7 @@
           "name": "telescope_dome",
           "prevSize": 32,
           "code": 59723,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1113,
@@ -4039,7 +4088,7 @@
           "name": "terminal",
           "prevSize": 32,
           "code": 59724,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1114,
@@ -4047,7 +4096,7 @@
           "name": "theatre",
           "prevSize": 32,
           "code": 59725,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1115,
@@ -4055,7 +4104,7 @@
           "name": "tobacco, e-cigarette",
           "prevSize": 32,
           "code": 59726,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1116,
@@ -4063,7 +4112,7 @@
           "name": "toilets",
           "prevSize": 32,
           "code": 59727,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1117,
@@ -4071,7 +4120,7 @@
           "name": "tower_cantilever_communication",
           "prevSize": 32,
           "code": 59728,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1118,
@@ -4079,7 +4128,7 @@
           "name": "tower_cooling",
           "prevSize": 32,
           "code": 59729,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1119,
@@ -4087,7 +4136,7 @@
           "name": "tower_defensive",
           "prevSize": 32,
           "code": 59730,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1120,
@@ -4095,7 +4144,7 @@
           "name": "tower_dish",
           "prevSize": 32,
           "code": 59731,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1121,
@@ -4103,7 +4152,7 @@
           "name": "tower_dome",
           "prevSize": 32,
           "code": 59732,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1122,
@@ -4111,7 +4160,7 @@
           "name": "tower_generic",
           "prevSize": 32,
           "code": 59733,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1123,
@@ -4119,7 +4168,7 @@
           "name": "tower_lattice_communication",
           "prevSize": 32,
           "code": 59734,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1124,
@@ -4127,7 +4176,7 @@
           "name": "tower_lattice_lighting",
           "prevSize": 32,
           "code": 59735,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1125,
@@ -4135,7 +4184,7 @@
           "name": "tower_lattice",
           "prevSize": 32,
           "code": 59736,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1126,
@@ -4143,7 +4192,7 @@
           "name": "tower_lighting",
           "prevSize": 32,
           "code": 59737,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1127,
@@ -4151,7 +4200,7 @@
           "name": "tower_observation",
           "prevSize": 32,
           "code": 59738,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1128,
@@ -4159,7 +4208,7 @@
           "name": "town_hall",
           "prevSize": 32,
           "code": 59739,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1129,
@@ -4167,7 +4216,7 @@
           "name": "toys, model",
           "prevSize": 32,
           "code": 59740,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1130,
@@ -4175,7 +4224,7 @@
           "name": "trade",
           "prevSize": 32,
           "code": 59741,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1131,
@@ -4183,7 +4232,7 @@
           "name": "travel_agency",
           "prevSize": 32,
           "code": 59742,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1132,
@@ -4191,7 +4240,7 @@
           "name": "tyres",
           "prevSize": 32,
           "code": 59743,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1133,
@@ -4199,7 +4248,7 @@
           "name": "variety_store",
           "prevSize": 32,
           "code": 59744,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1134,
@@ -4207,7 +4256,7 @@
           "name": "vehicle_inspection",
           "prevSize": 32,
           "code": 59745,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1135,
@@ -4215,7 +4264,7 @@
           "name": "veterinary",
           "prevSize": 32,
           "code": 59746,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1136,
@@ -4223,7 +4272,7 @@
           "name": "video_games",
           "prevSize": 32,
           "code": 59747,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1137,
@@ -4231,7 +4280,7 @@
           "name": "video",
           "prevSize": 32,
           "code": 59748,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1138,
@@ -4239,7 +4288,7 @@
           "name": "viewpoint",
           "prevSize": 32,
           "code": 59749,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1139,
@@ -4247,7 +4296,7 @@
           "name": "waste_basket",
           "prevSize": 32,
           "code": 59750,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1140,
@@ -4255,7 +4304,7 @@
           "name": "waste_disposal",
           "prevSize": 32,
           "code": 59751,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1141,
@@ -4263,7 +4312,7 @@
           "name": "water_park",
           "prevSize": 32,
           "code": 59752,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1142,
@@ -4271,7 +4320,7 @@
           "name": "water_tower",
           "prevSize": 32,
           "code": 59753,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1143,
@@ -4279,7 +4328,7 @@
           "name": "waterfall",
           "prevSize": 32,
           "code": 59754,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1297,
@@ -4287,7 +4336,7 @@
           "name": "wilderness_hut",
           "prevSize": 32,
           "code": 59755,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1145,
@@ -4295,7 +4344,7 @@
           "name": "windmill",
           "prevSize": 32,
           "code": 59756,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1146,
@@ -4303,7 +4352,7 @@
           "name": "alcohol",
           "prevSize": 32,
           "code": 59757,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1147,
@@ -4311,7 +4360,7 @@
           "name": "alpine_hut",
           "prevSize": 32,
           "code": 59758,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1148,
@@ -4319,7 +4368,7 @@
           "name": "amusement_arcade",
           "prevSize": 32,
           "code": 59759,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1149,
@@ -4331,7 +4380,7 @@
             59760,
             59761
           ],
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1150,
@@ -4339,7 +4388,7 @@
           "name": "archaeological_site",
           "prevSize": 32,
           "code": 59762,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1151,
@@ -4347,7 +4396,7 @@
           "name": "art",
           "prevSize": 32,
           "code": 59763,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1152,
@@ -4355,7 +4404,7 @@
           "name": "arts_centre",
           "prevSize": 32,
           "code": 59764,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1153,
@@ -4363,7 +4412,7 @@
           "name": "artwork",
           "prevSize": 32,
           "code": 59765,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1154,
@@ -4371,7 +4420,7 @@
           "name": "atm",
           "prevSize": 32,
           "code": 59766,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1155,
@@ -4379,7 +4428,7 @@
           "name": "audioguide",
           "prevSize": 32,
           "code": 59767,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1156,
@@ -4387,7 +4436,7 @@
           "name": "bag",
           "prevSize": 32,
           "code": 59768,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1157,
@@ -4395,7 +4444,7 @@
           "name": "bakery",
           "prevSize": 32,
           "code": 59769,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1158,
@@ -4403,7 +4452,7 @@
           "name": "bank",
           "prevSize": 32,
           "code": 59770,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1159,
@@ -4411,7 +4460,7 @@
           "name": "bar",
           "prevSize": 32,
           "code": 59771,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1160,
@@ -4419,7 +4468,7 @@
           "name": "bbq",
           "prevSize": 32,
           "code": 59772,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1161,
@@ -4427,7 +4476,7 @@
           "name": "beach_resort",
           "prevSize": 32,
           "code": 59773,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1162,
@@ -4435,7 +4484,7 @@
           "name": "beauty",
           "prevSize": 32,
           "code": 59774,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1163,
@@ -4443,7 +4492,7 @@
           "name": "bed",
           "prevSize": 32,
           "code": 59775,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1164,
@@ -4451,7 +4500,7 @@
           "name": "bell_tower",
           "prevSize": 32,
           "code": 59776,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1165,
@@ -4459,7 +4508,7 @@
           "name": "bench",
           "prevSize": 32,
           "code": 59777,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1166,
@@ -4467,7 +4516,7 @@
           "name": "beverages",
           "prevSize": 32,
           "code": 59778,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1167,
@@ -4475,7 +4524,7 @@
           "name": "bicycle_parking",
           "prevSize": 32,
           "code": 59779,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1168,
@@ -4483,7 +4532,7 @@
           "name": "bicycle_repair_station",
           "prevSize": 32,
           "code": 59780,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1434,
@@ -4491,7 +4540,7 @@
           "name": "bicycle, bicycle_rentalsvg",
           "prevSize": 32,
           "code": 59781,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1170,
@@ -4499,7 +4548,7 @@
           "name": "biergarten",
           "prevSize": 32,
           "code": 59782,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1171,
@@ -4507,7 +4556,7 @@
           "name": "bird_hide",
           "prevSize": 32,
           "code": 59783,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1172,
@@ -4515,7 +4564,7 @@
           "name": "board",
           "prevSize": 32,
           "code": 59784,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1173,
@@ -4523,7 +4572,7 @@
           "name": "boat_rental",
           "prevSize": 32,
           "code": 59785,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1174,
@@ -4531,7 +4580,7 @@
           "name": "bookmaker",
           "prevSize": 32,
           "code": 59786,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1175,
@@ -4539,7 +4588,7 @@
           "name": "bowling_alley",
           "prevSize": 32,
           "code": 59787,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1176,
@@ -4547,7 +4596,7 @@
           "name": "bureau_de_change",
           "prevSize": 32,
           "code": 59788,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1177,
@@ -4555,7 +4604,7 @@
           "name": "bus_stop, tram_stop",
           "prevSize": 32,
           "code": 59789,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1178,
@@ -4563,7 +4612,7 @@
           "name": "bust",
           "prevSize": 32,
           "code": 59790,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1179,
@@ -4571,7 +4620,7 @@
           "name": "butcher",
           "prevSize": 32,
           "code": 59791,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1180,
@@ -4579,7 +4628,7 @@
           "name": "cafe",
           "prevSize": 32,
           "code": 59792,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1181,
@@ -4587,7 +4636,7 @@
           "name": "camping, campsite",
           "prevSize": 32,
           "code": 59793,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1182,
@@ -4595,7 +4644,7 @@
           "name": "car_parts",
           "prevSize": 32,
           "code": 59794,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1183,
@@ -4603,7 +4652,7 @@
           "name": "car_repair",
           "prevSize": 32,
           "code": 59795,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1184,
@@ -4611,7 +4660,7 @@
           "name": "car_wash",
           "prevSize": 32,
           "code": 59796,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1185,
@@ -4619,7 +4668,7 @@
           "name": "car",
           "prevSize": 32,
           "code": 59797,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1186,
@@ -4627,7 +4676,7 @@
           "name": "caravan_park",
           "prevSize": 32,
           "code": 59798,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1187,
@@ -4635,7 +4684,7 @@
           "name": "carpet, curtain, household_linen",
           "prevSize": 32,
           "code": 59799,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1188,
@@ -4643,7 +4692,7 @@
           "name": "casino",
           "prevSize": 32,
           "code": 59800,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1189,
@@ -4651,7 +4700,7 @@
           "name": "castle",
           "prevSize": 32,
           "code": 59801,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1431,
@@ -4659,7 +4708,7 @@
           "name": "cave, cave_entrance, adit",
           "prevSize": 32,
           "code": 59802,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1191,
@@ -4667,7 +4716,7 @@
           "name": "chalet",
           "prevSize": 32,
           "code": 59803,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1192,
@@ -4675,7 +4724,7 @@
           "name": "charging_station",
           "prevSize": 32,
           "code": 59804,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1193,
@@ -4683,7 +4732,7 @@
           "name": "charity",
           "prevSize": 32,
           "code": 59805,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1194,
@@ -4691,7 +4740,7 @@
           "name": "chemist",
           "prevSize": 32,
           "code": 59806,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1195,
@@ -4699,7 +4748,7 @@
           "name": "chimney",
           "prevSize": 32,
           "code": 59807,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1196,
@@ -4707,7 +4756,7 @@
           "name": "cinema",
           "prevSize": 32,
           "code": 59808,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1197,
@@ -4715,7 +4764,7 @@
           "name": "city_gate, sally_port",
           "prevSize": 32,
           "code": 59809,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1198,
@@ -4723,7 +4772,7 @@
           "name": "clothes",
           "prevSize": 32,
           "code": 59810,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1199,
@@ -4731,7 +4780,7 @@
           "name": "clothing-store",
           "prevSize": 32,
           "code": 59811,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1200,
@@ -4739,7 +4788,7 @@
           "name": "coffee",
           "prevSize": 32,
           "code": 59812,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1201,
@@ -4747,7 +4796,7 @@
           "name": "college",
           "prevSize": 32,
           "code": 59813,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1202,
@@ -4755,7 +4804,7 @@
           "name": "communications_tower",
           "prevSize": 32,
           "code": 59814,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1203,
@@ -4763,7 +4812,7 @@
           "name": "community_centre",
           "prevSize": 32,
           "code": 59815,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1204,
@@ -4771,7 +4820,7 @@
           "name": "computer",
           "prevSize": 32,
           "code": 59816,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1437,
@@ -4779,7 +4828,7 @@
           "name": "confectionery, pastry",
           "prevSize": 32,
           "code": 59817,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1206,
@@ -4787,7 +4836,7 @@
           "name": "convenience",
           "prevSize": 32,
           "code": 59818,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1207,
@@ -4795,7 +4844,7 @@
           "name": "copyshop",
           "prevSize": 32,
           "code": 59819,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1208,
@@ -4803,7 +4852,7 @@
           "name": "courthouse",
           "prevSize": 32,
           "code": 59820,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1209,
@@ -4811,7 +4860,7 @@
           "name": "crane",
           "prevSize": 32,
           "code": 59821,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1210,
@@ -4819,7 +4868,7 @@
           "name": "cross",
           "prevSize": 32,
           "code": 59822,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1211,
@@ -4827,7 +4876,7 @@
           "name": "dairy, cheese",
           "prevSize": 32,
           "code": 59823,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1433,
@@ -4835,7 +4884,7 @@
           "name": "deli, nutrition_supplements",
           "prevSize": 32,
           "code": 59824,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1213,
@@ -4843,7 +4892,7 @@
           "name": "dentist",
           "prevSize": 32,
           "code": 59825,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1214,
@@ -4851,7 +4900,7 @@
           "name": "department_store",
           "prevSize": 32,
           "code": 59826,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1215,
@@ -4859,7 +4908,7 @@
           "name": "diy",
           "prevSize": 32,
           "code": 59827,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1216,
@@ -4867,7 +4916,7 @@
           "name": "doctors",
           "prevSize": 32,
           "code": 59828,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1217,
@@ -4875,7 +4924,7 @@
           "name": "drinking_water",
           "prevSize": 32,
           "code": 59829,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1218,
@@ -4883,7 +4932,7 @@
           "name": "electronics",
           "prevSize": 32,
           "code": 59830,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1219,
@@ -4891,7 +4940,7 @@
           "name": "embassy",
           "prevSize": 32,
           "code": 59831,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1220,
@@ -4899,7 +4948,7 @@
           "name": "emergency_phone",
           "prevSize": 32,
           "code": 59832,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1221,
@@ -4907,7 +4956,7 @@
           "name": "entrance",
           "prevSize": 32,
           "code": 59833,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1222,
@@ -4915,7 +4964,7 @@
           "name": "excrement_bags",
           "prevSize": 32,
           "code": 59834,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1223,
@@ -4923,7 +4972,7 @@
           "name": "fabric, sewing",
           "prevSize": 32,
           "code": 59835,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1224,
@@ -4931,7 +4980,7 @@
           "name": "fast_food",
           "prevSize": 32,
           "code": 59836,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1225,
@@ -4939,7 +4988,7 @@
           "name": "ferry, ferry_terminal",
           "prevSize": 32,
           "code": 59837,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1226,
@@ -4947,7 +4996,7 @@
           "name": "firepit",
           "prevSize": 32,
           "code": 59838,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1227,
@@ -4955,7 +5004,7 @@
           "name": "firestation",
           "prevSize": 32,
           "code": 59839,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1228,
@@ -4963,7 +5012,7 @@
           "name": "fishing",
           "prevSize": 32,
           "code": 59840,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1229,
@@ -4971,7 +5020,7 @@
           "name": "fitness, sports_centre",
           "prevSize": 32,
           "code": 59841,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1230,
@@ -4979,7 +5028,7 @@
           "name": "florist",
           "prevSize": 32,
           "code": 59842,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1231,
@@ -4987,7 +5036,7 @@
           "name": "ford",
           "prevSize": 32,
           "code": 59843,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1232,
@@ -4995,7 +5044,7 @@
           "name": "fort",
           "prevSize": 32,
           "code": 59844,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1233,
@@ -5003,7 +5052,7 @@
           "name": "fortress",
           "prevSize": 32,
           "code": 59845,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1234,
@@ -5011,7 +5060,7 @@
           "name": "fountain",
           "prevSize": 32,
           "code": 59846,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1235,
@@ -5019,7 +5068,7 @@
           "name": "fuel",
           "prevSize": 32,
           "code": 59847,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1236,
@@ -5027,7 +5076,7 @@
           "name": "furniture",
           "prevSize": 32,
           "code": 59848,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1237,
@@ -5035,7 +5084,7 @@
           "name": "garden_centre",
           "prevSize": 32,
           "code": 59849,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1238,
@@ -5043,7 +5092,7 @@
           "name": "gate",
           "prevSize": 32,
           "code": 59850,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1239,
@@ -5051,7 +5100,7 @@
           "name": "generator_wind",
           "prevSize": 32,
           "code": 59851,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1240,
@@ -5059,7 +5108,7 @@
           "name": "gift",
           "prevSize": 32,
           "code": 59852,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1241,
@@ -5067,7 +5116,7 @@
           "name": "golf",
           "prevSize": 32,
           "code": 59853,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1242,
@@ -5075,7 +5124,7 @@
           "name": "greengrocer",
           "prevSize": 32,
           "code": 59854,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1243,
@@ -5083,7 +5132,7 @@
           "name": "grocery",
           "prevSize": 32,
           "code": 59855,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1244,
@@ -5091,7 +5140,7 @@
           "name": "guest_house",
           "prevSize": 32,
           "code": 59856,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1245,
@@ -5099,7 +5148,7 @@
           "name": "guidepost",
           "prevSize": 32,
           "code": 59857,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1246,
@@ -5107,7 +5156,7 @@
           "name": "hairdresser",
           "prevSize": 32,
           "code": 59858,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1247,
@@ -5115,7 +5164,7 @@
           "name": "hifi",
           "prevSize": 32,
           "code": 59859,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1248,
@@ -5123,7 +5172,7 @@
           "name": "hospital",
           "prevSize": 32,
           "code": 59860,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1249,
@@ -5131,7 +5180,7 @@
           "name": "hostel",
           "prevSize": 32,
           "code": 59861,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1250,
@@ -5139,7 +5188,7 @@
           "name": "hotel",
           "prevSize": 32,
           "code": 59862,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1251,
@@ -5147,7 +5196,7 @@
           "name": "houseware",
           "prevSize": 32,
           "code": 59863,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1252,
@@ -5155,7 +5204,7 @@
           "name": "hunting_stand",
           "prevSize": 32,
           "code": 59864,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1253,
@@ -5163,7 +5212,7 @@
           "name": "ice_cream",
           "prevSize": 32,
           "code": 59865,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1254,
@@ -5171,7 +5220,7 @@
           "name": "information",
           "prevSize": 32,
           "code": 59866,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1255,
@@ -5179,7 +5228,7 @@
           "name": "interior_decoration",
           "prevSize": 32,
           "code": 59867,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1256,
@@ -5187,7 +5236,7 @@
           "name": "internet_cafe",
           "prevSize": 32,
           "code": 59868,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1257,
@@ -5195,7 +5244,7 @@
           "name": "jewelry-store",
           "prevSize": 32,
           "code": 59869,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1258,
@@ -5203,7 +5252,7 @@
           "name": "jewelry",
           "prevSize": 32,
           "code": 59870,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1259,
@@ -5211,7 +5260,7 @@
           "name": "laundry",
           "prevSize": 32,
           "code": 59871,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1260,
@@ -5219,7 +5268,7 @@
           "name": "library",
           "prevSize": 32,
           "code": 59872,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1261,
@@ -5227,7 +5276,7 @@
           "name": "lighthouse",
           "prevSize": 32,
           "code": 59873,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1262,
@@ -5235,7 +5284,7 @@
           "name": "manor",
           "prevSize": 32,
           "code": 59874,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1263,
@@ -5243,7 +5292,7 @@
           "name": "map",
           "prevSize": 32,
           "code": 59875,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1264,
@@ -5251,7 +5300,7 @@
           "name": "marketplace",
           "prevSize": 32,
           "code": 59876,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1265,
@@ -5259,7 +5308,7 @@
           "name": "massage",
           "prevSize": 32,
           "code": 59877,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1266,
@@ -5267,7 +5316,7 @@
           "name": "mast_communications",
           "prevSize": 32,
           "code": 59878,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1267,
@@ -5275,7 +5324,7 @@
           "name": "mast_lighting",
           "prevSize": 32,
           "code": 59879,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1268,
@@ -5283,7 +5332,7 @@
           "name": "mast",
           "prevSize": 32,
           "code": 59880,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1269,
@@ -5291,7 +5340,7 @@
           "name": "medical_supply",
           "prevSize": 32,
           "code": 59881,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1270,
@@ -5299,7 +5348,7 @@
           "name": "memorial, funeral_directors",
           "prevSize": 32,
           "code": 59882,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1271,
@@ -5307,7 +5356,7 @@
           "name": "miniature_golf",
           "prevSize": 32,
           "code": 59883,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1272,
@@ -5315,7 +5364,7 @@
           "name": "mobile_phone",
           "prevSize": 32,
           "code": 59884,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1273,
@@ -5323,7 +5372,7 @@
           "name": "monument",
           "prevSize": 32,
           "code": 59885,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1274,
@@ -5331,7 +5380,7 @@
           "name": "motel",
           "prevSize": 32,
           "code": 59886,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1275,
@@ -5339,7 +5388,7 @@
           "name": "motorcycle_parking",
           "prevSize": 32,
           "code": 59887,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1276,
@@ -5347,7 +5396,7 @@
           "name": "museum",
           "prevSize": 32,
           "code": 59888,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1277,
@@ -5355,7 +5404,7 @@
           "name": "music",
           "prevSize": 32,
           "code": 59889,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1278,
@@ -5363,7 +5412,7 @@
           "name": "musical_instrument",
           "prevSize": 32,
           "code": 59890,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1279,
@@ -5371,7 +5420,7 @@
           "name": "newsagent",
           "prevSize": 32,
           "code": 59891,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1280,
@@ -5379,7 +5428,7 @@
           "name": "nightclub",
           "prevSize": 32,
           "code": 59892,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1281,
@@ -5387,7 +5436,7 @@
           "name": "obelisk",
           "prevSize": 32,
           "code": 59893,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1282,
@@ -5395,7 +5444,7 @@
           "name": "office",
           "prevSize": 32,
           "code": 59894,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1283,
@@ -5403,7 +5452,7 @@
           "name": "oneway-reverse",
           "prevSize": 32,
           "code": 59895,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1284,
@@ -5411,7 +5460,7 @@
           "name": "oneway",
           "prevSize": 32,
           "code": 59896,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1285,
@@ -5419,7 +5468,7 @@
           "name": "optician",
           "prevSize": 32,
           "code": 59897,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1286,
@@ -5427,7 +5476,7 @@
           "name": "outdoor_seating",
           "prevSize": 32,
           "code": 59898,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1287,
@@ -5435,7 +5484,7 @@
           "name": "outdoor, symbol-white_foot",
           "prevSize": 32,
           "code": 59899,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1288,
@@ -5443,7 +5492,7 @@
           "name": "paint",
           "prevSize": 32,
           "code": 59900,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1289,
@@ -5451,7 +5500,7 @@
           "name": "palace",
           "prevSize": 32,
           "code": 59901,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1290,
@@ -5459,7 +5508,7 @@
           "name": "park",
           "prevSize": 32,
           "code": 59902,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1291,
@@ -5467,7 +5516,7 @@
           "name": "park-alt1",
           "prevSize": 32,
           "code": 59903,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1292,
@@ -5475,7 +5524,7 @@
           "name": "parking_entrance_multistorey",
           "prevSize": 32,
           "code": 59904,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1293,
@@ -5483,7 +5532,7 @@
           "name": "parking_entrance_underground",
           "prevSize": 32,
           "code": 59905,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1294,
@@ -5491,7 +5540,7 @@
           "name": "parking_tickets",
           "prevSize": 32,
           "code": 59906,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1295,
@@ -5499,7 +5548,7 @@
           "name": "parking",
           "prevSize": 32,
           "code": 59907,
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "order": 1296,
@@ -5507,7 +5556,7 @@
           "name": "peak",
           "prevSize": 32,
           "code": 59908,
-          "tempChar": ""
+          "tempChar": ""
         }
       ],
       "id": 0,
@@ -6388,9 +6437,19 @@
         {
           "id": 216,
           "paths": [
-            "M983.202 85.757c-0.289-0.007-0.629-0.012-0.97-0.012-4.508 0-8.844 0.737-12.894 2.096l0.286-0.083-108.339 40.306-19.724 91.474h73.179l7.289-29.3 73.179-25.584c16.209-5.537 27.657-20.636 27.657-38.408 0-22.073-17.659-40.021-39.619-40.488l-0.044-0.001zM731.792 695.202v109.769h-622.023c-20.208 0-36.59 16.382-36.59 36.59s16.382 36.59 36.59 36.59v0h74.751c-0.964 4.367-1.534 9.396-1.572 14.551l-0 0.028c0 40.416 32.763 73.179 73.179 73.179v0c40.416 0 73.179-32.763 73.179-73.179v0c-0.038-5.183-0.609-10.212-1.66-15.061l0.088 0.482h295.861c-0.964 4.367-1.534 9.396-1.572 14.551l-0 0.028c0 40.416 32.763 73.179 73.179 73.179v0c40.416 0 73.179-32.763 73.179-73.179v0c-0.038-5.183-0.608-10.212-1.66-15.061l0.088 0.482h38.162v-146.358zM-0 219.537l73.179 439.075 731.792 73.179 109.769-512.254zM85.614 292.717h170.513v73.179h-157.507zM292.717 292.717h109.769v73.179h-109.769zM439.075 292.717h109.769v73.179h-109.769zM585.433 292.717h109.769v73.179h-109.769zM731.792 292.717h94.332l-15.579 73.179h-78.753zM105.195 402.485h150.932v109.769h-131.351zM292.717 402.485h109.769v109.769h-109.769zM439.075 402.485h109.769v109.769h-109.769zM585.433 402.485h109.769v109.769h-109.769zM731.792 402.485h71.035l-23.297 109.769h-47.738zM131.208 548.844h124.919v55.17l-117.058-11.291zM292.717 548.844h109.769v69.177l-109.769-10.577zM439.075 548.844h109.769v83.184l-109.769-10.577zM585.433 548.844h109.769v97.191l-109.769-10.434zM731.792 548.844h40.020l-21.725 102.479-18.295-1.715z"
+            "M256 256h36.571v365.714h-36.571zM402.286 256h36.571v402.286h-36.571zM548.571 256h36.571v438.857h-36.571zM694.857 256h36.571v438.857h-36.571z",
+            "M73.143 365.714h768v36.571h-768zM73.143 512h768v36.571h-768z",
+            "M768 892.343c0 40.396-32.747 73.143-73.143 73.143s-73.143-32.747-73.143-73.143c0-40.396 32.747-73.143 73.143-73.143s73.143 32.747 73.143 73.143z",
+            "M329.143 892.343c0 40.396-32.747 73.143-73.143 73.143s-73.143-32.747-73.143-73.143c0-40.396 32.747-73.143 73.143-73.143s73.143 32.747 73.143 73.143z",
+            "M804.571 731.429v146.286h-694.857c-20.198 0-36.571-16.374-36.571-36.571s16.374-36.571 36.571-36.571v0h621.714v-109.714zM841.143 219.429l19.749-91.429 108.251-40.229c3.82-1.317 8.221-2.077 12.8-2.077 22.355 0 40.477 18.122 40.477 40.477 0 17.776-11.459 32.876-27.392 38.315l-0.285 0.085-73.143 25.6-7.314 29.257z",
+            "M73.143 658.286l731.429 73.143 109.714-512h-914.286zM85.577 292.571h740.206l-76.069 358.4-610.743-58.514z"
           ],
           "attrs": [
+            {},
+            {},
+            {},
+            {},
+            {},
             {}
           ],
           "grid": 0,
@@ -6402,6 +6461,11 @@
           "isMulticolor2": false,
           "colorPermutations": {
             "113413413411551128712552552551": [
+              {},
+              {},
+              {},
+              {},
+              {},
               {}
             ]
           }
@@ -6469,17 +6533,17 @@
         {
           "id": 212,
           "paths": [
-            "M512 955.733c-218.453 0-443.733-150.187-443.733-443.733s225.28-443.733 443.733-443.733 443.733 150.187 443.733 443.733c0 293.547-225.28 443.733-443.733 443.733zM512 279.893c-88.747 0-232.107 47.787-232.107 232.107s143.36 232.107 232.107 232.107c88.747 0 232.107-47.787 232.107-232.107s-143.36-232.107-232.107-232.107z"
+            "M512 84.362c236.182 0 427.638 191.457 427.638 427.638s-191.457 427.638-427.638 427.638c-236.182 0-427.638-191.457-427.638-427.638s191.457-427.638 427.638-427.638zM512 179.389c-183.696 0-332.606 148.915-332.606 332.611s148.909 332.611 332.606 332.611c183.696 0 332.606-148.915 332.606-332.611s-148.909-332.611-332.606-332.611z"
           ],
           "attrs": [
             {}
           ],
-          "isMulticolor": false,
-          "isMulticolor2": false,
           "grid": 0,
           "tags": [
             "symbol-circle"
           ],
+          "isMulticolor": false,
+          "isMulticolor2": false,
           "colorPermutations": {
             "113413413411551128712552552551": [
               {}
