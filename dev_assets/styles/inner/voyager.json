@@ -1,6 +1,8 @@
 {
     "layers": [
         "lines",
+        "routes",
+        "stops",
         "route",
         "items",
         "directions"
@@ -20,6 +22,7 @@
         "selected_id": -1,
         "editing_id": -1,
         "selected_id_str": "",
+        "default_transit_color": "red",
         "selected_osmid": -1,
         "texts3d": {
             "default": "nutibillboard",
