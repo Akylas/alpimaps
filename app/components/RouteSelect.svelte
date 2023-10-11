@@ -27,14 +27,14 @@
 <collectionView items={options} rowHeight={72} height={200}>
     <Template let:item>
         <ListItem
-            title={item.name || item.route.featureData.class}
-            subtitle={item.route.featureData.ref}
+            title={item.name || item.route.properties.class}
+            subtitle={item.route.properties.subtitle || item.route.properties.ref}
             showBottomLine
             extraPaddingLeft={44}
             on:tap={(event) => onTap(item, event)}
             showSymbol
-            symbol={formatter.getSymbol(item.route.featureData)}
-            symbolColor={item.route.featureData?.color || $textColor}
+            symbol={formatter.getSymbol(item.route.properties)}
+            symbolColor={item.route.properties?.color || $textColor}
         />
     </Template>
 </collectionView>
