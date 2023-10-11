@@ -639,7 +639,7 @@
             didIgnoreAlreadySelected = false;
             if (isFeatureInteresting) {
                 let isCurrentItem = item === $selectedItem;
-                TEST_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons);
+                TEST_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons, JSON.stringify(item));
                 if (setSelected && isCurrentItem && !item) {
                     unselectItem(false);
                 }
@@ -649,24 +649,33 @@
                     TEST_LOG && console.log('selected_id', typeof route.osmid, route.osmid, typeof props.id, props.id, setSelected);
 
                     // selected_osmid is for routes
-
                     // mapContext.mapDecoder.setStyleParameter('selected_id', '');
+                    let styleParameters = {};
                     if (props.id !== undefined) {
                         selectedId = props.id;
+                        styleParameters['selected_osmid'] = '0';
                         if (typeof props.id === 'string') {
-                            mapContext.innerDecoder.setStyleParameter('selected_id_str', selectedId);
-                            mapContext.innerDecoder.setStyleParameter('selected_id', '0');
+                            styleParameters['selected_id_str'] = selectedId;
+                            styleParameters['selected_id'] = '0';
                         } else {
-                            mapContext.innerDecoder.setStyleParameter('selected_id_str', '0');
-                            mapContext.innerDecoder.setStyleParameter('selected_id', selectedId + '');
+                            styleParameters['selected_id_str'] = '0';
+                            styleParameters['selected_id'] = selectedId + '';
                         }
                         mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
                     } else if (route.osmid !== undefined) {
-                        selectedOSMId = route.osmid;
-                        mapContext.innerDecoder.setStyleParameter('selected_osmid', selectedOSMId + '');
-                        mapContext.innerDecoder.setStyleParameter('selected_id', '0');
-                        mapContext.innerDecoder.setStyleParameter('selected_id_str', '0');
+                        if (typeof route.osmid === 'string') {
+                            selectedId = route.osmid;
+                            styleParameters['selected_id_str'] = selectedId + '';
+                            styleParameters['selected_osmid'] = '0';
+                            styleParameters['selected_id'] = '0';
+                        } else {
+                            selectedOSMId = route.osmid;
+                            styleParameters['selected_osmid'] = selectedOSMId + '';
+                            styleParameters['selected_id_str'] = '0';
+                            styleParameters['selected_id'] = '0';
+                        }
                     }
+                    mapContext.innerDecoder.setJSONStyleParameters(styleParameters);
 
                     if (selectedPosMarker) {
                         selectedPosMarker.visible = false;
@@ -695,27 +704,29 @@
                         // } else {
                         //     mapContext.mapDecoder.setStyleParameter('selected_id', '');
                         // }
+                        let styleParameters = {};
                         if (props.id !== undefined) {
                             selectedId = props.id;
                             if (typeof props.id === 'string') {
-                                mapContext.innerDecoder.setStyleParameter('selected_id_str', selectedId + '');
-                                mapContext.innerDecoder.setStyleParameter('selected_id', '0');
+                                styleParameters['selected_id_str'] = selectedId + '';
+                                styleParameters['selected_id'] = '0';
                             } else {
-                                mapContext.innerDecoder.setStyleParameter('selected_id', selectedId + '');
-                                mapContext.innerDecoder.setStyleParameter('selected_id_str', '0');
+                                styleParameters['selected_id'] = selectedId + '';
+                                styleParameters['selected_id_str'] = '';
                             }
-                            mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
+                            styleParameters['selected_osmid'] = '0';
                         } else {
                             if (selectedOSMId !== undefined) {
                                 selectedOSMId = undefined;
-                                mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
+                                styleParameters['selected_osmid'] = '0';
                             }
                             if (selectedId !== undefined) {
                                 selectedId = undefined;
-                                mapContext.innerDecoder.setStyleParameter('selected_id', '0');
-                                mapContext.innerDecoder.setStyleParameter('selected_id_str', '');
+                                styleParameters['selected_osmid'] = '0';
+                                styleParameters['selected_id_str'] = '';
                             }
                         }
+                        mapContext.innerDecoder.setJSONStyleParameters(styleParameters);
                     }
                 }
                 if (setSelected) {
@@ -861,15 +872,17 @@
             if (selectedPosMarker) {
                 selectedPosMarker.visible = false;
             }
+            let styleParameters = {};
             if (selectedOSMId !== undefined) {
                 selectedOSMId = undefined;
-                mapContext.innerDecoder.setStyleParameter('selected_osmid', '0');
+                styleParameters['selected_osmid'] = '0';
             }
             if (selectedId !== undefined) {
                 selectedId = undefined;
-                mapContext.innerDecoder.setStyleParameter('selected_id', '0');
-                mapContext.innerDecoder.setStyleParameter('selected_id_str', '');
+                styleParameters['selected_id'] = '0';
+                styleParameters['selected_id_str'] = '';
             }
+            mapContext.innerDecoder.setJSONStyleParameters(styleParameters);
             if (updateBottomSheet) {
                 bottomSheetStepIndex = 0;
             }
