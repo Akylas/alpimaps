@@ -22,7 +22,7 @@
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext, handleMapAction } from '~/mapModules/MapModule';
     import type { IItem, IItem as Item, RouteInstruction } from '~/models/Item';
-    import { networkService } from '~/services/NetworkService';
+    import { NoNetworkError, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { showError } from '~/utils/error';
     import { computeDistanceBetween } from '~/utils/geo';
@@ -68,7 +68,9 @@
     $: showListView = listViewAvailable && listViewVisible;
     let itemIsRoute = false;
     let itemIsEditingItem = false;
+    let itemCanBeEdited = false;
     let itemIsBusStop = false;
+    let itemCanBeAdded = false;
     let itemCanQueryProfile = false;
     let itemCanQueryStats = false;
     let currentLocation: GenericMapPos<LatLonKeys> = null;
@@ -163,24 +165,26 @@
         try {
             const props = item && item.properties;
             if (props) {
-                query = props.name;
+                query = props.name || formatter.getItemPositionToString(item);
                 if (canUseWebsite && props.website) {
                     query = props.website;
                 } else {
-                    if (props.wikipedia) {
-                        query = props.wikipedia.split(':')[1];
-                    }
+                    // if (props.wikipedia) {
+                    //     query = props.wikipedia.split(':')[1];
+                    // }
                     if (props.address) {
                         query += ' ' + props.address.county;
                     }
                 }
-
-                if (__ANDROID__) {
-                    const intent = new Intent(Intent.ACTION_WEB_SEARCH);
-                    intent.putExtra('query', query);
-                    Application.android.startActivity.startActivity(intent);
-                } else {
-                    throw new Error();
+                console.log('searchWeb', query);
+                if (query) {
+                    if (__ANDROID__) {
+                        const intent = new Intent(Intent.ACTION_WEB_SEARCH);
+                        intent.putExtra('query', query);
+                        Application.android.startActivity.startActivity(intent);
+                    } else {
+                        throw new Error();
+                    }
                 }
             }
         } catch (err) {
@@ -193,6 +197,9 @@
     }
     async function showInformation() {
         try {
+            // if (!item.properties?.osmid && !networkService.connected) {
+            //     throw new NoNetworkError();
+            // }
             const ItemInfo = (await import('~/components/ItemInfo.svelte')).default as any;
             // const hasOpenHours = !!item.properties?.opening_hours;
             const hasOpenHours = true;
@@ -225,8 +232,10 @@
             if (item) {
                 swipemenu?.nativeView?.close('right', 0);
                 itemIsRoute = !!item?.route;
-                itemIsEditingItem = item?.properties.editingId && item?.properties.editingId === mapContext.getEditingItem()?.id;
-                itemIsBusStop = item && !itemIsRoute && (item.properties?.class === 'bus' || item.properties?.subclass === 'tram_stop');
+                itemIsEditingItem = !!item?.properties.editingId && item?.properties.editingId === mapContext.getEditingItem()?.id;
+                itemCanBeEdited = !!item && !!item.id && !itemIsEditingItem;
+                itemCanBeAdded = !!item && (!item.id || !!itemIsEditingItem);
+                itemIsBusStop = !!item && (item.properties?.class === 'bus' || item.properties?.subclass === 'tram_stop');
                 itemCanQueryProfile = itemIsRoute && !!item?.id;
                 itemCanQueryStats = itemIsRoute && !!item?.id;
                 updateGraphAvailable();
@@ -737,6 +746,7 @@
             let aimingItems: any = selected ? [selected] : [];
             let updateWithUserLocation = true;
             if (itemIsRoute && !item.id) {
+                // aim for the start point!
                 updateWithUserLocation = false;
                 const points = mapContext.mapModules.directionsPanel.getFeatures().filter((s) => s.geometry.type === 'Point');
                 location = { lat: (points[0].geometry as Point).coordinates[1], lon: (points[0].geometry as Point).coordinates[0] };
@@ -988,7 +998,7 @@
         >
             <!-- svelte-ignore illegal-attribute-character -->
             <BottomSheetInfoView bind:this={infoView} prop:mainContent {item} colSpan={2} rightTextPadding={itemIsRoute ? actionBarButtonHeight : 0}>
-                <mdactivityindicator slot="above" visibility={updatingItem ? 'visible' : 'hidden'} horizontalAligment="right" busy={true} width={20} height={20} />
+                <mdactivityindicator slot="above" visibility={updatingItem ? 'visible' : 'hidden'} horizontalAlignment="right" verticalAlignment="top" busy={true} width={20} height={20} />
             </BottomSheetInfoView>
             <!-- svelte-ignore illegal-attribute-character -->
             <IconButton prop:leftDrawer on:tap={deleteItem} tooltip={lc('delete')} shape="none" width={60} height="100%" color="white" backgroundColor="red" text="mdi-trash-can" />
@@ -1016,16 +1026,9 @@
                     {/if}
                     <IconButton on:tap={() => getStats()} tooltip={lc('road_stats')} isVisible={itemIsRoute && itemCanQueryStats} text="mdi-chart-bar-stacked" rounded={false} />
                     <IconButton on:tap={hideItem} tooltip={lc('hide')} isVisible={!!item?.id && itemIsRoute} text="mdi-eye-off" rounded={false} />
-                    <IconButton
-                        on:tap={() => saveItem()}
-                        tooltip={lc('save')}
-                        isVisible={item && (!item.id || itemIsEditingItem)}
-                        text={itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus'}
-                        rounded={false}
-                    />
-                    {#if item && item.properties && !!item.properties.wikipedia}
-                        <IconButton on:tap={openWikipedia} tooltip={lc('wikipedia')} text="mdi-wikipedia" rounded={false} />
-                    {/if}
+                    <IconButton on:tap={() => saveItem()} tooltip={lc('save')} isVisible={itemCanBeAdded} text={itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus'} rounded={false} />
+                    <IconButton on:tap={startEditingItem} tooltip={lc('edit')} isVisible={itemCanBeEdited} text="mdi-pencil" rounded={false} />
+                    <IconButton isVisible={item && item.properties && !!item.properties.wikipedia} on:tap={openWikipedia} tooltip={lc('wikipedia')} text="mdi-wikipedia" rounded={false} />
                     {#if networkService.canCheckWeather}
                         <IconButton on:tap={checkWeather} isVisible={!itemIsRoute} tooltip={lc('weather')} text="mdi-weather-partly-cloudy" rounded={false} />
                     {/if}
@@ -1037,7 +1040,6 @@
 
                     <IconButton on:tap={getTransitLines} tooltip={lc('bus_stop_infos')} isVisible={itemIsBusStop} text="mdi-bus" rounded={false} />
                     <IconButton on:tap={shareItem} tooltip={lc('share')} text="mdi-share-variant" rounded={false} />
-                    <IconButton on:tap={startEditingItem} tooltip={lc('edit')} isVisible={item && item.id && !itemIsEditingItem} text="mdi-pencil" rounded={false} />
 
                     <!-- <IconButton on:tap={deleteItem} tooltip={lc('delete')} isVisible={!!item?.id} color="red" text="mdi-delete" rounded={false} /> -->
                 </stacklayout>
