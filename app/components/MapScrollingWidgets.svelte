@@ -1,18 +1,13 @@
 <script lang="ts">
-    import { l, lc } from '@nativescript-community/l';
+    import { lc } from '@nativescript-community/l';
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
-    import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
-    import type { PackageStatus } from '@nativescript-community/ui-carto/packagemanager';
-    import { PackageAction } from '@nativescript-community/ui-carto/packagemanager';
-    import { alert, confirm } from '@nativescript-community/ui-material-dialogs';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { CoreTypes, GridLayout, ViewBase } from '@nativescript/core';
+    import { Label } from '@nativescript-community/ui-label';
+    import { alert } from '@nativescript-community/ui-material-dialogs';
+    import { CoreTypes, GridLayout } from '@nativescript/core';
     import type { Point } from 'geojson';
-    import { debounce } from 'push-it-to-the-limit';
-    import { onDestroy, onMount } from 'svelte';
+    import { onDestroy } from 'svelte';
     import { NativeViewElementNode, navigate } from 'svelte-native/dom';
     import { asSvelteTransition } from 'svelte-native/transitions';
     import ScaleView from '~/components/ScaleView.svelte';
@@ -22,13 +17,11 @@
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import type { IItem } from '~/models/Item';
     import { RouteInstruction, RoutingAction } from '~/models/Item';
-    import { packageService } from '~/services/PackageService';
     import { queryingLocation, watchingLocation } from '~/stores/mapStore';
     import { showError } from '~/utils/error';
-    import { resolveComponentElement, showBottomSheet } from '~/utils/svelte/bottomsheet';
-    import { accentColor, alpimapsFontFamily, globalMarginTop, mdiFontFamily, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
-    import { Label } from '@nativescript-community/ui-label';
+    import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
+    import { accentColor, alpimapsFontFamily, globalMarginTop, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import IconButton from './IconButton.svelte';
     function scale(node, { delay = 0, duration = 400, easing = CoreTypes.AnimationCurve.easeOut }) {
         const scaleX = node.nativeView.scaleX;
@@ -246,39 +239,39 @@
         }
     }
 
-    async function open3DMap() {
-        try {
-            const position = mapContext.getMap().getFocusPos();
-            if (!position.altitude) {
-                position.altitude = await packageService.getElevation(position);
-            }
-            const hillshadeDatasource = packageService.hillshadeLayer?.dataSource;
-            const vectorDataSource = packageService.localVectorTileLayer?.dataSource;
-            const customSources = mapContext.mapModules.customLayers.customSources;
-            let rasterDataSource: TileDataSource<any, any>;
-            customSources.some((s) => {
-                if (s.layer instanceof RasterTileLayer) {
-                    rasterDataSource = s.layer.options.dataSource;
-                    return true;
-                }
-            });
-            if (!rasterDataSource) {
-                rasterDataSource = await mapContext.mapModules.customLayers.getDataSource('openstreetmap');
-            }
-            const component = (await import('~/components/3DMap.svelte')).default as any;
-            navigate({
-                page: component,
-                props: {
-                    position,
-                    vectorDataSource,
-                    dataSource: hillshadeDatasource,
-                    rasterDataSource
-                }
-            });
-        } catch (err) {
-            showError(err);
-        }
-    }
+    // async function open3DMap() {
+    //     try {
+    //         const position = mapContext.getMap().getFocusPos();
+    //         if (!position.altitude) {
+    //             position.altitude = await packageService.getElevation(position);
+    //         }
+    //         const hillshadeDatasource = packageService.hillshadeLayer?.dataSource;
+    //         const vectorDataSource = packageService.localVectorTileLayer?.dataSource;
+    //         const customSources = mapContext.mapModules.customLayers.customSources;
+    //         let rasterDataSource: TileDataSource<any, any>;
+    //         customSources.some((s) => {
+    //             if (s.layer instanceof RasterTileLayer) {
+    //                 rasterDataSource = s.layer.options.dataSource;
+    //                 return true;
+    //             }
+    //         });
+    //         if (!rasterDataSource) {
+    //             rasterDataSource = await mapContext.mapModules.customLayers.getDataSource('openstreetmap');
+    //         }
+    //         const component = (await import('~/components/3DMap.svelte')).default as any;
+    //         navigate({
+    //             page: component,
+    //             props: {
+    //                 position,
+    //                 vectorDataSource,
+    //                 dataSource: hillshadeDatasource,
+    //                 rasterDataSource
+    //             }
+    //         });
+    //     } catch (err) {
+    //         showError(err);
+    //     }
+    // }
 
     function onAttributionTap() {
         const customLayers = mapContext.mapModule('customLayers');
