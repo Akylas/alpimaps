@@ -249,7 +249,7 @@ export default class ItemsModule extends MapModule {
             searchService.findFeatures(
                 {
                     projection: mapProjection,
-                    filterExpression: `osmid=${properties.osmid}`,
+                    filterExpression: `${key}='${properties[key]}'`,
                     geometry: boundsGeo
                 },
                 resolve
