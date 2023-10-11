@@ -201,24 +201,21 @@
     }
 </script>
 
-<gridLayout {height}>
-    <canvaslabel padding={16}>
-        <cspan text={currentPressure} fontSize={16} textAlignment="right" />
-        <cgroup visibility={!!referencePressure ? 'visible' : 'hidden'} verticalAlignment="bottom" fontSize={14} textAlignment="right">
-            <cspan text={referencePressure && referencePressure.toFixed(2)} fontSize={14} />
-            <cspan text={'\n' + (referenceAltitude && Math.round(referenceAltitude) + 'm')} />
-        </cgroup>
-        <cgroup horizontalAlignment="center" textAlignment="center" verticalAlignment="middle">
-            <cspan text={pressureAltitude || '-'} fontSize={30} />
-            <cspan text=" m" fontSize={20} />
-        </cgroup>
-        <cspan visibility={!!currentLocation ? 'visible' : 'hidden'} text={!!currentLocation && currentLocation.altitude + 'm'} fontSize={14} verticalAlignment="bottom" textAlignment="left" />
-    </canvaslabel>
-
+<canvaslabel padding={16} {height}>
+    <cspan text={currentPressure} fontSize={16} textAlignment="right" />
+    <cgroup visibility={!!referencePressure ? 'visible' : 'hidden'} verticalAlignment="bottom" fontSize={14} textAlignment="right">
+        <cspan text={referencePressure && referencePressure.toFixed(2)} fontSize={14} />
+        <cspan text={'\n' + (referenceAltitude && Math.round(referenceAltitude) + 'm')} />
+    </cgroup>
+    <cgroup horizontalAlignment="center" textAlignment="center" verticalAlignment="middle">
+        <cspan text={pressureAltitude || '-'} fontSize={30} />
+        <cspan text=" m" fontSize={20} />
+    </cgroup>
+    <cspan visibility={!!currentLocation ? 'visible' : 'hidden'} text={!!currentLocation && currentLocation.altitude + 'm'} fontSize={14} verticalAlignment="bottom" textAlignment="left" />
     <stacklayout orientation="horizontal" horizontalAlignment="left" verticalAlignment="top">
         <IconButton text="mdi-gauge" on:tap={switchBarometer} color={listeningForBarometer ? primaryColor : undefined} />
         <IconButton text="mdi-airplane" on:tap={getNearestAirportPressure} />
         <IconButton text="mdi-refresh" on:tap={resetReference} />
         <IconButton text="mdi-crosshairs-gps" on:tap={askUserLocation} color={$watchingLocation || $queryingLocation ? primaryColor : undefined} />
     </stacklayout>
-</gridLayout>
+</canvaslabel>
