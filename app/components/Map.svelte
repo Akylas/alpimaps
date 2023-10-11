@@ -19,10 +19,14 @@
     import { isBottomSheetOpened, showBottomSheet } from '~/utils/svelte/bottomsheet';
     // import { Brightness } from '@nativescript/brightness';
     import { getFromLocation } from '@nativescript-community/geocoding';
+    import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
+    import { HTTPTileDataSource } from '@nativescript-community/ui-carto/datasources/http';
+    import { EPSG3857 } from '@nativescript-community/ui-carto/projections/epsg3857';
+    import { openFilePicker } from '@nativescript-community/ui-document-picker';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { Application, ApplicationSettings, File, Page, Utils } from '@nativescript/core';
+    import { Application, ApplicationSettings, Color, File, Page, Utils } from '@nativescript/core';
     import type { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Screen } from '@nativescript/core/platform';
@@ -47,13 +51,15 @@
     import { GeoResult, packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
     import { NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
-    import { contourLinesOpacity, pitchEnabled, rotateEnabled, routesType, show3DBuildings, showContourLines, showGlobe, showRoutes, showSlopePercentages } from '~/stores/mapStore';
+    import { contourLinesOpacity, pitchEnabled, preloading, rotateEnabled, routesType, show3DBuildings, showContourLines, showGlobe, showRoutes, showSlopePercentages } from '~/stores/mapStore';
     import { showError } from '~/utils/error';
     import { computeDistanceBetween, getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
     import { Sentry, isSentryEnabled } from '~/utils/sentry';
     import { share } from '~/utils/share';
-    import { disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn } from '~/utils/utils.android';
+    import { hideLoading, showLoading } from '~/utils/ui';
+    import { getDataFolder } from '~/utils/utils';
+    import { disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, showApp } from '~/utils/utils';
     import { navigationBarHeight, primaryColor } from '../variables';
     import BottomSheetInner from './BottomSheetInner.svelte';
     import ButtonBar from './ButtonBar.svelte';
@@ -61,8 +67,6 @@
     import LocationInfoPanel from './LocationInfoPanel.svelte';
     import MapScrollingWidgets from './MapScrollingWidgets.svelte';
     import Search from './Search.svelte';
-    import { openFilePicker } from '@nativescript-community/ui-document-picker';
-    import { hideLoading, showLoading } from '~/utils/ui';
 
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
