@@ -109,7 +109,7 @@ module.exports = (env, params = {}) => {
     env.appPath = appPath;
     env.appResourcesPath = appResourcesPath;
     env.appComponents = env.appComponents || [];
-    env.appComponents.push('~/services/android/BgService', '~/services/android/BgServiceBinder');
+    env.appComponents.push('~/services/android/BgService', '~/services/android/BgServiceBinder', '~/android/processtextactivity');
 
     nsWebpack.chainWebpack((config, env) => {
         config.when(env.production, (config) => {
@@ -344,7 +344,7 @@ module.exports = (env, params = {}) => {
         });
     }
     Object.assign(config.resolve.alias, {
-        'kiss-orm': `@akylas/kiss-orm`
+        'kiss-orm': '@akylas/kiss-orm'
     });
     let appVersion;
     let buildNumber;
