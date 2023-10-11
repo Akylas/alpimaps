@@ -925,41 +925,11 @@
 
     $: {
         ApplicationSettings.setBoolean(KEEP_AWAKE_KEY, keepScreenAwake);
-        if (keepScreenAwake) {
-            showKeepAwakeNotification();
-        } else {
-            hideKeepAwakeNotification();
-        }
+        showHideKeepAwakeNotification(keepScreenAwake);
     }
     // $: vectorTileDecoder && mapContext?.innerDecoder?.setStyleParameter('routes', $showRoutes ? '1' : '0');
     // $: shouldShowNavigationBarOverlay = $navigationBarHeight !== 0 && !!selectedItem;
-    function toggleHillshadeSlope(value: boolean) {
-        mapContext?.mapModule('customLayers').toggleHillshadeSlope(value);
-    }
-    function toggleMapRotate(value: boolean) {
-        if (cartoMap) {
-            cartoMap?.getOptions().setRotationGestures(value);
-        }
-    }
-    function toggleMapPitch(value: boolean) {
-        if (cartoMap) {
-            cartoMap?.getOptions().setTiltRange(toNativeMapRange([value ? 30 : 90, 90]));
-        }
-    }
 
-    async function handleRouteSelection(featureData, layer: VectorTileLayer) {
-        // console.log('handleRouteSelection', featureData);
-        const item: IItem = {
-            properties: {
-                ...featureData
-            },
-            route: {
-                osmid: featureData.osmid || featureData.ref || featureData.name
-            },
-            layer
-        };
-        selectItem({ item, isFeatureInteresting: true });
-    }
     async function handleSelectedRoutes() {
         unFocusSearch();
         try {
@@ -1458,22 +1428,20 @@
         }
     }
 
-    function showKeepAwakeNotification() {
+    function showHideKeepAwakeNotification(value: boolean) {
         if (__ANDROID__) {
-            const context: android.content.Context = Utils.android.getApplicationContext();
-            const builder = NotificationHelper.getNotification(context, {
-                title: lt('screen_awake_notification'),
-                channel: NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL
-            });
+            if (value) {
+                const context: android.content.Context = Utils.android.getApplicationContext();
+                const builder = NotificationHelper.getNotification(context, {
+                    title: lt('screen_awake_notification'),
+                    channel: NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL
+                });
 
-            const notification = builder.build();
-            NotificationHelper.showNotification(notification, KEEP_AWAKE_NOTIFICATION_ID);
-        }
-    }
-
-    function hideKeepAwakeNotification() {
-        if (__ANDROID__) {
-            NotificationHelper.hideNotification(KEEP_AWAKE_NOTIFICATION_ID);
+                const notification = builder.build();
+                NotificationHelper.showNotification(notification, KEEP_AWAKE_NOTIFICATION_ID);
+            } else {
+                NotificationHelper.hideNotification(KEEP_AWAKE_NOTIFICATION_ID);
+            }
         }
     }
 
