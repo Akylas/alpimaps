@@ -1555,7 +1555,6 @@
                     id: 'astronomy',
                     icon: 'mdi-weather-night'
                 },
-
                 {
                     title: lc('dark_mode'),
                     id: 'dark_mode',
@@ -1641,7 +1640,7 @@
                         });
                         const filePath = result.files[0];
                         if (filePath && File.exists(filePath)) {
-                showLoading();
+                            showLoading();
                             if (filePath.endsWith('gpx')) {
                                 await getMapContext().mapModule('items').importGPXFile(filePath);
                             } else {
