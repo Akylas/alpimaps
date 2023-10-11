@@ -332,9 +332,6 @@
 		[class=tertiary] {
 			marker-fill: @tertiary-casing;
 		}
-		[class=living_street] {
-			marker-fill: @living-street-casing;
-		}
 		[class=raceway] {
 			marker-fill: @raceway-casing;
 		}
@@ -509,7 +506,8 @@
 	[zoom=17][rank<=70],
 	[zoom>=18] {
 		::icon {
-			text-placement-priority:[nuti::selected_id] = @featureId ? 1000 : 0;
+			// text-placement-priority:[nuti::selected_id] = @featureId ? 1000 : 10;
+			text-placement-priority: 10;
 			text-placement: [nuti::markers3d];
 			text-name: @osm_icon;
 			text-feature-id: @featureId;
@@ -556,7 +554,8 @@
 		[zoom=17][rank<=50],
 		[zoom>=18] {
 			::label {
-				text-placement-priority:[nuti::selected_id] = @featureId ? 1000 : 0;
+				// text-placement-priority:[nuti::selected_id] = @featureId ? 1000 : 0;
+				text-placement-priority: 10;
 				text-name: @name;
 				text-feature-id: @featureId;
 				text-face-name: @mont_md;
@@ -655,8 +654,8 @@
 	text-fill: @housename;
 	text-size: linear([view::zoom], (17, 9), (18, 11));
 	// text-avoid-edges: true;
-	text-allow-overlap: true;
-	text-clip: false;
+	// text-allow-overlap: true;
+	// text-clip: false;
 	text-min-distance: linear([view::zoom], (17, 100), (18, 50), (19, 20));
 
 }

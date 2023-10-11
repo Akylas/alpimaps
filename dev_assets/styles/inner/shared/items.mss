@@ -16,7 +16,7 @@
             back/line-join: round;
             back/line-cap: round;
             back/line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
-            line-color: [style.color] ? [style.color] : #287bda;
+            line-color: @lineColor;
             line-dasharray: [nuti::editing_id]=[id] ? @editing_dash : @non_editing_dash;
             line-join: round;
             line-cap: round;
@@ -38,7 +38,7 @@
         back/line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
         line-join: miter;
         line-cap: round;
-        line-color: [style.color] ? [style.color] : #287bda;
+        line-color: @lineColor;
         line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
         line-width: @bicycle_line_width+ 2;
 
