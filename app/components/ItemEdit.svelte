@@ -21,6 +21,7 @@
     import CActionBar from './CActionBar.svelte';
     import IconButton from './IconButton.svelte';
     import TagView from './TagView.svelte';
+    import { showBottomSheet } from '~/utils/svelte/bottomsheet';
 
     export let item: Item;
     let itemColor: Color;
@@ -45,8 +46,8 @@
     $: itemUsingOsm = itemIcon === osmIcon && itemIconFontFamily === 'osm';
     let updatedProperties = {};
     const mapContext = getMapContext();
-    function blurTextField() {
-        Utils.dismissSoftInput();
+    function blurTextField(event) {
+        Utils.dismissSoftInput(event?.object.nativeViewProtected);
     }
     let updatingItem = false;
     async function updateItem() {
@@ -66,10 +67,9 @@
     }
 
     function onItemTextChange(item, e) {
-        if (!updatedProperties[item.id] && e.value === '') {
+        if (item.id === 'address' || (!updatedProperties[item.id] && e.value === '')) {
             return;
         }
-        // console.log('onTextChange', item.id, e.value);
         updatedProperties[item.id] = item.value = e.value;
         updatePreview(false);
     }
@@ -83,12 +83,11 @@
             if (updateForSvelte) {
                 updatedProperties = updatedProperties;
             }
-            const str = JSON.stringify({
+            // DEV_LOG && console.log('updateGeoJSONLayer', str);
+            vectorTileDataSource.setLayerGeoJSONString(1, {
                 type: 'FeatureCollection',
                 features: [{ type: 'Feature', id: item.id, properties: Object.assign({}, item.properties, updatedProperties), geometry: item.geometry }]
             });
-            // DEV_LOG && console.log('updateGeoJSONLayer', str);
-            vectorTileDataSource.setLayerGeoJSONString(1, str);
         }
     }
     async function onMapReady(e) {
@@ -208,12 +207,21 @@
         updatePreview();
     }
 
-    async function selectCustomIcon() {
+    async function selectCustomIcon(event) {
         try {
             const IconChooser = (await import('~/components/IconChooser.svelte')).default as any;
-            const results = await showModal({
-                fullscreen: true,
-                page: IconChooser as any
+            const results = await showPopover({
+                // fullscreen: true,
+                // trackingScrollView: 'collectionView',
+                view: IconChooser ,
+                vertPos: VerticalPosition.ALIGN_TOP,
+                horizPos: HorizontalPosition.ALIGN_LEFT,
+                anchor: event.object,
+                props: {
+                    elevation: 4,
+                    margin: 10
+                }
+                // peekHeight: 400
             });
             const result = Array.isArray(results) ? results[0] : results;
             if (result) {
@@ -298,7 +306,7 @@
         itemIsRoute = !!item.route;
         const props = { ...item.properties, ...updatedProperties };
         const propsKeys = Object.keys(props).filter((s) => propsToFilter.indexOf(s) === -1);
-        const {route, profile, ...toPrint} = props;
+        const { route, profile, ...toPrint } = props;
         items = new ObservableArray(
             (
                 [
@@ -349,7 +357,31 @@
     }
 
     async function fetchOSMDetails() {
-        await mapContext.mapModule('items').getOSMDetails(item, mapContext.getMap().zoom);
+        try {
+            const ignoredKeys = mapContext.mapModule('items').ignoredOSMKeys;
+            const result = await mapContext.mapModule('items').getOSMDetails(item, getMapContext().getMap().zoom);
+            DEV_LOG && console.log('fetchOSMDetails', result);
+            if (result) {
+                const itemProperties = item.properties;
+                const toAdd = { ...result.tags, osmid: result.id };
+                Object.keys(toAdd).forEach((k) => {
+                    const value = toAdd[k];
+                    console.log('test new prop', k, value);
+                    if (k.indexOf(':') === -1 && ignoredKeys.indexOf(k) === -1 && value !== item.properties.class) {
+                        updatedProperties[k] = value;
+                        if (!itemProperties[k] && propsToFilter.indexOf(k) === -1) {
+                            console.log('adding new prop', k, value);
+                            //new prop
+                            items.splice(items.length - 2, 0, { name: lc(k), id: k, value });
+                        }
+                    }
+                });
+                // item = { ...item, properties: { ...itemProperties, osmid: result.id } };
+                updatePreview(false);
+            }
+        } catch (error) {
+            showError(error);
+        }
     }
 </script>
 
@@ -375,14 +407,13 @@
             />
         </canvaslabel>
         {#if !itemIsRoute}
-            <gridlayout row={1} columns="auto,auto" height={50} horizontalAlignment="left" verticalAlignment="bottom" margin={5}>
+            <gridlayout row={1} columns="auto,auto,auto" height={50} horizontalAlignment="left" verticalAlignment="bottom" margin={5}>
                 <label
                     visibility={itemUsingDefault ? 'collapse' : 'visible'}
                     on:tap={setDefaultIcon}
                     fontSize={22}
                     borderRadius={4}
                     backgroundColor={$lightBackgroundColor}
-                    col={0}
                     verticalAlignment="middle"
                     textAlignment="center"
                     padding={5}
@@ -451,9 +482,9 @@
                         hint={item.name}
                         placeholder={item.name}
                         returnKeyType="done"
-                        on:returnPress={blurTextField}
                         text={item.value}
                         editable={item.editable ?? true}
+                        on:returnPress={blurTextField}
                         on:textChange={(e) => onItemTextChange(item, e)}
                         on:tap={(e) => item.onTap?.(item, e)}
                     />
