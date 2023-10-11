@@ -830,13 +830,10 @@
         //     firstUpdate = false;
         //     return setTimeout(setLayerGeoJSONString, 10);
         // }
-        _routeDataSource.setLayerGeoJSONString(
-            1,
-            JSON.stringify({
-                type: 'FeatureCollection',
-                features
-            })
-        );
+        _routeDataSource.setLayerGeoJSONString(1, {
+            type: 'FeatureCollection',
+            features
+        });
     }
     function clearRouteDatasource() {
         if (_routeDataSource) {
