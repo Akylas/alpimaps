@@ -459,7 +459,7 @@
     }
 </script>
 
-<gridLayout {height} rows="*,auto">
+<gridlayout {height} rows="*,auto">
     <CompassDialView drawInsideGrid={true} bind:canvas onDraw={onCanvasDraw} on:layoutChanged={refreshGeometries} />
     <canvas bind:this={canvas2} on:draw={onCanvasHorizontalDraw} height={preferredHeight} row={1} backgroundColor="#171717" />
-</gridLayout>
+</gridlayout>

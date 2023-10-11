@@ -48,18 +48,18 @@
     $: menuIconVisible = ((forceCanGoBack || canGoBack || modalWindow) && !disableBackButton) || showMenuIcon;
 </script>
 
-<gridLayout class="actionBar" columns="auto,*,auto" rows={`${height},auto`} {...$$restProps} color={color || $textColor} on:tap={() => {}} paddingTop={paddingTop}>
+<gridlayout class="actionBar" columns="auto,*,auto" rows={`${height},auto`} {...$$restProps} color={color || $textColor} on:tap={() => {}} paddingTop={paddingTop}>
     <label id="title" col={1} colSpan={3} class="actionBarTitle" textAlignment="left" visibility={!!title ? 'visible' : 'hidden'} text={title || ''} verticalTextAlignment="center" />
     <slot name="center" />
-    <stackLayout orientation="horizontal">
+    <stacklayout orientation="horizontal">
         <slot name="left" />
         <IconButton isVisible={menuIconVisible} text={menuIcon} on:tap={onMenuIcon} color="white" />
-    </stackLayout>
-    <stackLayout col={2} orientation="horizontal">
+    </stacklayout>
+    <stacklayout col={2} orientation="horizontal">
         <slot />
-    </stackLayout>
+    </stacklayout>
 
     <stacklayout row={1} colSpan={3}>
         <slot name="bottom" />
     </stacklayout>
-</gridLayout>
+</gridlayout>

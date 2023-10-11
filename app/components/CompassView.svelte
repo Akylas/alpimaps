@@ -228,7 +228,7 @@
     }
 </script>
 
-<gridLayout {height} rows="*,auto" {...$$restProps}>
+<gridlayout {height} rows="*,auto" {...$$restProps}>
     <CompassDialView bind:canvas onDraw={onCanvasDraw} onDrawBeforeText={onCanvasDrawBeforeText} rotation={updateWithSensor ? -currentHeading : 0} drawInsideGrid={!!moonBearing} />
     <!-- <svgview visibility={updateWithSensor ? 'visible' : 'hidden'} src="~/assets/svgs/needle.svg" stretch="aspectFit" horizontalAlignment="center" margin="30" /> -->
     <IconButton small={true} text="mdi-rotate-orbit" on:tap={() => (updateWithSensor = !updateWithSensor)} isSelected={updateWithSensor} horizontalAlignment="left" verticalAlignment="bottom" />
@@ -245,5 +245,5 @@
         borderRadius="4"
         color="white"
     />
-</gridLayout>
+</gridlayout>
 >
