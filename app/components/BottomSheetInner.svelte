@@ -206,7 +206,7 @@
             await showBottomSheet({
                 parent: mapContext.getMainPage(),
                 view: ItemInfo,
-                peekHeight: hasOpenHours ? 422 : undefined,
+                peekHeight: hasOpenHours ? 300 : undefined,
                 props: {
                     item,
                     height: hasOpenHours ? undefined : 300
