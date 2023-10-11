@@ -293,6 +293,8 @@
                 const itemModule = mapContext.mapModule('items');
                 showLoading();
                 await itemModule.importGeoJSONFile(link);
+            } else {
+                searchView.searchForQuery(link);
             }
         } catch (err) {
             console.error(err, err.stack);
@@ -470,6 +472,12 @@
         ApplicationSettings.setNumber('mapBearing', cartoMap.bearing);
         ApplicationSettings.setString('mapFocusPos', JSON.stringify(cartoMap.focusPos));
     }, 500);
+
+    // mapContext.onOtherAppTextSelected((text)=>{
+    //     console.log('onOtherAppTextSelected', text)
+    //     showApp();
+    //     searchView.searchForQuery(text);
+    // })
 
     async function onMainMapReady(e) {
         try {

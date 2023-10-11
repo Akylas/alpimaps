@@ -72,6 +72,7 @@ export interface MapContext {
     showOptions();
     createMapDecoder(mapStyle, mapStyleLayer): MBVectorTileDecoder;
     mapModule<T extends keyof MapModules>(id: T): MapModules[T];
+    onOtherAppTextSelected(callback: ContextCallback, once?: boolean);
     onMapReady(callback: ContextCallback, once?: boolean);
     onMapMove(callback: ContextCallback, once?: boolean);
     onMapStable(callback: ContextCallback, once?: boolean);
@@ -133,6 +134,7 @@ export function onNetworkChanged(callback: (theme) => void) {}
 
 const mapContext: MapContext = {
     mapModules: {},
+    onOtherAppTextSelected: createGlobalEventListener('onOtherAppTextSelected'),
     onMapReady: createGlobalEventListener('onMapReady'),
     onMapMove: createGlobalEventListener('onMapMove'),
     onMapStable: createGlobalEventListener('onMapStable'),
