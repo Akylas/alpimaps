@@ -905,9 +905,10 @@
             console.error(error, error.stack);
         }
     }
-    $: setRenderProjectionMode($showGlobe);
+    $: cartoMap?.getOptions().setRenderProjectionMode($showGlobe ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR);
     $: vectorTileDecoder && setStyleParameter('buildings', !!$show3DBuildings ? '2' : '1');
     $: vectorTileDecoder && setStyleParameter('contours', $showContourLines ? '1' : '0');
+    $: vectorTileDecoder && setStyleParameter('contoursOpacity', $contourLinesOpacity.toFixed(1));
     $: {
         const visible = $showRoutes;
         getLayers('routes').forEach((l) => {
@@ -915,10 +916,9 @@
         });
         cartoMap && cartoMap.requestRedraw();
     }
-    $: vectorTileDecoder && setStyleParameter('contoursOpacity', $contourLinesOpacity.toFixed(1));
-    $: vectorTileDecoder && toggleHillshadeSlope($showSlopePercentages);
-    $: toggleMapRotate($rotateEnabled);
-    $: toggleMapPitch($pitchEnabled);
+    $: customLayersModule?.toggleHillshadeSlope($showSlopePercentages);
+    $: cartoMap?.getOptions().setRotationGestures($rotateEnabled);
+    $: cartoMap?.getOptions().setTiltRange(toNativeMapRange([$pitchEnabled ? 30 : 90, 90]));
     // $: currentLayer && (currentLayer.preloading = $preloading);
     $: bottomSheetStepIndex === 0 && unselectItem();
     $: cartoMap?.getOptions().setFocusPointOffset(toNativeScreenPos({ x: 0, y: Utils.layout.toDevicePixels(steps[bottomSheetStepIndex]) / 2 }));
@@ -1198,15 +1198,10 @@
         // });
     }
 
-    function setRenderProjectionMode(showGlobe) {
-        cartoMap && cartoMap.getOptions().setRenderProjectionMode(showGlobe ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR);
-    }
-
     function setStyleParameter(key: string, value: string) {
-        // console.log('setStyleParameter', key, value);
         let decoder = mapContext.mapDecoder;
         if (!!decoder) {
-            decoder.setStyleParameter(key, value);
+            decoder.setStyleParameter(key, value + '');
         }
     }
 
@@ -1215,7 +1210,6 @@
         currentLanguage = newLang;
         packageService.currentLanguage = newLang;
         setStyleParameter('lang', newLang);
-        // setStyleParameter('fallback_lang', 'en');
     }
     onLanguageChanged(handleNewLanguage);
     onMapLanguageChanged(handleNewLanguage);
