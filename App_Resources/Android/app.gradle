@@ -149,7 +149,7 @@ android.applicationVariants.all { variant ->
 dependencies {
 
     // if (project.hasProperty('debugCarto')) {
-      // implementation project(path: ':carto-mobile-sdk')
+    //   implementation project(path: ':carto-mobile-sdk')
     // }
     implementation "com.github.skydoves:colorpickerview:2.2.4"
     implementation 'androidx.core:core-splashscreen:1.0.1'
