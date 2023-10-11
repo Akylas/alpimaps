@@ -489,7 +489,7 @@
             if (!PRODUCTION) {
                 await new Promise((resolve) => setTimeout(resolve, 1000));
             }
-            cartoMap = e.object as CartoMap<LatLonKeys>;
+            const map = e.object as CartoMap<LatLonKeys>;
             CartoMap.setRunOnMainThread(true);
             if (DEV_LOG) {
                 setShowDebug(true);
@@ -497,8 +497,10 @@
                 setShowWarn(true);
                 setShowError(true);
             }
-            projection = cartoMap.projection;
-            const options = cartoMap.getOptions();
+            projection = map.projection;
+            const options = map.getOptions();
+            //@ts-ignore
+            options.setLayersLabelsProcessedInReverseOrder(false);
             options.setWatermarkScale(0);
             options.setRestrictedPanning(true);
             options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
@@ -509,8 +511,8 @@
             options.setDoubleClickMaxDuration(0.3);
             options.setLongClickDuration(0.5);
             options.setKineticRotation(false);
-            options.setRotationGestures($rotateEnabled);
-            toggleMapPitch($pitchEnabled);
+
+            cartoMap = map;
             const pos = JSON.parse(ApplicationSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos<LatLonKeys>;
             const zoom = ApplicationSettings.getNumber('mapZoom', 10);
             const bearing = ApplicationSettings.getNumber('mapBearing', 0);
@@ -518,11 +520,12 @@
             cartoMap.setFocusPos(pos, 0);
             cartoMap.setZoom(zoom, 0);
             cartoMap.setBearing(bearing, 0);
+            DEV_LOG && console.log('onMainMapReady', pos, zoom, bearing);
             try {
                 packageService.start();
                 transitService.start();
                 setMapStyle(ApplicationSettings.getString('mapStyle', PRODUCTION || TEST_ZIP_STYLES ? 'osm.zip~osm' : 'osm~osm'), true);
-                // setMapStyle('osm.zip~osm', true);
+                // setMapStyle('mobile-sdk-styles~voyager', true);
             } catch (err) {
                 showError(err);
             }
