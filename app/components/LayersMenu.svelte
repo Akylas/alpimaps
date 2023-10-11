@@ -4,7 +4,6 @@
     import { ContentView, GridLayout } from '@nativescript/core';
     import { setNumber } from '@nativescript/core/application-settings';
     import { ObservableArray } from '@nativescript/core/data/observable-array';
-    import { debounce } from 'push-it-to-the-limit';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -19,6 +18,7 @@
     import { backgroundColor, borderColor, navigationBarHeight, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import IconButton from './IconButton.svelte';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
+    import { debounce } from '@nativescript/core/utils';
 
     const mapContext = getMapContext();
     let gridLayout: NativeViewElementNode<GridLayout>;
