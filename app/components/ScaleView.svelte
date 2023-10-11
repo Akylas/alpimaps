@@ -4,13 +4,11 @@
     import { Screen } from '@nativescript/core/platform';
     import { executeOnMainThread } from '@nativescript/core/utils';
     import { convertDistance } from '~/helpers/formatter';
+    import { getMetersPerPixel } from '~/helpers/geolib';
     import { getMapContext } from '~/mapModules/MapModule';
     import { TO_RAD } from '~/utils/geo';
 
     const mapContext = getMapContext();
-    function getMetersPerPixel(pos: MapPos<LatLonKeys>, zoom: number) {
-        return (156543.03392804097 * Math.cos(pos.lat * TO_RAD)) / Math.pow(2, zoom);
-    }
 
     const DPI = Screen.mainScreen.widthDIPs;
     const XDPI = DPI / Screen.mainScreen.scale;
