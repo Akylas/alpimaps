@@ -16,6 +16,6 @@
     export let valueFormatter = (value) => value.toFixed(1);
 </script>
 
-<gridLayout>
+<gridlayout>
     <SettingsSlider borderRadius={4} {backgroundColor} margin={2} elevation={2} {icon} {title} {value} {min} {max} {step} {onChange} {formatter} {valueFormatter} />
-</gridLayout>
+</gridlayout>

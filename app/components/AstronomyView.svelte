@@ -278,7 +278,7 @@
     }
 </script>
 
-<gridLayout height={500} rows="50,200,50,200" columns="*,*">
+<gridlayout height={500} rows="50,200,50,200" columns="*,*">
     <mdbutton variant="text" class="icon-btn" text="mdi-chevron-left" horizontalAlignment="left" on:tap={() => updateStartTime(startTime.subtract(1, 'd'))} />
     <label colSpan={2} text={startTime.format('LL')} textAlignment="center" verticalTextAlignment="center" on:tap={selectDate} fontSize={17} marginLeft={50} marginRight={50} />
     <mdbutton col={1} variant="text" class="icon-btn" text="mdi-chevron-right" horizontalAlignment="right" on:tap={() => updateStartTime(startTime.add(1, 'd'))} />
@@ -315,4 +315,4 @@
         </cgroup>
         <cspan text={formatTime(sunTimes.sunsetStart)} textAlignment="right" paddingTop={40} />
     </canvaslabel>
-</gridLayout>
+</gridlayout>
