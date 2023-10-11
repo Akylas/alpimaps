@@ -53,7 +53,7 @@ export async function selectTheme() {
         const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
         const result = await showBottomSheet({
             parent: null,
-            view: OptionSelect as any,
+            view: OptionSelect ,
             props: {
                 title: lc('select_language'),
                 options: actions.map((k) => ({ name: getThemeDisplayName(k), data: k }))
