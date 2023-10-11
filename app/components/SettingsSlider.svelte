@@ -71,7 +71,7 @@
     }
 </script>
 
-<gridLayout {...$$restProps} height="auto" rows="auto,auto, auto" columns="auto,*,auto" padding="10 10 10 10">
+<gridlayout {...$$restProps} height="auto" rows="auto,auto, auto" columns="auto,*,auto" padding="10 10 10 10">
     <!-- <canvas bind:this={canvas} on:draw={onDraw} /> -->
 
     <label visibility={icon ? 'visible' : 'collapsed'} color={$textColor} fontSize={24} text={icon} verticalTextAlignment="center" fontFamily={mdiFontFamily} />
@@ -91,4 +91,4 @@
     <label color={$textColor} fontSize={15} text={formatter(max)} verticalTextAlignment="center" row={2} col={2} textAlignment="right" />
     <label color={$textColor} fontSize={15} text={formatter(min)} verticalTextAlignment="center" row={2} />
     <slider row={2} col={1} value={actualValue} on:valueChange={onValueChange} minValue={min} maxValue={max} stepSize={step} verticalAlignment="bottom" color={actualValue === defaultValue ? colorSecondary : primaryColor} trackBackgroundColor="#aaaaaa88"/>
-</gridLayout>
+</gridlayout>
