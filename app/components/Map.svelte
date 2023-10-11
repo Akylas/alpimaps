@@ -516,7 +516,6 @@
             const pos = JSON.parse(ApplicationSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos<LatLonKeys>;
             const zoom = ApplicationSettings.getNumber('mapZoom', 10);
             const bearing = ApplicationSettings.getNumber('mapBearing', 0);
-            DEV_LOG && console.log('onMainMapReady', pos, zoom, bearing);
             cartoMap.setFocusPos(pos, 0);
             cartoMap.setZoom(zoom, 0);
             cartoMap.setBearing(bearing, 0);
