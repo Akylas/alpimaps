@@ -351,10 +351,12 @@ export default class ItemsModule extends MapModule {
                     return item as Item;
                 }
             }
-        } else {
-            properties = item.properties = item.properties || {};
-            // TODO: do we always remove it?
-            delete item.properties.style;
+        }
+        // else {
+        properties = item.properties = item.properties || {};
+        // TODO: do we always remove it?
+        delete item.properties.style;
+        if (!item.route) {
             item.properties.style = {
                 iconSize: 20,
                 fontFamily: mdiFontFamily,
@@ -362,9 +364,10 @@ export default class ItemsModule extends MapModule {
                 iconDx: -2,
                 icon: 'mdi-map-marker'
             };
-            const style = (properties.style = properties.style || {});
-            style.color = style.color || accentColor.hex;
         }
+        const style = (properties.style = properties.style || {});
+        style.color = style.color || accentColor.hex;
+        // }
 
         if (!item.id) {
             const isRoute = !!item.route;
