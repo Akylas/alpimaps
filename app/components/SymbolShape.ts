@@ -1,4 +1,4 @@
-import { Align, Canvas, Direction, Paint, Path, Style } from '@nativescript-community/ui-canvas';
+import { Align, Canvas, Direction, LayoutAlignment, Paint, Path, StaticLayout, Style } from '@nativescript-community/ui-canvas';
 import Shape, { colorProperty, lengthProperty, stringProperty } from '@nativescript-community/ui-canvas/shapes/shape';
 import { Color, CoreTypes, Length, PercentLength, Utils } from '@nativescript/core';
 import { osmicon } from '~/helpers/formatter';
@@ -82,7 +82,8 @@ export default class SymbolShape extends Shape {
                     if (shape.length > 1) {
                         canvas.drawText(osmicon('symbol-' + shape), left, height + top - 2, shapepaint);
                     } else {
-                        canvas.drawText(shape, left + 9, height / 2 + top + 9, shapepaint);
+                        const text = shape;
+                        canvas.drawText(text, left + 9, height / 2 + top + 9, shapepaint);
                     }
                 }
                 if (others[textIndex]?.length) {
@@ -93,7 +94,25 @@ export default class SymbolShape extends Shape {
 
                         textpaint.setColor('black');
                     }
-                    canvas.drawText(others[textIndex], left + width / 2, height / 2 + top + 7, textpaint);
+                    const text = others[textIndex];
+                    const textLength = text.length;
+                    if (textLength <= 3) {
+                        textpaint.setTextSize(18);
+                        canvas.drawText(text, left + width / 2, height / 2 + top + 7, textpaint);
+                    } else {
+                        const delta = Math.min(Math.max(text.length - 3, 0),3 );
+                        const fontSize = 18 - 2* delta;
+                        textpaint.setTextSize(fontSize);
+
+                        const staticLayout = new StaticLayout(text, textpaint, width, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+                        const textheight = staticLayout.getHeight();
+                        // staticLayout = new StaticLayout(text, textPaint, itemWidth, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
+                        canvas.save();
+                        canvas.translate(left + width / 2, height / 2 + top - textheight / 2);
+                        staticLayout.draw(canvas);
+                        canvas.restore();
+                        // canvas.drawText(text, left + width / 2, height / 2 + top + 7 - delta / 2, textpaint);
+                    }
                 }
             }
         } catch (error) {
