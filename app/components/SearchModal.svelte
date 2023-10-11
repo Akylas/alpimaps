@@ -1,6 +1,6 @@
 <script lang="ts">
     import { closePopover } from '@nativescript-community/ui-popover/svelte';
-    import { TextField } from '@nativescript/core';
+    import { TextField, Utils } from '@nativescript/core';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoLocation } from '~/handlers/GeoHandler';
@@ -80,6 +80,9 @@
     onDestroy(() => {
         unfocus();
     });
+    function blurTextField(event?) {
+        Utils.dismissSoftInput(event?.object.nativeViewProtected || textField?.nativeView?.nativeViewProtected);
+    }
 </script>
 
 <!-- <page id="selectCity" actionBarHidden={true} on:navigatingTo={onNavigatingTo}> -->
@@ -88,7 +91,19 @@
         <!-- <CActionBar title={lc('search')} modalWindow>
             <mdactivityIndicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapsed'} />
         </CActionBar> -->
-        <textfield bind:this={textField} row={1} hint={lc('search')} floating="false" returnKeyType="search" on:textChange={onTextChange} on:loaded={focus} {height} padding="3 10 3 10" text={query}/>
+        <textfield
+            bind:this={textField}
+            row={1}
+            hint={lc('search')}
+            floating="false"
+            returnKeyType="search"
+            {height}
+            padding="3 10 3 10"
+            text={query}
+            on:unloaded={blurTextField}
+            on:textChange={onTextChange}
+            on:loaded={focus}
+        />
         <SearchCollectionView bind:this={collectionView} row={2} on:tap={(event) => close(event.detail.detail)} />
     </gridlayout>
 </gesturerootview>
