@@ -1,5 +1,6 @@
 <script lang="ts" context="module">
     import { createNativeAttributedString } from '@nativescript-community/text';
+    import { Utils } from '@nativescript/core';
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { createEventDispatcher } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -85,7 +86,7 @@
         }
         updateItemText(it);
 
-        showSymbol = itemIsRoute && itemProps?.layer === 'route';
+        showSymbol = itemIsRoute && (itemProps?.layer === 'route' || itemProps?.layer === 'routes');
         actualShowSymbol = showSymbol && (itemProps.symbol || itemProps.network);
         let spans = [];
 
@@ -223,9 +224,14 @@
         }
     }
     function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
+        if (!item) {
+            return;
+        }
         try {
-            let w = canvas.getWidth();
-            let h = canvas.getHeight();
+            let paddingLeft = Utils.layout.toDeviceIndependentPixels(object.effectivePaddingLeft);
+            let paddingTop = Utils.layout.toDeviceIndependentPixels(object.effectivePaddingTop);
+            let w = canvas.getWidth() - paddingLeft - Utils.layout.toDeviceIndependentPixels(object.effectivePaddingRight);
+            let h = canvas.getHeight() - paddingTop - Utils.layout.toDeviceIndependentPixels(object.effectivePaddingBottom);
             if (onDraw) {
                 onDraw({ canvas, object });
             }
@@ -233,24 +239,24 @@
                 iconPaint.textSize = iconSize;
                 iconPaint.fontFamily = itemIconFontFamily;
                 iconPaint.color = iconColor || $textColor;
-                canvas.drawText(itemIcon, iconLeft, iconTop, iconPaint);
+                canvas.drawText(itemIcon, paddingLeft + iconLeft, iconTop, iconPaint);
             }
 
             if (nString) {
                 propsPaint.setTextAlign(Align.LEFT);
                 propsPaint.color = $textColor;
-                const staticLayout = new StaticLayout(nString, propsPaint, canvas.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+                const staticLayout = new StaticLayout(nString, propsPaint, w, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                 canvas.save();
-                canvas.translate(propsLeft, h - propsBottom);
+                canvas.translate(paddingLeft + propsLeft, paddingTop + h - propsBottom);
                 staticLayout.draw(canvas);
                 canvas.restore();
             }
             if (nString2) {
                 propsPaint.setTextAlign(Align.LEFT);
                 propsPaint.color = $textColor;
-                const staticLayout = new StaticLayout(nString2, propsPaint, canvas.getWidth(), LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
+                const staticLayout = new StaticLayout(nString2, propsPaint, w, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
                 canvas.save();
-                canvas.translate(0, h - props2Bottom);
+                canvas.translate(paddingLeft, paddingTop + h - props2Bottom);
                 staticLayout.draw(canvas);
                 canvas.restore();
             }
@@ -259,14 +265,14 @@
                 const data = openingHoursText(item);
                 propsPaint.color = data.color;
                 propsPaint.setTextAlign(Align.RIGHT);
-                canvas.drawText(data.text, w, h - 3, propsPaint);
+                canvas.drawText(data.text, paddingLeft + w, paddingTop + h - 3, propsPaint);
             }
             if (actualShowSymbol) {
                 SymbolShape.drawSymbolOnCanvas(canvas, {
                     width: symbolSize,
                     height: symbolSize,
-                    left: symbolLeft,
-                    top: symbolTop,
+                    left: paddingLeft + symbolLeft,
+                    top: paddingTop + symbolTop,
                     color: itemProps?.color || $textColor,
                     symbol: formatter.getSymbol(itemProps)
                 });
