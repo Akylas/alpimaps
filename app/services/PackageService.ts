@@ -12,7 +12,7 @@ import {
     ReverseGeocodingRequest,
     ReverseGeocodingService
 } from '@nativescript-community/ui-carto/geocoding/service';
-import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
+import { Geometry, LineGeometry } from '@nativescript-community/ui-carto/geometry';
 import { Feature, VectorTileFeature, VectorTileFeatureCollection } from '@nativescript-community/ui-carto/geometry/feature';
 import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
 import { HillshadeRasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
@@ -585,12 +585,12 @@ class PackageService extends Observable {
         if (!item._nativeGeometry) {
             item._nativeGeometry = geometry.getNative?.() || geometry;
         }
-        return item._nativeGeometry;
+        return item._nativeGeometry as Geometry;
     }
 
     getRouteItemPoses(item: Item) {
-        const geometry = this.getRouteItemGeometry(item);
-        return geometry.getPoses() as MapPosVector<LatLonKeys>;
+        const geometry = this.getRouteItemGeometry(item) as any as LineGeometry<LatLonKeys>;
+        return geometry.getPoses();
     }
     getItemCenter(item: Item) {
         if (!!item?.route) {
@@ -706,9 +706,9 @@ class PackageService extends Observable {
     }
     hasOfflineRouting = true;
     offlineRoutingSearchService() {
-        // console.log('offlineRoutingSearchService', !!this._localOfflineRoutingSearchService);
         if (this.hasOfflineRouting && !this._localOfflineRoutingSearchService) {
             const files = this.findFilesWithExtension('.vtiles');
+            // console.log('offlineRoutingSearchService', files);
             if (files.length) {
                 const source = (this._localOfflineRoutingSearchService = new MultiValhallaOfflineRoutingService());
                 source.setConfigurationParameter('service_limits.bicycle.max_distance', 255000);
