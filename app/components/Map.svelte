@@ -9,7 +9,7 @@
     import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
     import { BaseVectorTileLayer, VectorLayer, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
     import { Projection } from '@nativescript-community/ui-carto/projections';
-    import { CartoMap, PanningMode, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
+    import { CartoMap, MapInteractionInfo, PanningMode, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
     import { ZippedAssetPackage, nativeVectorToArray, setShowDebug, setShowError, setShowInfo, setShowWarn } from '@nativescript-community/ui-carto/utils';
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
     // import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
@@ -537,10 +537,8 @@
         if (!cartoMap) {
             return;
         }
-        if (!mapMoved) {
-            unFocusSearch();
-        }
-        mapMoved = true;
+        // console.log('onMainMapMove', e.data);
+        // mapMoved = true;
         // console.log('onMapMove');
         // const bearing = cartoMap.bearing;
         // console.log('onMapMove', bearing);
@@ -548,6 +546,18 @@
         mapContext.runOnModules('onMapMove', e);
         // executeOnMainThread(function () {
         currentMapRotation = Math.round(cartoMap.bearing * 100) / 100;
+        // });
+    }
+    function onMainMapInteraction(e) {
+        if (!cartoMap) {
+            return;
+        }
+        const interaction = e.data.interaction as MapInteractionInfo;
+        // console.log('onMainMapInteraction', interaction);
+        if (!mapMoved) {
+            unFocusSearch();
+        }
+        mapMoved = true;
         // });
     }
     function onMainMapIdle(e) {
