@@ -103,6 +103,7 @@ export interface MapContext {
     }) => void;
     zoomToItem: (args: { item: IItem; zoom?: number; minZoom?: number; forceZoomOut?: boolean }) => void;
     unselectItem: () => void;
+    selectStyle: () => Promise<void>;
     unFocusSearch: () => void;
     getCurrentLanguage: () => string;
     getSelectedItem: () => IItem;
@@ -190,6 +191,7 @@ const mapContext: MapContext = {
                   })
         });
         mapContext.runOnModules('vectorTileDecoderChanged', oldDecoder, mapContext.mapDecoder);
+        return mapContext.mapDecoder;
     },
     innerDecoder: new MBVectorTileDecoder({
         style: 'voyager',
