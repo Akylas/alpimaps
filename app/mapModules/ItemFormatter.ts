@@ -71,8 +71,12 @@ export default class ItemFormatter {
     }
     getItemSubtitle(item: Item, itemTile?: string) {
         if (item) {
-            if (item.properties && item.properties.ref) {
-                return item.properties.ref;
+            const properties = item.properties;
+            if (properties?.subtitle) {
+                return properties.subtitle;
+            }
+            if (properties?.ref) {
+                return properties.ref;
             }
             if (itemTile) {
                 return this.getItemAddress(item);
