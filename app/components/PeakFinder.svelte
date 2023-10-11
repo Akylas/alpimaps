@@ -1,20 +1,18 @@
 <script lang="ts">
     import { request } from '@nativescript-community/perms';
     import { estimateMagneticField, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
-    import { MergedMBVTTileDataSource, MultiTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
+    import { MultiTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
     import { MapTilerOnlineTileDataSource } from '@nativescript-community/ui-carto/datasources/maptiler';
     import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
-    import { AWebView, LoadFinishedEventData, WebViewEventData } from '@nativescript-community/ui-webview';
-    import { Folder, knownFolders, LoadEventData, ObservableArray, Page, path, Utils } from '@nativescript/core';
+    import { AWebView, LoadFinishedEventData } from '@nativescript-community/ui-webview';
+    import { Folder, LoadEventData, ObservableArray, Page, Utils, path } from '@nativescript/core';
     import { getBoolean, getNumber, setBoolean, setNumber } from '@nativescript/core/application-settings';
-    import { layout } from '@nativescript/core/utils';
+    import { debounce } from '@nativescript/core/utils';
     import dayjs from 'dayjs';
     import type { Feature } from 'geojson';
-    import { debounce } from 'push-it-to-the-limit';
-    import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { formatDistance } from '~/helpers/formatter';
@@ -558,7 +556,7 @@
         {shouldPan}
         android:marginBottom={$navigationBarHeight}
     >
-        <gridLayout on:layoutChanged={onLayoutChanged} width="100%" height="100%">
+        <gridlayout on:layoutChanged={onLayoutChanged} width="100%" height="100%">
             <awebview
                 bind:this={webView}
                 on:loaded={webviewLoaded}
@@ -623,7 +621,7 @@
                 fontSize={80}
                 marginBottom={100}
             />
-        </gridLayout>
+        </gridlayout>
         <gridlayout prop:bottomSheet height={300} width="100%" rows="30,*" columns="*,*" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
             <mdbutton variant="text" class="mdi" fontSize={16} width={undefined} text="mdi-cog" on:tap={() => (selectedPageIndex = 0)} />
             <mdbutton variant="text" col={1} class="mdi" fontSize={16} width={undefined} text="mdi-bug" on:tap={() => (selectedPageIndex = 1)} />

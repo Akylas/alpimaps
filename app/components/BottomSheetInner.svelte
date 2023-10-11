@@ -1080,10 +1080,10 @@
             isBounceEnabled="false"
         >
             <v-template>
-                <gridLayout columns="30,*" rows="*,auto,auto,*" rippleColor="white" on:tap={onInstructionTap(item)}>
+                <gridlayout columns="30,*" rows="*,auto,auto,*" rippleColor="white" on:tap={onInstructionTap(item)}>
                     <label rowSpan={4} text="getRouteInstructionIcon(item) |fonticon" class="osm" color="white" fontSize={20} verticalAlignment="middle" textAlignment='center' />
                     <label col={1} row={1} text="getRouteInstructionTitle(item)" color="white" fontSize={13} fontWeight='bold' textWrap={true} />
-                </gridLayout>
+                </gridlayout>
             </v-template>
         </collectionView> -->
     {/if}
