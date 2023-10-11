@@ -935,7 +935,7 @@
         try {
             if (selectedRoutes && selectedRoutes.length > 0) {
                 if (selectedRoutes.length === 1) {
-                    handleRouteSelection(selectedRoutes[0].featureData, selectedRoutes[0].layer);
+                    selectItem({ item: selectedRoutes[0], isFeatureInteresting: true });
                 } else {
                     const RouteSelect = (await import('~/components/RouteSelect.svelte')).default as any;
                     const results = await showBottomSheet({
@@ -944,12 +944,12 @@
                         ignoreTopSafeArea: true,
                         props: {
                             // title: l('pick_route'),
-                            options: selectedRoutes.map((s) => ({ name: s.featureData.name, route: s }))
+                            options: selectedRoutes.map((s) => ({ name: s.properties.name, route: s }))
                         }
                     });
                     const result = Array.isArray(results) ? results[0] : results;
                     if (result) {
-                        handleRouteSelection(result.route.featureData, result.route.layer);
+                        selectItem({ item: result.route, isFeatureInteresting: true });
                     }
                 }
             }
