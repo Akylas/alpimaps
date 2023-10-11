@@ -11,7 +11,6 @@ import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { openFilePicker } from '@nativescript-community/ui-document-picker';
 import { login, prompt } from '@nativescript-community/ui-material-dialogs';
 import { Application, ApplicationSettings, Color, profile } from '@nativescript/core';
-import * as appSettings from '@nativescript/core/application-settings';
 import { ChangeType, ChangedData, ObservableArray } from '@nativescript/core/data/observable-array';
 import { File, Folder, path } from '@nativescript/core/file-system';
 import { get } from 'svelte/store';
@@ -33,6 +32,12 @@ export enum RoutesType {
     Bicycle = 1,
     Hiking = 2
 }
+
+const mbTilesSourceGenerator = (s, minZoom) =>
+    new MBTilesTileDataSource({
+        minZoom,
+        databasePath: s
+    });
 
 const DEFAULT_HILLSHADE_SHADER =
     'uniform vec4 u_shadowColor;\n \
@@ -182,23 +187,14 @@ export default class CustomLayersModule extends MapModule {
             }
         }
     }
-    createMergeMBTilesDataSource(sources: (string | TileDataSource<any, any>)[], minZoom?: number) {
+    createMergeDataSource(sources: (string | TileDataSource<any, any>)[], dataSourceGenerator: (s: string, minZoom?: number) => TileDataSource<any, any>, minZoom?: number) {
         if (sources.length === 1) {
             if (sources[0] instanceof TileDataSource) {
                 return sources[0];
             }
-            return new MBTilesTileDataSource({
-                databasePath: sources[0]
-            });
+            return dataSourceGenerator(sources[0], minZoom);
         } else {
-            const dataSources = sources.map((s) =>
-                s instanceof TileDataSource
-                    ? s
-                    : new MBTilesTileDataSource({
-                          minZoom,
-                          databasePath: s
-                      })
-            );
+            const dataSources = sources.map((s) => (s instanceof TileDataSource ? s : dataSourceGenerator(s, minZoom)));
             let result, merged;
             for (let index = 0; index < dataSources.length; index += 2) {
                 if (index < dataSources.length - 1) {
@@ -267,18 +263,18 @@ export default class CustomLayersModule extends MapModule {
     }
 
     createHillshadeTileLayer(name, dataSource, options: HillshadeRasterTileLayerOptions = {}, terrarium = false) {
-        const contrast = appSettings.getNumber(`${name}_contrast`, 0.42);
-        const heightScale = appSettings.getNumber(`${name}_heightScale`, 0.22);
-        const illuminationDirection = appSettings.getNumber(`${name}_illuminationDirection`, 143);
-        const opacity = appSettings.getNumber(`${name}_opacity`, 1);
+        const contrast = ApplicationSettings.getNumber(`${name}_contrast`, 0.42);
+        const heightScale = ApplicationSettings.getNumber(`${name}_heightScale`, 0.22);
+        const illuminationDirection = ApplicationSettings.getNumber(`${name}_illuminationDirection`, 143);
+        const opacity = ApplicationSettings.getNumber(`${name}_opacity`, 1);
         const decoder = terrarium ? new TerrariumElevationDataDecoder() : new MapBoxElevationDataDecoder();
-        const tileFilterModeStr = appSettings.getString(`${name}_tileFilterMode`, 'bilinear');
+        const tileFilterModeStr = ApplicationSettings.getString(`${name}_tileFilterMode`, 'bilinear');
 
-        const accentColor = new Color(appSettings.getString(`${name}_accentColor`, '#000000aa'));
-        const shadowColor = new Color(appSettings.getString(`${name}_shadowColor`, '#00000000'));
-        const highlightColor = new Color(appSettings.getString(`${name}_highlightColor`, '#000000aa'));
-        const minVisibleZoom = appSettings.getNumber(`${name}_minVisibleZoom`, 0);
-        const maxVisibleZoom = appSettings.getNumber(`${name}_maxVisibleZoom`, 16);
+        const accentColor = new Color(ApplicationSettings.getString(`${name}_accentColor`, '#000000aa'));
+        const shadowColor = new Color(ApplicationSettings.getString(`${name}_shadowColor`, '#00000000'));
+        const highlightColor = new Color(ApplicationSettings.getString(`${name}_highlightColor`, '#000000aa'));
+        const minVisibleZoom = ApplicationSettings.getNumber(`${name}_minVisibleZoom`, 0);
+        const maxVisibleZoom = ApplicationSettings.getNumber(`${name}_maxVisibleZoom`, 16);
 
         let tileFilterMode: RasterTileFilterMode;
         switch (tileFilterModeStr) {
@@ -350,13 +346,13 @@ export default class CustomLayersModule extends MapModule {
         ApplicationSettings.setString(key + 'Token', value);
         this.tokenKeys[key] = value;
     }
-    async createRasterLayer(id: string, provider: Provider) {
-        const opacity = appSettings.getNumber(`${id}_opacity`, 1);
+    async createDataSourceAndMapLayer(id: string, provider: Provider) {
+        const opacity = ApplicationSettings.getNumber(`${id}_opacity`, 1);
 
         // Apply zoom level bias to the raster layer.
         // By default, bitmaps are upsampled on high-DPI screens.
         // We will correct this by applying appropriate bias
-        const zoomLevelBias = appSettings.getNumber(`${id}_zoomLevelBias`, (Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2)) * 0.75);
+        const zoomLevelBias = ApplicationSettings.getNumber(`${id}_zoomLevelBias`, (Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2)) * 0.75);
         const options = {
             zoomLevelBias: {
                 min: 0,
@@ -379,10 +375,11 @@ export default class CustomLayersModule extends MapModule {
         const idForPath = id.replaceAll(/[\\\?\*<":>\+\[\]\s\t\n\.]+/g, '_');
         const databasePath = File.fromPath(path.join(rasterCachePath.path, idForPath)).path;
         const legend = provider.legend;
-        let url = provider.url as string;
+        let url = provider.url as string | string[];
         if (provider.tokenKey) {
             const tokens = Array.isArray(provider.tokenKey) ? provider.tokenKey : [provider.tokenKey];
-            const needsToSet = tokens.some((s) => s === undefined);
+            console.log('tokens', tokens);
+            const needsToSet = tokens.map((s) => this.tokenKeys[s]).some((s) => s === undefined);
             if (needsToSet) {
                 if (tokens.length === 2) {
                     const result = await login({
@@ -412,13 +409,30 @@ export default class CustomLayersModule extends MapModule {
                 if (!this.tokenKeys[tok]) {
                     throw new Error('missing api token');
                 }
-                url = url.replace(`{${tok}}`, this.tokenKeys[tok]);
+                if (Array.isArray(url)) {
+                    url = url.map((u) => u.replace(`{${tok}}`, this.tokenKeys[tok]));
+                } else {
+                    url = url.replace(`{${tok}}`, this.tokenKeys[tok]);
+                }
             });
         }
-        const dataSource = new HTTPTileDataSource({
-            url,
-            ...provider.sourceOptions
-        });
+        let dataSource: TileDataSource<any, any>;
+        let vectorDataSource = false;
+        if (Array.isArray(url)) {
+            vectorDataSource = url[0].indexOf('.mvt') >= 0 || url[0].indexOf('.pbf') >= 0;
+            const generator = (s, minZoom) =>
+                new HTTPTileDataSource({
+                    url: s,
+                    ...provider.sourceOptions
+                });
+            dataSource = this.createMergeDataSource(url, generator);
+        } else {
+            vectorDataSource = url.indexOf('.mvt') >= 0 || url.indexOf('.pbf') >= 0;
+            dataSource = new HTTPTileDataSource({
+                url,
+                ...provider.sourceOptions
+            });
+        }
         // if (provider.cacheable !== false) {
         //     Object.assign(options, {
         //         cacheSize: {
@@ -427,7 +441,7 @@ export default class CustomLayersModule extends MapModule {
         //         }
         //     });
         // }
-        const cacheSize = appSettings.getNumber(`${id}_cacheSize`, 300);
+        const cacheSize = ApplicationSettings.getNumber(`${id}_cacheSize`, 300);
         let layer: TileLayer<any, any>;
         if (provider.hillshade) {
             Object.assign(options, HILLSHADE_OPTIONS);
@@ -454,6 +468,23 @@ export default class CustomLayersModule extends MapModule {
             if (!this.hillshadeLayer) {
                 this.hillshadeLayer = packageService.hillshadeLayer = layer as HillshadeRasterTileLayer;
             }
+        } else if (vectorDataSource) {
+            layer = new VectorTileLayer({
+                dataSource:
+                    provider.cacheable !== false
+                        ? new PersistentCacheTileDataSource({
+                              dataSource,
+                              capacity: cacheSize * 1024 * 1024,
+                              databasePath
+                          })
+                        : dataSource,
+                zoomLevelBias,
+                labelRenderOrder: VectorTileRenderOrder.LAST,
+                decoder: mapContext.innerDecoder,
+                // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
+                visible: opacity !== 0,
+                ...provider.layerOptions
+            });
         } else {
             layer = new RasterTileLayer({
                 dataSource:
@@ -628,7 +659,7 @@ export default class CustomLayersModule extends MapModule {
         await this.getSourcesLibrary();
         const provider = this.baseProviders[s] || this.overlayProviders[s];
         if (provider) {
-            const data = await this.createRasterLayer(s, provider);
+            const data = await this.createDataSourceAndMapLayer(s, provider);
             return data.layer.dataSource;
         }
     }
@@ -643,7 +674,7 @@ export default class CustomLayersModule extends MapModule {
                         await this.loadLocalMbtiles(folderPath);
                     }
                 }
-                const savedSources: (string | Provider)[] = JSON.parse(appSettings.getString('added_providers', '[]'));
+                const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
 
                 if (this.customSources.length === 0 && savedSources.length === 0) {
                     savedSources.push('openstreetmap');
@@ -660,7 +691,7 @@ export default class CustomLayersModule extends MapModule {
                         }
                         try {
                             if (provider) {
-                                const data = await this.createRasterLayer(provider.id || provider.name, provider);
+                                const data = await this.createDataSourceAndMapLayer(provider.id || provider.name, provider);
                                 this.customSources.push(data);
                                 mapContext.addLayer(data.layer, 'customLayers');
                                 this.updateAttribution(data);
@@ -711,7 +742,7 @@ export default class CustomLayersModule extends MapModule {
     needsAttribution = false;
     addDataSource(item: SourceItem) {
         const name = this.getSourceItemId(item);
-        const savedSources: (string | Provider)[] = JSON.parse(appSettings.getString('added_providers', '[]'));
+        const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
         const layerIndex = savedSources.findIndex((s) => (typeof s === 'string' ? s : s?.id) === name);
 
         if (layerIndex === -1) {
@@ -722,7 +753,7 @@ export default class CustomLayersModule extends MapModule {
             } else {
                 savedSources.push(name);
             }
-            appSettings.setString('added_providers', JSON.stringify(savedSources));
+            ApplicationSettings.setString('added_providers', JSON.stringify(savedSources));
         } else {
             this.customSources.splice(layerIndex, 0, item);
             mapContext.insertLayer(item.layer, 'customLayers', layerIndex);
@@ -734,7 +765,7 @@ export default class CustomLayersModule extends MapModule {
     hasRoute = false;
     async loadLocalMbtiles(directory: string) {
         try {
-            const context: android.app.Activity = __ANDROID__ && (Application.android.startActivity);
+            const context: android.app.Activity = __ANDROID__ && Application.android.startActivity;
             const entities = listFolder(directory);
             let worldMbtiles: MBTilesTileDataSource;
 
@@ -769,8 +800,9 @@ export default class CustomLayersModule extends MapModule {
                             sources.map((s) => s.path)
                         );
                     if (sources.length) {
-                        const dataSource: TileDataSource<any, any> = this.createMergeMBTilesDataSource(
+                        const dataSource: TileDataSource<any, any> = this.createMergeDataSource(
                             sources.map((s) => getFileNameThatICanUseInNativeCode(context, s.path)),
+                            mbTilesSourceGenerator,
                             worldMbtilesEntity ? 5 : undefined
                         );
                         mbtiles.push(dataSource);
@@ -824,7 +856,7 @@ export default class CustomLayersModule extends MapModule {
                         get(preloading)
                     );
                 mbtiles.forEach((s) => dataSource.add(s));
-                const opacity = appSettings.getNumber(name + '_opacity', 1);
+                const opacity = ApplicationSettings.getNumber(name + '_opacity', 1);
                 // const zoomLevelBias = Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2);
                 const layer = new VectorTileLayer({
                     dataSource,
@@ -888,7 +920,7 @@ export default class CustomLayersModule extends MapModule {
             if (terrains.length) {
                 this.hasTerrain = true;
                 const name = 'Hillshade';
-                const opacity = appSettings.getNumber(`${name}_opacity`, 1);
+                const opacity = ApplicationSettings.getNumber(`${name}_opacity`, 1);
                 const dataSource = new MultiTileDataSource();
                 terrains.forEach((s) => dataSource.add(s));
                 const layer = (this.hillshadeLayer = packageService.hillshadeLayer = this.createHillshadeTileLayer(name, dataSource));
@@ -1008,7 +1040,7 @@ export default class CustomLayersModule extends MapModule {
             .then((result) => {
                 if (Folder.exists(result.files[0])) {
                     const localMbtilesSource = result.files[0];
-                    appSettings.setString('local_mbtiles_directory', localMbtilesSource);
+                    ApplicationSettings.setString('local_mbtiles_directory', localMbtilesSource);
                     this.loadLocalMbtiles(localMbtilesSource);
                 } else {
                     return Promise.reject(new Error(l('no_folder_selected')));
@@ -1051,7 +1083,7 @@ export default class CustomLayersModule extends MapModule {
             //     provider.id = provider.url;
             //     provider.type = 'orux';
             // }
-            const data = await this.createRasterLayer(provider.id || result.name, provider);
+            const data = await this.createDataSourceAndMapLayer(provider.id || result.name, provider);
             this.addDataSource(data);
         }
     }
@@ -1096,12 +1128,12 @@ export default class CustomLayersModule extends MapModule {
             this.customSources.splice(index, 1);
             this.updateAttribution(item, true);
         }
-        const savedSources: (string | Provider)[] = JSON.parse(appSettings.getString('added_providers', '[]'));
+        const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
         index = savedSources.findIndex((s) => (typeof s === 'string' ? s : s?.id) === name);
-        appSettings.remove(name + '_opacity');
+        ApplicationSettings.remove(name + '_opacity');
         if (index !== -1) {
             savedSources.splice(index, 1);
-            appSettings.setString('added_providers', JSON.stringify(savedSources));
+            ApplicationSettings.setString('added_providers', JSON.stringify(savedSources));
         }
     }
     moveSource(item: SourceItem, newIndex: number) {
@@ -1125,7 +1157,7 @@ export default class CustomLayersModule extends MapModule {
                 this.customSources.splice(newIndex, 0, item);
             }
         }
-        const savedSources: (string | Provider)[] = JSON.parse(appSettings.getString('added_providers', '[]'));
+        const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
         index = savedSources.findIndex((s) => (typeof s === 'string' ? s : s?.id) === name);
         if (index !== -1) {
             // let firstNonLocalIndex = -1;
@@ -1142,7 +1174,7 @@ export default class CustomLayersModule extends MapModule {
             } else {
                 savedSources.splice(newIndex, 0, name);
             }
-            appSettings.setString('added_providers', JSON.stringify(savedSources));
+            ApplicationSettings.setString('added_providers', JSON.stringify(savedSources));
         }
     }
 }
