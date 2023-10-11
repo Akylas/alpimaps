@@ -1245,14 +1245,13 @@
             }
         }
         const actions = styles;
-        action({
+        const result = await action({
             title: lc('select_style'),
             actions
-        }).then((result) => {
-            if (actions.indexOf(result) !== -1) {
-                setMapStyle(result);
-            }
         });
+        if (actions.indexOf(result) !== -1) {
+            setMapStyle(result);
+        }
     }
 
     function removeLayer(layer: Layer<any, any>, layerId: LayerType) {
