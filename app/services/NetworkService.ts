@@ -348,10 +348,10 @@ export interface NetworkConnectionStateEventData extends EventData {
 // }
 
 function latlongToOSMString(_point: MapPos<LatLonKeys>) {
-    return _point.lat.toFixed(4) + ',' + _point.lon.toFixed(4);
+    return _point.lon.toFixed(4) + ',' + _point.lat.toFixed(4);
 }
-function regionToOSMString(_region: MapBounds<LatLonKeys>) {
-    return 'bbox:' + latlongToOSMString(_region.southwest) + ',' + latlongToOSMString(_region.northeast);
+export function regionToOSMString(_region: MapBounds<LatLonKeys>) {
+    return latlongToOSMString(_region.southwest) + ',' + latlongToOSMString(_region.northeast);
 }
 
 function evalTemplateString(resource: string, obj: {}) {
