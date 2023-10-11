@@ -334,6 +334,7 @@
             rasterTileClicked: onRasterTileClicked,
             getMapViewPort,
             // getCurrentLayer,
+            selectStyle,
             selectItem,
             unselectItem,
             unFocusSearch,
