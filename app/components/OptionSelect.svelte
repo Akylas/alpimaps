@@ -1,12 +1,13 @@
 <script lang="ts" context="module">
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
-    import { File } from '@nativescript/core';
+    import { File, Utils } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
     import { Template } from 'svelte-native/components';
     import { lc } from '~/helpers/locale';
     import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
     import { actionBarButtonHeight, borderColor, backgroundColor as defaultBackgroundColor, mdiFontFamily, textColor } from '~/variables';
     import IconButton from './IconButton.svelte';
+    import { onDestroy } from 'svelte';
     export interface OptionType {
         name: string;
         isPick?: boolean;
@@ -19,11 +20,12 @@
     export let showBorders = true;
     export let backgroundColor = $defaultBackgroundColor;
     export let rowHeight = 72;
-    export let width = 'auto';
+    export let width = '*';
     export let fontWeight = 'bold';
     export let options: OptionType[];
     export let onClose = null;
     export let height: number = 350;
+    export let onCheckBox: (item, value) => void = null;
     let filteredOptions: OptionType[] = null;
     let filter: string = null;
 
@@ -63,7 +65,12 @@
             close(item);
         }
     }
-    function blurTextField() {}
+    onDestroy(() => {
+        blurTextField();
+    });
+    function blurTextField() {
+        Utils.dismissSoftInput();
+    }
 </script>
 
 <gesturerootview {height} rows="auto,*" {backgroundColor} columns={`${width}`} {...$$restProps}>
@@ -96,7 +103,10 @@
             />
         </gridlayout>
     {/if}
-    <collectionView row={1} items={filteredOptions} {rowHeight}>
+    <collectionView row={1} items={filteredOptions} {rowHeight} itemTemplateSelector={(item) => item.type || 'default'}>
+        <Template let:item key="checkbox">
+            <checkbox text={item.name} checked={item.value} on:checkedChange={(e) => onCheckBox(item, e.value)} />
+        </Template>
         <Template let:item>
             <canvaslabel padding={16} color={item.color || $textColor} rippleColor={item.color || $textColor} on:tap={(event) => onTap(item, event)}>
                 <cspan verticalAlignment="middle" textAlignment="left" text={item.icon} fontSize={16} visibility={item.icon ? 'visible' : 'hidden'} fontFamily={mdiFontFamily} />
