@@ -262,7 +262,7 @@ export function queryString(params, location) {
             }
         }
         for (key in obj) {
-            parts.push(key + (obj[key] === true ? '' : '=' + obj[key]));
+            parts.push(key + ('=' + obj[key]));
         }
     }
 
