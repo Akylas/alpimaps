@@ -1,4 +1,3 @@
-@background: #e6e4e0;
 
 @border_country: #787b8c;
 @border_country_opacity: 1;
@@ -137,15 +136,15 @@
 
 
 @service-fill: #ffffff;
-@service-tunnel-fill: #b3b7cb;
+@service-tunnel-fill: darken(#ffffff, 5%);
 @service-casing: @residential-casing;
 @service-casing-width: linear([view::zoom], (14,0), (14.01,0.5), (16, 1));
 
-@service-width: (pow(2, linear([view::zoom], (14, -2.8), (18, 3.2))) + 0.5) * linear([view::zoom], (14,0), (14.01, 1));
+@service-width: linear([view::zoom],  (12, 0.5), (13, 0.95), (14, 1), (15, 1.2), (16, 2), (17, 2.5), (18, 3 ), (20, 6 ));
 
 
 @pedestrian-fill: #ffffff;
-@pedestrian-polygon-fill: fadeout(#E5E7F1, 0.3);
+@pedestrian-polygon-fill: fadeout(#E5E7F1, 0.2);
 @pedestrian-tunnel-fill: darken(@pedestrian-fill, 10%);
 @pedestrian-casing: #ffffff00;
 @pedestrian-casing-width: linear([view::zoom], (15,0), (15.01,1), (16, 2));
@@ -159,7 +158,7 @@
 @path-fill: linear([view::zoom], (13,#bb7979), (14,#bb6868));
 @path-tunnel-fill: lighten(@pedestrian-fill, 5%);
 @path-casing: linear([view::zoom], (10, #ffffff00), (13, #ffffff));
-@path-casing-width: linear([view::zoom], (14,0), (14.01,1), (16, 2.5));
+@path-casing-width: linear([view::zoom], (14,0), (14.01,0.5), (16, 1), (18, 2.5));
 @cycleway-casing-width: linear([view::zoom], (14,0), (14.01,1), (16, 1.5));
 @path-width: linear([view::zoom], (13,0.5), (14,1), (18,2), (20, 3));
 @path-dasharray: 7,1;
@@ -167,8 +166,8 @@
 
 @step-fill: #ffffff;
 @step-casing: #00ffff00;
-@step-width: @path-width + linear([view::zoom], (16, 0), (18, 3));
-@step-casing-width: linear([view::zoom], (14,0), (14.01,1));
+@step-width: @path-width + linear([view::zoom], (16, 0), (18, 1), (22, 10));
+@path-tunnel-casing-width: linear([view::zoom], (14,0), (14.01,0.5), (16,1), (20,2));
 @step-dasharray: 2,3;
 
 @track-fill: linear([view::zoom], (13,#996600), (14,#996600));
