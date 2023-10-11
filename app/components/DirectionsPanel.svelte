@@ -10,7 +10,6 @@
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { ApplicationSettings, Color, ContentView, Device, GridLayout, ObservableArray, StackLayout, TextField, Utils, View } from '@nativescript/core';
     import type { Feature, Point } from 'geojson';
-    import { debounce } from 'push-it-to-the-limit';
     import { createEventDispatcher, onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, showModal } from 'svelte-native/dom';
@@ -28,6 +27,7 @@
     import { accentColor, alpimapsFontFamily, globalMarginTop, mdiFontFamily, primaryColor } from '~/variables';
     import IconButton from './IconButton.svelte';
     import { defaultProfileCostingOptions, getSavedProfile, getValhallaSettings, removeSavedProfile, savedProfile, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
+    import { debounce } from '@nativescript/core/utils';
 
     const DEFAULT_PROFILE_KEY = 'default_direction_profile';
 
