@@ -1,10 +1,7 @@
 import * as https from '@nativescript-community/https';
 import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
 import * as appavailability from '@nativescript/appavailability';
-import { ApplicationEventData, EventData, Folder, Observable, Utils } from '@nativescript/core';
-import { off as applicationOff, on as applicationOn, foregroundEvent } from '@nativescript/core/application';
-import * as connectivity from '@nativescript/core/connectivity';
-import { Headers } from '@nativescript/core/http';
+import { Application, ApplicationEventData, ApplicationSettings, Connectivity, EventData, Folder, Headers, Observable, Utils } from '@nativescript/core';
 import { BaseError } from 'make-error';
 import { getBounds, getPathLength } from '~/helpers/geolib';
 import { l } from '~/helpers/locale';
@@ -551,9 +548,9 @@ export class NetworkService extends Observable {
             return;
         }
         this.monitoring = true;
-        applicationOn(foregroundEvent, this.onAppResume, this);
-        connectivity.startMonitoring(this.onConnectionStateChange.bind(this));
-        this.connectionType = connectivity.getConnectionType();
+        Application.on(Application.foregroundEvent, this.onAppResume, this);
+        Connectivity.startMonitoring(this.onConnectionStateChange.bind(this));
+        this.connectionType = Connectivity.getConnectionType();
         this.canCheckWeather = await appavailability.available(__IOS__ ? 'weather://' : 'com.akylas.weather');
         const folder = Folder.fromPath(getDataFolder()).getFolder('cache');
         const diskLocation = folder.path;
@@ -569,9 +566,9 @@ export class NetworkService extends Observable {
         if (!this.monitoring) {
             return;
         }
-        applicationOff(foregroundEvent, this.onAppResume, this);
+        Application.off(Application.foregroundEvent, this.onAppResume, this);
         this.monitoring = false;
-        connectivity.stopMonitoring();
+        Connectivity.stopMonitoring();
     }
     onAppResume(args: ApplicationEventData) {
         this.connectionType = Connectivity.getConnectionType();
