@@ -1,7 +1,6 @@
 <script lang="ts">
     import { Align, Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { AbsoluteLayout, Utils } from '@nativescript/core';
+    import { AbsoluteLayout } from '@nativescript/core';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { showToolTip } from '~/utils/utils';
     import { actionBarButtonHeight, mdiFontFamily, primaryColor, subtitleColor, textColor } from '~/variables';
@@ -108,14 +107,14 @@
             if (button.onLongPress) {
                 button.onLongPress(event);
             } else if (button.tooltip) {
-                showToolTip(button.tooltip)
+                showToolTip(button.tooltip);
             }
         }
     }
     function onTouch(event) {
         if (event.action === 'down') {
-            ripple.nativeView.left = Math.floor(event.getX() / buttonSize) * buttonSize;
-            ripple.nativeView.top = Math.floor(event.getY() / buttonSize) * buttonSize;
+            ripple.nativeView.marginLeft = Math.floor(event.getX() / buttonSize) * buttonSize;
+            ripple.nativeView.marginTop = Math.floor(event.getY() / buttonSize) * buttonSize;
             if (__ANDROID__) {
                 ripple.nativeView.nativeView.dispatchTouchEvent(event.android);
             } else if (__IOS__) {
