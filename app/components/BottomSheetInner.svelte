@@ -27,7 +27,7 @@
     import { showError } from '~/utils/error';
     import { computeDistanceBetween } from '~/utils/geo';
     import { showBottomSheet } from '~/utils/svelte/bottomsheet';
-    import { openLink } from '~/utils/ui';
+    import { hideLoading, openLink, showLoading } from '~/utils/ui';
     import { actionBarButtonHeight, borderColor, mdiFontFamily, primaryColor, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import ElevationChart from './ElevationChart.svelte';
     import IconButton from './IconButton.svelte';
@@ -658,7 +658,12 @@
                         );
                         break;
                     case 'geojson':
+                        showLoading();
                         await mapContext.mapModule('items').shareItemsAsGeoJSON([item]);
+                        break;
+                    case 'gpx':
+                        showLoading();
+                        await mapContext.mapModule('items').shareItemsAsGPX([item]);
                         break;
                     default:
                         throw new Error('command not found');
@@ -666,6 +671,8 @@
             }
         } catch (error) {
             showError(error);
+        } finally {
+            hideLoading();
         }
         // shareFile(JSON.stringify(itemToShare), 'sharedItem.json');
     }
