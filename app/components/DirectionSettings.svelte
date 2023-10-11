@@ -44,7 +44,7 @@
     onThemeChanged(() => collectionView?.nativeView.refreshVisibleItems());
 </script>
 
-<gridLayout rows="auto,*,auto" borderRadius={4} backgroundColor={$widgetBackgroundColor} margin={2} elevation={2}>
+<gridlayout rows="auto,*,auto" borderRadius={4} backgroundColor={$widgetBackgroundColor} margin={2} elevation={2}>
     {#if options}
         <stacklayout orientation="horizontal" horizontalAlignment="center" margin={5}>
             {#each options as option, index}
@@ -74,7 +74,7 @@
         </Template>
         <Template let:item key="switch">
             <gridlayout columns="*, auto" padding="0 10 0 30">
-                <stackLayout verticalAlignment="middle">
+                <stacklayout verticalAlignment="middle">
                     <label color={$textColor} fontSize={17} text={item.title} textWrap={true} verticalTextAlignment="top" maxLines={2} lineBreak="end" />
                     <label
                         color={$subtitleColor}
@@ -85,7 +85,7 @@
                         maxLines={2}
                         lineBreak="end"
                     />
-                </stackLayout>
+                </stacklayout>
                 <switch col={1} checked={item.value} on:checkedChange={(e) => onCheckBox(item, e.value)} verticalAlignment="middle" />
                 <absoluteLayout colSpan={2} backgroundColor={$borderColor} height={1} verticalAlignment="bottom" />
             </gridlayout>
@@ -108,4 +108,4 @@
             <span text={lc('reset_settings')} verticalAlignment="middle" />
         </mdbutton>
     {/if}
-</gridLayout>
+</gridlayout>

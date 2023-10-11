@@ -652,7 +652,7 @@ LEFT JOIN  (
             const result = await showPopover<any>({
                 vertPos: VerticalPosition.ALIGN_TOP,
                 horizPos: HorizontalPosition.ALIGN_LEFT,
-                view: OptionSelect as any,
+                view: OptionSelect ,
                 fitInScreen: true,
                 anchor: event.object,
                 props: {
