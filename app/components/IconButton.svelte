@@ -1,11 +1,10 @@
 <script lang="ts" context="module">
-    import { profile } from '@nativescript/core';
-    import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import { showToolTip } from '~/utils/utils';
     import { actionBarButtonHeight, mdiFontFamily, primaryColor, subtitleColor, textColor } from '~/variables';
     const iconPaint = new Paint();
     iconPaint.fontFamily = mdiFontFamily;
-    // iconPaint.setTextAlign(Align.CENTER);
 </script>
 
 <script lang="ts">
@@ -29,6 +28,8 @@
     export let height = null;
     export let width = null;
 
+    let canvas: NativeViewElementNode<CanvasView>;
+
     // let actualColor = null;
     // $: actualColor = white ? 'white' : !isEnabled || gray ? $subtitleColor : color;
     $: actualColor = color || (!isEnabled || gray ? $subtitleColor : $textColor);
@@ -45,7 +46,11 @@
                   }
               }
             : null;
+    $: refresh(text);
 
+    function refresh(...args) {
+        canvas?.nativeView?.redraw()
+    }
     function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
         iconPaint.fontFamily = fontFamily;
         iconPaint.textSize = fontSize ? fontSize : small ? 16 : 24;
@@ -60,7 +65,7 @@
     }
 
     function conditionalEvent(node, { condition, event, callback }) {
-        let toRemove
+        let toRemove;
         if (condition) {
             toRemove = callback;
             node.addEventListener(event, callback);
@@ -78,6 +83,7 @@
 
 <canvas
     on:draw={onCanvasDraw}
+    bind:this={canvas}
     borderRadius={shape === 'round' || (rounded && !shape) ? size / 2 : null}
     disableCss={true}
     rippleColor={actualColor}
