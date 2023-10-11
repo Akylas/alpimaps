@@ -2,7 +2,7 @@
     "compilerOptions": {
         "target": "es2020",
         "module": "esnext",
-        "moduleResolution": "nodenext",
+        "moduleResolution": "node",
         "declaration": false,
         "removeComments": true,
         "emitDecoratorMetadata": false,
