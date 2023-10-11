@@ -2,8 +2,7 @@ import { isSimulator } from '@nativescript-community/extendedinfo';
 import { Application, Color, Observable, Screen, Utils } from '@nativescript/core';
 import { writable } from 'svelte/store';
 import CSSModule from '~/variables.module.scss';
-// import { currentTheme } from './helpers/theme';
-import { get_current_component } from 'svelte/internal';
+import { onDestroy } from 'svelte';
 const locals = CSSModule.locals;
 
 export const globalObservable = new Observable();
@@ -12,21 +11,18 @@ const callbacks = {};
 export function createGlobalEventListener(eventName: string) {
     return function (callback: Function, once = false) {
         callbacks[eventName] = callbacks[eventName] || {};
-        let component;
-        try {
-            component = get_current_component();
-        } catch (error) {}
+        let cleaned = false;
+
+        function clean() {
+            if (cleaned) {
+                cleaned = true;
+                delete callbacks[eventName][callback];
+                globalObservable.off(eventName, eventCallack);
+            }
+        }
         const eventCallack = (event) => {
             if (once) {
-                globalObservable.off(eventName, eventCallack);
-                delete callbacks[eventName][callback];
-
-                if (component) {
-                    const index = component.$$.on_destroy.indexOf(clean);
-                    if (index >= 0) {
-                        component.$$.on_destroy.splice(index, 1);
-                    }
-                }
+                clean();
             }
             if (Array.isArray(event.data)) {
                 event.result = callback(...event.data);
@@ -36,13 +32,11 @@ export function createGlobalEventListener(eventName: string) {
         };
         callbacks[eventName][callback] = eventCallack;
         globalObservable.on(eventName, eventCallack);
-        function clean() {
-            delete callbacks[eventName][callback];
-            globalObservable.off(eventName, eventCallack);
-        }
-        if (component) {
-            component.$$.on_destroy.push(clean);
-        }
+
+
+        onDestroy(() => {
+            clean();
+        });
         return clean;
     };
 }
