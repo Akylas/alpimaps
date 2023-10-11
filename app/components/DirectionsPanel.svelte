@@ -1138,17 +1138,16 @@
                 on:itemReordered={onItemReordered}
             >
                 <Template let:item>
-                    <gridlayout>
-                        <canvaslabel color="white" fontSize={15} paddingLeft={10} fontFamily={mdiFontFamily}>
-                            <cspan text="mdi-dots-vertical" verticalAlignment="top" visibility={item.properties.isStart ? 'hidden' : 'visible'} fontSize={14} paddingTop={-2} />
-                            <cspan text="mdi-dots-vertical" verticalAlignment="bottom" visibility={item.properties.isStop ? 'hidden' : 'visible'} fontSize={14} paddingBottom={-2} />
-                            <cspan text={item.properties.isStop ? 'mdi-map-marker' : 'mdi-checkbox-blank-circle-outline'} verticalAlignment="middle" />
-                        </canvaslabel>
+                    <canvaslabel color="white" fontSize={15} paddingLeft={10} fontFamily={mdiFontFamily}>
+                        <cspan text="mdi-dots-vertical" verticalAlignment="top" visibility={item.properties.isStart ? 'hidden' : 'visible'} fontSize={14} paddingTop={-2} />
+                        <cspan text="mdi-dots-vertical" verticalAlignment="bottom" visibility={item.properties.isStop ? 'hidden' : 'visible'} fontSize={14} paddingBottom={-2} />
+                        <cspan text={item.properties.isStop ? 'mdi-map-marker' : 'mdi-checkbox-blank-circle-outline'} verticalAlignment="middle" />
+
                         <gridlayout borderRadius={8} backgroundColor={primaryColor.darken(20).hex} columns=" *,auto" height={30} margin="0 0 0 30" on:tap={(event) => openSearchFromItem(event, item)}>
                             <label color="white" marginLeft={15} fontSize={15} verticalTextAlignment="center" text={item.properties.name} maxLines={1} lineBreak="end" />
                             <IconButton color="white" small={true} isVisible={item.properties.name && item.properties.name.length > 0} col={1} text="mdi-delete" on:tap={() => clearWayPoint(item)} />
                         </gridlayout>
-                    </gridlayout>
+                    </canvaslabel>
                 </Template>
             </collectionview>
             <IconButton isSelected={true} white={true} row={1} col={1} text="mdi-swap-vertical" on:tap={() => reversePoints()} isEnabled={nbWayPoints > 1} />
