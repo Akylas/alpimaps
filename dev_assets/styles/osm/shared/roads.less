@@ -38,30 +38,30 @@
 }
 
 #transportation['mapnik::geometry_type'=2] {
-	[class=service][zoom>=15]::casing, 
-	[class=service][brunnel=bridge][zoom>=15]::bridge {
+	::casing [class=service][zoom>=15], 
+	::bridge [class=service][brunnel=bridge][zoom>=15] {
 		line-width: @service-width + @service-casing-width;
 		line-color: @service-casing;
 		// line-join: round;
 		// line-cap: round;
-		[brunnel=tunnel][zoom>=15]{
+		[brunnel=tunnel]{
 			// line-cap: butt;
 			// line-join: miter;
 			line-dasharray: @tunnel-dasharray;
 		}
-		[brunnel=bridge][zoom>=15]{
-			// line-cap: butt;
-			// line-join: miter;
-			line-color: @bridge-casing;
-		}
+		// [brunnel=bridge][zoom>=15]{
+		// 	// line-cap: butt;
+		// 	// line-join: miter;
+		// 	line-color: @bridge-casing;
+		// }
 		::inner {
 			// line-join: round;
 			// line-cap: round;
 			line-color: @service-fill;
 			line-width: @service-width;
-			[brunnel=tunnel][zoom>=15] {
-				line-color: @service-tunnel-fill;
-			}
+				[brunnel=tunnel] {
+					line-color: @service-tunnel-fill;
+				}
 		}
 	}
 	[class=minor][zoom>=12]::casing, 
@@ -290,10 +290,14 @@
 		[zoom>=13] {
 			
 			[brunnel=tunnel][zoom>=17] {
-				_casing/line-width: @step-width + @path-casing-width + @step-casing-width;
+				_casing/line-width: @path-width + @path-casing-width + @path-tunnel-casing-width;
 				_casing/line-color: @steps-tunnel-casing;
 				_casing/line-dasharray: @tunnel-dasharray;
 				casing/line-width: @path-width + @path-casing-width;
+				[subclass=steps] {
+					_casing/line-width: @step-width + @path-casing-width + @path-tunnel-casing-width;
+					casing/line-width: @step-width + @path-casing-width;
+				}
 				casing/line-color: @path-casing;
 			}
 			[subclass=cycleway],[bicycle=designated][surface=paved] {
@@ -342,7 +346,11 @@
 					line-dasharray: 4,2;
 				}
 				[brunnel=tunnel][zoom>=17]{
+					// line-color: darken(@pedestrian-fill, 20%);
 					line-color: @path-fill;
+					[subclass=steps][surface=paved],[subclass=steps][indoor>0] {
+						line-color: darken(@pedestrian-fill, 20%);
+					}
 				}
 			}
 			
@@ -375,7 +383,8 @@
 							line-width: @footway-width;
 						}
 						[brunnel=tunnel][zoom>=17]{
-							line-color: @path-fill;
+							line-color: darken(@pedestrian-fill, 20%);
+							// line-color: @path-fill;
 						}
 					}
 				}

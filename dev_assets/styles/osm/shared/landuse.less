@@ -78,10 +78,10 @@ Map {
     }
   }
 
-  [class=sand]::sand{
+  ::sand [class=sand]{
     polygon-fill: @sand;
   }
-  [class=wood]::wood{
+  ::wood [class=wood]{
     polygon-fill: @forest;
     [zoom>=14] {
       polygon-pattern-file: @forest_pattern;
@@ -116,11 +116,6 @@ Map {
        polygon-fill: @residential; 
   }
   ::top_of_residential {
-    [class=pedestrian]{
-      polygon-fill: @pedestrian-polygon-fill;
-      line-color: darken(@pedestrian-polygon-fill, 10%);
-      line-width: 0.5;
-    }
     [class=recreation_ground][zoom>=14],
     [class=playground][zoom>=15]{
       polygon-fill: @leisure;
@@ -150,14 +145,13 @@ Map {
       }
     }
 
-    [class=commercial]{
-      polygon-fill: @commercial; 
-      [zoom>=16] {
-        line-width: 0.5;
-        line-color: darken(@commercial, 20%);
-      }
-    }
-
+    // [class=commercial]{
+    //   polygon-fill: @commercial; 
+    //   [zoom>=16] {
+    //     line-width: 0.5;
+    //     line-color: darken(@commercial, 20%);
+    //   }
+    // }
     [class=university] {
       polygon-fill:  @university;
     }
@@ -175,6 +169,12 @@ Map {
         line-color: @parking-outline;
       }
     }
+    [class=pedestrian]{
+      polygon-fill: @pedestrian-polygon-fill;
+      line-color: darken(@pedestrian-polygon-fill, 10%);
+      line-width: 0.5;
+    }
+
 
     [class=military][zoom>=13]{
       polygon-pattern-file: url('symbols/military_red_hatch.png');
@@ -244,8 +244,8 @@ Map {
 		}
 	}
 }
-#building['nuti::buildings'>0][zoom>=15] {
-  ['nuti::buildings'=2][zoom>=17]::3d{
+#building['mapnik::geometry_type'=3]['nuti::buildings'>0][zoom>=15] {
+  ['nuti::buildings'>1][hide_3d!=true][zoom>=17]::3d  {
       building-height: [render_height] ? [render_height] : 5;
       building-min-height: [render_min_height];
       building-fill: @building-fill;
@@ -255,7 +255,6 @@ Map {
   polygon-fill: @building-fill;
   polygon-opacity: @building-opacity;
   ::line {
-
     line-color: @building-line;
     line-width: @building-line-width;
   }
