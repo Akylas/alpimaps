@@ -160,7 +160,7 @@ export default class ItemsModule extends MapModule {
         // DEV_LOG && console.log('addItemToLayer', `${item.properties.color}`, JSON.stringify(item.properties));
         // this.currentLayerFeatures.push({ type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
         if (autoUpdate) {
-            this.getLocalVectorDataSource().addGeoJSONStringFeature(1, JSON.stringify({ type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry }));
+            this.getLocalVectorDataSource().addGeoJSONStringFeature(1, { type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
             // this.updateGeoJSONLayer();
         }
     }
@@ -187,7 +187,7 @@ export default class ItemsModule extends MapModule {
         if (index !== -1) {
             this.currentItems.splice(index, 1, item);
             if (autoUpdateLayer && item.onMap !== 0) {
-                this.getLocalVectorDataSource().updateGeoJSONStringFeature(1, JSON.stringify({ type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry }));
+                this.getLocalVectorDataSource().updateGeoJSONStringFeature(1, { type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
             }
             if (item.route) {
                 this.takeItemPicture(item);
