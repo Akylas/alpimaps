@@ -22,6 +22,7 @@ import { networkService } from '~/services/NetworkService';
 import { startSentry } from '~/utils/sentry';
 import './app.scss';
 import { accentColor } from './variables';
+import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
 
 startSentry();
 installGestures(true);
@@ -94,7 +95,7 @@ PagerElement.register();
 // Trace.addCategories(Trace.categories.NativeLifecycle);
 // Trace.addCategories(Trace.categories.Transition);
 // Trace.addCategories(Trace.categories.Animation);
-// Trace.addCategories(ImageViewTraceCategory);
+// Trace.addCategories(CollectionViewTraceCategory);
 // Trace.enable();
 
 if (__IOS__) {
