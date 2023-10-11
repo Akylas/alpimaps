@@ -1835,8 +1835,8 @@
                 verticalAlignment="top"
                 id="mapButtonsNew"
                 buttons={sideButtons}
-                marginTop={90}
-                translateY={Math.max(topTranslationY - 50, 0)}
+                marginTop={Math.max(90 - topTranslationY, 0)}
+                translateY={Math.max(topTranslationY - 30, 0)}
             />
 
             <Search bind:this={searchView} verticalAlignment="top" defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
@@ -1866,10 +1866,10 @@
                 class="small-floating-btn"
                 on:tap={resetBearing}
                 visibility={currentMapRotation !== 0 ? 'visible' : 'collapsed'}
-                marginTop={90}
+                marginTop={Math.max(90 - topTranslationY, 0)}
                 verticalAlignment="top"
                 horizontalAlignment="right"
-                translateY={Math.max(topTranslationY - 50, 0)}
+                translateY={Math.max(topTranslationY - 30, 0)}
             >
                 <label class="mdi" textAlignment="center" rotate={-currentMapRotation} verticalAlignment="middle" text="mdi-navigation" color={primaryColor} />
             </mdcardview>
