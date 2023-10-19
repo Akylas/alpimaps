@@ -60,9 +60,9 @@
         if (!it) {
             return;
         }
-        // console.log('updateItemText1', getMapContext().getCurrentLanguage(), it)
+        const title = formatter.getItemName(it, lang) ;
         itemTitle = formatter.getItemTitle(it, lang);
-        itemSubtitle = formatter.getItemSubtitle(it, itemTitle);
+        itemSubtitle = formatter.getItemSubtitle(it, title);
     }
     function updateItem(it: Item = item) {
         if (!it) {
