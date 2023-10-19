@@ -154,7 +154,7 @@
 
     async function showItemsList() {
         try {
-            const RoutesList = (await import('~/components/ItemsList.svelte')).default as any;
+            const RoutesList = (await import('~/components/ItemsList.svelte')).default;
             navigate({ page: RoutesList });
         } catch (error) {
             showError(error);
@@ -162,13 +162,13 @@
     }
     async function showMapRightMenu() {
         // try {
-        //     const RoutesList = (await import('~/components/Testpage.svelte')).default as any;
+        //     const RoutesList = (await import('~/components/Testpage.svelte')).default;
         //     navigate({ page: RoutesList });
         // } catch (error) {
         //     showError(error);
         // }
         try {
-            const LayersMenu = (await import('~/components/LayersMenu.svelte')).default as any;
+            const LayersMenu = (await import('~/components/LayersMenu.svelte')).default;
             return showBottomSheet({
                 view: LayersMenu,
                 trackingScrollView: 'trackingScrollView'
@@ -258,7 +258,7 @@
     //         if (!rasterDataSource) {
     //             rasterDataSource = await mapContext.mapModules.customLayers.getDataSource('openstreetmap');
     //         }
-    //         const component = (await import('~/components/3DMap.svelte')).default as any;
+    //         const component = (await import('~/components/3DMap.svelte')).default;
     //         navigate({
     //             page: component,
     //             props: {
