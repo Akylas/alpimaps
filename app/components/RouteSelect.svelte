@@ -11,24 +11,34 @@
     import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
     import ListItem from './ListItem.svelte';
     import { textColor } from '~/variables';
+    import { IItem } from '~/models/Item';
 
-    export let options: OptionType[];
+    type RouteItem ={name:string, route:IItem }
 
-    function close(value?: OptionType) {
+    export let options: RouteItem[];
+
+    function close(value?: RouteItem) {
         closeBottomSheet(value);
     }
 
-    function onTap(item: OptionType, args) {
+    function onTap(item: RouteItem, args) {
         close(item);
     }
-    
+    function itemTitle(item: RouteItem) {
+        return item.name || item.route.properties.class;
+    }
+    function itemSubtitle(item: RouteItem) {
+        const title = itemTitle(item);
+        const subtitle =item.route.properties.subtitle || item.route.properties.ref;
+        return subtitle !== title ? subtitle : undefined
+    }
 </script>
 
 <collectionView items={options} rowHeight={72} height={200}>
     <Template let:item>
         <ListItem
-            title={item.name || item.route.properties.class}
-            subtitle={item.route.properties.subtitle || item.route.properties.ref}
+            title={itemTitle(item)}
+            subtitle={itemSubtitle(item)}
             showBottomLine
             extraPaddingLeft={44}
             on:tap={(event) => onTap(item, event)}
