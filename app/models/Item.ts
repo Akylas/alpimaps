@@ -187,7 +187,7 @@ export class GroupRepository extends CrudRepository<Group> {
     async createTables() {
         await this.database.query(sql`
         CREATE TABLE IF NOT EXISTS "Groups" (
-            id BIGINT PRIMARY KEY NOT NULL
+            id TEXT PRIMARY KEY NOT NULL
         );
         `);
         const migrationKeys = Object.keys(GroupRepository.migrations);
