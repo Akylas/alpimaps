@@ -391,7 +391,7 @@
             <IconButton text="mdi-playlist-plus" on:tap={addField} color="white" />
             <IconButton text="mdi-web-sync" on:tap={fetchOSMDetails} color="white" isVisible={!itemIsRoute} />
         </CActionBar>
-        <cartomap row={1} zoom={16} on:mapReady={onMapReady} useTextureView={false} on:layoutChanged={onLayoutChanged} />
+        <cartomap row={1} zoom={16} on:mapReady={onMapReady} on:layoutChanged={onLayoutChanged} />
         <canvaslabel row={1} fontSize={16} height={50} width={50} on:tap={pickOptionColor(itemColor)} horizontalAlignment="right" verticalAlignment="bottom">
             <circle strokeWidth={2} paintStyle="fill" fillColor={$textLightColor} radius={15} antiAlias={true} horizontalAlignment="right" verticalAlignment="middle" width={20} />
             <circle
