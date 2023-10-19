@@ -33,7 +33,6 @@ export function createGlobalEventListener(eventName: string) {
         callbacks[eventName][callback] = eventCallack;
         globalObservable.on(eventName, eventCallack);
 
-
         onDestroy(() => {
             clean();
         });
