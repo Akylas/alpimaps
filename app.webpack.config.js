@@ -101,6 +101,7 @@ module.exports = (env, params = {}) => {
         apiKeys = true,
         keep_classnames_functionnames = false,
         testZipStyles = false,
+        accessibility = false,
         locale = 'auto',
         theme = 'auto',
         adhoc
@@ -660,13 +661,15 @@ module.exports = (env, params = {}) => {
         })
     );
     if (fork) {
-        config.plugins.push(
-            new webpack.NormalModuleReplacementPlugin(/accessibility$/, (resource) => {
-                if (resource.context.match(nativescriptReplace)) {
-                    resource.request = '~/shims/accessibility';
-                }
-            })
-        );
+        if (!accessibility) {
+            config.plugins.push(
+                new webpack.NormalModuleReplacementPlugin(/accessibility$/, (resource) => {
+                    if (resource.context.match(nativescriptReplace)) {
+                        resource.request = '~/shims/accessibility';
+                    }
+                })
+            );
+        }
         config.plugins.push(
             new webpack.NormalModuleReplacementPlugin(/action-bar$/, (resource) => {
                 if (resource.context.match(nativescriptReplace)) {
