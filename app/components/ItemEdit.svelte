@@ -209,7 +209,7 @@
 
     async function selectCustomIcon(event) {
         try {
-            const IconChooser = (await import('~/components/IconChooser.svelte')).default as any;
+            const IconChooser = (await import('~/components/IconChooser.svelte')).default;
             const results = await showPopover({
                 // fullscreen: true,
                 // trackingScrollView: 'collectionView',
@@ -249,7 +249,7 @@
 
     async function featchAddress(listItem, event) {
         try {
-            const SearchModal = (await import('~/components/SearchModal.svelte')).default as any;
+            const SearchModal = (await import('~/components/SearchModal.svelte')).default;
             const geometry = item.geometry as Point;
             const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0], altitude: geometry.coordinates[2] };
             // const result: any = await showModal({ page: Settings, fullscreen: true, props: { position } });

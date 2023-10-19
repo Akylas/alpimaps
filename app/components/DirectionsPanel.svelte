@@ -920,7 +920,7 @@
                     }
                 }));
             }
-            const SliderPopover = (await import('~/components/DirectionsSettingsPopover.svelte')).default as any;
+            const SliderPopover = (await import('~/components/DirectionsSettingsPopover.svelte')).default;
             await showPopover({
                 view: SliderPopover,
                 anchor: event.object,
@@ -966,7 +966,7 @@
                 options = profileCostingOptions[profile];
             }
             let settings = getValhallaSettings(key);
-            const SliderPopover = (await import('~/components/SliderPopover.svelte')).default as any;
+            const SliderPopover = (await import('~/components/SliderPopover.svelte')).default;
             await showPopover({
                 view: SliderPopover,
                 anchor: event.object,
@@ -1007,7 +1007,7 @@
 
     async function showMoreOptions(event) {
         try {
-            const SliderPopover = (await import('~/components/DirectionsSettingsPopover.svelte')).default as any;
+            const SliderPopover = (await import('~/components/DirectionsSettingsPopover.svelte')).default;
             await showPopover({
                 view: SliderPopover,
                 anchor: event.object,
@@ -1049,7 +1049,7 @@
 
     async function openSearchFromItem(event, item: WayPoint) {
         try {
-            const SearchModal = (await import('~/components/SearchModal.svelte')).default as any;
+            const SearchModal = (await import('~/components/SearchModal.svelte')).default;
             const position = mapContext.getMap().focusPos;
             // const result: any = await showModal({ page: Settings, fullscreen: true, props: { position } });
             const anchorView = event.object as View;

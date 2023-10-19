@@ -895,7 +895,7 @@
     }
     async function selectShownRoutes(event) {
         try {
-            const component = (await import('~/components/RoutesTypePopover.svelte')).default as any;
+            const component = (await import('~/components/RoutesTypePopover.svelte')).default;
             await showPopover({
                 view: component,
                 anchor: event.object,
@@ -942,7 +942,7 @@
                 if (selectedRoutes.length === 1) {
                     selectItem({ item: selectedRoutes[0], isFeatureInteresting: true });
                 } else {
-                    const RouteSelect = (await import('~/components/RouteSelect.svelte')).default as any;
+                    const RouteSelect = (await import('~/components/RouteSelect.svelte')).default;
                     const results = await showBottomSheet({
                         parent: page,
                         view: RouteSelect,
@@ -1601,7 +1601,7 @@
                 });
             }
 
-            const MapOptions = (await import('~/components/MapOptions.svelte')).default as any;
+            const MapOptions = (await import('~/components/MapOptions.svelte')).default;
             const result = (await showBottomSheet({
                 parent: page,
                 view: MapOptions,
@@ -1684,7 +1684,7 @@
 
     async function showTransitLinesPage() {
         try {
-            const component = (await import('~/components/transit/TransitLines.svelte')).default as any;
+            const component = (await import('~/components/transit/TransitLines.svelte')).default;
             await navigate({ page: component });
         } catch (error) {
             showError(error);
