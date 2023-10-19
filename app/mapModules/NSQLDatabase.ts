@@ -7,10 +7,10 @@ function formatIdentifier(i: string): string {
     return i;
 }
 // Note: The mysql package does not expose the classes, so we have to rely on those ugly tests instead.
-const isPoolOrPoolConnection = (connection: any) =>
-    // Note: The mysql pacakge does not expose the classes, so we cannot use a proper instanceof...
-    connection.query && connection.query instanceof Function;
-const isPool = (connection: any) => isPoolOrPoolConnection(connection) && connection.end && !connection.release;
+// const isPoolOrPoolConnection = (connection: any) =>
+//     // Note: The mysql pacakge does not expose the classes, so we cannot use a proper instanceof...
+//     connection.query && connection.query instanceof Function;
+// const isPool = (connection: any) => isPoolOrPoolConnection(connection) && connection.end && !connection.release;
 
 export default class NSQLDatabase implements DatabaseInterface {
     db: SQLiteDatabase;
