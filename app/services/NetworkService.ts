@@ -31,8 +31,6 @@ export function getCacheControl(maxAge = 60, stale = 59) {
     return `max-age=${maxAge}, max-stale=${stale}, stale-while-revalidate=${stale}`;
 }
 
-const contactEmail = 'contact%40akylas.fr';
-
 // const osmOverpassUrl = 'http://overpass-api.de/api/';
 // const OSMReplaceKeys = {
 //     'contact:phone': 'phone',
