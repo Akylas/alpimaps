@@ -1,4 +1,4 @@
-import addressFormatter from '@fragaria/address-formatter';
+import addressFormatter from '@akylas/address-formatter';
 // import getIsOpenNow from '@wojtekmaj/opening-hours-utils/src/get_is_open_now';
 // import getNextClosedAt from '@wojtekmaj/opening-hours-utils/src/get_next_closed_at';
 // import getNextOpenAt from '@wojtekmaj/opening-hours-utils/src/get_next_open_at';
@@ -145,13 +145,33 @@ export function formatValueToUnit(value: any, unit, options?: { prefix?: string;
     return result;
 }
 
+function langToCountryCode(lang) {
+    switch (lang) {
+        case 'en':
+            return 'us';
+        default:
+            return lang;
+    }
+}
+
 export function getAddress(item: IItem, startIndex = -1, endIndex = -1) {
-    const address = { ...item.properties.address };
+    const address = item.properties.address;
     // if (!address.name) {
     //     address.name = item.properties.name;
     // }
+    if (!address.country_code && address.country) {
+        const array = address.country.split(/(?:,| |-|_)+/);
+        if (array.length > 1) {
+            address.country_code = array
+                .map((s) => s[0])
+                .join('')
+                .toUpperCase();
+        } else {
+            address.country_code = address.country.slice(0, 2).toUpperCase();
+        }
+    }
     const result = addressFormatter.format(address, {
-        fallbackCountryCode: get(langStore)
+        fallbackCountryCode: langToCountryCode(get(langStore))
     });
     if (startIndex >= 0 || endIndex >= 0) {
         return result.split('\n').slice(startIndex, endIndex);
