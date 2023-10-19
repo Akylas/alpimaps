@@ -189,14 +189,14 @@
                                                 const color = featureData['route_color']?.length ? featureData['route_color'] : transitService.defaultTransitLineColor;
                                                 const agency = featureData['agency_id'];
                                                 const textColor = new Color(color).getBrightness() >= 186 ? '#000000' : '#ffffff';
-                                                const lineName = featureData['CODE'].split('_')[1]
+                                                const lineName = featureData['CODE'].split('_')[1];
                                                 const item: IItem = {
                                                     properties: {
                                                         class: 'bus',
                                                         id,
-                                                        ref:lineName,
-                                                        subtitle:lineName,
-                                                        name:lineName,
+                                                        ref: lineName,
+                                                        subtitle: lineName,
+                                                        name: lineName,
                                                         symbol: `${color}:${color}:${lineName}:${textColor}`,
                                                         // ref: featureData['route_short_name'],
                                                         // subtitle: featureData['agency_name'],
@@ -1024,7 +1024,17 @@
                         ignoreTopSafeArea: true,
                         props: {
                             // title: l('pick_route'),
-                            options: selectedTransitLines.map((s) => ({ name: s.properties.name, route: s }))
+                            options: selectedTransitLines
+                                .map((s) => ({ name: s.properties.name, route: s }))
+                                .sort(function compare(a, b) {
+                                    if (a.name < b.name) {
+                                        return -1;
+                                    }
+                                    if (a.name > b.name) {
+                                        return 1;
+                                    }
+                                    return 0;
+                                })
                         }
                     });
                     const result = Array.isArray(results) ? results[0] : results;
