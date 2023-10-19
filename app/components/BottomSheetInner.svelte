@@ -32,7 +32,7 @@
     import ElevationChart from './ElevationChart.svelte';
     import IconButton from './IconButton.svelte';
     import { Clipboard } from '@nativescript-use/nativescript-clipboard';
-    import addressFormatter from '@fragaria/address-formatter';
+    import addressFormatter from '@akylas/address-formatter';
     import { langStore } from '~/helpers/locale';
     import { get } from 'svelte/store';
     import { share, shareFile } from '~/utils/share';
