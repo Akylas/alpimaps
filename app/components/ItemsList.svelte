@@ -304,8 +304,8 @@ LEFT JOIN  (
 
     async function showDetails(item: CollectionItem) {
         try {
-            const RoutesList = (await import('~/components/ItemEdit.svelte')).default as any;
-            navigate({ page: RoutesList, props: { item } });
+            const RoutesList = (await import('~/components/ItemEdit.svelte')).default;
+            navigate({ page: RoutesList, props: { item: item as Item } });
         } catch (error) {
             showError(error);
         }

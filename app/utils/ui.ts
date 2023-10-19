@@ -85,7 +85,7 @@ export function hideLoading() {
 }
 
 export async function promptForGroup(defaultGroup: string, groups?: Group[]): Promise<string> {
-    const TagView = (await import('~/components/TagView.svelte')).default as any;
+    const TagView = (await import('~/components/TagView.svelte')).default;
     const componentInstanceInfo = resolveComponentElement(TagView, { groups, defaultGroup });
     const modalView: View = componentInstanceInfo.element.nativeView;
     const result = await confirm({ view: modalView, okButtonText: lc('set'), cancelButtonText: lc('cancel') });
