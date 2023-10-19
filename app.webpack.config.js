@@ -1,7 +1,7 @@
 const webpackConfig = require('./webpack.config.js');
 const webpack = require('webpack');
 const { readFileSync, readdirSync } = require('fs');
-const { dirname, join, relative, resolve } = require('path');
+const { basename, dirname, join, relative, resolve } = require('path');
 const nsWebpack = require('@nativescript/webpack');
 const CopyPlugin = require('copy-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
@@ -198,10 +198,7 @@ module.exports = (env, params = {}) => {
     //             SENTRY_PREFIX: `"${!!sentry ? process.env.SENTRY_PREFIX : ''}"`,
     //             GIT_URL: `"${package.repository}"`,
     //             SUPPORT_URL: `"${package.bugs.url}"`,
-    //             CUSTOM_URL_SCHEME: `"${CUSTOM_URL_SCHEME}"`,
-    //             STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${nconfig.id}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
-    //             STORE_REVIEW_LINK: `"${
-    //                 isIOS
+    //             CUSTOM_URL_SCHEME: `"${CUSTOM_URL_SCHEME}"`,./templates/abbreviations.json
     //                     ? ` itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=${APP_STORE_ID}&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+Software`
     //                     : `market://details?id=${nconfig.id}`
     //             }"`,
@@ -326,14 +323,20 @@ module.exports = (env, params = {}) => {
     //         });
     //     });
     // });
+    const supportedLocales = readdirSync(join(projectRoot, appPath, 'i18n'))
+        .filter((s) => s.endsWith('.json'))
+        .map((s) => s.replace('.json', ''));
     config.externals.push('~/licenses.json');
     config.externals.push('~/osm_icons.json');
     config.externals.push('~/material_icons.json');
     config.externals.push(function ({ context, request }, cb) {
-        if (/i18n$/i.test(context)) {
-            return cb(null, './i18n/' + request);
+        if (/address-formatter/i.test(context)) {
+            return cb(null, join('~/address-formatter/templates', basename(request)));
         }
         cb();
+    });
+    supportedLocales.forEach((l) => {
+        config.externals.push(`~/i18n/${l}.json`);
     });
 
     const coreModulesPackageName = fork ? '@akylas/nativescript' : '@nativescript/core';
@@ -366,9 +369,6 @@ module.exports = (env, params = {}) => {
     const isAndroid = platform === 'android';
     const APP_STORE_ID = process.env.IOS_APP_ID;
     const CUSTOM_URL_SCHEME = 'alpimaps';
-    const supportedLocales = readdirSync(join(projectRoot, appPath, 'i18n'))
-        .filter((s) => s.endsWith('.json'))
-        .map((s) => s.replace('.json', ''));
     const defines = {
         PRODUCTION: !!production,
         process: 'global.process',
@@ -553,6 +553,15 @@ module.exports = (env, params = {}) => {
     const globOptions = { dot: false, ignore: [`**/${relative(appPath, appResourcesFullPath)}/**`] };
 
     const context = nsWebpack.Utils.platform.getEntryDirPath();
+
+    const allowedAddressFormatterCountries = ['FR', 'ES', 'IT', 'default'];
+
+    function filterObject(raw, allowed) {
+        Object.keys(raw)
+            .filter((key) => !allowed.includes(key))
+            .forEach((key) => delete raw[key]);
+        return raw;
+    }
     const copyPatterns = [
         { context, from: 'fonts/!(ios|android)/**/*', to: 'fonts/[name][ext]', noErrorOnMissing: true, globOptions },
         { context, from: 'fonts/*', to: 'fonts/[name][ext]', noErrorOnMissing: true, globOptions },
@@ -619,6 +628,19 @@ module.exports = (env, params = {}) => {
                             }, {})
                         )
                     );
+                }
+            }
+        },
+        {
+            context: 'node_modules/@akylas/address-formatter/src/templates',
+            from: '*.json',
+            to: 'address-formatter/templates',
+            globOptions,
+            transform: {
+                cache: !production,
+                transformer(buffer, path) {
+                    const data = JSON.parse(buffer.toString());
+                    return Buffer.from(JSON.stringify(path.endsWith('aliases.json') ? data : filterObject(data, allowedAddressFormatterCountries)));
                 }
             }
         }

@@ -98,6 +98,7 @@ export interface RouteStats {
 
 export interface Address {
     country?: string;
+    country_code?: string;
     name?: string;
     city?: string;
     county?: string;
