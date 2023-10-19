@@ -1816,6 +1816,7 @@
         <gridlayout width="100%" height="100%">
             <cartomap
                 zoom={16}
+                accessibilityLabel="cartoMap"
                 on:mapReady={onMainMapReady}
                 on:mapMoved={onMainMapMove}
                 on:mapInteraction={onMainMapInteraction}
