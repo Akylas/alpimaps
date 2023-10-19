@@ -22,29 +22,32 @@
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
     export let line;
+    console.log('line', line)
     let loading = false;
     let dataItems = null;
     let noNetworkAndNoData = false;
     const mapContext = getMapContext();
 
+    const lineColor = line.color || transitService.defaultTransitLineColor;
+
     async function refresh() {
         try {
             dataItems = (await transitService.getLineStops(line.id))
                 .filter((i) => i.visible === true)
-                .map((i, index, array) => ({ ...i, color: line.color, first: index === 0, last: index === array.length - 1 }));
+                .map((i, index, array) => ({ ...i, color: lineColor, first: index === 0, last: index === array.length - 1 }));
 
             let lineGeoJSON = await transitService.getTransitLines(line.id);
             const stopsGeoJSON = [];
             dataItems.forEach((i) => {
                 stopsGeoJSON.push({ type: 'Feature', geometry: { type: 'Point', coordinates: [i.lon, i.lat] }, properties: { id: i.id, name: i.name, color: i.color } as any });
             });
-            lineGeoJSON = lineGeoJSON.replace('features":[{', `features":[${JSON.stringify(stopsGeoJSON).slice(1, -1)},{`);
+            // lineGeoJSON = lineGeoJSON.replace('features":[{', `features":[${JSON.stringify(stopsGeoJSON).slice(1, -1)},{`);
 
             const transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
                 minZoom: 0,
                 maxZoom: 24
             });
-            transitVectorTileDataSource.createLayer('lines');
+            transitVectorTileDataSource.createLayer('routes');
             const geometry = packageService.getGeoJSONReader().readFeatureCollection(lineGeoJSON);
             transitVectorTileDataSource.setLayerGeoJSONString(1, lineGeoJSON);
 
@@ -113,7 +116,7 @@
 
     async function downloadPDF() {
         try {
-            openUrl(`https://data.mobilites-m.fr/api/planligne/pdf?route=${line.id}`);
+            openUrl(`https://data.mobilites-m.fr/api/planligne/pdf?route=${line.id.replace('_', ':')}`);
         } catch (error) {
             showError(error);
         }
@@ -121,7 +124,7 @@
 
     async function showTimesheet() {
         try {
-            const component = (await import('~/components/transit/TransitTimesheet.svelte')).default as any;
+            const component = (await import('~/components/transit/TransitTimesheet.svelte')).default;
             await navigate({
                 page: component,
                 props: {
@@ -165,10 +168,11 @@
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatingTo={onNavigatingTo}>
-    <gridLayout rows="auto,auto,*,2*">
+    <gridlayout rows="auto,auto,*,2*">
         <label
             row={1}
-            text={line.longName.replace(' / ', '\n')}
+            visibility={line.longName ? 'visible':'collapse'}
+            text={(line.longName || line.name)?.replace(' / ', '\n')}
             fontWeight="bold"
             padding="15 10 15 10"
             fontSize={20}
@@ -181,25 +185,33 @@
         <cartomap row={2} zoom={16} on:mapReady={onMapReady} useTextureView={false} />
         <collectionview bind:this={collectionView} row={3} items={dataItems}>
             <Template let:item>
-                <gridlayout columns="60,*,auto" rows="30,30" on:tap={() => selectStop(item)}>
-                    <canvas rowSpan={2}>
-                        <line strokeColor={item.color} startX={30} stopX={30} startY={0} stopY="50%" strokeWidth={4} visibility={item.first ? 'hidden' : 'visible'} />
-                        <line strokeColor={item.color} startX={30} stopX={30} startY="50%" stopY="100%" strokeWidth={4} visibility={item.last ? 'hidden' : 'visible'} />
-                        <circle
-                            strokeColor={item.color}
-                            fillColor={item.first || item.last ? item.color : $widgetBackgroundColor}
-                            radius={12}
-                            antiAlias={true}
-                            horizontalAlignment="center"
-                            verticalAlignment="middle"
-                            width={0}
-                            strokeWidth={3}
-                        />
-                    </canvas>
-                    <label col={1} fontSize={16} text={item.name} verticalTextAlignment="bottom" />
-                    <label row={1} col={1} fontSize={14} color={$subtitleColor} text={item.city} verticalTextAlignment="top" />
+                <canvas columns="*,auto" on:tap={() => selectStop(item)}>
+                    <line strokeColor={item.color} startX={30} stopX={30} startY={0} stopY="50%" strokeWidth={4} visibility={item.first ? 'hidden' : 'visible'} horizontalAlignment="left" />
+                    <line
+                        strokeColor={item.color}
+                        startX={30}
+                        stopX={30}
+                        startY="50%"
+                        stopY="100%"
+                        strokeWidth={4}
+                        visibility={item.last ? 'hidden' : 'visible'}
+                        horizontalAlignment="left"
+                    />
+                    <circle
+                        strokeColor={item.color}
+                        fillColor={item.first || item.last ? item.color : $widgetBackgroundColor}
+                        radius={12}
+                        antiAlias={true}
+                        verticalAlignment="middle"
+                        width={0}
+                        strokeWidth={3}
+                        paddingLeft={30}
+                        horizontalAlignment="left"
+                    />
+                    <label marginLeft={60} fontSize={16} text={item.name} verticalTextAlignment="middle" />
+                    <!-- <label row={1} col={1} fontSize={14} color={$subtitleColor} text={item.city} verticalTextAlignment="top" /> -->
                     <IconButton col={2} rowSpan={2} text="mdi-map-marker-radius-outline" on:tap={() => backToMapOnPoint(item)} verticalAlignment="middle" />
-                </gridlayout>
+                </canvas>
             </Template>
         </collectionview>
         <mdactivityindicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} row={3} />
@@ -212,10 +224,10 @@
             </canvaslabel>
         {/if}
         <CActionBar backgroundColor="transparent">
-            <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={line.color} color={line.textColor} text={line.shortName} autoFontSize={true} />
+            <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={lineColor} color={line.textColor} text={line.shortName || line.name} autoFontSize={true} />
 
             <IconButton text="mdi-file-pdf-box" on:tap={() => downloadPDF()} />
             <IconButton text="mdi-calendar-clock-outline" on:tap={() => showTimesheet()} />
         </CActionBar>
-    </gridLayout>
+    </gridlayout>
 </page>
