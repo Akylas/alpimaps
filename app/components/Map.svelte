@@ -815,6 +815,9 @@
                                         DEV_LOG && console.log('fetched addresses', bestFind, $selectedItem.geometry === item.geometry);
                                         if (bestFind && $selectedItem.geometry === item.geometry) {
                                             $selectedItem.properties.address = { ...bestFind.properties.address, name: null, ...(props.housenumber ? { houseNumber: props.housenumber } : {}) } as any;
+                                            if (bestFind.properties.address.name && !$selectedItem.properties.name) {
+                                                $selectedItem.properties.name = bestFind.properties.address.name;
+                                            }
                                             setSelectedItem($selectedItem);
                                         }
                                     }
