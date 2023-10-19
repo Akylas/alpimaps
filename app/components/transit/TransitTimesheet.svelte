@@ -16,8 +16,9 @@
     import { pickDate, pickTime } from '~/utils/utils';
     import { accentColor, borderColor, mdiFontFamily, navigationBarHeight, subtitleColor, textColor } from '~/variables';
     import IconButton from '../IconButton.svelte';
+    import type { TransitRoute } from '~/services/transitland';
 
-    export let line: any;
+    export let line: TransitRoute;
     let loading = false;
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -33,27 +34,29 @@
         try {
             loading = true;
             currentTime = time;
-            lineData = await transitService.getLineTimeline(line.id, time?.utc(true).valueOf());
-            DEV_LOG && console.log('lineData', JSON.stringify(line.id, lineData));
-            // prevTime = lineData[lineDataIndex].prevTime;
-            // nextTime = lineData[lineDataIndex].nextTime;
-            timelineItems = lineData[lineDataIndex].arrets;
-            if (timelineItems.length === 0) {
-                showSnack({ message: lc('no_timesheet_data') });
-                return;
-            }
-            // console.log('fetchLineTimeline', time.valueOf(), lineData[lineDataIndex].prevTime, lineData[lineDataIndex].nextTime);
-            directionText = timelineItems[0].stopName + '\n' + timelineItems[timelineItems.length - 1].stopName;
-            if (line.stopIds) {
-                currentStopId = line.stopIds[lineDataIndex];
-                const index = timelineItems.findIndex((a) => a.stopId === currentStopId);
-                if (index === -1) {
-                    line.stopIds = line.stopIds.reverse();
-                    currentStopId = line.stopIds[lineDataIndex];
-                }
-                const scrollIndex = timelineItems.findIndex((s) => s.stopId === currentStopId);
-                collectionView.nativeView.scrollToIndex(scrollIndex, false);
-            }
+            const trips = await transitService.trips(line.onestop_id || line.route_id, { include_alerts: true, service_date: time?.format('YYYY-MM-DD') });
+            DEV_LOG && console.log('trips', JSON.stringify(trips));
+            // lineData = await transitService.getLineTimeline(line.id, time?.utc(true).valueOf());
+            // DEV_LOG && console.log('lineData', JSON.stringify(line.id, lineData));
+            // // prevTime = lineData[lineDataIndex].prevTime;
+            // // nextTime = lineData[lineDataIndex].nextTime;
+            // timelineItems = lineData[lineDataIndex].arrets;
+            // if (timelineItems.length === 0) {
+            //     showSnack({ message: lc('no_timesheet_data') });
+            //     return;
+            // }
+            // // console.log('fetchLineTimeline', time.valueOf(), lineData[lineDataIndex].prevTime, lineData[lineDataIndex].nextTime);
+            // directionText = timelineItems[0].stopName + '\n' + timelineItems[timelineItems.length - 1].stopName;
+            // if (line.stopIds) {
+            //     currentStopId = line.stopIds[lineDataIndex];
+            //     const index = timelineItems.findIndex((a) => a.stopId === currentStopId);
+            //     if (index === -1) {
+            //         line.stopIds = line.stopIds.reverse();
+            //         currentStopId = line.stopIds[lineDataIndex];
+            //     }
+            //     const scrollIndex = timelineItems.findIndex((s) => s.stopId === currentStopId);
+            //     collectionView.nativeView.scrollToIndex(scrollIndex, false);
+            // }
             noNetworkAndNoData = false;
         } catch (error) {
             if (error instanceof NoNetworkError && !timelineItems) {
@@ -74,16 +77,16 @@
         lineDataIndex = 1 - lineDataIndex;
         timelineItems = lineData[lineDataIndex].arrets;
         directionText = timelineItems[0].stopName + '\n' + timelineItems[timelineItems.length - 1].stopName;
-        if (line.stopIds) {
-            currentStopId = line.stopIds[lineDataIndex];
-            const index = timelineItems.findIndex((a) => a.stopId === currentStopId);
-            if (index === -1) {
-                line.stopIds = line.stopIds.reverse();
-                currentStopId = line.stopIds[lineDataIndex];
-            }
-            const scrollIndex = timelineItems.findIndex((s) => s.stopId === currentStopId);
-            collectionView.nativeView.scrollToIndex(scrollIndex, false);
-        }
+        // if (line.stopIds) {
+        //     currentStopId = line.stopIds[lineDataIndex];
+        //     const index = timelineItems.findIndex((a) => a.stopId === currentStopId);
+        //     if (index === -1) {
+        //         line.stopIds = line.stopIds.reverse();
+        //         currentStopId = line.stopIds[lineDataIndex];
+        //     }
+        //     const scrollIndex = timelineItems.findIndex((s) => s.stopId === currentStopId);
+        //     collectionView.nativeView.scrollToIndex(scrollIndex, false);
+        // }
     }
 
     function getTripTime(item, index) {
@@ -144,7 +147,7 @@
         try {
             const component = (await import('~/components/transit/TransitLineDetails.svelte')).default as any;
             await navigate({
-                page: component as any,
+                page: component ,
                 props: {
                     line
                 }
@@ -159,6 +162,12 @@
     });
 
     onThemeChanged(() => collectionView?.nativeView.refreshVisibleItems());
+    function getRouteColor() {
+        return transitService.getRouteColor(line);
+    }
+    function getRouteTextColor() {
+        return transitService.getRouteTextColor(line);
+    }
 </script>
 
 <page bind:this={page} actionBarHidden={true}>
@@ -166,7 +175,7 @@
         <label
             row={1}
             colSpan={3}
-            text={line.longName.replace(' / ', '\n')}
+            text={line.route_long_name.replace(' / ', '\n')}
             fontWeight="bold"
             padding="15 10 15 10"
             fontSize={20}
@@ -228,7 +237,7 @@
             </canvaslabel>
         {/if}
         <CActionBar backgroundColor="transparent" colSpan={3}>
-            <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={line.color} color={line.textColor} text={line.shortName} autoFontSize={true} />
+            <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={getRouteColor()} color={getRouteTextColor()} text={line.route_short_name} autoFontSize={true} />
             <IconButton text="mdi-file-pdf-box" on:tap={downloadPDF} />
             <IconButton text="mdi-information-outline" on:tap={showDetails} />
         </CActionBar>

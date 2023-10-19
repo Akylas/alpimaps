@@ -15,13 +15,16 @@
     import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
+    import type { TransitRoute } from '~/services/transitland';
     import { showError } from '~/utils/error';
-    import { mdiFontFamily, subtitleColor, widgetBackgroundColor } from '~/variables';
+    import { mdiFontFamily, navigationBarHeight, widgetBackgroundColor } from '~/variables';
+    import type { Feature, Point } from 'geojson';
     import IconButton from '../IconButton.svelte';
 
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
-    export let line;
+    export let line: TransitRoute;
+    const routeColor = getRouteColor();
     let loading = false;
     let dataItems = null;
     let noNetworkAndNoData = false;
@@ -29,24 +32,29 @@
 
     async function refresh() {
         try {
-            dataItems = (await transitService.getLineStops(line.id))
-                .filter((i) => i.visible === true)
-                .map((i, index, array) => ({ ...i, color: line.color, first: index === 0, last: index === array.length - 1 }));
-
-            let lineGeoJSON = await transitService.getTransitLines(line.id);
-            const stopsGeoJSON = [];
-            dataItems.forEach((i) => {
-                stopsGeoJSON.push({ type: 'Feature', geometry: { type: 'Point', coordinates: [i.lon, i.lat] }, properties: { id: i.id, name: i.name, color: i.color } as any });
+            const route = await transitService.route(line.onestop_id || line.route_id, { include_alerts: true, include_geometry: true });
+            const stops = route.route_stops.map((s, index, array) => {
+                const { geometry, ...properties } = s.stop;
+                return { type: 'Feature', properties: { ...properties, color: routeColor }, geometry, first: index === 0, last: index === array.length - 1 };
             });
-            lineGeoJSON = lineGeoJSON.replace('features":[{', `features":[${JSON.stringify(stopsGeoJSON).slice(1, -1)},{`);
-
+            dataItems = stops;
             const transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
                 minZoom: 0,
                 maxZoom: 24
             });
-            transitVectorTileDataSource.createLayer('lines');
-            const geometry = packageService.getGeoJSONReader().readFeatureCollection(lineGeoJSON);
-            transitVectorTileDataSource.setLayerGeoJSONString(1, lineGeoJSON);
+            transitVectorTileDataSource.createLayer('routes');
+            transitVectorTileDataSource.createLayer('stops');
+            const { geometry, ...properties } = route;
+            const routeItem = { type: 'Feature', geometry, properties: { ...properties, route_color: routeColor } };
+            const featureCollection = packageService.getGeoJSONReader().readFeatureCollection({
+                type: 'FeatureCollection',
+                features: [routeItem]
+            });
+            transitVectorTileDataSource.setLayerFeatureCollection(1, mapContext.getProjection(), featureCollection);
+            transitVectorTileDataSource.setLayerGeoJSONString(2, {
+                type: 'FeatureCollection',
+                features: stops
+            });
 
             const transitVectorTileLayer = new VectorTileLayer({
                 dataSource: transitVectorTileDataSource,
@@ -55,7 +63,7 @@
 
             transitVectorTileLayer.setVectorTileEventListener(this);
             cartoMap.addLayer(transitVectorTileLayer);
-            cartoMap.moveToFitBounds(geometry.getBounds(), undefined, true, true, true, 0);
+            cartoMap.moveToFitBounds(featureCollection.getBounds(), undefined, true, true, true, 0);
             noNetworkAndNoData = false;
         } catch (error) {
             if (error instanceof NoNetworkError && !dataItems) {
@@ -135,9 +143,11 @@
     async function backToMapOnPoint(item) {
         try {
             mapContext.selectItem({
-                item: { geometry: { type: 'Point', coordinates: [item.lon, item.lat] }, properties: { id: item.id, name: item.name, color: item.color } },
+                item,
                 isFeatureInteresting: true,
                 setSelected: false,
+                preventZoom: false,
+                zoom: 15,
                 peek: false,
                 zoomDuration: 0
             });
@@ -146,29 +156,36 @@
             showError(error);
         }
     }
-    async function selectStop(item) {
+    async function selectStop(item: Feature<Point>) {
         try {
             mapContext.selectItem({
-                item: { geometry: { type: 'Point', coordinates: [item.lon, item.lat] }, properties: { id: item.id, name: item.name, color: item.color } },
+                item: item as any,
                 isFeatureInteresting: true,
                 setSelected: false,
                 peek: false,
+                preventZoom: false,
                 zoom: 15,
                 zoomDuration: 0
             });
-            cartoMap.setFocusPos(item, 200);
+            cartoMap.setFocusPos({ lat: item.geometry.coordinates[1], lon: item.geometry.coordinates[0] }, 200);
             cartoMap.setZoom(15, 200);
         } catch (error) {
             showError(error);
         }
     }
+    function getRouteColor() {
+        return transitService.getRouteColor(line);
+    }
+    function getRouteTextColor() {
+        return transitService.getRouteTextColor(line);
+    }
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatingTo={onNavigatingTo}>
-    <gridLayout rows="auto,auto,*,2*">
+    <gridlayout rows="auto,auto,*,2*">
         <label
             row={1}
-            text={line.longName.replace(' / ', '\n')}
+            text={line.route_long_name.replace(' / ', '\n')}
             fontWeight="bold"
             padding="15 10 15 10"
             fontSize={20}
@@ -178,28 +195,27 @@
             textAlignment="center"
             verticalTextAlignment="center"
         />
-        <cartomap row={2} zoom={16} on:mapReady={onMapReady} useTextureView={false} />
-        <collectionview bind:this={collectionView} row={3} items={dataItems}>
+        <cartomap row={2} zoom={16} on:mapReady={onMapReady} />
+        <collectionview bind:this={collectionView} row={3} items={dataItems} android:marginBottom={$navigationBarHeight}>
             <Template let:item>
-                <gridlayout columns="60,*,auto" rows="30,30" on:tap={() => selectStop(item)}>
-                    <canvas rowSpan={2}>
-                        <line strokeColor={item.color} startX={30} stopX={30} startY={0} stopY="50%" strokeWidth={4} visibility={item.first ? 'hidden' : 'visible'} />
-                        <line strokeColor={item.color} startX={30} stopX={30} startY="50%" stopY="100%" strokeWidth={4} visibility={item.last ? 'hidden' : 'visible'} />
-                        <circle
-                            strokeColor={item.color}
-                            fillColor={item.first || item.last ? item.color : $widgetBackgroundColor}
-                            radius={12}
-                            antiAlias={true}
-                            horizontalAlignment="center"
-                            verticalAlignment="middle"
-                            width={0}
-                            strokeWidth={3}
-                        />
-                    </canvas>
-                    <label col={1} fontSize={16} text={item.name} verticalTextAlignment="bottom" />
-                    <label row={1} col={1} fontSize={14} color={$subtitleColor} text={item.city} verticalTextAlignment="top" />
+                <canvas columns="*,auto" on:tap={() => selectStop(item)}>
+                    <line strokeColor={item.properties.color} startX={30} stopX={30} startY={0} stopY="50%" strokeWidth={4} visibility={item.first ? 'hidden' : 'visible'} horizontalAlignment="left"/>
+                    <line strokeColor={item.properties.color} startX={30} stopX={30} startY="50%" stopY="100%" strokeWidth={4} visibility={item.last ? 'hidden' : 'visible'}  horizontalAlignment="left"/>
+                    <circle
+                        strokeColor={item.properties.color}
+                        fillColor={item.first || item.last ? item.properties.color : $widgetBackgroundColor}
+                        radius={12}
+                        antiAlias={true}
+                        verticalAlignment="middle"
+                        width={0}
+                        strokeWidth={3}
+                        paddingLeft={30}
+                        horizontalAlignment="left"
+                    />
+                    <label marginLeft={60} fontSize={16} text={item.properties.stop_name} verticalTextAlignment="middle" />
+                    <!-- <label row={1} col={1} fontSize={14} color={$subtitleColor} text={item.city} verticalTextAlignment="top" /> -->
                     <IconButton col={2} rowSpan={2} text="mdi-map-marker-radius-outline" on:tap={() => backToMapOnPoint(item)} verticalAlignment="middle" />
-                </gridlayout>
+                </canvas>
             </Template>
         </collectionview>
         <mdactivityindicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} row={3} />
@@ -212,10 +228,10 @@
             </canvaslabel>
         {/if}
         <CActionBar backgroundColor="transparent">
-            <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={line.color} color={line.textColor} text={line.shortName} autoFontSize={true} />
+            <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={routeColor} color={getRouteTextColor()} text={line.route_short_name} autoFontSize={true} />
 
             <IconButton text="mdi-file-pdf-box" on:tap={() => downloadPDF()} />
             <IconButton text="mdi-calendar-clock-outline" on:tap={() => showTimesheet()} />
         </CActionBar>
-    </gridLayout>
+    </gridlayout>
 </page>

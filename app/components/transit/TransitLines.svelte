@@ -10,7 +10,7 @@
     import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
     import { transitService } from '~/services/TransitService';
     import { showError } from '~/utils/error';
-    import { mdiFontFamily } from '~/variables';
+    import { mdiFontFamily, navigationBarHeight } from '~/variables';
 
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -115,8 +115,8 @@
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatingTo={onNavigatingTo}>
-    <gridLayout rows="auto,*" on:layoutChanged={onLayoutChanged} >
-        <collectionview row={1} items={dataItems}>
+    <gridlayout rows="auto,*" on:layoutChanged={onLayoutChanged}>
+        <collectionview row={1} items={dataItems} android:marginBottom={$navigationBarHeight}>
             <Template let:item>
                 <stacklayout>
                     <label fontSize={18} text={item.type} padding={10} />
@@ -134,5 +134,5 @@
             </canvaslabel>
         {/if}
         <CActionBar title={lc('lines')} />
-    </gridLayout>
+    </gridlayout>
 </page>

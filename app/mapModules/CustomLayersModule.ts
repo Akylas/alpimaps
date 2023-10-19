@@ -330,7 +330,8 @@ export default class CustomLayersModule extends MapModule {
             maptiler: ApplicationSettings.getString('maptilerToken', this.devMode ? gVars.MAPTILER_TOKEN : undefined),
             google: ApplicationSettings.getString('googleToken', this.devMode ? gVars.GOOGLE_TOKEN : undefined),
             thunderforest: ApplicationSettings.getString('thunderforestToken', this.devMode ? gVars.THUNDERFOREST_TOKEN : undefined),
-            ign: ApplicationSettings.getString('ignToken', this.devMode ? gVars.IGN_TOKEN : undefined)
+            ign: ApplicationSettings.getString('ignToken', this.devMode ? gVars.IGN_TOKEN : undefined),
+            transitland: ApplicationSettings.getString('transitlandToken', gVars.TRANSIT_LAND)
         };
     }
     set devMode(value: boolean) {

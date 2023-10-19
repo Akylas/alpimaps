@@ -24,6 +24,7 @@ declare const gVars: {
     // FACEBOOK_TOKEN: string;
     IGN_TOKEN: string;
     THUNDERFOREST_TOKEN: string;
+    TRANSIT_LAND: string;
     MAPBOX_TOKEN: string;
     MAPTILER_TOKEN: string;
     MAPQUEST_TOKEN: string;

@@ -27,11 +27,7 @@ export interface HttpRequestOptions extends HTTPOptions {
     canRetry?;
 }
 
-export function getCacheControl(maxAge = 60, stale = 59) {
-    return `max-age=${maxAge}, max-stale=${stale}, stale-while-revalidate=${stale}`;
-}
-
-const contactEmail = 'contact%40akylas.fr';
+// const contactEmail = 'contact%40akylas.fr';
 
 // const osmOverpassUrl = 'http://overpass-api.de/api/';
 // const OSMReplaceKeys = {
@@ -1013,21 +1009,6 @@ export class NetworkService extends Observable {
             return 'only-if-cached';
         }
         return `max-age=${maxAge}, max-stale=${stale}, stale-while-revalidate=${stale}`;
-    }
-
-    async getMetroLines() {
-        return this.request<string>({
-            method: 'GET',
-            toJSON: false,
-            url: 'https://data.mobilites-m.fr/api/lines/json',
-            headers: {
-                'Cache-Control': getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1)
-            },
-            queryParams: {
-                types: 'ligne',
-                reseaux: 'SEM,C38'
-            }
-        });
     }
 }
 export const networkService = new NetworkService();
