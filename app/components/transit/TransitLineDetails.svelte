@@ -113,7 +113,7 @@
 
     async function downloadPDF() {
         try {
-            openUrl(`https://data.mobilites-m.fr/api/ficheHoraires/pdf?route=${line.id}`);
+            openUrl(`https://data.mobilites-m.fr/api/planligne/pdf?route=${line.id}`);
         } catch (error) {
             showError(error);
         }
