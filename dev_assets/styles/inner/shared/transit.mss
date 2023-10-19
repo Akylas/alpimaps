@@ -84,11 +84,11 @@
     }
 }
 
-// #stops['mapnik::geometry_type'=1] {
-//     marker-placement: [nuti::markers3d];
-//     marker-type: ellipse;
-//     marker-line-color: black;
-//     marker-fill: #fff;
-//     marker-width:  linear([view::zoom], (12,4), (13,5.5), (19, 8.5));
-//     marker-height:  linear([view::zoom], (12,4), (13,5.5), (19, 8.5));
-// }
+#routes['mapnik::geometry_type'=1] {
+    marker-placement: [nuti::markers3d];
+    marker-type: ellipse;
+    marker-line-color: black;
+    marker-fill: #fff;
+    marker-width:  linear([view::zoom], (12,4), (13,5.5), (19, 8.5));
+    marker-height:  linear([view::zoom], (12,4), (13,5.5), (19, 8.5));
+}

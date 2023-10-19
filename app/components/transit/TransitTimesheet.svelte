@@ -11,13 +11,14 @@
     import { formatTime, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
-    import { transitService } from '~/services/TransitService';
+    import { TransitRoute, transitService } from '~/services/TransitService';
     import { showError } from '~/utils/error';
     import { pickDate, pickTime } from '~/utils/utils';
     import { accentColor, borderColor, mdiFontFamily, navigationBarHeight, subtitleColor, textColor } from '~/variables';
     import IconButton from '../IconButton.svelte';
 
-    export let line: any;
+    export let line: TransitRoute;
+    const lineColor = line.color || transitService.defaultTransitLineColor;
     let loading = false;
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -134,7 +135,7 @@
 
     async function downloadPDF() {
         try {
-            openUrl(`https://data.mobilites-m.fr/api/ficheHoraires/pdf?route=${line.id}`);
+            openUrl(`https://data.mobilites-m.fr/api/ficheHoraires/pdf?route=${line.id.replace('_', ':')}`);
         } catch (error) {
             showError(error);
         }
@@ -142,9 +143,9 @@
 
     async function showDetails() {
         try {
-            const component = (await import('~/components/transit/TransitLineDetails.svelte')).default as any;
+            const component = (await import('~/components/transit/TransitLineDetails.svelte')).default;
             await navigate({
-                page: component as any,
+                page: component,
                 props: {
                     line
                 }
@@ -166,7 +167,8 @@
         <label
             row={1}
             colSpan={3}
-            text={line.longName.replace(' / ', '\n')}
+            visibility={line.longName ? 'visible':'collapse'}
+            text={(line.longName || line.name)?.replace(' / ', '\n')}
             fontWeight="bold"
             padding="15 10 15 10"
             fontSize={20}
@@ -228,7 +230,7 @@
             </canvaslabel>
         {/if}
         <CActionBar backgroundColor="transparent" colSpan={3}>
-            <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={line.color} color={line.textColor} text={line.shortName} autoFontSize={true} />
+            <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={lineColor} color={line.textColor} text={(line.shortName || line.name)} autoFontSize={true} />
             <IconButton text="mdi-file-pdf-box" on:tap={downloadPDF} />
             <IconButton text="mdi-information-outline" on:tap={showDetails} />
         </CActionBar>

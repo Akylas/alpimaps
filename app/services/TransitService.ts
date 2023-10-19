@@ -1,14 +1,18 @@
 import Observable from '@nativescript-community/observable';
+import { Color } from '@nativescript/core';
 import { GenericMapPos } from '@nativescript-community/ui-carto/core';
 import { getCacheControl, networkService } from './NetworkService';
 
 import { SQLiteDatabase } from '@nativescript-community/sqlite';
-export const MOBILITY_URL ='https://data.mobilites-m.fr';
+export const MOBILITY_URL = 'https://data.mobilites-m.fr';
 export const MOBILITY_API_URL = MOBILITY_URL + '/api';
 // const navitiaAPIEndPoint = 'https://api.navitia.io/v1/';
 
+export type TransitRoute = any;
+
 class TransitService extends Observable {
     _db: SQLiteDatabase;
+    defaultTransitLineColor = 'red';
     async start() {
         // const folderPath = getSavedMBTilesDir();
         // if (Folder.exists(folderPath)) {
@@ -22,7 +26,7 @@ class TransitService extends Observable {
         //     });
         // }
     }
-    routes: any[];
+    // routes: any[];
     async getTransitLines(line?) {
         // if (this._db) {
         //     if (!this.routes) {
@@ -120,12 +124,34 @@ class TransitService extends Observable {
     }
     async getLineStops(id) {
         return networkService.request({
-            url: `https://data.mobilites-m.fr/api/routers/default/index/routes/${id}/clusters`,
+            url: `https://data.mobilites-m.fr/api/routers/default/index/routes/${id.replace('_', ':')}/clusters`,
             method: 'GET',
             headers: {
                 'Cache-Control': getCacheControl(60 * 24)
             }
         });
+    }
+
+    async routes({ position }) {
+        const lines = await this.getMetroLinesData();
+        const positionData = await this.findBusStop(position);
+        const linesData = positionData.reduce((acc, d) => {
+            d.lines.forEach((l) => {
+                if (!acc[l]) {
+                    acc[l] = { ...lines[l], stopIds: [d.id], position: { lat: d.lat, lon: d.lon }, id: l };
+                } else {
+                    acc[l].stopIds.push(d.id);
+                }
+            });
+            return acc;
+        }, {});
+        return Object.values(linesData);
+    }
+    getRouteColor(item: TransitRoute) {
+        return item.color || this.defaultTransitLineColor;
+    }
+    getRouteTextColor(item: TransitRoute) {
+        return item.textColor || new Color(this.getRouteColor(item)).getBrightness() >= 170 ? '#000000' : '#ffffff';
     }
 }
 

@@ -6,7 +6,7 @@
     import { NativeViewElementNode, navigate } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
     import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
-    import { transitService } from '~/services/TransitService';
+    import { TransitRoute, transitService } from '~/services/TransitService';
     import { showError } from '~/utils/error';
     import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
     import { mdiFontFamily, navigationBarHeight } from '~/variables';
@@ -23,19 +23,20 @@
     async function refresh() {
         try {
             loading = true;
-            const lines = await transitService.getMetroLinesData();
-            const positionData = await transitService.findBusStop(position);
-            const linesData = positionData.reduce((acc, d) => {
-                d.lines.forEach((l) => {
-                    if (!acc[l]) {
-                        acc[l] = { ...lines[l], stopIds: [d.id], position: { lat: d.lat, lon: d.lon }, id: l };
-                    } else {
-                        acc[l].stopIds.push(d.id);
-                    }
-                });
-                return acc;
-            }, {});
-            linesItems = Object.values(linesData);
+            // const lines = await transitService.getMetroLinesData();
+            // const positionData = await transitService.findBusStop(position);
+            // const linesData = positionData.reduce((acc, d) => {
+            //     d.lines.forEach((l) => {
+            //         if (!acc[l]) {
+            //             acc[l] = { ...lines[l], stopIds: [d.id], position: { lat: d.lat, lon: d.lon }, id: l };
+            //         } else {
+            //             acc[l].stopIds.push(d.id);
+            //         }
+            //     });
+            //     return acc;
+            // }, {});
+            // linesItems = Object.values(linesData);
+            linesItems = await transitService.routes({ position });
             noNetworkAndNoData = false;
         } catch (error) {
             if (error instanceof NoNetworkError && !linesItems) {
@@ -54,7 +55,7 @@
     async function showTimesheet(item) {
         try {
             closeBottomSheet();
-            const component = (await import('~/components/transit/TransitTimesheet.svelte')).default as any;
+            const component = (await import('~/components/transit/TransitTimesheet.svelte')).default;
             await navigate({
                 page: component,
                 props: {
@@ -69,7 +70,7 @@
     async function showDetails(item) {
         try {
             closeBottomSheet();
-            const component = (await import('~/components/transit/TransitLineDetails.svelte')).default as any;
+            const component = (await import('~/components/transit/TransitLineDetails.svelte')).default;
             await navigate({
                 page: component,
                 props: {
@@ -84,6 +85,13 @@
     onMount(() => {
         refresh();
     });
+
+    function getItemColor(item: TransitRoute) {
+        return transitService.getRouteColor(item);
+    }
+    function getItemTextColor(item: TransitRoute) {
+        return transitService.getRouteTextColor(item);
+    }
 </script>
 
 <gridlayout rows="auto,*" class="bottomsheet" height={300}>
@@ -91,8 +99,8 @@
     <!-- svelte-ignore illegal-attribute-character -->
     <collectionview bind:this={collectionView} id="scrollView" row={1} items={linesItems} itemIdGenerator={(item, i) => i} android:marginBottom={$navigationBarHeight} rowHeight={70}>
         <Template let:item>
-            <gridlayout rippleColor={item.color} columns="auto,*,auto" padding={10} on:tap={() => showTimesheet(item)}>
-                <label borderRadius={4} class="transitIconLabel" backgroundColor={item.color || 'black'} color={item.textColor} text={item.shortName} maxFontSize={30} autoFontSize={true} />
+            <gridlayout rippleColor={getItemColor(item)} columns="auto,*,auto" padding={10} on:tap={() => showTimesheet(item)}>
+                <label borderRadius={4} class="transitIconLabel" backgroundColor={getItemColor(item)} color={getItemTextColor(item)} text={item.shortName} maxFontSize={30} autoFontSize={true} />
                 <label text={item.longName} col={1} fontSize={17} maxFontSize={17} paddingLeft={10} verticalTextAlignment="center" maxLines={2} autoFontSize={true} lineBreak="end" />
                 <IconButton col={2} text="mdi-information-outline" on:tap={() => showDetails(item)} />
             </gridlayout>
