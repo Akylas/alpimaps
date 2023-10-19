@@ -254,7 +254,7 @@
                     Utils.openUrl(STORE_REVIEW_LINK);
                     break;
                 case 'third_party':
-                    const ThirdPartySoftwareBottomSheet = (await import('~/components/ThirdPartySoftwareBottomSheet.svelte')).default as any;
+                    const ThirdPartySoftwareBottomSheet = (await import('~/components/ThirdPartySoftwareBottomSheet.svelte')).default;
                     showBottomSheet({
                         parent: this,
                         view: ThirdPartySoftwareBottomSheet,
@@ -347,7 +347,7 @@
                             updateItem(item);
                         }
                     } else {
-                        const OptionSelect = (await import('~/components/OptionSelect.svelte')).default as any;
+                        const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
                         const result = await showBottomSheet<any>({
                             parent: null,
                             view: OptionSelect,
