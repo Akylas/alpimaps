@@ -1007,6 +1007,14 @@ export class NetworkService extends Observable {
             delete this.broadcastPromises[id];
         }
     }
+
+    getCacheControl(maxAge = 60, stale = 59) {
+        if (this.forcedOffline && this.notifyNetworkChange) {
+            return 'only-if-cached';
+        }
+        return `max-age=${maxAge}, max-stale=${stale}, stale-while-revalidate=${stale}`;
+    }
+
     async getMetroLines() {
         return this.request<string>({
             method: 'GET',
