@@ -168,7 +168,6 @@
 
     $: {
         const query = text;
-        console.log('text changed', query, currentSearchText);
         if (query !== currentSearchText) {
             if (query) {
                 if (searchAsTypeTimer) {
