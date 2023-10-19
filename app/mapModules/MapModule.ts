@@ -190,6 +190,7 @@ const mapContext: MapContext = {
                       // getAssetNames: getAssetNamesWithMaterial
                   })
         });
+        oldDecoder?.dispose();
         mapContext.runOnModules('vectorTileDecoderChanged', oldDecoder, mapContext.mapDecoder);
         return mapContext.mapDecoder;
     },
