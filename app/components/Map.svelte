@@ -2,7 +2,7 @@
     import { isSensorAvailable } from '@nativescript-community/sensors';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { ClickType, MapBounds, toNativeMapRange, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
-    import { MergedMBVTTileDataSource } from '@nativescript-community/ui-carto/datasources';
+    import { GeoJSONVectorTileDataSource, MergedMBVTTileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
     import { Layer, TileSubstitutionPolicy } from '@nativescript-community/ui-carto/layers';
     import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
@@ -153,7 +153,7 @@
                             minZoom: 0,
                             maxZoom: 24
                         });
-                        transitVectorTileDataSource.createLayer('lines');
+                        transitVectorTileDataSource.createLayer('routes');
                         transitVectorTileDataSource.setLayerGeoJSONString(1, result.replace(/"geometry":{}/g, '"geometry":null'));
                         if (!transitVectorTileLayer) {
                             transitVectorTileLayer = new VectorTileLayer({
