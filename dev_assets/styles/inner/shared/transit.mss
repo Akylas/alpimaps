@@ -1,11 +1,13 @@
-@transitLineColor: [route_color] ? [route_color] : [nuti::default_transit_color];
-@transitLineContrastColor: brightness(color([route_color])) > 180 ? #000 : #fff;
+@transitLineColor: [route_color] ? [route_color] : ([COULEUR] ? 'rgb(' + [COULEUR] + ')' : [nuti::default_transit_color]);
+@transitLineContrastColor: brightness(color(@transitLineColor)) > 180 ? #000 : #fff;
 @transit_route_width: linear([view::zoom], (4, 0.3), (14, 2.1), (15, 3.2), (18, 4));
 @transit_route_casing_width: linear([view::zoom], (4, 1), (18, 3));
 
+@transitLineName: [route_short_name] ? [route_short_name] : [NUMERO];
+
 @transit_route_text_width :linear([view::zoom], (13, 8.0), (18, 12.0));
 @transit_route_text_dy :2;
-@transitShieldeatureId: [route_id]+[route_color];
+@transitShieldeatureId: [route_id]+ @transitLineColor;
 
 @transit_route_label_halo_radius: 2;
 @transit_route_label_halo: #f2f5f8;
@@ -48,7 +50,7 @@
                 // text-same-feature-id-dependent: true;
                 text-fill: @transitLineContrastColor;
 
-                text-name: [route_short_name];
+                text-name: @transitLineName;
                 // [zoom>=15] {
                 // 	text-name: [route_long_name];
                 // }
@@ -75,7 +77,7 @@
                 text-fill: @transitLineColor;
                 text-feature-id: @transitShieldeatureId;
                 text-size: @transit_route_text_width + 5;
-                text-name: '' + ntime('', max(length([route_short_name]) - 2, 0)) + '';
+                text-name: '' + ntime('', max(length(@transitLineName) - 2, 0)) + '';
                 text-face-name: 'osm';
             }
         }
