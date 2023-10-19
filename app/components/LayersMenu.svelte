@@ -82,7 +82,7 @@
     }
 
     async function showSourceOptions(item: SourceItem) {
-        const LayerOptionsBottomSheet = (await import('./LayerOptionsBottomSheet.svelte')).default as any;
+        const LayerOptionsBottomSheet = (await import('./LayerOptionsBottomSheet.svelte')).default;
         closeBottomSheet();
         setTimeout(() => {
             showBottomSheet({
