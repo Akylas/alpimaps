@@ -53,7 +53,7 @@
     <slot name="center" />
     <stacklayout orientation="horizontal">
         <slot name="left" />
-        <IconButton isVisible={menuIconVisible} text={menuIcon} on:tap={onMenuIcon} color="white" />
+        <IconButton isVisible={menuIconVisible} text={menuIcon} on:tap={onMenuIcon} />
     </stacklayout>
     <stacklayout col={2} orientation="horizontal">
         <slot />
