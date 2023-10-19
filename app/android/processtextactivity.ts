@@ -36,11 +36,11 @@ export class ProcessTextActivity extends androidx.appcompat.app.AppCompatActivit
         }
         // globalObservable.notify({ eventName: 'onOtherAppTextSelected', data: intent.getStringExtra('android.intent.extra.PROCESS_TEXT') });
 
-        console.log('ProcessTextActivity', 'onCreate', intent.getAction(), intent.getStringExtra('android.intent.extra.PROCESS_TEXT'));
+        DEV_LOG && console.log('ProcessTextActivity', 'onCreate', intent.getAction(), intent.getStringExtra('android.intent.extra.PROCESS_TEXT'));
         this.finish();
     }
 
     public onNewIntent(intent: android.content.Intent): void {
-        console.log('ProcessTextActivity', 'onNewIntent', intent.getAction(), intent.getStringExtra('android.intent.extra.PROCESS_TEXT'));
+        DEV_LOG && console.log('ProcessTextActivity', 'onNewIntent', intent.getAction(), intent.getStringExtra('android.intent.extra.PROCESS_TEXT'));
     }
 }

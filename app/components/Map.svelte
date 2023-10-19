@@ -1822,7 +1822,6 @@
                 on:mapStable={onMainMapStable}
                 on:mapIdle={onMainMapIdle}
                 on:mapClicked={onMainMapClicked}
-                useTextureView={false}
                 on:layoutChanged={reportFullyDrawn}
             />
             <ButtonBar
@@ -1886,7 +1885,7 @@
             <MapScrollingWidgets bind:this={mapScrollingWidgets} bind:navigationInstructions opacity={scrollingWidgetsOpacity} userInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
             <DirectionsPanel bind:this={directionsPanel} bind:translationY={topTranslationY} width="100%" verticalAlignment="top" {editingItem} on:cancel={onDirectionsCancel} />
         </gridlayout>
-        <BottomSheetInner bind:this={bottomSheetInner} bind:navigationInstructions bind:steps prop:bottomSheet updating={itemLoading} item={$selectedItem} />
+        <BottomSheetInner prop:bottomSheet bind:this={bottomSheetInner} bind:navigationInstructions bind:steps updating={itemLoading} item={$selectedItem} />
         <!-- <collectionview
                 items={currentClickedFeatures}
                 height={80}
