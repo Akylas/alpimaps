@@ -716,10 +716,20 @@
 
     async function getTransitLines() {
         try {
-            const TransitLinesBottomSheet = (await import('~/components/transit/TransitLinesBottomSheet.svelte')).default as any;
-            const geometry = item.geometry as Point;
-            const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0], altitude: geometry.coordinates[2] };
-            showBottomSheet({ parent: mapContext.getMainPage(), trackingScrollView: 'scrollView', view: TransitLinesBottomSheet, props: { name: formatter.getItemName(item), position } });
+            if (itemIsRoute) {
+                const component = (await import('~/components/transit/TransitLineDetails.svelte')).default;
+                await navigate({
+                    page: component,
+                    props: {
+                        line: { geometry: item.geometry, ...item.properties }
+                    }
+                });
+            } else {
+                const TransitLinesBottomSheet = (await import('~/components/transit/TransitLinesBottomSheet.svelte')).default;
+                const geometry = item.geometry as Point;
+                const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0], altitude: geometry.coordinates[2] };
+                showBottomSheet({ parent: mapContext.getMainPage(), trackingScrollView: 'scrollView', view: TransitLinesBottomSheet, props: { name: formatter.getItemName(item), position } });
+            }
         } catch (err) {
             showError(err);
         }
