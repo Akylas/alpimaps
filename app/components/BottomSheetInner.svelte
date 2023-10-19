@@ -21,7 +21,7 @@
     import { formatDistance, osmicon } from '~/helpers/formatter';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext, handleMapAction } from '~/mapModules/MapModule';
-    import type { IItem, IItem as Item, RouteInstruction } from '~/models/Item';
+    import type { Item, RouteInstruction } from '~/models/Item';
     import { NoNetworkError, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { showError } from '~/utils/error';
@@ -200,7 +200,7 @@
             // if (!item.properties?.osmid && !networkService.connected) {
             //     throw new NoNetworkError();
             // }
-            const ItemInfo = (await import('~/components/ItemInfo.svelte')).default as any;
+            const ItemInfo = (await import('~/components/ItemInfo.svelte')).default;
             // const hasOpenHours = !!item.properties?.opening_hours;
             const hasOpenHours = true;
             await showBottomSheet({
@@ -525,7 +525,7 @@
         }
     }
 
-    async function updateItem(item: IItem, data: Partial<IItem>, peek = true) {
+    async function updateItem(item: Item, data: Partial<Item>, peek = true) {
         try {
             updatingItem = true;
             const savedItem = await mapContext.mapModule('items').updateItem(item, data);
@@ -552,7 +552,7 @@
         //     // mapContext.mapModules.items.shareFile(gpx.string, `${gpx.name.replace(/[\s\t]/g, '_')}.gpx`);
         // }
         try {
-            const OptionSelect = (await import('~/components/OptionSelect.svelte')).default as any;
+            const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
             const options = [{ name: lc('geoson'), data: 'geojson' }];
             if (item.properties?.address) {
                 options.unshift({ name: lc('address'), data: 'address' });
@@ -669,7 +669,7 @@
                 rasterDataSource = await mapContext.mapModules.customLayers.getDataSource('openstreetmap');
             }
             // const { default: component } = await import('~/components/PeakFinder.svelte');
-            const component = (await import('~/components/PeakFinder.svelte')).default as any;
+            const component = (await import('~/components/PeakFinder.svelte')).default;
             navigate({
                 page: component,
                 props: {
@@ -698,7 +698,7 @@
                 location = { lat: (points[0].geometry as Point).coordinates[1], lon: (points[0].geometry as Point).coordinates[0] };
                 aimingItems = points.slice(1);
             }
-            const CompassView = (await import('~/components/CompassView.svelte')).default as any;
+            const CompassView = (await import('~/components/CompassView.svelte')).default;
             await showBottomSheet({
                 parent: mapContext.getMainPage(),
                 view: CompassView,
@@ -903,8 +903,8 @@
             mapContext.startEditingItem(item);
         } else {
             try {
-                const RoutesList = (await import('~/components/ItemEdit.svelte')).default as any;
-                navigate({ page: RoutesList, props: { item } });
+                const RoutesList = (await import('~/components/ItemEdit.svelte')).default;
+                navigate({ page: RoutesList, props: { item: item as Item } });
             } catch (error) {
                 showError(error);
             }
@@ -925,7 +925,7 @@
                 translateX: side === 'right' ? -delta : delta,
                 opacity: progress * 0.1
             }
-        } as any;
+        };
 
         return result;
     }
