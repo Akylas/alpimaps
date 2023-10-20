@@ -120,7 +120,7 @@ module.exports = (env, params = {}) => {
                 .loader('string-replace-loader')
                 .before('svelte-loader')
                 .options({
-                    search: 'createElementNS\\("https:\\/\\/svelte.dev\\/docs#template-syntax-svelte-options"',
+                    search: 'createElementNS\\("https:\\/\\/svelte.dev\\/docs\\/special-elements#svelte-options"',
                     replace: 'createElementNS(svN',
                     flags: 'gm'
                 })
@@ -332,6 +332,12 @@ module.exports = (env, params = {}) => {
     config.externals.push(function ({ context, request }, cb) {
         if (/address-formatter/i.test(context)) {
             return cb(null, join('~/address-formatter/templates', basename(request)));
+        }
+        cb();
+    });
+    config.externals.push(function ({ context, request }, cb) {
+        if (/i18n$/i.test(context)) {
+            return cb(null, join('~/i18n/', request));
         }
         cb();
     });
