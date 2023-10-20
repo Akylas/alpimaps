@@ -2,14 +2,14 @@
     import { isSensorAvailable } from '@nativescript-community/sensors';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { ClickType, MapBounds, toNativeMapRange, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
-    import { GeoJSONVectorTileDataSource, MergedMBVTTileDataSource } from '@nativescript-community/ui-carto/datasources';
+    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
     import { Layer, TileSubstitutionPolicy } from '@nativescript-community/ui-carto/layers';
     import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
     import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
     import { VectorLayer, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
     import { Projection } from '@nativescript-community/ui-carto/projections';
-    import { CartoMap, MapInteractionInfo, PanningMode, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
+    import { CartoMap, PanningMode, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
     import { ZippedAssetPackage, nativeVectorToArray, setShowDebug, setShowError, setShowInfo, setShowWarn } from '@nativescript-community/ui-carto/utils';
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
     // import { Text, TextStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/text';
@@ -19,8 +19,6 @@
     import { closeBottomSheet, isBottomSheetOpened, showBottomSheet } from '~/utils/svelte/bottomsheet';
     // import { Brightness } from '@nativescript/brightness';
     import { getFromLocation } from '@nativescript-community/geocoding';
-    import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
-    import { HTTPTileDataSource } from '@nativescript-community/ui-carto/datasources/http';
     import { EPSG3857 } from '@nativescript-community/ui-carto/projections/epsg3857';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
@@ -58,8 +56,7 @@
     import { Sentry, isSentryEnabled } from '~/utils/sentry';
     import { share } from '~/utils/share';
     import { hideLoading, showLoading } from '~/utils/ui';
-    import { getDataFolder } from '~/utils/utils';
-    import { disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, showApp } from '~/utils/utils';
+    import { disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn } from '~/utils/utils';
     import { navigationBarHeight, primaryColor } from '../variables';
     import BottomSheetInner from './BottomSheetInner.svelte';
     import ButtonBar from './ButtonBar.svelte';
@@ -86,7 +83,7 @@
     let selectedOSMId: string;
     let selectedId: string;
     let selectedPosMarker: Point<LatLonKeys>;
-    let selectedItem = watcher<IItem>(null, onSelectedItemChanged);
+    const selectedItem = watcher<IItem>(null, onSelectedItemChanged);
     let editingItem: IItem = null;
     // let currentLayer: VectorTileLayer;
     let currentLayerStyle: string;
@@ -97,11 +94,11 @@
     let itemLoading = false;
     let projection: Projection = null;
     let currentLanguage = ApplicationSettings.getString('map_language', ApplicationSettings.getString('language', 'en'));
-    let addedLayers: { layer: Layer<any, any>; layerId: LayerType }[] = [];
+    const addedLayers: { layer: Layer<any, any>; layerId: LayerType }[] = [];
     let keepScreenAwake = ApplicationSettings.getBoolean(KEEP_AWAKE_KEY, false);
     let showOnLockscreen = false;
     let currentMapRotation = 0;
-    let shouldShowNavigationBarOverlay = false;
+    const shouldShowNavigationBarOverlay = false;
     let steps;
     let topTranslationY;
     let networkConnected = false;
@@ -142,7 +139,7 @@
     //         }
     //     }
     // }
-    let fetchingTransitLines = false;
+    const fetchingTransitLines = false;
     $: {
         if (showTransitLines) {
             // const pos = cartoMap.focusPos;
@@ -391,12 +388,12 @@
                 DEV_LOG && console.log('setBottomSheetStepIndex', bottomSheetStepIndex, steps);
                 bottomSheetStepIndex = index;
             },
-            showOptions: showOptions,
+            showOptions,
             mapModules: {
                 items: new ItemsModule(),
                 userLocation: new UserLocationModule(),
                 customLayers: customLayersModule,
-                directionsPanel: directionsPanel,
+                directionsPanel,
                 mapScrollingWidgets
             }
         });
@@ -476,7 +473,7 @@
 
             localVectorLayer = new VectorLayer({ dataSource: localVectorDataSource });
             localVectorLayer.setVectorElementEventListener<LatLonKeys>({
-                onVectorElementClicked: onVectorElementClicked
+                onVectorElementClicked
             });
             addLayer(localVectorLayer, 'selection');
         }
@@ -602,7 +599,7 @@
         if (!cartoMap) {
             return;
         }
-        const interaction = e.data.interaction as MapInteractionInfo;
+        // const interaction = e.data.interaction as MapInteractionInfo;
         // console.log('onMainMapInteraction', interaction);
         if (!mapMoved) {
             unFocusSearch();
@@ -680,7 +677,7 @@
         try {
             didIgnoreAlreadySelected = false;
             if (isFeatureInteresting) {
-                let isCurrentItem = item === $selectedItem;
+                const isCurrentItem = item === $selectedItem;
                 TEST_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons, JSON.stringify(item));
                 if (setSelected && isCurrentItem && !item) {
                     unselectItem(false);
@@ -692,7 +689,7 @@
 
                     // selected_osmid is for routes
                     // mapContext.mapDecoder.setStyleParameter('selected_id', '');
-                    let styleParameters = {};
+                    const styleParameters = {};
                     if (props.id !== undefined) {
                         selectedId = props.id;
                         styleParameters['selected_osmid'] = '0';
@@ -745,7 +742,7 @@
                         // } else {
                         //     mapContext.mapDecoder.setStyleParameter('selected_id', '');
                         // }
-                        let styleParameters = {};
+                        const styleParameters = {};
                         if (props.id !== undefined) {
                             selectedId = props.id;
                             if (typeof props.id === 'string') {
@@ -863,7 +860,7 @@
                 if (preventZoom) {
                     return;
                 }
-                await zoomToItem({ item, zoom, minZoom, duration: zoomDuration, forceZoomOut });
+                zoomToItem({ item, zoom, minZoom, duration: zoomDuration, forceZoomOut });
             } else {
                 unselectItem();
             }
@@ -889,10 +886,10 @@
                 cartoMap.moveToFitBounds(item.properties.zoomBounds, screenBounds, false, true, false, duration);
             }
         } else if (item.properties?.extent) {
-            let extent: [number, number, number, number] = item.properties.extent as any;
+            let extent: [number, number, number, number] = item.properties.extent as [number, number, number, number];
             if (typeof extent === 'string') {
                 if (extent[0] !== '[') {
-                    extent = `[${extent}]` as any;
+                    extent = `[${extent as string}]` as any;
                 }
                 extent = JSON.parse(extent as any);
             }
@@ -923,7 +920,7 @@
             if (selectedPosMarker) {
                 selectedPosMarker.visible = false;
             }
-            let styleParameters = {};
+            const styleParameters = {};
             if (selectedOSMId !== undefined) {
                 selectedOSMId = undefined;
                 styleParameters['selected_osmid'] = '0';
@@ -1085,7 +1082,7 @@
         const { clickType, featureId, position, featureLayerName, featureData, featurePosition, featureGeometry, layer } = data;
 
         TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, position, featurePosition, featureGeometry);
-        const handledByModules = mapContext.runOnModules('onVectorTileClicked', data);
+        const handledByModules = mapContext.runOnModules('onVectorTileClicked', data) as boolean;
         if (!handledByModules && clickType === ClickType.SINGLE) {
             // if (showClickedFeatures) {
             //     clickedFeatures.push({
@@ -1233,7 +1230,7 @@
         //         feature.properties[k] = JSON.parse(feature.properties[k]);
         //     }
         // });
-        const handledByModules = mapContext.runOnModules('onVectorTileElementClicked', data);
+        const handledByModules = mapContext.runOnModules('onVectorTileElementClicked', data) as boolean;
         // if (DEV_LOG) {
         //     console.log('handledByModules', handledByModules);
         // }
@@ -1265,7 +1262,7 @@
     }
 
     function setStyleParameter(key: string, value: string) {
-        let decoder = mapContext.mapDecoder;
+        const decoder = mapContext.mapDecoder;
         if (!!decoder) {
             decoder.setStyleParameter(key, value + '');
         }
@@ -1318,7 +1315,7 @@
     }
 
     async function selectStyle() {
-        let styles = [];
+        const styles = [];
         const stylePath = path.join(knownFolders.currentApp().path, 'assets', 'styles');
         const entities = await Folder.fromPath(stylePath).getEntities();
         for (let index = 0; index < entities.length; index++) {
@@ -1397,7 +1394,7 @@
                 return;
             }
             const layerIndex = LAYERS_ORDER.indexOf(layerId);
-            let realIndex = addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) > layerIndex);
+            const realIndex = addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) > layerIndex);
             if (realIndex >= 0 && realIndex < addedLayers.length) {
                 cartoMap.addLayer(layer, realIndex);
                 addedLayers.splice(realIndex, 0, { layer, layerId });
@@ -1414,7 +1411,7 @@
                 return;
             }
             const layerIndex = LAYERS_ORDER.indexOf(layerId);
-            let realIndex =
+            const realIndex =
                 Math.max(
                     addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) >= layerIndex),
                     0
@@ -1693,13 +1690,13 @@
             }
 
             const MapOptions = (await import('~/components/MapOptions.svelte')).default;
-            const result = (await showBottomSheet({
+            const result = await showBottomSheet({
                 parent: page,
                 view: MapOptions,
                 props: { options }
                 // transparent: true,
                 // disableDimBackground: true
-            })) as any;
+            });
             if (result) {
                 switch (result.id) {
                     case 'select_style':
@@ -1776,7 +1773,7 @@
     async function showTransitLinesPage() {
         try {
             const component = (await import('~/components/transit/TransitLines.svelte')).default;
-            await navigate({ page: component });
+            navigate({ page: component });
         } catch (error) {
             showError(error);
         }
@@ -1804,7 +1801,7 @@
     }
 
     $: {
-        let newButtons: any[] = [
+        const newButtons: any[] = [
             {
                 text: 'mdi-bullseye',
                 id: 'contours',
@@ -1890,82 +1887,75 @@
     bind:this={page}
     actionBarHidden={true}
     backgroundColor="#E3E1D3"
-    on:navigatingTo={onNavigatingTo}
-    on:navigatingFrom={onNavigatingFrom}
     {keepScreenAwake}
     screenBrightness={keepScreenAwake ? 1 : -1}
->
+    on:navigatingTo={onNavigatingTo}
+    on:navigatingFrom={onNavigatingFrom}>
     <bottomsheet
         android:marginBottom={$navigationBarHeight}
         backgroundColor="#01550000"
         panGestureOptions={{ failOffsetXEnd: 20, minDist: 40 }}
-        {steps}
         stepIndex={bottomSheetStepIndex}
-        on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)}
+        {steps}
         translationFunction={bottomSheetTranslationFunction}
-    >
-        <gridlayout width="100%" height="100%">
+        on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)}>
+        <gridlayout height="100%" width="100%">
             <cartomap
-                zoom={16}
                 accessibilityLabel="cartoMap"
+                zoom={16}
                 on:mapReady={onMainMapReady}
                 on:mapMoved={onMainMapMove}
                 on:mapInteraction={onMainMapInteraction}
                 on:mapStable={onMainMapStable}
                 on:mapIdle={onMainMapIdle}
                 on:mapClicked={onMainMapClicked}
-                on:layoutChanged={reportFullyDrawn}
-            />
+                on:layoutChanged={reportFullyDrawn} />
             <ButtonBar
-                marginLeft={5}
-                gray={true}
-                color="#666"
-                buttonSize={40}
-                horizontalAlignment="left"
-                verticalAlignment="top"
                 id="mapButtonsNew"
+                buttonSize={40}
                 buttons={sideButtons}
+                color="#666"
+                gray={true}
+                horizontalAlignment="left"
+                marginLeft={5}
                 marginTop={Math.max(90 - topTranslationY, 0)}
                 translateY={Math.max(topTranslationY - 30, 0)}
-            />
+                verticalAlignment="top" />
 
-            <Search bind:this={searchView} verticalAlignment="top" defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
+            <Search bind:this={searchView} defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} verticalAlignment="top" />
             <LocationInfoPanel
+                bind:this={locationInfoPanel}
                 horizontalAlignment="left"
-                verticalAlignment="top"
+                isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
                 marginLeft={20}
                 marginTop={90}
-                bind:this={locationInfoPanel}
-                isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
-            />
+                verticalAlignment="top" />
             <canvaslabel
-                orientation="vertical"
-                verticalAlignment="middle"
-                horizontalAlignment="right"
-                isUserInteractionEnabled="false"
+                class="mdi"
                 color="red"
                 fontSize={12}
-                width={20}
                 height={30}
-                class="mdi"
+                horizontalAlignment="right"
+                isUserInteractionEnabled="false"
+                orientation="vertical"
                 textAlignment="center"
-            >
-                <cspan text="mdi-access-point-network-off" visibility={networkConnected ? 'collapsed' : 'visible'} textAlignment="left" verticalTextAlignment="top" />
+                verticalAlignment="middle"
+                width={20}>
+                <cspan text="mdi-access-point-network-off" textAlignment="left" verticalTextAlignment="top" visibility={networkConnected ? 'collapsed' : 'visible'} />
             </canvaslabel>
             <mdcardview
                 class="small-floating-btn"
-                on:tap={resetBearing}
-                visibility={currentMapRotation !== 0 ? 'visible' : 'collapsed'}
-                marginTop={Math.max(90 - topTranslationY, 0)}
-                verticalAlignment="top"
                 horizontalAlignment="right"
+                marginTop={Math.max(90 - topTranslationY, 0)}
                 translateY={Math.max(topTranslationY - 30, 0)}
-            >
-                <label class="mdi" textAlignment="center" rotate={-currentMapRotation} verticalAlignment="middle" text="mdi-navigation" color={primaryColor} />
+                verticalAlignment="top"
+                visibility={currentMapRotation !== 0 ? 'visible' : 'collapsed'}
+                on:tap={resetBearing}>
+                <label class="mdi" color={primaryColor} rotate={-currentMapRotation} text="mdi-navigation" textAlignment="center" verticalAlignment="middle" />
             </mdcardview>
             <!-- <mdbutton
-                
-                
+
+
                 on:tap={resetBearing}
                 class="small-floating-btn"
                 text="mdi-navigation"
@@ -1974,10 +1964,10 @@
                 horizontalAlignment="right"
                 translateY={Math.max(topTranslationY - 50, 0)}
             /> -->
-            <MapScrollingWidgets bind:this={mapScrollingWidgets} bind:navigationInstructions opacity={scrollingWidgetsOpacity} userInteractionEnabled={scrollingWidgetsOpacity > 0.3} />
-            <DirectionsPanel bind:this={directionsPanel} bind:translationY={topTranslationY} width="100%" verticalAlignment="top" {editingItem} on:cancel={onDirectionsCancel} />
+            <MapScrollingWidgets bind:this={mapScrollingWidgets} opacity={scrollingWidgetsOpacity} userInteractionEnabled={scrollingWidgetsOpacity > 0.3} bind:navigationInstructions />
+            <DirectionsPanel bind:this={directionsPanel} {editingItem} verticalAlignment="top" width="100%" bind:translationY={topTranslationY} on:cancel={onDirectionsCancel} />
         </gridlayout>
-        <BottomSheetInner prop:bottomSheet bind:this={bottomSheetInner} bind:navigationInstructions bind:steps updating={itemLoading} item={$selectedItem} />
+        <BottomSheetInner prop:bottomSheet bind:this={bottomSheetInner} item={$selectedItem} updating={itemLoading} bind:navigationInstructions bind:steps />
         <!-- <collectionview
                 items={currentClickedFeatures}
                 height={80}

@@ -3,28 +3,28 @@
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { Utils } from '@nativescript-community/ui-chart/utils/Utils';
+    import { SVG } from '@nativescript-community/ui-svg';
     import { executeOnMainThread } from '@nativescript/core/utils';
     import dayjs, { Dayjs } from 'dayjs';
-    import { getMoonPosition, GetMoonPositionResult, getPosition, GetSunPositionResult } from 'suncalc';
+    import { GetMoonPositionResult, GetSunPositionResult, getMoonPosition, getPosition } from 'suncalc';
     import { onDestroy, onMount } from 'svelte';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import type { NativeViewElementNode } from 'svelte-native/dom';
     import SmoothCompassBehavior, { wrap } from '~/components/SmoothCompassBehavior';
     import { formatDistance } from '~/helpers/formatter';
     import { getBearing, getDistanceSimple } from '~/helpers/geolib';
     import { lc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
-    import { Item } from '~/models/Item';
+    import { IItem as Item } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
     import { TO_DEG, TO_RAD } from '~/utils/geo';
     import { primaryColor } from '~/variables';
-    import { SVG } from '@nativescript-community/ui-svg';
     import CompassDialView from './CompassDialView.svelte';
     import IconButton from './IconButton.svelte';
 
     let currentHeading: number = 0;
     let lastHeadingTime: number = 0;
-    let headingAccuracy: number = undefined;
+    let headingAccuracy: number;
     let listeningForHeading = false;
 
     export let height: number = 350;
@@ -142,9 +142,9 @@
     svg.cache = true;
     svg.src = '~/assets/svgs/needle.svg';
 
-    function onCanvasDrawBeforeText({ canvas, object, delta, rotation }: { canvas: Canvas; object: CanvasView; delta: number; rotation: number }) {
-        let w = canvas.getWidth();
-        let h = canvas.getHeight();
+    function onCanvasDrawBeforeText({ canvas, rotation }: { canvas: Canvas; object: CanvasView; delta: number; rotation: number }) {
+        const w = canvas.getWidth();
+        const h = canvas.getHeight();
         const rx = w / 2;
         const ry = h / 2;
         if (updateWithSensor) {
@@ -157,14 +157,14 @@
             canvas.restore();
         }
     }
-    function onCanvasDraw({ canvas, object, delta, rotation }: { canvas: Canvas; object: CanvasView; delta: number; rotation: number }) {
-        let w = canvas.getWidth();
-        let h = canvas.getHeight();
+    function onCanvasDraw({ canvas, delta, rotation }: { canvas: Canvas; object: CanvasView; delta: number; rotation: number }) {
+        const w = canvas.getWidth();
+        const h = canvas.getHeight();
         const rx = w / 2;
         const ry = h / 2;
         const radius = Math.min(rx, ry);
 
-        function getCenter(bearing, altitude) {
+        function getCenter(bearing: number, altitude: number) {
             const rad = TO_RAD * ((bearing - 90) % 360);
             const ryd = (radius - delta) * (1 - Math.max(0, altitude) / 90);
             const result = [rx + Math.cos(rad) * ryd, ry + +Math.sin(rad) * ryd];
@@ -194,7 +194,7 @@
                 canvas.save();
                 const center = packageService.getItemCenter(item);
                 const bearing = getBearing(location, center);
-                let centerCanvas = getCenter(bearing, 0);
+                const centerCanvas = getCenter(bearing, 0);
                 paint.setColor(primaryColor);
                 canvas.translate(centerCanvas[0], centerCanvas[1]);
                 canvas.drawCircle(0, 0, 5, paint);
@@ -229,21 +229,19 @@
 </script>
 
 <gridlayout {height} rows="*,auto" {...$$restProps}>
-    <CompassDialView bind:canvas onDraw={onCanvasDraw} onDrawBeforeText={onCanvasDrawBeforeText} rotation={updateWithSensor ? -currentHeading : 0} drawInsideGrid={!!moonBearing} />
+    <CompassDialView drawInsideGrid={!!moonBearing} onDraw={onCanvasDraw} onDrawBeforeText={onCanvasDrawBeforeText} rotation={updateWithSensor ? -currentHeading : 0} bind:canvas />
     <!-- <svgview visibility={updateWithSensor ? 'visible' : 'hidden'} src="~/assets/svgs/needle.svg" stretch="aspectFit" horizontalAlignment="center" margin="30" /> -->
-    <IconButton small={true} text="mdi-rotate-orbit" on:tap={() => (updateWithSensor = !updateWithSensor)} isSelected={updateWithSensor} horizontalAlignment="left" verticalAlignment="bottom" />
+    <IconButton horizontalAlignment="left" isSelected={updateWithSensor} small={true} text="mdi-rotate-orbit" verticalAlignment="bottom" on:tap={() => (updateWithSensor = !updateWithSensor)} />
     <label
-        row={1}
-        visibility={updateWithSensor && headingAccuracy >= 2 ? 'visible' : 'hidden'}
-        text={lc('calibration_needed')}
-        horizontalAlignment="center"
-        fontSize={10}
-        padding={4}
-        marginBottom={4}
-        verticalTextAlignment="center"
         backgroundColor="orange"
         borderRadius="4"
         color="white"
-    />
+        fontSize={10}
+        horizontalAlignment="center"
+        marginBottom={4}
+        padding={4}
+        row={1}
+        text={lc('calibration_needed')}
+        verticalTextAlignment="center"
+        visibility={updateWithSensor && headingAccuracy >= 2 ? 'visible' : 'hidden'} />
 </gridlayout>
->

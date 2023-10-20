@@ -2,7 +2,7 @@
     import { debounce } from '@nativescript/core/utils';
     import { AWebView } from '@nativescript-community/ui-webview';
     import { LoadEventData, Page } from '@nativescript/core';
-    import type { Feature } from 'geojson';
+    // import type { Feature } from 'geojson';
     import { NativeViewElementNode } from 'svelte-native/dom';
 
     export let position;
@@ -13,9 +13,9 @@
     let webView: NativeViewElementNode<AWebView>;
     let page: NativeViewElementNode<Page>;
     // let webserver;
-    let selectedItem: Feature & { distance: number } = null;
+    // const selectedItem: Feature & { distance: number } = null;
 
-    const now = new Date();
+    // const now = new Date();
     let currentAltitude;
     const consoleEnabled = !PRODUCTION;
 
@@ -41,13 +41,12 @@
     }
 
     function webviewLoaded(args: LoadEventData) {
-        const webview = args.object as AWebView;
+        // const webview = args.object as AWebView;
         // webview.registerLocalResource('https://api.maptiler.com/maps/topo/sprite@2x.json', '~/assets/3dterrain/sprite@2x.json')
         // webview.registerLocalResource('https://api.maptiler.com/maps/topo/sprite@2x.png', '~/assets/3dterrain/sprite@2x.png')
         // webview.once('layoutChanged', () => {
         // webview.src = '~/assets/webapp.html';
         // });
-
         // webview.once(AWebView.loadFinishedEvent, (args: LoadFinishedEventData) => {
         //     args.object.executeJavaScript(`webapp.setTerrarium(${terrarium});webapp.setPosition(${JSON.stringify({ ...position, altitude: currentAltitude })})`);
         // });
@@ -75,6 +74,6 @@
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout>
-        <awebview bind:this={webView} on:loaded={webviewLoaded} webConsoleEnabled={consoleEnabled} displayZoomControls={false} normalizeUrls={false} />
+        <awebview bind:this={webView} displayZoomControls={false} normalizeUrls={false} webConsoleEnabled={consoleEnabled} on:loaded={webviewLoaded} />
     </gridlayout>
 </page>

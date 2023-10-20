@@ -1,13 +1,11 @@
-<script lang="ts" context="module">
+<script context="module" lang="ts">
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-    import { createEventDispatcher } from 'svelte';
+    import dayjs from 'dayjs';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { borderColor, mdiFontFamily, primaryColor, subtitleColor as defaultSubtitleColor, textColor, backgroundColor } from '~/variables';
-    import IconButton from './IconButton.svelte';
     import SimpleOpeningHours from '~/helpers/SimpleOpeningHours';
     import { lc } from '~/helpers/locale';
-    import dayjs from 'dayjs';
+    import { backgroundColor, subtitleColor as defaultSubtitleColor, mdiFontFamily, primaryColor, textColor } from '~/variables';
     const sectionsMatch = { su: 'sunday', mo: 'monday', tu: 'tuesday', we: 'wednesday', th: 'thursday', fr: 'friday', sa: 'saturday' };
     const textPaint: Paint = new Paint();
     textPaint.textSize = 16;
@@ -37,12 +35,12 @@
     const padding = 16;
     function onDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
         try {
-            let w = canvas.getWidth();
-            let h = canvas.getHeight();
+            const w = canvas.getWidth();
+            const h = canvas.getHeight();
             textPaint.setFontWeight('normal');
             const smallH = smallHeight;
             let leftPadding = padding;
-            let rightPadding = padding;
+            const rightPadding = padding;
             if (leftIcon) {
                 leftPadding += 40;
                 iconPaint.color = $textColor;
@@ -90,8 +88,8 @@
                 if (typeof data === 'object') {
                     let dy = 80;
                     textPaint.color = $textColor;
-                    let array,
-                        date = dayjs();
+                    let array;
+                    const date = dayjs();
                     Object.keys(sectionsMatch).forEach((k, index) => {
                         if (k === 'ph' || k === 'sh') {
                             return;
@@ -139,7 +137,7 @@
     $: redraw(title, subtitle, leftIcon);
 </script>
 
-<canvas {height} bind:this={canvas} rippleColor={primaryColor} backgroundColor={$backgroundColor}>
+<canvas bind:this={canvas} backgroundColor={$backgroundColor} {height} rippleColor={primaryColor}>
     <!-- <canvaslabel padding={16}>
         <cgroup c="middle" paddingBottom={subtitle ? 10 : 0}>
             <cspan visibility={leftIcon ? 'visible' : 'hidden'} paddingLeft={10} width={40} text={leftIcon} fontFamily={leftIconFonFamily} fontSize={24} />
