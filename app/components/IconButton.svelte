@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script context="module" lang="ts">
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { showToolTip } from '~/utils/utils';
@@ -49,15 +49,15 @@
     $: refresh(text);
 
     function refresh(...args) {
-        canvas?.nativeView?.redraw()
+        canvas?.nativeView?.redraw();
     }
     function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
         iconPaint.fontFamily = fontFamily;
         iconPaint.textSize = fontSize ? fontSize : small ? 16 : 24;
         iconPaint.color = isEnabled ? (isSelected ? selectedColor : actualColor) : 'lightgray';
-        let w = canvas.getWidth();
-        let w2 = w / 2;
-        let h2 = canvas.getHeight() / 2;
+        const w = canvas.getWidth();
+        const w2 = w / 2;
+        const h2 = canvas.getHeight() / 2;
         const staticLayout = new StaticLayout(text, iconPaint, w, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
         canvas.translate(0, h2 - staticLayout.getHeight() / 2);
         staticLayout.draw(canvas);
@@ -82,18 +82,17 @@
 </script>
 
 <canvas
-    on:draw={onCanvasDraw}
     bind:this={canvas}
     borderRadius={shape === 'round' || (rounded && !shape) ? size / 2 : null}
     disableCss={true}
     rippleColor={actualColor}
     visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapsed'}
+    on:draw={onCanvasDraw}
     {...$$restProps}
-    on:tap
-    use:conditionalEvent={{ condition: !!actualLongPress, event: 'longPress', callback: actualLongPress }}
-    width={width || size}
     height={height || size}
-/>
+    width={width || size}
+    on:tap
+    use:conditionalEvent={{ condition: !!actualLongPress, event: 'longPress', callback: actualLongPress }} />
 <!-- <mdbutton
     {isEnabled}
     {text}

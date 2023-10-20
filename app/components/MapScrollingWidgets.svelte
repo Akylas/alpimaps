@@ -34,7 +34,7 @@
         }));
     }
 
-    let currentMapZoom = 0;
+    const currentMapZoom = 0;
     let totalDownloadProgress = 0;
     let attributionVisible = false;
     const mapContext = getMapContext();
@@ -45,7 +45,7 @@
 
     let scaleView: ScaleView;
     let userLocationModule: UserLocationModule = null;
-    let currentLocation: MapPos = null;
+    const currentLocation: MapPos = null;
     // let lastSuggestionKey: string;
     let gridLayout: NativeViewElementNode<GridLayout>;
     let navigationCanvas: NativeViewElementNode<CanvasView>;
@@ -60,7 +60,7 @@
         remainingTime: number;
         distanceToNextInstruction: number;
         instruction: RouteInstruction;
-    } = undefined;
+    };
     $: {
         if (navigationInstructions && navigationInstructions.instruction) {
             switch (navigationInstructions.instruction.a) {
@@ -181,8 +181,8 @@
     let iconPaint: Paint;
     let textPaint: Paint;
     function drawNavigationInstruction({ canvas, object }: { canvas: Canvas; object: Canvas }) {
-        let w = canvas.getWidth();
-        let h = canvas.getHeight();
+        const w = canvas.getWidth();
+        const h = canvas.getHeight();
         if (!iconPaint) {
             iconPaint = new Paint();
             iconPaint.fontFamily = alpimapsFontFamily;
@@ -291,60 +291,56 @@
     }
 </script>
 
-<gridlayout id="scrollingWidgets" bind:this={gridLayout} {...$$restProps} rows="auto,*,auto" columns="60,*,70" isPassThroughParentEnabled={true} marginTop={globalMarginTop} {userInteractionEnabled}>
-    <stacklayout col={2} row={2} verticalAlignment="bottom" padding={2}>
+<gridlayout bind:this={gridLayout} id="scrollingWidgets" {...$$restProps} columns="60,*,70" isPassThroughParentEnabled={true} marginTop={globalMarginTop} rows="auto,*,auto" {userInteractionEnabled}>
+    <stacklayout col={2} padding={2} row={2} verticalAlignment="bottom">
         <mdbutton
-            transition:scale={{ duration: 200 }}
-            on:tap={startDirections}
-            rowSpan={2}
-            col={2}
-            class="floating-btn"
             id="directions"
+            class="floating-btn"
+            col={2}
+            rowSpan={2}
             text="mdi-directions"
             visibility={selectedItemHasPosition ? 'visible' : 'collapsed'}
-        />
+            on:tap={startDirections}
+            transition:scale={{ duration: 200 }} />
         <mdcardview class={'floating-btn ' + locationButtonClass} on:tap={askUserLocation} on:longPress={onWatchLocation}>
             <label
                 class={'mdi ' + locationButtonLabelClass}
-                textAlignment="center"
-                verticalAlignment="middle"
-                text="mdi-crosshairs-gps"
                 color={!$queryingLocation && $watchingLocation ? 'white' : accentColor}
-            />
+                text="mdi-crosshairs-gps"
+                textAlignment="center"
+                verticalAlignment="middle" />
         </mdcardview>
     </stacklayout>
-    <stacklayout marginTop={80} row={2} verticalAlignment="bottom" horizontalAlignment="left">
+    <stacklayout horizontalAlignment="left" marginTop={80} row={2} verticalAlignment="bottom">
         <!-- <mdbutton on:tap={open3DMap} class="small-floating-btn" color={primaryColor} text="mdi-video-3d" /> -->
-        <mdbutton id="layers" on:tap={showItemsList} class="small-floating-btn" text="mdi-format-list-checkbox" />
-        <mdbutton id="layers" on:tap={showMapRightMenu} on:longPress={() => mapContext.selectStyle()} class="small-floating-btn" text="mdi-layers" />
+        <mdbutton id="layers" class="small-floating-btn" text="mdi-format-list-checkbox" on:tap={showItemsList} />
+        <mdbutton id="layers" class="small-floating-btn" text="mdi-layers" on:tap={showMapRightMenu} on:longPress={() => mapContext.selectStyle()} />
     </stacklayout>
 
-    <ScaleView bind:this={scaleView} col={1} row={2} horizontalAlignment="right" verticalAlignment="bottom" marginBottom={8} />
+    <ScaleView bind:this={scaleView} col={1} horizontalAlignment="right" marginBottom={8} row={2} verticalAlignment="bottom" />
     <IconButton
-        isVisible={attributionVisible}
-        isSelected={true}
         col={1}
-        row={2}
         horizontalAlignment="left"
-        verticalAlignment="bottom"
-        tooltip={lc('attributions')}
+        isSelected={true}
+        isVisible={attributionVisible}
+        row={2}
         text="mdi-information-outline"
-        on:tap={onAttributionTap}
-    />
+        tooltip={lc('attributions')}
+        verticalAlignment="bottom"
+        on:tap={onAttributionTap} />
 
-    <mdprogress colSpan={3} row={2} value={totalDownloadProgress} visibility={totalDownloadProgress > 0 ? 'visible' : 'collapsed'} verticalAlignment="bottom" />
+    <mdprogress colSpan={3} row={2} value={totalDownloadProgress} verticalAlignment="bottom" visibility={totalDownloadProgress > 0 ? 'visible' : 'collapsed'} />
     <canvas
         bind:this={navigationCanvas}
-        rowSpan={3}
-        on:swipe={() => (navigationInstructions = null)}
-        col={1}
-        visibility={navigationInstructions ? 'visible' : 'collapsed'}
-        verticalAlignment="bottom"
         backgroundColor={$widgetBackgroundColor}
         borderRadius={6}
-        marginBottom={24}
-        width="70%"
+        col={1}
         height={80}
-        on:draw={drawNavigationInstruction}
-    />
+        marginBottom={24}
+        rowSpan={3}
+        verticalAlignment="bottom"
+        visibility={navigationInstructions ? 'visible' : 'collapsed'}
+        width="70%"
+        on:swipe={() => (navigationInstructions = null)}
+        on:draw={drawNavigationInstruction} />
 </gridlayout>

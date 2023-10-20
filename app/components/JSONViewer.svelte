@@ -1,10 +1,6 @@
 <script lang="ts">
-    import { TextView } from '@akylas/nativescript';
-    import { createNativeAttributedString } from '@nativescript-community/text';
     import { Label } from '@nativescript-community/ui-label';
-    import { AWebView } from '@nativescript-community/ui-webview';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { textColor } from '~/variables';
     let textview: NativeViewElementNode<Label>;
     export let jsonText;
     let htmlStr;

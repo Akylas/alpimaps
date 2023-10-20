@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script context="module" lang="ts">
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { ClickType } from '@nativescript-community/ui-carto/core';
     import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
@@ -6,13 +6,15 @@
     import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
     import { VectorTileEventData, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
     import { MultiValhallaOfflineRoutingService, RoutingResult, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+    import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { ApplicationSettings, Color, ContentView, Device, GridLayout, ObservableArray, StackLayout, TextField, Utils, View } from '@nativescript/core';
+    import { ApplicationSettings, ContentView, Device, GridLayout, ObservableArray, StackLayout, TextField, Utils, View } from '@nativescript/core';
+    import { debounce } from '@nativescript/core/utils';
     import type { Feature, Point } from 'geojson';
     import { createEventDispatcher, onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode, showModal } from 'svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import { formatDistance } from '~/helpers/formatter';
     import { getDistance } from '~/helpers/geolib';
     import { lc } from '~/helpers/locale';
@@ -24,11 +26,9 @@
     import { packageService } from '~/services/PackageService';
     import { MOBILITY_URL } from '~/services/TransitService';
     import { showError } from '~/utils/error';
+    import { defaultProfileCostingOptions, getSavedProfile, getValhallaSettings, removeSavedProfile, savedProfile, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
     import { accentColor, alpimapsFontFamily, globalMarginTop, mdiFontFamily, primaryColor } from '~/variables';
     import IconButton from './IconButton.svelte';
-    import { defaultProfileCostingOptions, getSavedProfile, getValhallaSettings, removeSavedProfile, savedProfile, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { debounce } from '@nativescript/core/utils';
 
     const DEFAULT_PROFILE_KEY = 'default_direction_profile';
 
@@ -79,17 +79,17 @@
     let profile = ApplicationSettings.getString(DEFAULT_PROFILE_KEY, 'pedestrian') as ValhallaProfile;
     let bicycle_type: 'enduro' | 'road' | 'normal' | 'gravel' | 'mountain' = ApplicationSettings.getString('bicycle_type', 'normal') as any;
     let pedestrian_type: 'normal' | 'mountainairing' | 'running' = ApplicationSettings.getString('pedestrian_type', 'normal') as any;
-    let showOptions = true;
+    const showOptions = true;
     let loading = false;
     let writer: GeoJSONGeometryWriter<LatLonKeys>;
     let loaded = false;
     let gridLayout: NativeViewElementNode<GridLayout>;
     let topLayout: NativeViewElementNode<StackLayout>;
-    let loadedListeners = [];
+    const loadedListeners = [];
     let currentTranslationY = -440;
     let computeMultiple = false;
-    let costingOptions = { use_ferry: 0, shortest: false };
-    let shouldSaveSettings = true;
+    const costingOptions = { use_ferry: 0, shortest: false };
+    const shouldSaveSettings = true;
     let pedestrianIcon = 'alpimaps-directions_walk';
     let bicycleIcon = 'alpimaps-touring';
     let requestProfile = ApplicationSettings.getBoolean('auto_fetch_profile', false);
@@ -201,7 +201,7 @@
             if (options === profileCostingOptions) {
                 options = profileCostingOptions[profile];
             }
-            let settings = getValhallaSettings(key);
+            const settings = getValhallaSettings(key);
             if (Array.isArray(settings)) {
                 const index = settings.indexOf(options[key]);
                 options[key] = settings[(index + 1) % settings.length];
@@ -674,8 +674,7 @@
                 }
             });
 
-            let service: MultiValhallaOfflineRoutingService | ValhallaOnlineRoutingService;
-            service = packageService.offlineRoutingSearchService() || packageService.onlineRoutingSearchService();
+            const service: MultiValhallaOfflineRoutingService | ValhallaOnlineRoutingService = packageService.offlineRoutingSearchService() || packageService.onlineRoutingSearchService();
             let startTime = Date.now();
             const projection = mapContext.getProjection();
             const customOptions = {
@@ -965,7 +964,7 @@
             if (options === profileCostingOptions) {
                 options = profileCostingOptions[profile];
             }
-            let settings = getValhallaSettings(key);
+            const settings = getValhallaSettings(key);
             const SliderPopover = (await import('~/components/SliderPopover.svelte')).default;
             await showPopover({
                 view: SliderPopover,
@@ -1092,160 +1091,145 @@
     }
 </script>
 
-<stacklayout bind:this={topLayout} {...$$restProps} backgroundColor={primaryColor} paddingTop={globalMarginTop} translateY={currentTranslationY} style="z-index:1000;">
+<stacklayout bind:this={topLayout} {...$$restProps} style="z-index:1000;" backgroundColor={primaryColor} paddingTop={globalMarginTop} translateY={currentTranslationY}>
     {#if loaded}
-        <gridlayout bind:this={gridLayout} on:tap={() => {}} rows="50,70,auto" columns="*,40">
-            <IconButton isSelected={true} white={true} horizontalAlignment="left" text="mdi-arrow-left" on:tap={() => cancel()} />
-            <stacklayout colSpan={2} orientation="horizontal" horizontalAlignment="center">
-                <IconButton text="mdi-car" on:tap={() => setProfile('auto')} color={profileColor(profile, 'auto')} />
-                <IconButton text="mdi-motorbike" on:tap={() => setProfile('motorcycle')} color={profileColor(profile, 'motorcycle')} />
+        <gridlayout bind:this={gridLayout} columns="*,40" rows="50,70,auto" on:tap={() => {}}>
+            <IconButton horizontalAlignment="left" isSelected={true} text="mdi-arrow-left" white={true} on:tap={() => cancel()} />
+            <stacklayout colSpan={2} horizontalAlignment="center" orientation="horizontal">
+                <IconButton color={profileColor(profile, 'auto')} text="mdi-car" on:tap={() => setProfile('auto')} />
+                <IconButton color={profileColor(profile, 'motorcycle')} text="mdi-motorbike" on:tap={() => setProfile('motorcycle')} />
                 <IconButton
-                    text={pedestrianIcon}
-                    fontFamily={alpimapsFontFamily}
-                    on:tap={() => setProfile('pedestrian')}
                     color={profileColor(profile, 'pedestrian')}
-                    onLongPress={(event) => showProfileSettings('pedestrian', event)}
-                />
-                <IconButton
-                    text={bicycleIcon}
                     fontFamily={alpimapsFontFamily}
-                    on:tap={() => setProfile('bicycle')}
+                    onLongPress={(event) => showProfileSettings('pedestrian', event)}
+                    text={pedestrianIcon}
+                    on:tap={() => setProfile('pedestrian')} />
+                <IconButton
                     color={profileColor(profile, 'bicycle')}
+                    fontFamily={alpimapsFontFamily}
                     onLongPress={(event) => showProfileSettings('bicycle', event)}
-                />
+                    text={bicycleIcon}
+                    on:tap={() => setProfile('bicycle')} />
                 <!-- <IconButton white={true} text="mdi-bus" on:tap={() => setProfile('bus')} color={profileColor(profile, 'bus')} /> -->
             </stacklayout>
             <IconButton
+                backgroundColor="white"
                 colSpan={2}
                 gray={true}
                 horizontalAlignment="right"
-                text="mdi-magnify"
-                on:tap={() => computeRoutes()}
                 isSelected={nbWayPoints > 1}
-                marginRight={10}
                 isVisible={!loading}
-                backgroundColor="white"
-                size={40}
+                marginRight={10}
                 selectedColor={accentColor}
-            />
-            <mdactivityindicator colSpan={2} visibility={loading ? 'visible' : 'hidden'} horizontalAlignment="right" busy={true} width={40} height={40} color="white" />
+                size={40}
+                text="mdi-magnify"
+                on:tap={() => computeRoutes()} />
+            <mdactivityindicator busy={true} colSpan={2} color="white" height={40} horizontalAlignment="right" visibility={loading ? 'visible' : 'hidden'} width={40} />
             <collectionview
-                row={1}
-                items={waypoints}
-                rowHeight={36}
-                itemIdGenerator={(item, i) => item.properties.id}
                 animateItemUpdate={true}
-                reorderLongPressEnabled={true}
+                itemIdGenerator={(item, i) => item.properties.id}
+                items={waypoints}
                 reorderEnabled={true}
+                reorderLongPressEnabled={true}
+                row={1}
+                rowHeight={36}
                 on:itemReorderStarting={onItemReorderStarting}
-                on:itemReordered={onItemReordered}
-            >
+                on:itemReordered={onItemReordered}>
                 <Template let:item>
-                    <canvaslabel color="white" fontSize={15} paddingLeft={10} fontFamily={mdiFontFamily}>
-                        <cspan text="mdi-dots-vertical" verticalAlignment="top" visibility={item.properties.isStart ? 'hidden' : 'visible'} fontSize={14} paddingTop={-2} />
-                        <cspan text="mdi-dots-vertical" verticalAlignment="bottom" visibility={item.properties.isStop ? 'hidden' : 'visible'} fontSize={14} paddingBottom={-2} />
+                    <canvaslabel color="white" fontFamily={mdiFontFamily} fontSize={15} paddingLeft={10}>
+                        <cspan fontSize={14} paddingTop={-2} text="mdi-dots-vertical" verticalAlignment="top" visibility={item.properties.isStart ? 'hidden' : 'visible'} />
+                        <cspan fontSize={14} paddingBottom={-2} text="mdi-dots-vertical" verticalAlignment="bottom" visibility={item.properties.isStop ? 'hidden' : 'visible'} />
                         <cspan text={item.properties.isStop ? 'mdi-map-marker' : 'mdi-checkbox-blank-circle-outline'} verticalAlignment="middle" />
 
-                        <gridlayout borderRadius={8} backgroundColor={primaryColor.darken(20).hex} columns=" *,auto" height={30} margin="0 0 0 30" on:tap={(event) => openSearchFromItem(event, item)}>
-                            <label color="white" marginLeft={15} fontSize={15} verticalTextAlignment="center" text={item.properties.name} maxLines={1} lineBreak="end" />
-                            <IconButton color="white" small={true} isVisible={item.properties.name && item.properties.name.length > 0} col={1} text="mdi-delete" on:tap={() => clearWayPoint(item)} />
+                        <gridlayout backgroundColor={primaryColor.darken(20).hex} borderRadius={8} columns=" *,auto" height={30} margin="0 0 0 30" on:tap={(event) => openSearchFromItem(event, item)}>
+                            <label color="white" fontSize={15} lineBreak="end" marginLeft={15} maxLines={1} text={item.properties.name} verticalTextAlignment="center" />
+                            <IconButton col={1} color="white" isVisible={item.properties.name && item.properties.name.length > 0} small={true} text="mdi-delete" on:tap={() => clearWayPoint(item)} />
                         </gridlayout>
                     </canvaslabel>
                 </Template>
             </collectionview>
-            <IconButton isSelected={true} white={true} row={1} col={1} text="mdi-swap-vertical" on:tap={() => reversePoints()} isEnabled={nbWayPoints > 1} />
-            <stacklayout colSpan={2} row={2} orientation="horizontal" visibility={showOptions ? 'visible' : 'collapsed'} id="directionsbuttons">
+            <IconButton col={1} isEnabled={nbWayPoints > 1} isSelected={true} row={1} text="mdi-swap-vertical" white={true} on:tap={() => reversePoints()} />
+            <stacklayout id="directionsbuttons" colSpan={2} orientation="horizontal" row={2} visibility={showOptions ? 'visible' : 'collapsed'}>
                 {#if profile === 'auto'}
                     <IconButton
-                        text={valhallaSettingIcon['use_highways']}
-                        size={40}
                         color={valhallaSettingColor('use_highways', profile, profileCostingOptions)}
-                        on:tap={() => switchValhallaSetting('use_highways')}
                         onLongPress={(event) => setSliderCostingOptions('use_highways', event)}
-                    />
+                        size={40}
+                        text={valhallaSettingIcon['use_highways']}
+                        on:tap={() => switchValhallaSetting('use_highways')} />
 
                     <IconButton
-                        text={valhallaSettingIcon['use_tolls']}
-                        size={40}
                         color={valhallaSettingColor('use_tolls', profile, profileCostingOptions)}
-                        on:tap={() => switchValhallaSetting('use_tolls')}
                         onLongPress={(event) => setSliderCostingOptions('use_tolls', event)}
-                    />
+                        size={40}
+                        text={valhallaSettingIcon['use_tolls']}
+                        on:tap={() => switchValhallaSetting('use_tolls')} />
                 {/if}
                 {#if profile === 'bicycle'}
                     <IconButton
-                        text={valhallaSettingIcon['use_roads']}
-                        size={40}
                         color={valhallaSettingColor('use_roads', profile, profileCostingOptions)}
-                        on:tap={() => switchValhallaSetting('use_roads')}
                         onLongPress={(event) => setSliderCostingOptions('use_roads', event)}
-                    />
-                    <IconButton
-                        text={valhallaSettingIcon['use_hills']}
                         size={40}
+                        text={valhallaSettingIcon['use_roads']}
+                        on:tap={() => switchValhallaSetting('use_roads')} />
+                    <IconButton
                         color={valhallaSettingColor('use_hills', profile, profileCostingOptions)}
-                        on:tap={() => switchValhallaSetting('use_hills')}
                         onLongPress={(event) => setSliderCostingOptions('use_hills', event)}
-                    />
-                    <IconButton
-                        text={valhallaSettingIcon['non_network_penalty']}
                         size={40}
+                        text={valhallaSettingIcon['use_hills']}
+                        on:tap={() => switchValhallaSetting('use_hills')} />
+                    <IconButton
                         color={valhallaSettingColor('non_network_penalty', profile, profileCostingOptions)}
-                        on:tap={() => switchValhallaSetting('non_network_penalty')}
                         onLongPress={(event) => setSliderCostingOptions('non_network_penalty', event)}
-                    />
-                    <IconButton
-                        text={valhallaSettingIcon['weight']}
                         size={40}
+                        text={valhallaSettingIcon['non_network_penalty']}
+                        on:tap={() => switchValhallaSetting('non_network_penalty')} />
+                    <IconButton
                         color={valhallaSettingColor('weight', profile, profileCostingOptions)}
-                        on:tap={() => switchValhallaSetting('weight')}
                         onLongPress={(event) => setSliderCostingOptions('weight', event)}
-                    />
-                    <IconButton
-                        text={valhallaSettingIcon['avoid_bad_surfaces']}
                         size={40}
+                        text={valhallaSettingIcon['weight']}
+                        on:tap={() => switchValhallaSetting('weight')} />
+                    <IconButton
                         color={valhallaSettingColor('avoid_bad_surfaces', profile, profileCostingOptions)}
-                        on:tap={() => switchValhallaSetting('avoid_bad_surfaces')}
                         onLongPress={(event) => setSliderCostingOptions('avoid_bad_surfaces', event)}
-                    />
+                        size={40}
+                        text={valhallaSettingIcon['avoid_bad_surfaces']}
+                        on:tap={() => switchValhallaSetting('avoid_bad_surfaces')} />
                     <!-- <IconButton col={5} text={bicycleTypeIcon(bicycle_type)} isVisible={profile === 'bicycle'} color="white" on:tap={() => switchValhallaSetting('bicycle_type')} /> -->
                 {/if}
                 {#if profile === 'pedestrian'}
                     <IconButton
-                        text={valhallaSettingIcon['driveway_factor']}
-                        size={40}
                         color={valhallaSettingColor('driveway_factor', profile, profileCostingOptions)}
-                        on:tap={() => switchValhallaSetting('driveway_factor')}
                         onLongPress={(event) => setSliderCostingOptions('driveway_factor', event)}
-                    />
-                    <IconButton
-                        text={valhallaSettingIcon['use_hills']}
                         size={40}
+                        text={valhallaSettingIcon['driveway_factor']}
+                        on:tap={() => switchValhallaSetting('driveway_factor')} />
+                    <IconButton
                         color={valhallaSettingColor('use_hills', profile, profileCostingOptions)}
-                        on:tap={() => switchValhallaSetting('use_hills')}
                         onLongPress={(event) => setSliderCostingOptions('use_hills', event)}
-                    />
+                        size={40}
+                        text={valhallaSettingIcon['use_hills']}
+                        on:tap={() => switchValhallaSetting('use_hills')} />
                     <IconButton
-                        text={valhallaSettingIcon['weight']}
                         color={valhallaSettingColor('weight', profile, profileCostingOptions)}
-                        size={40}
-                        on:tap={() => switchValhallaSetting('weight')}
                         onLongPress={(event) => setSliderCostingOptions('weight', event)}
-                    />
-                    <IconButton
-                        text={valhallaSettingIcon['step_penalty']}
-                        color={valhallaSettingColor('step_penalty', profile, profileCostingOptions)}
                         size={40}
-                        on:tap={() => switchValhallaSetting('step_penalty')}
+                        text={valhallaSettingIcon['weight']}
+                        on:tap={() => switchValhallaSetting('weight')} />
+                    <IconButton
+                        color={valhallaSettingColor('step_penalty', profile, profileCostingOptions)}
                         onLongPress={(event) => setSliderCostingOptions('step_penalty', event)}
-                    />
+                        size={40}
+                        text={valhallaSettingIcon['step_penalty']}
+                        on:tap={() => switchValhallaSetting('step_penalty')} />
                 {/if}
             </stacklayout>
 
-            <stacklayout colSpan={3} row={2} orientation="horizontal" visibility={showOptions ? 'visible' : 'collapsed'} horizontalAlignment="right" id="directionsbuttons2">
-                <IconButton size={40} text="mdi-timer-outline" color={costingOptions.shortest ? 'white' : '#ffffff55'} on:tap={() => (costingOptions.shortest = !costingOptions.shortest)} />
-                <IconButton size={40} text="mdi-arrow-decision" color={computeMultiple ? 'white' : '#ffffff55'} on:tap={() => (computeMultiple = !computeMultiple)} />
-                <IconButton color="white" text="mdi-dots-vertical" size={40} on:tap={showMoreOptions} />
+            <stacklayout id="directionsbuttons2" colSpan={3} horizontalAlignment="right" orientation="horizontal" row={2} visibility={showOptions ? 'visible' : 'collapsed'}>
+                <IconButton color={costingOptions.shortest ? 'white' : '#ffffff55'} size={40} text="mdi-timer-outline" on:tap={() => (costingOptions.shortest = !costingOptions.shortest)} />
+                <IconButton color={computeMultiple ? 'white' : '#ffffff55'} size={40} text="mdi-arrow-decision" on:tap={() => (computeMultiple = !computeMultiple)} />
+                <IconButton color="white" size={40} text="mdi-dots-vertical" on:tap={showMoreOptions} />
             </stacklayout>
         </gridlayout>
     {/if}
