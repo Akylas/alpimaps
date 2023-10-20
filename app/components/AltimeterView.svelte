@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script context="module" lang="ts">
     import { getAirportPressureAtLocation, getAltitude, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
@@ -69,7 +69,7 @@
     //     }
     // }
     let wasListeningForBarometerBeforePause = false;
-    let dontListenForBarometerWhilePaused = true;
+    const dontListenForBarometerWhilePaused = true;
     function onAppResume(args: ApplicationEventData) {
         if (wasListeningForBarometerBeforePause) {
             startBarometerAltitudeUpdate();
@@ -201,21 +201,21 @@
     }
 </script>
 
-<canvaslabel padding={16} {height}>
-    <cspan text={currentPressure} fontSize={16} textAlignment="right" />
-    <cgroup visibility={!!referencePressure ? 'visible' : 'hidden'} verticalAlignment="bottom" fontSize={14} textAlignment="right">
-        <cspan text={referencePressure && referencePressure.toFixed(2)} fontSize={14} />
+<canvaslabel {height} padding={16}>
+    <cspan fontSize={16} text={currentPressure} textAlignment="right" />
+    <cgroup fontSize={14} textAlignment="right" verticalAlignment="bottom" visibility={!!referencePressure ? 'visible' : 'hidden'}>
+        <cspan fontSize={14} text={referencePressure && referencePressure.toFixed(2)} />
         <cspan text={'\n' + (referenceAltitude && Math.round(referenceAltitude) + 'm')} />
     </cgroup>
     <cgroup horizontalAlignment="center" textAlignment="center" verticalAlignment="middle">
-        <cspan text={pressureAltitude || '-'} fontSize={30} />
-        <cspan text=" m" fontSize={20} />
+        <cspan fontSize={30} text={pressureAltitude || '-'} />
+        <cspan fontSize={20} text=" m" />
     </cgroup>
-    <cspan visibility={!!currentLocation ? 'visible' : 'hidden'} text={!!currentLocation && currentLocation.altitude + 'm'} fontSize={14} verticalAlignment="bottom" textAlignment="left" />
-    <stacklayout orientation="horizontal" horizontalAlignment="left" verticalAlignment="top">
-        <IconButton text="mdi-gauge" on:tap={switchBarometer} color={listeningForBarometer ? primaryColor : undefined} />
+    <cspan fontSize={14} text={!!currentLocation && currentLocation.altitude + 'm'} textAlignment="left" verticalAlignment="bottom" visibility={!!currentLocation ? 'visible' : 'hidden'} />
+    <stacklayout horizontalAlignment="left" orientation="horizontal" verticalAlignment="top">
+        <IconButton color={listeningForBarometer ? primaryColor : undefined} text="mdi-gauge" on:tap={switchBarometer} />
         <IconButton text="mdi-airplane" on:tap={getNearestAirportPressure} />
         <IconButton text="mdi-refresh" on:tap={resetReference} />
-        <IconButton text="mdi-crosshairs-gps" on:tap={askUserLocation} color={$watchingLocation || $queryingLocation ? primaryColor : undefined} />
+        <IconButton color={$watchingLocation || $queryingLocation ? primaryColor : undefined} text="mdi-crosshairs-gps" on:tap={askUserLocation} />
     </stacklayout>
 </canvaslabel>

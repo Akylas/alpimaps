@@ -1,45 +1,39 @@
 <script lang="ts">
-    import { l, lc } from '@nativescript-community/l';
+    import addressFormatter from '@akylas/address-formatter';
+    import { lc } from '@nativescript-community/l';
     import { createNativeAttributedString } from '@nativescript-community/text';
-    import { Canvas, CanvasView, LayoutAlignment, Paint, Rect, StaticLayout, Style } from '@nativescript-community/ui-canvas';
+    import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout, Style } from '@nativescript-community/ui-canvas';
     import { GenericMapPos, fromNativeMapPos } from '@nativescript-community/ui-carto/core';
     import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
     import type { VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
-    import { CartoMap } from '@nativescript-community/ui-carto/ui';
     import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
     import type { Entry } from '@nativescript-community/ui-chart/data/Entry';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { Application, ApplicationSettings, ImageSource, Utils } from '@nativescript/core';
-    import { path } from '@nativescript/core/file-system';
+    import { SwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
+    import { Application, ApplicationSettings } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
     import type { Point } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode, navigate } from 'svelte-native/dom';
+    import { get } from 'svelte/store';
     import BottomSheetInfoView from '~/components/BottomSheetInfoView.svelte';
-    import { formatDistance, osmicon } from '~/helpers/formatter';
+    import { formatDistance } from '~/helpers/formatter';
+    import { langStore } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext, handleMapAction } from '~/mapModules/MapModule';
     import type { Item, RouteInstruction } from '~/models/Item';
-    import { NoNetworkError, networkService } from '~/services/NetworkService';
+    import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { showError } from '~/utils/error';
     import { computeDistanceBetween } from '~/utils/geo';
+    import { share } from '~/utils/share';
     import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { hideLoading, openLink, showLoading } from '~/utils/ui';
-    import { actionBarButtonHeight, borderColor, mdiFontFamily, primaryColor, screenHeightDips, statusBarHeight, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
+    import { actionBarButtonHeight, borderColor, primaryColor, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
     import ElevationChart from './ElevationChart.svelte';
     import IconButton from './IconButton.svelte';
-    import { Clipboard } from '@nativescript-use/nativescript-clipboard';
-    import addressFormatter from '@akylas/address-formatter';
-    import { langStore } from '~/helpers/locale';
-    import { get } from 'svelte/store';
-    import { share, shareFile } from '~/utils/share';
-    import { SwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
-    const clipboard = new Clipboard();
 
-    const LISTVIEW_HEIGHT = 200;
     const PROFILE_HEIGHT = 150;
     const STATS_HEIGHT = 180;
     const WEB_HEIGHT = 400;
@@ -63,9 +57,9 @@
     let chartLoadHighlightData = null;
     let infoView: BottomSheetInfoView;
     let swipemenu: NativeViewElementNode<SwipeMenu>;
-    let webViewSrc: string = null;
-    let showListView = false;
-    $: showListView = listViewAvailable && listViewVisible;
+    // const webViewSrc: string = null;
+    // let showListView = false;
+    // $: showListView = listViewAvailable && listViewVisible;
     let itemIsRoute = false;
     let itemIsEditingItem = false;
     let itemCanBeEdited = false;
@@ -74,13 +68,12 @@
     let itemCanQueryProfile = false;
     let itemCanQueryStats = false;
     let currentLocation: GenericMapPos<LatLonKeys> = null;
-    let showProfileGrades = true;
 
     onMount(() => {
         updateSteps();
     });
 
-    mapContext.onMapReady((mapView: CartoMap<LatLonKeys>) => {
+    mapContext.onMapReady(() => {
         // updateSteps();
         mapContext.mapModule('userLocation').on('location', onNewLocation);
     });
@@ -91,7 +84,7 @@
     let dataToUpdateOnItemSelect = null;
 
     mapContext.onVectorTileElementClicked((data: VectorTileEventData<LatLonKeys>) => {
-        const { clickType, position, feature, featureData } = data;
+        const { position, feature, featureData } = data;
         DEV_LOG && console.log('BottomSheetInner onVectorTileElementClicked', item?.id, featureData, feature.properties);
         if (featureData?.route) {
             if (item && item.id && feature.properties?.id === item.id) {
@@ -220,7 +213,6 @@
         graphAvailable = itemIsRoute && !!item.profile && !!item.profile.data && item.profile.data.length > 0;
     }
     function updateStatsAvailable() {
-        let old = statsAvailable;
         statsAvailable = itemIsRoute && !!item.stats;
         if (statsAvailable && statsCanvas) {
             statsCanvas.nativeView.invalidate();
@@ -328,20 +320,6 @@
             handleMapAction('astronomy', { lat: positions[1], lon: positions[0] });
         }
     }
-    function searchItemWeb() {
-        if (__ANDROID__) {
-            const query = formatter.getItemName(item);
-            if (__ANDROID__) {
-                const intent = new Intent(Intent.ACTION_WEB_SEARCH);
-                intent.putExtra(android.app.SearchManager.QUERY, query); // query contains search string
-                if (intent.resolveActivity(Utils.ad.getApplicationContext().getPackageManager()) !== null) {
-                    (Application.android.foregroundActivity as android.app.Activity).startActivity(intent);
-                } else {
-                    showSnack({ message: l('no_web_search_app') });
-                }
-            }
-        }
-    }
     function closeSwipeMenu(animated = true) {
         swipemenu?.nativeView?.close(undefined, animated ? undefined : 0);
     }
@@ -349,23 +327,16 @@
         closeSwipeMenu();
         mapContext.zoomToItem({ item, forceZoomOut: true });
     }
-    function openWebView() {
-        openUrl(webViewSrc);
-    }
-    let webViewHeight = 0;
-    let listViewAvailable = false;
-    let listViewVisible = false;
-    function toggleWebView() {
-        // stepToScrollTo = !listViewAvailable ? steps.length : -1;
-        listViewAvailable = !listViewAvailable;
-    }
+    // let webViewHeight = 0;
+    // let listViewAvailable = false;
+    // const listViewVisible = false;
     export let steps;
     export let navigationInstructions: {
         remainingDistance: number;
         remainingTime: number;
         distanceToNextInstruction: number;
         instruction: RouteInstruction;
-    } = undefined;
+    };
 
     function updateSteps() {
         if (!item) {
@@ -384,14 +355,14 @@
             total += STATS_HEIGHT;
             result.push(total);
         }
-        if (listViewAvailable) {
-            total += WEB_HEIGHT;
-            result.push(total);
-            const delta = Math.floor(screenHeightDips - $statusBarHeight - total);
-            webViewHeight = WEB_HEIGHT + delta;
-            total += delta;
-            result.push(total);
-        }
+        // if (listViewAvailable) {
+        //     total += WEB_HEIGHT;
+        //     result.push(total);
+        //     const delta = Math.floor(screenHeightDips - $statusBarHeight - total);
+        //     webViewHeight = WEB_HEIGHT + delta;
+        //     total += delta;
+        //     result.push(total);
+        // }
         steps = result;
     }
 
@@ -718,7 +689,7 @@
         try {
             if (itemIsRoute) {
                 const component = (await import('~/components/transit/TransitLineDetails.svelte')).default;
-                await navigate({
+                navigate({
                     page: component,
                     props: {
                         line: { geometry: item.geometry, ...item.properties }
@@ -748,42 +719,7 @@
     //         animated: true // optional iOS
     //     });
     // }
-    function getRouteInstructionTitle(item: RouteInstruction) {
-        return item.inst;
-    }
-    function getRouteInstructionSubtitle(item: RouteInstruction) {
-        return item.name;
-    }
 
-    function routeInstructions() {
-        if (listViewAvailable) {
-            return item.instructions;
-        }
-        return [];
-    }
-    function onInstructionTap(instruction: RouteInstruction) {
-        // console.log('onInstructionTap', instruction);
-        // mapComp.selectItem({
-        //     item: { position: instruction.position },
-        //     isFeatureInteresting: true,
-        //     setSelected: false,
-        //     peek: false
-        // });
-        // if (graphAvailable) {
-        //     const dataSet = chart.getData().getDataSetByIndex(0);
-        //     dataSet.setIgnoreFiltered(true);
-        //     const item = dataSet.getEntryForIndex(instruction.pointIndex);
-        //     dataSet.setIgnoreFiltered(false);
-        //     // console.log('highlight item', item);
-        //     chart.highlightValues([
-        //         {
-        //             dataSetIndex: 0,
-        //             x: item.x,
-        //             entry: item
-        //         } as Highlight
-        //     ]);
-        // }
-    }
     let loaded = false;
     let loadedListeners = [];
     export async function loadView() {
@@ -836,10 +772,10 @@
         statsCanvas?.nativeView?.invalidate();
     }
 
-    function drawStats({ canvas, object }: { canvas: Canvas; object: Canvas }) {
+    function drawStats({ canvas }: { canvas: Canvas; object: Canvas }) {
         try {
-            let w = canvas.getWidth();
-            let h = canvas.getHeight();
+            const w = canvas.getWidth();
+            const h = canvas.getHeight();
 
             if (!barPaint) {
                 barPaint = new Paint();
@@ -865,7 +801,7 @@
             canvas.drawText(lc(statsKey), labelx, 20, bigTextPaint);
             const nbColumns = Math.max(1, Math.round(stats.length / Math.floor((h - 95) / 20)));
             const availableWidth = usedWidth / nbColumns - 15;
-            let rigthX, nString, text, text2, layoutHeight, staticLayout;
+            let nString, text, text2, layoutHeight, staticLayout;
             stats.forEach((s) => {
                 const rigthX = x + s.perc * usedWidth;
                 barPaint.color = 'white';
@@ -914,7 +850,7 @@
         } else {
             try {
                 const RoutesList = (await import('~/components/ItemEdit.svelte')).default;
-                navigate({ page: RoutesList, props: { item: item as Item } });
+                navigate({ page: RoutesList, props: { item } });
             } catch (error) {
                 showError(error);
             }
@@ -941,88 +877,84 @@
     }
 </script>
 
-<gridlayout {...$$restProps} width="100%" rows={`${INFOVIEW_HEIGHT},50,auto,auto,auto`} backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
+<gridlayout {...$$restProps} backgroundColor={$widgetBackgroundColor} rows={`${INFOVIEW_HEIGHT},50,auto,auto,auto`} width="100%" on:tap={() => {}}>
     {#if loaded}
         <swipemenu
             bind:this={swipemenu}
-            height={INFOVIEW_HEIGHT}
-            rightSwipeDistance={0}
-            leftSwipeDistance={0}
-            translationFunction={drawerTranslationFunction}
-            openAnimationDuration={100}
             closeAnimationDuration={100}
-        >
+            height={INFOVIEW_HEIGHT}
+            leftSwipeDistance={0}
+            openAnimationDuration={100}
+            rightSwipeDistance={0}
+            translationFunction={drawerTranslationFunction}>
             <!-- svelte-ignore illegal-attribute-character -->
-            <BottomSheetInfoView bind:this={infoView} prop:mainContent {item} colSpan={2} rightTextPadding={itemIsRoute ? actionBarButtonHeight : 0}>
-                <mdactivityindicator slot="above" visibility={updatingItem ? 'visible' : 'hidden'} horizontalAlignment="right" verticalAlignment="top" busy={true} width={20} height={20} />
+            <BottomSheetInfoView bind:this={infoView} prop:mainContent colSpan={2} {item} rightTextPadding={itemIsRoute ? actionBarButtonHeight : 0}>
+                <mdactivityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
             </BottomSheetInfoView>
             <!-- svelte-ignore illegal-attribute-character -->
-            <IconButton prop:leftDrawer on:tap={deleteItem} tooltip={lc('delete')} shape="none" width={60} height="100%" color="white" backgroundColor="red" text="mdi-trash-can" />
+            <IconButton prop:leftDrawer backgroundColor="red" color="white" height="100%" shape="none" text="mdi-trash-can" tooltip={lc('delete')} width={60} on:tap={deleteItem} />
 
             <!-- <stacklayout prop:rightDrawer orientation="horizontal"> -->
             <!-- svelte-ignore illegal-attribute-character -->
-            <IconButton prop:rightDrawer text="mdi-crosshairs-gps" on:tap={zoomToItem} shape="none" width={60} height="100%" color="white" backgroundColor={primaryColor.setAlpha(180).hex} />
+            <IconButton prop:rightDrawer backgroundColor={primaryColor.setAlpha(180).hex} color="white" height="100%" shape="none" text="mdi-crosshairs-gps" width={60} on:tap={zoomToItem} />
             <!-- </stacklayout> -->
         </swipemenu>
 
-        <scrollview orientation="horizontal" row={1} colSpan={2} borderTopWidth={1} borderBottomWidth={1} borderColor={$borderColor}>
-            <gridlayout rows="*" columns="auto">
-                <stacklayout orientation="horizontal" id="bottomsheetbuttons">
-                    <IconButton on:tap={() => showInformation()} tooltip={lc('information')} text="mdi-information-outline" isVisible={item && !itemIsRoute} rounded={false} />
+        <scrollview borderBottomWidth={1} borderColor={$borderColor} borderTopWidth={1} colSpan={2} orientation="horizontal" row={1}>
+            <gridlayout columns="auto" rows="*">
+                <stacklayout id="bottomsheetbuttons" orientation="horizontal">
+                    <IconButton isVisible={item && !itemIsRoute} rounded={false} text="mdi-information-outline" tooltip={lc('information')} on:tap={() => showInformation()} />
                     <IconButton
-                        on:tap={() => searchWeb()}
-                        onLongPress={() => searchWeb(false)}
-                        tooltip={lc('search_web')}
                         isVisible={item && (!itemIsRoute || !!item.properties?.name)}
-                        text="mdi-web"
+                        onLongPress={() => searchWeb(false)}
                         rounded={false}
-                    />
+                        text="mdi-web"
+                        tooltip={lc('search_web')}
+                        on:tap={() => searchWeb()} />
                     {#if packageService.hasElevation()}
-                        <IconButton on:tap={() => getProfile()} tooltip={lc('elevation_profile')} isVisible={itemIsRoute && itemCanQueryProfile} text="mdi-chart-areaspline" rounded={false} />
+                        <IconButton isVisible={itemIsRoute && itemCanQueryProfile} rounded={false} text="mdi-chart-areaspline" tooltip={lc('elevation_profile')} on:tap={() => getProfile()} />
                     {/if}
-                    <IconButton on:tap={() => getStats()} tooltip={lc('road_stats')} isVisible={itemIsRoute && itemCanQueryStats} text="mdi-chart-bar-stacked" rounded={false} />
-                    <IconButton on:tap={hideItem} tooltip={lc('hide')} isVisible={!!item?.id && itemIsRoute} text="mdi-eye-off" rounded={false} />
-                    <IconButton on:tap={() => saveItem()} tooltip={lc('save')} isVisible={itemCanBeAdded} text={itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus'} rounded={false} />
-                    <IconButton on:tap={startEditingItem} tooltip={lc('edit')} isVisible={itemCanBeEdited} text="mdi-pencil" rounded={false} />
-                    <IconButton isVisible={item && item.properties && !!item.properties.wikipedia} on:tap={openWikipedia} tooltip={lc('wikipedia')} text="mdi-wikipedia" rounded={false} />
+                    <IconButton isVisible={itemIsRoute && itemCanQueryStats} rounded={false} text="mdi-chart-bar-stacked" tooltip={lc('road_stats')} on:tap={() => getStats()} />
+                    <IconButton isVisible={!!item?.id && itemIsRoute} rounded={false} text="mdi-eye-off" tooltip={lc('hide')} on:tap={hideItem} />
+                    <IconButton isVisible={itemCanBeAdded} rounded={false} text={itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus'} tooltip={lc('save')} on:tap={() => saveItem()} />
+                    <IconButton isVisible={itemCanBeEdited} rounded={false} text="mdi-pencil" tooltip={lc('edit')} on:tap={startEditingItem} />
+                    <IconButton isVisible={item && item.properties && !!item.properties.wikipedia} rounded={false} text="mdi-wikipedia" tooltip={lc('wikipedia')} on:tap={openWikipedia} />
                     {#if networkService.canCheckWeather}
-                        <IconButton on:tap={checkWeather} isVisible={!itemIsRoute} tooltip={lc('weather')} text="mdi-weather-partly-cloudy" rounded={false} />
+                        <IconButton isVisible={!itemIsRoute} rounded={false} text="mdi-weather-partly-cloudy" tooltip={lc('weather')} on:tap={checkWeather} />
                     {/if}
-                    <IconButton id="astronomy" on:tap={showAstronomy} isVisible={!itemIsRoute} tooltip={lc('astronomy')} text="mdi-weather-night" rounded={false} />
+                    <IconButton id="astronomy" isVisible={!itemIsRoute} rounded={false} text="mdi-weather-night" tooltip={lc('astronomy')} on:tap={showAstronomy} />
                     {#if packageService.hasElevation()}
-                        <IconButton on:tap={openPeakFinder} tooltip={lc('peaks')} isVisible={!itemIsRoute} text="mdi-summit" rounded={false} />
+                        <IconButton isVisible={!itemIsRoute} rounded={false} text="mdi-summit" tooltip={lc('peaks')} on:tap={openPeakFinder} />
                     {/if}
-                    <IconButton on:tap={openCompass} tooltip={lc('compass')} isVisible={(itemIsRoute && !item?.id) || !!currentLocation} text="mdi-compass-outline" rounded={false} />
+                    <IconButton isVisible={(itemIsRoute && !item?.id) || !!currentLocation} rounded={false} text="mdi-compass-outline" tooltip={lc('compass')} on:tap={openCompass} />
 
-                    <IconButton on:tap={getTransitLines} tooltip={lc('bus_stop_infos')} isVisible={itemIsBusStop} text="mdi-bus" rounded={false} />
-                    <IconButton on:tap={shareItem} tooltip={lc('share')} text="mdi-share-variant" rounded={false} />
+                    <IconButton isVisible={itemIsBusStop} rounded={false} text="mdi-bus" tooltip={lc('bus_stop_infos')} on:tap={getTransitLines} />
+                    <IconButton rounded={false} text="mdi-share-variant" tooltip={lc('share')} on:tap={shareItem} />
 
                     <!-- <IconButton on:tap={deleteItem} tooltip={lc('delete')} isVisible={!!item?.id} color="red" text="mdi-delete" rounded={false} /> -->
                 </stacklayout>
             </gridlayout>
         </scrollview>
 
-        <ElevationChart bind:this={elevationChart} {item} row={2} colSpan={2} height={PROFILE_HEIGHT} visibility={graphAvailable ? 'visible' : 'collapsed'} on:highlight={onChartHighlight} />
-        <canvas bind:this={statsCanvas} on:draw={drawStats} row={3} colSpan={2} height={STATS_HEIGHT} visibility={statsAvailable ? 'visible' : 'collapsed'}>
+        <ElevationChart bind:this={elevationChart} colSpan={2} height={PROFILE_HEIGHT} {item} row={2} visibility={graphAvailable ? 'visible' : 'collapsed'} on:highlight={onChartHighlight} />
+        <canvas bind:this={statsCanvas} colSpan={2} height={STATS_HEIGHT} row={3} visibility={statsAvailable ? 'visible' : 'collapsed'} on:draw={drawStats}>
             <IconButton
-                small={true}
                 fontSize={20}
-                text="mdi-chevron-right"
-                verticalAlignment="top"
                 horizontalAlignment="right"
                 isEnabled={statsKey === 'waytypes'}
-                on:tap={() => setStatsKey('surfaces')}
-            />
-            <IconButton
                 small={true}
+                text="mdi-chevron-right"
+                verticalAlignment="top"
+                on:tap={() => setStatsKey('surfaces')} />
+            <IconButton
                 fontSize={20}
+                horizontalAlignment="right"
+                isEnabled={statsKey === 'surfaces'}
+                marginRight={25}
+                small={true}
                 text="mdi-chevron-left"
                 verticalAlignment="top"
-                horizontalAlignment="right"
-                marginRight={25}
-                isEnabled={statsKey === 'surfaces'}
-                on:tap={() => setStatsKey('waytypes')}
-            />
+                on:tap={() => setStatsKey('waytypes')} />
         </canvas>
 
         <!-- <AWebView

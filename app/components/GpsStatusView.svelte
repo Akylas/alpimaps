@@ -1,5 +1,5 @@
-<script lang="ts" context="module">
-    import { Color, Utils } from '@nativescript/core';
+<script context="module" lang="ts">
+    import { Utils } from '@nativescript/core';
     import { primaryColor, textColor } from '~/variables';
 
     const density = Utils.layout.getDisplayDensity();
@@ -185,9 +185,9 @@
 
         // range boundaries and auxiliary lines (after every 4th satellite)
         for (let nmeaID = 1; nmeaID < MAX_NMEA_ID; nmeaID++) {
-            let pos = getGridPos(nmeaID);
+            const pos = getGridPos(nmeaID);
             if (pos > 0) {
-                let x = gridStrokeWidth / 2 + (pos * (w - gridStrokeWidth)) / numBars;
+                const x = gridStrokeWidth / 2 + (pos * (w - gridStrokeWidth)) / numBars;
                 let paint;
                 switch (nmeaID) {
                     case 32:
@@ -211,7 +211,7 @@
                         if (!draw_196_200) paint = gridPaintStrong;
                         break;
                     default:
-                        if (nmeaID % 4 == 0) paint = gridPaint;
+                        if (nmeaID % 4 === 0) paint = gridPaint;
                         break;
                 }
                 if (paint) {
@@ -382,7 +382,7 @@
      */
     function initializeGrid() {
         // iterate through list to find out how many bars to draw
-        if (mSats)
+        if (mSats) {
             for (let index = 0; index < mSats.length; index++) {
                 const sat = mSats[index];
                 const prn = sat.nmeaID;
@@ -421,6 +421,7 @@
                     // Log.w(TAG, String.format("Got satellite with NMEA ID %d, possibly unsupported system", prn));
                 }
             }
+        }
         /*
          * If we didn't get any valid ranges, display at least the GPS range.
          * No need to check for extended ranges here - if they get drawn, so
@@ -439,8 +440,8 @@
      */
     function onCanvasHorizontalDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
         try {
-            let mW = canvas.getWidth();
-            let mH = canvas.getHeight();
+            const mW = canvas.getWidth();
+            const mH = canvas.getHeight();
             initializeGrid();
 
             // draw the SNR bars
@@ -460,6 +461,6 @@
 </script>
 
 <gridlayout {height} rows="*,auto">
-    <CompassDialView drawInsideGrid={true} bind:canvas onDraw={onCanvasDraw} on:layoutChanged={refreshGeometries} />
-    <canvas bind:this={canvas2} on:draw={onCanvasHorizontalDraw} height={preferredHeight} row={1} backgroundColor="#171717" />
+    <CompassDialView drawInsideGrid={true} onDraw={onCanvasDraw} bind:canvas on:layoutChanged={refreshGeometries} />
+    <canvas bind:this={canvas2} backgroundColor="#171717" height={preferredHeight} row={1} on:draw={onCanvasHorizontalDraw} />
 </gridlayout>

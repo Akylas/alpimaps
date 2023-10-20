@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script context="module" lang="ts">
     import { Align, Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
     import { mdiFontFamily, primaryColor } from '~/variables';
     const paint = new Paint();
@@ -16,11 +16,10 @@
     export let selected: boolean = false;
 
     function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
-        let w2 = canvas.getWidth() / 2;
+        const w2 = canvas.getWidth() / 2;
         canvas.drawCircle(radius, radius, radius, paint);
-        canvas.drawText(text, radius, radius+ 6, iconPaint);
+        canvas.drawText(text, radius, radius + 6, iconPaint);
     }
-    
 </script>
 
-<canvas disableCss={true} on:draw={onCanvasDraw} width={40} height={40} verticalAlignment="top" horizontalAlignment="left" visibility={selected ? 'visible' : 'hidden'} {...$$restProps}/>
+<canvas disableCss={true} height={40} horizontalAlignment="left" verticalAlignment="top" visibility={selected ? 'visible' : 'hidden'} width={40} on:draw={onCanvasDraw} {...$$restProps} />

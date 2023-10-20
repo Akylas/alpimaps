@@ -1,18 +1,18 @@
-<script lang="ts" context="module">
+<script context="module" lang="ts">
     require('@nativescript/canvas-polyfill');
     if (global.isAndroid) {
         java.lang.System.loadLibrary('canvasnative');
     }
     import { AdditiveTweening } from 'additween';
     import CameraControls from 'camera-controls';
-    import { LODFrustum } from 'geo-three/source/lod/LODFrustum';
     import { MapView } from 'geo-three/source/MapView';
-    import { clearCacheRecursive, getNode, MapNode } from 'geo-three/source/nodes/MapNode';
+    import { LODFrustum } from 'geo-three/source/lod/LODFrustum';
+    import { MapNode, clearCacheRecursive, getNode } from 'geo-three/source/nodes/MapNode';
     import { DebugProvider } from 'geo-three/source/providers/DebugProvider';
     import { UnitsUtils } from 'geo-three/source/utils/UnitsUtils';
     import { EmptyProvider } from 'geo-three/webapp/EmptyProvider';
     import { LocalHeightProvider } from 'geo-three/webapp/LocalHeightProvider';
-    import { customDepthMaterial, featuresByColor, getImageData, getPixel, MaterialHeightShader, sharedMaterial, sharedPointMaterial } from 'geo-three/webapp/MaterialHeightShader';
+    import { MaterialHeightShader, customDepthMaterial, featuresByColor, getImageData, getPixel, sharedMaterial, sharedPointMaterial } from 'geo-three/webapp/MaterialHeightShader';
     import { SunLight } from 'geo-three/webapp/SunLight';
     import RasterMapProvider from 'geo-three/webapp/TestMapProvider';
     import { BlendFunction, Effect, EffectAttribute, EffectComposer, EffectPass, RenderPass } from 'postprocessing';
@@ -23,9 +23,9 @@
         Color,
         DirectionalLightHelper,
         Euler,
+        MOUSE,
         MathUtils,
         Matrix4,
-        MOUSE,
         NearestFilter,
         PCFSoftShadowMap,
         PerspectiveCamera,
@@ -39,25 +39,24 @@
         Vector2,
         Vector3,
         Vector4,
-        WebGLRenderer,
-        WebGLRenderTarget
+        WebGLRenderTarget,
+        WebGLRenderer
     } from 'three';
     import { Sky } from 'three/examples/jsm/objects/Sky';
     // import RenderTargetHelper from 'three-rt-helper';
     import { pointToTileFraction, tileToBBOX } from '@mapbox/tilebelt';
+    import { MultiTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
+    import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
+    import { debounce, throttle } from '@nativescript/core/utils';
     import { isMobile, settings } from 'geo-three/webapp/settings';
     import { showError } from '~/utils/error';
-    import { MultiTileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
-    import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { debounce, throttle } from '@nativescript/core/utils';
 </script>
 
 <script lang="ts">
     export let terrarium: boolean = false;
-    export let dataSource: TileDataSource<any, any>;
-    export let vectorDataSource: MBTilesTileDataSource | MultiTileDataSource<any, any>;
-    export let rasterDataSource: TileDataSource<any, any>;
+    // export let dataSource: TileDataSource<any, any>;
+    // export let vectorDataSource: MBTilesTileDataSource | MultiTileDataSource<any, any>;
+    // export let rasterDataSource: TileDataSource<any, any>;
     export let position;
     export let bearing;
     let page;
@@ -154,7 +153,7 @@
                         // const helper = new CameraHelper( sunLight.shadow.camera );
                         // scene.add( helper );
 
-                        let date = new Date();
+                        const date = new Date();
                         const hours = Math.floor(settings.secondsInDay / 3600);
                         const minutes = Math.floor((settings.secondsInDay - hours * 3600) / 60);
                         const seconds = settings.secondsInDay - hours * 3600 - minutes * 60;
@@ -189,7 +188,7 @@
                     break;
                 }
                 case 'secondsInDay': {
-                    let date = new Date();
+                    const date = new Date();
                     const hours = Math.floor(value / 3600);
                     const minutes = Math.floor((value - hours * 3600) / 60);
                     const seconds = value - hours * 3600 - minutes * 60;
@@ -386,10 +385,10 @@
         onDeviceOrientationChangeEventBound;
 
         updateDeviceOrientationQuaternion() {
-            var alpha = this.deviceOrientation.alpha ? this.deviceOrientation.alpha * TO_RAD + this.alphaOffsetAngle : 0; // Z
-            var beta = this.deviceOrientation.beta ? this.deviceOrientation.beta * TO_RAD + this.betaOffsetAngle : 0; // X'
-            var gamma = this.deviceOrientation.gamma ? this.deviceOrientation.gamma * TO_RAD + this.gammaOffsetAngle : 0; // Y''
-            var orient = this.screenOrientation ? this.screenOrientation * TO_RAD : 0; // O
+            const alpha = this.deviceOrientation.alpha ? this.deviceOrientation.alpha * TO_RAD + this.alphaOffsetAngle : 0; // Z
+            const beta = this.deviceOrientation.beta ? this.deviceOrientation.beta * TO_RAD + this.betaOffsetAngle : 0; // X'
+            const gamma = this.deviceOrientation.gamma ? this.deviceOrientation.gamma * TO_RAD + this.gammaOffsetAngle : 0; // Y''
+            const orient = this.screenOrientation ? this.screenOrientation * TO_RAD : 0; // O
 
             // if (this.screenOrientation % 180 === 0)
             // {
@@ -596,7 +595,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
                     uniforms: new Map([
                         ['outlineColor', new Uniform(new Color(settings.dark ? 0xffffff : 0x000000))],
                         ['multiplierParameters', new Uniform(new Vector4(settings.depthBiais, settings.depthMultiplier, settings.depthPostMultiplier, settings.outlineStroke))]
-                    ])
+                    ] as any)
                 }
             );
         }
@@ -604,16 +603,16 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
 
     CameraControls.install({
         THREE: {
-            MOUSE: MOUSE,
-            Vector2: Vector2,
-            Vector3: Vector3,
-            Vector4: Vector4,
-            Quaternion: Quaternion,
-            Matrix4: Matrix4,
-            Spherical: Spherical,
-            Box3: Box3,
-            Sphere: Sphere,
-            Raycaster: Raycaster,
+            MOUSE,
+            Vector2,
+            Vector3,
+            Vector4,
+            Quaternion,
+            Matrix4,
+            Spherical,
+            Box3,
+            Sphere,
+            Raycaster,
             MathUtils: {
                 DEG2RAD: MathUtils.DEG2RAD,
                 clamp: MathUtils.clamp
@@ -638,7 +637,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
     let pixelsBuffer;
     const TEXT_HEIGHT = 170;
 
-    let showingCamera = false;
+    const showingCamera = false;
     // let showMagnify = false;
     let mousePosition = null;
 
@@ -869,7 +868,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
             return;
         }
         map.lod.updateLOD(map, camera, renderer, scene, force);
-    }, 200) as any;
+    }, 200);
 
     function updateCompass() {
         // if (compass)
@@ -1256,7 +1255,6 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
     controls.addEventListener('control', (event) => {
         const zooming = controls.zooming;
         const trucking = controls.trucking;
-        // @ts-ignore
         // if (event.originalEvent && event.originalEvent.buttons)
         // {
         // 	shouldClearSelectedOnClick = false;
@@ -1307,7 +1305,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
     function actualComputeFeatures() {
         let oldSyVisible;
         let oldSunLightVisible;
-        let oldAmbientLightVisible = ambientLight.visible;
+        const oldAmbientLightVisible = ambientLight.visible;
         ambientLight.visible = false;
         if (sky) {
             oldSyVisible = sky.visible;
@@ -1355,7 +1353,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
         }
         ambientLight.visible = oldAmbientLightVisible;
     }
-    const computeFeatures = throttle(actualComputeFeatures, 300) as any;
+    const computeFeatures = throttle(actualComputeFeatures, 300);
     function onresize() {
         sized = true;
         viewWidth = window.innerWidth;
@@ -1397,7 +1395,6 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
         updateLODThrottle();
         requestRenderIfNotRequested(true);
     }
-    // @ts-ignore
     // document.body.onresize();
     // updateControls();
 
@@ -1456,7 +1453,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
             context.fillText(line, x, y);
         }
         if (measureOnly) {
-            return { x: x + context.measureText(line).width, y: y, nbLines: nbLines };
+            return { x: x + context.measureText(line).width, y, nbLines };
         }
     }
     function roundRect(ctx, x, y, w, h, r) {
@@ -1493,7 +1490,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
                 const point1 = UnitsUtils.sphericalToDatums(tempVector.x / scale, -tempVector.z / scale);
                 const point2 = { lat: selectedItem.geometry.coordinates[1], lon: selectedItem.geometry.coordinates[0], altitude: selectedItem.properties.ele };
                 distance = getDistance(point1, point2);
-                return { ...selectedItem, distance: distance };
+                return { ...selectedItem, distance };
             }
             return null;
         });
@@ -1557,7 +1554,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
         }
 
         const featuresGroupedX = new Array(viewWidth);
-        let lastX = 0;
+        const lastX = 0;
         let maxEle = -10000;
         let maxEleX;
         const featuresToDraw = [];
@@ -1591,16 +1588,14 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
                 maxEle = ele;
             }
             const array = (featuresGroupedX[x] = featuresGroupedX[x] || []);
-            array.push({ ...f, x: x, y: y, z: z });
+            array.push({ ...f, x, y, z });
         });
         let windowStartX = maxEleX;
         // console.log('featuresGroupedX', featuresGroupedX);
         function handleWindowSize(startX, endX, distance) {
             const array = featuresGroupedX
                 .slice(startX, endX)
-                .filter((s) => {
-                    return Boolean(s);
-                })
+                .filter((s) => Boolean(s))
                 .flat();
             // console.log('handleWindowSize', windowStartX, array);
             if (array.length === 0) {
@@ -1615,26 +1610,20 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
             let nextFeature;
             if (mousePosition && mousePosition.x >= startX && mousePosition.x <= endX) {
                 // console.log('mouse', windowStartX, array);
-                const mouseObj = array.reduce((p, c) => {
-                    return !isSelectedFeature(p) && (getDistanceToMouse(p) < getDistanceToMouse(c) || isSelectedFeature(c)) ? p : c;
-                });
+                const mouseObj = array.reduce((p, c) => (!isSelectedFeature(p) && (getDistanceToMouse(p) < getDistanceToMouse(c) || isSelectedFeature(c)) ? p : c));
                 if (getDistanceToMouse(mouseObj) < 20) {
                     nextFeature = mouseObj;
                     setSelectedItem(nextFeature);
                 }
             }
             if (!nextFeature && selectedItem) {
-                const index = array.findIndex((f) => {
-                    return isSelectedFeature(f);
-                });
+                const index = array.findIndex((f) => isSelectedFeature(f));
                 if (index !== -1) {
                     nextFeature = array[index];
                 }
             }
             if (!nextFeature) {
-                nextFeature = array.reduce((p, c) => {
-                    return Math.pow(p.properties.ele, 2) > Math.pow(c.properties.ele, 2) ? p : c;
-                });
+                nextFeature = array.reduce((p, c) => (Math.pow(p.properties.ele, 2) > Math.pow(c.properties.ele, 2) ? p : c));
             }
             windowStartX = nextFeature.x + distance;
             featuresToDraw.push(nextFeature);
@@ -1928,7 +1917,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
                 from: { progress: current },
                 to: { progress: value },
                 duration: 200,
-                onUpdate: function (values) {
+                onUpdate(values) {
                     controls.azimuthAngle = values.progress * TO_RAD;
                     updateControls();
                 }
@@ -1982,7 +1971,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
         if (!currentPosition) {
             return 0;
         }
-        var farPoint = new Vector3(0, 0, -camera.far);
+        const farPoint = new Vector3(0, 0, -camera.far);
         farPoint.applyMatrix4(camera.matrixWorld);
         const scale = MaterialHeightShader.scaleRatio;
         const point2 = UnitsUtils.sphericalToDatums(farPoint.x / scale, -farPoint.z / scale);
@@ -2002,7 +1991,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
                 // depth: false,
                 stencil: false
             });
-            renderer.physicallyCorrectLights = true;
+            renderer['physicallyCorrectLights'] = true;
             renderer.shadowMap.type = PCFSoftShadowMap;
             renderer.shadowMap.enabled = false;
             renderer.setClearColor(0x000000, 0);
@@ -2017,7 +2006,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
             composer = new EffectComposer(renderer, {});
             onresize();
             updateControls();
-            callMethods({ terrarium: terrarium, setPosition: { ...position }, setAzimuth: bearing });
+            callMethods({ terrarium, setPosition: { ...position }, setAzimuth: bearing });
         } catch (err) {
             showError(err);
         }
@@ -2026,6 +2015,6 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
 
 <frame backgroundColor="transparent">
     <page bind:this={page} actionBarHidden={true} on:navigatingTo={onNavigatingTo}>
-        <ncanvas id="canvas" on:ready={canvasReady} backgroundColor="black" />
+        <ncanvas id="canvas" backgroundColor="black" on:ready={canvasReady} />
     </page>
 </frame>

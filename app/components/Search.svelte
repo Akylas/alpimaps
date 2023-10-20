@@ -3,7 +3,9 @@
     import { ClusterElementBuilder } from '@nativescript-community/ui-carto/layers/cluster';
     import { ClusteredVectorLayer } from '@nativescript-community/ui-carto/layers/vector';
     import { PointStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/point';
-    import { Animation, ApplicationSettings, GridLayout, ObservableArray, TextField, View } from '@nativescript/core';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
+    import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { Animation, ApplicationSettings, GridLayout, ObservableArray, TextField } from '@nativescript/core';
     import type { Point } from 'geojson';
     import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -13,17 +15,15 @@
     import type { IItem as Item } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
     import { showError } from '~/utils/error';
-    import { actionBarButtonHeight, globalMarginTop, lightBackgroundColor, subtitleColor, widgetBackgroundColor } from '~/variables';
+    import { actionBarButtonHeight, globalMarginTop, lightBackgroundColor, widgetBackgroundColor } from '~/variables';
     import IconButton from './IconButton.svelte';
     import SearchCollectionView from './SearchCollectionView.svelte';
-    import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
 
     const SEARCH_COLLECTIONVIEW_HEIGHT = 250;
     let animating = false;
     async function animateTargets(animations: any[]) {
         animations = animations.filter((a) => !!a.target);
-        let shouldAnimate = true;
+        const shouldAnimate = true;
         try {
             if (shouldAnimate && animations[0].target.nativeView) {
                 animating = true;
@@ -321,7 +321,7 @@
     }
 
     let loaded = false;
-    let loadedListeners = [];
+    const loadedListeners = [];
     async function loadView() {
         if (!loaded) {
             await new Promise((resolve) => {
@@ -368,7 +368,7 @@
             const result = await showPopover<any>({
                 vertPos: VerticalPosition.BELOW,
                 horizPos: HorizontalPosition.ALIGN_LEFT,
-                view: OptionSelect ,
+                view: OptionSelect,
                 fitInScreen: true,
                 anchor: event.object,
                 props: {
@@ -398,54 +398,51 @@
 </script>
 
 <gridlayout
-    id="search"
     bind:this={gridLayout}
+    id="search"
     {...$$restProps}
-    rows="auto,auto"
-    on:tap={() => {}}
-    elevation={$currentTheme !== 'dark' && focused ? 6 : 0}
-    columns="auto,*,auto,auto,auto"
     backgroundColor={$widgetBackgroundColor}
+    columns="auto,*,auto,auto,auto"
+    elevation={$currentTheme !== 'dark' && focused ? 6 : 0}
     margin={`${globalMarginTop + 10} 10 10 10`}
->
+    rows="auto,auto"
+    on:tap={() => {}}>
     <IconButton gray={true} text="mdi-magnify" on:tap={showSearchOptions} />
     <!-- <label class="icon-label" text="mdi-magnify" color={$subtitleColor} /> -->
     <textfield
         bind:this={textField}
-        variant="none"
+        autocapitalizationType="none"
         col={1}
-        margin="0 15 0 0"
+        floating="false"
         height={actionBarButtonHeight}
         hint={$slc('search')}
+        margin="0 15 0 0"
         placeholder={$slc('search')}
         returnKeyType="search"
-        on:focus={onFocus}
+        {text}
+        variant="none"
+        verticalTextAlignment="center"
         on:blur={onBlur}
         on:returnPress={onReturnKey}
-        {text}
         on:textChange={(e) => (text = e['value'])}
-        autocapitalizationType="none"
-        floating="false"
-        verticalTextAlignment="center"
-    />
-    <mdactivityindicator visibility={loading ? 'visible' : 'hidden'} col={2} busy={true} width={20} height={20} />
-    <IconButton gray={true} isVisible={currentSearchText && currentSearchText.length > 0 && !loading && didSearch} col={2} text="mdi-refresh" on:tap={reloadSearch} />
-    <IconButton gray={true} isVisible={currentSearchText && currentSearchText.length > 0} col={3} text="mdi-close" on:tap={() => clearSearch()} />
+        on:focus={onFocus} />
+    <mdactivityindicator busy={true} col={2} height={20} visibility={loading ? 'visible' : 'hidden'} width={20} />
+    <IconButton col={2} gray={true} isVisible={currentSearchText && currentSearchText.length > 0 && !loading && didSearch} text="mdi-refresh" on:tap={reloadSearch} />
+    <IconButton col={3} gray={true} isVisible={currentSearchText && currentSearchText.length > 0} text="mdi-close" on:tap={() => clearSearch()} />
     <IconButton col={4} gray={true} text="mdi-dots-vertical" on:tap={showMapMenu} />
     {#if loaded}
-        <absolutelayout bind:this={collectionViewHolder} row={1} height={0} colSpan={7} isUserInteractionEnabled={searchResultsVisible}>
-            <gridlayout height={SEARCH_COLLECTIONVIEW_HEIGHT} width="100%" rows="*,auto" columns="auto,auto,*">
+        <absolutelayout bind:this={collectionViewHolder} colSpan={7} height={0} isUserInteractionEnabled={searchResultsVisible} row={1}>
+            <gridlayout columns="auto,auto,*" height={SEARCH_COLLECTIONVIEW_HEIGHT} rows="*,auto" width="100%">
                 <SearchCollectionView
                     bind:this={collectionView}
-                    bind:searchResultsCount
-                    bind:dataItems
                     colSpan={3}
                     isUserInteractionEnabled={searchResultsVisible}
-                    on:tap={(event) => onItemTap(event.detail.detail)}
-                />
-                <stacklayout row={1} orientation="horizontal" on:tap={() => {}} width="100%">
+                    bind:searchResultsCount
+                    bind:dataItems
+                    on:tap={(event) => onItemTap(event.detail.detail)} />
+                <stacklayout orientation="horizontal" row={1} width="100%" on:tap={() => {}}>
                     <!-- <IconButton small={true} isVisible={searchResultsVisible} text="mdi-shape" on:tap={toggleFilterOSMKey} isSelected={filteringOSMKey} /> -->
-                    <IconButton small={true} isVisible={searchResultsVisible} text="mdi-map" on:tap={toggleShowResultsOnMap} />
+                    <IconButton isVisible={searchResultsVisible} small={true} text="mdi-map" on:tap={toggleShowResultsOnMap} />
                 </stacklayout>
             </gridlayout>
         </absolutelayout>

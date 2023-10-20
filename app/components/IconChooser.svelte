@@ -1,32 +1,34 @@
-<script lang="ts" context="module">
+<script context="module" lang="ts">
+    import { Align, Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { TextField } from '@nativescript-community/ui-material-textfield';
+    import { closePopover } from '@nativescript-community/ui-popover/svelte';
+    import { Utils } from '@nativescript/core';
+    import { debounce } from '@nativescript/core/utils';
+    import { onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode, closeModal } from 'svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import { osmIcons } from '~/helpers/formatter';
     import { lc } from '~/helpers/locale';
-    import { actionBarButtonHeight, borderColor, lightBackgroundColor, mdiFontFamily, primaryColor, textColor } from '~/variables';
-    import CActionBar from './CActionBar.svelte';
+    import { actionBarButtonHeight, lightBackgroundColor, mdiFontFamily, primaryColor, textColor, widgetBackgroundColor } from '~/variables';
     import IconButton from './IconButton.svelte';
-    import { debounce } from '@nativescript/core/utils';
-    import { Utils } from '@nativescript/core';
-    import { Align, Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
-    import { onDestroy, onMount } from 'svelte';
-    import { closePopover } from '@nativescript-community/ui-popover/svelte';
-    import { widgetBackgroundColor } from '~/variables';
-    import { TextField } from '@nativescript-community/ui-material-textfield';
 
     const materialIcons = require('~/material_icons.json');
-    type Item = { fontFamily: string; icon: string; name: string };
+    interface Item {
+        fontFamily: string;
+        icon: string;
+        name: string;
+    }
 
     const iconPaint = new Paint();
     iconPaint.setTextAlign(Align.CENTER);
 
     const ICON_SIZE = 50;
-    const items: Array<Item> = Object.keys(osmIcons)
+    const items: Item[] = Object.keys(osmIcons)
         .map((k) => ({ fontFamily: 'osm', icon: osmIcons[k], name: k }))
         .concat(Object.keys(materialIcons).map((k) => ({ fontFamily: mdiFontFamily, icon: materialIcons[k], name: k })))
         .sort((a, b) => (a.name > b.name ? 1 : b.name > a.name ? -1 : 0));
-        console.log('items', items.length)
+    console.log('items', items.length);
 </script>
 
 <script lang="ts">
@@ -36,7 +38,7 @@
     let textfield: NativeViewElementNode<TextField>;
     let filter: string = null;
 
-    let filteredItems: Array<Item> = null;
+    let filteredItems: Item[] = null;
     const updateFiltered = debounce((filter) => {
         if (filter) {
             filteredItems = items.filter((d) => d.name.indexOf(filter) !== -1);
@@ -58,8 +60,8 @@
 
     function onDraw(item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
         try {
-            let w = canvas.getWidth();
-            let h = canvas.getHeight();
+            const w = canvas.getWidth();
+            const h = canvas.getHeight();
             iconPaint.fontFamily = item.fontFamily;
             if (item.mdi) {
                 iconPaint.textSize = 33;
@@ -72,34 +74,32 @@
             console.error(err);
         }
     }
-
 </script>
 
 <!-- <page actionBarHidden={true}> -->
 <gesturerootview>
-    <gridlayout rows="auto,auto,250" backgroundColor={$widgetBackgroundColor} borderRadius={8} {elevation} {margin}>
+    <gridlayout backgroundColor={$widgetBackgroundColor} borderRadius={8} {elevation} {margin} rows="auto,auto,250">
         <!-- <CActionBar canGoBack modalWindow title={lc('icon')} /> -->
         <gridlayout margin={10} row={1}>
             <textfield
                 bind:this={textfield}
+                autocapitalizationType="none"
                 floating="false"
-                padding="3 10 3 10"
+                height={actionBarButtonHeight}
                 hint={lc('search')}
+                padding="3 10 3 10"
                 placeholder={lc('search')}
                 returnKeyType="search"
-                height={actionBarButtonHeight}
                 text={filter}
-                autocapitalizationType="none"
                 on:unloaded={blurTextField}
                 on:returnPress={blurTextField}
-                on:textChange={(e) => (filter = e['value'])}
-            />
-            <IconButton gray={true} isVisible={filter && filter.length > 0} col={1} text="mdi-close" on:tap={() => (filter = null)} verticalAlignment="middle" horizontalAlignment="right" size={40} />
+                on:textChange={(e) => (filter = e['value'])} />
+            <IconButton col={1} gray={true} horizontalAlignment="right" isVisible={filter && filter.length > 0} size={40} text="mdi-close" verticalAlignment="middle" on:tap={() => (filter = null)} />
         </gridlayout>
-        <collectionview bind:this={collectionView} itemIdGenerator={(item, i) => i} row={2} items={filteredItems} rowHeight={ICON_SIZE} colWidth={ICON_SIZE}>
+        <collectionview bind:this={collectionView} colWidth={ICON_SIZE} itemIdGenerator={(item, i) => i} items={filteredItems} row={2} rowHeight={ICON_SIZE}>
             <Template let:item>
                 <gridlayout padding={2}>
-                    <canvas on:draw={(e) => onDraw(item, e)} backgroundColor={$lightBackgroundColor} borderRadius={4} rippleColor={primaryColor} on:tap={selectIcon(item)} />
+                    <canvas backgroundColor={$lightBackgroundColor} borderRadius={4} rippleColor={primaryColor} on:draw={(e) => onDraw(item, e)} on:tap={selectIcon(item)} />
                 </gridlayout>
             </Template>
         </collectionview>
