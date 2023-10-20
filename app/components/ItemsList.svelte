@@ -1,12 +1,17 @@
-<script lang="ts" context="module">
+<script context="module" lang="ts">
+    import { createNativeAttributedString } from '@nativescript-community/text';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
+    import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
     import { AndroidActivityBackPressedEventData, Application, LayoutBase, NavigatedData, ObservableArray, View } from '@nativescript/core';
     import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, goBack, navigate } from 'svelte-native/dom';
+    import { UNITS, convertElevation, convertValueToUnit } from '~/helpers/formatter';
     import { convertDurationSeconds, lc, lu, onLanguageChanged } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
@@ -19,11 +24,6 @@
     import CActionBar from './CActionBar.svelte';
     import IconButton from './IconButton.svelte';
     import SelectedIndicator from './SelectedIndicator.svelte';
-    import { confirm } from '@nativescript-community/ui-material-dialogs';
-    import { UNITS, convertElevation, convertValueToUnit } from '~/helpers/formatter';
-    import { createNativeAttributedString } from '@nativescript-community/text';
-    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
     type MapGroup = Group & { collapsed: boolean };
     type CollectionGroup = MapGroup & { type: 'group'; count: number; selected?: boolean; totalTime?: number; totalDistance?: number };
     type CollectionItem = (Item & { groupOnMap?: 0 | 1; selected?: boolean }) | CollectionGroup;
@@ -144,7 +144,7 @@ LEFT JOIN  (
                     });
                 }
                 groupedItems = groupByArray<Item>(sqlItems, (i) => i.groups);
-                const noneGroupItems: Array<CollectionItem> = groupedItems['none'] || [];
+                const noneGroupItems: CollectionItem[] = groupedItems['none'] || [];
                 delete groupedItems['none'];
                 items = new ObservableArray(
                     Object.keys(groupedItems).reduce((acc, key) => {
@@ -166,7 +166,7 @@ LEFT JOIN  (
     }
     function switchGroupVisibility(item: Group) {
         const visible = (1 - groups[item.id].onMap) as 0 | 1;
-        if (visible == groups[item.id].onMap) {
+        if (visible === groups[item.id].onMap) {
             return;
         }
         groups[item.id].onMap = visible;
@@ -183,7 +183,7 @@ LEFT JOIN  (
     }
     function switchGroupCollapsed(item: Group, event) {
         const collapsed = !groups[item.name].collapsed;
-        if (collapsed == groups[item.name].collapsed) {
+        if (collapsed === groups[item.name].collapsed) {
             return;
         }
         groups[item.name].collapsed = collapsed;
@@ -494,7 +494,7 @@ LEFT JOIN  (
                 if (result) {
                     const selected = getSelected();
                     for (let index = 0; index < selected.length; index++) {
-                        await deleteItem(selected[index]);
+                        deleteItem(selected[index]);
                     }
                     unselectAll();
                 }
@@ -546,9 +546,9 @@ LEFT JOIN  (
     }
 
     function onDrawGroup(item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
-        let w = canvas.getWidth();
-        let h = canvas.getHeight();
-        let spans: any[] = [
+        const w = canvas.getWidth();
+        const h = canvas.getHeight();
+        const spans: any[] = [
             {
                 text: item.name + ` (${item.count})` + '\n',
                 fontWeight: 'bold',
@@ -652,7 +652,7 @@ LEFT JOIN  (
             const result = await showPopover<any>({
                 vertPos: VerticalPosition.ALIGN_TOP,
                 horizPos: HorizontalPosition.ALIGN_LEFT,
-                view: OptionSelect ,
+                view: OptionSelect,
                 fitInScreen: true,
                 anchor: event.object,
                 props: {
@@ -669,7 +669,7 @@ LEFT JOIN  (
             if (result) {
                 switch (result.id) {
                     case 'delete':
-                        await deleteItem(item as Item);
+                        deleteItem(item);
                         break;
                     case 'show_hide_on_map':
                         showItemOnMap(item);
@@ -690,64 +690,60 @@ LEFT JOIN  (
 
 <page actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout rows="auto,*">
-        <CActionBar title={nbSelected ? lc('selected', nbSelected) : lc('items')} onGoBack={nbSelected ? unselectAll : null} forceCanGoBack={nbSelected > 0}>
-            <IconButton text="mdi-delete" color="red" on:tap={deleteSelectedItems} isVisible={nbSelected > 0} />
-            <IconButton text="mdi-share-variant" color="white" on:tap={shareSelectedItems} isVisible={nbSelected > 0} />
-            <IconButton text="mdi-tag-plus-outline" color="white" on:tap={setSelectedGroup} isVisible={nbSelected > 0} />
+        <CActionBar forceCanGoBack={nbSelected > 0} onGoBack={nbSelected ? unselectAll : null} title={nbSelected ? lc('selected', nbSelected) : lc('items')}>
+            <IconButton color="red" isVisible={nbSelected > 0} text="mdi-delete" on:tap={deleteSelectedItems} />
+            <IconButton color="white" isVisible={nbSelected > 0} text="mdi-share-variant" on:tap={shareSelectedItems} />
+            <IconButton color="white" isVisible={nbSelected > 0} text="mdi-tag-plus-outline" on:tap={setSelectedGroup} />
             <gridlayout slot="bottom" columns="*,*" height={48}>
                 <canvaslabel
+                    color="white"
+                    disableCss={true}
                     fontSize={15}
                     fontWeight="500"
-                    disableCss={true}
+                    rippleColor="white"
                     text={lu('routes')}
                     textAlignment="center"
                     verticalTextAlignment="center"
-                    color="white"
-                    on:tap={() => setTabIndex(0)}
-                    rippleColor="white"
-                />
+                    on:tap={() => setTabIndex(0)} />
                 <canvaslabel
-                    disableCss={true}
-                    text={lu('markers')}
                     col={1}
-                    textAlignment="center"
-                    verticalTextAlignment="center"
+                    color="white"
+                    disableCss={true}
                     fontSize={15}
                     fontWeight="500"
-                    color="white"
-                    on:tap={() => setTabIndex(1)}
                     rippleColor="white"
-                />
-                <absolutelayout colSpan={2} width="50%" height={3} backgroundColor="white" verticalAlignment="bottom" horizontalAlignment={tabIndex === 1 ? 'right' : 'left'} />
+                    text={lu('markers')}
+                    textAlignment="center"
+                    verticalTextAlignment="center"
+                    on:tap={() => setTabIndex(1)} />
+                <absolutelayout backgroundColor="white" colSpan={2} height={3} horizontalAlignment={tabIndex === 1 ? 'right' : 'left'} verticalAlignment="bottom" width="50%" />
             </gridlayout>
         </CActionBar>
         <!-- svelte-ignore illegal-attribute-character -->
         <collectionview
             bind:this={collectionView}
-            row={1}
-            {items}
             itemTemplateSelector={(item) => item.type || (!!item.route ? 'route' : 'default')}
+            {items}
+            row={1}
             android:paddingBottom={$navigationBarHeight}
-            on:swipe={onCollectionSwipe}
-        >
-            <Template let:item key="group">
-                <gridlayout height={50} on:tap={(e) => onItemTap(item, e)} on:longPress={(e) => onItemLongPress(item, e)} backgroundColor={$borderColor} rippleColor={primaryColor}>
+            on:swipe={onCollectionSwipe}>
+            <Template key="group" let:item>
+                <gridlayout backgroundColor={$borderColor} height={50} rippleColor={primaryColor} on:tap={(e) => onItemTap(item, e)} on:longPress={(e) => onItemLongPress(item, e)}>
                     <canvas margin="5 30 5 10" on:draw={(e) => onDrawGroup(item, e)} />
                     <IconButton
-                        on:tap={(e) => switchGroupCollapsed(item, e)}
-                        marginRight={10}
-                        size={40}
-                        tooltip={lc('collapse')}
-                        text="mdi-chevron-up"
-                        horizontalAlignment="right"
-                        verticalAlignment="middle"
-                        rotate={item.collapsed ? 180 : 0}
                         id="collapseButton"
-                    />
+                        horizontalAlignment="right"
+                        marginRight={10}
+                        rotate={item.collapsed ? 180 : 0}
+                        size={40}
+                        text="mdi-chevron-up"
+                        tooltip={lc('collapse')}
+                        verticalAlignment="middle"
+                        on:tap={(e) => switchGroupCollapsed(item, e)} />
                     <SelectedIndicator selected={item.selected} />
                 </gridlayout>
             </Template>
-            <Template let:item key="route">
+            <Template key="route" let:item>
                 <!-- <swipemenu
                     id={item.name}
                     height={100}
@@ -764,37 +760,34 @@ LEFT JOIN  (
                 > -->
                 <!-- svelte-ignore illegal-attribute-character -->
                 <BottomSheetInfoView
-                    {item}
+                    backgroundColor={$backgroundColor}
+                    borderBottomColor={$borderColor}
+                    borderBottomWidth={1}
                     height={80}
-                    marginLeft={60}
+                    iconColor={$backgroundColor}
+                    iconLeft={17}
+                    iconSize={16}
+                    iconTop={63}
+                    {item}
                     marginBottom={34}
+                    marginLeft={60}
+                    {onDraw}
+                    opacity={(item.onMap && item.groupOnMap) || 0.6}
                     padding="4 0 2 10"
+                    propsBottom={34}
                     propsLeft={60}
                     rightTextPadding={40}
-                    propsBottom={34}
-                    iconLeft={17}
-                    iconTop={63}
-                    titleVerticalTextAlignment="middle"
-                    subtitleEnabled={false}
-                    iconColor={$backgroundColor}
-                    {onDraw}
-                    iconSize={16}
-                    opacity={(item.onMap && item.groupOnMap) || 0.6}
-                    prop:mainContent
-                    backgroundColor={$backgroundColor}
-                    on:tap={(e) => onItemTap(item, e)}
-                    on:longPress={(e) => onItemLongPress(item, e)}
                     rippleColor={primaryColor}
-                    borderBottomWidth={1}
-                    borderBottomColor={$borderColor}
-                >
-                    <image disableCss={true} src={item.image_path} width={50} height={50} borderRadius={8} horizontalAlignment="left" verticalAlignment="top" marginTop={6} />
+                    subtitleEnabled={false}
+                    titleVerticalTextAlignment="middle"
+                    prop:mainContent
+                    on:tap={(e) => onItemTap(item, e)}
+                    on:longPress={(e) => onItemLongPress(item, e)}>
+                    <image borderRadius={8} disableCss={true} height={50} horizontalAlignment="left" marginTop={6} src={item.image_path} verticalAlignment="top" width={50} />
                     <SelectedIndicator selected={item.selected} />
-                    <IconButton text="mdi-dots-vertical" gray={true} slot="above" horizontalAlignment="right" verticalAlignment="top" on:tap={(e) => showItemMoreMenu(item, e)} />
+                    <IconButton slot="above" gray={true} horizontalAlignment="right" text="mdi-dots-vertical" verticalAlignment="top" on:tap={(e) => showItemMoreMenu(item, e)} />
                 </BottomSheetInfoView>
-                <!-- svelte-ignore illegal-attribute-character -->
                 <!-- <IconButton prop:leftDrawer on:tap={() => deleteItem(item)} shape="none" width={60} height="100%" color="white" backgroundColor="red" text="mdi-trash-can" /> -->
-                <!-- svelte-ignore illegal-attribute-character -->
                 <!-- <stacklayout prop:rightDrawer orientation="horizontal">
                         <IconButton on:tap={() => startEditingItem(item)} text={'mdi-pencil'} shape="none" width={60} height="100%" color="white" backgroundColor={primaryColor} />
                         <IconButton
@@ -824,19 +817,18 @@ LEFT JOIN  (
                 > -->
                 <!-- svelte-ignore illegal-attribute-character -->
                 <BottomSheetInfoView
-                    {item}
+                    backgroundColor={$backgroundColor}
+                    borderBottomColor={$borderColor}
+                    borderBottomWidth={1}
                     height={80}
+                    {item}
                     opacity={(item.onMap && item.groupOnMap) || 0.6}
                     prop:mainContent
-                    backgroundColor={$backgroundColor}
-                    on:tap={(e) => onItemTap(item, e)}
-                    on:longPress={(e) => onItemLongPress(item, e)}
                     rippleColor={primaryColor}
-                    borderBottomWidth={1}
-                    borderBottomColor={$borderColor}
-                >
+                    on:tap={(e) => onItemTap(item, e)}
+                    on:longPress={(e) => onItemLongPress(item, e)}>
                     <SelectedIndicator selected={item.selected} />
-                    <IconButton text="mdi-dots-vertical" gray={true} slot="above" horizontalAlignment="right" verticalAlignment="top" on:tap={(e) => showItemMoreMenu(item, e)} />
+                    <IconButton slot="above" gray={true} horizontalAlignment="right" text="mdi-dots-vertical" verticalAlignment="top" on:tap={(e) => showItemMoreMenu(item, e)} />
                 </BottomSheetInfoView>
 
                 <!-- svelte-ignore illegal-attribute-character -->
@@ -846,28 +838,26 @@ LEFT JOIN  (
                     <!-- svelte-ignore illegal-attribute-character -->
                 <stacklayout prop:rightDrawer orientation="horizontal">
                     <IconButton
-                        on:tap={() => showItemOnMap(item)}
-                        tooltip={lc('show')}
-                        text={!item.onMap ? 'mdi-eye-off' : 'mdi-eye'}
-                        shape="none"
-                        width={60}
-                        height="100%"
-                        color="white"
                         backgroundColor={!item.onMap ? 'gray' : 'blue'}
-                    />
+                        color="white"
+                        height="100%"
+                        shape="none"
+                        text={!item.onMap ? 'mdi-eye-off' : 'mdi-eye'}
+                        tooltip={lc('show')}
+                        width={60}
+                        on:tap={() => showItemOnMap(item)} />
                 </stacklayout>
                 -->
                 <!-- </swipemenu> -->
             </Template>
         </collectionview>
         <canvaslabel
+            color={$subtitleColor}
             row={1}
             text={tabIndex === 1 ? lc('no_marker') : lc('no_route')}
-            color={$subtitleColor}
-            visibility={loading || itemsCount ? 'hidden' : 'visible'}
             textAlignment="center"
             verticalTextAlignment="middle"
-        />
-        <mdactivityindicator row={1} visibility={loading ? 'visible' : 'hidden'} busy={true} horizontalAlignment="center" verticalAlignment="middle" />
+            visibility={loading || itemsCount ? 'hidden' : 'visible'} />
+        <mdactivityindicator busy={true} horizontalAlignment="center" row={1} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
     </gridlayout>
 </page>

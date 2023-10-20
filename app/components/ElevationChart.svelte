@@ -31,7 +31,7 @@
 
     export let item: Item;
     let chart: NativeViewElementNode<LineChart>;
-    let showProfileGrades = true;
+    const showProfileGrades = true;
 
     $: {
         try {

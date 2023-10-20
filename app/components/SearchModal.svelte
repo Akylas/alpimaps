@@ -6,17 +6,17 @@
     import { GeoLocation } from '~/handlers/GeoHandler';
     import { lc } from '~/helpers/locale';
     import { showError } from '~/utils/error';
+    import { widgetBackgroundColor } from '~/variables';
     import { PhotonFeature } from './Features';
     import SearchCollectionView from './SearchCollectionView.svelte';
-    import { widgetBackgroundColor } from '~/variables';
 
     let textField: NativeViewElementNode<TextField>;
     let loading = false;
     let collectionView: SearchCollectionView;
-    let searchResults: PhotonFeature[] = [];
+    const searchResults: PhotonFeature[] = [];
     let searchAsTypeTimer: NodeJS.Timeout;
     let currentSearchText: string;
-    export let position: GeoLocation = undefined;
+    export let position: GeoLocation;
     export let width;
     export let height = 40;
     export let elevation = 0;
@@ -87,23 +87,22 @@
 
 <!-- <page id="selectCity" actionBarHidden={true} on:navigatingTo={onNavigatingTo}> -->
 <gesturerootview columns="auto">
-    <gridlayout rows="auto,auto,240" {width} backgroundColor={$widgetBackgroundColor} borderRadius={8} {elevation} {margin}>
+    <gridlayout backgroundColor={$widgetBackgroundColor} borderRadius={8} {elevation} {margin} rows="auto,auto,240" {width}>
         <!-- <CActionBar title={lc('search')} modalWindow>
             <mdactivityIndicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapsed'} />
         </CActionBar> -->
         <textfield
             bind:this={textField}
-            row={1}
-            hint={lc('search')}
             floating="false"
-            returnKeyType="search"
             {height}
+            hint={lc('search')}
             padding="3 10 3 10"
+            returnKeyType="search"
+            row={1}
             text={query}
             on:unloaded={blurTextField}
             on:textChange={onTextChange}
-            on:loaded={focus}
-        />
+            on:loaded={focus} />
         <SearchCollectionView bind:this={collectionView} row={2} on:tap={(event) => close(event.detail.detail)} />
     </gridlayout>
 </gesturerootview>

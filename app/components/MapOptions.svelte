@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script context="module" lang="ts">
     import { Color } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
     import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
@@ -25,12 +25,12 @@
     }
 </script>
 
-<collectionView items={options} {height} colWidth="20%" rowHeight={80}>
+<collectionView colWidth="20%" {height} items={options} rowHeight={80}>
     <Template let:item>
-        <canvaslabel backgroundColor={item.color} rippleColor={item.color || primaryColor} on:tap={() => onTap(item)} borderRadius={10} paddingTop={15} >
-            <cgroup verticalAlignment="top" textAlignment="center">
-                <cspan fontFamily={mdiFontFamily} text={item.icon} fontSize={30} />
-                <cspan text={'\n' + item.title} fontSize={12} />
+        <canvaslabel backgroundColor={item.color} borderRadius={10} paddingTop={15} rippleColor={item.color || primaryColor} on:tap={() => onTap(item)}>
+            <cgroup textAlignment="center" verticalAlignment="top">
+                <cspan fontFamily={mdiFontFamily} fontSize={30} text={item.icon} />
+                <cspan fontSize={12} text={'\n' + item.title} />
             </cgroup>
         </canvaslabel>
     </Template>

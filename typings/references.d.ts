@@ -3,6 +3,7 @@
 /// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!Foundation.d.ts" />
 /// <reference path="../node_modules/@nativescript-community/ui-carto/typings/carto.android.d.ts" />
 
+// import type { Color } from '@nativescript/core';
 declare module '*.scss' {
     export const locals;
 }
@@ -78,7 +79,7 @@ declare namespace svelteNative.JSX {
     interface ViewAttributes {
         disableCss?: boolean;
         // verticalAlignment: 'top' | 'center' | 'middle' | 'bottom';
-        rippleColor?: Color | string;
+        rippleColor?: string;
         dynamicElevationOffset?: string | number;
         elevation?: string | number;
     }
@@ -110,6 +111,8 @@ declare namespace svelteNative.JSX {
         lineBreak?: string;
         html?: string;
         selectable?: boolean;
+        onlinkTap?;
+        'on:linkTap'?;
     }
 }
 

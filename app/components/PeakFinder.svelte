@@ -35,10 +35,10 @@
     let bottomSheetStepIndex = 0;
 
     const now = new Date();
-    let secondsInDay = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    const secondsInDay = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
     const SCROLL_VIEW_TAG_1 = 9721;
     const SCROLL_VIEW_TAG_2 = 9722;
-    let simultaneousHandlersTags = [];
+    const simultaneousHandlersTags = [];
     // let simultaneousHandlersTags = [SCROLL_VIEW_TAG_1, SCROLL_VIEW_TAG_2];
     let currentAltitude;
     let selectedPageIndex = 0;
@@ -92,7 +92,7 @@
 
         webview.once(AWebView.loadFinishedEvent, (args: LoadFinishedEventData) => {
             const startValues = {
-                terrarium: terrarium,
+                terrarium,
                 setPosition: { ...position, altitude: currentAltitude },
                 setAzimuth: bearing
             };
@@ -549,123 +549,116 @@
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <!-- svelte-ignore illegal-attribute-character -->
     <bottomsheet
-        on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)}
-        steps={[0, 300]}
-        stepIndex={bottomSheetStepIndex}
         panGestureOptions={{ failOffsetXEnd: 50, minDist: 150 }}
         {shouldPan}
-        android:marginBottom={$navigationBarHeight}
-    >
-        <gridlayout on:layoutChanged={onLayoutChanged} width="100%" height="100%">
+        stepIndex={bottomSheetStepIndex}
+        steps={[0, 300]}
+        on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)}
+        android:marginBottom={$navigationBarHeight}>
+        <gridlayout height="100%" width="100%" on:layoutChanged={onLayoutChanged}>
             <awebview
                 bind:this={webView}
-                on:loaded={webviewLoaded}
                 createWebViewClient={createCustomWebViewClient}
-                webRTC={true}
-                normalizeUrls={false}
+                debugMode={consoleEnabled}
+                displayZoomControls={false}
                 domStorage={true}
                 mediaPlaybackRequiresUserAction={false}
-                debugMode={consoleEnabled}
+                normalizeUrls={false}
                 webConsoleEnabled={consoleEnabled}
-                displayZoomControls={false}
+                webRTC={true}
+                on:loaded={webviewLoaded}
                 on:sensors={onSensorsToggle}
                 on:selected={onFeatureSelected}
                 on:position={onPositionChanged}
-                on:zoom={onZoomChanged}
-            />
+                on:zoom={onZoomChanged} />
             <slider
-                horizontalAlignment="left"
-                verticalAlignment="middle"
-                value={currentAltitude}
-                on:valueChange={(e) => (currentAltitude = e['value'])}
-                minValue={0}
-                maxValue={6000}
-                originX={0}
                 style={`transform: rotate(-90) translate(20,${sliderHeight * 0.5})`}
+                horizontalAlignment="left"
+                maxValue={6000}
+                minValue={0}
+                originX={0}
+                value={currentAltitude}
+                verticalAlignment="middle"
                 width={sliderHeight}
-            />
+                on:valueChange={(e) => (currentAltitude = e['value'])} />
 
             <gridlayout
-                marginBottom={50}
-                verticalAlignment="bottom"
-                horizontalAlignment="center"
-                columns="*,auto"
-                width="60%"
-                padding={5}
-                visibility={!!selectedItem ? 'visible' : 'hidden'}
                 backgroundColor="#4465be94"
                 borderRadius={20}
+                columns="*,auto"
                 height={40}
-            >
+                horizontalAlignment="center"
+                marginBottom={50}
+                padding={5}
+                verticalAlignment="bottom"
+                visibility={!!selectedItem ? 'visible' : 'hidden'}
+                width="60%">
                 <canvaslabel color="white" fontSize={13} paddingLeft={10} on:tap={(e) => callJSFunction('focusSelectedItem')}>
                     <cgroup verticalAlignment="middle" verticalTextAlignment="center">
                         <cspan fontWeight="bold" text={selectedItem && truncate(selectedItem.properties.name, 25)} />
                         <cspan text={selectedItem && ` ${selectedItem.properties.ele}m(${formatDistance(selectedItem.distance)})`} />
                     </cgroup>
                 </canvaslabel>
-                <mdbutton col={1} width={40} on:tap={(e) => callJSFunction('goToSelectedItem')} fontFamily={alpimapsFontFamily} variant="text" text="alpimaps-paper-plane" color="white" />
+                <mdbutton col={1} color="white" fontFamily={alpimapsFontFamily} text="alpimaps-paper-plane" variant="text" width={40} on:tap={(e) => callJSFunction('goToSelectedItem')} />
             </gridlayout>
-            <stacklayout verticalAlignment="bottom" horizontalAlignment="left" orientation="horizontal" marginLeft={5}>
-                <mdbutton color={primaryColor} on:tap={(e) => toggleSetting('mapMap')} class="small-floating-btn" text="mdi-map" />
-                <mdbutton color={primaryColor} on:tap={(e) => (listeningForHeading ? stopHeadingListener() : startHeadingListener())} class="small-floating-btn" text="mdi-compass" />
-                <mdbutton color={primaryColor} on:tap={(e) => (bottomSheetStepIndex = 1 - bottomSheetStepIndex)} class="small-floating-btn" text="mdi-cog" />
+            <stacklayout horizontalAlignment="left" marginLeft={5} orientation="horizontal" verticalAlignment="bottom">
+                <mdbutton class="small-floating-btn" color={primaryColor} text="mdi-map" on:tap={(e) => toggleSetting('mapMap')} />
+                <mdbutton class="small-floating-btn" color={primaryColor} text="mdi-compass" on:tap={(e) => (listeningForHeading ? stopHeadingListener() : startHeadingListener())} />
+                <mdbutton class="small-floating-btn" color={primaryColor} text="mdi-cog" on:tap={(e) => (bottomSheetStepIndex = 1 - bottomSheetStepIndex)} />
             </stacklayout>
-            <mdactivityindicator visibility={listeningForHeading ? 'visible' : 'hidden'} verticalAlignment="bottom" horizontalAlignment="right" busy={true} />
-            <label text={currentAltitude?.toFixed(0) + 'm'} horizontalAlignment="right" verticalAlignment="bottom" fontSize={12} color={darkMode ? textColorDark : textColorLight} paddingRight={10} />
+            <mdactivityindicator busy={true} horizontalAlignment="right" verticalAlignment="bottom" visibility={listeningForHeading ? 'visible' : 'hidden'} />
+            <label color={darkMode ? textColorDark : textColorLight} fontSize={12} horizontalAlignment="right" paddingRight={10} text={currentAltitude?.toFixed(0) + 'm'} verticalAlignment="bottom" />
             <label
-                visibility={!listeningForHeading || headingAccuracy >= 2 ? 'hidden' : 'visible'}
                 class="alpimaps"
-                text="alpimaps-compass-calibrate"
-                horizontalAlignment="right"
-                verticalAlignment="bottom"
                 fontSize={80}
+                horizontalAlignment="right"
                 marginBottom={100}
-            />
+                text="alpimaps-compass-calibrate"
+                verticalAlignment="bottom"
+                visibility={!listeningForHeading || headingAccuracy >= 2 ? 'hidden' : 'visible'} />
         </gridlayout>
-        <gridlayout prop:bottomSheet height={300} width="100%" rows="30,*" columns="*,*" backgroundColor={$widgetBackgroundColor} on:tap={() => {}}>
-            <mdbutton variant="text" class="mdi" fontSize={16} width={undefined} text="mdi-cog" on:tap={() => (selectedPageIndex = 0)} />
-            <mdbutton variant="text" col={1} class="mdi" fontSize={16} width={undefined} text="mdi-bug" on:tap={() => (selectedPageIndex = 1)} />
-            <pager colSpan={2} row={1} disableSwipe={false} selectedIndex={selectedPageIndex} on:selectedIndexChange={(e) => (selectedPageIndex = e['value'])}>
+        <gridlayout prop:bottomSheet backgroundColor={$widgetBackgroundColor} columns="*,*" height={300} rows="30,*" width="100%" on:tap={() => {}}>
+            <mdbutton class="mdi" fontSize={16} text="mdi-cog" variant="text" width={undefined} on:tap={() => (selectedPageIndex = 0)} />
+            <mdbutton class="mdi" col={1} fontSize={16} text="mdi-bug" variant="text" width={undefined} on:tap={() => (selectedPageIndex = 1)} />
+            <pager colSpan={2} disableSwipe={false} row={1} selectedIndex={selectedPageIndex} on:selectedIndexChange={(e) => (selectedPageIndex = e['value'])}>
                 <pageritem>
                     <!-- svelte-ignore illegal-attribute-character -->
-                    <collectionview bind:this={collectionView1} items={listView1Items} itemTemplateSelector={selectTemplate} {itemIdGenerator} android:marginBottom={$navigationBarHeight}>
-                        <Template let:item key="checkbox">
-                            <checkbox text={item.title} checked={item.value} on:checkedChange={(e) => onCheckBox(item, e.value)} />
+                    <collectionview bind:this={collectionView1} {itemIdGenerator} itemTemplateSelector={selectTemplate} items={listView1Items} android:marginBottom={$navigationBarHeight}>
+                        <Template key="checkbox" let:item>
+                            <checkbox checked={item.value} text={item.title} on:checkedChange={(e) => onCheckBox(item, e.value)} />
                         </Template>
-                        <Template let:item key="slider">
-                            <gridlayout rows="auto,*" columns="*,auto" orientation="horizontal" padding="0 10 0 10">
-                                <label text={item.title} colSpan={2} />
+                        <Template key="slider" let:item>
+                            <gridlayout columns="*,auto" orientation="horizontal" padding="0 10 0 10" rows="auto,*">
+                                <label colSpan={2} text={item.title} />
                                 <slider
-                                    row={1}
-                                    value={item.value * (item.decimalFactor || 1)}
-                                    minValue={item.min * (item.decimalFactor || 1)}
                                     maxValue={item.max * (item.decimalFactor || 1)}
+                                    minValue={item.min * (item.decimalFactor || 1)}
+                                    row={1}
                                     stepSize={item.stepSize}
-                                    on:valueChange={(e) => onSliderValue(listView1Items, item, e)}
-                                />
-                                <label text={itemValue(item)} row={1} col={1} on:tap={() => promptSliderValue(listView1Items, item)} />
+                                    value={item.value * (item.decimalFactor || 1)}
+                                    on:valueChange={(e) => onSliderValue(listView1Items, item, e)} />
+                                <label col={1} row={1} text={itemValue(item)} on:tap={() => promptSliderValue(listView1Items, item)} />
                             </gridlayout>
                         </Template>
                     </collectionview>
                 </pageritem>
                 <pageritem>
                     <!-- svelte-ignore illegal-attribute-character -->
-                    <collectionview bind:this={collectionView2} items={listView2Items} itemTemplateSelector={selectTemplate} {itemIdGenerator} android:marginBottom={$navigationBarHeight}>
-                        <Template let:item key="checkbox">
-                            <checkbox text={item.title} checked={item.value} on:checkedChange={(e) => onCheckBox(item, e.value)} />
+                    <collectionview bind:this={collectionView2} {itemIdGenerator} itemTemplateSelector={selectTemplate} items={listView2Items} android:marginBottom={$navigationBarHeight}>
+                        <Template key="checkbox" let:item>
+                            <checkbox checked={item.value} text={item.title} on:checkedChange={(e) => onCheckBox(item, e.value)} />
                         </Template>
-                        <Template let:item key="slider">
-                            <gridlayout rows="auto,*" columns="*,auto" orientation="horizontal" padding="0 10 0 10">
-                                <label text={item.title} colSpan={2} />
+                        <Template key="slider" let:item>
+                            <gridlayout columns="*,auto" orientation="horizontal" padding="0 10 0 10" rows="auto,*">
+                                <label colSpan={2} text={item.title} />
                                 <slider
-                                    row={1}
-                                    value={item.value * (item.decimalFactor || 1)}
-                                    minValue={item.min * (item.decimalFactor || 1)}
                                     maxValue={item.max * (item.decimalFactor || 1)}
+                                    minValue={item.min * (item.decimalFactor || 1)}
+                                    row={1}
                                     stepSize={item.stepSize || 0.1}
-                                    on:valueChange={(e) => onSliderValue(listView2Items, item, e)}
-                                />
-                                <label text={itemValue(item)} row={1} col={1} on:tap={() => promptSliderValue(listView2Items, item)} />
+                                    value={item.value * (item.decimalFactor || 1)}
+                                    on:valueChange={(e) => onSliderValue(listView2Items, item, e)} />
+                                <label col={1} row={1} text={itemValue(item)} on:tap={() => promptSliderValue(listView2Items, item)} />
                             </gridlayout>
                         </Template>
                     </collectionview>

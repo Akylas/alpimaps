@@ -4,7 +4,6 @@
     import { SearchRequest } from '@nativescript-community/ui-carto/search';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { ApplicationSettings, ObservableArray, Screen } from '@nativescript/core';
-    import { getJSON } from '@nativescript/core/http';
     import deburr from 'deburr';
     import type { Point } from 'geojson';
     import { createEventDispatcher } from 'svelte';
@@ -20,7 +19,6 @@
     import type { GeoResult } from '~/services/PackageService';
     import { packageService } from '~/services/PackageService';
     import { computeDistanceBetween } from '~/utils/geo';
-    import { queryString } from '~/utils/http';
     import { arraySortOn } from '~/utils/utils';
     import { subtitleColor, textColor } from '~/variables';
     import { HereFeature, PhotonFeature } from './Features';
@@ -107,7 +105,7 @@
                 return r;
             }),
             'distance'
-        ) as any as GeoResult[];
+        ) as GeoResult[];
     }
     async function searchInVectorTiles(enabled: boolean, options: SearchRequest) {
         if (!enabled) {
@@ -241,15 +239,15 @@
                             dataItems.push(item);
                         }
                     });
-                    searchResultsCount = dataItems ? dataItems.length : 0
+                    searchResultsCount = dataItems ? dataItems.length : 0;
                     // dataItems = dataItems.concat(items);
                 }
                 // updateFilteredDataItems(filteringOSMKey);
             }
-            let searchInTiles = ApplicationSettings.getBoolean('searchInTiles', true);
-            let searchInGeocoding = ApplicationSettings.getBoolean('searchInGeocoding', true);
-            let searchUsingHere = networkService.connected && ApplicationSettings.getBoolean('searchUsingHere', false);
-            let searchUsingPhoton = networkService.connected && ApplicationSettings.getBoolean('searchUsingPhoton', true);
+            const searchInTiles = ApplicationSettings.getBoolean('searchInTiles', true);
+            const searchInGeocoding = ApplicationSettings.getBoolean('searchInGeocoding', true);
+            const searchUsingHere = networkService.connected && ApplicationSettings.getBoolean('searchUsingHere', false);
+            const searchUsingPhoton = networkService.connected && ApplicationSettings.getBoolean('searchUsingPhoton', true);
             await Promise.all([
                 searchInGeocodingService(searchInGeocoding, options)
                     .then((r) => prepareItems(r, addItems))
@@ -286,23 +284,22 @@
     }
 </script>
 
-<collectionview rowHeight={52} items={dataItems} {...$$restProps}>
+<collectionview items={dataItems} rowHeight={52} {...$$restProps}>
     <Template let:item>
-        <canvaslabel columns="34,*" padding="0 10 0 10" rows="*,auto,auto,*" disableCss={true} color={$textColor} rippleColor={$textColor} on:tap={(event) => dispatch('tap', item)}>
-            <cspan text={item.icon} color={item.color} fontFamily="osm" fontSize={20} verticalAlignment="middle" />
-            <cgroup paddingLeft={34} paddingRight={34} verticalAlignment="middle" lineBreak="end">
-                <cspan text={item.title} fontSize={13} fontWeight="bold" />
-                <cspan text={!!item.subtitle ? '\n' + item.subtitle : null} color={$subtitleColor} fontSize={11} visibility={!!item.subtitle ? 'visible' : 'collapsed'} />
+        <canvaslabel color={$textColor} columns="34,*" disableCss={true} padding="0 10 0 10" rippleColor={$textColor} rows="*,auto,auto,*" on:tap={(event) => dispatch('tap', item)}>
+            <cspan color={item.color} fontFamily="osm" fontSize={20} text={item.icon} verticalAlignment="middle" />
+            <cgroup lineBreak="end" paddingLeft={34} paddingRight={34} verticalAlignment="middle">
+                <cspan fontSize={13} fontWeight="bold" text={item.title} />
+                <cspan color={$subtitleColor} fontSize={11} text={!!item.subtitle ? '\n' + item.subtitle : null} visibility={!!item.subtitle ? 'visible' : 'collapsed'} />
             </cgroup>
             <cspan
-                textAlignment="right"
-                verticalAlignment="top"
-                paddingTop={10}
-                text={item.distance && formatDistance(item.distance)}
                 color={$subtitleColor}
                 fontSize={12}
-                visibility={'distance' in item ? 'visible' : 'collapsed'}
-            />
+                paddingTop={10}
+                text={item.distance && formatDistance(item.distance)}
+                textAlignment="right"
+                verticalAlignment="top"
+                visibility={'distance' in item ? 'visible' : 'collapsed'} />
         </canvaslabel>
     </Template>
 </collectionview>
