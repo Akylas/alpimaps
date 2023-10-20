@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script context="module" lang="ts">
     import { widgetBackgroundColor } from '~/variables';
     import SettingsSlider from './SettingsSlider.svelte';
 </script>
@@ -17,5 +17,5 @@
 </script>
 
 <gridlayout>
-    <SettingsSlider borderRadius={4} {backgroundColor} margin={2} elevation={2} {icon} {title} {value} {min} {max} {step} {onChange} {formatter} {valueFormatter} />
+    <SettingsSlider {backgroundColor} borderRadius={4} elevation={2} {formatter} {icon} margin={2} {max} {min} {onChange} {step} {title} {value} {valueFormatter} />
 </gridlayout>

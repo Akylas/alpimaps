@@ -1,12 +1,9 @@
 <script lang="ts">
-    import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { CartoMap } from '@nativescript-community/ui-carto/ui';
     import { Screen } from '@nativescript/core/platform';
-    import { executeOnMainThread } from '@nativescript/core/utils';
     import { convertDistance } from '~/helpers/formatter';
     import { getMetersPerPixel } from '~/helpers/geolib';
     import { getMapContext } from '~/mapModules/MapModule';
-    import { TO_RAD } from '~/utils/geo';
 
     const mapContext = getMapContext();
 
@@ -46,7 +43,7 @@
     });
 </script>
 
-<canvaslabel {...$$restProps} id="scale" width={scaleWidth} height={15}>
-    <cspan fontSize={10} text={scaleText} fontWeight="bold" color="black" />
-    <line strokeWidth={3} color="black" startX={0} startY="100%" stopX="100%" stopY="100%" paddingBottom={3} />
+<canvaslabel {...$$restProps} id="scale" height={15} width={scaleWidth}>
+    <cspan color="black" fontSize={10} fontWeight="bold" text={scaleText} />
+    <line color="black" paddingBottom={3} startX={0} startY="100%" stopX="100%" stopY="100%" strokeWidth={3} />
 </canvaslabel>

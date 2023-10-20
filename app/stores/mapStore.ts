@@ -1,5 +1,6 @@
 import { getBoolean, getNumber, getString, setBoolean, setNumber, setString } from '@nativescript/core/application-settings';
 import { get, writable } from 'svelte/store';
+import { RoutesType } from '~/mapModules/CustomLayersModule';
 
 function settingsStore<T = any>(key, defaultValue: T) {
     const tpof = typeof defaultValue;
@@ -43,4 +44,4 @@ export const contourLinesOpacity = settingsStore('contourLinesOpacity', 1);
 export const preloading = settingsStore('preloading', true);
 export const rotateEnabled = settingsStore('mapRotateEnabled', false);
 export const pitchEnabled = settingsStore('mapPitchEnabled', false);
-export const routesType = settingsStore('routes_type', 0);
+export const routesType = settingsStore<RoutesType>('routes_type', 0);

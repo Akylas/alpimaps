@@ -1,13 +1,13 @@
-<script lang="ts" context="module">
+<script context="module" lang="ts">
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
     import { File, Utils } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
+    import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { lc } from '~/helpers/locale';
     import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
     import { actionBarButtonHeight, borderColor, backgroundColor as defaultBackgroundColor, mdiFontFamily, textColor } from '~/variables';
     import IconButton from './IconButton.svelte';
-    import { onDestroy } from 'svelte';
     export interface OptionType {
         name: string;
         isPick?: boolean;
@@ -73,46 +73,44 @@
     }
 </script>
 
-<gesturerootview {height} rows="auto,*" {backgroundColor} columns={`${width}`} {...$$restProps}>
+<gesturerootview {backgroundColor} columns={`${width}`} {height} rows="auto,*" {...$$restProps}>
     {#if showFilter}
-        <gridlayout margin="10 10 0 10" borderColor={$borderColor}>
+        <gridlayout borderColor={$borderColor} margin="10 10 0 10">
             <textfield
-                variant="outline"
-                padding="0 30 0 20"
+                autocapitalizationType="none"
+                backgroundColor="transparent"
+                height={actionBarButtonHeight}
                 hint={lc('search')}
+                padding="0 30 0 20"
                 placeholder={lc('search')}
                 returnKeyType="search"
-                on:returnPress={blurTextField}
-                height={actionBarButtonHeight}
                 text={filter}
-                on:textChange={(e) => (filter = e['value'])}
-                backgroundColor="transparent"
-                autocapitalizationType="none"
+                variant="outline"
                 verticalTextAlignment="center"
-            />
+                on:returnPress={blurTextField}
+                on:textChange={(e) => (filter = e['value'])} />
 
             <IconButton
-                gray={true}
-                isHidden={!filter || filter.length === 0}
                 col={1}
-                text="mdi-close"
-                on:tap={() => (filter = null)}
-                verticalAlignment="middle"
+                gray={true}
                 horizontalAlignment="right"
+                isHidden={!filter || filter.length === 0}
                 size={40}
-            />
+                text="mdi-close"
+                verticalAlignment="middle"
+                on:tap={() => (filter = null)} />
         </gridlayout>
     {/if}
-    <collectionView row={1} items={filteredOptions} {rowHeight} itemTemplateSelector={(item) => item.type || 'default'}>
-        <Template let:item key="checkbox">
-            <checkbox text={item.name} checked={item.value} on:checkedChange={(e) => onCheckBox(item, e.value)} />
+    <collectionView itemTemplateSelector={(item) => item.type || 'default'} items={filteredOptions} row={1} {rowHeight}>
+        <Template key="checkbox" let:item>
+            <checkbox checked={item.value} text={item.name} on:checkedChange={(e) => onCheckBox(item, e.value)} />
         </Template>
         <Template let:item>
-            <canvaslabel padding={16} color={item.color || $textColor} rippleColor={item.color || $textColor} on:tap={(event) => onTap(item, event)}>
-                <cspan verticalAlignment="middle" textAlignment="left" text={item.icon} fontSize={16} visibility={item.icon ? 'visible' : 'hidden'} fontFamily={mdiFontFamily} />
-                <cspan verticalAlignment="middle" textAlignment="left" text={item.name} {fontWeight} fontSize={16} paddingLeft={item.icon ? 30 : 0} />
+            <canvaslabel color={item.color || $textColor} padding={16} rippleColor={item.color || $textColor} on:tap={(event) => onTap(item, event)}>
+                <cspan fontFamily={mdiFontFamily} fontSize={16} text={item.icon} textAlignment="left" verticalAlignment="middle" visibility={item.icon ? 'visible' : 'hidden'} />
+                <cspan fontSize={16} {fontWeight} paddingLeft={item.icon ? 30 : 0} text={item.name} textAlignment="left" verticalAlignment="middle" />
                 {#if showBorders}
-                    <line height={1} color={$borderColor} strokeWidth={1} startX={0} verticalAlignment="bottom" startY={0} stopX="100%" stopY={0} />
+                    <line color={$borderColor} height={1} startX={0} startY={0} stopX="100%" stopY={0} strokeWidth={1} verticalAlignment="bottom" />
                 {/if}
             </canvaslabel>
         </Template>
