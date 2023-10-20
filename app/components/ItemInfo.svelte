@@ -1,7 +1,9 @@
 <script lang="ts">
+    import { openUrl } from '@akylas/nativescript/utils';
     import { Align, Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Color, LayoutBase, ObservableArray, View } from '@nativescript/core';
+    import { compose } from '@nativescript/email';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { convertElevation, getAddress, openingHoursText, osmicon } from '~/helpers/formatter';
@@ -9,16 +11,14 @@
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import { Item } from '~/models/Item';
+    import { networkService } from '~/services/NetworkService';
     import { showError } from '~/utils/error';
+    import { share } from '~/utils/share';
     import { openLink } from '~/utils/ui';
     import { actionBarButtonHeight, actionBarHeight, backgroundColor, borderColor, mdiFontFamily, textColor } from '~/variables';
     import IconButton from './IconButton.svelte';
-    import ListItem2 from './ListItem2.svelte';
-    import { openUrl } from '@akylas/nativescript/utils';
-    import { compose } from '@nativescript/email';
-    import { share } from '~/utils/share';
     import JsonViewer from './JSONViewer.svelte';
-    import { networkService } from '~/services/NetworkService';
+    import ListItem2 from './ListItem2.svelte';
     // import JSONViewer from '~/components/JSONViewer.svelte';
 
     export let item: Item;
@@ -251,12 +251,12 @@
 
     function onTopDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
         try {
-            let w = canvas.getWidth();
-            let h = canvas.getHeight();
+            const w = canvas.getWidth();
+            const h = canvas.getHeight();
             const iconsTop = 5;
             const iconsLeft = 34;
             topItemsToDraw.forEach((c, index) => {
-                let x = index * 75 + iconsLeft;
+                const x = index * 75 + iconsLeft;
                 const paint = c.paint || textIconPaint;
                 if (index > 0) {
                     const lineX = index * 70;
@@ -391,34 +391,33 @@
 <gesturerootview {height} rows="auto,auto,*" {...$$restProps} backgroundColor={$backgroundColor}>
     <gridlayout columns="auto,*,auto" rows={`${actionBarHeight}`} {...$$restProps} color={$textColor}>
         <!-- <label id="title" fontSize={40} text={itemIcon} fontFamily={itemIconFontFamily} verticalTextAlignment="center" /> -->
-        <IconButton text={osmicon(formatter.geItemIcon(item))} fontFamily="osm" />
+        <IconButton fontFamily="osm" text={osmicon(formatter.geItemIcon(item))} />
         <label id="title" col={1} fontSize={20} fontWeight="bold" text={formatter.getItemTitle(item) || ''} verticalTextAlignment="center" />
         <stacklayout col={2} orientation="horizontal">
-            <IconButton text="mdi-content-save-outline" color="white" isVisible={Object.keys(extraProps).length > 0} on:tap={() => saveItem()} />
-            <IconButton text="mdi-autorenew" color="white" isVisible={canRefresh} />
-            <mdactivityindicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapse'}  width={actionBarButtonHeight} height={actionBarButtonHeight}/>
+            <IconButton color="white" isVisible={Object.keys(extraProps).length > 0} text="mdi-content-save-outline" on:tap={() => saveItem()} />
+            <IconButton color="white" isVisible={canRefresh} text="mdi-autorenew" />
+            <mdactivityindicator busy={loading} height={actionBarButtonHeight} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapse'} width={actionBarButtonHeight} />
         </stacklayout>
     </gridlayout>
-    <canvas row={1} visibility={topItemsToDraw.length ? 'visible' : 'collapsed'} on:draw={onTopDraw} height={60} />
-    <collectionview row={2} {items} bind:this={collectionView} itemTemplateSelector={(item) => item.type || 'default'}>
-        <Template let:item key="json">
-            <JsonViewer jsonText={item.src} padding={10}  backgroundColor={$backgroundColor}/>
+    <canvas height={60} row={1} visibility={topItemsToDraw.length ? 'visible' : 'collapsed'} on:draw={onTopDraw} />
+    <collectionview bind:this={collectionView} itemTemplateSelector={(item) => item.type || 'default'} {items} row={2}>
+        <Template key="json" let:item>
+            <JsonViewer backgroundColor={$backgroundColor} jsonText={item.src} padding={10} />
         </Template>
         <Template let:item>
             <gridlayout on:tap={(e) => onItemTap(e, item)}>
-                <ListItem2 smallHeight={item.height || 70} height={item.expanded ? item.expandedHeight : item.height || 70} {...item} />
+                <ListItem2 height={item.expanded ? item.expandedHeight : item.height || 70} smallHeight={item.height || 70} {...item} />
                 <IconButton
                     id="rightButton"
-                    text={item.rightIcon || 'mdi-chevron-down'}
+                    horizontalAlignment="right"
+                    isVisible={!!item.rightIcon || !!item.expandable}
                     marginRight={10}
                     marginTop={15}
-                    size={40}
-                    horizontalAlignment="right"
-                    verticalAlignment="top"
                     rotate={item.expanded ? 180 : 0}
-                    isVisible={!!item.rightIcon || !!item.expandable}
-                    on:tap={(e) => onItemRightTap(e, item)}
-                />
+                    size={40}
+                    text={item.rightIcon || 'mdi-chevron-down'}
+                    verticalAlignment="top"
+                    on:tap={(e) => onItemRightTap(e, item)} />
             </gridlayout>
         </Template>
     </collectionview>

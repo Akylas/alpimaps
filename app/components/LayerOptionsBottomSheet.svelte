@@ -5,9 +5,8 @@
     import { Color, File } from '@nativescript/core';
     import { setNumber, setString } from '@nativescript/core/application-settings';
     import { onMount } from 'svelte';
-    import { Template } from 'svelte-native/components';
     import { formatSize } from '~/helpers/formatter';
-    import { l, lc } from '~/helpers/locale';
+    import { lc } from '~/helpers/locale';
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
     import { showError } from '~/utils/error';
@@ -33,7 +32,7 @@
     onMount(() => {
         const layer = item.layer;
         const opts = item.options || {};
-        let result = { ...item.options };
+        const result = { ...item.options };
 
         Object.keys(result).forEach((k) => {
             result[k].value = opts[k].transformBack ? opts[k].transformBack(layer[k]) : layer[k];
@@ -42,7 +41,7 @@
     });
     function optionValue(name) {
         if (options[name].type === 'color') {
-            return options[name].value as any;
+            return options[name].value ;
         }
         return Math.round(options[name].value * 100);
         // return Math.round(options * 100);
@@ -132,51 +131,51 @@
 </script>
 
 <gesturerootview {...$$restProps} height={240}>
-    <gridlayout rows="auto,*" columns="*,auto" backgroundColor={$backgroundColor}>
-        <label text={getTitle()} fontWeight="bold" padding="10 10 0 20" fontSize={20} colSpan={2} />
-        <scrollview row={1} bind:this={scrollView} id="scrollView">
+    <gridlayout backgroundColor={$backgroundColor} columns="*,auto" rows="auto,*">
+        <label colSpan={2} fontSize={20} fontWeight="bold" padding="10 10 0 20" text={getTitle()} />
+        <scrollview bind:this={scrollView} id="scrollView" row={1}>
             <stacklayout>
                 {#each Object.entries(options) as [name, option]}
                     {#if option.type === 'color'}
-                        <gridlayout height={50} columsn="*" on:tap={pickOptionColor(name, optionValue(name))}>
+                        <gridlayout columsn="*" height={50} on:tap={pickOptionColor(name, optionValue(name))}>
                             <canvaslabel fontSize={13} padding={10}>
-                                <cspan text={name} verticalAlignment="middle" paddingLeft={10} horizontalAlignment="left" width={100} />
-                                <circle strokeWidth={2} paintStyle="fill" fillColor={$textLightColor} radius={15} antiAlias={true} horizontalAlignment="right" verticalAlignment="middle" width={20} />
+                                <cspan horizontalAlignment="left" paddingLeft={10} text={name} verticalAlignment="middle" width={100} />
+                                <circle antiAlias={true} fillColor={$textLightColor} horizontalAlignment="right" paintStyle="fill" radius={15} strokeWidth={2} verticalAlignment="middle" width={20} />
                                 <circle
-                                    strokeWidth={2}
-                                    paintStyle="fill_and_stroke"
-                                    strokeColor={$textLightColor}
-                                    fillColor={optionValue(name)}
-                                    radius={15}
                                     antiAlias={true}
+                                    fillColor={optionValue(name)}
                                     horizontalAlignment="right"
+                                    paintStyle="fill_and_stroke"
+                                    radius={15}
+                                    strokeColor={$textLightColor}
+                                    strokeWidth={2}
                                     verticalAlignment="middle"
                                     width={20}
                                 />
                             </canvaslabel>
                         </gridlayout>
                     {:else}
-                        <gridlayout height={50} columns="100,*,30">
+                        <gridlayout columns="100,*,30" height={50}>
                             <canvaslabel colSpan={3} fontSize={13} padding={10}>
-                                <cspan text={name} verticalAlignment="middle" paddingLeft={10} horizontalAlignment="left" width={100} />
-                                <cspan text={optionValue(name) / 100 + ''} verticalAlignment="middle" textAlignment="right" />
+                                <cspan horizontalAlignment="left" paddingLeft={10} text={name} verticalAlignment="middle" width={100} />
+                                <cspan text={optionValue(name) / 100 + ''} textAlignment="right" verticalAlignment="middle" />
                             </canvaslabel>
                             <slider
                                 col={1}
                                 marginLeft={10}
                                 marginRight={10}
-                                value={optionValue(name)}
-                                on:valueChange={(event) => onOptionChanged(name, event)}
-                                minValue={option.min * 100}
                                 maxValue={option.max * 100}
+                                minValue={option.min * 100}
+                                value={optionValue(name)}
                                 verticalAlignment="middle"
+                                on:valueChange={(event) => onOptionChanged(name, event)}
                             />
                         </gridlayout>
                     {/if}
                 {/each}
             </stacklayout>
         </scrollview>
-        <stacklayout row={1} col={1} borderLeftColor={$borderColor} borderLeftWidth={1}>
+        <stacklayout borderLeftColor={$borderColor} borderLeftWidth={1} col={1} row={1}>
             <IconButton gray={true} isVisible={item.provider.cacheable !== false} text="mdi-clock-remove-outline" tooltip={lc('clear_cache')} on:tap={() => handleAction('clear_cache')} />
             <IconButton
                 gray={true}
