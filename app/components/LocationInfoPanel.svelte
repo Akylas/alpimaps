@@ -1,11 +1,10 @@
-<script lang="ts" context="module">
+<script context="module" lang="ts">
     import { getAirportPressureAtLocation, getAltitude, isSensorAvailable, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
     import type { CanvasLabel } from '@nativescript-community/ui-canvaslabel';
     import type { VectorElementEventData } from '@nativescript-community/ui-carto/layers/vector';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import type { ApplicationEventData, GridLayout } from '@nativescript/core';
     import { Application } from '@nativescript/core';
-    import { backgroundEvent, foregroundEvent } from '@nativescript/core/application';
     import { onDestroy, onMount } from 'svelte';
     import type { NativeViewElementNode } from 'svelte-native/dom';
     import type { GeoHandler, GeoLocation, UserLocationdEventData } from '~/handlers/GeoHandler';
@@ -24,7 +23,7 @@
     let firstCanvas: NativeViewElementNode<CanvasLabel>;
 
     let showLocationInfo = false;
-    let hasBarometer = isSensorAvailable('barometer');
+    const hasBarometer = isSensorAvailable('barometer');
     let listeningForBarometer = false;
     let referencePressure = null;
     let airportRefName: string = null;
@@ -84,12 +83,12 @@
     }
 
     onMount(() => {
-        Application.on(backgroundEvent, onAppPause);
-        Application.on(foregroundEvent, onAppResume);
+        Application.on(Application.backgroundEvent, onAppPause);
+        Application.on(Application.foregroundEvent, onAppResume);
     });
     onDestroy(() => {
-        Application.off(backgroundEvent, onAppPause);
-        Application.off(foregroundEvent, onAppResume);
+        Application.off(Application.backgroundEvent, onAppPause);
+        Application.off(Application.foregroundEvent, onAppResume);
     });
 
     onServiceLoaded((handler: GeoHandler) => {
@@ -195,7 +194,7 @@
         }
     }
     let wasListeningForBarometerBeforePause = false;
-    let dontListenForBarometerWhilePaused = true;
+    const dontListenForBarometerWhilePaused = true;
     function onAppResume(args: ApplicationEventData) {
         if (wasListeningForBarometerBeforePause) {
             startBarometerAltitudeUpdate();
@@ -211,7 +210,7 @@
         }
     }
     let loaded = false;
-    let loadedListeners = [];
+    const loadedListeners = [];
     async function loadView() {
         if (!loaded) {
             await new Promise((resolve) => {
@@ -231,41 +230,41 @@
     {...$$restProps}
     bind:this={gridLayout}
     id="locationInfo"
-    width={200}
-    visibility={showLocationInfo ? 'visible' : 'collapsed'}
-    height={70}
-    borderRadius={40}
     backgroundColor="#00000077"
-    padding={6}
+    borderRadius={40}
     columns="auto,*,auto"
+    height={70}
+    padding={6}
+    visibility={showLocationInfo ? 'visible' : 'collapsed'}
+    width={200}
     on:tap={moveToUserLocation}
     on:swipe={switchLocationInfo}
 >
     {#if loaded}
-        <canvaslabel bind:this={firstCanvas} width={60} height={60} borderRadius={30} borderWidth={4} borderColor={accentColor} backgroundColor="#000000aa" color="#fff">
+        <canvaslabel bind:this={firstCanvas} backgroundColor="#000000aa" borderColor={accentColor} borderRadius={30} borderWidth={4} color="#fff" height={60} width={60}>
             <cspan
-                text={currentLocation && currentLocation.speed !== undefined ? currentLocation.speed.toFixed() : ''}
                 fontSize={26}
                 fontWeight="bold"
+                paddingBottom={3}
+                text={currentLocation && currentLocation.speed !== undefined ? currentLocation.speed.toFixed() : ''}
                 textAlignment="center"
                 verticalAlignment="middle"
-                paddingBottom={3}
             />
-            <cspan text={'km/h'} fontSize={10} textAlignment="center" verticalAlignment="middle" paddingTop={12} />
+            <cspan fontSize={10} paddingTop={12} text={'km/h'} textAlignment="center" verticalAlignment="middle" />
         </canvaslabel>
-        <canvaslabel col={1} marginLeft={5} color="#fff">
-            <cspan text={lu('altitude') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'} fontSize={11} color={accentColor} verticalAlignment="top" />
+        <canvaslabel col={1} color="#fff" marginLeft={5}>
+            <cspan color={accentColor} fontSize={11} text={lu('altitude') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'} verticalAlignment="top" />
             <cgroup verticalAlignment="middle">
-                <cspan text={shownAltitude} fontSize={20} fontWeight="bold" />
-                <cspan text=" m" fontSize={12} />
+                <cspan fontSize={20} fontWeight="bold" text={shownAltitude} />
+                <cspan fontSize={12} text=" m" />
             </cgroup>
         </canvaslabel>
         <canvaslabel col={1} visibility={listeningForBarometer && airportRefName ? 'visible' : 'collapsed'}>
-            <cspan text={airportRefName} verticalAlignment="bottom" textAlignment="right" color="#fff" fontSize={9} />
+            <cspan color="#fff" fontSize={9} text={airportRefName} textAlignment="right" verticalAlignment="bottom" />
         </canvaslabel>
-        <stacklayout visibility={hasBarometer ? 'visible' : 'collapsed'} col={2} verticalAlignment="middle">
-            <IconButton small={true} white={true} text="mdi-gauge" on:tap={switchBarometer} />
-            <IconButton small={true} white={true} isVisible={listeningForBarometer} text="mdi-reflect-vertical" on:tap={getNearestAirportPressure} />
+        <stacklayout col={2} verticalAlignment="middle" visibility={hasBarometer ? 'visible' : 'collapsed'}>
+            <IconButton small={true} text="mdi-gauge" white={true} on:tap={switchBarometer} />
+            <IconButton isVisible={listeningForBarometer} small={true} text="mdi-reflect-vertical" white={true} on:tap={getNearestAirportPressure} />
         </stacklayout>
     {/if}
 </gridlayout>

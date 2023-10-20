@@ -1,13 +1,13 @@
-<script lang="ts" context="module">
+<script context="module" lang="ts">
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { accentColor, colorSecondary, mdiFontFamily, subtitleColor, textColor, widgetBackgroundColor } from '~/variables';
+    import { colorSecondary, mdiFontFamily, subtitleColor, textColor } from '~/variables';
     let iconPaint: Paint;
     let textPaint: Paint;
 </script>
 
 <script lang="ts">
-    import { primaryColor } from "~/variables";
+    import { primaryColor } from '~/variables';
 
     export let icon: string = null;
     export let title: string = null;
@@ -32,10 +32,10 @@
     }
     function onDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
         try {
-            let w = canvas.getWidth();
-            let h = canvas.getHeight();
+            const w = canvas.getWidth();
+            const h = canvas.getHeight();
             let leftPadding = 10;
-            let topPadding = 30;
+            const topPadding = 30;
             if (icon) {
                 if (!iconPaint) {
                     iconPaint = new Paint();
@@ -71,24 +71,33 @@
     }
 </script>
 
-<gridlayout {...$$restProps} height="auto" rows="auto,auto, auto" columns="auto,*,auto" padding="10 10 10 10">
+<gridlayout {...$$restProps} columns="auto,*,auto" height="auto" padding="10 10 10 10" rows="auto,auto, auto">
     <!-- <canvas bind:this={canvas} on:draw={onDraw} /> -->
 
-    <label visibility={icon ? 'visible' : 'collapsed'} color={$textColor} fontSize={24} text={icon} verticalTextAlignment="center" fontFamily={mdiFontFamily} />
-    <label color={$textColor} fontSize={15} text={title} textWrap={true} verticalTextAlignment="center" maxLines={2} lineBreak="end" col={1} padding="0 10 0 10" />
+    <label color={$textColor} fontFamily={mdiFontFamily} fontSize={24} text={icon} verticalTextAlignment="center" visibility={icon ? 'visible' : 'collapsed'} />
+    <label col={1} color={$textColor} fontSize={15} lineBreak="end" maxLines={2} padding="0 10 0 10" text={title} textWrap={true} verticalTextAlignment="center" />
     <label
-        row={1}
         col={1}
         color={$subtitleColor}
-        visibility={subtitle && subtitle.length > 0 ? 'visible' : 'collapsed'}
         fontSize={14}
+        lineBreak="end"
+        maxLines={2}
+        row={1}
         text={subtitle}
         verticalTextAlignment="center"
-        maxLines={2}
-        lineBreak="end"
-    />
-    <label color={$textColor} fontSize={15} text={valueFormatter(actualValue)} verticalTextAlignment="center" col={2} textAlignment="right" />
-    <label color={$textColor} fontSize={15} text={formatter(max)} verticalTextAlignment="center" row={2} col={2} textAlignment="right" />
-    <label color={$textColor} fontSize={15} text={formatter(min)} verticalTextAlignment="center" row={2} />
-    <slider row={2} col={1} value={actualValue} on:valueChange={onValueChange} minValue={min} maxValue={max} stepSize={step} verticalAlignment="bottom" color={actualValue === defaultValue ? colorSecondary : primaryColor} trackBackgroundColor="#aaaaaa88"/>
+        visibility={subtitle && subtitle.length > 0 ? 'visible' : 'collapsed'} />
+    <label col={2} color={$textColor} fontSize={15} text={valueFormatter(actualValue)} textAlignment="right" verticalTextAlignment="center" />
+    <label col={2} color={$textColor} fontSize={15} row={2} text={formatter(max)} textAlignment="right" verticalTextAlignment="center" />
+    <label color={$textColor} fontSize={15} row={2} text={formatter(min)} verticalTextAlignment="center" />
+    <slider
+        col={1}
+        color={actualValue === defaultValue ? colorSecondary : primaryColor}
+        maxValue={max}
+        minValue={min}
+        row={2}
+        stepSize={step}
+        trackBackgroundColor="#aaaaaa88"
+        value={actualValue}
+        verticalAlignment="bottom"
+        on:valueChange={onValueChange} />
 </gridlayout>
