@@ -11,14 +11,14 @@
     import { getThemeDisplayName, selectTheme } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
+    import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
     import { showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
+    import { ANDROID_30, getDefaultMBTilesDir, moveFileOrFolder } from '~/utils/utils';
+    import { getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, resetItemsDataFolder, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils.common';
     import { borderColor, mdiFontFamily, navigationBarHeight, subtitleColor } from '~/variables';
     import CActionBar from './CActionBar.svelte';
-    import { getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, resetItemsDataFolder, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils.common';
-    import { ANDROID_30, getDefaultMBTilesDir, moveFileOrFolder } from '~/utils/utils';
-    import { showError } from '~/utils/error';
 
     let collectionView: NativeViewElementNode<CollectionView>;
 
@@ -70,7 +70,7 @@
         }
     }
     function refresh() {
-        let newItems = [
+        const newItems = [
             {
                 id: 'language',
                 rightValue: getLocaleDisplayName,
@@ -167,7 +167,7 @@
         try {
             switch (command) {
                 case 'data_path': {
-                    let result = await confirm({
+                    const result = await confirm({
                         message: lc('reset_setting', item.title),
                         okButtonText: lc('ok'),
                         cancelButtonText: lc('cancel')
@@ -402,64 +402,60 @@
 
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*">
-        <collectionview bind:this={collectionView} row={1} {items} rowHeight={70} itemTemplateSelector={selectTemplate} android:paddingBottom={$navigationBarHeight}>
-            <Template let:item key="switch">
+        <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} rowHeight={70} android:paddingBottom={$navigationBarHeight}>
+            <Template key="switch" let:item>
                 <gridlayout columns="*,auto" padding="0 10 0 10">
                     <stacklayout verticalAlignment="middle">
-                        <label fontSize={17} text={getTitle(item)} verticalTextAlignment="top" maxLines={1} lineBreak="end" />
+                        <label fontSize={17} lineBreak="end" maxLines={1} text={getTitle(item)} verticalTextAlignment="top" />
                         <label
-                            visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'}
-                            fontSize={14}
                             color={$subtitleColor}
+                            fontSize={14}
+                            lineBreak="end"
+                            maxLines={2}
                             text={getSubtitle(item)}
                             verticalTextAlignment="top"
-                            maxLines={2}
-                            lineBreak="end"
-                        />
+                            visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'} />
                     </stacklayout>
-                    <switch col={1} checked={item.value} on:checkedChange={(e) => onCheckBox(item, e.value)} verticalAlignment="middle" />
-                    <absolutelayout colSpan={2} backgroundColor={$borderColor} height={1} verticalAlignment="bottom" />
+                    <switch checked={item.value} col={1} verticalAlignment="middle" on:checkedChange={(e) => onCheckBox(item, e.value)} />
+                    <absolutelayout backgroundColor={$borderColor} colSpan={2} height={1} verticalAlignment="bottom" />
                 </gridlayout>
             </Template>
             <Template let:item>
-                <gridlayout columns="auto,*,auto" class="textRipple" on:tap={(event) => onTap(item.id, item)} on:longPress={(event) => onLongPress(item.id, item)} on:touch={(e) => onTouch(item, e)}>
-                    <label fontSize={36} text={item.icon} marginLeft="-10" width={40} verticalAlignment="middle" fontFamily={mdiFontFamily} visibility={!!item.icon ? 'visible' : 'hidden'} />
-                    <stacklayout col={1} verticalAlignment="middle" marginLeft="10">
-                        <label fontSize={17} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" maxLines={1} lineBreak="end" />
+                <gridlayout class="textRipple" columns="auto,*,auto" on:tap={(event) => onTap(item.id, item)} on:longPress={(event) => onLongPress(item.id, item)} on:touch={(e) => onTouch(item, e)}>
+                    <label fontFamily={mdiFontFamily} fontSize={36} marginLeft="-10" text={item.icon} verticalAlignment="middle" visibility={!!item.icon ? 'visible' : 'hidden'} width={40} />
+                    <stacklayout col={1} marginLeft="10" verticalAlignment="middle">
+                        <label fontSize={17} lineBreak="end" maxLines={1} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" />
                         <label
-                            visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'}
-                            fontSize={14}
                             color={$subtitleColor}
+                            fontSize={14}
+                            lineBreak="end"
+                            maxLines={2}
                             text={getSubtitle(item)}
                             verticalTextAlignment="top"
-                            maxLines={2}
-                            lineBreak="end"
-                        />
+                            visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'} />
                     </stacklayout>
 
                     <label
                         col={2}
-                        visibility={!!item.rightValue ? 'visible' : 'collapsed'}
-                        text={item.rightValue && item.rightValue()}
                         color={$subtitleColor}
-                        verticalAlignment="middle"
-                        marginRight={16}
                         marginLeft={16}
-                    />
+                        marginRight={16}
+                        text={item.rightValue && item.rightValue()}
+                        verticalAlignment="middle"
+                        visibility={!!item.rightValue ? 'visible' : 'collapsed'} />
                     <label
-                        col={2}
-                        width={25}
-                        height={25}
-                        fontSize={30}
-                        horizontalAlignment="right"
-                        visibility={!!item.rightBtnIcon ? 'visible' : 'hidden'}
                         class="mdi"
+                        col={2}
                         color={$subtitleColor}
+                        fontSize={30}
+                        height={25}
+                        horizontalAlignment="right"
                         marginLeft={10}
                         marginRight={10}
                         text={item.rightBtnIcon}
-                    />
-                    <absolutelayout row={2} col={1} colSpan={3} backgroundColor={$borderColor} height={1} verticalAlignment="bottom" />
+                        visibility={!!item.rightBtnIcon ? 'visible' : 'hidden'}
+                        width={25} />
+                    <absolutelayout backgroundColor={$borderColor} col={1} colSpan={3} height={1} row={2} verticalAlignment="bottom" />
                 </gridlayout>
             </Template>
         </collectionview>

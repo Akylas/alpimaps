@@ -43,8 +43,8 @@
 
     function onDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
         try {
-            let w = canvas.getWidth();
-            let h = canvas.getHeight();
+            const w = canvas.getWidth();
+            const h = canvas.getHeight();
             const buttonsFontSize = fontSize || defaultFontSize;
             if (!iconPaint) {
                 iconPaint = new Paint();
@@ -123,20 +123,19 @@
             // console.log('onTouch', event.getX(), event.getY(), rippleX, rippleY);
         }
     }
-    let rippleX = 0;
-    let rippleY = 0;
+    const rippleX = 0;
+    const rippleY = 0;
 </script>
 
-<canvas bind:this={canvas} on:draw={onDraw} {width} {height} {...$$restProps} on:tap={() => {}} on:touch={onTouch} on:tap={onTap} on:longPress={onLongPress}>
+<canvas bind:this={canvas} {height} {width} on:draw={onDraw} {...$$restProps} on:tap={() => {}} on:touch={onTouch} on:tap={onTap} on:longPress={onLongPress}>
     <absolutelayout
         bind:this={ripple}
+        borderRadius="{buttonSize / 2}}"
+        height={buttonSize}
         horizontalAlignment="left"
-        verticalAlignment="top"
         marginLeft={rippleX}
         marginTop={rippleY}
-        width={buttonSize}
-        height={buttonSize}
         {rippleColor}
-        borderRadius="{buttonSize / 2}}"
-    />
+        verticalAlignment="top"
+        width={buttonSize} />
 </canvas>

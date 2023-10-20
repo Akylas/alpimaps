@@ -9,7 +9,7 @@
     import { Color, File, ObservableArray, Utils, View } from '@nativescript/core';
     import type { Point as GeoJSONPoint, Point } from 'geojson';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode, goBack, showModal } from 'svelte-native/dom';
+    import { NativeViewElementNode, goBack } from 'svelte-native/dom';
     import { osmicon } from '~/helpers/formatter';
     import { lc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
@@ -21,7 +21,6 @@
     import CActionBar from './CActionBar.svelte';
     import IconButton from './IconButton.svelte';
     import TagView from './TagView.svelte';
-    import { showBottomSheet } from '~/utils/svelte/bottomsheet';
 
     export let item: Item;
     let itemColor: Color;
@@ -113,7 +112,7 @@
                 layers = mapContext.getLayers('customLayers');
             }
             layers.forEach((l) => {
-                var prototype = Object.getPrototypeOf(l.layer);
+                const prototype = Object.getPrototypeOf(l.layer);
                 cartoMap.addLayer(new prototype.constructor(l.layer.options));
             });
 
@@ -164,7 +163,7 @@
                 let extent: [number, number, number, number] = item.properties.extent as any;
                 if (typeof extent === 'string') {
                     if (extent[0] !== '[') {
-                        extent = `[${extent}]` as any;
+                        extent = `[${extent as string}]` as any;
                     }
                     extent = JSON.parse(extent as any);
                 }
@@ -213,7 +212,7 @@
             const results = await showPopover({
                 // fullscreen: true,
                 // trackingScrollView: 'collectionView',
-                view: IconChooser ,
+                view: IconChooser,
                 vertPos: VerticalPosition.ALIGN_TOP,
                 horizPos: HorizontalPosition.ALIGN_LEFT,
                 anchor: event.object,
@@ -388,120 +387,114 @@
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*,auto,2.5*,auto" android:paddingBottom={$navigationBarHeight}>
         <CActionBar canGoBack title={lc('edit')}>
-            <IconButton text="mdi-playlist-plus" on:tap={addField} color="white" />
-            <IconButton text="mdi-web-sync" on:tap={fetchOSMDetails} color="white" isVisible={!itemIsRoute} />
+            <IconButton color="white" text="mdi-playlist-plus" on:tap={addField} />
+            <IconButton color="white" isVisible={!itemIsRoute} text="mdi-web-sync" on:tap={fetchOSMDetails} />
         </CActionBar>
         <cartomap row={1} zoom={16} on:mapReady={onMapReady} on:layoutChanged={onLayoutChanged} />
-        <canvaslabel row={1} fontSize={16} height={50} width={50} on:tap={pickOptionColor(itemColor)} horizontalAlignment="right" verticalAlignment="bottom">
-            <circle strokeWidth={2} paintStyle="fill" fillColor={$textLightColor} radius={15} antiAlias={true} horizontalAlignment="right" verticalAlignment="middle" width={20} />
+        <canvaslabel fontSize={16} height={50} horizontalAlignment="right" row={1} verticalAlignment="bottom" width={50} on:tap={pickOptionColor(itemColor)}>
+            <circle antiAlias={true} fillColor={$textLightColor} horizontalAlignment="right" paintStyle="fill" radius={15} strokeWidth={2} verticalAlignment="middle" width={20} />
             <circle
-                strokeWidth={2}
-                paintStyle="fill_and_stroke"
-                strokeColor={$textLightColor}
-                fillColor={itemColor}
-                radius={15}
                 antiAlias={true}
+                fillColor={itemColor}
                 horizontalAlignment="right"
+                paintStyle="fill_and_stroke"
+                radius={15}
+                strokeColor={$textLightColor}
+                strokeWidth={2}
                 verticalAlignment="middle"
-                width={20}
-            />
+                width={20} />
         </canvaslabel>
         {#if !itemIsRoute}
-            <gridlayout row={1} columns="auto,auto,auto" height={50} horizontalAlignment="left" verticalAlignment="bottom" margin={5}>
+            <gridlayout columns="auto,auto,auto" height={50} horizontalAlignment="left" margin={5} row={1} verticalAlignment="bottom">
                 <label
-                    visibility={itemUsingDefault ? 'collapse' : 'visible'}
-                    on:tap={setDefaultIcon}
-                    fontSize={22}
-                    borderRadius={4}
                     backgroundColor={$lightBackgroundColor}
-                    verticalAlignment="middle"
-                    textAlignment="center"
-                    padding={5}
-                    width={50}
-                    height={50}
-                    elevation={2}
-                    margin="0 4 0 4"
                     borderColor={$subtitleColor}
+                    borderRadius={4}
                     borderWidth={1}
+                    elevation={2}
+                    fontSize={22}
+                    height={50}
+                    margin="0 4 0 4"
+                    padding={5}
                     rippleColor={itemColor}
-                >
-                    <span text="mdi-map-marker" fontFamily={mdiFontFamily} color={itemColor} />
+                    textAlignment="center"
+                    verticalAlignment="middle"
+                    visibility={itemUsingDefault ? 'collapse' : 'visible'}
+                    width={50}
+                    on:tap={setDefaultIcon}>
+                    <span color={itemColor} fontFamily={mdiFontFamily} text="mdi-map-marker" />
                     <span fontSize={12} text={'\n' + lc('marker')} />
                 </label>
                 <label
-                    visibility={itemUsingOsm ? 'collapse' : 'visible'}
-                    fontSize={20}
-                    on:tap={setOSMIcon}
-                    borderRadius={4}
                     backgroundColor={$lightBackgroundColor}
-                    col={1}
-                    verticalAlignment="middle"
-                    textAlignment="center"
-                    padding={5}
-                    width={50}
-                    height={50}
-                    elevation={2}
-                    margin="0 4 0 4"
                     borderColor={$subtitleColor}
+                    borderRadius={4}
                     borderWidth={1}
+                    col={1}
+                    elevation={2}
+                    fontSize={20}
+                    height={50}
+                    margin="0 4 0 4"
+                    padding={5}
                     rippleColor={itemColor}
-                >
-                    <span text={osmIcon} fontFamily="osm" color={itemColor} />
+                    textAlignment="center"
+                    verticalAlignment="middle"
+                    visibility={itemUsingOsm ? 'collapse' : 'visible'}
+                    width={50}
+                    on:tap={setOSMIcon}>
+                    <span color={itemColor} fontFamily="osm" text={osmIcon} />
                     <span fontSize={12} text={'\n' + lc('osm')} />
                 </label>
                 <label
-                    on:tap={selectCustomIcon}
-                    fontSize={itemUsingMdi ? 22 : 18}
-                    borderRadius={4}
                     backgroundColor={$lightBackgroundColor}
+                    borderColor={$subtitleColor}
+                    borderRadius={4}
+                    borderWidth={1}
                     col={2}
-                    verticalAlignment="middle"
-                    textAlignment="center"
-                    padding={5}
-                    width={50}
+                    elevation={2}
+                    fontSize={itemUsingMdi ? 22 : 18}
                     height={50}
                     margin="0 4 0 4"
-                    borderColor={$subtitleColor}
-                    borderWidth={1}
-                    elevation={2}
+                    padding={5}
                     rippleColor={itemColor}
-                >
-                    <span text={itemIcon} fontFamily={itemIconFontFamily} color={itemColor} />
+                    textAlignment="center"
+                    verticalAlignment="middle"
+                    width={50}
+                    on:tap={selectCustomIcon}>
+                    <span color={itemColor} fontFamily={itemIconFontFamily} text={itemIcon} />
                     <span fontSize={12} text={'\n' + lc('custom')} />
                 </label>
             </gridlayout>
         {/if}
-        <collectionview row={3} {items} bind:this={collectionView} itemTemplateSelector={(item) => item.type || 'textfield'}>
+        <collectionview bind:this={collectionView} itemTemplateSelector={(item) => item.type || 'textfield'} {items} row={3}>
             <Template key="taggroup" let:item>
-                <TagView showDefaultGroups={false} padding="5 10 0 10" on:groupSelected={onTagViewSelectedGroup} topGroup={item.groups?.[0]} />
+                <TagView padding="5 10 0 10" showDefaultGroups={false} topGroup={item.groups?.[0]} on:groupSelected={onTagViewSelectedGroup} />
             </Template>
             <Template key="textfield" let:item>
                 <gridlayout padding="10 10 0 10">
                     <textfield
-                        variant="outline"
+                        editable={item.editable ?? true}
                         hint={item.name}
                         placeholder={item.name}
                         returnKeyType="done"
                         text={item.value}
-                        editable={item.editable ?? true}
+                        variant="outline"
                         on:returnPress={blurTextField}
                         on:textChange={(e) => onItemTextChange(item, e)}
-                        on:tap={(e) => item.onTap?.(item, e)}
-                    />
+                        on:tap={(e) => item.onTap?.(item, e)} />
                 </gridlayout>
             </Template>
             <Template key="textview" let:item>
                 <gridlayout padding="10 10 0 10">
                     <textview
                         height={item.height || 150}
-                        variant="outline"
                         hint={item.name}
                         placeholder={item.name}
                         returnKeyType="done"
-                        on:returnPress={blurTextField}
                         text={item.value}
-                        on:textChange={(e) => onItemTextChange(item, e)}
-                    />
+                        variant="outline"
+                        on:returnPress={blurTextField}
+                        on:textChange={(e) => onItemTextChange(item, e)} />
                 </gridlayout>
             </Template>
         </collectionview>
@@ -542,18 +535,17 @@
             </stacklayout>
         </scrollview> -->
 
-        <gridlayout row={4} marginBottom={5} columns="*,*">
-            <mdbutton on:tap={(e) => updateItem()} text={lc('save')} isEnabled={Object.keys(updatedProperties).length > 0} />
+        <gridlayout columns="*,*" marginBottom={5} row={4}>
+            <mdbutton isEnabled={Object.keys(updatedProperties).length > 0} text={lc('save')} on:tap={(e) => updateItem()} />
             <mdbutton
-                variant="text"
                 col={1}
+                text={lc('cancel')}
+                variant="text"
                 on:tap={(e) => {
                     updatedProperties = {};
                     refreshItems();
                     updatePreview(false);
-                }}
-                text={lc('cancel')}
-            />
+                }} />
         </gridlayout>
     </gridlayout>
 </page>

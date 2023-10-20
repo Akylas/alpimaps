@@ -166,7 +166,7 @@ export const data: { [k: string]: Provider } = {
             'SCAN OACI': {
                 urlOptions: {
                     variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-OACI'
-                },
+                }
                 // sourceOptions: {
                 //     TMSScheme: true
                 // }

@@ -1,13 +1,12 @@
-<script lang="ts" context="module">
+<script context="module" lang="ts">
     import { createNativeAttributedString } from '@nativescript-community/text';
-    import { Utils } from '@nativescript/core';
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { Utils } from '@nativescript/core';
     import { createEventDispatcher } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { convertDurationSeconds, convertElevation, convertValueToUnit, openingHoursText, osmicon, UNITS } from '~/helpers/formatter';
+    import { UNITS, convertDurationSeconds, convertElevation, convertValueToUnit, openingHoursText, osmicon } from '~/helpers/formatter';
     import { onMapLanguageChanged } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
-    import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item, ItemProperties } from '~/models/Item';
     import { valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
     import { alpimapsFontFamily, mdiFontFamily, subtitleColor, textColor } from '~/variables';
@@ -60,7 +59,7 @@
         if (!it) {
             return;
         }
-        const title = formatter.getItemName(it, lang) ;
+        const title = formatter.getItemName(it, lang);
         itemTitle = formatter.getItemTitle(it, lang);
         itemSubtitle = formatter.getItemSubtitle(it, title);
     }
@@ -88,7 +87,7 @@
 
         showSymbol = itemIsRoute && (itemProps?.layer === 'route' || itemProps?.layer === 'routes');
         actualShowSymbol = showSymbol && (itemProps.symbol || itemProps.network);
-        let spans = [];
+        const spans = [];
 
         if (!itemIsRoute && itemProps?.hasOwnProperty('ele')) {
             spans.push(
@@ -195,7 +194,7 @@
             let options = item.route.costing_options;
             const profile = item.properties.route.type;
             options = options[profile] || options;
-            let spans2 = [];
+            const spans2 = [];
             Object.entries<number>(options).forEach((v) => {
                 const k = v[0];
                 if (valhallaSettingIcon[k] && v[1] > 0) {
@@ -228,10 +227,10 @@
             return;
         }
         try {
-            let paddingLeft = Utils.layout.toDeviceIndependentPixels(object.effectivePaddingLeft);
-            let paddingTop = Utils.layout.toDeviceIndependentPixels(object.effectivePaddingTop);
-            let w = canvas.getWidth() - paddingLeft - Utils.layout.toDeviceIndependentPixels(object.effectivePaddingRight);
-            let h = canvas.getHeight() - paddingTop - Utils.layout.toDeviceIndependentPixels(object.effectivePaddingBottom);
+            const paddingLeft = Utils.layout.toDeviceIndependentPixels(object.effectivePaddingLeft);
+            const paddingTop = Utils.layout.toDeviceIndependentPixels(object.effectivePaddingTop);
+            const w = canvas.getWidth() - paddingLeft - Utils.layout.toDeviceIndependentPixels(object.effectivePaddingRight);
+            const h = canvas.getHeight() - paddingTop - Utils.layout.toDeviceIndependentPixels(object.effectivePaddingBottom);
             if (onDraw) {
                 onDraw({ canvas, object });
             }
@@ -283,33 +282,31 @@
     }
 </script>
 
-<canvas bind:this={canvas} on:draw={onCanvasDraw} padding="4 10 2 10" {...$$restProps} on:tap on:longPress disableCss={true}>
+<canvas bind:this={canvas} padding="4 10 2 10" on:draw={onCanvasDraw} {...$$restProps} disableCss={true} on:tap on:longPress>
     <slot />
-    <flexlayout disableCss={true} {marginLeft} {marginTop} {marginBottom} flexDirection="column" marginRight={rightTextPadding}>
+    <flexlayout disableCss={true} flexDirection="column" {marginBottom} {marginLeft} marginRight={rightTextPadding} {marginTop}>
         <label
-            disableCss={true}
-            text={itemTitle}
-            fontWeight="bold"
-            color={$textColor}
-            fontSize={18}
             autoFontSize={true}
+            color={$textColor}
+            disableCss={true}
             flexGrow={1}
+            fontSize={18}
+            fontWeight="bold"
             maxFontSize={18}
-            verticalTextAlignment={titleVerticalTextAlignment || (itemSubtitle ? 'bottom' : 'middle')}
+            text={itemTitle}
             textWrap={true}
-        />
+            verticalTextAlignment={titleVerticalTextAlignment || (itemSubtitle ? 'bottom' : 'middle')} />
         {#if subtitleEnabled}
             <label
-                disableCss={true}
-                visibility={itemSubtitle ? 'visible' : 'collapsed'}
-                text={itemSubtitle}
                 color={$subtitleColor}
-                fontSize={13}
-                maxLines={2}
-                verticalTextAlignment="top"
+                disableCss={true}
                 flexGrow={1}
                 flexShrink={0}
-            />
+                fontSize={13}
+                maxLines={2}
+                text={itemSubtitle}
+                verticalTextAlignment="top"
+                visibility={itemSubtitle ? 'visible' : 'collapsed'} />
         {/if}
     </flexlayout>
     <slot name="above" />

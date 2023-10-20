@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script context="module" lang="ts">
     import { Align, Canvas, CanvasView, Paint, Path, Rect, Style } from '@nativescript-community/ui-canvas';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { lu } from '~/helpers/locale';
@@ -7,7 +7,7 @@
     function dialTicks(center: { x; y }, radius: number, tickLength: number, spacing: number, start: number = 0, end: number = 360, path: Path = new Path()): Path {
         path.reset();
         for (let angle = start; angle <= end; angle += spacing) {
-            if (angle == end && start == end) {
+            if (angle === end && start === end) {
                 continue;
             }
             const tickX = Math.cos(TO_RAD * angle);

@@ -100,8 +100,8 @@ export default class SymbolShape extends Shape {
                         textpaint.setTextSize(18);
                         canvas.drawText(text, left + width / 2, height / 2 + top + 7, textpaint);
                     } else {
-                        const delta = Math.min(Math.max(text.length - 3, 0),3 );
-                        const fontSize = 18 - 2* delta;
+                        const delta = Math.min(Math.max(text.length - 3, 0), 3);
+                        const fontSize = 18 - 2 * delta;
                         textpaint.setTextSize(fontSize);
 
                         const staticLayout = new StaticLayout(text, textpaint, width, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);

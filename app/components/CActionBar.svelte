@@ -22,7 +22,7 @@
 
     onMount(() => {
         // setTimeout(() => {
-            canGoBack = Frame.topmost() && (Frame.topmost().canGoBack() || !!Frame.topmost().currentEntry);
+        canGoBack = Frame.topmost() && (Frame.topmost().canGoBack() || !!Frame.topmost().currentEntry);
         // }, 0);
     });
     function onMenuIcon() {
@@ -48,8 +48,8 @@
     $: menuIconVisible = ((forceCanGoBack || canGoBack || modalWindow) && !disableBackButton) || showMenuIcon;
 </script>
 
-<gridlayout class="actionBar" columns="auto,*,auto" rows={`${height},auto`} {...$$restProps} color={color || $textColor} on:tap={() => {}} paddingTop={paddingTop}>
-    <label id="title" col={1} colSpan={3} class="actionBarTitle" textAlignment="left" visibility={!!title ? 'visible' : 'hidden'} text={title || ''} verticalTextAlignment="center" />
+<gridlayout class="actionBar" columns="auto,*,auto" {paddingTop} rows={`${height},auto`} {...$$restProps} color={color || $textColor} on:tap={() => {}}>
+    <label id="title" class="actionBarTitle" col={1} colSpan={3} text={title || ''} textAlignment="left" verticalTextAlignment="center" visibility={!!title ? 'visible' : 'hidden'} />
     <slot name="center" />
     <stacklayout orientation="horizontal">
         <slot name="left" />
@@ -59,7 +59,7 @@
         <slot />
     </stacklayout>
 
-    <stacklayout row={1} colSpan={3}>
+    <stacklayout colSpan={3} row={1}>
         <slot name="bottom" />
     </stacklayout>
 </gridlayout>

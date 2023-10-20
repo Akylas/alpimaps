@@ -1,12 +1,11 @@
 <svelte:options accessors />
 
 <script lang="ts">
-    import { lc } from '~/helpers/locale';
-    import { primaryColor } from '~/variables';
-    import MiniSearch from '~/utils/minisearch';
-    import { Group } from '~/models/Item';
-    import { getMapContext } from '~/mapModules/MapModule';
     import { createEventDispatcher, onMount } from 'svelte';
+    import { lc } from '~/helpers/locale';
+    import { getMapContext } from '~/mapModules/MapModule';
+    import { Group } from '~/models/Item';
+    import MiniSearch from '~/utils/minisearch';
 
     const dispatch = createEventDispatcher();
     let closeCallback: Function;
@@ -59,24 +58,23 @@
     }
 </script>
 
-<gesturerootview {...$$restProps} rows="auto,auto,auto,auto" {padding} on:layoutChanged={(e) => (closeCallback = e.object['bindingContext']?.closeCallback)}>
-    <mdbutton text={topGroup} height={30} margin="2" visibility={topGroup ? 'visible' : 'collapsed'} horizontalAlignment="left" />
+<gesturerootview {...$$restProps} {padding} rows="auto,auto,auto,auto" on:layoutChanged={(e) => (closeCallback = e.object['bindingContext']?.closeCallback)}>
+    <mdbutton height={30} horizontalAlignment="left" margin="2" text={topGroup} visibility={topGroup ? 'visible' : 'collapsed'} />
     <textfield
-        row={1}
-        variant="outline"
         autocapitalizationType="none"
         hint={lc('group')}
         placeholder={lc('group')}
         returnKeyType="done"
+        row={1}
         text={defaultGroup}
+        variant="outline"
         on:textChange={onTextChange}
-        on:returnPress={onKeyboardReturn}
-    />
+        on:returnPress={onKeyboardReturn} />
     {#if foundGroups.length > 0}
         <label row={2} text={lc('existing_groups')} />
-        <wraplayout row={3} margin={5}>
+        <wraplayout margin={5} row={3}>
             {#each foundGroups as group}
-                <mdbutton text={group.name} height={30} margin="2" on:tap={() => onGroupTap(group)} />
+                <mdbutton height={30} margin="2" text={group.name} on:tap={() => onGroupTap(group)} />
             {/each}
         </wraplayout>
     {/if}
