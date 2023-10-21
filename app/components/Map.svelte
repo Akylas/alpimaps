@@ -678,7 +678,7 @@
             didIgnoreAlreadySelected = false;
             if (isFeatureInteresting) {
                 const isCurrentItem = item === $selectedItem;
-                TEST_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons, JSON.stringify(item));
+                TEST_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons, new Error().stack);
                 if (setSelected && isCurrentItem && !item) {
                     unselectItem(false);
                 }
@@ -871,7 +871,7 @@
 
     export function zoomToItem({ item, zoom, minZoom, duration = 200, forceZoomOut = false }: { item: IItem; zoom?: number; minZoom?: number; duration?; forceZoomOut?: boolean }) {
         const viewPort = getMapViewPort();
-        DEV_LOG && console.log('zoomToItem', viewPort);
+        DEV_LOG && console.log('zoomToItem', viewPort, item.properties?.zoomBounds, item.properties?.extent, !!item.route, new Error().stack);
         // we ensure the viewPort is squared for the screen captured
         const screenBounds = {
             min: { x: viewPort.left, y: viewPort.top },
@@ -911,6 +911,7 @@
             const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
             cartoMap.setFocusPos(position, duration);
         }
+        DEV_LOG && console.log('zoomToItem done ');
     }
     export function unselectItem(updateBottomSheet = true) {
         TEST_LOG && console.log('unselectItem', updateBottomSheet, !!$selectedItem);
