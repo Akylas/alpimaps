@@ -485,9 +485,10 @@
             if (item.route) {
                 mapContext.mapModules.directionsPanel.cancel(false);
             }
-            mapContext.selectItem({ item, isFeatureInteresting: true, peek, preventZoom: false });
             if (item.route) {
                 itemsModule.takeItemPicture(item);
+            } else {
+                mapContext.selectItem({ item, isFeatureInteresting: true, peek, preventZoom: false });
             }
         } catch (err) {
             showError(err);
