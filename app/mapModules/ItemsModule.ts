@@ -457,7 +457,7 @@ export default class ItemsModule extends MapModule {
         return new Promise<void>((resolve) => {
             mapContext.onMapStable(async () => {
                 try {
-                    // console.log('takeItemPicture', 'onMapStable');
+                    DEV_LOG && console.log('takeItemPicture', 'onMapStable');
                     // const startTime = Date.now();
                     const viewPort = mapContext.getMapViewPort();
                     const image = await mapContext.getMap().captureRendering(true);
