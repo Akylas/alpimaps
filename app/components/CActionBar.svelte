@@ -30,7 +30,11 @@
             if (onGoBack) {
                 onGoBack();
             } else if (modalWindow) {
-                onClose ? onClose() : closeModal(undefined);
+                if (onClose) {
+                    onClose();
+                } else {
+                    closeModal(undefined);
+                }
             } else {
                 goBack();
             }
@@ -53,7 +57,7 @@
     <slot name="center" />
     <stacklayout orientation="horizontal">
         <slot name="left" />
-        <IconButton isVisible={menuIconVisible} text={menuIcon} on:tap={onMenuIcon} />
+        <IconButton color="white" isVisible={menuIconVisible} text={menuIcon} on:tap={onMenuIcon}/>
     </stacklayout>
     <stacklayout col={2} orientation="horizontal">
         <slot />
