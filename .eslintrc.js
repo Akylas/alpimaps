@@ -1,7 +1,7 @@
 const ignoreWarnings = ['a11y-no-onchange', 'a11y-label-has-associated-control', 'illegal-attribute-character'];
 module.exports = {
     globals: { gVars: true, SENTRY_DSN: true, SENTRY_PREFIX: true, PRODUCTION: true, OWM_KEY: true, __ANDROID__: true, __IOS__: true, LatLonKeys: true, DEV_LOG: true },
-    extends: ['plugin:prettier/recommended', 'plugin:@typescript-eslint/recommended-type-checked', 'plugin:svelte/recommended'],
+    extends: ['plugin:@typescript-eslint/recommended-type-checked', 'plugin:svelte/recommended', 'prettier'],
     env: {
         es6: true,
         node: true
@@ -10,20 +10,20 @@ module.exports = {
     parser: '@typescript-eslint/parser',
 
     parserOptions: {
-        ecmaVersion: 2021,
+        ecmaVersion: 2020,
         sourceType: 'module',
         project: 'tsconfig.eslint.json',
         extraFileExtensions: ['.svelte'],
         tsconfigRootDir: __dirname
     },
-    plugins: ['@typescript-eslint'],
+    plugins: ['prettier', '@typescript-eslint'],
     overrides: [
         {
             files: ['*.svelte'],
             parser: 'svelte-eslint-parser',
             parserOptions: {
                 sourceType: 'module',
-                ecmaVersion: 2021,
+                ecmaVersion: 2020,
                 parser: '@typescript-eslint/parser'
             },
             rules: {
@@ -52,12 +52,7 @@ module.exports = {
         }
     },
     rules: {
-        'prettier/prettier': [
-            'warn',
-            {
-                parser: 'typescript'
-            }
-        ],
+        'prettier/prettier': ['warn', {}],
         'no-duplicate-imports': 'off',
         '@typescript-eslint/no-unused-vars': 'off',
         '@typescript-eslint/no-unsafe-member-access': 'off',
