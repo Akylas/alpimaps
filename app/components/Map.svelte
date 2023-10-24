@@ -1797,20 +1797,27 @@
     function updateSideButtons() {
         sideButtons.find((b) => b.id === 'routes').visible = !!customLayersModule?.hasRoute;
         sideButtons.find((b) => b.id === 'slopes').visible = !!customLayersModule?.hasTerrain;
-        sideButtons.find((b) => b.id === 'contours').visible = !!customLayersModule?.hasLocalData;
+        // sideButtons.find((b) => b.id === 'contours').visible = !!customLayersModule?.hasLocalData;
         sideButtons = sideButtons;
     }
 
     $: {
         const newButtons: any[] = [
             {
-                text: 'mdi-bullseye',
-                id: 'contours',
-                tooltip: lc('show_contour_lines'),
-                isSelected: $showContourLines,
-                visible: !!customLayersModule?.hasLocalData,
-                onTap: () => showContourLines.set(!$showContourLines)
+                text: 'mdi-rotate-3d-variant',
+                id: 'map_rotation',
+                tooltip: lc('map_rotation'),
+                isSelected: $rotateEnabled,
+                onTap: () => rotateEnabled.set(!$rotateEnabled)
             },
+            // {
+            //     text: 'mdi-bullseye',
+            //     id: 'contours',
+            //     tooltip: lc('show_contour_lines'),
+            //     isSelected: $showContourLines,
+            //     visible: !!customLayersModule?.hasLocalData,
+            //     onTap: () => showContourLines.set(!$showContourLines)
+            // },
             {
                 text: 'mdi-signal',
                 id: 'slopes',
@@ -1828,11 +1835,11 @@
                 onTap: () => showRoutes.set(!$showRoutes),
                 onLongPress: selectShownRoutes
             },
-            {
-                text: 'mdi-speedometer',
-                tooltip: lc('speedometer'),
-                onTap: switchLocationInfo
-            },
+            // {
+            //     text: 'mdi-speedometer',
+            //     tooltip: lc('speedometer'),
+            //     onTap: switchLocationInfo
+            // },
             {
                 text: keepScreenAwake ? 'mdi-sleep' : 'mdi-sleep-off',
                 isSelected: keepScreenAwake,
