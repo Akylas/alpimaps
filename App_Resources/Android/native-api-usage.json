@@ -2,6 +2,7 @@
     "whitelist-plugins-usages": true,
     "whitelist": [
         "akylas.alpi.maps*:*",
+        "android.app:AlarmManager",
         "android.app:Notification",
         "android.app:NotificationChannel",
         "android.app:NotificationManager",

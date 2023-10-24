@@ -109,3 +109,6 @@ export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath:
         fileManager.copyItemAtPathToPathError(sourceLocationPath, targetLocationPath);
     }
 }
+export function restartApp() {
+    throw new Error('not possible on iOS');
+}
