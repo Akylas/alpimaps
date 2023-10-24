@@ -12,7 +12,7 @@
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
-    import { pitchEnabled, rotateEnabled, show3DBuildings, showGlobe } from '~/stores/mapStore';
+    import { pitchEnabled, rotateEnabled, show3DBuildings, showContourLines, showGlobe } from '~/stores/mapStore';
     import { showError } from '~/utils/error';
     import { closeBottomSheet, showBottomSheet } from '~/utils/svelte/bottomsheet';
     import { openLink } from '~/utils/ui';
@@ -223,9 +223,10 @@
             </collectionview>
             <stacklayout borderLeftColor={$borderColor} borderLeftWidth={1} col={1}>
                 <IconButton gray={true} text="mdi-plus" on:tap={addSource} />
+                <IconButton gray={true} isSelected={$showContourLines} isVisible={!!customLayers?.hasLocalData} text="mdi-bullseye" tooltip={lc('show_contour_lines')} on:tap={() => showContourLines.set(!$showContourLines)}/>
                 <IconButton gray={true} isSelected={$show3DBuildings} text="mdi-domain" tooltip={lc('buildings_3d')} on:tap={() => show3DBuildings.set(!$show3DBuildings)} />
                 <IconButton gray={true} isSelected={$showGlobe} text="mdi-globe-model" tooltip={lc('globe_mode')} on:tap={() => showGlobe.set(!$showGlobe)} />
-                <IconButton gray={true} isSelected={$rotateEnabled} text="mdi-rotate-3d-variant" tooltip={lc('map_rotation')} on:tap={() => rotateEnabled.set(!$rotateEnabled)} />
+                <!-- <IconButton gray={true} isSelected={$rotateEnabled} text="mdi-rotate-3d-variant" tooltip={lc('map_rotation')} on:tap={() => rotateEnabled.set(!$rotateEnabled)} /> -->
                 <IconButton gray={true} isSelected={$pitchEnabled} text="mdi-rotate-orbit" tooltip={lc('map_pitch')} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
                 <!-- <IconButton gray={true} isSelected={$preloading} tooltip={lc('preloading')} text="mdi-map-clock" on:tap={() => preloading.set(!$preloading)} /> -->
             </stacklayout>
