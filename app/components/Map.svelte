@@ -68,7 +68,7 @@
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
     const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'routes', 'transit', 'hillshade', 'items', 'directions', 'search', 'selection', 'userLocation'];
-    const KEEP_AWAKE_KEY = 'keepAwake';
+    const KEEP_AWAKE_KEY = '_keep_awake';
     let defaultLiveSync = global.__onLiveSync;
 
     let page: NativeViewElementNode<Page>;
@@ -481,7 +481,6 @@
     }
 
     function resetBearing() {
-        console.log('resetBearing');
         if (!cartoMap) {
             return;
         }
@@ -584,12 +583,6 @@
         if (!cartoMap) {
             return;
         }
-        // console.log('onMainMapMove', e.data);
-        // mapMoved = true;
-        // console.log('onMapMove');
-        // const bearing = cartoMap.bearing;
-        // console.log('onMapMove', bearing);
-        // currentMapRotation = Math.round(bearing * 100) / 100;
         mapContext.runOnModules('onMapMove', e);
         // executeOnMainThread(function () {
         currentMapRotation = Math.round(cartoMap.bearing * 100) / 100;
@@ -648,7 +641,7 @@
     }
 
     function setSelectedItem(item) {
-        DEV_LOG && console.log('setSelectedItem', item?.id);
+        // DEV_LOG && console.log('setSelectedItem', item?.id);
         $selectedItem = item;
     }
     async function selectItem({
@@ -692,6 +685,7 @@
                     const styleParameters = {};
                     if (props.id !== undefined) {
                         selectedId = props.id;
+                        selectedOSMId = undefined;
                         styleParameters['selected_osmid'] = '0';
                         if (typeof props.id === 'string') {
                             styleParameters['selected_id_str'] = selectedId;
@@ -703,10 +697,12 @@
                     } else if (route.osmid !== undefined) {
                         if (typeof route.osmid === 'string') {
                             selectedId = route.osmid;
+                            selectedOSMId = undefined;
                             styleParameters['selected_id_str'] = selectedId + '';
                             styleParameters['selected_osmid'] = '0';
                             styleParameters['selected_id'] = '0';
                         } else {
+                            selectedId = undefined;
                             selectedOSMId = route.osmid;
                             styleParameters['selected_osmid'] = selectedOSMId + '';
                             styleParameters['selected_id_str'] = '0';
@@ -760,9 +756,10 @@
                             }
                             if (selectedId !== undefined) {
                                 selectedId = undefined;
-                                styleParameters['selected_osmid'] = '0';
+                                // styleParameters['selected_osmid'] = '0';
                                 styleParameters['selected_id_str'] = '';
-                            }
+                                styleParameters['selected_id'] = '0';
+                        }
                         }
                         mapContext.innerDecoder.setJSONStyleParameters(styleParameters);
                     }
@@ -777,7 +774,7 @@
                                 const service = packageService.localOSMOfflineReverseGeocodingService;
                                 const geometry = item.geometry as GeoJSONPoint;
                                 const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-                                DEV_LOG && console.log('fetching addresses', !!service, position);
+                                // DEV_LOG && console.log('fetching addresses', !!service, position);
                                 if (service) {
                                     itemLoading = true;
                                     const radius = 200;
@@ -809,7 +806,7 @@
                                                 break;
                                             }
                                         }
-                                        DEV_LOG && console.log('fetched addresses', bestFind, $selectedItem.geometry === item.geometry);
+                                        // DEV_LOG && console.log('fetched addresses', bestFind, $selectedItem.geometry === item.geometry);
                                         if (bestFind && $selectedItem.geometry === item.geometry) {
                                             $selectedItem.properties.address = { ...bestFind.properties.address, name: null, ...(props.housenumber ? { houseNumber: props.housenumber } : {}) } as any;
                                             if (bestFind.properties.address.name && !$selectedItem.properties.name) {
@@ -914,7 +911,7 @@
         DEV_LOG && console.log('zoomToItem done ');
     }
     export function unselectItem(updateBottomSheet = true) {
-        TEST_LOG && console.log('unselectItem', updateBottomSheet, !!$selectedItem);
+        // TEST_LOG && console.log('unselectItem', updateBottomSheet, !!$selectedItem);
         if (!!$selectedItem) {
             // mapContext.mapDecoder.setStyleParameter('selected_id', '');
             setSelectedItem(null);
@@ -1082,7 +1079,7 @@
         }
         const { clickType, featureId, position, featureLayerName, featureData, featurePosition, featureGeometry, layer } = data;
 
-        TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, position, featurePosition, featureGeometry);
+        // TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, position, featurePosition, featureGeometry);
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data) as boolean;
         if (!handledByModules && clickType === ClickType.SINGLE) {
             // if (showClickedFeatures) {
@@ -1155,7 +1152,7 @@
                 featureLayerName === 'mountain_peak' ||
                 featureLayerName === 'housenumber' ||
                 (!!featureData.name && (featureData.class !== 'national_park' || cartoMap.zoom < 9) && (featureData.class !== 'protected_area' || cartoMap.zoom < 11) && !selectedRoutes);
-            DEV_LOG && console.log('isFeatureInteresting', featureLayerName, featureData.name, isFeatureInteresting);
+            // DEV_LOG && console.log('isFeatureInteresting', featureLayerName, featureData.name, isFeatureInteresting);
             if (isFeatureInteresting) {
                 ignoreNextMapClick = false;
                 selectedRoutes = null;
