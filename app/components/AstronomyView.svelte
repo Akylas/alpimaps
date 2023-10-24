@@ -1,5 +1,5 @@
-<script lang="ts" context="module">
-    import { getMoonIllumination, GetMoonIlluminationResult, getMoonPosition, getPosition, getTimes, GetTimesResult } from 'suncalc';
+<script context="module" lang="ts">
+    import { GetMoonIlluminationResult, GetTimesResult, getMoonIllumination, getMoonPosition, getPosition, getTimes } from 'suncalc';
     // import { moon, MoonPhase, MoonPosition, sun, SunPosition, SunTimes } from '@modern-dev/daylight/lib/es6';
     import { Align, Canvas, DashPathEffect, Paint, Style } from '@nativescript-community/ui-canvas';
     import { CanvasLabel } from '@nativescript-community/ui-canvaslabel/canvaslabel.common';
@@ -278,15 +278,15 @@
     }
 </script>
 
-<gridlayout height={500} rows="50,200,50,200" columns="*,*">
-    <mdbutton variant="text" class="icon-btn" text="mdi-chevron-left" horizontalAlignment="left" on:tap={() => updateStartTime(startTime.subtract(1, 'd'))} />
-    <label colSpan={2} text={startTime.format('LL')} textAlignment="center" verticalTextAlignment="center" on:tap={selectDate} fontSize={17} marginLeft={50} marginRight={50} />
-    <mdbutton col={1} variant="text" class="icon-btn" text="mdi-chevron-right" horizontalAlignment="right" on:tap={() => updateStartTime(startTime.add(1, 'd'))} />
-    <linechart row={1} colSpan={3} bind:this={chart} backgroundColor="#222222">
+<gridlayout columns="*,*" height={500} rows="50,200,50,200">
+    <mdbutton class="icon-btn" horizontalAlignment="left" text="mdi-chevron-left" variant="text" on:tap={() => updateStartTime(startTime.subtract(1, 'd'))} />
+    <label colSpan={2} fontSize={17} marginLeft={50} marginRight={50} text={startTime.format('LL')} textAlignment="center" verticalTextAlignment="center" on:tap={selectDate} />
+    <mdbutton class="icon-btn" col={1} horizontalAlignment="right" text="mdi-chevron-right" variant="text" on:tap={() => updateStartTime(startTime.add(1, 'd'))} />
+    <linechart bind:this={chart} backgroundColor="#222222" colSpan={3} row={1}>
         <rectangle fillColor="#a0caff" height="50%" width="100%" />
     </linechart>
     {#if sunTimes}
-        <canvaslabel bind:this={bottomLabel} row={2} colSpan={3} fontSize={18} padding="0 10 0 10" on:draw={drawMoonPosition}>
+        <canvaslabel bind:this={bottomLabel} colSpan={3} fontSize={18} padding="0 10 0 10" row={2} on:draw={drawMoonPosition}>
             <cgroup color="#ffa500" verticalAlignment="middle">
                 <cspan fontFamily={mdiFontFamily} text="mdi-weather-sunset-up" />
                 <cspan text={' ' + formatTime(sunTimes.sunriseEnd)} />
@@ -302,17 +302,17 @@
         </canvaslabel>
     {/if}
 
-    <CompassView row={3} {location} updateWithSensor={false} date={startTime} />
-    <canvaslabel row={3} col={1} fontSize={13} padding={10}>
+    <CompassView date={startTime} {location} row={3} updateWithSensor={false} />
+    <canvaslabel col={1} fontSize={13} padding={10} row={3}>
         <cgroup paddingTop={10}>
-            <cspan fontFamily={mdiFontFamily} text="mdi-weather-sunset-up" color="#ffa500" />
+            <cspan color="#ffa500" fontFamily={mdiFontFamily} text="mdi-weather-sunset-up" />
             <cspan text={lc('sunrise')} />
         </cgroup>
-        <cspan text={formatTime(sunTimes.sunriseEnd)} textAlignment="right" paddingTop={10} />
+        <cspan paddingTop={10} text={formatTime(sunTimes.sunriseEnd)} textAlignment="right" />
         <cgroup paddingTop={40}>
-            <cspan fontFamily={mdiFontFamily} text="mdi-weather-sunset-down" color="#ff7200" />
+            <cspan color="#ff7200" fontFamily={mdiFontFamily} text="mdi-weather-sunset-down" />
             <cspan text={lc('sunset')} />
         </cgroup>
-        <cspan text={formatTime(sunTimes.sunsetStart)} textAlignment="right" paddingTop={40} />
+        <cspan paddingTop={40} text={formatTime(sunTimes.sunsetStart)} textAlignment="right" />
     </canvaslabel>
 </gridlayout>
