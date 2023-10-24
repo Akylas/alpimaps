@@ -1,5 +1,5 @@
 export * from './utils.common';
-import { Application, ApplicationSettings, Color, Device, Folder, Frame, Utils, View, path } from '@nativescript/core';
+import { Application, ApplicationSettings, Color, Device, File, Folder, Frame, Utils, View, path } from '@nativescript/core';
 import { Dayjs } from 'dayjs';
 import { AndroidActivityResultEventData, AndroidApplication, getRootView } from '@nativescript/core/application';
 import { lc } from '@nativescript-community/l';
@@ -36,6 +36,10 @@ export async function askForManagePermission() {
 
 export async function getDefaultMBTilesDir() {
     let localMbtilesSource = getSavedMBTilesDir();
+    if (localMbtilesSource && !File.exists(localMbtilesSource)) {
+        localMbtilesSource = null;
+        setSavedMBTilesDir(null);
+    }
     // let localMbtilesSource = null;
     if (!ANDROID_30) {
         // storage permission is not needed
@@ -237,4 +241,14 @@ export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath:
         inStream.close();
         out.close();
     }
+}
+
+export function restartApp() {
+    const context = Utils.android.getApplicationContext();
+    const mStartActivity = new android.content.Intent(context, Application.android.startActivity.getClass());
+    const mPendingIntentId = 123456;
+    const mPendingIntent = android.app.PendingIntent.getActivity(context, mPendingIntentId, mStartActivity, android.app.PendingIntent.FLAG_CANCEL_CURRENT);
+    const mgr = context.getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager;
+    mgr.set(android.app.AlarmManager.RTC, java.lang.System.currentTimeMillis() + 500, mPendingIntent);
+    java.lang.System.exit(0);
 }

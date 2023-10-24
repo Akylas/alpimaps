@@ -1,9 +1,10 @@
 <script lang="ts">
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { pickFolder } from '@nativescript-community/ui-document-picker';
+    import { openFilePicker, pickFolder, saveFile } from '@nativescript-community/ui-document-picker';
     import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { ApplicationSettings, Folder, ObservableArray, Utils, path } from '@nativescript/core';
+    import { ApplicationSettings, File, Folder, ObservableArray, Utils, path } from '@nativescript/core';
+    import dayjs from 'dayjs';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
@@ -14,9 +15,9 @@
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
     import { showBottomSheet } from '~/utils/svelte/bottomsheet';
-    import { openLink } from '~/utils/ui';
+    import { hideLoading, openLink, showLoading } from '~/utils/ui';
     import { ANDROID_30, getDefaultMBTilesDir, moveFileOrFolder } from '~/utils/utils';
-    import { getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, resetItemsDataFolder, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils.common';
+    import { getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, resetItemsDataFolder, restartApp, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';
     import { borderColor, mdiFontFamily, navigationBarHeight, subtitleColor } from '~/variables';
     import CActionBar from './CActionBar.svelte';
 
@@ -120,6 +121,18 @@
                 rightBtnIcon: 'mdi-chevron-right',
                 title: lc('third_parties'),
                 description: lc('list_used_third_parties')
+            },
+            {
+                id: 'export_settings',
+                title: lc('export_settings'),
+                description: lc('export_settings_desc'),
+                rightBtnIcon: 'mdi-chevron-right'
+            },
+            {
+                id: 'import_settings',
+                title: lc('import_settings'),
+                description: lc('import_settings_desc'),
+                rightBtnIcon: 'mdi-chevron-right'
             }
         ];
 
@@ -232,6 +245,82 @@
     async function onTap(command, item?) {
         try {
             switch (command) {
+                case 'export_settings':
+                    //@ts-ignore
+                    const jsonStr = ApplicationSettings.getAllJSON();
+                    console.log('jsonStr', jsonStr);
+                    if (jsonStr) {
+                        await saveFile({
+                            name: `alpimaps_settings_${dayjs().format('YYYY-MM-DD')}.json`,
+                            data: jsonStr
+                        });
+                    }
+                    break;
+                case 'import_settings':
+                    const result = await openFilePicker({
+                        extensions: ['application/json'],
+                        multipleSelection: false,
+                        pickerMode: 0
+                    });
+                    const filePath = result.files[0];
+                    if (filePath && File.exists(filePath)) {
+                        showLoading();
+                        const json = JSON.parse(await File.fromPath(filePath).readText());
+                        //@ts-ignore
+                        const nativePref = ApplicationSettings.getNative();
+                        if (__ANDROID__) {
+                            const editor = (nativePref as android.content.SharedPreferences).edit();
+                            Object.keys(json).forEach((k) => {
+                                if (k.startsWith('_')) {
+                                    return;
+                                }
+                                const value = json[k];
+                                const type = typeof value;
+                                switch (type) {
+                                    case 'boolean':
+                                        editor.putBoolean(k, value);
+                                        break;
+                                    case 'number':
+                                        editor.putLong(k, java.lang.Double.doubleToRawLongBits(double(value)));
+                                        break;
+                                    case 'string':
+                                        editor.putString(k, value);
+                                        break;
+                                }
+                            });
+                            editor.apply();
+                        } else {
+                            const userDefaults = nativePref as NSUserDefaults;
+                            Object.keys(json).forEach((k) => {
+                                if (k.startsWith('_')) {
+                                    return;
+                                }
+                                const value = json[k];
+                                const type = typeof value;
+                                switch (type) {
+                                    case 'boolean':
+                                        userDefaults.setBoolForKey(value, k);
+                                        break;
+                                    case 'number':
+                                        userDefaults.setDoubleForKey(value, k);
+                                        break;
+                                    case 'string':
+                                        userDefaults.setObjectForKey(value, k);
+                                        break;
+                                }
+                            });
+                        }
+                        hideLoading();
+                        const result = await confirm({
+                            message: lc('restart_app'),
+                            okButtonText: lc('restart'),
+                            cancelButtonText: lc('later')
+                        });
+                        if (result) {
+                            restartApp();
+                        }
+                    }
+                    break;
                 case 'github':
                     openLink(GIT_URL);
                     break;
@@ -342,7 +431,7 @@
                             if (item.valueType === 'string') {
                                 ApplicationSettings.setString(item.key, result.text);
                             } else {
-                                ApplicationSettings.setNumber(item.key, parseInt(result.text));
+                                ApplicationSettings.setNumber(item.key, parseInt(result.text, 10));
                             }
                             updateItem(item);
                         }
@@ -382,6 +471,8 @@
             }
         } catch (err) {
             showError(err);
+        } finally {
+            hideLoading();
         }
     }
     onLanguageChanged(refresh);
