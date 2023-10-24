@@ -1,4 +1,4 @@
-import { Application, ApplicationSettings, Device, FileSystemEntity, Folder, Utils, knownFolders, path } from '@nativescript/core';
+import { Application, ApplicationSettings, Device, File, FileSystemEntity, Folder, Utils, knownFolders, path } from '@nativescript/core';
 
 let savedMBTilesDir = ApplicationSettings.getString('local_mbtiles_directory');
 
@@ -122,7 +122,7 @@ export function getAndroidRealPath(src: string) {
         const type = split[split.length - 2];
 
         if ('primary' === type) {
-            return android.os.Environment.getExternalStorageDirectory() + '/' + split[split.length - 1];
+            return android.os.Environment.getExternalStorageDirectory().getPath() + '/' + split[split.length - 1];
         } else {
             // if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
             //getExternalMediaDirs() added in API 21

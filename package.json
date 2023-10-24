@@ -173,6 +173,7 @@
     },
     "resolutions": {
         "@akylas/nativescript": "portal:../NativeScript/dist/packages/core",
-        "@nativescript-community/ui-carto": "portal:..//ui-carto/packages/ui-carto"
+        "@nativescript-community/ui-carto": "portal:..//ui-carto/packages/ui-carto",
+        "@nativescript-community/ui-document-picker": "portal:/home/mguillon/dev/nativescript/ui-document-picker/packages/ui-document-picker"
     }
 }
