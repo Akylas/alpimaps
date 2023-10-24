@@ -32,15 +32,15 @@
 
     when ([nuti::selected_id]=[id])::selected {
         back/line-color: white;
-        back/line-width: @bicycle_line_width + 8;
+        back/line-width: @bicycle_line_width + 5;
         back/line-join: round;
         back/line-cap: round;
-        back/line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
+        back/line-opacity: linear([view::zoom], (13, 1), (15, 0.5), (18, 0.3));
         line-join: miter;
         line-cap: round;
         line-color: @lineColor;
-        line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
-        line-width: @bicycle_line_width+ 2;
+        line-opacity: linear([view::zoom], (13, 1), (15, 0.5), (18, 0.3));
+        line-width: @bicycle_line_width + 2;
 
         [zoom>=14] {
             marker-placement: line;
@@ -51,7 +51,7 @@
             marker-height: 9;
             marker-spacing: 50;
             marker-fill: white;
-            marker-line-color: [style.color] ? [style.color] : #287bda;
+            marker-line-color: @lineColor;
         }
 
         // [class=pedestrian] {
