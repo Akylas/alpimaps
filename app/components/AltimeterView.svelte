@@ -18,7 +18,7 @@
 </script>
 
 <script lang="ts">
-    const ALT_REF_SETTING = 'altimeter_reference';
+    const ALT_REF_SETTING = '_altimeter_reference';
     let currentLocation: GeoLocation = null;
     let referencePressure = null;
     let referenceAltitude = null;
