@@ -623,7 +623,7 @@ LEFT JOIN  (
     }
     async function showItemMoreMenu(item: Item, event) {
         try {
-            const actions: any[] = [
+            const actions = [
                 {
                     icon: item.onMap ? 'mdi-eye-off' : 'mdi-eye',
                     name: !item.onMap ? lc('show') : lc('hide'),
@@ -649,7 +649,7 @@ LEFT JOIN  (
                 });
             }
             const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
-            const result = await showPopover<any>({
+            const result: (typeof actions)[0] = await showPopover({
                 vertPos: VerticalPosition.ALIGN_TOP,
                 horizPos: HorizontalPosition.ALIGN_LEFT,
                 view: OptionSelect,
