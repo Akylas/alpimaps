@@ -5,12 +5,12 @@
     import { navigate } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import CActionBar from '~/components/CActionBar.svelte';
+    import CActionBar from '~/components/common/CActionBar.svelte';
     import { lc } from '~/helpers/locale';
-    import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
+    import { onNetworkChanged } from '~/services/NetworkService';
     import { transitService } from '~/services/TransitService';
-    import { showError } from '~/utils/error';
-    import { mdiFontFamily, navigationBarHeight } from '~/variables';
+    import { NoNetworkError, showError } from '~/utils/error';
+    import { fonts, navigationBarHeight } from '~/variables';
 
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -63,8 +63,8 @@
     let textPaint: Paint;
     function drawItem(item, event: { canvas: Canvas; object: CanvasView }) {
         const canvas = event.canvas;
-        let w = canvas.getWidth();
-        let h = canvas.getHeight();
+        const w = canvas.getWidth();
+        const h = canvas.getHeight();
         if (!backgroundPaint) {
             backgroundPaint = new Paint();
         }
@@ -84,7 +84,7 @@
             textPaint.getTextBounds(text, 0, text.length, rect);
             const wantedFontSize = Math.min(30, Math.floor(((itemWidth - 10) / rect.width()) * 20));
             textPaint.setTextSize(wantedFontSize);
-            let staticLayout = new StaticLayout(text, textPaint, itemWidth, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
+            const staticLayout = new StaticLayout(text, textPaint, itemWidth, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
             const height = staticLayout.getHeight();
             // staticLayout = new StaticLayout(text, textPaint, itemWidth, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
             canvas.translate(x, y + itemWidth / 2 - height / 2);
@@ -101,7 +101,7 @@
         const line = item.items[index];
         try {
             const component = (await import('~/components/transit/TransitLineDetails.svelte')).default;
-            await navigate({ page: component, props: { line } });
+            navigate({ page: component, props: { line } });
         } catch (error) {
             showError(error);
         }
@@ -115,21 +115,21 @@
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatingTo={onNavigatingTo}>
-    <gridlayout rows="auto,*" on:layoutChanged={onLayoutChanged} >
-        <collectionview row={1} items={dataItems} android:marginBottom={$navigationBarHeight}>
+    <gridlayout rows="auto,*" on:layoutChanged={onLayoutChanged}>
+        <collectionview items={dataItems} row={1} android:marginBottom={$navigationBarHeight}>
             <Template let:item>
                 <stacklayout>
-                    <label fontSize={18} text={item.type} padding={10} />
+                    <label fontSize={18} padding={10} text={item.type} />
                     <canvaslabel height={getItemHeight(item)} on:draw={(event) => drawItem(item, event)} on:tap={(event) => onTap(item, event)} />
                 </stacklayout>
             </Template>
         </collectionview>
-        <mdactivityindicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} row={1} />
+        <mdactivityindicator busy={loading} row={1} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
         {#if noNetworkAndNoData}
-            <canvaslabel v- row={1}>
+            <canvaslabel row={1} v->
                 <cgroup textAlignment="center" verticalAlignment="middle">
-                    <cspan text="mdi-alert-circle-outline" fontSize={50} fontFamily={mdiFontFamily} />
-                    <cspan text={'\n' + lc('no_network')} fontSize={20} />
+                    <cspan fontFamily={$fonts.mdi} fontSize={50} text="mdi-alert-circle-outline" />
+                    <cspan fontSize={20} text={'\n' + lc('no_network')} />
                 </cgroup>
             </canvaslabel>
         {/if}

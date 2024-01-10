@@ -21,7 +21,7 @@ import { packageService } from '~/services/PackageService';
 import { preloading, showRoutes } from '~/stores/mapStore';
 import { showError } from '~/utils/error';
 import { toDegrees, toRadians } from '~/utils/geo';
-import { showBottomSheet } from '~/utils/svelte/bottomsheet';
+import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
 // eslint-disable-next-line no-duplicate-imports
 import { data as TileSourcesData } from '~/data/tilesources';
@@ -42,12 +42,12 @@ const mbTilesSourceGenerator = (s, minZoom) =>
 const DEFAULT_HILLSHADE_SHADER =
     'uniform vec4 u_shadowColor;\n \
 uniform vec4 u_highlightColor;\n \
-uniform vec4 u_accentColor;\n \
+uniform vec4 u_colorPrimary;\n \
 uniform vec3 u_lightDir;\n \
 vec4 applyLighting(lowp vec4 color, mediump vec3 normal, mediump vec3 surfaceNormal, mediump float intensity) {\n \
     mediump float lighting = max(0.0, dot(normal, u_lightDir));\n \
     mediump float accent = normal.z;\n \
-    lowp vec4 accent_color = (1.0 - accent) * u_accentColor * intensity;\n \
+    lowp vec4 accent_color = (1.0 - accent) * u_colorPrimary * intensity;\n \
     mediump float alpha = clamp(u_shadowColor.a*(1.0-lighting)+u_highlightColor.a*lighting, 0.0, 1.0);\n \
     lowp vec4 shade_color = vec4(mix(u_shadowColor.rgb, u_highlightColor.rgb, lighting), alpha);\n \
     return (accent_color * (1.0 - shade_color.a) + shade_color) * color * intensity;\n \
@@ -56,7 +56,7 @@ vec4 applyLighting(lowp vec4 color, mediump vec3 normal, mediump vec3 surfaceNor
 const SLOPE_HILLSHADE_SHADER =
     'uniform vec4 u_shadowColor; \n \
 uniform vec4 u_highlightColor; \n \
-uniform vec4 u_accentColor; \n \
+uniform vec4 u_colorPrimary; \n \
 uniform vec3 u_lightDir;  \n\
 vec4 applyLighting(lowp vec4 color, mediump vec3 normal, mediump vec3 surfaceNormal, mediump float intensity) { \n \
    mediump float lighting = max(0.0, dot(normal, u_lightDir)); \n \
@@ -97,7 +97,7 @@ const HILLSHADE_OPTIONS = {
     highlightColor: {
         type: 'color'
     },
-    accentColor: {
+    colorPrimary: {
         type: 'color'
     },
     shadowColor: {
@@ -668,7 +668,7 @@ export default class CustomLayersModule extends MapModule {
         super.onMapReady(mapView);
         (async () => {
             try {
-                if (!__DISABLE_OFFLINE__) {
+                if (!__DISABLE_OFFLINE__ && (!__ANDROID__ || !PLAY_STORE_BUILD)) {
                     const folderPath = await getDefaultMBTilesDir();
                     if (folderPath) {
                         await this.loadLocalMbtiles(folderPath);
@@ -1061,11 +1061,12 @@ export default class CustomLayersModule extends MapModule {
 
     async addSource() {
         await this.getSourcesLibrary();
-        const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
+        const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
         const results = await showBottomSheet({
             parent: null,
             view: OptionSelect,
             props: {
+                height: 400,
                 title: l('pick_source'),
                 showFilter: true,
                 options:

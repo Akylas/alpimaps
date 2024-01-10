@@ -8,21 +8,20 @@ import { Projection } from '@nativescript-community/ui-carto/projections';
 import { CartoMap, MapInteractionInfo } from '@nativescript-community/ui-carto/ui';
 import { DirAssetPackage, ZippedAssetPackage } from '@nativescript-community/ui-carto/utils';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
+import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
-import { Application, File, Folder, Frame, Page, knownFolders, path } from '@nativescript/core';
+import { Application, File, Frame, Page, knownFolders, path } from '@nativescript/core';
 import { executeOnMainThread } from '@nativescript/core/utils';
 import { navigate } from 'svelte-native';
 import { NativeViewElementNode } from 'svelte-native/dom';
-import type DirectionsPanel from '~/components/DirectionsPanel.svelte';
+import type DirectionsPanel from '~/components/directions/DirectionsPanel.svelte';
 import { GeoHandler } from '~/handlers/GeoHandler';
 import type CustomLayersModule from '~/mapModules/CustomLayersModule';
 import type ItemsModule from '~/mapModules/ItemsModule';
 import type UserLocationModule from '~/mapModules/UserLocationModule';
 import type { IItem } from '~/models/Item';
 import { getBGServiceInstance } from '~/services/BgService';
-import { showBottomSheet } from '~/utils/svelte/bottomsheet';
-import { listFolderFiles } from '~/utils/utils.common';
-import { createGlobalEventListener, globalObservable } from '~/variables';
+import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
 export interface IMapModule {
     onMapReady(mapView: CartoMap<LatLonKeys>);
     onMapDestroyed();
@@ -229,10 +228,10 @@ export async function handleMapAction(action: string, options?) {
             const module = mapContext.mapModule('userLocation');
             const location = module.lastUserLocation || options;
             if (!location) {
-                showSnack({ message: `${l('no_location_yet')}` });
+                showSnack({ message: `${l('no_location_yet')}`, view: Application.getRootView() });
                 return;
             }
-            const AstronomyView = (await import('~/components/AstronomyView.svelte')).default;
+            const AstronomyView = (await import('~/components/astronomy/AstronomyView.svelte')).default;
             await showBottomSheet({
                 parent,
                 view: AstronomyView,
@@ -247,7 +246,7 @@ export async function handleMapAction(action: string, options?) {
                 const module = mapContext.mapModule('userLocation');
                 const selected = mapContext.getSelectedItem();
                 const location = module.lastUserLocation || options;
-                const CompassView = (await import('~/components/CompassView.svelte')).default;
+                const CompassView = (await import('~/components/compass/CompassView.svelte')).default;
                 await showBottomSheet({
                     parent,
                     view: CompassView,
@@ -265,7 +264,7 @@ export async function handleMapAction(action: string, options?) {
         case 'gps_status':
             try {
                 await getBGServiceInstance().geoHandler.enableLocation();
-                const GpsStatusView = (await import('~/components/GpsStatusView.svelte')).default;
+                const GpsStatusView = (await import('~/components/gps/GpsStatusView.svelte')).default;
                 await showBottomSheet({
                     parent,
                     view: GpsStatusView
@@ -278,14 +277,14 @@ export async function handleMapAction(action: string, options?) {
             break;
         case 'altimeter':
             try {
-                const AltimeterView = (await import('~/components/AltimeterView.svelte')).default;
+                const AltimeterView = (await import('~/components/compass/AltimeterView.svelte')).default;
                 await showBottomSheet({ parent, view: AltimeterView });
             } catch (err) {
                 console.error('showAltimeter', err, err['stack']);
             }
             break;
         case 'settings':
-            const Settings = (await import('~/components/Settings.svelte')).default;
+            const Settings = (await import('~/components/settings/Settings.svelte')).default;
             navigate({ page: Settings });
 
             break;

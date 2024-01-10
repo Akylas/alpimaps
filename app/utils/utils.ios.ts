@@ -29,26 +29,10 @@ export async function getDefaultMBTilesDir() {
 }
 
 export function enableShowWhenLockedAndTurnScreenOn() {
-    // const activity = Application.android.startActivity as android.app.Activity;
-    // if (sdkVersion >= 27) {
-    //     activity.setShowWhenLocked(true);
-    //     // this.setTurnScreenOn(true);
-    // } else {
-    //     activity.getWindow().addFlags(
-    //         524288 // android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
-    //     );
-    // }
+    // NO OP on iOS
 }
 export function disableShowWhenLockedAndTurnScreenOn() {
-    // const activity = Application.android.startActivity as android.app.Activity;
-    // if (sdkVersion >= 27) {
-    //     activity.setShowWhenLocked(false);
-    //     // this.setTurnScreenOn(false);
-    // } else {
-    //     activity.getWindow().clearFlags(
-    //         524288 //android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
-    //     );
-    // }
+    // NO OP on iOS
 }
 
 export async function pickDate(currentDate: Dayjs) {
