@@ -1,22 +1,22 @@
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
             export class ActionMode {
-                public static class: java.lang.Class<com.skydoves.colorpickerview.ActionMode>;
-                public static ALWAYS: com.skydoves.colorpickerview.ActionMode;
-                public static LAST: com.skydoves.colorpickerview.ActionMode;
-                public static values(): androidNative.Array<com.skydoves.colorpickerview.ActionMode>;
-                public static valueOf(param0: string): com.skydoves.colorpickerview.ActionMode;
+                public static class: java.lang.Class<ActionMode>;
+                public static ALWAYS: ActionMode;
+                public static LAST: ActionMode;
+                public static values(): androidNative.Array<ActionMode>;
+                public static valueOf(param0: string): ActionMode;
             }
         }
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
             export class AlphaTileView {
-                public static class: java.lang.Class<com.skydoves.colorpickerview.AlphaTileView>;
+                public static class: java.lang.Class<AlphaTileView>;
                 public setBackgroundColor(param0: number): void;
                 public onDraw(param0: globalAndroid.graphics.Canvas): void;
                 public constructor(param0: globalAndroid.content.Context, param1: globalAndroid.util.AttributeSet);
@@ -30,11 +30,11 @@ declare module com {
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
             export class ColorEnvelope {
-                public static class: java.lang.Class<com.skydoves.colorpickerview.ColorEnvelope>;
+                public static class: java.lang.Class<ColorEnvelope>;
                 public getHexCode(): string;
                 public getColor(): number;
                 public getArgb(): androidNative.Array<number>;
@@ -44,11 +44,11 @@ declare module com {
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
             export class ColorHsvPalette {
-                public static class: java.lang.Class<com.skydoves.colorpickerview.ColorHsvPalette>;
+                public static class: java.lang.Class<ColorHsvPalette>;
                 public setColorFilter(param0: globalAndroid.graphics.ColorFilter): void;
                 public constructor(param0: globalAndroid.content.res.Resources, param1: globalAndroid.graphics.Bitmap);
                 public draw(param0: globalAndroid.graphics.Canvas): void;
@@ -59,80 +59,89 @@ declare module com {
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
             export class ColorPickerDialog {
-                public static class: java.lang.Class<com.skydoves.colorpickerview.ColorPickerDialog>;
+                public static class: java.lang.Class<ColorPickerDialog>;
                 public constructor(param0: globalAndroid.content.Context);
             }
-            export module ColorPickerDialog {
+            export namespace ColorPickerDialog {
                 export class Builder {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.ColorPickerDialog.Builder>;
-                    public setIcon(param0: globalAndroid.graphics.drawable.Drawable): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setNeutralButton(param0: string, param1: globalAndroid.content.DialogInterface.OnClickListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setPositiveButton(param0: number, param1: com.skydoves.colorpickerview.listeners.ColorPickerViewListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setMessage(param0: number): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setOnItemSelectedListener(param0: globalAndroid.widget.AdapterView.OnItemSelectedListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
+                    public static class: java.lang.Class<Builder>;
+                    public setIcon(param0: globalAndroid.graphics.drawable.Drawable): Builder;
+                    public setNeutralButton(param0: string, param1: globalAndroid.content.DialogInterface.OnClickListener): Builder;
+                    public setPositiveButton(param0: number, param1: listeners.ColorPickerViewListener): Builder;
+                    public setMessage(param0: number): Builder;
+                    public setOnItemSelectedListener(param0: globalAndroid.widget.AdapterView.OnItemSelectedListener): Builder;
                     public constructor(param0: globalAndroid.content.Context, param1: number);
-                    public getColorPickerView(): com.skydoves.colorpickerview.ColorPickerView;
-                    public setPreferenceName(param0: string): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setSingleChoiceItems(param0: globalAndroid.widget.ListAdapter, param1: number, param2: globalAndroid.content.DialogInterface.OnClickListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setView(param0: globalAndroid.view.View): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setCustomTitle(param0: globalAndroid.view.View): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setAdapter(param0: globalAndroid.widget.ListAdapter, param1: globalAndroid.content.DialogInterface.OnClickListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setCancelable(param0: boolean): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setOnDismissListener(param0: globalAndroid.content.DialogInterface.OnDismissListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setMultiChoiceItems(param0: androidNative.Array<string>, param1: androidNative.Array<boolean>, param2: globalAndroid.content.DialogInterface.OnMultiChoiceClickListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setView(param0: number): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setPositiveButton(param0: string, param1: globalAndroid.content.DialogInterface.OnClickListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setBottomSpace(param0: number): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public attachAlphaSlideBar(param0: boolean): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setCursor(param0: globalAndroid.database.Cursor, param1: globalAndroid.content.DialogInterface.OnClickListener, param2: string): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setMultiChoiceItems(param0: globalAndroid.database.Cursor, param1: string, param2: string, param3: globalAndroid.content.DialogInterface.OnMultiChoiceClickListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setSingleChoiceItems(param0: number, param1: number, param2: globalAndroid.content.DialogInterface.OnClickListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setOnCancelListener(param0: globalAndroid.content.DialogInterface.OnCancelListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setItems(param0: number, param1: globalAndroid.content.DialogInterface.OnClickListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setSingleChoiceItems(param0: globalAndroid.database.Cursor, param1: number, param2: string, param3: globalAndroid.content.DialogInterface.OnClickListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setSingleChoiceItems(param0: androidNative.Array<string>, param1: number, param2: globalAndroid.content.DialogInterface.OnClickListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setIcon(param0: number): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setTitle(param0: string): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setMultiChoiceItems(param0: number, param1: androidNative.Array<boolean>, param2: globalAndroid.content.DialogInterface.OnMultiChoiceClickListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setItems(param0: androidNative.Array<string>, param1: globalAndroid.content.DialogInterface.OnClickListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setPositiveButton(param0: number, param1: globalAndroid.content.DialogInterface.OnClickListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setNegativeButton(param0: number, param1: globalAndroid.content.DialogInterface.OnClickListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setColorPickerView(param0: com.skydoves.colorpickerview.ColorPickerView): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setNegativeButton(param0: string, param1: globalAndroid.content.DialogInterface.OnClickListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
+                    public getColorPickerView(): ColorPickerView;
+                    public setPreferenceName(param0: string): Builder;
+                    public setSingleChoiceItems(param0: globalAndroid.widget.ListAdapter, param1: number, param2: globalAndroid.content.DialogInterface.OnClickListener): Builder;
+                    public setView(param0: globalAndroid.view.View): Builder;
+                    public setCustomTitle(param0: globalAndroid.view.View): Builder;
+                    public setAdapter(param0: globalAndroid.widget.ListAdapter, param1: globalAndroid.content.DialogInterface.OnClickListener): Builder;
+                    public setCancelable(param0: boolean): Builder;
+                    public setOnDismissListener(param0: globalAndroid.content.DialogInterface.OnDismissListener): Builder;
+                    public setMultiChoiceItems(
+                        param0: androidNative.Array<string>,
+                        param1: androidNative.Array<boolean>,
+                        param2: globalAndroid.content.DialogInterface.OnMultiChoiceClickListener
+                    ): Builder;
+                    public setView(param0: number): Builder;
+                    public setPositiveButton(param0: string, param1: globalAndroid.content.DialogInterface.OnClickListener): Builder;
+                    public setBottomSpace(param0: number): Builder;
+                    public attachAlphaSlideBar(param0: boolean): Builder;
+                    public setCursor(param0: globalAndroid.database.Cursor, param1: globalAndroid.content.DialogInterface.OnClickListener, param2: string): Builder;
+                    public setMultiChoiceItems(
+                        param0: globalAndroid.database.Cursor,
+                        param1: string,
+                        param2: string,
+                        param3: globalAndroid.content.DialogInterface.OnMultiChoiceClickListener
+                    ): Builder;
+                    public setSingleChoiceItems(param0: number, param1: number, param2: globalAndroid.content.DialogInterface.OnClickListener): Builder;
+                    public setOnCancelListener(param0: globalAndroid.content.DialogInterface.OnCancelListener): Builder;
+                    public setItems(param0: number, param1: globalAndroid.content.DialogInterface.OnClickListener): Builder;
+                    public setSingleChoiceItems(param0: globalAndroid.database.Cursor, param1: number, param2: string, param3: globalAndroid.content.DialogInterface.OnClickListener): Builder;
+                    public setSingleChoiceItems(param0: androidNative.Array<string>, param1: number, param2: globalAndroid.content.DialogInterface.OnClickListener): Builder;
+                    public setIcon(param0: number): Builder;
+                    public setTitle(param0: string): Builder;
+                    public setMultiChoiceItems(param0: number, param1: androidNative.Array<boolean>, param2: globalAndroid.content.DialogInterface.OnMultiChoiceClickListener): Builder;
+                    public setItems(param0: androidNative.Array<string>, param1: globalAndroid.content.DialogInterface.OnClickListener): Builder;
+                    public setPositiveButton(param0: number, param1: globalAndroid.content.DialogInterface.OnClickListener): Builder;
+                    public setNegativeButton(param0: number, param1: globalAndroid.content.DialogInterface.OnClickListener): Builder;
+                    public setColorPickerView(param0: ColorPickerView): Builder;
+                    public setNegativeButton(param0: string, param1: globalAndroid.content.DialogInterface.OnClickListener): Builder;
                     public create(): androidx.appcompat.app.AlertDialog;
                     public constructor(param0: globalAndroid.content.Context);
-                    public setTitle(param0: number): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setMessage(param0: string): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setIconAttribute(param0: number): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setOnKeyListener(param0: globalAndroid.content.DialogInterface.OnKeyListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setNeutralButton(param0: number, param1: globalAndroid.content.DialogInterface.OnClickListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public setPositiveButton(param0: string, param1: com.skydoves.colorpickerview.listeners.ColorPickerViewListener): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
-                    public attachBrightnessSlideBar(param0: boolean): com.skydoves.colorpickerview.ColorPickerDialog.Builder;
+                    public setTitle(param0: number): Builder;
+                    public setMessage(param0: string): Builder;
+                    public setIconAttribute(param0: number): Builder;
+                    public setOnKeyListener(param0: globalAndroid.content.DialogInterface.OnKeyListener): Builder;
+                    public setNeutralButton(param0: number, param1: globalAndroid.content.DialogInterface.OnClickListener): Builder;
+                    public setPositiveButton(param0: string, param1: listeners.ColorPickerViewListener): Builder;
+                    public attachBrightnessSlideBar(param0: boolean): Builder;
                 }
             }
         }
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
             export class ColorPickerView {
-                public static class: java.lang.Class<com.skydoves.colorpickerview.ColorPickerView>;
-                public colorListener: com.skydoves.colorpickerview.listeners.ColorPickerViewListener;
-                public setColorListener(param0: com.skydoves.colorpickerview.listeners.ColorPickerViewListener): void;
+                public static class: java.lang.Class<ColorPickerView>;
+                public colorListener: listeners.ColorPickerViewListener;
+                public setColorListener(param0: listeners.ColorPickerViewListener): void;
                 public getColor(): number;
-                public getFlagView(): com.skydoves.colorpickerview.flag.FlagView;
+                public getFlagView(): flag.FlagView;
                 public constructor(param0: globalAndroid.content.Context, param1: globalAndroid.util.AttributeSet, param2: number);
                 public setSelectorDrawable(param0: globalAndroid.graphics.drawable.Drawable): void;
                 public getPreferenceName(): string;
                 public getColorFromBitmap(param0: number, param1: number): number;
                 public getSelector(): globalAndroid.widget.ImageView;
-                public attachAlphaSlider(param0: com.skydoves.colorpickerview.sliders.AlphaSlideBar): void;
+                public attachAlphaSlider(param0: sliders.AlphaSlideBar): void;
                 public getAlpha(): number;
                 public setEnabled(param0: boolean): void;
                 public constructor(param0: globalAndroid.content.Context, param1: globalAndroid.util.AttributeSet, param2: number, param3: number);
@@ -141,24 +150,24 @@ declare module com {
                 public setHsvPaletteDrawable(): void;
                 public setLifecycleOwner(param0: androidx.lifecycle.LifecycleOwner): void;
                 public setPreferenceName(param0: string): void;
-                public setFlagView(param0: com.skydoves.colorpickerview.flag.FlagView): void;
+                public setFlagView(param0: flag.FlagView): void;
                 public setDebounceDuration(param0: number): void;
                 public constructor(param0: globalAndroid.content.Context);
                 public isHuePalette(): boolean;
                 public getSelectorY(): number;
                 public getPureColor(): number;
                 public selectByHsvColorRes(param0: number): void;
-                public getColorEnvelope(): com.skydoves.colorpickerview.ColorEnvelope;
+                public getColorEnvelope(): ColorEnvelope;
                 public selectCenter(): void;
-                public getAlphaSlideBar(): com.skydoves.colorpickerview.sliders.AlphaSlideBar;
+                public getAlphaSlideBar(): sliders.AlphaSlideBar;
                 public setInitialColor(param0: number): void;
                 public constructor(param0: globalAndroid.content.Context, param1: globalAndroid.util.AttributeSet);
-                public onCreateByBuilder(param0: com.skydoves.colorpickerview.ColorPickerView.Builder): void;
+                public onCreateByBuilder(param0: ColorPickerView.Builder): void;
                 public setPureColor(param0: number): void;
                 public getSelectorX(): number;
                 public onTouchEvent(param0: globalAndroid.view.MotionEvent): boolean;
                 public moveSelectorPoint(param0: number, param1: number, param2: number): void;
-                public getActionMode(): com.skydoves.colorpickerview.ActionMode;
+                public getActionMode(): ActionMode;
                 public getSelectedPoint(): globalAndroid.graphics.Point;
                 public setSelectorPoint(param0: number, param1: number): void;
                 public setCoordinate(param0: number, param1: number): void;
@@ -166,46 +175,46 @@ declare module com {
                 public removeLifecycleOwner(param0: androidx.lifecycle.LifecycleOwner): void;
                 public onSizeChanged(param0: number, param1: number, param2: number, param3: number): void;
                 public setInitialColorRes(param0: number): void;
-                public getBrightnessSlider(): com.skydoves.colorpickerview.sliders.BrightnessSlideBar;
+                public getBrightnessSlider(): sliders.BrightnessSlideBar;
                 public onDestroy(): void;
                 public fireColorListener(param0: number, param1: boolean): void;
-                public setActionMode(param0: com.skydoves.colorpickerview.ActionMode): void;
-                public attachBrightnessSlider(param0: com.skydoves.colorpickerview.sliders.BrightnessSlideBar): void;
+                public setActionMode(param0: ActionMode): void;
+                public attachBrightnessSlider(param0: sliders.BrightnessSlideBar): void;
             }
-            export module ColorPickerView {
+            export namespace ColorPickerView {
                 export class Builder {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.ColorPickerView.Builder>;
-                    public setPaletteDrawable(param0: globalAndroid.graphics.drawable.Drawable): com.skydoves.colorpickerview.ColorPickerView.Builder;
-                    public setLifecycleOwner(param0: androidx.lifecycle.LifecycleOwner): com.skydoves.colorpickerview.ColorPickerView.Builder;
-                    public setDebounceDuration(param0: number): com.skydoves.colorpickerview.ColorPickerView.Builder;
-                    public setSelectorDrawable(param0: globalAndroid.graphics.drawable.Drawable): com.skydoves.colorpickerview.ColorPickerView.Builder;
-                    public setHeight(param0: number): com.skydoves.colorpickerview.ColorPickerView.Builder;
-                    public setFlagAlpha(param0: number): com.skydoves.colorpickerview.ColorPickerView.Builder;
-                    public setPreferenceName(param0: string): com.skydoves.colorpickerview.ColorPickerView.Builder;
+                    public static class: java.lang.Class<Builder>;
+                    public setPaletteDrawable(param0: globalAndroid.graphics.drawable.Drawable): Builder;
+                    public setLifecycleOwner(param0: androidx.lifecycle.LifecycleOwner): Builder;
+                    public setDebounceDuration(param0: number): Builder;
+                    public setSelectorDrawable(param0: globalAndroid.graphics.drawable.Drawable): Builder;
+                    public setHeight(param0: number): Builder;
+                    public setFlagAlpha(param0: number): Builder;
+                    public setPreferenceName(param0: string): Builder;
                     public constructor(param0: globalAndroid.content.Context);
-                    public setFlagView(param0: com.skydoves.colorpickerview.flag.FlagView): com.skydoves.colorpickerview.ColorPickerView.Builder;
-                    public setActionMode(param0: com.skydoves.colorpickerview.ActionMode): com.skydoves.colorpickerview.ColorPickerView.Builder;
-                    public setFlagIsFlipAble(param0: boolean): com.skydoves.colorpickerview.ColorPickerView.Builder;
-                    public setInitialColor(param0: number): com.skydoves.colorpickerview.ColorPickerView.Builder;
-                    public setSelectorAlpha(param0: number): com.skydoves.colorpickerview.ColorPickerView.Builder;
-                    public build(): com.skydoves.colorpickerview.ColorPickerView;
-                    public setInitialColorRes(param0: number): com.skydoves.colorpickerview.ColorPickerView.Builder;
-                    public setColorListener(param0: com.skydoves.colorpickerview.listeners.ColorPickerViewListener): com.skydoves.colorpickerview.ColorPickerView.Builder;
-                    public setWidth(param0: number): com.skydoves.colorpickerview.ColorPickerView.Builder;
-                    public setAlphaSlideBar(param0: com.skydoves.colorpickerview.sliders.AlphaSlideBar): com.skydoves.colorpickerview.ColorPickerView.Builder;
-                    public setBrightnessSlideBar(param0: com.skydoves.colorpickerview.sliders.BrightnessSlideBar): com.skydoves.colorpickerview.ColorPickerView.Builder;
-                    public setSelectorSize(param0: number): com.skydoves.colorpickerview.ColorPickerView.Builder;
+                    public setFlagView(param0: flag.FlagView): Builder;
+                    public setActionMode(param0: ActionMode): Builder;
+                    public setFlagIsFlipAble(param0: boolean): Builder;
+                    public setInitialColor(param0: number): Builder;
+                    public setSelectorAlpha(param0: number): Builder;
+                    public build(): ColorPickerView;
+                    public setInitialColorRes(param0: number): Builder;
+                    public setColorListener(param0: listeners.ColorPickerViewListener): Builder;
+                    public setWidth(param0: number): Builder;
+                    public setAlphaSlideBar(param0: sliders.AlphaSlideBar): Builder;
+                    public setBrightnessSlideBar(param0: sliders.BrightnessSlideBar): Builder;
+                    public setSelectorSize(param0: number): Builder;
                 }
             }
         }
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
             export class ColorUtils {
-                public static class: java.lang.Class<com.skydoves.colorpickerview.ColorUtils>;
+                public static class: java.lang.Class<ColorUtils>;
                 public static getHexCode(param0: number): string;
                 public static getColorARGB(param0: number): androidNative.Array<number>;
             }
@@ -213,27 +222,26 @@ declare module com {
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
             export class Dp {
-                public static class: java.lang.Class<com.skydoves.colorpickerview.Dp>;
+                public static class: java.lang.Class<Dp>;
                 /**
                  * Constructs a new instance of the com.skydoves.colorpickerview.Dp interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
                  */
-                public constructor(implementation: {
-                });
+                public constructor(implementation: {});
                 public constructor();
             }
         }
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
             export class FadeUtils {
-                public static class: java.lang.Class<com.skydoves.colorpickerview.FadeUtils>;
+                public static class: java.lang.Class<FadeUtils>;
                 public static fadeOut(param0: globalAndroid.view.View): void;
                 public static fadeIn(param0: globalAndroid.view.View): void;
                 public constructor();
@@ -242,26 +250,26 @@ declare module com {
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
             export class PointMapper {
-                public static class: java.lang.Class<com.skydoves.colorpickerview.PointMapper>;
-                public static getColorPoint(param0: com.skydoves.colorpickerview.ColorPickerView, param1: globalAndroid.graphics.Point): globalAndroid.graphics.Point;
+                public static class: java.lang.Class<PointMapper>;
+                public static getColorPoint(param0: ColorPickerView, param1: globalAndroid.graphics.Point): globalAndroid.graphics.Point;
             }
         }
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
             export class R {
-                public static class: java.lang.Class<com.skydoves.colorpickerview.R>;
+                public static class: java.lang.Class<R>;
             }
-            export module R {
+            export namespace R {
                 export class anim {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.R.anim>;
+                    public static class: java.lang.Class<anim>;
                     public static abc_fade_in: number;
                     public static abc_fade_out: number;
                     public static abc_grow_fade_in_from_bottom: number;
@@ -290,7 +298,7 @@ declare module com {
                     public static fade_out_colorpickerview_skydoves: number;
                 }
                 export class attr {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.R.attr>;
+                    public static class: java.lang.Class<attr>;
                     public static actionBarDivider: number;
                     public static actionBarItemBackground: number;
                     public static actionBarPopupTheme: number;
@@ -590,13 +598,13 @@ declare module com {
                     public static windowNoTitle: number;
                 }
                 export class bool {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.R.bool>;
+                    public static class: java.lang.Class<bool>;
                     public static abc_action_bar_embed_tabs: number;
                     public static abc_allow_stacked_button_bar: number;
                     public static abc_config_actionMenuItemAllCaps: number;
                 }
                 export class color {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.R.color>;
+                    public static class: java.lang.Class<color>;
                     public static abc_background_cache_hint_selector_material_dark: number;
                     public static abc_background_cache_hint_selector_material_light: number;
                     public static abc_btn_colored_borderless_text_material: number;
@@ -686,7 +694,7 @@ declare module com {
                     public static tooltip_background_light: number;
                 }
                 export class dimen {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.R.dimen>;
+                    public static class: java.lang.Class<dimen>;
                     public static abc_action_bar_content_inset_material: number;
                     public static abc_action_bar_content_inset_with_nav: number;
                     public static abc_action_bar_default_height_material: number;
@@ -806,7 +814,7 @@ declare module com {
                     public static tooltip_y_offset_touch: number;
                 }
                 export class drawable {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.R.drawable>;
+                    public static class: java.lang.Class<drawable>;
                     public static abc_ab_share_pack_mtrl_alpha: number;
                     public static abc_action_bar_item_background_material: number;
                     public static abc_btn_borderless_material: number;
@@ -920,7 +928,7 @@ declare module com {
                     public static wheel: number;
                 }
                 export class id {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.R.id>;
+                    public static class: java.lang.Class<id>;
                     public static accessibility_action_clickable_span: number;
                     public static accessibility_custom_action_0: number;
                     public static accessibility_custom_action_1: number;
@@ -1076,7 +1084,7 @@ declare module com {
                     public static wrap_content: number;
                 }
                 export class integer {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.R.integer>;
+                    public static class: java.lang.Class<integer>;
                     public static abc_config_activityDefaultDur: number;
                     public static abc_config_activityShortDur: number;
                     public static cancel_button_image_alpha: number;
@@ -1084,7 +1092,7 @@ declare module com {
                     public static status_bar_notification_info_maxnum: number;
                 }
                 export class interpolator {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.R.interpolator>;
+                    public static class: java.lang.Class<interpolator>;
                     public static btn_checkbox_checked_mtrl_animation_interpolator_0: number;
                     public static btn_checkbox_checked_mtrl_animation_interpolator_1: number;
                     public static btn_checkbox_unchecked_mtrl_animation_interpolator_0: number;
@@ -1094,7 +1102,7 @@ declare module com {
                     public static fast_out_slow_in: number;
                 }
                 export class layout {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.R.layout>;
+                    public static class: java.lang.Class<layout>;
                     public static abc_action_bar_title_item: number;
                     public static abc_action_bar_up_container: number;
                     public static abc_action_menu_item_layout: number;
@@ -1138,7 +1146,7 @@ declare module com {
                     public static support_simple_spinner_dropdown_item: number;
                 }
                 export class style {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.R.style>;
+                    public static class: java.lang.Class<style>;
                     public static AlertDialog_AppCompat: number;
                     public static AlertDialog_AppCompat_Light: number;
                     public static Animation_AppCompat_Dialog: number;
@@ -1491,7 +1499,7 @@ declare module com {
                     public static Widget_Compat_NotificationActionText: number;
                 }
                 export class styleable {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.R.styleable>;
+                    public static class: java.lang.Class<styleable>;
                     public static ActionBar: androidNative.Array<number>;
                     public static ActionBar_background: number;
                     public static ActionBar_backgroundSplit: number;
@@ -1982,73 +1990,73 @@ declare module com {
                     public static ViewStubCompat_android_id: number;
                     public static ViewStubCompat_android_inflatedId: number;
                     public static ViewStubCompat_android_layout: number;
-                    public static <clinit>(): void;
+                    public static<clinit>(): void;
                 }
             }
         }
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
             export class SizeUtils {
-                public static class: java.lang.Class<com.skydoves.colorpickerview.SizeUtils>;
+                public static class: java.lang.Class<SizeUtils>;
                 public static dp2Px(param0: globalAndroid.content.Context, param1: number): number;
             }
         }
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
-            export module databinding {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
+            export namespace databinding {
                 export class DialogColorpickerColorpickerviewSkydovesBinding {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.databinding.DialogColorpickerColorpickerviewSkydovesBinding>;
-                    public alphaSlideBar: com.skydoves.colorpickerview.sliders.AlphaSlideBar;
+                    public static class: java.lang.Class<DialogColorpickerColorpickerviewSkydovesBinding>;
+                    public alphaSlideBar: sliders.AlphaSlideBar;
                     public alphaSlideBarFrame: globalAndroid.widget.FrameLayout;
-                    public brightnessSlideBar: com.skydoves.colorpickerview.sliders.BrightnessSlideBar;
+                    public brightnessSlideBar: sliders.BrightnessSlideBar;
                     public brightnessSlideBarFrame: globalAndroid.widget.FrameLayout;
-                    public colorPickerView: com.skydoves.colorpickerview.ColorPickerView;
+                    public colorPickerView: ColorPickerView;
                     public colorPickerViewFrame: globalAndroid.widget.FrameLayout;
                     public spaceBottom: globalAndroid.widget.Space;
                     public getRoot(): globalAndroid.widget.ScrollView;
-                    public static inflate(param0: globalAndroid.view.LayoutInflater): com.skydoves.colorpickerview.databinding.DialogColorpickerColorpickerviewSkydovesBinding;
-                    public static inflate(param0: globalAndroid.view.LayoutInflater, param1: globalAndroid.view.ViewGroup, param2: boolean): com.skydoves.colorpickerview.databinding.DialogColorpickerColorpickerviewSkydovesBinding;
-                    public static bind(param0: globalAndroid.view.View): com.skydoves.colorpickerview.databinding.DialogColorpickerColorpickerviewSkydovesBinding;
+                    public static inflate(param0: globalAndroid.view.LayoutInflater): DialogColorpickerColorpickerviewSkydovesBinding;
+                    public static inflate(param0: globalAndroid.view.LayoutInflater, param1: globalAndroid.view.ViewGroup, param2: boolean): DialogColorpickerColorpickerviewSkydovesBinding;
+                    public static bind(param0: globalAndroid.view.View): DialogColorpickerColorpickerviewSkydovesBinding;
                 }
             }
         }
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
-            export module databinding {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
+            export namespace databinding {
                 export class FlagBubbleColorpickerviewSkydovesBinding {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.databinding.FlagBubbleColorpickerviewSkydovesBinding>;
+                    public static class: java.lang.Class<FlagBubbleColorpickerviewSkydovesBinding>;
                     public bubble: androidx.appcompat.widget.AppCompatImageView;
                     public layout: globalAndroid.widget.FrameLayout;
-                    public static inflate(param0: globalAndroid.view.LayoutInflater): com.skydoves.colorpickerview.databinding.FlagBubbleColorpickerviewSkydovesBinding;
-                    public static inflate(param0: globalAndroid.view.LayoutInflater, param1: globalAndroid.view.ViewGroup, param2: boolean): com.skydoves.colorpickerview.databinding.FlagBubbleColorpickerviewSkydovesBinding;
+                    public static inflate(param0: globalAndroid.view.LayoutInflater): FlagBubbleColorpickerviewSkydovesBinding;
+                    public static inflate(param0: globalAndroid.view.LayoutInflater, param1: globalAndroid.view.ViewGroup, param2: boolean): FlagBubbleColorpickerviewSkydovesBinding;
                     public getRoot(): globalAndroid.widget.FrameLayout;
-                    public static bind(param0: globalAndroid.view.View): com.skydoves.colorpickerview.databinding.FlagBubbleColorpickerviewSkydovesBinding;
+                    public static bind(param0: globalAndroid.view.View): FlagBubbleColorpickerviewSkydovesBinding;
                 }
             }
         }
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
-            export module flag {
-                export class BubbleFlag extends com.skydoves.colorpickerview.flag.FlagView {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.flag.BubbleFlag>;
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
+            export namespace flag {
+                export class BubbleFlag extends FlagView {
+                    public static class: java.lang.Class<BubbleFlag>;
                     public constructor(param0: globalAndroid.content.Context);
-                    public onRefresh(param0: com.skydoves.colorpickerview.ColorEnvelope): void;
+                    public onRefresh(param0: ColorEnvelope): void;
                     public constructor(param0: globalAndroid.content.Context, param1: number);
                 }
             }
@@ -2056,37 +2064,37 @@ declare module com {
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
-            export module flag {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
+            export namespace flag {
                 export class FlagMode {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.flag.FlagMode>;
-                    public static ALWAYS: com.skydoves.colorpickerview.flag.FlagMode;
-                    public static LAST: com.skydoves.colorpickerview.flag.FlagMode;
-                    public static FADE: com.skydoves.colorpickerview.flag.FlagMode;
-                    public static valueOf(param0: string): com.skydoves.colorpickerview.flag.FlagMode;
-                    public static values(): androidNative.Array<com.skydoves.colorpickerview.flag.FlagMode>;
+                    public static class: java.lang.Class<FlagMode>;
+                    public static ALWAYS: FlagMode;
+                    public static LAST: FlagMode;
+                    public static FADE: FlagMode;
+                    public static valueOf(param0: string): FlagMode;
+                    public static values(): androidNative.Array<FlagMode>;
                 }
             }
         }
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
-            export module flag {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
+            export namespace flag {
                 export abstract class FlagView {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.flag.FlagView>;
-                    public onRefresh(param0: com.skydoves.colorpickerview.ColorEnvelope): void;
+                    public static class: java.lang.Class<FlagView>;
+                    public onRefresh(param0: ColorEnvelope): void;
                     public visible(): void;
                     public receiveOnTouchEvent(param0: globalAndroid.view.MotionEvent): void;
                     public constructor(param0: globalAndroid.content.Context, param1: number);
                     public setFlipAble(param0: boolean): void;
-                    public getFlagMode(): com.skydoves.colorpickerview.flag.FlagMode;
+                    public getFlagMode(): FlagMode;
                     public isFlipAble(): boolean;
-                    public setFlagMode(param0: com.skydoves.colorpickerview.flag.FlagMode): void;
+                    public setFlagMode(param0: FlagMode): void;
                     public gone(): void;
                 }
             }
@@ -2094,17 +2102,16 @@ declare module com {
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
-            export module any {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
+            export namespace any {
                 export class ColorPickerDsl {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.any>;
+                    public static class: java.lang.Class<any>;
                     /**
                      * Constructs a new instance of the com.skydoves.colorpickerview.any interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
                      */
-                    public constructor(implementation: {
-                    });
+                    public constructor(implementation: {});
                     public constructor();
                 }
             }
@@ -2112,38 +2119,34 @@ declare module com {
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
-            export module listeners {
-                export class ColorEnvelopeListener extends com.skydoves.colorpickerview.listeners.ColorPickerViewListener {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.listeners.ColorEnvelopeListener>;
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
+            export namespace listeners {
+                export class ColorEnvelopeListener extends ColorPickerViewListener {
+                    public static class: java.lang.Class<ColorEnvelopeListener>;
                     /**
                      * Constructs a new instance of the com.skydoves.colorpickerview.listeners.ColorEnvelopeListener interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
                      */
-                    public constructor(implementation: {
-                        onColorSelected(param0: com.skydoves.colorpickerview.ColorEnvelope, param1: boolean): void;
-                    });
+                    public constructor(implementation: { onColorSelected(param0: ColorEnvelope, param1: boolean): void });
                     public constructor();
-                    public onColorSelected(param0: com.skydoves.colorpickerview.ColorEnvelope, param1: boolean): void;
+                    public onColorSelected(param0: ColorEnvelope, param1: boolean): void;
                 }
             }
         }
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
-            export module listeners {
-                export class ColorListener extends com.skydoves.colorpickerview.listeners.ColorPickerViewListener {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.listeners.ColorListener>;
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
+            export namespace listeners {
+                export class ColorListener extends ColorPickerViewListener {
+                    public static class: java.lang.Class<ColorListener>;
                     /**
                      * Constructs a new instance of the com.skydoves.colorpickerview.listeners.ColorListener interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
                      */
-                    public constructor(implementation: {
-                        onColorSelected(param0: number, param1: boolean): void;
-                    });
+                    public constructor(implementation: { onColorSelected(param0: number, param1: boolean): void });
                     public constructor();
                     public onColorSelected(param0: number, param1: boolean): void;
                 }
@@ -2152,17 +2155,16 @@ declare module com {
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
-            export module listeners {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
+            export namespace listeners {
                 export class ColorPickerViewListener {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.listeners.ColorPickerViewListener>;
+                    public static class: java.lang.Class<ColorPickerViewListener>;
                     /**
                      * Constructs a new instance of the com.skydoves.colorpickerview.listeners.ColorPickerViewListener interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
                      */
-                    public constructor(implementation: {
-                    });
+                    public constructor(implementation: {});
                     public constructor();
                 }
             }
@@ -2170,51 +2172,51 @@ declare module com {
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
-            export module preference {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
+            export namespace preference {
                 export class ColorPickerPreferenceManager {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.preference.ColorPickerPreferenceManager>;
+                    public static class: java.lang.Class<ColorPickerPreferenceManager>;
                     public static COLOR: string;
                     public static SelectorX: string;
                     public static SelectorY: string;
                     public static AlphaSlider: string;
                     public static BrightnessSlider: string;
-                    public saveColorPickerData(param0: com.skydoves.colorpickerview.ColorPickerView): void;
+                    public saveColorPickerData(param0: ColorPickerView): void;
                     public getAlphaSliderName(param0: string): string;
-                    public clearSavedSelectorPosition(param0: string): com.skydoves.colorpickerview.preference.ColorPickerPreferenceManager;
+                    public clearSavedSelectorPosition(param0: string): ColorPickerPreferenceManager;
                     public getBrightnessSliderPosition(param0: string, param1: number): number;
-                    public setAlphaSliderPosition(param0: string, param1: number): com.skydoves.colorpickerview.preference.ColorPickerPreferenceManager;
-                    public setColor(param0: string, param1: number): com.skydoves.colorpickerview.preference.ColorPickerPreferenceManager;
+                    public setAlphaSliderPosition(param0: string, param1: number): ColorPickerPreferenceManager;
+                    public setColor(param0: string, param1: number): ColorPickerPreferenceManager;
                     public getSelectorYName(param0: string): string;
-                    public static getInstance(param0: globalAndroid.content.Context): com.skydoves.colorpickerview.preference.ColorPickerPreferenceManager;
+                    public static getInstance(param0: globalAndroid.content.Context): ColorPickerPreferenceManager;
                     public getColorName(param0: string): string;
                     public getSelectorPosition(param0: string, param1: globalAndroid.graphics.Point): globalAndroid.graphics.Point;
-                    public clearSavedBrightnessSlider(param0: string): com.skydoves.colorpickerview.preference.ColorPickerPreferenceManager;
+                    public clearSavedBrightnessSlider(param0: string): ColorPickerPreferenceManager;
                     public getColor(param0: string, param1: number): number;
-                    public clearSavedAllData(): com.skydoves.colorpickerview.preference.ColorPickerPreferenceManager;
-                    public restoreColorPickerData(param0: com.skydoves.colorpickerview.ColorPickerView): void;
-                    public setSelectorPosition(param0: string, param1: globalAndroid.graphics.Point): com.skydoves.colorpickerview.preference.ColorPickerPreferenceManager;
-                    public setBrightnessSliderPosition(param0: string, param1: number): com.skydoves.colorpickerview.preference.ColorPickerPreferenceManager;
+                    public clearSavedAllData(): ColorPickerPreferenceManager;
+                    public restoreColorPickerData(param0: ColorPickerView): void;
+                    public setSelectorPosition(param0: string, param1: globalAndroid.graphics.Point): ColorPickerPreferenceManager;
+                    public setBrightnessSliderPosition(param0: string, param1: number): ColorPickerPreferenceManager;
                     public getAlphaSliderPosition(param0: string, param1: number): number;
                     public getSelectorXName(param0: string): string;
-                    public clearSavedColor(param0: string): com.skydoves.colorpickerview.preference.ColorPickerPreferenceManager;
+                    public clearSavedColor(param0: string): ColorPickerPreferenceManager;
                     public getBrightnessSliderName(param0: string): string;
-                    public clearSavedAlphaSliderPosition(param0: string): com.skydoves.colorpickerview.preference.ColorPickerPreferenceManager;
+                    public clearSavedAlphaSliderPosition(param0: string): ColorPickerPreferenceManager;
                 }
             }
         }
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
-            export module sliders {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
+            export namespace sliders {
                 export abstract class AbstractSlider {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.sliders.AbstractSlider>;
-                    public colorPickerView: com.skydoves.colorpickerview.ColorPickerView;
+                    public static class: java.lang.Class<AbstractSlider>;
+                    public colorPickerView: ColorPickerView;
                     public colorPaint: globalAndroid.graphics.Paint;
                     public borderPaint: globalAndroid.graphics.Paint;
                     public selectorPosition: number;
@@ -2236,7 +2238,7 @@ declare module com {
                     public getSelectedX(): number;
                     public setSelectorDrawable(param0: globalAndroid.graphics.drawable.Drawable): void;
                     public setPreferenceName(param0: string): void;
-                    public attachColorPickerView(param0: com.skydoves.colorpickerview.ColorPickerView): void;
+                    public attachColorPickerView(param0: ColorPickerView): void;
                     public setBorderColor(param0: number): void;
                     public setEnabled(param0: boolean): void;
                     public assembleColor(): number;
@@ -2260,12 +2262,12 @@ declare module com {
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
-            export module sliders {
-                export class AlphaSlideBar extends com.skydoves.colorpickerview.sliders.AbstractSlider {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.sliders.AlphaSlideBar>;
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
+            export namespace sliders {
+                export class AlphaSlideBar extends AbstractSlider {
+                    public static class: java.lang.Class<AlphaSlideBar>;
                     public constructor(param0: globalAndroid.content.Context);
                     public constructor(param0: globalAndroid.content.Context, param1: globalAndroid.util.AttributeSet);
                     public getAttrs(param0: globalAndroid.util.AttributeSet): void;
@@ -2282,28 +2284,28 @@ declare module com {
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
-            export module sliders {
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
+            export namespace sliders {
                 export class AlphaTileDrawable {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.sliders.AlphaTileDrawable>;
+                    public static class: java.lang.Class<AlphaTileDrawable>;
                     public constructor();
                     public draw(param0: globalAndroid.graphics.Canvas): void;
-                    public constructor(param0: com.skydoves.colorpickerview.sliders.AlphaTileDrawable.Builder);
+                    public constructor(param0: AlphaTileDrawable.Builder);
                     public setColorFilter(param0: globalAndroid.graphics.ColorFilter): void;
                     public setAlpha(param0: number): void;
                     public getOpacity(): number;
                 }
-                export module AlphaTileDrawable {
+                export namespace AlphaTileDrawable {
                     export class Builder {
-                        public static class: java.lang.Class<com.skydoves.colorpickerview.sliders.AlphaTileDrawable.Builder>;
-                        public setTileEvenColor(param0: number): com.skydoves.colorpickerview.sliders.AlphaTileDrawable.Builder;
+                        public static class: java.lang.Class<Builder>;
+                        public setTileEvenColor(param0: number): Builder;
                         public constructor();
-                        public setTileSize(param0: number): com.skydoves.colorpickerview.sliders.AlphaTileDrawable.Builder;
-                        public build(): com.skydoves.colorpickerview.sliders.AlphaTileDrawable;
+                        public setTileSize(param0: number): Builder;
+                        public build(): AlphaTileDrawable;
                         public getTileOddColor(): number;
-                        public setTileOddColor(param0: number): com.skydoves.colorpickerview.sliders.AlphaTileDrawable.Builder;
+                        public setTileOddColor(param0: number): Builder;
                         public getTileEvenColor(): number;
                         public getTileSize(): number;
                     }
@@ -2313,12 +2315,12 @@ declare module com {
     }
 }
 
-declare module com {
-    export module skydoves {
-        export module colorpickerview {
-            export module sliders {
-                export class BrightnessSlideBar extends com.skydoves.colorpickerview.sliders.AbstractSlider {
-                    public static class: java.lang.Class<com.skydoves.colorpickerview.sliders.BrightnessSlideBar>;
+declare namespace com {
+    export namespace skydoves {
+        export namespace colorpickerview {
+            export namespace sliders {
+                export class BrightnessSlideBar extends AbstractSlider {
+                    public static class: java.lang.Class<BrightnessSlideBar>;
                     public constructor(param0: globalAndroid.content.Context);
                     public constructor(param0: globalAndroid.content.Context, param1: globalAndroid.util.AttributeSet);
                     public getAttrs(param0: globalAndroid.util.AttributeSet): void;

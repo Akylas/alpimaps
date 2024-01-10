@@ -4,9 +4,9 @@
     </item> -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="@color/colorPrimary" />
+            <solid android:color="@color/seed" />
         </shape>
     </item>
-    <item android:gravity="center"  android:drawable="@drawable/logo">
+    <item android:gravity="center"  android:drawable="@drawable/ic_launcher_foreground">
     </item>
 </layer-list>

@@ -151,7 +151,7 @@ export async function pickTime(currentDate: Dayjs) {
     });
 }
 
-export async function pickColor(color: Color, options: { alpha?: boolean } = {}) {
+export async function pickColor(color: Color | string, options: { alpha?: boolean } = {}) {
     return new Promise<Color>((resolve) => {
         const activity = Application.android.startActivity;
         if (!(color instanceof Color)) {
@@ -244,11 +244,5 @@ export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath:
 }
 
 export function restartApp() {
-    const context = Utils.android.getApplicationContext();
-    const mStartActivity = new android.content.Intent(context, Application.android.startActivity.getClass());
-    const mPendingIntentId = 123456;
-    const mPendingIntent = android.app.PendingIntent.getActivity(context, mPendingIntentId, mStartActivity, android.app.PendingIntent.FLAG_CANCEL_CURRENT);
-    const mgr = context.getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager;
-    mgr.set(android.app.AlarmManager.RTC, java.lang.System.currentTimeMillis() + 500, mPendingIntent);
-    java.lang.System.exit(0);
+    akylas.alpi.maps.Utils.restartApp(Utils.android.getApplicationContext(), Application.android.startActivity);
 }

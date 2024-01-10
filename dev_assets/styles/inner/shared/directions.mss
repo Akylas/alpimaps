@@ -22,12 +22,12 @@
 		[class !='waypointline'] {
 			when ([nuti::selected_id]=[id])::selected,
 			{
-				casing/line-color: [nuti::selected_id]=[id] ? #0F70DF: #787E7B;
+				casing/line-color: [nuti::selected_id]=[id] ? [nuti::main_darker_color]: #787E7B;
 				casing/line-width: [class=auto] ? 7: 5;
 				casing/line-join: round;
 				casing/line-cap: round;
 				casing/line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
-				line-color: [nuti::selected_id]=[id] ? #60A5F4: ([style.color]? [style.color]:#ACB0AE);
+				line-color: [nuti::selected_id]=[id] ? [nuti::main_color]: ([style.color]? [style.color]:#ACB0AE);
 				line-width: [class=auto] ? 5: 3;
 				line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
 				line-join: round;
