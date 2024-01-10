@@ -99,6 +99,7 @@ module.exports = (env, params = {}) => {
         disableoffline = false,
         busSupport = true,
         apiKeys = true,
+        playStoreBuild = true,
         keep_classnames_functionnames = false,
         testZipStyles = false,
         accessibility = false,
@@ -110,9 +111,20 @@ module.exports = (env, params = {}) => {
     env.appPath = appPath;
     env.appResourcesPath = appResourcesPath;
     env.appComponents = env.appComponents || [];
-    env.appComponents.push('~/services/android/BgService', '~/services/android/BgServiceBinder', '~/android/processtextactivity');
+    env.appComponents.push('~/services/android/BgService', '~/services/android/BgServiceBinder', '~/android/processtextactivity', '~/android/activity.android');
+
+    const ignoredSvelteWarnings = new Set(['a11y-no-onchange', 'a11y-label-has-associated-control', 'illegal-attribute-character']);
 
     nsWebpack.chainWebpack((config, env) => {
+        config.module
+            .rule('svelte')
+            .use('svelte-loader')
+            .tap((options) => {
+                options.onwarn = function (warning, onwarn) {
+                    return ignoredSvelteWarnings.has(warning.code) || onwarn(warning);
+                };
+                return options;
+            });
         config.when(env.production, (config) => {
             config.module
                 .rule('svelte')
@@ -405,6 +417,7 @@ module.exports = (env, params = {}) => {
         SENTRY_PREFIX: `"${!!sentry ? process.env.SENTRY_PREFIX : ''}"`,
         GIT_URL: `"${package.repository}"`,
         SUPPORT_URL: `"${package.bugs.url}"`,
+        PLAY_STORE_BUILD: playStoreBuild,
         CUSTOM_URL_SCHEME: `"${CUSTOM_URL_SCHEME}"`,
         STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${nconfig.id}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
         STORE_REVIEW_LINK: `"${
@@ -412,6 +425,7 @@ module.exports = (env, params = {}) => {
                 ? ` itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=${APP_STORE_ID}&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+Software`
                 : `market://details?id=${nconfig.id}`
         }"`,
+        SPONSOR_URL: '"https://github.com/sponsors/farfromrefug"',
         DEV_LOG: !!devlog,
         TEST_LOG: !!devlog || !!testlog
     };
@@ -444,58 +458,42 @@ module.exports = (env, params = {}) => {
             appIcons[v.name.replace('$icon-', '')] = String.fromCharCode(parseInt(v.value.slice(2), 16));
         });
 
-    const scssPrepend = `$alpimaps-fontFamily: alpimaps;
-    $mdi-fontFamily: ${platform === 'android' ? 'materialdesignicons-webfont' : 'Material Design Icons'};
+    const scssPrepend = `$appFontFamily: alpimaps;
+    $mdiFontFamily: ${platform === 'android' ? 'materialdesignicons-webfont' : 'Material Design Icons'};
     `;
     const scssLoaderRuleIndex = config.module.rules.findIndex((r) => r.test && r.test.toString().indexOf('scss') !== -1);
-    config.module.rules.splice(
-        scssLoaderRuleIndex,
-        1,
-        {
-            test: /app\.scss$/,
-            use: [
-                { loader: 'apply-css-loader' },
-                {
-                    loader: 'css2json-loader',
-                    options: { useForImports: true }
-                }
-            ]
-                .concat(
-                    !!production
-                        ? [
-                              {
-                                  loader: 'postcss-loader',
-                                  options: {
-                                      postcssOptions: {
-                                          plugins: [
-                                              [
-                                                  'cssnano',
-                                                  {
-                                                      preset: 'advanced'
-                                                  }
-                                              ],
-                                              ['postcss-combine-duplicated-selectors', { removeDuplicatedProperties: true }]
-                                          ]
-                                      }
+    config.module.rules.splice(scssLoaderRuleIndex, 1, {
+        test: /\.scss$/,
+        use: [
+            { loader: 'apply-css-loader' },
+            {
+                loader: 'css2json-loader',
+                options: { useForImports: true }
+            }
+        ]
+            .concat(
+                !!production
+                    ? [
+                          {
+                              loader: 'postcss-loader',
+                              options: {
+                                  postcssOptions: {
+                                      plugins: [
+                                          [
+                                              'cssnano',
+                                              {
+                                                  preset: 'advanced'
+                                              }
+                                          ],
+                                          ['postcss-combine-duplicated-selectors', { removeDuplicatedProperties: true }]
+                                      ]
                                   }
                               }
-                          ]
-                        : []
-                )
-                .concat([
-                    {
-                        loader: 'sass-loader',
-                        options: {
-                            sourceMap: false,
-                            additionalData: scssPrepend
-                        }
-                    }
-                ])
-        },
-        {
-            test: /\.module\.scss$/,
-            use: [
-                { loader: 'css-loader', options: { url: false } },
+                          }
+                      ]
+                    : []
+            )
+            .concat([
                 {
                     loader: 'sass-loader',
                     options: {
@@ -503,9 +501,21 @@ module.exports = (env, params = {}) => {
                         additionalData: scssPrepend
                     }
                 }
-            ]
-        }
-    );
+            ])
+        // },
+        // {
+        //     test: /\.module\.scss$/,
+        //     use: [
+        //         { loader: 'css-loader', options: { url: false } },
+        //         {
+        //             loader: 'sass-loader',
+        //             options: {
+        //                 sourceMap: false,
+        //                 additionalData: scssPrepend
+        //             }
+        //         }
+        //     ]
+    });
 
     const usedMDIICons = [];
     config.module.rules.push({
@@ -575,7 +585,16 @@ module.exports = (env, params = {}) => {
         { context, from: '**/*.jpg', noErrorOnMissing: true, globOptions },
         { context, from: '**/*.png', noErrorOnMissing: true, globOptions },
         { context, from: 'assets/**/*', noErrorOnMissing: true, globOptions },
-        { context, from: 'i18n/**/*', globOptions },
+        {
+            context,
+            from: 'i18n/**/*',
+            globOptions,
+            transform: !!production
+                ? {
+                      transformer: (content, path) => Promise.resolve(Buffer.from(JSON.stringify(JSON.parse(content.toString())), 'utf8'))
+                  }
+                : undefined
+        },
         // {
         //     from: 'node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf',
         //     to: 'fonts',
