@@ -8,21 +8,22 @@
     import { goBack, navigate } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import CActionBar from '~/components/CActionBar.svelte';
+    import CActionBar from '~/components/common/CActionBar.svelte';
     import { lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
-    import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
+    import { onNetworkChanged } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
-    import { showError } from '~/utils/error';
-    import { mdiFontFamily, subtitleColor, widgetBackgroundColor } from '~/variables';
-    import IconButton from '../IconButton.svelte';
+    import { NoNetworkError, showError } from '~/utils/error';
+    import { colors, fonts } from '~/variables';
+    import IconButton from '../common/IconButton.svelte';
+    $: ({ colorSurfaceContainer } = $colors);
 
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
     export let line;
-    console.log('line', line)
+    console.log('line', line);
     let loading = false;
     let dataItems = null;
     let noNetworkAndNoData = false;
@@ -36,7 +37,7 @@
                 .filter((i) => i.visible === true)
                 .map((i, index, array) => ({ ...i, color: lineColor, first: index === 0, last: index === array.length - 1 }));
 
-            let lineGeoJSON = await transitService.getTransitLines(line.id);
+            const lineGeoJSON = await transitService.getTransitLines(line.id);
             const stopsGeoJSON = [];
             dataItems.forEach((i) => {
                 stopsGeoJSON.push({ type: 'Feature', geometry: { type: 'Point', coordinates: [i.lon, i.lat] }, properties: { id: i.id, name: i.name, color: i.color } as any });
@@ -99,7 +100,7 @@
                 layers = mapContext.getLayers('customLayers');
             }
             layers.forEach((l) => {
-                var prototype = Object.getPrototypeOf(l.layer);
+                const prototype = Object.getPrototypeOf(l.layer);
                 cartoMap.addLayer(new prototype.constructor(l.layer.options));
             });
         } catch (err) {
@@ -125,7 +126,7 @@
     async function showTimesheet() {
         try {
             const component = (await import('~/components/transit/TransitTimesheet.svelte')).default;
-            await navigate({
+            navigate({
                 page: component,
                 props: {
                     line
@@ -170,61 +171,50 @@
 <page bind:this={page} actionBarHidden={true} on:navigatingTo={onNavigatingTo}>
     <gridlayout rows="auto,auto,*,2*">
         <label
-            row={1}
-            visibility={line.longName ? 'visible':'collapse'}
-            text={(line.longName || line.name)?.replace(' / ', '\n')}
-            fontWeight="bold"
-            padding="15 10 15 10"
-            fontSize={20}
-            maxFontSize={20}
             autoFontSize={true}
+            fontSize={20}
+            fontWeight="bold"
+            maxFontSize={20}
             maxLines={3}
+            padding="15 10 15 10"
+            row={1}
+            text={(line.longName || line.name)?.replace(' / ', '\n')}
             textAlignment="center"
             verticalTextAlignment="center"
-        />
-        <cartomap row={2} zoom={16} on:mapReady={onMapReady} useTextureView={false} />
-        <collectionview bind:this={collectionView} row={3} items={dataItems}>
+            visibility={line.longName ? 'visible' : 'collapse'} />
+        <cartomap row={2} useTextureView={false} zoom={16} on:mapReady={onMapReady} />
+        <collectionview bind:this={collectionView} items={dataItems} row={3}>
             <Template let:item>
                 <canvas columns="*,auto" on:tap={() => selectStop(item)}>
-                    <line strokeColor={item.color} startX={30} stopX={30} startY={0} stopY="50%" strokeWidth={4} visibility={item.first ? 'hidden' : 'visible'} horizontalAlignment="left" />
-                    <line
-                        strokeColor={item.color}
-                        startX={30}
-                        stopX={30}
-                        startY="50%"
-                        stopY="100%"
-                        strokeWidth={4}
-                        visibility={item.last ? 'hidden' : 'visible'}
-                        horizontalAlignment="left"
-                    />
+                    <line horizontalAlignment="left" startX={30} startY={0} stopX={30} stopY="50%" strokeColor={item.color} strokeWidth={4} visibility={item.first ? 'hidden' : 'visible'} />
+                    <line horizontalAlignment="left" startX={30} startY="50%" stopX={30} stopY="100%" strokeColor={item.color} strokeWidth={4} visibility={item.last ? 'hidden' : 'visible'} />
                     <circle
-                        strokeColor={item.color}
-                        fillColor={item.first || item.last ? item.color : $widgetBackgroundColor}
-                        radius={12}
                         antiAlias={true}
-                        verticalAlignment="middle"
-                        width={0}
-                        strokeWidth={3}
-                        paddingLeft={30}
+                        fillColor={item.first || item.last ? item.color : colorSurfaceContainer}
                         horizontalAlignment="left"
-                    />
-                    <label marginLeft={60} fontSize={16} text={item.name} verticalTextAlignment="middle" />
-                    <!-- <label row={1} col={1} fontSize={14} color={$subtitleColor} text={item.city} verticalTextAlignment="top" /> -->
-                    <IconButton col={2} rowSpan={2} text="mdi-map-marker-radius-outline" on:tap={() => backToMapOnPoint(item)} verticalAlignment="middle" />
+                        paddingLeft={30}
+                        radius={12}
+                        strokeColor={item.color}
+                        strokeWidth={3}
+                        verticalAlignment="middle"
+                        width={0} />
+                    <label fontSize={16} marginLeft={60} text={item.name} verticalTextAlignment="middle" />
+                    <!-- <label row={1} col={1} fontSize={14} color={colorOnSurfaceVariant} text={item.city} verticalTextAlignment="top" /> -->
+                    <IconButton col={2} rowSpan={2} text="mdi-map-marker-radius-outline" verticalAlignment="middle" on:tap={() => backToMapOnPoint(item)} />
                 </canvas>
             </Template>
         </collectionview>
-        <mdactivityindicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} row={3} />
+        <mdactivityindicator busy={loading} row={3} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
         {#if noNetworkAndNoData}
             <canvaslabel row={3}>
                 <cgroup textAlignment="center" verticalAlignment="middle">
-                    <cspan text="mdi-alert-circle-outline" fontSize={50} fontFamily={mdiFontFamily} />
-                    <cspan text={'\n' + lc('no_network')} fontSize={20} />
+                    <cspan fontFamily={$fonts.mdi} fontSize={50} text="mdi-alert-circle-outline" />
+                    <cspan fontSize={20} text={'\n' + lc('no_network')} />
                 </cgroup>
             </canvaslabel>
         {/if}
         <CActionBar backgroundColor="transparent">
-            <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={lineColor} color={line.textColor} text={line.shortName || line.name} autoFontSize={true} />
+            <label slot="center" class="transitIconLabel" autoFontSize={true} backgroundColor={lineColor} colSpan={3} color={line.textColor} marginLeft={5} text={line.shortName || line.name} />
 
             <IconButton text="mdi-file-pdf-box" on:tap={() => downloadPDF()} />
             <IconButton text="mdi-calendar-clock-outline" on:tap={() => showTimesheet()} />

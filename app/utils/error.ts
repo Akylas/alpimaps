@@ -1,17 +1,21 @@
+import { Color } from '@nativescript/core';
 import { lc } from '@nativescript-community/l';
-import { confirm, alert as mdAlert } from '@nativescript-community/ui-material-dialogs';
+import { Label } from '@nativescript-community/ui-label';
+import { alert as mdAlert } from '@nativescript-community/ui-material-dialogs';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { BaseError } from 'make-error';
 import { l } from '~/helpers/locale';
-import { HTTPError, NoNetworkError, TimeoutError } from '~/services/NetworkService';
+import { HttpRequestOptions } from '~/services/NetworkService';
 import { Sentry, isSentryEnabled } from '~/utils/sentry';
+import { Headers } from '@nativescript-community/https';
 
-function evalTemplateString(resource: string, obj: {}) {
+export function evalTemplateString(resource: string, obj: {}) {
     if (!obj) {
         return resource;
     }
     const names = Object.keys(obj);
-    const vals = Object.keys(obj).map((key) => obj[key]);
+    const vals = names.map((key) => obj[key]);
+    // eslint-disable-next-line @typescript-eslint/no-implied-eval
     return new Function(...names, `return \`${resource}\`;`)(...vals);
 }
 
@@ -78,14 +82,92 @@ export class CustomError extends BaseError {
     getMessage() {}
 }
 
+export class TimeoutError extends CustomError {
+    constructor(props?) {
+        super(
+            Object.assign(
+                {
+                    message: 'timeout_error'
+                },
+                props
+            ),
+            'TimeoutError'
+        );
+    }
+}
+
+export class NoNetworkError extends CustomError {
+    constructor(props?) {
+        super(
+            Object.assign(
+                {
+                    message: 'no_network'
+                },
+                props
+            ),
+            'NoNetworkError'
+        );
+    }
+}
+export interface HTTPErrorProps {
+    statusCode: number;
+    responseHeaders?: Headers;
+    title?: string;
+    message: string;
+    requestParams: HttpRequestOptions;
+}
+export class HTTPError extends CustomError {
+    statusCode: number;
+    requestParams: HttpRequestOptions;
+    constructor(props: HTTPErrorProps | HTTPError) {
+        super(
+            Object.assign(
+                {
+                    message: 'httpError'
+                },
+                props
+            ),
+            'HTTPError'
+        );
+    }
+}
+
+// export class MessageError extends CustomError {
+//     constructor(props: { title?: string; message: string }) {
+//         super(
+//             Object.assign(
+//                 {
+//                     message: 'error'
+//                 },
+//                 props
+//             ),
+//             'MessageError'
+//         );
+//     }
+// }
+// // used to throw while not show the error
+// export class FakeError extends CustomError {
+//     constructor(props?: any) {
+//         super(
+//             Object.assign(
+//                 {
+//                     message: 'error'
+//                 },
+//                 props
+//             ),
+//             'FakeError'
+//         );
+//     }
+// }
+
 export async function showError(err: Error | string, showAsSnack = false) {
     try {
         if (!err) {
             return;
         }
-        console.error('showError', err, err?.['stack']);
-        const reporterEnabled = isSentryEnabled;
+        const reporterEnabled = SENTRY_ENABLED && isSentryEnabled;
         const realError = typeof err === 'string' ? null : err;
+        DEV_LOG && console.error('showError', reporterEnabled, err['message'] || err, err?.['stack'], err?.['stackTrace']);
 
         const isString = realError === null || realError === undefined;
         const message = isString ? (err as string) : realError.message || realError.toString();
@@ -93,22 +175,24 @@ export async function showError(err: Error | string, showAsSnack = false) {
             showSnack({ message });
             return;
         }
-        const title = lc('error');
+        if (reporterEnabled) {
+            Sentry.captureException(err);
+        }
         const showSendBugReport = reporterEnabled && !isString && !(realError instanceof HTTPError) && !!realError.stack;
+        const title = realError?.['title'] || showSendBugReport ? lc('error') : ' ';
         // if (!PRODUCTION) {
         // }
-        const result = await confirm({
+        const label = new Label();
+        label.style.padding = '10 20 0 20';
+        label.style.color = new Color(255, 138, 138, 138);
+        label.html = message.trim();
+        return mdAlert({
+            okButtonText: lc('ok'),
             title,
-            okButtonText: showSendBugReport ? lc('send_bug_report') : undefined,
-            cancelButtonText: showSendBugReport ? lc('cancel') : lc('ok'),
-            message
+            view: label
         });
-        if (SENTRY_ENABLED && result && isSentryEnabled) {
-            Sentry.captureException(err);
-            this.$alert(l('bug_report_sent'));
-        }
     } catch (error) {
-        console.error('showError', error);
+        console.error('error trying to show error', err, error, error.stack);
     }
 }
 

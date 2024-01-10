@@ -9,9 +9,10 @@ export const NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL = 'alpimaps_service';
 export const NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL = 'alpimaps_keepawake';
 // export const NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL = 'alpimaps_screenshot';
 
-import { primaryColor } from '~/variables';
+import { colors, fonts } from '~/variables';
 import { sdkVersion } from '~/utils/utils';
-import { Utils } from '@nativescript/core';
+import { Color, Utils } from '@nativescript/core';
+import { get } from 'svelte/store';
 
 export namespace NotificationHelper {
     const NotificationManager = __ANDROID__ ? android.app.NotificationManager : null;
@@ -19,8 +20,9 @@ export namespace NotificationHelper {
     const Intent = __ANDROID__ ? android.content.Intent : null;
     /* Creates a notification builder */
     export function getNotification(context: android.content.Context, options: { title?: string; channel?: string; builder?: androidx.core.app.NotificationCompat.Builder } = {}) {
+        const { colorPrimary } = get(colors);
         const builder = options.builder || new NotificationCompat.Builder(context, options.channel);
-        const color = primaryColor.android;
+        const color = new Color(colorPrimary).android;
         const activityClass = (com as any).tns.NativeScriptActivity.class;
         const tapActionIntent = new Intent(context, activityClass);
         tapActionIntent.setAction(Intent.ACTION_MAIN);
@@ -63,7 +65,8 @@ export namespace NotificationHelper {
 
     /* Create a notification channel */
     export function createNotificationChannel() {
-        const color = primaryColor.android;
+        const { colorPrimary } = get(colors);
+        const color = new Color(colorPrimary).android;
         if (sdkVersion >= 26) {
             const service = getNotificationManager();
             // create channel

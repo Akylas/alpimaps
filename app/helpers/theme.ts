@@ -3,11 +3,13 @@ import { Application, Device, EventData, Utils } from '@nativescript/core';
 import { getBoolean, getString, setString } from '@nativescript/core/application-settings';
 import { prefs } from '~/services/preferences';
 import { showError } from '~/utils/error';
-import { showBottomSheet } from '~/utils/svelte/bottomsheet';
-import { sdkVersion } from '~/utils/utils.common';
-import { createGlobalEventListener, globalObservable, updateThemeColors } from '~/variables';
+import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
+import { updateThemeColors } from '~/variables';
 import { lc } from '~/helpers/locale';
 import { writable } from 'svelte/store';
+import { SDK_VERSION } from '@nativescript/core/utils';
+import { showAlertOptionSelect } from '~/utils/ui';
+import { closePopover } from '@nativescript-community/ui-popover/svelte';
 
 export type Themes = 'auto' | 'light' | 'dark' | 'black';
 
@@ -27,7 +29,13 @@ Application.on(Application.systemAppearanceChangedEvent, (event: EventData & { n
         if (autoDarkToBlack && theme === 'dark') {
             theme = 'black';
         }
+        if (__ANDROID__) {
+            akylas.alpi.maps.Utils.applyDayNight(Application.android.startActivity, true);
+        }
+        applyTheme(theme);
         updateThemeColors(theme);
+        //close any popover as they are not updating with theme yet
+        closePopover();
         globalObservable.notify({ eventName: 'theme', data: theme });
     }
 });
@@ -35,11 +43,13 @@ Application.on(Application.systemAppearanceChangedEvent, (event: EventData & { n
 export function getThemeDisplayName(toDisplay = theme) {
     switch (toDisplay) {
         case 'auto':
-            return lc('auto');
+            return lc('theme.auto');
         case 'dark':
-            return lc('dark');
+            return lc('theme.dark');
+        case 'black':
+            return lc('theme.black');
         case 'light':
-            return lc('light');
+            return lc('theme.light');
     }
 }
 
@@ -49,17 +59,26 @@ export function toggleTheme(autoDark = false) {
 }
 export async function selectTheme() {
     try {
-        const actions: Themes[] = ['auto', 'light', 'dark'];
-        const OptionSelect = (await import('~/components/OptionSelect.svelte')).default;
-        const result = await showBottomSheet({
-            parent: null,
-            view: OptionSelect,
-            props: {
-                title: lc('select_language'),
-                options: actions.map((k) => ({ name: getThemeDisplayName(k), data: k }))
+        const actions: Themes[] = ['auto', 'light', 'dark', 'black'];
+        const component = (await import('~/components/common/OptionSelect.svelte')).default;
+        const result = await showAlertOptionSelect(
+            component,
+            {
+                height: Math.min(actions.length * 56, 400),
+                rowHeight: 56,
+                options: actions
+                    .map((k) => ({ name: getThemeDisplayName(k), data: k }))
+                    .map((d) => ({
+                        ...d,
+                        boxType: 'circle',
+                        type: 'checkbox',
+                        value: theme === d.data
+                    }))
             },
-            trackingScrollView: 'collectionView'
-        });
+            {
+                title: lc('select_theme')
+            }
+        );
         if (result && actions.indexOf(result.data) !== -1) {
             setString('theme', result.data);
         }
@@ -79,7 +98,6 @@ export function applyTheme(theme: Themes) {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
                 } else {
                     if (Application.ios.window) {
-                        //@ts-ignore
                         Application.ios.window.overrideUserInterfaceStyle = UIUserInterfaceStyle.Unspecified;
                     }
                 }
@@ -90,7 +108,6 @@ export function applyTheme(theme: Themes) {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
                 } else {
                     if (Application.ios.window) {
-                        //@ts-ignore
                         Application.ios.window.overrideUserInterfaceStyle = UIUserInterfaceStyle.Light;
                     }
                 }
@@ -101,7 +118,6 @@ export function applyTheme(theme: Themes) {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                 } else {
                     if (Application.ios.window) {
-                        //@ts-ignore
                         Application.ios.window.overrideUserInterfaceStyle = UIUserInterfaceStyle.Dark;
                     }
                 }
@@ -112,7 +128,6 @@ export function applyTheme(theme: Themes) {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                 } else {
                     if (Application.ios.window) {
-                        //@ts-ignore
                         Application.ios.window.overrideUserInterfaceStyle = UIUserInterfaceStyle.Dark;
                     }
                 }
@@ -127,22 +142,28 @@ function getSystemAppearance() {
     if (typeof Application.systemAppearance === 'function') {
         return Application.systemAppearance();
     }
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     return Application.systemAppearance;
 }
 
-function getRealTheme(theme) {
+export function getRealTheme(th = theme) {
     DEV_LOG && console.log('getRealTheme', theme);
-    if (theme === 'auto') {
+    if (th === 'auto') {
         try {
-            theme = getSystemAppearance();
-            if (autoDarkToBlack && theme === 'dark') {
+            th = getSystemAppearance() as any;
+            if (autoDarkToBlack && th === 'dark') {
                 theme = 'black';
             }
         } catch (err) {
             console.error('getRealTheme', err, err.stack);
         }
     }
-    return theme;
+    return th;
+}
+
+export function getRealThemeAndUpdateColors() {
+    const realTheme = getRealTheme(theme);
+    updateThemeColors(realTheme);
 }
 
 export function start() {
@@ -150,7 +171,7 @@ export function start() {
         return;
     }
     started = true;
-    if (__IOS__ && sdkVersion < 13) {
+    if (__IOS__ && SDK_VERSION < 13) {
         theme = 'light';
     } else {
         theme = getString('theme', DEFAULT_THEME) as Themes;
@@ -173,7 +194,7 @@ export function start() {
     prefs.on('key:theme', () => {
         let newTheme = getString('theme') as Themes;
         DEV_LOG && console.log('key:theme', theme, newTheme, autoDarkToBlack);
-        if (__IOS__ && sdkVersion < 13) {
+        if (__IOS__ && SDK_VERSION < 13) {
             newTheme = 'light';
         }
         // on pref change we are updating
@@ -182,20 +203,19 @@ export function start() {
         }
 
         theme = newTheme;
-        sTheme.set(newTheme);
-        applyTheme(newTheme);
+
         const realTheme = getRealTheme(newTheme);
         currentTheme.set(realTheme);
+
+        applyTheme(newTheme);
         updateThemeColors(realTheme);
-        globalObservable.notify({ eventName: 'theme', data: realTheme });
-        // if (__ANDROID__) {
-        //     // we recreate the activity to get the change
-        //     const activity = Application.android.startActivity as androidx.appcompat.app.AppCompatActivity;
-        //     activity.recreate();
-        //     if (Application.android.foregroundActivity !== activity) {
-        //         (Application.android.foregroundActivity as androidx.appcompat.app.AppCompatActivity).recreate();
-        //     }
-        // }
+        sTheme.set(newTheme);
+        if (__ANDROID__) {
+            akylas.alpi.maps.Utils.applyDayNight(Application.android.startActivity, true);
+        }
+        setTimeout(() => {
+            globalObservable.notify({ eventName: 'theme', data: realTheme });
+        }, 0);
     });
     const realTheme = getRealTheme(theme);
     currentTheme.set(realTheme);
@@ -209,16 +229,24 @@ export function start() {
                 updateThemeColors(realTheme);
             });
         }
-        updateThemeColors(realTheme);
+
+        // we need to update the theme on every activity start
+        // to get dynamic colors
+        Application.on('activity_started', () => {
+            DEV_LOG && console.log('activity_started');
+            if (Application.getRootView()) {
+                getRealThemeAndUpdateColors();
+            }
+        });
     } else {
         if (Application.ios && Application.ios.window) {
-            applyTheme(theme);
             updateThemeColors(realTheme);
+            applyTheme(theme);
         } else {
             updateThemeColors(realTheme);
             Application.on(Application.displayedEvent, () => {
-                applyTheme(theme);
                 updateThemeColors(realTheme);
+                applyTheme(theme);
             });
         }
     }
