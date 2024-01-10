@@ -1,9 +1,12 @@
 module.exports = {
-    ignoredNativeDependencies: ['@nativescript-community/sentry'],
+    ignoredNativeDependencies: ['@nativescript-community/sentry', '@nativescript/detox'],
     id: 'akylas.alpi.maps',
     appResourcesPath: 'App_Resources',
     webpackConfigPath: 'app.webpack.config.js',
     appPath: 'app',
+    i18n: {
+        defaultLanguage: 'en'
+    },
     android: {
         gradleVersion: '8.3',
         markingMode: 'none',
