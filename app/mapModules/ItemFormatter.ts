@@ -2,7 +2,6 @@ import { formatAddress } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { getMapContext } from '~/mapModules/MapModule';
 import type { IItem as Item } from '~/models/Item';
-import { textColor } from '~/variables';
 const mapContext = getMapContext();
 
 export default class ItemFormatter {

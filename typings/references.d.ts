@@ -1,7 +1,13 @@
 /// <reference path="../node_modules/@nativescript/core/global-types.d.ts" />
 /// <reference path="../node_modules/@nativescript/types-android/lib/android-32.d.ts" />
 /// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!Foundation.d.ts" />
+/// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!ObjectiveC.d.ts" />
+/// <reference path="../node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!UIKit.d.ts" />
 /// <reference path="../node_modules/@nativescript-community/ui-carto/typings/carto.android.d.ts" />
+
+declare module 'svelte/internal' {
+    export function get_current_component();
+}
 
 // import type { Color } from '@nativescript/core';
 declare module '*.scss' {
@@ -51,11 +57,13 @@ declare const DEFAULT_THEME: string;
 declare const GIT_URL: string;
 declare const STORE_LINK: string;
 declare const STORE_REVIEW_LINK: string;
+declare const SPONSOR_URL: string;
 declare const __APP_ID__: string;
 declare const __APP_VERSION__: string;
 declare const __APP_BUILD_NUMBER__: string;
 declare const MATERIAL_MAP_FONT_FAMILY: string;
 declare const TEST_ZIP_STYLES: boolean;
+declare const PLAY_STORE_BUILD: boolean;
 // declare const process: { env: any };
 
 declare namespace akylas {
@@ -64,6 +72,15 @@ declare namespace akylas {
             class VectorTileEventListener extends com.akylas.carto.additions.AKVectorTileEventListener {}
             class BgService extends globalAndroid.app.Service {}
             class BgServiceBinder extends globalAndroid.os.Binder {}
+            class Utils {
+                static applyDayNight(context: android.content.Context, applyDynamicColors: boolean);
+                static applyDynamicColors(context: android.content.Context);
+                static getDimensionFromInt(context: android.content.Context, intToGet);
+                static getColorFromInt(context: android.content.Context, intToGet);
+                static getColorFromName(context: android.content.Context, intToGet);
+                static restartApp(context: android.content.Context, activity: android.app.Activity);
+                static getSystemLocale(): java.util.Locale;
+            }
         }
     }
 }
@@ -76,33 +93,56 @@ interface LatLonKeys {
 
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-qualifier
 declare namespace svelteNative.JSX {
-    interface ViewAttributes {
-        disableCss?: boolean;
-        // verticalAlignment: 'top' | 'center' | 'middle' | 'bottom';
-        rippleColor?: string;
-        dynamicElevationOffset?: string | number;
-        elevation?: string | number;
-    }
-    export interface ButtonAttributes {
+    type Override<What, With> = Omit<What, keyof With> & With;
+    type ViewKeys = keyof TViewAttributes;
+    type TViewAugmentedAttributes = Override<
+        TViewAttributes,
+        {
+            disableCss?: boolean;
+            rippleColor?: string;
+            sharedTransitionTag?: string;
+            verticalAlignment?: string;
+            dynamicElevationOffset?: string | number;
+            elevation?: string | number;
+        }
+    >;
+    type ViewAndroidAttributes = {
+        [K in keyof TViewAugmentedAttributes as `android:${K}`]: TViewAugmentedAttributes[k];
+    };
+    type ViewIOSAttributes = {
+        [K in keyof TViewAugmentedAttributes as `ios:${K}`]: TViewAugmentedAttributes[k];
+    };
+    type ViewAttributes = TViewAugmentedAttributes & ViewAndroidAttributes & ViewIOSAttributes;
+
+    interface ButtonAttributes {
         variant?: string;
         shape?: string;
     }
-    export interface ImageAttributes {
+    interface ImageAttributes {
         noCache?: boolean;
+        imageRotation?: number;
+        colorMatrix?: number[];
+        blurRadius?: number;
+        fadeDuration?: number;
+        'on:rotateAnimated'?: (args: EventData) => void;
     }
-    export interface SpanAttributes {
+    interface SpanAttributes {
         verticalAlignment?: string;
         verticalTextAlignment?: string;
     }
-    export interface SliderAttributes {
+    interface SliderAttributes {
         stepSize?: number;
         trackBackgroundColor?: string;
     }
-    export interface PageAttributes {
+    interface PageAttributes {
+        statusBarColor?: string;
+        screenOrientation?: string;
         keepScreenAwake?: boolean;
         screenBrightness?: number;
+        'on:closingModally'?: (args: ShownModallyData) => void;
+        // "on:shownModally"?: (args: ShownModallyData) => void;
     }
-    export interface LabelAttributes {
+    interface LabelAttributes {
         autoFontSize?: boolean;
         verticalTextAlignment?: string;
         maxLines?: number;
