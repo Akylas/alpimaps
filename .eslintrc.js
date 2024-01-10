@@ -1,7 +1,7 @@
 const ignoreWarnings = ['a11y-no-onchange', 'a11y-label-has-associated-control', 'illegal-attribute-character'];
 module.exports = {
-    globals: { gVars: true, SENTRY_DSN: true, SENTRY_PREFIX: true, PRODUCTION: true, OWM_KEY: true, __ANDROID__: true, __IOS__: true, LatLonKeys: true, DEV_LOG: true },
-    extends: ['plugin:@typescript-eslint/recommended-type-checked', 'plugin:svelte/recommended', 'prettier'],
+    globals: { SENTRY_DSN: true, SENTRY_PREFIX: true, PRODUCTION: true, OWM_KEY: true, __ANDROID__: true, __IOS__: true, LatLonKeys: true, DEV_LOG: true },
+    extends: ['plugin:prettier/recommended', 'plugin:@typescript-eslint/recommended-type-checked', 'plugin:svelte/recommended'],
     env: {
         es6: true,
         node: true
@@ -10,7 +10,7 @@ module.exports = {
     parser: '@typescript-eslint/parser',
 
     parserOptions: {
-        ecmaVersion: 2020,
+        ecmaVersion: 2021,
         sourceType: 'module',
         project: 'tsconfig.eslint.json',
         extraFileExtensions: ['.svelte'],
@@ -23,7 +23,7 @@ module.exports = {
             parser: 'svelte-eslint-parser',
             parserOptions: {
                 sourceType: 'module',
-                ecmaVersion: 2020,
+                ecmaVersion: 2021,
                 parser: '@typescript-eslint/parser'
             },
             rules: {
@@ -52,7 +52,18 @@ module.exports = {
         }
     },
     rules: {
-        'prettier/prettier': ['warn', {}],
+        '@typescript-eslint/no-unsafe-declaration-merging': 'off',
+        'svelte/no-inner-declarations': 'off',
+        'prettier/prettier': [
+            'warn',
+            {
+                // parser: 'typescript'
+            }
+        ],
+        '@typescript-eslint/restrict-template-expressions': 'off',
+        '@typescript-eslint/no-unsafe-enum-comparison': 'off',
+        '@typescript-eslint/no-base-to-string': 'off',
+        '@typescript-eslint/unbound-method': 'off',
         'no-duplicate-imports': 'off',
         '@typescript-eslint/no-unused-vars': 'off',
         '@typescript-eslint/no-unsafe-member-access': 'off',
