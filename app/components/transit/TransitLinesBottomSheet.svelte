@@ -5,12 +5,12 @@
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, navigate } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
-    import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
+    import { onNetworkChanged } from '~/services/NetworkService';
     import { TransitRoute, transitService } from '~/services/TransitService';
-    import { showError } from '~/utils/error';
-    import { closeBottomSheet } from '~/utils/svelte/bottomsheet';
-    import { mdiFontFamily, navigationBarHeight } from '~/variables';
-    import IconButton from '../IconButton.svelte';
+    import { NoNetworkError, showError } from '~/utils/error';
+    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { fonts, navigationBarHeight } from '~/variables';
+    import IconButton from '../common/IconButton.svelte';
 
     export let position: MapPos<LatLonKeys>;
     export let name: string;
@@ -56,7 +56,7 @@
         try {
             closeBottomSheet();
             const component = (await import('~/components/transit/TransitTimesheet.svelte')).default;
-            await navigate({
+            navigate({
                 page: component,
                 props: {
                     line: item
@@ -71,7 +71,7 @@
         try {
             closeBottomSheet();
             const component = (await import('~/components/transit/TransitLineDetails.svelte')).default;
-            await navigate({
+            navigate({
                 page: component,
                 props: {
                     line: item
@@ -94,14 +94,14 @@
     }
 </script>
 
-<gridlayout rows="auto,*" class="bottomsheet" height={300}>
-    <label text={name} fontWeight="bold" padding="15 10 15 20" fontSize={20} />
+<gridlayout class="bottomsheet" height={300} rows="auto,*">
+    <label fontSize={20} fontWeight="bold" padding="15 10 15 20" text={name} />
     <!-- svelte-ignore illegal-attribute-character -->
-    <collectionview bind:this={collectionView} id="scrollView" row={1} items={linesItems} itemIdGenerator={(item, i) => i} android:marginBottom={$navigationBarHeight} rowHeight={70}>
+    <collectionview bind:this={collectionView} id="scrollView" itemIdGenerator={(item, i) => i} items={linesItems} row={1} android:marginBottom={$navigationBarHeight} rowHeight={70}>
         <Template let:item>
-            <gridlayout rippleColor={getItemColor(item)} columns="auto,*,auto" padding={10} on:tap={() => showTimesheet(item)}>
-                <label borderRadius={4} class="transitIconLabel" backgroundColor={getItemColor(item)} color={getItemTextColor(item)} text={item.shortName} maxFontSize={30} autoFontSize={true} />
-                <label text={item.longName} col={1} fontSize={17} maxFontSize={17} paddingLeft={10} verticalTextAlignment="center" maxLines={2} autoFontSize={true} lineBreak="end" />
+            <gridlayout columns="auto,*,auto" padding={10} rippleColor={getItemColor(item)} on:tap={() => showTimesheet(item)}>
+                <label class="transitIconLabel" autoFontSize={true} backgroundColor={getItemColor(item)} borderRadius={4} color={getItemTextColor(item)} maxFontSize={30} text={item.shortName} />
+                <label autoFontSize={true} col={1} fontSize={17} lineBreak="end" maxFontSize={17} maxLines={2} paddingLeft={10} text={item.longName} verticalTextAlignment="center" />
                 <IconButton col={2} text="mdi-information-outline" on:tap={() => showDetails(item)} />
             </gridlayout>
         </Template>
@@ -109,10 +109,10 @@
     {#if noNetworkAndNoData}
         <canvaslabel row={1}>
             <cgroup textAlignment="center" verticalAlignment="middle">
-                <cspan text="mdi-alert-circle-outline" fontSize={50} fontFamily={mdiFontFamily} />
-                <cspan text={'\n' + lc('no_network')} fontSize={20} />
+                <cspan fontFamily={$fonts.mdi} fontSize={50} text="mdi-alert-circle-outline" />
+                <cspan fontSize={20} text={'\n' + lc('no_network')} />
             </cgroup>
         </canvaslabel>
     {/if}
-    <mdactivityindicator visibility={loading ? 'visible' : 'hidden'} busy={true} horizontalAlignment="right" verticalAlignment="middle" />
+    <mdactivityindicator busy={true} horizontalAlignment="right" verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
 </gridlayout>

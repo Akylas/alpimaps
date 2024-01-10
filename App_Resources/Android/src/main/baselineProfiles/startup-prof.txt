@@ -2383,7 +2383,7 @@ PLcom/carto/graphics/Color;->getCPtr(Lcom/carto/graphics/Color;)J
 PLcom/carto/layers/HillshadeRasterTileLayer;-><init>(JZ)V
 PLcom/carto/layers/HillshadeRasterTileLayer;-><init>(Lcom/carto/datasources/TileDataSource;Lcom/carto/rastertiles/ElevationDecoder;)V
 PLcom/carto/layers/HillshadeRasterTileLayer;->getExagerateHeightScaleEnabled()Z
-PLcom/carto/layers/HillshadeRasterTileLayer;->setAccentColor(Lcom/carto/graphics/Color;)V
+PLcom/carto/layers/HillshadeRasterTileLayer;->setcolorPrimary(Lcom/carto/graphics/Color;)V
 PLcom/carto/layers/HillshadeRasterTileLayer;->setContrast(F)V
 PLcom/carto/layers/HillshadeRasterTileLayer;->setHeightScale(F)V
 PLcom/carto/layers/HillshadeRasterTileLayer;->setHighlightColor(Lcom/carto/graphics/Color;)V

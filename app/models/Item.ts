@@ -148,22 +148,22 @@ export class Item {
     image_path?: string;
     creation_date: number;
 
-    public properties!: ItemProperties | null;
-    public _properties!: string;
-    public geometry!: Geometry;
-    public _geometry!: string;
-    public _nativeGeometry!: any;
+    public properties?: ItemProperties | null;
+    public _properties?: string;
+    public geometry?: Geometry;
+    public _geometry?: string;
+    public _nativeGeometry?: any;
 
     onMap: 1 | 0;
 
     route?: Route;
-    public _route!: string;
+    public _route?: string;
     profile?: RouteProfile;
-    public _profile!: string;
+    public _profile?: string;
     instructions?: RouteInstruction[];
-    public _instructions!: string;
+    public _instructions?: string;
     stats?: RouteStats;
-    public _stats!: string;
+    public _stats?: string;
 
     public groups?: string[];
 }
@@ -264,12 +264,12 @@ export class ItemRepository extends CrudRepository<Item> {
             creation_date: item.creation_date || Date.now(),
             onMap: item.onMap,
             image_path: item.image_path,
-            properties: item._properties || JSON.stringify(item.properties),
-            route: item._route || JSON.stringify(item.route),
-            profile: item._profile || JSON.stringify(item.profile),
-            stats: item._stats || JSON.stringify(item.stats),
-            instructions: item._instructions || JSON.stringify(item.instructions),
-            geometry: item._geometry || JSON.stringify(item.geometry)
+            properties: item._properties || (JSON.stringify(item.properties) as any),
+            route: item._route || (JSON.stringify(item.route) as any),
+            profile: item._profile || (JSON.stringify(item.profile) as any),
+            stats: item._stats || (JSON.stringify(item.stats) as any),
+            instructions: item._instructions || (JSON.stringify(item.instructions) as any),
+            geometry: item._geometry || (JSON.stringify(item.geometry) as any)
         });
         return item as Item;
     }
@@ -285,7 +285,7 @@ export class ItemRepository extends CrudRepository<Item> {
                 stats: item._stats || JSON.stringify(item.stats),
                 instructions: item._instructions || JSON.stringify(item.instructions),
                 geometry: item._geometry || JSON.stringify(item.geometry)
-            };
+            } as any;
             await this.update(item, toUpdate);
             return item;
         }
@@ -342,7 +342,7 @@ export class ItemRepository extends CrudRepository<Item> {
                     console.error('setItemGroup', error, error.stack);
                 }
                 if (!group) {
-                    group = await this.groupsRepository.create({ id: Date.now(), name: groupName, onMap: 1 });
+                    group = await this.groupsRepository.create({ id: Date.now() + '', name: groupName, onMap: 1 });
                 }
             }
 

@@ -1,29 +1,71 @@
-@import './variables';
 @import './animations';
+
+.ns-root {
+    // --systemFontScale: 1;
+    --colorPrimary: #29B6F6;
+    --colorOnPrimary: #ffffff;
+    --colorPrimaryContainer: #C6E7FF;
+    --colorOnPrimaryContainer: #001E2D;
+    --colorSecondary: #4F616D;
+    --colorOnSecondary: #FFFFFF;
+    --colorSecondaryContainer: #D2E5F4;
+    --colorOnSecondaryContainer: #0A1D28;
+    --colorTertiary: #62597C;
+    --colorOnTertiary: #FFFFFF;
+    --colorTertiaryContainer: #E8DEFF;
+    --colorOnTertiaryContainer: #1E1735;
+    --colorBackground: #FCFCFF;
+    --colorOnBackground: #191C1E;
+    --colorError: #BA1A1A;
+    --colorOnError: #FFFFFF;
+    --colorErrorContainer: #FFDAD6;
+    --colorOutline: #71787E;
+    --colorOutlineVariant: #C1C7CE;
+    --colorOnSurfaceDisabled: #00000055;
+    --colorSurfaceVariant: #DDE3EA;
+    --colorOnSurfaceVariant: #41484D;
+    --colorSurface: #FCFCFF;
+    --colorOnSurface: #191C1E;
+    --colorOnSurfaceInverse: #000000;
+    --colorSurfaceContainer: #C2C9BD;
+    --popupMenuBackground: #C2C9BD;
+
+    --mdiFontFamily: #{$mdiFontFamily};
+    --appFontFamily: #{$appFontFamily};
+
+    --navigationBarHeight: 0;
+    --actionBarButtonHeight: 50;
+    --actionBarHeight: 60;
+}
 
 // .lato {
 //     font-family: 'Lato Regular', 'res/lato';
 // }
 
 %mdi {
-    font-family: $mdi-fontFamily;
+    font-family: $mdiFontFamily;
 }
 
 %alpimaps {
-    font-family: $alpimaps-fontFamily;
+    font-family: $appFontFamily;
 }
 
 %icon-btn {
-    ripple-color: gray;
-    color: $text-color-light;
+    // ripple-color: gray;
 
-    .ns-dark & {
-        color: $text-color-dark;
-        ripple-color: $text-color-dark;
-    }
 
-    width: $actionbar-button-height;
-    height: $actionbar-button-height;
+    color: var(--colorPrimary);
+    ripple-color: var(--colorPrimary);
+    // color: var(--colorOnBackground);
+    // ripple-color: var(--colorOnPrimary);
+
+    // .ns-dark & {
+        // color: var(--colorOnPrimary);
+        // ripple-color: var(--colorOnPrimary);
+    // }
+
+    width: var(--actionBarButtonHeight);
+    height: var(--actionBarButtonHeight);
     font-size: 24;
 }
 
@@ -35,63 +77,67 @@
     @extend %alpimaps;
 }
 
+checkbox {
+    color: var(--colorOnSurface);
+    fill-color: var(--colorPrimary);
+    on-check-color: var(--colorOnPrimary);
+    on-tint-color: var(--colorPrimary);
+}
+
 page {
     status-bar-style: dark;
-    navigation-bar-color: transparent;
-    status-bar-color: transparent;
-    background-color: $text-color-dark;
+    background-color: var(--colorBackground);
+    status-bar-color: var(--colorBackground);
 
-    .ns-dark &,
-    &.ns-dark {
-        background-color: #1c1c1e;
-    }
+    // .ns-dark &,
+    // &.ns-dark {
+    //     status-bar-style: dark;
+    // }
 }
 
 htmllabel,
 canvaslabel,
-label{
-    color: $text-color-light;
+label {
+    color: var(--colorOnBackground);
 
-    .ns-dark & {
-        color: $text-color-dark;
-    }
 }
 
 // mdbutton,
 // button {
-//     ripple-color: $text-color-light;
+//     ripple-color: var(--colorOnBackground);
 
 //     .ns-dark & {
-//         ripple-color: $text-color-dark;
+//         ripple-color: var(--colorOnPrimary);
 //     }
 // }
 
 mdbutton {
     padding: 4 10 4 10;
 }
+
 mdbutton[variant=text] {
     padding: 0;
 }
 
 mdtextfield,
 textfield {
-    color: $text-color-light;
-    // backgroundcolor-color: $text-color-dark;
-    placeholder-color: gray;
+    // color: var(--colorOnBackground);
+    // backgroundcolor-color: var(--colorOnPrimary);
+    placeholder-color: var(--colorOnSurfaceVariant);
 
-    .ns-dark & {
-        color: $text-color-dark;
-        // backgroun    dcolor-color: $text-color-light;
-        placeholder-color: lightgray;
-    }
+    // .ns-dark & {
+    //     // color: var(--colorOnPrimary);
+    //     // backgroun    dcolor-color: var(--colorOnBackground);
+    //     placeholder-color: lightgray;
+    // }
 }
 
 .textRipple {
-    ripple-color: $text-color-light;
+    ripple-color: var(--colorOnBackground);
 
-    .ns-dark & {
-        ripple-color: $text-color-dark;
-    }
+    // .ns-dark & {
+    //     ripple-color: var(--colorOnPrimary);
+    // }
 }
 
 mdbutton,
@@ -100,19 +146,20 @@ mdcardview {
 }
 
 .buttonthemed {
-    background-color: $primary-color;
-    color: $text-color-dark;
+    background-color: var(--colorPrimary);
+    color: var(--colorOnPrimary);
+    ripple-color: var(--colorOnPrimary);
 }
 
 .buttontext {
-    background-color: $text-color-dark;
-    color: $primary-color;
-    ripple-color: $dark-color;
-    .ns-dark & {
-        background-color: #1c1c1e;
-        color: $primary-color;
-        ripple-color: $dark-color;
-    }
+    background-color: var(--colorBackground);
+    color: var(--colorPrimary);
+    ripple-color: var(--colorPrimary);
+    // .ns-dark & {
+    //     background-color: #1c1c1e;
+    //     color: var(--colorPrimary);
+    //     ripple-color: var(--colorPrimary);
+    // }
 }
 
 .maki {
@@ -134,15 +181,15 @@ mdcardview {
 .icon-btn-white {
     @extend %mdi;
     @extend %icon-btn;
-    color: $text-color-dark;
-    ripple-color: $text-color-dark;
+    color: var(--colorOnPrimary);
+    ripple-color: var(--colorOnPrimary);
 }
 
 .icon-btn-text {
     @extend %mdi;
     @extend %icon-btn;
-    color: $primary-color;
-    ripple-color: $dark-color;
+    color: var(--colorPrimary);
+    ripple-color: var(--colorPrimary);
 }
 
 .icon-btn-text[isEnabled='false'] {
@@ -152,7 +199,6 @@ mdcardview {
 
 .floating-btn {
     @extend %mdi;
-    color: white;
     elevation: 6;
     font-size: 24;
     padding: 0;
@@ -182,15 +228,15 @@ mdcardview {
 //     padding-right: 12;
 //     margin-bottom: 10;
 // }
-z .navigationBarOverlay {
-    // height: $navigation-bar-height;
-    width: 100%;
-    background-color: #aa000000;
-    vertical-alignment: bottom;
-}
+//  .navigationBarOverlay {
+//     // height: $navigation-bar-height;
+//     width: 100%;
+//     background-color: #aa000000;
+//     vertical-alignment: bottom;
+// }
 
 .actionBar {
-    background-color: $primary-color;
+    background-color: var(--colorPrimary);
     // background-color: adjust-color(white, $lightness: -30%);
 
     // .ns-dark & {
@@ -200,12 +246,12 @@ z .navigationBarOverlay {
 
 .actionBarButton {
     @extend .mdi;
-    width: $actionbar-height;
-    height: $actionbar-height;
+    width: var(--actionBarHeight);
+    height: var(--actionBarHeight);
     // color: black;
 
     // .ns-dark & {
-        color: white;
+    color: white;
     // }
 
     margin: 0;
@@ -220,7 +266,7 @@ z .navigationBarOverlay {
     // color: black;
 
     // .ns-dark & {
-        color: white;
+    color: white;
     // }
 }
 
@@ -232,25 +278,23 @@ z .navigationBarOverlay {
 .icon-btn {
     @extend %mdi;
     @extend %icon-btn;
-
-    color: $primary-color;
-    ripple-color: $primary-color;
 }
 
 .icon-label {
     @extend %mdi;
+    @extend %icon-btn;
 
-    color: $text-color-light;
+    // color: var(--colorOnBackground);
 
-    .ns-dark & {
-        color: $text-color-dark;
-    }
+    // .ns-dark & {
+    //     color: var(--colorOnPrimary);
+    // }
 
-    width: $actionbar-button-height;
-    height: $actionbar-button-height;
+    // width: var(--actionBarButtonHeight);
+    // height: var(--actionBarButtonHeight);
     text-align: center;
     vertical-text-alignment: center;
-    font-size: 24;
+    // font-size: 24;
 }
 
 .transitIconLabel {

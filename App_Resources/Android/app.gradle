@@ -15,13 +15,13 @@ android {
     versionCode 250
     versionName "2.4.1"
 
-    if (project.hasProperty('resConfigs')) {
-      def resConfigs = project.findProperty('resConfigs')
-      reset()
-      include resConfigs.split(',')
-    } else {
-      resConfigs "en", "fr", "es"
-    }
+    // if (project.hasProperty('resConfigs')) {
+    //   def resConfigs = project.findProperty('resConfigs')
+    //   reset()
+    //   include resConfigs.split(',')
+    // } else {
+    //   resConfigs "en", "fr", "es"
+    // }
     ndk {
       if (splitEnabled || project.hasProperty('abiFilters')) {
         abiFilters.clear()
@@ -30,6 +30,9 @@ android {
         }
       }
 
+    }
+    androidResources {
+      generateLocaleConfig = true
     }
   }
   kotlin {
@@ -112,6 +115,9 @@ android {
     pickFirst 'lib/arm64-v8a/libc++_shared.so'
     pickFirst 'lib/x86_64/libc++_shared.so'
     pickFirst 'lib/x86/libc++_shared.so'
+    exclude "org/bouncycastle/**"
+    exclude "license/**"
+    // resources.excludes += "assets/com/tom_roush/fontbox/resources/cmap/*"
   }
   // flavorDimensions "stage"
   // productFlavors {
@@ -132,7 +138,8 @@ task createProguard {
     doLast {
         exec {
             workingDir "$USER_PROJECT_ROOT"
-            commandLine 'node', 'scripts/createProguard.js'
+            println("node scripts/createProguard.js ${rootDir} ${getAppResourcesPath()}")
+            commandLine 'node', "scripts/createProguard.js", "${rootDir}", "${getAppResourcesPath()}"
         }
     }
 }
