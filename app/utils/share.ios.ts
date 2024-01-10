@@ -1,6 +1,5 @@
-import { Application, Color, View } from '@nativescript/core';
+import { Application, Color } from '@nativescript/core';
 import { Content, Options } from './share';
-export * from   './share.common';
 
 export async function share(content: Content, options: Options = {}) {
     if (content == null) {
@@ -10,11 +9,9 @@ export async function share(content: Content, options: Options = {}) {
     return new Promise((resolve, reject) => {
         const items = [];
         if (content.url) {
-            //@ts-ignore
             const url = NSURL.URLWithString(content.url);
             if (url.scheme.toLowerCase() === 'data') {
-                //@ts-ignore
-                const data = NSData.dataWithContentsOfURLOptionsError(url, 0);
+                const data = NSData.dataWithContentsOfURLOptionsError(url, 0 as any);
                 if (!data) {
                     throw new Error('cant_share_url');
                 }
@@ -29,35 +26,37 @@ export async function share(content: Content, options: Options = {}) {
         if (content.image) {
             items.push(content.image.ios);
         }
-        //@ts-ignore
+        if (content.images) {
+            content.images.forEach((image) => items.push(image.ios));
+        }
+        if (content.file) {
+            items.push(content.file);
+        }
+        if (content.files) {
+            content.files.forEach((file) => items.push(file));
+        }
         const shareController = UIActivityViewController.alloc().initWithActivityItemsApplicationActivities(items, null);
         if (options.subject) {
             shareController.setValueForKey(options.subject, 'subject');
         }
         if (options.excludedActivityTypes) {
-            //@ts-ignore
             shareController.excludedActivityTypes = NSArray.arrayWithArray(options.excludedActivityTypes);
         }
-        //@ts-ignore
-        const presentingController = iosApp.rootController as UIViewController;
+        const presentingController = Application.ios.rootController;
         shareController.completionWithItemsHandler = (activityType, completed, error) => {
             if (error) {
                 reject(error);
             } else if (completed || activityType == null) {
-                //@ts-ignore
-                resolve(kCFBooleanTrue);
+                resolve(true);
             }
         };
 
-        //@ts-ignore
         shareController.modalPresentationStyle = UIModalPresentationStyle.Popover;
 
         const appearance = options.appearance || Application.ios.systemAppearance;
         if (appearance === 'dark') {
-            //@ts-ignore
             shareController.overrideUserInterfaceStyle = UIUserInterfaceStyle.Dark;
         } else if (appearance === 'light') {
-            //@ts-ignore
             shareController.overrideUserInterfaceStyle = UIUserInterfaceStyle.Light;
         }
 
@@ -65,11 +64,13 @@ export async function share(content: Content, options: Options = {}) {
 
         if (options.anchor) {
             sourceView = options.anchor.nativeViewProtected;
-        } else {
-            shareController.popoverPresentationController.permittedArrowDirections = 0;
+        } else if (shareController.popoverPresentationController) {
+            shareController.popoverPresentationController.permittedArrowDirections = 0 as any;
         }
-        shareController.popoverPresentationController.sourceView = sourceView;
-        shareController.popoverPresentationController.sourceRect = sourceView.bounds;
+        if (shareController.popoverPresentationController) {
+            shareController.popoverPresentationController.sourceView = sourceView;
+            shareController.popoverPresentationController.sourceRect = sourceView.bounds;
+        }
         if (options.tintColor) {
             const color = options.tintColor instanceof Color ? options.tintColor : new Color(options.tintColor);
             shareController.view.tintColor = color.ios;
