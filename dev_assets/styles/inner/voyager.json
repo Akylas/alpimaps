@@ -23,6 +23,8 @@
         "editing_id": -1,
         "selected_id_str": "",
         "default_transit_color": "red",
+        "main_color": "#60A5F4",
+        "main_darker_color": "#287bda",
         "selected_osmid": -1,
         "texts3d": {
             "default": "nutibillboard",

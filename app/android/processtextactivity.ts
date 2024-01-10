@@ -1,20 +1,4 @@
-import {
-    AndroidActivityBackPressedEventData,
-    AndroidActivityCallbacks,
-    AndroidActivityNewIntentEventData,
-    AndroidActivityRequestPermissionsEventData,
-    AndroidActivityResultEventData,
-    AndroidApplication,
-    Application,
-    ApplicationEventData,
-    Frame,
-    GridLayout,
-    Trace,
-    Utils,
-    View
-} from '@nativescript/core';
-import { getBGServiceInstance } from '~/services/BgService';
-import { globalObservable } from '~/variables';
+import { Utils } from '@nativescript/core';
 
 @NativeClass
 @JavaProxy('akylas.alpi.maps.ProcessTextActivity')

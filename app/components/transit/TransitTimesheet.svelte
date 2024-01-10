@@ -7,15 +7,16 @@
     import { onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, navigate } from 'svelte-native/dom';
-    import CActionBar from '~/components/CActionBar.svelte';
+    import CActionBar from '~/components/common/CActionBar.svelte';
     import { formatTime, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
-    import { NoNetworkError, onNetworkChanged } from '~/services/NetworkService';
+    import { onNetworkChanged } from '~/services/NetworkService';
     import { TransitRoute, transitService } from '~/services/TransitService';
-    import { showError } from '~/utils/error';
+    import { NoNetworkError, showError } from '~/utils/error';
     import { pickDate, pickTime } from '~/utils/utils';
-    import { accentColor, borderColor, mdiFontFamily, navigationBarHeight, subtitleColor, textColor } from '~/variables';
-    import IconButton from '../IconButton.svelte';
+    import { colors, fonts, navigationBarHeight } from '~/variables';
+    import IconButton from '../common/IconButton.svelte';
+    $: ({ colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant } = $colors);
 
     export let line: TransitRoute;
     const lineColor = line.color || transitService.defaultTransitLineColor;
@@ -144,7 +145,7 @@
     async function showDetails() {
         try {
             const component = (await import('~/components/transit/TransitLineDetails.svelte')).default;
-            await navigate({
+            navigate({
                 page: component,
                 props: {
                     line
@@ -163,74 +164,72 @@
 </script>
 
 <page bind:this={page} actionBarHidden={true}>
-    <gridlayout rows="auto,auto,auto,*" columns="auto,*,auto">
+    <gridlayout columns="auto,*,auto" rows="auto,auto,auto,*">
         <label
-            row={1}
-            colSpan={3}
-            visibility={line.longName ? 'visible':'collapse'}
-            text={(line.longName || line.name)?.replace(' / ', '\n')}
-            fontWeight="bold"
-            padding="15 10 15 10"
-            fontSize={20}
-            maxFontSize={20}
             autoFontSize={true}
+            colSpan={3}
+            fontSize={20}
+            fontWeight="bold"
+            maxFontSize={20}
             maxLines={3}
+            padding="15 10 15 10"
+            row={1}
+            text={(line.longName || line.name)?.replace(' / ', '\n')}
             textAlignment="center"
             verticalTextAlignment="center"
-        />
-        <gridlayout row={2} colSpan={3} columns="*,40,*" rows="50,auto" visibility={noNetworkAndNoData ? 'hidden' : 'visible'}>
-            <canvaslabel borderBottomColor={$borderColor} borderBottomWidth={1} marginLeft={20} rippleColor={accentColor} on:tap={() => selectDate()}>
-                <cspan text={lc('date')} fontSize={11} color={$subtitleColor} verticalAlignment="top" />
-                <cspan text="mdi-calendar-today" fontSize={22} fontFamily={mdiFontFamily} verticalAlignment="middle" textAlignment="right" />
-                <cspan text={currentTime.format('L')} fontSize={14} verticalAlignment="middle" />
+            visibility={line.longName ? 'visible' : 'collapse'} />
+        <gridlayout colSpan={3} columns="*,40,*" row={2} rows="50,auto" visibility={noNetworkAndNoData ? 'hidden' : 'visible'}>
+            <canvaslabel borderBottomColor={colorOutlineVariant} borderBottomWidth={1} marginLeft={20} rippleColor={colorOnSurface} on:tap={() => selectDate()}>
+                <cspan color={colorOnSurfaceVariant} fontSize={11} text={lc('date')} verticalAlignment="top" />
+                <cspan fontFamily={$fonts.mdi} fontSize={22} text="mdi-calendar-today" textAlignment="right" verticalAlignment="middle" />
+                <cspan fontSize={14} text={currentTime.format('L')} verticalAlignment="middle" />
             </canvaslabel>
-            <canvaslabel col={2} borderBottomColor={$borderColor} borderBottomWidth={1} marginRight={20} rippleColor={accentColor} on:tap={() => selectTime()}>
-                <cspan text={lc('time')} fontSize={11} color={$subtitleColor} verticalAlignment="top" />
-                <cspan text="mdi-calendar-clock" fontSize={22} fontFamily={mdiFontFamily} verticalAlignment="middle" textAlignment="right" />
-                <cspan text={formatTime(currentTime)} fontSize={14} verticalAlignment="middle" />
+            <canvaslabel borderBottomColor={colorOutlineVariant} borderBottomWidth={1} col={2} marginRight={20} rippleColor={colorOnSurface} on:tap={() => selectTime()}>
+                <cspan color={colorOnSurfaceVariant} fontSize={11} text={lc('time')} verticalAlignment="top" />
+                <cspan fontFamily={$fonts.mdi} fontSize={22} text="mdi-calendar-clock" textAlignment="right" verticalAlignment="middle" />
+                <cspan fontSize={14} text={formatTime(currentTime)} verticalAlignment="middle" />
             </canvaslabel>
-            <stacklayout orientation="horizontal" horizontalAlignment="center" row={1} rippleColor={accentColor} on:tap={reverseTimesheet} colSpan={3} margin={20}>
-                <label fontFamily={mdiFontFamily} fontSize={22} text="mdi-swap-vertical" verticalTextAlignment="center" />
+            <stacklayout colSpan={3} horizontalAlignment="center" margin={20} orientation="horizontal" rippleColor={colorOnSurface} row={1} on:tap={reverseTimesheet}>
+                <label fontFamily={$fonts.mdi} fontSize={22} text="mdi-swap-vertical" verticalTextAlignment="center" />
                 <label fontSize={14} text={directionText} />
             </stacklayout>
-            <IconButton row={1} colSpan={3} text="mdi-chevron-left" horizontalAlignment="left" on:tap={previousDates} />
-            <IconButton row={1} colSpan={3} text="mdi-chevron-right" horizontalAlignment="right" on:tap={nextDates} />
+            <IconButton colSpan={3} horizontalAlignment="left" row={1} text="mdi-chevron-left" on:tap={previousDates} />
+            <IconButton colSpan={3} horizontalAlignment="right" row={1} text="mdi-chevron-right" on:tap={nextDates} />
         </gridlayout>
 
         <!-- svelte-ignore illegal-attribute-character -->
-        <collectionview row={3} colSpan={3} bind:this={collectionView} items={timelineItems} itemIdGenerator={(item, i) => i} android:marginBottom={$navigationBarHeight} rowHeight={50}>
+        <collectionview bind:this={collectionView} colSpan={3} itemIdGenerator={(item, i) => i} items={timelineItems} row={3} android:marginBottom={$navigationBarHeight} rowHeight={50}>
             <Template let:item>
-                <gridlayout rippleColor={item.color} columns="*,200" padding={4} borderBottomColor={$borderColor} borderBottomWidth={1}>
+                <gridlayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} columns="*,200" padding={4} rippleColor={item.color}>
                     <label
-                        text={item.stopName}
-                        maxFontSize={13}
-                        fontSize={13}
                         autoFontSize={true}
-                        verticalTextAlignment="center"
-                        color={item.stopId === currentStopId ? accentColor : $textColor}
+                        color={item.stopId === currentStopId ? colorOnSurface : colorOnSurface}
+                        fontSize={13}
+                        maxFontSize={13}
                         maxLines={2}
                         paddingRight={10}
-                    />
-                    <canvaslabel col={1} fontSize={12} color={item.stopId === currentStopId ? accentColor : $textColor} textAlignment="center">
+                        text={item.stopName}
+                        verticalTextAlignment="center" />
+                    <canvaslabel col={1} color={item.stopId === currentStopId ? colorOnSurface : colorOnSurface} fontSize={12} textAlignment="center">
                         <cspan text={getTripTime(item, 0)} verticalAlignment="middle" width="25%" />
-                        <cspan text={getTripTime(item, 1)} verticalAlignment="middle" paddingLeft="25%" width="25%" />
-                        <cspan text={getTripTime(item, 2)} verticalAlignment="middle" paddingLeft="50%" width="25%" />
-                        <cspan text={getTripTime(item, 3)} verticalAlignment="middle" paddingLeft="75%" width="25%" />
+                        <cspan paddingLeft="25%" text={getTripTime(item, 1)} verticalAlignment="middle" width="25%" />
+                        <cspan paddingLeft="50%" text={getTripTime(item, 2)} verticalAlignment="middle" width="25%" />
+                        <cspan paddingLeft="75%" text={getTripTime(item, 3)} verticalAlignment="middle" width="25%" />
                     </canvaslabel>
                 </gridlayout>
             </Template>
         </collectionview>
-        <mdactivityindicator row={3} colSpan={3} visibility={loading ? 'visible' : 'hidden'} busy={true} horizontalAlignment="center" verticalAlignment="middle" />
+        <mdactivityindicator busy={true} colSpan={3} horizontalAlignment="center" row={3} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
         {#if noNetworkAndNoData}
-            <canvaslabel row={2} rowSpan={2} colSpan={3}>
+            <canvaslabel colSpan={3} row={2} rowSpan={2}>
                 <cgroup textAlignment="center" verticalAlignment="middle">
-                    <cspan text="mdi-alert-circle-outline" fontSize={50} fontFamily={mdiFontFamily} />
-                    <cspan text={'\n' + lc('no_network')} fontSize={20} />
+                    <cspan fontFamily={$fonts.mdi} fontSize={50} text="mdi-alert-circle-outline" />
+                    <cspan fontSize={20} text={'\n' + lc('no_network')} />
                 </cgroup>
             </canvaslabel>
         {/if}
         <CActionBar backgroundColor="transparent" colSpan={3}>
-            <label slot="center" class="transitIconLabel" colSpan={3} marginLeft={5} backgroundColor={lineColor} color={line.textColor} text={(line.shortName || line.name)} autoFontSize={true} />
+            <label slot="center" class="transitIconLabel" autoFontSize={true} backgroundColor={lineColor} colSpan={3} color={line.textColor} marginLeft={5} text={line.shortName || line.name} />
             <IconButton text="mdi-file-pdf-box" on:tap={downloadPDF} />
             <IconButton text="mdi-information-outline" on:tap={showDetails} />
         </CActionBar>

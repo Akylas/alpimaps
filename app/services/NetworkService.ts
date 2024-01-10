@@ -1,13 +1,10 @@
 import * as https from '@nativescript-community/https';
 import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
 import * as appavailability from '@nativescript/appavailability';
-import { Application, ApplicationEventData, ApplicationSettings, Connectivity, EventData, Folder, Headers, Observable, Utils } from '@nativescript/core';
-import { BaseError } from 'make-error';
-import { getBounds, getPathLength } from '~/helpers/geolib';
-import { l } from '~/helpers/locale';
-import { RouteProfile } from '~/models/Item';
+import { Application, ApplicationEventData, ApplicationSettings, Connectivity, EventData, Folder, Observable, Utils } from '@nativescript/core';
+import { HTTPError, NoNetworkError } from '~/utils/error';
+import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
 import { getDataFolder } from '~/utils/utils.common';
-import { createGlobalEventListener, globalObservable } from '~/variables';
 
 export const onNetworkChanged = createGlobalEventListener('network');
 
@@ -16,7 +13,7 @@ export interface CacheOptions {
     diskSize: number;
     memorySize?: number;
 }
-type HTTPOptions = https.HttpsRequestOptions;
+export type HTTPOptions = https.HttpsRequestOptions;
 
 export interface HttpRequestOptions extends HTTPOptions {
     body?;
@@ -350,149 +347,6 @@ function latlongToOSMString(_point: MapPos<LatLonKeys>) {
 }
 export function regionToOSMString(_region: MapBounds<LatLonKeys>) {
     return latlongToOSMString(_region.southwest) + ',' + latlongToOSMString(_region.northeast);
-}
-
-function evalTemplateString(resource: string, obj: {}) {
-    const names = Object.keys(obj);
-    const vals = Object.keys(obj).map((key) => obj[key]);
-    return new Function(...names, `return \`${resource}\`;`)(...vals);
-}
-export class CustomError extends BaseError {
-    customErrorConstructorName: string;
-    isCustomError = true;
-    assignedLocalData: any;
-    silent?: boolean;
-    constructor(props?, customErrorConstructorName?: string) {
-        super(props.message);
-        this.message = props.message;
-        delete props.message;
-        this.silent = props.silent;
-        delete props.silent;
-        // we need to understand if we are duplicating or not
-        const isError = props instanceof Error;
-        if (props.customErrorConstructorName || isError) {
-            // duplicating
-            // use getOwnPropertyNames to get hidden Error props
-            const keys = Object.getOwnPropertyNames(props);
-            for (let index = 0; index < keys.length; index++) {
-                const k = keys[index];
-                if (!props[k] || typeof props[k] === 'function') continue;
-                // console.log('assigning', k, props[k], this[k]);
-                this[k] = props[k];
-            }
-        } else {
-            this.assignedLocalData = props;
-        }
-
-        if (!this.customErrorConstructorName) {
-            this.customErrorConstructorName = customErrorConstructorName || (this as any).constructor.name; // OR (<any>this).constructor.name;
-        }
-    }
-
-    localData() {
-        const res = {};
-        for (const key in this.assignedLocalData) {
-            res[key] = this.assignedLocalData[key];
-        }
-        return res;
-    }
-
-    toJSON() {
-        const error = {
-            message: this.message
-        };
-        Object.getOwnPropertyNames(this).forEach((key) => {
-            if (typeof this[key] !== 'function') {
-                error[key] = this[key];
-            }
-        });
-        return error;
-    }
-    toData() {
-        return JSON.stringify(this.toJSON());
-    }
-    toString() {
-        return evalTemplateString(l(this.message), Object.assign({ localize: l }, this.assignedLocalData));
-    }
-
-    getMessage() {}
-}
-export class TimeoutError extends CustomError {
-    constructor(props?) {
-        super(
-            Object.assign(
-                {
-                    message: 'timeout_error'
-                },
-                props
-            ),
-            'TimeoutError'
-        );
-    }
-}
-
-export class NoNetworkError extends CustomError {
-    constructor(props?) {
-        super(
-            Object.assign(
-                {
-                    message: 'no_network'
-                },
-                props
-            ),
-            'NoNetworkError'
-        );
-    }
-}
-export interface HTTPErrorProps {
-    statusCode: number;
-    responseHeaders?: Headers;
-    title?: string;
-    message: string;
-    requestParams: HTTPOptions;
-}
-export class HTTPError extends CustomError {
-    statusCode: number;
-    responseHeaders?: Headers;
-    requestParams: HTTPOptions;
-    constructor(props: HTTPErrorProps | HTTPError) {
-        super(
-            Object.assign(
-                {
-                    message: 'httpError'
-                },
-                props
-            ),
-            'HTTPError'
-        );
-    }
-}
-export class MessageError extends CustomError {
-    constructor(props: { title?: string; message: string }) {
-        super(
-            Object.assign(
-                {
-                    message: 'error'
-                },
-                props
-            ),
-            'MessageError'
-        );
-    }
-}
-// used to throw while not show the error
-export class FakeError extends CustomError {
-    constructor(props?: any) {
-        super(
-            Object.assign(
-                {
-                    message: 'error'
-                },
-                props
-            ),
-            'FakeError'
-        );
-    }
 }
 
 export class NetworkService extends Observable {
