@@ -1,3 +1,4 @@
+import { Canvas, Rect } from '@nativescript-community/ui-canvas';
 import { GenericMapPos, MapBounds } from '@nativescript-community/ui-carto/core';
 import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
 import { PolygonGeometry } from '@nativescript-community/ui-carto/geometry';
@@ -7,25 +8,27 @@ import { VectorTileEventData, VectorTileLayer, VectorTileRenderOrder } from '@na
 import { VectorTileSearchService } from '@nativescript-community/ui-carto/search';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/point';
+import { getImagePipeline } from '@nativescript-community/ui-image';
 import { ShareFile } from '@nativescript-community/ui-share-file';
 import { File, Folder, ImageSource, Screen, knownFolders, path, profile } from '@nativescript/core';
 import type { Feature, FeatureCollection, Point as GeometryPoint } from 'geojson';
+import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
+import { get } from 'svelte/store';
 import { getBoundsOfDistance, getDistanceSimple, getMetersPerPixel } from '~/helpers/geolib';
-import { GroupRepository, IItem, Item, ItemRepository, Route, RouteInstruction, RouteProfile, RouteStats, toJSONStringified } from '~/models/Item';
+import { GroupRepository, IItem, Item, ItemRepository, Route, RouteInstruction, RouteProfile, RouteStats } from '~/models/Item';
+import { networkService } from '~/services/NetworkService';
 import { showError } from '~/utils/error';
-import { accentColor, mdiFontFamily } from '~/variables';
+import { JSONtoXML, importGPXToGeojson } from '~/utils/gpx';
+import { shareFile } from '~/utils/share';
+import { getItemsDataFolder, pick } from '~/utils/utils.common';
+import { fonts } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
 import NSQLDatabase from './NSQLDatabase';
-import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
-import { getDataFolder, getItemsDataFolder, pick } from '~/utils/utils.common';
-import { JSONtoXML, importGPXToGeojson } from '~/utils/gpx';
-import { Canvas, Rect } from '@nativescript-community/ui-canvas';
-import { shareFile } from '~/utils/share';
-import { networkService } from '~/services/NetworkService';
-import { getImagePipeline } from '@nativescript-community/ui-image';
 const mapContext = getMapContext();
 
 let writer: GeoJSONGeometryWriter<LatLonKeys>;
+
+const TAG = '[ItemsModule]';
 
 // var osmOverpassUrls = [
 //     // 'http://this.openstreetmap.fr/oapi/',
@@ -99,6 +102,10 @@ export default class ItemsModule extends MapModule {
     }
     onMapReady(mapView: CartoMap<LatLonKeys>) {
         super.onMapReady(mapView);
+        DEV_LOG && console.log(TAG, 'onMapReady', !!this.localVectorLayer);
+        // if (this.localVectorLayer) {
+        //     mapContext.addLayer(this.localVectorLayer, 'items');
+        // }
         this.initDb();
     }
     onDbInitListeners = [];
@@ -354,6 +361,7 @@ export default class ItemsModule extends MapModule {
         };
     }
     async saveItem(item: Mutable<IItem>, onMap = true) {
+        const { mdi } = get(fonts);
         let properties = item.properties;
         if (item.route) {
             // console.log('saveItem', properties.route.osmid, item.geometry);
@@ -371,14 +379,14 @@ export default class ItemsModule extends MapModule {
         if (!item.route) {
             item.properties.style = {
                 iconSize: 20,
-                fontFamily: mdiFontFamily,
+                fontFamily: mdi,
                 mapFontFamily: MATERIAL_MAP_FONT_FAMILY,
                 iconDx: -2,
                 icon: 'mdi-map-marker'
             };
         }
         const style = (properties.style = properties.style || {});
-        style.color = style.color || accentColor.hex;
+        style.color = style.color;
         // }
 
         if (!item.id) {

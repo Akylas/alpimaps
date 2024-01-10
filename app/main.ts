@@ -2,34 +2,32 @@
 import { install as installGestures } from '@nativescript-community/gesturehandler';
 import { setGeoLocationKeys } from '@nativescript-community/gps';
 import { installMixins as installUIMixins } from '@nativescript-community/systemui';
-// import { overrideSpanAndFormattedString } from '@nativescript-community/text';
+import { overrideSpanAndFormattedString } from '@nativescript-community/text';
 import { setMapPosKeys } from '@nativescript-community/ui-carto/core';
 import SwipeMenuElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
-import { ImageViewTraceCategory, initialize } from '@nativescript-community/ui-image';
+import { initialize } from '@nativescript-community/ui-image';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
 import installWebRTC from '@nativescript-community/ui-webview-rtc';
-import { Application, Trace } from '@nativescript/core';
+import { Application } from '@nativescript/core';
 import { ScrollView } from '@nativescript/core/ui';
 import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
-import Map from '~/components/Map.svelte';
+import Map from '~/components/map/Map.svelte';
 import { start as startThemeHelper } from '~/helpers/theme';
 import { getBGServiceInstance } from '~/services/BgService';
 import { networkService } from '~/services/NetworkService';
 import { startSentry } from '~/utils/sentry';
-import './app.scss';
-import { accentColor } from './variables';
-import { CollectionViewTraceCategory } from '@nativescript-community/ui-collectionview';
+// import './app.scss';
 
 startSentry();
 installGestures(true);
 installMixins();
 installBottomSheets();
 installUIMixins();
-// overrideSpanAndFormattedString();
+overrideSpanAndFormattedString();
 installWebRTC();
 initialize();
 
@@ -54,10 +52,10 @@ registerNativeViewElement('gridlayout', () => require('@nativescript/core').Grid
 registerNativeViewElement('scrollview', () => NestedScrollView as any);
 registerNativeViewElement('stacklayout', () => require('@nativescript/core').StackLayout);
 registerNativeViewElement('wraplayout', () => require('@nativescript/core').WrapLayout);
-// registerNativeViewElement('image', () => require('@nativescript-community/ui-image').Img);
+registerNativeViewElement('image', () => require('@nativescript-community/ui-image').Img);
 registerNativeViewElement('flexlayout', () => require('@nativescript/core').FlexboxLayout);
 // registerNativeViewElement('textfield', () => require('@nativescript/core').TextField);
-registerNativeViewElement('image', () => require('@nativescript/core').Image);
+// registerNativeViewElement('image', () => require('@nativescript/core').Image);
 registerNativeViewElement('span', () => require('@nativescript/core').Span);
 registerNativeViewElement('button', () => require('@nativescript/core').Button);
 
@@ -84,7 +82,7 @@ registerNativeViewElement('cgroup', () => require('@nativescript-community/ui-ca
 // registerNativeViewElement('svg', () => require('@nativescript-community/ui-svg').SVG);
 registerNativeViewElement('bottomsheet', () => require('@nativescript-community/ui-persistent-bottomsheet').PersistentBottomSheet);
 registerNativeViewElement('gesturerootview', () => require('@nativescript-community/gesturehandler').GestureRootView);
-registerNativeViewElement('symbolshape', () => require('~/components/SymbolShape').default);
+registerNativeViewElement('symbolshape', () => require('~/components/common/SymbolShape').default);
 registerNativeViewElement('awebview', () => require('@nativescript-community/ui-webview').AWebView);
 registerNativeViewElement('checkbox', () => require('@nativescript-community/ui-checkbox').CheckBox);
 CollectionViewElement.register();
@@ -98,12 +96,6 @@ PagerElement.register();
 // Trace.addCategories(CollectionViewTraceCategory);
 // Trace.enable();
 
-if (__IOS__) {
-    const variables = require('~/variables');
-    const primaryColor = variables.primaryColor;
-    themer.setPrimaryColor(primaryColor);
-    themer.setAccentColor(accentColor);
-}
 themer.createShape('round', {
     cornerFamily: 'rounded' as any,
     cornerSize: {
@@ -131,5 +123,4 @@ Application.on(Application.exitEvent, () => {
     bgService.stop();
 });
 
-//@ts-ignore
 svelteNative(Map, {});

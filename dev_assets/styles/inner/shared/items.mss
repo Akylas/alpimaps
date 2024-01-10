@@ -3,8 +3,8 @@
 @pedestrian_line_width: linear([view::zoom], (16, 2), (18, 2));
 @bicycle_line_width: linear([view::zoom], (16, 2), (18, 2));
 
-@itemColor: [color] ? [color] : #60A5F4;
-@lineColor: [color] ? [color] : #287bda;
+@itemColor: [color] ? [color] : [nuti::main_color];
+@lineColor: [color] ? [color] : [nuti::main_darker_color];
 @editing_dash: 12, 8;
 @non_editing_dash: none;
 #items['mapnik::geometry_type'=2] {
@@ -62,7 +62,7 @@
 }
 
 #items['mapnik::geometry_type'=1]['nuti::hide_unselected'=0] {
-        text-fill: [style.color] ? [style.color] : #60A5F4;
+        text-fill: [style.color] ? [style.color] : @itemColor;
         text-placement: [nuti::markers3d];
         text-name: [style.icon] ? [style.icon] : '';
         text-allow-overlap: true;
