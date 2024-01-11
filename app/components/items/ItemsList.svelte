@@ -33,7 +33,7 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorBackground, colorOnSurface, colorSurfaceContainerHigh, colorOnSurfaceVariant, colorPrimary, colorOutlineVariant, colorError } = $colors);
+    $: ({ colorBackground, colorOnSurface, colorSurfaceContainerHigh, colorOnSurfaceVariant, colorPrimary, colorOnPrimary, colorOutlineVariant, colorError } = $colors);
     let collectionView: NativeViewElementNode<CollectionView>;
     let items: ObservableArray<CollectionItem>;
     let groupedItems: { [k: string]: Item[] };
@@ -117,12 +117,17 @@
     }
 
     async function refresh() {
+        const firstLoad = !!needsFirstRefresh;
         needsFirstRefresh = false;
         loading = true;
         // if itemslist is opened too fast the db might not be fully initialized
         itemsModule.onDbInit(async () => {
             try {
                 nbSelected = 0;
+                if (firstLoad) {
+                    const result = await itemsModule.itemRepository.database.query(SqlQuery.createFromTemplateString`SELECT COUNT(*) FROM Items WHERE "route" IS NOT NULL`);
+                    tabIndex = result[0]['COUNT(*)'] > 0 ? 0 : 1;
+                }
                 const searchArgs = {
                     where: tabIndex === 1 ? SqlQuery.createFromTemplateString`"route" IS NULL` : SqlQuery.createFromTemplateString`"route" IS NOT NULL`,
                     // postfix: Sq  lQuery.createFromTemplateString`i`
@@ -680,31 +685,31 @@ LEFT JOIN  (
     <gridlayout rows="auto,*">
         <CActionBar forceCanGoBack={nbSelected > 0} onGoBack={nbSelected ? unselectAll : null} title={nbSelected ? lc('selected', nbSelected) : lc('items')}>
             <IconButton color={colorError} isVisible={nbSelected > 0} text="mdi-delete" on:tap={deleteSelectedItems} />
-            <IconButton color="white" isVisible={nbSelected > 0} text="mdi-share-variant" on:tap={shareSelectedItems} />
-            <IconButton color="white" isVisible={nbSelected > 0} text="mdi-tag-plus-outline" on:tap={setSelectedGroup} />
+            <IconButton color={colorOnPrimary} isVisible={nbSelected > 0} text="mdi-share-variant" on:tap={shareSelectedItems} />
+            <IconButton color={colorOnPrimary} isVisible={nbSelected > 0} text="mdi-tag-plus-outline" on:tap={setSelectedGroup} />
             <gridlayout slot="bottom" colSpan={3} columns="*,*" height={48} row={1}>
                 <canvaslabel
-                    color="white"
+                    color={colorOnPrimary}
                     disableCss={true}
                     fontSize={15}
                     fontWeight="500"
-                    rippleColor="white"
+                    rippleColor={colorOnPrimary}
                     text={lu('routes')}
                     textAlignment="center"
                     verticalTextAlignment="center"
                     on:tap={() => setTabIndex(0)} />
                 <canvaslabel
                     col={1}
-                    color="white"
+                    color={colorOnPrimary}
                     disableCss={true}
                     fontSize={15}
                     fontWeight="500"
-                    rippleColor="white"
+                    rippleColor={colorOnPrimary}
                     text={lu('markers')}
                     textAlignment="center"
                     verticalTextAlignment="center"
                     on:tap={() => setTabIndex(1)} />
-                <absolutelayout backgroundColor="white" colSpan={2} height={3} horizontalAlignment={tabIndex === 1 ? 'right' : 'left'} verticalAlignment="bottom" width="50%" />
+                <absolutelayout backgroundColor={colorOnPrimary} colSpan={2} height={3} horizontalAlignment={tabIndex === 1 ? 'right' : 'left'} verticalAlignment="bottom" width="50%" />
             </gridlayout>
         </CActionBar>
         <collectionview
