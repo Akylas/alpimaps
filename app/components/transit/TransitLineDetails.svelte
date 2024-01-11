@@ -14,21 +14,24 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { onNetworkChanged } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
-    import { transitService } from '~/services/TransitService';
+    import { MetroLineStop, TransitRoute, transitService } from '~/services/TransitService';
     import { NoNetworkError, showError } from '~/utils/error';
-    import { colors, fonts } from '~/variables';
+    import { colors, fonts, navigationBarHeight } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
-    $: ({ colorSurfaceContainer } = $colors);
-
+    $: ({ colorSurfaceContainer, colorBackground } = $colors);
+    interface Item extends MetroLineStop {
+        color: string;
+        first: boolean;
+        last: boolean;
+    }
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
-    export let line;
+    export let line: TransitRoute;
     console.log('line', line);
     let loading = false;
-    let dataItems = null;
+    let dataItems: Item[] = null;
     let noNetworkAndNoData = false;
     const mapContext = getMapContext();
-
     const lineColor = line.color || transitService.defaultTransitLineColor;
 
     async function refresh() {
@@ -136,7 +139,7 @@
             showError(error);
         }
     }
-    async function backToMapOnPoint(item) {
+    async function backToMapOnPoint(item: Item) {
         try {
             mapContext.selectItem({
                 item: { geometry: { type: 'Point', coordinates: [item.lon, item.lat] }, properties: { id: item.id, name: item.name, color: item.color } },
@@ -150,7 +153,7 @@
             showError(error);
         }
     }
-    async function selectStop(item) {
+    async function selectStop(item: Item) {
         try {
             mapContext.selectItem({
                 item: { geometry: { type: 'Point', coordinates: [item.lon, item.lat] }, properties: { id: item.id, name: item.name, color: item.color } },
@@ -183,14 +186,14 @@
             verticalTextAlignment="center"
             visibility={line.longName ? 'visible' : 'collapse'} />
         <cartomap row={2} useTextureView={false} zoom={16} on:mapReady={onMapReady} />
-        <collectionview bind:this={collectionView} items={dataItems} row={3}>
+        <collectionview bind:this={collectionView} items={dataItems} row={3} android:paddingBottom={$navigationBarHeight}>
             <Template let:item>
                 <canvas columns="*,auto" on:tap={() => selectStop(item)}>
                     <line horizontalAlignment="left" startX={30} startY={0} stopX={30} stopY="50%" strokeColor={item.color} strokeWidth={4} visibility={item.first ? 'hidden' : 'visible'} />
                     <line horizontalAlignment="left" startX={30} startY="50%" stopX={30} stopY="100%" strokeColor={item.color} strokeWidth={4} visibility={item.last ? 'hidden' : 'visible'} />
                     <circle
                         antiAlias={true}
-                        fillColor={item.first || item.last ? item.color : colorSurfaceContainer}
+                        fillColor={item.first || item.last ? item.color : colorBackground}
                         horizontalAlignment="left"
                         paddingLeft={30}
                         radius={12}
@@ -213,8 +216,16 @@
                 </cgroup>
             </canvaslabel>
         {/if}
-        <CActionBar backgroundColor="transparent">
-            <label slot="center" class="transitIconLabel" autoFontSize={true} backgroundColor={lineColor} colSpan={3} color={line.textColor} marginLeft={5} text={line.shortName || line.name} />
+        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="transparent" labelsDefaultVisualState="transparent">
+            <label
+                slot="center"
+                class="transitIconLabel"
+                autoFontSize={true}
+                backgroundColor={lineColor}
+                colSpan={3}
+                color={line.textColor || 'white'}
+                marginLeft={5}
+                text={line.shortName || line.name} />
 
             <IconButton text="mdi-file-pdf-box" on:tap={() => downloadPDF()} />
             <IconButton text="mdi-calendar-clock-outline" on:tap={() => showTimesheet()} />
