@@ -548,7 +548,6 @@
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
-    <!-- svelte-ignore illegal-attribute-character -->
     <bottomsheet
         panGestureOptions={{ failOffsetXEnd: 50, minDist: 150 }}
         {shouldPan}
@@ -623,7 +622,6 @@
             <mdbutton class="mdi" col={1} fontSize={16} text="mdi-bug" variant="text" width={undefined} on:tap={() => (selectedPageIndex = 1)} />
             <pager colSpan={2} disableSwipe={false} row={1} selectedIndex={selectedPageIndex} on:selectedIndexChange={(e) => (selectedPageIndex = e['value'])}>
                 <pageritem>
-                    <!-- svelte-ignore illegal-attribute-character -->
                     <collectionview bind:this={collectionView1} {itemIdGenerator} itemTemplateSelector={selectTemplate} items={listView1Items} android:marginBottom={$navigationBarHeight}>
                         <Template key="checkbox" let:item>
                             <checkbox checked={item.value} text={item.title} on:checkedChange={(e) => onCheckBox(item, e.value)} />
@@ -644,7 +642,6 @@
                     </collectionview>
                 </pageritem>
                 <pageritem>
-                    <!-- svelte-ignore illegal-attribute-character -->
                     <collectionview bind:this={collectionView2} {itemIdGenerator} itemTemplateSelector={selectTemplate} items={listView2Items} android:marginBottom={$navigationBarHeight}>
                         <Template key="checkbox" let:item>
                             <checkbox checked={item.value} text={item.title} on:checkedChange={(e) => onCheckBox(item, e.value)} />
