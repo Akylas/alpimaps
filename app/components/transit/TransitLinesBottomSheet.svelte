@@ -17,14 +17,13 @@
 
     let loading = false;
     let collectionView: NativeViewElementNode<CollectionView>;
-    let linesItems: any[] = null;
+    let linesItems: TransitRoute[] = null;
     let noNetworkAndNoData = false;
 
     async function refresh() {
         try {
             loading = true;
             // const lines = await transitService.getMetroLinesData();
-            // const positionData = await transitService.findBusStop(position);
             // const linesData = positionData.reduce((acc, d) => {
             //     d.lines.forEach((l) => {
             //         if (!acc[l]) {
@@ -94,9 +93,8 @@
     }
 </script>
 
-<gridlayout class="bottomsheet" height={300} rows="auto,*">
+<gesturerootview class="bottomsheet" height={300} rows="auto,*">
     <label fontSize={20} fontWeight="bold" padding="15 10 15 20" text={name} />
-    <!-- svelte-ignore illegal-attribute-character -->
     <collectionview bind:this={collectionView} id="scrollView" itemIdGenerator={(item, i) => i} items={linesItems} row={1} android:marginBottom={$navigationBarHeight} rowHeight={70}>
         <Template let:item>
             <gridlayout columns="auto,*,auto" padding={10} rippleColor={getItemColor(item)} on:tap={() => showTimesheet(item)}>
@@ -115,4 +113,4 @@
         </canvaslabel>
     {/if}
     <mdactivityindicator busy={true} horizontalAlignment="right" verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
-</gridlayout>
+</gesturerootview>
