@@ -8,14 +8,19 @@
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { lc } from '~/helpers/locale';
     import { onNetworkChanged } from '~/services/NetworkService';
-    import { transitService } from '~/services/TransitService';
+    import { MetroRoute, transitService } from '~/services/TransitService';
     import { NoNetworkError, showError } from '~/utils/error';
     import { fonts, navigationBarHeight } from '~/variables';
 
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
     let loading = false;
-    let dataItems = null;
+
+    interface Item {
+        type: string;
+        items: MetroRoute[];
+    }
+    let dataItems: Item[] = null;
     let noNetworkAndNoData = false;
 
     const itemWidth = 50;
@@ -26,14 +31,14 @@
 
     async function refresh() {
         try {
-            const lines: { [k: string]: any } = await transitService.getMetroLinesData();
+            const lines = await transitService.getMetroLinesData();
             const groups = Object.values(lines).reduce(function (acc, item) {
                 if (!acc[item.type]) {
                     acc[item.type] = { type: item.type, items: [] };
                 }
                 acc[item.type].items.push(item);
                 return acc;
-            }, {});
+            }, {}) as { [k: string]: { type: string; items: MetroRoute[] } };
             dataItems = Object.values(groups);
             noNetworkAndNoData = false;
         } catch (error) {
@@ -61,7 +66,7 @@
     }
     let backgroundPaint: Paint;
     let textPaint: Paint;
-    function drawItem(item, event: { canvas: Canvas; object: CanvasView }) {
+    function drawItem(item: Item, event: { canvas: Canvas; object: CanvasView }) {
         const canvas = event.canvas;
         const w = canvas.getWidth();
         const h = canvas.getHeight();
@@ -72,14 +77,14 @@
             textPaint = new Paint();
         }
         const rect = new Rect(0, 0, 0, 0);
-        item.items.forEach((i, index) => {
+        item.items.forEach((route, index) => {
             canvas.save();
             const x = (index % itemsPerLine) * cellWidth + itemPadding;
             const y = Math.floor(index / itemsPerLine) * cellWidth + itemPadding;
-            textPaint.setColor(i.textColor);
-            backgroundPaint.setColor(i.color || 'white');
+            textPaint.setColor(route.textColor);
+            backgroundPaint.setColor(route.color || 'white');
             canvas.drawRoundRect(x, y, x + itemWidth, y + itemWidth, 4, 4, backgroundPaint);
-            const text = i.shortName;
+            const text = route.shortName;
             textPaint.setTextSize(20);
             textPaint.getTextBounds(text, 0, text.length, rect);
             const wantedFontSize = Math.min(30, Math.floor(((itemWidth - 10) / rect.width()) * 20));
@@ -93,7 +98,7 @@
         });
     }
 
-    async function onTap(item, event) {
+    async function onTap(item: Item, event) {
         const index = Math.floor(event.getX() / cellWidth) + itemsPerLine * Math.floor(event.getY() / cellWidth);
         if (index === -1) {
             return;
