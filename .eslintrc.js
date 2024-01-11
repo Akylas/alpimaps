@@ -28,6 +28,7 @@ module.exports = {
             },
             rules: {
                 'no-undef': 'off',
+                'svelte/no-inner-declarations': 'off',
                 'svelte/sort-attributes': 'warn',
                 'svelte/no-inner-declarations': 'off',
                 'svelte/valid-compile': [
@@ -53,7 +54,6 @@ module.exports = {
     },
     rules: {
         '@typescript-eslint/no-unsafe-declaration-merging': 'off',
-        'svelte/no-inner-declarations': 'off',
         'prettier/prettier': [
             'warn',
             {
