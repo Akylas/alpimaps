@@ -42,6 +42,7 @@
     <collectionView height={200} items={options} rowHeight={72}>
         <Template let:item>
             <ListItem
+                borderRadius={30}
                 extraPaddingLeft={44}
                 showSymbol
                 subtitle={itemSubtitle(item)}
