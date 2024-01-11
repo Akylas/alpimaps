@@ -7,7 +7,6 @@
     import { showError } from '~/utils/error';
     $: ({ colorOnSurface } = $colors);
 
-    export let color: string = colorOnSurface;
     export let title: string = null;
     export let showMenuIcon: boolean = false;
     export let height = $actionBarHeight;
@@ -20,6 +19,8 @@
     export let onGoBack: Function = null;
     let menuIcon: string;
     let menuIconVisible: boolean;
+    export let labelsDefaultVisualState = null;
+    export let buttonsDefaultVisualState = null;
 
     onMount(() => {
         // setTimeout(() => {
@@ -53,18 +54,25 @@
     $: menuIconVisible = ((forceCanGoBack || canGoBack || modalWindow) && !disableBackButton) || showMenuIcon;
 </script>
 
-<gridlayout class="actionBar" {color} columns="auto,*,auto" {paddingTop} rows={`${height},auto`} {...$$restProps} on:tap={() => {}}>
-    <label id="title" class="actionBarTitle" col={1} colSpan={3} text={title || ''} textAlignment="left" verticalTextAlignment="center" visibility={!!title ? 'visible' : 'hidden'} />
+<gridlayout class="actionBar" columns="auto,*,auto" {paddingTop} rows={`${height},auto`} {...$$restProps} on:tap={() => {}}>
+    <label
+        id="title"
+        class="actionBarTitle"
+        col={1}
+        colSpan={3}
+        text={title || ''}
+        textAlignment="left"
+        verticalTextAlignment="center"
+        visibility={!!title ? 'visible' : 'hidden'}
+        {...$$restProps?.titleProps}
+        defaultVisualState={labelsDefaultVisualState} />
     <slot name="center" />
     <stacklayout orientation="horizontal">
         <slot name="left" />
-        <IconButton color="white" isVisible={menuIconVisible} text={menuIcon} on:tap={onMenuIcon} />
+        <mdbutton class="actionBarButton" defaultVisualState={buttonsDefaultVisualState} isVisible={menuIconVisible} text={menuIcon} variant="text" on:tap={onMenuIcon} />
     </stacklayout>
     <stacklayout col={2} orientation="horizontal">
         <slot />
     </stacklayout>
-
-    <!-- <stacklayout colSpan={3} row={1}> -->
-        <slot name="bottom" />
-    <!-- </stacklayout> -->
+    <slot name="bottom" />
 </gridlayout>
