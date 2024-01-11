@@ -39,7 +39,7 @@
     let nbDevModeTap = 0;
     let devModeClearTimer;
     function onTouch(item, event) {
-        if (item.id !== 'version' || event.action !== 'down') {
+        if (event.action !== 'down') {
             return;
         }
         nbDevModeTap += 1;
@@ -567,7 +567,7 @@
                         <label color="white" fontSize={12} text={item.title} textWrap={true} verticalAlignment="center" />
                     </stacklayout>
 
-                    <stacklayout horizontalAlignment="center" marginBottom={0} marginTop={20} row={1} verticalAlignment="center">
+                    <stacklayout horizontalAlignment="center" marginBottom={0} marginTop={20} row={1} verticalAlignment="center" on:touch={(e) => onTouch(item, e)}>
                         <image borderRadius="50%" height={50} horizontalAlignment="center" src="res://icon" width={50} />
                         <label fontSize={13} marginTop={4} text={version} />
                     </stacklayout>
