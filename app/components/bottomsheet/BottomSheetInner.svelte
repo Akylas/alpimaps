@@ -694,7 +694,7 @@
                 navigate({
                     page: component,
                     props: {
-                        line: { geometry: item.geometry, ...item.properties }
+                        line: { geometry: item.geometry, ...item.properties } as any
                     }
                 });
             } else {
@@ -889,15 +889,12 @@
             openAnimationDuration={100}
             rightSwipeDistance={0}
             translationFunction={drawerTranslationFunction}>
-            <!-- svelte-ignore illegal-attribute-character -->
             <BottomSheetInfoView bind:this={infoView} prop:mainContent colSpan={2} {item} rightTextPadding={itemIsRoute ? $actionBarButtonHeight : 0}>
                 <mdactivityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
             </BottomSheetInfoView>
-            <!-- svelte-ignore illegal-attribute-character -->
             <IconButton prop:leftDrawer backgroundColor={colorError} color="white" height="100%" shape="none" text="mdi-trash-can" tooltip={lc('delete')} width={60} on:tap={deleteItem} />
 
             <!-- <stacklayout prop:rightDrawer orientation="horizontal"> -->
-            <!-- svelte-ignore illegal-attribute-character -->
             <IconButton
                 prop:rightDrawer
                 backgroundColor={new Color(colorPrimary).setAlpha(180).hex}
