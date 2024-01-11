@@ -242,6 +242,9 @@ mdcardview {
     // .ns-dark & {
     //     background-color: adjust-color(black, $lightness: 30%);
     // }
+    &:transparent {
+        background-color: transparent;
+    }
 }
 
 .actionBarButton {
@@ -251,12 +254,16 @@ mdcardview {
     // color: black;
 
     // .ns-dark & {
-    color: white;
+    color: var(--colorOnPrimary);
     // }
 
     margin: 0;
     padding: 0;
-    font-size: 32;
+    font-size: 24;
+
+    &:transparent {
+        color: var(--colorOnSurface);
+    }
 }
 
 .actionBarTitle {
@@ -266,13 +273,21 @@ mdcardview {
     // color: black;
 
     // .ns-dark & {
-    color: white;
-    // }
+        color: var(--colorOnPrimary);
+        // }
+
+    &:transparent {
+        color: var(--colorOnSurface);
+    }
 }
 
 .actionBarSubtitle {
     font-size: 13;
-    color: #ffffff88;
+    color: var(--colorOnPrimary);
+
+    &:transparent {
+        color: var(--colorOnSurface);
+    }
 }
 
 .icon-btn {
