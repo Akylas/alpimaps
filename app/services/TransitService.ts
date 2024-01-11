@@ -4,11 +4,77 @@ import { GenericMapPos } from '@nativescript-community/ui-carto/core';
 import { getCacheControl, networkService } from './NetworkService';
 
 import { SQLiteDatabase } from '@nativescript-community/sqlite';
+import { GeoLocation } from '~/handlers/GeoHandler';
 export const MOBILITY_URL = 'https://data.mobilites-m.fr';
 export const MOBILITY_API_URL = MOBILITY_URL + '/api';
 // const navitiaAPIEndPoint = 'https://api.navitia.io/v1/';
 
-export type TransitRoute = any;
+export interface MetroRoute {
+    id: string;
+    gtfsId: string;
+    shortName: string;
+    longName: string;
+    color: string;
+    textColor: string;
+    mode: string;
+    type: string;
+    res?: number;
+    name?: string;
+}
+
+export interface MetroBusStop {
+    id: string;
+    name: string;
+    lon: number;
+    lat: number;
+    zone: string;
+    lines: string[];
+}
+
+export interface MetroLineStop {
+    id: string;
+    code: string;
+    city: string;
+    name: string;
+    visible: boolean;
+    lat: number;
+    lon: number;
+}
+
+export interface MetroTimesheet {
+    '0': MetroTimesheetInner;
+    '1': MetroTimesheetInner;
+}
+
+export interface MetroTimesheetInner {
+    arrets: MetroTripStop[];
+    trips: MetroTrip[];
+    prevTime: number;
+    nextTime: number;
+}
+
+export interface MetroTripStop {
+    stopId: string;
+    trips: (number | string)[];
+    stopName: string;
+    name: string;
+    city: string;
+    lat: number;
+    lon: number;
+    parentStation: MetroLineStop;
+}
+
+export interface MetroTrip {
+    tripId: string;
+    pickupType: string;
+}
+
+export interface TransitRoute extends MetroRoute {
+    stopIds: string[];
+    position: GenericMapPos<LatLonKeys>;
+    id: string;
+    geometry?;
+}
 
 class TransitService extends Observable {
     _db: SQLiteDatabase;
@@ -39,7 +105,7 @@ class TransitService extends Observable {
         return networkService.request<string>({
             method: 'GET',
             toJSON: false,
-            url: 'https://data.mobilites-m.fr/api/lines/json',
+            url: MOBILITY_API_URL + '/lines/json',
             headers: {
                 'Cache-Control': getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1)
             },
@@ -66,10 +132,10 @@ class TransitService extends Observable {
         //         });
     }
 
-    metroLinesData;
+    metroLinesData: { [k: string]: MetroRoute };
     async getMetroLinesData() {
         if (!this.metroLinesData) {
-            const data = await networkService.request({
+            const data = await networkService.request<MetroRoute[]>({
                 url: MOBILITY_API_URL + '/routers/default/index/routes',
                 method: 'GET',
                 headers: {
@@ -86,7 +152,7 @@ class TransitService extends Observable {
         return this.metroLinesData;
     }
     async findBusStop(position: GenericMapPos<LatLonKeys>) {
-        return networkService.request({
+        return networkService.request<MetroBusStop[]>({
             url: MOBILITY_API_URL + '/linesNear/json',
             method: 'GET',
             headers: {
@@ -101,7 +167,7 @@ class TransitService extends Observable {
         });
     }
     async getLineTimeline(id, time?) {
-        return networkService.request({
+        return networkService.request<MetroTimesheet>({
             url: MOBILITY_API_URL + '/ficheHoraires/json',
             method: 'GET',
             headers: {
@@ -115,7 +181,7 @@ class TransitService extends Observable {
     }
     async getDisturbances() {
         return networkService.request({
-            url: 'https://data.mobilites-m.fr/api/dyn/evtTC/json',
+            url: MOBILITY_API_URL + '/dyn/evtTC/json',
             method: 'GET',
             headers: {
                 'Cache-Control': getCacheControl(60 * 24)
@@ -123,8 +189,8 @@ class TransitService extends Observable {
         });
     }
     async getLineStops(id) {
-        return networkService.request({
-            url: `https://data.mobilites-m.fr/api/routers/default/index/routes/${id.replace('_', ':')}/clusters`,
+        return networkService.request<MetroLineStop[]>({
+            url: `${MOBILITY_API_URL}/routers/default/index/routes/${id.replace('_', ':')}/clusters`,
             method: 'GET',
             headers: {
                 'Cache-Control': getCacheControl(60 * 24)
@@ -144,7 +210,7 @@ class TransitService extends Observable {
                 }
             });
             return acc;
-        }, {});
+        }, {}) as { [k: string]: TransitRoute };
         return Object.values(linesData);
     }
     getRouteColor(item: TransitRoute) {

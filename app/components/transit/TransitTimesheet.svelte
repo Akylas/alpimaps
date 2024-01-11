@@ -1,7 +1,7 @@
-<script lang="ts">
+<script context="module" lang="ts">
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { Page } from '@nativescript/core';
+    import { Page, View } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
     import dayjs, { Dayjs } from 'dayjs';
     import { onMount } from 'svelte';
@@ -11,12 +11,19 @@
     import { formatTime, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { onNetworkChanged } from '~/services/NetworkService';
-    import { TransitRoute, transitService } from '~/services/TransitService';
+    import { MetroTimesheet, MetroTripStop, TransitRoute, transitService } from '~/services/TransitService';
     import { NoNetworkError, showError } from '~/utils/error';
     import { pickDate, pickTime } from '~/utils/utils';
     import { colors, fonts, navigationBarHeight } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
-    $: ({ colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant } = $colors);
+    import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+
+    const timePaint = new Paint();
+    timePaint.textSize = 12;
+</script>
+
+<script lang="ts">
+    $: ({ colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
 
     export let line: TransitRoute;
     const lineColor = line.color || transitService.defaultTransitLineColor;
@@ -24,19 +31,20 @@
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
     let noNetworkAndNoData = false;
-    let timelineItems: any[] = null;
-    let lineData = null;
-    let lineDataIndex = 0;
+    let timelineItems: MetroTripStop[] = null;
+    let lineData: MetroTimesheet = null;
+    let lineDataIndex: 0 | 1 = 0;
     let directionText: string;
     let currentTime = dayjs().set('s', 0).set('ms', 0);
-    let currentStopId = null;
+    let currentStopId: string = null;
+    DEV_LOG && console.log('line', line);
 
-    async function fetchLineTimeline(time?: Dayjs) {
+    async function fetchLineTimeline(time?: Dayjs, scrollToItem = false) {
         try {
             loading = true;
             currentTime = time;
             lineData = await transitService.getLineTimeline(line.id, time?.utc(true).valueOf());
-            DEV_LOG && console.log('lineData', JSON.stringify(line.id, lineData));
+            DEV_LOG && console.log('lineData', line.id, JSON.stringify(lineData));
             // prevTime = lineData[lineDataIndex].prevTime;
             // nextTime = lineData[lineDataIndex].nextTime;
             timelineItems = lineData[lineDataIndex].arrets;
@@ -49,12 +57,15 @@
             if (line.stopIds) {
                 currentStopId = line.stopIds[lineDataIndex];
                 const index = timelineItems.findIndex((a) => a.stopId === currentStopId);
+                DEV_LOG && console.log('currentStopId', currentStopId, index);
                 if (index === -1) {
                     line.stopIds = line.stopIds.reverse();
                     currentStopId = line.stopIds[lineDataIndex];
                 }
-                const scrollIndex = timelineItems.findIndex((s) => s.stopId === currentStopId);
-                collectionView.nativeView.scrollToIndex(scrollIndex, false);
+                if (scrollToItem) {
+                    const scrollIndex = timelineItems.findIndex((s) => s.stopId === currentStopId);
+                    collectionView.nativeView.scrollToIndex(scrollIndex, false);
+                }
             }
             noNetworkAndNoData = false;
         } catch (error) {
@@ -69,7 +80,7 @@
 
     onNetworkChanged((connected) => {
         if (connected && noNetworkAndNoData) {
-            fetchLineTimeline();
+            fetchLineTimeline(undefined, true);
         }
     });
     function reverseTimesheet() {
@@ -156,11 +167,51 @@
         }
     }
 
+    function drawTripTime(item: MetroTripStop, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
+        try {
+            const w = canvas.getWidth();
+            const h = canvas.getHeight();
+            const w5 = w / 5;
+            timePaint.color = item.stopId === currentStopId ? colorPrimary : colorOnSurface;
+            for (let index = 0; index < 4; index++) {
+                const staticLayout = new StaticLayout(getTripTime(item, index), timePaint, w5 - 10, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
+                canvas.save();
+                canvas.translate(w5 * (index + 1), (h - staticLayout.getHeight()) / 2);
+                staticLayout.draw(canvas);
+                canvas.restore();
+            }
+        } catch (err) {
+            console.error('onCanvas2Draw', err, err.stack);
+        }
+    }
+    function onSwipe(event) {
+        console.log('onSwipe', event.direction);
+        switch (event.direction) {
+            case 1:
+                previousDates();
+                break;
+            case 2:
+                nextDates();
+                break;
+        }
+    }
+
     onMount(() => {
-        fetchLineTimeline(currentTime);
+        fetchLineTimeline(currentTime, true);
     });
 
     onThemeChanged(() => collectionView?.nativeView.refreshVisibleItems());
+
+    function onItemLoading({ index, view }) {
+        if (view) {
+            try {
+                const canvasView: CanvasView = (view as View).getViewById('canvas');
+                canvasView?.invalidate();
+            } catch (error) {
+                console.error(error);
+            }
+        }
+    }
 </script>
 
 <page bind:this={page} actionBarHidden={true}>
@@ -178,7 +229,7 @@
             textAlignment="center"
             verticalTextAlignment="center"
             visibility={line.longName ? 'visible' : 'collapse'} />
-        <gridlayout colSpan={3} columns="*,40,*" row={2} rows="50,auto" visibility={noNetworkAndNoData ? 'hidden' : 'visible'}>
+        <gridlayout colSpan={3} columns="*,40,*" row={2} rows="50,auto" visibility={noNetworkAndNoData ? 'hidden' : 'visible'} on:swipe={onSwipe}>
             <canvaslabel borderBottomColor={colorOutlineVariant} borderBottomWidth={1} marginLeft={20} rippleColor={colorOnSurface} on:tap={() => selectDate()}>
                 <cspan color={colorOnSurfaceVariant} fontSize={11} text={lc('date')} verticalAlignment="top" />
                 <cspan fontFamily={$fonts.mdi} fontSize={22} text="mdi-calendar-today" textAlignment="right" verticalAlignment="middle" />
@@ -197,25 +248,19 @@
             <IconButton colSpan={3} horizontalAlignment="right" row={1} text="mdi-chevron-right" on:tap={nextDates} />
         </gridlayout>
 
-        <!-- svelte-ignore illegal-attribute-character -->
-        <collectionview bind:this={collectionView} colSpan={3} itemIdGenerator={(item, i) => i} items={timelineItems} row={3} android:marginBottom={$navigationBarHeight} rowHeight={50}>
+        <collectionview bind:this={collectionView} colSpan={3} items={timelineItems} row={3} android:marginBottom={$navigationBarHeight} rowHeight={50} on:swipe={onSwipe}>
             <Template let:item>
-                <gridlayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} columns="*,200" padding={4} rippleColor={item.color}>
+                <gridlayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} columns="*,200" padding="0 10 0 10" rippleColor={item.color}>
                     <label
                         autoFontSize={true}
-                        color={item.stopId === currentStopId ? colorOnSurface : colorOnSurface}
+                        color={item.stopId === currentStopId ? colorPrimary : colorOnSurface}
                         fontSize={13}
                         maxFontSize={13}
                         maxLines={2}
                         paddingRight={10}
                         text={item.stopName}
                         verticalTextAlignment="center" />
-                    <canvaslabel col={1} color={item.stopId === currentStopId ? colorOnSurface : colorOnSurface} fontSize={12} textAlignment="center">
-                        <cspan text={getTripTime(item, 0)} verticalAlignment="middle" width="25%" />
-                        <cspan paddingLeft="25%" text={getTripTime(item, 1)} verticalAlignment="middle" width="25%" />
-                        <cspan paddingLeft="50%" text={getTripTime(item, 2)} verticalAlignment="middle" width="25%" />
-                        <cspan paddingLeft="75%" text={getTripTime(item, 3)} verticalAlignment="middle" width="25%" />
-                    </canvaslabel>
+                    <canvas id="canvas" col={1} color={item.stopId === currentStopId ? colorPrimary : colorOnSurface} on:draw={(e) => drawTripTime(item, e)} />
                 </gridlayout>
             </Template>
         </collectionview>
@@ -228,7 +273,7 @@
                 </cgroup>
             </canvaslabel>
         {/if}
-        <CActionBar backgroundColor="transparent" colSpan={3}>
+        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="transparent" colSpan={3} labelsDefaultVisualState="transparent">
             <label slot="center" class="transitIconLabel" autoFontSize={true} backgroundColor={lineColor} colSpan={3} color={line.textColor} marginLeft={5} text={line.shortName || line.name} />
             <IconButton text="mdi-file-pdf-box" on:tap={downloadPDF} />
             <IconButton text="mdi-information-outline" on:tap={showDetails} />
