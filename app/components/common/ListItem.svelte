@@ -28,12 +28,19 @@
 
 <canvas {columns} rippleColor={colorPrimary} on:tap={(event) => dispatch('tap', event)} {...$$restProps} padding="10 16 10 16">
     <symbolshape color={symbolColor} height={34} {symbol} verticalAlignment="middle" visibility={showSymbol ? 'visible' : 'hidden'} width={34} />
-    <canvaslabel col={mainCol} {color} on:draw={onDraw}>
+    <canvaslabel col={mainCol} on:draw={onDraw}>
         <cgroup paddingBottom={subtitle ? 10 : 0} verticalAlignment="middle">
-            <cspan fontFamily={leftIconFonFamily} fontSize={iconFontSize * $systemFontScale} paddingLeft="10" text={leftIcon} visibility={leftIcon ? 'visible' : 'hidden'} width={iconFontSize * 2} />
+            <cspan
+                {color}
+                fontFamily={leftIconFonFamily}
+                fontSize={iconFontSize * $systemFontScale}
+                paddingLeft="10"
+                text={leftIcon}
+                visibility={leftIcon ? 'visible' : 'hidden'}
+                width={iconFontSize * 2} />
         </cgroup>
         <cgroup paddingLeft={(leftIcon ? iconFontSize * 2 : 0) + extraPaddingLeft} textAlignment="left" verticalAlignment="middle">
-            <cspan fontSize={fontSize * $systemFontScale} {fontWeight} text={title} />
+            <cspan {color} fontSize={fontSize * $systemFontScale} {fontWeight} text={title} />
             <cspan color={colorOnSurfaceVariant} fontSize={subtitleFontSize * $systemFontScale} text={subtitle ? '\n' + subtitle : ''} visibility={subtitle ? 'visible' : 'hidden'} />
         </cgroup>
     </canvaslabel>
