@@ -653,15 +653,43 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
     let sized = false;
     let canCreateMap = true;
 
-    // const featuresDrawingCanvas = document.getElementById('canvas4') as HTMLCanvasElement;
-    // const video = document.getElementById('video') as HTMLVideoElement;
-    // const ctx2d = featuresDrawingCanvas.getContext('2d');
-    // canvas.addEventListener('touchstart', () => { return clock.getDelta(); }, {passive: true});
+    const renderer = new WebGLRenderer({
+        canvas,
+        antialias: false,
+        alpha: true,
+        powerPreference: 'high-performance',
+        // depth: false,
+        stencil: false
+    });
+    renderer['physicallyCorrectLights'] = true;
+    // renderer.debug.checkShaderErrors = true;
+    renderer.shadowMap.type = PCFSoftShadowMap;
+    renderer.shadowMap.enabled = false;
+    // const magnify3d = new Magnify3d();
+    // const magnify3dTarget = new WebGLRenderTarget(0, 0);
 
-    let renderer: WebGLRenderer;
+    renderer.setClearColor(0x000000, 0);
 
-    let pointBufferTarget: WebGLRenderTarget;
-    let composer: EffectComposer;
+    // const rendererMagnify = new WebGLRenderer({
+    // 	canvas: document.getElementById('canvas5') as HTMLCanvasElement,
+    // 	// logarithmicDepthBuffer: true,
+    // 	antialias: AA,
+    // 	alpha: true,
+    // 	powerPreference: 'high-performance',
+    // 	stencil: false,
+    // 	depth: false
+    // 	// precision: isMobile ? 'mediump' : 'highp'
+    // });
+
+    const pointBufferTarget = new WebGLRenderTarget(100, 100, {
+        generateMipmaps: false,
+        stencilBuffer: false,
+        depthBuffer: false,
+        minFilter: NearestFilter,
+        magFilter: NearestFilter
+    });
+    let renderTargetHelper;
+    const composer = new EffectComposer(renderer, {});
 
     export function shouldComputeNormals() {
         return settings.computeNormals || settings.drawNormals || settings.generateColor || ((settings.debug || settings.mapMap || settings.shadows) && settings.dayNightCycle);
@@ -996,15 +1024,15 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
     controls.touches.two = CameraControls.ACTION.TOUCH_ZOOM_TRUCK;
     controls.verticalDragToForward = true;
     controls.saveState();
-    let keyboardMoveSpeed = 5;
-    let keyboardRotateSpeed = 0.05;
+    // let keyboardMoveSpeed = 5;
+    // let keyboardRotateSpeed = 0.05;
 
-    export function setKeyboardRotateSpeed(value) {
-        keyboardRotateSpeed = value;
-    }
-    export function setKeyboardMoveSpeed(value) {
-        keyboardMoveSpeed = value;
-    }
+    // export function setKeyboardRotateSpeed(value) {
+    //     keyboardRotateSpeed = value;
+    // }
+    // export function setKeyboardMoveSpeed(value) {
+    //     keyboardMoveSpeed = value;
+    // }
     let sunLight: SunLight;
     let sky: Sky;
     // Add an ambient light
@@ -1265,7 +1293,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
         }
         updateControls();
         if (selectedItem && trucking) {
-            sendSelectedToNS();
+            // sendSelectedToNS();
         }
         // if (EXTERNAL_APP && zooming)
         // {
@@ -1273,12 +1301,12 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
         // }
     });
 
-    function emitNSEvent(name, value) {
-        if (window['nsWebViewBridge']) {
-            // console.log('emitNSEvent ', name, value);
-            window['nsWebViewBridge'].emit(name, typeof value === 'function' ? value() : value);
-        }
-    }
+    // function emitNSEvent(name, value) {
+    //     if (window['nsWebViewBridge']) {
+    //         // console.log('emitNSEvent ', name, value);
+    //         window['nsWebViewBridge'].emit(name, typeof value === 'function' ? value() : value);
+    //     }
+    // }
 
     class OutlinePass extends EffectPass {
         constructor(camera, outlineEffect) {
@@ -1395,8 +1423,8 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
         updateLODThrottle();
         requestRenderIfNotRequested(true);
     }
-    // document.body.onresize();
-    // updateControls();
+    onresize();
+    updateControls();
 
     function toScreenXY(pos3D) {
         const pos = pos3D.clone();
@@ -1481,20 +1509,20 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
         // selectedPeakLabel.innerText = selectedItem.properties.name + ' ' + selectedItem.properties.ele + 'm(' + Math.round(distance / 100) / 10 + 'km)';
     }
 
-    function sendSelectedToNS() {
-        emitNSEvent('selected', () => {
-            let distance = 0;
-            if (selectedItem) {
-                controls.getPosition(tempVector);
-                const scale = MaterialHeightShader.scaleRatio;
-                const point1 = UnitsUtils.sphericalToDatums(tempVector.x / scale, -tempVector.z / scale);
-                const point2 = { lat: selectedItem.geometry.coordinates[1], lon: selectedItem.geometry.coordinates[0], altitude: selectedItem.properties.ele };
-                distance = getDistance(point1, point2);
-                return { ...selectedItem, distance };
-            }
-            return null;
-        });
-    }
+    // function sendSelectedToNS() {
+    //     emitNSEvent('selected', () => {
+    //         let distance = 0;
+    //         if (selectedItem) {
+    //             controls.getPosition(tempVector);
+    //             const scale = MaterialHeightShader.scaleRatio;
+    //             const point1 = UnitsUtils.sphericalToDatums(tempVector.x / scale, -tempVector.z / scale);
+    //             const point2 = { lat: selectedItem.geometry.coordinates[1], lon: selectedItem.geometry.coordinates[0], altitude: selectedItem.properties.ele };
+    //             distance = getDistance(point1, point2);
+    //             return { ...selectedItem, distance };
+    //         }
+    //         return null;
+    //     });
+    // }
     function setSelectedItem(f) {
         mousePosition = null;
         if (f === selectedItem) {
@@ -1872,6 +1900,13 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
         // {
         actualRender(renderForceComputeFeatures);
         renderForceComputeFeatures = false;
+
+        if (renderTargetHelper) {
+            renderTargetHelper.update();
+        }
+        if (stats) {
+            stats.update();
+        }
         // }
     }
 
