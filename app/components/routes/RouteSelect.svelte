@@ -44,6 +44,7 @@
             <ListItem
                 borderRadius={30}
                 extraPaddingLeft={44}
+                fontSize={15}
                 showSymbol
                 subtitle={itemSubtitle(item)}
                 symbol={formatter.getSymbol(item.route.properties)}

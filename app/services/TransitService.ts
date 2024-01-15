@@ -1,10 +1,11 @@
 import Observable from '@nativescript-community/observable';
-import { Color } from '@nativescript/core';
 import { GenericMapPos } from '@nativescript-community/ui-carto/core';
+import { ApplicationSettings, Color } from '@nativescript/core';
 import { getCacheControl, networkService } from './NetworkService';
 
 import { SQLiteDatabase } from '@nativescript-community/sqlite';
-import { GeoLocation } from '~/handlers/GeoHandler';
+import { FeatureCollection } from 'geojson';
+import { prepareWorker } from '~/workers/utils';
 export const MOBILITY_URL = 'https://data.mobilites-m.fr';
 export const MOBILITY_API_URL = MOBILITY_URL + '/api';
 // const navitiaAPIEndPoint = 'https://api.navitia.io/v1/';
@@ -94,20 +95,22 @@ class TransitService extends Observable {
     }
     // routes: any[];
     async getTransitLines(line?) {
-        // if (this._db) {
-        //     if (!this.routes) {
-        //         this.routes = (await this._db.select('SELECT * from routes WHERE geojson IS NOT NULL')) as any;
-
-        //         console.log('routes', this.routes.length);
-        //     }
-        //     return `{"type":"FeatureCollection","features":[${this.routes.map(r=>r.geojson).join(',')}]}`;
-        // }
-        return networkService.request<string>({
+        const settingsKey = 'transit_lines';
+        const maxAge = 60 * 3600 * 24;
+        if (ApplicationSettings.hasKey(settingsKey)) {
+            const data = JSON.parse(ApplicationSettings.getString(settingsKey));
+            DEV_LOG && console.log('testing backed up data', Date.now(), data.timestamp, Date.now() - data.timestamp, maxAge * 1000);
+            if (Date.now() - data.timestamp < maxAge * 1000) {
+                return data.data;
+            }
+        }
+        const data = await this.getMetroLinesData();
+        const transitLines = await networkService.request<string>({
             method: 'GET',
             toJSON: false,
             url: MOBILITY_API_URL + '/lines/json',
             headers: {
-                'Cache-Control': getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1)
+                'Cache-Control': getCacheControl(maxAge, 60 * 3600 * 24 - 1)
             },
             queryParams: {
                 types: 'ligne',
@@ -115,21 +118,46 @@ class TransitService extends Observable {
                 codes: line
             }
         });
-        // const result = await  networkService.request<string>({
-        //             method: 'GET',
-        //             toJSON: false,
-        //             url: `${navitiaAPIEndPoint}coverage/${lon};${lat}/lines${line ? '/' + line : ''}`,
-        //             headers: {
-        //                 'Cache-Control': getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1),
-        //                 Authorization: '8fad1f83-3a48-4eae-9bae-8e0177e6b7c7'
-        //             },
-        //             queryParams: {
-        //                 count:1000
-        //                 // types: 'ligne',
-        //                 // reseaux: 'SEM,C38',
-        //                 // codes: line
-        //             }
+        const worker = prepareWorker(new Worker('~/workers/TransitLinesWorker'));
+
+        const result = await worker.sendMessageToWorker('getTransitLines', { transitLines, metroData: JSON.stringify(data) }, Date.now());
+        ApplicationSettings.setString(settingsKey, JSON.stringify({ timestamp: Date.now(), data: result.messageData }));
+        return result.messageData;
+        // const features = featureCollection.features;
+        // for (let index = features.length - 1; index >= 0; index--) {
+        //     const f = features[index];
+        //     const key = f.properties.id.replace('_', ':');
+        //     const d = data[key];
+        //     if (d) {
+        //         Object.assign(f.properties, {
+        //             route_id: f.properties.id,
+        //             route_mode: d.mode,
+        //             route_short_name: d.shortName,
+        //             route_long_name: d.longName,
+        //             shortName: d.shortName,
+        //             longName: d.longName,
+        //             name: d.longName,
+        //             route_color: d.color,
+        //             route_text_color: d.textColor,
+        //             color: d.color,
+        //             textColor: d.textColor
         //         });
+
+        //         if (f.geometry && !f.geometry.type) {
+        //             f.geometry = null;
+        //         } else {
+        //             const geometry = packageService.getRouteItemGeometry(f as any);
+        //             const bounds = geometry?.getBounds();
+        //             const min = bounds.getMin() as any;
+        //             const max = bounds.getMax() as any;
+        //             f.properties.extent = [min.getX(), min.getY(), max.getX(), max.getY()];
+        //         }
+        //     } else {
+        //         features.splice(index, 1);
+        //     }
+        // }
+        // console.timeEnd('test');
+        // return featureCollection;
     }
 
     metroLinesData: { [k: string]: MetroRoute };
@@ -179,12 +207,22 @@ class TransitService extends Observable {
             }
         });
     }
-    async getDisturbances() {
-        return networkService.request({
-            url: MOBILITY_API_URL + '/dyn/evtTC/json',
+    // async getDisturbances() {
+    //     return networkService.request({
+    //         url: MOBILITY_API_URL + '/dyn/evtTC/json',
+    //         method: 'GET',
+    //         headers: {
+    //             'Cache-Control': getCacheControl(60 * 24)
+    //         }
+    //     });
+    // }
+    async getStopTimes(id) {
+        return networkService.request<MetroLineStop[]>({
+            url: `${MOBILITY_API_URL}/routers/default/index/stops/${id.replace('_', ':')}/stoptimes`,
             method: 'GET',
             headers: {
-                'Cache-Control': getCacheControl(60 * 24)
+                Origin: 'https://github.com/Akylas/alpimaps',
+                'Cache-Control': getCacheControl(30, 29)
             }
         });
     }
@@ -211,7 +249,7 @@ class TransitService extends Observable {
             });
             return acc;
         }, {}) as { [k: string]: TransitRoute };
-        return Object.values(linesData);
+        return Object.values(linesData) /* .sort((a, b) => (a.id < b.id ? -1 : b.id > a.id ? 1 : 0)) */;
     }
     getRouteColor(item: TransitRoute) {
         return item.color || this.defaultTransitLineColor;
