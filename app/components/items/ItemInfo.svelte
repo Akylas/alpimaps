@@ -218,7 +218,7 @@
                 refreshItems();
                 loading = true;
                 const result = await itemsModule.getOSMDetails(item, mapContext.getMap().zoom);
-                DEV_LOG && console.log('result', result);
+                // DEV_LOG && console.log('result', result);
                 if (result) {
                     const newProps = {};
                     Object.keys(result.tags).forEach((k) => {

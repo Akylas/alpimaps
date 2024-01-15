@@ -145,14 +145,16 @@
             (async () => {
                 try {
                     if (!transitVectorTileDataSource && !fetchingTransitLines) {
+                        console.time('getTransitLines');
                         const result = await transitService.getTransitLines();
+                        console.timeEnd('getTransitLines');
                         transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
                             // simplifyTolerance: 0,
                             minZoom: 0,
                             maxZoom: 24
                         });
                         transitVectorTileDataSource.createLayer('routes');
-                        transitVectorTileDataSource.setLayerGeoJSONString(1, result.replace(/"geometry":{}/g, '"geometry":null'));
+                        transitVectorTileDataSource.setLayerGeoJSONString(1, result);
                         if (!transitVectorTileLayer) {
                             mapContext.innerDecoder.setStyleParameter('default_transit_color', transitService.defaultTransitLineColor);
                             transitVectorTileLayer = new VectorTileLayer({
@@ -172,7 +174,7 @@
                                         if (handleSelectedRouteTimer) {
                                             return;
                                         }
-                                        console.log('clicked on transit data', featureId, featureLayerName, featureData);
+                                        console.log('clicked on transit data', featureId, featureLayerName, featureData, featureGeometry);
                                         if (featureLayerName === 'routes') {
                                             if (handleSelectedTransitLinesTimer) {
                                                 clearTimeout(handleSelectedTransitLinesTimer);
@@ -181,7 +183,7 @@
                                             selectedTransitLines = selectedTransitLines || [];
                                             selectedTransitLines = selectedTransitLines || [];
                                             handleSelectedTransitLinesTimer = setTimeout(handleSelectedTransitLines, 10);
-                                            if (selectedTransitLines.findIndex((s) => s.id === id) === -1) {
+                                            if (selectedTransitLines.findIndex((s) => s.properties.id === id) === -1) {
                                                 const color = featureData['route_color']?.length ? featureData['route_color'] : transitService.defaultTransitLineColor;
                                                 const agency = featureData['agency_id'];
                                                 const textColor = new Color(color).getBrightness() >= 186 ? '#000000' : '#ffffff';
@@ -190,14 +192,14 @@
                                                     properties: {
                                                         class: 'bus',
                                                         id,
-                                                        ref: lineName,
-                                                        subtitle: lineName,
-                                                        name: lineName,
-                                                        symbol: `${color}:${color}:${lineName}:${textColor}`,
-                                                        // ref: featureData['route_short_name'],
-                                                        // subtitle: featureData['agency_name'],
-                                                        // name: featureData['route_long_name'],
-                                                        // symbol: `${color}:${color}:${agency === 'FLIXBUS-eu' ? 'FLIX' : featureData['route_short_name']}:${textColor}`,
+                                                        // ref: lineName,
+                                                        // subtitle: lineName,
+                                                        // name: lineName,
+                                                        // symbol: `${color}:${color}:${lineName}:${textColor}`,
+                                                        ref: featureData['route_short_name'],
+                                                        subtitle: featureData['agency_name'],
+                                                        name: featureData['route_long_name'],
+                                                        symbol: `${color}:${color}:${agency === 'FLIXBUS-eu' ? 'FLIX' : featureData['route_short_name']}:${textColor}`,
                                                         layer: featureLayerName,
                                                         ...featureData
                                                     },
@@ -219,9 +221,6 @@
                                 },
                                 mapContext.getProjection()
                             );
-                            // transitVectorTileLayer.setVectorTileEventListener(this,
-                            // mapContext.getProjection());
-                            // always add it at 1 to respect local order
                             addLayer(transitVectorTileLayer, 'transit');
                         } else {
                             transitVectorTileLayer.visible = true;
@@ -496,16 +495,16 @@
     function getMapViewPort() {
         const width = cartoMap.getMeasuredWidth();
         const height = cartoMap.getMeasuredHeight();
-        const left = Utils.layout.toDevicePixels(60);
+        const left = Utils.layout.toDevicePixels(40);
         const top = Utils.layout.toDevicePixels(90 + topTranslationY);
         const bottom = Utils.layout.toDevicePixels($navigationBarHeight - mapTranslation + 0);
         const min = Math.min(width - 2 * left, height - top - bottom);
         const deltaX = (width - min) / 2;
         const result = {
-            left: deltaX,
-            top: top + (height - top - bottom - min) / 2,
-            width: min,
-            height: min
+            left,
+            top,
+            width: width - 2 * left,
+            height: height - top - bottom
         };
         // DEV_LOG && console.log('getMapViewPort', width, height, mapTranslation, topTranslationY, result);
         return result;
@@ -579,6 +578,10 @@
                 Object.values(addedLayers).forEach((d) => {
                     addLayer(d.layer, d.layerId, true);
                 });
+            }
+            //in case it is created before (clicked as soon as the UI is shown)
+            if (transitVectorTileLayer) {
+                addLayer(transitVectorTileLayer, 'transit');
             }
             mapContext.runOnModules('onMapReady', cartoMap);
 

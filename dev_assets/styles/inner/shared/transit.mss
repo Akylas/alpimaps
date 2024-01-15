@@ -1,5 +1,5 @@
 @transitLineColor: [route_color] ? [route_color] : ([COULEUR] ? 'rgb(' + [COULEUR] + ')' : [nuti::default_transit_color]);
-@transitLineContrastColor: brightness(color(@transitLineColor)) > 180 ? #000 : #fff;
+@transitLineContrastColor: [route_text_color] ? [route_text_color] : brightness(color(@transitLineColor)) > 180 ? #000 : #fff;
 @transit_route_width: linear([view::zoom], (4, 0.3), (14, 2.1), (15, 3.2), (18, 4));
 @transit_route_casing_width: linear([view::zoom], (4, 1), (18, 3));
 
