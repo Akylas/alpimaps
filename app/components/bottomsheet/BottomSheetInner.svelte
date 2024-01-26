@@ -943,8 +943,8 @@
             </gridlayout>
         </scrollview>
 
-        <ElevationChart bind:this={elevationChart} colSpan={2} height={PROFILE_HEIGHT} {item} row={2} visibility={graphAvailable ? 'visible' : 'collapsed'} on:highlight={onChartHighlight} />
-        <canvas bind:this={statsCanvas} colSpan={2} height={STATS_HEIGHT} row={3} visibility={statsAvailable ? 'visible' : 'collapsed'} on:draw={drawStats}>
+        <ElevationChart bind:this={elevationChart} colSpan={2} height={PROFILE_HEIGHT} {item} row={2} visibility={graphAvailable ? 'visible' : 'collapse'} on:highlight={onChartHighlight} />
+        <canvas bind:this={statsCanvas} colSpan={2} height={STATS_HEIGHT} row={3} visibility={statsAvailable ? 'visible' : 'collapse'} on:draw={drawStats}>
             <IconButton
                 fontSize={20}
                 horizontalAlignment="right"
@@ -969,7 +969,7 @@
             height={webViewHeight}
             displayZoomControls={false}
             bind:this="listView"
-            visibility={listViewVisible ? 'visible' : 'collapsed'}
+            visibility={listViewVisible ? 'visible' : 'collapse'}
             @scroll="onListViewScroll"
             isScrollEnabled={scrollEnabled}
             src={webViewSrc}
