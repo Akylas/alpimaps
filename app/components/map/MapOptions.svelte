@@ -29,7 +29,13 @@
 <gesturerootview rows="auto">
     <collectionView colWidth="20%" {height} items={options} rowHeight={80}>
         <Template let:item>
-            <canvaslabel backgroundColor={item.color} borderRadius={10} paddingTop={15} rippleColor={item.color || colorPrimary} on:tap={() => onTap(item)}>
+            <canvaslabel
+                accessibilityValue={item.accessibilityValue}
+                backgroundColor={item.color}
+                borderRadius={10}
+                paddingTop={15}
+                rippleColor={item.color || colorPrimary}
+                on:tap={() => onTap(item)}>
                 <cgroup textAlignment="center" verticalAlignment="top">
                     <cspan fontFamily={$fonts.mdi} fontSize={30} text={item.icon} />
                     <cspan fontSize={12} text={'\n' + item.title} />
