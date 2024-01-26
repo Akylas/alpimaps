@@ -1,6 +1,7 @@
 const webpackConfig = require('./webpack.config.js');
 const webpack = require('webpack');
 const { readFileSync, readdirSync } = require('fs');
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const { basename, dirname, join, relative, resolve } = require('path');
 const nsWebpack = require('@nativescript/webpack');
 const CopyPlugin = require('copy-webpack-plugin');
@@ -96,13 +97,14 @@ module.exports = (env, params = {}) => {
         fork = true,
         buildpeakfinder,
         buildstyle,
+        report,
         disableoffline = false,
         busSupport = true,
         apiKeys = true,
-        playStoreBuild = true,
+        playStoreBuild = false,
         keep_classnames_functionnames = false,
         testZipStyles = false,
-        accessibility = false,
+        accessibility = true,
         locale = 'auto',
         theme = 'auto',
         adhoc
@@ -394,6 +396,7 @@ module.exports = (env, params = {}) => {
         __UI_LABEL_USE_LIGHT_FORMATTEDSTRING__: true,
         __UI_USE_EXTERNAL_RENDERER__: true,
         __UI_USE_XML_PARSER__: false,
+        __ACCESSIBILITY_DEFAULT_ENABLED__: false,
         'global.__AUTO_REGISTER_UI_MODULES__': false,
         __IOS__: isIOS,
         __ANDROID__: isAndroid,
@@ -796,6 +799,19 @@ module.exports = (env, params = {}) => {
         config.plugins.push(
             new ForkTsCheckerWebpackPlugin({
                 async: false
+            })
+        );
+    }
+
+    if (report) {
+        // Generate report files for bundles content
+        config.plugins.push(
+            new BundleAnalyzerPlugin({
+                analyzerMode: 'static',
+                openAnalyzer: false,
+                generateStatsFile: true,
+                reportFilename: resolve(projectRoot, 'report', 'report.html'),
+                statsFilename: resolve(projectRoot, 'report', 'stats.json')
             })
         );
     }
