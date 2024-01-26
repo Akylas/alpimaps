@@ -78,14 +78,14 @@
         marginLeft="-10"
         text={leftIcon}
         verticalAlignment="middle"
-        visibility={!!leftIcon ? 'visible' : 'collapsed'}
+        visibility={!!leftIcon ? 'visible' : 'collapse'}
         width={iconFontSize * 2} /> -->
     <label col={mainCol} height={subtitle?.length > 0 ? 'auto' : 40} lineBreak="end" textWrap={true} verticalAlignment="middle" verticalTextAlignment="center">
         <cspan color={titleColor} {fontSize} {fontWeight} text={title} />
         <cspan color={subtitleColor} fontSize={subtitleFontSize} text={subtitle ? '\n' + subtitle : null} />
     </label>
 
-    <label col={2} color={subtitleColor} marginLeft={16} textAlignment="right" verticalAlignment="middle" visibility={!!rightValue || rightIcon ? 'visible' : 'collapsed'}>
+    <label col={2} color={subtitleColor} marginLeft={16} textAlignment="right" verticalAlignment="middle" visibility={!!rightValue || rightIcon ? 'visible' : 'collapse'}>
         <cspan fontSize={subtitleFontSize} text={typeof rightValue === 'function' ? rightValue() : rightValue} />
         <cspan fontFamily={rightIconFonFamily} fontSize={rightIconFontSize} text={rightIcon} />
     </label>
