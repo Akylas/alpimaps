@@ -9,7 +9,7 @@ const Intent = android.content.Intent;
 
 export class BgService extends BgServiceCommon {
     private serviceConnection: android.content.ServiceConnection;
-    bgService: WeakRef<AndroidBgService>;
+    declare bgService: WeakRef<AndroidBgService>;
     context: android.content.Context;
     constructor() {
         super();
