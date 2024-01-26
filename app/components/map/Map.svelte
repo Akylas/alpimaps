@@ -1680,6 +1680,7 @@
                     icon: 'mdi-import'
                 },
                 {
+                    accessibilityValue: 'settingsBtn',
                     title: lc('settings'),
                     id: 'settings',
                     icon: 'mdi-cogs'
