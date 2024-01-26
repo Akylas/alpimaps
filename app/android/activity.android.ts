@@ -22,7 +22,7 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
         androidx.core.splashscreen.SplashScreen.installSplashScreen(this);
         // DynamicColors
         akylas.alpi.maps.Utils.applyDynamicColors(this);
-        this.getWindow().setStatusBarColor(getThemeColor(this, 'colorPrimaryDark'));
+        // this.getWindow().setStatusBarColor(getThemeColor(this, 'colorPrimaryDark'));
         Application.android.init(this.getApplication());
         // Set the isNativeScriptActivity in onCreate (as done in the original NativeScript activity code)
         // The JS constructor might not be called because the activity is created from Android.
@@ -32,6 +32,10 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
         }
 
         this._callbacks.onCreate(this, savedInstanceState, this.getIntent(), super.onCreate);
+
+        // DynamicColors
+        com.google.android.material.color.DynamicColors.applyIfAvailable(this);
+        this.getWindow().setStatusBarColor(getThemeColor(this, 'colorPrimaryDark'));
     }
 
     public onNewIntent(intent: android.content.Intent): void {
@@ -39,7 +43,6 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
     }
 
     public onSaveInstanceState(outState: android.os.Bundle): void {
-        DEV_LOG && console.log(TAG, 'onSaveInstanceState');
         this._callbacks.onSaveInstanceState(this, outState, super.onSaveInstanceState);
     }
 
