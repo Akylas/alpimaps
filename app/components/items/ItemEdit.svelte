@@ -513,7 +513,7 @@
                     on:textChange={(e) => onTextChange('name', e)}
                 />
                 <textfield
-                    visibility={itemIsRoute ? 'collapsed' : 'visible'}
+                    visibility={itemIsRoute ? 'collapse' : 'visible'}
                     variant="outline"
                     margin="10 0 0 0"
                     hint={lc('address')}

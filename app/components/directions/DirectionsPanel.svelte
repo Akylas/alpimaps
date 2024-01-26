@@ -1162,7 +1162,7 @@
                 </Template>
             </collectionview>
             <IconButton col={1} isEnabled={nbWayPoints > 1} isSelected={true} row={1} text="mdi-swap-vertical" white={true} on:tap={() => reversePoints()} />
-            <stacklayout id="directionsbuttons" colSpan={2} orientation="horizontal" row={2} visibility={showOptions ? 'visible' : 'collapsed'}>
+            <stacklayout id="directionsbuttons" colSpan={2} orientation="horizontal" row={2} visibility={showOptions ? 'visible' : 'collapse'}>
                 {#if profile === 'auto'}
                     <IconButton
                         color={valhallaSettingColor('use_highways', profile, profileCostingOptions)}
@@ -1239,7 +1239,7 @@
                 {/if}
             </stacklayout>
 
-            <stacklayout id="directionsbuttons2" colSpan={3} horizontalAlignment="right" orientation="horizontal" row={2} visibility={showOptions ? 'visible' : 'collapsed'}>
+            <stacklayout id="directionsbuttons2" colSpan={3} horizontalAlignment="right" orientation="horizontal" row={2} visibility={showOptions ? 'visible' : 'collapse'}>
                 <IconButton color={costingOptions.shortest ? 'white' : '#ffffff55'} size={40} text="mdi-timer-outline" on:tap={() => (costingOptions.shortest = !costingOptions.shortest)} />
                 <IconButton color={computeMultiple ? 'white' : '#ffffff55'} size={40} text="mdi-arrow-decision" on:tap={() => (computeMultiple = !computeMultiple)} />
                 <IconButton color="white" size={40} text="mdi-dots-vertical" on:tap={showMoreOptions} />
