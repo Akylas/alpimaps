@@ -1,7 +1,8 @@
 import { isSimulator } from '@nativescript-community/extendedinfo';
-import { Application, Color, Screen, Utils } from '@nativescript/core';
-import { get, writable } from 'svelte/store';
 import { themer } from '@nativescript-community/ui-material-core';
+import { Application, Color, Screen, Utils } from '@nativescript/core';
+import { getCurrentFontScale } from '@nativescript/core/accessibility/font-scale';
+import { get, writable } from 'svelte/store';
 import { getRealTheme, theme } from './helpers/theme';
 
 export const colors = writable({
@@ -59,22 +60,23 @@ export const navigationBarHeight = writable(0);
 export let globalMarginTop = 0;
 export const systemFontScale = writable(1);
 
+function updateSystemFontScale(value) {
+    systemFontScale.set(value);
+}
+
 const onInitRootView = function () {
     // we need a timeout to read rootView css variable. not 100% sure why yet
     if (__ANDROID__) {
         // setTimeout(() => {
         const rootView = Application.getRootView();
-
         const rootViewStyle = rootView?.style;
         fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily'), app: rootViewStyle.getCssVariable('--appFontFamily') });
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
-        DEV_LOG && console.log('initRootView', get(actionBarButtonHeight));
         const activity = Application.android.startActivity;
         const nUtils = akylas.alpi.maps.Utils;
         const nActionBarHeight = nUtils.getDimensionFromInt(activity, 16843499);
         if (nActionBarHeight > 0) {
-            DEV_LOG && console.log('nActionBarHeight', nActionBarHeight);
             actionBarHeight.set(Utils.layout.toDeviceIndependentPixels(nActionBarHeight));
         }
         const resources = Utils.android.getApplicationContext().getResources();
@@ -98,7 +100,14 @@ const onInitRootView = function () {
         const rootViewStyle = rootView?.style;
         DEV_LOG && console.log('initRootView', rootView);
         fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily'), app: rootViewStyle.getCssVariable('--appFontFamily') });
-        // DEV_LOG && console.log('fonts', get(fonts));
+
+        const currentColors = get(colors);
+        Object.keys(currentColors).forEach((c) => {
+            currentColors[c] = rootViewStyle.getCssVariable('--' + c);
+        });
+        colors.set(currentColors);
+        updateSystemFontScale(getCurrentFontScale());
+        Application.on(Application.fontScaleChangedEvent, (event) => updateSystemFontScale(event.newValue));
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
         navigationBarHeight.set(Application.ios.window.safeAreaInsets.bottom);
@@ -111,18 +120,11 @@ const onInitRootView = function () {
 Application.on('initRootView', onInitRootView);
 
 export function updateThemeColors(theme: string, force = false) {
-    // DEV_LOG && console.log('updateThemeColors', theme, force);
-    try {
-        if (!force) {
-            theme = Application.systemAppearance();
-            // console.log('systemAppearance', theme);
-        }
-    } catch (err) {
-        console.error('updateThemeColors', err);
-    }
-
     const currentColors = get(colors);
-    const rootView = Application.getRootView();
+    let rootView = Application.getRootView();
+    if (rootView?.parent) {
+        rootView = rootView.parent as any;
+    }
     const rootViewStyle = rootView?.style;
     if (!rootViewStyle) {
         return;
@@ -147,9 +149,6 @@ export function updateThemeColors(theme: string, force = false) {
             }
         });
     } else {
-        Object.keys(currentColors).forEach((c) => {
-            currentColors[c] = rootViewStyle.getCssVariable('--' + c);
-        });
         if (theme === 'dark') {
             currentColors.colorPrimary = '#29B6F6';
             currentColors.colorOnPrimary = '#00344B';
@@ -200,20 +199,19 @@ export function updateThemeColors(theme: string, force = false) {
     }
 
     currentColors.colorWidgetBackground = new Color(currentColors.colorSurface).setAlpha(230).hex;
-    currentColors.colorOnSurfaceDisabled = new Color(currentColors.colorOnSurface).setAlpha(50).hex;
     if (theme === 'dark') {
-        currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).lighten(3).hex;
-        currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).lighten(6).hex;
+        currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).lighten(10).hex;
+        currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).lighten(20).hex;
     } else {
-        currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).darken(3).hex;
-        currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).darken(6).hex;
+        currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).darken(10).hex;
+        currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).darken(20).hex;
     }
     currentColors.colorOnSurfaceVariant2 = new Color(currentColors.colorOnSurfaceVariant).setAlpha(170).hex;
+    currentColors.colorOnSurfaceDisabled = new Color(currentColors.colorOnSurface).setAlpha(50).hex;
     Object.keys(currentColors).forEach((c) => {
         rootViewStyle?.setUnscopedCssVariable('--' + c, currentColors[c]);
     });
     colors.set(currentColors);
-
     Application.notify({ eventName: 'colorsChange', colors: currentColors });
     DEV_LOG && console.log('changed colors', rootView, JSON.stringify(currentColors));
     rootView?._onCssStateChange();
