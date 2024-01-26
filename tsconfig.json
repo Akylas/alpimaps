@@ -32,5 +32,5 @@
         }
     },
     "include": ["app/**/*", "typings/*.d.ts"],
-    "exclude": ["**/node_modules", "**/build", "platforms", "**/angular"]
+    "exclude": ["node_modules"]
 }
