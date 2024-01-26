@@ -432,7 +432,7 @@
     <mdactivityindicator busy={true} col={2} height={20} visibility={loading ? 'visible' : 'hidden'} width={20} />
     <IconButton col={2} gray={true} isVisible={currentSearchText && currentSearchText.length > 0 && !loading && didSearch} text="mdi-refresh" on:tap={reloadSearch} />
     <IconButton col={3} gray={true} isVisible={currentSearchText && currentSearchText.length > 0} text="mdi-close" on:tap={() => clearSearch()} />
-    <IconButton col={4} gray={true} text="mdi-dots-vertical" on:tap={showMapMenu} />
+    <IconButton accessibilityValue="menuBtn" col={4} gray={true} text="mdi-dots-vertical" on:tap={showMapMenu} />
     {#if loaded}
         <absolutelayout bind:this={collectionViewHolder} colSpan={7} height={0} isUserInteractionEnabled={searchResultsVisible} row={1}>
             <gridlayout columns="auto,auto,*" height={SEARCH_COLLECTIONVIEW_HEIGHT} rows="*,auto" width="100%">
