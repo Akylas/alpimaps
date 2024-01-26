@@ -236,7 +236,7 @@
     columns="auto,*,auto"
     height={70}
     padding={6}
-    visibility={showLocationInfo ? 'visible' : 'collapsed'}
+    visibility={showLocationInfo ? 'visible' : 'collapse'}
     width={200}
     on:tap={moveToUserLocation}
     on:swipe={switchLocationInfo}>
@@ -258,10 +258,10 @@
                 <cspan fontSize={12} text=" m" />
             </cgroup>
         </canvaslabel>
-        <canvaslabel col={1} visibility={listeningForBarometer && airportRefName ? 'visible' : 'collapsed'}>
+        <canvaslabel col={1} visibility={listeningForBarometer && airportRefName ? 'visible' : 'collapse'}>
             <cspan color="#fff" fontSize={9} text={airportRefName} textAlignment="right" verticalAlignment="bottom" />
         </canvaslabel>
-        <stacklayout col={2} verticalAlignment="middle" visibility={hasBarometer ? 'visible' : 'collapsed'}>
+        <stacklayout col={2} verticalAlignment="middle" visibility={hasBarometer ? 'visible' : 'collapse'}>
             <IconButton small={true} text="mdi-gauge" white={true} on:tap={switchBarometer} />
             <IconButton isVisible={listeningForBarometer} small={true} text="mdi-reflect-vertical" white={true} on:tap={getNearestAirportPressure} />
         </stacklayout>
