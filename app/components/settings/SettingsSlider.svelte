@@ -74,7 +74,7 @@
 <gridlayout {...$$restProps} columns="auto,*,auto" height="auto" padding="10 10 10 10" rows="auto,auto, auto">
     <!-- <canvas bind:this={canvas} on:draw={onDraw} /> -->
 
-    <label color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={24} text={icon} verticalTextAlignment="center" visibility={icon ? 'visible' : 'collapsed'} />
+    <label color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={24} text={icon} verticalTextAlignment="center" visibility={icon ? 'visible' : 'collapse'} />
     <label col={1} color={colorOnSurface} fontSize={15} lineBreak="end" maxLines={2} padding="0 10 0 10" text={title} textWrap={true} verticalTextAlignment="center" />
     <label
         col={1}
@@ -85,7 +85,7 @@
         row={1}
         text={subtitle}
         verticalTextAlignment="center"
-        visibility={subtitle && subtitle.length > 0 ? 'visible' : 'collapsed'} />
+        visibility={subtitle && subtitle.length > 0 ? 'visible' : 'collapse'} />
     <label col={2} color={colorOnSurface} fontSize={15} text={valueFormatter(actualValue)} textAlignment="right" verticalTextAlignment="center" />
     <label col={2} color={colorOnSurface} fontSize={15} row={2} text={formatter(max)} textAlignment="right" verticalTextAlignment="center" />
     <label color={colorOnSurface} fontSize={15} row={2} text={formatter(min)} verticalTextAlignment="center" />
