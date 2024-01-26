@@ -1967,7 +1967,7 @@
                 textAlignment="center"
                 verticalAlignment="middle"
                 width={20}>
-                <cspan text="mdi-access-point-network-off" textAlignment="left" verticalTextAlignment="top" visibility={networkConnected ? 'collapsed' : 'visible'} />
+                <cspan text="mdi-access-point-network-off" textAlignment="left" verticalTextAlignment="top" visibility={networkConnected ? 'collapse' : 'visible'} />
             </canvaslabel>
             <mdcardview
                 class="small-floating-btn"
@@ -1975,7 +1975,7 @@
                 marginTop={Math.max(90 - topTranslationY, 0)}
                 translateY={Math.max(topTranslationY - 30, 0)}
                 verticalAlignment="top"
-                visibility={currentMapRotation !== 0 ? 'visible' : 'collapsed'}
+                visibility={currentMapRotation !== 0 ? 'visible' : 'collapse'}
                 on:tap={resetBearing}>
                 <label class="mdi" color={colorPrimary} rotate={-currentMapRotation} text="mdi-navigation" textAlignment="center" verticalAlignment="middle" />
             </mdcardview>
@@ -2001,7 +2001,7 @@
                 verticalAlignment="top"
                 borderRadius={16}
                 backgroundColor="#00000055"
-                visibility={currentClickedFeatures && currentClickedFeatures.length > 0 ? 'visible' : 'collapsed'}
+                visibility={currentClickedFeatures && currentClickedFeatures.length > 0 ? 'visible' : 'collapse'}
             >
                 <Template let:item>
                     <label padding="0 20 0 20" text={JSON.stringify(item)} verticalAlignment="middle" fontSize={11} color="white" />

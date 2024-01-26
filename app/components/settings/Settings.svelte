@@ -606,7 +606,7 @@
                             maxLines={2}
                             text={getSubtitle(item)}
                             verticalTextAlignment="top"
-                            visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'} />
+                            visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapse'} />
                     </stacklayout>
                     <switch checked={item.value} col={1} verticalAlignment="middle" on:checkedChange={(e) => onCheckBox(item, e.value)} />
                     <absolutelayout backgroundColor={colorOutlineVariant} colSpan={2} height={1} verticalAlignment="bottom" />
@@ -624,7 +624,7 @@
                             maxLines={2}
                             text={getSubtitle(item)}
                             verticalTextAlignment="top"
-                            visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapsed'} />
+                            visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapse'} />
                     </stacklayout>
 
                     <label
@@ -634,7 +634,7 @@
                         marginRight={16}
                         text={item.rightValue && item.rightValue()}
                         verticalAlignment="middle"
-                        visibility={!!item.rightValue ? 'visible' : 'collapsed'} />
+                        visibility={!!item.rightValue ? 'visible' : 'collapse'} />
                     <label
                         class="mdi"
                         col={2}
