@@ -290,7 +290,7 @@
             col={2}
             rowSpan={2}
             text="mdi-directions"
-            visibility={selectedItemHasPosition ? 'visible' : 'collapsed'}
+            visibility={selectedItemHasPosition ? 'visible' : 'collapse'}
             on:tap={startDirections}
             transition:scale={{ duration: 200 }} />
         <mdcardview
@@ -326,7 +326,7 @@
         verticalAlignment="bottom"
         on:tap={onAttributionTap} />
 
-    <mdprogress colSpan={3} row={2} value={totalDownloadProgress} verticalAlignment="bottom" visibility={totalDownloadProgress > 0 ? 'visible' : 'collapsed'} />
+    <mdprogress colSpan={3} row={2} value={totalDownloadProgress} verticalAlignment="bottom" visibility={totalDownloadProgress > 0 ? 'visible' : 'collapse'} />
     <canvas
         bind:this={navigationCanvas}
         backgroundColor={colorSurfaceContainer}
@@ -336,7 +336,7 @@
         marginBottom={24}
         rowSpan={3}
         verticalAlignment="bottom"
-        visibility={navigationInstructions ? 'visible' : 'collapsed'}
+        visibility={navigationInstructions ? 'visible' : 'collapse'}
         width="70%"
         on:swipe={() => (navigationInstructions = null)}
         on:draw={drawNavigationInstruction} />

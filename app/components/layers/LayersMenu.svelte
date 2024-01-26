@@ -196,7 +196,7 @@
                                     html={item.provider.attribution}
                                     maxLines={2}
                                     paddingTop={3}
-                                    visibility={item.provider.attribution ? 'visible' : 'collapsed'}
+                                    visibility={item.provider.attribution ? 'visible' : 'collapse'}
                                     on:linkTap={onLinkTap} />
                             </stacklayout>
                             <slider
@@ -209,7 +209,7 @@
                                 verticalAlignment="middle"
                                 on:valueChange={(event) => onLayerOpacityChanged(item, event)} />
                             <IconButton col={2} gray={true} onLongPress={(event) => onButtonLongPress(item, event)} rowSpan={2} text="mdi-dots-vertical" on:tap={() => showSourceOptions(item)} />
-                            <mdprogress colSpan={3} value={item.downloadProgress} verticalAlignment="bottom" visibility={item.downloading > 0 ? 'visible' : 'collapsed'} />
+                            <mdprogress colSpan={3} value={item.downloadProgress} verticalAlignment="bottom" visibility={item.downloading > 0 ? 'visible' : 'collapse'} />
                         </gridlayout>
                         <mdbutton
                             prop:leftDrawer
@@ -244,7 +244,7 @@
                 <!-- <IconButton gray={true} isSelected={$preloading} tooltip={lc('preloading')} text="mdi-map-clock" on:tap={() => preloading.set(!$preloading)} /> -->
             </stacklayout>
         {/if}
-        <!-- <GridLayout visibility="(currentLegend)?'visible':'collapsed'" rows="auto,*" columns="auto,*" backgroundColor={white}>
+        <!-- <GridLayout visibility="(currentLegend)?'visible':'collapse'" rows="auto,*" columns="auto,*" backgroundColor={white}>
                 <WebView rowSpan={2} colSpan={2} v-if="currentLegend" src="currentLegend" @scroll={onListViewScroll}  />
                 <MDButton variant="flat" class="icon-btn" text="mdi-arrow-left" @tap="currentLegend = null" />
             </GridLayout> -->
