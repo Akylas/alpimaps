@@ -9,7 +9,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { clock_24, getLocaleDisplayName, l, lc, onLanguageChanged, onMapLanguageChanged, selectLanguage, selectMapLanguage, slc } from '~/helpers/locale';
-    import { getThemeDisplayName, selectTheme } from '~/helpers/theme';
+    import { getThemeDisplayName, onThemeChanged, selectTheme } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { showError } from '~/utils/error';
@@ -377,9 +377,6 @@
                     break;
                 case 'dark_mode':
                     await selectTheme();
-                    if (__IOS__) {
-                        refresh();
-                    }
                     break;
                 case 'review':
                     openLink(STORE_REVIEW_LINK);
@@ -530,16 +527,30 @@
             return;
         }
         const value = event.value;
+        item.value = value;
         if (checkboxTapTimer) {
             clearTimeout(checkboxTapTimer);
             checkboxTapTimer = null;
         }
         try {
-            ApplicationSettings.setBoolean(item.key, value);
+            ApplicationSettings.setBoolean(item.key || item.id, value);
         } catch (error) {
             console.error(error, error.stack);
         }
     }
+    function refreshCollectionView() {
+        collectionView?.nativeView.refresh();
+        //     console.log('refreshCollectionView');
+        // const nativeView = collectionView?.nativeView;
+        //     if (nativeView) {
+        //         items.forEach((item, index)=>{
+        //         if (item.type === 'switch') {
+        //             nativeView.getViewForItemAtIndex(index).getViewById('checkbox')?.updateTheme?.();
+        //         }
+        //     });
+        //     }
+    }
+    onThemeChanged(refreshCollectionView);
     onLanguageChanged((value, event) => {
         if (event.clock_24 !== true) {
             refresh();
