@@ -84,6 +84,10 @@ checkbox {
     on-tint-color: var(--colorPrimary);
 }
 
+frame {
+    background-color: var(--colorBackground);
+}
+
 page {
     status-bar-style: dark;
     background-color: var(--colorBackground);
@@ -119,18 +123,23 @@ mdbutton[variant=text] {
     padding: 0;
 }
 
+htmllabel,
+canvasview,
+label,
+button,
+textfield,
 mdtextfield,
-textfield {
-    // color: var(--colorOnBackground);
-    // backgroundcolor-color: var(--colorOnPrimary);
-    placeholder-color: var(--colorOnSurfaceVariant);
-
-    // .ns-dark & {
-    //     // color: var(--colorOnPrimary);
-    //     // backgroun    dcolor-color: var(--colorOnBackground);
-    //     placeholder-color: lightgray;
-    // }
+checkbox,
+mdbutton {
+    ios-a11y-adjusts-font-size: true;
 }
+
+textfield, mdtextfield {
+    stroke-color: var(--colorOutline);
+    placeholder-color: var(--colorOutline);
+    color: var(--colorOnSurface);
+}
+
 
 .textRipple {
     ripple-color: var(--colorOnBackground);

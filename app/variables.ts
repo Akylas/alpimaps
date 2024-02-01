@@ -133,7 +133,6 @@ export function updateThemeColors(theme: string, force = false) {
     if (__ANDROID__) {
         const nUtils = akylas.alpi.maps.Utils;
         const activity = Application.android.startActivity;
-        Utils.android.getApplicationContext().getResources();
         // we also update system font scale so that our UI updates correcly
         systemFontScale.set(Utils.android.getApplicationContext().getResources().getConfiguration().fontScale);
         Object.keys(currentColors).forEach((c) => {
@@ -199,6 +198,10 @@ export function updateThemeColors(theme: string, force = false) {
     }
 
     currentColors.colorWidgetBackground = new Color(currentColors.colorSurface).setAlpha(230).hex;
+
+    if (theme === 'black') {
+        currentColors.colorBackground = '#000000';
+    }
     if (theme === 'dark') {
         currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).lighten(10).hex;
         currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).lighten(20).hex;
@@ -215,4 +218,6 @@ export function updateThemeColors(theme: string, force = false) {
     Application.notify({ eventName: 'colorsChange', colors: currentColors });
     DEV_LOG && console.log('changed colors', rootView, JSON.stringify(currentColors));
     rootView?._onCssStateChange();
+    const rootModalViews = rootView?._getRootModalViews();
+    rootModalViews.forEach((rootModalView) => rootModalView._onCssStateChange());
 }
