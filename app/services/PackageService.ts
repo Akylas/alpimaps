@@ -128,15 +128,15 @@ class PackageService extends Observable {
     hillshadeLayer?: HillshadeRasterTileLayer;
     localVectorTileLayer?: VectorTileLayer;
 
-    _localOfflineRoutingSearchService: MultiValhallaOfflineRoutingService;
-    _onlineRoutingSearchService: ValhallaOnlineRoutingService;
+    mLocalOfflineRoutingSearchService: MultiValhallaOfflineRoutingService;
+    mOnlineRoutingSearchService: ValhallaOnlineRoutingService;
 
-    _docPath;
+    mDocPath;
     get docPath() {
-        if (!this._docPath) {
-            this._docPath = getDataFolder();
+        if (!this.mDocPath) {
+            this.mDocPath = getDataFolder();
         }
-        return this._docPath;
+        return this.mDocPath;
     }
     started = false;
     start() {
@@ -163,11 +163,11 @@ class PackageService extends Observable {
     set currentLanguage(value) {
         if (this._currentLanguage === value) {
             this._currentLanguage = value;
-            if (this._localOSMOfflineGeocodingService) {
-                this._localOSMOfflineGeocodingService.language = value;
+            if (this.mLocalOSMOfflineGeocodingService) {
+                this.mLocalOSMOfflineGeocodingService.language = value;
             }
-            if (this._localOSMOfflineReverseGeocodingService) {
-                this._localOSMOfflineReverseGeocodingService.language = value;
+            if (this.mLocalOSMOfflineReverseGeocodingService) {
+                this.mLocalOSMOfflineReverseGeocodingService.language = value;
             }
         }
     }
@@ -263,27 +263,38 @@ class PackageService extends Observable {
         return result;
     }
 
-    _localOSMOfflineGeocodingService: MultiOSMOfflineGeocodingService;
+    mLocalOSMOfflineGeocodingService: MultiOSMOfflineGeocodingService;
+    hasLocalOSMOfflineGeocodingService = true;
+
     get localOSMOfflineGeocodingService() {
-        if (!this._localOSMOfflineGeocodingService) {
+        if (this.hasLocalOSMOfflineGeocodingService && !this.mLocalOSMOfflineGeocodingService) {
             const files = this.findFilesWithExtension('.nutigeodb');
-            const source = (this._localOSMOfflineGeocodingService = new MultiOSMOfflineGeocodingService({
-                language: this.currentLanguage
-            }));
-            files.forEach((f) => source.add(f.path));
+            if (files.length) {
+                const source = (this.mLocalOSMOfflineGeocodingService = new MultiOSMOfflineGeocodingService({
+                    language: this.currentLanguage
+                }));
+                files.forEach((f) => source.add(f.path));
+            } else {
+                this.hasLocalOSMOfflineGeocodingService = false;
+            }
         }
-        return this._localOSMOfflineGeocodingService;
+        return this.mLocalOSMOfflineGeocodingService;
     }
-    _localOSMOfflineReverseGeocodingService: MultiOSMOfflineReverseGeocodingService;
+    mLocalOSMOfflineReverseGeocodingService: MultiOSMOfflineReverseGeocodingService;
+    hasLocalOSMOfflineReverseGeocodingService = true;
     get localOSMOfflineReverseGeocodingService() {
-        if (!this._localOSMOfflineReverseGeocodingService) {
+        if (this.hasLocalOSMOfflineReverseGeocodingService && !this.mLocalOSMOfflineReverseGeocodingService) {
             const files = this.findFilesWithExtension('.nutigeodb');
-            const source = (this._localOSMOfflineReverseGeocodingService = new MultiOSMOfflineReverseGeocodingService({
-                language: this.currentLanguage
-            }));
-            files.forEach((f) => source.add(f.path));
+            if (files.length) {
+                const source = (this.mLocalOSMOfflineReverseGeocodingService = new MultiOSMOfflineReverseGeocodingService({
+                    language: this.currentLanguage
+                }));
+                files.forEach((f) => source.add(f.path));
+            } else {
+                this.hasLocalOSMOfflineReverseGeocodingService = false;
+            }
         }
-        return this._localOSMOfflineReverseGeocodingService;
+        return this.mLocalOSMOfflineReverseGeocodingService;
     }
     _vectorTileSearchService: VectorTileSearchService;
     get vectorTileSearchService() {
@@ -706,11 +717,11 @@ class PackageService extends Observable {
     }
     hasOfflineRouting = true;
     offlineRoutingSearchService() {
-        if (this.hasOfflineRouting && !this._localOfflineRoutingSearchService) {
+        if (this.hasOfflineRouting && !this.mLocalOfflineRoutingSearchService) {
             const files = this.findFilesWithExtension('.vtiles');
             // console.log('offlineRoutingSearchService', files);
             if (files.length) {
-                const source = (this._localOfflineRoutingSearchService = new MultiValhallaOfflineRoutingService());
+                const source = (this.mLocalOfflineRoutingSearchService = new MultiValhallaOfflineRoutingService());
                 source.setConfigurationParameter('service_limits.bicycle.max_distance', 255000);
                 source.setConfigurationParameter('service_limits.trace.max_distance', 500000);
                 files.forEach((f) => source.add(f.path));
@@ -718,16 +729,16 @@ class PackageService extends Observable {
                 this.hasOfflineRouting = false;
             }
         }
-        return this._localOfflineRoutingSearchService;
+        return this.mLocalOfflineRoutingSearchService;
     }
 
     onlineRoutingSearchService() {
-        if (!this._onlineRoutingSearchService) {
-            this._onlineRoutingSearchService = new ValhallaOnlineRoutingService({
+        if (!this.mOnlineRoutingSearchService) {
+            this.mOnlineRoutingSearchService = new ValhallaOnlineRoutingService({
                 apiKey: gVars.MAPBOX_TOKEN
             });
         }
-        return this._onlineRoutingSearchService;
+        return this.mOnlineRoutingSearchService;
     }
 }
 export const packageService = new PackageService();
