@@ -31,6 +31,8 @@
     import { showError } from '~/utils/error';
     import { defaultProfileCostingOptions, getSavedProfile, getValhallaSettings, removeSavedProfile, savedProfile, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
     import { colors, fonts, globalMarginTop } from '~/variables';
+    import { onThemeChanged } from '~/helpers/theme';
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
 
     const DEFAULT_PROFILE_KEY = 'default_direction_profile';
 
@@ -71,7 +73,8 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorPrimary } = $colors);
+    let { colorPrimary, colorOnPrimary } = $colors;
+    $: ({ colorPrimary, colorOnPrimary } = $colors);
     const mapContext = getMapContext();
     const dispatch = createEventDispatcher();
     let _routeDataSource: GeoJSONVectorTileDataSource;
@@ -748,6 +751,7 @@
                 },
                 properties: {
                     name: formatter.getItemName(waypoints.getItem(0)) + ' - ' + formatter.getItemName(waypoints.getItem(waypoints.length - 1)),
+                    hasRealName: false,
                     class: profile,
                     id,
                     zoomBounds: geometry.getBounds(),
@@ -1096,6 +1100,13 @@
             showError(error);
         }
     }
+    let collectionView: NativeViewElementNode<CollectionView>;
+    function refreshCollectionView() {
+        collectionView?.nativeView.refresh();
+    }
+    onThemeChanged(() => {
+        refreshCollectionView();
+    });
 </script>
 
 <stacklayout bind:this={topLayout} {...$$restProps} style="z-index:1000;" backgroundColor={colorPrimary} paddingTop={globalMarginTop} translateY={currentTranslationY}>
@@ -1122,17 +1133,19 @@
             <IconButton
                 backgroundColor="white"
                 colSpan={2}
-                gray={true}
+                color="black"
                 horizontalAlignment="right"
                 isSelected={nbWayPoints > 1}
                 isVisible={!loading}
                 marginRight={10}
+                rippleColor="black"
                 selectedColor={colorPrimary}
                 size={40}
                 text="mdi-magnify"
                 on:tap={() => computeRoutes()} />
             <mdactivityindicator busy={true} colSpan={2} color="white" height={40} horizontalAlignment="right" visibility={loading ? 'visible' : 'hidden'} width={40} />
             <collectionview
+                bind:this={collectionView}
                 animateItemUpdate={true}
                 itemIdGenerator={(item, i) => item.properties.id}
                 items={waypoints}
@@ -1149,7 +1162,7 @@
                         <cspan text={item.properties.isStop ? 'mdi-map-marker' : 'mdi-checkbox-blank-circle-outline'} verticalAlignment="middle" />
 
                         <gridlayout
-                            backgroundColor={new Color(colorPrimary).darken(20).hex}
+                            backgroundColor={new Color(colorPrimary).darken(14).hex}
                             borderRadius={8}
                             columns=" *,auto"
                             height={30}
@@ -1161,7 +1174,7 @@
                     </canvaslabel>
                 </Template>
             </collectionview>
-            <IconButton col={1} isEnabled={nbWayPoints > 1} isSelected={true} row={1} text="mdi-swap-vertical" white={true} on:tap={() => reversePoints()} />
+            <IconButton col={1} color={colorOnPrimary} isEnabled={nbWayPoints > 1} row={1} text="mdi-swap-vertical" on:tap={() => reversePoints()} />
             <stacklayout id="directionsbuttons" colSpan={2} orientation="horizontal" row={2} visibility={showOptions ? 'visible' : 'collapse'}>
                 {#if profile === 'auto'}
                     <IconButton

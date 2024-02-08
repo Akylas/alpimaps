@@ -15,7 +15,7 @@
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { hideLoading, openLink, showLoading } from '~/utils/ui';
+    import { hideLoading, openLink, showAlertOptionSelect, showLoading } from '~/utils/ui';
     import { ANDROID_30, getDefaultMBTilesDir, moveFileOrFolder } from '~/utils/utils';
     import { getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, resetItemsDataFolder, restartApp, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';
     import { colors, fonts, navigationBarHeight } from '~/variables';
@@ -82,39 +82,69 @@
                 title: lc('donate')
             },
             {
+                type: 'sectionheader',
+                title: lc('general')
+            },
+            {
                 id: 'language',
                 description: getLocaleDisplayName,
                 title: lc('language')
-            },
-            {
-                id: 'dark_mode',
-                description: getThemeDisplayName,
-                title: lc('theme.title')
-            },
-            {
-                type: 'switch',
-                key: 'clock_24',
-                value: clock_24,
-                title: lc('hours_24_clock')
-            },
-            {
-                type: 'switch',
-                key: 'startDirDest',
-                value: ApplicationSettings.getBoolean('startDirDest', false),
-                title: lc('start_direction_dest')
-            },
-            // {
-            //     id: 'share',
-            //     rightBtnIcon: 'mdi-chevron-right',
-            //     title: lc('share_application')
-            // },
-            {
-                id: 'data_path',
-                title: lc('map_data_path'),
-                description: getSavedMBTilesDir,
-                rightBtnIcon: 'mdi-chevron-right'
             }
         ]
+            .concat(
+                !PLAY_STORE_BUILD && customLayers.hasLocalData
+                    ? [
+                          {
+                              id: 'map_language',
+                              description: () => getLocaleDisplayName(ApplicationSettings.getString('map_language')),
+                              title: lc('map_language')
+                          }
+                      ]
+                    : ([] as any)
+            )
+            .concat([
+                {
+                    id: 'dark_mode',
+                    description: getThemeDisplayName,
+                    title: lc('theme.title')
+                },
+                {
+                    type: 'switch',
+                    key: 'clock_24',
+                    value: clock_24,
+                    title: lc('hours_24_clock')
+                },
+                {
+                    type: 'switch',
+                    key: 'startDirDest',
+                    value: ApplicationSettings.getBoolean('startDirDest', false),
+                    title: lc('start_direction_dest')
+                },
+                // {
+                //     id: 'share',
+                //     rightBtnIcon: 'mdi-chevron-right',
+                //     title: lc('share_application')
+                // },
+                {
+                    id: 'data_path',
+                    title: lc('map_data_path'),
+                    description: getSavedMBTilesDir,
+                    rightBtnIcon: 'mdi-chevron-right'
+                }
+            ] as any)
+            .concat(
+                !PLAY_STORE_BUILD && ANDROID_30
+                    ? [
+                          {
+                              id: 'items_data_path',
+                              title: lc('items_data_path'),
+                              description: getItemsDataFolder,
+                              rightBtnIcon: 'mdi-chevron-right'
+                          }
+                      ]
+                    : ([] as any)
+            )
+
             .concat(
                 PLAY_STORE_BUILD
                     ? [
@@ -131,22 +161,15 @@
                       ]
                     : ([] as any)
             )
-            .concat(
-                PLAY_STORE_BUILD
-                    ? [
-                          {
-                              id: 'review',
-                              rightBtnIcon: 'mdi-chevron-right',
-                              title: lc('review_application')
-                          }
-                      ]
-                    : ([] as any)
-            )
             .concat([
                 {
                     id: 'third_party',
                     title: lc('third_parties'),
                     description: lc('list_used_third_parties')
+                },
+                {
+                    type: 'sectionheader',
+                    title: lc('backup_restore')
                 },
                 {
                     id: 'export_settings',
@@ -160,21 +183,10 @@
                 }
             ] as any);
 
-        if (!PLAY_STORE_BUILD && ANDROID_30) {
-            newItems.push({
-                id: 'items_data_path',
-                title: lc('items_data_path'),
-                description: getItemsDataFolder,
-                rightBtnIcon: 'mdi-chevron-right'
-            });
-        }
-        if (customLayers.hasLocalData) {
-            newItems.splice(1, 0, {
-                id: 'map_language',
-                description: () => getLocaleDisplayName(ApplicationSettings.getString('map_language')),
-                title: lc('map_language')
-            });
-        }
+        newItems.push({
+            type: 'sectionheader',
+            title: lc('geolocation')
+        });
         const geoSettings = geoHandler.getWatchSettings();
         Object.keys(geoSettings).forEach((k) => {
             const value = geoSettings[k];
@@ -186,6 +198,10 @@
             });
         });
 
+        newItems.push({
+            type: 'sectionheader',
+            title: lc('api_keys')
+        });
         const tokenSettings = [];
         Object.keys(customLayers.tokenKeys).forEach((k) => {
             tokenSettings.push({
@@ -460,6 +476,7 @@
                     if (item.type === 'prompt') {
                         const result = await prompt({
                             title: getTitle(item),
+                            message: getSubtitle(item),
                             okButtonText: l('save'),
                             cancelButtonText: l('cancel'),
                             autoFocus: true,
@@ -476,14 +493,24 @@
                         }
                     } else {
                         const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
-                        const result = await showBottomSheet<any>({
-                            parent: null,
-                            view: OptionSelect,
-                            props: {
-                                options: item.values.map((k) => ({ name: k.title, data: k.value }))
+                        const options = item.values.map((k) => ({ name: k.title, data: k.value }));
+                        const currentValue = ApplicationSettings.getNumber(item.key, item.default);
+                        const result = await showAlertOptionSelect(
+                            OptionSelect,
+                            {
+                                height: Math.min(options.length * 56, 400),
+                                rowHeight: 56,
+                                options: options.map((d) => ({
+                                    ...d,
+                                    boxType: 'circle',
+                                    type: 'checkbox',
+                                    value: currentValue === d.data
+                                }))
                             },
-                            trackingScrollView: 'collectionView'
-                        });
+                            {
+                                title: lc('select_language')
+                            }
+                        );
                         if (result) {
                             ApplicationSettings.setNumber(item.key, result.data);
                             updateItem(item);
@@ -562,6 +589,9 @@
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*">
         <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$navigationBarHeight}>
+            <Template key="sectionheader" let:item>
+                <label class="sectionHeader" text={item.title} />
+            </Template>
             <Template key="header" let:item>
                 <gridlayout rows="auto,auto">
                     <stacklayout
