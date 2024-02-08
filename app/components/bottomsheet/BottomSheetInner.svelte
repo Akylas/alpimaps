@@ -912,7 +912,7 @@
                 <stacklayout id="bottomsheetbuttons" orientation="horizontal">
                     <IconButton isVisible={item && !itemIsRoute} rounded={false} text="mdi-information-outline" tooltip={lc('information')} on:tap={() => showInformation()} />
                     <IconButton
-                        isVisible={item && (!itemIsRoute || !!item.properties?.name)}
+                        isVisible={item && (!itemIsRoute || (!!item.properties?.name && item.properties.hasRealName !== false))}
                         onLongPress={() => searchWeb(false)}
                         rounded={false}
                         text="mdi-web"
@@ -921,7 +921,9 @@
                     {#if packageService.hasElevation()}
                         <IconButton isVisible={itemIsRoute && itemCanQueryProfile} rounded={false} text="mdi-chart-areaspline" tooltip={lc('elevation_profile')} on:tap={() => getProfile()} />
                     {/if}
-                    <IconButton isVisible={itemIsRoute && itemCanQueryStats} rounded={false} text="mdi-chart-bar-stacked" tooltip={lc('road_stats')} on:tap={() => getStats()} />
+                    {#if packageService.offlineRoutingSearchService()}
+                        <IconButton isVisible={itemIsRoute && itemCanQueryStats} rounded={false} text="mdi-chart-bar-stacked" tooltip={lc('road_stats')} on:tap={() => getStats()} />
+                    {/if}
                     <IconButton isVisible={!!item?.id && itemIsRoute} rounded={false} text="mdi-eye-off" tooltip={lc('hide')} on:tap={hideItem} />
                     <IconButton isVisible={itemCanBeAdded} rounded={false} text={itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus'} tooltip={lc('save')} on:tap={() => saveItem()} />
                     <IconButton isVisible={itemCanBeEdited} rounded={false} text="mdi-pencil" tooltip={lc('edit')} on:tap={startEditingItem} />
