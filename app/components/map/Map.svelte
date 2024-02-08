@@ -17,7 +17,7 @@
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
     import { closeBottomSheet, isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { action, prompt } from '@nativescript-community/ui-material-dialogs';
+    import { action, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
@@ -404,6 +404,7 @@
         });
 
         Application.on('colorsChange', onColorsChange);
+
 
         if (!PRODUCTION) {
             defaultLiveSync = global.__onLiveSync.bind(global);
@@ -1675,7 +1676,7 @@
                     icon: 'mdi-wifi-strength-off-outline'
                 },
                 {
-                    title: lc('import'),
+                    title: lc('import_data'),
                     id: 'import',
                     icon: 'mdi-import'
                 },
@@ -1948,7 +1949,6 @@
                 translateY={Math.max(topTranslationY - 30, 0)}
                 verticalAlignment="top" />
 
-            <Search bind:this={searchView} defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} verticalAlignment="top" />
             <LocationInfoPanel
                 bind:this={locationInfoPanel}
                 horizontalAlignment="left"
@@ -1956,6 +1956,7 @@
                 marginLeft={20}
                 marginTop={90}
                 verticalAlignment="top" />
+            <Search bind:this={searchView} defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} verticalAlignment="top" />
             <canvaslabel
                 class="mdi"
                 color={colorError}
@@ -1970,6 +1971,7 @@
                 <cspan text="mdi-access-point-network-off" textAlignment="left" verticalTextAlignment="top" visibility={networkConnected ? 'collapse' : 'visible'} />
             </canvaslabel>
             <mdcardview
+                id="orientation"
                 class="small-floating-btn"
                 horizontalAlignment="right"
                 marginTop={Math.max(90 - topTranslationY, 0)}
