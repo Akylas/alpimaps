@@ -1,0 +1,17 @@
+*Features*
+- support text copied from other apps
+- share item as gpx
+- force offline mode
+- item info view can show JSON data (dev)
+- select style on long press options button
+- changed a bit actions shown on map left
+- import/export settings
+- material You theme support
+
+*Bug fixes*
+- updated map style
+- different disk and memory size cache for http
+- ensure query parameters are set correctly
+- use carto map interaction for better interaction of map with search view
+- better text colors
+- item 
