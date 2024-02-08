@@ -656,7 +656,8 @@ LEFT JOIN  (
             }
             const result = await showPopoverMenu({
                 options: actions,
-                anchor: event.object
+                anchor: event.object,
+                vertPos: VerticalPosition.BELOW
             });
 
             if (result) {

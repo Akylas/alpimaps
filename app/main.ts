@@ -102,6 +102,10 @@ try {
             unit: '%'
         }
     });
+    themer.createShape('medium', {
+        cornerFamily: 'rounded' as any,
+        cornerSize: 12
+    });
 
     // we need to instantiate it to "start" it
     const bgService = getBGServiceInstance();
