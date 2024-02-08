@@ -19,7 +19,7 @@
     import IconButton from '../common/IconButton.svelte';
     import SearchCollectionView from './SearchCollectionView.svelte';
 
-    $: ({ colorSurfaceContainerHigh, colorWidgetBackground, colorOnSurfaceVariant } = $colors);
+    $: ({ colorSurfaceContainerHigh, colorWidgetBackground, colorOnSurface } = $colors);
 
     const SEARCH_COLLECTIONVIEW_HEIGHT = 250;
     let animating = false;
@@ -340,32 +340,45 @@
 
     async function showSearchOptions(event) {
         try {
-            const actions: any[] = [
-                {
-                    type: 'checkbox',
-                    name: lc('search_using_geocoding'),
-                    value: ApplicationSettings.getBoolean('searchInGeocoding', true),
-                    id: 'searchInGeocoding'
-                },
-                {
-                    type: 'checkbox',
-                    name: lc('search_in_vectortiles'),
-                    value: ApplicationSettings.getBoolean('searchInTiles', true),
-                    id: 'searchInTiles'
-                },
-                {
-                    type: 'checkbox',
-                    name: lc('search_using_here'),
-                    value: ApplicationSettings.getBoolean('searchUsingHere', false),
-                    id: 'searchUsingHere'
-                },
-                {
-                    type: 'checkbox',
-                    name: lc('search_using_photon'),
-                    value: ApplicationSettings.getBoolean('searchUsingPhoton', true),
-                    id: 'searchUsingPhoton'
-                }
-            ];
+            const actions: any[] = []
+                .concat(
+                    !!packageService.localOSMOfflineGeocodingService
+                        ? [
+                              {
+                                  type: 'checkbox',
+                                  name: lc('search_using_geocoding'),
+                                  value: ApplicationSettings.getBoolean('searchInGeocoding', true),
+                                  id: 'searchInGeocoding'
+                              }
+                          ]
+                        : []
+                )
+                .concat(
+                    !!packageService.localVectorTileLayer
+                        ? [
+                              {
+                                  type: 'checkbox',
+                                  name: lc('search_in_vectortiles'),
+                                  value: ApplicationSettings.getBoolean('searchInTiles', true),
+                                  id: 'searchInTiles'
+                              }
+                          ]
+                        : []
+                )
+                .concat([
+                    {
+                        type: 'checkbox',
+                        name: lc('search_using_here'),
+                        value: ApplicationSettings.getBoolean('searchUsingHere', false),
+                        id: 'searchUsingHere'
+                    },
+                    {
+                        type: 'checkbox',
+                        name: lc('search_using_photon'),
+                        value: ApplicationSettings.getBoolean('searchUsingPhoton', true),
+                        id: 'searchUsingPhoton'
+                    }
+                ]);
             const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
             const result: any = await showPopover({
                 vertPos: VerticalPosition.BELOW,
@@ -415,8 +428,8 @@
         bind:this={textField}
         autocapitalizationType="none"
         col={1}
+        color={colorOnSurface}
         floating={false}
-        floatingInactiveColor={colorOnSurfaceVariant}
         height={$actionBarButtonHeight}
         hint={$slc('search')}
         margin="0 15 0 0"

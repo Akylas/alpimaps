@@ -22,6 +22,9 @@
     import { arraySortOn } from '~/utils/utils';
     import { colors } from '~/variables';
     import { HereFeature, PhotonFeature } from './Features';
+    import { onThemeChanged } from '~/helpers/theme';
+    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
 
     $: ({ colorOnSurface, colorOnSurfaceVariant } = $colors);
 
@@ -285,9 +288,14 @@
             currentQuery = null;
         }
     }
+    let collectionView: NativeViewElementNode<CollectionView>;
+    function refreshCollectionView() {
+        collectionView?.nativeView.refresh();
+    }
+    onThemeChanged(refreshCollectionView);
 </script>
 
-<collectionview items={dataItems} rowHeight={52} {...$$restProps}>
+<collectionview bind:this={collectionView} items={dataItems} rowHeight={52} {...$$restProps}>
     <Template let:item>
         <canvaslabel color={colorOnSurface} columns="34,*" disableCss={true} padding="0 10 0 10" rippleColor={colorOnSurface} rows="*,auto,auto,*" on:tap={() => dispatch('tap', item)}>
             <cspan color={item.color} fontFamily="osm" fontSize={20} text={item.icon} verticalAlignment="middle" />

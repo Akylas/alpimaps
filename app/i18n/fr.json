@@ -31,7 +31,7 @@
   "amusement_park": "parc d'attractions",
   "apartment": "appartement",
   "api_key": "Clé API",
-  "api_keys_needed": "une clé API est nécessaire pour utiliser cette source, merci de rentrer \"%1$s\" ici ou dans les paramètres",
+  "api_key_needed": "une clé API est nécessaire pour utiliser cette source, merci de rentrer la clef \"%1$s\" ici ou dans les paramètres",
   "app.name": "Alpi Maps",
   "approximate_accuracy": "précision approximative",
   "aquarium": "aquarium",
