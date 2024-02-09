@@ -284,9 +284,9 @@ platform :android do
         sh("npm", "run", "build.android.production.fdroid")
       end
     when 'alpha'
-      sh("npm", "run", "build.android.production", "--", "--env.playStoreBuild", "--env.reportall", "--env.testlog")
+      sh("PLAY_STORE_BUILD=1", "npm", "run", "build.android.production", "--", "--aab", "--env.reportall", "--env.testlog")
     else
-      sh("npm", "run", "build.android.production", "--", "--env.playStoreBuild")
+      sh("PLAY_STORE_BUILD=1", "npm", "run", "build.android.production", "--", "--aab")
     end
   end
 
