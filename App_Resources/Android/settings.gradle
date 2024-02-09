@@ -2,4 +2,4 @@
     // include ':carto-mobile-sdk'
     // project(':carto-mobile-sdk').projectDir = new File("/home/mguillon/dev/carto/mobile-sdk/scripts/android-dev/carto_mobile_sdk")
 // }
-include ':benchmark'
+include ':baselineprofile'

@@ -24,7 +24,7 @@
     import CActionBar from '../common/CActionBar.svelte';
     import IconButton from '../common/IconButton.svelte';
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
-    type MapGroup = Group & { collapsed: boolean };
+    type MapGroup = Group & { collapse: boolean };
     type CollectionGroup = MapGroup & { type: 'group'; count: number; selected?: boolean; totalTime?: number; totalDistance?: number };
     type CollectionItem = (Item & { groupOnMap?: 0 | 1; selected?: boolean }) | CollectionGroup;
 
@@ -145,7 +145,7 @@ LEFT JOIN  (
                 if (oldGroups) {
                     Object.keys(oldGroups).forEach((k) => {
                         if (groups[k]) {
-                            groups[k].collapsed = oldGroups[k].collapsed;
+                            groups[k].collapse = oldGroups[k].collapse;
                         }
                     });
                 }
@@ -158,7 +158,7 @@ LEFT JOIN  (
                         const subItems = groupedItems[key];
                         const groupItem = { type: 'group', ...group, count: subItems.length } as CollectionGroup;
                         updateGroupItemData(groupItem, group);
-                        acc.push(groupItem, ...(group.collapsed ? [] : subItems));
+                        acc.push(groupItem, ...(group.collapse ? [] : subItems));
                         return acc;
                     }, noneGroupItems)
                 );
@@ -188,25 +188,25 @@ LEFT JOIN  (
         }
     }
     function switchGroupCollapsed(item: Group, event) {
-        const collapsed = !groups[item.name].collapsed;
-        if (collapsed === groups[item.name].collapsed) {
+        const collapse = !groups[item.name].collapse;
+        if (collapse === groups[item.name].collapse) {
             return;
         }
-        groups[item.name].collapsed = collapsed;
+        groups[item.name].collapse = collapse;
         let collapseButton = event.object as View;
         if (collapseButton instanceof LayoutBase) {
             collapseButton = collapseButton.getViewById('collapseButton');
         }
         collapseButton.animate({
             duration: 200,
-            rotate: collapsed ? 180 : 0
+            rotate: collapse ? 180 : 0
         });
         const groupIndex = items.findIndex((i) => i.type === 'group' && i.id === item.id);
         if (groupIndex >= 0) {
             const groupItem = items.getItem(groupIndex);
-            (groupItem as CollectionGroup).collapsed = collapsed;
+            (groupItem as CollectionGroup).collapse = collapse;
             items.setItem(groupIndex, groupItem);
-            if (collapsed) {
+            if (collapse) {
                 items.splice(groupIndex + 1, groupedItems[item.name].length);
             } else {
                 items.splice(groupIndex + 1, 0, ...groupedItems[item.name]);
@@ -656,7 +656,8 @@ LEFT JOIN  (
             }
             const result = await showPopoverMenu({
                 options: actions,
-                anchor: event.object
+                anchor: event.object,
+                vertPos: VerticalPosition.BELOW
             });
 
             if (result) {
@@ -726,7 +727,7 @@ LEFT JOIN  (
                         id="collapseButton"
                         horizontalAlignment="right"
                         marginRight={10}
-                        rotate={item.collapsed ? 180 : 0}
+                        rotate={item.collapse ? 180 : 0}
                         size={40}
                         text="mdi-chevron-up"
                         tooltip={lc('collapse')}

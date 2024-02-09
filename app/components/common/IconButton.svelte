@@ -4,13 +4,13 @@
     import { conditionalEvent } from '~/utils/svelte/ui';
     import { showToolTip } from '~/utils/utils';
     import { actionBarButtonHeight, colors, fonts } from '~/variables';
-    const iconPaint = new Paint();
+
+    const iconPaints: { [k: string]: Paint } = {};
 </script>
 
 <script lang="ts">
     let { colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
-    $: iconPaint.fontFamily = $fonts.mdi;
     export let isVisible = true;
     export let isHidden = false;
     export let white = false;
@@ -35,7 +35,7 @@
 
     // let actualColor = null;
     // $: actualColor = white ? 'white' : !isEnabled || gray ? colorOnSurfaceVariant : color;
-    $: actualColor = color || (!isEnabled || gray ? colorOnSurfaceVariant : colorOnSurface);
+    $: actualColor = !isEnabled ? colorOnSurfaceVariant : color || (white ? 'white' : !isEnabled || gray ? colorOnSurfaceVariant : colorOnSurface);
     $: actualLongPress =
         onLongPress || tooltip
             ? (event) => {
@@ -55,7 +55,12 @@
         canvas?.nativeView?.redraw();
     }
     function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
-        iconPaint.fontFamily = fontFamily || $fonts.mdi;
+        const theFontFamily = fontFamily || $fonts.mdi;
+        let iconPaint = iconPaints[theFontFamily];
+        if (!iconPaint) {
+            iconPaint = iconPaints[theFontFamily] = new Paint();
+            iconPaint.fontFamily = theFontFamily;
+        }
         iconPaint.textSize = fontSize ? fontSize : small ? 16 : 24;
         iconPaint.color = isEnabled ? (isSelected ? selectedColor || colorPrimary : actualColor) : 'lightgray';
         const w = canvas.getWidth();
@@ -66,7 +71,6 @@
         staticLayout.draw(canvas);
         // canvas.drawText(text, w2, w2+ textSize/3, iconPaint);
     }
-
 </script>
 
 <canvas
@@ -74,7 +78,7 @@
     borderRadius={shape === 'round' || (rounded && !shape) ? size / 2 : null}
     disableCss={true}
     rippleColor={actualColor}
-    visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapsed'}
+    visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapse'}
     on:draw={onCanvasDraw}
     {...$$restProps}
     height={height || size}
@@ -89,7 +93,7 @@
     disableCss={true}
     rippleColor={actualColor}
     {fontFamily}
-    visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapsed'}
+    visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapse'}
     color={isSelected ? selectedColor : actualColor}
     {...$$restProps}
     on:tap
