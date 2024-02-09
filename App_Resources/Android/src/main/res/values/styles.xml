@@ -17,12 +17,10 @@
         <item name="elevationOverlayEnabled">false</item>
         <item name="bottomSheetStyle">@style/ModalBottomSheetDialog</item>
     </style>
-    <style name="MaterialAlertDialog.App.Title.Text" parent="MaterialAlertDialog.Material3.Title.Text">
+    <!-- <style name="MaterialAlertDialog.App.Title.Text" parent="MaterialAlertDialog.Material3.Title.Text">
     </style>
     <style name="MaterialAlertDialog.App.Body.Text" parent="MaterialAlertDialog.Material3.Body.Text">
-    </style>
-    <style name="Widget.App.Button" parent="@style/Widget.Material3.Button.TextButton.Dialog">
-    </style>
+    </style> -->
     <!-- <style name="Theme.Material3.Preference" parent="Theme.Material3.DayNight">
         <item name="preferenceTheme">@style/MaterialPreferenceThemeOverlay</item>
     </style> -->

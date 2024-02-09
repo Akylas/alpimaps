@@ -60,7 +60,7 @@
 </script>
 
 <gesturerootview {...$$restProps} {padding} rows="auto,auto,auto,auto" on:layoutChanged={(e) => (closeCallback = e.object['bindingContext']?.closeCallback)}>
-    <mdbutton height={30} horizontalAlignment="left" margin="2" text={topGroup} visibility={topGroup ? 'visible' : 'collapsed'} />
+    <mdbutton height={30} horizontalAlignment="left" margin="2" text={topGroup} visibility={topGroup ? 'visible' : 'collapse'} />
     <textfield
         autocapitalizationType="none"
         hint={lc('group')}
