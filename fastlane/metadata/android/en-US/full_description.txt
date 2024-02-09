@@ -1,19 +1,4 @@
-Alpi Maps is a map companion application for your hikes and bicycle trips
-
-The app is principally made to be used with offline data. There are many kinds of offline data:
-• map data (`.mbtiles` files). This can be generated with [Planetiler](https://github.com/onthegomap/planetiler)
-• elevation data (`.mbtiles` renamed to `.etiles`). Those are rgb terrain tiles which can be generated with [rio-mbtiles](https://github.com/mapbox/rio-mbtiles)
-• routing data (valhalla data `.mbtiles` renamed to `.vtiles`) which can be generated with [this](https://github.com/nutiteq/mobile-sdk-scripts#build-offline-valhalla-packages)
-
-You can place those data in your sdcard under `alpimaps_mbtiles` and the app will pick them up. It is advised to create subdirectories per region/country.
-Don't hesitate to contact me if you want help generating those files.
-
-But the app can also with work with many online data sources like OpenStreetMap. You can set different API keys through the app Settings
-
-Alpi Maps also helps you in managing the GPS to get your precise location when needed while keeping the battery consumption to the lowest.
-Continued use of GPS running in the background can dramatically decrease battery life.
-
-Alpi Maps data is base on OpenStreetMap, which means you can access almost anything anywhere in the world!
+<p><i>Alpi Maps</i> is an outdoor companion app</p>
 
 Map features:
 • enjoy more that 50 different map styles

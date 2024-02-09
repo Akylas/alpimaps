@@ -84,7 +84,7 @@
                         maxLines={2}
                         text={item.subtitle}
                         verticalTextAlignment="top"
-                        visibility={item.subtitle && item.subtitle.length > 0 ? 'visible' : 'collapsed'} />
+                        visibility={item.subtitle && item.subtitle.length > 0 ? 'visible' : 'collapse'} />
                 </stacklayout>
                 <switch checked={item.value} col={1} verticalAlignment="middle" on:checkedChange={(e) => onCheckBox(item, e.value)} />
                 <absoluteLayout backgroundColor={colorOutlineVariant} colSpan={2} height={1} verticalAlignment="bottom" />

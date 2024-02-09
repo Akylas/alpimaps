@@ -42,8 +42,8 @@
     let gridLayout: NativeViewElementNode<GridLayout>;
     let navigationCanvas: NativeViewElementNode<CanvasView>;
 
-    // let locationButtonClass = 'buttontext';
-    // let locationButtonLabelClass: string = '';
+    let locationButtonClass = 'buttontext';
+    let locationButtonLabelClass: string = '';
     let selectedItemHasPosition = false;
     let instructionIcon;
     export let navigationInstructions: {
@@ -98,8 +98,8 @@
         }
         // userLocationModule.on('location', onNewLocation);
     });
-    // $: locationButtonClass = !$queryingLocation && $watchingLocation ? 'buttonthemed' : 'buttontext';
-    // $: locationButtonLabelClass = $queryingLocation ? 'fade-blink' : '';
+    $: locationButtonClass = !$queryingLocation && $watchingLocation ? 'buttonthemed' : 'buttontext';
+    $: locationButtonLabelClass = $queryingLocation ? 'fade-blink' : '';
     $: selectedItemHasPosition = selectedItem && !selectedItem.route && selectedItem.geometry.type === 'Point';
 
     export function onSelectedItem(item: IItem, oldItem: IItem) {
@@ -130,10 +130,10 @@
     }
 
     function askUserLocation() {
-        return userLocationModule.askUserLocation();
+        return userLocationModule?.askUserLocation();
     }
     function onWatchLocation() {
-        return userLocationModule.onWatchLocation();
+        return userLocationModule?.onWatchLocation();
     }
     function startDirections() {
         if (selectedItem) {
@@ -286,23 +286,17 @@
     <stacklayout col={2} padding={2} row={2} verticalAlignment="bottom">
         <mdbutton
             id="directions"
-            class="floating-btn"
+            class="floating-btn-themed"
             col={2}
             rowSpan={2}
             text="mdi-directions"
-            visibility={selectedItemHasPosition ? 'visible' : 'collapsed'}
+            visibility={selectedItemHasPosition ? 'visible' : 'collapse'}
             on:tap={startDirections}
             transition:scale={{ duration: 200 }} />
-        <mdcardview
-            class="floating-btn"
-            class:buttontext={$queryingLocation || !$watchingLocation}
-            class:buttonthemed={!$queryingLocation && $watchingLocation}
-            on:tap={askUserLocation}
-            on:longPress={onWatchLocation}>
+        <mdcardview id="location" class={`floating-btn ${locationButtonClass}`} on:tap={askUserLocation} on:longPress={onWatchLocation}>
             <label
-                class="mdi"
-                class:fade-blink={$queryingLocation}
-                color={!$queryingLocation && $watchingLocation ? colorOnPrimary : colorPrimary}
+                class={`mdi ${locationButtonLabelClass}`}
+                color={$watchingLocation && !$queryingLocation ? colorOnPrimary : colorPrimary}
                 text="mdi-crosshairs-gps"
                 textAlignment="center"
                 verticalAlignment="middle" />
@@ -310,8 +304,8 @@
     </stacklayout>
     <stacklayout horizontalAlignment="left" marginTop={80} row={2} verticalAlignment="bottom">
         <!-- <mdbutton on:tap={open3DMap} class="small-floating-btn" color={colorPrimary} text="mdi-video-3d" /> -->
-        <mdbutton id="layers" class="small-floating-btn" text="mdi-format-list-checkbox" on:tap={showItemsList} />
-        <mdbutton id="layers" class="small-floating-btn" text="mdi-layers" on:tap={showMapRightMenu} on:longPress={() => mapContext.selectStyle()} />
+        <mdbutton class="small-floating-btn" text="mdi-format-list-checkbox" on:tap={showItemsList} />
+        <mdbutton class="small-floating-btn" text="mdi-layers" on:tap={showMapRightMenu} on:longPress={() => mapContext.selectStyle()} />
     </stacklayout>
 
     <ScaleView col={1} horizontalAlignment="right" marginBottom={8} row={2} verticalAlignment="bottom" />
@@ -326,7 +320,7 @@
         verticalAlignment="bottom"
         on:tap={onAttributionTap} />
 
-    <mdprogress colSpan={3} row={2} value={totalDownloadProgress} verticalAlignment="bottom" visibility={totalDownloadProgress > 0 ? 'visible' : 'collapsed'} />
+    <mdprogress colSpan={3} row={2} value={totalDownloadProgress} verticalAlignment="bottom" visibility={totalDownloadProgress > 0 ? 'visible' : 'collapse'} />
     <canvas
         bind:this={navigationCanvas}
         backgroundColor={colorSurfaceContainer}
@@ -336,7 +330,7 @@
         marginBottom={24}
         rowSpan={3}
         verticalAlignment="bottom"
-        visibility={navigationInstructions ? 'visible' : 'collapsed'}
+        visibility={navigationInstructions ? 'visible' : 'collapse'}
         width="70%"
         on:swipe={() => (navigationInstructions = null)}
         on:draw={drawNavigationInstruction} />

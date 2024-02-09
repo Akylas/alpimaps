@@ -17,7 +17,7 @@
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
     import { closeBottomSheet, isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { action, prompt } from '@nativescript-community/ui-material-dialogs';
+    import { action, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
@@ -404,6 +404,7 @@
         });
 
         Application.on('colorsChange', onColorsChange);
+
 
         if (!PRODUCTION) {
             defaultLiveSync = global.__onLiveSync.bind(global);
@@ -1675,11 +1676,12 @@
                     icon: 'mdi-wifi-strength-off-outline'
                 },
                 {
-                    title: lc('import'),
+                    title: lc('import_data'),
                     id: 'import',
                     icon: 'mdi-import'
                 },
                 {
+                    accessibilityValue: 'settingsBtn',
                     title: lc('settings'),
                     id: 'settings',
                     icon: 'mdi-cogs'
@@ -1947,7 +1949,6 @@
                 translateY={Math.max(topTranslationY - 30, 0)}
                 verticalAlignment="top" />
 
-            <Search bind:this={searchView} defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} verticalAlignment="top" />
             <LocationInfoPanel
                 bind:this={locationInfoPanel}
                 horizontalAlignment="left"
@@ -1955,6 +1956,7 @@
                 marginLeft={20}
                 marginTop={90}
                 verticalAlignment="top" />
+            <Search bind:this={searchView} defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} verticalAlignment="top" />
             <canvaslabel
                 class="mdi"
                 color={colorError}
@@ -1966,15 +1968,16 @@
                 textAlignment="center"
                 verticalAlignment="middle"
                 width={20}>
-                <cspan text="mdi-access-point-network-off" textAlignment="left" verticalTextAlignment="top" visibility={networkConnected ? 'collapsed' : 'visible'} />
+                <cspan text="mdi-access-point-network-off" textAlignment="left" verticalTextAlignment="top" visibility={networkConnected ? 'collapse' : 'visible'} />
             </canvaslabel>
             <mdcardview
+                id="orientation"
                 class="small-floating-btn"
                 horizontalAlignment="right"
                 marginTop={Math.max(90 - topTranslationY, 0)}
                 translateY={Math.max(topTranslationY - 30, 0)}
                 verticalAlignment="top"
-                visibility={currentMapRotation !== 0 ? 'visible' : 'collapsed'}
+                visibility={currentMapRotation !== 0 ? 'visible' : 'collapse'}
                 on:tap={resetBearing}>
                 <label class="mdi" color={colorPrimary} rotate={-currentMapRotation} text="mdi-navigation" textAlignment="center" verticalAlignment="middle" />
             </mdcardview>
@@ -2000,7 +2003,7 @@
                 verticalAlignment="top"
                 borderRadius={16}
                 backgroundColor="#00000055"
-                visibility={currentClickedFeatures && currentClickedFeatures.length > 0 ? 'visible' : 'collapsed'}
+                visibility={currentClickedFeatures && currentClickedFeatures.length > 0 ? 'visible' : 'collapse'}
             >
                 <Template let:item>
                     <label padding="0 20 0 20" text={JSON.stringify(item)} verticalAlignment="middle" fontSize={11} color="white" />

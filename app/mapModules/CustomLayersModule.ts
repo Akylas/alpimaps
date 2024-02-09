@@ -9,7 +9,7 @@ import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/
 import { MapBoxElevationDataDecoder, TerrariumElevationDataDecoder } from '@nativescript-community/ui-carto/rastertiles';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { openFilePicker } from '@nativescript-community/ui-document-picker';
-import { login, prompt } from '@nativescript-community/ui-material-dialogs';
+import { confirm, login, prompt } from '@nativescript-community/ui-material-dialogs';
 import { Application, ApplicationSettings, Color, profile } from '@nativescript/core';
 import { ChangeType, ChangedData, ObservableArray } from '@nativescript/core/data/observable-array';
 import { File, Folder, path } from '@nativescript/core/file-system';
@@ -25,6 +25,9 @@ import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet
 import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
 // eslint-disable-next-line no-duplicate-imports
 import { data as TileSourcesData } from '~/data/tilesources';
+import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { openLink } from '~/utils/ui';
+import { SDK_VERSION } from '@akylas/nativescript/utils';
 const mapContext = getMapContext();
 
 export enum RoutesType {
@@ -407,7 +410,8 @@ export default class CustomLayersModule extends MapModule {
             }
             tokens.forEach((tok) => {
                 if (!this.tokenKeys[tok]) {
-                    throw new Error('missing api token');
+                    showSnack({ message: lc('missing_api_token') });
+                    return;
                 }
                 if (Array.isArray(url)) {
                     url = url.map((u) => u.replace(`{${tok}}`, this.tokenKeys[tok]));
@@ -668,10 +672,23 @@ export default class CustomLayersModule extends MapModule {
         super.onMapReady(mapView);
         (async () => {
             try {
-                if (!__DISABLE_OFFLINE__ && (!__ANDROID__ || !PLAY_STORE_BUILD)) {
+                if (!__DISABLE_OFFLINE__ && (!__ANDROID__ || !PLAY_STORE_BUILD || SDK_VERSION < 11)) {
                     const folderPath = await getDefaultMBTilesDir();
                     if (folderPath) {
                         await this.loadLocalMbtiles(folderPath);
+                    }
+                    if (this.customSources.length === 0) {
+                        const showFirstPresentation = ApplicationSettings.getBoolean('showFirstPresentation', true);
+                        const result = await confirm({
+                            title: lc('app.name'),
+                            message: lc('app_generate_date_presentation'),
+                            okButtonText: lc('ok'),
+                            cancelButtonText: lc('cancel')
+                        });
+                        if (result) {
+                            openLink(GIT_URL);
+                        }
+                        ApplicationSettings.getBoolean('showFirstPresentation', false);
                     }
                 }
                 const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
@@ -740,7 +757,7 @@ export default class CustomLayersModule extends MapModule {
     }
     hillshadeLayer: HillshadeRasterTileLayer;
     needsAttribution = false;
-    addDataSource(item: SourceItem) {
+    addDataSource(item: SourceItem, save = true) {
         const name = this.getSourceItemId(item);
         const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
         const layerIndex = savedSources.findIndex((s) => (typeof s === 'string' ? s : s?.id) === name);
@@ -748,12 +765,14 @@ export default class CustomLayersModule extends MapModule {
         if (layerIndex === -1) {
             this.customSources.push(item);
             mapContext.addLayer(item.layer, 'customLayers');
-            if (item.provider.type) {
-                savedSources.push(item.provider);
-            } else {
-                savedSources.push(name);
+            if (save) {
+                if (item.provider.type) {
+                    savedSources.push(item.provider);
+                } else {
+                    savedSources.push(name);
+                }
+                ApplicationSettings.setString('added_providers', JSON.stringify(savedSources));
             }
-            ApplicationSettings.setString('added_providers', JSON.stringify(savedSources));
         } else {
             this.customSources.splice(layerIndex, 0, item);
             mapContext.insertLayer(item.layer, 'customLayers', layerIndex);
@@ -1113,7 +1132,7 @@ export default class CustomLayersModule extends MapModule {
             }
         }
     }
-    deleteSource(item: SourceItem) {
+    async deleteSource(item: SourceItem) {
         let index = -1;
         const name = this.getSourceItemId(item);
         this.customSources.some((d, i) => {
@@ -1134,7 +1153,13 @@ export default class CustomLayersModule extends MapModule {
         ApplicationSettings.remove(name + '_opacity');
         if (index !== -1) {
             savedSources.splice(index, 1);
+
             ApplicationSettings.setString('added_providers', JSON.stringify(savedSources));
+            if (savedSources.length === 0) {
+                const provider = this.baseProviders['openstreetmap'];
+                const data = await this.createDataSourceAndMapLayer(provider.id, provider);
+                this.addDataSource(data);
+            }
         }
     }
     moveSource(item: SourceItem, newIndex: number) {

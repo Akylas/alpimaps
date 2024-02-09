@@ -19,7 +19,7 @@
     import IconButton from '../common/IconButton.svelte';
     import SearchCollectionView from './SearchCollectionView.svelte';
 
-    $: ({ colorSurfaceContainerHigh, colorWidgetBackground, colorOnSurfaceVariant } = $colors);
+    $: ({ colorSurfaceContainerHigh, colorWidgetBackground, colorOnSurface } = $colors);
 
     const SEARCH_COLLECTIONVIEW_HEIGHT = 250;
     let animating = false;
@@ -340,32 +340,45 @@
 
     async function showSearchOptions(event) {
         try {
-            const actions: any[] = [
-                {
-                    type: 'checkbox',
-                    name: lc('search_using_geocoding'),
-                    value: ApplicationSettings.getBoolean('searchInGeocoding', true),
-                    id: 'searchInGeocoding'
-                },
-                {
-                    type: 'checkbox',
-                    name: lc('search_in_vectortiles'),
-                    value: ApplicationSettings.getBoolean('searchInTiles', true),
-                    id: 'searchInTiles'
-                },
-                {
-                    type: 'checkbox',
-                    name: lc('search_using_here'),
-                    value: ApplicationSettings.getBoolean('searchUsingHere', false),
-                    id: 'searchUsingHere'
-                },
-                {
-                    type: 'checkbox',
-                    name: lc('search_using_photon'),
-                    value: ApplicationSettings.getBoolean('searchUsingPhoton', true),
-                    id: 'searchUsingPhoton'
-                }
-            ];
+            const actions: any[] = []
+                .concat(
+                    !!packageService.localOSMOfflineGeocodingService
+                        ? [
+                              {
+                                  type: 'checkbox',
+                                  name: lc('search_using_geocoding'),
+                                  value: ApplicationSettings.getBoolean('searchInGeocoding', true),
+                                  id: 'searchInGeocoding'
+                              }
+                          ]
+                        : []
+                )
+                .concat(
+                    !!packageService.localVectorTileLayer
+                        ? [
+                              {
+                                  type: 'checkbox',
+                                  name: lc('search_in_vectortiles'),
+                                  value: ApplicationSettings.getBoolean('searchInTiles', true),
+                                  id: 'searchInTiles'
+                              }
+                          ]
+                        : []
+                )
+                .concat([
+                    {
+                        type: 'checkbox',
+                        name: lc('search_using_here'),
+                        value: ApplicationSettings.getBoolean('searchUsingHere', false),
+                        id: 'searchUsingHere'
+                    },
+                    {
+                        type: 'checkbox',
+                        name: lc('search_using_photon'),
+                        value: ApplicationSettings.getBoolean('searchUsingPhoton', true),
+                        id: 'searchUsingPhoton'
+                    }
+                ]);
             const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
             const result: any = await showPopover({
                 vertPos: VerticalPosition.BELOW,
@@ -415,8 +428,8 @@
         bind:this={textField}
         autocapitalizationType="none"
         col={1}
+        color={colorOnSurface}
         floating={false}
-        floatingInactiveColor={colorOnSurfaceVariant}
         height={$actionBarButtonHeight}
         hint={$slc('search')}
         margin="0 15 0 0"
@@ -432,7 +445,7 @@
     <mdactivityindicator busy={true} col={2} height={20} visibility={loading ? 'visible' : 'hidden'} width={20} />
     <IconButton col={2} gray={true} isVisible={currentSearchText && currentSearchText.length > 0 && !loading && didSearch} text="mdi-refresh" on:tap={reloadSearch} />
     <IconButton col={3} gray={true} isVisible={currentSearchText && currentSearchText.length > 0} text="mdi-close" on:tap={() => clearSearch()} />
-    <IconButton col={4} gray={true} text="mdi-dots-vertical" on:tap={showMapMenu} />
+    <IconButton accessibilityValue="menuBtn" col={4} gray={true} text="mdi-dots-vertical" on:tap={showMapMenu} />
     {#if loaded}
         <absolutelayout bind:this={collectionViewHolder} colSpan={7} height={0} isUserInteractionEnabled={searchResultsVisible} row={1}>
             <gridlayout columns="auto,auto,*" height={SEARCH_COLLECTIONVIEW_HEIGHT} rows="*,auto" width="100%">
