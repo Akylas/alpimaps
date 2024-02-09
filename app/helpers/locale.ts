@@ -1,5 +1,5 @@
 import { capitalize, l, lc, loadLocaleJSON, lt, lu, overrideNativeLocale, titlecase } from '@nativescript-community/l';
-import { ApplicationSettings, Device, File, Utils } from '@nativescript/core';
+import { Application, ApplicationSettings, Device, File, Utils } from '@nativescript/core';
 import { getString } from '@nativescript/core/application-settings';
 import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
@@ -10,7 +10,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import updateLocale from 'dayjs/plugin/updateLocale';
 import utc from 'dayjs/plugin/utc';
 
-import { derived, writable } from 'svelte/store';
+import { derived, get, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
 import { showError } from '~/utils/error';
 import { showAlertOptionSelect } from '~/utils/ui';
@@ -43,7 +43,7 @@ langStore.subscribe((newLang: string) => {
     if (!lang) {
         return;
     }
-    // console.log('changed lang', lang, Device.region);
+    DEV_LOG && console.log('changed lang', lang, Device.region);
     try {
         require(`dayjs/locale/${newLang}.js`);
     } catch (err) {
@@ -262,6 +262,20 @@ export function convertDurationSeconds(seconds, formatStr?: string) {
 
 // TODO: on android 13 check for per app language, we dont need to store it
 setLang(deviceLanguage);
+
+Application.on('activity_started', () => {
+    // on android after switching to auto we dont get the actual language
+    // before an activity restart
+    if (__ANDROID__) {
+        const lang = ApplicationSettings.getString('language');
+        if (lang === 'auto') {
+            const actualNewLang = getActualLanguage(lang);
+            if (actualNewLang !== get(langStore)) {
+                langStore.set(actualNewLang);
+            }
+        }
+    }
+});
 
 export { l, lc, lt, lu };
 export const sl = derived([langStore], () => l);
