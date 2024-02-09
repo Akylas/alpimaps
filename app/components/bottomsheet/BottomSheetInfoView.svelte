@@ -307,7 +307,7 @@
                 maxLines={2}
                 text={itemSubtitle}
                 verticalTextAlignment="top"
-                visibility={itemSubtitle ? 'visible' : 'collapsed'} />
+                visibility={itemSubtitle ? 'visible' : 'collapse'} />
         {/if}
     </flexlayout>
     <slot name="above" />

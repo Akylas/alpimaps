@@ -1,25 +1,52 @@
-<p align="center"><img src="fastlane/metadata/android/en_US/images/featureGraphic.png" width="100%"></a></p>
+<!-- <p align="center"><img src="fastlane/metadata/android/en-US/images/featureGraphic.png" width="100%"></a></p> -->
 
-<h1 align="center">You hiking companion</h1>
+<!-- <img title="" src="./fastlane/metadata/akylas.alpi.maps/android/en-US/images/icon.png" align="right" width="64"> -->
+<img title="" src="./featureGraphic.png">
+
+<!-- # OSS Document Scanner -->
+
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](COC.md)
+[![GitHub repo stars](https://img.shields.io/github/stars/Akylas/alpimaps?style=flat)](https://github.com/Akylas/alpimaps/stargazers)
+[![GitHub License](https://img.shields.io/github/license/Akylas/alpimaps)](https://github.com/Akylas/alpimaps/blob/master/COPYING)
+[![GitHub All Releases](https://img.shields.io/github/downloads/Akylas/alpimaps/total.svg)](https://github.com/Akylas/alpimaps/releases/)
+[![GitHub release](https://img.shields.io/github/v/release/Akylas/alpimaps?display_name=release)](https://github.com/Akylas/alpimaps/releases/latest)
+[![Small translation badge](https://hosted.weblate.org/widgets/alpimaps/-/svg-badge.svg)](https://hosted.weblate.org/engage/alpimaps/?utm_source=widget)
+
+<!-- <h1 align="center">Scan all your documents</h1>
 <p align="center">
-<a href="https://www.gnu.org/licenses/gpl-3.0" alt="License: GPLv3"><img src="https://img.shields.io/badge/license-GPL%20v3-blue"></a> <a href="https://github.com/farfromrefug/alpimaps/releases" alt="Release version"><img src="https://img.shields.io/github/v/release/farfromrefug/alpimaps?color=ff5200"/></a>
-<p align="center">
-<br>You can get the <a href="https://github.com/farfromrefug/alpimaps/releases/latest">latest release on GitHub</a>
+  <a href="https://github.com/Akylas/alpimaps" alt="License"><img src="https://img.shields.io/badge/License-MIT-blue.svg"/></a>
+ <a href="https://github.com/Akylas/alpimaps/releases" alt="Release version"><img src="https://img.shields.io/github/downloads/akylas/akylas.alpi.maps/total"/></a> -->
+
+ ## Installation
+
+<!-- [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/com.machiav3lli.backup/) -->
+[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get it on IzzyOnDroid" height="80">](https://apt.izzysoft.de/packages/akylas.alpi.maps)
+[<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on PlayStore" height="80">](https://play.google.com/store/apps/details?id=akylas.alpi.maps)
+[<img src="badge_github.png" alt="Get it on GitHub" height="80">](https://github.com/Akylas/alpimaps/releases)
+<div>
+
+<!-- <a href="https://apps.apple.com/us/app/alpimaps/id6472918564"><img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&amp;releaseDate=1496188800" alt="Download on the App Store" height="58"></a>
+</div> -->
+ 
+<!-- <p align="center">
+<br>You can get the <a href="https://github.com/akylas.alpi.maps/releases/latest">latest release on GitHub</a>
 </p>
 <div align="center">
 <a href="https://apt.izzysoft.de/packages/akylas.alpi.maps/"><img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" height="80"></a>
+<a href='https://play.google.com/store/apps/details?id=akylas.alpi.maps&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'  height="82"/></a>
+<br>
+<a href="https://testflight.apple.com/join/sxiV4ZKL"><img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&amp;releaseDate=1496188800" alt="Download on the App Store" height="58"></a>
 </div>
-
-<h2 align="center">Enjoying AlpiMaps?</h2>
+</div> -->
+<h2 align="center">Enjoying Alpi Maps?</h2>
 <p align="center">Please consider making a small donation to help fund the project. Developing an application, especially one that is open source and completely free, takes a lot of time and effort.
 <br>
 <br>
-
 <div align="center">
 <a href="https://github.com/sponsors/farfromrefug">:heart: Sponsor</a>
 </div>
-
 <hr>
+
 
 Alpi Maps is a map application to help you prepare and enjoy your hike!
 Get all the info you need before you go, then enjoy all the data offline during your hike.
@@ -103,4 +130,17 @@ If you use those data, they will automatically be loaded on start and enable a t
 ### Having issues, suggestions and feedback?
 
 You can,
-- [Create an issue here](https://github.com/farfromrefug/alpimaps/issues)
+- [Create an issue here](https://github.com/Akylas/OSS-DocumentScanner/issues)
+
+### Languages: [<img align="right" src="https://hosted.weblate.org/widgets/alpimaps/-/287x66-white.png" alt="Übersetzungsstatus" />](https://hosted.weblate.org/engage/alpimaps/?utm_source=widget)
+
+[<img src="https://hosted.weblate.org/widgets/alpimaps/-/multi-auto.svg" alt="Übersetzungsstatus" />](https://hosted.weblate.org/engage/alpimaps/)
+
+The Translations are hosted by [Weblate.org](https://hosted.weblate.org/engage/alpimaps/).
+
+
+<p align="center">
+  <a href="https://raw.githubusercontent.com/farfromrefug/sponsorkit/main/sponsors.svg">
+	<img src='https://raw.githubusercontent.com/farfromrefug/sponsorkit/main/sponsors.svg'/>
+  </a>
+</p>
