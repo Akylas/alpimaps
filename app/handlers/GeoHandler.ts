@@ -385,27 +385,18 @@ export class GeoHandler extends Handler {
                 description: lc('gps_desired_accuracy_desc'),
                 default: desiredAccuracy,
                 formatter: formatDistance,
+                type: __ANDROID__ ? 'prompt' : undefined,
                 values: __IOS__
                     ? [
-                          //@ts-ignore
                           { title: lc('best_for_navigation'), value: kCLLocationAccuracyBestForNavigation },
-                          //@ts-ignore
                           { title: lc('best'), value: kCLLocationAccuracyBest },
-                          //@ts-ignore
                           { title: '10m', value: kCLLocationAccuracyNearestTenMeters },
-                          //@ts-ignore
                           { title: '100m', value: kCLLocationAccuracyHundredMeters },
-                          //@ts-ignore
                           { title: '1km', value: kCLLocationAccuracyKilometer },
-                          //@ts-ignore
                           { title: '3km', value: kCLLocationAccuracyThreeKilometers },
-                          //@ts-ignore
                           { title: lc('reduced'), value: kCLLocationAccuracyReduced }
                       ]
-                    : [
-                          { title: lc('finer_location_accuracy'), value: CoreTypes.Accuracy.high },
-                          { title: lc('approximate_accuracy'), value: CoreTypes.Accuracy.any }
-                      ]
+                    : undefined
             }
         };
         if (__IOS__) {

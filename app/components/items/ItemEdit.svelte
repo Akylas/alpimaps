@@ -23,7 +23,7 @@
     import TagView from '../common/TagView.svelte';
     import { GeoLocation } from '~/handlers/GeoHandler';
 
-    $: ({ colorSurfaceContainerHigh, colorOnSurfaceVariant, colorPrimary } = $colors);
+    $: ({ colorSurfaceContainerHigh, colorOnSurfaceVariant, colorPrimary, colorOnPrimary } = $colors);
     export let item: Item;
     let itemColor: string;
     let itemIsRoute = false;
@@ -389,8 +389,8 @@
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*,auto,2.5*,auto" android:paddingBottom={$navigationBarHeight}>
         <CActionBar canGoBack title={lc('edit')}>
-            <IconButton color="white" text="mdi-playlist-plus" on:tap={addField} />
-            <IconButton color="white" isVisible={!itemIsRoute} text="mdi-web-sync" on:tap={fetchOSMDetails} />
+            <IconButton text="mdi-playlist-plus" on:tap={addField} />
+            <IconButton color={colorOnPrimary} isVisible={!itemIsRoute} text="mdi-web-sync" on:tap={fetchOSMDetails} />
         </CActionBar>
         <cartomap row={1} zoom={16} on:mapReady={onMapReady} on:layoutChanged={onLayoutChanged} />
         <canvaslabel fontSize={16} height={50} horizontalAlignment="right" row={1} verticalAlignment="bottom" width={50} on:tap={pickOptionColor(itemColor)}>
@@ -513,7 +513,7 @@
                     on:textChange={(e) => onTextChange('name', e)}
                 />
                 <textfield
-                    visibility={itemIsRoute ? 'collapsed' : 'visible'}
+                    visibility={itemIsRoute ? 'collapse' : 'visible'}
                     variant="outline"
                     margin="10 0 0 0"
                     hint={lc('address')}
@@ -538,11 +538,12 @@
         </scrollview> -->
 
         <gridlayout columns="*,*" marginBottom={5} row={4}>
-            <mdbutton isEnabled={Object.keys(updatedProperties).length > 0} text={lc('save')} on:tap={(e) => updateItem()} />
+            <mdbutton isEnabled={Object.keys(updatedProperties).length > 0} text={lc('save')} verticalAlignment="center" on:tap={(e) => updateItem()} />
             <mdbutton
                 col={1}
                 text={lc('cancel')}
                 variant="text"
+                verticalAlignment="center"
                 on:tap={(e) => {
                     updatedProperties = {};
                     refreshItems();
