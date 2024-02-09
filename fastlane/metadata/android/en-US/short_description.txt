@@ -1,1 +1,1 @@
-Map companion application for your hikes and bicycle trips
+Open Source outdoor companion app
