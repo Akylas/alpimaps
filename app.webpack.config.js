@@ -101,7 +101,7 @@ module.exports = (env, params = {}) => {
         disableoffline = false,
         busSupport = true,
         apiKeys = true,
-        playStoreBuild = false,
+        playStoreBuild = !!process.env['PLAY_STORE_BUILD'],
         keep_classnames_functionnames = false,
         testZipStyles = false,
         accessibility = true,
@@ -109,7 +109,7 @@ module.exports = (env, params = {}) => {
         theme = 'auto',
         adhoc
     } = env;
-    console.log('env', env);
+    console.log('env', playStoreBuild, env);
     env.appPath = appPath;
     env.appResourcesPath = appResourcesPath;
     env.appComponents = env.appComponents || [];
