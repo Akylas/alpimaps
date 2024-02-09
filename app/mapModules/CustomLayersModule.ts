@@ -27,6 +27,7 @@ import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode
 import { data as TileSourcesData } from '~/data/tilesources';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { openLink } from '~/utils/ui';
+import { SDK_VERSION } from '@akylas/nativescript/utils';
 const mapContext = getMapContext();
 
 export enum RoutesType {
@@ -671,7 +672,7 @@ export default class CustomLayersModule extends MapModule {
         super.onMapReady(mapView);
         (async () => {
             try {
-                if (!__DISABLE_OFFLINE__ && (!__ANDROID__ || !PLAY_STORE_BUILD)) {
+                if (!__DISABLE_OFFLINE__ && (!__ANDROID__ || !PLAY_STORE_BUILD || SDK_VERSION < 11)) {
                     const folderPath = await getDefaultMBTilesDir();
                     if (folderPath) {
                         await this.loadLocalMbtiles(folderPath);
