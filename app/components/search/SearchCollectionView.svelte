@@ -40,6 +40,7 @@
     // export function getFilteredDataItems() {
     //     return filteredDataItems;
     // }
+    const PHOTON_SUPPORTED_LANGUAGES = ['en', 'de', 'fr'];
 
     const providerColors = {
         here: 'blue',
@@ -177,6 +178,10 @@
         if (!enabled) {
             return [];
         }
+        let actualLang = (options.language || 'en').split('-')[0];
+        if (PHOTON_SUPPORTED_LANGUAGES.indexOf(actualLang) === -1) {
+            actualLang = 'en';
+        }
         const results = await networkService.request<Photon>({
             url: 'https://photon.komoot.io/api',
             method: 'GET',
@@ -184,7 +189,7 @@
                 q: options.query,
                 lat: options.location && options.location.lat,
                 lon: options.location && options.location.lon,
-                lang: options.language,
+                lang: actualLang,
                 limit: 40,
                 bbox: options.bounds ? regionToOSMString(options.bounds) : undefined
             }
