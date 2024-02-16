@@ -24,6 +24,10 @@ fastlaneOptions = packageJSON['fastlane'] || Hash.new
 puts "fastlaneOptions:"  + JSON.generate(fastlaneOptions)
 
 app_identifier = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
+app_identifier = ENV["APP_ID"] || CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
+app_name = i18nEnJSON['$'+app_identifier]['app']['name']
+sentry_project_slug = ENV["SENTRY_PROJECT_SLUG"]
+app_build_path = ENV["APP_BUILD_PATH"] || "platforms" # based on nativescript.config.js !!!
 
 desc 'test lane'
 lane :test do
@@ -111,18 +115,20 @@ lane :build_flavor do |params|
   puts "sentry_version:"  + sentry_version
   puts "options:"  + JSON.generate(options.to_json)
 
-  if (options[:sentry])
-    sentry_create_release(
-      sentry_cli_path: sentry_cli_path,
-      version: sentry_version
-    )
-  end
+  # if (options[:sentry])
+  #   sentry_create_release(
+  #     sentry_cli_path: sentry_cli_path,
+  #     version: sentry_version
+  #   )
+  # end
   build(flavor: flavor, options: options)
-  push_to_git_remote
+  push_to_git_remote(tags:false)
 
   if (options[:sentry])
     sh("npm", "run", "sentry-set-commits", "#{sentry_version}")
     sentry_upload(
+      project_slug: sentry_project_slug,
+      app_identifier: app_identifier,
       sentry_cli_path: sentry_cli_path,
     )
   end
@@ -191,7 +197,10 @@ end
 platform :ios do
   desc 'Upload Dsyms to Sentry'
   lane :sentry_upload do 
-    sentry_upload_dsym
+    sentry_upload_dsym(
+      project_slug: sentry_project_slug,
+      app_identifier: app_identifier,
+    )
   end
   lane :upload_store  do |params| 
     upload_to_testflight(
