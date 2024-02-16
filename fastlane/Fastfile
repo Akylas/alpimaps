@@ -283,10 +283,9 @@ platform :android do
       else 
         sh("npm", "run", "build.android.production.fdroid")
       end
-    when 'alpha'
-      sh("npm", "run", "build.android.production.playstore", "--", "--env.reportall", "--env.testlog")
     else
-      sh("npm", "run", "build.android.production.playstore", "--")
+      # for now we build sentry releases for playstore to get bug reports
+      sh("npm", "run", "build.android.production.playstore.sentry")
     end
   end
 
