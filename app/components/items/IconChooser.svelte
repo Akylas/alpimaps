@@ -102,7 +102,7 @@
         <collectionview bind:this={collectionView} colWidth={ICON_SIZE} itemIdGenerator={(item, i) => i} items={filteredItems} row={2} rowHeight={ICON_SIZE}>
             <Template let:item>
                 <gridlayout padding={2}>
-                    <canvas backgroundColor={colorSurfaceContainerHigh} borderRadius={4} rippleColor={colorOnSurface} on:draw={(e) => onDraw(item, e)} on:tap={selectIcon(item)} />
+                    <canvasview backgroundColor={colorSurfaceContainerHigh} borderRadius={4} rippleColor={colorOnSurface} on:draw={(e) => onDraw(item, e)} on:tap={selectIcon(item)} />
                 </gridlayout>
             </Template>
         </collectionview>

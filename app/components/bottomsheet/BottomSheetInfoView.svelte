@@ -283,7 +283,7 @@
     }
 </script>
 
-<canvas bind:this={canvas} padding="4 10 2 10" on:draw={onCanvasDraw} {...$$restProps} disableCss={true} on:tap on:longPress>
+<canvasview bind:this={canvas} padding="4 10 2 10" on:draw={onCanvasDraw} {...$$restProps} disableCss={true} on:tap on:longPress>
     <slot />
     <flexlayout disableCss={true} flexDirection="column" {marginBottom} {marginLeft} marginRight={rightTextPadding} {marginTop}>
         <label
@@ -311,4 +311,4 @@
         {/if}
     </flexlayout>
     <slot name="above" />
-</canvas>
+</canvasview>

@@ -722,7 +722,7 @@ LEFT JOIN  (
             on:swipe={onCollectionSwipe}>
             <Template key="group" let:item>
                 <gridlayout backgroundColor={colorOutlineVariant} height={50} rippleColor={colorPrimary} on:tap={(e) => onItemTap(item, e)} on:longPress={(e) => onItemLongPress(item, e)}>
-                    <canvas margin="5 30 5 10" on:draw={(e) => onDrawGroup(item, e)} />
+                    <canvasview margin="5 30 5 10" on:draw={(e) => onDrawGroup(item, e)} />
                     <IconButton
                         id="collapseButton"
                         horizontalAlignment="right"
