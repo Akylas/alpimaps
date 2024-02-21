@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Canvas, CanvasView } from '@nativescript-community/ui-canvas';
     import { createEventDispatcher } from '~/utils/svelte/ui';
-    import { colors, fonts, systemFontScale } from '~/variables';
+    import { colors, fontScale, fonts } from '~/variables';
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorOutlineVariant } = $colors);
     const dispatch = createEventDispatcher();
     // technique for only specific properties to get updated on store change
@@ -30,18 +30,11 @@
     <symbolshape color={symbolColor} height={34} {symbol} verticalAlignment="middle" visibility={showSymbol ? 'visible' : 'hidden'} width={34} />
     <canvaslabel col={mainCol} on:draw={onDraw}>
         <cgroup paddingBottom={subtitle ? 10 : 0} verticalAlignment="middle">
-            <cspan
-                {color}
-                fontFamily={leftIconFonFamily}
-                fontSize={iconFontSize * $systemFontScale}
-                paddingLeft="10"
-                text={leftIcon}
-                visibility={leftIcon ? 'visible' : 'hidden'}
-                width={iconFontSize * 2} />
+            <cspan {color} fontFamily={leftIconFonFamily} fontSize={iconFontSize * $fontScale} paddingLeft="10" text={leftIcon} visibility={leftIcon ? 'visible' : 'hidden'} width={iconFontSize * 2} />
         </cgroup>
         <cgroup paddingLeft={(leftIcon ? iconFontSize * 2 : 0) + extraPaddingLeft} textAlignment="left" verticalAlignment="middle">
-            <cspan {color} fontSize={fontSize * $systemFontScale} {fontWeight} text={title} />
-            <cspan color={colorOnSurfaceVariant} fontSize={subtitleFontSize * $systemFontScale} text={subtitle ? '\n' + subtitle : ''} visibility={subtitle ? 'visible' : 'hidden'} />
+            <cspan {color} fontSize={fontSize * $fontScale} {fontWeight} text={title} />
+            <cspan color={colorOnSurfaceVariant} fontSize={subtitleFontSize * $fontScale} text={subtitle ? '\n' + subtitle : ''} visibility={subtitle ? 'visible' : 'hidden'} />
         </cgroup>
     </canvaslabel>
     <slot />
