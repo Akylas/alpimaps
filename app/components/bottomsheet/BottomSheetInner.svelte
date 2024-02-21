@@ -722,6 +722,8 @@
     //     });
     // }
 
+    // on iOS the first animation would not be nice so let load it right away
+    // the issue must be in UIView.animate being call before a first layout
     let loaded = false;
     let loadedListeners = [];
     export async function loadView() {
