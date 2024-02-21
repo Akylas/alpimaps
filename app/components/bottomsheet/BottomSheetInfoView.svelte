@@ -294,6 +294,7 @@
             fontSize={18}
             fontWeight="bold"
             maxFontSize={18}
+            selectable={true}
             text={itemTitle}
             textWrap={true}
             verticalTextAlignment={titleVerticalTextAlignment || (itemSubtitle ? 'bottom' : 'middle')} />
@@ -305,6 +306,7 @@
                 flexShrink={0}
                 fontSize={13}
                 maxLines={2}
+                selectable={true}
                 text={itemSubtitle}
                 verticalTextAlignment="top"
                 visibility={itemSubtitle ? 'visible' : 'collapse'} />
