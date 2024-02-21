@@ -836,13 +836,12 @@ module.exports = (env, params = {}) => {
             })
         );
     }
-
     config.plugins.unshift(
         new WebpackShellPluginNext({
             onBuildExit: {
                 scripts: [
-                    `./fixFontDirection.pe app/fonts/osm.ttf ${join(dist, 'fonts', 'osm.ttf')}`,
-                    `./fixFontDirection.pe node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf ${join(dist, 'fonts', 'materialdesignicons-webfont.ttf')}`
+                    `fontforge --script ./fixFontDirection_overlap.pe app/fonts/osm.ttf ${join(dist, 'fonts', 'osm.ttf')}`,
+                    `fontforge --script ./fixFontDirection.pe node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf ${join(dist, 'fonts', 'materialdesignicons-webfont.ttf')}`
                 ].concat(
                     production
                         ? []
