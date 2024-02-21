@@ -10,7 +10,7 @@
     export let title: string = null;
     export let showMenuIcon: boolean = false;
     export let height = $actionBarHeight;
-    export let paddingTop = $statusBarHeight;
+    export let paddingTop = __ANDROID__ ? $statusBarHeight : 0;
     export let canGoBack: boolean = false;
     export let forceCanGoBack: boolean = false;
     export let modalWindow: boolean = false;
