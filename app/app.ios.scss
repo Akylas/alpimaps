@@ -1,0 +1,33 @@
+@import './app.common';
+
+mdbutton {
+    // material3 basic design
+    shape: round;
+}
+
+mdcardview {
+    // material3 basic design
+    shape: medium;
+}
+
+.floating-btn {
+    shape: medium;
+    elevation: 2;
+}
+.small-floating-btn {
+    shape: medium;
+    elevation: 2;
+}
+
+mdtextfield[variant=none] {
+    padding:0;
+}
+
+page {
+    status-bar-style: light;
+    .ns-dark &,
+    &.ns-dark, .ns-black &,
+    &.ns-black {
+        status-bar-style: dark;
+    }
+}
