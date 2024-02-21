@@ -18,6 +18,7 @@
     import { actionBarButtonHeight, colors, fonts, globalMarginTop } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import SearchCollectionView from './SearchCollectionView.svelte';
+    import { showPopoverMenu } from '~/utils/ui';
 
     $: ({ colorSurfaceContainerHigh, colorWidgetBackground, colorOnSurface } = $colors);
 
@@ -60,7 +61,7 @@
     let loading = false;
     // let filteringOSMKey = false;
     export let dataItems: ObservableArray<SearchItem> = null;
-    let text: string = null;
+    // let text: string = null;
     let currentSearchText: string = null;
     const mapContext = getMapContext();
 
@@ -116,7 +117,7 @@
         const nGridLayout = gridLayout?.nativeView;
         if (nCollectionView || nGridLayout) {
             animateTargets([
-                { target: nCollectionView, height: searchResultsVisible ? SEARCH_COLLECTIONVIEW_HEIGHT : 0, duration: 100 },
+                { target: nCollectionView, height: searchResultsVisible ? SEARCH_COLLECTIONVIEW_HEIGHT : __ANDROID__ ? 0 : 0.01, duration: 100 },
                 { target: nGridLayout, elevation: $currentTheme !== 'dark' && focused ? 10 : 0, borderRadius: searchResultsVisible ? 10 : 25, duration: 100 }
             ]);
             // animateView(nCollectionView, { height: searchResultsVisible ? SEARCH_COLLECTIONVIEW_HEIGHT : 0 }, 100);
@@ -159,17 +160,18 @@
             clearTimeout(searchAsTypeTimer);
             searchAsTypeTimer = null;
         }
-        instantSearch(text);
+        instantSearch(currentSearchText);
     }
 
     function reloadSearch() {
-        if (text && !loading && !searchAsTypeTimer) {
-            instantSearch(text);
+        if (currentSearchText && !loading && !searchAsTypeTimer) {
+            instantSearch(currentSearchText);
         }
     }
 
-    $: {
-        const query = text;
+    function onTextChanged(text: string) {
+        const query = text.toLowerCase();
+        DEV_LOG && console.log('onTextChanged', text, currentSearchText);
         if (query !== currentSearchText) {
             if (query) {
                 if (searchAsTypeTimer) {
@@ -178,7 +180,7 @@
                 }
                 if (query && query.length > 2) {
                     didSearch = false;
-                    console.log('will instantSerach', query);
+                    console.log('will instantSearch', query);
                     searchAsTypeTimer = setTimeout(() => {
                         searchAsTypeTimer = null;
                         instantSearch(query);
@@ -197,6 +199,8 @@
             currentSearchText = query;
         }
     }
+
+    // $: onTextChanged(text);
     $: if (needToShowOnResult && searchResultsCount > 0) {
         needToShowOnResult = false;
         textField.nativeView.requestFocus();
@@ -250,8 +254,9 @@
             clearTimeout(searchAsTypeTimer);
             searchAsTypeTimer = null;
         }
+        console.log('unfocus', animating);
         if (!animating) {
-            (textField.nativeView as any).clearFocus();
+            textField.nativeView.clearFocus();
         }
     }
 
@@ -340,6 +345,7 @@
 
     async function showSearchOptions(event) {
         try {
+            DEV_LOG && console.log('showSearchOptions');
             const actions: any[] = []
                 .concat(
                     !!packageService.localOSMOfflineGeocodingService
@@ -379,33 +385,25 @@
                         id: 'searchUsingPhoton'
                     }
                 ]);
-            const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
-            const result: any = await showPopover({
+            DEV_LOG && console.log('showSearchOptions1', actions, event.object);
+            const result: any = await showPopoverMenu({
+                options: actions,
                 vertPos: VerticalPosition.BELOW,
                 horizPos: HorizontalPosition.ALIGN_LEFT,
-                view: OptionSelect,
-                fitInScreen: true,
                 anchor: event.object,
                 props: {
-                    showBorders: false,
-                    backgroundColor: colorSurfaceContainerHigh,
-                    options: actions,
-                    borderRadius: 6,
-                    rowHeight: 50,
-                    onClose: closePopover,
-                    width: 300,
-                    fontWeight: 'normal',
+                    autoSizeListItem: true,
                     onCheckBox(item, value) {
                         ApplicationSettings.setBoolean(item.id, value);
                     }
                 }
             });
-            if (result) {
-                switch (result.id) {
-                    case 'delete':
-                        break;
-                }
-            }
+            // if (result) {
+            //     switch (result.id) {
+            //         case 'delete':
+            //             break;
+            //     }
+            // }
         } catch (error) {
             showError(error);
         }
@@ -419,7 +417,8 @@
     backgroundColor={colorWidgetBackground}
     columns="auto,*,auto,auto,auto"
     elevation={$currentTheme !== 'dark' && focused ? 6 : 0}
-    margin={`${globalMarginTop + 10} 10 10 10`}
+    android:margin={`${globalMarginTop + 10} 10 10 10`}
+    ios:margin={10}
     rows="auto,auto"
     on:tap={() => {}}>
     <IconButton gray={true} text="mdi-magnify" on:tap={showSearchOptions} />
@@ -435,20 +434,19 @@
         margin="0 15 0 0"
         placeholder={$slc('search')}
         returnKeyType="search"
-        {text}
         variant="none"
         verticalTextAlignment="center"
         on:blur={onBlur}
         on:returnPress={onReturnKey}
-        on:textChange={(e) => (text = e['value'])}
+        on:textChange={(e) => onTextChanged(e['value'])}
         on:focus={onFocus} />
     <mdactivityindicator busy={true} col={2} height={20} visibility={loading ? 'visible' : 'hidden'} width={20} />
     <IconButton col={2} gray={true} isVisible={currentSearchText && currentSearchText.length > 0 && !loading && didSearch} text="mdi-refresh" on:tap={reloadSearch} />
     <IconButton col={3} gray={true} isVisible={currentSearchText && currentSearchText.length > 0} text="mdi-close" on:tap={() => clearSearch()} />
     <IconButton accessibilityValue="menuBtn" col={4} gray={true} text="mdi-dots-vertical" on:tap={showMapMenu} />
     {#if loaded}
-        <absolutelayout bind:this={collectionViewHolder} colSpan={7} height={0} isUserInteractionEnabled={searchResultsVisible} row={1}>
-            <gridlayout columns="auto,auto,*" height={SEARCH_COLLECTIONVIEW_HEIGHT} rows="*,auto" width="100%">
+        <absolutelayout bind:this={collectionViewHolder} id="searchCollectionViewHolder" clipToBounds={true} colSpan={7} height={0} isUserInteractionEnabled={searchResultsVisible} row={1}>
+            <gridlayout id="searchCollectionViewSubHolder" columns="auto,auto,*" height={SEARCH_COLLECTIONVIEW_HEIGHT} rows="*,auto" width="100%">
                 <SearchCollectionView bind:this={collectionView} colSpan={3} isUserInteractionEnabled={searchResultsVisible} bind:searchResultsCount bind:dataItems on:tap={onItemTap} />
                 <stacklayout orientation="horizontal" row={1} width="100%" on:tap={() => {}}>
                     <!-- <IconButton small={true} isVisible={searchResultsVisible} text="mdi-shape" on:tap={toggleFilterOSMKey} isSelected={filteringOSMKey} /> -->

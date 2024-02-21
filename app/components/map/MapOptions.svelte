@@ -26,21 +26,22 @@
     }
 </script>
 
-<gesturerootview rows="auto">
-    <collectionView colWidth="20%" {height} items={options} rowHeight={80}>
+<gesturerootview {height}>
+    <collectionView id="scrollView" colWidth="20%" ios:iosIgnoreSafeArea={true} items={options} rowHeight={80}>
         <Template let:item>
-            <canvaslabel
+            <label
                 accessibilityValue={item.accessibilityValue}
-                backgroundColor={item.color}
+                backgroundColor={item.color || 'transparent'}
                 borderRadius={10}
-                paddingTop={15}
+                padding="10 4 0 4"
                 rippleColor={item.color || colorPrimary}
+                textAlignment="center"
+                textWrap={true}
+                verticalTextAlignment="top"
                 on:tap={() => onTap(item)}>
-                <cgroup textAlignment="center" verticalAlignment="top">
-                    <cspan fontFamily={$fonts.mdi} fontSize={30} text={item.icon} />
-                    <cspan fontSize={12} text={'\n' + item.title} />
-                </cgroup>
-            </canvaslabel>
+                <cspan fontFamily={$fonts.mdi} fontSize={30} text={item.icon} />
+                <cspan fontSize={12} text={'\n' + item.title} />
+            </label>
         </Template>
     </collectionView>
 </gesturerootview>
