@@ -1,10 +1,11 @@
 <script context="module" lang="ts">
+    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { Template } from 'svelte-native/components';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { IItem } from '~/models/Item';
-    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { colors, fonts } from '~/variables';
+    import { colors, statusBarHeight } from '~/variables';
     import ListItem from '../common/ListItem.svelte';
+    import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     export interface OptionType {
         name: string;
         data?: string;
@@ -39,9 +40,9 @@
 </script>
 
 <gesturerootview rows="auto">
-    <collectionView height={200} items={options} rowHeight={72}>
+    <collectionView id="scrollView" height={200} items={options} rowHeight={72} ios:contentInsetAdjustmentBehavior={2}>
         <Template let:item>
-            <ListItem
+            <ListItemAutoSize
                 borderRadius={30}
                 extraPaddingLeft={44}
                 fontSize={15}

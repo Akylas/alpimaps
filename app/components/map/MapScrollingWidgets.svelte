@@ -161,8 +161,7 @@
         try {
             const LayersMenu = (await import('~/components/layers/LayersMenu.svelte')).default;
             return showBottomSheet({
-                view: LayersMenu,
-                trackingScrollView: 'trackingScrollView'
+                view: LayersMenu
             });
         } catch (error) {
             showError(error);
@@ -271,6 +270,8 @@
             const label = new Label();
             label.style.padding = '10 20 0 20';
             label.color = colorOnSurface as any;
+            //@ts-ignore
+            label.linkColor = colorPrimary;
             label.html = attributions.join('<br/>');
             label.on('linkTap', (e) => openLink(e['link']));
             return alert({
@@ -282,18 +283,18 @@
     }
 </script>
 
-<gridlayout bind:this={gridLayout} id="scrollingWidgets" {...$$restProps} columns="60,*,70" isPassThroughParentEnabled={true} marginTop={globalMarginTop} rows="auto,*,auto" {userInteractionEnabled}>
+<gridlayout
+    bind:this={gridLayout}
+    id="scrollingWidgets"
+    {...$$restProps}
+    columns="60,*,70"
+    isPassThroughParentEnabled={true}
+    android:marginTop={globalMarginTop}
+    rows="auto,*,auto"
+    {userInteractionEnabled}>
     <stacklayout col={2} padding={2} row={2} verticalAlignment="bottom">
-        <mdbutton
-            id="directions"
-            class="floating-btn-themed"
-            col={2}
-            rowSpan={2}
-            text="mdi-directions"
-            visibility={selectedItemHasPosition ? 'visible' : 'collapse'}
-            on:tap={startDirections}
-            transition:scale={{ duration: 200 }} />
-        <mdcardview id="location" class={`floating-btn ${locationButtonClass}`} on:tap={askUserLocation} on:longPress={onWatchLocation}>
+        <mdbutton id="directions" class="floating-btn-themed" col={2} rowSpan={2} text="mdi-directions" visibility={selectedItemHasPosition ? 'visible' : 'hidden'} on:tap={startDirections} />
+        <mdcardview id="location" class={`floating-btn ${locationButtonClass}`} shape="medium" on:tap={askUserLocation} on:longPress={onWatchLocation}>
             <label
                 class={`mdi ${locationButtonLabelClass}`}
                 color={$watchingLocation && !$queryingLocation ? colorOnPrimary : colorPrimary}

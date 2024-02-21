@@ -299,7 +299,7 @@
     <Template let:item>
         <canvaslabel color={colorOnSurface} columns="34,*" disableCss={true} padding="0 10 0 10" rippleColor={colorOnSurface} rows="*,auto,auto,*" on:tap={() => dispatch('tap', item)}>
             <cspan color={item.color} fontFamily="osm" fontSize={20} text={item.icon} verticalAlignment="middle" />
-            <cgroup lineBreak="end" paddingLeft={34} paddingRight={34} verticalAlignment="middle">
+            <cgroup paddingLeft={34} paddingRight={34} verticalAlignment="middle">
                 <cspan fontSize={13} fontWeight="bold" text={item.title} />
                 <cspan color={colorOnSurfaceVariant} fontSize={11} text={!!item.subtitle ? '\n' + item.subtitle : null} visibility={!!item.subtitle ? 'visible' : 'collapse'} />
             </cgroup>
