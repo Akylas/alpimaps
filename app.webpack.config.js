@@ -37,6 +37,7 @@ module.exports = (env, params = {}) => {
                 sentry: true,
                 uploadSentry: true,
                 testlog: true,
+                devlog: true,
                 noconsole: false,
                 sourceMap: true,
                 uglify: env.production !== false
