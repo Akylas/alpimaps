@@ -674,7 +674,7 @@ export default class CustomLayersModule extends MapModule {
             try {
                 if (!__DISABLE_OFFLINE__ && (!__ANDROID__ || !PLAY_STORE_BUILD || SDK_VERSION < 11)) {
                     const folderPath = await getDefaultMBTilesDir();
-                    if (folderPath) {
+                    if (folderPath && Folder.exists(folderPath)) {
                         await this.loadLocalMbtiles(folderPath);
                     }
                     if (this.customSources.length === 0) {
