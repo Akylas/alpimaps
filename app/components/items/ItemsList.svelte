@@ -1,17 +1,17 @@
 <script context="module" lang="ts">
     import { createNativeAttributedString } from '@nativescript-community/text';
-    import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { AndroidActivityBackPressedEventData, Application, LayoutBase, NavigatedData, ObservableArray, View } from '@nativescript/core';
+    import { AndroidActivityBackPressedEventData, Application, LayoutBase, NavigatedData, ObservableArray, Utils, View } from '@nativescript/core';
     import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode, goBack, navigate } from 'svelte-native/dom';
-    import { UNITS, convertElevation, convertValueToUnit } from '~/helpers/formatter';
+    import { UNITS, convertElevation, convertValueToUnit, osmicon } from '~/helpers/formatter';
     import { convertDurationSeconds, lc, lu, onLanguageChanged } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
@@ -24,12 +24,18 @@
     import CActionBar from '../common/CActionBar.svelte';
     import IconButton from '../common/IconButton.svelte';
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
+    import { formatter } from '~/mapModules/ItemFormatter';
     type MapGroup = Group & { collapse: boolean };
     type CollectionGroup = MapGroup & { type: 'group'; count: number; selected?: boolean; totalTime?: number; totalDistance?: number };
     type CollectionItem = (Item & { groupOnMap?: 0 | 1; selected?: boolean }) | CollectionGroup;
 
     const groupPaint = new Paint();
     groupPaint.textSize = 12;
+
+    const iconPaint = new Paint();
+    iconPaint.setTextAlign(Align.LEFT);
+    iconPaint.textSize = 16;
+    iconPaint.fontFamily = 'osm';
 </script>
 
 <script lang="ts">
@@ -287,13 +293,7 @@ LEFT JOIN  (
     onThemeChanged(refresh);
     const circlePaint = new Paint();
     $: circlePaint.color = colorOnSurface;
-    function onDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
-        try {
-            canvas.drawCircle(10 + 25, 57, 13, circlePaint);
-        } catch (error) {
-            console.error(error, error.stack);
-        }
-    }
+
     function drawerTranslationFunction(side, width, value, delta, progress) {
         const result = {
             mainContent: {
@@ -680,6 +680,30 @@ LEFT JOIN  (
             showError(err);
         }
     }
+    function onDrawRouteIcon(item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
+        let itemIconFontFamily;
+        let itemIcon;
+        const itemProps = item.properties;
+        if (itemIsRoute && itemProps.route && (itemProps.route.type === 'pedestrian' || itemProps.route.type === 'bicycle')) {
+            itemIconFontFamily = $fonts.app;
+            itemIcon = formatter.getRouteIcon(itemProps.route.type, itemProps.route.subtype);
+        } else {
+            if (itemProps?.fontFamily) {
+                itemIconFontFamily = itemProps.fontFamily;
+                itemIcon = itemProps.icon;
+            } else {
+                itemIconFontFamily = 'osm';
+                itemIcon = osmicon(formatter.geItemIcon(item));
+            }
+        }
+        if (itemIcon) {
+            iconPaint.color = colorBackground;
+            iconPaint.fontFamily = itemIconFontFamily;
+            canvas.drawCircle(25, 57, 13, circlePaint);
+            const paddingLeft = Utils.layout.toDeviceIndependentPixels(object.effectivePaddingLeft);
+            canvas.drawText(itemIcon, paddingLeft + 17, 63, iconPaint);
+        }
+    }
 </script>
 
 <page actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
@@ -742,14 +766,9 @@ LEFT JOIN  (
                     borderBottomColor={colorOutlineVariant}
                     borderBottomWidth={1}
                     height={80}
-                    iconColor={colorBackground}
-                    iconLeft={17}
-                    iconSize={16}
-                    iconTop={63}
                     {item}
                     marginBottom={34}
                     marginLeft={60}
-                    {onDraw}
                     opacity={(item.onMap && item.groupOnMap) || 0.6}
                     padding="4 0 2 10"
                     propsBottom={34}
@@ -761,7 +780,8 @@ LEFT JOIN  (
                     prop:mainContent
                     on:tap={(e) => onItemTap(item, e)}
                     on:longPress={(e) => onItemLongPress(item, e)}>
-                    <image borderRadius={8} disableCss={true} height={50} horizontalAlignment="left" marginTop={6} src={item.image_path} verticalAlignment="top" width={50} />
+                    <image borderRadius={8} disableCss={true} height={50} horizontalAlignment="left" marginTop={6} src={item.image_path} stretch="aspectFill" verticalAlignment="top" width={50} />
+                    <canvasView on:draw={(event) => onDrawRouteIcon(item, event)} />
                     <SelectedIndicator selected={item.selected} />
                     <IconButton slot="above" gray={true} horizontalAlignment="right" text="mdi-dots-vertical" verticalAlignment="top" on:tap={(e) => showItemMoreMenu(item, e)} />
                 </BottomSheetInfoView>
