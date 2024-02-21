@@ -946,7 +946,7 @@
         </scrollview>
 
         <ElevationChart bind:this={elevationChart} colSpan={2} height={PROFILE_HEIGHT} {item} row={2} visibility={graphAvailable ? 'visible' : 'collapse'} on:highlight={onChartHighlight} />
-        <canvas bind:this={statsCanvas} colSpan={2} height={STATS_HEIGHT} row={3} visibility={statsAvailable ? 'visible' : 'collapse'} on:draw={drawStats}>
+        <canvasview bind:this={statsCanvas} colSpan={2} height={STATS_HEIGHT} row={3} visibility={statsAvailable ? 'visible' : 'collapse'} on:draw={drawStats}>
             <IconButton
                 fontSize={20}
                 horizontalAlignment="right"
@@ -964,7 +964,7 @@
                 text="mdi-chevron-left"
                 verticalAlignment="top"
                 on:tap={() => setStatsKey('waytypes')} />
-        </canvas>
+        </canvasview>
 
         <!-- <AWebView
             row={3}

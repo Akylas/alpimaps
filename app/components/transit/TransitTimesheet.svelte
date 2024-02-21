@@ -260,7 +260,7 @@
                         paddingRight={10}
                         text={item.stopName}
                         verticalTextAlignment="center" />
-                    <canvas id="canvas" col={1} color={item.stopId === currentStopId ? colorPrimary : colorOnSurface} on:draw={(e) => drawTripTime(item, e)} />
+                    <canvasview id="canvas" col={1} color={item.stopId === currentStopId ? colorPrimary : colorOnSurface} on:draw={(e) => drawTripTime(item, e)} />
                 </gridlayout>
             </Template>
         </collectionview>

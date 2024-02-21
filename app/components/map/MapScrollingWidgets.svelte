@@ -321,7 +321,7 @@
         on:tap={onAttributionTap} />
 
     <mdprogress colSpan={3} row={2} value={totalDownloadProgress} verticalAlignment="bottom" visibility={totalDownloadProgress > 0 ? 'visible' : 'collapse'} />
-    <canvas
+    <canvasview
         bind:this={navigationCanvas}
         backgroundColor={colorSurfaceContainer}
         borderRadius={6}
