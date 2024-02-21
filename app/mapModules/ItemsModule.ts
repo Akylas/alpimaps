@@ -10,7 +10,7 @@ import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/point';
 import { getImagePipeline } from '@nativescript-community/ui-image';
 import { ShareFile } from '@nativescript-community/ui-share-file';
-import { File, Folder, ImageSource, Screen, knownFolders, path, profile } from '@nativescript/core';
+import { File, Folder, ImageSource, Screen, Utils, knownFolders, path, profile } from '@nativescript/core';
 import type { Feature, FeatureCollection, Point as GeometryPoint } from 'geojson';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import { get } from 'svelte/store';
@@ -24,6 +24,7 @@ import { getItemsDataFolder, pick } from '~/utils/utils.common';
 import { fonts } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
 import NSQLDatabase from './NSQLDatabase';
+import { clearTimeout, setTimeout } from '~/utils/utils';
 const mapContext = getMapContext();
 
 let writer: GeoJSONGeometryWriter<LatLonKeys>;
@@ -462,13 +463,24 @@ export default class ItemsModule extends MapModule {
         }
         mapContext.selectItem({ item, isFeatureInteresting: true, preventZoom: false });
         mapContext.innerDecoder.setStyleParameter('hide_unselected', '1');
+        console.log('takeItemPicture');
         return new Promise<void>((resolve) => {
-            mapContext.onMapStable(async () => {
+            let done = false;
+            const onDone = async () => {
+                if (timer) {
+                    clearTimeout(timer);
+                    timer = null;
+                }
+                if (done) {
+                    return;
+                }
+                done = true;
                 try {
                     DEV_LOG && console.log('takeItemPicture', 'onMapStable');
                     // const startTime = Date.now();
-                    const viewPort = mapContext.getMapViewPort();
-                    const image = await mapContext.getMap().captureRendering(true);
+                    const mapView = mapContext.getMap();
+                    const image = await mapView.captureRendering(true);
+                    DEV_LOG && console.log('takeItemPicture', 'onMapStable1');
 
                     // restore everyting
                     mapContext.innerDecoder.setStyleParameter('hide_unselected', '0');
@@ -480,17 +492,21 @@ export default class ItemsModule extends MapModule {
                         mapContext.getMap().moveToFitBounds(mapBounds, undefined, true, true, true, 0);
                     }
 
-                    // image.saveToFile(path.join(itemsModule.imagesFolder.path, Date.now() + '_full.png'), 'png');
-                    const canvas = new Canvas(500, 500);
-                    // console.log('captureRendering', item.image_path, image.width, image.height, viewPort, canvas.getWidth(), canvas.getHeight());
+                    // image.saveToFile(item.image_path, 'jpg');
+                    const viewPort = mapContext.getMapViewPort();
                     //we offset a bit to be sure we the whole trace
                     const offset = 20;
-                    canvas.drawBitmap(
-                        image,
-                        new Rect(viewPort.left - offset, viewPort.top - offset, viewPort.left + viewPort.width + offset, viewPort.top + viewPort.height + offset),
-                        new Rect(0, 0, 500, 500),
-                        null
-                    );
+                    const left = Math.max(viewPort.left - offset, 0);
+                    const top = Math.max(viewPort.top - offset, 0);
+                    const width = Math.min(left + viewPort.width + offset, mapView.getMeasuredWidth() - left);
+                    const height = Math.min(top + viewPort.height + offset, mapView.getMeasuredHeight() - top);
+                    const canvas = new Canvas(width, height);
+                    console.log('captureRendering', item.image_path, image.width, image.height, viewPort, canvas.getWidth(), canvas.getHeight());
+                    // const actuaWidth = Math.min(width, height);
+                    if (__IOS__) {
+                        canvas.scale(1, -1,  width / 2, height / 2);
+                    }
+                    canvas.drawBitmap(image, new Rect(left, top, left + width, top + height), new Rect(0, 0, canvas.getWidth(), canvas.getHeight()), null);
                     new ImageSource(canvas.getImage()).saveToFile(item.image_path, 'jpg');
                     // console.log('saved bitmap', imagePath, Date.now() - startTime, 'ms');
                     canvas.release();
@@ -498,7 +514,9 @@ export default class ItemsModule extends MapModule {
                 } catch (error) {
                     console.error(error, error.stack);
                 }
-            }, true);
+            };
+            let timer = setTimeout(onDone, 1500) as any;
+            mapContext.onMapStable(onDone, true);
         });
     }
 
