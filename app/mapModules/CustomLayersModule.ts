@@ -381,13 +381,12 @@ export default class CustomLayersModule extends MapModule {
         let url = provider.url as string | string[];
         if (provider.tokenKey) {
             const tokens = Array.isArray(provider.tokenKey) ? provider.tokenKey : [provider.tokenKey];
-            console.log('tokens', tokens);
             const needsToSet = tokens.map((s) => this.tokenKeys[s]).some((s) => s === undefined);
             if (needsToSet) {
                 if (tokens.length === 2) {
                     const result = await login({
                         title: lc('api_key'),
-                        message: lc('api_keys_needed', tokens.join(',')),
+                        message: lc('api_key_needed', tokens.join(',')),
                         autoFocus: true,
                         userNameHint: tokens[0],
                         passwordHint: tokens[1]
@@ -679,16 +678,19 @@ export default class CustomLayersModule extends MapModule {
                     }
                     if (this.customSources.length === 0) {
                         const showFirstPresentation = ApplicationSettings.getBoolean('showFirstPresentation', true);
-                        const result = await confirm({
-                            title: lc('app.name'),
-                            message: lc('app_generate_date_presentation'),
-                            okButtonText: lc('ok'),
-                            cancelButtonText: lc('cancel')
-                        });
-                        if (result) {
-                            openLink(GIT_URL);
+                        if (showFirstPresentation) {
+                            confirm({
+                                title: lc('app.name'),
+                                message: lc('app_generate_date_presentation'),
+                                okButtonText: lc('open_github'),
+                                cancelButtonText: lc('cancel')
+                            }).then((result) => {
+                                if (result) {
+                                    openLink(GIT_URL);
+                                }
+                                ApplicationSettings.setBoolean('showFirstPresentation', false);
+                            });
                         }
-                        ApplicationSettings.getBoolean('showFirstPresentation', false);
                     }
                 }
                 const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
@@ -895,7 +897,8 @@ export default class CustomLayersModule extends MapModule {
                         onVectorTileClicked: (e) => mapContext.vectorTileClicked(e)
                     },
                     mapContext.getProjection(),
-                    akylas.alpi.maps.VectorTileEventListener
+                    // TODO: fix this to be optimized too on iOS
+                    __ANDROID__ ? akylas.alpi.maps.VectorTileEventListener : undefined
                 );
                 if (!packageService.localVectorTileLayer) {
                     packageService.localVectorTileLayer = layer;
