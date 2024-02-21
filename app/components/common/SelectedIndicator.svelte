@@ -25,4 +25,4 @@
     }
 </script>
 
-<canvas disableCss={true} height={40} horizontalAlignment="left" verticalAlignment="top" visibility={selected ? 'visible' : 'hidden'} width={40} on:draw={onCanvasDraw} {...$$restProps} />
+<canvasview disableCss={true} height={40} horizontalAlignment="left" verticalAlignment="top" visibility={selected ? 'visible' : 'hidden'} width={40} on:draw={onCanvasDraw} {...$$restProps} />

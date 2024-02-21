@@ -62,7 +62,7 @@ try {
     registerNativeViewElement('textview', () => require('@nativescript-community/ui-material-textview').TextView, null, {}, { override: true });
     registerNativeViewElement('lineChart', () => require('@nativescript-community/ui-chart').LineChart);
     registerNativeViewElement('cartomap', () => require('@nativescript-community/ui-carto/ui').CartoMap);
-    registerNativeViewElement('canvas', () => require('@nativescript-community/ui-canvas').CanvasView);
+    registerNativeViewElement('canvasview', () => require('@nativescript-community/ui-canvas').CanvasView);
     registerNativeViewElement('line', () => require('@nativescript-community/ui-canvas/shapes').Line);
     registerNativeViewElement('circle', () => require('@nativescript-community/ui-canvas/shapes').Circle);
     registerNativeViewElement('rectangle', () => require('@nativescript-community/ui-canvas/shapes').Rectangle);

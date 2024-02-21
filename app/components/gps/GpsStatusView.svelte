@@ -463,5 +463,5 @@
 
 <gesturerootview {height} rows="*,auto">
     <CompassDialView drawInsideGrid={true} onDraw={onCanvasDraw} bind:canvas on:layoutChanged={refreshGeometries} />
-    <canvas bind:this={canvas2} backgroundColor={colorSurfaceContainerHighest} height={preferredHeight} row={1} on:draw={onCanvasHorizontalDraw} />
+    <canvasview bind:this={canvas2} backgroundColor={colorSurfaceContainerHighest} height={preferredHeight} row={1} on:draw={onCanvasHorizontalDraw} />
 </gesturerootview>
