@@ -146,4 +146,4 @@
     }
 </script>
 
-<canvas bind:this={canvas} on:draw={draw} on:layoutChanged={refreshGeometries} {...$$restProps} />
+<canvasview bind:this={canvas} on:draw={draw} on:layoutChanged={refreshGeometries} {...$$restProps} />

@@ -188,7 +188,7 @@
         <cartomap row={2} useTextureView={false} zoom={16} on:mapReady={onMapReady} />
         <collectionview bind:this={collectionView} items={dataItems} row={3} android:paddingBottom={$navigationBarHeight}>
             <Template let:item>
-                <canvas columns="*,auto" on:tap={() => selectStop(item)}>
+                <canvasview columns="*,auto" on:tap={() => selectStop(item)}>
                     <line horizontalAlignment="left" startX={30} startY={0} stopX={30} stopY="50%" strokeColor={item.color} strokeWidth={4} visibility={item.first ? 'hidden' : 'visible'} />
                     <line horizontalAlignment="left" startX={30} startY="50%" stopX={30} stopY="100%" strokeColor={item.color} strokeWidth={4} visibility={item.last ? 'hidden' : 'visible'} />
                     <circle
@@ -204,7 +204,7 @@
                     <label fontSize={16} marginLeft={60} text={item.name} verticalTextAlignment="middle" />
                     <!-- <label row={1} col={1} fontSize={14} color={colorOnSurfaceVariant} text={item.city} verticalTextAlignment="top" /> -->
                     <IconButton col={2} rowSpan={2} text="mdi-map-marker-radius-outline" verticalAlignment="middle" on:tap={() => backToMapOnPoint(item)} />
-                </canvas>
+                </canvasview>
             </Template>
         </collectionview>
         <mdactivityindicator busy={loading} row={3} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
