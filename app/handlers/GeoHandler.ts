@@ -358,13 +358,22 @@ export class GeoHandler extends Handler {
                 options.pausesLocationUpdatesAutomatically = ApplicationSettings.getBoolean('gps_ios_auto_pause_updates', true);
                 options.allowsBackgroundLocationUpdates = ApplicationSettings.getBoolean('gps_ios_allow_background', true);
             }
-            //@ts-ignore
             options.activityType = ApplicationSettings.getNumber('gps_ios_activitytype', CLActivityType.Other);
         }
 
         this.watchId = await geolocation.watchLocation(this.onLocation, this.onLocationError, options);
     }
-
+    IOS_ACCURACIES = __IOS__
+        ? {
+              [kCLLocationAccuracyBestForNavigation]: lc('best_for_navigation'),
+              [kCLLocationAccuracyBest]: lc('best'),
+              [kCLLocationAccuracyNearestTenMeters]: '10m',
+              [kCLLocationAccuracyHundredMeters]: '100m',
+              [kCLLocationAccuracyKilometer]: '1km',
+              [kCLLocationAccuracyThreeKilometers]: '3km',
+              [kCLLocationAccuracyReduced]: lc('reduced')
+          }
+        : undefined;
     getWatchSettings() {
         const options = {
             stop_gps_background: {
@@ -384,18 +393,20 @@ export class GeoHandler extends Handler {
                 title: lc('gps_desired_accuracy'),
                 description: lc('gps_desired_accuracy_desc'),
                 default: desiredAccuracy,
-                formatter: formatDistance,
+                formatter: __ANDROID__
+                    ? formatDistance
+                    : (k) => {
+                          console.log('gps_desired_accuracy formatter', k);
+                          return this.IOS_ACCURACIES[k];
+                      },
                 type: __ANDROID__ ? 'prompt' : undefined,
                 values: __IOS__
-                    ? [
-                          { title: lc('best_for_navigation'), value: kCLLocationAccuracyBestForNavigation },
-                          { title: lc('best'), value: kCLLocationAccuracyBest },
-                          { title: '10m', value: kCLLocationAccuracyNearestTenMeters },
-                          { title: '100m', value: kCLLocationAccuracyHundredMeters },
-                          { title: '1km', value: kCLLocationAccuracyKilometer },
-                          { title: '3km', value: kCLLocationAccuracyThreeKilometers },
-                          { title: lc('reduced'), value: kCLLocationAccuracyReduced }
-                      ]
+                    ? Object.keys(this.IOS_ACCURACIES)
+                          .map((k) => ({
+                              value: parseFloat(k),
+                              title: this.IOS_ACCURACIES[k]
+                          }))
+                          .sort((a, b) => a.value - b.value)
                     : undefined
             }
         };
