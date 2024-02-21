@@ -133,7 +133,7 @@
                 }
             ] as any)
             .concat(
-                !PLAY_STORE_BUILD && ANDROID_30
+                __ANDROID__ && !PLAY_STORE_BUILD && ANDROID_30
                     ? [
                           {
                               id: 'items_data_path',
@@ -218,21 +218,21 @@
     async function onLongPress(item, event) {
         try {
             switch (item.id) {
-                case 'data_path': {
-                    const result = await confirm({
-                        message: lc('reset_setting', item.title),
-                        okButtonText: lc('ok'),
-                        cancelButtonText: lc('cancel')
-                    });
-                    if (!result) {
-                        return;
-                    }
-                    setSavedMBTilesDir(null);
+                // case 'data_path': {
+                //     const result = await confirm({
+                //         message: lc('reset_setting', item.title),
+                //         okButtonText: lc('ok'),
+                //         cancelButtonText: lc('cancel')
+                //     });
+                //     if (!result) {
+                //         return;
+                //     }
+                //     setSavedMBTilesDir(null);
 
-                    item.description = await getDefaultMBTilesDir();
-                    updateItem(item, 'id');
-                    break;
-                }
+                //     item.description = await getDefaultMBTilesDir();
+                //     updateItem(item, 'id');
+                //     break;
+                // }
                 case 'items_data_path': {
                     let result = await confirm({
                         message: lc('reset_setting', item.title),
@@ -283,7 +283,6 @@
     }
     let checkboxTapTimer;
     async function onTap(item, event) {
-        DEV_LOG && console.log('onTap', event);
         try {
             if (item.type === 'switch') {
                 // we dont want duplicate events so let s timeout and see if we clicking diretly on the checkbox
@@ -402,7 +401,6 @@
                     showBottomSheet({
                         parent: this,
                         view: ThirdPartySoftwareBottomSheet,
-                        ignoreTopSafeArea: true,
                         trackingScrollView: 'trackingScrollView'
                     });
                     break;
@@ -508,10 +506,10 @@
                                 }))
                             },
                             {
-                                title: lc('select_language')
+                                title: item.title
                             }
                         );
-                        if (result) {
+                        if (result?.data !== undefined) {
                             ApplicationSettings.setNumber(item.key, result.data);
                             updateItem(item);
                         }
