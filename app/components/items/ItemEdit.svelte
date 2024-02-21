@@ -150,8 +150,9 @@
 
         if (itemIsRoute) {
             if (item.image_path && (!item.image_path || !File.exists(item.image_path))) {
-                item.image_path = this.getItemImagePath();
-                mapContext.mapModules['items'].takeItemPicture(item, true);
+                const module = mapContext.mapModules['items'];
+                item.image_path = module.getItemImagePath();
+                module.takeItemPicture(item, true);
             }
             // TODO: update image if there is none (testing file existence?)
             const margin = Utils.layout.toDevicePixels(20);
@@ -389,7 +390,7 @@
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*,auto,2.5*,auto" android:paddingBottom={$navigationBarHeight}>
         <CActionBar canGoBack title={lc('edit')}>
-            <IconButton text="mdi-playlist-plus" on:tap={addField} />
+            <IconButton color={colorOnPrimary} text="mdi-playlist-plus" on:tap={addField} />
             <IconButton color={colorOnPrimary} isVisible={!itemIsRoute} text="mdi-web-sync" on:tap={fetchOSMDetails} />
         </CActionBar>
         <cartomap row={1} zoom={16} on:mapReady={onMapReady} on:layoutChanged={onLayoutChanged} />
