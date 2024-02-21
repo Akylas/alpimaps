@@ -1,3 +1,4 @@
+import { executeOnMainThread } from '@nativescript/core/utils';
 import { Application, ApplicationSettings, Device, File, FileSystemEntity, Folder, Utils, knownFolders, path } from '@nativescript/core';
 
 let savedMBTilesDir = ApplicationSettings.getString('local_mbtiles_directory');
@@ -233,4 +234,12 @@ export async function showApp() {
     //         context.startActivity(intent);
     //     }
     // }
+}
+
+export function iosExecuteOnMainThread(callback) {
+    if (__IOS__) {
+        executeOnMainThread(callback);
+    } else {
+        callback();
+    }
 }

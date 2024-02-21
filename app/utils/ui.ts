@@ -4,7 +4,7 @@ import { Label } from '@nativescript-community/ui-label';
 import { AlertDialog, MDCAlertControlerOptions, alert, confirm } from '@nativescript-community/ui-material-dialogs';
 import { ActivityIndicator, AlertOptions, StackLayout, Utils, View } from '@nativescript/core';
 import { Group } from '~/models/Item';
-import { colors, systemFontScale } from '~/variables';
+import { colors, fontScale } from '~/variables';
 import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
@@ -147,7 +147,7 @@ export async function showAlertOptionSelect<T>(viewSpec: typeof SvelteComponent<
 export async function showPopoverMenu<T = any>({ options, anchor, onClose, props, horizPos, vertPos }: { options; anchor; onClose?; props? } & Partial<PopoverOptions>) {
     const { colorSurfaceContainer } = get(colors);
     const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
-    const rowHeight = (props?.rowHeight || 58) * get(systemFontScale);
+    const rowHeight = (props?.rowHeight || 58) * get(fontScale);
     const result: T = await showPopover({
         backgroundColor: colorSurfaceContainer,
         view: OptionSelect,

@@ -96,3 +96,8 @@ export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath:
 export function restartApp() {
     throw new Error('not possible on iOS');
 }
+
+export const setTimeout = global.__ns__setTimeout;
+export const setInterval = global.__ns__setInterval;
+export const clearTimeout = global.__ns__clearTimeout;
+export const clearInterval = global.__ns__clearInterval;
