@@ -72,7 +72,7 @@
 </script>
 
 <gridlayout {...$$restProps} columns="auto,*,auto" height="auto" padding="10 10 10 10" rows="auto,auto, auto">
-    <!-- <canvas bind:this={canvas} on:draw={onDraw} /> -->
+    <!-- <canvasview bind:this={canvas} on:draw={onDraw} /> -->
 
     <label color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={24} text={icon} verticalTextAlignment="center" visibility={icon ? 'visible' : 'collapse'} />
     <label col={1} color={colorOnSurface} fontSize={15} lineBreak="end" maxLines={2} padding="0 10 0 10" text={title} textWrap={true} verticalTextAlignment="center" />

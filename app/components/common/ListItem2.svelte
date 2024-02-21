@@ -138,7 +138,7 @@
     $: redraw(title, subtitle, leftIcon);
 </script>
 
-<canvas bind:this={canvas} backgroundColor={colorBackground} {height} rippleColor={colorPrimary}>
+<canvasview bind:this={canvas} backgroundColor={colorBackground} {height} rippleColor={colorPrimary}>
     <!-- <canvaslabel padding={16}>
         <cgroup c="middle" paddingBottom={subtitle ? 10 : 0}>
             <cspan visibility={leftIcon ? 'visible' : 'hidden'} paddingLeft={10} width={40} text={leftIcon} fontFamily={leftIconFonFamily} fontSize={24} />
@@ -149,4 +149,4 @@
         </cgroup>
         <line visibility={showBottomLine ? 'visible' : 'hidden'} height={1} color={colorOutlineVariant} strokeWidth={1} startX={0} verticalAlignment="bottom" startY={0} stopX="100%" stopY={0} />
     </canvaslabel> -->
-</canvas>
+</canvasview>
