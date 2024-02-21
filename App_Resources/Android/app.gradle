@@ -119,18 +119,10 @@ android {
     exclude "license/**"
     // resources.excludes += "assets/com/tom_roush/fontbox/resources/cmap/*"
   }
-  // flavorDimensions "stage"
-  // productFlavors {
-  //   dev {
-  //     dimension "stage"
-  //     versionNameSuffix "-dev"
-  //     resConfigs "en", "xxhdpi"
-  //   }
-  //   prod {
-  //     dimension "stage"
-  //     resConfigs "en", "fr", "es"
-  //   }
-  // }
+  dependenciesInfo {
+    // Disables dependency metadata when building APKs.
+    includeInApk = false
+  }
   // experimentalProperties["android.experimental.r8.dex-startup-optimization"] = true
 }
 
