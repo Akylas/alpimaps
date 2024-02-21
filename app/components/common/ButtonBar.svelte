@@ -129,7 +129,7 @@
     const rippleY = 0;
 </script>
 
-<canvas bind:this={canvas} {height} {width} on:draw={onDraw} {...$$restProps} on:tap={() => {}} on:touch={onTouch} on:tap={onTap} on:longPress={onLongPress}>
+<canvasview bind:this={canvas} {height} {width} on:draw={onDraw} {...$$restProps} on:tap={() => {}} on:touch={onTouch} on:tap={onTap} on:longPress={onLongPress}>
     <absolutelayout
         bind:this={ripple}
         borderRadius="{buttonSize / 2}}"
@@ -140,4 +140,4 @@
         {rippleColor}
         verticalAlignment="top"
         width={buttonSize} />
-</canvas>
+</canvasview>

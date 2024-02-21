@@ -400,7 +400,7 @@
             <mdactivityindicator busy={loading} height={$actionBarButtonHeight} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapse'} width={$actionBarButtonHeight} />
         </stacklayout>
     </gridlayout>
-    <canvas height={60} row={1} visibility={topItemsToDraw.length ? 'visible' : 'collapse'} on:draw={onTopDraw} />
+    <canvasview height={60} row={1} visibility={topItemsToDraw.length ? 'visible' : 'collapse'} on:draw={onTopDraw} />
     <collectionview bind:this={collectionView} itemTemplateSelector={(item) => item.type || 'default'} {items} row={2}>
         <Template key="json" let:item>
             <JsonViewer backgroundColor={colorBackground} jsonText={item.src} padding={10} />
