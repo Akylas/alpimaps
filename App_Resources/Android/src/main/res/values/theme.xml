@@ -9,7 +9,7 @@
     </style>
     <style name="LaunchScreenTheme" parent="LaunchScreenThemeBase"></style>
 
-    <style name="AppThemeBase" parent="Theme.Material3.DynamicColors.DayNight">
+    <style name="AppThemeBase" parent="Theme.Material3.DayNight">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="switchPreferenceCompatStyle">
