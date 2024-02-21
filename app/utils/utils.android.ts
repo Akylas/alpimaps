@@ -246,3 +246,8 @@ export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath:
 export function restartApp() {
     akylas.alpi.maps.Utils.restartApp(Utils.android.getApplicationContext(), Application.android.startActivity);
 }
+
+export const setTimeout = global.setTimeout;
+export const setInterval = global.setInterval;
+export const clearTimeout = global.clearTimeout;
+export const clearInterval = global.clearInterval;

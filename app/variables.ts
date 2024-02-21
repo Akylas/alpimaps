@@ -58,11 +58,11 @@ export const screenWidthDips = Screen.mainScreen.widthDIPs;
 export const navigationBarHeight = writable(0);
 
 export let globalMarginTop = 0;
-export const systemFontScale = writable(1);
+export const fontScale = writable(1);
 export const isRTL = writable(false);
 
 function updateSystemFontScale(value) {
-    systemFontScale.set(value);
+    fontScale.set(value);
 }
 
 const onInitRootView = function () {
@@ -81,7 +81,7 @@ const onInitRootView = function () {
             actionBarHeight.set(Utils.layout.toDeviceIndependentPixels(nActionBarHeight));
         }
         const resources = Utils.android.getApplicationContext().getResources();
-        systemFontScale.set(resources.getConfiguration().fontScale);
+        fontScale.set(resources.getConfiguration().fontScale);
         const id = resources.getIdentifier('config_showNavigationBar', 'bool', 'android');
         let resourceId = resources.getIdentifier('navigation_bar_height', 'dimen', 'android');
         if (id > 0 && resourceId > 0 && (resources.getBoolean(id) || (!PRODUCTION && isSimulator()))) {
@@ -112,7 +112,9 @@ const onInitRootView = function () {
         Application.on(Application.fontScaleChangedEvent, (event) => updateSystemFontScale(event.newValue));
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
-        navigationBarHeight.set(Application.ios.window.safeAreaInsets.bottom);
+        navigationBarHeight.set(Utils.layout.toDeviceIndependentPixels(Application.ios.window.safeAreaInsets.bottom));
+        statusBarHeight.set(Utils.layout.toDeviceIndependentPixels(Application.ios.window.safeAreaInsets.top));
+        globalMarginTop = get(statusBarHeight);
     }
     updateThemeColors(getRealTheme(theme));
     // DEV_LOG && console.log('initRootView', get(navigationBarHeight), get(statusBarHeight), get(actionBarHeight), get(actionBarButtonHeight), get(fonts));
@@ -137,12 +139,12 @@ export function updateThemeColors(theme: string, force = false) {
     if (!rootViewStyle) {
         return;
     }
-    // rootViewStyle?.setUnscopedCssVariable('--systemFontScale', systemFontScale + '');
+    // rootViewStyle?.setUnscopedCssVariable('--fontScale', fontScale + '');
     if (__ANDROID__) {
         const nUtils = akylas.alpi.maps.Utils;
         const activity = Application.android.startActivity;
         // we also update system font scale so that our UI updates correcly
-        systemFontScale.set(Utils.android.getApplicationContext().getResources().getConfiguration().fontScale);
+        fontScale.set(Utils.android.getApplicationContext().getResources().getConfiguration().fontScale);
         Object.keys(currentColors).forEach((c) => {
             if (c.endsWith('Disabled')) {
                 return;
