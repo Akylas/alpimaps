@@ -219,7 +219,6 @@ export function queryString(params, location) {
 
     const locSplit = location.split(/[?&]/);
     // _params[0] is the url
-
     const parts = [];
     for (i = 0, len = locSplit.length; i < len; i++) {
         const theParts = locSplit[i].split('=');
@@ -238,9 +237,9 @@ export function queryString(params, location) {
         for (i = 0, len = params.length; i < len; i++) {
             data = params[i];
             if (typeof data === 'string') {
-                parts.push(data);
+                parts.push(encodeURIComponent(data));
             } else if (Array.isArray(data)) {
-                parts.push(data[0] + '=' + data[1]);
+                parts.push(data[0] + '=' + encodeURIComponent(data[1]));
             }
         }
     } else if (typeof params === 'object') {
@@ -257,7 +256,7 @@ export function queryString(params, location) {
             }
         }
         for (key in obj) {
-            parts.push(key + ('=' + obj[key]));
+            parts.push(key + ('=' + encodeURIComponent(obj[key])));
         }
     }
 
