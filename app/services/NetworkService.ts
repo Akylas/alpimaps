@@ -272,74 +272,74 @@ export interface NetworkConnectionStateEventData extends EventData {
     };
 }
 
-// function decompress(encoded: string, precision: number) {
-//     precision = Math.pow(10, -precision);
-//     let index = 0,
-//         lat = 0,
-//         lng = 0;
-//     const len = encoded.length,
-//         array: MapPos<LatLonKeys>[] = [];
-//     while (index < len) {
-//         let b,
-//             shift = 0,
-//             result = 0;
-//         do {
-//             b = encoded.charCodeAt(index++) - 63;
-//             result |= (b & 0x1f) << shift;
-//             shift += 5;
-//         } while (b >= 0x20);
-//         const dlat = result & 1 ? ~(result >> 1) : result >> 1;
-//         lat += dlat;
-//         shift = 0;
-//         result = 0;
-//         do {
-//             b = encoded.charCodeAt(index++) - 63;
-//             result |= (b & 0x1f) << shift;
-//             shift += 5;
-//         } while (b >= 0x20);
-//         const dlng = result & 1 ? ~(result >> 1) : result >> 1;
-//         lng += dlng;
-//         array.push({ lat: lat * precision, lon: lng * precision });
-//     }
-//     return array;
-// }
+function decompress(encoded: string, precision: number) {
+    precision = Math.pow(10, -precision);
+    let index = 0,
+        lat = 0,
+        lng = 0;
+    const len = encoded.length,
+        array: MapPos<LatLonKeys>[] = [];
+    while (index < len) {
+        let b,
+            shift = 0,
+            result = 0;
+        do {
+            b = encoded.charCodeAt(index++) - 63;
+            result |= (b & 0x1f) << shift;
+            shift += 5;
+        } while (b >= 0x20);
+        const dlat = result & 1 ? ~(result >> 1) : result >> 1;
+        lat += dlat;
+        shift = 0;
+        result = 0;
+        do {
+            b = encoded.charCodeAt(index++) - 63;
+            result |= (b & 0x1f) << shift;
+            shift += 5;
+        } while (b >= 0x20);
+        const dlng = result & 1 ? ~(result >> 1) : result >> 1;
+        lng += dlng;
+        array.push({ lat: lat * precision, lon: lng * precision });
+    }
+    return array;
+}
 
-// function encodeNumber(num: number) {
-//     num = num << 1;
-//     if (num < 0) {
-//         num = ~num;
-//     }
-//     let encoded = '';
-//     while (num >= 0x20) {
-//         encoded += String.fromCharCode((0x20 | (num & 0x1f)) + 63);
-//         num >>= 5;
-//     }
-//     encoded += String.fromCharCode(num + 63);
-//     return encoded;
-// }
+function encodeNumber(num: number) {
+    num = num << 1;
+    if (num < 0) {
+        num = ~num;
+    }
+    let encoded = '';
+    while (num >= 0x20) {
+        encoded += String.fromCharCode((0x20 | (num & 0x1f)) + 63);
+        num >>= 5;
+    }
+    encoded += String.fromCharCode(num + 63);
+    return encoded;
+}
 
-// function compress(points: MapPos<LatLonKeys>[], precision: number) {
-//     let oldLat = 0,
-//         oldLng = 0,
-//         index = 0;
-//     let encoded = '';
-//     const len = points.length;
-//     precision = Math.pow(10, precision);
-//     while (index < len) {
-//         const pt = points[index++];
-//         //  Round to N decimal places
-//         const lat = Math.round(pt.lat * precision);
-//         const lng = Math.round(pt.lon * precision);
+function compress(points: [number, number][], precision: number) {
+    let oldLat = 0,
+        oldLng = 0,
+        index = 0;
+    let encoded = '';
+    const len = points.length;
+    precision = Math.pow(10, precision);
+    while (index < len) {
+        const pt = points[index++];
+        //  Round to N decimal places
+        const lat = Math.round(pt[1] * precision);
+        const lng = Math.round(pt[0] * precision);
 
-//         //  Encode the differences between the points
-//         encoded += encodeNumber(lat - oldLat);
-//         encoded += encodeNumber(lng - oldLng);
+        //  Encode the differences between the points
+        encoded += encodeNumber(lat - oldLat);
+        encoded += encodeNumber(lng - oldLng);
 
-//         oldLat = lat;
-//         oldLng = lng;
-//     }
-//     return encoded;
-// }
+        oldLat = lat;
+        oldLng = lng;
+    }
+    return encoded;
+}
 
 function latlongToOSMString(_point: MapPos<LatLonKeys>) {
     return _point.lon.toFixed(4) + ',' + _point.lat.toFixed(4);
@@ -511,6 +511,44 @@ export class NetworkService extends Observable {
                 throw error;
             }
         }
+    }
+
+    async getValhallaElevationProfile(points: [number, number][]) {
+        return this.request({
+            url: 'https://valhalla1.openstreetmap.de/height',
+            queryParams: {
+                json: {
+                    range: true,
+                    encoded_polyline: compress(points, 6)
+                }
+            },
+            headers: {
+                'Cache-Control': getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1)
+            },
+            // silent:_params.silent,
+            method: 'GET',
+            timeout: 60000
+        });
+    }
+
+    async getValhallaTraceAttributes(points: [number, number][], options = {}) {
+        return this.request({
+            url: 'https://valhalla1.openstreetmap.de/trace_attributes',
+            queryParams: {
+                json: {
+                    range: true,
+                    encoded_polyline: compress(points, 6),
+                    costing: 'pedestrian',
+                    ...options
+                }
+            },
+            headers: {
+                'Cache-Control': getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1)
+            },
+            // silent:_params.silent,
+            method: 'GET',
+            timeout: 60000
+        });
     }
 
     // queryGeoFeatures(
