@@ -160,7 +160,7 @@ export class HTTPError extends CustomError {
 //     }
 // }
 
-export async function showError(err: Error | string, showAsSnack = false) {
+export async function showError(err: Error | string, showAsSnack = false, forcedMessage?: string) {
     try {
         if (!err) {
             return;
@@ -170,7 +170,7 @@ export async function showError(err: Error | string, showAsSnack = false) {
         DEV_LOG && console.error('showError', reporterEnabled, err.constructor.name, ['message'] || err, err?.['stack'], err?.['stackTrace']);
 
         const isString = realError === null || realError === undefined;
-        const message = isString ? (err as string) : realError.message || realError.toString();
+        let message = isString ? (err as string) : realError.message || realError.toString();
         if (message?.startsWith('java.net.')) {
             if (message.indexOf('SocketTimeoutException') !== -1) {
                 realError = new TimeoutError();
@@ -179,6 +179,7 @@ export async function showError(err: Error | string, showAsSnack = false) {
             }
         }
         DEV_LOG && console.error('showError', reporterEnabled, realError && Object.keys(realError),  message, err?.['stack'], err?.['stackTrace'], err?.['nativeException']);
+        message = forcedMessage || message;
         if (showAsSnack || realError instanceof NoNetworkError || realError instanceof TimeoutError) {
             showSnack({ message });
             return;
