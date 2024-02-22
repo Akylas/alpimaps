@@ -1,0 +1,13 @@
+*Bug fixes*
+- language not set to english when device locale is not supported
+- city search was not working when the device/app language was one not supported by photon
+- *android:* disable MaterialYou theme as it does not render nicely with the map
+- selectable text in bottom info view
+- actionbar button color fix in edit item view
+- drawing fix for items list
+- layout fixes
+- map global improvements
+- localisation fixes
+- route snapshot fix
+- api calls fix
+- *android:* layout issue fix on some
