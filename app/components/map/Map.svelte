@@ -500,7 +500,7 @@
         const width = cartoMap.getMeasuredWidth();
         const height = cartoMap.getMeasuredHeight();
         const left = Utils.layout.toDevicePixels(40);
-        const top = Utils.layout.toDevicePixels($statusBarHeight  +  90 + topTranslationY);
+        const top = Utils.layout.toDevicePixels($statusBarHeight + 90 + topTranslationY);
         const bottom = Utils.layout.toDevicePixels($navigationBarHeight - mapTranslation + 0);
         const min = Math.min(width - 2 * left, height - top - bottom);
         const deltaX = (width - min) / 2;
@@ -1961,7 +1961,7 @@
                     gray={true}
                     horizontalAlignment="left"
                     marginLeft={5}
-                    marginTop={90 + Math.max(topTranslationY - 90, 0)}
+                    marginTop={66 + $statusBarHeight + Math.max(topTranslationY - 90, 0)}
                     verticalAlignment="top" />
 
                 <LocationInfoPanel
@@ -1989,7 +1989,7 @@
                     id="orientation"
                     class="small-floating-btn"
                     horizontalAlignment="right"
-                    marginTop={90 + Math.max(topTranslationY - 90, 0)}
+                    marginTop={66 + $statusBarHeight + Math.max(topTranslationY - 90, 0)}
                     shape="round"
                     verticalAlignment="top"
                     visibility={currentMapRotation !== 0 ? 'visible' : 'collapse'}

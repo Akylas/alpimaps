@@ -247,7 +247,8 @@ export function restartApp() {
     akylas.alpi.maps.Utils.restartApp(Utils.android.getApplicationContext(), Application.android.startActivity);
 }
 
-export const setTimeout = global.setTimeout;
-export const setInterval = global.setInterval;
-export const clearTimeout = global.clearTimeout;
-export const clearInterval = global.clearInterval;
+const gSetTimeout = setTimeout;
+const gSetInterval = setInterval;
+const gClearTimeout = clearTimeout;
+const gClearInterval = clearInterval;
+export { gSetTimeout as setTimeout, gSetInterval as setInterval, gClearTimeout as clearTimeout, gClearInterval as clearInterval };

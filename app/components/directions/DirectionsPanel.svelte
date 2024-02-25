@@ -714,8 +714,8 @@
                     route.profile = await packageService.getElevationProfile(null, positions);
                 }
             } catch (error) {
-                showSnack({ message: 'error computing route: ' + error });
-                console.error('error computing route', profile, JSON.stringify(points), JSON.stringify(customOptions));
+                showError(error, true, 'error computing route: ' + error);
+                console.error('error computing route', profile, error, JSON.stringify(points), JSON.stringify(customOptions));
                 return;
             }
         }
