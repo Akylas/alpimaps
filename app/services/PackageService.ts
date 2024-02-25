@@ -22,11 +22,13 @@ import { SearchRequest, VectorTileSearchService } from '@nativescript-community/
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import * as appSettings from '@nativescript/core/application-settings';
 import { Folder } from '@nativescript/core/file-system';
-import { Point } from 'geojson';
+import { LineString, MultiLineString, Point } from 'geojson';
 import { getMapContext } from '~/mapModules/MapModule';
 import { IItem as Item, Route, RouteProfile } from '~/models/Item';
 import { EARTH_RADIUS, TO_RAD } from '~/utils/geo';
 import { getDataFolder, getSavedMBTilesDir, listFolder } from '~/utils/utils';
+import { networkService } from './NetworkService';
+import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
@@ -456,7 +458,7 @@ class PackageService extends Observable {
         return finalGrades;
     }
 
-    computeProfileFromHeights(positions: MapPosVector<LatLonKeys>, elevations: IntVector) {
+    computeProfileFromHeights(positions: MapPosVector<LatLonKeys>, elevations: IntVector | number[]) {
         let last: { lat: number; lon: number; altitude: number; tmpElevation?: number },
             currentHeight,
             currentDistance = 0;
@@ -470,13 +472,20 @@ class PackageService extends Observable {
 
         const profile: { lat: number; lon: number; altitude: number; tmpElevation?: number }[] = [];
         const altitudeFilter = new WindowFilter({ windowLength: 2 });
-        const jsElevation: number[] = (elevations as any).toArray();
-        const nbPoints = positions.size();
-        for (let i = 0; i < positions.size(); i++) {
-            const pos = positions.get(i);
+        const jsElevation: number[] = typeof elevations['toArray'] === 'function' ? (elevations as any).toArray() : elevations;
+        const usingNative = typeof positions.size === 'function';
+        const getPos = usingNative
+            ? (i) => {
+                  const pos = positions.get(i);
+                  return [pos.getX(), pos.getY()];
+              }
+            : (i) => positions[i];
+        const nbPoints = usingNative ? positions.size() : positions['length'];
+        for (let i = 0; i < nbPoints; i++) {
+            const pos = getPos(i);
             profile.push({
-                lat: pos.getY(),
-                lon: pos.getX(),
+                lat: pos[1],
+                lon: pos[0],
                 altitude: jsElevation[i],
                 tmpElevation: altitudeFilter.filter(jsElevation[i])
             });
@@ -610,34 +619,66 @@ class PackageService extends Observable {
         return (item.geometry as Point).coordinates;
     }
     async getElevationProfile(item: Item, positions?: MapPosVector<LatLonKeys>) {
-        if (this.hillshadeLayer && (!item || item.geometry.type === 'LineString' || item.geometry.type === 'MultiLineString')) {
-            const startTime = Date.now();
-            if (!positions) {
-                positions = this.getRouteItemPoses(item);
+        if (!item || item.geometry.type === 'LineString' || item.geometry.type === 'MultiLineString') {
+            if (this.hillshadeLayer) {
+                const startTime = Date.now();
+                if (!positions) {
+                    positions = this.getRouteItemPoses(item);
+                }
+                const elevations = await this.getElevations(positions);
+                const result = this.computeProfileFromHeights(positions, elevations);
+                DEV_LOG && console.log('getElevations done', Date.now() - startTime, 'ms');
+                return result;
+            } else {
+                const startTime = Date.now();
+                let positions;
+                if (item._nativeGeometry) {
+                    const writer = new GeoJSONGeometryWriter<LatLonKeys>({
+                        sourceProjection: getMapContext().getProjection()
+                    });
+                    const geometry = JSON.parse(writer.writeGeometry(item._nativeGeometry));
+                    positions = (geometry as MultiLineString | LineString).coordinates;
+                    if (Array.isArray(positions[0][0])) {
+                        positions = positions.flatten();
+                    }
+                } else {
+                    const geometry = item.geometry || JSON.parse(item._geometry);
+                    positions = (geometry as MultiLineString | LineString).coordinates;
+                    if (Array.isArray(positions[0][0])) {
+                        positions = positions.flatten();
+                    }
+                }
+                DEV_LOG && console.log('getValhallaElevationProfile', positions.length);
+                const webResult = await networkService.getValhallaElevationProfile(positions);
+                DEV_LOG && console.log('getValhallaElevationProfile elevations', Object.keys(webResult), webResult.range_height.length, webResult.range_height);
+                const result = this.computeProfileFromHeights(
+                    positions,
+                    webResult.range_height.map((e) => e[1])
+                );
+                DEV_LOG && console.log('getElevations done', Date.now() - startTime, 'ms');
+                return result;
             }
-            const elevations = await this.getElevations(positions);
-            const result = this.computeProfileFromHeights(positions, elevations);
-            DEV_LOG && console.log('getElevations done', Date.now() - startTime, 'ms');
-            return result;
         }
         return null;
     }
 
     async getStats({
+        item,
         projection,
         points,
         profile,
         attributes = ['edge.surface', 'edge.road_class', 'edge.sac_scale', 'edge.use', 'edge.length'],
         shape_match = 'walk_or_snap'
     }: {
+        item;
         projection;
         points;
         profile?: ValhallaProfile;
         attributes?: string[];
         shape_match?: string;
     }) {
-        const service = this.offlineRoutingSearchService() || this.onlineRoutingSearchService();
-        if (service instanceof MultiValhallaOfflineRoutingService || service instanceof ValhallaOnlineRoutingService) {
+        const service = this.offlineRoutingSearchService();
+        if (service instanceof MultiValhallaOfflineRoutingService) {
             const startTime = Date.now();
             DEV_LOG && console.log('matchRoute', points);
             const matchResult = await service.matchRoute(
@@ -654,13 +695,44 @@ class PackageService extends Observable {
             );
             DEV_LOG && console.log('got trace attributes', Date.now() - startTime, 'ms');
             return JSON.parse(matchResult.getRawResult()).edges;
+        } else {
+            const startTime = Date.now();
+            let positions;
+            if (item._nativeGeometry) {
+                const writer = new GeoJSONGeometryWriter<LatLonKeys>({
+                    sourceProjection: getMapContext().getProjection()
+                });
+                const geometry = JSON.parse(writer.writeGeometry(item._nativeGeometry));
+                positions = (geometry as MultiLineString | LineString).coordinates;
+                if (Array.isArray(positions[0][0])) {
+                    positions = positions.flatten();
+                }
+            } else {
+                const geometry = item.geometry || JSON.parse(item._geometry);
+                positions = (geometry as MultiLineString | LineString).coordinates;
+                if (Array.isArray(positions[0][0])) {
+                    positions = positions.flatten();
+                }
+            }
+            DEV_LOG && console.log('getStats', positions.length);
+            const webResult = await networkService.getValhallaTraceAttributes(positions, {
+                shape_match,
+                filters: { attributes, action: 'include' }
+            });
+            // DEV_LOG && console.log('getStats result', Object.keys(webResult));
+            // const result = this.computeProfileFromHeights(
+            //     positions,
+            //     webResult.range_height.map((e) => e[1])
+            // );
+            DEV_LOG && console.log('getStats done', Date.now() - startTime, 'ms');
+            return webResult.edges;
         }
     }
     async fetchStats({ projection, positions, item, route, profile }: { projection; positions?; item?; route?: Route; profile?: ValhallaProfile }) {
         if (!route) {
             route = item.route;
         }
-        const edges = await this.getStats({ projection, points: positions || this.getRouteItemPoses(item), profile });
+        const edges = await this.getStats({ item, projection, points: positions || this.getRouteItemPoses(item), profile });
         if (!edges) {
             return;
         }
@@ -735,7 +807,9 @@ class PackageService extends Observable {
     onlineRoutingSearchService() {
         if (!this.mOnlineRoutingSearchService) {
             this.mOnlineRoutingSearchService = new ValhallaOnlineRoutingService({
-                apiKey: gVars.MAPBOX_TOKEN
+                apiKey: gVars.MAPBOX_TOKEN,
+                customServiceURL: 'https://valhalla1.openstreetmap.de',
+                profile: 'pedestrian'
             });
         }
         return this.mOnlineRoutingSearchService;
