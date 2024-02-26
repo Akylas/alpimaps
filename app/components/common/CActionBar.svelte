@@ -23,9 +23,8 @@
     export let buttonsDefaultVisualState = null;
 
     onMount(() => {
-        // setTimeout(() => {
-        canGoBack = Frame.topmost() && (Frame.topmost().canGoBack() || !!Frame.topmost().currentEntry);
-        // }, 0);
+        const frame = Frame.topmost();
+        canGoBack = frame?.canGoBack() || !!frame?.currentEntry;
     });
     function onMenuIcon() {
         try {
@@ -38,6 +37,13 @@
                     closeModal(undefined);
                 }
             } else {
+                const frame = Frame.topmost();
+                // this means the frame is animating
+                // doing goBack would mean boing back up 2 levels because
+                // the animating context is not yet in the backStack
+                if (frame['_executingContext']) {
+                    return;
+                }
                 goBack();
             }
         } catch (error) {
