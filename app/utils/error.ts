@@ -1,7 +1,7 @@
-import { Color } from '@nativescript/core';
+import { AlertOptions, Color } from '@nativescript/core';
 import { lc } from '@nativescript-community/l';
 import { Label } from '@nativescript-community/ui-label';
-import { alert as mdAlert } from '@nativescript-community/ui-material-dialogs';
+import { MDCAlertControlerOptions, alert as mdAlert } from '@nativescript-community/ui-material-dialogs';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { BaseError } from 'make-error';
 import { l } from '~/helpers/locale';
@@ -160,7 +160,10 @@ export class HTTPError extends CustomError {
 //     }
 // }
 
-export async function showError(err: Error | string, showAsSnack = false, forcedMessage?: string) {
+export async function showError(
+    err: Error | string,
+    { showAsSnack = false, forcedMessage, alertOptions = {} }: { showAsSnack?: boolean; forcedMessage?: string; alertOptions?: AlertOptions & MDCAlertControlerOptions } = {}
+) {
     try {
         if (!err) {
             return;
@@ -171,14 +174,14 @@ export async function showError(err: Error | string, showAsSnack = false, forced
 
         const isString = realError === null || realError === undefined;
         let message = isString ? (err as string) : realError.message || realError.toString();
-        if (message?.startsWith('java.net.')) {
+        if (__ANDROID__ && message && /java.*Exception/.test(message)) {
             if (message.indexOf('SocketTimeoutException') !== -1) {
                 realError = new TimeoutError();
             } else {
                 realError = new Error(message);
             }
         }
-        DEV_LOG && console.error('showError', reporterEnabled, realError && Object.keys(realError),  message, err?.['stack'], err?.['stackTrace'], err?.['nativeException']);
+        DEV_LOG && console.error('showError', reporterEnabled, realError && Object.keys(realError), message, err?.['stack'], err?.['stackTrace'], err?.['nativeException']);
         message = forcedMessage || message;
         if (showAsSnack || realError instanceof NoNetworkError || realError instanceof TimeoutError) {
             showSnack({ message });
@@ -189,8 +192,9 @@ export async function showError(err: Error | string, showAsSnack = false, forced
         // if (!PRODUCTION) {
         // }
         const label = new Label();
-        label.style.padding = '10 20 0 20';
-        label.style.color = new Color(255, 138, 138, 138);
+        label.padding = '10 20 0 20';
+        label.textWrap = true;
+        label.color = new Color(255, 138, 138, 138);
         label.html = message.trim();
 
         if (realError && reporterEnabled) {
@@ -200,7 +204,8 @@ export async function showError(err: Error | string, showAsSnack = false, forced
         return mdAlert({
             okButtonText: lc('ok'),
             title,
-            view: label
+            view: label,
+            ...alertOptions
         });
     } catch (error) {
         console.error('error trying to show error', err, error, error.stack);
