@@ -50,6 +50,7 @@
               }
             : null;
     $: refresh(text);
+    $: refresh(color);
 
     function refresh(...args) {
         canvas?.nativeView?.redraw();
