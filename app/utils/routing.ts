@@ -27,7 +27,7 @@ export function valhallaSettingColor(key: string, profile: string, options: any,
             if (key.endsWith('_factor') || key.endsWith('_penalty')) {
                 perc = 1 - perc;
             }
-            return new Color(baseColor).setAlpha(perc * 126 + 126).hex;
+            return new Color(baseColor).setAlpha(perc * 150 + 105).hex;
         }
     } catch (error) {
         console.error(key, error);
