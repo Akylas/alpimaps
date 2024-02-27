@@ -6,7 +6,20 @@
 
     const licences = require('~/licenses.json');
 
-    const items = licences.dependencies;
+    const items = [
+        {
+            moduleName: 'Material Design Icons',
+            moduleUrl: 'https://pictogrammers.com/library/mdi/'
+        },
+        {
+            moduleName: 'OpenStreetMap',
+            moduleUrl: 'https://www.openstreetmap.org/copyright'
+        },
+        {
+            moduleName: 'NativeScript',
+            moduleUrl: 'https://github.com/NativeScript/NativeScript'
+        }
+    ].concat(licences.dependencies);
 
     function onTap(item) {
         if (item.moduleUrl) {
