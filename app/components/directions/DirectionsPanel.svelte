@@ -244,7 +244,7 @@
     //     }
     // }
     function profileColor(currentP, p) {
-        return currentP === p ? '#fff' : '#ffffff55';
+        return currentP === p ? '#fff' : '#ffffff77';
     }
 
     function setProfile(p: ValhallaProfile) {
@@ -1156,10 +1156,16 @@
                 on:itemReorderStarting={onItemReorderStarting}
                 on:itemReordered={onItemReordered}>
                 <Template let:item>
-                    <canvaslabel color="white" fontFamily={$fonts.mdi} fontSize={15} paddingLeft={10}>
-                        <cspan fontSize={14} paddingTop={-2} text="mdi-dots-vertical" verticalAlignment="top" visibility={item.properties.isStart ? 'hidden' : 'visible'} />
-                        <cspan fontSize={14} paddingBottom={-2} text="mdi-dots-vertical" verticalAlignment="bottom" visibility={item.properties.isStop ? 'hidden' : 'visible'} />
-                        <cspan text={item.properties.isStop ? 'mdi-map-marker' : 'mdi-checkbox-blank-circle-outline'} verticalAlignment="middle" />
+                    <canvaslabel color="white" fontSize={15} paddingLeft={10}>
+                        <cspan fontFamily={$fonts.mdi} fontSize={14} paddingTop={-2} text="mdi-dots-vertical" verticalAlignment="top" visibility={item.properties.isStart ? 'hidden' : 'visible'} />
+                        <cspan
+                            fontFamily={$fonts.mdi}
+                            fontSize={14}
+                            paddingBottom={-2}
+                            text="mdi-dots-vertical"
+                            verticalAlignment="bottom"
+                            visibility={item.properties.isStop ? 'hidden' : 'visible'} />
+                        <cspan fontFamily={$fonts.mdi} text={item.properties.isStop ? 'mdi-map-marker' : 'mdi-checkbox-blank-circle-outline'} verticalAlignment="middle" />
 
                         <gridlayout
                             backgroundColor={new Color(colorPrimary).darken(14).hex}
