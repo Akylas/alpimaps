@@ -16,6 +16,14 @@
             moduleUrl: 'https://www.openstreetmap.org/copyright'
         },
         {
+            moduleName: 'Valhalla',
+            moduleUrl: 'https://github.com/valhalla/valhalla'
+        },
+        {
+            moduleName: 'Valhalla Server',
+            moduleUrl: 'https://valhalla1.openstreetmap.de'
+        },
+        {
             moduleName: 'NativeScript',
             moduleUrl: 'https://github.com/NativeScript/NativeScript'
         }
@@ -28,8 +36,8 @@
     }
 </script>
 
-<gesturerootview rows="auto">
-    <collectionView id="trackingScrollView" height="300" itemIdGenerator={(item, i) => i} {items}>
+<gesturerootview height="300">
+    <collectionView id="scrollView" ios:contentInsetAdjustmentBehavior={2} itemIdGenerator={(item, i) => i} {items}>
         <Template let:item>
             <ListItemAutoSize subtitle={item.moduleUrl} title={item.moduleName} on:tap={() => onTap(item)} />
         </Template>
