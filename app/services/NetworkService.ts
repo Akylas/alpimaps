@@ -523,6 +523,7 @@ export class NetworkService extends Observable {
                 }
             },
             headers: {
+                'User-Agent': 'AlpiMaps',
                 'Cache-Control': getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1)
             },
             // silent:_params.silent,
@@ -543,6 +544,7 @@ export class NetworkService extends Observable {
                 }
             },
             headers: {
+                'User-Agent': 'AlpiMaps',
                 'Cache-Control': getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1)
             },
             // silent:_params.silent,
