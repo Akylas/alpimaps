@@ -401,7 +401,7 @@
                     showBottomSheet({
                         parent: this,
                         view: ThirdPartySoftwareBottomSheet,
-                        trackingScrollView: 'trackingScrollView'
+                        // trackingScrollView: 'scrollView'
                     });
                     break;
                 case 'data_path': {
