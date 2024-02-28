@@ -26,7 +26,7 @@
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
 </script>
 
-<canvasview {columns} rippleColor={colorPrimary} on:tap={(event) => dispatch('tap', event)} {...$$restProps} padding="10 16 10 16">
+<canvasview {columns} disableCss={true} rippleColor={color} on:tap={(event) => dispatch('tap', event)} {...$$restProps} padding="10 16 10 16">
     <symbolshape color={symbolColor} height={34} {symbol} verticalAlignment="middle" visibility={showSymbol ? 'visible' : 'hidden'} width={34} />
     <canvaslabel col={mainCol} on:draw={onDraw}>
         <cgroup paddingBottom={subtitle ? 10 : 0} verticalAlignment="middle">
