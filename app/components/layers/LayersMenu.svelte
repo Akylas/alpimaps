@@ -226,14 +226,12 @@ while being shown using bottomsheet. We remove it with paddingTop -->
         </collectionview>
         <stacklayout borderLeftColor={colorOutlineVariant} borderLeftWidth={1} col={1}>
             <IconButton gray={true} text="mdi-plus" on:tap={addSource} />
-            <IconButton
-                gray={true}
-                isSelected={$showContourLines}
-                isVisible={!!customLayers?.hasLocalData}
-                text="mdi-bullseye"
-                tooltip={lc('show_contour_lines')}
-                on:tap={() => showContourLines.set(!$showContourLines)} />
-            <IconButton gray={true} isSelected={$show3DBuildings} text="mdi-domain" tooltip={lc('buildings_3d')} on:tap={() => show3DBuildings.set(!$show3DBuildings)} />
+            {#if !!customLayers?.hasLocalData}
+                <IconButton gray={true} isSelected={$showContourLines} text="mdi-bullseye" tooltip={lc('show_contour_lines')} on:tap={() => showContourLines.set(!$showContourLines)} />
+            {/if}
+            {#if !!customLayers?.hasLocalData}
+                <IconButton gray={true} isSelected={$show3DBuildings} text="mdi-domain" tooltip={lc('buildings_3d')} on:tap={() => show3DBuildings.set(!$show3DBuildings)} />
+            {/if}
             <IconButton gray={true} isSelected={$projectionModeSpherical} text="mdi-globe-model" tooltip={lc('globe_mode')} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} />
             <!-- <IconButton gray={true} isSelected={$rotateEnabled} text="mdi-rotate-3d-variant" tooltip={lc('map_rotation')} on:tap={() => rotateEnabled.set(!$rotateEnabled)} /> -->
             <IconButton gray={true} isSelected={$pitchEnabled} text="mdi-rotate-orbit" tooltip={lc('map_pitch')} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
