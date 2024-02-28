@@ -666,6 +666,7 @@
         // DEV_LOG && console.log('setSelectedItem', item?.id);
         $selectedItem = item;
     }
+    let geocodingAvailable = true;
     async function selectItem({
         item,
         isFeatureInteresting = false,
@@ -790,7 +791,8 @@
                     setSelectedItem(item);
                 }
                 if (setSelected && !route) {
-                    if (!props.address?.['city']) {
+                    // if geocodingAvailable is not available it means we tested once
+                    if (!props.address?.['city'] && geocodingAvailable) {
                         (async () => {
                             try {
                                 const service = packageService.localOSMOfflineReverseGeocodingService;
@@ -854,6 +856,9 @@
                                     }
                                 }
                             } catch (error) {
+                                if (__ANDROID__ && /IOException.*UNAVAILABLE$/.test(error.toString())) {
+                                    geocodingAvailable = false;
+                                }
                                 console.error('error fetching address', error, error.stack);
                             }
                         })();
