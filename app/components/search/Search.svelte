@@ -260,8 +260,8 @@
         }
     }
 
-    function showMapMenu() {
-        mapContext.showOptions();
+    function showMapMenu(event) {
+        mapContext.showOptions(event);
     }
     function onItemTap(item /*: SearchItem*/) {
         if (!searchResultsVisible || !item) {
@@ -345,7 +345,6 @@
 
     async function showSearchOptions(event) {
         try {
-            DEV_LOG && console.log('showSearchOptions');
             const actions: any[] = []
                 .concat(
                     !!packageService.localOSMOfflineGeocodingService
@@ -385,14 +384,13 @@
                         id: 'searchUsingPhoton'
                     }
                 ]);
-            DEV_LOG && console.log('showSearchOptions1', actions, event.object);
             const result: any = await showPopoverMenu({
                 options: actions,
                 vertPos: VerticalPosition.BELOW,
                 horizPos: HorizontalPosition.ALIGN_LEFT,
                 anchor: event.object,
                 props: {
-                    autoSizeListItem: true,
+                    // autoSizeListItem: true,
                     onCheckBox(item, value) {
                         ApplicationSettings.setBoolean(item.id, value);
                     }
