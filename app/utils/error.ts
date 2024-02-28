@@ -159,7 +159,16 @@ export class HTTPError extends CustomError {
 //         );
 //     }
 // }
-
+function wrapNativeException(ex) {
+    if (__ANDROID__ && ex instanceof java.lang.Exception) {
+        const err = new Error(ex.toString());
+        err['nativeException'] = ex;
+        //@ts-ignore
+        err['stackTrace'] = com.tns.NativeScriptException.getStackTraceAsString(ex);
+        return err;
+    }
+    return ex;
+}
 export async function showError(
     err: Error | string,
     { showAsSnack = false, forcedMessage, alertOptions = {} }: { showAsSnack?: boolean; forcedMessage?: string; alertOptions?: AlertOptions & MDCAlertControlerOptions } = {}
@@ -169,18 +178,11 @@ export async function showError(
             return;
         }
         const reporterEnabled = SENTRY_ENABLED && isSentryEnabled;
-        let realError = typeof err === 'string' ? null : err;
+        const realError = typeof err === 'string' ? null : wrapNativeException(err);
         DEV_LOG && console.error('showError', reporterEnabled, err.constructor.name, ['message'] || err, err?.['stack'], err?.['stackTrace']);
 
         const isString = realError === null || realError === undefined;
         let message = isString ? (err as string) : realError.message || realError.toString();
-        if (__ANDROID__ && message && /java.*Exception/.test(message)) {
-            if (message.indexOf('SocketTimeoutException') !== -1) {
-                realError = new TimeoutError();
-            } else {
-                realError = new Error(message);
-            }
-        }
         DEV_LOG && console.error('showError', reporterEnabled, realError && Object.keys(realError), message, err?.['stack'], err?.['stackTrace'], err?.['nativeException']);
         message = forcedMessage || message;
         if (showAsSnack || realError instanceof NoNetworkError || realError instanceof TimeoutError) {
