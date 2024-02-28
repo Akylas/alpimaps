@@ -97,13 +97,13 @@
         }
     }
     function onLongPress(event) {
-        // console.log('onLongPress', Object.keys(event));
         let index;
         if (orientation === 'vertical') {
             index = Math.floor(event.getY() / buttonSize);
         } else {
             index = Math.floor(event.getX() / buttonSize);
         }
+        // DEV_LOG && console.log('onLongPress', Object.keys(event), index);
         if (index >= 0) {
             const button = visibleButtons()[index];
             if (button.onLongPress) {
