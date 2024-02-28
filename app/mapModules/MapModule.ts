@@ -69,7 +69,7 @@ export interface MapContext {
     mapModules: MapModules;
     innerDecoder: MBVectorTileDecoder;
     mapDecoder: MBVectorTileDecoder;
-    showOptions();
+    showOptions(event);
     createMapDecoder(mapStyle, mapStyleLayer): MBVectorTileDecoder;
     mapModule<T extends keyof MapModules>(id: T): MapModules[T];
     onOtherAppTextSelected(callback: ContextCallback, once?: boolean);
