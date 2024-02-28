@@ -119,22 +119,22 @@
                     key: 'startDirDest',
                     value: ApplicationSettings.getBoolean('startDirDest', false),
                     title: lc('start_direction_dest')
-                },
+                }
                 // {
                 //     id: 'share',
                 //     rightBtnIcon: 'mdi-chevron-right',
                 //     title: lc('share_application')
                 // },
-                {
-                    id: 'data_path',
-                    title: lc('map_data_path'),
-                    description: getSavedMBTilesDir,
-                    rightBtnIcon: 'mdi-chevron-right'
-                }
             ] as any)
             .concat(
                 __ANDROID__ && !PLAY_STORE_BUILD && ANDROID_30
                     ? [
+                          {
+                              id: 'data_path',
+                              title: lc('map_data_path'),
+                              description: getSavedMBTilesDir,
+                              rightBtnIcon: 'mdi-chevron-right'
+                          },
                           {
                               id: 'items_data_path',
                               title: lc('items_data_path'),
@@ -400,7 +400,7 @@
                     const ThirdPartySoftwareBottomSheet = (await import('~/components/settings/ThirdPartySoftwareBottomSheet.svelte')).default;
                     showBottomSheet({
                         parent: this,
-                        view: ThirdPartySoftwareBottomSheet,
+                        view: ThirdPartySoftwareBottomSheet
                         // trackingScrollView: 'scrollView'
                     });
                     break;
