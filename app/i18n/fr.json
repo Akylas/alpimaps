@@ -33,7 +33,7 @@
     "api_key": "Clé API",
     "api_key_needed": "une clé API est nécessaire pour utiliser cette source, merci de rentrer la clef \"%1$s\" ici ou dans les paramètres",
     "api_keys": "Les clés API",
-    "app":{
+    "app": {
         "name": "Alpi Maps"
     },
     "app_generate_date_presentation": "la véritable puissance d'Alpi Maps réside dans l'utilisation de données générées hors ligne. De nombreuses caractéristiques de l'application (profil d'élévation, grade d'altitude, pentes, statistiques d'itinéraire, routage hors ligne/géocodation) ne fonctionneront que avec des données générées. Vous voulez voir comment les générer sur Github ?",
@@ -202,6 +202,7 @@
     "email_required": "Un e-mail est requis",
     "embassy": "ambassade",
     "emergency_phone": "téléphone d &apos; urgence",
+    "enable_map_rotation": "activer la rotation de la carte",
     "end": "fin",
     "entrance": "entrée",
     "entrance_alt1": "entrée",
