@@ -19,7 +19,7 @@
     import { closeBottomSheet, isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { action, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
     import { AbsoluteLayout, Application, ApplicationSettings, Color, File, Page, Utils } from '@nativescript/core';
@@ -70,7 +70,7 @@
     import { parseUrlQueryParameters } from '~/utils/http';
     import { Sentry, isSentryEnabled } from '~/utils/sentry';
     import { share } from '~/utils/share';
-    import { hideLoading, showLoading } from '~/utils/ui';
+    import { hideLoading, showLoading, showPopoverMenu } from '~/utils/ui';
     import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, iosExecuteOnMainThread, setTimeout } from '~/utils/utils';
     import { colors, navigationBarHeight, statusBarHeight } from '../../variables';
 
@@ -1649,7 +1649,7 @@
         }
     }
 
-    async function showOptions() {
+    async function showOptions(event) {
         try {
             const options = [
                 {
@@ -1738,60 +1738,63 @@
                 });
             }
 
-            const MapOptions = (await import('~/components/map/MapOptions.svelte')).default;
-            const result = await showBottomSheet({
-                parent: page,
-                view: MapOptions,
-                props: { options },
-                trackingScrollView: 'scrollView'
-                // transparent: true,
-                // disableDimBackground: true
-            });
-            if (result) {
-                switch (result.id) {
-                    case 'select_style':
-                        await selectStyle();
-                        break;
-                    case 'location_info':
-                        switchLocationInfo();
-                        break;
-                    case 'share_screenshot':
-                        shareScreenshot();
-                        break;
-                    case 'keep_awake':
-                        switchKeepAwake();
-                        break;
-                    case 'dark_mode':
-                        toggleTheme(true);
-                        break;
-                    case 'offline_mode':
-                        networkService.forcedOffline = !networkService.forcedOffline;
-                        break;
-                    case 'sentry':
-                        await sendBugReport();
-                        break;
-                    case 'import': {
-                        const result = await openFilePicker({
-                            extensions: __IOS__ ? ['com.microoled.gpx'] : ['application/gpx+xml', 'application/json', 'application/geo+json'],
-                            multipleSelection: false,
-                            pickerMode: 0
-                        });
-                        const filePath = result.files[0];
-                        if (filePath && File.exists(filePath)) {
-                            showLoading();
-                            if (filePath.endsWith('gpx')) {
-                                await getMapContext().mapModule('items').importGPXFile(filePath);
-                            } else {
-                                await getMapContext().mapModule('items').importGeoJSONFile(filePath);
+            await showPopoverMenu({
+                options,
+                vertPos: VerticalPosition.BELOW,
+                horizPos: HorizontalPosition.ALIGN_RIGHT,
+                anchor: event.object,
+                props: {
+                    // autoSizeListItem: true,
+                    maxHeight: Screen.mainScreen.heightDIPs
+                },
+                onClose: async (result) => {
+                    if (result) {
+                        switch (result.id) {
+                            case 'select_style':
+                                await selectStyle();
+                                break;
+                            case 'location_info':
+                                switchLocationInfo();
+                                break;
+                            case 'share_screenshot':
+                                shareScreenshot();
+                                break;
+                            case 'keep_awake':
+                                switchKeepAwake();
+                                break;
+                            case 'dark_mode':
+                                toggleTheme(true);
+                                break;
+                            case 'offline_mode':
+                                networkService.forcedOffline = !networkService.forcedOffline;
+                                break;
+                            case 'sentry':
+                                await sendBugReport();
+                                break;
+                            case 'import': {
+                                const result = await openFilePicker({
+                                    extensions: __IOS__ ? ['com.microoled.gpx'] : ['application/gpx+xml', 'application/json', 'application/geo+json'],
+                                    multipleSelection: false,
+                                    pickerMode: 0
+                                });
+                                const filePath = result.files[0];
+                                if (filePath && File.exists(filePath)) {
+                                    showLoading();
+                                    if (filePath.endsWith('gpx')) {
+                                        await getMapContext().mapModule('items').importGPXFile(filePath);
+                                    } else {
+                                        await getMapContext().mapModule('items').importGeoJSONFile(filePath);
+                                    }
+                                }
+                                break;
                             }
+                            default:
+                                await handleMapAction(result.id);
+                                break;
                         }
-                        break;
                     }
-                    default:
-                        await handleMapAction(result.id);
-                        break;
                 }
-            }
+            });
         } catch (err) {
             showError(err);
         } finally {
