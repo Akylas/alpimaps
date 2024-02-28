@@ -525,7 +525,6 @@
         return result;
     }
     const saveSettings = debounce(function () {
-        DEV_LOG && console.log('saveSettings');
         if (!cartoMap) {
             return;
         }
