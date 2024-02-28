@@ -53,7 +53,18 @@
     import { GeoResult, packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
     import { NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
-    import { contourLinesOpacity, pitchEnabled, preloading, rotateEnabled, routesType, show3DBuildings, showContourLines, showGlobe, showRoutes, showSlopePercentages } from '~/stores/mapStore';
+    import {
+        contourLinesOpacity,
+        pitchEnabled,
+        preloading,
+        projectionModeSpherical,
+        rotateEnabled,
+        routesType,
+        show3DBuildings,
+        showContourLines,
+        showRoutes,
+        showSlopePercentages
+    } from '~/stores/mapStore';
     import { showError } from '~/utils/error';
     import { computeDistanceBetween, getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
@@ -978,7 +989,7 @@
             console.error(error, error.stack);
         }
     }
-    $: cartoMap?.getOptions().setRenderProjectionMode($showGlobe ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR);
+    $: cartoMap?.getOptions().setRenderProjectionMode($projectionModeSpherical ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR);
     $: vectorTileDecoder && setStyleParameter('buildings', !!$show3DBuildings ? '2' : '1');
     $: vectorTileDecoder && setStyleParameter('contours', $showContourLines ? '1' : '0');
     $: vectorTileDecoder && setStyleParameter('contoursOpacity', $contourLinesOpacity.toFixed(1));
