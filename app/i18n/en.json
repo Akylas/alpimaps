@@ -33,7 +33,7 @@
     "api_key": "API key",
     "api_key_needed": "an API key is needed to use that source, please set \"%1$s\" key here or in the settings",
     "api_keys": "API keys",
-    "app":{
+    "app": {
         "name": "Alpi Maps"
     },
     "app_generate_date_presentation": "the true power of Alpi Maps lies in using offline generated data. Many app features(elevation profile, elevation grade, slopes, route stats, offline routing/geocoding) will only work with generated data. Do you want to see how to generate them on Github?",
@@ -202,6 +202,7 @@
     "email_required": "an email is required",
     "embassy": "embassy",
     "emergency_phone": "emergency phone",
+    "enable_map_rotation": "enable map rotation",
     "end": "end",
     "entrance": "entrance",
     "entrance_alt1": "entrance",
