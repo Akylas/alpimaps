@@ -9,6 +9,7 @@ import { NativeViewElementNode, createElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
+import { showError } from './error';
 
 export async function openLink(url) {
     try {
@@ -77,6 +78,10 @@ export function showLoading(msg: string = lc('loading')) {
     loadingIndicator.show();
 }
 export function hideLoading() {
+
+    if (!loadingIndicator) {
+        return;
+    }
     const delta = showLoadingStartTime ? Date.now() - showLoadingStartTime : -1;
     if (delta >= 0 && delta < 1000) {
         setTimeout(() => hideLoading(), 1000 - delta);
@@ -144,7 +149,15 @@ export async function showAlertOptionSelect<T>(viewSpec: typeof SvelteComponent<
     }
 }
 
-export async function showPopoverMenu<T = any>({ options, anchor, onClose, props, horizPos, vertPos }: { options; anchor; onClose?; props? } & Partial<PopoverOptions>) {
+export async function showPopoverMenu<T = any>({
+    options,
+    anchor,
+    onClose,
+    props,
+    horizPos,
+    vertPos,
+    closeOnClose = true
+}: { options; anchor; onClose?; props?; closeOnClose? } & Partial<PopoverOptions>) {
     const { colorSurfaceContainer } = get(colors);
     const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
     const rowHeight = (props?.rowHeight || 58) * get(fontScale);
@@ -161,13 +174,26 @@ export async function showPopoverMenu<T = any>({ options, anchor, onClose, props
             fontWeight: 500,
             backgroundColor: colorSurfaceContainer,
             containerColumns: 'auto',
-            rowHeight,
-            height: Math.min(rowHeight * options.length, 400),
-            width: 200,
+            rowHeight: !!props?.autoSizeListItem ? null : rowHeight,
+            height: Math.min(rowHeight * options.length, props?.maxHeight || 400),
+            width: 200 * get(fontScale),
             options,
-            onClose: (item) => {
-                closePopover();
-                onClose?.(item);
+            onClose: async (item) => {
+                if (closeOnClose) {
+                    if (__IOS__) {
+                        // on iOS we need to wait or if onClose shows an alert dialog it wont work
+                        await closePopover();
+                    } else {
+                        closePopover();
+                    }
+                }
+                try {
+                    await onClose?.(item);
+                } catch (error) {
+                    showError(error);
+                } finally {
+                    hideLoading();
+                }
             },
             ...(props || {})
         }
