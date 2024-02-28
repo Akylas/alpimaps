@@ -1855,7 +1855,7 @@
             {
                 text: 'mdi-rotate-3d-variant',
                 id: 'map_rotation',
-                tooltip: lc('map_rotation'),
+                tooltip: lc('enable_map_rotation'),
                 isSelected: $rotateEnabled,
                 onTap: () => rotateEnabled.set(!$rotateEnabled)
             },
