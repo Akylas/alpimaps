@@ -151,6 +151,7 @@ declare namespace svelteNative.JSX {
         maxFontSize?: number;
         lineBreak?: string;
         html?: string;
+        linkColor?: string;
         selectable?: boolean;
         onlinkTap?;
         'on:linkTap'?;
