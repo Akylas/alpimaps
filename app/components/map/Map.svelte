@@ -19,7 +19,7 @@
     import { closeBottomSheet, isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { action, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
     import { AbsoluteLayout, Application, ApplicationSettings, Color, File, Page, Utils } from '@nativescript/core';
@@ -53,13 +53,24 @@
     import { GeoResult, packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
     import { NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
-    import { contourLinesOpacity, pitchEnabled, preloading, rotateEnabled, routesType, show3DBuildings, showContourLines, showGlobe, showRoutes, showSlopePercentages } from '~/stores/mapStore';
+    import {
+        contourLinesOpacity,
+        pitchEnabled,
+        preloading,
+        projectionModeSpherical,
+        rotateEnabled,
+        routesType,
+        show3DBuildings,
+        showContourLines,
+        showRoutes,
+        showSlopePercentages
+    } from '~/stores/mapStore';
     import { showError } from '~/utils/error';
     import { computeDistanceBetween, getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
     import { Sentry, isSentryEnabled } from '~/utils/sentry';
     import { share } from '~/utils/share';
-    import { hideLoading, showLoading } from '~/utils/ui';
+    import { hideLoading, showLoading, showPopoverMenu } from '~/utils/ui';
     import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, iosExecuteOnMainThread, setTimeout } from '~/utils/utils';
     import { colors, navigationBarHeight, statusBarHeight } from '../../variables';
 
@@ -514,7 +525,6 @@
         return result;
     }
     const saveSettings = debounce(function () {
-        DEV_LOG && console.log('saveSettings');
         if (!cartoMap) {
             return;
         }
@@ -666,6 +676,7 @@
         // DEV_LOG && console.log('setSelectedItem', item?.id);
         $selectedItem = item;
     }
+    let geocodingAvailable = true;
     async function selectItem({
         item,
         isFeatureInteresting = false,
@@ -790,7 +801,8 @@
                     setSelectedItem(item);
                 }
                 if (setSelected && !route) {
-                    if (!props.address?.['city']) {
+                    // if geocodingAvailable is not available it means we tested once
+                    if (!props.address?.['city'] && geocodingAvailable) {
                         (async () => {
                             try {
                                 const service = packageService.localOSMOfflineReverseGeocodingService;
@@ -854,6 +866,9 @@
                                     }
                                 }
                             } catch (error) {
+                                if (__ANDROID__ && /IOException.*UNAVAILABLE$/.test(error.toString())) {
+                                    geocodingAvailable = false;
+                                }
                                 console.error('error fetching address', error, error.stack);
                             }
                         })();
@@ -973,7 +988,7 @@
             console.error(error, error.stack);
         }
     }
-    $: cartoMap?.getOptions().setRenderProjectionMode($showGlobe ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR);
+    $: cartoMap?.getOptions().setRenderProjectionMode($projectionModeSpherical ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR);
     $: vectorTileDecoder && setStyleParameter('buildings', !!$show3DBuildings ? '2' : '1');
     $: vectorTileDecoder && setStyleParameter('contours', $showContourLines ? '1' : '0');
     $: vectorTileDecoder && setStyleParameter('contoursOpacity', $contourLinesOpacity.toFixed(1));
@@ -1634,7 +1649,7 @@
         }
     }
 
-    async function showOptions() {
+    async function showOptions(event) {
         try {
             const options = [
                 {
@@ -1723,60 +1738,63 @@
                 });
             }
 
-            const MapOptions = (await import('~/components/map/MapOptions.svelte')).default;
-            const result = await showBottomSheet({
-                parent: page,
-                view: MapOptions,
-                props: { options },
-                trackingScrollView: 'scrollView'
-                // transparent: true,
-                // disableDimBackground: true
-            });
-            if (result) {
-                switch (result.id) {
-                    case 'select_style':
-                        await selectStyle();
-                        break;
-                    case 'location_info':
-                        switchLocationInfo();
-                        break;
-                    case 'share_screenshot':
-                        shareScreenshot();
-                        break;
-                    case 'keep_awake':
-                        switchKeepAwake();
-                        break;
-                    case 'dark_mode':
-                        toggleTheme(true);
-                        break;
-                    case 'offline_mode':
-                        networkService.forcedOffline = !networkService.forcedOffline;
-                        break;
-                    case 'sentry':
-                        await sendBugReport();
-                        break;
-                    case 'import': {
-                        const result = await openFilePicker({
-                            extensions: __IOS__ ? ['com.microoled.gpx'] : ['application/gpx+xml', 'application/json', 'application/geo+json'],
-                            multipleSelection: false,
-                            pickerMode: 0
-                        });
-                        const filePath = result.files[0];
-                        if (filePath && File.exists(filePath)) {
-                            showLoading();
-                            if (filePath.endsWith('gpx')) {
-                                await getMapContext().mapModule('items').importGPXFile(filePath);
-                            } else {
-                                await getMapContext().mapModule('items').importGeoJSONFile(filePath);
+            await showPopoverMenu({
+                options,
+                vertPos: VerticalPosition.BELOW,
+                horizPos: HorizontalPosition.ALIGN_RIGHT,
+                anchor: event.object,
+                props: {
+                    // autoSizeListItem: true,
+                    maxHeight: Screen.mainScreen.heightDIPs
+                },
+                onClose: async (result) => {
+                    if (result) {
+                        switch (result.id) {
+                            case 'select_style':
+                                await selectStyle();
+                                break;
+                            case 'location_info':
+                                switchLocationInfo();
+                                break;
+                            case 'share_screenshot':
+                                shareScreenshot();
+                                break;
+                            case 'keep_awake':
+                                switchKeepAwake();
+                                break;
+                            case 'dark_mode':
+                                toggleTheme(true);
+                                break;
+                            case 'offline_mode':
+                                networkService.forcedOffline = !networkService.forcedOffline;
+                                break;
+                            case 'sentry':
+                                await sendBugReport();
+                                break;
+                            case 'import': {
+                                const result = await openFilePicker({
+                                    extensions: __IOS__ ? ['com.microoled.gpx'] : ['application/gpx+xml', 'application/json', 'application/geo+json'],
+                                    multipleSelection: false,
+                                    pickerMode: 0
+                                });
+                                const filePath = result.files[0];
+                                if (filePath && File.exists(filePath)) {
+                                    showLoading();
+                                    if (filePath.endsWith('gpx')) {
+                                        await getMapContext().mapModule('items').importGPXFile(filePath);
+                                    } else {
+                                        await getMapContext().mapModule('items').importGeoJSONFile(filePath);
+                                    }
+                                }
+                                break;
                             }
+                            default:
+                                await handleMapAction(result.id);
+                                break;
                         }
-                        break;
                     }
-                    default:
-                        await handleMapAction(result.id);
-                        break;
                 }
-            }
+            });
         } catch (err) {
             showError(err);
         } finally {
@@ -1840,7 +1858,7 @@
             {
                 text: 'mdi-rotate-3d-variant',
                 id: 'map_rotation',
-                tooltip: lc('map_rotation'),
+                tooltip: lc('enable_map_rotation'),
                 isSelected: $rotateEnabled,
                 onTap: () => rotateEnabled.set(!$rotateEnabled)
             },

@@ -12,18 +12,19 @@ export async function askForManagePermission() {
 }
 
 export async function getDefaultMBTilesDir() {
+    // on iOS we cant save the path as the knownFolders path can change upon app upgrade
     // let localMbtilesSource = savedMBTilesDir;
-    let localMbtilesSource = null;
+    // let localMbtilesSource = null;
 
-    if (!localMbtilesSource) {
-        const resultPath = path.normalize(path.join(getDataFolder(), 'alpimaps_mbtiles'));
-        DEV_LOG && console.log('resultPath', resultPath);
-        if (resultPath) {
-            localMbtilesSource = resultPath;
-            setSavedMBTilesDir(localMbtilesSource);
-            ApplicationSettings.setString('local_mbtiles_directory', resultPath);
-        }
-    }
+    // if (!localMbtilesSource) {
+        const localMbtilesSource = path.normalize(path.join(getDataFolder(), 'alpimaps_mbtiles'));
+        // DEV_LOG && console.log('resultPath', resultPath);
+        // if (resultPath) {
+            // localMbtilesSource = resultPath;
+            // setSavedMBTilesDir(localMbtilesSource);
+            // ApplicationSettings.setString('local_mbtiles_directory', resultPath);
+        // }
+    // }
     DEV_LOG && console.log('getDefaultMBTilesDir', localMbtilesSource);
     return localMbtilesSource;
 }
