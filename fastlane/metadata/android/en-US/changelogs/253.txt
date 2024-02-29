@@ -1,0 +1,2 @@
+*Bug fixes*
+- wrong local display in settings

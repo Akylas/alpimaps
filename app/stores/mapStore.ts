@@ -1,6 +1,6 @@
-import { getBoolean, getNumber, getString, setBoolean, setNumber, setString } from '@nativescript/core/application-settings';
+import { ApplicationSettings } from '@akylas/nativescript';
 import { get, writable } from 'svelte/store';
-import { RoutesType } from '~/mapModules/CustomLayersModule';
+import type { RoutesType } from '~/mapModules/CustomLayersModule';
 
 function settingsStore<T = any>(key, defaultValue: T) {
     const tpof = typeof defaultValue;
@@ -8,17 +8,17 @@ function settingsStore<T = any>(key, defaultValue: T) {
     let startValue;
     switch (tpof) {
         case 'boolean':
-            updateMethod = setBoolean;
-            startValue = getBoolean(key, defaultValue as boolean);
+            updateMethod = ApplicationSettings.setBoolean;
+            startValue = ApplicationSettings.getBoolean(key, defaultValue as boolean);
             break;
         case 'number':
-            updateMethod = setNumber;
-            startValue = getNumber(key, defaultValue as number);
+            updateMethod = ApplicationSettings.setNumber;
+            startValue = ApplicationSettings.getNumber(key, defaultValue as number);
             break;
 
         default:
-            updateMethod = setString;
-            startValue = getString(key, defaultValue as string);
+            updateMethod = ApplicationSettings.setString;
+            startValue = ApplicationSettings.getString(key, defaultValue as string);
             break;
     }
     const store = writable<T>(startValue);
@@ -35,7 +35,7 @@ function settingsStore<T = any>(key, defaultValue: T) {
 
 export const watchingLocation = writable(false);
 export const queryingLocation = writable(false);
-export const showGlobe = settingsStore('showGlobe', false);
+export const projectionModeSpherical = settingsStore('showGlobe', false);
 export const show3DBuildings = settingsStore('show3DBuildings', false);
 export const showContourLines = settingsStore('showContourLines', true);
 export const showSlopePercentages = settingsStore('showSlopePercentages', false);
