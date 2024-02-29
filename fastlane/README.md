@@ -122,6 +122,14 @@ Ship iOS build to Testflight.
 
 Ship iOS build to Testflight.
 
+### ios production
+
+```sh
+[bundle exec] fastlane ios production
+```
+
+Ship iOS build to AppStore.
+
 ----
 
 
