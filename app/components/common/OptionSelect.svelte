@@ -158,7 +158,7 @@
                         mainCol={1}
                         showBottomLine={showBorders}
                         subtitle={item.subtitle}
-                        title={item.name}
+                        title={item.name || item.title}
                         on:tap={(event) => onTap(item, event)}>
                         <checkbox
                             id="checkbox"
@@ -181,7 +181,7 @@
                         mainCol={1}
                         showBottomLine={showBorders}
                         subtitle={item.subtitle}
-                        title={item.name}
+                        title={item.name || item.title}
                         on:tap={(event) => onTap(item, event)}>
                         <checkbox
                             id="checkbox"
@@ -205,7 +205,7 @@
                         leftIcon={item.icon}
                         showBottomLine={showBorders}
                         subtitle={item.subtitle}
-                        title={item.name}
+                        title={item.name || item.title}
                         on:tap={(event) => onTap(item, event)}>
                         <mdbutton class="icon-btn" col={2} text={item.rightIcon} variant="text" on:tap={(event) => onRightTap(item, event)} />
                     </ListItemAutoSize>
@@ -221,7 +221,7 @@
                         mainCol={1}
                         showBottomLine={showBorders}
                         subtitle={item.subtitle}
-                        title={item.name}
+                        title={item.name || item.title}
                         on:tap={(event) => onTap(item, event)}>
                         <mdbutton class="icon-btn" col={2} text={item.rightIcon} variant="text" on:tap={(event) => onRightTap(item, event)} />
                     </ListItem>
@@ -236,11 +236,9 @@
                         {fontWeight}
                         {iconFontSize}
                         leftIcon={item.icon}
-                        rightIcon={item.rightIcon}
                         showBottomLine={showBorders}
                         subtitle={item.subtitle}
-                        title={item.name}
-                        on:rightTap={(event) => onRightTap(item, event)}
+                        title={item.name || item.title}
                         on:tap={(event) => onTap(item, event)}>
                     </ListItemAutoSize>
                 {:else}
@@ -251,11 +249,9 @@
                         {fontWeight}
                         {iconFontSize}
                         leftIcon={item.icon}
-                        rightIcon={item.rightIcon}
                         showBottomLine={showBorders}
                         subtitle={item.subtitle}
-                        title={item.name}
-                        on:rightTap={(event) => onRightTap(item, event)}
+                        title={item.name || item.title}
                         on:tap={(event) => onTap(item, event)}>
                     </ListItem>
                 {/if}
