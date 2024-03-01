@@ -82,6 +82,20 @@ export class CustomError extends BaseError {
     getMessage() {}
 }
 
+export class PermissionError extends CustomError {
+    constructor(props?) {
+        super(
+            Object.assign(
+                {
+                    message: 'permission_error'
+                },
+                props
+            ),
+            'PermissionError'
+        );
+    }
+}
+
 export class TimeoutError extends CustomError {
     constructor(props?) {
         super(
