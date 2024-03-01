@@ -1,0 +1,7 @@
+### Features
+- info on click feature ([0d1c25c1](/0d1c25c156a0d78a4520c1fff95da88afc9b37d0))
+- light/dark theme ([33ad398f](/33ad398f358ec35ded84a1b219320e208c45ddb7))
+- new peak finder ([b425d5e1](/b425d5e1d9dc96e474119aeb1629c0fc9f8f427a))
+- options to enable/disable map rotation / pitch ([3653222c](/3653222c2e3a97a00df61b1d6433e4781ce9843f))
+- allow computing multiple directions at once ([cdc58534](/cdc58534519def1a1b6734cbe7c510255808808c))
+- testing 3d terrain with mapbox ([a02ea75c](/a02ea
