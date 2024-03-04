@@ -2,3 +2,6 @@ app_identifier "akylas.alpi.maps"
 package_name "akylas.alpi.maps"
 apple_id "martin.guillon@akylas.fr"
 team_id "3UUB5NM43K"
+itunes_connect_id("martin.guillon@akylas.fr")
+itc_team_id("1469488")
+team_name('Akylas')
