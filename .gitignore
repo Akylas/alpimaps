@@ -39,6 +39,7 @@ yarn-error.log*
 .idea
 .cloud
 .project
+.env*
 .yarn
 yarn.lock
 tmp/
@@ -49,7 +50,7 @@ tmp/
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
-!.vscode/extensions.json
+!.vscode/i18n-ally-custom-framework.yml
 /.sentryclirc
 *.zip
 dist
