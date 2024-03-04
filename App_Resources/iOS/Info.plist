@@ -38,13 +38,13 @@
       <string>UIInterfaceOrientationPortraitUpsideDown</string>
     </array>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>«Alpi Maps» use your GPS location to display it on your glasses</string>
+    <string>«Alpi Maps» use your GPS location to display it on the map</string>
     <key>NSLocationAlwaysUsageDescription</key>
-    <string>«Alpi Maps» use your GPS location to display it on your glasses</string>
+    <string>«Alpi Maps» use your GPS location to display it on the map</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>«Alpi Maps» use your GPS location to display it on your glasses</string>
+    <string>«Alpi Maps» use your GPS location to display it on the map</string>
     <key>NSBluetoothPeripheralUsageDescription</key>
-    <string>«Alpi Maps» use Bluetooth to connect to your glasses</string>
+    <string>«Alpi Maps» use Bluetooth to connect to the map</string>
     <key>UIBackgroundModes</key>
     <array>
       <string>location</string>
