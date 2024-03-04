@@ -285,9 +285,10 @@
     "interior_decoration": "décoration intérieure",
     "internet_cafe": "internet café",
     "ios.info.plist": {
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "«Alpi Maps» utilise le GPS pour l'afficher sur vos lunettes",
-        "NSLocationAlwaysUsageDescription": "«Alpi Maps» utilise le GPS pour l'afficher sur vos lunettes",
-        "NSLocationWhenInUseUsageDescription": "«Alpi Maps» utilise le GPS pour l'afficher sur vos lunettes"
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "«Alpi Maps» utilise le GPS pour l'afficher sur la carte",
+        "NSLocationAlwaysUsageDescription": "«Alpi Maps» utilise le GPS pour l'afficher sur la carte",
+        "NSLocationWhenInUseUsageDescription": "«Alpi Maps» utilise le GPS pour l'afficher sur la carte",
+        "NSCameraUsageDescription": "«Alpi Maps» peut utiliser votre caméra pour le détecteur de pics"
     },
     "item_now_hidden": "l'objet est maintenant caché de la carte",
     "item_now_visible": "l'objet est maintenant visible sur la carte",
