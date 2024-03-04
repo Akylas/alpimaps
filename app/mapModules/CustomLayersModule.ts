@@ -1101,7 +1101,14 @@ export default class CustomLayersModule extends MapModule {
         });
         const result = Array.isArray(results) ? results[0] : results;
         if (result) {
-            const provider = result.data;
+            const provider = result.data as Provider;
+            const name = provider.id || result.name;
+
+            const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
+            const layerIndex = savedSources.findIndex((s) => (typeof s === 'string' ? s : s?.id) === name);
+            if (layerIndex !== -1) {
+                throw new Error(lc('data_source_already_added', name));
+            }
             // if (result.isPick) {
             //     provider.name = File.fromPath(provider.url).name;
             //     provider.id = provider.url;
