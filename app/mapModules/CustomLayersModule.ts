@@ -1091,6 +1091,7 @@ export default class CustomLayersModule extends MapModule {
                 height: 400,
                 title: l('pick_source'),
                 showFilter: true,
+                rowHeight: 56,
                 options:
                     //  [{ name: l('pick'), isPick: true }].concat
                     Object.keys(this.baseProviders)
