@@ -26,6 +26,8 @@
     <string>LaunchScreen</string>
     <key>UIRequiresFullScreen</key>
     <true/>
+    <key>CADisableMinimumFrameDurationOnPhone</key>
+    <true/>
     <key>UIRequiredDeviceCapabilities</key>
     <array>
       <string>bluetooth-le</string>
@@ -51,10 +53,6 @@
       <string>bluetooth-central</string>
       <string>bluetooth-peripheral</string>
     </array>
-    <key>UIStatusBarStyle</key>
-    <string>UIStatusBarStyleLightContent</string>
-    <key>UIViewControllerBasedStatusBarAppearance</key>
-    <false/>
     <key>CFBundleURLTypes</key>
     <array>
       <dict>
@@ -117,5 +115,7 @@
         </dict>
       </dict>
     </array>
+    <key>NSCameraUsageDescription</key>
+    <string>«Alpi Maps» can use your camera for the peak finder feature</string>
   </dict>
 </plist>
