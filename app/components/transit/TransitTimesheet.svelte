@@ -248,19 +248,20 @@
             <IconButton colSpan={3} horizontalAlignment="right" row={1} text="mdi-chevron-right" on:tap={nextDates} />
         </gridlayout>
 
-        <collectionview bind:this={collectionView} colSpan={3} items={timelineItems} row={3} android:marginBottom={$navigationBarHeight} rowHeight={50} on:swipe={onSwipe}>
+        <collectionview bind:this={collectionView} colSpan={3} items={timelineItems} row={3} android:marginBottom={$navigationBarHeight} rowHeight={56} on:swipe={onSwipe}>
             <Template let:item>
                 <gridlayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} columns="*,200" padding="0 10 0 10" rippleColor={item.color}>
                     <label
+                        id="test"
                         autoFontSize={true}
                         color={item.stopId === currentStopId ? colorPrimary : colorOnSurface}
                         fontSize={13}
                         maxFontSize={13}
-                        maxLines={2}
-                        paddingRight={10}
+                        maxLines={3}
+                        padding="4 10 4 0"
                         text={item.stopName}
                         verticalTextAlignment="center" />
-                    <canvasview id="canvas" col={1} color={item.stopId === currentStopId ? colorPrimary : colorOnSurface} on:draw={(e) => drawTripTime(item, e)} />
+                    <canvasview id="canvas" col={1} on:draw={(e) => drawTripTime(item, e)} />
                 </gridlayout>
             </Template>
         </collectionview>

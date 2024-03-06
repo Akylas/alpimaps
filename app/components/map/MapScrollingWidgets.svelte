@@ -289,7 +289,8 @@
     {...$$restProps}
     columns="60,*,70"
     isPassThroughParentEnabled={true}
-    android:marginTop={globalMarginTop}
+    android:marginTop={$globalMarginTop}
+    ios:marginTop={2 * $globalMarginTop}
     rows="auto,*,auto"
     {userInteractionEnabled}>
     <stacklayout col={2} padding={2} row={2} verticalAlignment="bottom">
