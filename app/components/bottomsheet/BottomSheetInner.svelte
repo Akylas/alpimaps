@@ -222,6 +222,7 @@
 
     function updateSelectedItem(item) {
         try {
+            DEV_LOG && console.log('updateSelectedItem', !!item);
             if (item) {
                 swipemenu?.nativeView?.close('right', 0);
                 itemIsRoute = !!item?.route;
@@ -727,12 +728,14 @@
     let loaded = false;
     let loadedListeners = [];
     export async function loadView() {
+        DEV_LOG && console.log('loadView', loaded);
         if (!loaded) {
             await new Promise((resolve) => {
                 loadedListeners.push(resolve);
                 loaded = true;
             });
         }
+        DEV_LOG && console.log('loadView done', loaded);
     }
     $: {
         try {
@@ -778,6 +781,9 @@
 
     function drawStats({ canvas }: { canvas: Canvas; object: Canvas }) {
         try {
+            if (!item?.stats) {
+                return;
+            }
             const w = canvas.getWidth();
             const h = canvas.getHeight();
 
@@ -881,7 +887,7 @@
     }
 </script>
 
-<gridlayout {...$$restProps} backgroundColor={colorWidgetBackground} rows={`${INFOVIEW_HEIGHT},50,auto,auto,auto`} width="100%" on:tap={() => {}}>
+<gridlayout {...$$restProps} backgroundColor={colorWidgetBackground} rows={`${INFOVIEW_HEIGHT},50,${PROFILE_HEIGHT},${STATS_HEIGHT},auto`} width="100%" on:tap={() => {}}>
     {#if loaded}
         <swipemenu
             bind:this={swipemenu}
@@ -946,9 +952,9 @@
                 </stacklayout>
             </gridlayout>
         </scrollview>
-
-        <ElevationChart bind:this={elevationChart} colSpan={2} height={PROFILE_HEIGHT} {item} row={2} visibility={graphAvailable ? 'visible' : 'collapse'} on:highlight={onChartHighlight} />
-        <canvasview bind:this={statsCanvas} colSpan={2} height={STATS_HEIGHT} row={3} visibility={statsAvailable ? 'visible' : 'collapse'} on:draw={drawStats}>
+        <!-- <label height={PROFILE_HEIGHT} row={2} visibility={graphAvailable ? 'visible' : 'collapse'}/> -->
+        <ElevationChart bind:this={elevationChart} colSpan={2} {item} row={2} visibility={graphAvailable ? 'visible' : 'collapse'} on:highlight={onChartHighlight} />
+        <canvasview bind:this={statsCanvas} colSpan={2} row={3} visibility={statsAvailable ? 'visible' : 'collapse'} on:draw={drawStats}>
             <IconButton
                 fontSize={20}
                 horizontalAlignment="right"

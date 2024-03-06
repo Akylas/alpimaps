@@ -22,19 +22,26 @@
     export let leftIconFonFamily: string = $fonts.mdi;
     export let symbol: string = null;
     export let symbolColor: string = null;
-    export let color: string = colorOnSurface;
+    export let color: string = null;
     export let showSymbol: boolean = false;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
 </script>
 
-<canvasview {columns} disableCss={true} rippleColor={color} on:tap={(event) => dispatch('tap', event)} {...$$restProps} padding="10 16 10 16">
+<canvasview {columns} disableCss={true} rippleColor={color || colorOnSurface} on:tap={(event) => dispatch('tap', event)} {...$$restProps} padding="10 16 10 16">
     <symbolshape color={symbolColor} height={34} {symbol} verticalAlignment="middle" visibility={showSymbol ? 'visible' : 'hidden'} width={34} />
     <canvaslabel col={mainCol} on:draw={onDraw}>
         <cgroup paddingBottom={subtitle ? 10 : 0} verticalAlignment="middle">
-            <cspan {color} fontFamily={leftIconFonFamily} fontSize={iconFontSize * $fontScale} paddingLeft="10" text={leftIcon} visibility={leftIcon ? 'visible' : 'hidden'} width={iconFontSize * 2} />
+            <cspan
+                color={color || colorOnSurface}
+                fontFamily={leftIconFonFamily}
+                fontSize={iconFontSize * $fontScale}
+                paddingLeft="10"
+                text={leftIcon}
+                visibility={leftIcon ? 'visible' : 'hidden'}
+                width={iconFontSize * 2} />
         </cgroup>
         <cgroup paddingLeft={(leftIcon ? iconFontSize * 2 : 0) + extraPaddingLeft} textAlignment="left" verticalAlignment="middle">
-            <cspan {color} fontSize={fontSize * $fontScale} {fontWeight} text={title} />
+            <cspan color={color || colorOnSurface} fontSize={fontSize * $fontScale} {fontWeight} text={title} />
             <cspan color={colorOnSurfaceVariant} fontSize={subtitleFontSize * $fontScale} text={subtitle ? '\n' + subtitle : ''} visibility={subtitle ? 'visible' : 'hidden'} />
         </cgroup>
     </canvaslabel>
