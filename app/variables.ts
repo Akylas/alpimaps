@@ -57,7 +57,7 @@ export const screenHeightDips = Screen.mainScreen.heightDIPs;
 export const screenWidthDips = Screen.mainScreen.widthDIPs;
 export const navigationBarHeight = writable(0);
 
-export let globalMarginTop = 0;
+export const globalMarginTop = writable(0);
 export const fontScale = writable(1);
 export const isRTL = writable(false);
 
@@ -93,7 +93,7 @@ const onInitRootView = function () {
             innerStatusBarHeight = Utils.layout.toDeviceIndependentPixels(resources.getDimensionPixelSize(resourceId));
             statusBarHeight.set(innerStatusBarHeight);
         }
-        globalMarginTop = innerStatusBarHeight;
+        globalMarginTop.set(innerStatusBarHeight);
         // }, 0);
     }
 
@@ -114,10 +114,10 @@ const onInitRootView = function () {
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
         navigationBarHeight.set(Utils.layout.toDeviceIndependentPixels(Application.ios.window.safeAreaInsets.bottom));
         statusBarHeight.set(Utils.layout.toDeviceIndependentPixels(Application.ios.window.safeAreaInsets.top));
-        globalMarginTop = get(statusBarHeight);
+        globalMarginTop.set(get(statusBarHeight));
     }
     updateThemeColors(getRealTheme(theme));
-    DEV_LOG && console.log('initRootView', get(navigationBarHeight), get(statusBarHeight), get(actionBarHeight), get(actionBarButtonHeight), get(fonts));
+    DEV_LOG && console.log('initRootView', Application.ios.window.safeAreaInsets, get(navigationBarHeight), get(statusBarHeight), get(actionBarHeight), get(actionBarButtonHeight), get(fonts));
     Application.off(Application.initRootViewEvent, onInitRootView);
     // getRealThemeAndUpdateColors();
 };
