@@ -51,7 +51,6 @@
     let actualShowSymbol = false;
     let itemIsRoute = false;
     let itemProps: ItemProperties = null;
-
     let nString;
     let nString2;
 
@@ -285,7 +284,7 @@
 
 <canvasview bind:this={canvas} padding="4 10 2 10" on:draw={onCanvasDraw} {...$$restProps} disableCss={true} on:tap on:longPress>
     <slot />
-    <flexlayout disableCss={true} flexDirection="column" {marginBottom} {marginLeft} marginRight={rightTextPadding} {marginTop}>
+    <flexlayout disableCss={true} flexDirection="column" {marginBottom} {marginLeft} marginRight={rightTextPadding} {marginTop} ios:verticalAlignment="center">
         <label
             autoFontSize={true}
             color={colorOnSurface}
