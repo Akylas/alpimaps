@@ -694,9 +694,9 @@ export default class CustomLayersModule extends MapModule {
                     }
                 }
                 const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
-
                 if (this.customSources.length === 0 && savedSources.length === 0) {
                     savedSources.push('openstreetmap');
+                    ApplicationSettings.setString('added_providers', '["openstreetmap"]');
                 }
                 if (savedSources.length > 0) {
                     await this.getSourcesLibrary();
