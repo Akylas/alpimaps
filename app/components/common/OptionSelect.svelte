@@ -40,7 +40,7 @@
     export let onRightIconTap: (item, e) => void = null;
     let filteredOptions: OptionType[] | ObservableArray<OptionType[]> = null;
     let filter: string = null;
-
+    DEV_LOG && console.log('options', options);
     // technique for only specific properties to get updated on store change
     $: ({ colorOutlineVariant, colorOnSurface, colorOutline } = $colors);
 
@@ -124,7 +124,7 @@
 <gesturerootview columns={containerColumns} rows="auto">
     <gridlayout {backgroundColor} {borderRadius} columns={`${width}`} {height} rows="auto,*" {...$$restProps}>
         {#if showFilter}
-            <gridlayout borderColor={colorOutline} margin="10 10 0 10">
+            <gridlayout borderBottomColor={colorOutline} borderBottomWidth={1} margin="10 10 0 10">
                 <textfield
                     autocapitalizationType="none"
                     backgroundColor="transparent"
@@ -134,7 +134,7 @@
                     placeholder={lc('search')}
                     returnKeyType="search"
                     text={filter}
-                    variant="outline"
+                    variant="none"
                     verticalTextAlignment="center"
                     on:returnPress={blurTextField}
                     on:textChange={(e) => (filter = e['value'])} />

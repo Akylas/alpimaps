@@ -1109,7 +1109,15 @@
     });
 </script>
 
-<stacklayout bind:this={topLayout} {...$$restProps} style="z-index:1000;" backgroundColor={colorPrimary} paddingTop={globalMarginTop} translateY={currentTranslationY}>
+<stacklayout
+    bind:this={topLayout}
+    {...$$restProps}
+    style="z-index:1000;"
+    backgroundColor={colorPrimary}
+    paddingTop={$globalMarginTop}
+    translateY={currentTranslationY}
+    android:paddingTop={$globalMarginTop}
+    ios:paddingTop={2 * $globalMarginTop}>
     {#if loaded}
         <gridlayout bind:this={gridLayout} columns="*,40" rows="50,70,auto" on:tap={() => {}}>
             <IconButton horizontalAlignment="left" isSelected={true} text="mdi-arrow-left" white={true} on:tap={() => cancel()} />
