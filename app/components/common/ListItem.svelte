@@ -2,6 +2,7 @@
     import { Canvas, CanvasView } from '@nativescript-community/ui-canvas';
     import { createEventDispatcher } from '~/utils/svelte/ui';
     import { colors, fontScale, fonts } from '~/variables';
+    let { colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorOutlineVariant } = $colors;
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorOutlineVariant } = $colors);
     const dispatch = createEventDispatcher();
     // technique for only specific properties to get updated on store change

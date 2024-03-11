@@ -694,9 +694,9 @@ export default class CustomLayersModule extends MapModule {
                     }
                 }
                 const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
-
                 if (this.customSources.length === 0 && savedSources.length === 0) {
                     savedSources.push('openstreetmap');
+                    ApplicationSettings.setString('added_providers', '["openstreetmap"]');
                 }
                 if (savedSources.length > 0) {
                     await this.getSourcesLibrary();
@@ -1091,6 +1091,7 @@ export default class CustomLayersModule extends MapModule {
                 height: 400,
                 title: l('pick_source'),
                 showFilter: true,
+                rowHeight: 56,
                 options:
                     //  [{ name: l('pick'), isPick: true }].concat
                     Object.keys(this.baseProviders)
@@ -1100,7 +1101,14 @@ export default class CustomLayersModule extends MapModule {
         });
         const result = Array.isArray(results) ? results[0] : results;
         if (result) {
-            const provider = result.data;
+            const provider = result.data as Provider;
+            const name = provider.id || result.name;
+
+            const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
+            const layerIndex = savedSources.findIndex((s) => (typeof s === 'string' ? s : s?.id) === name);
+            if (layerIndex !== -1) {
+                throw new Error(lc('data_source_already_added', name));
+            }
             // if (result.isPick) {
             //     provider.name = File.fromPath(provider.url).name;
             //     provider.id = provider.url;
