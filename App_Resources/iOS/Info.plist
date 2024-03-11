@@ -19,12 +19,14 @@
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleVersion</key>
-    <string>217</string>
+    <string>221</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>UILaunchStoryboardName</key>
     <string>LaunchScreen</string>
     <key>UIRequiresFullScreen</key>
+    <true/>
+    <key>CADisableMinimumFrameDurationOnPhone</key>
     <true/>
     <key>UIRequiredDeviceCapabilities</key>
     <array>
@@ -38,23 +40,19 @@
       <string>UIInterfaceOrientationPortraitUpsideDown</string>
     </array>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>«Alpi Maps» use your GPS location to display it on your glasses</string>
+    <string>«Alpi Maps» use your GPS location to display it on the map</string>
     <key>NSLocationAlwaysUsageDescription</key>
-    <string>«Alpi Maps» use your GPS location to display it on your glasses</string>
+    <string>«Alpi Maps» use your GPS location to display it on the map</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>«Alpi Maps» use your GPS location to display it on your glasses</string>
+    <string>«Alpi Maps» use your GPS location to display it on the map</string>
     <key>NSBluetoothPeripheralUsageDescription</key>
-    <string>«Alpi Maps» use Bluetooth to connect to your glasses</string>
+    <string>«Alpi Maps» use Bluetooth to connect to the map</string>
     <key>UIBackgroundModes</key>
     <array>
       <string>location</string>
       <string>bluetooth-central</string>
       <string>bluetooth-peripheral</string>
     </array>
-    <key>UIStatusBarStyle</key>
-    <string>UIStatusBarStyleLightContent</string>
-    <key>UIViewControllerBasedStatusBarAppearance</key>
-    <false/>
     <key>CFBundleURLTypes</key>
     <array>
       <dict>
@@ -117,5 +115,7 @@
         </dict>
       </dict>
     </array>
+    <key>NSCameraUsageDescription</key>
+    <string>«Alpi Maps» can use your camera for the peak finder feature</string>
   </dict>
 </plist>

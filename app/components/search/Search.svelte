@@ -415,8 +415,8 @@
     backgroundColor={colorWidgetBackground}
     columns="auto,*,auto,auto,auto"
     elevation={$currentTheme !== 'dark' && focused ? 6 : 0}
-    android:margin={`${globalMarginTop + 10} 10 10 10`}
-    ios:margin={10}
+    android:margin={`${$globalMarginTop + 10} 10 10 10`}
+    ios:margin={`${2* $globalMarginTop + 10} 10 10 10`}
     rows="auto,auto"
     on:tap={() => {}}>
     <IconButton gray={true} text="mdi-magnify" on:tap={showSearchOptions} />
