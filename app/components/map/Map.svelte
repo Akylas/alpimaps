@@ -1946,15 +1946,17 @@
     bind:this={page}
     actionBarHidden={true}
     backgroundColor="#E3E1D3"
+    iosIgnoreSafeArea={true}
+    ios:statusBarStyle="light"
+    ios:statusBarColor="transparent"
     {keepScreenAwake}
     screenBrightness={keepScreenAwake ? 1 : -1}
     on:navigatingTo={onNavigatingTo}
-    on:navigatingFrom={onNavigatingFrom}
-    >\
-    <gridlayout>
+    on:navigatingFrom={onNavigatingFrom}>
+    <gridlayout ios:marginBottom={-2 * $navigationBarHeight}>
         <bottomsheet
             backgroundColor="#01550000"
-            marginBottom={$navigationBarHeight}
+            android:marginBottom={$navigationBarHeight}
             panGestureOptions={{ failOffsetXEnd: 20, minDist: 40 }}
             stepIndex={bottomSheetStepIndex}
             {steps}
@@ -1980,6 +1982,7 @@
                     horizontalAlignment="left"
                     marginLeft={5}
                     marginTop={66 + $statusBarHeight + Math.max(topTranslationY - 90, 0)}
+                    ios:marginTop={66 + 2 * $statusBarHeight + Math.max(topTranslationY - 90, 0)}
                     verticalAlignment="top" />
 
                 <LocationInfoPanel
@@ -2029,21 +2032,14 @@
                 <DirectionsPanel bind:this={directionsPanel} {editingItem} verticalAlignment="top" width="100%" bind:translationY={topTranslationY} on:cancel={onDirectionsCancel} />
             </gridlayout>
             <BottomSheetInner prop:bottomSheet bind:this={bottomSheetInner} item={$selectedItem} updating={itemLoading} bind:navigationInstructions bind:steps />
-            <!-- <collectionview
-                items={currentClickedFeatures}
-                height={80}
-                margin="80 20 0 20"
-                verticalAlignment="top"
-                borderRadius={16}
-                backgroundColor="#00000055"
-                visibility={currentClickedFeatures && currentClickedFeatures.length > 0 ? 'visible' : 'collapse'}
-            >
-                <Template let:item>
-                    <label padding="0 20 0 20" text={JSON.stringify(item)} verticalAlignment="middle" fontSize={11} color="white" />
-                </Template>
-            </collectionview> -->
         </bottomsheet>
 
-        <absolutelayout backgroundColor={colorBackground} height={$navigationBarHeight} verticalAlignment="bottom" width="100%" />
+        <absolutelayout
+            backgroundColor={colorBackground}
+            android:height={$navigationBarHeight}
+            ios:height={6 * $navigationBarHeight}
+            ios:translateY={6 * $navigationBarHeight}
+            verticalAlignment="bottom"
+            width="100%" />
     </gridlayout>
 </page>
