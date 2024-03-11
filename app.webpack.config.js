@@ -460,7 +460,8 @@ module.exports = (env, params = {}) => {
     appSymbols.variables
         .filter((v) => v.name.startsWith('$icon-'))
         .forEach((v) => {
-            appIcons[v.name.replace('$icon-', '')] = String.fromCharCode(parseInt(v.value.slice(2), 16));
+            // console.log('test', `'${v.value}'`, `'${v.value.slice(2)}'`)
+            appIcons[v.name.replace('$icon-', '')] = String.fromCharCode(parseInt(v.value.slice(2, -1), 16));
         });
 
     const scssPrepend = `$appFontFamily: alpimaps;
