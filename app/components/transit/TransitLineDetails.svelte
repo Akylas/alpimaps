@@ -27,7 +27,7 @@
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
     export let line: TransitRoute;
-    console.log('line', line);
+    DEV_LOG && console.log('line', line);
     let loading = false;
     let dataItems: Item[] = null;
     let noNetworkAndNoData = false;
@@ -36,6 +36,9 @@
 
     async function refresh() {
         try {
+            if (!cartoMap) {
+                return;
+            }
             dataItems = (await transitService.getLineStops(line.id))
                 .filter((i) => i.visible === true)
                 .map((i, index, array) => ({ ...i, color: lineColor, first: index === 0, last: index === array.length - 1 }));
@@ -106,6 +109,7 @@
                 const prototype = Object.getPrototypeOf(l.layer);
                 cartoMap.addLayer(new prototype.constructor(l.layer.options));
             });
+            refresh();
         } catch (err) {
             showError(err);
         }
@@ -224,7 +228,7 @@
                 backgroundColor={lineColor}
                 colSpan={3}
                 color={line.textColor || 'white'}
-                marginLeft={5}
+                horizontalAlignment="center"
                 text={line.shortName || line.name} />
 
             <IconButton text="mdi-file-pdf-box" on:tap={() => downloadPDF()} />
