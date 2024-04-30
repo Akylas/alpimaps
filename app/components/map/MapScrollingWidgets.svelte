@@ -19,7 +19,6 @@
     import { RouteInstruction, RoutingAction } from '~/models/Item';
     import { queryingLocation, watchingLocation } from '~/stores/mapStore';
     import { showError } from '~/utils/error';
-    import { scale } from '~/utils/svelte/ui';
     import { openLink } from '~/utils/ui';
     import { colors, fonts, globalMarginTop } from '~/variables';
 
@@ -283,16 +282,7 @@
     }
 </script>
 
-<gridlayout
-    bind:this={gridLayout}
-    id="scrollingWidgets"
-    {...$$restProps}
-    columns="60,*,70"
-    isPassThroughParentEnabled={true}
-    android:marginTop={$globalMarginTop}
-    ios:marginTop={2 * $globalMarginTop}
-    rows="auto,*,auto"
-    {userInteractionEnabled}>
+<gridlayout bind:this={gridLayout} id="scrollingWidgets" {...$$restProps} columns="60,*,70" isPassThroughParentEnabled={true} rows="auto,*,auto" {userInteractionEnabled}>
     <stacklayout col={2} padding={2} row={2} verticalAlignment="bottom">
         <mdbutton id="directions" class="floating-btn-themed" col={2} rowSpan={2} text="mdi-directions" visibility={selectedItemHasPosition ? 'visible' : 'hidden'} on:tap={startDirections} />
         <mdcardview id="location" class={`floating-btn ${locationButtonClass}`} shape="medium" on:tap={askUserLocation} on:longPress={onWatchLocation}>
