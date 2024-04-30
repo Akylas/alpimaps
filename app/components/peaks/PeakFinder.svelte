@@ -18,7 +18,7 @@
     import { formatDistance } from '~/helpers/formatter';
     import { formatTime, lc } from '~/helpers/locale';
     import { showError } from '~/utils/error';
-    import { getDataFolder } from '~/utils/utils.common';
+    import { getDataFolder } from '~/utils/utils';
     import { colors, fonts, navigationBarHeight } from '~/variables';
 
     $: ({ colorOnSurface, colorPrimary, colorSurfaceContainer } = $colors);
