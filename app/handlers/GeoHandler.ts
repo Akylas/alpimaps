@@ -6,7 +6,7 @@ import { bind } from 'helpful-decorators/dist-src/bind';
 import { convertDurationSeconds, formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { BgServiceCommon } from '~/services/BgService.common';
-import { sdkVersion } from '~/utils/utils.common';
+import { sdkVersion } from '~/utils/utils/index.common';
 import { Handler } from './Handler';
 import type { BgService as AndroidBgService } from '~/services/android/BgService';
 
