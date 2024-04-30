@@ -20,7 +20,7 @@ import { networkService } from '~/services/NetworkService';
 import { showError } from '~/utils/error';
 import { JSONtoXML, importGPXToGeojson } from '~/utils/gpx';
 import { shareFile } from '~/utils/share';
-import { getItemsDataFolder, pick } from '~/utils/utils.common';
+import { getItemsDataFolder, pick } from '~/utils/utils/index.common';
 import { fonts } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
 import NSQLDatabase from './NSQLDatabase';
