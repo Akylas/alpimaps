@@ -1,9 +1,9 @@
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { ApplicationSettings, Color, Utils, View, path } from '@nativescript/core';
 import { Dayjs } from 'dayjs';
-import { getDataFolder, setSavedMBTilesDir } from './utils.common';
+import { getDataFolder, setSavedMBTilesDir } from './index.common';
 
-export * from './utils.common';
+export * from './index.common';
 export function checkManagePermission() {
     return true;
 }
