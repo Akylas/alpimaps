@@ -4,7 +4,7 @@ import * as appavailability from '@nativescript/appavailability';
 import { Application, ApplicationEventData, ApplicationSettings, Connectivity, EventData, Folder, Observable, Utils } from '@nativescript/core';
 import { HTTPError, NoNetworkError } from '~/utils/error';
 import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
-import { getDataFolder } from '~/utils/utils.common';
+import { getDataFolder } from '~/utils/utils/index.common';
 
 export const onNetworkChanged = createGlobalEventListener('network');
 
