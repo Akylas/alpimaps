@@ -572,7 +572,6 @@
             const options = map.getOptions();
             //@ts-ignore
             options.setLayersLabelsProcessedInReverseOrder(false);
-            options.setWatermarkScale(0);
             options.setRestrictedPanning(true);
             options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
             options.setEnvelopeThreadPoolSize(1);
