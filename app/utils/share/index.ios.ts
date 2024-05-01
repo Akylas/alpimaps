@@ -1,5 +1,6 @@
 import { Application, Color } from '@nativescript/core';
 import { Content, Options } from '.';
+export * from './index.common';
 
 @NativeClass
 class ItemSource extends NSObject implements UIActivityItemSource {
