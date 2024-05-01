@@ -1,6 +1,8 @@
 import { Application, Device, ImageSource, Utils, knownFolders, path } from '@nativescript/core';
 import { Content, Options } from '.';
 
+export * from './index.common';
+
 let numberOfImagesCreated = 0;
 const sdkVersionInt = parseInt(Device.sdkVersion, 10);
 const EXTRA_STREAM = 'android.intent.extra.STREAM';
