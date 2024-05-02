@@ -1,11 +1,11 @@
-export * from './utils.common';
+export * from './index.common';
 import { Application, ApplicationSettings, Color, Device, File, Folder, Frame, Utils, View, path } from '@nativescript/core';
 import { Dayjs } from 'dayjs';
 import { AndroidActivityResultEventData, AndroidApplication, getRootView } from '@nativescript/core/application';
 import { lc } from '@nativescript-community/l';
 import { clock_24 } from '~/helpers/locale';
 import { request } from '@nativescript-community/perms';
-import { getDataFolder, getSavedMBTilesDir, permResultCheck, setSavedMBTilesDir } from './utils.common';
+import { getDataFolder, getSavedMBTilesDir, permResultCheck, setSavedMBTilesDir } from './index.common';
 
 export const sdkVersion = parseInt(Device.sdkVersion, 10);
 export const ANDROID_30 = __ANDROID__ && sdkVersion >= 30;
