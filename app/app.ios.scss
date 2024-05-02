@@ -5,6 +5,16 @@ mdbutton {
     shape: round;
 }
 
+htmllabel,
+canvasview,
+label,
+mdtextfield,
+checkbox,
+mdbutton {
+    ios-a11y-adjusts-font-size: true;
+}
+
+
 mdcardview {
     // material3 basic design
     shape: medium;
