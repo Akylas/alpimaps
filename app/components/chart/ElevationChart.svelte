@@ -49,13 +49,14 @@
     let highlightNString;
     function onChartPanOrZoom(event) {
         try {
-            const xAxisRender = chart.nativeView.getRendererXAxis();
+            const chart = event.object as LineChart;
+            const xAxisRender = chart.xAxisRenderer;
             const { min, max } = xAxisRender.getCurrentMinMax();
-            const dataSet = chart.nativeView.getData().getDataSetByIndex(0);
-            dataSet.setIgnoreFiltered(true);
+            const dataSet = chart.data.getDataSetByIndex(0);
+            dataSet.ignoreFiltered = true;
             const minX = dataSet.getEntryIndexForXValue(min, NaN, Rounding.CLOSEST);
             const maxX = dataSet.getEntryIndexForXValue(max, NaN, Rounding.CLOSEST);
-            dataSet.setIgnoreFiltered(false);
+            dataSet.ignoreFiltered = false;
             const positions = (item.geometry?.['coordinates'] as any[]).slice(minX, maxX + 1);
             const region = getBounds(positions);
             mapContext.getMap().moveToFitBounds(
@@ -139,13 +140,16 @@
         }
         const chartView = chart.nativeView;
 
-        const leftAxis = chartView.getAxisLeft();
-        leftAxis.setTextColor(colorOnSurface);
-        leftAxis.setGridColor(colorOutlineVariant);
-        const xAxis = chartView.getXAxis();
-        xAxis.setTextColor(colorOnSurface);
-        xAxis.setGridColor(colorOutlineVariant);
-        chartView.getData()?.getDataSetByIndex(0)?.setValueTextColor(colorOnSurface);
+        const leftAxis = chartView.leftAxis;
+        leftAxis.textColor = colorOnSurface;
+        leftAxis.gridColor = colorOutlineVariant;
+        const xAxis = chartView.xAxis;
+        xAxis.textColor = colorOnSurface;
+        xAxis.gridColor = colorOutlineVariant;
+        const dataSet = chartView.data?.getDataSetByIndex(0);
+        if (dataSet) {
+            dataSet.valueTextColor = colorOnSurface;
+        }
     });
     export function hilghlightPathIndex(onPathIndex: number, remainingDistance: number, remainingTime: number, highlight?: Highlight<Entry>, sendEvent = true) {
         if (!chart) {
@@ -216,10 +220,10 @@
                 const profile = item.profile;
                 const profileData = profile?.data;
                 if (profileData) {
-                    const dataSet = nChart.getData().getDataSetByIndex(0);
-                    dataSet.setIgnoreFiltered(true);
+                    const dataSet = nChart.data.getDataSetByIndex(0);
+                    dataSet.ignoreFiltered = true;
                     const item = profileData[onPathIndex];
-                    dataSet.setIgnoreFiltered(false);
+                    dataSet.ignoreFiltered = false;
                     DEV_LOG && console.log('highlight', onPathIndex, item.d, item);
                     const highlight = {
                         dataSetIndex: 0,
@@ -230,7 +234,7 @@
                     sendEvent && onChartHighlight({ eventName: 'highlight', highlight, object: nChart } as any);
                 }
             }
-            if (nChart && nChart.getData()) {
+            if (nChart && nChart.data) {
                 highlightFunc();
             } else {
                 DEV_LOG && console.log('stacking highlight');
@@ -247,48 +251,47 @@
         const sets = [];
         const profile = it.profile;
         const profileData = profile?.data;
-        const leftAxis = chartView.getAxisLeft();
+        const leftAxis = chartView.leftAxis;
         if (profileData) {
-            const xAxis = chartView.getXAxis();
+            const xAxis = chartView.xAxis;
             if (!chartInitialized) {
                 chartInitialized = true;
                 chartView.panGestureOptions = { minDist: 40, failOffsetYEnd: 20 };
-                chartView.setHighlightPerDragEnabled(true);
-                chartView.setHighlightPerTapEnabled(true);
-                chartView.setScaleXEnabled(true);
-                chartView.setDoubleTapToZoomEnabled(true);
-                chartView.setDragEnabled(true);
+                chartView.highlightPerDragEnabled = true;
+                chartView.highlightPerTapEnabled = true;
+                chartView.scaleXEnabled = true;
+                chartView.doubleTapToZoomEnabled = true;
+                chartView.dragEnabled = true;
                 chartView.clipHighlightToContent = false;
                 chartView.zoomedPanWith2Pointers = true;
-                chartView.setClipDataToContent(true);
-                // chartView.setClipValuesToContent(false);
+                chartView.clipDataToContent = true;
+                // chartView.clipValuesToContent=(false);
 
-                // chartView.setExtraTopOffset(30);
-                chartView.setMinOffset(0);
+                // chartView.extraTopOffset=(30);
+                chartView.minOffset = 0;
                 chartView.setExtraOffsets(0, 24, 0, 10);
-                chartView.getAxisRight().setEnabled(false);
-                chartView.getLegend().setEnabled(false);
-                leftAxis.setTextColor(colorOnSurface);
-                leftAxis.setDrawZeroLine(true);
-                leftAxis.setGridColor(colorOutlineVariant);
+                // chartView.axisRight.setEnabled(false);
+                leftAxis.textColor = colorOnSurface;
+                leftAxis.drawZeroLine = true;
+                leftAxis.gridColor = colorOutlineVariant;
 
-                leftAxis.setGridDashedLine(new DashPathEffect([6, 3], 0));
+                leftAxis.gridDashPathEffect = new DashPathEffect([6, 3], 0);
                 leftAxis.ensureLastLabel = true;
-                // leftAxis.setLabelCount(3);
+                // leftAxis.labelCount=(3);
 
-                xAxis.setPosition(XAxisPosition.TOP);
-                xAxis.setLabelTextAlign(Align.CENTER);
+                xAxis.position = XAxisPosition.TOP;
+                xAxis.labelTextAlign = Align.CENTER;
                 xAxis.ensureLastLabel = true;
-                // xAxis.setLabelCount(4);
-                xAxis.setTextColor(colorOnSurface);
-                xAxis.setGridColor(colorOutlineVariant);
-                xAxis.setDrawGridLines(false);
-                xAxis.setDrawMarkTicks(true);
-                xAxis.setValueFormatter({
+                // xAxis.labelCount=(4);
+                xAxis.textColor = colorOnSurface;
+                xAxis.gridColor = colorOutlineVariant;
+                xAxis.drawGridLines = false;
+                xAxis.drawMarkTicks = true;
+                xAxis.valueFormatter = {
                     getAxisLabel: (value) => formatDistance(value)
-                });
+                };
 
-                chartView.setCustomRenderer({
+                chartView.customRenderer = {
                     drawHighlight(c: Canvas, h: Highlight<Entry>, set: LineDataSet, paint: Paint) {
                         const x = h.drawX;
                         if (highlightNString) {
@@ -301,7 +304,7 @@
                         c.drawLine(x, 20, x, c.getHeight(), highlightPaint);
                         c.drawCircle(x, 20, 4, highlightPaint);
                     }
-                });
+                };
             } else {
                 // console.log('clearing highlight')
                 chartView.highlightValues(null);
@@ -316,52 +319,52 @@
                 spaceMax += space;
             }
             spaceMin += ((deltaA + spaceMin + spaceMax) / Utils.layout.toDeviceIndependentPixels(chart.nativeView.getMeasuredHeight())) * 30;
-            leftAxis.setSpaceMin(spaceMin);
-            leftAxis.setSpaceMax(spaceMax);
-            const chartData = chartView.getData();
+            leftAxis.spaceMin = spaceMin;
+            leftAxis.spaceMax = spaceMax;
+            const chartData = chartView.data;
             if (!chartData) {
                 const set = new LineDataSet(profileData, 'a', 'd', 'a');
-                // set.setDrawValues(false);
-                // set.setValueTextColor(colorOnSurface);
-                // set.setValueTextSize(10);
-                set.setMaxFilterNumber(50);
-                set.setUseColorsForFill(true);
-                set.setFillFormatter({
+                // set.drawValues=(false);
+                // set.valueTextColor=(colorOnSurface);
+                // set.valueTextSize=(10);
+                set.maxFilterNumber = 50;
+                set.useColorsForFill = true;
+                set.fillFormatter = {
                     getFillLinePosition(dataSet: LineDataSet, dataProvider) {
-                        return dataProvider.getYChartMin();
+                        return dataProvider.yChartMin;
                     }
-                });
-                // set.setValueFormatter({
+                };
+                // set.valueFormatter=({
                 //     getFormattedValue(value: number, entry: Entry, index, count, dataSetIndex: any, viewPortHandler: any) {
                 //         if (index === 0 || index === count - 1 || value === profile.max[1] || value === profile.min[1]) {
                 //             return convertElevation(value);
                 //         }
                 //     }
                 // } as any);
-                set.setDrawFilled(true);
-                set.setColor('#60B3FC');
-                set.setLineWidth(1);
-                set.setFillColor('#60B3FC80');
+                set.drawFilledEnabled = true;
+                set.color = '#60B3FC';
+                set.lineWidth = 1;
+                set.fillColor = '#60B3FC80';
                 if (showProfileGrades && profile.colors && profile.colors.length > 1) {
-                    set.setLineWidth(2);
-                    set.setColors(profile.colors);
+                    set.lineWidth = 2;
+                    set.colors = profile.colors as any;
                 }
-                // set.setMode(Mode.LINEAR);
+                // set.mode=(Mode.LINEAR);
                 sets.push(set);
                 const lineData = new LineData(sets);
-                chartView.setData(lineData);
+                chartView.data = lineData;
             } else {
                 // console.log('clearing highlight1')
                 chartView.highlightValues(null);
                 const set = chartData.getDataSetByIndex(0);
                 if (showProfileGrades && profile.colors && profile.colors.length > 1) {
-                    set.setLineWidth(2);
-                    set.setColors(profile.colors);
+                    set.lineWidth = 2;
+                    set.colors = profile.colors as any;
                 } else {
-                    set.setLineWidth(1);
-                    set.setColor('#60B3FC');
+                    set.lineWidth = 1;
+                    set.color = '#60B3FC';
                 }
-                set.setValues(profileData);
+                set.values = profileData;
                 set.notifyDataSetChanged();
                 chartData.notifyDataChanged();
                 chartView.notifyDataSetChanged();
