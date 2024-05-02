@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Frame } from '@nativescript/core/ui/frame';
     import { onMount } from 'svelte';
-    import { closeModal, goBack } from 'svelte-native';
+    import { closeModal, goBack } from '~/utils/svelte/ui';
     import { actionBarHeight, colors, statusBarHeight } from '~/variables';
     import IconButton from './IconButton.svelte';
     import { showError } from '~/utils/error';
@@ -58,11 +58,12 @@
         }
     }
     $: menuIconVisible = ((forceCanGoBack || canGoBack || modalWindow) && !disableBackButton) || showMenuIcon;
+    $: menuIconVisibility = menuIconVisible ? 'visible' : 'collapse';
 </script>
 
 <gridlayout class="actionBar" columns="auto,*,auto" {paddingTop} rows={`${height},auto`} {...$$restProps} on:tap={() => {}}>
     <label
-        id="title"
+        id="actionBarTitle"
         class="actionBarTitle"
         col={1}
         colSpan={3}
@@ -75,7 +76,7 @@
     <slot name="center" />
     <stacklayout orientation="horizontal">
         <slot name="left" />
-        <mdbutton class="actionBarButton" defaultVisualState={buttonsDefaultVisualState} isVisible={menuIconVisible} text={menuIcon} variant="text" on:tap={onMenuIcon} />
+        <mdbutton class="actionBarButton" defaultVisualState={buttonsDefaultVisualState} text={menuIcon} variant="text" visibility={menuIconVisibility} on:tap={onMenuIcon} />
     </stacklayout>
     <stacklayout col={2} orientation="horizontal">
         <slot />

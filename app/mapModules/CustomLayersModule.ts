@@ -9,6 +9,7 @@ import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/
 import { MapBoxElevationDataDecoder, TerrariumElevationDataDecoder } from '@nativescript-community/ui-carto/rastertiles';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { openFilePicker } from '@nativescript-community/ui-document-picker';
+import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { confirm, login, prompt } from '@nativescript-community/ui-material-dialogs';
 import { Application, ApplicationSettings, Color, profile } from '@nativescript/core';
 import { ChangeType, ChangedData, ObservableArray } from '@nativescript/core/data/observable-array';
@@ -21,13 +22,12 @@ import { packageService } from '~/services/PackageService';
 import { preloading, showRoutes } from '~/stores/mapStore';
 import { showError } from '~/utils/error';
 import { toDegrees, toRadians } from '~/utils/geo';
-import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
 // eslint-disable-next-line no-duplicate-imports
-import { data as TileSourcesData } from '~/data/tilesources';
-import { showSnack } from '@nativescript-community/ui-material-snackbar';
-import { openLink } from '~/utils/ui';
 import { SDK_VERSION } from '@akylas/nativescript/utils';
+import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { data as TileSourcesData } from '~/data/tilesources';
+import { openLink } from '~/utils/ui';
 const mapContext = getMapContext();
 
 export enum RoutesType {
