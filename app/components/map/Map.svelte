@@ -22,8 +22,9 @@
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
-    import { Application, ApplicationSettings, Color, File, Page, Utils } from '@nativescript/core';
-    import type { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
+    import { AbsoluteLayout, Application, ApplicationSettings, Color, File, Page, Utils } from '@nativescript/core';
+    import type { AndroidActivityBackPressedEventData, OrientationChangedEventData } from '@nativescript/core/application/application-interfaces';
+    import { EPSG4326 } from '@nativescript-community/ui-carto/projections/epsg4326';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Screen } from '@nativescript/core/platform';
     import { debounce } from '@nativescript/core/utils';
@@ -70,10 +71,9 @@
     import { Sentry, isSentryEnabled } from '~/utils/sentry';
     import { share } from '~/utils/share';
     import { navigate } from '~/utils/svelte/ui';
-    import { onBackButton } from '~/utils/ui';
-    import { hideLoading, showLoading, showPopoverMenu } from '~/utils/ui/index.common';
+    import { hideLoading, onBackButton, showLoading, showPopoverMenu } from '~/utils/ui';
     import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, setTimeout } from '~/utils/utils';
-    import { colors, navigationBarHeight, statusBarHeight } from '../../variables';
+    import { colors, globalMarginTop, navigationBarHeight, statusBarHeight } from '../../variables';
 
     $: ({ colorPrimary, colorError, colorBackground } = $colors);
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
@@ -103,13 +103,12 @@
     let vectorTileDecoder: MBVectorTileDecoder;
     let bottomSheetStepIndex = 0;
     let itemLoading = false;
-    let projection: Projection = null;
+    let projection: Projection = new EPSG4326();
     let currentLanguage = ApplicationSettings.getString('map_language', ApplicationSettings.getString('language', 'en'));
     const addedLayers: { layer: Layer<any, any>; layerId: LayerType }[] = [];
     let keepScreenAwake = ApplicationSettings.getBoolean(KEEP_AWAKE_KEY, false);
     let showOnLockscreen = false;
     let currentMapRotation = 0;
-    const shouldShowNavigationBarOverlay = false;
     let steps;
     let topTranslationY;
     let networkConnected = false;
@@ -359,7 +358,17 @@
         networkConnected = event.data.connected;
     }
     let customLayersModule: CustomLayersModule;
+
+    let isLandscape = Application.orientation() === 'landscape';
+    function onOrientationChanged(event: OrientationChangedEventData) {
+        isLandscape = event.newValue === 'landscape';
+        if (__IOS__) {
+            page?.nativeElement?.requestLayout();
+        }
+    }
+    DEV_LOG && console.log('isLandscape', isLandscape);
     onMount(() => {
+        Application.on(Application.orientationChangedEvent, onOrientationChanged);
         networkService.on(NetworkConnectionStateEvent, onNetworkChange);
         networkConnected = networkService.connected;
         if (__ANDROID__) {
@@ -443,6 +452,7 @@
     // function onLoaded() {}
     onDestroy(() => {
         // console.log('onMapDestroyed');
+        Application.off(Application.orientationChangedEvent, onOrientationChanged);
         mapContext.runOnModules('onMapDestroyed');
 
         localVectorLayer = null;
@@ -1495,6 +1505,7 @@
         } else {
             scrollingWidgetsOpacity = Math.max(0, 1 - (-translation - 300) / 30);
         }
+        DEV_LOG && console.log('bottomSheetTranslationFunction', translation);
         // mapTranslation = translation - (__IOS__ && translation !== 0 ? $navigationBarHeight : 0);
         mapTranslation = translation;
         const result = {
@@ -1517,48 +1528,6 @@
             }
         };
         return result;
-    }
-
-    function drawerTranslationFunction(side, width, value, delta, progress) {
-        if (side === 'left') {
-            const result = {
-                mainContent: {
-                    translateX: 0
-                },
-                [side + 'Drawer']: {
-                    translateX: side === 'left' ? -value : value
-                }
-                // backDrop: {
-                //     translateX: 0,
-                //     opacity: 0,
-                // },
-            } as any;
-            if (side === 'left') {
-                result.backDrop = {
-                    translateX: 0,
-                    opacity: progress
-                };
-            }
-            return result;
-        } else if (side === 'bottom') {
-            const result = {
-                mainContent: {
-                    translateY: 0
-                },
-                [side + 'Drawer']: {
-                    translateY: value
-                }
-                // backDrop: {
-                //     translateX: 0,
-                //     opacity: 0,
-                // },
-            } as any;
-            result.backDrop = {
-                translateY: 0,
-                opacity: 0
-            };
-            return result;
-        }
     }
 
     function showHideKeepAwakeNotification(value: boolean) {
@@ -1947,17 +1916,16 @@
     bind:this={page}
     actionBarHidden={true}
     backgroundColor="#E3E1D3"
-    iosIgnoreSafeArea={true}
+    ios:iosIgnoreSafeArea={false}
     ios:statusBarStyle="light"
     ios:statusBarColor="transparent"
     {keepScreenAwake}
     screenBrightness={keepScreenAwake ? 1 : -1}
     on:navigatingTo={onNavigatingTo}
     on:navigatingFrom={onNavigatingFrom}>
-    <gridlayout ios:marginBottom={-2 * $navigationBarHeight}>
+    <gridlayout>
         <bottomsheet
-            backgroundColor="#01550000"
-            android:marginBottom={$navigationBarHeight}
+            marginBottom={$navigationBarHeight}
             panGestureOptions={{ failOffsetXEnd: 20, minDist: 40 }}
             stepIndex={bottomSheetStepIndex}
             {steps}
@@ -1983,7 +1951,7 @@
                     horizontalAlignment="left"
                     marginLeft={5}
                     marginTop={66 + $statusBarHeight + Math.max(topTranslationY - 90, 0)}
-                    ios:marginTop={66 + 2 * $statusBarHeight + Math.max(topTranslationY - 90, 0)}
+                    ios:marginTop={66 + Math.max(topTranslationY - 90, 0)}
                     verticalAlignment="top" />
 
                 <LocationInfoPanel
@@ -1993,7 +1961,13 @@
                     marginLeft={20}
                     marginTop={90}
                     verticalAlignment="top" />
-                <Search bind:this={searchView} defaultElevation={0} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} verticalAlignment="top" />
+                <Search
+                    bind:this={searchView}
+                    defaultElevation={0}
+                    isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
+                    verticalAlignment="top"
+                    android:margin={`${$globalMarginTop + 10} 10 10 10`}
+                    ios:margin={10} />
                 <canvaslabel
                     class="mdi"
                     color={colorError}
@@ -2011,7 +1985,8 @@
                     id="orientation"
                     class="small-floating-btn"
                     horizontalAlignment="right"
-                    marginTop={66 + $statusBarHeight + Math.max(topTranslationY - 90, 0)}
+                    android:marginTop={66 + $statusBarHeight + Math.max(topTranslationY - 90, 0)}
+                    ios:marginTop={66 + Math.max(topTranslationY - 90, 0)}
                     shape="round"
                     verticalAlignment="top"
                     visibility={currentMapRotation !== 0 ? 'visible' : 'collapse'}
@@ -2032,15 +2007,18 @@
                 <MapScrollingWidgets bind:this={mapScrollingWidgets} opacity={scrollingWidgetsOpacity} userInteractionEnabled={scrollingWidgetsOpacity > 0.3} bind:navigationInstructions />
                 <DirectionsPanel bind:this={directionsPanel} {editingItem} verticalAlignment="top" width="100%" bind:translationY={topTranslationY} on:cancel={onDirectionsCancel} />
             </gridlayout>
-            <BottomSheetInner prop:bottomSheet bind:this={bottomSheetInner} item={$selectedItem} updating={itemLoading} bind:navigationInstructions bind:steps />
+            <BottomSheetInner
+                prop:bottomSheet
+                bind:this={bottomSheetInner}
+                borderRadius={10}
+                horizontalAlignment={isLandscape ? 'left' : 'stretch'}
+                item={$selectedItem}
+                updating={itemLoading}
+                width={isLandscape ? 300 : '100%'}
+                bind:navigationInstructions
+                bind:steps />
         </bottomsheet>
 
-        <absolutelayout
-            backgroundColor={colorBackground}
-            android:height={$navigationBarHeight}
-            ios:height={6 * $navigationBarHeight}
-            ios:translateY={6 * $navigationBarHeight}
-            verticalAlignment="bottom"
-            width="100%" />
+        <absolutelayout backgroundColor={colorBackground} height={$navigationBarHeight} verticalAlignment="bottom" />
     </gridlayout>
 </page>
