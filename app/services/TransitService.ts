@@ -1,11 +1,12 @@
 import Observable from '@nativescript-community/observable';
 import { GenericMapPos } from '@nativescript-community/ui-carto/core';
 import { ApplicationSettings, Color } from '@nativescript/core';
-import { getCacheControl, networkService } from './NetworkService';
+import { getCacheControl, maxAgeMonth, networkService } from './NetworkService';
 
 import { SQLiteDatabase } from '@nativescript-community/sqlite';
 import { FeatureCollection } from 'geojson';
 import { prepareWorker } from '~/workers/utils';
+import dayjs from 'dayjs';
 export const MOBILITY_URL = 'https://data.mobilites-m.fr';
 export const MOBILITY_API_URL = MOBILITY_URL + '/api';
 // const navitiaAPIEndPoint = 'https://api.navitia.io/v1/';
@@ -96,7 +97,7 @@ class TransitService extends Observable {
     // routes: any[];
     async getTransitLines(line?) {
         const settingsKey = 'transit_lines';
-        const maxAge = 60 * 3600 * 24;
+        const maxAge = maxAgeMonth;
         if (ApplicationSettings.hasKey(settingsKey)) {
             const data = JSON.parse(ApplicationSettings.getString(settingsKey));
             DEV_LOG && console.log('testing backed up data', Date.now(), data.timestamp, Date.now() - data.timestamp, maxAge * 1000);
@@ -110,7 +111,7 @@ class TransitService extends Observable {
             toJSON: false,
             url: MOBILITY_API_URL + '/lines/json',
             headers: {
-                'Cache-Control': getCacheControl(maxAge, 60 * 3600 * 24 - 1)
+                'Cache-Control': getCacheControl(maxAge, maxAgeMonth - 1)
             },
             queryParams: {
                 types: 'ligne',
@@ -167,7 +168,7 @@ class TransitService extends Observable {
                 url: MOBILITY_API_URL + '/routers/default/index/routes',
                 method: 'GET',
                 headers: {
-                    'Cache-Control': getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1)
+                    'Cache-Control': getCacheControl(maxAgeMonth, maxAgeMonth - 1)
                 }
             });
             this.metroLinesData = data.reduce((acc, value) => {
@@ -184,7 +185,7 @@ class TransitService extends Observable {
             url: MOBILITY_API_URL + '/linesNear/json',
             method: 'GET',
             headers: {
-                'Cache-Control': getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1)
+                'Cache-Control': getCacheControl(maxAgeMonth, maxAgeMonth - 1)
             },
             queryParams: {
                 x: position.lon,
@@ -199,7 +200,7 @@ class TransitService extends Observable {
             url: MOBILITY_API_URL + '/ficheHoraires/json',
             method: 'GET',
             headers: {
-                'Cache-Control': getCacheControl(60 * 24)
+                'Cache-Control': getCacheControl(maxAgeMonth, maxAgeMonth - 1)
             },
             queryParams: {
                 route: id,
@@ -222,7 +223,7 @@ class TransitService extends Observable {
             method: 'GET',
             headers: {
                 Origin: 'https://github.com/Akylas/alpimaps',
-                'Cache-Control': getCacheControl(30, 29)
+                'Cache-Control': getCacheControl(maxAgeMonth, maxAgeMonth - 1)
             }
         });
     }
@@ -231,7 +232,7 @@ class TransitService extends Observable {
             url: `${MOBILITY_API_URL}/routers/default/index/routes/${id.replace('_', ':')}/clusters`,
             method: 'GET',
             headers: {
-                'Cache-Control': getCacheControl(60 * 24)
+                'Cache-Control': getCacheControl(maxAgeMonth, maxAgeMonth - 1)
             }
         });
     }

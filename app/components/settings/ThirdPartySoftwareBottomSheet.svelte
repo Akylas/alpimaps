@@ -1,6 +1,6 @@
 <script lang="ts">
     import { Template } from 'svelte-native/components';
-    import { openLink } from '~/utils/ui';
+    import { openLink } from '~/utils/ui/index.common';
     import ListItemAutoSize from '~/components/common/ListItemAutoSize.svelte';
     // technique for only specific properties to get updated on store change
 

@@ -18,7 +18,7 @@
     import { actionBarButtonHeight, colors, fonts, globalMarginTop } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import SearchCollectionView from './SearchCollectionView.svelte';
-    import { showPopoverMenu } from '~/utils/ui';
+    import { showPopoverMenu } from '~/utils/ui/index.common';
 
     $: ({ colorSurfaceContainerHigh, colorWidgetBackground, colorOnSurface } = $colors);
 
@@ -429,7 +429,7 @@
         floating={false}
         height={$actionBarButtonHeight}
         hint={$slc('search')}
-        margin="0 15 0 0"
+        margin="0 0 0 0"
         placeholder={$slc('search')}
         returnKeyType="search"
         variant="none"
