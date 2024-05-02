@@ -5,7 +5,6 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Page } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
-    import { goBack, navigate } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
@@ -16,6 +15,7 @@
     import { packageService } from '~/services/PackageService';
     import { MetroLineStop, TransitRoute, transitService } from '~/services/TransitService';
     import { NoNetworkError, showError } from '~/utils/error';
+    import { goBack, navigate } from '~/utils/svelte/ui';
     import { colors, fonts, navigationBarHeight } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     $: ({ colorSurfaceContainer, colorBackground } = $colors);

@@ -12,7 +12,6 @@ import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { Application, File, Frame, Page, knownFolders, path } from '@nativescript/core';
 import { executeOnMainThread } from '@nativescript/core/utils';
-import { navigate } from 'svelte-native';
 import { NativeViewElementNode } from 'svelte-native/dom';
 import type DirectionsPanel from '~/components/directions/DirectionsPanel.svelte';
 import { GeoHandler } from '~/handlers/GeoHandler';
@@ -21,7 +20,7 @@ import type ItemsModule from '~/mapModules/ItemsModule';
 import type UserLocationModule from '~/mapModules/UserLocationModule';
 import type { IItem } from '~/models/Item';
 import { getBGServiceInstance } from '~/services/BgService';
-import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
+import { createGlobalEventListener, globalObservable, navigate } from '~/utils/svelte/ui';
 export interface IMapModule {
     onMapReady(mapView: CartoMap<LatLonKeys>);
     onMapDestroyed();
