@@ -38,23 +38,33 @@ export const onLanguageChanged = createGlobalEventListener('language');
 export const onMapLanguageChanged = createGlobalEventListener('map_language');
 export const onTimeChanged = createGlobalEventListener('time');
 
+async function loadDayjsLang(newLang: string) {
+    const toLoad = newLang.replace('_', '-');
+    try {
+        await import(`dayjs/locale/${toLoad}.js`);
+        dayjs.locale(toLoad);
+        DEV_LOG && console.log('dayjs loaded', toLoad, dayjs().format('llll'));
+    } catch (err) {
+        if (toLoad.indexOf('-') !== -1) {
+            loadDayjsLang(toLoad.split('-')[0]);
+        } else {
+            DEV_LOG && console.error(lang, `~/dayjs/${toLoad}`, err, err.stack);
+        }
+    }
+}
+
 langStore.subscribe((newLang: string) => {
     lang = newLang;
     if (!lang) {
         return;
     }
     DEV_LOG && console.log('changed lang', lang, Device.region);
-    try {
-        require(`dayjs/locale/${newLang}.js`);
-    } catch (err) {
-        console.error('failed to load dayjs locale', lang, `~/dayjs/${newLang}`, err, err.stack);
-    }
-    dayjs.locale(lang); // switch back to default English locale globally
+    loadDayjsLang(lang);
     try {
         // const localeData = require(`~/i18n/${lang}.json`);
         loadLocaleJSON(`~/i18n/${lang}.json`);
     } catch (err) {
-        console.error('failed to load lang json', lang, `~/i18n/${lang}.json`, File.exists(`~/i18n/${lang}.json`), err, err.stack);
+        console.error(lang, `~/i18n/${lang}.json`, File.exists(`~/i18n/${lang}.json`), err, err.stack);
     }
     globalObservable.notify({ eventName: 'language', data: lang });
 });
@@ -71,9 +81,9 @@ function setLang(newLang) {
             if (newLang === 'auto') {
                 appLocale = androidx.core.os.LocaleListCompat.getEmptyLocaleList();
             } else {
-                appLocale = androidx.core.os.LocaleListCompat.forLanguageTags(actualNewLang);
+                appLocale = androidx.core.os.LocaleListCompat.forLanguageTags(actualNewLang + ',' + actualNewLang.split('_')[0]);
             }
-            DEV_LOG && console.log('appLocale', appLocale);
+            DEV_LOG && console.log('appLocale', appLocale, actualNewLang);
             // Call this on the main thread as it may require Activity.restart()
             androidx.appcompat.app.AppCompatDelegate['setApplicationLocales'](appLocale);
             currentLocale = null;
