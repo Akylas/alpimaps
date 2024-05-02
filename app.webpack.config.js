@@ -3,7 +3,7 @@ const webpack = require('webpack');
 const { readFileSync, readdirSync } = require('fs');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const { basename, dirname, join, relative, resolve } = require('path');
-const nsWebpack = require('@nativescript/webpack');
+const nsWebpack = require('@akylas/nativescript-webpack');
 const CopyPlugin = require('copy-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
@@ -876,6 +876,7 @@ module.exports = (env, params = {}) => {
             console.log(dist + '/**/*.js', join(dist, process.env.SOURCEMAP_REL_DIR) + '/*.map');
             config.plugins.push(
                 sentryWebpackPlugin({
+                    telemetry: false,
                     org: process.env.SENTRY_ORG,
                     url: process.env.SENTRY_URL,
                     project: process.env.SENTRY_PROJECT,
