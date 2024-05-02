@@ -6,7 +6,7 @@ import { bind } from 'helpful-decorators/dist-src/bind';
 import { convertDurationSeconds, formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { BgServiceCommon } from '~/services/BgService.common';
-import { sdkVersion } from '~/utils/utils.common';
+import { sdkVersion } from '~/utils/utils';
 import { Handler } from './Handler';
 import type { BgService as AndroidBgService } from '~/services/android/BgService';
 
@@ -336,7 +336,6 @@ export class GeoHandler extends Handler {
         this.currentWatcher && this.currentWatcher(err);
     }
     async startWatch(opts?: Partial<GeolocationOptions>) {
-        //@ts-ignore
         const options: GeolocationOptions = {
             // provider: 'gps',
             updateDistance: ApplicationSettings.getNumber('gps_update_distance', updateDistance),
