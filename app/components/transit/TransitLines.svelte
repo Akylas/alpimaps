@@ -2,7 +2,6 @@
     import { Canvas, CanvasView, LayoutAlignment, Paint, Rect, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { EventData, Page, Utils, View } from '@nativescript/core';
-    import { navigate } from 'svelte-native';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
@@ -10,6 +9,7 @@
     import { onNetworkChanged } from '~/services/NetworkService';
     import { MetroRoute, transitService } from '~/services/TransitService';
     import { NoNetworkError, showError } from '~/utils/error';
+    import { navigate } from '~/utils/svelte/ui';
     import { fonts, navigationBarHeight } from '~/variables';
 
     let page: NativeViewElementNode<Page>;

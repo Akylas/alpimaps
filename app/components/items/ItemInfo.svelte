@@ -14,7 +14,7 @@
     import { networkService } from '~/services/NetworkService';
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
-    import { openLink } from '~/utils/ui';
+    import { openLink } from '~/utils/ui/index.common';
     import { actionBarButtonHeight, actionBarHeight, colors, fonts } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import JsonViewer from './JSONViewer.svelte';
