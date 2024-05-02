@@ -1,14 +1,15 @@
 <script lang="ts">
     import { MapPos } from '@nativescript-community/ui-carto/core';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode, navigate } from 'svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import { lc } from '~/helpers/locale';
     import { onNetworkChanged } from '~/services/NetworkService';
     import { TransitRoute, transitService } from '~/services/TransitService';
     import { NoNetworkError, showError } from '~/utils/error';
-    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { navigate } from '~/utils/svelte/ui';
     import { fonts, navigationBarHeight } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
 
