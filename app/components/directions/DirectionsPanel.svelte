@@ -1188,7 +1188,7 @@
                     </canvaslabel>
                 </Template>
             </collectionview>
-            <IconButton col={1} color={colorOnPrimary} isEnabled={nbWayPoints > 1} row={1} text="mdi-swap-vertical" on:tap={() => reversePoints()} />
+            <IconButton col={1} color="white" isEnabled={nbWayPoints > 1} row={1} text="mdi-swap-vertical" on:tap={() => reversePoints()} />
             <stacklayout id="directionsbuttons" colSpan={2} orientation="horizontal" row={2} visibility={showOptions ? 'visible' : 'collapse'}>
                 {#if profile === 'auto'}
                     <IconButton
