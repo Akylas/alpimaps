@@ -9,19 +9,20 @@
     import { Color, File, ObservableArray, Utils, View } from '@nativescript/core';
     import type { Point as GeoJSONPoint, Point } from 'geojson';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode, goBack } from 'svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { GeoLocation } from '~/handlers/GeoHandler';
     import { osmicon } from '~/helpers/formatter';
     import { lc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import { Item } from '~/models/Item';
     import { showError } from '~/utils/error';
+    import { goBack } from '~/utils/svelte/ui';
     import { pickColor } from '~/utils/utils';
     import { colors, fonts, navigationBarHeight } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import IconButton from '../common/IconButton.svelte';
     import TagView from '../common/TagView.svelte';
-    import { GeoLocation } from '~/handlers/GeoHandler';
 
     $: ({ colorSurfaceContainerHigh, colorOnSurfaceVariant, colorPrimary, colorOnPrimary } = $colors);
     export let item: Item;
@@ -101,7 +102,6 @@
         // }
 
         const options = cartoMap.getOptions();
-        options.setWatermarkScale(0);
         options.setRestrictedPanning(true);
         options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
 
