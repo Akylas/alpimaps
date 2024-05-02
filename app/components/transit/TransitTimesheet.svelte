@@ -1,4 +1,5 @@
 <script context="module" lang="ts">
+    import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { Page, View } from '@nativescript/core';
@@ -6,17 +7,17 @@
     import dayjs, { Dayjs } from 'dayjs';
     import { onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode, navigate } from 'svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { formatTime, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { onNetworkChanged } from '~/services/NetworkService';
     import { MetroTimesheet, MetroTripStop, TransitRoute, transitService } from '~/services/TransitService';
     import { NoNetworkError, showError } from '~/utils/error';
+    import { navigate } from '~/utils/svelte/ui';
     import { pickDate, pickTime } from '~/utils/utils';
     import { colors, fonts, navigationBarHeight } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
-    import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
 
     const timePaint = new Paint();
     timePaint.textSize = 12;

@@ -4,27 +4,28 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { AndroidActivityBackPressedEventData, Application, LayoutBase, NavigatedData, ObservableArray, Utils, View } from '@nativescript/core';
+    import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import { AndroidActivityBackPressedEventData, Application, LayoutBase, NavigatedData, ObservableArray, Page, Utils, View } from '@nativescript/core';
     import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode, goBack, navigate } from 'svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import { UNITS, convertElevation, convertValueToUnit, osmicon } from '~/helpers/formatter';
     import { convertDurationSeconds, lc, lu, onLanguageChanged } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
+    import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import { Group, Item } from '~/models/Item';
     import { isServiceStarted, onServiceStarted } from '~/services/BgService.common';
     import { showError } from '~/utils/error';
-    import { hideLoading, promptForGroup, showLoading, showPopoverMenu } from '~/utils/ui';
+    import { goBack, navigate } from '~/utils/svelte/ui';
+    import { onBackButton } from '~/utils/ui';
+    import { hideLoading, promptForGroup, showLoading, showPopoverMenu } from '~/utils/ui/index.common';
     import { colors, fonts, navigationBarHeight } from '~/variables';
     import BottomSheetInfoView from '../bottomsheet/BottomSheetInfoView.svelte';
     import CActionBar from '../common/CActionBar.svelte';
     import IconButton from '../common/IconButton.svelte';
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
-    import { formatter } from '~/mapModules/ItemFormatter';
     type MapGroup = Group & { collapse: boolean };
     type CollectionGroup = MapGroup & { type: 'group'; count: number; selected?: boolean; totalTime?: number; totalDistance?: number };
     type CollectionItem = (Item & { groupOnMap?: 0 | 1; selected?: boolean }) | CollectionGroup;
@@ -40,6 +41,7 @@
 
 <script lang="ts">
     $: ({ colorBackground, colorOnSurface, colorSurfaceContainerHigh, colorOnSurfaceVariant, colorPrimary, colorOnPrimary, colorOutlineVariant, colorError } = $colors);
+    let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
     let items: ObservableArray<CollectionItem>;
     let groupedItems: { [k: string]: Item[] };
@@ -461,15 +463,13 @@ LEFT JOIN  (
             showError(error);
         }
     }
-    function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
-        if (__ANDROID__) {
+    const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
+        onBackButton(page?.nativeView, () => {
             if (nbSelected > 0) {
                 data.cancel = true;
                 unselectAll();
             }
-        }
-    }
-
+        });
     function getSelected() {
         const selected: Item[] = [];
         items.forEach((d, index) => {
@@ -706,7 +706,7 @@ LEFT JOIN  (
     }
 </script>
 
-<page actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
+<page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout rows="auto,*">
         <CActionBar forceCanGoBack={nbSelected > 0} onGoBack={nbSelected ? unselectAll : null} title={nbSelected ? lc('selected', nbSelected) : lc('items')}>
             <IconButton color={colorError} isVisible={nbSelected > 0} text="mdi-delete" on:tap={deleteSelectedItems} />

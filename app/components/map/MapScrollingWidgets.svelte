@@ -8,7 +8,7 @@
     import { GridLayout } from '@nativescript/core';
     import type { Point } from 'geojson';
     import { onDestroy } from 'svelte';
-    import { NativeViewElementNode, navigate } from 'svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import IconButton from '~/components/common/IconButton.svelte';
     import ScaleView from '~/components/map/ScaleView.svelte';
     import { convertDistance } from '~/helpers/formatter';
@@ -19,8 +19,8 @@
     import { RouteInstruction, RoutingAction } from '~/models/Item';
     import { queryingLocation, watchingLocation } from '~/stores/mapStore';
     import { showError } from '~/utils/error';
-    import { scale } from '~/utils/svelte/ui';
-    import { openLink } from '~/utils/ui';
+    import { fade, navigate, scale } from '~/utils/svelte/ui';
+    import { openLink } from '~/utils/ui/index.common';
     import { colors, fonts, globalMarginTop } from '~/variables';
 
     let { colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorOnPrimary, colorSurfaceContainer } = $colors;

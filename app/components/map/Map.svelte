@@ -17,19 +17,18 @@
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
     import { closeBottomSheet, isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { action, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
+    import { action, prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
-    import { AbsoluteLayout, Application, ApplicationSettings, Color, File, Page, Utils } from '@nativescript/core';
+    import { Application, ApplicationSettings, Color, File, Page, Utils } from '@nativescript/core';
     import type { AndroidActivityBackPressedEventData } from '@nativescript/core/application/application-interfaces';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Screen } from '@nativescript/core/platform';
     import { debounce } from '@nativescript/core/utils';
     import type { Point as GeoJSONPoint } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
-    import { navigate } from 'svelte-native';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import BottomSheetInner from '~/components/bottomsheet/BottomSheetInner.svelte';
     import ButtonBar from '~/components/common/ButtonBar.svelte';
@@ -70,8 +69,10 @@
     import { parseUrlQueryParameters } from '~/utils/http';
     import { Sentry, isSentryEnabled } from '~/utils/sentry';
     import { share } from '~/utils/share';
-    import { hideLoading, showLoading, showPopoverMenu } from '~/utils/ui';
-    import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, iosExecuteOnMainThread, setTimeout } from '~/utils/utils';
+    import { navigate } from '~/utils/svelte/ui';
+    import { onBackButton } from '~/utils/ui';
+    import { hideLoading, showLoading, showPopoverMenu } from '~/utils/ui/index.common';
+    import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, setTimeout } from '~/utils/utils';
     import { colors, navigationBarHeight, statusBarHeight } from '../../variables';
 
     $: ({ colorPrimary, colorError, colorBackground } = $colors);
@@ -469,21 +470,22 @@
     function onNavigatingFrom() {
         inFront = false;
     }
-    function onAndroidBackButton(data: AndroidActivityBackPressedEventData) {
-        if (__ANDROID__) {
-            if (!inFront || isBottomSheetOpened()) {
-                return;
+    const onAndroidBackButton = (data: AndroidActivityBackPressedEventData) =>
+        onBackButton(page?.nativeView, () => {
+            if (__ANDROID__) {
+                if (!inFront || isBottomSheetOpened()) {
+                    return;
+                }
+                data.cancel = true;
+                if (searchView && searchView.hasFocus()) {
+                    searchView.unfocus();
+                } else if (directionsPanel && directionsPanel.isVisible()) {
+                    directionsPanel.cancel();
+                } else {
+                    Application.android.foregroundActivity.moveTaskToBack(true);
+                }
             }
-            data.cancel = true;
-            if (searchView && searchView.hasFocus()) {
-                searchView.unfocus();
-            } else if (directionsPanel && directionsPanel.isVisible()) {
-                directionsPanel.cancel();
-            } else {
-                Application.android.foregroundActivity.moveTaskToBack(true);
-            }
-        }
-    }
+        });
     function reloadMapStyle() {
         mapContext.runOnModules('reloadMapStyle');
     }
@@ -561,7 +563,6 @@
             const options = map.getOptions();
             //@ts-ignore
             options.setLayersLabelsProcessedInReverseOrder(false);
-            options.setWatermarkScale(0);
             options.setRestrictedPanning(true);
             options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
             options.setEnvelopeThreadPoolSize(1);
@@ -1745,7 +1746,7 @@
                 anchor: event.object,
                 props: {
                     // autoSizeListItem: true,
-                    maxHeight: Screen.mainScreen.heightDIPs
+                    maxHeight: Screen.mainScreen.heightDIPs - 100
                 },
                 onClose: async (result) => {
                     if (result) {
