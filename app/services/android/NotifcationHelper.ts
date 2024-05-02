@@ -14,6 +14,15 @@ import { sdkVersion } from '~/utils/utils';
 import { Color, Utils } from '@nativescript/core';
 import { get } from 'svelte/store';
 
+let notificationManager: android.app.NotificationManager;
+function getNotificationManager() {
+    if (!notificationManager) {
+        const context: android.content.Context = Utils.android.getApplicationContext();
+        notificationManager = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE);
+    }
+    return notificationManager;
+}
+
 export namespace NotificationHelper {
     const NotificationManager = __ANDROID__ ? android.app.NotificationManager : null;
     const NotificationCompat = __ANDROID__ ? androidx.core.app.NotificationCompat : null;
@@ -84,14 +93,6 @@ export namespace NotificationHelper {
         } else {
             return false;
         }
-    }
-    let notificationManager: android.app.NotificationManager;
-    function getNotificationManager() {
-        if (!notificationManager) {
-            const context: android.content.Context = Utils.android.getApplicationContext();
-            notificationManager = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE);
-        }
-        return notificationManager;
     }
 
     export function showNotification(notification: android.app.Notification, id: number) {
