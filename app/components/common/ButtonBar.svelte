@@ -2,7 +2,7 @@
     import { Align, Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
     import { AbsoluteLayout } from '@nativescript/core';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { showToolTip } from '~/utils/utils';
+    import { showToolTip } from '~/utils/ui';
     import { actionBarButtonHeight, colors, fonts } from '~/variables';
 
     let { colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorPrimaryContainer, colorOutlineVariant, colorSurfaceContainer } = $colors;
