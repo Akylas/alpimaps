@@ -74,32 +74,36 @@
     }
 </script>
 
-<canvasview
-    bind:this={canvas}
-    borderRadius={shape === 'round' || (rounded && !shape) ? size / 2 : null}
-    disableCss={true}
-    rippleColor={actualColor}
-    visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapse'}
-    on:draw={onCanvasDraw}
-    {...$$restProps}
-    height={height || size}
-    width={width || size}
-    on:tap
-    use:conditionalEvent={{ condition: !!actualLongPress, event: 'longPress', callback: actualLongPress }} />
-<!-- <mdbutton
-    {isEnabled}
-    {text}
-    variant="text"
-    shape={shape || (rounded ? 'round' : null)}
-    disableCss={true}
-    rippleColor={actualColor}
-    {fontFamily}
-    visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapse'}
-    color={isSelected ? selectedColor : actualColor}
-    {...$$restProps}
-    on:tap
-    on:longPress={actualLongPress}
-    width={width || size}
-    height={height || size}
-    fontSize={fontSize ? fontSize : small ? 16 : 24}
-/> -->
+{#if __ANDROID__}
+    <canvasview
+        bind:this={canvas}
+        borderRadius={shape === 'round' || (rounded && !shape) ? '50%' : null}
+        disableCss={true}
+        rippleColor={actualColor}
+        visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapse'}
+        on:draw={onCanvasDraw}
+        {...$$restProps}
+        height={height || size}
+        width={width || size}
+        on:tap
+        use:conditionalEvent={{ condition: !!actualLongPress, event: 'longPress', callback: actualLongPress }} />
+{:else}
+    <mdbutton
+        color={isSelected ? selectedColor : actualColor}
+        disableCss={true}
+        {fontFamily}
+        {isEnabled}
+        padding={0}
+        rippleColor={actualColor}
+        shape={shape || (rounded ? 'round' : null)}
+        {text}
+        variant="text"
+        visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapse'}
+        {...$$restProps}
+        fontSize={fontSize ? fontSize : small ? 16 : 24}
+        height={height || size}
+        width={width || size}
+        on:tap
+        on:longPress={actualLongPress}
+        use:conditionalEvent={{ condition: !!actualLongPress, event: 'longPress', callback: actualLongPress }} /> --> />
+{/if}

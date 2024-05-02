@@ -714,7 +714,7 @@
                     route.profile = await packageService.getElevationProfile(null, positions);
                 }
             } catch (error) {
-                showError(error, true, 'error computing route: ' + error);
+                showError(error, { forcedMessage: 'error computing route: ' + error, showAsSnack: true });
                 console.error('error computing route', profile, error, JSON.stringify(points), JSON.stringify(customOptions));
                 return;
             }
@@ -1109,15 +1109,7 @@
     });
 </script>
 
-<stacklayout
-    bind:this={topLayout}
-    {...$$restProps}
-    style="z-index:1000;"
-    backgroundColor={colorPrimary}
-    paddingTop={$globalMarginTop}
-    translateY={currentTranslationY}
-    android:paddingTop={$globalMarginTop}
-    ios:paddingTop={2 * $globalMarginTop}>
+<stacklayout bind:this={topLayout} {...$$restProps} style="z-index:1000;" backgroundColor={colorPrimary} translateY={currentTranslationY} ios:iosIgnoreSafeArea={false}>
     {#if loaded}
         <gridlayout bind:this={gridLayout} columns="*,40" rows="50,70,auto" on:tap={() => {}}>
             <IconButton horizontalAlignment="left" isSelected={true} text="mdi-arrow-left" white={true} on:tap={() => cancel()} />
@@ -1188,7 +1180,7 @@
                     </canvaslabel>
                 </Template>
             </collectionview>
-            <IconButton col={1} color="white" isEnabled={nbWayPoints > 1} row={1} text="mdi-swap-vertical" on:tap={() => reversePoints()} />
+            <IconButton col={1} color="white" height={40} isEnabled={nbWayPoints > 1} row={1} text="mdi-swap-vertical" on:tap={() => reversePoints()} />
             <stacklayout id="directionsbuttons" colSpan={2} orientation="horizontal" row={2} visibility={showOptions ? 'visible' : 'collapse'}>
                 {#if profile === 'auto'}
                     <IconButton

@@ -68,14 +68,14 @@
         }
         if (!chartInitialized) {
             chartInitialized = true;
-            const leftAxis = chartView.getAxisLeft();
-            const xAxis = chartView.getXAxis();
+            const leftAxis = chartView.leftAxis;
+            const xAxis = chartView.xAxis;
             chartView.setExtraOffsets(0, 0, 0, 0);
-            chartView.setMinOffset(0);
-            chartView.setClipDataToContent(false);
-            chartView.setHighlightPerTapEnabled(true);
-            chartView.setHighlightPerDragEnabled(true);
-            chartView.setCustomRenderer({
+            chartView.minOffset=(0);
+            chartView.clipDataToContent=(false);
+            chartView.highlightPerTapEnabled=(true);
+            chartView.highlightPerDragEnabled=(true);
+            chartView.customRenderer=({
                 drawHighlight(c: Canvas, h: Highlight<Entry>, set: LineDataSet, paint: Paint) {
                     const hours = Math.min(Math.floor(h.x / 6), 23);
                     const minutes = (h.x * 10) % 60;
@@ -93,22 +93,22 @@
                     bottomLabel?.nativeView?.redraw();
                 }
             });
-            leftAxis.setLabelCount(0);
-            leftAxis.setDrawGridLines(false);
-            leftAxis.setDrawAxisLine(false);
-            leftAxis.setDrawLabels(false);
-            leftAxis.setAxisMinimum(-PI_DIV2);
-            leftAxis.setAxisMaximum(PI_DIV2);
-            xAxis.setPosition(XAxisPosition.BOTTOM_INSIDE);
-            xAxis.setForcedInterval(24);
-            xAxis.setTextColor('white');
-            xAxis.setDrawAxisLine(false);
-            xAxis.setDrawGridLines(false);
+            leftAxis.labelCount=(0);
+            leftAxis.drawGridLines=(false);
+            leftAxis.drawAxisLine=(false);
+            leftAxis.drawLabels=(false);
+            leftAxis.axisMinimum=(-PI_DIV2);
+            leftAxis.axisMaximum=(PI_DIV2);
+            xAxis.position=(XAxisPosition.BOTTOM_INSIDE);
+            xAxis.forcedInterval=(24);
+            xAxis.textColor=('white');
+            xAxis.drawAxisLine=(false);
+            xAxis.drawGridLines=(false);
             xAxis.ensureVisible = true;
-            xAxis.setLabelTextAlign(Align.CENTER);
-            xAxis.setDrawLabels(true);
-            xAxis.setValueFormatter({
-                getAxisLabel(value: any, axis: AxisBase, viewPortHandler: ViewPortHandler) {
+            xAxis.labelTextAlign=(Align.CENTER);
+            xAxis.drawLabels=(true);
+            xAxis.valueFormatter=({
+                getAxisLabel(value: any, axis: AxisBase) {
                     const time = computeStartTime.add(value * 10, 'minutes');
                     return formatTime(time);
                 }
@@ -126,27 +126,27 @@
         // limitLine.setLabel(formatTime(startTime));
         // limitLine.setLimit(nowMinutes / 10);
 
-        const chartData = chartView.getData();
+        const chartData = chartView.data;
         if (!chartData) {
             let set = new LineDataSet(sunPoses, 'sun', undefined, 'altitude');
-            set.setColor('#ffdd55');
-            set.setLineWidth(3);
+            set.color=('#ffdd55');
+            set.lineWidth=(3);
             sets.push(set);
             set = new LineDataSet(moonPoses, 'moon', undefined, 'altitude');
-            set.setColor('white');
-            set.setLineWidth(3);
+            set.color=('white');
+            set.lineWidth=(3);
             sets.unshift(set);
 
             const lineData = new LineData(sets);
-            chartView.setData(lineData);
+            chartView.data=(lineData);
 
             const nowMinutes = startTime.diff(computeStartTime, 'minutes');
             const h = chartView.getHighlightByXValue(nowMinutes / 10);
             chartView.highlight(h[0]);
         } else {
-            chartData.getDataSetByIndex(1).setValues(sunPoses);
+            chartData.getDataSetByIndex(1).values =(sunPoses);
             chartData.getDataSetByIndex(1).notifyDataSetChanged();
-            chartData.getDataSetByIndex(0).setValues(moonPoses);
+            chartData.getDataSetByIndex(0).values =(moonPoses);
             chartData.getDataSetByIndex(0).notifyDataSetChanged();
             chartData.notifyDataChanged();
             chartView.notifyDataSetChanged();
