@@ -1,20 +1,21 @@
 import { AlertOptions, Color } from '@nativescript/core';
 import { lc } from '@nativescript-community/l';
 import { Label } from '@nativescript-community/ui-label';
-import { MDCAlertControlerOptions, alert as mdAlert } from '@nativescript-community/ui-material-dialogs';
+import { MDCAlertControlerOptions, confirm, alert as mdAlert } from '@nativescript-community/ui-material-dialogs';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { BaseError } from 'make-error';
 import { l } from '~/helpers/locale';
-import { HttpRequestOptions } from '~/services/NetworkService';
 import { Sentry, isSentryEnabled } from '~/utils/sentry';
-import { Headers } from '@nativescript-community/https';
+import type { HttpsRequestOptions as HTTPSOptions, Headers } from '@nativescript-community/https';
 
-export function evalTemplateString(resource: string, obj: {}) {
+Error.stackTraceLimit = Infinity;
+
+function evalTemplateString(resource: string, obj: {}) {
     if (!obj) {
         return resource;
     }
     const names = Object.keys(obj);
-    const vals = names.map((key) => obj[key]);
+    const vals = Object.keys(obj).map((key) => obj[key]);
     // eslint-disable-next-line @typescript-eslint/no-implied-eval
     return new Function(...names, `return \`${resource}\`;`)(...vals);
 }
@@ -24,10 +25,15 @@ export class CustomError extends BaseError {
     isCustomError = true;
     assignedLocalData: any;
     silent?: boolean;
+    _customStack?: string;
     constructor(props?, customErrorConstructorName?: string) {
         super(props.message);
         this.message = props.message;
         delete props.message;
+
+        // standard way: Error.captureStackTrace(this, this.constructor.name);
+        // if you do this, you couldn't set different getter for the 'stack' property
+        this.stack = props.stack || new Error().stack; // do this, if you need a custom getter
 
         this.silent = props.silent;
         delete props.silent;
@@ -41,15 +47,25 @@ export class CustomError extends BaseError {
             for (let index = 0; index < keys.length; index++) {
                 const k = keys[index];
                 if (!props[k] || typeof props[k] === 'function') continue;
-                this[k] = props[k];
+                if (k === 'stack') {
+                    this._customStack = props[k];
+                } else {
+                    this[k] = props[k];
+                }
             }
-        } else {
-            this.assignedLocalData = props;
         }
+        this.assignedLocalData = props;
 
         if (!this.customErrorConstructorName) {
             this.customErrorConstructorName = customErrorConstructorName || (this as any).constructor.name; // OR (<any>this).constructor.name;
         }
+    }
+    //@ts-ignore
+    get stack() {
+        return this._customStack;
+    }
+    set stack(value) {
+        this._customStack = value;
     }
 
     localData() {
@@ -75,25 +91,10 @@ export class CustomError extends BaseError {
         return JSON.stringify(this.toJSON());
     }
     toString() {
-        const result = evalTemplateString(l(this.message), Object.assign({ l }, this.assignedLocalData));
-        return result;
+        return evalTemplateString(l(this.message), Object.assign({ l }, this.assignedLocalData));
     }
 
     getMessage() {}
-}
-
-export class PermissionError extends CustomError {
-    constructor(props?) {
-        super(
-            Object.assign(
-                {
-                    message: 'permission_error'
-                },
-                props
-            ),
-            'PermissionError'
-        );
-    }
 }
 
 export class TimeoutError extends CustomError {
@@ -106,6 +107,19 @@ export class TimeoutError extends CustomError {
                 props
             ),
             'TimeoutError'
+        );
+    }
+}
+export class PermissionError extends CustomError {
+    constructor(props?) {
+        super(
+            Object.assign(
+                {
+                    message: 'permission_error'
+                },
+                props
+            ),
+            'PermissionError'
         );
     }
 }
@@ -126,13 +140,12 @@ export class NoNetworkError extends CustomError {
 export interface HTTPErrorProps {
     statusCode: number;
     responseHeaders?: Headers;
-    title?: string;
     message: string;
-    requestParams: HttpRequestOptions;
+    requestParams: HTTPSOptions;
 }
 export class HTTPError extends CustomError {
     statusCode: number;
-    requestParams: HttpRequestOptions;
+    requestParams: HTTPSOptions;
     constructor(props: HTTPErrorProps | HTTPError) {
         super(
             Object.assign(
@@ -145,41 +158,25 @@ export class HTTPError extends CustomError {
         );
     }
 }
-
-// export class MessageError extends CustomError {
-//     constructor(props: { title?: string; message: string }) {
-//         super(
-//             Object.assign(
-//                 {
-//                     message: 'error'
-//                 },
-//                 props
-//             ),
-//             'MessageError'
-//         );
-//     }
-// }
-// // used to throw while not show the error
-// export class FakeError extends CustomError {
-//     constructor(props?: any) {
-//         super(
-//             Object.assign(
-//                 {
-//                     message: 'error'
-//                 },
-//                 props
-//             ),
-//             'FakeError'
-//         );
-//     }
-// }
-function wrapNativeException(ex, errorType) {
-    if (__ANDROID__ && !(ex instanceof Error) && errorType === 'object') {
-        const err = new Error(ex.toString());
-        err['nativeException'] = ex;
-        //@ts-ignore
-        err['stackTrace'] = com.tns.NativeScriptException.getStackTraceAsString(ex);
-        return err;
+export function wrapNativeException(ex, wrapError: (...args) => Error = (msg) => new Error(msg)) {
+    if (typeof ex === 'string') {
+        return new Error(ex);
+    }
+    if (!(ex instanceof Error)) {
+        if (__ANDROID__) {
+            const err = wrapError(ex.toString());
+            err['nativeException'] = ex;
+            err['stackTrace'] = com.tns.NativeScriptException.getStackTraceAsString(ex);
+            return err;
+        }
+        if (__IOS__) {
+            const err = wrapError(ex.localizedDescription);
+            err['nativeException'] = ex;
+            err['code'] = ex.code;
+            err['domain'] = ex.domain;
+            // TODO: we loose native stack. see how to get it
+            return err;
+        }
     }
     return ex;
 }
@@ -198,7 +195,7 @@ export async function showError(
         }
         const reporterEnabled = SENTRY_ENABLED && isSentryEnabled;
         const errorType = typeof err;
-        const realError = errorType === 'string' ? null : wrapNativeException(err, errorType);
+        const realError = errorType === 'string' ? null : wrapNativeException(err);
 
         const isString = realError === null || realError === undefined;
         let message = isString ? (err as string) : realError.message || realError.toString();
