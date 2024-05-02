@@ -148,7 +148,6 @@ function getSystemAppearance() {
 }
 
 export function getRealTheme(th = theme) {
-    DEV_LOG && console.log('getRealTheme', theme);
     if (th === 'auto') {
         try {
             th = getSystemAppearance() as any;
@@ -159,6 +158,7 @@ export function getRealTheme(th = theme) {
             console.error('getRealTheme', err, err.stack);
         }
     }
+    DEV_LOG && console.log('getRealTheme', theme, th);
     return th;
 }
 
