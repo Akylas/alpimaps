@@ -93,7 +93,6 @@
         // }
 
         const options = cartoMap.getOptions();
-        options.setWatermarkScale(0);
         options.setRestrictedPanning(true);
         options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
 

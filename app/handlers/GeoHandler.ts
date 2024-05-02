@@ -2,11 +2,11 @@ import { GPS, GenericGeoLocation, Options as GeolocationOptions, LocationMonitor
 import { check, request } from '@nativescript-community/perms';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
 import { AndroidActivityResultEventData, AndroidApplication, Application, ApplicationEventData, ApplicationSettings, CoreTypes, EventData, Observable, Utils } from '@nativescript/core';
+import { SDK_VERSION} from '@nativescript/core/utils';
 import { bind } from 'helpful-decorators/dist-src/bind';
 import { convertDurationSeconds, formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { BgServiceCommon } from '~/services/BgService.common';
-import { sdkVersion } from '~/utils/utils';
 import { Handler } from './Handler';
 import type { BgService as AndroidBgService } from '~/services/android/BgService';
 
@@ -250,7 +250,7 @@ export class GeoHandler extends Handler {
     isBatteryOptimized(context: android.content.Context) {
         const pwrm = context.getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager;
         const name = context.getPackageName();
-        if (sdkVersion >= 23) {
+        if (SDK_VERSION >= 23) {
             return !pwrm.isIgnoringBatteryOptimizations(name);
         }
         return false;
@@ -758,7 +758,7 @@ function initGPSStatusCallback() {
 let satlistener;
 export function listenForGpsStatus(listener) {
     const locationManager = getAndroidLocationManager();
-    if (sdkVersion > 24) {
+    if (SDK_VERSION > 24) {
         initGPSStatusCallback();
         satlistener = new GPSStatusCallback(listener);
         locationManager.registerGnssStatusCallback(satlistener);
@@ -788,7 +788,7 @@ export function listenForGpsStatus(listener) {
 export function stopListenForGpsStatus() {
     if (satlistener) {
         const locationManager = getAndroidLocationManager();
-        if (sdkVersion > 24) {
+        if (SDK_VERSION > 24) {
             locationManager.unregisterGnssStatusCallback(satlistener);
         } else {
             locationManager.removeGpsStatusListener(satlistener);
