@@ -10,6 +10,7 @@
         "sourceMap": true,
         "skipLibCheck": true,
         "skipDefaultLibCheck": true,
+        "preserveSymlinks": true,
         "allowUnreachableCode": false,
         "allowSyntheticDefaultImports": true,
         "allowUnusedLabels": false,
