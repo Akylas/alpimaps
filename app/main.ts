@@ -1,5 +1,5 @@
 // (com as any).tns.Runtime.getCurrentRuntime().enableVerboseLogging();
-import { install as installGestures } from '@nativescript-community/gesturehandler';
+import { GestureRootView, install as installGestures } from '@nativescript-community/gesturehandler';
 import { setGeoLocationKeys } from '@nativescript-community/gps';
 import { installMixins as installUIMixins } from '@nativescript-community/systemui';
 import { overrideSpanAndFormattedString } from '@nativescript-community/text';
@@ -12,7 +12,7 @@ import { installMixins, themer } from '@nativescript-community/ui-material-core'
 import PagerElement from '@nativescript-community/ui-pager/svelte';
 import installWebRTC from '@nativescript-community/ui-webview-rtc';
 import { Application, Trace } from '@nativescript/core';
-import { ScrollView } from '@nativescript/core/ui';
+import { Frame, NavigatedData, Page, ScrollView } from '@nativescript/core/ui';
 import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
 import Map from '~/components/map/Map.svelte';
@@ -118,6 +118,30 @@ try {
         networkService.stop();
         bgService.stop();
     });
+
+    if (!PRODUCTION && DEV_LOG) {
+        Page.on('navigatingTo', (event: NavigatedData) => {
+            DEV_LOG && console.info('NAVIGATION', 'to', event.object, event.isBackNavigation);
+        });
+        Page.on('showingModally', (event: NavigatedData) => {
+            DEV_LOG && console.info('NAVIGATION', 'MODAL', event.object, event.isBackNavigation);
+        });
+        Frame.on('showingModally', (event: NavigatedData) => {
+            DEV_LOG && console.info('NAVIGATION', 'MODAL', event.object, event.isBackNavigation);
+        });
+        Frame.on('closingModally', (event: NavigatedData) => {
+            DEV_LOG && console.info('NAVIGATION', 'CLOSING MODAL', event.object, event.isBackNavigation);
+        });
+        Page.on('closingModally', (event: NavigatedData) => {
+            DEV_LOG && console.info('NAVIGATION', 'CLOSING MODAL', event.object, event.isBackNavigation);
+        });
+        GestureRootView.on('shownInBottomSheet', (event: NavigatedData) => {
+            DEV_LOG && console.info('NAVIGATION', 'BOTTOMSHEET', event.object, event.isBackNavigation);
+        });
+        GestureRootView.on('closedBottomSheet', (event: NavigatedData) => {
+            DEV_LOG && console.info('NAVIGATION', 'CLOSING BOTTOMSHEET', event.object, event.isBackNavigation);
+        });
+    }
 
     svelteNative(Map, {});
 } catch (error) {
