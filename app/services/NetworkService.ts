@@ -2,12 +2,14 @@ import * as https from '@nativescript-community/https';
 import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
 import * as appavailability from '@nativescript/appavailability';
 import { Application, ApplicationEventData, ApplicationSettings, Connectivity, EventData, Folder, Observable, Utils } from '@nativescript/core';
-import { HTTPError, NoNetworkError } from '~/utils/error';
+import dayjs from 'dayjs';
+import { HTTPError, NoNetworkError, wrapNativeException } from '~/utils/error';
 import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
-import { getDataFolder } from '~/utils/utils.common';
+import { getDataFolder } from '~/utils/utils';
 
 export const onNetworkChanged = createGlobalEventListener('network');
 
+export const maxAgeMonth = dayjs.duration({ months: 1 }).asSeconds();
 export interface CacheOptions {
     diskLocation: string;
     diskSize: number;
@@ -506,10 +508,16 @@ export class NetworkService extends Observable {
                 if (!this._connected) {
                     throw new NoNetworkError();
                 }
-                throw error;
-            } else {
-                throw error;
             }
+            throw wrapNativeException(
+                error,
+                (message) =>
+                    new HTTPError({
+                        message,
+                        statusCode: -1,
+                        requestParams
+                    })
+            );
         }
     }
 
@@ -524,7 +532,7 @@ export class NetworkService extends Observable {
             },
             headers: {
                 'User-Agent': 'AlpiMaps',
-                'Cache-Control': getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1)
+                'Cache-Control': getCacheControl(maxAgeMonth, maxAgeMonth - 1)
             },
             // silent:_params.silent,
             method: 'GET',
@@ -545,7 +553,7 @@ export class NetworkService extends Observable {
             },
             headers: {
                 'User-Agent': 'AlpiMaps',
-                'Cache-Control': getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1)
+                'Cache-Control': getCacheControl(maxAgeMonth, maxAgeMonth - 1)
             },
             // silent:_params.silent,
             method: 'GET',
@@ -912,7 +920,7 @@ export class NetworkService extends Observable {
             toJSON: false,
             url: 'https://data.mobilites-m.fr/api/lines/json',
             headers: {
-                'Cache-Control': getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1)
+                'Cache-Control': getCacheControl(maxAgeMonth, maxAgeMonth - 1)
             },
             queryParams: {
                 types: 'ligne',
