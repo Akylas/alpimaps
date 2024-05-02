@@ -117,7 +117,7 @@ const onInitRootView = function () {
         globalMarginTop.set(get(statusBarHeight));
     }
     updateThemeColors(getRealTheme(theme));
-    DEV_LOG && console.log('initRootView', Application.ios.window.safeAreaInsets, get(navigationBarHeight), get(statusBarHeight), get(actionBarHeight), get(actionBarButtonHeight), get(fonts));
+    DEV_LOG && console.log('initRootView', get(navigationBarHeight), get(statusBarHeight), get(actionBarHeight), get(actionBarButtonHeight), get(fonts));
     Application.off(Application.initRootViewEvent, onInitRootView);
     // getRealThemeAndUpdateColors();
 };
