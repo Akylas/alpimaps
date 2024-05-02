@@ -15,7 +15,7 @@
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { hideLoading, openLink, showAlertOptionSelect, showLoading } from '~/utils/ui';
+    import { hideLoading, openLink, showAlertOptionSelect, showLoading } from '~/utils/ui/index.common';
     import { ANDROID_30, getDefaultMBTilesDir, moveFileOrFolder } from '~/utils/utils';
     import { getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, resetItemsDataFolder, restartApp, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';
     import { colors, fonts, navigationBarHeight } from '~/variables';

@@ -10,21 +10,20 @@ import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/point';
 import { getImagePipeline } from '@nativescript-community/ui-image';
 import { ShareFile } from '@nativescript-community/ui-share-file';
-import { File, Folder, ImageSource, Screen, Utils, knownFolders, path, profile } from '@nativescript/core';
+import { File, Folder, ImageSource, Screen, knownFolders, path, profile } from '@nativescript/core';
 import type { Feature, FeatureCollection, Point as GeometryPoint } from 'geojson';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import { get } from 'svelte/store';
 import { getBoundsOfDistance, getDistanceSimple, getMetersPerPixel } from '~/helpers/geolib';
 import { GroupRepository, IItem, Item, ItemRepository, Route, RouteInstruction, RouteProfile, RouteStats } from '~/models/Item';
-import { networkService } from '~/services/NetworkService';
+import { maxAgeMonth, networkService } from '~/services/NetworkService';
 import { showError } from '~/utils/error';
 import { JSONtoXML, importGPXToGeojson } from '~/utils/gpx';
 import { shareFile } from '~/utils/share';
-import { getItemsDataFolder, pick } from '~/utils/utils.common';
+import { clearTimeout, getItemsDataFolder, pick, setTimeout } from '~/utils/utils';
 import { fonts } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
 import NSQLDatabase from './NSQLDatabase';
-import { clearTimeout, setTimeout } from '~/utils/utils';
 const mapContext = getMapContext();
 
 let writer: GeoJSONGeometryWriter<LatLonKeys>;
@@ -504,7 +503,7 @@ export default class ItemsModule extends MapModule {
                     console.log('captureRendering', item.image_path, image.width, image.height, viewPort, canvas.getWidth(), canvas.getHeight());
                     // const actuaWidth = Math.min(width, height);
                     if (__IOS__) {
-                        canvas.scale(1, -1,  width / 2, height / 2);
+                        canvas.scale(1, -1, width / 2, height / 2);
                     }
                     canvas.drawBitmap(image, new Rect(left, top, left + width, top + height), new Rect(0, 0, canvas.getWidth(), canvas.getHeight()), null);
                     new ImageSource(canvas.getImage()).saveToFile(item.image_path, 'jpg');
@@ -697,7 +696,7 @@ export default class ItemsModule extends MapModule {
             url: overpassAPIURL() + 'interpreter',
             method: 'GET',
             headers: {
-                'Cache-Control': networkService.getCacheControl(60 * 3600 * 24, 60 * 3600 * 24 - 1)
+                'Cache-Control': networkService.getCacheControl(maxAgeMonth, maxAgeMonth - 1)
             },
             queryParams: {
                 data
