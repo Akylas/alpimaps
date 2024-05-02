@@ -8,6 +8,7 @@ module.exports = {
     id: process.env['APP_ID'] || 'akylas.alpi.maps',
     appResourcesPath: process.env['APP_RESOURCES'] || 'App_Resources',
     buildPath: process.env['APP_BUILD_PATH'] || 'platforms',
+    webpackPackageName: '@akylas/nativescript-webpack',
     webpackConfigPath: 'app.webpack.config.js',
     appPath: 'app',
     forceLog: loggingEnabled,
@@ -15,8 +16,12 @@ module.exports = {
     i18n: {
         defaultLanguage: 'en'
     },
+    ios: {
+        runtimePackageName: '@akylas/nativescript-ios-runtime'
+    },
     android: {
-        gradleVersion: '8.3',
+        runtimePackageName: '@akylas/nativescript-android-runtime',
+        gradleVersion: '8.4',
         markingMode: 'none',
         codeCache: true,
         enableMultithreadedJavascript: false,
