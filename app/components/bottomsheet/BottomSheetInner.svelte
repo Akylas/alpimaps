@@ -11,11 +11,12 @@
     import type { Entry } from '@nativescript-community/ui-chart/data/Entry';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { SwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
+    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { Application, ApplicationSettings, Color } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
     import type { Point } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
-    import { NativeViewElementNode, navigate } from 'svelte-native/dom';
+    import { NativeViewElementNode } from 'svelte-native/dom';
     import { get } from 'svelte/store';
     import BottomSheetInfoView from '~/components/bottomsheet/BottomSheetInfoView.svelte';
     import { formatDistance } from '~/helpers/formatter';
@@ -28,8 +29,8 @@
     import { showError } from '~/utils/error';
     import { computeDistanceBetween } from '~/utils/geo';
     import { share } from '~/utils/share';
-    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { hideLoading, openLink, showLoading } from '~/utils/ui';
+    import { navigate } from '~/utils/svelte/ui';
+    import { hideLoading, openLink, showLoading } from '~/utils/ui/index.common';
     import { actionBarButtonHeight, colors } from '~/variables';
     import ElevationChart from '../chart/ElevationChart.svelte';
     import IconButton from '../common/IconButton.svelte';
