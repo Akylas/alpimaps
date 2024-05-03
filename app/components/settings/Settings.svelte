@@ -18,11 +18,12 @@
     import { hideLoading, openLink, showAlertOptionSelect, showLoading } from '~/utils/ui/index.common';
     import { ANDROID_30, getDefaultMBTilesDir, moveFileOrFolder } from '~/utils/utils';
     import { getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, resetItemsDataFolder, restartApp, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';
-    import { colors, fonts, navigationBarHeight } from '~/variables';
+    import { colors, fonts, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import { CheckBox } from '@nativescript-community/ui-checkbox';
     $: ({ colorOnSurfaceVariant, colorOutlineVariant } = $colors);
+    $: ({ bottom: windowInsetBottom } = $windowInset);
 
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
 
@@ -586,7 +587,7 @@
 
 <page actionBarHidden={true}>
     <gridlayout rows="auto,*">
-        <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={$navigationBarHeight}>
+        <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={windowInsetBottom}>
             <Template key="sectionheader" let:item>
                 <label class="sectionHeader" text={item.title} />
             </Template>

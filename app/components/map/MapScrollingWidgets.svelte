@@ -19,9 +19,9 @@
     import { RouteInstruction, RoutingAction } from '~/models/Item';
     import { queryingLocation, watchingLocation } from '~/stores/mapStore';
     import { showError } from '~/utils/error';
-    import { fade, navigate, scale } from '~/utils/svelte/ui';
+    import { navigate } from '~/utils/svelte/ui';
     import { openLink } from '~/utils/ui';
-    import { colors, fonts, globalMarginTop } from '~/variables';
+    import { colors, fonts } from '~/variables';
 
     let { colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorOnPrimary, colorSurfaceContainer } = $colors;
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorOnPrimary, colorSurfaceContainer } = $colors);
@@ -228,7 +228,6 @@
             // }
         }
     }
-
     // async function open3DMap() {
     //     try {
     //         const position = mapContext.getMap().getFocusPos();
@@ -270,7 +269,6 @@
             const label = new Label();
             label.style.padding = '10 20 0 20';
             label.color = colorOnSurface as any;
-            //@ts-ignore
             label.linkColor = colorPrimary;
             label.html = attributions.join('<br/>');
             label.on('linkTap', (e) => openLink(e['link']));
