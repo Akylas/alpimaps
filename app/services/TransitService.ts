@@ -100,7 +100,7 @@ class TransitService extends Observable {
         const maxAge = maxAgeMonth;
         if (ApplicationSettings.hasKey(settingsKey)) {
             const data = JSON.parse(ApplicationSettings.getString(settingsKey));
-            DEV_LOG && console.log('testing backed up data', Date.now(), data.timestamp, Date.now() - data.timestamp, maxAge * 1000);
+            // DEV_LOG && console.log('testing backed up data', Date.now(), data.timestamp, Date.now() - data.timestamp, maxAge * 1000);
             if (Date.now() - data.timestamp < maxAge * 1000) {
                 return data.data;
             }

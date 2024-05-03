@@ -19,9 +19,10 @@
     import { formatTime, lc } from '~/helpers/locale';
     import { showError } from '~/utils/error';
     import { getDataFolder } from '~/utils/utils';
-    import { colors, fonts, navigationBarHeight } from '~/variables';
+    import { colors, fonts, windowInset } from '~/variables';
 
     $: ({ colorOnSurface, colorPrimary, colorSurfaceContainer } = $colors);
+    $: ({ bottom: windowInsetBottom } = $windowInset);
     export let position;
     export let bearing;
     export let terrarium: boolean = false;
@@ -554,7 +555,7 @@
         stepIndex={bottomSheetStepIndex}
         steps={[0, 300]}
         on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)}
-        android:marginBottom={$navigationBarHeight}>
+        android:marginBottom={windowInsetBottom}>
         <gridlayout height="100%" width="100%" on:layoutChanged={onLayoutChanged}>
             <awebview
                 bind:this={webView}
@@ -622,7 +623,7 @@
             <mdbutton class="mdi" col={1} fontSize={16} text="mdi-bug" variant="text" width={undefined} on:tap={() => (selectedPageIndex = 1)} />
             <pager colSpan={2} disableSwipe={false} row={1} selectedIndex={selectedPageIndex} on:selectedIndexChange={(e) => (selectedPageIndex = e['value'])}>
                 <pageritem>
-                    <collectionview bind:this={collectionView1} {itemIdGenerator} itemTemplateSelector={selectTemplate} items={listView1Items} android:marginBottom={$navigationBarHeight}>
+                    <collectionview bind:this={collectionView1} {itemIdGenerator} itemTemplateSelector={selectTemplate} items={listView1Items} android:marginBottom={windowInsetBottom}>
                         <Template key="checkbox" let:item>
                             <checkbox checked={item.value} text={item.title} on:checkedChange={(e) => onCheckBox(item, e.value)} />
                         </Template>
@@ -642,7 +643,7 @@
                     </collectionview>
                 </pageritem>
                 <pageritem>
-                    <collectionview bind:this={collectionView2} {itemIdGenerator} itemTemplateSelector={selectTemplate} items={listView2Items} android:marginBottom={$navigationBarHeight}>
+                    <collectionview bind:this={collectionView2} {itemIdGenerator} itemTemplateSelector={selectTemplate} items={listView2Items} android:marginBottom={windowInsetBottom}>
                         <Template key="checkbox" let:item>
                             <checkbox checked={item.value} text={item.title} on:checkedChange={(e) => onCheckBox(item, e.value)} />
                         </Template>

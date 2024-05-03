@@ -35,16 +35,17 @@
     textHeight = rect.height();
     textWidth = rect.width();
     fontMetrics = textPaint.getFontMetrics();
+    textPaint.color = '#bbb';
     // }
 </script>
 
 <script lang="ts">
     let { colorPrimary, colorSurfaceContainerHighest, colorOnSurface, colorOutlineVariant } = $colors;
     $: ({ colorPrimary, colorSurfaceContainerHighest, colorOnSurface, colorOutlineVariant } = $colors);
-    $: textPaint.color = colorOnSurface;
+    // $: textPaint.color = colorOnSurface;
     export let drawInsideGrid = false;
-    export let backgroundColor = colorSurfaceContainerHighest;
-    export let tickColor = colorOutlineVariant;
+    export let backgroundColor = '#171717';
+    export let tickColor = '#888';
     export let cardinalTickColor = colorPrimary;
     export let rotation = 0;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView; delta: number; radius: number; center: { x: number; y: number }; rotation: number }) => void = null;
