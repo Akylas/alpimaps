@@ -16,7 +16,7 @@
     import { NoNetworkError, showError } from '~/utils/error';
     import { navigate } from '~/utils/svelte/ui';
     import { pickDate, pickTime } from '~/utils/utils';
-    import { colors, fonts, navigationBarHeight } from '~/variables';
+    import { colors, fonts, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
 
     const timePaint = new Paint();
@@ -25,6 +25,7 @@
 
 <script lang="ts">
     $: ({ colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
+    $: ({ bottom: windowInsetBottom } = $windowInset);
 
     export let line: TransitRoute;
     const lineColor = line.color || transitService.defaultTransitLineColor;
@@ -249,7 +250,7 @@
             <IconButton colSpan={3} horizontalAlignment="right" row={1} text="mdi-chevron-right" on:tap={nextDates} />
         </gridlayout>
 
-        <collectionview bind:this={collectionView} colSpan={3} items={timelineItems} row={3} android:marginBottom={$navigationBarHeight} rowHeight={56} on:swipe={onSwipe}>
+        <collectionview bind:this={collectionView} colSpan={3} items={timelineItems} row={3} android:marginBottom={windowInsetBottom} rowHeight={56} on:swipe={onSwipe}>
             <Template let:item>
                 <gridlayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} columns="*,200" padding="0 10 0 10" rippleColor={item.color}>
                     <label
