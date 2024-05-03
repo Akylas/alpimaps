@@ -3,8 +3,7 @@
     import { Template } from 'svelte-native/components';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { IItem } from '~/models/Item';
-    import { colors, statusBarHeight } from '~/variables';
-    import ListItem from '../common/ListItem.svelte';
+    import { colors } from '~/variables';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     export interface OptionType {
         name: string;

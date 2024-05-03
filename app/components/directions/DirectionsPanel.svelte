@@ -30,7 +30,7 @@
     import { MOBILITY_URL } from '~/services/TransitService';
     import { showError } from '~/utils/error';
     import { defaultProfileCostingOptions, getSavedProfile, getValhallaSettings, removeSavedProfile, savedProfile, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
-    import { colors, fonts, globalMarginTop } from '~/variables';
+    import { colors, fonts } from '~/variables';
     import { onThemeChanged } from '~/helpers/theme';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
 

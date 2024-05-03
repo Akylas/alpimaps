@@ -21,7 +21,7 @@
     import { goBack, navigate } from '~/utils/svelte/ui';
     import { onBackButton } from '~/utils/ui';
     import { hideLoading, promptForGroup, showLoading, showPopoverMenu } from '~/utils/ui/index.common';
-    import { colors, fonts, navigationBarHeight } from '~/variables';
+    import { colors, fonts, windowInset } from '~/variables';
     import BottomSheetInfoView from '../bottomsheet/BottomSheetInfoView.svelte';
     import CActionBar from '../common/CActionBar.svelte';
     import IconButton from '../common/IconButton.svelte';
@@ -41,6 +41,7 @@
 
 <script lang="ts">
     $: ({ colorBackground, colorOnSurface, colorSurfaceContainerHigh, colorOnSurfaceVariant, colorPrimary, colorOnPrimary, colorOutlineVariant, colorError } = $colors);
+    $: ({ bottom: windowInsetBottom } = $windowInset);
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
     let items: ObservableArray<CollectionItem>;
@@ -742,7 +743,7 @@ LEFT JOIN  (
             itemTemplateSelector={(item) => item.type || (!!item.route ? 'route' : 'default')}
             {items}
             row={1}
-            android:paddingBottom={$navigationBarHeight}
+            android:paddingBottom={windowInsetBottom}
             on:swipe={onCollectionSwipe}>
             <Template key="group" let:item>
                 <gridlayout backgroundColor={colorOutlineVariant} height={50} rippleColor={colorPrimary} on:tap={(e) => onItemTap(item, e)} on:longPress={(e) => onItemLongPress(item, e)}>

@@ -2,6 +2,9 @@
     "whitelist-plugins-usages": true,
     "whitelist": [
         "akylas.alpi.maps*:*",
+        "android.view:View.OnApplyWindowInsetsListener",
+        "android.view:WindowInsets",
+        "android.graphics:Insets",
         "android.app:AlarmManager",
         "android.app:Notification",
         "android.app:NotificationChannel",

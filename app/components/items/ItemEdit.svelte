@@ -19,12 +19,13 @@
     import { showError } from '~/utils/error';
     import { goBack } from '~/utils/svelte/ui';
     import { pickColor } from '~/utils/utils';
-    import { colors, fonts, navigationBarHeight } from '~/variables';
+    import { colors, fonts, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import IconButton from '../common/IconButton.svelte';
     import TagView from '../common/TagView.svelte';
 
     $: ({ colorSurfaceContainerHigh, colorOnSurfaceVariant, colorPrimary, colorOnPrimary } = $colors);
+    $: ({ bottom: windowInsetBottom } = $windowInset);
     export let item: Item;
     let itemColor: string;
     let itemIsRoute = false;
@@ -388,7 +389,7 @@
 </script>
 
 <page actionBarHidden={true}>
-    <gridlayout rows="auto,*,auto,2.5*,auto" android:paddingBottom={$navigationBarHeight}>
+    <gridlayout rows="auto,*,auto,2.5*,auto">
         <CActionBar canGoBack title={lc('edit')}>
             <IconButton color={colorOnPrimary} text="mdi-playlist-plus" on:tap={addField} />
             <IconButton color={colorOnPrimary} isVisible={!itemIsRoute} text="mdi-web-sync" on:tap={fetchOSMDetails} />
@@ -469,7 +470,7 @@
                 </label>
             </gridlayout>
         {/if}
-        <collectionview bind:this={collectionView} itemTemplateSelector={(item) => item.type || 'textfield'} {items} row={3}>
+        <collectionview bind:this={collectionView} itemTemplateSelector={(item) => item.type || 'textfield'} {items} row={3} android:paddingBottom={windowInsetBottom}>
             <Template key="taggroup" let:item>
                 <TagView padding="5 10 0 10" showDefaultGroups={false} topGroup={item.groups?.[0]} on:groupSelected={onTagViewSelectedGroup} />
             </Template>

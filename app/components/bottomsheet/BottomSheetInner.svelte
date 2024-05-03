@@ -888,7 +888,7 @@
     }
 </script>
 
-<gridlayout {...$$restProps} backgroundColor={colorWidgetBackground} rows={`${INFOVIEW_HEIGHT},50,${PROFILE_HEIGHT},${STATS_HEIGHT},auto`} on:tap={() => {}}>
+<gridlayout id="bottomSheetInner" {...$$restProps} backgroundColor={colorWidgetBackground} rows={`${INFOVIEW_HEIGHT},50,${PROFILE_HEIGHT},${STATS_HEIGHT},auto`} on:tap={() => {}}>
     {#if loaded}
         <swipemenu
             bind:this={swipemenu}

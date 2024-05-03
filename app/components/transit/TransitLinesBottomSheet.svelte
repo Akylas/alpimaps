@@ -10,12 +10,13 @@
     import { TransitRoute, transitService } from '~/services/TransitService';
     import { NoNetworkError, showError } from '~/utils/error';
     import { navigate } from '~/utils/svelte/ui';
-    import { fonts, navigationBarHeight } from '~/variables';
+    import { fonts, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
 
     export let position: MapPos<LatLonKeys>;
     export let name: string;
 
+    $: ({ bottom: windowInsetBottom } = $windowInset);
     let loading = false;
     let collectionView: NativeViewElementNode<CollectionView>;
     let linesItems: TransitRoute[] = null;
@@ -105,7 +106,7 @@
 
 <gesturerootview class="bottomsheet" height={300} rows="auto,*">
     <label fontSize={20} fontWeight="bold" padding="15 10 15 20" text={name} />
-    <collectionview bind:this={collectionView} id="scrollView" itemIdGenerator={(item, i) => i} items={linesItems} row={1} android:marginBottom={$navigationBarHeight} rowHeight={70}>
+    <collectionview bind:this={collectionView} id="scrollView" itemIdGenerator={(item, i) => i} items={linesItems} row={1} android:marginBottom={windowInsetBottom} rowHeight={70}>
         <Template let:item>
             <gridlayout columns="auto,*,auto,auto" padding={10} rippleColor={getItemColor(item)} on:tap={() => showTimesheet(item)}>
                 <label class="transitIconLabel" autoFontSize={true} backgroundColor={getItemColor(item)} borderRadius={4} color={getItemTextColor(item)} maxFontSize={30} text={item.shortName} />
