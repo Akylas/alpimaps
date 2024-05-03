@@ -2,15 +2,15 @@
     import { Frame } from '@nativescript/core/ui/frame';
     import { onMount } from 'svelte';
     import { closeModal, goBack } from '~/utils/svelte/ui';
-    import { actionBarHeight, colors, statusBarHeight } from '~/variables';
-    import IconButton from './IconButton.svelte';
+    import { actionBarHeight, colors, windowInset } from '~/variables';
     import { showError } from '~/utils/error';
     $: ({ colorOnSurface } = $colors);
+    $: ({ top: windowInsetTop } = $windowInset);
 
     export let title: string = null;
     export let showMenuIcon: boolean = false;
-    export let height = $actionBarHeight;
-    export let paddingTop = __ANDROID__ ? $statusBarHeight : 0;
+    export let height = null;
+    export let paddingTop = null;
     export let canGoBack: boolean = false;
     export let forceCanGoBack: boolean = false;
     export let modalWindow: boolean = false;
@@ -61,7 +61,7 @@
     $: menuIconVisibility = menuIconVisible ? 'visible' : 'collapse';
 </script>
 
-<gridlayout class="actionBar" columns="auto,*,auto" {paddingTop} rows={`${height},auto`} {...$$restProps} on:tap={() => {}}>
+<gridlayout class="actionBar" columns="auto,*,auto" paddingTop={paddingTop || windowInsetTop} rows={`${height || $actionBarHeight},auto`} {...$$restProps} on:tap={() => {}}>
     <label
         id="actionBarTitle"
         class="actionBarTitle"

@@ -43,6 +43,11 @@
     const preferredHeight = ((2 * labelPaint.getTextSize() + 18) * textHeight) / labelPaint.getTextSize();
 
     const northArrow = new Path();
+
+    gridPaint.setColor('#888');
+    gridPaintStrong.setColor('#888');
+    labelPaint.setColor('#bbb');
+    // labelPaint.setColor(get(textColor));
 </script>
 
 <script lang="ts">
@@ -58,10 +63,9 @@
     let { colorOnSurface, colorPrimary, colorOutlineVariant } = $colors;
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorOutlineVariant, colorSurfaceContainer, colorSurfaceContainerHighest } = $colors);
 
-    $: gridPaint.setColor(colorOutlineVariant);
-    $: gridPaintStrong.setColor(colorOutlineVariant);
+    // $: gridPaint.setColor(colorOutlineVariant);
+    // $: gridPaintStrong.setColor(colorOutlineVariant);
     $: activePaint.setColor(colorPrimary);
-    $: labelPaint.setColor(colorOnSurface);
     export let height: number = 350;
     let canvas: NativeViewElementNode<CanvasView>;
     let canvas2: NativeViewElementNode<CanvasView>;
@@ -463,5 +467,5 @@
 
 <gesturerootview {height} rows="*,auto">
     <CompassDialView drawInsideGrid={true} onDraw={onCanvasDraw} bind:canvas on:layoutChanged={refreshGeometries} />
-    <canvasview bind:this={canvas2} backgroundColor={colorSurfaceContainerHighest} height={preferredHeight} row={1} on:draw={onCanvasHorizontalDraw} />
+    <canvasview bind:this={canvas2} backgroundColor="#171717" height={preferredHeight} row={1} on:draw={onCanvasHorizontalDraw} />
 </gesturerootview>

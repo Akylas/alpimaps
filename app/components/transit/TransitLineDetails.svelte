@@ -16,8 +16,9 @@
     import { MetroLineStop, TransitRoute, transitService } from '~/services/TransitService';
     import { NoNetworkError, showError } from '~/utils/error';
     import { goBack, navigate } from '~/utils/svelte/ui';
-    import { colors, fonts, navigationBarHeight } from '~/variables';
+    import { colors, fonts, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
+    $: ({ bottom: windowInsetBottom } = $windowInset);
     $: ({ colorSurfaceContainer, colorBackground } = $colors);
     interface Item extends MetroLineStop {
         color: string;
@@ -189,7 +190,7 @@
             verticalTextAlignment="center"
             visibility={line.longName ? 'visible' : 'collapse'} />
         <cartomap row={2} useTextureView={false} zoom={16} on:mapReady={onMapReady} />
-        <collectionview bind:this={collectionView} items={dataItems} row={3} android:paddingBottom={$navigationBarHeight}>
+        <collectionview bind:this={collectionView} items={dataItems} row={3} android:paddingBottom={windowInsetBottom}>
             <Template let:item>
                 <canvasview columns="*,auto" on:tap={() => selectStop(item)}>
                     <line horizontalAlignment="left" startX={30} startY={0} stopX={30} stopY="50%" strokeColor={item.color} strokeWidth={4} visibility={item.first ? 'hidden' : 'visible'} />
