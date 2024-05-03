@@ -16,7 +16,7 @@
     import { pitchEnabled, projectionModeSpherical, show3DBuildings, showContourLines } from '~/stores/mapStore';
     import { showError } from '~/utils/error';
     import { openLink } from '~/utils/ui/index.common';
-    import { colors, statusBarHeight } from '~/variables';
+    import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     $: ({ colorBackground, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorError, colorPrimary } = $colors);
 

@@ -33,7 +33,6 @@
     --mdiFontFamily: #{$mdiFontFamily};
     --appFontFamily: #{$appFontFamily};
 
-    --navigationBarHeight: 0;
     --actionBarButtonHeight: 50;
     --actionBarHeight: 60;
 }
@@ -241,8 +240,8 @@ label {
 
 .actionBarButton {
     @extend .mdi;
-    width: var(--actionBarHeight);
-    height: var(--actionBarHeight);
+    width: var(--actionBarButtonHeight);
+    height: var(--actionBarButtonHeight);
     // color: black;
 
     // .ns-dark & {
@@ -307,9 +306,8 @@ label {
 .transitIconLabel {
     border-radius: 4;
     font-weight: bold;
-    width: 50;
-    height: 50;
     font-size: 20;
+    padding: 5 4 5 4;
     text-align: center;
     vertical-text-alignment: center;
     vertical-alignment: center;

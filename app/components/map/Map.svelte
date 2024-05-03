@@ -73,9 +73,10 @@
     import { navigate } from '~/utils/svelte/ui';
     import { hideLoading, onBackButton, showLoading, showPopoverMenu } from '~/utils/ui';
     import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, setTimeout } from '~/utils/utils';
-    import { colors, globalMarginTop, navigationBarHeight, statusBarHeight } from '../../variables';
+    import { colors, windowInset } from '../../variables';
 
     $: ({ colorPrimary, colorError, colorBackground } = $colors);
+    $: ({ top: windowInsetTop, bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight } = $windowInset);
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
     const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'routes', 'transit', 'hillshade', 'items', 'directions', 'search', 'selection', 'userLocation'];
@@ -361,12 +362,12 @@
 
     let isLandscape = Application.orientation() === 'landscape';
     function onOrientationChanged(event: OrientationChangedEventData) {
+        DEV_LOG && console.log('onOrientationChanged', event.newValue);
         isLandscape = event.newValue === 'landscape';
         if (__IOS__) {
             page?.nativeElement?.requestLayout();
         }
     }
-    DEV_LOG && console.log('isLandscape', isLandscape);
     onMount(() => {
         Application.on(Application.orientationChangedEvent, onOrientationChanged);
         networkService.on(NetworkConnectionStateEvent, onNetworkChange);
@@ -523,8 +524,8 @@
         const width = cartoMap.getMeasuredWidth();
         const height = cartoMap.getMeasuredHeight();
         const left = Utils.layout.toDevicePixels(40);
-        const top = Utils.layout.toDevicePixels($statusBarHeight + 90 + topTranslationY);
-        const bottom = Utils.layout.toDevicePixels($navigationBarHeight - mapTranslation + 0);
+        const top = Utils.layout.toDevicePixels(windowInsetTop + 90 + topTranslationY);
+        const bottom = Utils.layout.toDevicePixels(windowInsetBottom - mapTranslation + 0);
         const min = Math.min(width - 2 * left, height - top - bottom);
         const deltaX = (width - min) / 2;
         const result = {
@@ -571,7 +572,6 @@
             }
             projection = map.projection;
             const options = map.getOptions();
-            //@ts-ignore
             options.setLayersLabelsProcessedInReverseOrder(false);
             options.setRestrictedPanning(true);
             options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
@@ -1924,24 +1924,26 @@
     on:navigatingTo={onNavigatingTo}
     on:navigatingFrom={onNavigatingFrom}>
     <gridlayout>
+        <cartomap
+            accessibilityLabel="cartoMap"
+            zoom={16}
+            on:mapReady={onMainMapReady}
+            on:mapMoved={onMainMapMove}
+            on:mapInteraction={onMainMapInteraction}
+            on:mapStable={onMainMapStable}
+            on:mapIdle={onMainMapIdle}
+            on:mapClicked={onMainMapClicked}
+            on:layoutChanged={reportFullyDrawn} />
         <bottomsheet
-            marginBottom={$navigationBarHeight}
+            marginBottom={windowInsetBottom}
+            marginLeft={windowInsetLeft}
+            marginRight={windowInsetRight}
             panGestureOptions={{ failOffsetXEnd: 20, minDist: 40 }}
             stepIndex={bottomSheetStepIndex}
             {steps}
             translationFunction={bottomSheetTranslationFunction}
             on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)}>
             <gridlayout height="100%" width="100%">
-                <cartomap
-                    accessibilityLabel="cartoMap"
-                    zoom={16}
-                    on:mapReady={onMainMapReady}
-                    on:mapMoved={onMainMapMove}
-                    on:mapInteraction={onMainMapInteraction}
-                    on:mapStable={onMainMapStable}
-                    on:mapIdle={onMainMapIdle}
-                    on:mapClicked={onMainMapClicked}
-                    on:layoutChanged={reportFullyDrawn} />
                 <ButtonBar
                     id="mapButtonsNew"
                     buttonSize={40}
@@ -1950,24 +1952,23 @@
                     gray={true}
                     horizontalAlignment="left"
                     marginLeft={5}
-                    marginTop={66 + $statusBarHeight + Math.max(topTranslationY - 90, 0)}
-                    ios:marginTop={66 + Math.max(topTranslationY - 90, 0)}
+                    marginTop={66 + windowInsetTop + Math.max(topTranslationY - 90, 0)}
                     verticalAlignment="top" />
 
                 <LocationInfoPanel
                     bind:this={locationInfoPanel}
                     horizontalAlignment="left"
                     isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
-                    marginLeft={20}
+                    marginLeft={40}
                     marginTop={90}
                     verticalAlignment="top" />
                 <Search
                     bind:this={searchView}
                     defaultElevation={0}
                     isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
+                    margin={10}
                     verticalAlignment="top"
-                    android:margin={`${$globalMarginTop + 10} 10 10 10`}
-                    ios:margin={10} />
+                    android:marginTop={windowInsetTop + 10} />
                 <canvaslabel
                     class="mdi"
                     color={colorError}
@@ -1985,7 +1986,7 @@
                     id="orientation"
                     class="small-floating-btn"
                     horizontalAlignment="right"
-                    android:marginTop={66 + $statusBarHeight + Math.max(topTranslationY - 90, 0)}
+                    android:marginTop={66 + windowInsetTop + Math.max(topTranslationY - 90, 0)}
                     ios:marginTop={66 + Math.max(topTranslationY - 90, 0)}
                     shape="round"
                     verticalAlignment="top"
@@ -2005,20 +2006,27 @@
                 translateY={Math.max(topTranslationY - 50, 0)}
             /> -->
                 <MapScrollingWidgets bind:this={mapScrollingWidgets} opacity={scrollingWidgetsOpacity} userInteractionEnabled={scrollingWidgetsOpacity > 0.3} bind:navigationInstructions />
-                <DirectionsPanel bind:this={directionsPanel} {editingItem} verticalAlignment="top" width="100%" bind:translationY={topTranslationY} on:cancel={onDirectionsCancel} />
+                <DirectionsPanel
+                    bind:this={directionsPanel}
+                    {editingItem}
+                    paddingTop={windowInsetTop}
+                    verticalAlignment="top"
+                    width="100%"
+                    bind:translationY={topTranslationY}
+                    on:cancel={onDirectionsCancel} />
             </gridlayout>
             <BottomSheetInner
                 prop:bottomSheet
                 bind:this={bottomSheetInner}
-                borderRadius={10}
+                borderRadius={isLandscape ? 10 : 0}
                 horizontalAlignment={isLandscape ? 'left' : 'stretch'}
                 item={$selectedItem}
                 updating={itemLoading}
-                width={isLandscape ? 300 : '100%'}
+                width={isLandscape ? 400 : '100%'}
                 bind:navigationInstructions
                 bind:steps />
         </bottomsheet>
 
-        <absolutelayout backgroundColor={colorBackground} height={$navigationBarHeight} verticalAlignment="bottom" />
+        <absolutelayout backgroundColor={colorBackground} height={windowInsetBottom} verticalAlignment="bottom" />
     </gridlayout>
 </page>

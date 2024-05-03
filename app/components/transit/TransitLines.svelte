@@ -10,7 +10,9 @@
     import { MetroRoute, transitService } from '~/services/TransitService';
     import { NoNetworkError, showError } from '~/utils/error';
     import { navigate } from '~/utils/svelte/ui';
-    import { fonts, navigationBarHeight } from '~/variables';
+    import { fonts, windowInset } from '~/variables';
+
+    $: ({ bottom: windowInsetBottom } = $windowInset);
 
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -121,7 +123,7 @@
 
 <page bind:this={page} actionBarHidden={true} on:navigatingTo={onNavigatingTo}>
     <gridlayout rows="auto,*" on:layoutChanged={onLayoutChanged}>
-        <collectionview items={dataItems} row={1} android:marginBottom={$navigationBarHeight}>
+        <collectionview items={dataItems} row={1} android:marginBottom={windowInsetBottom}>
             <Template let:item>
                 <stacklayout>
                     <label fontSize={18} padding={10} text={item.type} />
