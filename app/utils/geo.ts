@@ -304,3 +304,7 @@ export function latLngToTileXY(lat, lng, zoom, tileSize = 256) {
     };
     return result;
 }
+
+export function getLongitudeTimeZoneOffset(lng: number) {
+    return -Math.ceil((lng / 7.5 - 1) / 2);
+}
