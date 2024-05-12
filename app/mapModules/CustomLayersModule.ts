@@ -23,7 +23,7 @@ import { preloading, showRoutes } from '~/stores/mapStore';
 import { showError } from '~/utils/error';
 import { toDegrees, toRadians } from '~/utils/geo';
 import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
-// eslint-disable-next-line no-duplicate-imports
+
 import { SDK_VERSION } from '@akylas/nativescript/utils';
 import { showSnack } from '@nativescript-community/ui-material-snackbar';
 import { data as TileSourcesData } from '~/data/tilesources';

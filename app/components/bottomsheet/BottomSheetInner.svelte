@@ -320,7 +320,9 @@
     function showAstronomy() {
         if (item) {
             const positions = item.geometry.type === 'Point' ? item.geometry?.['coordinates'] : item.geometry?.['coordinates'][0];
-            handleMapAction('astronomy', { lat: positions[1], lon: positions[0] });
+            const name = formatter.getItemTitle(item);
+            const subtitle = formatter.getItemSubtitle(item, name);
+            handleMapAction('astronomy', { name, subtitle, location: { lat: positions[1], lon: positions[0] }, timezone: item.properties.timezone });
         }
     }
     function closeSwipeMenu(animated = true) {
