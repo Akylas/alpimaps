@@ -21,7 +21,7 @@ import { MultiValhallaOfflineRoutingService, ValhallaOnlineRoutingService, Valha
 import { SearchRequest, VectorTileSearchService } from '@nativescript-community/ui-carto/search';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import * as appSettings from '@nativescript/core/application-settings';
-import { Folder } from '@nativescript/core/file-system';
+import { File, Folder, knownFolders, path } from '@nativescript/core/file-system';
 import { LineString, MultiLineString, Point } from 'geojson';
 import { getMapContext } from '~/mapModules/MapModule';
 import { IItem as Item, Route, RouteProfile } from '~/models/Item';
@@ -29,6 +29,7 @@ import { EARTH_RADIUS, TO_RAD } from '~/utils/geo';
 import { getDataFolder, getSavedMBTilesDir, listFolder } from '~/utils/utils';
 import { networkService } from './NetworkService';
 import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
+import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
@@ -314,6 +315,29 @@ class PackageService extends Observable {
         }
         return this._vectorTileSearchService;
     }
+    _timezoneTileSearchService: VectorTileSearchService;
+    timezoneVectorTileDataSource?: MBTilesTileDataSource;
+    get timezoneTileSearchService() {
+        if (!this._timezoneTileSearchService) {
+            if (this.timezoneVectorTileDataSource === undefined) {
+                this.timezoneVectorTileDataSource = new MBTilesTileDataSource({
+                    databasePath: path.join(knownFolders.currentApp().path, 'assets', 'timezone.mbtiles')
+                });
+            }
+
+            if (this.timezoneVectorTileDataSource) {
+                this._timezoneTileSearchService = new VectorTileSearchService({
+                    minZoom: 4,
+                    maxZoom: 4,
+                    preventDuplicates: true,
+                    sortByDistance: true,
+                    dataSource: this.timezoneVectorTileDataSource,
+                    decoder: getMapContext().mapDecoder
+                });
+            }
+        }
+        return this._timezoneTileSearchService;
+    }
     searchInLocalGeocodingService(options: GeocodingRequest<LatLonKeys>): Promise<GeocodingResultVector> {
         const service = this.localOSMOfflineGeocodingService;
         if (!service) {
@@ -334,6 +358,18 @@ class PackageService extends Observable {
             return null;
         }
         return new Promise((resolve) => service.findFeatures(options, resolve));
+    }
+
+    getTimezone(position: MapPos<LatLonKeys>) {
+        const service = this.timezoneTileSearchService;
+        if (!service) {
+            return null;
+        }
+        return service.findFeatures({
+            projection: getMapContext().getProjection(),
+            position,
+            searchRadius: 10
+        });
     }
     prepareGeoCodingResult(geoRes: GeoResult, onlyAddress = false) {
         const address: any = {};
