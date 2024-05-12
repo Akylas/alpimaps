@@ -55,7 +55,8 @@
         "java.lang.reflect:Array",
         "java.lang:Iterable",
         "android.text:Spannable",
-        "java.lang:Long"
+        "java.lang:Long",
+        "java.util:TimeZone"
     ],
     "blacklist": [
         "android.widget:DatePicker",

@@ -74,6 +74,7 @@
     import { hideLoading, onBackButton, showLoading, showPopoverMenu } from '~/utils/ui';
     import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, setTimeout } from '~/utils/utils';
     import { colors, windowInset } from '../../variables';
+    import dayjs from 'dayjs';
 
     $: ({ colorPrimary, colorError, colorBackground } = $colors);
     $: ({ top: windowInsetTop, bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight } = $windowInset);
@@ -896,6 +897,21 @@
                             }
                         });
                     }
+                    // if (props && 'timezone' in props === false) {
+                    //     const geometry = item.geometry as GeoJSONPoint;
+                    //     const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+                    //     packageService.getTimezone(position).then((result) => {
+                    //         DEV_LOG && console.log('getTimezone', position, result.getFeatureCount());
+                    //         const tzid = result?.getFeature(0).properties['tzid'];
+                    //         if (tzid) {
+                    //             if (__ANDROID__) {
+                    //                 const timezone = java.util.TimeZone.getTimeZone(tzid);
+                    //                 const offset = timezone.getOffset(Date.now()) / 3600000;
+                    //                 DEV_LOG && console.log('timezone', tzid, timezone.getDisplayName(), offset, dayjs.utc().utcOffset(offset).format('lll'));
+                    //             }
+                    //         }
+                    //     });
+                    // }
                 }
 
                 if (peek) {
@@ -1505,7 +1521,6 @@
         } else {
             scrollingWidgetsOpacity = Math.max(0, 1 - (-translation - 300) / 30);
         }
-        DEV_LOG && console.log('bottomSheetTranslationFunction', translation);
         // mapTranslation = translation - (__IOS__ && translation !== 0 ? $navigationBarHeight : 0);
         mapTranslation = translation;
         const result = {
