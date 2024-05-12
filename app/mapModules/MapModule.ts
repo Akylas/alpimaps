@@ -20,6 +20,7 @@ import type ItemsModule from '~/mapModules/ItemsModule';
 import type UserLocationModule from '~/mapModules/UserLocationModule';
 import type { IItem } from '~/models/Item';
 import { getBGServiceInstance } from '~/services/BgService';
+import { packageService } from '~/services/PackageService';
 import { createGlobalEventListener, globalObservable, navigate } from '~/utils/svelte/ui';
 export interface IMapModule {
     onMapReady(mapView: CartoMap<LatLonKeys>);
@@ -222,10 +223,11 @@ export function getMapContext() {
 
 export async function handleMapAction(action: string, options?) {
     const parent = Frame.topmost() || Application.getRootView();
+    DEV_LOG && console.log('handleMapAction', action, options);
     switch (action) {
         case 'astronomy':
             const module = mapContext.mapModule('userLocation');
-            const location = module.lastUserLocation || options;
+            const location = module.lastUserLocation || options?.location;
             if (!location) {
                 showSnack({ message: `${l('no_location_yet')}`, view: Application.getRootView() });
                 return;
@@ -234,8 +236,9 @@ export async function handleMapAction(action: string, options?) {
             await showBottomSheet({
                 parent,
                 view: AstronomyView,
-                peekHeight: 300,
+                peekHeight: options.name ? 350 : 300,
                 props: {
+                    ...options,
                     location
                 }
             });
