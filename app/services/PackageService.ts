@@ -327,8 +327,8 @@ class PackageService extends Observable {
 
             if (this.timezoneVectorTileDataSource) {
                 this._timezoneTileSearchService = new VectorTileSearchService({
-                    minZoom: 4,
-                    maxZoom: 4,
+                    minZoom: 3,
+                    maxZoom: 3,
                     preventDuplicates: true,
                     sortByDistance: true,
                     dataSource: this.timezoneVectorTileDataSource,
