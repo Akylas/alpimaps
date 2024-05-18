@@ -1,0 +1,6 @@
+### Features
+- get local time from anywhere in the world. astronomy view will show local data + current time+ more daylight related infos ([3e54c5ec](/3e54c5ecf4c5adab2632e4d26240768343894cdb))
+
+### Bug fixes
+- prevent adding existing source ([0f12e191](/0f12e191f833abcc4381dc007ffcd8872b5e4f34))
+- item info fix ([bb1c3d39](/bb1c3d397bd0e317e98a24d4d66e71aba82a9b16))
