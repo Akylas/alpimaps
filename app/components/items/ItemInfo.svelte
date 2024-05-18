@@ -20,6 +20,7 @@
     import JsonViewer from './JSONViewer.svelte';
     import ListItem2 from '../common/ListItem2.svelte';
     // import JSONViewer from '~/components/JSONViewer.svelte';
+    let { colorBackground, colorOnSurface, colorOutlineVariant } = $colors;
     $: ({ colorBackground, colorOnSurface, colorOutlineVariant } = $colors);
 
     export let item: Item;
@@ -390,7 +391,7 @@
 </script>
 
 <gesturerootview {height} rows="auto,auto,*" {...$$restProps} backgroundColor={colorBackground}>
-    <gridlayout columns="auto,*,auto" rows={`${actionBarHeight}`} {...$$restProps} color={colorOnSurface}>
+    <gridlayout columns="auto,*,auto" rows={`${$actionBarHeight}`} {...$$restProps} color={colorOnSurface}>
         <!-- <label id="title" fontSize={40} text={itemIcon} fontFamily={itemIconFontFamily} verticalTextAlignment="center" /> -->
         <IconButton fontFamily="osm" text={osmicon(formatter.geItemIcon(item))} />
         <label id="title" col={1} fontSize={20} fontWeight="bold" text={formatter.getItemTitle(item) || ''} verticalTextAlignment="center" />
