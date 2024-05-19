@@ -1,3 +1,6 @@
+### Breaking
+The app's signing key had to be changed as the old one used an algorithm meanwhile considered unsafe. To update, you will have to uninstall and reinstall the app.
+
 ### Features
 - get local time from anywhere in the world. astronomy view will show local data + current time+ more daylight related infos ([3e54c5ec](/3e54c5ecf4c5adab2632e4d26240768343894cdb))
 
