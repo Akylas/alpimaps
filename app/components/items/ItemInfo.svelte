@@ -208,17 +208,21 @@
 
     const topProps = ['population', 'wheelchair', 'atm', 'change_machine', 'copy_facility', 'stamping_machine', 'currency', 'ele'];
 
-    let canRefresh = false;
     let loading = false;
-    async function refresh() {
+    async function refresh(force = false) {
         try {
             const ignoredKeys = itemsModule.ignoredOSMKeys;
             const itemProperties = { ...item.properties };
-            DEV_LOG && console.log('refresh', item);
-            if (!itemProperties.osmid && networkService.connected) {
-                refreshItems();
+            const needsSaving = !!item.id;
+            DEV_LOG && console.log('refresh', needsSaving, item);
+            // if (!itemProperties.osmid) {
+            if (force || !itemProperties.osmid) {
+                if (!force) {
+                    refreshItems();
+
+                }
                 loading = true;
-                const result = await itemsModule.getOSMDetails(item, mapContext.getMap().zoom);
+                const result = await itemsModule.getOSMDetails(item, mapContext.getMap().zoom, force);
                 // DEV_LOG && console.log('result', result);
                 if (result) {
                     const newProps = {};
@@ -231,14 +235,16 @@
                     item = { ...item, properties: { ...itemProperties, osmid: result.id } };
                     extraProps = newProps;
                 }
-                // if (!item.properties.opening_hours) {
-                //     const result = await itemsModule.getFacebookDetails(item, mapContext.getMap().zoom);
-                // }
-                canRefresh = false;
-            } else {
-                extraProps = {};
-                canRefresh = true;
+                if (needsSaving) {
+                    saveItem(false);
+                }
             }
+            // if (!item.properties.opening_hours) {
+            //     const result = await itemsModule.getFacebookDetails(item, mapContext.getMap().zoom);
+            // }
+            // } else {
+            //     extraProps = {};
+            // }
 
             refreshItems();
         } catch (error) {
@@ -293,7 +299,6 @@
         DEV_LOG && console.log('saveItem', item);
         try {
             item = await itemsModule.saveItem(item);
-            canRefresh = true;
             extraProps = {};
             refreshItems();
             if (item.route) {
@@ -396,8 +401,8 @@
         <IconButton fontFamily="osm" text={osmicon(formatter.geItemIcon(item))} />
         <label id="title" col={1} fontSize={20} fontWeight="bold" text={formatter.getItemTitle(item) || ''} verticalTextAlignment="center" />
         <stacklayout col={2} orientation="horizontal">
-            <IconButton color="white" isVisible={Object.keys(extraProps).length > 0} text="mdi-content-save-outline" on:tap={() => saveItem()} />
-            <IconButton color="white" isVisible={canRefresh} text="mdi-autorenew" />
+            <IconButton isVisible={Object.keys(extraProps).length > 0} text="mdi-content-save-outline" on:tap={() => saveItem()} />
+            <IconButton text="mdi-autorenew" on:tap={() => refresh(true)} />
             <mdactivityindicator busy={loading} height={$actionBarButtonHeight} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapse'} width={$actionBarButtonHeight} />
         </stacklayout>
     </gridlayout>
