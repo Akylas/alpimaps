@@ -413,6 +413,16 @@ export class NetworkService extends Observable {
             diskSize: 40 * 1024 * 1024,
             memorySize: 10 * 1024 * 1024
         });
+        if (__ANDROID__) {
+            try {
+                //@ts-ignore
+                https.addInterceptor(com.nativescript.https.CacheInterceptor.INTERCEPTOR);
+                //@ts-ignore
+                https.addNetworkInterceptor(com.nativescript.https.CacheInterceptor.INTERCEPTOR);
+            } catch (error) {
+                console.error(error);
+            }
+        }
     }
     stop() {
         if (!this.monitoring) {
@@ -433,6 +443,7 @@ export class NetworkService extends Observable {
         //     return Promise.reject(new NoNetworkError());
         // }
         try {
+            DEV_LOG && console.info('request', networkService.connected, JSON.stringify(requestParams));
             if (requestParams.queryParams) {
                 requestParams.url = queryString(requestParams.queryParams, requestParams.url);
                 delete requestParams.queryParams;
@@ -907,8 +918,11 @@ export class NetworkService extends Observable {
         }
     }
 
-    getCacheControl(maxAge = 60, stale = 59) {
-        if (this.forcedOffline && this.notifyNetworkChange) {
+    getCacheControl(maxAge = 60, stale = 59, noCache = false) {
+        if (noCache) {
+            return 'no-cache';
+        }
+        if (this.forcedOffline) {
             return 'only-if-cached';
         }
         return `max-age=${maxAge}, max-stale=${stale}, stale-while-revalidate=${stale}`;

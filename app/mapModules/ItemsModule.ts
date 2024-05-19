@@ -687,23 +687,28 @@ export default class ItemsModule extends MapModule {
     }
     ignoredOSMKeys = ['source', 'building', 'wall', 'bench', 'shelter_type', 'amenity', 'check_date', 'note', 'comment', 'ele', 'tourism'];
 
-    async getOSMDetails(item: Item, mapZoom?: number) {
+    async getOSMDetails(item: Item, mapZoom?: number, force = false) {
         const coordinates = (item.geometry as GeometryPoint).coordinates;
         const distance = mapZoom ? Math.max(14 - mapZoom, 1) * 20 : item.properties.class === 'country' ? 500 : 40;
         const types = ['way', 'node'];
-        const data = `[out:json][timeout:25];${types.map((t) => `${t}['name'](around:${distance},${coordinates[1]},${coordinates[0]});out tags;`).join('')}`;
+        const data = `[out:json][timeout:25];${types.map((t) => `${t}['name'](around:${distance},${coordinates[1]},${coordinates[0]});out tags center;`).join('')}`;
         const results = await networkService.request({
             url: overpassAPIURL() + 'interpreter',
             method: 'GET',
             headers: {
-                'Cache-Control': networkService.getCacheControl(maxAgeMonth, maxAgeMonth - 1)
+                'Cache-Control': networkService.getCacheControl(maxAgeMonth, maxAgeMonth - 1, force)
             },
             queryParams: {
                 data
             }
         });
         const properties = item.properties;
-        const matches = results.elements.filter((e) => e.tags && e.tags.name === properties.name);
+        const matches = properties.name
+            ? results.elements.filter((e) => e.tags && e.tags.name === properties.name)
+            : results.elements
+                  .filter((e) => e.tags)
+                  .sort((a, b) => getDistanceSimple(a.center || a, coordinates) - getDistanceSimple(b.center || b, coordinates))
+                  .sort((a, b) => (a.type === b.type ? 0 : a.type === 'node' ? -1 : 1));
         const nb = matches.length;
         if (nb) {
             if (nb === 1) {
