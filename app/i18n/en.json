@@ -165,6 +165,8 @@
     "date": "date",
     "day_night_cycle": "day night cycle",
     "day_time": "day time",
+    "daylight_duration": "daylight duration",
+    "daylight_left": "daylight left",
     "debug_gpu_picking": "debug gpu picking",
     "debug_mode": "debug mode",
     "defibrillator": "defibrillator",
