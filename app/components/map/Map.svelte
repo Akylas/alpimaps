@@ -244,6 +244,7 @@
                         transitVectorTileLayer.visible = true;
                     }
                 } catch (error) {
+                    showTransitLines = false
                     showError(error);
                 }
             })();
