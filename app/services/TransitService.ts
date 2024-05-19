@@ -96,22 +96,13 @@ class TransitService extends Observable {
     }
     // routes: any[];
     async getTransitLines(line?) {
-        const settingsKey = 'transit_lines';
-        const maxAge = maxAgeMonth;
-        if (ApplicationSettings.hasKey(settingsKey)) {
-            const data = JSON.parse(ApplicationSettings.getString(settingsKey));
-            // DEV_LOG && console.log('testing backed up data', Date.now(), data.timestamp, Date.now() - data.timestamp, maxAge * 1000);
-            if (Date.now() - data.timestamp < maxAge * 1000) {
-                return data.data;
-            }
-        }
         const data = await this.getMetroLinesData();
         const transitLines = await networkService.request<string>({
             method: 'GET',
             toJSON: false,
             url: MOBILITY_API_URL + '/lines/json',
             headers: {
-                'Cache-Control': getCacheControl(maxAge, maxAgeMonth - 1)
+                'Cache-Control': getCacheControl(maxAgeMonth, maxAgeMonth - 1)
             },
             queryParams: {
                 types: 'ligne',
@@ -122,7 +113,6 @@ class TransitService extends Observable {
         const worker = prepareWorker(new Worker('~/workers/TransitLinesWorker'));
 
         const result = await worker.sendMessageToWorker('getTransitLines', { transitLines, metroData: JSON.stringify(data) }, Date.now());
-        ApplicationSettings.setString(settingsKey, JSON.stringify({ timestamp: Date.now(), data: result.messageData }));
         return result.messageData;
         // const features = featureCollection.features;
         // for (let index = features.length - 1; index >= 0; index--) {
