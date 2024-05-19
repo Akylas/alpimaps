@@ -167,11 +167,10 @@
         const chartData = chartView.data;
         if (!chartData) {
             let set = new LineDataSet(sunPoses, 'sun', undefined, 'altitude');
-            set.color = '#ffdd55';
             set.fillFormatter = {
                 getFillLinePosition: (dataSet, dataProvider) => 0
             };
-            set.fillColor = '#ffdd55';
+            set.fillColor = set.color = '#ffdd55';
             set.fillAlpha = 50;
             set.drawFilledEnabled = true;
             set.lineWidth = 3;
