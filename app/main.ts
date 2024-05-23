@@ -21,6 +21,7 @@ import { getBGServiceInstance } from '~/services/BgService';
 import { networkService } from '~/services/NetworkService';
 import { startSentry } from '~/utils/sentry';
 import { NestedScrollView } from './NestedScrollView';
+import { ChartTraceCategory } from '@nativescript-community/ui-chart';
 // import './app.scss';
 
 try {
@@ -85,7 +86,7 @@ try {
     // Trace.addCategories(Trace.categories.NativeLifecycle);
     // Trace.addCategories(Trace.categories.Transition);
     // Trace.addCategories(Trace.categories.Animation);
-    // Trace.addCategories(CollectionViewTraceCategory);
+    // Trace.addCategories(ChartTraceCategory);
     // Trace.enable();
 
     themer.createShape('round', {
