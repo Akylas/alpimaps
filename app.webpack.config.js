@@ -705,10 +705,10 @@ module.exports = (env, params = {}) => {
     config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|ui-carto|ui-chart|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
     config.plugins.push(new IgnoreNotFoundExportPlugin());
 
-    const nativescriptReplace = '(NativeScript[\\/]dist[\\/]packages[\\/]core|@nativescript/core)';
+    const nativescriptReplace = '(NativeScript[\\/]dist[\\/]packages[\\/]core|@nativescript/core|@akylas/nativescript)';
     config.plugins.push(
-        new webpack.NormalModuleReplacementPlugin(/http$/, (resource) => {
-            if (resource.context.match(nativescriptReplace) || resource.request === '@nativescript/core/http') {
+        new webpack.NormalModuleReplacementPlugin(/http/, (resource) => {
+            if (resource.context.match(nativescriptReplace) || resource.request === '@nativescript/core/http' || resource.request === '@akylas/nativescript/http') {
                 resource.request = '@nativescript-community/https';
             }
         })
