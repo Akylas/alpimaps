@@ -1759,7 +1759,8 @@
                                 break;
                             case 'import': {
                                 const result = await openFilePicker({
-                                    extensions: __IOS__ ? ['com.microoled.gpx'] : ['application/gpx+xml', 'application/json', 'application/geo+json'],
+                                    documentTypes: ['com.akylas.gpx'],
+                                    mimeTypes: ['application/gpx+xml', 'application/json', 'application/geo+json'],
                                     multipleSelection: false,
                                     pickerMode: 0
                                 });
