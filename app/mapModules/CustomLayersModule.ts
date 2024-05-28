@@ -8,7 +8,7 @@ import { HillshadeRasterTileLayer, HillshadeRasterTileLayerOptions, RasterTileFi
 import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
 import { MapBoxElevationDataDecoder, TerrariumElevationDataDecoder } from '@nativescript-community/ui-carto/rastertiles';
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
-import { openFilePicker } from '@nativescript-community/ui-document-picker';
+import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-picker';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { confirm, login, prompt } from '@nativescript-community/ui-material-dialogs';
 import { Application, ApplicationSettings, Color, profile } from '@nativescript/core';
@@ -1054,14 +1054,12 @@ export default class CustomLayersModule extends MapModule {
     }
 
     selectLocalMbtilesFolder() {
-        return openFilePicker({
-            extensions: ['file/*'],
-            multipleSelection: false,
-            pickerMode: 0
+        return pickFolder({
+            multipleSelection: false
         })
             .then((result) => {
-                if (Folder.exists(result.files[0])) {
-                    const localMbtilesSource = result.files[0];
+                if (Folder.exists(result.folders[0])) {
+                    const localMbtilesSource = result.folders[0];
                     ApplicationSettings.setString('local_mbtiles_directory', localMbtilesSource);
                     this.loadLocalMbtiles(localMbtilesSource);
                 } else {
