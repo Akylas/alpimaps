@@ -634,7 +634,7 @@ module.exports = (env, params = {}) => {
                     const symbols = symbolsParser.parseSymbols(manifestBuffer.toString());
                     const icons = symbols.variables.reduce(function (acc, value) {
                         if (value.name.startsWith('$osm-')) {
-                            acc[value.name.slice(5)] = String.fromCharCode(parseInt(value.value.slice(2, -1), 16));
+                            acc[value.name.slice(5)] = String.fromCharCode(parseInt(value.value.slice(11, -2), 16));
                         }
                         return acc;
                     }, {});
@@ -827,6 +827,8 @@ module.exports = (env, params = {}) => {
             new WebpackShellPluginNext({
                 onBuildStart: {
                     scripts: [
+                        'fontforge --script ./fixFontDirection_overlap.pe app/fonts/osm.ttf ./dev_assets/styles/base/fonts/osm.ttf',
+                        'fontforge --script ./fixFontDirection.pe node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf ./dev_assets/styles/inner_cleaned/fonts/materialdesignicons-webfont.ttf',
                         `./${css2xmlBin} dev_assets/styles/osm/streets.json dev_assets/styles/osmxml_cleaned/streets.xml`,
                         `./${css2xmlBin} dev_assets/styles/osm/osm.json dev_assets/styles/osmxml_cleaned/osm.xml`,
                         `./${css2xmlBin} dev_assets/styles/osm/outdoors.json dev_assets/styles/osmxml_cleaned/outdoors.xml`,
@@ -845,17 +847,12 @@ module.exports = (env, params = {}) => {
         new WebpackShellPluginNext({
             onBuildExit: {
                 scripts: [
-                    `fontforge --script ./fixFontDirection_overlap.pe app/fonts/osm.ttf ${join(dist, 'fonts', 'osm.ttf')}`,
-                    `fontforge --script ./fixFontDirection.pe node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf ${join(dist, 'fonts', 'materialdesignicons-webfont.ttf')}`
-                ].concat(
-                    production
-                        ? []
-                        : [
-                              `cp ${join(dist, 'fonts', 'materialdesignicons-webfont.ttf')} ${join(dist, 'assets/styles/inner/fonts')}`,
-                              `cp ${join(dist, 'fonts', 'osm.ttf')} ${join(dist, 'assets/styles/inner/fonts')}`,
-                              `cp ${join(dist, 'fonts', 'osm.ttf')} ${join(dist, 'assets/styles/osm/fonts')}`
-                          ]
-                ),
+                    `cp dev_assets/styles/inner_cleaned/fonts/materialdesignicons-webfont.ttf ${join(dist, 'fonts')}`,
+                    `cp dev_assets/styles/inner_cleaned/fonts/materialdesignicons-webfont.ttf ${join(dist, 'assets/styles/inner/fonts')}`,
+                    `cp dev_assets/styles/base/fonts/osm.ttf ${join(dist, 'fonts')}`,
+                    `cp dev_assets/styles/base/fonts/osm.ttf ${join(dist, 'assets/styles/inner/fonts')}`,
+                    `cp dev_assets/styles/base/fonts/osm.ttf ${join(dist, 'assets/styles/osm/fonts')}`
+                ],
                 blocking: true,
                 parallel: false
             }
