@@ -22,6 +22,8 @@
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import { CheckBox } from '@nativescript-community/ui-checkbox';
+    import { SDK_VERSION } from '@nativescript-community/sentry';
+    import { isPermResultAuthorized, request } from '@nativescript-community/perms';
     $: ({ colorOnSurfaceVariant, colorOutlineVariant } = $colors);
     $: ({ bottom: windowInsetBottom } = $windowInset);
 
@@ -295,6 +297,12 @@
             }
             switch (item.id) {
                 case 'export_settings':
+                if (__ANDROID__ && SDK_VERSION < 29) {
+                        const permRes = await request('storage');
+                        if (!isPermResultAuthorized(permRes)) {
+                            throw new Error(lc('missing_storage_perm_settings'));
+                        }
+                    }
                     const jsonStr = ApplicationSettings.getAllJSON();
                     DEV_LOG && console.log('export_settings', jsonStr);
                     if (jsonStr) {
@@ -306,7 +314,7 @@
                     break;
                 case 'import_settings':
                     const result = await openFilePicker({
-                        extensions: ['application/json'],
+                        extensions: ['json'],
                         multipleSelection: false,
                         pickerMode: 0
                     });

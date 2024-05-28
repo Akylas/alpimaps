@@ -341,6 +341,7 @@
     "miniature_golf": "miniature golf",
     "missing_api_token": "cant add that source without an API token",
     "missing_manage_permission": "missing manage all files permission",
+    "missing_storage_perm_settings": "storage permission is needed to export settings",
     "missing_storage_permission": "missing storage permission",
     "mobile_phone": "mobile_phone",
     "monument": "monument",
