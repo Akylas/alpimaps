@@ -359,5 +359,6 @@
     "skiing": "滑雪",
     "skateboard": "滑板",
     "shrine": "神社",
-    "stop_gps_background_desc": "如果你停用此功能，GPS 將會在背景保持開啟狀態並觀看位置"
+    "stop_gps_background_desc": "如果你停用此功能，GPS 將會在背景保持開啟狀態並觀看位置",
+    "dentist": "牙醫"
 }
