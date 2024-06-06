@@ -50,7 +50,19 @@
 	}
 
 }
-
+#boundary::label {
+	[admin_level=4][zoom>=5][zoom<=8], [admin_level=6][zoom>=8][zoom<=10]{
+		text-name: @name;
+		text-face-name: @mont_it;
+		text-wrap-character: @wrap_characters;
+		text-placement: [nuti::texts3d];
+		text-fill: @state_label;
+		text-halo-fill: @state_halo;
+		text-halo-radius: @place_halo_radius;
+		text-size: linear([view::zoom], (6, 9.0), (7, 13.0));
+		text-wrap-width: step([view::zoom], (5, 40), (7, 70));
+	}
+}
 #place::label{
 	[class=continent][zoom>=1][zoom<=2]{
 		text-name: @name;
@@ -101,19 +113,19 @@
 			text-wrap-width: 30;
 		}
 	}
-	[class=state][zoom>=4][zoom<=6],[class=province][zoom>=3][zoom<=6]{
-		text-name: @name;
-		text-face-name: @mont_it;
-		text-wrap-character: @wrap_characters;
-		text-placement: [nuti::texts3d];
-		text-fill: @state_label;
-		text-halo-fill: @state_halo;
-		text-halo-radius: @place_halo_radius;
-		text-size: linear([view::zoom], (6, 9.0), (7, 13.0));
-		text-wrap-width: step([view::zoom], (5, 40), (7, 70));
-	}
+	// [class=state][zoom>=4][zoom<=6],[class=province][zoom>=3][zoom<=6]{
+	// 	text-name: @name;
+	// 	text-face-name: @mont_it;
+	// 	text-wrap-character: @wrap_characters;
+	// 	text-placement: [nuti::texts3d];
+	// 	text-fill: @state_label;
+	// 	text-halo-fill: @state_halo;
+	// 	text-halo-radius: @place_halo_radius;
+	// 	text-size: linear([view::zoom], (6, 9.0), (7, 13.0));
+	// 	text-wrap-width: step([view::zoom], (5, 40), (7, 70));
+	// }
 	
-	[class=island][zoom>=12][zoom<=14] {
+	[class=island][zoom>=2][zoom<=14] {
 		text-name: @name;
 		text-face-name: @mont_md;
 		text-wrap-character: @wrap_characters;
