@@ -147,8 +147,11 @@
         try {
             const props = item && item.properties;
             DEV_LOG && console.log('openWikipedia', props.wikipedia);
-            if (props && props.wikipedia) {
+            if (props?.wikipedia) {
                 const url = `https://en.wikipedia.org/wiki/${props.wikipedia}`;
+                openLink(url);
+            } else if (props?.name) {
+                const url = `https://en.wikipedia.org/wiki/Special:Search?search=${props.name}`;
                 openLink(url);
             }
         } catch (error) {
@@ -167,7 +170,7 @@
                     // if (props.wikipedia) {
                     //     query = props.wikipedia.split(':')[1];
                     // }
-                    if (props.address) {
+                    if (props.address?.county && props.address?.county !== query) {
                         query += ' ' + props.address.county;
                     }
                 }
