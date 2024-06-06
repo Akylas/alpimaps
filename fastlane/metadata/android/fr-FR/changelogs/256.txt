@@ -1,0 +1,7 @@
+### Bug fixes
+- item info fixes ([b76ec232](/b76ec232deffdb1f9080d3de6cffc43dc5b4893d))
+- disable transit lines button on error ([c2b801e3](/c2b801e3155a629ccbf30ee756c856f6f851ecca))
+- elevation chart fixes ([628a15b5](/628a15b5b07bf35598a2a12a2effa718ef3288e6))
+- show patreon/librepay links in settings ([fe9ed110](/fe9ed11038ee9643565f319cbbac5638820d00c4))
+- file pickers fix ([bdd80e5c](/bdd80e5cfe1348b5f00aaf20e695dd58a6b336c9))
+- item search fix ([f2ad7b57](/f2ad7b579e5f7bdda11f0fcd176ad77d
