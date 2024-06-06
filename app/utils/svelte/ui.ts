@@ -1,4 +1,4 @@
-import { Frame, Observable, View } from '@nativescript/core';
+import { EventData, Frame, Observable, View } from '@nativescript/core';
 import { onDestroy } from 'svelte';
 import { asSvelteTransition, easings } from 'svelte-native/transitions';
 import { get_current_component } from 'svelte/internal';
@@ -9,8 +9,8 @@ import { throttle } from '@akylas/nativescript/utils';
 export const globalObservable = new Observable();
 
 const callbacks = {};
-export function createGlobalEventListener(eventName: string) {
-    return function (callback: Function, once = false) {
+export function createGlobalEventListener<T = any>(eventName: string) {
+    return function (callback: (data: T, event: EventData) => any, once = false) {
         callbacks[eventName] = callbacks[eventName] || {};
         let cleaned = false;
 
@@ -21,11 +21,12 @@ export function createGlobalEventListener(eventName: string) {
                 globalObservable.off(eventName, eventCallack);
             }
         }
-        const eventCallack = (event) => {
+        const eventCallack = (event: EventData & { data: T; result?: any }) => {
             if (once) {
                 clean();
             }
             if (Array.isArray(event.data)) {
+                //@ts-ignore
                 event.result = callback(...event.data, event);
             } else {
                 event.result = callback(event.data, event);

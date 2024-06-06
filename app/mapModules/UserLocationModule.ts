@@ -39,7 +39,7 @@ export default class UserLocationModule extends MapModule {
             this.mUserFollow = value;
         }
     }
-    onMapDestroyed() {
+    override onMapDestroyed() {
         super.onMapDestroyed();
         this.localVectorLayer = null;
         if (this.localVectorDataSource) {
@@ -88,8 +88,10 @@ export default class UserLocationModule extends MapModule {
             mapContext.addLayer(this.localVectorLayer, 'userLocation');
         }
     }
-    onMapInteraction(interaction: MapInteractionInfo) {
-        if (interaction.isPanAction && interaction.userAction) {
+    override onMapInteraction(e: { data: { interaction: MapInteractionInfo } }) {
+        const interaction = e.data.interaction;
+        // DEV_LOG && console.log('onMapInteraction', interaction);
+        if (!interaction.isZoomAction && interaction.isPanAction && interaction.userAction) {
             this.userFollow = false;
         }
     }
