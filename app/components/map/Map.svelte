@@ -11,7 +11,7 @@
     import { VectorLayer, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
     import { Projection } from '@nativescript-community/ui-carto/projections';
     import { EPSG3857 } from '@nativescript-community/ui-carto/projections/epsg3857';
-    import { CartoMap, PanningMode, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
+    import { CartoMap, MapClickInfo, PanningMode, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
     import { ZippedAssetPackage, nativeVectorToArray, setShowDebug, setShowError, setShowInfo, setShowWarn } from '@nativescript-community/ui-carto/utils';
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
@@ -623,7 +623,7 @@
         }
     }
     let mapMoved = false;
-    function onMainMapMove(e) {
+    function onMainMapMove(e: { data: { userAction: boolean } }) {
         // DEV_LOG && console.log('onMainMapMove', mapMoved);
         if (!cartoMap) {
             return;
@@ -634,13 +634,14 @@
     }
     function onMainMapInteraction(e) {
         // this means user interaction
-        // DEV_LOG && console.log('onMainMapInteraction', mapMoved);
+        // DEV_LOG && console.log('onMainMapInteraction', Object.keys(e));
         if (!cartoMap) {
             return;
         }
         if (!mapMoved) {
             unFocusSearch();
         }
+        mapContext.runOnModules('onMapInteraction', e);
         mapMoved = true;
     }
     function onMainMapIdle(e) {
@@ -662,11 +663,11 @@
         mapContext.runOnModules('onMapStable', e);
     }
 
-    function onMainMapClicked(e) {
+    function onMainMapClicked(e: { data: MapClickInfo<MapPos<LatLonKeys>> }) {
         const { clickType, position } = e.data;
         TEST_LOG && console.log('onMainMapClicked', clickType, position, ignoreNextMapClick);
         // handleClickedFeatures(position);
-        if (ignoreNextMapClick || searchView.hasFocus()) {
+        if (ignoreNextMapClick ) {
             ignoreNextMapClick = false;
             return;
         }

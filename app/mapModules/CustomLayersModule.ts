@@ -459,8 +459,7 @@ export default class CustomLayersModule extends MapModule {
                     : dataSource,
                 {
                     zoomLevelBias,
-                    //@ts-ignore
-                    cacheSize,
+                    // cacheSize,
                     opacity,
                     tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_ALL,
                     visible: opacity !== 0,
@@ -499,8 +498,7 @@ export default class CustomLayersModule extends MapModule {
                           })
                         : dataSource,
                 zoomLevelBias,
-                //@ts-ignore
-                cacheSize,
+                // cacheSize,
                 opacity,
                 // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                 visible: opacity !== 0,
@@ -794,6 +792,7 @@ export default class CustomLayersModule extends MapModule {
             const terrains = [];
             const mbtiles = [];
             const worldMbtilesEntity = entities.find((e) => e.name === 'world.mbtiles');
+            // const worldMbtilesEntity = undefined;
             const worldRouteMbtilesEntity = entities.find((e) => e.name.endsWith('routes_9.mbtiles') || e.name.endsWith('routes.mbtiles'));
             const worldTerrainMbtilesEntity = entities.find((e) => e.name.endsWith('.etiles'));
 
