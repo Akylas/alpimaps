@@ -12,7 +12,10 @@ Map {
   }
 
   [class=ice] {
-      polygon-fill: @glacier;
+      polygon-fill: @ice;
+      [subclass=iceshelf] {
+        polygon-fill: @iceshelf;
+      }
   }
 
   [class=farmland]{
