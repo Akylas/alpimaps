@@ -31,14 +31,14 @@
         scaleText = `${data.value.toFixed(data.value < 10 ? 1 : 0)} ${data.unit} (${zoom.toFixed(1)})`;
         // });
     }
-    mapContext.onMapReady((mapView: CartoMap<LatLonKeys>) => {
+    mapContext.onMapReady(() => {
         updateData();
     });
     export function onLayoutChange() {
         scaleWidth = INCH_IN_CM * DPI;
         updateData();
     }
-    mapContext.onMapMove((mapView: CartoMap<LatLonKeys>) => {
+    mapContext.onMapMove(() => {
         updateData();
     });
 </script>
