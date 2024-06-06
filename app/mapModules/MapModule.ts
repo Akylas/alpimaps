@@ -1,11 +1,11 @@
 import { l } from '@nativescript-community/l';
 import Observable from '@nativescript-community/observable';
-import { arrayToNativeVector } from '@nativescript-community/ui-carto/core';
+import { MapPos, arrayToNativeVector } from '@nativescript-community/ui-carto/core';
 import { Layer } from '@nativescript-community/ui-carto/layers';
 import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
 import { VectorElementEventData, VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { Projection } from '@nativescript-community/ui-carto/projections';
-import { CartoMap, MapInteractionInfo } from '@nativescript-community/ui-carto/ui';
+import { CartoMap, MapClickInfo, MapInteractionInfo } from '@nativescript-community/ui-carto/ui';
 import { DirAssetPackage, ZippedAssetPackage } from '@nativescript-community/ui-carto/utils';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
@@ -22,18 +22,18 @@ import type { IItem } from '~/models/Item';
 import { getBGServiceInstance } from '~/services/BgService';
 import { packageService } from '~/services/PackageService';
 import { createGlobalEventListener, globalObservable, navigate } from '~/utils/svelte/ui';
-export interface IMapModule {
-    onMapReady(mapView: CartoMap<LatLonKeys>);
-    onMapDestroyed();
-    onServiceLoaded?(geoHandler: GeoHandler);
-    onServiceUnloaded?(geoHandler: GeoHandler);
-    onMapMove?(e);
-    onMapInteraction?(e);
-    onMapClicked?(e);
-    onVectorTileClicked?(data: VectorTileEventData<LatLonKeys>);
-    onVectorElementClicked?(data: VectorElementEventData<LatLonKeys>);
-    onSelectedItem?(item: IItem, oldItem: IItem);
-}
+// export interface IMapModule {
+//     onMapReady(mapView: CartoMap<LatLonKeys>);
+//     onMapDestroyed();
+//     onServiceLoaded?(geoHandler: GeoHandler);
+//     onServiceUnloaded?(geoHandler: GeoHandler);
+//     onMapMove?(e: { data: { userAction: boolean } });
+//     onMapInteraction?(e: { data: { interaction: MapInteractionInfo } });
+//     onMapClicked?(e: { data: MapClickInfo });
+//     onVectorTileClicked?(data: VectorTileEventData<LatLonKeys>);
+//     onVectorElementClicked?(data: VectorElementEventData<LatLonKeys>);
+//     onSelectedItem?(item: IItem, oldItem: IItem);
+// }
 export type LayerType = 'map' | 'routes' | 'customLayers' | 'hillshade' | 'selection' | 'items' | 'directions' | 'userLocation' | 'search' | 'transit';
 
 export type ContextCallback<T = CartoMap<LatLonKeys>> = (data: T) => void;
@@ -74,8 +74,8 @@ export interface MapContext {
     mapModule<T extends keyof MapModules>(id: T): MapModules[T];
     onOtherAppTextSelected(callback: ContextCallback, once?: boolean);
     onMapReady(callback: ContextCallback, once?: boolean);
-    onMapMove(callback: ContextCallback, once?: boolean);
-    onMapInteraction(callback: ContextCallback<MapInteractionInfo>, once?: boolean);
+    onMapMove(callback: ContextCallback<{ userAction: boolean }>, once?: boolean);
+    onMapInteraction(callback: ContextCallback<{ interaction: MapInteractionInfo }>, once?: boolean);
     onMapStable(callback: ContextCallback, once?: boolean);
     getMapViewPort(): { left: number; width: number; top: number; height: number };
     onMapIdle(callback: ContextCallback, once?: boolean);
@@ -137,12 +137,12 @@ export function onNetworkChanged(callback: (theme) => void) {}
 const mapContext: MapContext = {
     mapModules: {},
     onOtherAppTextSelected: createGlobalEventListener('onOtherAppTextSelected'),
-    onMapReady: createGlobalEventListener('onMapReady'),
-    onMapMove: createGlobalEventListener('onMapMove'),
-    onMapInteraction: createGlobalEventListener('onMapInteraction'),
-    onMapStable: createGlobalEventListener('onMapStable'),
-    onMapIdle: createGlobalEventListener('onMapIdle'),
-    onMapClicked: createGlobalEventListener('onMapClicked'),
+    onMapReady: createGlobalEventListener<never>('onMapReady'),
+    onMapMove: createGlobalEventListener<{ userInteraction: boolean }>('onMapMove'),
+    onMapInteraction: createGlobalEventListener<{ interaction: MapInteractionInfo }>('onMapInteraction'),
+    onMapStable: createGlobalEventListener<never>('onMapStable'),
+    onMapIdle: createGlobalEventListener<never>('onMapIdle'),
+    onMapClicked: createGlobalEventListener<MapClickInfo<MapPos<LatLonKeys>>>('onMapClicked'),
     onVectorElementClicked: createGlobalEventListener('onVectorElementClicked'),
     onVectorTileElementClicked: createGlobalEventListener('onVectorTileElementClicked'),
     onRasterTileClicked: createGlobalEventListener('onRasterTileClicked'),
@@ -293,7 +293,7 @@ export async function handleMapAction(action: string, options?) {
     }
 }
 
-export default abstract class MapModule extends Observable implements IMapModule {
+export default abstract class MapModule extends Observable /*  implements IMapModule */ {
     mapView: CartoMap<LatLonKeys>;
     onMapReady(mapView: CartoMap<LatLonKeys>) {
         this.mapView = mapView;
@@ -303,9 +303,9 @@ export default abstract class MapModule extends Observable implements IMapModule
     }
     onServiceLoaded?(geoHandler: GeoHandler);
     onServiceUnloaded?(geoHandler: GeoHandler);
-    onMapMove?(e);
-    onMapInteraction?(e);
-    onMapClicked?(e);
+    onMapMove?(e: { data: { userAction: boolean } });
+    onMapInteraction?(e: { data: { interaction: MapInteractionInfo } });
+    onMapClicked?(e: { data: MapClickInfo });
     onVectorTileClicked?(data: VectorTileEventData<LatLonKeys>);
     onVectorElementClicked?(data: VectorElementEventData<LatLonKeys>);
     onVectorTileElementClicked?(data: VectorTileEventData<LatLonKeys>);
