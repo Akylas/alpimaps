@@ -941,7 +941,7 @@
                     <IconButton isVisible={!!item?.id && itemIsRoute} rounded={false} text="mdi-eye-off" tooltip={lc('hide')} on:tap={hideItem} />
                     <IconButton isVisible={itemCanBeAdded} rounded={false} text={itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus'} tooltip={lc('save')} on:tap={() => saveItem()} />
                     <IconButton isVisible={itemCanBeEdited} rounded={false} text="mdi-pencil" tooltip={lc('edit')} on:tap={startEditingItem} />
-                    <IconButton isVisible={item && item.properties && !!item.properties.wikipedia} rounded={false} text="mdi-wikipedia" tooltip={lc('wikipedia')} on:tap={openWikipedia} />
+                    <IconButton isVisible={item && item.properties && !!item.properties.name} rounded={false} text="mdi-wikipedia" tooltip={lc('wikipedia')} on:tap={openWikipedia} />
                     {#if networkService.canCheckWeather}
                         <IconButton isVisible={!itemIsRoute} rounded={false} text="mdi-weather-partly-cloudy" tooltip={lc('weather')} on:tap={checkWeather} />
                     {/if}
