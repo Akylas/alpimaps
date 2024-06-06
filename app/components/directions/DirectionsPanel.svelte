@@ -33,6 +33,7 @@
     import { colors, fonts } from '~/variables';
     import { onThemeChanged } from '~/helpers/theme';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { MapClickInfo } from '@nativescript-community/ui-carto/ui';
 
     const DEFAULT_PROFILE_KEY = 'default_direction_profile';
 
@@ -538,7 +539,7 @@
         }
     }
 
-    export function onMapClicked(e) {
+    export function onMapClicked(e: { data: MapClickInfo<MapPos<LatLonKeys>> }) {
         const { clickType, position } = e.data;
         if (clickType === ClickType.LONG && waypoints.length > 0) {
             // executeOnMainThread(() => {
