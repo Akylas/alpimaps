@@ -667,7 +667,7 @@
         const { clickType, position } = e.data;
         TEST_LOG && console.log('onMainMapClicked', clickType, position, ignoreNextMapClick);
         // handleClickedFeatures(position);
-        if (ignoreNextMapClick ) {
+        if (ignoreNextMapClick) {
             ignoreNextMapClick = false;
             return;
         }
