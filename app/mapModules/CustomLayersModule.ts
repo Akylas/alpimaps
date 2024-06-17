@@ -1054,7 +1054,8 @@ export default class CustomLayersModule extends MapModule {
 
     selectLocalMbtilesFolder() {
         return pickFolder({
-            multipleSelection: false
+            multipleSelection: false,
+            forceSAF: true
         })
             .then((result) => {
                 if (Folder.exists(result.folders[0])) {
