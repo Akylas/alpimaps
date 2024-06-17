@@ -47,7 +47,7 @@
     onThemeChanged(() => collectionView?.nativeView.refreshVisibleItems());
 </script>
 
-<PopoverBackgroundView backgroundColor={colorWidgetBackground} rows="auto,*,auto">
+<PopoverBackgroundView backgroundColor={colorWidgetBackground} rows="auto,*,auto" columns="*" width="95%">
     {#if options}
         <stacklayout horizontalAlignment="center" margin={5} orientation="horizontal">
             {#each options as option, index}
@@ -74,7 +74,7 @@
                 value={item.value} />
         </Template>
         <Template key="switch" let:item>
-            <gridlayout columns="*, auto" padding="0 10 0 30">
+            <gridlayout columns="*, auto" padding="0 10 0 10">
                 <stacklayout verticalAlignment="middle">
                     <label color={colorOnSurface} fontSize={17} lineBreak="end" maxLines={2} text={item.title} textWrap={true} verticalTextAlignment="top" />
                     <label
@@ -86,7 +86,7 @@
                         verticalTextAlignment="top"
                         visibility={item.subtitle && item.subtitle.length > 0 ? 'visible' : 'collapse'} />
                 </stacklayout>
-                <switch checked={item.value} col={1} verticalAlignment="middle" on:checkedChange={(e) => onCheckBox(item, e.value)} />
+                <switch checked={item.value} col={1} marginLeft={10} verticalAlignment="middle" on:checkedChange={(e) => onCheckBox(item, e.value)} />
                 <absoluteLayout backgroundColor={colorOutlineVariant} colSpan={2} height={1} verticalAlignment="bottom" />
             </gridlayout>
         </Template>
