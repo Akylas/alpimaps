@@ -1763,7 +1763,8 @@
                                     documentTypes: ['com.akylas.gpx'],
                                     mimeTypes: ['application/gpx+xml', 'application/json', 'application/geo+json'],
                                     multipleSelection: false,
-                                    pickerMode: 0
+                                    pickerMode: 0,
+                            forceSAF: true
                                 });
                                 const filePath = result.files[0];
                                 if (filePath && File.exists(filePath)) {
