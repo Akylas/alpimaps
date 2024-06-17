@@ -30,7 +30,7 @@
     import { MOBILITY_URL } from '~/services/TransitService';
     import { showError } from '~/utils/error';
     import { defaultProfileCostingOptions, getSavedProfile, getValhallaSettings, removeSavedProfile, savedProfile, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
-    import { colors, fonts } from '~/variables';
+    import { colors, fonts, windowInset } from '~/variables';
     import { onThemeChanged } from '~/helpers/theme';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { MapClickInfo } from '@nativescript-community/ui-carto/ui';
@@ -71,6 +71,8 @@
 
         return { route, instructions };
     }
+
+    const COLLECTIONVIEW_HEIGHT = 70;
 </script>
 
 <script lang="ts">
@@ -108,7 +110,7 @@
 
     const used_settings = {
         common: ['service_factor', 'service_penalty', 'use_living_streets', 'use_tracks'],
-        pedestrian: ['walking_speed', 'weight', 'use_hills', 'max_hiking_difficulty', 'step_penalty', 'driveway_factor', 'walkway_factor', 'sidewalk_factor', 'alley_factor'],
+        pedestrian: ['walking_speed', 'weight', 'use_hills', 'max_hiking_difficulty', 'step_penalty', 'driveway_factor', 'walkway_factor', 'sidewalk_factor', 'alley_factor', 'use_roads'],
         bicycle: ['use_hills', 'avoid_bad_surfaces', 'use_roads', 'cycling_speed', 'non_network_penalty'],
         auto: ['use_highways', 'use_distance', 'use_tolls', 'alley_factor'],
         motorcycle: ['use_highways', 'use_tolls', 'use_trails']
@@ -456,9 +458,53 @@
             const params = translationFunction ? translationFunction(height, 0, 1, superParams) : superParams;
             await nView.animate(params);
             currentTranslationY = 0;
-            translationY = 220;
+            translationY = Utils.layout.toDeviceIndependentPixels(nView.getMeasuredHeight()) + 10;
         } catch (error) {
             showError(error);
+        }
+    }
+    let expanded = false;
+    async function expand() {
+        try {
+            if (expanded) {
+                return;
+            }
+            expanded = true;
+            const nView = collectionView.nativeView;
+            const params = {
+                target: nView,
+                height: COLLECTIONVIEW_HEIGHT * 2,
+                duration: 100
+            };
+            await nView.animate(params);
+        } catch (error) {
+            expanded = false;
+            showError(error);
+        }
+    }
+    async function collapse() {
+        try {
+            if (!expanded) {
+                return;
+            }
+            expanded = false;
+            const nView = collectionView.nativeView;
+            const params = {
+                target: nView,
+                height: COLLECTIONVIEW_HEIGHT,
+                duration: 100
+            };
+            await nView.animate(params);
+        } catch (error) {
+            expanded = true;
+            showError(error);
+        }
+    }
+    async function onExpandedChevron() {
+        if (expanded) {
+            collapse();
+        } else {
+            expand();
         }
     }
     async function hide() {
@@ -804,9 +850,9 @@
                         //shortest
                         { shortest: true },
                         // very steep
-                        { use_hills: 1, style: { color: '#AD5FC4' } },
+                        { use_roads: 0, use_hills: 1, style: { color: '#AD5FC4' } },
                         // least steep
-                        { use_hills: 0.4, step_penalty: 60, style: { color: '#5FC476' } }
+                        { use_roads: 0, use_hills: 0.4, step_penalty: 60, style: { color: '#5FC476' } }
                     ];
                 } else {
                     options = [{ shortest: true }, { shortest: false, use_tolls: 1, use_highways: 1 }, { shortest: false, use_tolls: 0, use_highways: 1 }, { shortest: false, use_highways: 0 }];
@@ -1112,7 +1158,7 @@
 
 <stacklayout bind:this={topLayout} {...$$restProps} style="z-index:1000;" backgroundColor={colorPrimary} translateY={currentTranslationY} ios:iosIgnoreSafeArea={false}>
     {#if loaded}
-        <gridlayout bind:this={gridLayout} columns="*,40" rows="50,70,auto" on:tap={() => {}}>
+        <gridlayout bind:this={gridLayout} columns="*,40" rows="50,auto,auto" on:tap={() => {}}>
             <IconButton horizontalAlignment="left" isSelected={true} text="mdi-arrow-left" white={true} on:tap={() => cancel()} />
             <stacklayout colSpan={2} horizontalAlignment="center" orientation="horizontal">
                 <IconButton color={profileColor(profile, 'auto')} text="mdi-car" on:tap={() => setProfile('auto')} />
@@ -1148,6 +1194,7 @@
             <collectionview
                 bind:this={collectionView}
                 animateItemUpdate={true}
+                height={COLLECTIONVIEW_HEIGHT}
                 itemIdGenerator={(item, i) => item.properties.id}
                 items={waypoints}
                 reorderEnabled={true}
@@ -1166,7 +1213,10 @@
                             text="mdi-dots-vertical"
                             verticalAlignment="bottom"
                             visibility={item.properties.isStop ? 'hidden' : 'visible'} />
-                        <cspan fontFamily={$fonts.mdi} text={item.properties.isStop ? 'mdi-map-marker' : 'mdi-checkbox-blank-circle-outline'} verticalAlignment="middle" />
+                        <cspan
+                            fontFamily={$fonts.mdi}
+                            text={item.properties.isStop ? 'mdi-flag-checkered' : item.properties.isStart ? 'mdi-map-marker' : 'mdi-checkbox-blank-circle-outline'}
+                            verticalAlignment="middle" />
 
                         <gridlayout
                             backgroundColor={new Color(colorPrimary).darken(14).hex}
@@ -1183,7 +1233,7 @@
             </collectionview>
             <IconButton col={1} color="white" height={40} isEnabled={nbWayPoints > 1} row={1} text="mdi-swap-vertical" on:tap={() => reversePoints()} />
             <stacklayout id="directionsbuttons" colSpan={2} orientation="horizontal" row={2} visibility={showOptions ? 'visible' : 'collapse'}>
-                {#if profile === 'auto'}
+                {#if profile === 'auto' || profile === 'motorcycle'}
                     <IconButton
                         color={valhallaSettingColor('use_highways', profile, profileCostingOptions)}
                         onLongPress={(event) => setSliderCostingOptions('use_highways', event)}
@@ -1263,6 +1313,7 @@
                 <IconButton color={costingOptions.shortest ? 'white' : '#ffffff55'} size={40} text="mdi-timer-outline" on:tap={() => (costingOptions.shortest = !costingOptions.shortest)} />
                 <IconButton color={computeMultiple ? 'white' : '#ffffff55'} size={40} text="mdi-arrow-decision" on:tap={() => (computeMultiple = !computeMultiple)} />
                 <IconButton color="white" size={40} text="mdi-dots-vertical" on:tap={showMoreOptions} />
+                <IconButton color="white" size={40} text={expanded ? 'mdi-chevron-up' : 'mdi-chevron-down'} on:tap={onExpandedChevron} />
             </stacklayout>
         </gridlayout>
     {/if}
