@@ -44,12 +44,12 @@ export async function getDefaultMBTilesDir() {
     if (!ANDROID_30) {
         // storage permission is not needed
         // and will report never_ask_again on >= 33
-        const result = await request('storage', { read: true, write: true });
+        // const result = await request('storage', { read: true, write: true });
 
-        DEV_LOG && console.log('storage', result);
-        if (!permResultCheck(result)) {
-            throw new Error(lc('missing_storage_permission'));
-        }
+        // DEV_LOG && console.log('storage', result);
+        // if (!permResultCheck(result)) {
+        //     throw new Error(lc('missing_storage_permission'));
+        // }
 
         // if (__ANDROID__) {
         //     (async function test() {
