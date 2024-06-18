@@ -30,9 +30,9 @@ Application.on(Application.systemAppearanceChangedEvent, (event: SystemAppearanc
         if (autoDarkToBlack && realTheme === 'dark') {
             realTheme = 'black';
         }
-        // if (__ANDROID__) {
-        //     akylas.alpi.maps.Utils.applyDayNight(Application.android.startActivity, true);
-        // }
+        if (__ANDROID__) {
+            akylas.alpi.maps.Utils.applyDayNight(Application.android.startActivity, true);
+        }
         Theme.setMode(Theme.Auto, undefined, realTheme, false);
         updateThemeColors(realTheme);
         //close any popover as they are not updating with theme yet
