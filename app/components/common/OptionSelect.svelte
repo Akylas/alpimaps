@@ -40,6 +40,7 @@
     export let onRightIconTap: (item, e) => void = null;
     let filteredOptions: OptionType[] | ObservableArray<OptionType[]> = null;
     let filter: string = null;
+    DEV_LOG && console.log('options', options);
     // technique for only specific properties to get updated on store change
     $: ({ colorOutlineVariant, colorOnSurface, colorOutline } = $colors);
 
@@ -69,8 +70,7 @@
                 const result = await openFilePicker({
                     extensions: ['file/*'],
                     multipleSelection: false,
-                    pickerMode: 0,
-                    forceSAF: true
+                    pickerMode: 0
                 });
                 if (File.exists(result.files[0])) {
                     const file = File.fromPath(result.files[0]);
