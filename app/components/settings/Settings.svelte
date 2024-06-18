@@ -297,19 +297,18 @@
             }
             switch (item.id) {
                 case 'export_settings':
-                    // if (__ANDROID__ && SDK_VERSION < 29) {
-                    //     const permRes = await request('storage');
-                    //     if (!isPermResultAuthorized(permRes)) {
-                    //         throw new Error(lc('missing_storage_perm_settings'));
-                    //     }
-                    // }
+                if (__ANDROID__ && SDK_VERSION < 29) {
+                        const permRes = await request('storage');
+                        if (!isPermResultAuthorized(permRes)) {
+                            throw new Error(lc('missing_storage_perm_settings'));
+                        }
+                    }
                     const jsonStr = ApplicationSettings.getAllJSON();
                     DEV_LOG && console.log('export_settings', jsonStr);
                     if (jsonStr) {
                         await saveFile({
                             name: `${__APP_ID__}_settings_${dayjs().format('YYYY-MM-DD')}.json`,
-                            data: jsonStr,
-                            forceSAF: true
+                            data: jsonStr
                         });
                     }
                     break;
@@ -317,8 +316,7 @@
                     const result = await openFilePicker({
                         extensions: ['json'],
                         multipleSelection: false,
-                        pickerMode: 0,
-                        forceSAF: true
+                        pickerMode: 0
                     });
                     const filePath = result.files[0];
                     if (filePath && File.exists(filePath)) {
@@ -433,8 +431,7 @@
                         permissions: {
                             read: true,
                             persistable: true
-                        },
-                        forceSAF: true
+                        }
                     });
                     const resultPath = result.folders[0];
                     if (resultPath) {
