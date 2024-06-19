@@ -2,7 +2,7 @@ import { GPS, GenericGeoLocation, Options as GeolocationOptions, LocationMonitor
 import { check, request } from '@nativescript-community/perms';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
 import { AndroidActivityResultEventData, AndroidApplication, Application, ApplicationEventData, ApplicationSettings, CoreTypes, EventData, Observable, Utils } from '@nativescript/core';
-import { SDK_VERSION} from '@nativescript/core/utils';
+import { SDK_VERSION } from '@nativescript/core/utils';
 import { bind } from 'helpful-decorators/dist-src/bind';
 import { convertDurationSeconds, formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
@@ -12,7 +12,6 @@ import type { BgService as AndroidBgService } from '~/services/android/BgService
 
 let geolocation: GPS;
 
-//@ts-ignore
 export const desiredAccuracy = __ANDROID__ ? CoreTypes.Accuracy.high : kCLLocationAccuracyBestForNavigation;
 export const updateDistance = 0;
 export const maximumAge = 3000;
@@ -716,7 +715,7 @@ let GPSStatusCallback: typeof IGPSStatusCallback;
 
 function getAndroidLocationManager(): android.location.LocationManager {
     if (!androidLocationManager) {
-        androidLocationManager = Utils.ad.getApplicationContext().getSystemService(android.content.Context.LOCATION_SERVICE) as android.location.LocationManager;
+        androidLocationManager = Utils.android.getApplicationContext().getSystemService(android.content.Context.LOCATION_SERVICE) as android.location.LocationManager;
     }
     return androidLocationManager;
 }
