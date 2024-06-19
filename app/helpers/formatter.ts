@@ -7,7 +7,7 @@ import SimpleOpeningHours from '~/helpers/SimpleOpeningHours';
 import dayjs from 'dayjs';
 import humanUnit, { sizePreset } from 'human-unit';
 import { get } from 'svelte/store';
-import { formatDate, langStore, lc } from '~/helpers/locale';
+import { formatDate, formatTime, langStore, lc } from '~/helpers/locale';
 import { IItem } from '~/models/Item';
 export { convertDurationSeconds, formatDate } from '~/helpers/locale';
 const timePreset = {
@@ -235,7 +235,7 @@ export function openingHoursText(item: IItem) {
     let text = isOpened ? lc('open') : lc('closed');
     const nextTime = oh.nextTime();
     if (nextTime && (isOpened || nextTime.getDate() === new Date().getDate())) {
-        text += ' - ' + (isOpened ? lc('until') : lc('opening_at')) + ' ' + dayjs(nextTime).format('LT');
+        text += ' - ' + (isOpened ? lc('until') : lc('opening_at')) + ' ' + formatTime(nextTime, 'LT');
     }
     return { text, isOpened, color: isOpened ? '#4ba787' : '#f90000', oh };
 }
