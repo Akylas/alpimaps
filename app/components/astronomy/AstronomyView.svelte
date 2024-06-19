@@ -335,58 +335,98 @@
                 spans
             });
             const staticLayout = new StaticLayout(nString, subCanvasTextPaint, w, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
-            canvas.translate(padding, padding + padding + paddingTop);
+            canvas.translate(padding, 2 * padding + paddingTop);
             staticLayout.draw(canvas);
         }
 
-        canvas.save();
-        drawOnSubCanvas(
-            [
-                {
-                    color: '#ffa500',
-                    fontFamily: $fonts.mdi,
-                    text: 'mdi-weather-sunset-up',
-                    verticalAlignment: 'center'
-                },
-                {
-                    text: lc('sunrise') + ':',
-                    verticalAlignment: 'center'
-                }
-            ],
-            0
-        );
-        subCanvasTextPaint.setTextAlign(Align.RIGHT);
-        canvas.drawText(formatTime(sunriseEnd, undefined, timezoneOffset), w - 2 * padding, 13, subCanvasTextPaint);
-        subCanvasTextPaint.setTextAlign(Align.LEFT);
-        canvas.restore();
-        canvas.save();
-        drawOnSubCanvas(
-            [
-                {
-                    color: '#ff7200',
-                    fontFamily: $fonts.mdi,
-                    text: 'mdi-weather-sunset-down',
-                    verticalAlignment: 'center'
-                },
-                {
-                    text: lc('sunset') + ':',
-                    verticalAlignment: 'center'
-                }
-            ],
-            30
-        );
-        subCanvasTextPaint.setTextAlign(Align.RIGHT);
-        canvas.drawText(formatTime(sunsetStart, undefined, timezoneOffset), w - 2 * padding, 13, subCanvasTextPaint);
-        subCanvasTextPaint.setTextAlign(Align.LEFT);
-        canvas.restore();
+        // canvas.save();
+        // drawOnSubCanvas(
+        //     [
+        //         {
+        //             color: '#ffa500',
+        //             fontFamily: $fonts.mdi,
+        //             text: 'mdi-weather-sunset-up',
+        //             verticalAlignment: 'center'
+        //         },
+        //         {
+        //             text: ' ' + lc('sunrise') + ':',
+        //             verticalAlignment: 'center'
+        //         }
+        //     ],
+        //     0
+        // );
+        // subCanvasTextPaint.setTextAlign(Align.RIGHT);
+        // canvas.drawText(formatTime(sunriseEnd, undefined, timezoneOffset), w - 2 * padding, 13, subCanvasTextPaint);
+        // subCanvasTextPaint.setTextAlign(Align.LEFT);
+        // canvas.restore();
+        // canvas.save();
+        // drawOnSubCanvas(
+        //     [
+        //         {
+        //             color: '#ff7200',
+        //             fontFamily: $fonts.mdi,
+        //             text: 'mdi-weather-sunset-down',
+        //             verticalAlignment: 'center'
+        //         },
+        //         {
+        //             text: ' ' + lc('sunset') + ':',
+        //             verticalAlignment: 'center'
+        //         }
+        //     ],
+        //     30
+        // );
+        // subCanvasTextPaint.setTextAlign(Align.RIGHT);
+        // canvas.drawText(formatTime(sunsetStart, undefined, timezoneOffset), w - 2 * padding, 13, subCanvasTextPaint);
+        // canvas.restore();
 
-        canvas.drawText(lc('daylight_duration') + ':', padding, 90, subCanvasTextPaint);
-        subCanvasTextPaint.setTextAlign(Align.RIGHT);
-        canvas.drawText(dayjs.duration({ milliseconds: sunsetStart - sunriseEnd }).humanize(), w - padding, 90, subCanvasTextPaint);
-        subCanvasTextPaint.setTextAlign(Align.LEFT);
-        canvas.drawText(lc('daylight_left') + ':', padding, 120, subCanvasTextPaint);
-        subCanvasTextPaint.setTextAlign(Align.RIGHT);
-        canvas.drawText(dayjs.duration({ milliseconds: sunsetStart - Date.now() }).humanize(), w - padding, 120, subCanvasTextPaint);
+        (
+            [
+                [
+                    [
+                        {
+                            color: '#ffa500',
+                            fontFamily: $fonts.mdi,
+                            text: 'mdi-weather-sunset-up',
+                            verticalAlignment: 'center'
+                        },
+                        {
+                            text: ' ' + lc('sunrise') + ':',
+                            verticalAlignment: 'center'
+                        }
+                    ],
+                    formatTime(sunriseEnd, undefined, timezoneOffset)
+                ],
+                [
+                    [
+                        {
+                            color: '#ff7200',
+                            fontFamily: $fonts.mdi,
+                            text: 'mdi-weather-sunset-down',
+                            verticalAlignment: 'center'
+                        },
+                        {
+                            text: ' ' + lc('sunset') + ':',
+                            verticalAlignment: 'center'
+                        }
+                    ],
+                    formatTime(sunsetStart, undefined, timezoneOffset)
+                ],
+                [lc('daylight_duration'), dayjs.duration({ milliseconds: sunsetStart - sunriseEnd }).humanize()],
+                [lc('daylight_left'), dayjs.duration({ milliseconds: sunsetStart - Date.now() }).humanize()]
+            ] as [any, string][]
+        ).forEach((e, index) => {
+            const y = 30 + 30 * index;
+            subCanvasTextPaint.setTextAlign(Align.LEFT);
+            if (Array.isArray(e[0])) {
+                canvas.save();
+                drawOnSubCanvas(e[0], y - 35);
+                canvas.restore();
+            } else {
+                canvas.drawText(e[0] + ':', padding, y, subCanvasTextPaint);
+            }
+            subCanvasTextPaint.setTextAlign(Align.RIGHT);
+            canvas.drawText(e[1], w - padding, y, subCanvasTextPaint);
+        });
     }
 </script>
 
@@ -397,7 +437,7 @@
                 <cspan fontSize={17} fontWeight="600" text={name} />
                 <cspan fontSize={14} text={subtitle ? '\n' + subtitle : null} />
             </label>
-            <label col={1} fontSize={20} fontWeight="500" marginRight={16} text={currentTime.format('LT')} textAlignment="right" verticalTextAlignment="center" />
+            <label col={1} fontSize={20} fontWeight="500" marginRight={16} text={formatTime(currentTime, 'LT')} textAlignment="right" verticalTextAlignment="center" />
         </gridlayout>
     {/if}
     <mdbutton class="icon-btn" horizontalAlignment="left" row={1} text="mdi-chevron-left" variant="text" on:tap={() => updateStartTime(startTime.subtract(1, 'd'))} />
