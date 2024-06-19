@@ -29,7 +29,6 @@ export interface HttpRequestOptions extends HTTPOptions {
 export function getCacheControl(maxAge = 60, stale = 59) {
     return `max-age=${maxAge}, max-stale=${stale}, stale-while-revalidate=${stale}`;
 }
-
 // const osmOverpassUrl = 'http://overpass-api.de/api/';
 // const OSMReplaceKeys = {
 //     'contact:phone': 'phone',
@@ -472,7 +471,7 @@ export class NetworkService extends Observable {
                 content = await response.content.toStringAsync();
             }
             const isString = typeof content === 'string';
-            DEV_LOG && console.log('handleRequestResponse response', requestParams.url, statusCode, response.reason, response.headers, isString, typeof content, content);
+            DEV_LOG && console.log('handleRequestResponse', requestParams.url, statusCode, response.reason, JSON.stringify(response.headers), isString, typeof content, JSON.stringify(content));
             if (Math.round(statusCode / 100) !== 2) {
                 let jsonReturn: {
                     data?: any;
