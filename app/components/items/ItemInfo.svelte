@@ -50,88 +50,109 @@
     // $: itemIconFontFamily = 'osm';
 
     let items: ObservableArray<any>;
-    const propsToFilter = [
-        'notes',
-        'name',
-        'address',
-        'extent',
-        'profile',
-        'zoomBounds',
-        'osm_value',
-        'osm_key',
-        'class',
-        'layer',
-        'rank',
-        'provider',
-        'categories',
-        'route',
-        'profile',
-        'ele',
-        'style',
-        'id'
-    ];
     function refreshItems() {
         // because of svelte async way itemIsRoute might not be set on opening
         const newItems = [];
         const itemProperties = item.properties;
 
-        if (itemProperties.address) {
-            const address = getAddress(item);
-            newItems.push({
-                id: 'address',
-                title: lc('address'),
-                subtitle: address.join(' '),
-                leftIcon: 'mdi-map-marker'
-            });
-        }
-        if (itemProperties['opening_hours']) {
-            const data = openingHoursText(item);
-            newItems.push({
-                id: 'opening_hours',
-                title: lc('opening_hours'),
-                subtitle: data.text,
-                subtitleColor: data.color,
-                leftIcon: 'mdi-clock-outline',
-                expandable: true,
-                expandedHeight: 224,
-                opening_hours: data.oh
-            });
-        }
-        if (itemProperties.phone) {
-            newItems.push({
-                id: 'phone',
-                title: lc('phone'),
-                subtitle: itemProperties.phone,
-                leftIcon: 'mdi-phone',
-                rightIcon: 'mdi-message-text'
-            });
-        }
-        if (itemProperties.email) {
-            newItems.push({
-                id: 'email',
-                title: lc('email'),
-                subtitle: itemProperties.email,
-                leftIcon: 'mdi-email'
-            });
-        }
-        if (itemProperties.website) {
-            itemProperties.website.split(';').forEach((i) => {
+        Object.keys(itemProperties).forEach((k) => {
+            if (k === 'address') {
+                const address = getAddress(item);
                 newItems.push({
-                    id: 'website',
-                    title: lc('website'),
-                    subtitle: i,
-                    leftIcon: 'mdi-web'
+                    id: 'address',
+                    title: lc('address'),
+                    subtitle: address.join(' '),
+                    leftIcon: 'mdi-map-marker'
                 });
-            });
-        }
-        if (itemProperties.wikipedia) {
-            newItems.push({
-                id: 'wikipedia',
-                title: lc('wikipedia'),
-                subtitle: itemProperties.wikipedia,
-                leftIcon: 'mdi-wikipedia'
-            });
-        }
+            }
+            if (k === 'opening_hours') {
+                const data = openingHoursText(item);
+                newItems.push({
+                    id: 'opening_hours',
+                    title: lc('opening_hours'),
+                    subtitle: data.text,
+                    subtitleColor: data.color,
+                    leftIcon: 'mdi-clock-outline',
+                    expandable: true,
+                    expandedHeight: 224,
+                    opening_hours: data.oh
+                });
+            }
+            if (k === 'phone' || k === 'contact:phone') {
+                newItems.push({
+                    id: 'phone',
+                    title: lc('phone'),
+                    subtitle: itemProperties[k],
+                    leftIcon: 'mdi-phone',
+                    rightIcon: 'mdi-message-text'
+                });
+            }
+            if (k === 'email' || k === 'contact:email') {
+                newItems.push({
+                    id: 'email',
+                    title: lc('email'),
+                    subtitle: itemProperties[k],
+                    leftIcon: 'mdi-email'
+                });
+            }
+            if (k === 'website' || k === 'contact:website') {
+                itemProperties[k].split(';').forEach((i) => {
+                    newItems.push({
+                        id: 'website',
+                        title: lc('website'),
+                        subtitle: i,
+                        leftIcon: 'mdi-web'
+                    });
+                });
+            }
+            if (k === 'wikipedia') {
+                newItems.push({
+                    id: 'wikipedia',
+                    title: lc('wikipedia'),
+                    wikipedia: itemProperties[k],
+                    subtitle: itemProperties[k],
+                    leftIcon: 'mdi-wikipedia'
+                });
+            }
+            if (k === 'wikidata') {
+                newItems.push({
+                    id: 'wikidata',
+                    title: lc('wikidata'),
+                    wikidata: itemProperties[k],
+                    subtitle: itemProperties[k],
+                    leftIcon: 'mdi-barcode'
+                });
+            }
+            if (k === 'mapillary') {
+                newItems.push({
+                    id: 'mapillary',
+                    title: lc('mapillary'),
+                    subtitle: itemProperties[k],
+                    leftIcon: 'mdi-navigation-variant-outline'
+                });
+            }
+            if (k === 'network') {
+                newItems.push({
+                    id: 'network',
+                    title: lc('network'),
+                    subtitle: itemProperties[k],
+                    leftIcon: 'mdi-train-car',
+                    wikidata: itemProperties['network:wikidata'],
+                    rightIcon: itemProperties['network:wikidata'] ? 'mdi-barcode' : undefined
+                });
+            }
+            if (k === 'operator') {
+                newItems.push({
+                    id: 'operator',
+                    title: lc('operator'),
+                    subtitle: itemProperties[k],
+                    leftIcon: 'mdi-train-car',
+                    wikidata: itemProperties['operator:wikidata'],
+                    rightIcon: itemProperties['operator:wikidata'] ? 'mdi-barcode' : undefined
+                });
+            }
+        });
+
         const devMode = mapContext.mapModule('customLayers').devMode;
         if (devMode) {
             newItems.push({
@@ -189,7 +210,17 @@
                             });
                         }
                         break;
-                    default:
+                    case 'currency:XLT':
+                    case 'currency':
+                        toDraw.push({
+                            // paint: wiPaint,
+                            // color: item.cloudColor,
+                            // iconFontSize,
+                            icon: 'mdi-currency-eur',
+                            value: (itemProperties[k] + '').toLowerCase()
+                        });
+                        break;
+                    case 'currency':
                         toDraw.push({
                             // paint: wiPaint,
                             // color: item.cloudColor,
@@ -199,6 +230,17 @@
                             subvalue: (itemProperties[k] + '').toLowerCase()
                         });
                         break;
+                    case 'cuisine':
+                        itemProperties[k].split(',').forEach((value) =>
+                            toDraw.push({
+                                // paint: wiPaint,
+                                // color: item.cloudColor,
+                                // iconFontSize,
+                                icon: 'mdi-food',
+                                value: value.toLowerCase()
+                            })
+                        );
+                        break;
                 }
             }
         });
@@ -206,7 +248,7 @@
     }
     const itemsModule = mapContext.mapModule('items');
 
-    const topProps = ['population', 'wheelchair', 'atm', 'change_machine', 'copy_facility', 'stamping_machine', 'currency', 'ele'];
+    const topProps = ['population', 'wheelchair', 'atm', 'change_machine', 'copy_facility', 'stamping_machine', 'currency', 'ele', 'currency:XLT', 'cuisine'];
 
     let loading = false;
     async function refresh(force = false) {
@@ -219,7 +261,6 @@
             if (force || !itemProperties.osmid) {
                 if (!force) {
                     refreshItems();
-
                 }
                 loading = true;
                 const result = await itemsModule.getOSMDetails(item, mapContext.getMap().zoom, force);
@@ -228,7 +269,12 @@
                     const newProps = {};
                     Object.keys(result.tags).forEach((k) => {
                         const value = result.tags[k];
-                        if (k.indexOf(':') === -1 && ignoredKeys.indexOf(k) === -1 && value !== item.properties.class) {
+                        if (!k.startsWith('addr:') && ignoredKeys.indexOf(k) === -1 && value !== item.properties.class) {
+                            // const prefixIndex = k.indexOf(':');
+                            // if (prefixIndex !== -1) {
+                            //     k = k.substring(prefixIndex + 1);
+                            // }
+
                             newProps[k] = itemProperties[k] = value;
                         }
                     });
@@ -328,8 +374,13 @@
                     });
                     break;
                 case 'wikipedia':
-                    const url = `https://en.wikipedia.org/wiki/${listItem.subtitle}`;
-                    await openLink(url);
+                    await openLink(`https://en.wikipedia.org/wiki/${listItem.subtitle}`);
+                    break;
+                case 'wikidata':
+                    await openLink(`https://www.wikidata.org/wiki/${listItem.subtitle}`);
+                    break;
+                case 'mapillary':
+                    await openLink(`https://www.mapillary.com/app/?pKey=${listItem.subtitle}&focus=photo`);
                     break;
                 default:
                     if (listItem.expandable) {
@@ -375,6 +426,13 @@
         DEV_LOG && console.log('onItemRightTap', listItem);
         try {
             switch (listItem.id) {
+                case 'network':
+                case 'operator':
+                case 'wikidata':
+                    if (listItem.wikidata) {
+                        await openLink(`https://www.wikidata.org/wiki/${listItem.wikidata}`);
+                    }
+                    break;
                 case 'phone':
                     openUrl('sms:' + listItem.subtitle);
                     break;
