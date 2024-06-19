@@ -2,12 +2,11 @@ import { capitalize, l, lc, loadLocaleJSON, lt, lu, overrideNativeLocale, titlec
 import { Application, ApplicationSettings, Device, File, Utils } from '@nativescript/core';
 import { getString } from '@nativescript/core/application-settings';
 import dayjs from 'dayjs';
-import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 import duration from 'dayjs/plugin/duration';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 // import timezone from 'dayjs/plugin/timezone';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import updateLocale from 'dayjs/plugin/updateLocale';
+// import updateLocale from 'dayjs/plugin/updateLocale';
 import utc from 'dayjs/plugin/utc';
 
 import { derived, get, writable } from 'svelte/store';
@@ -17,8 +16,7 @@ import { showAlertOptionSelect } from '~/utils/ui';
 import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
 const supportedLanguages = SUPPORTED_LOCALES;
 
-dayjs.extend(LocalizedFormat);
-dayjs.extend(updateLocale);
+// dayjs.extend(updateLocale);
 // dayjs.extend(timezone);
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
@@ -29,7 +27,7 @@ export let lang;
 export const langStore = writable(null);
 let default24Clock = false;
 if (__ANDROID__) {
-    default24Clock = android.text.format.DateFormat.is24HourFormat(Utils.ad.getApplicationContext());
+    default24Clock = android.text.format.DateFormat.is24HourFormat(Utils.android.getApplicationContext());
 }
 export let clock_24 = ApplicationSettings.getBoolean('clock_24', default24Clock) || default24Clock;
 export const clock_24Store = writable(null);
