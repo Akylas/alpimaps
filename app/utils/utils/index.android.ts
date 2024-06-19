@@ -186,7 +186,7 @@ export async function pickColor(color: Color | string, options: { alpha?: boolea
 }
 
 export function showToolTip(tooltip: string, view?: View) {
-    android.widget.Toast.makeText(Utils.ad.getApplicationContext(), tooltip, android.widget.Toast.LENGTH_SHORT).show();
+    android.widget.Toast.makeText(Utils.android.getApplicationContext(), tooltip, android.widget.Toast.LENGTH_SHORT).show();
 }
 
 export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath: string, androidTargetLocationPath?: string) {

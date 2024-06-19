@@ -15,7 +15,7 @@
 </script>
 
 <script lang="ts">
-    let{ colorBackground, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
+    let { colorBackground, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
     $: ({ colorBackground, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
     iconPaint.fontFamily = $fonts.mdi;
     export let height: string | number = '100%';
@@ -139,7 +139,7 @@
     $: redraw(title, subtitle, leftIcon);
 </script>
 
-<canvasview bind:this={canvas} backgroundColor={colorBackground} {height} rippleColor={colorPrimary} on:draw={onDraw}>
+<canvasview bind:this={canvas} backgroundColor={colorBackground} {height} rippleColor={colorPrimary} on:draw={onDraw} {...$$restProps}>
     <!-- <canvaslabel padding={16}>
         <cgroup c="middle" paddingBottom={subtitle ? 10 : 0}>
             <cspan visibility={leftIcon ? 'visible' : 'hidden'} paddingLeft={10} width={40} text={leftIcon} fontFamily={leftIconFonFamily} fontSize={24} />
