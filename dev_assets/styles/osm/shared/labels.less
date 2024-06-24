@@ -50,7 +50,7 @@
 	}
 
 }
-#boundary::label {
+#boundary['mapnik::geometry_type'=1]['nuti::hide_admins'=0]::label {
 	[admin_level=4][zoom>=5][zoom<=8], [admin_level=6][zoom>=8][zoom<=10]{
 		text-name: @name;
 		text-face-name: @mont_it;
@@ -196,6 +196,7 @@
 		
 	}
 	[class=city][zoom>=4][zoom<14]{
+		shield-placement-priority: 3;
 		shield-feature-id: [name]+[ele];
 		shield-name: @name;
 		shield-unlock-image: true;

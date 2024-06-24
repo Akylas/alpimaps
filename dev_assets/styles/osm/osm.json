@@ -34,6 +34,7 @@
     "nutiparameters": {
         "font_face": "Noto Sans",
         "motorway_casing_start_zoom": 9,
+        "hide_admins": 0,
         "lang": "en",
         "zoomBiais": 0,
         "selected_id": "",
