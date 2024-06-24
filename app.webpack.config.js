@@ -576,7 +576,7 @@ module.exports = (env, params = {}) => {
 
     const context = nsWebpack.Utils.platform.getEntryDirPath();
 
-    const allowedAddressFormatterCountries = ['FR', 'ES', 'IT', 'default'];
+    const allowedAddressFormatterCountries = supportedLocales.map((s) => s.toUpperCase()).concat(['default']);
 
     function filterObject(raw, allowed) {
         Object.keys(raw)
@@ -700,7 +700,7 @@ module.exports = (env, params = {}) => {
             cancelAnimationFrame: [require.resolve(coreModulesPackageName + '/animation-frame'), 'cancelAnimationFrame']
         })
     );
-    config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${supportedLocales.join('|')}).\js`)));
+    config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${supportedLocales.map((l) => l.replace('_', '-').toLowerCase()).join('|')}).\js`)));
 
     config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|ui-carto|ui-chart|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
     config.plugins.push(new IgnoreNotFoundExportPlugin());
