@@ -34,7 +34,7 @@ import { createGlobalEventListener, globalObservable, navigate } from '~/utils/s
 //     onVectorElementClicked?(data: VectorElementEventData<LatLonKeys>);
 //     onSelectedItem?(item: IItem, oldItem: IItem);
 // }
-export type LayerType = 'map' | 'routes' | 'customLayers' | 'hillshade' | 'selection' | 'items' | 'directions' | 'userLocation' | 'search' | 'transit';
+export type LayerType = 'map' | 'routes' | 'customLayers' | 'hillshade' | 'selection' | 'items' | 'directions' | 'userLocation' | 'search' | 'transit' | 'admin';
 
 export type ContextCallback<T = CartoMap<LatLonKeys>> = (data: T) => void;
 
@@ -132,6 +132,27 @@ export interface MapModules {
     items: ItemsModule;
 }
 
+export function createTileDecoder(name: string, style: string = 'voyager') {
+    return new MBVectorTileDecoder({
+        style,
+        pack:
+            PRODUCTION || TEST_ZIP_STYLES
+                ? new ZippedAssetPackage({
+                      liveReload: !PRODUCTION,
+                      zipPath: `~/assets/styles/${name}.zip`,
+                      loadAsset,
+                      basePack,
+                      getAssetNames: getAssetNamesWithMaterial
+                  })
+                : new DirAssetPackage({
+                      loadUsingNS: !PRODUCTION,
+                      dirPath: `~/assets/styles/${name}`
+                      // loadAsset,
+                      // getAssetNames: getAssetNamesWithMaterial
+                  })
+    });
+}
+
 export function onNetworkChanged(callback: (theme) => void) {}
 
 const mapContext: MapContext = {
@@ -193,24 +214,7 @@ const mapContext: MapContext = {
         mapContext.runOnModules('vectorTileDecoderChanged', oldDecoder, mapContext.mapDecoder);
         return mapContext.mapDecoder;
     },
-    innerDecoder: new MBVectorTileDecoder({
-        style: 'voyager',
-        pack:
-            PRODUCTION || TEST_ZIP_STYLES
-                ? new ZippedAssetPackage({
-                      liveReload: !PRODUCTION,
-                      zipPath: '~/assets/styles/inner.zip',
-                      loadAsset,
-                      basePack,
-                      getAssetNames: getAssetNamesWithMaterial
-                  })
-                : new DirAssetPackage({
-                      loadUsingNS: !PRODUCTION,
-                      dirPath: '~/assets/styles/inner'
-                      // loadAsset,
-                      // getAssetNames: getAssetNamesWithMaterial
-                  })
-    })
+    innerDecoder: createTileDecoder('inner')
 } as any;
 
 export function setMapContext(ctx) {

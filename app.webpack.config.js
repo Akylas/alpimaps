@@ -835,6 +835,8 @@ module.exports = (env, params = {}) => {
                         'cd ./dev_assets/styles/osmxml_cleaned && zip -r ../../../app/assets/styles/osm.zip ./* && cd -',
                         `./${css2xmlBin} dev_assets/styles/inner/voyager.json dev_assets/styles/inner_cleaned/voyager.xml`,
                         'cd ./dev_assets/styles/inner_cleaned && zip -r ../../../app/assets/styles/inner.zip ./* && cd -',
+                        `./${css2xmlBin} dev_assets/styles/admin/voyager.json dev_assets/styles/admin_cleaned/voyager.xml`,
+                        'cd ./dev_assets/styles/admin_cleaned && zip -r ../../../app/assets/styles/admin.zip ./* && cd -',
                         'cd ./dev_assets/styles/base && zip -r ../../../app/assets/styles/base.zip ./* && cd -'
                     ],
                     blocking: true,
