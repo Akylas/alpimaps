@@ -185,5 +185,6 @@
     "resolutions": {
         "@akylas/nativescript": "portal:../NativeScript/dist/packages/core",
         "@nativescript-community/ui-carto": "portal:../ui-carto/packages/ui-carto"
-    }
+    },
+    "packageManager": "yarn@4.3.1"
 }
