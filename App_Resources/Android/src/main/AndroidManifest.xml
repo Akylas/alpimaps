@@ -32,7 +32,7 @@
             android:label="@string/title_activity_kimera"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|locale|uiMode"
             android:theme="@style/LaunchScreenTheme"
-            android:windowSoftInputMode="stateHidden|adjustPan" android:screenOrientation="user"
+            android:windowSoftInputMode="adjustPan|stateAlwaysHidden" android:screenOrientation="user"
             android:launchMode="singleTask" android:exported="true" android:showOnLockScreen="true">
             <meta-data android:name="SET_THEME_ON_LAUNCH" android:resource="@style/AppTheme" />
             <intent-filter>
