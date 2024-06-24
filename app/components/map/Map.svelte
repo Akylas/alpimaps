@@ -44,7 +44,7 @@
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
     import type { LayerType } from '~/mapModules/MapModule';
-    import { getMapContext, handleMapAction, setMapContext } from '~/mapModules/MapModule';
+    import { createTileDecoder, getMapContext, handleMapAction, setMapContext } from '~/mapModules/MapModule';
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import type { IItem, Item, RouteInstruction } from '~/models/Item';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
@@ -80,7 +80,7 @@
     $: ({ top: windowInsetTop, bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight } = $windowInset);
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
-    const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'routes', 'transit', 'hillshade', 'items', 'directions', 'search', 'selection', 'userLocation'];
+    const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'admin', 'routes', 'transit', 'hillshade', 'items', 'directions', 'search', 'selection', 'userLocation'];
     const KEEP_AWAKE_KEY = '_keep_awake';
     let defaultLiveSync = global.__onLiveSync;
 
@@ -98,22 +98,29 @@
     let selectedPosMarker: Point<LatLonKeys>;
     const selectedItem = watcher<Item>(null, onSelectedItemChanged);
     let editingItem: Item = null;
-    // let currentLayer: VectorTileLayer;
+    let handleSelectedRouteTimer: NodeJS.Timeout;
+    let handleSelectedTransitLinesTimer: NodeJS.Timeout;
+    let selectedRoutes: IItem[];
+    let selectedTransitLines: IItem[];
+    let didIgnoreAlreadySelected = false;
+
     let currentLayerStyle: string;
-    let localVectorDataSource: LocalVectorDataSource;
-    let localVectorLayer: VectorLayer;
     let vectorTileDecoder: MBVectorTileDecoder;
+
     let bottomSheetStepIndex = 0;
-    let itemLoading = false;
-    let projection: Projection = new EPSG4326();
-    let currentLanguage = ApplicationSettings.getString('map_language', ApplicationSettings.getString('language', 'en'));
-    const addedLayers: { layer: Layer<any, any>; layerId: LayerType }[] = [];
-    let keepScreenAwake = ApplicationSettings.getBoolean(KEEP_AWAKE_KEY, false);
-    let showOnLockscreen = false;
-    let currentMapRotation = 0;
     let steps;
     let topTranslationY;
     let networkConnected = false;
+    let itemLoading = false;
+
+    let projection: Projection = new EPSG4326();
+    const addedLayers: { layer: Layer<any, any>; layerId: LayerType }[] = [];
+
+    let currentLanguage = ApplicationSettings.getString('map_language', ApplicationSettings.getString('language', 'en'));
+    let keepScreenAwake = ApplicationSettings.getBoolean(KEEP_AWAKE_KEY, false);
+    let showOnLockscreen = false;
+    let currentMapRotation = 0;
+
     let navigationInstructions: {
         remainingDistance: number;
         remainingTime: number;
@@ -122,17 +129,16 @@
     };
 
     let ignoreNextMapClick = false;
-    let handleSelectedRouteTimer: NodeJS.Timeout;
-    let handleSelectedTransitLinesTimer: NodeJS.Timeout;
-    let selectedRoutes: IItem[];
-    let selectedTransitLines: IItem[];
-    let didIgnoreAlreadySelected = false;
 
+    let fetchingTransitLines = false;
     let showTransitLines = false;
-    // let selectedClickMarker: Text<LatLonKeys>;
+    let showAdmins = false;
 
-    let transitVectorTileDataSource: GeoJSONVectorTileDataSource;
+    // let transitVectorTileDataSource: GeoJSONVectorTileDataSource;
     let transitVectorTileLayer: VectorTileLayer;
+    // let localVectorDataSource: LocalVectorDataSource;
+    let localVectorLayer: VectorLayer;
+    let adminVectorTileLayer: VectorTileLayer;
 
     $: {
         if (steps) {
@@ -151,105 +157,153 @@
     //         }
     //     }
     // }
-    const fetchingTransitLines = false;
     $: {
         if (showTransitLines) {
             // const pos = cartoMap.focusPos;
             (async () => {
                 try {
-                    if (!transitVectorTileDataSource && !fetchingTransitLines) {
+                    if (!transitVectorTileLayer && !fetchingTransitLines) {
+                        fetchingTransitLines = true;
                         DEV_LOG && console.time('getTransitLines');
                         const result = await transitService.getTransitLines();
                         DEV_LOG && console.timeEnd('getTransitLines');
-                        transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
+                        const transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
                             // simplifyTolerance: 0,
                             minZoom: 0,
                             maxZoom: 24
                         });
                         transitVectorTileDataSource.createLayer('routes');
                         transitVectorTileDataSource.setLayerGeoJSONString(1, result);
-                        if (!transitVectorTileLayer) {
-                            mapContext.innerDecoder.setStyleParameter('default_transit_color', transitService.defaultTransitLineColor);
-                            transitVectorTileLayer = new VectorTileLayer({
-                                // preloading: true,
-                                visibleZoomRange: [7, 24],
-                                layerBlendingSpeed: 3,
-                                labelBlendingSpeed: 3,
-                                preloading: $preloading,
-                                tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
-                                labelRenderOrder: VectorTileRenderOrder.LAST,
-                                dataSource: transitVectorTileDataSource,
-                                decoder: mapContext.innerDecoder
-                            });
-                            transitVectorTileLayer.setVectorTileEventListener<LatLonKeys>(
-                                {
-                                    onVectorTileClicked: ({ featureId, featureData, featureLayerName, featureGeometry }) => {
-                                        if (handleSelectedRouteTimer) {
-                                            return;
-                                        }
-                                        DEV_LOG && console.log('clicked on transit data', featureId, featureLayerName, featureGeometry, handleSelectedTransitLinesTimer);
-                                        if (featureLayerName === 'routes') {
-                                            if (handleSelectedTransitLinesTimer) {
-                                                clearTimeout(handleSelectedTransitLinesTimer);
-                                            }
-                                            const id = featureData.route_id || featureData.id || featureId;
-                                            selectedTransitLines = selectedTransitLines || [];
-                                            handleSelectedTransitLinesTimer = setTimeout(() => {
-                                                handleSelectedTransitLines();
-                                            }, 10);
-
-                                            if (selectedTransitLines.findIndex((s) => s.properties.id === id) === -1) {
-                                                const color = featureData['route_color']?.length ? featureData['route_color'] : transitService.defaultTransitLineColor;
-                                                const agency = featureData['agency_id'];
-                                                const textColor = new Color(color).getBrightness() >= 186 ? '#000000' : '#ffffff';
-                                                const lineName = featureData['CODE'].split('_')[1];
-                                                const item: IItem = {
-                                                    properties: {
-                                                        class: 'bus',
-                                                        id,
-                                                        // ref: lineName,
-                                                        // subtitle: lineName,
-                                                        // name: lineName,
-                                                        // symbol: `${color}:${color}:${lineName}:${textColor}`,
-                                                        ref: featureData['route_short_name'],
-                                                        subtitle: featureData['agency_name'],
-                                                        name: featureData['route_long_name'],
-                                                        symbol: `${color}:${color}:${agency === 'FLIXBUS-eu' ? 'FLIX' : featureData['route_short_name']}:${textColor}`,
-                                                        layer: featureLayerName,
-                                                        ...featureData
-                                                    },
-                                                    route: {
-                                                        osmid: id
-                                                    } as any,
-                                                    _nativeGeometry: featureGeometry,
-                                                    layer: transitVectorTileLayer
-                                                };
-                                                selectedTransitLines.push(item);
-                                                ignoreNextMapClick = true;
-                                            }
-                                            return false;
-                                        }
-                                        // selectItem({ item, isFeatureInteresting: true });
-                                        // return true;
-                                        // mapContext.vectorTileClicked(e);
+                        // if (!transitVectorTileLayer) {
+                        mapContext.innerDecoder.setStyleParameter('default_transit_color', transitService.defaultTransitLineColor);
+                        transitVectorTileLayer = new VectorTileLayer({
+                            // preloading: true,
+                            visibleZoomRange: [7, 24],
+                            layerBlendingSpeed: 3,
+                            labelBlendingSpeed: 3,
+                            preloading: $preloading,
+                            tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
+                            labelRenderOrder: VectorTileRenderOrder.LAST,
+                            dataSource: transitVectorTileDataSource,
+                            decoder: mapContext.innerDecoder
+                        });
+                        transitVectorTileLayer.setVectorTileEventListener<LatLonKeys>(
+                            {
+                                onVectorTileClicked: ({ featureId, featureData, featureLayerName, featureGeometry }) => {
+                                    if (handleSelectedRouteTimer) {
+                                        return;
                                     }
-                                },
-                                mapContext.getProjection()
-                            );
-                            addLayer(transitVectorTileLayer, 'transit');
-                        } else {
-                            transitVectorTileLayer.visible = true;
-                        }
+                                    DEV_LOG && console.log('clicked on transit data', featureId, featureLayerName, featureGeometry, handleSelectedTransitLinesTimer);
+                                    if (featureLayerName === 'routes') {
+                                        if (handleSelectedTransitLinesTimer) {
+                                            clearTimeout(handleSelectedTransitLinesTimer);
+                                        }
+                                        const id = featureData.route_id || featureData.id || featureId;
+                                        selectedTransitLines = selectedTransitLines || [];
+                                        handleSelectedTransitLinesTimer = setTimeout(() => {
+                                            handleSelectedTransitLines();
+                                        }, 10);
+
+                                        if (selectedTransitLines.findIndex((s) => s.properties.id === id) === -1) {
+                                            const color = featureData['route_color']?.length ? featureData['route_color'] : transitService.defaultTransitLineColor;
+                                            const agency = featureData['agency_id'];
+                                            const textColor = new Color(color).getBrightness() >= 186 ? '#000000' : '#ffffff';
+                                            const lineName = featureData['CODE'].split('_')[1];
+                                            const item: IItem = {
+                                                properties: {
+                                                    class: 'bus',
+                                                    id,
+                                                    ref: featureData['route_short_name'],
+                                                    subtitle: featureData['agency_name'],
+                                                    name: featureData['route_long_name'],
+                                                    symbol: `${color}:${color}:${agency === 'FLIXBUS-eu' ? 'FLIX' : featureData['route_short_name']}:${textColor}`,
+                                                    layer: featureLayerName,
+                                                    ...featureData
+                                                },
+                                                route: {
+                                                    osmid: id
+                                                } as any,
+                                                _nativeGeometry: featureGeometry,
+                                                layer: transitVectorTileLayer
+                                            };
+                                            selectedTransitLines.push(item);
+                                            ignoreNextMapClick = true;
+                                        }
+                                        return false;
+                                    }
+                                    // selectItem({ item, isFeatureInteresting: true });
+                                    // return true;
+                                    // mapContext.vectorTileClicked(e);
+                                }
+                            },
+                            mapContext.getProjection()
+                        );
+                        addLayer(transitVectorTileLayer, 'transit');
+                        // } else {
+                        //     transitVectorTileLayer.visible = true;
+                        // }
                     } else if (transitVectorTileLayer) {
                         transitVectorTileLayer.visible = true;
                     }
                 } catch (error) {
                     showTransitLines = false;
                     showError(error);
+                } finally {
+                    fetchingTransitLines = false;
                 }
             })();
         } else if (transitVectorTileLayer) {
             transitVectorTileLayer.visible = false;
+        }
+    }
+
+    $: {
+        // DEV_LOG && console.log('showAdmins', showAdmins, customLayersModule?.hasLocalData, adminVectorTileLayer);
+        if (showAdmins && customLayersModule?.hasLocalData) {
+            // const pos = cartoMap.focusPos;
+            try {
+                if (!adminVectorTileLayer) {
+                    DEV_LOG && console.log('show admins ');
+                    adminVectorTileLayer = new VectorTileLayer({
+                        layerBlendingSpeed: 3,
+                        labelBlendingSpeed: 3,
+                        preloading: $preloading,
+                        tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
+                        labelRenderOrder: VectorTileRenderOrder.LAST,
+                        dataSource: (getLayers('map')[0].layer as any as VectorTileLayer).dataSource,
+                        decoder: createTileDecoder('admin')
+                    });
+                    adminVectorTileLayer.setVectorTileEventListener<LatLonKeys>(
+                        {
+                            onVectorTileClicked: ({ featureId, featureData, featureLayerName, featureGeometry }) => {
+                                if (handleSelectedRouteTimer) {
+                                    return;
+                                }
+                                DEV_LOG && console.log('onVectorTileClicked', featureId, featureLayerName, featureData);
+                                return false;
+                                // selectItem({ item, isFeatureInteresting: true });
+                                // return true;
+                                // mapContext.vectorTileClicked(e);
+                            }
+                        },
+                        mapContext.getProjection()
+                    );
+                    addLayer(adminVectorTileLayer, 'admin');
+                    // } else {
+                    //     transitVectorTileLayer.visible = true;
+                    // }
+                } else if (adminVectorTileLayer) {
+                    adminVectorTileLayer.visible = true;
+                }
+            } catch (error) {
+                showAdmins = false;
+                showError(error);
+            }
+        } else if (adminVectorTileLayer) {
+            adminVectorTileLayer.visible = false;
+        }
+        if (adminVectorTileLayer) {
+            setStyleParameter('hide_admins', adminVectorTileLayer.visible ? '1' : '0');
         }
     }
 
@@ -449,31 +503,23 @@
             main_darker_color: new Color($colors.colorPrimary).darken(10).hex
         });
     }
-    function onDeviceScreen(isScreenOn: boolean) {
-        // console.log('onDeviceScreen', isScreenOn);
-    }
     // function onLoaded() {}
     onDestroy(() => {
         // console.log('onMapDestroyed');
         Application.off(Application.orientationChangedEvent, onOrientationChanged);
         mapContext.runOnModules('onMapDestroyed');
 
-        localVectorLayer = null;
-        if (localVectorDataSource) {
-            localVectorDataSource.clear();
-            localVectorDataSource = null;
-        }
-        if (cartoMap) {
-            // const layers = cartoMap.getLayers();
-            // if (layers) {
-            //     layers.clear();
-            // }
-            cartoMap = null;
-        }
+        // localVectorLayer = null;
+        // if (localVectorDataSource) {
+        //     localVectorDataSource = null;
+        // }
+        // if (cartoMap) {
+        //     cartoMap = null;
+        // }
+        // selectedPosMarker = null;
         if (DEV_LOG) {
             global.__onLiveSync = defaultLiveSync;
         }
-        selectedPosMarker = null;
     });
 
     let inFront = false;
@@ -503,10 +549,18 @@
         mapContext.runOnModules('reloadMapStyle');
     }
 
-    function getOrCreateLocalVectorLayer() {
+    function getOrCreateLocalVectorLayer(position) {
         if (!localVectorLayer) {
-            localVectorDataSource = new LocalVectorDataSource({ projection });
+            const localVectorDataSource = new LocalVectorDataSource({ projection });
 
+            const itemModule = mapContext.mapModule('items');
+            selectedPosMarker = itemModule.createLocalPoint(position, {
+                color: new Color(colorPrimary).setAlpha(178).hex,
+                clickSize: 0,
+                scaleWithDPI: true,
+                size: 20
+            });
+            localVectorDataSource.add(selectedPosMarker);
             localVectorLayer = new VectorLayer({ dataSource: localVectorDataSource });
             localVectorLayer.setVectorElementEventListener<LatLonKeys>({
                 onVectorElementClicked
@@ -574,7 +628,7 @@
             }
             projection = map.projection;
             const options = map.getOptions();
-            options.setLayersLabelsProcessedInReverseOrder(false);
+            options.setLayersLabelsProcessedInReverseOrder(true);
             options.setRestrictedPanning(true);
             options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
             options.setEnvelopeThreadPoolSize(1);
@@ -765,15 +819,7 @@
                     const geometry = item.geometry as GeoJSONPoint;
                     const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
                     if (!selectedPosMarker) {
-                        getOrCreateLocalVectorLayer();
-                        const itemModule = mapContext.mapModule('items');
-                        selectedPosMarker = itemModule.createLocalPoint(position, {
-                            color: new Color(colorPrimary).setAlpha(178).hex,
-                            clickSize: 0,
-                            scaleWithDPI: true,
-                            size: 20
-                        });
-                        localVectorDataSource.add(selectedPosMarker);
+                        getOrCreateLocalVectorLayer(position);
                     } else {
                         selectedPosMarker.position = position;
                         selectedPosMarker.visible = true;
@@ -1895,15 +1941,78 @@
                 onTap: switchShowOnLockscreen
             }
         ];
-        if (WITH_BUS_SUPPORT && customLayersModule?.devMode) {
+        if ((WITH_BUS_SUPPORT && customLayersModule?.devMode) || customLayersModule?.hasLocalData) {
+            async function onShowMore(event) {
+                try {
+                    const options = []
+                        .concat(
+                            WITH_BUS_SUPPORT && customLayersModule?.devMode
+                                ? [
+                                      {
+                                          icon: 'mdi-bus-marker',
+                                          id: 'transit_lines',
+                                          title: lc('show_transit_lines'),
+                                          color: showTransitLines ? colorPrimary : undefined
+                                      }
+                                  ]
+                                : []
+                        )
+                        .concat(
+                            customLayersModule.hasLocalData
+                                ? [
+                                      {
+                                          icon: 'mdi-vector-polygon',
+                                          id: 'show_admin_regions',
+                                          title: lc('show_admin_regions'),
+                                          color: showAdmins ? colorPrimary : undefined
+                                      }
+                                  ]
+                                : []
+                        );
+
+                    await showPopoverMenu({
+                        options,
+                        vertPos: VerticalPosition.ALIGN_BOTTOM,
+                        horizPos: HorizontalPosition.LEFT,
+                        anchor: event.object,
+                        props: {
+                            // autoSizeListItem: true,
+                            maxHeight: Screen.mainScreen.heightDIPs - 100
+                        },
+                        onLongPress: async (result) => {
+                            if (result) {
+                                switch (result.id) {
+                                    case 'transit_lines':
+                                        await showTransitLinesPage();
+                                        break;
+                                }
+                            }
+                        },
+                        onClose: async (result) => {
+                            if (result) {
+                                switch (result.id) {
+                                    case 'transit_lines':
+                                        showTransitLines = !showTransitLines;
+                                        break;
+                                    case 'show_admin_regions':
+                                        showAdmins = !showAdmins;
+                                        break;
+                                }
+                            }
+                        }
+                    });
+                } catch (err) {
+                    showError(err);
+                } finally {
+                    hideLoading();
+                }
+            }
             newButtons.push({
-                text: 'mdi-bus-marker',
-                isSelected: showTransitLines,
-                selectedColor: colorPrimary,
-                onTap: () => (showTransitLines = !showTransitLines),
-                onLongPress: showTransitLinesPage
+                text: 'mdi-dots-vertical',
+                onTap: onShowMore
             });
         }
+
         sideButtons = newButtons;
     }
     function onDirectionsCancel() {
