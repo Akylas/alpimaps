@@ -44,9 +44,6 @@
 
     const northArrow = new Path();
 
-    gridPaint.setColor('#888');
-    gridPaintStrong.setColor('#888');
-    labelPaint.setColor('#bbb');
     // labelPaint.setColor(get(textColor));
 </script>
 
@@ -63,8 +60,9 @@
     let { colorOnSurface, colorPrimary, colorOutlineVariant } = $colors;
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorOutlineVariant, colorSurfaceContainer, colorSurfaceContainerHighest } = $colors);
 
-    // $: gridPaint.setColor(colorOutlineVariant);
-    // $: gridPaintStrong.setColor(colorOutlineVariant);
+    $: gridPaint.setColor(colorOnSurface);
+    $: gridPaintStrong.setColor(colorOnSurface);
+    $: labelPaint.setColor(colorOnSurface);
     $: activePaint.setColor(colorPrimary);
     export let height: number = 350;
     let canvas: NativeViewElementNode<CanvasView>;
@@ -467,5 +465,5 @@
 
 <gesturerootview {height} rows="*,auto">
     <CompassDialView drawInsideGrid={true} onDraw={onCanvasDraw} bind:canvas on:layoutChanged={refreshGeometries} />
-    <canvasview bind:this={canvas2} backgroundColor="#171717" height={preferredHeight} row={1} on:draw={onCanvasHorizontalDraw} />
+    <canvasview bind:this={canvas2} height={preferredHeight} row={1} on:draw={onCanvasHorizontalDraw} />
 </gesturerootview>

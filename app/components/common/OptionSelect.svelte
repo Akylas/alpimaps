@@ -40,7 +40,6 @@
     export let onRightIconTap: (item, e) => void = null;
     let filteredOptions: OptionType[] | ObservableArray<OptionType[]> = null;
     let filter: string = null;
-    DEV_LOG && console.log('options', options);
     // technique for only specific properties to get updated on store change
     $: ({ colorOutlineVariant, colorOnSurface, colorOutline } = $colors);
 
