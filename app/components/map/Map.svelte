@@ -671,7 +671,10 @@
             registerUniversalLinkCallback(onAppUrl);
             const current = getUniversalLink();
             if (current) {
-                onAppUrl(current);
+                const itemModule = mapContext.mapModule('items');
+                itemModule.onDbInit(() => {
+                    onAppUrl(current);
+                });
             }
         } catch (error) {
             console.error(error, error.stack);
