@@ -64,7 +64,7 @@ export default class ItemsModule extends MapModule {
     itemRepository: ItemRepository;
     groupsRepository: GroupRepository;
     imagesFolder = Folder.fromPath(path.join(getItemsDataFolder(), 'item_images'));
-
+    dbInitialized = false;
     @profile
     async initDb() {
         try {
@@ -85,6 +85,7 @@ export default class ItemsModule extends MapModule {
             this.itemRepository = new ItemRepository(this.db, this.groupsRepository);
             await this.groupsRepository.createTables();
             await this.itemRepository.createTables();
+            this.dbInitialized = true;
             this.onDbInitListeners.forEach((l) => l());
             this.onDbInitListeners = [];
             const items = await this.itemRepository.searchItem({ where: SqlQuery.createFromTemplateString`"onMap" = 1` });
@@ -110,7 +111,7 @@ export default class ItemsModule extends MapModule {
     }
     onDbInitListeners = [];
     onDbInit(callback) {
-        if (this.itemRepository) {
+        if (this.dbInitialized) {
             callback();
         } else {
             this.onDbInitListeners.push(callback);
