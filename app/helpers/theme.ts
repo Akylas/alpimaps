@@ -6,12 +6,12 @@ import { showError } from '~/utils/error';
 import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
 import { updateThemeColors } from '~/variables';
 import { lc } from '~/helpers/locale';
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import { SDK_VERSION } from '@nativescript/core/utils';
 import { showAlertOptionSelect } from '~/utils/ui';
 import { closePopover } from '@nativescript-community/ui-popover/svelte';
 
-export type Themes = 'auto' | 'light' | 'dark' | 'black';
+export type Themes = 'auto' | 'light' | 'dark' | 'black' | 'eink';
 
 export const onThemeChanged = createGlobalEventListener('theme');
 export let theme: Themes;
@@ -20,6 +20,7 @@ export const currentTheme = writable('auto');
 
 let started = false;
 let autoDarkToBlack = getBoolean('auto_black', false);
+export const forceDarkMode = writable(false);
 const ThemeBlack = 'ns-black';
 
 Application.on(Application.systemAppearanceChangedEvent, (event: SystemAppearanceChangedEventData) => {
@@ -51,6 +52,8 @@ export function getThemeDisplayName(toDisplay = theme) {
             return lc('theme.black');
         case 'light':
             return lc('theme.light');
+        case 'eink':
+            return lc('theme.eink');
     }
 }
 
@@ -60,7 +63,7 @@ export function toggleTheme(autoDark = false) {
 }
 export async function selectTheme() {
     try {
-        const actions: Themes[] = ['auto', 'light', 'dark', 'black'];
+        const actions: Themes[] = ['auto', 'light', 'dark', 'black', 'eink'];
         const component = (await import('~/components/common/OptionSelect.svelte')).default;
         const result = await showAlertOptionSelect(
             component,
@@ -104,7 +107,8 @@ export function applyTheme(theme: Themes) {
                 }
                 break;
             case 'light':
-                Theme.setMode(Theme.Light);
+            case 'eink':
+                Theme.setMode(theme);
                 if (__ANDROID__) {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
                 } else {
@@ -143,12 +147,14 @@ function getSystemAppearance() {
     if (typeof Application.systemAppearance === 'function') {
         return Application.systemAppearance();
     }
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+
     return Application.systemAppearance;
 }
 
 export function getRealTheme(th = theme) {
-    if (th === 'auto') {
+    if (get(forceDarkMode)) {
+        th = autoDarkToBlack ? 'black' : 'dark';
+    } else if (th === 'auto') {
         try {
             th = getSystemAppearance() as any;
             if (autoDarkToBlack && th === 'dark') {
@@ -169,6 +175,15 @@ export function isDarkTheme(th = getRealTheme(theme)) {
 export function getRealThemeAndUpdateColors() {
     const realTheme = getRealTheme(theme);
     updateThemeColors(realTheme);
+}
+
+export function toggleForceDarkMode() {
+    forceDarkMode.set(!get(forceDarkMode));
+    DEV_LOG && console.log('toggleForceDarkMode', get(forceDarkMode));
+    const realTheme = getRealTheme(theme);
+    applyTheme(realTheme);
+    updateThemeColors(realTheme);
+    globalObservable.notify({ eventName: 'theme', data: realTheme });
 }
 
 export function start() {

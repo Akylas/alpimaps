@@ -13,6 +13,7 @@ import { colors, fonts } from '~/variables';
 import { sdkVersion } from '~/utils/utils';
 import { Color, Utils } from '@nativescript/core';
 import { get } from 'svelte/store';
+import { request } from '@nativescript-community/perms';
 
 let notificationManager: android.app.NotificationManager;
 function getNotificationManager() {
@@ -22,13 +23,17 @@ function getNotificationManager() {
     }
     return notificationManager;
 }
-
+export interface NotificationOptions {
+    title?: string;
+    channel?: string;
+    builder?: androidx.core.app.NotificationCompat.Builder;
+}
 export namespace NotificationHelper {
     const NotificationManager = __ANDROID__ ? android.app.NotificationManager : null;
     const NotificationCompat = __ANDROID__ ? androidx.core.app.NotificationCompat : null;
     const Intent = __ANDROID__ ? android.content.Intent : null;
     /* Creates a notification builder */
-    export function getNotification(context: android.content.Context, options: { title?: string; channel?: string; builder?: androidx.core.app.NotificationCompat.Builder } = {}) {
+    export function getNotification(context: android.content.Context, options: NotificationOptions = {}) {
         const { colorPrimary } = get(colors);
         const builder = options.builder || new NotificationCompat.Builder(context, options.channel);
         const color = new Color(colorPrimary).android;
@@ -95,8 +100,15 @@ export namespace NotificationHelper {
         }
     }
 
-    export function showNotification(notification: android.app.Notification, id: number) {
+    export async function showNotification(notification: android.app.Notification | NotificationOptions, id: number) {
+        await request('notification');
         const service = getNotificationManager();
+        if (!(notification instanceof android.app.Notification)) {
+            const context: android.content.Context = Utils.android.getApplicationContext();
+            const builder = getNotification(context, notification);
+
+            notification = builder.build();
+        }
         service.notify(id, notification);
     }
 

@@ -2,7 +2,7 @@ import { themer } from '@nativescript-community/ui-material-core';
 import { Application, Color, Screen, Utils } from '@nativescript/core';
 import { getCurrentFontScale } from '@nativescript/core/accessibility/font-scale';
 import { get, writable } from 'svelte/store';
-import { getRealTheme, theme } from './helpers/theme';
+import { Themes, getRealTheme, theme } from './helpers/theme';
 import { SDK_VERSION } from '@nativescript/core/utils';
 
 export const colors = writable({
@@ -36,6 +36,7 @@ export const colors = writable({
     colorPrimaryInverse: '',
     colorSurfaceContainer: '',
     colorSurfaceBright: '',
+    colorSurfaceTint: '',
     colorSurfaceDim: '',
     colorSurfaceContainerLow: '',
     colorSurfaceContainerLowest: '',
@@ -177,7 +178,7 @@ Application.on('activity_started', () => {
     }
 });
 
-export function updateThemeColors(theme: string, force = false) {
+export function updateThemeColors(theme: Themes, force = false) {
     const currentColors = get(colors);
     let rootView = Application.getRootView();
     if (rootView?.parent) {
@@ -255,15 +256,21 @@ export function updateThemeColors(theme: string, force = false) {
         themer.setOnSurfaceColor(currentColors.colorOnSurface);
     }
 
-    currentColors.colorWidgetBackground = new Color(currentColors.colorSurface).setAlpha(230).hex;
+    if (theme === 'eink') {
+        currentColors.colorWidgetBackground = currentColors.colorSurface;
+    } else {
+        currentColors.colorWidgetBackground = new Color(currentColors.colorSurface).setAlpha(230).hex;
+    }
 
     if (theme === 'black') {
         currentColors.colorBackground = '#000000';
     }
     if (theme === 'dark') {
+        currentColors.colorSurfaceTint = new Color(currentColors.colorPrimary).lighten(10).hex;
         currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).lighten(10).hex;
         currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).lighten(20).hex;
     } else {
+        currentColors.colorSurfaceTint = new Color(currentColors.colorPrimary).darken(10).hex;
         currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).darken(10).hex;
         currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).darken(20).hex;
     }

@@ -26,6 +26,8 @@
     import { onDestroy } from 'svelte';
     import { clearInterval } from '~/utils/utils/index.ios';
     import { createNativeAttributedString } from '@nativescript-community/text';
+    import { onThemeChanged } from '~/helpers/theme';
+    import { Color } from '@nativescript/core';
 
     const nightPaint = new Paint();
     nightPaint.color = '#00000099';
@@ -37,7 +39,7 @@
 
 <script lang="ts">
     $: ({ colorOnSurface, colorOutline } = $colors);
-    let chart: NativeViewElementNode<LineChart>;
+    let chartView: NativeViewElementNode<LineChart>;
 
     let chartInitialized = false;
     export let location: GeoLocation;
@@ -96,14 +98,40 @@
     highlightPaint.setTextAlign(Align.LEFT);
     highlightPaint.setTextSize(10);
 
+    function updateTheme() {
+        nightPaint.color = new Color($colors.colorBackground).setAlpha(170);
+        nightLiinePaint.color = new Color($colors.colorOnSurface).setAlpha(150);
+    }
+    updateTheme();
+    onThemeChanged(() => {
+        updateTheme();
+        const chart = chartView?.nativeView;
+        if (chart) {
+            const newColor = $colors.colorOnSurface;
+            // DEV_LOG && console.log('onThemeChanged', !!chart, colorOnSurface, newColor);
+            const leftAxis = chart.leftAxis;
+            const xAxis = chart.xAxis;
+            leftAxis.textColor = xAxis.textColor = highlightPaint.color = newColor;
+            const dataSets = chart.data?.dataSets;
+            if (dataSets) {
+                dataSets.forEach((d) => {
+                    if (d.drawValuesEnabled) {
+                        d.valueTextColor = newColor;
+                    }
+                });
+                chart.invalidate();
+            }
+        }
+    });
+
     let bottomLabel: NativeViewElementNode<CanvasLabel>;
     function updateChartData() {
-        if (!chart) {
+        if (!chartView) {
             return;
         }
 
         const computeStartTime = getLocalTime(startTime.startOf('d').valueOf(), timezoneOffset);
-        const chartView = chart.nativeView;
+        const chart = chartView.nativeView;
         const sets = [];
         sunPoses = [];
         moonPoses = [];
@@ -114,14 +142,15 @@
         }
         if (!chartInitialized) {
             chartInitialized = true;
-            const leftAxis = chartView.leftAxis;
-            const xAxis = chartView.xAxis;
-            chartView.setExtraOffsets(0, 0, 0, 0);
-            chartView.minOffset = 0;
-            chartView.clipDataToContent = false;
-            chartView.highlightPerTapEnabled = true;
-            chartView.highlightPerDragEnabled = true;
-            chartView.customRenderer = {
+            const leftAxis = chart.leftAxis;
+            const xAxis = chart.xAxis;
+            leftAxis.textColor = xAxis.textColor = highlightPaint.color = colorOnSurface;
+            chart.setExtraOffsets(0, 0, 0, 0);
+            chart.minOffset = 0;
+            chart.clipDataToContent = false;
+            chart.highlightPerTapEnabled = true;
+            chart.highlightPerDragEnabled = true;
+            chart.customRenderer = {
                 drawHighlight(c: Canvas, h: Highlight<Entry>, set: LineDataSet, paint: Paint) {
                     const w = c.getWidth();
                     const height = c.getHeight();
@@ -151,7 +180,6 @@
             leftAxis.axisMaximum = PI_DIV2;
             xAxis.position = XAxisPosition.BOTTOM_INSIDE;
             xAxis.forcedInterval = 24;
-            xAxis.textColor = 'white';
             xAxis.drawAxisLine = false;
             xAxis.drawGridLines = false;
             xAxis.ensureVisible = true;
@@ -159,12 +187,12 @@
             xAxis.drawLabels = true;
             xAxis.valueFormatter = {
                 getAxisLabel(value: any, axis: AxisBase) {
-                    const time = computeStartTime.add(value * 10, 'minutes');
-                    return formatTime(time);
+                    const time = computeStartTime.add(value * 10, 'minutes').valueOf();
+                    return formatTime(time, undefined, timezoneOffset);
                 }
             };
         }
-        const chartData = chartView.data;
+        const chartData = chart.data;
         if (!chartData) {
             let set = new LineDataSet(sunPoses, 'sun', undefined, 'altitude');
             set.fillFormatter = {
@@ -181,19 +209,19 @@
             sets.unshift(set);
 
             const lineData = new LineData(sets);
-            chartView.data = lineData;
+            chart.data = lineData;
 
-            const nowMinutes = startTime.diff(computeStartTime, 'minutes');
-            const h = chartView.getHighlightByXValue(nowMinutes / 10);
-            chartView.highlight(h[0]);
+            const nowMinutes = dayjs(startTime).diff(computeStartTime, 'minutes');
+            const h = chart.getHighlightByXValue(nowMinutes / 10);
+            chart.highlight(h[0]);
         } else {
             chartData.getDataSetByIndex(1).values = sunPoses;
             chartData.getDataSetByIndex(1).notifyDataSetChanged();
             chartData.getDataSetByIndex(0).values = moonPoses;
             chartData.getDataSetByIndex(0).notifyDataSetChanged();
             chartData.notifyDataChanged();
-            chartView.notifyDataSetChanged();
-            chartView.invalidate();
+            chart.notifyDataSetChanged();
+            chart.invalidate();
         }
     }
 
@@ -210,7 +238,7 @@
 
     $: {
         try {
-            if (chart) {
+            if (chartView) {
                 updateChartData();
             }
         } catch (err) {
@@ -443,7 +471,7 @@
     <mdbutton class="icon-btn" horizontalAlignment="left" row={1} text="mdi-chevron-left" variant="text" on:tap={() => updateStartTime(startTime.subtract(1, 'd'))} />
     <label colSpan={2} fontSize={17} marginLeft={50} marginRight={50} row={1} text={startTime.format('LL')} textAlignment="center" verticalTextAlignment="center" on:tap={selectDate} />
     <mdbutton class="icon-btn" col={1} horizontalAlignment="right" row={1} text="mdi-chevron-right" variant="text" on:tap={() => updateStartTime(startTime.add(1, 'd'))} />
-    <linechart bind:this={chart} backgroundColor="#222222" colSpan={3} row={2}>
+    <linechart bind:this={chartView} colSpan={3} row={2}>
         <!-- <rectangle fillColor="#a0caff" height="50%" width="100%" /> -->
     </linechart>
     {#if sunTimes}
