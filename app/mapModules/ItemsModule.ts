@@ -515,7 +515,7 @@ export default class ItemsModule extends MapModule {
                 }
             };
             let timer = setTimeout(onDone, 1500) as any;
-            mapContext.onMapStable(onDone, true);
+            mapContext.getMap().once('mapStable', onDone);
         });
     }
 

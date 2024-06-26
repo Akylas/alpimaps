@@ -9,9 +9,10 @@ import { IItem } from '~/models/Item';
 import { toXML } from 'jstoxml';
 
 export function importGPXToGeojson(filePath: string) {
-    const str = File.fromPath(path.join(knownFolders.currentApp().path, 'assets', 'gr52.gpx')).readTextSync();
+    const str = File.fromPath(filePath).readTextSync();
 
     const gpxDom = new DOMParser().parseFromString(str);
+    DEV_LOG && console.log('importGPXToGeojson', gpxDom);
     const featureCollection = gpx(gpxDom);
     const itemFeature = featureCollection.features[0] as Feature<LineString>;
     return featureCollection.features.map((feature) => {
