@@ -1,0 +1,9 @@
+### Features
+- new show admin boundaries features ([0eb7d5ef](/0eb7d5ef819916ccffd39ff7d12f222f1cc59713))
+- new eink theme for eink devices ([1b2cbcdf](/1b2cbcdf053b314d335621f2d0ab6acb05bcb440))
+
+### Bug fixes
+- expandable directionpane ([1098c9a4](/1098c9a4c55e9b7cf89193848b2679639f01dab5))
+- some astronomy view improvements ([7221c79b](/7221c79bd82a43c840d0a40bfd931de7e1da7539))
+- map item info view improved with more OSM keys ([17f60b11](/17f60b114c43ca8c1b60b955e65b590a975b7a92))
+- untransl
