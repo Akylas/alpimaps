@@ -2,6 +2,7 @@
     import { Align, Canvas, CanvasView, Paint, Path, Rect, Style } from '@nativescript-community/ui-canvas';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { lu } from '~/helpers/locale';
+    import { onThemeChanged } from '~/helpers/theme';
     import { TO_RAD } from '~/utils/geo';
     import { colors } from '~/variables';
     function dialTicks(center: { x; y }, radius: number, tickLength: number, spacing: number, start: number = 0, end: number = 360, path: Path = new Path()): Path {
@@ -40,11 +41,10 @@
 </script>
 
 <script lang="ts">
-    let { colorPrimary, colorSurfaceContainerHighest, colorOnSurface, colorOutlineVariant } = $colors;
-    $: ({ colorPrimary, colorSurfaceContainerHighest, colorOnSurface, colorOutlineVariant } = $colors);
+    let { colorBackground, colorPrimary, colorSurfaceContainerHighest, colorOnSurface, colorOutlineVariant } = $colors;
+    $: ({ colorBackground, colorPrimary, colorSurfaceContainerHighest, colorOnSurface, colorOutlineVariant } = $colors);
     // $: textPaint.color = colorOnSurface;
     export let drawInsideGrid = false;
-    export let backgroundColor = '#171717';
     export let tickColor = '#888';
     export let cardinalTickColor = colorPrimary;
     export let rotation = 0;
@@ -67,6 +67,8 @@
     function redraw(unusedArg) {
         canvas?.nativeView?.invalidate();
     }
+
+    onThemeChanged(redraw);
 
     $: redraw(rotation);
 
@@ -100,11 +102,11 @@
                 cardinalTicks = dialTicks(center, tickRadiusPercent * radius, tickLengthPercent * radius * 2, 45);
             }
 
-            paint.color = backgroundColor;
+            paint.color = colorBackground;
             paint.setStyle(Style.FILL);
             canvas.drawCircle(center.x, center.y, radius, paint);
 
-            paint.color = backgroundColor;
+            paint.color = colorBackground;
 
             paint.setStyle(Style.STROKE);
             paint.strokeWidth = 3;
