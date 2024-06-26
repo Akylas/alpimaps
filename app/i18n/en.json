@@ -564,6 +564,7 @@
         "auto": "Auto",
         "black": "Black",
         "dark": "Dark",
+        "eink": "EInk",
         "light": "Light",
         "title": "Theme"
     },
