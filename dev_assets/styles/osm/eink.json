@@ -1,0 +1,16 @@
+{
+    "extends":"./osm.json",
+    
+    "styles": [
+        "eink/style.less",
+        "shared/style.less",
+        "shared/admin.less",
+        "shared/terrain.less",
+        "shared/hydro.less",
+        "shared/landuse.less",
+        "shared/roads.less",
+        "shared/labels.less"
+    ],
+    
+    "name": "outdoors"
+}
