@@ -39,7 +39,7 @@
     import Search from '~/components/search/Search.svelte';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { l, lc, lt, onLanguageChanged, onMapLanguageChanged } from '~/helpers/locale';
-    import { sTheme, toggleTheme } from '~/helpers/theme';
+    import { forceDarkMode, sTheme, toggleForceDarkMode, toggleTheme } from '~/helpers/theme';
     import watcher from '~/helpers/watcher';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
@@ -71,10 +71,11 @@
     import { Sentry, isSentryEnabled } from '~/utils/sentry';
     import { share } from '~/utils/share';
     import { navigate } from '~/utils/svelte/ui';
-    import { hideLoading, onBackButton, showLoading, showPopoverMenu } from '~/utils/ui';
+    import { hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu } from '~/utils/ui';
     import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, setTimeout } from '~/utils/utils';
     import { colors, windowInset } from '../../variables';
     import dayjs from 'dayjs';
+    import { request } from '@nativescript-community/perms';
 
     $: ({ colorPrimary, colorError, colorBackground } = $colors);
     $: ({ top: windowInsetTop, bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight } = $windowInset);
@@ -1426,28 +1427,48 @@
     async function selectStyle() {
         const styles = [];
         const stylePath = path.join(knownFolders.currentApp().path, 'assets', 'styles');
-        const entities = await Folder.fromPath(stylePath).getEntities();
+        const entities = (await Folder.fromPath(stylePath).getEntities()).filter((e) => !/(inner|admin|cleaned)/.test(e.path));
         for (let index = 0; index < entities.length; index++) {
             const e = entities[index];
             if (Folder.exists(e.path)) {
                 const subs = await Folder.fromPath(e.path).getEntities();
-                styles.push(...subs.filter((s) => s.name.endsWith('.json') || s.name.endsWith('.xml')).map((s) => e.name + '~' + s.name.split('.')[0]));
+                styles.push(
+                    ...subs
+                        .filter((s) => s.name.endsWith('.json') || s.name.endsWith('.xml'))
+                        .map((s) => ({ name: s.name.split('.')[0] + '/' + e.name.toUpperCase(), data: e.name + '~' + s.name.split('.')[0] }))
+                );
             } else {
                 try {
                     const assetsNames = nativeVectorToArray(new ZippedAssetPackage({ zipPath: e.path }).getAssetNames());
-                    styles.push(...assetsNames.filter((s) => s.endsWith('.xml')).map((s) => e.name + '~' + s.split('.')[0]));
+                    DEV_LOG && console.log('assetsNames', assetsNames);
+                    styles.push(...assetsNames.filter((s) => s.endsWith('.xml')).map((s) => ({ name: s.split('.')[0] + '/' + e.name.toUpperCase(), data: e.name + '~' + s.split('.')[0] })));
                 } catch (error) {
                     console.error(error, error.stack);
                 }
             }
         }
+
         const actions = styles;
-        const result = await action({
-            title: lc('select_style'),
-            actions
-        });
-        if (actions.indexOf(result) !== -1) {
-            setMapStyle(result);
+        const component = (await import('~/components/common/OptionSelect.svelte')).default;
+        const result = await showAlertOptionSelect(
+            component,
+            {
+                height: Math.min(actions.length * 56, 400),
+                rowHeight: 56,
+                options: actions.map((d) => ({
+                    ...d,
+                    boxType: 'circle',
+                    type: 'checkbox',
+                    value: currentLayerStyle === d.data
+                }))
+            },
+            {
+                title: lc('select_style')
+            }
+        );
+        DEV_LOG && console.log('on style selected', result);
+        if (result?.data) {
+            setMapStyle(result.data);
         }
     }
 
@@ -1593,17 +1614,16 @@
         return result;
     }
 
-    function showHideKeepAwakeNotification(value: boolean) {
+    async function showHideKeepAwakeNotification(value: boolean) {
         if (__ANDROID__) {
             if (value) {
-                const context: android.content.Context = Utils.android.getApplicationContext();
-                const builder = NotificationHelper.getNotification(context, {
-                    title: lt('screen_awake_notification'),
-                    channel: NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL
-                });
-
-                const notification = builder.build();
-                NotificationHelper.showNotification(notification, KEEP_AWAKE_NOTIFICATION_ID);
+                NotificationHelper.showNotification(
+                    {
+                        title: lt('screen_awake_notification'),
+                        channel: NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL
+                    },
+                    KEEP_AWAKE_NOTIFICATION_ID
+                );
             } else {
                 NotificationHelper.hideNotification(KEEP_AWAKE_NOTIFICATION_ID);
             }
@@ -1727,7 +1747,7 @@
                     {
                         title: lc('dark_mode'),
                         id: 'dark_mode',
-                        color: $sTheme === 'dark' ? colorPrimary : undefined,
+                        color: $forceDarkMode ? colorPrimary : undefined,
                         icon: 'mdi-theme-light-dark'
                     },
                     {
@@ -1796,7 +1816,7 @@
                                 switchKeepAwake();
                                 break;
                             case 'dark_mode':
-                                toggleTheme(true);
+                                toggleForceDarkMode();
                                 break;
                             case 'offline_mode':
                                 networkService.forcedOffline = !networkService.forcedOffline;

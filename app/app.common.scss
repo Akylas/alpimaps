@@ -25,6 +25,7 @@
     --colorSurfaceVariant: #DDE3EA;
     --colorOnSurfaceVariant: #41484D;
     --colorSurface: #FCFCFF;
+    --colorSurfaceTint: #00658D;
     --colorOnSurface: #191C1E;
     --colorOnSurfaceInverse: #000000;
     --colorSurfaceContainer: #C2C9BD;
@@ -82,6 +83,15 @@ mdtextfield[variant=outline], mdtextfield[variant=fill] {
     placeholder-color: var(--colorOutline);
     floating-color: var(--colorOutline);
     floating-inactive-color: var(--colorOutline);
+}
+
+.directionsPanel {
+    background-color: var(--colorPrimary);
+    .ns-eink & {
+        background-color: white;
+        border-bottom-width: 1;
+        border-bottom-color: black;
+    }
 }
 
 checkbox {
@@ -154,12 +164,20 @@ label {
     background-color: var(--colorPrimary);
     color: var(--colorOnPrimary);
     ripple-color: var(--colorOnPrimary);
+    .ns-eink & {
+        color: white;
+        background-color: black;
+    }
 }
 
 .buttontext {
     background-color: var(--colorBackground);
     color: var(--colorPrimary);
     ripple-color: var(--colorPrimary);
+    .ns-eink & {
+        background-color: white;
+        color: black;
+    }
 }
 
 .maki {
@@ -206,12 +224,21 @@ label {
     margin: 8;
     width: 54;
     height: 54;
+    .ns-eink & {
+        color: black;
+        // background-color: white;
+    }
 }
 .floating-btn-themed {
     @extend .floating-btn;
     background-color: var(--colorPrimaryContainer);
     ripple-color: var(--colorPrimaryContainer);
     color: var(--colorOnPrimaryContainer);
+    .ns-eink & {
+        color: black;
+        background-color: white;
+    }
+
 }
 
 .small-floating-btn {
