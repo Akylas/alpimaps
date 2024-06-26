@@ -3,7 +3,7 @@
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { Utils } from '@nativescript-community/ui-chart/utils/Utils';
-    import { SVG } from '@nativescript-community/ui-svg';
+    import { SVG } from '@nativescript-community/ui-svg/canvas';
     import { executeOnMainThread } from '@nativescript/core/utils';
     import dayjs, { Dayjs } from 'dayjs';
     import { GetMoonPositionResult, GetSunPositionResult, getMoonPosition, getPosition } from 'suncalc';

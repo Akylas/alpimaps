@@ -101,7 +101,7 @@
     $: locationButtonClass = !$queryingLocation && $watchingLocation ? 'buttonthemed' : 'buttontext';
     $: locationButtonLabelClass = $queryingLocation ? 'fade-blink' : '';
     $: selectedItemHasPosition = selectedItem && !selectedItem.route && selectedItem.geometry.type === 'Point';
-
+    $: DEV_LOG && console.log('locationButtonClass', locationButtonClass);
     export function onSelectedItem(item: IItem, oldItem: IItem) {
         selectedItem = item;
     }
@@ -284,10 +284,10 @@
 <gridlayout bind:this={gridLayout} id="scrollingWidgets" {...$$restProps} columns="60,*,70" isPassThroughParentEnabled={true} rows="auto,*,auto" {userInteractionEnabled}>
     <stacklayout col={2} padding={2} row={2} verticalAlignment="bottom">
         <mdbutton id="directions" class="floating-btn-themed" col={2} rowSpan={2} text="mdi-directions" visibility={selectedItemHasPosition ? 'visible' : 'hidden'} on:tap={startDirections} />
-        <mdcardview id="location" class={`floating-btn ${locationButtonClass}`} shape="medium" on:tap={askUserLocation} on:longPress={onWatchLocation}>
+        <mdcardview id="location" class={` ${locationButtonClass} floating-btn`} shape="medium" on:tap={askUserLocation} on:longPress={onWatchLocation}>
             <label
                 class={`mdi ${locationButtonLabelClass}`}
-                color={$watchingLocation && !$queryingLocation ? colorOnPrimary : colorPrimary}
+                color={$watchingLocation && !$queryingLocation  ? colorOnPrimary : colorPrimary}
                 text="mdi-crosshairs-gps"
                 textAlignment="center"
                 verticalAlignment="middle" />
