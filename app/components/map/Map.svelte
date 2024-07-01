@@ -541,6 +541,8 @@
                     searchView.unfocus();
                 } else if (directionsPanel && directionsPanel.isVisible()) {
                     directionsPanel.cancel();
+                } else if (bottomSheetStepIndex !== 0) {
+                    bottomSheetStepIndex = 0;
                 } else {
                     Application.android.foregroundActivity.moveTaskToBack(true);
                 }
