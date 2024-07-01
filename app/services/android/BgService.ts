@@ -7,7 +7,7 @@ import { ACTION_PAUSE, ACTION_RESUME, NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL, 
 const NOTIFICATION_ID = 3426124;
 
 @NativeClass
-@JavaProxy('akylas.alpi.maps.BgService')
+@JavaProxy('__PACKAGE__.BgService')
 export class BgService extends android.app.Service {
     // export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.BgService', {
     currentNotifText: string;
