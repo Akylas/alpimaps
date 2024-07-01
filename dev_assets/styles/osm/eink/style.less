@@ -1,89 +1,138 @@
 
-@background: #ffffff;
+@applied_eink_lighten: 20%;
+@applied_eink_lighten_light: 5%;
+
+@background: lighten(#e6e4e0, @applied_eink_lighten); 
+@contour_inner:lighten(#226600b2, @applied_eink_lighten_light);
+@water: lighten(#7fcae0, @applied_eink_lighten);
+@park: lighten(#C8FACC, @applied_eink_lighten_light); 
+@n_park: lighten(#b6e69e, @applied_eink_lighten); 
+@park_line: lighten(#82bf5a, @applied_eink_lighten);
+@grass_color:lighten(#cdebb0, @applied_eink_lighten_light);
+@scrub_color:lighten(#c8d7ab, @applied_eink_lighten);
+@heath_color:lighten(#d6d99f, @applied_eink_lighten);
+@forest_color: lighten(#add19e, @applied_eink_lighten);
+@allotments_color: lighten(#add19e, @applied_eink_lighten);
+@bare_rock:lighten(#eee5dc, @applied_eink_lighten_light);
+@rock_pattern_fill:lighten(#ccc, @applied_eink_lighten_light);
+@cliff: lighten(#867056, @applied_eink_lighten);
+@walls:  lighten(#777777, @applied_eink_lighten);
+@residential_color: lighten(#bdbfb3, @applied_eink_lighten);
+@retail: lighten(#ffd6d1, @applied_eink_lighten); 
+@commercial: lighten(#e8e6df, @applied_eink_lighten);
+@industrial: lighten(#d6d8e177, @applied_eink_lighten); 
+@aeroway: lighten(#d6d8e177, @applied_eink_lighten); 
+@farmland: lighten(#d8e0bd, @applied_eink_lighten); 
+@university: lighten(#e5deb8, @applied_eink_lighten);
+@hospital: lighten(#ead2da, @applied_eink_lighten);
+@school: lighten(#e5deb8, @applied_eink_lighten);
+@building-fill: lighten(#dddddd, @applied_eink_lighten_light);
+@building-line: lighten(#d2d2d2, @applied_eink_lighten_light); 
+@cemetery: lighten(#d3dcc1, @applied_eink_lighten); 
+@pitch: lighten(#AAE0CB, @applied_eink_lighten);
+@tourism: lighten(#660033, @applied_eink_lighten);
+@quarry: lighten(#c5c3c388, @applied_eink_lighten);
+@military:lighten( #f55, @applied_eink_lighten);
+@sand: lighten(#ededcf, @applied_eink_lighten);
+@golf_course: lighten(#b5e3b5, @applied_eink_lighten);
+
+
+@via_ferrata: #cccccc;
+
+@via_ferrata-dasharray: 3,2, 1, 2;
+@via_ferrata-line-width: 2;
+
+@lowevel_road_color: #ccc;
+@motorway-color: lighten(#e66e89, @applied_eink_lighten);
+@trunk-color: lighten(#f9b29c, @applied_eink_lighten_light);
+@primary-color: lighten(#f3ba5c, @applied_eink_lighten);
+@secondary-color: darken(#f7fabf, @applied_eink_lighten_light);
+
+@path-fill: lighten(#bb6868, @applied_eink_lighten);
+@track-fill: lighten(#996600, @applied_eink_lighten);
+@railway-line-color: lighten(#666, @applied_eink_lighten);
+@aerial-fill: lighten(#47484d, @applied_eink_lighten);
+@pedestrian-fill: #ffffff;
+@pedestrian-casing: lighten(#999, @applied_eink_lighten);
+@step-fill: #ffffff;
+@pedestrian-tunnel-fill: @pedestrian-fill;
+@track-tunnel-fill: @pedestrian-fill;
+
+@step-casing: @pedestrian-casing;
+// @track-casing: lighten(#9b7057, @applied_eink_lighten);
+@cycleway-inner-fill: lighten(#0000ff, @applied_eink_lighten);
+@bridleway-fill: lighten(green, @applied_eink_lighten);
+@aeroway-fill: lighten(#c7cce5, @applied_eink_lighten);
+@steps-tunnel-casing: lighten(#808080, @applied_eink_lighten);
+@dam_fill: lighten(#cac9c9, @applied_eink_lighten);
+@piste-fill: lighten(#c47aff, @applied_eink_lighten);
+@bridge: lighten(#8b8282, @applied_eink_lighten);
+@glacier: lighten(#e0f3faaa, @applied_eink_lighten);
+@ice:lighten( #ddecec, @applied_eink_lighten);
+@iceshelf: lighten(#ddecec77, @applied_eink_lighten);
 
 @border_country: #787b8c;
 @border_country_opacity: 1;
-@border_region: linear([view::zoom], (11, #787b8c), (13, #787b8c77), (14, #787b8c00));
+@border_region_color:lighten(#787b8ca9, @applied_eink_lighten);
+@border_region: linear([view::zoom], (11, @border_region_color), (13, fadeout(@border_region_color, 0.5)), (14, fadeout(@border_region_color, 1)));
+@border_region_dasharray: 1, 2;
 
-@contour_inner:#226600;
-@contour: fadeout(@contour_inner, 0.6);
+@contour: fadeout(@contour_inner, 0.55);
 @contour_width: linear([view::zoom], (16, 0.6), (22, 1.6));
 @contour_low: fadeout(@contour_inner, 0.8);
 @contour_semi: step([view::zoom], (12, @contour_low), (14,@contour));
-@contour_label: @contour_inner;
+@contour_label: #226600b2;
 @contour_halo: #f2f5f866;
 @contour_halo_radius: 1;
 
-@glacier: #e0f3faaa;
-@ice: #ddecec;
-@iceshelf: #ddecec77;
-@water: #7fcae0;
+
 // @water_stroke: darken(@water, 0%);
-@river: linear([view::zoom], (8, #128bc4), (9, @water));
+// @river: linear([view::zoom], (8, darken(@water, 20%)), (9, @water));
+@river: darken(@water, 30%);
+@waterway: darken(@water, 30%);
+@river_polygon: @water;
+
+@river-width: linear([view::zoom], (8, 1), (15, 2), (16, 4));
 
 @aboriginal_label: #82643a;
 @national_park_label: rgb(99, 150, 65);
-@park: #C8FACC; 
-@n_park: #b6e69e; 
 @national_park_fill: linear([view::zoom], (6, fadeout(@n_park, 0.25)), (11, fadeout(@n_park, 1)));
 @protected_area_line: linear([view::zoom], (12, darken(@n_park, 20%)), (14, fadeout(darken(@n_park, 20%), 0.7)));
 @aboriginal_line: #D9B391;
-@park_line: #82bf5a;
-
-@protected_area_line_width:linear([view::zoom], (9, 0.75), (12, 2), (15, 2), (18, 3));
 
 @protected-area: #09330c;
 @protected-area_halo: #ffffff88;
 @aboriginal_label: #82643a;
 
-@grass: linear([view::zoom], (6, fadeout(#cdebb0, 0.7)), (12,#cdebb0));
-@scrub: linear([view::zoom], (6, fadeout(#c8d7ab, 0.7)), (12,#c8d7ab));
-@heath:  linear([view::zoom], (6, fadeout(#d6d99f, 0.7)), (12,#d6d99f));
-@fell: @heath
-@forest: linear([view::zoom], (6, fadeout(#add19e, 0.7)), (12,#add19e));
-@forest_pattern:  url('symbols/leaftype_mixed.svg');
-@scrub_pattern:  url('symbols/scrub.png');
-@allotments: linear([view::zoom], (6, fadeout(#c9e1bf, 0.7)), (12,#c9e1bf)) ;
-@bare_rock:#eee5dc;
+@grass: linear([view::zoom], (6, fadeout(@grass_color, 0.7)), (12,@grass_color));
+@scrub: linear([view::zoom], (6, fadeout(@scrub_color, 0.7)), (12,@scrub_color));
+@heath: linear([view::zoom], (6, fadeout(@heath_color, 0.7)), (12,@heath_color));
+@fell: @heath;
+@forest: linear([view::zoom], (6, fadeout(@forest_color, 0.7)), (12,@forest_color));
+
+@forest_pattern_opacity:  0.4;
+@allotments: linear([view::zoom], (6, fadeout(@allotments_color, 0.7)), (12,@allotments_color));
 @rock:step([view::zoom], (12, @bare_rock), (13,fadeout(@bare_rock, 0.7)), (14,fadeout(@bare_rock, 0.9)));
 @scree: @rock;
-@rock_pattern: url('symbols/rock_overlay.png');
-@scree_pattern:  url('symbols/scree_overlay.png');
-@rock_pattern_fill:#ccc;
 @scree_pattern_fill:darken(@bare_rock, 30%);
-@cliff: #867056;
 @cliff-width: linear([view::zoom], (12, 0.5), (15,1));
-@walls: #777777;
 
-@residential: linear([view::zoom], (4,#bdbfb399), (12, #bdbfb333));
-@retail: #ffd6d1; 
-@commercial: #e8e6df; 
-@industrial: #d6d8e177; 
-@aeroway: #d6d8e177; 
-@farmland: #d8e0bd; 
+@residential: linear([view::zoom], (4, fadeout(@residential_color, 0.3)), (12,fadeout(@residential_color, 0.8)));
+// @farmland: #d8e0bd; 
 
-@university: #e5deb8;
-@hospital: #ead2da;
-@school: #e5deb8;
+@iceshelf_pattern_opacity: 0.4;
+@iceshelf_pattern_fill: @water;
+@military_pattern_opacity: linear([view::zoom], (13, 0.2), (15,0.1), (17,0));
 
-@building-fill: #D8D0C9;
 @building-opacity: linear([view::zoom], (15,0), (15.01, 0.8), (16, 1));
 
-@building-line: #C2B5AB; 
 @building-line-width: linear([view::zoom], (15, 0), (15.01, .75));
 
-@cemetery: #d3dcc1; 
 @mud: rgba(203, 177, 154, 0.3); 
 @leisure: lighten(@park, 5%);
-@tourism: #660033;
-@quarry: #c5c3c388;
-@military: #f55;
-@sand: #ededcf;
 
-@pitch: #AAE0CB; 
 @track: @pitch;
 @stadium: @leisure;
-@golf_course: #b5e3b5;
 
 @marine_labels: @water_label;
 @marine_labels_halo: @water_halo;
@@ -93,49 +142,49 @@
 
 @housenumber: rgb(77, 76, 76);
 
-@via_ferrata: yellow;
-@via_ferrata-dasharray: 2,1;
-@via_ferrata-line-width: 2;
-
-
-@motorway-fill: linear([view::zoom], (6, #e66e8933), (7, #e66e89), (10, #e892a2));
-@motorway-tunnel-fill:lighten(#e892a2, 10%);
-@motorway-casing: linear([view::zoom], (9, #c24e6b00), (10, #c24e6b), (12, #dc2a67));
+@motorway-fill: linear([view::zoom], (6, fadeout(@motorway-color, 0.8)), (7,  fadeout(@motorway-color, 0.2)), (10, @motorway-color));
+@motorway-tunnel-fill:lighten(@motorway-color, 15%);
+@motorway-casing-color:darken(@motorway-color, 30%);
+@motorway-casing: linear([view::zoom], (9, fadeout(@motorway-casing-color, 1)), (10,@motorway-casing-color));
 @motorway-casing-width: linear([view::zoom], (5, 0), (7,1), (18, 2));
 @motorway-width: linear([view::zoom], (5, 0), (5.01, 0.75), (7, 0.9), (8, 1.14), (9, 1.4), (10, 1.82), (11, 2.34), (12, 3.3), (13, 4.74), (14, 6.74), (15, 10), (17, 15), (18, 18));
 @motorway-link-width: linear([view::zoom], (12, 0), (12.01, 0.5),  (14, 2), (15, 4), (17, 8.4), (18, 16));
 
-@trunk-fill: linear([view::zoom], (5, #fdb59e77), (6, #fdb59e),(11,#f9b29c));
-@trunk-tunnel-fill: lighten(#f9b29c, 10%);
-@trunk-casing: linear([view::zoom], (10, #a0740000), (11, #a07400), (12, #c84e2f));
+@trunk-fill: linear([view::zoom], (5, fadeout(@trunk-color, 0.6)), (10, @trunk-color));
+@trunk-tunnel-fill: lighten(@trunk-color, 10%);
+@trunk-casing-color:darken(@trunk-color, 35%);
+@trunk-casing: linear([view::zoom], (10, fadeout(@trunk-casing-color, 1)), (11,@trunk-casing-color));
 @trunk-width: linear([view::zoom], (4, 0), (4.01, 0.75), (7, 0.9), (8, 1.14), (9, 1.4), (10, 1.82), (11, 2.34), (12, 3.3), (13, 4.74), (14, 6.74), (15, 10), (17, 15), (18, 18));
 @trunk-casing-width: linear([view::zoom], (4,0), (4.01,1), (10,1), (18, 2));
 @trunk-link-width: linear([view::zoom], (12, 0), (12.01, 0.5),  (14, 2), (15, 4), (17, 8.4), (18, 16));
 
-@primary-fill: linear([view::zoom], (7, #f3ba5c), (11, #f3ba5c),(12,#fcd6a4));
-@primary-tunnel-fill: @primary-fill;
-@primary-casing: linear([view::zoom], (11, #a0740000), (11.01, #a07400));
-@primary-casing-width: linear([view::zoom], (10,0), (10.01,1), (18, 2));
-@primary-width: linear([view::zoom], (7, 0), (7.01, 0.5), (8, 1), (10, 2), (13, 3), (15, 4.3), (16, 8), (17, 9.5), (18, 12.5));
+@primary-fill:@primary-color;
+@primary-tunnel-fill: lighten(@primary-color, 10%);
+@primary-casing-color:darken(@primary-color, 35%);
+@primary-casing: linear([view::zoom], (10.99, @lowevel_road_color), (11, @primary-casing-color));
+@primary-casing-width: linear([view::zoom], (7,0), (7.01,0.5), (8, 1), (10, 1), (18, 2));
+@primary-width: linear([view::zoom], (10, 0), (10.5, 2), (13, 3), (15, 4.3), (16, 8), (17, 9.5), (18, 12.5));
+
+
+@secondary-fill: @secondary-color;
+@secondary-tunnel-fill: @tertiary-fill;
+@secondary-casing: linear([view::zoom], (11,@lowevel_road_color), (12, #707d05));
+@secondary-casing-width: linear([view::zoom], (9, 0), (9.01, 0.4), (10, 1), (11, 0.6), (15, 0.7),(18, 2));
+@secondary-width: linear([view::zoom], (10, 0), (11, 2), (12, 2.15), (14, 3.8), (15, 4.3), (16, 8), (17, 9.5), (18, 12.5));
 
 @primary-link-width: linear([view::zoom], (7, 0), (7.01, 0.5), (8, 0.7), (9, 0.9), (10, 0.9), (11, 1.25), (12, 1.5), (13, 1.5), (15, 3.3), (16, 5.2), (17, 5.7), (18, 7.2));
-@tertiary-fill: linear([view::zoom], (10.5,#bbbbbb), (10.6, #FFFFFF));
+
+@tertiary-fill: #FFFFFF;
 @tertiary-tunnel-fill: @tertiary-fill;
-@tertiary-casing: #d8dbe8;
+@tertiary-casing: @lowevel_road_color;
 @tertiary-casing-width: linear([view::zoom], (11, 0), (11.01, 1.5), (12, 1.6), (16, 2.6), (17, 3.2), (18, 3));
 @tertiary-width: linear([view::zoom], (10, 0), (10.01, 0.35), (11, 0.95), (12, 1.5), (13, 1.95), (14, 3.9), (15, 4.4), (16, 8.2), (17, 9.7), (18, 12.7));
 
-@secondary-fill: linear([view::zoom], (10.5,#f7fabf), (10.6, #f7fabf));
-@secondary-tunnel-fill: @tertiary-fill;
-@secondary-casing: linear([view::zoom], (11,#9eae23), (12, #707d05));
-@secondary-casing-width: linear([view::zoom], (11, 0), (11.01, 0.6), (15, 0.7),(18, 2));
-@secondary-width: linear([view::zoom], (9, 0), (9.01, 1), (10, 2), (12, 2.15), (14, 3.8), (15, 4.3), (16, 8), (17, 9.5), (18, 12.5));
-
-@residential-fill: linear([view::zoom], (12,#d3d3d3), (13, #fff));
+@residential-fill: #fff;
 @noaccess-opacity:0.8;
 @residential-tunnel-fill: @residential-fill;
-@residential-casing: #b3b7cb;
-@residential-casing-width: linear([view::zoom], (14,0), (14.01, 0.75), (14, 0.82), (14, 0.88), (16, 1));
+@residential-casing: linear([view::zoom], (12,fadeout(@lowevel_road_color, 1)), (13, @lowevel_road_color));
+@residential-casing-width: linear([view::zoom], (12,0), (12.01, 0.75), (12, 1), (14, 1.5), (16, 2));
 @residential-width: linear([view::zoom],  (12, 0.5), (13, 0.95), (14, 1.9), (15, 2.4), (16, 5.2), (17, 5.7), (18, 7.7));
 
 
@@ -147,20 +196,14 @@
 @service-width: linear([view::zoom],  (12, 0.5), (13, 0.95), (14, 1), (15, 1.2), (16, 2), (17, 2.5), (18, 3 ), (20, 6 ));
 
 
-@pedestrian-fill: #ffffff;
 @pedestrian-polygon-fill: fadeout(#E5E7F1, 0.2);
-@pedestrian-tunnel-fill: darken(@pedestrian-fill, 10%);
-@pedestrian-casing: #ffffff00;
 @pedestrian-casing-width: linear([view::zoom], (15,0), (15.01,1), (16, 2));
 @pedestrian-width: linear([view::zoom], (15,0.5), (16,1), (18,1), (20, 3));
 @pedestrian-dasharray: 7,2;
-@pedestrian-tunnel-dasharray: 6,3;
 @footway-width: linear([view::zoom], (15,0.5), (16,1), (18,1), (20, 3));
 
 @footway-casing-width: linear([view::zoom], (16,0), (16.01,1), (18, 2));
 
-@path-fill: linear([view::zoom], (13,#bb7979), (14,#bb6868));
-@path-tunnel-fill: lighten(@pedestrian-fill, 5%);
 @path-casing: linear([view::zoom], (10, #ffffff00), (13, #ffffff));
 @path-casing-width: linear([view::zoom], (14,0), (14.01,0.5), (16, 1), (18, 2.5));
 @cycleway-casing-width: linear([view::zoom], (14,0), (14.01,1), (16, 1.5));
@@ -168,16 +211,11 @@
 @path-dasharray: 7,1;
 @track_path_text_dy: linear([view::zoom], (13, 0), (16, 1), (18, 2));
 
-@step-fill: #ffffff;
-@step-casing: #00ffff00;
 @step-width: @path-width + linear([view::zoom], (16, 0), (18, 1), (22, 10));
 @path-tunnel-casing-width: linear([view::zoom], (14,0), (14.01,0.5), (16,1), (20,2));
 @step-dasharray: 2,3;
 
-@track-fill: linear([view::zoom], (13,#996600), (14,#996600));
-@track-tunnel-fill: lighten(@pedestrian-fill, 5%);
 @track-casing: linear([view::zoom], (10, #ffffff00), (14, #ffffff77));
-@track-paved-casing: #d6d9e6;
 @track-casing-width: linear([view::zoom], (14,0), (14.01,1), (16, 2.5));
 @track-width: @path-width + 0.2;
 @track-dasharray: 6,3,6;
@@ -190,14 +228,13 @@
 @track_line_cap: butt;
 
 @railway: @pedestrian-polygon-fill;
-@railway-line: linear([view::zoom], (8,	#b6b8c3), (10, #aaa), (13, #666));
+@railway-line: linear([view::zoom], (8,	lighten(@railway-line-color, 60%)), (10, lighten(@railway-line-color, 50%)), (13, @railway-line-color));
 @railway-line-width: linear([view::zoom], (8,	0.8), (16, 1));
 @railway-track-line-width: linear([view::zoom], (8,	1), (14,	2), (20, 5));
 @railway-track-line-dasharray: 0.5,30;
 @railway-track-line:  @railway-line;
 
 @aerial-width: linear([view::zoom], (14,	0.5), (20, 1));
-@aerial-fill: #47484d;
 @aerial-casing-width: linear([view::zoom], (14,	0.5), (20, 1));
 @aerial-casing-fill: #ffffff;
 
@@ -207,9 +244,7 @@
 @piste-casing-fill: #647BF288;
 
 @default-casing: white;
-@pedestrian-casing: #999;
 @path-casing: @default-casing;
-@track-casing: #9b7057;
 
 @raceway-fill: #f0eeeb;
 @raceway-casing: #d6d9e6;
@@ -223,10 +258,6 @@
 @steps-fill: @path;
 @cycleway-fill: 0;
 // @cycleway-inner-fill: linear([view::zoom], (15, #bb6868), (16, rgba(0, 110, 255, 0.6)));
-@cycleway-inner-fill: #0000ff;
-@bridleway-fill: green;
-@track-fill: #ffffff;
-@aeroway-fill: #c7cce5;
 @apron-fill: #dadae0;
 @runway-fill: @aeroway-fill;
 @taxiway-fill: @aeroway-fill;
@@ -235,17 +266,14 @@
 @taxiway-width: linear([view::zoom], (11,1), (13, 2), (14,4), (15,6), (16,8));
 
 @tunnel-casing: #ffffff;
-@steps-tunnel-casing: #808080;
 @tunnel-opacity: 0.9;
 @tunnel-dasharray: 8,6;
 
-@bridge_fill: fadeout(#8b8282, 0.5);
+@bridge_fill: fadeout(@bridge, 0.5);
 @bridge-casing: @bridge_fill;
 @railway-bridge-casing: @bridge-casing;
-@dam_fill: #cac9c9;
 @dam_casing: darken(@dam_fill, 20%);
 
-@piste-fill: #c47aff;
 @piste-width: linear([view::zoom], (12, 0.8), (17, 2), (18, 8), (19, 12), (20, 24));
 
 
@@ -265,6 +293,8 @@
 @waterway_label_spacing: 0;
 
 @river-width: linear([view::zoom], (8, 0.9), (15, 2), (16, 4));
+@waterway-dasharray: 5, 2;
+@river-dasharray: @waterway-dasharray;
 @canal_width: linear([view::zoom], (13, 0.9), (14, 1.3), (15, 2));
 @stream-width: @canal_width;
 
@@ -342,3 +372,6 @@
 
 
 @peak_icon_width: @poi_icon_width + 0.00000001 * [ele];
+
+
+@parking_pattern_opacity:0.3;
