@@ -1,5 +1,5 @@
 {
-    "extends":"./osm.json",
+    "extends":"./base.json",
     
     "styles": [
         "ign/style.less",

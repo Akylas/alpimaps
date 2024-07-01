@@ -8,6 +8,12 @@
 
 @background: #e6e4e0;
 
+@river-width: linear([view::zoom], (8, 0.5), (15, 2), (16, 4));
+@canal_width: linear([view::zoom], (13, 0.7), (14, 1), (15, 1.6));
+@stream-width: linear([view::zoom], (13, 0.7), (14, 1), (15, 1.6));
+
+@protected_area_line_width:linear([view::zoom], (9, 0.75), (12, 1), (15, 1), (18, 3));
+
 @contour_label_size: linear([view::zoom], (12, 5), (16, 8), (20, 9));
 @park_font_size:linear([view::zoom], (12, 12), (14, 12));
 @protected_area_font_size:@park_font_size;
@@ -49,3 +55,13 @@
 
 @poi_national_park_label_width:@poi_icon_width;
 @poi_national_park_wrap_width:@poi_label_wrap_width;
+
+@border_country_width: linear([view::zoom], (3, 0.5), (6, 1), (20, 0.5));
+@border_region_width: linear([view::zoom], (5, 0.7), (6, 0.8), (7, 0.9), (8, 0.9), (9, 1), (10, 1.2));
+@border_region_opacity: linear([view::zoom], (5, 0.8), (6, 0.9));
+@border_region_dasharray: 1.35, 0.9;
+@waterway_inter_dasharray: 10, 2;
+
+@via_ferrata: yellow;
+@via_ferrata-dasharray: 2,1;
+@via_ferrata-line-width: 2;
