@@ -608,9 +608,9 @@
     let appUrlRegistered = false;
     async function onMainMapReady(e) {
         try {
-            if (!PRODUCTION) {
-                await new Promise((resolve) => setTimeout(resolve, 1000));
-            }
+            // if (!PRODUCTION) {
+            //     await new Promise((resolve) => setTimeout(resolve, 1000));
+            // }
             const map = e.object as CartoMap<LatLonKeys>;
             CartoMap.setRunOnMainThread(true);
             if (!PRODUCTION && DEV_LOG) {
