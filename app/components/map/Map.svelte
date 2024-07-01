@@ -605,12 +605,7 @@
         ApplicationSettings.setString('mapFocusPos', JSON.stringify(cartoMap.focusPos));
     }, 500);
 
-    // mapContext.onOtherAppTextSelected((text)=>{
-    //     console.log('onOtherAppTextSelected', text)
-    //     showApp();
-    //     searchView.searchForQuery(text);
-    // })
-
+    let appUrlRegistered = false;
     async function onMainMapReady(e) {
         try {
             if (!PRODUCTION) {
@@ -669,14 +664,16 @@
                 addLayer(transitVectorTileLayer, 'transit');
             }
             mapContext.runOnModules('onMapReady', cartoMap);
-
-            registerUniversalLinkCallback(onAppUrl);
-            const current = getUniversalLink();
-            if (current) {
-                const itemModule = mapContext.mapModule('items');
-                itemModule.onDbInit(() => {
-                    onAppUrl(current);
-                });
+            if (!appUrlRegistered) {
+                appUrlRegistered = true;
+                registerUniversalLinkCallback(onAppUrl);
+                const current = getUniversalLink();
+                if (current) {
+                    const itemModule = mapContext.mapModule('items');
+                    itemModule.onDbInit(() => {
+                        onAppUrl(current);
+                    });
+                }
             }
         } catch (error) {
             console.error(error, error.stack);
