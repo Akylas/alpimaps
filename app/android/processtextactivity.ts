@@ -1,7 +1,7 @@
 import { Utils } from '@nativescript/core';
 
 @NativeClass
-@JavaProxy('akylas.alpi.maps.ProcessTextActivity')
+@JavaProxy('__PACKAGE__.ProcessTextActivity')
 export class ProcessTextActivity extends androidx.appcompat.app.AppCompatActivity {
     constructor() {
         super();
