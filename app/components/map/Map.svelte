@@ -2176,6 +2176,8 @@
                 bind:steps />
         </bottomsheet>
 
-        <absolutelayout backgroundColor={colorBackground} height={windowInsetBottom} verticalAlignment="bottom" />
+        {#if __IOS__}
+            <absolutelayout backgroundColor={colorBackground} height={windowInsetBottom} verticalAlignment="bottom" />
+        {/if}
     </gridlayout>
 </page>
