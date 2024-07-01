@@ -668,56 +668,59 @@ export default class CustomLayersModule extends MapModule {
         super.onMapReady(mapView);
         (async () => {
             try {
-                if (!__DISABLE_OFFLINE__ && (!__ANDROID__ || !PLAY_STORE_BUILD || SDK_VERSION < 11)) {
-                    const folderPath = await getDefaultMBTilesDir();
-                    if (folderPath && Folder.exists(folderPath)) {
-                        await this.loadLocalMbtiles(folderPath);
-                    }
-                    if (this.customSources.length === 0) {
-                        const showFirstPresentation = ApplicationSettings.getBoolean('showFirstPresentation', true);
-                        if (showFirstPresentation) {
-                            confirm({
-                                title: lc('app.name'),
-                                message: lc('app_generate_date_presentation'),
-                                okButtonText: lc('open_github'),
-                                cancelButtonText: lc('cancel')
-                            }).then((result) => {
-                                if (result) {
-                                    openLink(GIT_URL);
-                                }
-                                ApplicationSettings.setBoolean('showFirstPresentation', false);
-                            });
+                if (!this.listenForSourceChanges) {
+                    if (!__DISABLE_OFFLINE__ && (!__ANDROID__ || !PLAY_STORE_BUILD || SDK_VERSION < 11)) {
+                        const folderPath = await getDefaultMBTilesDir();
+                        if (folderPath && Folder.exists(folderPath)) {
+                            await this.loadLocalMbtiles(folderPath);
                         }
-                    }
-                }
-                const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
-                if (this.customSources.length === 0 && savedSources.length === 0) {
-                    savedSources.push('openstreetmap');
-                    ApplicationSettings.setString('added_providers', '["openstreetmap"]');
-                }
-                if (savedSources.length > 0) {
-                    await this.getSourcesLibrary();
-                    for (let index = 0; index < savedSources.length; index++) {
-                        const s = savedSources[index];
-                        let provider;
-                        if (typeof s === 'string') {
-                            provider = this.baseProviders[s] || this.overlayProviders[s];
-                        } else {
-                            provider = s;
-                        }
-                        try {
-                            if (provider) {
-                                const data = await this.createDataSourceAndMapLayer(provider.id || provider.name, provider);
-                                this.customSources.push(data);
-                                mapContext.addLayer(data.layer, 'customLayers');
-                                this.updateAttribution(data);
+                        if (this.customSources.length === 0) {
+                            const showFirstPresentation = ApplicationSettings.getBoolean('showFirstPresentation', true);
+                            if (showFirstPresentation) {
+                                confirm({
+                                    title: lc('app.name'),
+                                    message: lc('app_generate_date_presentation'),
+                                    okButtonText: lc('open_github'),
+                                    cancelButtonText: lc('cancel')
+                                }).then((result) => {
+                                    if (result) {
+                                        openLink(GIT_URL);
+                                    }
+                                    ApplicationSettings.setBoolean('showFirstPresentation', false);
+                                });
                             }
-                        } catch (err) {
-                            console.error('createRasterLayer', err);
                         }
                     }
+                    const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
+                    if (this.customSources.length === 0 && savedSources.length === 0) {
+                        savedSources.push('openstreetmap');
+                        ApplicationSettings.setString('added_providers', '["openstreetmap"]');
+                    }
+                    if (savedSources.length > 0) {
+                        await this.getSourcesLibrary();
+                        for (let index = 0; index < savedSources.length; index++) {
+                            const s = savedSources[index];
+                            let provider;
+                            if (typeof s === 'string') {
+                                provider = this.baseProviders[s] || this.overlayProviders[s];
+                            } else {
+                                provider = s;
+                            }
+                            try {
+                                if (provider) {
+                                    const data = await this.createDataSourceAndMapLayer(provider.id || provider.name, provider);
+                                    this.customSources.push(data);
+                                    mapContext.addLayer(data.layer, 'customLayers');
+                                    this.updateAttribution(data);
+                                }
+                            } catch (err) {
+                                console.error('createRasterLayer', err);
+                            }
+                        }
+                    }
+                    this.listenForSourceChanges = true;
                 }
-                this.listenForSourceChanges = true;
+
                 this.notify({ eventName: 'ready' });
             } catch (err) {
                 showError(err);
