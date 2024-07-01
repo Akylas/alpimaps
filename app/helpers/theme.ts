@@ -1,5 +1,5 @@
 import Theme from '@nativescript-community/css-theme';
-import { Application, Device, EventData, SystemAppearanceChangedEventData, Utils } from '@nativescript/core';
+import { Application, ApplicationSettings, Device, EventData, SystemAppearanceChangedEventData, Utils } from '@nativescript/core';
 import { getBoolean, getString, setString } from '@nativescript/core/application-settings';
 import { prefs } from '~/services/preferences';
 import { showError } from '~/utils/error';
@@ -95,9 +95,19 @@ const AppCompatDelegate = __ANDROID__ ? androidx.appcompat.app.AppCompatDelegate
 export function applyTheme(theme: Themes) {
     try {
         DEV_LOG && console.log('applyTheme', theme);
+        if (__ANDROID__) {
+            if (theme === 'eink') {
+                const context = Utils.android.getApplicationContext();
+                const themeId = context.getResources().getIdentifier('AppThemeEInk', 'style', context.getPackageName());
+                DEV_LOG && console.log('SET_THEME_ON_LAUNCH', themeId);
+                ApplicationSettings.setNumber('SET_THEME_ON_LAUNCH', themeId);
+            } else {
+                ApplicationSettings.remove('SET_THEME_ON_LAUNCH');
+            }
+        }
+        Theme.setMode(theme);
         switch (theme) {
             case 'auto':
-                Theme.setMode(Theme.Auto);
                 if (__ANDROID__) {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
                 } else {
@@ -108,7 +118,6 @@ export function applyTheme(theme: Themes) {
                 break;
             case 'light':
             case 'eink':
-                Theme.setMode(theme);
                 if (__ANDROID__) {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
                 } else {
@@ -118,7 +127,6 @@ export function applyTheme(theme: Themes) {
                 }
                 break;
             case 'dark':
-                Theme.setMode(Theme.Dark);
                 if (__ANDROID__) {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                 } else {
@@ -128,7 +136,6 @@ export function applyTheme(theme: Themes) {
                 }
                 break;
             case 'black':
-                Theme.setMode(ThemeBlack);
                 if (__ANDROID__) {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                 } else {
@@ -236,6 +243,14 @@ export function start() {
         setTimeout(() => {
             globalObservable.notify({ eventName: 'theme', data: realTheme });
         }, 0);
+
+        // TODO: for now we dont restart the activity as it seems to break css
+        // setTimeout(() => {
+        //     if (__ANDROID__) {
+        //         Application.android.startActivity.recreate();
+        //     }
+        // }, 10);
+
     });
     const realTheme = getRealTheme(theme);
     currentTheme.set(realTheme);

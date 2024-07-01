@@ -114,6 +114,9 @@ page {
     // &.ns-dark {
     //     status-bar-style: dark;
     // }
+    .ns-eink & {
+        status-bar-style: light;
+    }
 }
 
 htmllabel,
@@ -263,6 +266,9 @@ label {
     &:transparent {
         background-color: transparent;
     }
+    .ns-eink & {
+        background-color: white;
+    }
 }
 
 .actionBarButton {
@@ -282,6 +288,9 @@ label {
     &:transparent {
         color: var(--colorOnSurface);
     }
+    .ns-eink & {
+        color: var(--colorOnSurface);
+    }
 }
 
 .actionBarTitle {
@@ -297,6 +306,9 @@ label {
     &:transparent {
         color: var(--colorOnSurface);
     }
+    .ns-eink & {
+        color: var(--colorOnSurface);
+    }
 }
 
 .actionBarSubtitle {
@@ -304,6 +316,9 @@ label {
     color: var(--colorOnPrimary);
 
     &:transparent {
+        color: var(--colorOnSurface);
+    }
+    .ns-eink & {
         color: var(--colorOnSurface);
     }
 }
