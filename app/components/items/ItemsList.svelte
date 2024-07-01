@@ -12,7 +12,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { UNITS, convertElevation, convertValueToUnit, osmicon } from '~/helpers/formatter';
     import { convertDurationSeconds, lc, lu, onLanguageChanged } from '~/helpers/locale';
-    import { onThemeChanged } from '~/helpers/theme';
+    import { onThemeChanged, theme } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import { Group, Item } from '~/models/Item';
@@ -705,37 +705,38 @@ LEFT JOIN  (
             canvas.drawText(itemIcon, paddingLeft + 17, 63, iconPaint);
         }
     }
+    $: actionBarLabelColor = theme === 'eink' ? colorOnSurface : colorOnPrimary;
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout rows="auto,*">
         <CActionBar forceCanGoBack={nbSelected > 0} onGoBack={nbSelected ? unselectAll : null} title={nbSelected ? lc('selected', nbSelected) : lc('items')}>
             <IconButton color={colorError} isVisible={nbSelected > 0} text="mdi-delete" on:tap={deleteSelectedItems} />
-            <IconButton color={colorOnPrimary} isVisible={nbSelected > 0} text="mdi-share-variant" on:tap={shareSelectedItems} />
-            <IconButton color={colorOnPrimary} isVisible={nbSelected > 0} text="mdi-tag-plus-outline" on:tap={setSelectedGroup} />
+            <IconButton color={actionBarLabelColor} isVisible={nbSelected > 0} text="mdi-share-variant" on:tap={shareSelectedItems} />
+            <IconButton color={actionBarLabelColor} isVisible={nbSelected > 0} text="mdi-tag-plus-outline" on:tap={setSelectedGroup} />
             <gridlayout slot="bottom" colSpan={3} columns="*,*" height={48} row={1}>
                 <canvaslabel
-                    color={colorOnPrimary}
+                    color={actionBarLabelColor}
                     disableCss={true}
                     fontSize={15}
                     fontWeight="500"
-                    rippleColor={colorOnPrimary}
+                    rippleColor={actionBarLabelColor}
                     text={lu('routes')}
                     textAlignment="center"
                     verticalTextAlignment="center"
                     on:tap={() => setTabIndex(0)} />
                 <canvaslabel
                     col={1}
-                    color={colorOnPrimary}
+                    color={actionBarLabelColor}
                     disableCss={true}
                     fontSize={15}
                     fontWeight="500"
-                    rippleColor={colorOnPrimary}
+                    rippleColor={actionBarLabelColor}
                     text={lu('markers')}
                     textAlignment="center"
                     verticalTextAlignment="center"
                     on:tap={() => setTabIndex(1)} />
-                <absolutelayout backgroundColor={colorOnPrimary} colSpan={2} height={3} horizontalAlignment={tabIndex === 1 ? 'right' : 'left'} verticalAlignment="bottom" width="50%" />
+                <absolutelayout backgroundColor={actionBarLabelColor} colSpan={2} height={3} horizontalAlignment={tabIndex === 1 ? 'right' : 'left'} verticalAlignment="bottom" width="50%" />
             </gridlayout>
         </CActionBar>
         <collectionview
