@@ -1,6 +1,7 @@
 <script lang="ts">
     import { getFromLocation } from '@nativescript-community/geocoding';
     import { isSensorAvailable } from '@nativescript-community/sensors';
+    import { getCartoBitmap } from '@nativescript-community/ui-carto';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { ClickType, MapBounds, toNativeMapRange, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
     import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
@@ -39,7 +40,7 @@
     import Search from '~/components/search/Search.svelte';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { l, lc, lt, onLanguageChanged, onMapLanguageChanged } from '~/helpers/locale';
-    import { forceDarkMode, sTheme, toggleForceDarkMode, toggleTheme } from '~/helpers/theme';
+    import { forceDarkMode, sTheme, theme, toggleForceDarkMode, toggleTheme } from '~/helpers/theme';
     import watcher from '~/helpers/watcher';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
@@ -631,6 +632,9 @@
             options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
             options.setEnvelopeThreadPoolSize(1);
             options.setTileThreadPoolSize(1);
+            if (theme === 'eink') {
+                options.setBackgroundBitmap(getCartoBitmap('~/assets/images/eink-map-background_result.png'));
+            }
 
             options.setZoomGestures(true);
             options.setDoubleClickMaxDuration(0.3);
@@ -645,7 +649,7 @@
             cartoMap.setFocusPos(pos, 0);
             cartoMap.setZoom(zoom, 0);
             cartoMap.setBearing(bearing, 0);
-            DEV_LOG && console.log('onMainMapReady', pos, zoom, bearing, addedLayers);
+            DEV_LOG && console.log('onMainMapReady', pos, zoom, bearing, addedLayers, theme);
             try {
                 packageService.start();
                 transitService.start();
