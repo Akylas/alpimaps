@@ -23,6 +23,8 @@
 @water: #75cff0;
 @water_stroke: darken(@water, 10%);
 @river: #8dcbf7;
+@waterway: @river;
+@river_polygon: @river;
 
 @aboriginal_label: #82643a;
 @national_park_label: rgb(99, 150, 65);
@@ -33,7 +35,6 @@
 @aboriginal_line: #D9B391;
 @park_line: #82bf5a;
 
-@protected_area_line_width:linear([view::zoom], (9, 0.75), (12, 1), (15, 1), (18, 3));
 
 @protected-area: #09330c;
 @protected-area_halo: #e8fde8;
@@ -48,8 +49,6 @@
 @allotments: #c9e1bf;
 @rock: #f5f2ee;
 @scree: @rock;
-@rock_pattern: none;
-@scree_pattern:  none;
 
 @cliff: #3A721D;
 @cliff-width: linear([view::zoom], (12, 0.5), (15,1));
@@ -81,6 +80,7 @@
 @tourism: #660033;
 @quarry: #c5c3c388;
 @military: #f55;
+@military_pattern_opacity: linear([view::zoom], (13, 0.2), (15,0.1), (17,0));
 @sand: #ededcf;
 
 // --- Sports ---
@@ -98,9 +98,6 @@
 
 @housenumber: rgb(77, 76, 76);
 
-@via_ferrata: yellow;
-@via_ferrata-dasharray: 2,1;
-@via_ferrata-line-width: 2;
 
 
 @motorway-fill: linear([view::zoom], (0, #f2934a), (6, #f2934a), (9, #ffa35c));
@@ -163,12 +160,10 @@
 @pedestrian-casing-width: linear([view::zoom], (15,0), (15.01,1), (16, 2));
 @pedestrian-width: pow(2.0, linear([view::zoom], (15, -2), (18, 1.6))) * linear([view::zoom], (14,0), (14.01, 1))+ 0.5;
 @pedestrian-dasharray: [zoom] < 15 ? (0,0) : (4,1);
-@pedestrian-tunnel-dasharray: [zoom] < 15 ? (0,0) : (6,3);
 @footway-width: pow(2.0, linear([view::zoom], (15, -2), (18, 1.6))) * linear([view::zoom], (14,0), (14.01, 1))+ 0.5;
 @footway-casing-width: linear([view::zoom], (16,0), (16.01,1), (18, 2));
 
 @path-fill: linear([view::zoom], (12,#ccaa0022), (13,#ccaa00), (14,#ccaa00), (14.01, #ffffff));
-@path-tunnel-fill: lighten(@pedestrian-fill, 5%);
 @path-casing: linear([view::zoom], (14,#ccaa0000), (14.01, #ccaa00));
 @path-casing-width: linear([view::zoom], (14,0), (14.01,1), (16, 1.5));
 @cycleway-casing-width: linear([view::zoom], (14,0), (14.01,1), (16, 1.5));
@@ -184,7 +179,6 @@
 @track-fill: #ffffff;
 @track-tunnel-fill: lighten(@pedestrian-fill, 5%);
 @track-casing: #ccaa00;
-@track-paved-casing: #d6d9e6;
 @track-casing-width: linear([view::zoom], (13,0), (13.01,1), (16, 2));
 @track-width: linear([view::zoom],  (12, 0), (12.01, 0.5), (15, 2), (16, 2), (19, 9));
 @track-dasharray: 0,0;
@@ -276,13 +270,6 @@
 @water_label: #3a4ca6;
 @water_halo: #ffffff88;
 @water_halo_radius: 1;
-
-@waterway_label_dy:0;
-@waterway_label_spacing: 0;
-
-@river-width: linear([view::zoom], (8, 0.5), (15, 2), (16, 4));
-@canal_width: linear([view::zoom], (13, 0.7), (14, 1), (15, 1.6));
-@stream-width: linear([view::zoom], (13, 0.7), (14, 1), (15, 1.6));
 
 @park_label: #3a7921;
 @halo_park_label: rgba(255, 255, 255, 0.45);

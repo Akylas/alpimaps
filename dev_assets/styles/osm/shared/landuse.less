@@ -20,27 +20,33 @@ Map {
 
   [class=farmland]{
       polygon-fill: @farmland;
-      [subclass=vineyard][zoom>=15] {
-        polygon-pattern-file: url('symbols/vineyard.png');
+      [subclass=vineyard][zoom>=$vineyard_pattern_zoom] {
+        polygon-pattern-fill: $vineyard_pattern_fill;
+        polygon-pattern-opacity: $vineyard_pattern_opacity;
+        polygon-pattern-file: $vineyard_pattern;
       }
-      [subclass=orchard][zoom>=15] {
-        polygon-pattern-file: url('symbols/orchard.png');
-    }
+      [subclass=orchard][zoom>=$orchard_pattern_zoom] {
+        polygon-pattern-fill: $orchard_pattern_fill;
+        polygon-pattern-opacity: $orchard_pattern_opacity;
+        polygon-pattern-file: $orchard_pattern;
+      }
   }
   
   [class=rock]{
     polygon-fill: @rock;
     [subclass=bare_rock]  {
-      [zoom>=13] {
-        polygon-pattern-fill: @rock_pattern_fill;
-        polygon-pattern-file: @rock_pattern;
+      [zoom>=$rock_pattern_zoom] {
+        polygon-pattern-fill: $rock_pattern_fill;
+        polygon-pattern-opacity: $rock_pattern_opacity;
+        polygon-pattern-file: $rock_pattern;
       }
     }
     [subclass=scree]{
       polygon-fill: @scree;
-      [zoom>=13] {
-        polygon-pattern-fill: @scree_pattern_fill;
-        polygon-pattern-file: @scree_pattern;
+      [zoom>=$scree_pattern_zoom] {
+        polygon-pattern-fill: $scree_pattern_fill;
+        polygon-pattern-opacity: $scree_pattern_opacity;
+        polygon-pattern-file: $scree_pattern;
       }
     }
   }
@@ -68,15 +74,19 @@ Map {
     }
     [subclass=scrub] {
       polygon-fill:@scrub;
-      [zoom>=14] {
-        polygon-pattern-file: @scrub_pattern;
-        polygon-pattern-opacity:linear([view::zoom], (14, 1), (17,0.5));
+      [zoom>=$scrub_pattern_zoom] {
+        polygon-pattern-fill: $scrub_pattern_fill;
+        polygon-pattern-file: $scrub_pattern;
+        polygon-pattern-opacity: $scrub_pattern_opacity;
+        // polygon-pattern-opacity:linear([view::zoom], (14, 1), (17,0.5));
       }
     }
     [subclass=allotments]{
       polygon-fill:@allotments;
-      [zoom>=15] {
-        polygon-pattern-file: url('symbols/allotments.png');
+      [zoom>=$allotments_pattern_zoom] {
+        polygon-pattern-fill: @allotments_pattern_fill;
+        polygon-pattern-file: $allotments_pattern;
+        polygon-pattern-opacity:@allotments_pattern_opacity;
       }
     }
   }
@@ -86,9 +96,10 @@ Map {
   }
   ::wood [class=wood]{
     polygon-fill: @forest;
-    [zoom>=14] {
-      polygon-pattern-file: @forest_pattern;
-      polygon-pattern-opacity:linear([view::zoom], (14, 0.5), (16,0.2));
+    [zoom>=$forest_pattern_zoom] {
+      polygon-pattern-fill: @forest_pattern_fill;
+      polygon-pattern-file: $forest_pattern;
+      polygon-pattern-opacity:@forest_pattern_opacity;
     }
   }
 
@@ -106,8 +117,10 @@ Map {
     [subclass=marsh] {
         polygon-fill: @grass;
     }
-    [zoom>=13] {
-      polygon-pattern-file: url('symbols/wetland.png');
+    [zoom>=$wetland_pattern_zoom] {
+      polygon-pattern-fill: $wetland_pattern_fill;
+      polygon-pattern-opacity: $wetland_pattern_opacity;
+      polygon-pattern-file: $wetland_pattern;
     }
   }
 }
@@ -130,6 +143,11 @@ Map {
 
     [class=cemetery][zoom>=10]{
         polygon-fill: @cemetery;
+        [zoom >= $cemetery_pattern_zoom] {
+          polygon-pattern-fill:$cemetery_pattern_fill;
+          polygon-pattern-file:$cemetery_pattern ;
+          polygon-pattern-opacity:$cemetery_pattern_opacity;
+        }
     }
 
     [class=industrial] {
@@ -171,6 +189,11 @@ Map {
         line-width: 0.3;
         line-color: @parking-outline;
       }
+      [zoom>=$parking_pattern_zoom] {
+        polygon-pattern-fill: $parking_pattern_fill;
+        polygon-pattern-opacity: $parking_pattern_opacity;
+        polygon-pattern-file: $parking_pattern;
+      }
     }
     [class=pedestrian]{
       polygon-fill: @pedestrian-polygon-fill;
@@ -180,8 +203,11 @@ Map {
 
 
     [class=military][zoom>=13]{
-      polygon-pattern-file: url('symbols/military_red_hatch.png');
-      polygon-opacity:linear([view::zoom], (13, 0.2), (15,0.1), (17,0));
+      [zoom >= $military_pattern_zoom] {
+        polygon-pattern-fill:$military_pattern_fill;
+        polygon-pattern-file:$military_pattern ;
+        polygon-pattern-opacity:$military_pattern_opacity;
+      }
       line-color: @military;
       line-opacity: 0.24;
       line-width: linear([view::zoom], (13, 1), (15,2));
