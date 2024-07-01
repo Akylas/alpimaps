@@ -17,9 +17,6 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
 
     public onCreate(savedInstanceState: android.os.Bundle): void {
         DEV_LOG && console.log(TAG, 'onCreate');
-        // Handle the splash screen transition.
-        //@ts-ignore
-        androidx.core.splashscreen.SplashScreen.installSplashScreen(this);
         // DynamicColors
         // akylas.alpi.maps.Utils.applyDynamicColors(this);
         // this.getWindow().setStatusBarColor(getThemeColor(this, 'colorPrimaryDark'));
@@ -32,10 +29,13 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
         }
 
         this._callbacks.onCreate(this, savedInstanceState, this.getIntent(), super.onCreate);
+        // Handle the splash screen transition.
+        //@ts-ignore
+        androidx.core.splashscreen.SplashScreen.installSplashScreen(this);
 
         // DynamicColors
         // com.google.android.material.color.DynamicColors.applyIfAvailable(this);
-        this.getWindow().setStatusBarColor(getThemeColor(this, 'colorPrimaryDark'));
+        // this.getWindow().setStatusBarColor(getThemeColor(this, 'colorPrimaryDark'));
     }
 
     public onNewIntent(intent: android.content.Intent): void {
