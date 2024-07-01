@@ -1,35 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
-    <style name="Preference.SwitchPreferenceCompat.Material3" parent="@style/Preference.SwitchPreferenceCompat.Material">
+    <style name="Preference.SwitchPreferenceCompat.Material3"
+        parent="@style/Preference.SwitchPreferenceCompat.Material">
     </style>
     <style name="ModalBottomSheetDialog" parent="Widget.Material3.BottomSheet.Modal">
         <!-- <item name="android:background">@color/colorBackground</item> -->
+    </style>
+    <style name="ModalBottomSheetDialogEInk" parent="Widget.Material3.BottomSheet.Modal">
+        <!-- <item name="android:backgroundDimAmount">0</item>
+        <item name="android:navigationBarColor">@android:color/white</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:windowTranslucentStatus">false</item> -->
+            <!-- <item name="android:background">@color/colorBackground</item> -->
     </style>
 
     <style name="FloatingActivityTheme.WindowTransition">
         <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
         <item name="android:windowExitAnimation">@android:anim/fade_out</item>
     </style>
-    <style name="ThemeOverlay.App.BottomSheetDialog" parent="ThemeOverlay.Material3.DayNight.BottomSheetDialog">
+    <style name="ThemeOverlay.App.BottomSheetDialog"
+        parent="ThemeOverlay.Material3.DayNight.BottomSheetDialog">
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowActionBarOverlay">true</item>
         <item name="android:windowTranslucentStatus">false</item>
         <item name="elevationOverlayEnabled">false</item>
         <item name="bottomSheetStyle">@style/ModalBottomSheetDialog</item>
     </style>
-    <!-- <style name="MaterialAlertDialog.App.Title.Text" parent="MaterialAlertDialog.Material3.Title.Text">
+    <style name="ThemeOverlay.App.BottomSheetDialogEInk"
+        parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:navigationBarColor">@android:color/white</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="elevationOverlayEnabled">false</item>
+        <item name="bottomSheetStyle">@style/ModalBottomSheetDialogEInk</item>
+        <item name="android:backgroundDimAmount">0</item>
+     </style>
+    <!-- <style name="MaterialAlertDialog.App.Title.Text"
+    parent="MaterialAlertDialog.Material3.Title.Text">
     </style>
     <style name="MaterialAlertDialog.App.Body.Text" parent="MaterialAlertDialog.Material3.Body.Text">
     </style> -->
     <!-- <style name="Theme.Material3.Preference" parent="Theme.Material3.DayNight">
         <item name="preferenceTheme">@style/MaterialPreferenceThemeOverlay</item>
     </style> -->
-    
+
     <!-- <style name="MaterialPreferenceThemeOverlay" parent="PreferenceThemeOverlay">
         <item name="switchPreferenceCompatStyle">@style/Preference.SwitchPreferenceCompat</item>
     </style> -->
-    
-    <!-- <style name="Preference.SwitchPreferenceCompat" parent="Preference.SwitchPreferenceCompat.Material">
+
+    <!-- <style name="Preference.SwitchPreferenceCompat"
+    parent="Preference.SwitchPreferenceCompat.Material">
         <item name="android:widgetLayout">@layout/preference_widget_material_switch</item>
     </style> -->
 </resources>
