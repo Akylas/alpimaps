@@ -126,7 +126,8 @@
         }
     }
     function onAttribution(e) {
-        attributionVisible = e.needsAttribution;
+        const devMode = mapContext.mapModule('customLayers').devMode;
+        attributionVisible = !devMode && e.needsAttribution;
     }
 
     function askUserLocation() {
