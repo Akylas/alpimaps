@@ -1,6 +1,7 @@
 <script lang="ts">
     import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
     import { HillshadeRasterTileLayer, RasterTileFilterMode, RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
+    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { action } from '@nativescript-community/ui-material-dialogs';
     import { Color, File } from '@nativescript/core';
     import { setNumber, setString } from '@nativescript/core/application-settings';
@@ -10,9 +11,8 @@
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
     import { showError } from '~/utils/error';
-    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { pickColor } from '~/utils/utils';
-    import { colors, fonts } from '~/variables';
+    import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     $: ({ colorBackground, colorOnSurfaceVariant, colorOutlineVariant, colorError } = $colors);
 
