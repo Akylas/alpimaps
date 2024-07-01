@@ -74,8 +74,18 @@ const onInitRootView = function () {
     // we need a timeout to read rootView css variable. not 100% sure why yet
     if (__ANDROID__) {
         // setTimeout(() => {
-        const rootView = Application.getRootView();
+        let rootView = Application.getRootView();
+        if (rootView.parent) {
+            rootView = rootView.parent as any;
+        }
         if (rootView) {
+            // in case the inset was already (android restart activity) set we need to reset it
+            windowInset.set({
+                top: 0,
+                bottom: 0,
+                left: 0,
+                right: 0
+            });
             (rootView.nativeViewProtected as android.view.View).setOnApplyWindowInsetsListener(
                 new android.view.View.OnApplyWindowInsetsListener({
                     onApplyWindowInsets(view, insets) {
@@ -149,7 +159,7 @@ const onInitRootView = function () {
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
     }
     updateThemeColors(getRealTheme(theme));
-    Application.off(Application.initRootViewEvent, onInitRootView);
+    // Application.off(Application.initRootViewEvent, onInitRootView);
     // getRealThemeAndUpdateColors();
 };
 function onOrientationChanged() {
