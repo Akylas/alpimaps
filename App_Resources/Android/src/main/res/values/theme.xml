@@ -6,6 +6,7 @@
         <item name="android:windowBackground">@drawable/splash_screen</item>
         <item name="android:windowActionBarOverlay">true</item>
         <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
     </style>
     <style name="LaunchScreenTheme" parent="LaunchScreenThemeBase"></style>
 
@@ -18,10 +19,10 @@
 
         <item name="bottomSheetDialogTheme">@style/ThemeOverlay.App.BottomSheetDialog</item>
         <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowActionBarOverlay">true</item>  
+        <item name="android:windowActionBarOverlay">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
     </style>
-    
+
     <style name="AppTheme" parent="AppThemeBase">
         <item name="colorPrimary">@color/md_theme_light_primary</item>
         <item name="colorOnPrimary">@color/md_theme_light_onPrimary</item>
@@ -51,6 +52,17 @@
         <item name="colorSurfaceInverse">@color/md_theme_light_inverseSurface</item>
         <item name="colorOnSurfaceInverse">@color/md_theme_light_inverseOnSurface</item>
         <item name="colorPrimaryInverse">@color/md_theme_light_inversePrimary</item>
+        <!-- <item name="bottomSheetDialogTheme">@style/ThemeOverlay.App.BottomSheetDialogEInk</item> -->
+    </style>
+    <style name="AppThemeEInk" parent="AppTheme">
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowActionBarOverlay">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:navigationBarColor">@android:color/white</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:statusBarColor">@android:color/white</item>
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.App.BottomSheetDialogEInk</item>
     </style>
     <style name="FloatingActivityTheme" parent="AppTheme">
         <item name="android:windowIsTranslucent">true</item>
