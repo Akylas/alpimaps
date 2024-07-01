@@ -64,7 +64,7 @@
 	}
 	[class=minor][zoom>=12]::casing, 
 	[class=minor][brunnel=bridge][zoom>=15]::bridge {
-		[zoom>=14] {
+		// [zoom>=14] {
 			line-width: @residential-width + @residential-casing-width;
 			line-color: @residential-casing;
 	
@@ -78,7 +78,7 @@
 				// line-join: miter;
 				line-color: @bridge-casing;
 			}
-		}
+		// }
 		
 		::inner {
 			// line-join: round;
@@ -333,8 +333,8 @@
 				[brunnel=tunnel][zoom>=17]{
 					// line-color: darken(@pedestrian-fill, 20%);
 					line-color: @path-fill;
-					[subclass=steps][surface=paved],[subclass=steps][indoor>0] {
-						line-color: darken(@pedestrian-fill, 20%);
+					[subclass=steps] {
+						line-color: @pedestrian-tunnel-fill;
 					}
 				}
 			}
@@ -368,8 +368,7 @@
 							line-width: @footway-width;
 						}
 						[brunnel=tunnel][zoom>=17]{
-							line-color: darken(@pedestrian-fill, 20%);
-							// line-color: @path-fill;
+							line-color: @pedestrian-tunnel-fill;
 						}
 					}
 				}
