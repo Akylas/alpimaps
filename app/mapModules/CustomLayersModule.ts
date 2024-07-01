@@ -42,34 +42,33 @@ const mbTilesSourceGenerator = (s, minZoom) =>
         databasePath: s
     });
 
-const DEFAULT_HILLSHADE_SHADER =
-    'uniform vec4 u_shadowColor;\n \
-uniform vec4 u_highlightColor;\n \
-uniform vec4 u_colorPrimary;\n \
-uniform vec3 u_lightDir;\n \
-vec4 applyLighting(lowp vec4 color, mediump vec3 normal, mediump vec3 surfaceNormal, mediump float intensity) {\n \
-    mediump float lighting = max(0.0, dot(normal, u_lightDir));\n \
-    mediump float accent = normal.z;\n \
-    lowp vec4 accent_color = (1.0 - accent) * u_colorPrimary * intensity;\n \
-    mediump float alpha = clamp(u_shadowColor.a*(1.0-lighting)+u_highlightColor.a*lighting, 0.0, 1.0);\n \
-    lowp vec4 shade_color = vec4(mix(u_shadowColor.rgb, u_highlightColor.rgb, lighting), alpha);\n \
-    return (accent_color * (1.0 - shade_color.a) + shade_color) * color * intensity;\n \
-}';
+const DEFAULT_HILLSHADE_SHADER = `uniform vec4 u_shadowColor;
+uniform vec4 u_highlightColor;
+uniform vec4 u_accentColor;
+uniform vec3 u_lightDir;
+vec4 applyLighting(lowp vec4 color, mediump vec3 normal, mediump vec3 surfaceNormal, mediump float intensity) {
+    mediump float lighting = max(0.0, dot(normal, u_lightDir));
+    mediump float accent = normal.z;
+    lowp vec4 accent_color = (1.0 - accent) * u_accentColor * intensity;
+    mediump float alpha = clamp(u_shadowColor.a*(1.0-lighting)+u_highlightColor.a*lighting, 0.0, 1.0);
+    lowp vec4 shade_color = vec4(mix(u_shadowColor.rgb, u_highlightColor.rgb, lighting), alpha);
+    return (accent_color * (1.0 - shade_color.a) + shade_color) * color * intensity;
+}`;
 
-const SLOPE_HILLSHADE_SHADER =
-    'uniform vec4 u_shadowColor; \n \
-uniform vec4 u_highlightColor; \n \
-uniform vec4 u_colorPrimary; \n \
-uniform vec3 u_lightDir;  \n\
-vec4 applyLighting(lowp vec4 color, mediump vec3 normal, mediump vec3 surfaceNormal, mediump float intensity) { \n \
-   mediump float lighting = max(0.0, dot(normal, u_lightDir)); \n \
-   mediump float slope = acos(dot(normal, surfaceNormal)) *180.0 / 3.14159 * 1.2; \n \
-   if (slope >= 45.0) {return vec4(0.7568627450980392* 0.5, 0.5450980392156863* 0.5, 0.7176470588235294* 0.5, 0.5); } \n \
-   if (slope >= 40.0) {return vec4( 0.5, 0, 0, 0.5); } \n \
-   if (slope >= 35.0) {return vec4(0.9098039215686275* 0.5, 0.4627450980392157* 0.5, 0.2235294117647059* 0.5, 0.5); } \n \
-   if (slope >= 30.0) {return vec4(0.9411764705882353* 0.5, 0.9019607843137255* 0.5, 0.3058823529411765* 0.5, 0.5); } \n \
-   return vec4(0, 0, 0, 0.0); \n \
-} \n';
+const SLOPE_STEPS = [30, 35, 40, 45].reverse();
+const SLOPE_COLORS = ['#f0e64e', '#e87639', '#ff0000', '#c18bb7'].reverse();
+
+const SLOPE_HILLSHADE_SHADER = `uniform vec4 u_shadowColor;
+uniform vec3 u_lightDir;
+vec4 applyLighting(lowp vec4 color, mediump vec3 normal, mediump vec3 surfaceNormal, mediump float intensity) {
+   mediump float lighting = max(0.0, dot(normal, u_lightDir));
+   mediump float slope = acos(dot(normal, surfaceNormal)) *180.0 / 3.14159 * 1.2;
+   ${SLOPE_STEPS.map((step, index) => {
+       const color = new Color(SLOPE_COLORS[index]);
+       return `if (slope >= ${step.toFixed(1)}) {return vec4(${color.r / 255}, ${color.g / 255}, ${color.b / 255}, 1.0) * 0.5; }\n`;
+   }).join('')}
+   return vec4(0, 0, 0, 0.0);
+}`;
 
 function getProviderAttribution(pr) {
     return pr.attribution || (pr.urlOptions && pr.urlOptions.attribution);
@@ -100,7 +99,7 @@ const HILLSHADE_OPTIONS = {
     highlightColor: {
         type: 'color'
     },
-    colorPrimary: {
+    accentColor: {
         type: 'color'
     },
     shadowColor: {
