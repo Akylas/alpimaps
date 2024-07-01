@@ -2,10 +2,10 @@ const timelineEnabled = !!process.env['NS_TIMELINE'];
 const sentryEnabled = !!process.env['NS_SENTRY'];
 const loggingEnabled = sentryEnabled || !!process.env['NS_LOGGING'];
 const playstoreBuild = !!process.env['PLAY_STORE_BUILD'];
-
+const appId = process.env['APP_ID'] || 'akylas.alpi.maps';
 module.exports = {
     ignoredNativeDependencies: ['@nativescript/detox'].concat(sentryEnabled ? [] : ['@nativescript-community/sentry']).concat(playstoreBuild ? ['alpimaps-non-playstore'] : []),
-    id: process.env['APP_ID'] || 'akylas.alpi.maps',
+    id: appId,
     appResourcesPath: process.env['APP_RESOURCES'] || 'App_Resources',
     buildPath: process.env['APP_BUILD_PATH'] || 'platforms',
     webpackPackageName: '@akylas/nativescript-webpack',
