@@ -9,8 +9,8 @@ import { throttle } from '@akylas/nativescript/utils';
 export const globalObservable = new Observable();
 
 const callbacks = {};
-export function createGlobalEventListener<T = any>(eventName: string) {
-    return function (callback: (data: T, event: EventData) => any, once = false) {
+export function createGlobalEventListener<T = any, U extends EventData = EventData>(eventName: string) {
+    return function (callback: (data: T, event: U) => any, once = false) {
         callbacks[eventName] = callbacks[eventName] || {};
         let cleaned = false;
 
@@ -21,7 +21,7 @@ export function createGlobalEventListener<T = any>(eventName: string) {
                 globalObservable.off(eventName, eventCallack);
             }
         }
-        const eventCallack = (event: EventData & { data: T; result?: any }) => {
+        const eventCallack = (event: U & { data: T; result?: any }) => {
             if (once) {
                 clean();
             }
