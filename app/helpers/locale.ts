@@ -1,5 +1,5 @@
 import { capitalize, l, lc, loadLocaleJSON, lt, lu, overrideNativeLocale, titlecase } from '@nativescript-community/l';
-import { Application, ApplicationSettings, Device, File, Utils } from '@nativescript/core';
+import { Application, ApplicationSettings, Device, EventData, File, Utils } from '@nativescript/core';
 import { getString } from '@nativescript/core/application-settings';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
@@ -32,9 +32,9 @@ if (__ANDROID__) {
 export let clock_24 = ApplicationSettings.getBoolean('clock_24', default24Clock) || default24Clock;
 export const clock_24Store = writable(null);
 
-export const onLanguageChanged = createGlobalEventListener('language');
-export const onMapLanguageChanged = createGlobalEventListener('map_language');
-export const onTimeChanged = createGlobalEventListener('time');
+export const onLanguageChanged = createGlobalEventListener<string, EventData & { clock_24: boolean }>('language');
+export const onMapLanguageChanged = createGlobalEventListener<string>('map_language');
+// export const onTimeChanged = createGlobalEventListener('time');
 
 async function loadDayjsLang(newLang: string) {
     const toLoad = newLang.replace('_', '-');
