@@ -13,7 +13,7 @@ import { closePopover } from '@nativescript-community/ui-popover/svelte';
 
 export type Themes = 'auto' | 'light' | 'dark' | 'black' | 'eink';
 
-export const onThemeChanged = createGlobalEventListener('theme');
+export const onThemeChanged = createGlobalEventListener<Themes>('theme');
 export let theme: Themes;
 export const sTheme = writable('auto');
 export const currentTheme = writable('auto');
@@ -250,7 +250,6 @@ export function start() {
         //         Application.android.startActivity.recreate();
         //     }
         // }, 10);
-
     });
     const realTheme = getRealTheme(theme);
     currentTheme.set(realTheme);
