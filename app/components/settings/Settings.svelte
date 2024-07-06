@@ -297,7 +297,7 @@
             }
             switch (item.id) {
                 case 'export_settings':
-                if (__ANDROID__ && SDK_VERSION < 29) {
+                    if (__ANDROID__ && SDK_VERSION < 29) {
                         const permRes = await request('storage');
                         if (!isPermResultAuthorized(permRes)) {
                             throw new Error(lc('missing_storage_perm_settings'));
