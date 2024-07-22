@@ -633,7 +633,7 @@
             options.setEnvelopeThreadPoolSize(1);
             options.setTileThreadPoolSize(1);
             if (theme === 'eink') {
-                options.setBackgroundBitmap(getCartoBitmap('~/assets/images/eink-map-background_result.png'));
+                options.setBackgroundBitmap(getCartoBitmap('~/assets/images/eink-map-background.png'));
             }
 
             options.setZoomGestures(true);
