@@ -4,7 +4,7 @@
     import dayjs from 'dayjs';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import SimpleOpeningHours from '~/helpers/SimpleOpeningHours';
-    import { lc } from '~/helpers/locale';
+    import { formatTime, lc } from '~/helpers/locale';
     import { colors, fonts } from '~/variables';
     const sectionsMatch = { su: 'sunday', mo: 'monday', tu: 'tuesday', we: 'wednesday', th: 'thursday', fr: 'friday', sa: 'saturday' };
     const textPaint: Paint = new Paint();
@@ -113,7 +113,7 @@
                                               .split('-')
                                               .map((s2) => {
                                                   array = s2.split(':').map((d) => parseInt(d, 10)) as [number, number];
-                                                  return date.set('h', array[0]).set('m', array[1]).format('LT');
+                                                  return formatTime(date.set('h', array[0]).set('m', array[1]), 'LT');
                                               })
                                               .join(' - ')
                                       )
