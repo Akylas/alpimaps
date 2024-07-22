@@ -887,6 +887,7 @@ export default class CustomLayersModule extends MapModule {
                     labelRenderOrder: VectorTileRenderOrder.LAST,
                     opacity,
                     preloading: get(preloading),
+                    tileCacheCapacity: 30 * 1024 * 1024,
                     decoder: mapContext.mapDecoder,
                     // clickHandlerLayerFilter: PRODUCTION ? undefined : '.*',
                     clickHandlerLayerFilter: PRODUCTION ? '(.*::(icon|label)|waterway|transportation)' : '.*',
