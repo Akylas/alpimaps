@@ -106,6 +106,7 @@
 
     let eink = theme === 'eink';
     let buttonsColor = eink ? 'black' : 'white';
+    let buttonsColorAlpha = new Color(buttonsColor).setAlpha(50);
 
     export let editingItem: IItem = null;
     export let translationY = 0;
@@ -250,7 +251,7 @@
     //     }
     // }
     function profileColor(currentP, p) {
-        return currentP === p ? '#fff' : '#ffffff77';
+        return currentP === p ? buttonsColor : buttonsColorAlpha;
     }
 
     function setProfile(p: ValhallaProfile) {
@@ -1324,8 +1325,8 @@
             </stacklayout>
 
             <stacklayout id="directionsbuttons2" colSpan={3} horizontalAlignment="right" orientation="horizontal" row={2} visibility={showOptions ? 'visible' : 'collapse'}>
-                <IconButton color={costingOptions.shortest ? '{buttonsColor}' : '#ffffff55'} size={40} text="mdi-timer-outline" on:tap={() => (costingOptions.shortest = !costingOptions.shortest)} />
-                <IconButton color={computeMultiple ? '{buttonsColor}' : '#ffffff55'} size={40} text="mdi-arrow-decision" on:tap={() => (computeMultiple = !computeMultiple)} />
+                <IconButton color={costingOptions.shortest ? buttonsColor : buttonsColorAlpha} size={40} text="mdi-timer-outline" on:tap={() => (costingOptions.shortest = !costingOptions.shortest)} />
+                <IconButton color={computeMultiple ? buttonsColor : buttonsColorAlpha} size={40} text="mdi-arrow-decision" on:tap={() => (computeMultiple = !computeMultiple)} />
                 <IconButton color={buttonsColor} size={40} text="mdi-dots-vertical" on:tap={showMoreOptions} />
                 <IconButton color={buttonsColor} size={40} text={expanded ? 'mdi-chevron-up' : 'mdi-chevron-down'} on:tap={onExpandedChevron} />
             </stacklayout>
