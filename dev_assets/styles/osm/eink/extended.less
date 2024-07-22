@@ -1,0 +1,27 @@
+#water {
+	// [class=river] {
+	line-color: @river;
+	line-width: 0.5;
+	// }
+}
+
+#water[class=ice_shelf],
+#landcover[class=ice] {
+	// line-width: 0.5;
+	// line-color: #aaa;
+
+	[zoom>=$iceshelf_pattern_zoom] {
+		polygon-pattern-fill: $iceshelf_pattern_fill;
+		polygon-pattern-file: $iceshelf_pattern;
+		polygon-pattern-opacity: $iceshelf_pattern_opacity;
+	}
+}
+
+#water,
+#landcover,
+#landuse {
+	['mapnik::geometry_type'=3][zoom>=11] {
+		line-width: 0.3;
+		line-color: #aaa;
+	}
+}
