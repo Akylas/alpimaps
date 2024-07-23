@@ -1,9 +1,15 @@
 <script lang="ts">
+    import { isPermResultAuthorized, request } from '@nativescript-community/perms';
+    import { SDK_VERSION } from '@nativescript-community/sentry';
+    import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { openFilePicker, pickFolder, saveFile } from '@nativescript-community/ui-document-picker';
+    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { showSnack } from '@nativescript-community/ui-material-snackbar';
-    import { ApplicationSettings, File, Folder, ObservableArray, Utils, View, path } from '@nativescript/core';
+    import { TextField } from '@nativescript-community/ui-material-textfield';
+    import { TextView } from '@nativescript-community/ui-material-textview';
+    import { ApplicationSettings, File, Folder, ObservableArray, ScrollView, StackLayout, Utils, View, path } from '@nativescript/core';
     import dayjs from 'dayjs';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -14,16 +20,12 @@
     import { onServiceLoaded } from '~/services/BgService.common';
     import { showError } from '~/utils/error';
     import { share } from '~/utils/share';
-    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { hideLoading, openLink, showAlertOptionSelect, showLoading } from '~/utils/ui/index.common';
-    import { ANDROID_30, getDefaultMBTilesDir, moveFileOrFolder } from '~/utils/utils';
-    import { getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, resetItemsDataFolder, restartApp, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';
+    import { createView, hideLoading, openLink, showAlertOptionSelect, showLoading } from '~/utils/ui/index.common';
+    import { ANDROID_30, getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, moveFileOrFolder, resetItemsDataFolder, restartApp, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';
     import { colors, fonts, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
-    import { CheckBox } from '@nativescript-community/ui-checkbox';
-    import { SDK_VERSION } from '@nativescript-community/sentry';
-    import { isPermResultAuthorized, request } from '@nativescript-community/perms';
+    import { Sentry } from '~/utils/sentry';
     $: ({ colorOnSurfaceVariant, colorOutlineVariant } = $colors);
     $: ({ bottom: windowInsetBottom } = $windowInset);
 
@@ -151,11 +153,11 @@
             .concat(
                 PLAY_STORE_BUILD
                     ? [
-                          {
-                              id: 'share',
-                              rightBtnIcon: 'mdi-chevron-right',
-                              title: lc('share_application')
-                          },
+                          //   {
+                          //       id: 'share',
+                          //       rightBtnIcon: 'mdi-chevron-right',
+                          //       title: lc('share_application')
+                          //   },
                           {
                               id: 'review',
                               rightBtnIcon: 'mdi-chevron-right',
@@ -169,6 +171,11 @@
                     id: 'third_party',
                     title: lc('third_parties'),
                     description: lc('list_used_third_parties')
+                },
+                {
+                    id: 'feedback',
+                    icon: 'mdi-bullhorn',
+                    title: lc('send_feedback')
                 },
                 {
                     type: 'sectionheader',
@@ -424,6 +431,58 @@
                 case 'dark_mode':
                     await selectTheme();
                     break;
+                case 'feedback': {
+                    if (SENTRY_ENABLED) {
+                        const view = createView(ScrollView);
+                        const stackLayout = createView(StackLayout, {
+                            padding: 10
+                        });
+                        const commentsTF = createView(TextView, {
+                            hint: lc('comments'),
+                            variant: 'outline',
+                            height: 150,
+                            returnKeyType: 'done'
+                        });
+                        const emailTF = createView(TextField, {
+                            hint: lc('email'),
+                            variant: 'outline',
+                            autocapitalizationType: 'none',
+                            autocorrect: false,
+                            keyboardType: 'email',
+                            returnKeyType: 'next'
+                        });
+                        const nameTF = createView(TextField, {
+                            hint: lc('name'),
+                            variant: 'outline',
+                            returnKeyType: 'next'
+                        });
+                        stackLayout.addChild(nameTF);
+                        stackLayout.addChild(emailTF);
+                        stackLayout.addChild(commentsTF);
+                        view.content = stackLayout;
+                        const result = await confirm({
+                            title: lc('send_feedback'),
+                            okButtonText: l('send'),
+                            cancelButtonText: l('cancel'),
+                            view
+                        });
+                        if (result) {
+                            const eventId = Sentry.captureMessage('User Feedback');
+
+                            Sentry.captureUserFeedback({
+                                event_id: eventId,
+                                name: nameTF.text,
+                                email: emailTF.text,
+                                comments: commentsTF.text
+                            });
+                            Sentry.flush();
+                            showSnack({ message: l('feedback_sent') });
+                        }
+                    } else {
+                        openLink(GIT_URL + '/issues');
+                    }
+                    break;
+                }
                 case 'review':
                     openLink(STORE_REVIEW_LINK);
                     break;
@@ -522,19 +581,28 @@
                         }
                     } else {
                         const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
-                        const options = item.values.map((k) => ({ name: k.title, data: k.value }));
                         const currentValue = ApplicationSettings.getNumber(item.key, item.default);
+                        let selectedIndex = -1;
+                        const options = item.values.map((k, index) => {
+                            const selected = currentValue === k.value;
+                            if (selected) {
+                                selectedIndex = index;
+                            }
+                            return {
+                                name: k.title || k.name,
+                                data: k.value,
+                                boxType: 'circle',
+                                type: 'checkbox',
+                                value: selected
+                            };
+                        });
                         const result = await showAlertOptionSelect(
                             OptionSelect,
                             {
                                 height: Math.min(options.length * 56, 400),
                                 rowHeight: 56,
-                                options: options.map((d) => ({
-                                    ...d,
-                                    boxType: 'circle',
-                                    type: 'checkbox',
-                                    value: currentValue === d.data
-                                }))
+                                selectedIndex,
+                                options
                             },
                             {
                                 title: item.title
