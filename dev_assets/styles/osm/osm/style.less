@@ -1,6 +1,11 @@
 
 @background: #e6e4e0;
 
+
+@standard-halo-radius: 2;
+@standard-halo-fill: #f2f5f888;
+
+
 @border_country: #787b8c;
 @border_country_opacity: 1;
 @border_region: linear([view::zoom], (11, #787b8c), (13, #787b8c77), (14, #787b8c00));
@@ -11,7 +16,7 @@
 @contour_low: fadeout(@contour_inner, 0.8);
 @contour_semi: step([view::zoom], (12, @contour_low), (14,@contour));
 @contour_label: @contour_inner;
-@contour_halo: #f2f5f866;
+@contour_halo: @standard-halo-fill;
 @contour_halo_radius: 1;
 
 @glacier: #e0f3faaa;
@@ -86,7 +91,7 @@
 
 @marine_labels: @water_label;
 @marine_labels_halo: @water_halo;
-@marine_labels_halo_radius: 2;
+@marine_labels_halo_radius: @standard-halo-radius;
 
 
 
@@ -208,9 +213,6 @@
 @raceway-width: linear([view::zoom], (12, 0), (12.01, 0.5), (14, 2), (16, 6), (18, 18));
 @raceway-casing-width: linear([view::zoom], (12, 0), (12.01, 0.75), (20, 2));
 
-@standard-halo-radius: 1;
-@standard-halo-fill: #ffffff88;
-
 @footway-fill: #ffffff;
 @steps-fill: @path;
 @cycleway-fill: 0;
@@ -251,8 +253,8 @@
 @glacier_label: #1C88AF;
 @glacier_label_wrap_width: 20;
 @water_label: #4d80b3;
-@water_halo: #ffffffaa;
-@water_halo_radius: 2;
+@water_halo: @standard-halo-fill;
+@water_halo_radius: @standard-halo-radius;
 @waterway_label_dy:0;
 @waterway_label_spacing: 0;
 
@@ -267,8 +269,8 @@
 @peak_label: #684a1e;
 @saddle_icon_fill: #666600;
 @sadle_label: #454545;
-@peak_halo: #f2f5f8;
-@peak_halo_radius: 2;
+@peak_halo: @standard-halo-fill;
+@peak_halo_radius: @standard-halo-radius;
 
 @peak_icon:[nuti::osm-mountain];
 @saddle_icon:[nuti::osm-saddle];
@@ -295,19 +297,19 @@
 @hamlet_label: step([view::zoom], (11, #333333), (14, #777777));
 
 @continent_text: #405c78;
-@continent_halo: #fbf8f3;
-@country_halo: #fbf8f3;
-@state_halo: #fbf8f388;
-@place_halo: #f2f5f8;
-@place_halo_radius: 2; 
+@continent_halo: @standard-halo-fill;
+@country_halo: @standard-halo-fill;
+@state_halo: @standard-halo-fill;
+@place_halo: @standard-halo-fill;
+@place_halo_radius: @standard-halo-radius; 
 @road_label: #303030;
 
-@road_label_halo: #f2f5f888;
+@road_label_halo: @standard-halo-fill;
 @road_large_label_fill: #000;
-@road_large_label_halo_radius: 2;
+@road_large_label_halo_radius: @standard-halo-radius;
 
 @road_small_label_fill: #000;
-@road_small_label_halo_radius: 2;
+@road_small_label_halo_radius: @standard-halo-radius;
 
 @poi-fill: #956e50;
 @poi-park-fill: #76BC54;
@@ -328,9 +330,10 @@
 @poi-bakery-fill: #EF8000; 
 @poi-restaurant-fill: #BC7729; 
 @poi-shop-fill: #9F43A7; 
-@poi_halo_radius:2;
-@poi_halo: #f2f5f8;
-
+@poi_halo_radius:@standard-halo-radius;
+@poi_halo: @standard-halo-fill;
+@poi_icon_halo_radius:1;
+@poi_icon_halo: #f2f5f8;
 
 
 @peak_icon_width: @poi_icon_width + 0.00000001 * [ele];
