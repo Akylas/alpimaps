@@ -43,7 +43,6 @@
 	text-halo-fill: @marine_labels_halo;
 	text-halo-radius: @marine_labels_halo_radius;
 	text-line-spacing: -2;
-	text-character-spacing: 1.1;
 	text-size:@marine_labels_size;
 	[class=ocean] {
 		text-size:@ocean_labels_size;
@@ -71,9 +70,8 @@
 		text-placement: [nuti::texts3d];
 		text-transform: uppercase;
 		text-wrap-character: @wrap_characters;
-		text-halo-fill: @continent_halo;
-		text-halo-radius: 1;
-		text-character-spacing: 0.5;
+		text-halo-fill: @place_halo;
+		text-halo-radius:@place_halo_radius;
 		text-size: linear([view::zoom], (1, 10.0), (2, 14.0));
 		text-wrap-width: step([view::zoom], (1, 20), (2, 40));
 	}
@@ -276,7 +274,7 @@
 #waterway[class=drain][zoom>=15]{
 	// ::label {
 		text-name: @name;
-		text-face-name: @mont_bd;
+		text-face-name: @mont_md;
 		[class=dam][class=weir] {
 			text-placement: point;
 			text-fill: @dam_casing;
@@ -299,13 +297,13 @@
 	[brunnel=bridge][zoom>=14],[zoom>=16] {
 		// ::label {
 			text-name: @name;
-			text-face-name: @mont;
+			text-face-name: @mont_md;
 			text-fill: @building_label;
 			text-size: 10;
 			text-min-distance:150;
 			text-wrap-width:@suburb-label-wrap-width;
-			text-halo-fill: @peak_halo;
-			text-halo-radius: 1;
+			text-halo-fill: @place_halo;
+			text-halo-radius: @place_halo_radius;
 		// }
 	}
 }
@@ -386,8 +384,8 @@
 	}
 	[class=track][zoom>=13],
 	[class=path][subclass=path][zoom>=14],
-	[class=path][subclass=footway][zoom>=19],
-	[class=path][subclass=pedestrian][zoom>=19],
+	[class=path][subclass=footway][zoom>=16],
+	[class=path][subclass=pedestrian][zoom>=16],
 	[class=path][subclass!=path][subclass!=footway][subclass!=pedestrian][zoom>=15] {
 		::_path {	
 			text-name: @name;
@@ -430,8 +428,8 @@
 			text-name: @osm_icon;
 			text-size: @poi_icon_width;
 			text-face-name: @osm;
-			text-halo-fill: @poi_halo;
-			text-halo-radius: @poi_halo_radius;
+			text-halo-fill: @poi_icon_halo;
+			text-halo-radius: @poi_icon_halo_radius;
 			text-fill: @poi-lodging-fill;
 			text-allow-overlap-same-feature-id: true;
 		}
@@ -461,8 +459,8 @@
 			text-feature-id: @featureId;
 			text-size: @poi_icon_width;
 			text-face-name: @osm;
-			text-halo-fill: @poi_halo;
-			text-halo-radius: @poi_halo_radius;
+			text-halo-fill: @poi_icon_halo;
+			text-halo-radius: @poi_icon_halo_radius;
 			text-size: @poi_icon_width;
 			text-fill: @poi-campsite-fill;
 			text-allow-overlap-same-feature-id: true;
@@ -490,7 +488,7 @@
 		text-name: @osm_icon;
 		text-feature-id: @featureId;
 		text-face-name: @osm;
-		text-halo-fill: @poi_halo;
+		text-halo-fill: @poi_icon_halo;
 		text-halo-radius: @poi-spring_halo_radius;
 		text-fill: @poi-water-fill;
 		text-size: @poi-spring-size;
@@ -526,8 +524,8 @@
 			text-feature-id: @featureId;
 			text-size: @poi_icon_width;
 			text-face-name: @osm;
-			text-halo-fill: @poi_halo;
-			text-halo-radius: @poi_halo_radius;
+			text-halo-fill: @poi_icon_halo;
+			text-halo-radius: @poi_icon_halo_radius;
 			text-fill: @poi-fill;
 			text-allow-overlap-same-feature-id: true;
 			[class=park] {
@@ -573,14 +571,13 @@
 				text-feature-id: @featureId;
 				text-face-name: @mont_md;
 				text-placement: [nuti::texts3d];
-				text-fill: @poi-fill;
 				text-halo-fill: @poi_halo;
 				text-halo-radius: @poi_halo_radius;
 				text-size: @poi_label_width;
 				text-wrap-width: @poi_label_wrap_width;
 				text-wrap-character: @wrap_characters;
 				text-dy: @poi_label_dy;
-				text-fill: @poi-fill;
+				text-fill: darken(@poi-fill, 30%);
 				text-allow-overlap-same-feature-id: true;
 				text-same-feature-id-dependent: true;
 				[class=park] {
@@ -661,16 +658,15 @@
 	text-size: linear([view::zoom], (16, 6.0), (18, 8.0), (20, 10));
 	text-min-distance: linear([view::zoom], (16, 100), (17, 50), (18, 20));
 }
-#housenumber[zoom>=18]::label{
+#housenumber[zoom>=16]::label{
 	text-name: [housenumber];
 	text-face-name: @mont;
 	text-fill: @housename;
-	text-size: linear([view::zoom], (17, 9), (18, 11));
-	// text-avoid-edges: true;
-	// text-allow-overlap: true;
-	// text-clip: false;
+	text-size: 11;
+	text-avoid-edges: true;
+	text-allow-overlap: true;
+	text-clip: false;
 	text-min-distance: linear([view::zoom], (17, 100), (18, 50), (19, 20));
-
 }
 
 #aerodrome_label[zoom>=15]::label {
