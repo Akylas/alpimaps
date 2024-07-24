@@ -1,0 +1,16 @@
+### Features
+- get local time from anywhere in the world. astronomy view will show local data + current time+ more daylight related infos
+- new show admin boundaries features
+- new eink theme for eink devices
+
+### Bug fixes
+- prevent adding existing source
+- item info fix
+- item info fixes
+- disable transit lines button on error
+- elevation chart fixes
+- show patreon/librepay links in settings
+- file pickers fix
+- item search fix
+- map interaction fix while following user position.
+- style updat
