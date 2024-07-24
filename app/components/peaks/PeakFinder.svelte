@@ -44,8 +44,8 @@
     // let simultaneousHandlersTags = [SCROLL_VIEW_TAG_1, SCROLL_VIEW_TAG_2];
     let currentAltitude;
     let selectedPageIndex = 0;
-    const consoleEnabled = false;
-    // const consoleEnabled = !PRODUCTION;
+    // const consoleEnabled = false;
+    const consoleEnabled = !PRODUCTION;
 
     function truncate(str, maxlength) {
         return str.length > maxlength ? str.slice(0, maxlength - 1) + '…' : str;
