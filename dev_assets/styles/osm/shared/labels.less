@@ -384,8 +384,8 @@
 	}
 	[class=track][zoom>=13],
 	[class=path][subclass=path][zoom>=14],
-	[class=path][subclass=footway][zoom>=16],
-	[class=path][subclass=pedestrian][zoom>=16],
+	[class=path][subclass=footway][zoom>=15],
+	[class=path][subclass=pedestrian][zoom>=15],
 	[class=path][subclass!=path][subclass!=footway][subclass!=pedestrian][zoom>=15] {
 		::_path {	
 			text-name: @name;
@@ -658,15 +658,15 @@
 	text-size: linear([view::zoom], (16, 6.0), (18, 8.0), (20, 10));
 	text-min-distance: linear([view::zoom], (16, 100), (17, 50), (18, 20));
 }
-#housenumber[zoom>=16]::label{
+#housenumber[zoom>=17]{
 	text-name: [housenumber];
 	text-face-name: @mont;
 	text-fill: @housename;
-	text-size: 11;
-	text-avoid-edges: true;
-	text-allow-overlap: true;
-	text-clip: false;
-	text-min-distance: linear([view::zoom], (17, 100), (18, 50), (19, 20));
+	text-size: linear([view::zoom], (17, 9), (19, 11));
+	// text-avoid-edges: true;
+	// text-allow-overlap: true;
+	// text-clip: false;
+	text-min-distance: linear([view::zoom], (17, 50), (18, 30), (19, 20));
 }
 
 #aerodrome_label[zoom>=15]::label {
