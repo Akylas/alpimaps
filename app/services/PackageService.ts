@@ -1,7 +1,9 @@
+import { getFromLocation } from '@nativescript-community/geocoding';
 import Observable from '@nativescript-community/observable';
 import { GenericMapPos, IntVector, MapPos, MapPosVector, fromNativeMapPos, nativeVectorToArray } from '@nativescript-community/ui-carto/core';
 import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
 import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
+import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
 import {
     GeocodingRequest,
     GeocodingResult,
@@ -15,21 +17,21 @@ import {
 import { Geometry, LineGeometry } from '@nativescript-community/ui-carto/geometry';
 import { Feature, VectorTileFeature, VectorTileFeatureCollection } from '@nativescript-community/ui-carto/geometry/feature';
 import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
+import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
 import { HillshadeRasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
 import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
+import { Projection } from '@nativescript-community/ui-carto/projections';
 import { MultiValhallaOfflineRoutingService, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
 import { SearchRequest, VectorTileSearchService } from '@nativescript-community/ui-carto/search';
-import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import * as appSettings from '@nativescript/core/application-settings';
-import { File, Folder, knownFolders, path } from '@nativescript/core/file-system';
+import { Folder, knownFolders, path } from '@nativescript/core/file-system';
+import type { Point as GeoJSONPoint } from 'geojson';
 import { LineString, MultiLineString, Point } from 'geojson';
 import { getMapContext } from '~/mapModules/MapModule';
-import { IItem as Item, Route, RouteProfile } from '~/models/Item';
-import { EARTH_RADIUS, TO_RAD } from '~/utils/geo';
+import { Address, IItem, IItem as Item, Route, RouteProfile } from '~/models/Item';
+import { EARTH_RADIUS, TO_RAD, computeDistanceBetween } from '~/utils/geo';
 import { getDataFolder, getSavedMBTilesDir, listFolder } from '~/utils/utils';
 import { networkService } from './NetworkService';
-import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
-import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
@@ -126,6 +128,7 @@ const geocodingMapping = [
     ['county', 'getCounty']
 ];
 
+let geocodingAvailable = true;
 class PackageService extends Observable {
     // vectorTileDecoder: MBVectorTileDecoder;
     hillshadeLayer?: HillshadeRasterTileLayer;
@@ -337,6 +340,75 @@ class PackageService extends Observable {
             }
         }
         return this._timezoneTileSearchService;
+    }
+
+    async getItemAddress(item: IItem, projection: Projection) {
+        try {
+            const service = this.localOSMOfflineReverseGeocodingService;
+            let foundAddress = false;
+            const geometry = item.geometry as GeoJSONPoint;
+            const location = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+            // DEV_LOG && console.log('fetching addresses', !!service, position);
+            if (service) {
+                const radius = 200;
+                const res = await packageService.searchInGeocodingService(service, {
+                    projection,
+                    location,
+                    searchRadius: radius
+                });
+                const props = item.properties;
+                if (res) {
+                    let bestFind: GeoResult;
+                    for (let index = 0; index < res.size(); index++) {
+                        const r = packageService.convertGeoCodingResult(res.get(index), true);
+
+                        if (
+                            r &&
+                            r.properties.rank > 0.6 &&
+                            computeDistanceBetween(location, {
+                                lat: r.geometry.coordinates[1],
+                                lon: r.geometry.coordinates[0]
+                            }) <= radius
+                        ) {
+                            if (!bestFind || Object.keys(r.properties.address).length > Object.keys(bestFind.properties.address).length) {
+                                bestFind = r;
+                            } else if (bestFind && props.address && props.address['street']) {
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                    // DEV_LOG && console.log('fetched addresses', bestFind, $selectedItem.geometry === item.geometry);
+                    if (bestFind) {
+                        foundAddress = true;
+                        const result = { ...bestFind.properties.address, name: null, ...(props.housenumber ? { houseNumber: props.housenumber } : {}) } as any as Address;
+                        return result;
+                    }
+                }
+            }
+            if (!foundAddress && geocodingAvailable) {
+                const results = await getFromLocation(location.lat, location.lon, 10);
+                DEV_LOG && console.log('found addresses', results);
+                if (results?.length > 0) {
+                    const result = results[0];
+                    return {
+                        city: result.locality,
+                        country: result.country,
+                        state: result.administrativeArea,
+                        housenumber: result.subThoroughfare,
+                        postcode: result.postalCode,
+                        street: result.thoroughfare
+                    } as any as Address;
+                }
+            }
+        } catch (error) {
+            if (__ANDROID__ && /IOException.*UNAVAILABLE$/.test(error.toString())) {
+                geocodingAvailable = false;
+            }
+            // for now we dont throw error, only return undefined
+            console.error('error fetching address', error, error.stack);
+        }
     }
     searchInLocalGeocodingService(options: GeocodingRequest<LatLonKeys>): Promise<GeocodingResultVector> {
         const service = this.localOSMOfflineGeocodingService;
@@ -844,7 +916,7 @@ class PackageService extends Observable {
         if (!this.mOnlineRoutingSearchService) {
             this.mOnlineRoutingSearchService = new ValhallaOnlineRoutingService({
                 apiKey: gVars.MAPBOX_TOKEN,
-                customServiceURL: 'https://valhalla1.openstreetmap.de',
+                customServiceURL: 'https://valhalla.openstreetmap.de',
                 profile: 'pedestrian'
             });
         }
