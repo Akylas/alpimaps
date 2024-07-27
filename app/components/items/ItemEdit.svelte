@@ -48,13 +48,20 @@
     $: itemUsingDefault = itemUsingMdi && itemIcon === 'mdi-map-marker';
     $: itemUsingOsm = itemIcon === osmIcon && itemIconFontFamily === 'osm';
     let updatedProperties = {};
+    let canSave = false;
+    $: canSave = Object.keys(updatedProperties).length > 0;
+    $: DEV_LOG && console.log('itemColor', itemColor);
     const mapContext = getMapContext();
     function blurTextField(event) {
         Utils.dismissSoftInput(event?.object.nativeViewProtected);
     }
     let updatingItem = false;
+
     async function updateItem() {
         try {
+            if (!canSave) {
+                return;
+            }
             updatingItem = true;
             // console.log('updateItem', updatedProperties);
             const savedItem = await mapContext.mapModule('items').updateItem(item, { properties: { ...item.properties, ...updatedProperties } });
@@ -82,10 +89,10 @@
     let vectorTileLayer: VectorTileLayer;
 
     function updatePreview(updateForSvelte = true) {
+        if (updateForSvelte) {
+            updatedProperties = updatedProperties;
+        }
         if (vectorTileDataSource) {
-            if (updateForSvelte) {
-                updatedProperties = updatedProperties;
-            }
             // DEV_LOG && console.log('updateGeoJSONLayer', str);
             vectorTileDataSource.setLayerGeoJSONString(1, {
                 type: 'FeatureCollection',
@@ -180,29 +187,37 @@
             cartoMap.setFocusPos(position, 0);
         }
     }
+
+    function getUpdateStyle() {
+        return (updatedProperties['style'] = updatedProperties['style'] || item.properties.style || {});
+    }
     async function pickOptionColor(color: Color | string) {
         try {
             const newColor = await pickColor(color, { alpha: false });
             if (!newColor) {
                 return;
             }
-            const style = (updatedProperties['style'] = updatedProperties['style'] || {});
+            const style = getUpdateStyle();
+            DEV_LOG && console.log('pickOptionColor', updatedProperties);
             style['color'] = newColor.hex;
             updatePreview();
         } catch (err) {
             showError(err);
         }
     }
+
     function setOSMIcon() {
-        const style = (updatedProperties['style'] = updatedProperties['style'] || {});
+        const style = getUpdateStyle();
         style['fontFamily'] = 'osm';
         style['mapFontFamily'] = 'osm';
         style['iconDx'] = 0;
         style['icon'] = osmIcon;
+        console.log('setOSMIcon', updatedProperties);
         updatePreview();
     }
     function setDefaultIcon() {
-        const style = (updatedProperties['style'] = updatedProperties['style'] || {});
+        const style = getUpdateStyle();
+        console.log('setDefaultIcon', updatedProperties);
         style['fontFamily'] = $fonts.mdi;
         style['mapFontFamily'] = MATERIAL_MAP_FONT_FAMILY;
         style['iconDx'] = -2;
@@ -228,8 +243,8 @@
             });
             const result = Array.isArray(results) ? results[0] : results;
             if (result) {
-                // console.log('result', result);
-                const style = (updatedProperties['style'] = updatedProperties['style'] || {});
+                console.log('result', result, updatedProperties);
+                const style = getUpdateStyle();
                 style['fontFamily'] = result.fontFamily;
                 itemUsingMdi = result.fontFamily === $fonts.mdi;
                 style['mapFontFamily'] = itemUsingMdi ? MATERIAL_MAP_FONT_FAMILY : 'osm';
@@ -285,6 +300,7 @@
     }
     let items: ObservableArray<any>;
     const propsToFilter = [
+        'hasRealName',
         'notes',
         'name',
         'address',
@@ -389,8 +405,9 @@
 </script>
 
 <page actionBarHidden={true}>
-    <gridlayout rows="auto,*,auto,2.5*,auto">
+    <gridlayout rows="auto,*,auto,2.5*,auto" android:paddingBottom={windowInsetBottom}>
         <CActionBar canGoBack title={lc('edit')}>
+            <IconButton color={colorOnPrimary} isEnabled={canSave} text="mdi-content-save-outline" on:tap={(e) => updateItem()} />
             <IconButton color={colorOnPrimary} text="mdi-playlist-plus" on:tap={addField} />
             <IconButton color={colorOnPrimary} isVisible={!itemIsRoute} text="mdi-web-sync" on:tap={fetchOSMDetails} />
         </CActionBar>
@@ -426,8 +443,8 @@
                     visibility={itemUsingDefault ? 'collapse' : 'visible'}
                     width={50}
                     on:tap={setDefaultIcon}>
-                    <span color={itemColor} fontFamily={$fonts.mdi} text="mdi-map-marker" />
-                    <span fontSize={12} text={'\n' + lc('marker')} />
+                    <cspan color={itemColor} fontFamily={$fonts.mdi} text="mdi-map-marker" />
+                    <cspan fontSize={12} text={'\n' + lc('marker')} />
                 </label>
                 <label
                     backgroundColor={colorSurfaceContainerHigh}
@@ -446,8 +463,8 @@
                     visibility={itemUsingOsm ? 'collapse' : 'visible'}
                     width={50}
                     on:tap={setOSMIcon}>
-                    <span color={itemColor} fontFamily="osm" text={osmIcon} />
-                    <span fontSize={12} text={'\n' + lc('osm')} />
+                    <cspan color={itemColor} fontFamily="osm" text={osmIcon} />
+                    <cspan fontSize={12} text={'\n' + lc('osm')} />
                 </label>
                 <label
                     backgroundColor={colorSurfaceContainerHigh}
@@ -465,8 +482,8 @@
                     verticalAlignment="middle"
                     width={50}
                     on:tap={selectCustomIcon}>
-                    <span color={itemColor} fontFamily={itemIconFontFamily} text={itemIcon} />
-                    <span fontSize={12} text={'\n' + lc('custom')} />
+                    <cspan color={itemColor} fontFamily={itemIconFontFamily} text={itemIcon} />
+                    <cspan fontSize={12} text={'\n' + lc('custom')} />
                 </label>
             </gridlayout>
         {/if}
@@ -540,7 +557,7 @@
         </scrollview> -->
 
         <gridlayout columns="*,*" marginBottom={5} row={4}>
-            <mdbutton isEnabled={Object.keys(updatedProperties).length > 0} text={lc('save')} verticalAlignment="center" on:tap={(e) => updateItem()} />
+            <mdbutton isEnabled={canSave} text={lc('save')} verticalAlignment="center" on:tap={(e) => updateItem()} />
             <mdbutton
                 col={1}
                 text={lc('cancel')}
