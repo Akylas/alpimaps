@@ -106,7 +106,7 @@
 
     let eink = theme === 'eink';
     let buttonsColor = eink ? 'black' : 'white';
-    let buttonsColorAlpha = new Color(buttonsColor).setAlpha(50);
+    const buttonsColorAlpha = new Color(buttonsColor).setAlpha(50);
 
     export let editingItem: IItem = null;
     export let translationY = 0;
@@ -844,22 +844,30 @@
                 let options = [];
                 if (profile === 'bicycle') {
                     options = [
-                        { shortest: true },
+                        {},
+                        { shortest: true, style: { color: '#5994e0' }},
                         { avoid_bad_surfaces: 1, use_hills: 1, use_roads: 1, non_network_penalty: 0, style: { color: '#AD5FC4' } },
                         { avoid_bad_surfaces: 1, use_hills: 0, use_roads: 1, non_network_penalty: 25, style: { color: '#5FC476' } },
-                        { avoid_bad_surfaces: 1, use_hills: 1, use_roads: 1, non_network_penalty: 50, style: { color: '#C49F5F' } }
+                        { avoid_bad_surfaces: 1, use_hills: 1, use_roads: 0, non_network_penalty: 50, style: { color: '#C49F5F' } }
                     ];
                 } else if (profile === 'pedestrian') {
                     options = [
+                        {},
                         //shortest
-                        { shortest: true },
+                        { shortest: true, style: { color: '#5994e0' }},
                         // very steep
                         { use_roads: 0, use_hills: 1, style: { color: '#AD5FC4' } },
                         // least steep
                         { use_roads: 0, use_hills: 0.4, step_penalty: 60, style: { color: '#5FC476' } }
                     ];
                 } else {
-                    options = [{ shortest: true }, { shortest: false, use_tolls: 1, use_highways: 1 }, { shortest: false, use_tolls: 0, use_highways: 1 }, { shortest: false, use_highways: 0 }];
+                    options = [
+                        {},
+                        { shortest: true, style: { color: '#5994e0' }},
+                        { shortest: false, use_tolls: 1, use_highways: 1, style: { color: '#AD5FC4' } },
+                        { shortest: false, use_tolls: 0, use_highways: 1, style: { color: '#5FC476' } },
+                        { shortest: false, use_highways: 0, style: { color: '#C49F5F' }}
+                    ];
                 }
                 const results = await Promise.all(options.map(computeAndAddRoute));
                 itemToFocus = results.reduce(function (prev, current) {
