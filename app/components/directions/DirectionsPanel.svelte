@@ -528,7 +528,7 @@
         const params = translationFunction ? translationFunction(height, -height, 0, superParams) : superParams;
         currentTranslationY = -height;
         translationY = 0;
-        await nView.animate(params);
+        return nView.animate(params);
     }
     export function isVisible() {
         return translationY > 0;
@@ -609,8 +609,8 @@
         if (unselect) {
             mapContext.unselectItem();
         }
-        hide();
         dispatch('cancel');
+        return hide();
     }
     function walkingSpeed() {
         switch (pedestrian_type) {

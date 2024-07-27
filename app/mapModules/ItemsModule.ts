@@ -188,7 +188,7 @@ export default class ItemsModule extends MapModule {
         // DEV_LOG && console.log('updateGeoJSONLayer', str);
         this.getLocalVectorDataSource().setLayerGeoJSONString(1, str);
     }
-    async updateItem(item: IItem, data?: Partial<IItem>, autoUpdateLayer = true) {
+    async updateItem(item: IItem, data?: Partial<IItem>, autoUpdateLayer = true, updatePicture = true) {
         item = await this.itemRepository.updateItem(item as Item, data);
         const index = this.currentItems.findIndex((d) => d.id === item.id);
         // console.log('updateItem', item.id, index, autoUpdateLayer, item.onMap);
@@ -197,7 +197,7 @@ export default class ItemsModule extends MapModule {
             if (autoUpdateLayer && item.onMap !== 0) {
                 this.getLocalVectorDataSource().updateGeoJSONStringFeature(1, { type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
             }
-            if (item.route) {
+            if (item.route && updatePicture) {
                 this.takeItemPicture(item);
             }
         }
@@ -448,6 +448,7 @@ export default class ItemsModule extends MapModule {
         }
     }
     async takeItemPicture(item, restore = false) {
+        console.log('takeItemPicture', new Error().stack);
         //item needs to be already selected
         // we hide other items before the screenshot
         // and we show theme again after it
@@ -461,11 +462,11 @@ export default class ItemsModule extends MapModule {
             // we need to evict from image cache
             getImagePipeline().evictFromCache(item.image_path);
         }
-        mapContext.selectItem({ item, isFeatureInteresting: true, preventZoom: false });
-        mapContext.innerDecoder.setStyleParameter('hide_unselected', '1');
-        console.log('takeItemPicture');
         return new Promise<void>((resolve) => {
             let done = false;
+            const mapView = mapContext.getMap();
+            mapContext.innerDecoder.setStyleParameter('hide_unselected', '1');
+            mapContext.selectItem({ item, isFeatureInteresting: true, preventZoom: false });
             const onDone = async () => {
                 if (timer) {
                     clearTimeout(timer);
@@ -475,13 +476,14 @@ export default class ItemsModule extends MapModule {
                     return;
                 }
                 done = true;
+                let image: ImageSource;
+                let canvasImage: ImageSource;
                 try {
                     DEV_LOG && console.log('takeItemPicture', 'onMapStable');
                     // const startTime = Date.now();
-                    const mapView = mapContext.getMap();
-                    const image = await mapView.captureRendering(true);
+                    image = await mapView.captureRendering(true);
                     DEV_LOG && console.log('takeItemPicture', 'onMapStable1');
-
+                    image.saveToFile(item.image_path, 'jpg');
                     // restore everyting
                     mapContext.innerDecoder.setStyleParameter('hide_unselected', '0');
                     if (restore) {
@@ -493,26 +495,32 @@ export default class ItemsModule extends MapModule {
                     }
 
                     // image.saveToFile(item.image_path, 'jpg');
-                    const viewPort = mapContext.getMapViewPort();
-                    //we offset a bit to be sure we the whole trace
-                    const offset = 20;
-                    const left = Math.max(viewPort.left - offset, 0);
-                    const top = Math.max(viewPort.top - offset, 0);
-                    const width = Math.min(left + viewPort.width + offset, mapView.getMeasuredWidth() - left);
-                    const height = Math.min(top + viewPort.height + offset, mapView.getMeasuredHeight() - top);
-                    const canvas = new Canvas(width, height);
-                    console.log('captureRendering', item.image_path, image.width, image.height, viewPort, canvas.getWidth(), canvas.getHeight());
-                    // const actuaWidth = Math.min(width, height);
-                    if (__IOS__) {
-                        canvas.scale(1, -1, width / 2, height / 2);
-                    }
-                    canvas.drawBitmap(image, new Rect(left, top, left + width, top + height), new Rect(0, 0, canvas.getWidth(), canvas.getHeight()), null);
-                    new ImageSource(canvas.getImage()).saveToFile(item.image_path, 'jpg');
-                    // console.log('saved bitmap', imagePath, Date.now() - startTime, 'ms');
-                    canvas.release();
+                    // const viewPort = mapContext.getMapViewPort();
+                    // //we offset a bit to be sure we the whole trace
+                    // const offset = 20;
+                    // const left = Math.max(viewPort.left - offset, 0);
+                    // const top = Math.max(viewPort.top - offset, 0);
+                    // const width = Math.min(left + viewPort.width + offset, mapView.getMeasuredWidth() - left);
+                    // const height = Math.min(top + viewPort.height + offset, mapView.getMeasuredHeight() - top);
+                    // const canvas = new Canvas(width, height);
+                    // console.log('captureRendering', item.image_path, image.width, image.height, viewPort, canvas.getWidth(), canvas.getHeight());
+                    // // const actuaWidth = Math.min(width, height);
+                    // if (__IOS__) {
+                    //     canvas.scale(1, -1, width / 2, height / 2);
+                    // }
+                    // canvas.drawBitmap(image, new Rect(left, top, left + width, top + height), new Rect(0, 0, canvas.getWidth(), canvas.getHeight()), null);
+                    // canvasImage = new ImageSource(canvas.getImage());
+                    // canvasImage.saveToFile(item.image_path, 'jpg');
+                    // // console.log('saved bitmap', imagePath, Date.now() - startTime, 'ms');
+                    // canvas.release();
                     resolve();
                 } catch (error) {
                     console.error(error, error.stack);
+                } finally {
+                    if (__ANDROID__) {
+                        image?.android.recycle();
+                        canvasImage?.android.recycle();
+                    }
                 }
             };
             let timer = setTimeout(onDone, 1500) as any;
