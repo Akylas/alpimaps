@@ -39,6 +39,7 @@
     export let iconSize = 24;
     export let iconLeft = 5;
     export let iconTop = 42;
+    export let showIcon = true;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
     export let rightTextPadding = 0;
     let canvas: NativeViewElementNode<CanvasView>;
@@ -234,7 +235,7 @@
             if (onDraw) {
                 onDraw({ canvas, object });
             }
-            if (itemIcon && !actualShowSymbol) {
+            if (showIcon && itemIcon && !actualShowSymbol) {
                 iconPaint.textSize = iconSize;
                 iconPaint.fontFamily = itemIconFontFamily;
                 iconPaint.color = iconColor || colorOnSurface;

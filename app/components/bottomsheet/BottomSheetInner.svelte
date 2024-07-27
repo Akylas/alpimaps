@@ -400,15 +400,15 @@
                 const stats = await packageService.fetchStats({ item, projection });
                 item['_parsedStats'] = stats;
             }
-            item = await itemsModule.updateItem(item);
-            if (isRoute) {
-                mapContext.mapModules.directionsPanel.cancel(false);
-            }
+            item = await itemsModule.updateItem(item, undefined, true, false);
             mapContext.selectItem({ item, isFeatureInteresting: true, peek: true, preventZoom: false });
             updateGraphAvailable();
             updateSteps();
             if (elevationChart && graphAvailable) {
                 elevationChart.updateChartData();
+            }
+            if (isRoute) {
+                await mapContext.mapModules.directionsPanel.cancel(false);
             }
             if (item.route) {
                 itemsModule.takeItemPicture(item);
