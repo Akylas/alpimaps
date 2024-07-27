@@ -700,6 +700,7 @@ LEFT JOIN  (
         if (itemIcon) {
             iconPaint.color = colorBackground;
             iconPaint.fontFamily = itemIconFontFamily;
+            circlePaint.setAlpha(100);
             canvas.drawCircle(25, 57, 13, circlePaint);
             const paddingLeft = Utils.layout.toDeviceIndependentPixels(object.effectivePaddingLeft);
             canvas.drawText(itemIcon, paddingLeft + 17, 63, iconPaint);
@@ -777,6 +778,7 @@ LEFT JOIN  (
                     propsLeft={60}
                     rightTextPadding={40}
                     rippleColor={colorPrimary}
+                    showIcon={false}
                     subtitleEnabled={false}
                     titleVerticalTextAlignment="middle"
                     prop:mainContent
