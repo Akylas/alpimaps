@@ -870,75 +870,87 @@
                 if (setSelected && !route) {
                     // if geocodingAvailable is not available it means we tested once
                     if (!props.address?.['city'] && geocodingAvailable) {
-                        (async () => {
-                            try {
-                                const service = packageService.localOSMOfflineReverseGeocodingService;
-                                const geometry = item.geometry as GeoJSONPoint;
-                                const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-                                // DEV_LOG && console.log('fetching addresses', !!service, position);
-                                if (service) {
-                                    itemLoading = true;
-                                    const radius = 200;
-                                    // use a promise not to "wait" for it
-                                    const res = await packageService.searchInGeocodingService(service, {
-                                        projection,
-                                        location: position,
-                                        searchRadius: radius
-                                    });
-                                    if (res) {
-                                        let bestFind: GeoResult;
-                                        for (let index = 0; index < res.size(); index++) {
-                                            const r = packageService.convertGeoCodingResult(res.get(index), true);
-
-                                            if (
-                                                r &&
-                                                r.properties.rank > 0.6 &&
-                                                computeDistanceBetween(position, {
-                                                    lat: r.geometry.coordinates[1],
-                                                    lon: r.geometry.coordinates[0]
-                                                }) <= radius
-                                            ) {
-                                                if (!bestFind || Object.keys(r.properties.address).length > Object.keys(bestFind.properties.address).length) {
-                                                    bestFind = r;
-                                                } else if (bestFind && props.address && props.address['street']) {
-                                                    break;
-                                                }
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                        // DEV_LOG && console.log('fetched addresses', bestFind, $selectedItem.geometry === item.geometry);
-                                        if (bestFind && $selectedItem.geometry === item.geometry) {
-                                            $selectedItem.properties.address = { ...bestFind.properties.address, name: null, ...(props.housenumber ? { houseNumber: props.housenumber } : {}) } as any;
-                                            if (bestFind.properties.address.name && !$selectedItem.properties.name) {
-                                                $selectedItem.properties.name = bestFind.properties.address.name;
-                                            }
-                                            setSelectedItem($selectedItem);
-                                        }
-                                    }
-                                } else {
-                                    const results = await getFromLocation(position.lat, position.lon, 10);
-                                    DEV_LOG && console.log('found addresses', results);
-                                    if (results?.length > 0) {
-                                        const result = results[0];
-                                        $selectedItem.properties.address = {
-                                            city: result.locality,
-                                            country: result.country,
-                                            state: result.administrativeArea,
-                                            housenumber: result.subThoroughfare,
-                                            postcode: result.postalCode,
-                                            street: result.thoroughfare
-                                        } as any;
-                                        setSelectedItem($selectedItem);
-                                    }
+                        packageService.getItemAddress(item, projection).then((r) => {
+                            if (r && $selectedItem.geometry === item.geometry) {
+                                $selectedItem.properties.address = r;
+                                if (r.name && !$selectedItem.properties.name) {
+                                    $selectedItem.properties.name = r.name;
                                 }
-                            } catch (error) {
-                                if (__ANDROID__ && /IOException.*UNAVAILABLE$/.test(error.toString())) {
-                                    geocodingAvailable = false;
-                                }
-                                console.error('error fetching address', error, error.stack);
+                                setSelectedItem($selectedItem);
                             }
-                        })();
+                        });
+                        // use a promise not to "wait" for it
+                        // (async () => {
+                        //     try {
+                        //         const service = packageService.localOSMOfflineReverseGeocodingService;
+                        //         const geometry = item.geometry as GeoJSONPoint;
+                        //         const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+                        //         let foundAddress = false;
+                        //         // DEV_LOG && console.log('fetching addresses', !!service, position);
+                        //         if (service) {
+                        //             itemLoading = true;
+                        //             const radius = 200;
+                        //             const res = await packageService.searchInGeocodingService(service, {
+                        //                 projection,
+                        //                 location: position,
+                        //                 searchRadius: radius
+                        //             });
+                        //             if (res) {
+                        //                 let bestFind: GeoResult;
+                        //                 for (let index = 0; index < res.size(); index++) {
+                        //                     const r = packageService.convertGeoCodingResult(res.get(index), true);
+
+                        //                     if (
+                        //                         r &&
+                        //                         r.properties.rank > 0.6 &&
+                        //                         computeDistanceBetween(position, {
+                        //                             lat: r.geometry.coordinates[1],
+                        //                             lon: r.geometry.coordinates[0]
+                        //                         }) <= radius
+                        //                     ) {
+                        //                         if (!bestFind || Object.keys(r.properties.address).length > Object.keys(bestFind.properties.address).length) {
+                        //                             bestFind = r;
+                        //                         } else if (bestFind && props.address && props.address['street']) {
+                        //                             break;
+                        //                         }
+                        //                     } else {
+                        //                         break;
+                        //                     }
+                        //                 }
+                        //                 // DEV_LOG && console.log('fetched addresses', bestFind, $selectedItem.geometry === item.geometry);
+                        //                 if (bestFind && $selectedItem.geometry === item.geometry) {
+                        //                     foundAddress = true;
+                        //                     $selectedItem.properties.address = { ...bestFind.properties.address, name: null, ...(props.housenumber ? { houseNumber: props.housenumber } : {}) } as any;
+                        //                     if (bestFind.properties.address.name && !$selectedItem.properties.name) {
+                        //                         $selectedItem.properties.name = bestFind.properties.address.name;
+                        //                     }
+                        //                     setSelectedItem($selectedItem);
+                        //                 }
+                        //             }
+                        //         }
+                        //         if (!foundAddress) {
+                        //             const results = await getFromLocation(position.lat, position.lon, 10);
+                        //             DEV_LOG && console.log('found addresses', results);
+                        //             if (results?.length > 0) {
+                        //                 const result = results[0];
+                        //                 $selectedItem.properties.address = {
+                        //                     city: result.locality,
+                        //                     country: result.country,
+                        //                     state: result.administrativeArea,
+                        //                     housenumber: result.subThoroughfare,
+                        //                     postcode: result.postalCode,
+                        //                     street: result.thoroughfare
+                        //                 } as any;
+                        //                 setSelectedItem($selectedItem);
+                        //             }
+                        //         }
+                        //     } catch (error) {
+                        //         if (__ANDROID__ && /IOException.*UNAVAILABLE$/.test(error.toString())) {
+                        //             geocodingAvailable = false;
+                        //         }
+                        //         console.error('error fetching address', error, error.stack);
+                        //     }
+                        // })();
                     }
 
                     if (props && 'ele' in props === false && packageService.hasElevation()) {
