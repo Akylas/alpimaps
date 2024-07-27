@@ -5,5 +5,5 @@
 @mont_it: @font_face + ' Medium Italic';
 
 @standard-halo-radius: 2;
-@standard-halo-fill: #f2f5f8;
+@standard-halo-fill: #f2f5f888;
 @wrap_characters: '-_';
