@@ -19,6 +19,8 @@
 
         <item name="bottomSheetDialogTheme">@style/ThemeOverlay.App.BottomSheetDialog</item>
         <item name="android:windowTranslucentStatus">true</item>
+        <!-- <item name="android:navigationBarColor">@color/md_theme_light_background</item>
+        <item name="android:windowLightNavigationBar">true</item> -->
         <item name="android:windowActionBarOverlay">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
     </style>
