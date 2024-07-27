@@ -7,6 +7,9 @@
 @lineColor: [color] ? [color] : [nuti::main_darker_color];
 @editing_dash: 12, 8;
 @non_editing_dash: none;
+
+@itemContrastColor: brightness(color([style.color] ? [style.color]:@itemColor)) > 140 ? #33333388 : #f2f5f888;
+
 #items['mapnik::geometry_type'=2] {
     ['nuti::hide_unselected'=0] {
         when ([nuti::selected_id] !=[id]) {
@@ -39,24 +42,26 @@
         line-cap: round;
         line-color: @lineColor;
         line-width: @bicycle_line_width + 2;
+        ['nuti::hide_unselected'=1] {
+            line-width: @bicycle_line_width + 7;
+        }
 
         ['nuti::hide_unselected'=0] {
             back/line-opacity: linear([view::zoom], (13, 1), (15, 0.5), (18, 0.3));
             line-opacity: linear([view::zoom], (13, 1), (15, 0.5), (18, 0.3));
-        }
-        ['nuti::hide_unselected'=0][zoom>=14] {
-            marker-placement: line;
-            marker-type: arrow;
-            marker-line-width: 1;
-            marker-allow-overlap: true;
-            marker-width: 14;
-            marker-height: 9;
-            marker-spacing: 50;
-            marker-fill: white;
-            marker-line-color: @lineColor;
-        }
-        
 
+            [zoom>=14] {
+                marker-placement: line;
+                marker-type: arrow;
+                marker-line-width: 1;
+                marker-allow-overlap: true;
+                marker-width: 14;
+                marker-height: 9;
+                marker-spacing: 50;
+                marker-fill: white;
+                marker-line-color: @lineColor;
+            }
+        }
         // [class=pedestrian] {
         //     back/line-width: @pedestrian_line_width+ 8;
         //     line-width: @pedestrian_line_width+ 4;
@@ -72,7 +77,7 @@
         text-clip: false;
         text-face-name: [style.mapFontFamily] ? [style.mapFontFamily] : 'osm';
         text-size: linear([view::zoom], (10, 10), (16, 10), (18, 12))+ ([style.iconSize] ? [style.iconSize]: 10);
-        text-halo-fill: @standard-halo-fill;
+        text-halo-fill: @itemContrastColor;
         text-halo-radius: @standard-halo-radius;
         text-horizontal-alignment: [style.horizontalAlignment] ? [style.horizontalAlignment] : middle;
         text-vertical-alignment: [style.verticalAlignment] ? [style.verticalAlignment] : bottom;

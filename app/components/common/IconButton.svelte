@@ -79,6 +79,7 @@
         bind:this={canvas}
         borderRadius={shape === 'round' || (rounded && !shape) ? '50%' : null}
         disableCss={true}
+        isUserInteractionEnabled={isEnabled}
         rippleColor={actualColor}
         visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapse'}
         on:draw={onCanvasDraw}
