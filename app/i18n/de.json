@@ -3,7 +3,7 @@
     "api_key": "API-Schlüssel",
     "N": "N",
     "WNE": "WNO",
-    "alley_factor": "Faktor für Gassen (Sanktion)",
+    "alley_factor": "Faktor, der für schmale Gassen angewendet wird (Sanktion)",
     "app": {
         "name": "Alpi Maps"
     },
@@ -478,5 +478,9 @@
     "start_direction_dest": "Weganweisungen mit dem Zielpunkt beginnen",
     "street": "Straße",
     "tap_to_open": "AlpiMaps zeichnet deinen Standort auf. Tippe, um es zu öffnen.",
-    "use_roads": "Soll Straßen benutzen"
+    "use_roads": "Soll Straßen benutzen",
+    "service_factor": "Faktor, der für Dienst-Straßen angewendet wird (Sanktion)",
+    "service_penalty": "Sanktion, die für Dienststraßen angewendet wird",
+    "non_network_penalty": "Faktor, der für Straßen außerhalb Radwegen angewendet wird (Sanktion)",
+    "sidewalk_factor": "Faktor, der für Gehsteige angewendet wird (Sanktion)"
 }
