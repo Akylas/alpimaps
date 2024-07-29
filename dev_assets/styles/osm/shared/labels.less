@@ -6,7 +6,7 @@
 #landcover_name[class!=ice],
 #landuse_name
 {
-	// ::label {
+	::label {
 		text-name: @name;
 		text-face-name: @mont_it;
 		text-fill: @hamlet_label;
@@ -30,24 +30,25 @@
 			text-halo-fill: @standard-halo-fill;
 			text-halo-radius: @place_halo_radius;
 		}
-	// }
+	}
 }
 
 #water_name[class=ocean][zoom<=9],
 #water_name[class=sea][zoom>=2][zoom<=11] {
-	text-name: @name;
-	text-face-name: @mont_it;
-	text-wrap-width: 50;
-	text-fill: @marine_labels;
-	text-placement: [nuti::texts3d];
-	text-halo-fill: @marine_labels_halo;
-	text-halo-radius: @marine_labels_halo_radius;
-	text-line-spacing: -2;
-	text-size:@marine_labels_size;
-	[class=ocean] {
-		text-size:@ocean_labels_size;
+	::label {
+		text-name: @name;
+		text-face-name: @mont_it;
+		text-wrap-width: 50;
+		text-fill: @marine_labels;
+		text-placement: [nuti::texts3d];
+		text-halo-fill: @marine_labels_halo;
+		text-halo-radius: @marine_labels_halo_radius;
+		text-line-spacing: -2;
+		text-size:@marine_labels_size;
+		[class=ocean] {
+			text-size:@ocean_labels_size;
+		}
 	}
-
 }
 #boundary['mapnik::geometry_type'=1]['nuti::hide_admins'=0]::label {
 	[admin_level=4][zoom>=5][zoom<=8], [admin_level=6][zoom>=8][zoom<=10]{
@@ -253,17 +254,18 @@
 
 #water_name[class!=river][class!=ocean][class!=sea],
 #landcover_name[class=ice]{
-	text-name: @name;
-	text-face-name: @mont_it;
-	text-fill: @water_label;
-	[class=ice] {
-		text-fill: @glacier_label;
+	::label {
+		text-name: @name;
+		text-face-name: @mont_it;
+		text-fill: @water_label;
+		[class=ice] {
+			text-fill: @glacier_label;
+		}
+		text-halo-fill: @water_halo;
+		text-halo-radius: @water_halo_radius;
+		text-size: @glacier_label_width;
+		text-wrap-width: @glacier_label_wrap_width;
 	}
-	text-halo-fill: @water_halo;
-	text-halo-radius: @water_halo_radius;
-	text-size: @glacier_label_width;
-	text-wrap-width: @glacier_label_wrap_width;
-	
 }
 
 #waterway[class=riverbank][zoom>=13],
@@ -272,7 +274,7 @@
 #waterway[class=canal][zoom>=13],
 #waterway[class=ditch][zoom>=15],
 #waterway[class=drain][zoom>=15]{
-	// ::label {
+	::label {
 		text-name: @name;
 		text-face-name: @mont_md;
 		[class=dam][class=weir] {
@@ -291,11 +293,11 @@
 		[class=river] {
 			text-size: @river_text_width;
 		}
-	// }
+	}
 }
 #transportation['mapnik::geometry_type'=3][name!=null] {
 	[brunnel=bridge][zoom>=14],[zoom>=16] {
-		// ::label {
+		::label {
 			text-name: @name;
 			text-face-name: @mont_md;
 			text-fill: @building_label;
@@ -304,7 +306,7 @@
 			text-wrap-width:@suburb-label-wrap-width;
 			text-halo-fill: @place_halo;
 			text-halo-radius: @place_halo_radius;
-		// }
+		}
 	}
 }
 
@@ -658,15 +660,20 @@
 	text-size: linear([view::zoom], (16, 6.0), (18, 8.0), (20, 10));
 	text-min-distance: linear([view::zoom], (16, 100), (17, 50), (18, 20));
 }
-#housenumber[zoom>=17]{
+#housenumber[zoom>=17]::label{
 	text-name: [housenumber];
 	text-face-name: @mont;
 	text-fill: @housename;
 	text-size: linear([view::zoom], (17, 9), (19, 11));
-	// text-avoid-edges: true;
-	// text-allow-overlap: true;
-	// text-clip: false;
+	text-allow-overlap-same-feature-id: true; // needed because housenumber use MultiPoint and thus some can share the same id
 	text-min-distance: linear([view::zoom], (17, 50), (18, 30), (19, 20));
+	
+	// text-avoid-edges: true;
+	[zoom>=19] {
+
+		text-allow-overlap: true;
+		text-clip: false;
+	}
 }
 
 #aerodrome_label[zoom>=15]::label {
