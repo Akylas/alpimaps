@@ -942,7 +942,7 @@
                         text="mdi-web"
                         tooltip={lc('search_web')}
                         on:tap={() => searchWeb()} />
-                    <IconButton isVisible={item && item.properties && !!item.properties.name} rounded={false} text="mdi-wikipedia" tooltip={lc('wikipedia')} on:tap={openWikipedia} />
+                    <IconButton isVisible={!itemIsRoute && item && item.properties && !!item.properties.name} rounded={false} text="mdi-wikipedia" tooltip={lc('wikipedia')} on:tap={openWikipedia} />
                     {#if networkService.canCheckWeather}
                         <IconButton isVisible={!itemIsRoute} rounded={false} text="mdi-weather-partly-cloudy" tooltip={lc('weather')} on:tap={checkWeather} />
                     {/if}
