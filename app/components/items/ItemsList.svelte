@@ -273,10 +273,13 @@ LEFT JOIN  (
     }
 
     function showItemOnMap(item: Item) {
+        DEV_LOG && console.log('showItemOnMap', item.onMap);
         if (item.onMap) {
             itemsModule.hideItem(item);
+            item.onMap = 0;
         } else {
             itemsModule.showItem(item);
+            item.onMap = 1;
         }
         item.onMap = item.onMap ? 0 : 1;
         const index = items.indexOf(item);
@@ -655,28 +658,29 @@ LEFT JOIN  (
                     id: 'edit'
                 });
             }
-            const result = await showPopoverMenu({
+            await showPopoverMenu({
                 options: actions,
                 anchor: event.object,
-                vertPos: VerticalPosition.BELOW
-            });
-
-            if (result) {
-                switch (result.id) {
-                    case 'delete':
-                        deleteItem(item);
-                        break;
-                    case 'show_hide_on_map':
-                        showItemOnMap(item);
-                        break;
-                    case 'share':
-                        await getMapContext().mapModule('items').shareItemsAsGeoJSON([item]);
-                        break;
-                    case 'edit':
-                        startEditingItem(item);
-                        break;
+                vertPos: VerticalPosition.BELOW,
+                onClose: async (result) => {
+                    if (result) {
+                        switch (result.id) {
+                            case 'delete':
+                                deleteItem(item);
+                                break;
+                            case 'show_hide_on_map':
+                                showItemOnMap(item);
+                                break;
+                            case 'share':
+                                await getMapContext().mapModule('items').shareItemsAsGeoJSON([item]);
+                                break;
+                            case 'edit':
+                                startEditingItem(item);
+                                break;
+                        }
+                    }
                 }
-            }
+            });
         } catch (err) {
             showError(err);
         }
@@ -781,7 +785,6 @@ LEFT JOIN  (
                     showIcon={false}
                     subtitleEnabled={false}
                     titleVerticalTextAlignment="middle"
-                    prop:mainContent
                     on:tap={(e) => onItemTap(item, e)}
                     on:longPress={(e) => onItemLongPress(item, e)}>
                     <image borderRadius={8} disableCss={true} height={50} horizontalAlignment="left" marginTop={6} src={item.image_path} stretch="aspectFill" verticalAlignment="top" width={50} />
@@ -798,7 +801,6 @@ LEFT JOIN  (
                     height={80}
                     {item}
                     opacity={(item.onMap && item.groupOnMap) || 0.6}
-                    prop:mainContent
                     rippleColor={colorPrimary}
                     on:tap={(e) => onItemTap(item, e)}
                     on:longPress={(e) => onItemLongPress(item, e)}>
