@@ -53,6 +53,7 @@ export abstract class BgServiceCommon extends Observable {
     protected _handlerLoaded() {
         if (!this._loaded) {
             this._loaded = true;
+            // eslint-disable-next-line @typescript-eslint/no-this-alias
             mSharedInstance = this;
             onServiceLoadedListeners.forEach((l) => l(this.geoHandler));
             onServiceLoadedListeners = [];
