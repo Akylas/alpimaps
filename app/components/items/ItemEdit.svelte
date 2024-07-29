@@ -24,7 +24,7 @@
     import IconButton from '../common/IconButton.svelte';
     import TagView from '../common/TagView.svelte';
 
-    $: ({ colorSurfaceContainerHigh, colorOnSurfaceVariant, colorPrimary, colorOnPrimary } = $colors);
+    $: ({ colorBackground, colorSurfaceContainerHigh, colorOnSurfaceVariant, colorPrimary, colorOnPrimary } = $colors);
     $: ({ bottom: windowInsetBottom } = $windowInset);
     export let item: Item;
     let itemColor: string;
@@ -428,7 +428,7 @@
         {#if !itemIsRoute}
             <gridlayout columns="auto,auto,auto" height={50} horizontalAlignment="left" margin={5} row={1} verticalAlignment="bottom">
                 <label
-                    backgroundColor={colorSurfaceContainerHigh}
+                    backgroundColor={colorBackground}
                     borderColor={colorOnSurfaceVariant}
                     borderRadius={4}
                     borderWidth={1}
@@ -447,7 +447,7 @@
                     <cspan fontSize={12} text={'\n' + lc('marker')} />
                 </label>
                 <label
-                    backgroundColor={colorSurfaceContainerHigh}
+                    backgroundColor={colorBackground}
                     borderColor={colorOnSurfaceVariant}
                     borderRadius={4}
                     borderWidth={1}
@@ -467,7 +467,7 @@
                     <cspan fontSize={12} text={'\n' + lc('osm')} />
                 </label>
                 <label
-                    backgroundColor={colorSurfaceContainerHigh}
+                    backgroundColor={colorBackground}
                     borderColor={colorOnSurfaceVariant}
                     borderRadius={4}
                     borderWidth={1}
