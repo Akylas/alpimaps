@@ -2,7 +2,6 @@
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { Utils } from '@nativescript/core';
-    import { createEventDispatcher } from '~/utils/svelte/ui';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { UNITS, convertDurationSeconds, convertElevation, convertValueToUnit, openingHoursText, osmicon } from '~/helpers/formatter';
     import { onMapLanguageChanged } from '~/helpers/locale';
@@ -22,7 +21,6 @@
 
 <script lang="ts">
     $: ({ colorOnSurface, colorOnSurfaceVariant } = $colors);
-    const dispatch = createEventDispatcher();
     export let item: Item;
     export let symbolSize = 34;
     export let subtitleEnabled = true;
