@@ -38,7 +38,7 @@ export class BgService extends BgServiceCommon {
     }
 
     async start() {
-        const intent = new Intent(this.context, akylas.alpi.maps.BgService.class);
+        const intent = new Intent(this.context, java.lang.Class.forName(__APP_ID__ + '.BgService'));
         this.bindService(this.context, intent);
     }
 
@@ -46,7 +46,7 @@ export class BgService extends BgServiceCommon {
         await super.stop();
         if (this.bgService) {
             (this.bgService as any).get().removeForeground();
-            const intent = new Intent(this.context, akylas.alpi.maps.BgService.class);
+            const intent = new Intent(this.context, java.lang.Class.forName(__APP_ID__ + '.BgService'));
             this.context.stopService(intent);
             this.context.unbindService(this.serviceConnection);
             this._loaded = false;
