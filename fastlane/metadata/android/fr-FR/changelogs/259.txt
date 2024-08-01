@@ -1,0 +1,14 @@
+### Features
+- download area is now working (in layer option menu). Added a new button to force a layer to only use cache data
+
+### Bug fixes
+- route thumbnail fix
+- multiple item edit fixes
+- multiple routes compute: add default settings route
+- hide wikipedia button for routes
+- action menu in items list not working
+- style improvements
+- faster item selection on map
+- long press on directions "search" will force only compute
+- better saving of map position upon restart
+- allow to change conto
