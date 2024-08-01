@@ -7,13 +7,10 @@
 
 /* 3.NATURAL */
 /* 3.1 Main natural */
-@contour_inner:#226600;
-@contour: fadeout(@contour_inner, 0.6);
+@contour_color:#226600;
 @contour_width: linear([view::zoom], (16, 0.6), (22, 1.6));
-@contour_low: fadeout(@contour_inner, 0.8);
-@contour_semi: step([view::zoom], (12, @contour_low), (14,@contour));
-@contour_label: @contour_inner;
-@contour_halo: #ffffff88;
+@contour_label: @contour_color;
+@contour_halo: @standard-halo-fill;
 @contour_halo_radius: 1;
 
 @contour_semi_opacity:0.2 ;

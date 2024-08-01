@@ -46,15 +46,12 @@
         "orchard_pattern":"symbols/orchard.png"
     },
     "nutiparameters": {
-        "font_face": "Noto Sans",
-        "motorway_casing_start_zoom": 9,
         "hide_admins": 0,
         "lang": "en",
-        "zoomBiais": 0,
         "selected_id": "",
         "buildings": 1,
         "contours": 1,
-        "contoursOpacity": 1.0,
+        "contoursOpacity": 0.45,
         "fallback_lang": "en",
         "texts3d": {
             "default": "nutibillboard",
