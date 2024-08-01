@@ -103,7 +103,7 @@ module.exports = (env, params = {}) => {
         busSupport = true,
         apiKeys = true,
         playStoreBuild = !!process.env['PLAY_STORE_BUILD'],
-        keep_classnames_functionnames = false,
+        keep_classnames_functionnames = true,
         testZipStyles = false,
         accessibility = true,
         locale = 'auto',
@@ -911,7 +911,7 @@ module.exports = (env, params = {}) => {
     config.resolve.fallback = config.resolve.fallback || {};
     config.optimization.minimize = uglify !== undefined ? !!uglify : production;
     const isAnySourceMapEnabled = !!sourceMap || !!hiddenSourceMap || !!inlineSourceMap;
-    const actual_keep_classnames_functionnames = keep_classnames_functionnames || platform !== 'android';
+    const actual_keep_classnames_functionnames = keep_classnames_functionnames;
     config.optimization.usedExports = true;
     config.optimization.minimizer = [
         new TerserPlugin({
