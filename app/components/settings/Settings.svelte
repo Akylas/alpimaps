@@ -6,7 +6,6 @@
     import { openFilePicker, pickFolder, saveFile } from '@nativescript-community/ui-document-picker';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-    import { showSnack } from '~/utils/ui';
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { TextView } from '@nativescript-community/ui-material-textview';
     import { ApplicationSettings, File, Folder, ObservableArray, ScrollView, StackLayout, Utils, View, path } from '@nativescript/core';
@@ -18,14 +17,16 @@
     import { getThemeDisplayName, onThemeChanged, selectTheme } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
+    import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { showError } from '~/utils/error';
+    import { Sentry } from '~/utils/sentry';
     import { share } from '~/utils/share';
+    import { showSnack } from '~/utils/ui';
     import { createView, hideLoading, openLink, showAlertOptionSelect, showLoading } from '~/utils/ui/index.common';
     import { ANDROID_30, getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, moveFileOrFolder, resetItemsDataFolder, restartApp, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';
     import { colors, fonts, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
-    import { Sentry } from '~/utils/sentry';
     $: ({ colorOnSurfaceVariant, colorOutlineVariant } = $colors);
     $: ({ bottom: windowInsetBottom } = $windowInset);
 
@@ -599,7 +600,7 @@
                         const result = await showAlertOptionSelect(
                             OptionSelect,
                             {
-                                height: Math.min(options.length * 56, 400),
+                                height: Math.min(options.length * 56, ALERT_OPTION_MAX_HEIGHT),
                                 rowHeight: 56,
                                 selectedIndex,
                                 options

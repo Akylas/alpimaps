@@ -1,15 +1,16 @@
 import Theme from '@nativescript-community/css-theme';
-import { Application, ApplicationSettings, Device, EventData, SystemAppearanceChangedEventData, Utils } from '@nativescript/core';
+import { closePopover } from '@nativescript-community/ui-popover/svelte';
+import { Application, ApplicationSettings, SystemAppearanceChangedEventData, Utils } from '@nativescript/core';
 import { getBoolean, getString, setString } from '@nativescript/core/application-settings';
+import { SDK_VERSION } from '@nativescript/core/utils';
+import { get, writable } from 'svelte/store';
+import { lc } from '~/helpers/locale';
 import { prefs } from '~/services/preferences';
+import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
 import { showError } from '~/utils/error';
 import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
-import { updateThemeColors } from '~/variables';
-import { lc } from '~/helpers/locale';
-import { get, writable } from 'svelte/store';
-import { SDK_VERSION } from '@nativescript/core/utils';
 import { showAlertOptionSelect } from '~/utils/ui';
-import { closePopover } from '@nativescript-community/ui-popover/svelte';
+import { updateThemeColors } from '~/variables';
 
 export type Themes = 'auto' | 'light' | 'dark' | 'black' | 'eink';
 
@@ -68,7 +69,7 @@ export async function selectTheme() {
         const result = await showAlertOptionSelect(
             component,
             {
-                height: Math.min(actions.length * 56, 400),
+                height: Math.min(actions.length * 56, ALERT_OPTION_MAX_HEIGHT),
                 rowHeight: 56,
                 options: actions
                     .map((k) => ({ name: getThemeDisplayName(k), data: k }))

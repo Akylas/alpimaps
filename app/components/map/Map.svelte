@@ -74,9 +74,10 @@
     import { navigate } from '~/utils/svelte/ui';
     import { hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu } from '~/utils/ui';
     import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, setTimeout } from '~/utils/utils';
-    import { colors, windowInset } from '../../variables';
+    import { colors, screenHeightDips, windowInset } from '../../variables';
     import dayjs from 'dayjs';
     import { request } from '@nativescript-community/perms';
+    import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
 
     $: ({ colorPrimary, colorError, colorBackground } = $colors);
     $: ({ top: windowInsetTop, bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight } = $windowInset);
@@ -1398,25 +1399,26 @@
                 styles.push(
                     ...subs
                         .filter((s) => s.name.endsWith('.json') || s.name.endsWith('.xml'))
-                        .map((s) => ({ name: s.name.split('.')[0] + '/' + e.name.toUpperCase(), data: e.name + '~' + s.name.split('.')[0] }))
+                        .map((s) => ({ name: s.name.split('.')[0], subtitle: e.name.toUpperCase(), data: e.name + '~' + s.name.split('.')[0] }))
                 );
             } else {
                 try {
                     const assetsNames = nativeVectorToArray(new ZippedAssetPackage({ zipPath: e.path }).getAssetNames());
-                    DEV_LOG && console.log('assetsNames', assetsNames);
-                    styles.push(...assetsNames.filter((s) => s.endsWith('.xml')).map((s) => ({ name: s.split('.')[0] + '/' + e.name.toUpperCase(), data: e.name + '~' + s.split('.')[0] })));
+                    // DEV_LOG && console.log('assetsNames', assetsNames);
+                    styles.push(...assetsNames.filter((s) => s.endsWith('.xml')).map((s) => ({ name: s.split('.')[0], subtitle: e.name.toUpperCase(), data: e.name + '~' + s.split('.')[0] })));
                 } catch (error) {
                     console.error(error, error.stack);
                 }
             }
         }
 
+        DEV_LOG && console.log('selectStyle', screenHeightDips, ALERT_OPTION_MAX_HEIGHT);
         const actions = styles;
         const component = (await import('~/components/common/OptionSelect.svelte')).default;
         const result = await showAlertOptionSelect(
             component,
             {
-                height: Math.min(actions.length * 56, 400),
+                height: Math.min(actions.length * 56, ALERT_OPTION_MAX_HEIGHT),
                 rowHeight: 56,
                 options: actions.map((d) => ({
                     ...d,
