@@ -2,7 +2,7 @@ import { AlertOptions, Color } from '@nativescript/core';
 import { lc } from '@nativescript-community/l';
 import { Label } from '@nativescript-community/ui-label';
 import { MDCAlertControlerOptions, confirm, alert as mdAlert } from '@nativescript-community/ui-material-dialogs';
-import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { showSnack } from '~/utils/ui';
 import { BaseError } from 'make-error';
 import { l } from '~/helpers/locale';
 import { Sentry, isSentryEnabled } from '~/utils/sentry';
