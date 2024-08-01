@@ -710,16 +710,16 @@
         if (!cartoMap) {
             return;
         }
+        if (mapMoved) {
+            mapMoved = false;
+            saveSettings();
+        }
         mapContext.runOnModules('onMapIdle', e);
     }
     function onMainMapStable(e) {
         // DEV_LOG && console.log('onMainMapStable', mapMoved);
         if (!cartoMap) {
             return;
-        }
-        if (mapMoved) {
-            mapMoved = false;
-            saveSettings();
         }
         mapContext.runOnModules('onMapStable', e);
     }
