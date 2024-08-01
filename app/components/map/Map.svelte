@@ -19,7 +19,7 @@
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
     import { closeBottomSheet, isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { action, prompt } from '@nativescript-community/ui-material-dialogs';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
+    import { showSnack } from '~/utils/ui';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
