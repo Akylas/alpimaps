@@ -686,7 +686,7 @@
         }
     }
 
-    async function computeAndAddRoute(optionsWithStyle: { [k: string]: any; style?: any } = {}) {
+    async function computeAndAddRoute(forceOnline: boolean, optionsWithStyle: { [k: string]: any; style?: any } = {}) {
         if (waypoints.length <= 1) {
             return;
         }
@@ -736,14 +736,16 @@
                 }
             });
 
-            const service: MultiValhallaOfflineRoutingService | ValhallaOnlineRoutingService = packageService.offlineRoutingSearchService() || packageService.onlineRoutingSearchService();
+            const service: MultiValhallaOfflineRoutingService | ValhallaOnlineRoutingService = forceOnline
+                ? packageService.onlineRoutingSearchService()
+                : packageService.offlineRoutingSearchService() || packageService.onlineRoutingSearchService();
             let startTime = Date.now();
             const projection = mapContext.getProjection();
             const customOptions = {
                 directions_options: { language: Device.language },
                 costing_options
             };
-            DEV_LOG && console.log('calculateRoute', profile, JSON.stringify(points), JSON.stringify(customOptions));
+            DEV_LOG && console.log('calculateRoute', forceOnline, profile, JSON.stringify(points), JSON.stringify(customOptions));
             try {
                 const result = await service.calculateRoute<LatLonKeys>(
                     {
@@ -834,7 +836,7 @@
             return item as ItemFeature;
         }
     }
-    async function computeRoutes() {
+    async function computeRoutes(forceOnline = false) {
         try {
             loading = true;
             clearCurrentRoutes(false);
@@ -845,7 +847,7 @@
                 if (profile === 'bicycle') {
                     options = [
                         {},
-                        { shortest: true, style: { color: '#5994e0' }},
+                        { shortest: true, style: { color: '#5994e0' } },
                         { avoid_bad_surfaces: 1, use_hills: 1, use_roads: 1, non_network_penalty: 0, style: { color: '#AD5FC4' } },
                         { avoid_bad_surfaces: 1, use_hills: 0, use_roads: 1, non_network_penalty: 25, style: { color: '#5FC476' } },
                         { avoid_bad_surfaces: 1, use_hills: 1, use_roads: 0, non_network_penalty: 50, style: { color: '#C49F5F' } }
@@ -854,7 +856,7 @@
                     options = [
                         {},
                         //shortest
-                        { shortest: true, style: { color: '#5994e0' }},
+                        { shortest: true, style: { color: '#5994e0' } },
                         // very steep
                         { use_roads: 0, use_hills: 1, style: { color: '#AD5FC4' } },
                         // least steep
@@ -863,18 +865,18 @@
                 } else {
                     options = [
                         {},
-                        { shortest: true, style: { color: '#5994e0' }},
+                        { shortest: true, style: { color: '#5994e0' } },
                         { shortest: false, use_tolls: 1, use_highways: 1, style: { color: '#AD5FC4' } },
                         { shortest: false, use_tolls: 0, use_highways: 1, style: { color: '#5FC476' } },
-                        { shortest: false, use_highways: 0, style: { color: '#C49F5F' }}
+                        { shortest: false, use_highways: 0, style: { color: '#C49F5F' } }
                     ];
                 }
-                const results = await Promise.all(options.map(computeAndAddRoute));
+                const results = await Promise.all(options.map((opts) => computeAndAddRoute(forceOnline, opts)));
                 itemToFocus = results.reduce(function (prev, current) {
                     return prev?.route?.totalTime > current?.route?.totalTime ? current : prev;
                 });
             } else {
-                itemToFocus = await computeAndAddRoute();
+                itemToFocus = await computeAndAddRoute(forceOnline);
             }
             setLayerGeoJSONString();
             if (itemToFocus) {
@@ -1203,7 +1205,8 @@
                 selectedColor={colorPrimary}
                 size={40}
                 text="mdi-magnify"
-                on:tap={() => computeRoutes()} />
+                on:tap={() => computeRoutes()}
+                on:longPress={() => computeRoutes(true)} />
             <mdactivityindicator busy={true} colSpan={2} color={buttonsColor} height={40} horizontalAlignment="right" visibility={loading ? 'visible' : 'hidden'} width={40} />
             <collectionview
                 bind:this={collectionView}
