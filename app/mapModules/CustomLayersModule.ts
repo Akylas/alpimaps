@@ -1195,7 +1195,7 @@ export default class CustomLayersModule extends MapModule {
             }
             return false;
         });
-        // console.log('deleteSource', name, index);
+        DEV_LOG && console.log('deleteSource', name, index);
         if (index !== -1) {
             mapContext.removeLayer(this.customSources.getItem(index).layer, 'customLayers');
             this.customSources.splice(index, 1);
@@ -1208,7 +1208,7 @@ export default class CustomLayersModule extends MapModule {
             savedSources.splice(index, 1);
 
             ApplicationSettings.setString('added_providers', JSON.stringify(savedSources));
-            if (savedSources.length === 0) {
+            if (this.customSources.length === 0 && savedSources.length === 0) {
                 const provider = this.baseProviders['openstreetmap'];
                 const data = await this.createDataSourceAndMapLayer(provider.id, provider);
                 this.addDataSource(data);
