@@ -32,6 +32,8 @@
         "cemetery_pattern_opacity":0.51,
         "cemetery_pattern":"symbols/grave_yard_generic.svg"
     },
-    
+    "nutiparameters": {
+        "contoursOpacity": 0.85
+    },
     "name": "outdoors"
 }

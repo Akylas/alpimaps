@@ -8,13 +8,21 @@
 
 @background: #e6e4e0;
 
+@standard-halo-radius: 2;
+@standard-halo-fill: #f2f5f888;
+
+
 @river-width: linear([view::zoom], (8, 0.5), (15, 2), (16, 4));
 @canal_width: linear([view::zoom], (13, 0.7), (14, 1), (15, 1.6));
 @stream-width: linear([view::zoom], (13, 0.7), (14, 1), (15, 1.6));
 
 @protected_area_line_width:linear([view::zoom], (9, 0.75), (12, 1), (15, 1), (18, 3));
 
-@contour_label_size: linear([view::zoom], (12, 5), (16, 8), (20, 9));
+@contour_opacity: 0.45;
+@contour_opacity_low: @contour_opacity * 0.75;
+@contour_opacity_semi: linear([view::zoom], (12, @contour_opacity_low), (14, @contour_opacity));
+
+@contour_label_size: linear([view::zoom], (12, 7), (16, 8), (20, 9));
 @park_font_size:linear([view::zoom], (12, 12), (14, 12));
 @protected_area_font_size:@park_font_size;
 @marine_labels_size: linear([view::zoom], (1, 11),  (2, 13), (5, 14));
