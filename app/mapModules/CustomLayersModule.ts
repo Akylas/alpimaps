@@ -1186,6 +1186,11 @@ export default class CustomLayersModule extends MapModule {
         }
     }
     async deleteSource(item: SourceItem) {
+        const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
+        if (this.customSources.length === 0 && savedSources.length === 1) {
+            showSnack({ message: lc('cant_delete_last_layer') });
+            return;
+        }
         let index = -1;
         const name = this.getSourceItemId(item);
         this.customSources.some((d, i) => {
@@ -1201,12 +1206,10 @@ export default class CustomLayersModule extends MapModule {
             this.customSources.splice(index, 1);
             this.updateAttribution(item, true);
         }
-        const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
         index = savedSources.findIndex((s) => (typeof s === 'string' ? s : s?.id) === name);
         ApplicationSettings.remove(name + '_opacity');
         if (index !== -1) {
             savedSources.splice(index, 1);
-
             ApplicationSettings.setString('added_providers', JSON.stringify(savedSources));
             if (this.customSources.length === 0 && savedSources.length === 0) {
                 const provider = this.baseProviders['openstreetmap'];
