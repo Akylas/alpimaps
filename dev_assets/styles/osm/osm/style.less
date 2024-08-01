@@ -1,21 +1,11 @@
 
-@background: #e6e4e0;
-
-
-@standard-halo-radius: 2;
-@standard-halo-fill: #f2f5f888;
-
-
 @border_country: #787b8c;
 @border_country_opacity: 1;
 @border_region: linear([view::zoom], (11, #787b8c), (13, #787b8c77), (14, #787b8c00));
 
-@contour_inner:#226600;
-@contour: fadeout(@contour_inner, 0.6);
+@contour_color:#226600;
 @contour_width: linear([view::zoom], (16, 0.6), (22, 1.6));
-@contour_low: fadeout(@contour_inner, 0.8);
-@contour_semi: step([view::zoom], (12, @contour_low), (14,@contour));
-@contour_label: @contour_inner;
+@contour_label: @contour_color;
 @contour_halo: @standard-halo-fill;
 @contour_halo_radius: 1;
 
@@ -39,7 +29,7 @@
 
 
 @protected-area: #09330c;
-@protected-area_halo: #ffffff88;
+@protected-area_halo: @standard-halo-fill;
 @aboriginal_label: #82643a;
 
 @grass: linear([view::zoom], (6, fadeout(#cdebb0, 0.7)), (12,#cdebb0));
@@ -263,7 +253,7 @@
 @stream-width: @canal_width;
 
 @park_label: #3a7921;
-@halo_park_label: rgba(255, 255, 255, 0.45);
+@halo_park_label: @standard-halo-radius;
 
 @peak_icon_fill: #ae874d;
 @peak_label: #684a1e;

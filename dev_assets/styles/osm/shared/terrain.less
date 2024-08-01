@@ -109,25 +109,27 @@
 	}
 }
 
-#contour['nuti::contours'>0][zoom>=12][ele>0] {
-
+#contour {
 	[div=10][zoom>=14],
 	[div=20][zoom>=14] {
-		line-color: @contour_low;
+		line-color: @contour_color;
+		line-opacity: @contour_opacity_low;
 		line-width: @contour_width ;
 	}
 
 	[div=100][zoom>=12],
 	[div=200][zoom>=12],
 	[div=50][zoom>=13] {
-		line-color: @contour_semi;
+		line-color: @contour_color;
+		line-opacity: @contour_opacity_semi;
 		line-width: @contour_width;
 	}
 
 	[div=1000][zoom>=12],
 	[div=500][zoom>=12],
 	[div=250][zoom>=13][zoom<14] {
-		line-color: @contour;
+		line-color: @contour_color;
+		line-opacity: @contour_opacity;
 		line-width: @contour_width ;
 	}
 
