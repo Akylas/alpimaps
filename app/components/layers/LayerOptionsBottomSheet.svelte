@@ -2,9 +2,8 @@
     import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
     import { HillshadeRasterTileLayer, RasterTileFilterMode, RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { action } from '@nativescript-community/ui-material-dialogs';
-    import { Color, File } from '@nativescript/core';
-    import { setNumber, setString } from '@nativescript/core/application-settings';
+    import { action, confirm } from '@nativescript-community/ui-material-dialogs';
+    import { ApplicationSettings, Color, File, StackLayout } from '@nativescript/core';
     import { onMount } from 'svelte';
     import { formatSize } from '~/helpers/formatter';
     import { lc } from '~/helpers/locale';
@@ -14,12 +13,20 @@
     import { pickColor } from '~/utils/utils';
     import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
+    import { createView } from '~/utils/ui';
     $: ({ colorBackground, colorOnSurfaceVariant, colorOutlineVariant, colorError } = $colors);
+    import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
+    import type SettingsSlider__SvelteComponent_ from '~/components/settings/SettingsSlider.svelte';
 
     const mapContext = getMapContext();
     let scrollView;
     const devMode = mapContext.mapModule('customLayers').devMode;
     export let item: SourceItem;
+
+    $: downloadable = item.provider.downloadable || !PRODUCTION || this.devMode;
+    $: cacheable = item.provider.cacheable || !PRODUCTION;
+    $: persistent = item.layer.dataSource instanceof PersistentCacheTileDataSource;
+    $: cacheOnlyMode = persistent && (item.layer.dataSource as PersistentCacheTileDataSource).cacheOnlyMode;
     let options: {
         [k: string]: {
             type?: string;
@@ -49,7 +56,7 @@
     }
     function onOptionChanged(name, event) {
         let newValue = (event.value || 0) / 100;
-        setNumber(`${item.name}_${name}`, newValue);
+        ApplicationSettings.setNumber(`${item.name}_${name}`, newValue);
         options[name].value = newValue;
         if (options[name].transform) {
             newValue = options[name].transform(newValue);
@@ -62,7 +69,7 @@
             if (!newColor) {
                 return;
             }
-            setString(`${item.name}_${name}`, newColor.hex);
+            ApplicationSettings.setString(`${item.name}_${name}`, newColor.hex);
             options[name].value = newColor.hex;
             item.layer[name] = newColor;
         } catch (err) {
@@ -70,54 +77,119 @@
         }
     }
     async function handleAction(act: string) {
-        const customLayers = mapContext.mapModule('customLayers');
-        switch (act) {
-            case 'delete': {
-                customLayers.deleteSource(item);
-                break;
-            }
-            case 'clear_cache': {
-                const layer = item.layer as any;
-                const dataSource = layer.dataSource;
-                if (dataSource instanceof PersistentCacheTileDataSource) {
-                    dataSource.clear();
+        try {
+            DEV_LOG && console.log('handleAction', act);
+            const customLayers = mapContext.mapModule('customLayers');
+            switch (act) {
+                case 'delete': {
+                    customLayers.deleteSource(item);
+                    break;
                 }
-                layer.clearTileCaches(true);
-                break;
-            }
-            case 'download_area': {
-                const layer = item.layer;
-                const dataSource = layer.dataSource;
-                const customLayers = mapContext.mapModule('customLayers');
-                if (customLayers) {
-                    customLayers.downloadDataSource(dataSource, item.provider);
+                case 'cache_only_mode': {
+                    const layer = item.layer as any;
+                    const dataSource = layer.dataSource;
+                    if (dataSource instanceof PersistentCacheTileDataSource) {
+                        cacheOnlyMode = dataSource.cacheOnlyMode = !dataSource.cacheOnlyMode;
+                        ApplicationSettings.setBoolean(`${item.name}_cacheOnlyMode`, cacheOnlyMode);
+                    }
+                    //dont close the bottom sheet
+                    return;
                 }
-                break;
-            }
-            case 'tile_filter_mode':
-                if (item.layer instanceof RasterTileLayer || item.layer instanceof HillshadeRasterTileLayer) {
-                    const result = await action({
-                        title: lc('tile_filter_mode'),
-                        actions: ['bicubic', 'bilinear', 'nearest']
+                case 'clear_cache': {
+                    const layer = item.layer as any;
+                    const dataSource = layer.dataSource;
+                    if (dataSource instanceof PersistentCacheTileDataSource) {
+                        dataSource.clear();
+                    }
+                    // const result = await confirm({
+                    //     title: lc('clear'),
+                    //     message: lc('confirm_clear_tile_cache'),
+                    //     okButtonText: lc('clear'),
+                    //     cancelButtonText: lc('cancel')
+                    // });
+                    // if (result) {
+                    layer.clearTileCaches(true);
+                    // }
+                    break;
+                }
+                case 'download_area': {
+                    const stackLayout = createView(StackLayout, {
+                        padding: 10
                     });
+                    const SettingsSlider = (await import('~/components/settings/SettingsSlider.svelte')).default;
+                    const cartoMap = mapContext.getMap();
+                    const minSliderInstance = resolveComponentElement(SettingsSlider, {
+                        title: lc('dowload_area_minzoom'),
+                        icon: 'mdi-chevron-down',
+                        max: item.provider.sourceOptions.maxZoom,
+                        step: 1,
+                        valueFormatter: (value) => value + '',
+                        min: 0,
+                        value: cartoMap.getZoom()
+                    });
+                    const maxSliderInstance = resolveComponentElement(SettingsSlider, {
+                        title: lc('dowload_area_maxzoom'),
+                        icon: 'mdi-chevron-up',
+                        max: item.provider.sourceOptions.maxZoom,
+                        min: 0,
+                        valueFormatter: (value) => value + '',
+                        step: 1,
+                        value: item.provider.sourceOptions.maxZoom - 1
+                    });
+                    stackLayout.addChild(minSliderInstance.element.nativeView);
+                    stackLayout.addChild(maxSliderInstance.element.nativeView);
+                    const result = await confirm({
+                        title: lc('download'),
+                        message: lc('confirm_area_download'),
+                        view: stackLayout,
+                        okButtonText: lc('ok'),
+                        cancelButtonText: lc('cancel')
+                    });
+                    const minZoom = (minSliderInstance.viewInstance as SettingsSlider__SvelteComponent_).value;
+                    const maxZoom = (maxSliderInstance.viewInstance as SettingsSlider__SvelteComponent_).value;
+                    minSliderInstance.element.nativeElement._tearDownUI();
+                    minSliderInstance.viewInstance.$destroy();
+                    maxSliderInstance.element.nativeElement._tearDownUI();
+                    maxSliderInstance.viewInstance.$destroy();
                     if (result) {
-                        setString(`${item.name}_tileFilterMode`, result);
-                        // use native for now
-                        switch (result) {
-                            case 'bicubic':
-                                (item.layer as RasterTileLayer).tileFilterMode = RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BICUBIC;
-                                break;
-                            case 'bilinear':
-                                (item.layer as RasterTileLayer).tileFilterMode = RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BILINEAR;
-                                break;
-                            case 'nearest':
-                                (item.layer as RasterTileLayer).tileFilterMode = RasterTileFilterMode.RASTER_TILE_FILTER_MODE_NEAREST;
-                                break;
+                        const layer = item.layer;
+                        const dataSource = layer.dataSource;
+                        const customLayers = mapContext.mapModule('customLayers');
+                        if (customLayers) {
+                            customLayers.downloadDataSource({ dataSource, provider: item.provider, minZoom, maxZoom });
                         }
                     }
+                    break;
                 }
+                case 'tile_filter_mode':
+                    if (item.layer instanceof RasterTileLayer || item.layer instanceof HillshadeRasterTileLayer) {
+                        const result = await action({
+                            title: lc('tile_filter_mode'),
+                            actions: ['bicubic', 'bilinear', 'nearest']
+                        });
+                        if (result) {
+                            ApplicationSettings.setString(`${item.name}_tileFilterMode`, result);
+                            // use native for now
+                            switch (result) {
+                                case 'bicubic':
+                                    (item.layer as RasterTileLayer).tileFilterMode = RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BICUBIC;
+                                    break;
+                                case 'bilinear':
+                                    (item.layer as RasterTileLayer).tileFilterMode = RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BILINEAR;
+                                    break;
+                                case 'nearest':
+                                    (item.layer as RasterTileLayer).tileFilterMode = RasterTileFilterMode.RASTER_TILE_FILTER_MODE_NEAREST;
+                                    break;
+                            }
+                        }
+                    }
+                    //dont close the bottom sheet
+                    return;
+            }
+            closeBottomSheet();
+        } catch (error) {
+            showError(error);
         }
-        closeBottomSheet();
     }
 
     function getTitle() {
@@ -133,7 +205,7 @@
 
 <gesturerootview {...$$restProps} height={240}>
     <gridlayout backgroundColor={colorBackground} columns="*,auto" rows="auto,*">
-        <label colSpan={2} fontSize={20} fontWeight="bold" padding="10 10 0 20" text={getTitle()} />
+        <label fontSize={20} fontWeight="bold" padding="10 10 0 20" text={getTitle()} />
         <scrollview bind:this={scrollView} id="scrollView" row={1}>
             <stacklayout>
                 {#each Object.entries(options) as [name, option]}
@@ -182,11 +254,17 @@
                 {/each}
             </stacklayout>
         </scrollview>
-        <stacklayout borderLeftColor={colorOutlineVariant} borderLeftWidth={1} col={1} row={1}>
-            <IconButton gray={true} isVisible={item.provider.cacheable !== false} text="mdi-clock-remove-outline" tooltip={lc('clear_cache')} on:tap={() => handleAction('clear_cache')} />
+        <stacklayout borderLeftColor={colorOutlineVariant} borderLeftWidth={1} col={1} rowSpan={2}>
+            <IconButton gray={true} isVisible={cacheable !== false} text="mdi-clock-remove-outline" tooltip={lc('clear_cache')} on:tap={() => handleAction('clear_cache')} />
             <IconButton
                 gray={true}
-                isVisible={!item.local && (devMode || item.provider.downloadable === true) && !item.downloading}
+                isVisible={!item.local && persistent}
+                text={cacheOnlyMode ? 'mdi-cloud-off-outline' : 'mdi-cloud-download-outline'}
+                tooltip={lc('cache_only_mode')}
+                on:tap={() => handleAction('cache_only_mode')} />
+            <IconButton
+                gray={true}
+                isVisible={!item.local && (devMode || downloadable) && !item.downloading}
                 text="mdi-download"
                 tooltip={lc('download_area')}
                 on:tap={() => handleAction('download_area')} />
