@@ -34,6 +34,7 @@
     import { actionBarButtonHeight, colors } from '~/variables';
     import ElevationChart from '../chart/ElevationChart.svelte';
     import IconButton from '../common/IconButton.svelte';
+    import { compareArrays } from '~/utils/utils';
 
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorOutlineVariant, colorWidgetBackground, colorError } = $colors);
     const PROFILE_HEIGHT = 150;
@@ -226,7 +227,7 @@
 
     function updateSelectedItem(item) {
         try {
-            DEV_LOG && console.log('updateSelectedItem', !!item);
+            // DEV_LOG && console.log('updateSelectedItem', !!item, Date.now());
             if (item) {
                 swipemenu?.nativeView?.close('right', 0);
                 itemIsRoute = !!item?.route;
@@ -371,7 +372,9 @@
         //     total += delta;
         //     result.push(total);
         // }
-        steps = result;
+        if (compareArrays(steps, result) === false) {
+            steps = result;
+        }
     }
 
     let updatingItem = false;
@@ -734,7 +737,7 @@
     let loaded = false;
     let loadedListeners = [];
     export async function loadView() {
-        DEV_LOG && console.log('loadView', loaded);
+        DEV_LOG && console.log('loadView', loaded, Date.now());
         if (!loaded) {
             await new Promise((resolve) => {
                 loadedListeners.push(resolve);
