@@ -3,7 +3,7 @@
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
+    import { showSnack } from '~/utils/ui';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { AndroidActivityBackPressedEventData, Application, LayoutBase, NavigatedData, ObservableArray, Page, Utils, View } from '@nativescript/core';
     import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';

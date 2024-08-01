@@ -9,7 +9,7 @@ import { CartoMap, MapClickInfo, MapInteractionInfo } from '@nativescript-commun
 import { DirAssetPackage, ZippedAssetPackage } from '@nativescript-community/ui-carto/utils';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { showSnack } from '~/utils/ui';
 import { Application, File, Frame, Page, knownFolders, path } from '@nativescript/core';
 import { executeOnMainThread } from '@nativescript/core/utils';
 import { NativeViewElementNode } from 'svelte-native/dom';
