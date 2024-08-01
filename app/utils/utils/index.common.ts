@@ -243,3 +243,14 @@ export function iosExecuteOnMainThread(callback) {
         callback();
     }
 }
+
+export function compareArrays(a1: any[], a2: any[]) {
+    let i = a1?.length;
+    if (i !== a2?.length) {
+        return false;
+    }
+    while (i--) {
+        if (a1[i] !== a2[i]) return false;
+    }
+    return true;
+}
