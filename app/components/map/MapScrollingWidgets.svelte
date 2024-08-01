@@ -23,8 +23,8 @@
     import { openLink } from '~/utils/ui';
     import { colors, fonts } from '~/variables';
 
-    let { colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorOnPrimary, colorSurfaceContainer } = $colors;
-    $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorOnPrimary, colorSurfaceContainer } = $colors);
+    let { colorPrimaryContainer, colorOnPrimaryContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorOnPrimary, colorSurfaceContainer } = $colors;
+    $: ({ colorPrimaryContainer, colorOnPrimaryContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorOnPrimary, colorSurfaceContainer } = $colors);
 
     // const currentMapZoom = 0;
     let totalDownloadProgress = 0;
@@ -93,7 +93,7 @@
 
         const customLayers = mapContext.mapModule('customLayers');
         if (customLayers) {
-            customLayers.on('onProgress', onTotalDownloadProgress);
+            customLayers.on('datasource_download_progress', onTotalDownloadProgress);
             customLayers.on('attribution', onAttribution);
         }
         // userLocationModule.on('location', onNewLocation);
@@ -110,7 +110,7 @@
 
         const customLayers = mapContext.mapModule('customLayers');
         if (customLayers) {
-            customLayers.off('onProgress', onTotalDownloadProgress);
+            customLayers.off('datasource_download_progress', onTotalDownloadProgress);
         }
     });
 
@@ -119,6 +119,7 @@
     // }
 
     function onTotalDownloadProgress(e) {
+        // DEV_LOG && console.log('onTotalDownloadProgress', e.data);
         if (e.data === 100) {
             totalDownloadProgress = 0;
         } else {
@@ -280,15 +281,22 @@
             });
         }
     }
+    async function stopDatasourceDownload() {
+        try {
+            mapContext.mapModule('customLayers')?.stopDownloads();
+        } catch (error) {
+            showError(error);
+        }
+    }
 </script>
 
-<gridlayout bind:this={gridLayout} id="scrollingWidgets" {...$$restProps} columns="60,*,70" isPassThroughParentEnabled={true} rows="auto,*,auto" {userInteractionEnabled}>
+<gridlayout bind:this={gridLayout} id="scrollingWidgets" {...$$restProps} columns="60,*,70" isPassThroughParentEnabled={true} rows="auto,*,auto,auto" {userInteractionEnabled}>
     <stacklayout col={2} padding={2} row={2} verticalAlignment="bottom">
         <mdbutton id="directions" class="floating-btn-themed" col={2} rowSpan={2} text="mdi-directions" visibility={selectedItemHasPosition ? 'visible' : 'hidden'} on:tap={startDirections} />
         <mdcardview id="location" class={` ${locationButtonClass} floating-btn`} shape="medium" on:tap={askUserLocation} on:longPress={onWatchLocation}>
             <label
                 class={`mdi ${locationButtonLabelClass}`}
-                color={$watchingLocation && !$queryingLocation  ? colorOnPrimary : colorPrimary}
+                color={$watchingLocation && !$queryingLocation ? colorOnPrimary : colorPrimary}
                 text="mdi-crosshairs-gps"
                 textAlignment="center"
                 verticalAlignment="middle" />
@@ -312,7 +320,21 @@
         verticalAlignment="bottom"
         on:tap={onAttributionTap} />
 
-    <mdprogress colSpan={3} row={2} value={totalDownloadProgress} verticalAlignment="bottom" visibility={totalDownloadProgress > 0 ? 'visible' : 'collapse'} />
+    <gridlayout
+        backgroundColor={colorPrimaryContainer}
+        borderRadius="50%"
+        col={1}
+        columns="auto,auto"
+        horizontalAlignment="left"
+        marginBottom={10}
+        row={2}
+        verticalAlignment="bottom"
+        visibility={totalDownloadProgress > 0 ? 'visible' : 'collapse'}>
+        <label color={colorOnPrimaryContainer} fontSize={13} padding={10} text={lc('downloading_area', Math.round(totalDownloadProgress))} verticalTextAlignment="center" />
+        <mdbutton class="mdi" col={1} color={colorOnPrimaryContainer} fontSize={13} marginRight={10} text="mdi-close" variant="text" width={40} on:tap={stopDatasourceDownload} />
+    </gridlayout>
+
+    <mdprogress colSpan={3} row={3} value={totalDownloadProgress} verticalAlignment="bottom" visibility={totalDownloadProgress > 0 ? 'visible' : 'collapse'} />
     <canvasview
         bind:this={navigationCanvas}
         backgroundColor={colorSurfaceContainer}
