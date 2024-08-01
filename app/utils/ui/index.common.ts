@@ -4,14 +4,16 @@ import { Label } from '@nativescript-community/ui-label';
 import { AlertDialog, MDCAlertControlerOptions, alert, confirm } from '@nativescript-community/ui-material-dialogs';
 import { ActivityIndicator, AlertOptions, StackLayout, Utils, View } from '@nativescript/core';
 import { Group } from '~/models/Item';
-import { colors, fontScale } from '~/variables';
-import { NativeViewElementNode, createElement } from 'svelte-native/dom';
+import { colors, fontScale, screenWidthDips } from '~/variables';
+import { ComponentInstanceInfo, NativeViewElementNode, createElement, resolveComponentElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
 import { showError } from '../error';
 import type LoadingIndicator__SvelteComponent_ from '~/components/common/LoadingIndicator.svelte';
 import LoadingIndicator from '~/components/common/LoadingIndicator.svelte';
+import { debounce } from '@nativescript/core/utils';
+import { SnackBarOptions, showSnack as mdShowSnack } from '@nativescript-community/ui-material-snackbar';
 
 export function timeout(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -145,17 +147,6 @@ export async function promptForGroup(defaultGroup: string, groups?: Group[]): Pr
     return null;
 }
 
-export interface ComponentInstanceInfo {
-    element: NativeViewElementNode<View>;
-    viewInstance: SvelteComponent;
-}
-
-export function resolveComponentElement<T>(viewSpec: typeof SvelteComponent<T>, props?: T): ComponentInstanceInfo {
-    const dummy = createElement('fragment', window.document as any);
-    const viewInstance = new viewSpec({ target: dummy, props });
-    const element = dummy.firstElement() as NativeViewElementNode<View>;
-    return { element, viewInstance };
-}
 export async function showAlertOptionSelect<T>(viewSpec: typeof SvelteComponent<T>, props?: T, options?: Partial<AlertOptions & MDCAlertControlerOptions>) {
     let componentInstanceInfo: ComponentInstanceInfo;
     try {
@@ -246,4 +237,62 @@ export function createView<T extends View>(claz: new () => T, props: Partial<Pic
         Object.keys(events).forEach((k) => view.on(k, events[k]));
     }
     return view;
+}
+export async function showSliderPopover({
+    debounceDuration = 100,
+    min = 0,
+    max = 100,
+    step = 1,
+    horizPos = HorizontalPosition.ALIGN_LEFT,
+    anchor,
+    vertPos = VerticalPosition.CENTER,
+    width = 0.8 * screenWidthDips,
+    value,
+    onChange,
+    title,
+    icon,
+    formatter
+}: {
+    title?;
+    debounceDuration?;
+    icon?;
+    min?;
+    max?;
+    step?;
+    formatter?;
+    horizPos?;
+    anchor;
+    vertPos?;
+    width?;
+    value?;
+    onChange?;
+}) {
+    const component = (await import('~/components/common/SliderPopover.svelte')).default;
+    const { colorSurfaceContainer } = get(colors);
+
+    return showPopover({
+        backgroundColor: colorSurfaceContainer,
+        view: component,
+        anchor,
+        horizPos,
+        vertPos,
+        props: {
+            title,
+            icon,
+            min,
+            max,
+            step,
+            width,
+            formatter,
+            value,
+            onChange: debounce(onChange, debounceDuration)
+        }
+
+        // trackingScrollView: 'collectionView'
+    });
+}
+export async function showSnack(options: SnackBarOptions) {
+    try {
+        return mdShowSnack(options);
+    } catch (error) {}
 }
