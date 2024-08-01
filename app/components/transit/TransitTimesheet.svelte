@@ -1,7 +1,7 @@
 <script context="module" lang="ts">
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
+    import { showSnack } from '~/utils/ui';
     import { Page, View } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
     import dayjs, { Dayjs } from 'dayjs';

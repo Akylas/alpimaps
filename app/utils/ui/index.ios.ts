@@ -1,5 +1,5 @@
 import { View } from '@nativescript/core';
-import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { showSnack } from '~/utils/ui';
 
 export * from './index.common';
 
