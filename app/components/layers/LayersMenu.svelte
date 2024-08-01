@@ -13,11 +13,12 @@
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
-    import { pitchEnabled, projectionModeSpherical, show3DBuildings, showContourLines } from '~/stores/mapStore';
+    import { contourLinesOpacity, pitchEnabled, projectionModeSpherical, show3DBuildings, showContourLines } from '~/stores/mapStore';
     import { showError } from '~/utils/error';
-    import { openLink } from '~/utils/ui/index.common';
+    import { openLink, showSliderPopover } from '~/utils/ui/index.common';
     import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
+    import { VerticalPosition } from '@nativescript-community/ui-popover';
     $: ({ colorBackground, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorError, colorPrimary } = $colors);
 
     const mapContext = getMapContext();
@@ -111,7 +112,6 @@
     async function onItemReorderStarting(e) {
         (e.view as ContentView).content.opacity = 0.6;
     }
-
     function onButtonLongPress(item, event) {
         collectionView.nativeView.startDragging(customSources.indexOf(item));
     }
@@ -139,6 +139,22 @@
     }
     function onCloseBottomSheet() {
         collectionView?.nativeView?.closeCurrentMenu();
+    }
+
+    async function setContoursOpacity(event) {
+        try {
+            await showSliderPopover({
+                debounceDuration: 100,
+                anchor: event.object,
+                vertPos: VerticalPosition.ABOVE,
+                value: $contourLinesOpacity * 100,
+                onChange(value) {
+                    $contourLinesOpacity = value / 100;
+                }
+            });
+        } catch (error) {
+            showError(error);
+        }
     }
 </script>
 
@@ -227,7 +243,13 @@ while being shown using bottomsheet. We remove it with paddingTop -->
         <stacklayout borderLeftColor={colorOutlineVariant} borderLeftWidth={1} col={1}>
             <IconButton gray={true} text="mdi-plus" on:tap={addSource} />
             {#if !!customLayers?.hasLocalData}
-                <IconButton gray={true} isSelected={$showContourLines} text="mdi-bullseye" tooltip={lc('show_contour_lines')} on:tap={() => showContourLines.set(!$showContourLines)} />
+                <IconButton
+                    gray={true}
+                    isSelected={$showContourLines}
+                    onLongPress={setContoursOpacity}
+                    text="mdi-bullseye"
+                    tooltip={lc('show_contour_lines')}
+                    on:tap={() => showContourLines.set(!$showContourLines)} />
             {/if}
             {#if !!customLayers?.hasLocalData}
                 <IconButton gray={true} isSelected={$show3DBuildings} text="mdi-domain" tooltip={lc('buildings_3d')} on:tap={() => show3DBuildings.set(!$show3DBuildings)} />
