@@ -203,7 +203,7 @@ export async function showPopoverMenu<T = any>({
             backgroundColor: colorSurfaceContainer,
             containerColumns: 'auto',
             rowHeight: !!props?.autoSizeListItem ? null : rowHeight,
-            height: Math.min(rowHeight * options.length, props?.maxHeight || 400),
+            height: Math.min(rowHeight * options.length, props?.maxHeight ?? 300),
             width: 200 * get(fontScale),
             options,
             onLongPress,
