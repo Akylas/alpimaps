@@ -2,7 +2,7 @@
     import { l } from '@nativescript-community/l';
     import type { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
     import { SearchRequest } from '@nativescript-community/ui-carto/search';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
+    import { showSnack } from '~/utils/ui';
     import { ApplicationSettings, ObservableArray, Screen } from '@nativescript/core';
     import deburr from 'deburr';
     import type { Point } from 'geojson';
