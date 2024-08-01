@@ -113,7 +113,7 @@
     let steps;
     let topTranslationY;
     let networkConnected = false;
-    let itemLoading = false;
+    const itemLoading = false;
 
     let projection: Projection = new EPSG4326();
     const addedLayers: { layer: Layer<any, any>; layerId: LayerType }[] = [];
@@ -755,7 +755,6 @@
         }
         $selectedItem = item;
     }
-    let geocodingAvailable = true;
     async function selectItem({
         item,
         isFeatureInteresting = false,
