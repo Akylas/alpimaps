@@ -747,8 +747,12 @@
         mapContext.runOnModules('onSelectedItem', value, oldValue);
     }
 
-    function setSelectedItem(item) {
-        // DEV_LOG && console.log('setSelectedItem', item?.id);
+    function setSelectedItem(item, updateProperties?) {
+        DEV_LOG && console.log('setSelectedItem', item?.id, Date.now());
+        if (updateProperties) {
+            item.properties = item.properties || {};
+            Object.assign(item.properties, updateProperties);
+        }
         $selectedItem = item;
     }
     let geocodingAvailable = true;
@@ -779,7 +783,7 @@
             didIgnoreAlreadySelected = false;
             if (isFeatureInteresting) {
                 const isCurrentItem = item === $selectedItem;
-                TEST_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons);
+                TEST_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons, Date.now());
                 if (setSelected && isCurrentItem && !item) {
                     unselectItem(false);
                 }
@@ -823,147 +827,94 @@
                         selectedPosMarker.visible = false;
                     }
                 } else {
-                    const geometry = item.geometry as GeoJSONPoint;
-                    const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-                    if (!selectedPosMarker) {
-                        getOrCreateLocalVectorLayer(position);
-                    } else {
-                        selectedPosMarker.position = position;
-                        selectedPosMarker.visible = true;
+                    if (peek) {
+                        bottomSheetInner.loadView().then(() => {
+                            bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
+                        });
                     }
                     if (setSelected) {
-                        // TODO: not enabled for now as really slow
-                        // if (props.subclass) {
-                        //     mapContext.mapDecoder.setStyleParameter('selected_id', props.name + props.subclass);
-                        // } else {
-                        //     mapContext.mapDecoder.setStyleParameter('selected_id', '');
-                        // }
-                        const styleParameters = {};
-                        if (props.id !== undefined) {
-                            selectedId = props.id;
-                            if (typeof props.id === 'string') {
-                                styleParameters['selected_id_str'] = selectedId + '';
-                                styleParameters['selected_id'] = '0';
-                            } else {
-                                styleParameters['selected_id'] = selectedId + '';
-                                styleParameters['selected_id_str'] = '';
-                            }
-                            styleParameters['selected_osmid'] = '0';
-                        } else {
-                            if (selectedOSMId !== undefined) {
-                                selectedOSMId = undefined;
-                                styleParameters['selected_osmid'] = '0';
-                            }
-                            if (selectedId !== undefined) {
-                                selectedId = undefined;
-                                // styleParameters['selected_osmid'] = '0';
-                                styleParameters['selected_id_str'] = '';
-                                styleParameters['selected_id'] = '0';
-                            }
-                        }
-                        mapContext.innerDecoder.setJSONStyleParameters(styleParameters);
+                        setSelectedItem(item);
                     }
-                }
-                if (setSelected) {
-                    setSelectedItem(item);
-                }
-                if (setSelected && !route) {
-                    // if geocodingAvailable is not available it means we tested once
-                    if (!props.address?.['city'] && geocodingAvailable) {
-                        packageService.getItemAddress(item, projection).then((r) => {
-                            if (r && $selectedItem.geometry === item.geometry) {
-                                $selectedItem.properties.address = r;
-                                if (r.name && !$selectedItem.properties.name) {
-                                    $selectedItem.properties.name = r.name;
-                                }
-                                setSelectedItem($selectedItem);
-                            }
-                        });
-                        // use a promise not to "wait" for it
-                        // (async () => {
-                        //     try {
-                        //         const service = packageService.localOSMOfflineReverseGeocodingService;
-                        //         const geometry = item.geometry as GeoJSONPoint;
-                        //         const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-                        //         let foundAddress = false;
-                        //         // DEV_LOG && console.log('fetching addresses', !!service, position);
-                        //         if (service) {
-                        //             itemLoading = true;
-                        //             const radius = 200;
-                        //             const res = await packageService.searchInGeocodingService(service, {
-                        //                 projection,
-                        //                 location: position,
-                        //                 searchRadius: radius
-                        //             });
-                        //             if (res) {
-                        //                 let bestFind: GeoResult;
-                        //                 for (let index = 0; index < res.size(); index++) {
-                        //                     const r = packageService.convertGeoCodingResult(res.get(index), true);
-
-                        //                     if (
-                        //                         r &&
-                        //                         r.properties.rank > 0.6 &&
-                        //                         computeDistanceBetween(position, {
-                        //                             lat: r.geometry.coordinates[1],
-                        //                             lon: r.geometry.coordinates[0]
-                        //                         }) <= radius
-                        //                     ) {
-                        //                         if (!bestFind || Object.keys(r.properties.address).length > Object.keys(bestFind.properties.address).length) {
-                        //                             bestFind = r;
-                        //                         } else if (bestFind && props.address && props.address['street']) {
-                        //                             break;
-                        //                         }
-                        //                     } else {
-                        //                         break;
-                        //                     }
-                        //                 }
-                        //                 // DEV_LOG && console.log('fetched addresses', bestFind, $selectedItem.geometry === item.geometry);
-                        //                 if (bestFind && $selectedItem.geometry === item.geometry) {
-                        //                     foundAddress = true;
-                        //                     $selectedItem.properties.address = { ...bestFind.properties.address, name: null, ...(props.housenumber ? { houseNumber: props.housenumber } : {}) } as any;
-                        //                     if (bestFind.properties.address.name && !$selectedItem.properties.name) {
-                        //                         $selectedItem.properties.name = bestFind.properties.address.name;
-                        //                     }
-                        //                     setSelectedItem($selectedItem);
-                        //                 }
-                        //             }
-                        //         }
-                        //         if (!foundAddress) {
-                        //             const results = await getFromLocation(position.lat, position.lon, 10);
-                        //             DEV_LOG && console.log('found addresses', results);
-                        //             if (results?.length > 0) {
-                        //                 const result = results[0];
-                        //                 $selectedItem.properties.address = {
-                        //                     city: result.locality,
-                        //                     country: result.country,
-                        //                     state: result.administrativeArea,
-                        //                     housenumber: result.subThoroughfare,
-                        //                     postcode: result.postalCode,
-                        //                     street: result.thoroughfare
-                        //                 } as any;
-                        //                 setSelectedItem($selectedItem);
-                        //             }
-                        //         }
-                        //     } catch (error) {
-                        //         if (__ANDROID__ && /IOException.*UNAVAILABLE$/.test(error.toString())) {
-                        //             geocodingAvailable = false;
-                        //         }
-                        //         console.error('error fetching address', error, error.stack);
-                        //     }
-                        // })();
-                    }
-
-                    if (props && 'ele' in props === false && packageService.hasElevation()) {
+                    (async () => {
                         const geometry = item.geometry as GeoJSONPoint;
                         const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-                        packageService.getElevation(position).then((result) => {
-                            if ($selectedItem.geometry === item.geometry) {
-                                $selectedItem.properties = $selectedItem.properties || {};
-                                $selectedItem.properties['ele'] = result;
-                                setSelectedItem($selectedItem);
+                        if (!selectedPosMarker) {
+                            getOrCreateLocalVectorLayer(position);
+                        } else {
+                            selectedPosMarker.position = position;
+                            selectedPosMarker.visible = true;
+                        }
+                        if (setSelected) {
+                            // TODO: not enabled for now as really slow
+                            // if (props.subclass) {
+                            //     mapContext.mapDecoder.setStyleParameter('selected_id', props.name + props.subclass);
+                            // } else {
+                            //     mapContext.mapDecoder.setStyleParameter('selected_id', '');
+                            // }
+                            const styleParameters = {};
+                            if (props.id !== undefined) {
+                                selectedId = props.id;
+                                if (typeof props.id === 'string') {
+                                    styleParameters['selected_id_str'] = selectedId + '';
+                                    styleParameters['selected_id'] = '0';
+                                } else {
+                                    styleParameters['selected_id'] = selectedId + '';
+                                    styleParameters['selected_id_str'] = '';
+                                }
+                                styleParameters['selected_osmid'] = '0';
+                            } else {
+                                if (selectedOSMId !== undefined) {
+                                    selectedOSMId = undefined;
+                                    styleParameters['selected_osmid'] = '0';
+                                }
+                                if (selectedId !== undefined) {
+                                    selectedId = undefined;
+                                    // styleParameters['selected_osmid'] = '0';
+                                    styleParameters['selected_id_str'] = '';
+                                    styleParameters['selected_id'] = '0';
+                                }
                             }
-                        });
-                    }
+                            mapContext.innerDecoder.setJSONStyleParameters(styleParameters);
+                        }
+                    })();
+                }
+                if (setSelected && !route) {
+                    const toUpdate = {} as Record<string, any>;
+                    Promise.all([
+                        (async () => {
+                            if (!props.address?.['city']) {
+                                const r = await packageService.getItemAddress(item, projection);
+                                if (r && $selectedItem.geometry === item.geometry) {
+                                    DEV_LOG && console.log('found addresses', r);
+                                    toUpdate.address = r;
+                                    // $selectedItem.properties.address = r;
+                                    if (r.name && !$selectedItem.properties.name) {
+                                        toUpdate.name = r.name;
+                                        //     $selectedItem.properties.name = r.name;
+                                    }
+                                    return true;
+                                }
+                            }
+                        })(),
+                        (async () => {
+                            if (props && 'ele' in props === false && packageService.hasElevation()) {
+                                const geometry = item.geometry as GeoJSONPoint;
+                                const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+                                const r = await packageService.getElevation(position);
+                                if (r && $selectedItem.geometry === item.geometry) {
+                                    DEV_LOG && console.log('found elevation', r);
+                                    toUpdate.ele = r;
+                                    // $selectedItem.properties = $selectedItem.properties || {};
+                                    // $selectedItem.properties['ele'] = r;
+                                    return true;
+                                }
+                            }
+                        })()
+                    ]).then((r) => {
+                        if (r.some((d) => d === true)) {
+                            setSelectedItem($selectedItem, toUpdate);
+                        }
+                    });
                     // if (props && 'timezone' in props === false) {
                     //     const geometry = item.geometry as GeoJSONPoint;
                     //     const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
@@ -981,14 +932,9 @@
                     // }
                 }
 
-                if (peek) {
-                    await bottomSheetInner.loadView();
-                    bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
+                if (!preventZoom) {
+                    zoomToItem({ item, zoom, minZoom, duration: zoomDuration, forceZoomOut });
                 }
-                if (preventZoom) {
-                    return;
-                }
-                zoomToItem({ item, zoom, minZoom, duration: zoomDuration, forceZoomOut });
             } else {
                 unselectItem();
             }
@@ -2075,6 +2021,11 @@
             // getMapContext().mapModule('items').hideItem(item);
         }
     }
+    function onStepIndexChanged(e) {
+        if (e.value !== bottomSheetStepIndex) {
+            bottomSheetStepIndex = e.value;
+        }
+    }
 </script>
 
 <page
@@ -2107,7 +2058,7 @@
             stepIndex={bottomSheetStepIndex}
             {steps}
             translationFunction={bottomSheetTranslationFunction}
-            on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)}>
+            on:stepIndexChange={onStepIndexChanged}>
             <gridlayout height="100%" width="100%">
                 <ButtonBar
                     id="mapButtonsNew"
