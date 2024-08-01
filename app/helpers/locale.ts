@@ -1,4 +1,4 @@
-import { capitalize, l, lc, loadLocaleJSON, lt, lu, overrideNativeLocale, titlecase } from '@nativescript-community/l';
+import { capitalize, l, lc, loadLocaleJSON, lt, lu, overrideNativeLocale } from '@nativescript-community/l';
 import { Application, ApplicationSettings, Device, EventData, File, Utils } from '@nativescript/core';
 import { getString } from '@nativescript/core/application-settings';
 import dayjs from 'dayjs';
@@ -11,9 +11,10 @@ import utc from 'dayjs/plugin/utc';
 
 import { derived, get, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
+import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
 import { showError } from '~/utils/error';
-import { showAlertOptionSelect } from '~/utils/ui';
 import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
+import { showAlertOptionSelect } from '~/utils/ui';
 const supportedLanguages = SUPPORTED_LOCALES;
 
 // dayjs.extend(updateLocale);
@@ -219,7 +220,7 @@ async function internalSelectLanguage() {
     return showAlertOptionSelect(
         component,
         {
-            height: Math.min(actions.length * 56, 400),
+            height: Math.min(actions.length * 56, ALERT_OPTION_MAX_HEIGHT),
             rowHeight: 56,
             options: [{ name: lc('auto'), data: 'auto' }].concat(actions.map((k) => ({ name: getLocaleDisplayName(k.replace('_', '-')), data: k }))).map((d) => ({
                 ...d,
