@@ -25,7 +25,7 @@ import { toDegrees, toRadians } from '~/utils/geo';
 import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
 
 import { SDK_VERSION } from '@akylas/nativescript/utils';
-import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { showSnack } from '~/utils/ui';
 import { data as TileSourcesData } from '~/data/tilesources';
 import { openLink } from '~/utils/ui';
 const mapContext = getMapContext();

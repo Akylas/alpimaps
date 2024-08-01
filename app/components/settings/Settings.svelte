@@ -6,7 +6,7 @@
     import { openFilePicker, pickFolder, saveFile } from '@nativescript-community/ui-document-picker';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-    import { showSnack } from '@nativescript-community/ui-material-snackbar';
+    import { showSnack } from '~/utils/ui';
     import { TextField } from '@nativescript-community/ui-material-textfield';
     import { TextView } from '@nativescript-community/ui-material-textview';
     import { ApplicationSettings, File, Folder, ObservableArray, ScrollView, StackLayout, Utils, View, path } from '@nativescript/core';

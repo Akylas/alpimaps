@@ -1,4 +1,4 @@
-import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { showSnack } from '~/utils/ui';
 import { ApplicationSettings, Color, Utils, View, path } from '@nativescript/core';
 import { Dayjs } from 'dayjs';
 import { getDataFolder, setSavedMBTilesDir } from './index.common';
