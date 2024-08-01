@@ -17,6 +17,7 @@
     $: ({ colorBackground, colorOnSurfaceVariant, colorOutlineVariant, colorError } = $colors);
     import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
     import type SettingsSlider__SvelteComponent_ from '~/components/settings/SettingsSlider.svelte';
+    import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
 
     const mapContext = getMapContext();
     let scrollView;
@@ -113,7 +114,9 @@
                     break;
                 }
                 case 'download_area': {
-                    const view = createView(ScrollView);
+                    const view = createView(ScrollView, {
+                        height: ALERT_OPTION_MAX_HEIGHT - 80
+                    });
                     const stackLayout = createView(StackLayout, {
                         padding: 10
                     });
