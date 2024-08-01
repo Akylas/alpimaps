@@ -1,9 +1,8 @@
+<svelte:options accessors />
+
 <script context="module" lang="ts">
-    import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Paint } from '@nativescript-community/ui-canvas';
     import { colors, fonts } from '~/variables';
-    let iconPaint: Paint;
-    let textPaint: Paint;
 </script>
 
 <script lang="ts">
@@ -20,7 +19,7 @@
     export let onChange = null;
     export let formatter = (value) => value + '';
     export let valueFormatter = (value) => value.toFixed(1);
-    let canvas: NativeViewElementNode<CanvasView>;
+    // let canvas: NativeViewElementNode<CanvasView>;
     let actualValue;
     $: actualValue = value ?? defaultValue;
     function onValueChange(event) {
@@ -28,54 +27,54 @@
         if (onChange) {
             onChange(event.value);
         }
-        canvas?.nativeView.invalidate();
+        // canvas?.nativeView.invalidate();
     }
-    function onDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
-        try {
-            const w = canvas.getWidth();
-            const h = canvas.getHeight();
-            let leftPadding = 10;
-            const topPadding = 30;
-            if (icon) {
-                if (!iconPaint) {
-                    iconPaint = new Paint();
-                    iconPaint.textSize = 24;
-                    iconPaint.fontFamily = $fonts.mdi;
-                }
-                iconPaint.color = colorOnSurface;
-                canvas.drawText(icon, leftPadding, topPadding + 5, iconPaint);
-                leftPadding += 40;
-            }
-            if (!textPaint) {
-                textPaint = new Paint();
-                textPaint.textSize = 15;
-            }
-            textPaint.color = colorOnSurface;
-            textPaint.setTextAlign(Align.LEFT);
+    // function onDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
+    //     try {
+    //         const w = canvas.getWidth();
+    //         const h = canvas.getHeight();
+    //         let leftPadding = 10;
+    //         const topPadding = 30;
+    //         if (icon) {
+    //             if (!iconPaint) {
+    //                 iconPaint = new Paint();
+    //                 iconPaint.textSize = 24;
+    //                 iconPaint.fontFamily = $fonts.mdi;
+    //             }
+    //             iconPaint.color = colorOnSurface;
+    //             canvas.drawText(icon, leftPadding, topPadding + 5, iconPaint);
+    //             leftPadding += 40;
+    //         }
+    //         if (!textPaint) {
+    //             textPaint = new Paint();
+    //             textPaint.textSize = 15;
+    //         }
+    //         textPaint.color = colorOnSurface;
+    //         textPaint.setTextAlign(Align.LEFT);
 
-            if (title) {
-                const staticLayout = new StaticLayout(title, textPaint, canvas.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
-                canvas.save();
-                canvas.translate(leftPadding, topPadding);
-                staticLayout.draw(canvas);
-                canvas.restore();
-                // canvas.drawText(title, leftPadding, topPadding, textPaint);
-            }
-            canvas.drawText(formatter(min), 10, h - 20, textPaint);
-            textPaint.setTextAlign(Align.RIGHT);
-            canvas.drawText(valueFormatter(value), w - 10, topPadding, textPaint);
-            canvas.drawText(formatter(max), w - 10, h - 20, textPaint);
-        } catch (err) {
-            console.error(err, err.stack);
-        }
-    }
+    //         if (title) {
+    //             const staticLayout = new StaticLayout(title, textPaint, canvas.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+    //             canvas.save();
+    //             canvas.translate(leftPadding, topPadding);
+    //             staticLayout.draw(canvas);
+    //             canvas.restore();
+    //             // canvas.drawText(title, leftPadding, topPadding, textPaint);
+    //         }
+    //         canvas.drawText(formatter(min), 10, h - 20, textPaint);
+    //         textPaint.setTextAlign(Align.RIGHT);
+    //         canvas.drawText(valueFormatter(value), w - 10, topPadding, textPaint);
+    //         canvas.drawText(formatter(max), w - 10, h - 20, textPaint);
+    //     } catch (err) {
+    //         console.error(err, err.stack);
+    //     }
+    // }
 </script>
 
 <gridlayout {...$$restProps} columns="auto,*,auto" height="auto" padding="10 10 10 10" rows="auto,auto, auto">
     <!-- <canvasview bind:this={canvas} on:draw={onDraw} /> -->
 
     <label color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={24} text={icon} verticalTextAlignment="center" visibility={icon ? 'visible' : 'collapse'} />
-    <label col={0} colSpan={2} color={colorOnSurface} fontSize={15} lineBreak="end" maxLines={2} padding="0 10 0 0" text={title} textWrap={true} verticalTextAlignment="center" />
+    <label col={1} colSpan={2} color={colorOnSurface} fontSize={15} lineBreak="end" maxLines={2} padding="0 10 0 0" text={title} textWrap={true} verticalTextAlignment="center" />
     <label
         col={1}
         color={colorOnSurfaceVariant}

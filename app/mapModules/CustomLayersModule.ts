@@ -475,6 +475,7 @@ export default class CustomLayersModule extends MapModule {
                     provider.cacheable !== false
                         ? new PersistentCacheTileDataSource({
                               dataSource,
+                              cacheOnlyMode: ApplicationSettings.getBoolean(`${id}_cacheOnlyMode`, false),
                               capacity: cacheSize * 1024 * 1024,
                               databasePath
                           })
@@ -487,11 +488,15 @@ export default class CustomLayersModule extends MapModule {
                 ...provider.layerOptions
             });
         } else {
+            const downloadable = provider.downloadable || !PRODUCTION || this.devMode;
+            const cacheable = provider.cacheable || !PRODUCTION;
+            DEV_LOG && console.log('createDataSourceAndMapLayer', cacheable, downloadable);
             layer = new RasterTileLayer({
                 dataSource:
-                    provider.cacheable !== false
+                    cacheable !== false || downloadable
                         ? new PersistentCacheTileDataSource({
                               dataSource,
+                              cacheOnlyMode: ApplicationSettings.getBoolean(`${id}_cacheOnlyMode`, false),
                               capacity: cacheSize * 1024 * 1024,
                               databasePath
                           })
@@ -556,29 +561,32 @@ export default class CustomLayersModule extends MapModule {
             attribution: data.attribution,
             tokenKey: data.tokenKey,
             urlOptions: data.urlOptions,
-            layerOptions: data.layerOptions
+            layerOptions: data.layerOptions,
+            downloadable: data.downloadable,
+            devHidden: data.devHidden,
+            cacheable: data.cacheable
         };
 
         if (data.legend) {
             provider.legend = templateString(data.legend, provider.urlOptions);
         }
-        if (data.cacheable !== undefined) {
-            provider.cacheable = data.cacheable || !PRODUCTION;
-        } else {
-            provider.cacheable = !PRODUCTION;
-        }
+        // if (data.cacheable !== undefined) {
+        // provider.cacheable = data.cacheable || !PRODUCTION;
+        // } else {
+        //     provider.cacheable = !PRODUCTION;
+        // }
         if (data.hillshade === true) {
             provider.hillshade = true;
             provider.terrarium = data.terrarium;
         }
-        if (data.downloadable !== undefined) {
-            provider.downloadable = data.downloadable || !PRODUCTION || this.devMode;
-        } else {
-            provider.downloadable = !PRODUCTION;
-        }
-        if (data.devHidden !== undefined) {
-            provider.devHidden = data.devHidden;
-        }
+        // if (data.downloadable !== undefined) {
+        //     provider.downloadable = data.downloadable || !PRODUCTION || this.devMode;
+        // } else {
+        //     provider.downloadable = !PRODUCTION;
+        // }
+        // if (data.devHidden !== undefined) {
+        //     provider.devHidden = data.devHidden;
+        // }
 
         // overwrite values in provider from variant.
         if (variantName && 'variants' in data) {
@@ -890,7 +898,8 @@ export default class CustomLayersModule extends MapModule {
                     tileCacheCapacity: 30 * 1024 * 1024,
                     decoder: mapContext.mapDecoder,
                     // clickHandlerLayerFilter: PRODUCTION ? undefined : '.*',
-                    clickHandlerLayerFilter: PRODUCTION ? '(.*::(icon|label)|waterway|transportation)' : '.*',
+                    // clickHandlerLayerFilter: PRODUCTION ? '(.*::(icon|label)|waterway|transportation)' : '.*',
+                    clickHandlerLayerFilter: PRODUCTION ? '.*::(icon|label)' : '.*',
                     tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                     visible: opacity !== 0
                 });
@@ -969,85 +978,118 @@ export default class CustomLayersModule extends MapModule {
     async stopDownloads() {
         if (this.currentlyDownloadind) {
             this.currentlyDownloadind.dataSource.stopAllDownloads();
+            this.notify({
+                eventName: 'datasource_download_progress',
+                object: this,
+                data: 0
+            });
+            const itemIndex = this.customSources.findIndex((s) => s.provider === this.currentlyDownloadind.provider);
+            DEV_LOG && console.log('stopDownloads', this.currentlyDownloadind.provider, itemIndex);
+            if (itemIndex) {
+                const item = this.customSources.getItem(itemIndex);
+                delete item.downloading;
+                delete item.downloadProgress;
+                this.customSources.setItem(itemIndex, item);
+            }
+            this.currentlyDownloadind = null;
         }
     }
 
-    async downloadDataSource(dataSource: TileDataSource<any, any>, provider: Provider) {
+    async downloadDataSource({ dataSource, provider, minZoom, maxZoom }: { dataSource: TileDataSource<any, any>; provider: Provider; minZoom?; maxZoom? }) {
+        TEST_LOG && console.log('downloadDataSource', dataSource.constructor.name, provider, minZoom, maxZoom);
         try {
             if (this.currentlyDownloadind) {
                 return;
             }
             if (dataSource instanceof PersistentCacheTileDataSource) {
                 await new Promise<void>((resolve, reject) => {
-                    this.currentlyDownloadind = { dataSource, provider };
-                    const zoom = provider.sourceOptions.maxZoom - 1;
-                    const cartoMap = mapContext.getMap();
-                    const projection = dataSource.getProjection();
-                    const screenBounds = toNativeScreenBounds({
-                        min: { x: cartoMap.getMeasuredWidth(), y: 0 },
-                        max: { x: 0, y: cartoMap.getMeasuredHeight() }
-                    });
-                    const bounds = new MapBounds(projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMin()) as any), projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMax()) as any));
+                    try {
+                        this.currentlyDownloadind = { dataSource, provider };
+                        const zoom = maxZoom ?? provider.sourceOptions.maxZoom - 1;
+                        const cartoMap = mapContext.getMap();
+                        const projection = dataSource.getProjection();
+                        const screenBounds = toNativeScreenBounds({
+                            min: { x: cartoMap.getMeasuredWidth(), y: 0 },
+                            max: { x: 0, y: cartoMap.getMeasuredHeight() }
+                        });
+                        const bounds = new MapBounds(
+                            projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMin()) as any),
+                            projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMax()) as any)
+                        );
 
-                    TEST_LOG && console.log('startDownloadArea1', provider, bounds, cartoMap.getZoom(), zoom);
-                    dataSource.startDownloadArea(bounds, cartoMap.getZoom(), zoom, {
-                        onDownloadCompleted: () => {
-                            this.currentlyDownloadind = null;
-                            const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
-                            if (itemIndex) {
-                                const item = this.customSources.getItem(itemIndex);
-                                delete item.downloading;
-                                delete item.downloadProgress;
-                                this.customSources.setItem(itemIndex, item);
+                        TEST_LOG && console.log('startDownloadArea', provider, bounds, minZoom, maxZoom, cartoMap.getZoom(), zoom);
+                        dataSource.startDownloadArea(bounds, minZoom ?? cartoMap.getZoom(), zoom, {
+                            onDownloadCompleted: () => {
+                                DEV_LOG && console.log('onDownloadCompleted');
+                                this.currentlyDownloadind = null;
+                                const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
+                                if (itemIndex) {
+                                    const item = this.customSources.getItem(itemIndex);
+                                    delete item.downloading;
+                                    delete item.downloadProgress;
+                                    this.customSources.setItem(itemIndex, item);
+                                }
+                                // ensure we hide the progress
+                                this.notify({
+                                    eventName: 'datasource_download_progress',
+                                    object: this,
+                                    data: 0
+                                });
+                                this.notify({
+                                    eventName: 'datasource_dowload_finished',
+                                    object: this,
+                                    data: { provider, dataSource }
+                                });
+                                resolve();
+                            },
+                            onDownloadFailed(tile: { x: number; y: number; tileId: number }) {
+                                // this.notify({
+                                //     eventName: 'dowload_finished',
+                                //     object: this,
+                                //     data: {provider, dataSource}
+                                // });
+                                // const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
+                                // if (itemIndex) {
+                                //     const item = this.customSources.getItem(itemIndex);
+                                //     delete item.downloading;
+                                //     delete item.downloadProgress;
+                                //     this.customSources.setItem(itemIndex, item);
+                                // }
+                            },
+                            onDownloadProgress: (progress: number) => {
+                                // DEV_LOG && console.log('onDownloadProgress', progress);
+                                this.notify({
+                                    eventName: 'datasource_download_progress',
+                                    object: this,
+                                    data: progress
+                                });
+                                const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
+                                if (itemIndex) {
+                                    const item = this.customSources.getItem(itemIndex);
+                                    item.downloadProgress = progress;
+                                    this.customSources.setItem(itemIndex, item);
+                                }
+                            },
+                            onDownloadStarting: (tileCount: number) => {
+                                DEV_LOG && console.log('onDownloadStarting', tileCount);
+                                // showSnack({ message: lc('download_area_started', bounds.toString()) });
+                                const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
+                                if (itemIndex) {
+                                    const item = this.customSources.getItem(itemIndex);
+                                    item.downloading = true;
+                                    item.downloadProgress = 0;
+                                    this.customSources.setItem(itemIndex, item);
+                                }
+                                this.notify({
+                                    eventName: 'datasource_dowload_started',
+                                    object: this,
+                                    data: { provider, dataSource }
+                                });
                             }
-                            // ensure we hide the progress
-                            this.notify({
-                                eventName: 'onProgress',
-                                object: this,
-                                data: 0
-                            });
-                            this.notify({
-                                eventName: 'dowload_finished',
-                                object: this,
-                                data: { provider, dataSource }
-                            });
-                            resolve();
-                        },
-                        onDownloadFailed(tile: { x: number; y: number; tileId: number }) {
-                            // this.notify({
-                            //     eventName: 'dowload_finished',
-                            //     object: this,
-                            //     data: {provider, dataSource}
-                            // });
-                        },
-                        onDownloadProgress: (progress: number) => {
-                            this.notify({
-                                eventName: 'onProgress',
-                                object: this,
-                                data: progress
-                            });
-                            const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
-                            if (itemIndex) {
-                                const item = this.customSources.getItem(itemIndex);
-                                item.downloadProgress = progress;
-                                this.customSources.setItem(itemIndex, item);
-                            }
-                        },
-                        onDownloadStarting: (tileCount: number) => {
-                            const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
-                            if (itemIndex) {
-                                const item = this.customSources.getItem(itemIndex);
-                                item.downloading = true;
-                                item.downloadProgress = 0;
-                                this.customSources.setItem(itemIndex, item);
-                            }
-                            this.notify({
-                                eventName: 'dowloading',
-                                object: this,
-                                data: { provider, dataSource }
-                            });
-                        }
-                    });
+                        });
+                    } catch (error) {
+                        reject(error);
+                    }
                 });
             }
         } catch (err) {
