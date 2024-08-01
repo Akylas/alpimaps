@@ -3,7 +3,7 @@
     import { HillshadeRasterTileLayer, RasterTileFilterMode, RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { action, confirm } from '@nativescript-community/ui-material-dialogs';
-    import { ApplicationSettings, Color, File, StackLayout } from '@nativescript/core';
+    import { ApplicationSettings, Color, File, ScrollView, StackLayout } from '@nativescript/core';
     import { onMount } from 'svelte';
     import { formatSize } from '~/helpers/formatter';
     import { lc } from '~/helpers/locale';
@@ -113,22 +113,25 @@
                     break;
                 }
                 case 'download_area': {
+                    const view = createView(ScrollView);
                     const stackLayout = createView(StackLayout, {
                         padding: 10
                     });
                     const SettingsSlider = (await import('~/components/settings/SettingsSlider.svelte')).default;
                     const cartoMap = mapContext.getMap();
                     const minSliderInstance = resolveComponentElement(SettingsSlider, {
-                        title: lc('dowload_area_minzoom'),
+                        title: lc('min_zoom'),
+                        subtitle: lc('dowload_area_minzoom'),
                         icon: 'mdi-chevron-down',
                         max: item.provider.sourceOptions.maxZoom,
                         step: 1,
                         valueFormatter: (value) => value + '',
                         min: 0,
-                        value: cartoMap.getZoom()
+                        value: Math.round(cartoMap.getZoom())
                     });
                     const maxSliderInstance = resolveComponentElement(SettingsSlider, {
-                        title: lc('dowload_area_maxzoom'),
+                        title: lc('max_zoom'),
+                        subtitle: lc('dowload_area_maxzoom'),
                         icon: 'mdi-chevron-up',
                         max: item.provider.sourceOptions.maxZoom,
                         min: 0,
@@ -138,10 +141,11 @@
                     });
                     stackLayout.addChild(minSliderInstance.element.nativeView);
                     stackLayout.addChild(maxSliderInstance.element.nativeView);
+                    view.content = stackLayout;
                     const result = await confirm({
                         title: lc('download'),
                         message: lc('confirm_area_download'),
-                        view: stackLayout,
+                        view,
                         okButtonText: lc('ok'),
                         cancelButtonText: lc('cancel')
                     });
