@@ -5,7 +5,7 @@ import { VectorLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
 import { Polygon } from '@nativescript-community/ui-carto/vectorelements/polygon';
 import { Tween } from '@nativescript-community/ui-chart/animation/Tween';
-import { showSnack } from '@nativescript-community/ui-material-snackbar';
+import { showSnack } from '~/utils/ui';
 import { Color } from '@nativescript/core';
 import dayjs from 'dayjs';
 import { get } from 'svelte/store';
