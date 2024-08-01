@@ -389,7 +389,6 @@ class PackageService extends Observable {
             }
             if (!foundAddress && geocodingAvailable) {
                 const results = await getFromLocation(location.lat, location.lon, 10);
-                DEV_LOG && console.log('found addresses', results);
                 if (results?.length > 0) {
                     const result = results[0];
                     return {
