@@ -5,7 +5,7 @@ import { Layer } from '@nativescript-community/ui-carto/layers';
 import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
 import { VectorElementEventData, VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { Projection } from '@nativescript-community/ui-carto/projections';
-import { CartoMap, MapClickInfo, MapInteractionInfo } from '@nativescript-community/ui-carto/ui';
+import { CartoMap, MapClickInfo, MapInteractionInfo, PanningMode } from '@nativescript-community/ui-carto/ui';
 import { DirAssetPackage, ZippedAssetPackage } from '@nativescript-community/ui-carto/utils';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
@@ -22,6 +22,8 @@ import type { IItem } from '~/models/Item';
 import { getBGServiceInstance } from '~/services/BgService';
 import { packageService } from '~/services/PackageService';
 import { createGlobalEventListener, globalObservable, navigate } from '~/utils/svelte/ui';
+import { getCartoBitmap } from '@nativescript-community/ui-carto';
+import { theme } from '~/helpers/theme';
 // export interface IMapModule {
 //     onMapReady(mapView: CartoMap<LatLonKeys>);
 //     onMapDestroyed();
@@ -70,6 +72,7 @@ export interface MapContext {
     innerDecoder: MBVectorTileDecoder;
     mapDecoder: MBVectorTileDecoder;
     showOptions(event);
+    setMapDefaultOptions(options);
     createMapDecoder(mapStyle, mapStyleLayer): MBVectorTileDecoder;
     mapModule<T extends keyof MapModules>(id: T): MapModules[T];
     onOtherAppTextSelected(callback: ContextCallback, once?: boolean);
@@ -157,6 +160,20 @@ export function onNetworkChanged(callback: (theme) => void) {}
 
 const mapContext: MapContext = {
     mapModules: {},
+    setMapDefaultOptions(options) {
+        options.setLayersLabelsProcessedInReverseOrder(true);
+        options.setSeamlessPanning(false);
+        options.setRestrictedPanning(true);
+        options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
+        if (theme === 'eink') {
+            options.setBackgroundBitmap(getCartoBitmap('~/assets/images/eink-map-background.png'));
+        }
+
+        options.setZoomGestures(true);
+        options.setDoubleClickMaxDuration(0.3);
+        options.setLongClickDuration(0.5);
+        options.setKineticRotation(false);
+    },
     onOtherAppTextSelected: createGlobalEventListener('onOtherAppTextSelected'),
     onMapReady: createGlobalEventListener<never>('onMapReady'),
     onMapMove: createGlobalEventListener<{ userInteraction: boolean }>('onMapMove'),
