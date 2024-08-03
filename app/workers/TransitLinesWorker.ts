@@ -24,7 +24,6 @@ function getRouteItemGeometry(item) {
 const context: Worker = self as any;
 const TAG = '[TransitLinesWorker]';
 
-DEV_LOG && console.log(TAG);
 class TransitLinesWorker extends BaseWorker {
     receivedMessage(event: { data }) {
         const handled = super.receivedMessage(event);
@@ -40,7 +39,7 @@ class TransitLinesWorker extends BaseWorker {
                         const featureCollection = JSON.parse(transitLines);
                         const metroDataJSON = JSON.parse(metroData);
                         const features = featureCollection.features;
-            for (let index = features.length - 1; index >= 0; index--) {
+                        for (let index = features.length - 1; index >= 0; index--) {
                             const f = features[index];
                             const key = f.properties.id.replace('_', ':');
                             const d = metroDataJSON[key];
@@ -72,11 +71,10 @@ class TransitLinesWorker extends BaseWorker {
                                 features.splice(index, 1);
                             }
                         }
-            (global as any).postMessage({ id, type, messageData: JSON.stringify(featureCollection) });
+                        (global as any).postMessage({ id, type, messageData: JSON.stringify(featureCollection) });
                         break;
                 }
             } catch (error) {
-                console.error(error, error.stack);
                 (global as any).postMessage({ id, type, error: JSON.stringify({ message: error.toString(), stack: error.stack, stackTrace: error.stackTrace }) });
             }
         }

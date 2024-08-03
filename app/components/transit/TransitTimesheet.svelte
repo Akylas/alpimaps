@@ -18,17 +18,18 @@
     import { pickDate, pickTime } from '~/utils/utils';
     import { colors, fonts, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
+    import { MapPos } from '@nativescript-community/ui-carto/core';
 
     const timePaint = new Paint();
     timePaint.textSize = 12;
 </script>
 
 <script lang="ts">
-    $: ({ colorOutlineVariant, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
+    $: ({ colorOutlineVariant, colorOnBackground, colorOnSurfaceVariant, colorPrimary } = $colors);
     $: ({ bottom: windowInsetBottom } = $windowInset);
 
     export let line: TransitRoute;
-    const lineColor = line.color || transitService.defaultTransitLineColor;
+    export let position: MapPos<LatLonKeys> = null;
     let loading = false;
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -174,7 +175,7 @@
             const w = canvas.getWidth();
             const h = canvas.getHeight();
             const w5 = w / 5;
-            timePaint.color = item.stopId === currentStopId ? colorPrimary : colorOnSurface;
+            timePaint.color = item.stopId === currentStopId ? colorPrimary : colorOnBackground;
             for (let index = 0; index < 4; index++) {
                 const staticLayout = new StaticLayout(getTripTime(item, index), timePaint, w5 - 10, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
                 canvas.save();
@@ -204,16 +205,16 @@
 
     onThemeChanged(() => collectionView?.nativeView.refreshVisibleItems());
 
-    function onItemLoading({ index, view }) {
-        if (view) {
-            try {
-                const canvasView: CanvasView = (view as View).getViewById('canvas');
-                canvasView?.invalidate();
-            } catch (error) {
-                console.error(error);
-            }
-        }
-    }
+    // function onItemLoading({ index, view }) {
+    //     if (view) {
+    //         try {
+    //             const canvasView: CanvasView = (view as View).getViewById('canvas');
+    //             canvasView?.invalidate();
+    //         } catch (error) {
+    //             console.error(error);
+    //         }
+    //     }
+    // }
 </script>
 
 <page bind:this={page} actionBarHidden={true}>
@@ -232,17 +233,17 @@
             verticalTextAlignment="center"
             visibility={line.longName ? 'visible' : 'collapse'} />
         <gridlayout colSpan={3} columns="*,40,*" row={2} rows="50,auto" visibility={noNetworkAndNoData ? 'hidden' : 'visible'} on:swipe={onSwipe}>
-            <canvaslabel borderBottomColor={colorOutlineVariant} borderBottomWidth={1} marginLeft={20} rippleColor={colorOnSurface} on:tap={() => selectDate()}>
+            <canvaslabel borderBottomColor={colorOutlineVariant} borderBottomWidth={1} marginLeft={20} rippleColor={colorOnBackground} on:tap={() => selectDate()}>
                 <cspan color={colorOnSurfaceVariant} fontSize={11} text={lc('date')} verticalAlignment="top" />
                 <cspan fontFamily={$fonts.mdi} fontSize={22} text="mdi-calendar-today" textAlignment="right" verticalAlignment="middle" />
                 <cspan fontSize={14} text={currentTime.format('L')} verticalAlignment="middle" />
             </canvaslabel>
-            <canvaslabel borderBottomColor={colorOutlineVariant} borderBottomWidth={1} col={2} marginRight={20} rippleColor={colorOnSurface} on:tap={() => selectTime()}>
+            <canvaslabel borderBottomColor={colorOutlineVariant} borderBottomWidth={1} col={2} marginRight={20} rippleColor={colorOnBackground} on:tap={() => selectTime()}>
                 <cspan color={colorOnSurfaceVariant} fontSize={11} text={lc('time')} verticalAlignment="top" />
                 <cspan fontFamily={$fonts.mdi} fontSize={22} text="mdi-calendar-clock" textAlignment="right" verticalAlignment="middle" />
                 <cspan fontSize={14} text={formatTime(currentTime)} verticalAlignment="middle" />
             </canvaslabel>
-            <stacklayout colSpan={3} horizontalAlignment="center" margin={20} orientation="horizontal" rippleColor={colorOnSurface} row={1} on:tap={reverseTimesheet}>
+            <stacklayout colSpan={3} horizontalAlignment="center" margin={20} orientation="horizontal" rippleColor={colorOnBackground} row={1} on:tap={reverseTimesheet}>
                 <label fontFamily={$fonts.mdi} fontSize={22} text="mdi-swap-vertical" verticalTextAlignment="center" />
                 <label fontSize={14} text={directionText} />
             </stacklayout>
@@ -256,7 +257,7 @@
                     <label
                         id="test"
                         autoFontSize={true}
-                        color={item.stopId === currentStopId ? colorPrimary : colorOnSurface}
+                        color={item.stopId === currentStopId ? colorPrimary : colorOnBackground}
                         fontSize={13}
                         maxFontSize={13}
                         maxLines={3}
@@ -277,7 +278,15 @@
             </canvaslabel>
         {/if}
         <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="transparent" colSpan={3} labelsDefaultVisualState="transparent">
-            <label slot="center" class="transitIconLabel" autoFontSize={true} backgroundColor={lineColor} colSpan={3} color={line.textColor} marginLeft={5} text={line.shortName || line.name} />
+            <label
+                slot="center"
+                class="transitIconLabel"
+                autoFontSize={true}
+                backgroundColor={transitService.getRouteColor(line)}
+                colSpan={3}
+                color={transitService.getRouteTextColor(line)}
+                horizontalAlignment="center"
+                text={line.shortName || line.name} />
             <IconButton text="mdi-file-pdf-box" on:tap={downloadPDF} />
             <IconButton text="mdi-information-outline" on:tap={showDetails} />
         </CActionBar>

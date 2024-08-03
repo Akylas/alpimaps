@@ -2,15 +2,15 @@
     import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
     import { CartoMap, PanningMode } from '@nativescript-community/ui-carto/ui';
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { Page } from '@nativescript/core';
+    import { CollectionView, SnapPosition } from '@nativescript-community/ui-collectionview';
+    import { ObservableArray, Page } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
-    import { getMapContext } from '~/mapModules/MapModule';
+    import { createTileDecoder, getMapContext } from '~/mapModules/MapModule';
     import { onNetworkChanged } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { MetroLineStop, TransitRoute, transitService } from '~/services/TransitService';
@@ -18,9 +18,13 @@
     import { goBack, navigate } from '~/utils/svelte/ui';
     import { colors, fonts, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
+    import { FeatureCollection } from 'geojson';
+    import { MapPos } from '@nativescript-community/ui-carto/core';
+    import { getDistanceSimple } from '~/helpers/geolib';
     $: ({ bottom: windowInsetBottom } = $windowInset);
-    $: ({ colorSurfaceContainer, colorBackground } = $colors);
+    $: ({ colorSurfaceContainer, colorBackground, colorPrimary, colorOnBackground } = $colors);
     interface Item extends MetroLineStop {
+        selected: boolean;
         color: string;
         first: boolean;
         last: boolean;
@@ -28,10 +32,17 @@
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
     export let line: TransitRoute;
-    DEV_LOG && console.log('line', line);
+    export let position: MapPos<LatLonKeys> = null;
+    export let selectedStop = line.stopIds?.[0];
+
+    let cartoMap: CartoMap<LatLonKeys>;
+    let selectedIndex = -1;
+
+    DEV_LOG && console.log('line', selectedStop, JSON.stringify(line));
     let loading = false;
-    let dataItems: Item[] = null;
+    let dataItems: ObservableArray<Item> = null;
     let noNetworkAndNoData = false;
+    export let decoder = createTileDecoder('inner');
     const mapContext = getMapContext();
     const lineColor = line.color || transitService.defaultTransitLineColor;
 
@@ -40,14 +51,21 @@
             if (!cartoMap) {
                 return;
             }
-            dataItems = (await transitService.getLineStops(line.id))
-                .filter((i) => i.visible === true)
-                .map((i, index, array) => ({ ...i, color: lineColor, first: index === 0, last: index === array.length - 1 }));
+            dataItems = new ObservableArray(
+                (await transitService.getLineStops(line.id))
+                    .filter((i) => i.visible === true)
+                    .map((i, index, array) => {
+                        const selected = i.id === selectedStop || (position && getDistanceSimple(i, position) < 50);
+                        if (selected) {
+                            selectedIndex = index;
+                        }
+                        return { ...i, color: lineColor, first: index === 0, last: index === array.length - 1, selected };
+                    })
+            );
 
-            const lineGeoJSON = await transitService.getTransitLines(line.id);
-            const stopsGeoJSON = [];
+            const lineGeoJSON: FeatureCollection = await transitService.getTransitLines(line.id);
             dataItems.forEach((i) => {
-                stopsGeoJSON.push({ type: 'Feature', geometry: { type: 'Point', coordinates: [i.lon, i.lat] }, properties: { id: i.id, name: i.name, color: i.color } as any });
+                lineGeoJSON.features.unshift({ type: 'Feature', geometry: { type: 'Point', coordinates: [i.lon, i.lat] }, properties: { id: i.id, name: i.name, color: i.color } as any });
             });
             // lineGeoJSON = lineGeoJSON.replace('features":[{', `features":[${JSON.stringify(stopsGeoJSON).slice(1, -1)},{`);
 
@@ -55,18 +73,24 @@
                 minZoom: 0,
                 maxZoom: 24
             });
+            const lineGeoJSONStr = JSON.stringify(lineGeoJSON);
+            DEV_LOG && console.log('line', JSON.stringify(lineGeoJSONStr));
             transitVectorTileDataSource.createLayer('routes');
-            const geometry = packageService.getGeoJSONReader().readFeatureCollection(lineGeoJSON);
-            transitVectorTileDataSource.setLayerGeoJSONString(1, lineGeoJSON);
+            const geometry = packageService.getGeoJSONReader().readFeatureCollection(lineGeoJSONStr);
+            transitVectorTileDataSource.setLayerGeoJSONString(1, lineGeoJSONStr);
 
             const transitVectorTileLayer = new VectorTileLayer({
                 dataSource: transitVectorTileDataSource,
-                decoder: getMapContext().innerDecoder
+                decoder
             });
 
             transitVectorTileLayer.setVectorTileEventListener(this);
             cartoMap.addLayer(transitVectorTileLayer);
-            cartoMap.moveToFitBounds(geometry.getBounds(), undefined, true, true, true, 0);
+            if (selectedIndex) {
+                focusOnItem(dataItems.getItem(selectedIndex), true);
+            } else {
+                cartoMap.moveToFitBounds(geometry.getBounds(), undefined, true, true, true, 0);
+            }
             noNetworkAndNoData = false;
         } catch (error) {
             if (error instanceof NoNetworkError && !dataItems) {
@@ -83,22 +107,9 @@
     function onNavigatingTo(e) {
         refresh();
     }
-    let cartoMap: CartoMap<LatLonKeys>;
     async function onMapReady(e) {
         cartoMap = e.object as CartoMap<LatLonKeys>;
-        // projection = cartoMap.projection;
-        // if (__ANDROID__) {
-        //     console.log('onMapReady', com.carto.ui.BaseMapView.getSDKVersion());
-        // } else {
-        //     console.log('onMapReady', cartoMap.nativeViewProtected as NTMapView);
-        // }
-
-        const options = cartoMap.getOptions();
-        options.setRestrictedPanning(true);
-        options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
-
-        options.setZoomGestures(true);
-        options.setKineticRotation(false);
+        mapContext.setMapDefaultOptions(cartoMap.getOptions());
         // const route = dataItems.map(i=>([]))
         try {
             let layers = mapContext.getLayers('map');
@@ -157,18 +168,35 @@
             showError(error);
         }
     }
+
+    function focusOnItem(item: Item, scrollToIndex = false) {
+        cartoMap.setFocusPos(item, 200);
+        cartoMap.setZoom(15, 200);
+        decoder.setJSONStyleParameters({ selected_id_str: item.id + '' });
+        if (scrollToIndex) {
+            collectionView.nativeView.scrollToIndex(dataItems.indexOf(item), false, SnapPosition.START);
+        }
+    }
     async function selectStop(item: Item) {
         try {
-            mapContext.selectItem({
-                item: { geometry: { type: 'Point', coordinates: [item.lon, item.lat] }, properties: { id: item.id, name: item.name, color: item.color } },
-                isFeatureInteresting: true,
-                setSelected: false,
-                peek: false,
-                zoom: 15,
-                zoomDuration: 0
-            });
-            cartoMap.setFocusPos(item, 200);
-            cartoMap.setZoom(15, 200);
+            DEV_LOG && console.log('selectStop', item.id);
+            if (selectedIndex !== -1) {
+                const oldItem = dataItems.getItem(selectedIndex);
+                oldItem.selected = false;
+                dataItems.setItem(selectedIndex, oldItem);
+            }
+            selectedIndex = dataItems.indexOf(item);
+            item.selected = true;
+            dataItems.setItem(selectedIndex, item);
+            // mapContext.selectItem({
+            //     item: { geometry: { type: 'Point', coordinates: [item.lon, item.lat] }, properties: { id: item.id, name: item.name, color: item.color } },
+            //     isFeatureInteresting: true,
+            //     setSelected: false,
+            //     peek: false,
+            //     zoom: 15,
+            //     zoomDuration: 0
+            // });
+            focusOnItem(item);
         } catch (error) {
             showError(error);
         }
@@ -176,14 +204,14 @@
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatingTo={onNavigatingTo}>
-    <gridlayout rows="auto,auto,*,2*">
+    <gridlayout rows="auto,auto,4*,6*">
         <label
             autoFontSize={true}
             fontSize={20}
             fontWeight="bold"
             maxFontSize={20}
             maxLines={3}
-            padding="15 10 15 10"
+            padding="0 10 5 10"
             row={1}
             text={(line.longName || line.name)?.replace(' / ', '\n')}
             textAlignment="center"
@@ -200,13 +228,12 @@
                         fillColor={item.first || item.last ? item.color : colorBackground}
                         horizontalAlignment="left"
                         paddingLeft={30}
-                        radius={12}
+                        radius={item.selected ? 14 : 12}
                         strokeColor={item.color}
                         strokeWidth={3}
                         verticalAlignment="middle"
                         width={0} />
-                    <label fontSize={16} marginLeft={60} text={item.name} verticalTextAlignment="middle" />
-                    <!-- <label row={1} col={1} fontSize={14} color={colorOnSurfaceVariant} text={item.city} verticalTextAlignment="top" /> -->
+                    <label color={item.selected ? colorPrimary : colorOnBackground} fontSize={16} marginLeft={60} text={item.name} verticalTextAlignment="middle" />
                     <IconButton col={2} rowSpan={2} text="mdi-map-marker-radius-outline" verticalAlignment="middle" on:tap={() => backToMapOnPoint(item)} />
                 </canvasview>
             </Template>
@@ -225,9 +252,9 @@
                 slot="center"
                 class="transitIconLabel"
                 autoFontSize={true}
-                backgroundColor={lineColor}
+                backgroundColor={transitService.getRouteColor(line)}
                 colSpan={3}
-                color={line.textColor || 'white'}
+                color={transitService.getRouteTextColor(line)}
                 horizontalAlignment="center"
                 text={line.shortName || line.name} />
 

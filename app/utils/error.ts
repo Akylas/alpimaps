@@ -26,6 +26,21 @@ export class CustomError extends BaseError {
     assignedLocalData: any;
     silent?: boolean;
     _customStack?: string;
+
+    // static fromObject(data) {
+    //     switch (data.customErrorConstructorName) {
+    //         case 'TimeoutError':
+    //             return new TimeoutError(data);
+    //         case 'NoNetworkError':
+    //             return new NoNetworkError(data);
+    //         case 'HTTPError':
+    //             return new HTTPError(data);
+    //         case 'PermissionError':
+    //             return new PermissionError(data);
+    //         default:
+    //             return new CustomError(data);
+    //     }
+    // }
     constructor(props?, customErrorConstructorName?: string) {
         super(props.message);
         this.message = props.message;
