@@ -44,7 +44,7 @@
 	}
 
 	['mapnik::geometry_type'=1] {
-		text-placement: [nuti::markers3d];
+		text-placement: nutibillboard;
 		// text-file: url('symbols/pin.svg');
 		text-fill: [isStart] ? 'green': ([isStop] ? 'red' : 'blue');
 		// text-width: 24;

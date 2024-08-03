@@ -16,11 +16,10 @@
     [admin_level>=5][zoom>=7][zoom<=14] {
 
             text-placement-priority: -10000000;
-			text-placement: [nuti::markers3d];
+			text-placement: nutibillboard;
             text-name: @name + '\n' + [ref];
             text-face-name: @mont_md;
             text-wrap-character: @wrap_characters;
-            // text-placement: [nuti::texts3d];
             text-fill: #000;
             text-halo-fill: @standard-halo-fill;
             text-halo-radius: @standard-halo-radius;
