@@ -44,8 +44,8 @@
         line-join: round;
         line-width: @transit_route_width +([route_id]=[nuti::selected_id_str] ? 1 : 0);
 
-        [route_short_name !=null][zoom>=13],
-        [route_long_name !=null][zoom>=15] {
+        [route_short_name !=null][zoom>=12],
+        [route_short_name =null][route_long_name !=null][zoom>=14] {
 
             ::label0 {
                 text-feature-id: @transitShieldeatureId;
