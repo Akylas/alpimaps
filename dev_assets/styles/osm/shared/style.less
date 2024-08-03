@@ -18,9 +18,9 @@
 
 @protected_area_line_width:linear([view::zoom], (9, 0.75), (12, 1), (15, 1), (18, 3));
 
-@contour_opacity: 0.45;
-@contour_opacity_low: @contour_opacity * 0.75;
-@contour_opacity_semi: linear([view::zoom], (12, @contour_opacity_low), (14, @contour_opacity));
+@contour_opacity: [nuti::contoursOpacity];
+@contour_opacity_low: @contour_opacity * 0.5;
+@contour_opacity_semi: step([view::zoom], (12, @contour_opacity_low), (14, @contour_opacity));
 
 @contour_label_size: linear([view::zoom], (12, 7), (16, 8), (20, 9));
 @park_font_size:linear([view::zoom], (12, 12), (14, 12));

@@ -77,9 +77,6 @@
 @border_region_dasharray: 1, 2;
 
 @contour_width: linear([view::zoom], (16, 0.6), (22, 1.6));
-@contour_opacity: [nuti::contoursOpacity];
-@contour_opacity_low: @contour_opacity * 0.75;
-@contour_opacity_semi: linear([view::zoom], (12, @contour_opacity_low), (14, @contour_opacity));
 @contour_label: @contour_color;
 @contour_halo: @standard-halo-fill;
 @contour_halo_radius: 1;
