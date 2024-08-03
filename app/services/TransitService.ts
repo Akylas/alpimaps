@@ -246,7 +246,7 @@ class TransitService extends Observable {
         return item.color || this.defaultTransitLineColor;
     }
     getRouteTextColor(item: TransitRoute) {
-        return item.textColor || new Color(this.getRouteColor(item)).getBrightness() >= 170 ? '#000000' : '#ffffff';
+        return new Color(this.getRouteColor(item)).getBrightness() >= 170 ? '#000000' : '#ffffff';
     }
 }
 

@@ -109,12 +109,7 @@
         //     console.log('onMapReady', cartoMap.nativeViewProtected as NTMapView);
         // }
 
-        const options = cartoMap.getOptions();
-        options.setRestrictedPanning(true);
-        options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
-
-        options.setZoomGestures(true);
-        options.setKineticRotation(false);
+        mapContext.setMapDefaultOptions(cartoMap.getOptions());
         // const route = dataItems.map(i=>([]))
         try {
             let layers = mapContext.getLayers('map');
