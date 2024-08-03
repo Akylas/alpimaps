@@ -13,28 +13,7 @@
         "selected_osmid": -1,
         "selected_id_str": "",
         "main_color": "#60A5F4",
-        "main_darker_color": "#287bda",
-        "texts3d": {
-            "default": "nutibillboard",
-            "values": {
-                "1": "nutibillboard",
-                "0": "point"
-            }
-        },
-        "markers3d": {
-            "default": "nutibillboard",
-            "values": {
-                "1": "nutibillboard",
-                "0": "point"
-            }
-        },
-        "shields3d": {
-            "default": "nutibillboard",
-            "values": {
-                "1": "nutibillboard",
-                "0": "point"
-            }
-        }
+        "main_darker_color": "#287bda"
     },
     "name": "voyager"
 }
