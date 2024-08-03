@@ -71,7 +71,7 @@
 
 #items['mapnik::geometry_type'=1]['nuti::hide_unselected'=0] {
         text-fill: [style.color] ? [style.color] : @itemColor;
-        text-placement: [nuti::markers3d];
+        text-placement: nutibillboard;
         text-name: [style.icon] ? [style.icon] : '';
         text-allow-overlap: true;
         text-clip: false;
