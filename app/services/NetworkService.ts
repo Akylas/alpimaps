@@ -3,7 +3,7 @@ import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
 import * as appavailability from '@nativescript/appavailability';
 import { Application, ApplicationEventData, ApplicationSettings, Connectivity, EventData, Folder, Observable, Utils } from '@nativescript/core';
 import dayjs from 'dayjs';
-import { HTTPError, NoNetworkError, wrapNativeException } from '~/utils/error';
+import { HTTPError, NoNetworkError, TimeoutError, wrapNativeException } from '~/utils/error';
 import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
 import { getDataFolder } from '~/utils/utils';
 
@@ -203,6 +203,20 @@ export function getCacheControl(maxAge = 60, stale = 59) {
 //     console.debug('prepareOSMObject done ', result);
 //     return result;
 // }
+
+export function wrapNativeHttpException(error, requestParams: HttpRequestOptions) {
+    return wrapNativeException(error, (message) => {
+        if (/(SocketTimeout|SocketException|UnknownHost)/.test(message)) {
+            return new TimeoutError();
+        } else {
+            return new HTTPError({
+                message,
+                statusCode: -1,
+                requestParams
+            });
+        }
+    });
+}
 
 export interface HttpRequestOptions extends HTTPOptions {
     toJSON?: boolean;
@@ -447,6 +461,7 @@ export class NetworkService extends Observable {
                 requestParams.url = queryString(requestParams.queryParams, requestParams.url);
                 delete requestParams.queryParams;
             }
+            DEV_LOG && console.info('url', requestParams.url);
             requestParams.headers = requestParams.headers || {};
             if (!requestParams.headers['Content-Type']) {
                 requestParams.headers['Content-Type'] = 'application/json';
@@ -514,20 +529,7 @@ export class NetworkService extends Observable {
                 return undefined;
             }
         } catch (error) {
-            if (!(error instanceof HTTPError)) {
-                if (!this._connected) {
-                    throw new NoNetworkError();
-                }
-            }
-            throw wrapNativeException(
-                error,
-                (message) =>
-                    new HTTPError({
-                        message,
-                        statusCode: -1,
-                        requestParams
-                    })
-            );
+            throw wrapNativeHttpException(error, requestParams);
         }
     }
 

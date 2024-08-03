@@ -627,20 +627,7 @@
                 setShowError(false);
             }
             projection = map.projection;
-            const options = map.getOptions();
-            options.setLayersLabelsProcessedInReverseOrder(true);
-            options.setRestrictedPanning(true);
-            options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
-            options.setEnvelopeThreadPoolSize(1);
-            options.setTileThreadPoolSize(1);
-            if (theme === 'eink') {
-                options.setBackgroundBitmap(getCartoBitmap('~/assets/images/eink-map-background.png'));
-            }
-
-            options.setZoomGestures(true);
-            options.setDoubleClickMaxDuration(0.3);
-            options.setLongClickDuration(0.5);
-            options.setKineticRotation(false);
+            mapContext.setMapDefaultOptions(map.getOptions());
 
             cartoMap = map;
             onColorsChange();
@@ -789,52 +776,54 @@
                 }
                 const route = item?.route;
                 const props = item.properties;
+                if (peek) {
+                    bottomSheetInner.loadView().then(() => {
+                        bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
+                    });
+                }
+                if (setSelected) {
+                    setSelectedItem(item);
+                }
                 if (setSelected && route) {
-                    TEST_LOG && console.log('selected_id', typeof route.osmid, route.osmid, typeof props.id, props.id, setSelected);
+                    (async () => {
+                        TEST_LOG && console.log('selected_id', typeof route.osmid, route.osmid, typeof props.id, props.id, setSelected);
 
-                    // selected_osmid is for routes
-                    // mapContext.mapDecoder.setStyleParameter('selected_id', '');
-                    const styleParameters = {};
-                    if (props.id !== undefined) {
-                        selectedId = props.id;
-                        selectedOSMId = undefined;
-                        styleParameters['selected_osmid'] = '0';
-                        if (typeof props.id === 'string') {
-                            styleParameters['selected_id_str'] = selectedId;
-                            styleParameters['selected_id'] = '0';
-                        } else {
-                            styleParameters['selected_id_str'] = '0';
-                            styleParameters['selected_id'] = selectedId + '';
-                        }
-                    } else if (route.osmid !== undefined) {
-                        if (typeof route.osmid === 'string') {
-                            selectedId = route.osmid;
+                        // selected_osmid is for routes
+                        // mapContext.mapDecoder.setStyleParameter('selected_id', '');
+                        const styleParameters = {};
+                        if (props.id !== undefined) {
+                            selectedId = props.id;
                             selectedOSMId = undefined;
-                            styleParameters['selected_id_str'] = selectedId + '';
                             styleParameters['selected_osmid'] = '0';
-                            styleParameters['selected_id'] = '0';
-                        } else {
-                            selectedId = undefined;
-                            selectedOSMId = route.osmid;
-                            styleParameters['selected_osmid'] = selectedOSMId + '';
-                            styleParameters['selected_id_str'] = '0';
-                            styleParameters['selected_id'] = '0';
+                            if (typeof props.id === 'string') {
+                                styleParameters['selected_id_str'] = selectedId;
+                                styleParameters['selected_id'] = '0';
+                            } else {
+                                styleParameters['selected_id_str'] = '0';
+                                styleParameters['selected_id'] = selectedId + '';
+                            }
+                        } else if (route.osmid !== undefined) {
+                            if (typeof route.osmid === 'string') {
+                                selectedId = route.osmid;
+                                selectedOSMId = undefined;
+                                styleParameters['selected_id_str'] = selectedId + '';
+                                styleParameters['selected_osmid'] = '0';
+                                styleParameters['selected_id'] = '0';
+                            } else {
+                                selectedId = undefined;
+                                selectedOSMId = route.osmid;
+                                styleParameters['selected_osmid'] = selectedOSMId + '';
+                                styleParameters['selected_id_str'] = '0';
+                                styleParameters['selected_id'] = '0';
+                            }
                         }
-                    }
-                    mapContext.innerDecoder.setJSONStyleParameters(styleParameters);
+                        mapContext.innerDecoder.setJSONStyleParameters(styleParameters);
 
-                    if (selectedPosMarker) {
-                        selectedPosMarker.visible = false;
-                    }
+                        if (selectedPosMarker) {
+                            selectedPosMarker.visible = false;
+                        }
+                    })();
                 } else {
-                    if (peek) {
-                        bottomSheetInner.loadView().then(() => {
-                            bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
-                        });
-                    }
-                    if (setSelected) {
-                        setSelectedItem(item);
-                    }
                     (async () => {
                         const geometry = item.geometry as GeoJSONPoint;
                         const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
