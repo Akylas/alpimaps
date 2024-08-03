@@ -30,11 +30,13 @@
     import { computeDistanceBetween } from '~/utils/geo';
     import { share } from '~/utils/share';
     import { navigate } from '~/utils/svelte/ui';
-    import { hideLoading, openLink, showLoading } from '~/utils/ui/index.common';
+    import { hideLoading, openLink, showLoading, showPopoverMenu } from '~/utils/ui/index.common';
     import { actionBarButtonHeight, colors } from '~/variables';
     import ElevationChart from '../chart/ElevationChart.svelte';
     import IconButton from '../common/IconButton.svelte';
     import { compareArrays } from '~/utils/utils';
+    import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
+    import { VerticalPosition } from '@nativescript-community/ui-popover';
 
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorOutlineVariant, colorWidgetBackground, colorError } = $colors);
     const PROFILE_HEIGHT = 150;
@@ -526,7 +528,7 @@
     function hideItem() {
         mapContext.mapModule('items').hideItem(mapContext.getSelectedItem());
     }
-    async function shareItem() {
+    async function shareItem(event) {
         // if (item?.route) {
         //     if (!item.profile && itemCanQueryProfile) {
         //         await getProfile(false);
@@ -545,68 +547,66 @@
             } else {
                 options.push({ name: lc('position'), data: 'position' });
             }
-            const result = await showBottomSheet<any>({
-                parent: null,
-                view: OptionSelect,
-                props: {
-                    title: lc('share'),
-                    options
-                },
-                trackingScrollView: 'collectionView'
-            });
-            if (result) {
-                switch (result.data) {
-                    case 'address':
-                        const address = { ...item.properties.address };
-                        if (!address.name) {
-                            address.name = item.properties.name;
-                        }
-                        // console.log('item', JSON.stringify(item));
-                        // console.log('address', JSON.stringify(address));
-                        // console.log('test1', addressFormatter.format(address, {
-                        //     fallbackCountryCode:get(langStore)
-                        // }));
-                        // console.log('test2', formatter.getItemName(item) + ',' + formatter.getItemAddress(item));
-                        // clipboard.copy(
-                        // addressFormatter.format(address, {
-                        //     fallbackCountryCode: get(langStore)
-                        // })
-                        // );
-                        share(
-                            {
-                                message: addressFormatter.format(address, {
-                                    fallbackCountryCode: get(langStore)
-                                })
-                            },
-                            {
-                                dialogTitle: lc('share')
-                            }
-                        );
-                        break;
-                    case 'position':
-                        // clipboard.copy(formatter.getItemPositionToString(item));
+            await showPopoverMenu({
+                options,
+                anchor: event.object,
+                vertPos: VerticalPosition.ABOVE,
+                onClose: async (result) => {
+                    if (result) {
+                        switch (result.data) {
+                            case 'address':
+                                const address = { ...item.properties.address };
+                                if (!address.name) {
+                                    address.name = item.properties.name;
+                                }
+                                // console.log('item', JSON.stringify(item));
+                                // console.log('address', JSON.stringify(address));
+                                // console.log('test1', addressFormatter.format(address, {
+                                //     fallbackCountryCode:get(langStore)
+                                // }));
+                                // console.log('test2', formatter.getItemName(item) + ',' + formatter.getItemAddress(item));
+                                // clipboard.copy(
+                                // addressFormatter.format(address, {
+                                //     fallbackCountryCode: get(langStore)
+                                // })
+                                // );
+                                share(
+                                    {
+                                        message: addressFormatter.format(address, {
+                                            fallbackCountryCode: get(langStore)
+                                        })
+                                    },
+                                    {
+                                        dialogTitle: lc('share')
+                                    }
+                                );
+                                break;
+                            case 'position':
+                                // clipboard.copy(formatter.getItemPositionToString(item));
 
-                        share(
-                            {
-                                message: formatter.getItemPositionToString(item)
-                            },
-                            {
-                                dialogTitle: lc('share')
-                            }
-                        );
-                        break;
-                    case 'geojson':
-                        showLoading();
-                        await mapContext.mapModule('items').shareItemsAsGeoJSON([item]);
-                        break;
-                    case 'gpx':
-                        showLoading();
-                        await mapContext.mapModule('items').shareItemsAsGPX([item]);
-                        break;
-                    default:
-                        throw new Error('command not found');
+                                share(
+                                    {
+                                        message: formatter.getItemPositionToString(item)
+                                    },
+                                    {
+                                        dialogTitle: lc('share')
+                                    }
+                                );
+                                break;
+                            case 'geojson':
+                                showLoading();
+                                await mapContext.mapModule('items').shareItemsAsGeoJSON([item]);
+                                break;
+                            case 'gpx':
+                                showLoading();
+                                await mapContext.mapModule('items').shareItemsAsGPX([item]);
+                                break;
+                            default:
+                                throw new Error('command not found');
+                        }
+                    }
                 }
-            }
+            });
         } catch (error) {
             showError(error);
         } finally {
