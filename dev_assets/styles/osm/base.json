@@ -53,27 +53,6 @@
         "contours": 1,
         "contoursOpacity": 0.45,
         "fallback_lang": "en",
-        "texts3d": {
-            "default": "nutibillboard",
-            "values": {
-                "1": "nutibillboard",
-                "0": "point"
-            }
-        },
-        "markers3d": {
-            "default": "nutibillboard",
-            "values": {
-                "1": "nutibillboard",
-                "0": "point"
-            }
-        },
-        "shields3d": {
-            "default": "nutibillboard",
-            "values": {
-                "1": "nutibillboard",
-                "0": "point"
-            }
-        },
         "osm-border_control": "\uea8f",
         "osm-collecting": "\uea86",
         "osm-frame": "\uea87",

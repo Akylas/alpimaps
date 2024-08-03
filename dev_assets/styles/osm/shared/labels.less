@@ -10,7 +10,7 @@
 		text-name: @name;
 		text-face-name: @mont_it;
 		text-fill: @hamlet_label;
-		text-placement: [nuti::texts3d];
+		text-placement: nutibillboard;
 		text-wrap-width:@suburb-label-wrap-width;
 		text-size: @hamlet_label_width 
 		text-halo-fill: @standard-halo-fill;
@@ -40,7 +40,7 @@
 		text-face-name: @mont_it;
 		text-wrap-width: 50;
 		text-fill: @marine_labels;
-		text-placement: [nuti::texts3d];
+		text-placement: nutibillboard;
 		text-halo-fill: @marine_labels_halo;
 		text-halo-radius: @marine_labels_halo_radius;
 		text-line-spacing: -2;
@@ -55,7 +55,7 @@
 		text-name: @name;
 		text-face-name: @mont_it;
 		text-wrap-character: @wrap_characters;
-		text-placement: [nuti::texts3d];
+		text-placement: nutibillboard;
 		text-fill: @state_label;
 		text-halo-fill: @state_halo;
 		text-halo-radius: @place_halo_radius;
@@ -68,7 +68,7 @@
 		text-name: @name;
 		text-fill: @continent_text;
 		text-face-name: @mont_md;
-		text-placement: [nuti::texts3d];
+		text-placement: nutibillboard;
 		text-transform: uppercase;
 		text-wrap-character: @wrap_characters;
 		text-halo-fill: @place_halo;
@@ -79,7 +79,7 @@
 	[class=country][zoom>=2][zoom<=6]{
 		text-name: @name;
 		text-face-name: @mont_bd;
-		text-placement: [nuti::texts3d];
+		text-placement: nutibillboard;
 		text-wrap-character: @wrap_characters;
 		text-halo-fill: @country_halo;
 		text-halo-radius: @place_halo_radius;
@@ -116,7 +116,7 @@
 	// 	text-name: @name;
 	// 	text-face-name: @mont_it;
 	// 	text-wrap-character: @wrap_characters;
-	// 	text-placement: [nuti::texts3d];
+	// 	text-placement: nutibillboard;
 	// 	text-fill: @state_label;
 	// 	text-halo-fill: @state_halo;
 	// 	text-halo-radius: @place_halo_radius;
@@ -128,7 +128,7 @@
 		text-name: @name;
 		text-face-name: @mont_md;
 		text-wrap-character: @wrap_characters;
-		text-placement: [nuti::texts3d];
+		text-placement: nutibillboard;
 		text-min-distance:@suburb_min_dist;
 		text-wrap-width:@suburb-label-wrap-width;
 		text-fill: @island_label;
@@ -140,7 +140,7 @@
 	[class=hamlet][zoom>=12][zoom<=16] {
 		text-name: @name;
 		text-face-name: @mont_md;
-		text-placement: [nuti::texts3d];
+		text-placement: nutibillboard;
 		text-wrap-width:@suburb-label-wrap-width;
 		text-min-distance:@suburb_min_dist;
 		text-wrap-character: @wrap_characters;
@@ -153,7 +153,7 @@
 	[class=village][zoom>=8][zoom<=16] {
 		text-name: @name;
 		text-face-name: @mont_md;
-		text-placement: [nuti::texts3d];
+		text-placement: nutibillboard;
 		text-fill: @village_label;
 		text-min-distance:@suburb_min_dist;
 		text-wrap-character: @wrap_characters;
@@ -165,7 +165,7 @@
 	[class=suburb][zoom>=12][zoom<=14]{
 		text-name: @name;
 		text-face-name: @mont_md;
-		text-placement: [nuti::texts3d];
+		text-placement: nutibillboard;
 		text-fill: @suburb_label;
 		text-transform: uppercase;
 		text-wrap-character: @wrap_characters;
@@ -181,7 +181,7 @@
 		
 		text-name: @name;
 		text-face-name: @mont_md;
-		text-placement: [nuti::texts3d];
+		text-placement: nutibillboard;
 		text-halo-fill: @place_halo;
 		text-halo-radius: @place_halo_radius;
 		text-fill: @town_label;
@@ -201,7 +201,7 @@
 		shield-unlock-image: true;
 		shield-face-name: @mont_md;
 		shield-size: @city-label-width;
-		shield-placement: [nuti::texts3d];
+		shield-placement: nutibillboard;
 		shield-fill: @city_label;
 		shield-wrap-width: @city-label-wrap-width;
 		shield-halo-fill: @place_halo;
@@ -222,7 +222,7 @@
 		 {
 			text-name: @name;
 			text-face-name: @mont_md;
-			text-placement: [nuti::texts3d];
+			text-placement: nutibillboard;
 			text-fill: @neighbourhood_label;
 			text-transform: uppercase;
 			text-wrap-character: @wrap_characters;
@@ -240,7 +240,7 @@
 	[class=locality][zoom>=13][zoom<=16] {
 		text-name: @name;
 		text-face-name: @mont_md;
-		text-placement: [nuti::texts3d];
+		text-placement: nutibillboard;
 		text-fill: @locality_label_fill;
 		text-halo-fill: @place_halo;
 		text-min-distance:@locality_min_dist;
@@ -425,7 +425,7 @@
 	[zoom=17][rank<=100],
 	[zoom>=18] {
 		::icon {
-			text-placement: [nuti::markers3d];
+			text-placement: nutibillboard;
 			text-feature-id: @featureId;
 			text-name: @osm_icon;
 			text-size: @poi_icon_width;
@@ -439,7 +439,7 @@
 			text-name: @name;
 			text-feature-id: @featureId;
 			text-face-name: @mont_md;
-			text-placement: [nuti::texts3d];
+			text-placement: nutibillboard;
 			text-halo-fill: @poi_halo;
 			text-halo-radius: @poi_halo_radius;
 			text-size: @poi_label_width;
@@ -456,7 +456,7 @@
 	[rank<=15],
 	[zoom>=14] {
 		::icon {
-			text-placement: [nuti::markers3d];
+			text-placement: nutibillboard;
 			text-name: @osm_icon;
 			text-feature-id: @featureId;
 			text-size: @poi_icon_width;
@@ -471,7 +471,7 @@
 			text-name: @name;
 			text-feature-id: @featureId;
 			text-face-name: @mont_md;
-			text-placement: [nuti::texts3d];
+			text-placement: nutibillboard;
 			text-halo-fill: @poi_halo;
 			text-halo-radius: @poi_halo_radius;
 			text-size: @poi_label_width;
@@ -486,7 +486,7 @@
 }
 #poi[class=spring][zoom>=12] {
 	::icon {
-		text-placement: [nuti::markers3d];
+		text-placement: nutibillboard;
 		text-name: @osm_icon;
 		text-feature-id: @featureId;
 		text-face-name: @osm;
@@ -500,7 +500,7 @@
 		text-name: @name;
 		text-feature-id: @featureId;
 		text-face-name: @mont_md;
-		text-placement: [nuti::texts3d];
+		text-placement: nutibillboard;
 		text-halo-fill: @poi_halo;
 		text-halo-radius: @poi_halo_radius;
 		text-size: @poi_label_width;
@@ -521,7 +521,7 @@
 		::icon {
 			// text-placement-priority:[nuti::selected_id] = @featureId ? 1000 : 10;
 			text-placement-priority: 10;
-			text-placement: [nuti::markers3d];
+			text-placement: nutibillboard;
 			text-name: @osm_icon;
 			text-feature-id: @featureId;
 			text-size: @poi_icon_width;
@@ -572,7 +572,7 @@
 				text-name: @name;
 				text-feature-id: @featureId;
 				text-face-name: @mont_md;
-				text-placement: [nuti::texts3d];
+				text-placement: nutibillboard;
 				text-halo-fill: @poi_halo;
 				text-halo-radius: @poi_halo_radius;
 				text-size: @poi_label_width;
@@ -620,7 +620,7 @@
 
 #park['mapnik::geometry_type'=1][class=national_park][zoom>=5][zoom<12] {
 	::icon {
-		text-placement: [nuti::markers3d];
+		text-placement: nutibillboard;
 		text-name: [nuti::osm-park];
 		text-feature-id: @featureId;
 		text-size: @poi_icon_width;
@@ -634,7 +634,7 @@
 		text-name: @name;
 		text-feature-id: @featureId;
 		text-face-name: @mont_md;
-		text-placement: [nuti::texts3d];
+		text-placement: nutibillboard;
 		text-halo-fill: @poi_halo;
 		text-halo-radius: @poi_halo_radius;
 		text-size: @poi_label_width;
