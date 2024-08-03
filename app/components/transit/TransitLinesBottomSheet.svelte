@@ -37,7 +37,14 @@
             //     return acc;
             // }, {});
             // linesItems = Object.values(linesData);
-            linesItems = await transitService.routes({ position });
+            linesItems = (await transitService.routes({ position })).sort((a, b) => {
+                const aS = a.id;
+                const bS = b.id;
+                if (aS.length === bS.length) {
+                    return aS > bS ? 1 : -1;
+                }
+                return aS.length - bS.length;
+            });
             noNetworkAndNoData = false;
         } catch (error) {
             if (error instanceof NoNetworkError && !linesItems) {
@@ -60,7 +67,8 @@
             navigate({
                 page: component,
                 props: {
-                    line: item
+                    line: item,
+                    position
                 }
             });
         } catch (error) {
@@ -75,7 +83,8 @@
             navigate({
                 page: component,
                 props: {
-                    line: item
+                    line: item,
+                    position
                 }
             });
         } catch (error) {
@@ -109,10 +118,17 @@
     <collectionview bind:this={collectionView} id="scrollView" itemIdGenerator={(item, i) => i} items={linesItems} row={1} android:marginBottom={windowInsetBottom} rowHeight={70}>
         <Template let:item>
             <gridlayout columns="auto,*,auto,auto" padding={10} rippleColor={getItemColor(item)} on:tap={() => showTimesheet(item)}>
-                <label class="transitIconLabel" autoFontSize={true} backgroundColor={getItemColor(item)} borderRadius={4} color={getItemTextColor(item)} maxFontSize={30} text={item.shortName} />
+                <label
+                    class="transitIconLabel"
+                    autoFontSize={true}
+                    backgroundColor={getItemColor(item)}
+                    borderRadius={4}
+                    color={getItemTextColor(item)}
+                    maxFontSize={30}
+                    text={item.shortName || item.name} />
                 <label autoFontSize={true} col={1} fontSize={17} lineBreak="end" maxFontSize={17} maxLines={3} paddingLeft={10} text={item.longName} verticalTextAlignment="center" />
                 <IconButton col={2} text="mdi-routes" on:tap={() => showDetails(item)} />
-                <IconButton col={3} text="mdi-routes-clock" on:tap={() => getTimes(item)} />
+                <IconButton col={3} text="mdi-routes-clock" on:tap={() => showTimesheet(item)} />
             </gridlayout>
         </Template>
     </collectionview>
