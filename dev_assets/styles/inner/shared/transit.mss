@@ -7,11 +7,13 @@
 
 @transit_route_text_width :linear([view::zoom], (13, 8.0), (18, 12.0));
 @transit_route_text_dy :2;
-@transitShieldeatureId: [route_id]+ @transitLineColor;
+@transitShieldeatureId: [route_id] + @transitLineColor;
 
 @transit_route_label_halo_radius: 2;
 @transit_route_label_halo: #f2f5f8;
 @transit_line_priority: 100 - length([route_short_name]);
+
+@marker-size: linear([view::zoom], (12, 4), (13, 5.5), (19, 8.5)) + ([nuti::selected_id_str]=[id] ? 5: 0);
 
 #routes['mapnik::geometry_type'=2][route_type !=2][generated !=true][agency_id !='FLIXBUS-eu'] {
 
@@ -55,7 +57,7 @@
                 // 	text-name: [route_long_name];
                 // }
 
-                text-placement: nutipoint;
+                text-placement: nutibillboardline;
                 text-placement-priority: 0 + @transit_line_priority;
                 text-wrap-before: true;
                 text-face-name: @mont_bd;
@@ -71,13 +73,14 @@
                 text-placement-priority: 1 + @transit_line_priority;
                 text-allow-overlap-same-feature-id: true;
                 // text-placement-priority: [nuti::selected_id_str]=[route_id] ? 1000: 0;
-                text-placement: nutipoint;
+                text-placement: nutibillboardline;
                 text-vertical-alignment: middle;
                 text-dy: 0.5;
+                text-character-spacing: -1;
                 text-fill: @transitLineColor;
                 text-feature-id: @transitShieldeatureId;
                 text-size: @transit_route_text_width + 5;
-                text-name: '' + ntime('', max(length(@transitLineName) - 2, 0)) + '';
+                text-name: '' + ntime('', max(length(@transitLineName) - 2, 0)) + '';
                 text-face-name: 'osm';
             }
         }
@@ -85,10 +88,13 @@
 }
 
 #routes['mapnik::geometry_type'=1] {
-    marker-placement: [nuti::markers3d];
+    marker-placement-priority: [nuti::selected_id_str]=[id] ? 10: 0;
+    marker-placement: point;
     marker-type: ellipse;
     marker-line-color: black;
     marker-fill: #fff;
-    marker-width:  linear([view::zoom], (12,4), (13,5.5), (19, 8.5));
-    marker-height:  linear([view::zoom], (12,4), (13,5.5), (19, 8.5));
+    marker-width: @marker-size;
+    marker-height: @marker-size;
+    marker-allow-overlap: true;
+    marker-clip: false;
 }
