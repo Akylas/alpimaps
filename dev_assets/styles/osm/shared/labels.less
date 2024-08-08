@@ -255,6 +255,7 @@
 #water_name[class!=river][class!=ocean][class!=sea],
 #landcover_name[class=ice]{
 	::label {
+		text-placement: nutibillboard;
 		text-name: @name;
 		text-face-name: @mont_it;
 		text-fill: @water_label;
@@ -520,7 +521,6 @@
 	[zoom>=18] {
 		::icon {
 			// text-placement-priority:[nuti::selected_id] = @featureId ? 1000 : 10;
-			text-placement-priority: 10;
 			text-placement: nutibillboard;
 			text-name: @osm_icon;
 			text-feature-id: @featureId;
@@ -568,7 +568,6 @@
 		[zoom>=18] {
 			::label {
 				// text-placement-priority:[nuti::selected_id] = @featureId ? 1000 : 0;
-				text-placement-priority: 10;
 				text-name: @name;
 				text-feature-id: @featureId;
 				text-face-name: @mont_md;
