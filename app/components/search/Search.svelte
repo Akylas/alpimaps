@@ -171,7 +171,7 @@
 
     function onTextChanged(text: string) {
         const query = text.toLowerCase();
-        DEV_LOG && console.log('onTextChanged', text, currentSearchText);
+        // DEV_LOG && console.log('onTextChanged', text, currentSearchText);
         if (query !== currentSearchText) {
             if (query) {
                 if (searchAsTypeTimer) {
@@ -180,7 +180,6 @@
                 }
                 if (query && query.length > 2) {
                     didSearch = false;
-                    console.log('will instantSearch', query);
                     searchAsTypeTimer = setTimeout(() => {
                         searchAsTypeTimer = null;
                         instantSearch(query);
