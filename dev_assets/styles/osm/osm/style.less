@@ -32,7 +32,9 @@
 @protected-area_halo: @standard-halo-fill;
 @aboriginal_label: #82643a;
 
-@grass: linear([view::zoom], (6, fadeout(#cdebb0, 0.7)), (12,#cdebb0));
+@grass_color: #cdebb0;
+
+@grass: linear([view::zoom], (6, fadeout(@grass_color, 0.7)), (12,@grass_color));
 @scrub: linear([view::zoom], (6, fadeout(#c8d7ab, 0.7)), (12,#c8d7ab));
 @heath:  linear([view::zoom], (6, fadeout(#d6d99f, 0.7)), (12,#d6d99f));
 @fell: @heath
@@ -246,7 +248,7 @@
 @water_halo: @standard-halo-fill;
 @water_halo_radius: @standard-halo-radius;
 @waterway_label_dy:0;
-@waterway_label_spacing: 0;
+@waterway_label_spacing: linear([view::zoom], (12,5), (17, 10), (19, 20));
 
 @river-width: linear([view::zoom], (8, 0.9), (15, 2), (16, 4));
 @canal_width: linear([view::zoom], (13, 0.9), (14, 1.3), (15, 2));
