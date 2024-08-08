@@ -1317,7 +1317,7 @@
     }
     function unFocusSearch() {
         // executeOnMainThread(function () {
-        TEST_LOG && console.log('unFocusSearch', searchView?.hasFocus());
+        // TEST_LOG && console.log('unFocusSearch', searchView?.hasFocus());
         if (searchView?.hasFocus()) {
             searchView.unfocus();
         }
