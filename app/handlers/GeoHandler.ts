@@ -739,6 +739,7 @@ function initGPSStatusCallback() {
                     if (cid === 5) svid += 200;
                     if (cid === 6) svid += 300;
                     sats.push({
+                        constellationType: status.getConstellationType(index),
                         azimuth: status.getAzimuthDegrees(index),
                         elevation: status.getElevationDegrees(index),
                         snr: status.getCn0DbHz(index),
@@ -770,11 +771,32 @@ export function listenForGpsStatus(listener) {
                 const it = sats.iterator();
                 while (it.hasNext()) {
                     const sat = it.next();
+                    const nmeaID = sat.getPrn();
+                    let constellationType = 0;
+                    if (nmeaID <= 32) {
+                        constellationType = 1; // GPS
+                    } else if (nmeaID <= 54) {
+                        constellationType = 2; // SBAS
+                    } else if (nmeaID <= 64) {
+                        // most likely an extended SBAS range, display the lower range, too
+                        constellationType = 2; // SBAS
+                    } else if (nmeaID <= 96) {
+                        constellationType = 3; // GLONASS
+                    } else if (nmeaID <= 192) {
+                    } else if (nmeaID <= 200) {
+                        constellationType = 4; // QZSS
+                    } else if (nmeaID <= 235) {
+                        constellationType = 5; // Beidou
+                    } else if (nmeaID <= 300) {
+                    } else if (nmeaID <= 336) {
+                        constellationType = 6; // Galileo
+                    }
                     res.push({
                         azimuth: sat.getAzimuth(),
                         elevation: sat.getElevation(),
                         snr: sat.getSnr(),
-                        nmeaID: sat.getPrn(),
+                        nmeaID,
+                        constellationType,
                         usedInFix: sat.usedInFix()
                     });
                 }
