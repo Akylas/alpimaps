@@ -23,7 +23,6 @@ import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector'
 import { Projection } from '@nativescript-community/ui-carto/projections';
 import { MultiValhallaOfflineRoutingService, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
 import { SearchRequest, VectorTileSearchService } from '@nativescript-community/ui-carto/search';
-import * as appSettings from '@nativescript/core/application-settings';
 import { Folder, knownFolders, path } from '@nativescript/core/file-system';
 import type { Point as GeoJSONPoint } from 'geojson';
 import { LineString, MultiLineString, Point } from 'geojson';
@@ -32,6 +31,9 @@ import { Address, IItem, IItem as Item, Route, RouteProfile } from '~/models/Ite
 import { EARTH_RADIUS, TO_RAD, computeDistanceBetween } from '~/utils/geo';
 import { getDataFolder, getSavedMBTilesDir, listFolder } from '~/utils/utils';
 import { networkService } from './NetworkService';
+import { Application, ApplicationSettings } from '@akylas/nativescript';
+import { get } from 'svelte/store';
+import { useOfflineGeocodeAddress, useSystemGeocodeAddress } from '~/stores/mapStore';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
@@ -162,7 +164,7 @@ class PackageService extends Observable {
             dataSource.dataSources.forEach((d) => this.clearCacheOnDataSource(d));
         }
     }
-    _currentLanguage = appSettings.getString('language', 'en');
+    _currentLanguage = ApplicationSettings.getString('language', 'en');
     get currentLanguage() {
         return this._currentLanguage;
     }
@@ -271,7 +273,6 @@ class PackageService extends Observable {
 
     mLocalOSMOfflineGeocodingService: MultiOSMOfflineGeocodingService;
     hasLocalOSMOfflineGeocodingService = true;
-
     get localOSMOfflineGeocodingService() {
         if (this.hasLocalOSMOfflineGeocodingService && !this.mLocalOSMOfflineGeocodingService) {
             const files = this.findFilesWithExtension('.nutigeodb');
@@ -349,7 +350,7 @@ class PackageService extends Observable {
             const geometry = item.geometry as GeoJSONPoint;
             const location = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
             // DEV_LOG && console.log('fetching addresses', !!service, position);
-            if (service) {
+            if (get(useOfflineGeocodeAddress) && service) {
                 const radius = 200;
                 const res = await packageService.searchInGeocodingService(service, {
                     projection,
@@ -387,7 +388,7 @@ class PackageService extends Observable {
                     }
                 }
             }
-            if (!foundAddress && geocodingAvailable) {
+            if (!foundAddress && get(useSystemGeocodeAddress) && geocodingAvailable) {
                 const results = await getFromLocation(location.lat, location.lon, 10);
                 if (results?.length > 0) {
                     const result = results[0];
