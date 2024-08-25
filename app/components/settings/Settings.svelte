@@ -27,6 +27,8 @@
     import { colors, fonts, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
+    import { get, Writable } from 'svelte/store';
+    import { useOfflineGeocodeAddress, useSystemGeocodeAddress } from '~/stores/mapStore';
     $: ({ colorOnSurfaceVariant, colorOutlineVariant } = $colors);
     $: ({ bottom: windowInsetBottom } = $windowInset);
 
@@ -119,12 +121,6 @@
                     key: 'clock_24',
                     value: clock_24,
                     title: lc('hours_24_clock')
-                },
-                {
-                    type: 'switch',
-                    key: 'startDirDest',
-                    value: ApplicationSettings.getBoolean('startDirDest', false),
-                    title: lc('start_direction_dest')
                 }
                 // {
                 //     id: 'share',
@@ -139,13 +135,13 @@
                               id: 'data_path',
                               title: lc('map_data_path'),
                               description: getSavedMBTilesDir,
-                              rightBtnIcon: 'mdi-chevron-right'
+                            //   rightBtnIcon: 'mdi-chevron-right'
                           },
                           {
                               id: 'items_data_path',
                               title: lc('items_data_path'),
                               description: getItemsDataFolder,
-                              rightBtnIcon: 'mdi-chevron-right'
+                            //   rightBtnIcon: 'mdi-chevron-right'
                           }
                       ]
                     : ([] as any)
@@ -161,7 +157,7 @@
                           //   },
                           {
                               id: 'review',
-                              rightBtnIcon: 'mdi-chevron-right',
+                            //   rightBtnIcon: 'mdi-chevron-right',
                               title: lc('review_application')
                           }
                       ]
@@ -177,6 +173,32 @@
                     id: 'feedback',
                     icon: 'mdi-bullhorn',
                     title: lc('send_feedback')
+                },
+                {
+                    type: 'sectionheader',
+                    title: lc('directions')
+                },
+                {
+                    type: 'switch',
+                    key: 'startDirDest',
+                    value: ApplicationSettings.getBoolean('startDirDest', false),
+                    title: lc('start_direction_dest')
+                },
+                {
+                    type: 'sectionheader',
+                    title: lc('address')
+                },
+                {
+                    type: 'switch',
+                    mapStore: useOfflineGeocodeAddress,
+                    value: get(useOfflineGeocodeAddress),
+                    title: lc('use_offline_geocoding_address')
+                },
+                {
+                    type: 'switch',
+                    mapStore: useSystemGeocodeAddress,
+                    value: get(useSystemGeocodeAddress),
+                    title: lc('use_system_geocoding_address')
                 },
                 {
                     type: 'sectionheader',
@@ -644,6 +666,10 @@
         if (item.type === 'prompt') {
             return 'default';
         }
+
+        if (item.icon) {
+            return 'leftIcon';
+        }
         return item.type || 'default';
     }
 
@@ -658,7 +684,11 @@
             checkboxTapTimer = null;
         }
         try {
-            ApplicationSettings.setBoolean(item.key || item.id, value);
+            if (item.mapStore) {
+                (item.mapStore as Writable<boolean>).set(value);
+            } else {
+                ApplicationSettings.setBoolean(item.key || item.id, value);
+            }
         } catch (error) {
             console.error(error, error.stack);
         }
@@ -734,10 +764,22 @@
                     <checkbox id="checkbox" checked={item.value} col={2} on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
+            <Template key="leftIcon" let:item>
+                <ListItemAutoSize
+                    columns="auto,*,auto"
+                    fontSize={20}
+                    leftIcon={item.icon}
+                    mainCol={1}
+                    rightValue={item.rightValue}
+                    showBottomLine={false}
+                    subtitle={getSubtitle(item)}
+                    title={getTitle(item)}
+                    on:tap={(event) => onTap(item, event)}>
+                    <label col={0} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} verticalAlignment="center" />
+                </ListItemAutoSize>
+            </Template>
             <Template let:item>
                 <ListItemAutoSize
-                    leftIcon={item.icon}
-                    rightIcon={item.rightBtnIcon}
                     rightValue={item.rightValue}
                     showBottomLine={false}
                     subtitle={getSubtitle(item)}
