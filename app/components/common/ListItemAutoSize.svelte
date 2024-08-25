@@ -19,7 +19,7 @@
     export let iconFontSize: number = 24;
     export let rightIconFontSize: number = 30;
     export let fontSize: number = 17;
-    export let fontWeight: any = 'bold';
+    export let fontWeight: any = 'normal';
     export let subtitleFontSize: number = 14;
     export let title: string = null;
     export let titleColor: string = null;
