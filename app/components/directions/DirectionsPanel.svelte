@@ -156,7 +156,9 @@
             case 'use_hills':
                 return profile === 'bicycle' ? getBicycleUseHills() : getPedestrianUseHills();
             case 'max_hiking_difficulty':
-                return pedestrian_type === 'mountainairing' ? 6 : 3;
+                // return pedestrian_type === 'mountainairing' ? 6 : 3;
+                // always return 6 to ensure we use all available paths
+                return 6;
             case 'step_penalty':
                 return getPedestrianStepPenalty();
             case 'driveway_factor':
