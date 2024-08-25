@@ -45,3 +45,5 @@ export const preloading = settingsStore('preloading', true);
 export const rotateEnabled = settingsStore('mapRotateEnabled', false);
 export const pitchEnabled = settingsStore('mapPitchEnabled', false);
 export const routesType = settingsStore<RoutesType>('routes_type', 0);
+export const useOfflineGeocodeAddress = settingsStore('useOfflineGeocodeAddress', true);
+export const useSystemGeocodeAddress = settingsStore('useSystemGeocodeAddress', true);
