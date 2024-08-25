@@ -659,20 +659,22 @@
 	text-size: linear([view::zoom], (16, 6.0), (18, 8.0), (20, 10));
 	text-min-distance: linear([view::zoom], (16, 100), (17, 50), (18, 20));
 }
-#housenumber[zoom>=17]::label{
+#housenumber[zoom>=18]::label{
+	// we are kind of forced to use text-allow-overlap thus clip thus simple mode or rendering will be too slow  https://github.com/CartoDB/mobile-sdk/wiki/CartoCSS-notes#label-rendering-mode-vs-simple-rendering-mode
 	text-name: [housenumber];
 	text-face-name: @mont;
 	text-fill: @housename;
+	// text-placement: nutibillboard;
 	text-size: linear([view::zoom], (17, 9), (19, 11));
-	text-allow-overlap-same-feature-id: true; // needed because housenumber use MultiPoint and thus some can share the same id
-	text-min-distance: linear([view::zoom], (17, 50), (18, 30), (19, 20));
+	// text-allow-overlap-same-feature-id: true; // needed because housenumber use MultiPoint and thus some can share the same id
+	// text-min-distance: linear([view::zoom], (17, 50), (18, 30), (19, 20));
 	
 	// text-avoid-edges: true;
-	[zoom>=19] {
+	// [zoom>=19] {
 
 		text-allow-overlap: true;
-		text-clip: false;
-	}
+		// text-clip: false;
+	// }
 }
 
 #aerodrome_label[zoom>=15]::label {
