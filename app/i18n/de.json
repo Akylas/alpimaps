@@ -640,5 +640,8 @@
     "social_facility": "Soziale Einrichtung",
     "telephone": "Telefon",
     "telescope_dome": "Teleskop",
-    "telescope_dish": "Teleskop"
+    "telescope_dish": "Teleskop",
+    "directions": "Richtungen",
+    "use_offline_geocoding_address": "Verwenden Sie die Offline-Geokodierungsdatenbank, falls verfügbar, um Standortadressen zu suchen",
+    "use_system_geocoding_address": "Verwenden Sie die System-Geokodierungsdatenbank, falls verfügbar, um Standortadressen zu finden"
 }
