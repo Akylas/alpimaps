@@ -41,6 +41,7 @@ export const showContourLines = settingsStore('showContourLines', true);
 export const showSlopePercentages = settingsStore('showSlopePercentages', false);
 export const showRoutes = settingsStore('showRoutes', false);
 export const contourLinesOpacity = settingsStore('contourLinesOpacity', -1);
+export const mapFontScale = settingsStore('mapFontScale', 1);
 export const preloading = settingsStore('preloading', true);
 export const rotateEnabled = settingsStore('mapRotateEnabled', false);
 export const pitchEnabled = settingsStore('mapPitchEnabled', false);
