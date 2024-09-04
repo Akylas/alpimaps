@@ -48,6 +48,7 @@
     },
     "nutiparameters": {
         "hide_admins": 0,
+        "_fontscale": 1.0,
         "lang": "en",
         "selected_id": "",
         "buildings": 1,
