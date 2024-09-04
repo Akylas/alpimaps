@@ -140,6 +140,7 @@ export class Group {
     public readonly id!: string;
     public name: string;
     public onMap: 1 | 0;
+    public collapse: 1 | 0;
 }
 export class Item {
     public id!: number;
@@ -183,7 +184,8 @@ export class GroupRepository extends CrudRepository<Group> {
     }
     static migrations = {
         addGroupName: sql`ALTER TABLE Groups ADD COLUMN name TEXT`,
-        addGroupOnMap: sql`ALTER TABLE Groups ADD COLUMN onMap INTEGER`
+        addGroupOnMap: sql`ALTER TABLE Groups ADD COLUMN onMap INTEGER`,
+        addGroupCollapse: sql`ALTER TABLE Groups ADD COLUMN collapse INTEGER`
     };
     async createTables() {
         await this.database.query(sql`
@@ -319,7 +321,7 @@ export class ItemRepository extends CrudRepository<Item> {
             } catch (error) {}
             // console.log('addGroupToItem', group);
             if (!group) {
-                group = await this.groupsRepository.create({ id: groupId, name: groupId, onMap: 1 });
+                group = await this.groupsRepository.create({ id: groupId, name: groupId, onMap: 1, collapse: 0 });
             }
             const relation = await this.database.query(sql` SELECT * FROM ItemsGroups WHERE "item_id" = ${item.id} AND "group_id" = ${groupId}`);
             if (relation.length === 0) {
@@ -331,7 +333,7 @@ export class ItemRepository extends CrudRepository<Item> {
             console.error(error);
         }
     }
-    async setItemGroup(item: Item, groupName: string) {
+    async setItemGroup(item: Item, groupName?: string) {
         try {
             // console.log('setItemGroup', groupName, item.id);
             let group;
@@ -342,7 +344,7 @@ export class ItemRepository extends CrudRepository<Item> {
                     console.error('setItemGroup', error, error.stack);
                 }
                 if (!group) {
-                    group = await this.groupsRepository.create({ id: Date.now() + '', name: groupName, onMap: 1 });
+                    group = await this.groupsRepository.create({ id: Date.now() + '', name: groupName, onMap: 1, collapse: 0 });
                 }
             }
 
