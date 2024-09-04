@@ -6,7 +6,7 @@
     import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
     import { VectorTileEventData, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
     import { MultiValhallaOfflineRoutingService, RoutingResult, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
-    import { showSnack } from '~/utils/ui';
+    import { showSliderPopover, showSnack } from '~/utils/ui';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { ApplicationSettings, Color, ContentView, Device, GridLayout, ObservableArray, StackLayout, TextField, Utils, View } from '@nativescript/core';
@@ -34,6 +34,7 @@
     import { Themes, onThemeChanged, theme } from '~/helpers/theme';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { MapClickInfo } from '@nativescript-community/ui-carto/ui';
+    import { promiseSeq } from '~/utils/utils';
 
     const DEFAULT_PROFILE_KEY = 'default_direction_profile';
 
@@ -130,7 +131,6 @@
     const saveProfileSettings = debounce(
         (profile: ValhallaProfile) => {
             if (shouldSaveSettings) {
-                profileCostingOptions = profileCostingOptions;
                 savedProfile(profile, 'default', profileCostingOptions[profile]);
             }
         },
@@ -227,6 +227,7 @@
                     options[key] = settings.max;
                 }
             }
+            profileCostingOptions = profileCostingOptions; // for svelte to see the update
             saveProfileSettings(profile);
         } catch (error) {
             console.error(key, error);
@@ -688,7 +689,7 @@
         }
     }
 
-    async function computeAndAddRoute(forceOnline: boolean, optionsWithStyle: { [k: string]: any; style?: any } = {}) {
+    async function computeAndAddRoute(service: MultiValhallaOfflineRoutingService | ValhallaOnlineRoutingService, optionsWithStyle: { [k: string]: any; style?: any } = {}) {
         if (waypoints.length <= 1) {
             return;
         }
@@ -738,16 +739,13 @@
                 }
             });
 
-            const service: MultiValhallaOfflineRoutingService | ValhallaOnlineRoutingService = forceOnline
-                ? packageService.onlineRoutingSearchService()
-                : packageService.offlineRoutingSearchService() || packageService.onlineRoutingSearchService();
             let startTime = Date.now();
             const projection = mapContext.getProjection();
             const customOptions = {
                 directions_options: { language: Device.language },
                 costing_options
             };
-            DEV_LOG && console.log('calculateRoute', forceOnline, profile, JSON.stringify(points), JSON.stringify(customOptions));
+            DEV_LOG && console.log('calculateRoute', profile, JSON.stringify(points), JSON.stringify(customOptions));
             try {
                 const result = await service.calculateRoute<LatLonKeys>(
                     {
@@ -844,6 +842,11 @@
             clearCurrentRoutes(false);
             clearWaypointLines(false);
             let itemToFocus: ItemFeature;
+            const service: MultiValhallaOfflineRoutingService | ValhallaOnlineRoutingService = forceOnline
+                ? packageService.onlineRoutingSearchService()
+                : packageService.offlineRoutingSearchService() || packageService.onlineRoutingSearchService();
+            const usingOnline = service instanceof ValhallaOnlineRoutingService;
+            DEV_LOG && console.log('usingOnline', usingOnline);
             if (computeMultiple) {
                 let options = [];
                 if (profile === 'bicycle') {
@@ -873,12 +876,17 @@
                         { shortest: false, use_highways: 0, style: { color: '#C49F5F' } }
                     ];
                 }
-                const results = await Promise.all(options.map((opts) => computeAndAddRoute(forceOnline, opts)));
+                const results = usingOnline
+                    ? await promiseSeq(
+                          options.map((opts) => () => computeAndAddRoute(service, opts)),
+                          500 // we add a delay or we will get a Too Many requests error
+                      )
+                    : await Promise.all(options.map((opts) => computeAndAddRoute(service, opts)));
                 itemToFocus = results.reduce(function (prev, current) {
                     return prev?.route?.totalTime > current?.route?.totalTime ? current : prev;
                 });
             } else {
-                itemToFocus = await computeAndAddRoute(forceOnline);
+                itemToFocus = await computeAndAddRoute(service);
             }
             setLayerGeoJSONString();
             if (itemToFocus) {
@@ -989,6 +997,7 @@
                     ...getValhallaSettings(key),
                     onChange(value) {
                         profileCostingOptions[profile][key] = value;
+                        profileCostingOptions = profileCostingOptions; // for svelte to see the update
                         saveProfileSettings(profile);
                     }
                 }));
@@ -1039,21 +1048,36 @@
                 options = profileCostingOptions[profile];
             }
             const settings = getValhallaSettings(key);
-            const SliderPopover = (await import('~/components/common/SliderPopover.svelte')).default;
-            await showPopover({
-                view: SliderPopover,
+            await showSliderPopover({
+                debounceDuration: 0,
                 anchor: event.object,
-                props: {
-                    title: lc(key),
-                    icon: event.object.text,
-                    ...settings,
-                    value: options[key],
-                    onChange(value) {
-                        options[key] = value;
-                        saveProfileSettings(profile);
-                    }
-                }
+                vertPos: VerticalPosition.BELOW,
+                ...settings,
+                value: options[key],
+                onChange(value) {
+                    options[key] = value;
+                    profileCostingOptions = profileCostingOptions; // for svelte to see the update
+                    saveProfileSettings(profile);
+                },
+                step: null,
+                title: lc(key),
+                icon: event.object.text
             });
+            // const SliderPopover = (await import('~/components/common/SliderPopover.svelte')).default;
+            // await showPopover({
+            //     view: SliderPopover,
+            //     anchor: event.object,
+            //     props: {
+            //         title: lc(key),
+            //         icon: event.object.text,
+            //         ...settings,
+            //         value: options[key],
+            //         onChange(value) {
+            //             options[key] = value;
+            //             saveProfileSettings(profile);
+            //         }
+            //     }
+            // });
         } catch (err) {
             showError(err);
         }
@@ -1205,7 +1229,6 @@
                 marginRight={10}
                 rippleColor="black"
                 selectedColor={colorPrimary}
-                size={40}
                 text="mdi-magnify"
                 on:tap={() => computeRoutes()}
                 on:longPress={() => computeRoutes(true)} />
