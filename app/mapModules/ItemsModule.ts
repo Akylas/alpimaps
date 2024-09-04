@@ -440,7 +440,7 @@ export default class ItemsModule extends MapModule {
             // this.updateGeoJSONLayer();
         }
 
-        if (item.image_path) {
+        if (item.image_path && File.exists(item.image_path)) {
             File.fromPath(item.image_path).remove();
         }
         if (item.id) {

@@ -7,6 +7,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { Group } from '~/models/Item';
     import MiniSearch from '~/utils/minisearch';
+    import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
 
     const dispatch = createEventDispatcher();
     let closeCallback: Function;
@@ -25,7 +26,7 @@
 
     onMount(async () => {
         if (!groups) {
-            groups = await getMapContext().mapModules['items'].groupsRepository.search();
+            groups = await getMapContext().mapModules['items'].groupsRepository.search({ where: SqlQuery.createFromTemplateString`name <> 'none'` });
         }
         if (showDefaultGroups) {
             foundGroups = groups.slice(0, 4);
@@ -72,7 +73,7 @@
         on:textChange={onTextChange}
         on:returnPress={onKeyboardReturn} />
     {#if foundGroups.length > 0}
-        <label row={2} text={lc('existing_groups')} />
+        <label row={2} text={lc('existing_groups')}  marginTop={15}/>
         <wraplayout margin={5} row={3}>
             {#each foundGroups as group}
                 <mdbutton height={30} margin="2" text={group.name} on:tap={() => onGroupTap(group)} />
