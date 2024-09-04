@@ -20,6 +20,7 @@
     import type { IItem as Item } from '~/models/Item';
     import { showError } from '~/utils/error';
     import { colors, fonts } from '~/variables';
+    import { SDK_VERSION } from '@akylas/nativescript/utils';
     $: ({ colorOnSurface, colorPrimary, colorOutlineVariant } = $colors);
 
     const dispatch = createEventDispatcher();
@@ -377,4 +378,4 @@
     }
 </script>
 
-<linechart {...$$restProps} bind:this={chart} on:highlight={onChartHighlight} on:zoom={onChartPanOrZoom} on:pan={onChartPanOrZoom} />
+<linechart bind:this={chart} hardwareAccelerated={__ANDROID__ && SDK_VERSION >= 28} {...$$restProps} on:highlight={onChartHighlight} on:zoom={onChartPanOrZoom} on:pan={onChartPanOrZoom} />
