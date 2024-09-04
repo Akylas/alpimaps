@@ -71,7 +71,8 @@ export interface MapContext {
     mapModules: MapModules;
     innerDecoder: MBVectorTileDecoder;
     mapDecoder: MBVectorTileDecoder;
-    showOptions(event);
+    showMapMenu(event);
+    showMapOptions(event);
     setMapDefaultOptions(options);
     createMapDecoder(mapStyle, mapStyleLayer): MBVectorTileDecoder;
     mapModule<T extends keyof MapModules>(id: T): MapModules[T];
