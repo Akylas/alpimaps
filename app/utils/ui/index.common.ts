@@ -14,6 +14,7 @@ import type LoadingIndicator__SvelteComponent_ from '~/components/common/Loading
 import LoadingIndicator from '~/components/common/LoadingIndicator.svelte';
 import { debounce } from '@nativescript/core/utils';
 import { SnackBarOptions, showSnack as mdShowSnack } from '@nativescript-community/ui-material-snackbar';
+import { navigate } from '../svelte/ui';
 
 export function timeout(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -298,4 +299,12 @@ export async function showSnack(options: SnackBarOptions) {
     try {
         return mdShowSnack(options);
     } catch (error) {}
+}
+
+export async function showSettings(props?) {
+    const Settings = (await import('~/components/settings/Settings.svelte')).default;
+    navigate({
+        page: Settings,
+        props
+    });
 }
