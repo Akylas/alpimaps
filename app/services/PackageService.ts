@@ -349,7 +349,7 @@ class PackageService extends Observable {
             let foundAddress = false;
             const geometry = item.geometry as GeoJSONPoint;
             const location = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-            // DEV_LOG && console.log('fetching addresses', !!service, position);
+            DEV_LOG && console.log('fetching addresses', !!service, location, get(useOfflineGeocodeAddress), get(useSystemGeocodeAddress), geocodingAvailable);
             if (get(useOfflineGeocodeAddress) && service) {
                 const radius = 200;
                 const res = await packageService.searchInGeocodingService(service, {
@@ -390,6 +390,7 @@ class PackageService extends Observable {
             }
             if (!foundAddress && get(useSystemGeocodeAddress) && geocodingAvailable) {
                 const results = await getFromLocation(location.lat, location.lon, 10);
+                DEV_LOG && console.log('getFromLocation', results);
                 if (results?.length > 0) {
                     const result = results[0];
                     return {
@@ -916,7 +917,7 @@ class PackageService extends Observable {
         if (!this.mOnlineRoutingSearchService) {
             this.mOnlineRoutingSearchService = new ValhallaOnlineRoutingService({
                 apiKey: gVars.MAPBOX_TOKEN,
-                customServiceURL: 'https://valhalla.openstreetmap.de',
+                customServiceURL: 'https://valhalla1.openstreetmap.de/{service}',
                 profile: 'pedestrian'
             });
         }
