@@ -1,5 +1,6 @@
 import { executeOnMainThread } from '@nativescript/core/utils';
 import { Application, ApplicationSettings, Device, File, FileSystemEntity, Folder, Utils, knownFolders, path } from '@nativescript/core';
+import { timeout } from '~/handlers/GeoHandler';
 
 let savedMBTilesDir = ApplicationSettings.getString('local_mbtiles_directory');
 
@@ -253,4 +254,15 @@ export function compareArrays(a1: any[], a2: any[]) {
         if (a1[i] !== a2[i]) return false;
     }
     return true;
+}
+
+export async function promiseSeq(tasks, delay = 0) {
+    const results = [];
+    for (const task of tasks) {
+        results.push(await task());
+        if (delay) {
+            await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+    }
+    return results;
 }
