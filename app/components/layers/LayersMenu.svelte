@@ -145,11 +145,13 @@
         try {
             await showSliderPopover({
                 debounceDuration: 100,
+                step: null,
                 anchor: event.object,
                 vertPos: VerticalPosition.ABOVE,
-                value: $contourLinesOpacity * 100,
+                value: $contourLinesOpacity,
                 onChange(value) {
-                    $contourLinesOpacity = value / 100;
+                    DEV_LOG && console.log('setContoursOpacity', value);
+                    $contourLinesOpacity = value;
                 }
             });
         } catch (error) {
@@ -161,7 +163,7 @@
 <!-- on iOS the collectionview is applied a padding because of the safearea
 while being shown using bottomsheet. We remove it with paddingTop -->
 <gesturerootview {...$$restProps} height={240} on:closedBottomSheet={onCloseBottomSheet}>
-    <gridlayout bind:this={gridLayout} backgroundColor={colorBackground} columns="*,auto">
+    <gridlayout bind:this={gridLayout} columns="*,auto">
         <collectionview
             bind:this={collectionView}
             id="scrollView"
