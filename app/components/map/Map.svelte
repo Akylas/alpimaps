@@ -56,6 +56,7 @@
     import { NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
     import {
         contourLinesOpacity,
+        mapFontScale,
         pitchEnabled,
         preloading,
         projectionModeSpherical,
@@ -1021,6 +1022,7 @@
     $: vectorTileDecoder && setStyleParameter('buildings', !!$show3DBuildings ? '2' : '1');
     $: vectorTileDecoder && setStyleParameter('contours', $showContourLines ? '1' : '0');
     $: vectorTileDecoder && $contourLinesOpacity >= 0 && setStyleParameter('contoursOpacity', $contourLinesOpacity.toFixed(1));
+    $: vectorTileDecoder && $mapFontScale > 0 && setStyleParameter('_fontscale', $mapFontScale.toFixed(2));
     $: {
         const visible = $showRoutes;
         getLayers('routes').forEach((l) => {
