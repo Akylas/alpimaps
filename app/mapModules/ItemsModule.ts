@@ -410,7 +410,7 @@ export default class ItemsModule extends MapModule {
     }
     async showItem(item: IItem) {
         if (item.onMap === 0) {
-            this.updateItem(item, { onMap: 1 }, false);
+            await this.updateItem(item, { onMap: 1 }, false, false);
             this.addItemToLayer(item, true);
         }
     }
@@ -425,7 +425,7 @@ export default class ItemsModule extends MapModule {
             this.getLocalVectorDataSource().removeGeoJSONFeature(1, item.id);
             // this.updateGeoJSONLayer();
         }
-        this.updateItem(item, { onMap: 0 });
+        return this.updateItem(item, { onMap: 0 }, false, false);
     }
     async deleteItem(item: IItem) {
         DEV_LOG && console.log('deleteItem', item.id);
