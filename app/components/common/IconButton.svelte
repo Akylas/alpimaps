@@ -77,7 +77,7 @@
 {#if __ANDROID__}
     <canvasview
         bind:this={canvas}
-        borderRadius={shape === 'round' || (rounded && !shape) ? '50%' : null}
+        borderRadius={shape === 'round' || (rounded && !shape) ? (height || size) / 2 : null}
         disableCss={true}
         isUserInteractionEnabled={isEnabled}
         rippleColor={actualColor}
