@@ -26,9 +26,10 @@
     import CActionBar from '../common/CActionBar.svelte';
     import IconButton from '../common/IconButton.svelte';
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
-    type MapGroup = Group & { collapse: boolean };
+    type MapGroup = Group;
     type CollectionGroup = MapGroup & { type: 'group'; count: number; selected?: boolean; totalTime?: number; totalDistance?: number };
-    type CollectionItem = (Item & { groupOnMap?: 0 | 1; selected?: boolean }) | CollectionGroup;
+    type CollectionItem = Item & { selected?: boolean };
+    type CollectionItemOrGroup = CollectionItem | CollectionGroup;
 
     const groupPaint = new Paint();
     groupPaint.textSize = 12;
@@ -44,7 +45,7 @@
     $: ({ bottom: windowInsetBottom } = $windowInset);
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
-    let items: ObservableArray<CollectionItem>;
+    let items: ObservableArray<CollectionItemOrGroup>;
     let groupedItems: { [k: string]: CollectionItem[] };
     let groups: { [k: string]: MapGroup };
     let itemsCount = 0;
@@ -54,7 +55,7 @@
     let needsFirstRefresh = true;
     let ignoreRefresh = false;
     let navigatedTo = false;
-    let loading = true;
+    let loading = false;
 
     function onNavigatedTo(args: NavigatedData) {
         if (!args.isBackNavigation && !navigatedTo) {
@@ -103,9 +104,6 @@
         const subItems = groupedItems[groupKey];
 
         subItems.forEach((item: Item) => {
-            if (group) {
-                item['groupOnMap'] = group.onMap;
-            }
             const profile = item.profile;
             const itemProps = item.properties;
             const hasProfile = !!profile?.max;
@@ -153,17 +151,20 @@ LEFT JOIN  (
    GROUP  BY it.item_id
    ) t USING (id)`
                 };
-                const sqlItems = (await itemsModule.itemRepository.searchItem(searchArgs)).map((i) => ({ ...i, groupOnMap: 1 }));
+                const sqlItems = (await itemsModule.itemRepository.searchItem(searchArgs)).map((i) => ({ ...i }));
                 const oldGroups = groups;
                 groups = groupBy<Group>(await itemsModule.groupsRepository.search(), (i) => i.name);
-                groups['none'] = { name: 'none', onMap: 1, id: 'none', collapse: false };
-                if (oldGroups) {
-                    Object.keys(oldGroups).forEach((k) => {
-                        if (groups[k]) {
-                            groups[k].collapse = oldGroups[k].collapse;
-                        }
-                    });
+                if (!groups['none']) {
+                    await itemsModule.groupsRepository.create({ id: Date.now() + '', name: 'none', onMap: 1, collapse: 0 });
+                    groups['none'] = { name: 'none', onMap: 1, id: 'none', collapse: 0 };
                 }
+                // if (oldGroups) {
+                //     Object.keys(oldGroups).forEach((k) => {
+                //         if (groups[k]) {
+                //             groups[k].collapse = oldGroups[k].collapse;
+                //         }
+                //     });
+                // }
                 groupedItems = groupByArray<Item>(sqlItems, (i) => i.groups);
                 const groupsCount = Object.keys(groupedItems).length;
                 const noneGroupItems: CollectionItem[] = groupsCount > 1 ? [] : groupedItems['none'] || [];
@@ -179,7 +180,7 @@ LEFT JOIN  (
                         updateGroupItemData(groupItem, group);
                         acc.push(groupItem, ...(group.collapse ? [] : subItems));
                         return acc;
-                    }, noneGroupItems)
+                    }, noneGroupItems as CollectionItemOrGroup[])
                 );
                 itemsCount = items.length;
             } catch (error) {
@@ -192,11 +193,12 @@ LEFT JOIN  (
 
     function switchGroupCollapsed(item: Group, event) {
         const groupKey = item.name || 'none';
-        const collapse = !groups[groupKey].collapse;
+        const collapse = (1 - groups[groupKey].collapse) as 0 | 1;
         if (collapse === groups[groupKey].collapse) {
             return;
         }
         groups[groupKey].collapse = collapse;
+        itemsModule.groupsRepository.update(groups[groupKey], { collapse });
         let collapseButton = event.object as View;
         if (collapseButton instanceof LayoutBase) {
             collapseButton = collapseButton.getViewById('collapseButton');
@@ -274,31 +276,51 @@ LEFT JOIN  (
         return !!item?.route;
     }
 
-    function deleteItem(item: Item) {
+    async function deleteItem(item: CollectionItemOrGroup) {
         try {
-            const index = items.indexOf(item);
-            itemsModule.deleteItem(item);
-            if (index !== -1) {
-                items.splice(index, 1);
-            }
-            if (item.groups?.length) {
-                const itemGroup = item.groups[0];
+            DEV_LOG && console.log('deleteItem', item.type, item.id);
+            if (item.type === 'group') {
+                // const groupKey = (item as CollectionGroup).name || 'none';
+                // const collapsed = (item as CollectionGroup).collapse;
+                // const subItems = groupedItems[groupKey];
+                // const groupIndex = items.findIndex((i) => i.type === 'group' && i.id === (item as CollectionGroup).id);
+                // for (let index = 0; index < subItems.length; index++) {
+                //     const item = subItems[index];
+                //     await itemsModule.deleteItem(item);
+                //     items.splice(index + groupIndex + 1, 1);
+                // }
+            } else {
+                const index = items.indexOf(item);
+                await itemsModule.deleteItem(item as CollectionItem);
+                if (index !== -1) {
+                    items.splice(index, 1);
+                }
+                DEV_LOG && console.log('deleteItem', item.id, (item as CollectionItem).groups?.length);
+                const itemGroup = (item as CollectionItem).groups?.[0] || 'none';
                 const group = groups[itemGroup];
-                if (group) {
-                    const groupedForItem = groupedItems[itemGroup];
-                    let groupIndex = groupedForItem.findIndex((i) => i === item);
-                    if (groupIndex >= 0) {
-                        groupedForItem.splice(groupIndex, 1);
+                const groupedForItem = groupedItems[itemGroup];
+                if (group && groupedForItem) {
+                    const itemInGroupIndex = groupedForItem.findIndex((i) => i === item);
+                    DEV_LOG && console.log('itemInGroupIndex', groupedForItem.length, item.id, groupedForItem);
+                    if (itemInGroupIndex >= 0) {
+                        groupedForItem.splice(itemInGroupIndex, 1);
                     }
-                    groupIndex = items.findIndex((i) => i.type === 'group' && i.id === group.id);
+                    const groupIndex = items.findIndex((i) => i.type === 'group' && i.id === group.id);
+                    DEV_LOG && console.log('deleteItem group', group, groupIndex, groupedForItem.length);
                     if (groupIndex >= 0) {
                         const groupItem = items.getItem(groupIndex) as CollectionGroup;
+                        groupItem.count = groupedForItem.length;
                         updateGroupItemData(groupItem);
+                        DEV_LOG && console.log('update group', groupItem);
                         items.setItem(groupIndex, groupItem);
+                        if (__ANDROID__) {
+                            const canvas: CanvasView = collectionView.nativeView.getViewForItemAtIndex(groupIndex).getViewById('canvas');
+                            canvas?.invalidate();
+                        }
                     }
                 }
+                itemsCount = items.length;
             }
-            itemsCount = items.length;
         } catch (error) {
             showError(error);
         }
@@ -355,7 +377,7 @@ LEFT JOIN  (
         }
     }
 
-    function selectItem(item: CollectionItem) {
+    function selectItem(item: CollectionItemOrGroup) {
         if (!item.selected) {
             items.some((d, index) => {
                 if (d === item) {
@@ -412,7 +434,7 @@ LEFT JOIN  (
             });
         }
     }
-    function unselectItem(item: CollectionItem) {
+    function unselectItem(item: CollectionItemOrGroup) {
         if (item.selected) {
             items.some((d, index) => {
                 if (d === item) {
@@ -476,7 +498,7 @@ LEFT JOIN  (
         // refresh();
     }
     let ignoreTap = false;
-    function onItemLongPress(item: CollectionItem, event?) {
+    function onItemLongPress(item: CollectionItemOrGroup, event?) {
         // console.log('onItemLongPress', event && event.ios && event.ios.state);
         if (event && event.ios && event.ios.state !== 1) {
             return;
@@ -491,7 +513,7 @@ LEFT JOIN  (
             selectItem(item);
         }
     }
-    async function onItemTap(item: CollectionItem, event) {
+    async function onItemTap(item: CollectionItemOrGroup, event) {
         try {
             if (ignoreTap) {
                 ignoreTap = false;
@@ -501,9 +523,9 @@ LEFT JOIN  (
             if (nbSelected > 0) {
                 onItemLongPress(item);
             } else if (item.type === 'group') {
-                switchGroupCollapsed(item as Group, event);
+                switchGroupCollapsed(item as CollectionGroup, event);
             } else {
-                showDetails(item);
+                showDetails(item as CollectionItem);
             }
         } catch (error) {
             showError(error);
@@ -519,7 +541,9 @@ LEFT JOIN  (
     function getSelected() {
         const selected: Item[] = [];
         items.forEach((d, index) => {
-            if (d.selected && d.type !== 'group') {
+            if (d.selected && d.type === 'group' && (d as CollectionGroup).collapse) {
+                selected.push(...groupedItems[(d as CollectionGroup).name]);
+            } else if (d.selected && d.type !== 'group') {
                 selected.push(d as Item);
             }
         });
@@ -534,11 +558,12 @@ LEFT JOIN  (
         }
     }
     async function deleteSelectedItems() {
+        DEV_LOG && console.log('deleteSelectedItems', nbSelected);
         if (nbSelected > 0) {
             try {
                 const result = await confirm({
                     title: lc('delete'),
-                    message: lc('confirm_delete_documents', nbSelected),
+                    message: lc('confirm_delete_items', nbSelected),
                     okButtonText: lc('delete'),
                     cancelButtonText: lc('cancel')
                 });
@@ -577,16 +602,19 @@ LEFT JOIN  (
             // showLoading();
             const selected = getSelected();
             let defaultGroup;
-            if (selected.length === 1) {
-                defaultGroup = selected[0].groups?.[0];
-            }
-            const group = await promptForGroup(defaultGroup, Object.values(groups));
+            // if (selected.length === 1) {
+            //     defaultGroup = selected[0].groups?.[0];
+            // }
+            const group = await promptForGroup(
+                defaultGroup,
+                Object.values(groups).filter((g) => g.name !== 'none')
+            );
             if (typeof group === 'string') {
                 const itemsModule = getMapContext().mapModules['items'];
                 // console.log('group2', typeof group, `"${group}"`, selected.length);
                 for (let index = 0; index < selected.length; index++) {
                     const item = selected[index];
-                    await itemsModule.setItemGroup(item, group);
+                    await itemsModule.setItemGroup(item, group === 'none' ? undefined : group);
                 }
             }
             refresh();
@@ -598,8 +626,6 @@ LEFT JOIN  (
     }
 
     function onDrawGroup(item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
-        const w = canvas.getWidth();
-        const h = canvas.getHeight();
         const spans: any[] = [
             {
                 text: item.name + ` (${item.count})` + '\n',
@@ -673,7 +699,7 @@ LEFT JOIN  (
             setTabIndex(1);
         }
     }
-    async function showItemMoreMenu(item: Item, event) {
+    async function showItemMoreMenu(item: CollectionItem, event) {
         try {
             const actions = [
                 {
@@ -766,7 +792,7 @@ LEFT JOIN  (
             on:swipe={onCollectionSwipe}>
             <Template key="group" let:item>
                 <gridlayout backgroundColor={colorOutlineVariant} height={50} rippleColor={colorPrimary} on:tap={(e) => onItemTap(item, e)} on:longPress={(e) => onItemLongPress(item, e)}>
-                    <canvasview margin="5 30 5 10" on:draw={(e) => onDrawGroup(item, e)} />
+                    <canvasview id="canvas" margin="5 30 5 10" on:draw={(e) => onDrawGroup(item, e)} />
                     <IconButton
                         horizontalAlignment="right"
                         marginRight={60}
@@ -797,7 +823,7 @@ LEFT JOIN  (
                     {item}
                     marginBottom={34}
                     marginLeft={60}
-                    opacity={(item.onMap && item.groupOnMap) || 0.6}
+                    opacity={item.onMap || 0.6}
                     padding="4 0 2 10"
                     propsBottom={34}
                     propsLeft={60}
@@ -822,7 +848,7 @@ LEFT JOIN  (
                     borderBottomWidth={1}
                     height={80}
                     {item}
-                    opacity={(item.onMap && item.groupOnMap) || 0.6}
+                    opacity={item.onMap || 0.6}
                     rippleColor={colorPrimary}
                     selectable={false}
                     on:tap={(e) => onItemTap(item, e)}
