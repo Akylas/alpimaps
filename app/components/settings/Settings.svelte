@@ -1,4 +1,4 @@
-<script lang="ts">
+<script context="module" lang="ts">
     import { isPermResultAuthorized, request } from '@nativescript-community/perms';
     import { SDK_VERSION } from '@nativescript-community/sentry';
     import { CheckBox } from '@nativescript-community/ui-checkbox';
@@ -22,19 +22,34 @@
     import { Sentry } from '~/utils/sentry';
     import { share } from '~/utils/share';
     import { showSnack } from '~/utils/ui';
-    import { createView, hideLoading, openLink, showAlertOptionSelect, showLoading } from '~/utils/ui/index.common';
+    import { createView, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui/index.common';
     import { ANDROID_30, getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, moveFileOrFolder, resetItemsDataFolder, restartApp, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';
     import { colors, fonts, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
-    import { get, Writable } from 'svelte/store';
+    import { Writable, get } from 'svelte/store';
     import { useOfflineGeocodeAddress, useSystemGeocodeAddress } from '~/stores/mapStore';
+
+    const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
+</script>
+
+<script lang="ts">
     $: ({ colorOnSurfaceVariant, colorOutlineVariant } = $colors);
     $: ({ bottom: windowInsetBottom } = $windowInset);
 
-    const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
-
     let collectionView: NativeViewElementNode<CollectionView>;
+
+    export let title = null;
+    export let actionBarButtons = [
+        { icon: 'mdi-share-variant', id: 'share' },
+        { icon: 'mdi-github', id: 'github' }
+    ];
+
+    export let subSettingsOptions: string = null;
+    export let options: any[] = null;
+    if (!options && subSettingsOptions) {
+        options = getSubSettings(subSettingsOptions);
+    }
 
     let items: ObservableArray<any>;
     const customLayers = getMapContext().mapModule('customLayers');
@@ -43,6 +58,62 @@
         geoHandler = handler;
         refresh();
     });
+
+    function getSubSettings(id: string): any[] {
+        switch (id) {
+            case 'directions':
+                return [
+                    {
+                        type: 'switch',
+                        key: 'startDirDest',
+                        value: ApplicationSettings.getBoolean('startDirDest', false),
+                        title: lc('start_direction_dest')
+                    }
+                ];
+            case 'address':
+                return [
+                    {
+                        type: 'switch',
+                        mapStore: useOfflineGeocodeAddress,
+                        value: get(useOfflineGeocodeAddress),
+                        title: lc('use_offline_geocoding_address')
+                    },
+                    {
+                        type: 'switch',
+                        mapStore: useSystemGeocodeAddress,
+                        value: get(useSystemGeocodeAddress),
+                        title: lc('use_system_geocoding_address')
+                    }
+                ];
+            case 'geolocation':
+                const newItems = [];
+                const geoSettings = geoHandler.getWatchSettings();
+                Object.keys(geoSettings).forEach((k) => {
+                    const value = geoSettings[k];
+                    newItems.push({
+                        key: k,
+                        rightValue: value.formatter ? () => value.formatter(ApplicationSettings.getNumber(k, value.default)) : undefined,
+                        ...value,
+                        id: 'setting'
+                    });
+                });
+                return newItems;
+            case 'api_keys':
+                const tokenSettings = [];
+                Object.keys(customLayers.tokenKeys).forEach((k) => {
+                    tokenSettings.push({
+                        id: 'token',
+                        token: k,
+                        value: customLayers.tokenKeys[k]
+                    });
+                });
+
+                return tokenSettings;
+            default:
+                break;
+        }
+        return null;
+    }
 
     let nbDevModeTap = 0;
     let devModeClearTimer;
@@ -84,167 +155,142 @@
         }
     }
     function refresh() {
-        const newItems = [
-            {
-                type: 'header',
-                title: lc('donate')
-            },
-            {
-                type: 'sectionheader',
-                title: lc('general')
-            },
-            {
-                id: 'language',
-                description: getLocaleDisplayName,
-                title: lc('language')
-            }
-        ]
-            .concat(
-                !PLAY_STORE_BUILD && customLayers.hasLocalData
-                    ? [
-                          {
-                              id: 'map_language',
-                              description: () => getLocaleDisplayName(ApplicationSettings.getString('map_language')),
-                              title: lc('map_language')
-                          }
-                      ]
-                    : ([] as any)
-            )
-            .concat([
+        const newItems: any[] =
+            options ||
+            [
                 {
-                    id: 'dark_mode',
-                    description: getThemeDisplayName,
-                    title: lc('theme.title')
+                    type: 'header',
+                    title: __IOS__ ? lc('show_love') : lc('donate')
                 },
                 {
-                    type: 'switch',
-                    key: 'clock_24',
-                    value: clock_24,
-                    title: lc('hours_24_clock')
+                    type: 'sectionheader',
+                    title: lc('general')
+                },
+                {
+                    id: 'language',
+                    description: () => getLocaleDisplayName(),
+                    title: lc('language')
                 }
-                // {
-                //     id: 'share',
-                //     rightBtnIcon: 'mdi-chevron-right',
-                //     title: lc('share_application')
-                // },
-            ] as any)
-            .concat(
-                __ANDROID__ && !PLAY_STORE_BUILD && ANDROID_30
-                    ? [
-                          {
-                              id: 'data_path',
-                              title: lc('map_data_path'),
-                              description: getSavedMBTilesDir,
-                            //   rightBtnIcon: 'mdi-chevron-right'
-                          },
-                          {
-                              id: 'items_data_path',
-                              title: lc('items_data_path'),
-                              description: getItemsDataFolder,
-                            //   rightBtnIcon: 'mdi-chevron-right'
-                          }
-                      ]
-                    : ([] as any)
-            )
+            ]
+                .concat(
+                    !PLAY_STORE_BUILD && customLayers.hasLocalData
+                        ? [
+                              {
+                                  id: 'map_language',
+                                  description: () => getLocaleDisplayName(ApplicationSettings.getString('map_language')),
+                                  title: lc('map_language')
+                              }
+                          ]
+                        : ([] as any)
+                )
+                .concat([
+                    {
+                        id: 'dark_mode',
+                        description: () => getThemeDisplayName(),
+                        title: lc('theme.title')
+                    },
+                    {
+                        type: 'switch',
+                        key: 'clock_24',
+                        value: clock_24,
+                        title: lc('hours_24_clock')
+                    }
+                    // {
+                    //     id: 'share',
+                    //     rightBtnIcon: 'mdi-chevron-right',
+                    //     title: lc('share_application')
+                    // },
+                ] as any)
+                .concat(
+                    __ANDROID__ && !PLAY_STORE_BUILD && ANDROID_30
+                        ? [
+                              {
+                                  id: 'data_path',
+                                  title: lc('map_data_path'),
+                                  description: getSavedMBTilesDir
+                                  //   rightBtnIcon: 'mdi-chevron-right'
+                              },
+                              {
+                                  id: 'items_data_path',
+                                  title: lc('items_data_path'),
+                                  description: getItemsDataFolder
+                                  //   rightBtnIcon: 'mdi-chevron-right'
+                              }
+                          ]
+                        : ([] as any)
+                )
 
-            .concat(
-                PLAY_STORE_BUILD
-                    ? [
-                          //   {
-                          //       id: 'share',
-                          //       rightBtnIcon: 'mdi-chevron-right',
-                          //       title: lc('share_application')
-                          //   },
-                          {
-                              id: 'review',
-                            //   rightBtnIcon: 'mdi-chevron-right',
-                              title: lc('review_application')
-                          }
-                      ]
-                    : ([] as any)
-            )
-            .concat([
-                {
-                    id: 'third_party',
-                    title: lc('third_parties'),
-                    description: lc('list_used_third_parties')
-                },
-                {
-                    id: 'feedback',
-                    icon: 'mdi-bullhorn',
-                    title: lc('send_feedback')
-                },
-                {
-                    type: 'sectionheader',
-                    title: lc('directions')
-                },
-                {
-                    type: 'switch',
-                    key: 'startDirDest',
-                    value: ApplicationSettings.getBoolean('startDirDest', false),
-                    title: lc('start_direction_dest')
-                },
-                {
-                    type: 'sectionheader',
-                    title: lc('address')
-                },
-                {
-                    type: 'switch',
-                    mapStore: useOfflineGeocodeAddress,
-                    value: get(useOfflineGeocodeAddress),
-                    title: lc('use_offline_geocoding_address')
-                },
-                {
-                    type: 'switch',
-                    mapStore: useSystemGeocodeAddress,
-                    value: get(useSystemGeocodeAddress),
-                    title: lc('use_system_geocoding_address')
-                },
-                {
-                    type: 'sectionheader',
-                    title: lc('backup_restore')
-                },
-                {
-                    id: 'export_settings',
-                    title: lc('export_settings'),
-                    description: lc('export_settings_desc')
-                },
-                {
-                    id: 'import_settings',
-                    title: lc('import_settings'),
-                    description: lc('import_settings_desc')
-                }
-            ] as any);
+                .concat(
+                    PLAY_STORE_BUILD
+                        ? [
+                              //   {
+                              //       id: 'share',
+                              //       rightBtnIcon: 'mdi-chevron-right',
+                              //       title: lc('share_application')
+                              //   },
+                              {
+                                  id: 'review',
+                                  //   rightBtnIcon: 'mdi-chevron-right',
+                                  title: lc('review_application')
+                              }
+                          ]
+                        : ([] as any)
+                )
+                .concat([
+                    {
+                        id: 'third_party',
+                        title: lc('third_parties'),
+                        description: lc('list_used_third_parties')
+                    },
+                    {
+                        id: 'feedback',
+                        icon: 'mdi-bullhorn',
+                        title: lc('send_feedback')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-directions',
+                        title: lc('directions'),
+                        description: lc('directions_settings'),
+                        options: () => getSubSettings('directions')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-map-marker',
+                        title: lc('address'),
+                        description: lc('address_settings'),
+                        options: () => getSubSettings('address')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-crosshairs-gps',
+                        title: lc('geolocation'),
+                        description: lc('geolocation_settings'),
+                        options: () => getSubSettings('geolocation')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-key',
+                        title: lc('api_keys'),
+                        description: lc('api_keys_settings'),
+                        options: () => getSubSettings('api_keys')
+                    },
+                    {
+                        type: 'sectionheader',
+                        title: lc('backup_restore')
+                    },
+                    {
+                        id: 'export_settings',
+                        title: lc('export_settings'),
+                        description: lc('export_settings_desc')
+                    },
+                    {
+                        id: 'import_settings',
+                        title: lc('import_settings'),
+                        description: lc('import_settings_desc')
+                    }
+                ] as any);
 
-        newItems.push({
-            type: 'sectionheader',
-            title: lc('geolocation')
-        });
-        const geoSettings = geoHandler.getWatchSettings();
-        Object.keys(geoSettings).forEach((k) => {
-            const value = geoSettings[k];
-            newItems.push({
-                key: k,
-                rightValue: value.formatter ? () => value.formatter(ApplicationSettings.getNumber(k, value.default)) : undefined,
-                ...value,
-                id: 'setting'
-            });
-        });
-
-        newItems.push({
-            type: 'sectionheader',
-            title: lc('api_keys')
-        });
-        const tokenSettings = [];
-        Object.keys(customLayers.tokenKeys).forEach((k) => {
-            tokenSettings.push({
-                id: 'token',
-                token: k,
-                value: customLayers.tokenKeys[k]
-            });
-        });
-
-        newItems.push(...tokenSettings);
         items = new ObservableArray(newItems);
     }
 
@@ -317,7 +363,7 @@
     let checkboxTapTimer;
     async function onTap(item, event) {
         try {
-            if (item.type === 'switch') {
+            if (item.type === 'checkbox' || item.type === 'switch') {
                 // we dont want duplicate events so let s timeout and see if we clicking diretly on the checkbox
                 const checkboxView: CheckBox = ((event.object as View).parent as View).getViewById('checkbox');
                 checkboxTapTimer = setTimeout(() => {
@@ -326,6 +372,15 @@
                 return;
             }
             switch (item.id) {
+                case 'sub_settings': {
+                    showSettings({
+                        title: item.title,
+                        options: item.options(),
+                        actionBarButtons: item.actionBarButtons?.() || []
+                    });
+
+                    break;
+                }
                 case 'export_settings':
                     if (__ANDROID__ && SDK_VERSION < 29) {
                         const permRes = await request('storage');
@@ -602,6 +657,29 @@
                             }
                             updateItem(item);
                         }
+                    } else if (item.type === 'slider') {
+                        await showSliderPopover({
+                            anchor: event.object,
+                            value: item.currentValue(),
+                            ...item,
+                            onChange(value) {
+                                if (item.transformValue) {
+                                    value = item.transformValue(value, item);
+                                } else {
+                                    value = Math.round(value / item.step) * item.step;
+                                }
+                                if (item.mapStore) {
+                                    (item.mapStore as Writable<boolean>).set(value);
+                                } else {
+                                    if (item.valueType === 'string') {
+                                        ApplicationSettings.setString(item.key, value + '');
+                                    } else {
+                                        ApplicationSettings.setNumber(item.key, value);
+                                    }
+                                }
+                                updateItem(item);
+                            }
+                        });
                     } else {
                         const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
                         const currentValue = ApplicationSettings.getNumber(item.key, item.default);
@@ -749,7 +827,7 @@
                     </gridlayout>
 
                     <gridlayout columns="*,auto,*" marginTop={20} paddingLeft={16} paddingRight={16} row={1} verticalAlignment="center" on:touch={(e) => onTouch(item, e)}>
-                        <image borderRadius="50%" col={1} height={50} horizontalAlignment="center" marginBottom={20} src="res://icon" width={50} />
+                        <image borderRadius={25} col={1} height={50} horizontalAlignment="center" marginBottom={20} src="res://icon" width={50} />
                         <label col={1} fontSize={13} marginTop={4} text={version} verticalAlignment="bottom" on:longPress={(event) => onLongPress({ id: 'version' }, event)} />
                     </gridlayout>
                 </gridlayout>
@@ -768,7 +846,6 @@
                 <ListItemAutoSize
                     columns="auto,*,auto"
                     fontSize={20}
-                    leftIcon={item.icon}
                     mainCol={1}
                     rightValue={item.rightValue}
                     showBottomLine={false}
@@ -844,6 +921,10 @@
                 </gridlayout>
             </Template> -->
         </collectionview>
-        <CActionBar canGoBack title={$slc('settings')} />
+        <CActionBar canGoBack title={title || $slc('settings')}>
+            {#each actionBarButtons as button}
+                <mdbutton class="actionBarButton" text={button.icon} variant="text" on:tap={(event) => onTap({ id: button.id }, event)} />
+            {/each}
+        </CActionBar>
     </gridlayout>
 </page>
