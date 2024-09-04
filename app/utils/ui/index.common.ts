@@ -251,6 +251,7 @@ export async function showSliderPopover({
     onChange,
     title,
     icon,
+    valueFormatter,
     formatter
 }: {
     title?;
@@ -260,6 +261,7 @@ export async function showSliderPopover({
     max?;
     step?;
     formatter?;
+    valueFormatter?;
     horizPos?;
     anchor;
     vertPos?;
@@ -284,8 +286,9 @@ export async function showSliderPopover({
             step,
             width,
             formatter,
+            valueFormatter,
             value,
-            onChange: debounce(onChange, debounceDuration)
+            onChange: debounceDuration ? debounce(onChange, debounceDuration) : onChange
         }
 
         // trackingScrollView: 'collectionView'
