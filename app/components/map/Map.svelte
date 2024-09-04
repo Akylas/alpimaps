@@ -79,6 +79,7 @@
     import dayjs from 'dayjs';
     import { request } from '@nativescript-community/perms';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
+    import AltimeterView from '../compass/AltimeterView.svelte';
 
     $: ({ colorPrimary, colorError, colorBackground } = $colors);
     $: ({ top: windowInsetTop, bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight } = $windowInset);
@@ -470,7 +471,8 @@
                 DEV_LOG && console.log('setBottomSheetStepIndex', bottomSheetStepIndex, steps);
                 bottomSheetStepIndex = index;
             },
-            showOptions,
+            showMapMenu,
+            showMapOptions,
             mapModules: {
                 items: new ItemsModule(),
                 userLocation: new UserLocationModule(),
@@ -1326,7 +1328,7 @@
         // });
     }
 
-    function setStyleParameter(key: string, value: string) {
+    function setStyleParameter(key: string, value: string | number) {
         const decoder = mapContext.mapDecoder;
         if (!!decoder) {
             decoder.setStyleParameter(key, value + '');
@@ -1613,6 +1615,7 @@
             image
         });
     }
+
     function onTap(command: string) {
         switch (
             command
@@ -1658,7 +1661,7 @@
         }
     }
 
-    async function showOptions(event) {
+    async function showMapMenu(event) {
         try {
             const options = [
                 {
@@ -1809,6 +1812,16 @@
             showError(err);
         } finally {
             hideLoading();
+        }
+    }
+    async function showMapOptions() {
+        try {
+            const MapOptions = (await import('~/components/map/MapOptions.svelte')).default;
+            return showBottomSheet({
+                view: MapOptions
+            });
+        } catch (error) {
+            showError(error);
         }
     }
 
