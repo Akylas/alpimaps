@@ -45,15 +45,16 @@
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
     let items: ObservableArray<CollectionItem>;
-    let groupedItems: { [k: string]: Item[] };
+    let groupedItems: { [k: string]: CollectionItem[] };
     let groups: { [k: string]: MapGroup };
     let itemsCount = 0;
     let tabIndex = 0;
     let nbSelected = 0;
     const itemsModule = getMapContext().mapModule('items');
     let needsFirstRefresh = true;
+    let ignoreRefresh = false;
     let navigatedTo = false;
-    let loading = false;
+    let loading = true;
 
     function onNavigatedTo(args: NavigatedData) {
         if (!args.isBackNavigation && !navigatedTo) {
@@ -98,9 +99,10 @@
         let totalTime = 0;
         let dplus = 0;
         let dmin = 0;
-        const subItems = groupedItems[groupItem.name];
+        const groupKey = groupItem.name || 'none';
+        const subItems = groupedItems[groupKey];
 
-        subItems.forEach((item) => {
+        subItems.forEach((item: Item) => {
             if (group) {
                 item['groupOnMap'] = group.onMap;
             }
@@ -126,6 +128,9 @@
     }
 
     async function refresh() {
+        if (ignoreRefresh || loading) {
+            return;
+        }
         const firstLoad = !!needsFirstRefresh;
         needsFirstRefresh = false;
         loading = true;
@@ -151,6 +156,7 @@ LEFT JOIN  (
                 const sqlItems = (await itemsModule.itemRepository.searchItem(searchArgs)).map((i) => ({ ...i, groupOnMap: 1 }));
                 const oldGroups = groups;
                 groups = groupBy<Group>(await itemsModule.groupsRepository.search(), (i) => i.name);
+                groups['none'] = { name: 'none', onMap: 1, id: 'none', collapse: false };
                 if (oldGroups) {
                     Object.keys(oldGroups).forEach((k) => {
                         if (groups[k]) {
@@ -159,13 +165,17 @@ LEFT JOIN  (
                     });
                 }
                 groupedItems = groupByArray<Item>(sqlItems, (i) => i.groups);
-                const noneGroupItems: CollectionItem[] = groupedItems['none'] || [];
-                delete groupedItems['none'];
+                const groupsCount = Object.keys(groupedItems).length;
+                const noneGroupItems: CollectionItem[] = groupsCount > 1 ? [] : groupedItems['none'] || [];
+                if (groupsCount === 1) {
+                    delete groupedItems['none'];
+                }
                 items = new ObservableArray(
                     Object.keys(groupedItems).reduce((acc, key) => {
                         const group = groups[key];
                         const subItems = groupedItems[key];
-                        const groupItem = { type: 'group', ...group, count: subItems.length } as CollectionGroup;
+                        const onMap = subItems.some((i) => i.onMap === 1) ? 1 : 0;
+                        const groupItem = { type: 'group', ...group, onMap, count: subItems.length } as CollectionGroup;
                         updateGroupItemData(groupItem, group);
                         acc.push(groupItem, ...(group.collapse ? [] : subItems));
                         return acc;
@@ -179,29 +189,14 @@ LEFT JOIN  (
             }
         });
     }
-    function switchGroupVisibility(item: Group) {
-        const visible = (1 - groups[item.id].onMap) as 0 | 1;
-        if (visible === groups[item.id].onMap) {
-            return;
-        }
-        groups[item.id].onMap = visible;
-        const groupIndex = items.findIndex((i) => i.type === 'group' && i.id === item.id);
-        if (visible) {
-            if (groupIndex >= 0) {
-                items.splice(groupIndex + 1, 0, ...groupedItems[item.id]);
-            }
-        } else {
-            if (groupIndex >= 0) {
-                items.splice(groupIndex + 1, groupedItems[item.id].length);
-            }
-        }
-    }
+
     function switchGroupCollapsed(item: Group, event) {
-        const collapse = !groups[item.name].collapse;
-        if (collapse === groups[item.name].collapse) {
+        const groupKey = item.name || 'none';
+        const collapse = !groups[groupKey].collapse;
+        if (collapse === groups[groupKey].collapse) {
             return;
         }
-        groups[item.name].collapse = collapse;
+        groups[groupKey].collapse = collapse;
         let collapseButton = event.object as View;
         if (collapseButton instanceof LayoutBase) {
             collapseButton = collapseButton.getViewById('collapseButton');
@@ -216,10 +211,47 @@ LEFT JOIN  (
             (groupItem as CollectionGroup).collapse = collapse;
             items.setItem(groupIndex, groupItem);
             if (collapse) {
-                items.splice(groupIndex + 1, groupedItems[item.name].length);
+                items.splice(groupIndex + 1, groupedItems[groupKey].length);
             } else {
-                items.splice(groupIndex + 1, 0, ...groupedItems[item.name]);
+                items.splice(groupIndex + 1, 0, ...groupedItems[groupKey]);
             }
+        }
+    }
+    async function switchGroupOnMap(item: Group, event) {
+        try {
+            await showLoading();
+            ignoreRefresh = true;
+            const groupKey = item.name || 'none';
+
+            const groupIndex = items.findIndex((i) => i.type === 'group' && i.id === item.id);
+            if (groupIndex >= 0) {
+                const groupItem = items.getItem(groupIndex);
+                const onMap = (1 - groupItem.onMap) as 0 | 1;
+                groupItem.onMap = onMap;
+                items.setItem(groupIndex, groupItem);
+                const subItems = groupedItems[groupKey];
+                const collapsed = (item as CollectionGroup).collapse;
+                const groupCount = subItems.length;
+                DEV_LOG && console.log('switchGroupOnMap', groupKey, groupIndex, onMap, groupCount);
+                for (let j = 0; j < groupCount; j++) {
+                    const subItem = subItems[j];
+                    if (onMap) {
+                        await itemsModule.showItem(subItem as Item);
+                    } else {
+                        await itemsModule.hideItem(subItem as Item);
+                    }
+                    subItem.onMap = onMap;
+                    if (!collapsed) {
+                        items.setItem(groupIndex + 1 + j, subItem);
+                    }
+                }
+            }
+        } catch (error) {
+            showError(error);
+        } finally {
+            DEV_LOG && console.log('switchGroupOnMap done');
+            ignoreRefresh = false;
+            hideLoading();
         }
     }
     // async function refresh() {
@@ -328,18 +360,23 @@ LEFT JOIN  (
             items.some((d, index) => {
                 if (d === item) {
                     if (item.type === 'group') {
+                        const groupKey = (item as CollectionGroup).name || 'none';
+                        const collapsed = (item as CollectionGroup).collapse;
+                        const subItems = groupedItems[groupKey];
+                        item.selected = true;
+                        items.setItem(index, item);
                         // const groupIndex = items.findIndex((i) => i.type === 'group' && i.id === item.id);
-                        const groupCount = groupedItems[(item as Group).name].length;
+                        const groupCount = subItems.length;
                         // console.log('selecting group', groupCount, index);
-                        for (let j = index; j < index + groupCount + 1; j++) {
-                            const subItem = items.getItem(j);
+                        for (let j = 0; j < groupCount; j++) {
+                            const subItem = subItems[j];
                             if (!subItem.selected) {
                                 subItem.selected = true;
                                 // console.log('updating subItem', j, subItem);
-                                items.setItem(j, subItem);
-                                if (j > index) {
-                                    nbSelected++;
+                                if (!collapsed) {
+                                    items.setItem(index + 1 + j, subItem);
                                 }
+                                nbSelected++;
                             }
                         }
                     } else {
@@ -380,16 +417,21 @@ LEFT JOIN  (
             items.some((d, index) => {
                 if (d === item) {
                     if (item.type === 'group') {
+                        const groupKey = (item as CollectionGroup).name || 'none';
+                        const collapsed = (item as CollectionGroup).collapse;
+                        const subItems = groupedItems[groupKey];
+                        item.selected = false;
+                        items.setItem(index, item);
                         // const groupIndex = items.findIndex((i) => i.type === 'group' && i.id === item.id);
-                        const groupCount = groupedItems[(item as Group).name].length;
-                        for (let j = index; j < index + groupCount + 1; j++) {
-                            const subItem = items.getItem(j);
+                        const groupCount = subItems.length;
+                        for (let j = 0; j < groupCount; j++) {
+                            const subItem = subItems[j];
                             if (subItem.selected) {
                                 subItem.selected = false;
-                                items.setItem(j, subItem);
-                                if (j > index) {
-                                    nbSelected--;
+                                if (!collapsed) {
+                                    items.setItem(index + 1 + j, subItem);
                                 }
+                                nbSelected--;
                             }
                         }
                     } else {
@@ -715,6 +757,90 @@ LEFT JOIN  (
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout rows="auto,*">
+        <collectionview
+            bind:this={collectionView}
+            itemTemplateSelector={(item) => item.type || (!!item.route ? 'route' : 'default')}
+            {items}
+            row={1}
+            android:paddingBottom={windowInsetBottom}
+            on:swipe={onCollectionSwipe}>
+            <Template key="group" let:item>
+                <gridlayout backgroundColor={colorOutlineVariant} height={50} rippleColor={colorPrimary} on:tap={(e) => onItemTap(item, e)} on:longPress={(e) => onItemLongPress(item, e)}>
+                    <canvasview margin="5 30 5 10" on:draw={(e) => onDrawGroup(item, e)} />
+                    <IconButton
+                        horizontalAlignment="right"
+                        marginRight={60}
+                        size={40}
+                        text={item.onMap === 0 ? 'mdi-eye-off-outline' : 'mdi-eye'}
+                        tooltip={item.onMap === 0 ? lc('show') : lc('hide')}
+                        verticalAlignment="middle"
+                        on:tap={(e) => switchGroupOnMap(item, e)} />
+                    <IconButton
+                        id="collapseButton"
+                        horizontalAlignment="right"
+                        marginRight={10}
+                        rotate={item.collapse ? 180 : 0}
+                        size={40}
+                        text="mdi-chevron-up"
+                        tooltip={lc('collapse')}
+                        verticalAlignment="middle"
+                        on:tap={(e) => switchGroupCollapsed(item, e)} />
+                    <SelectedIndicator selected={item.selected} />
+                </gridlayout>
+            </Template>
+            <Template key="route" let:item>
+                <BottomSheetInfoView
+                    backgroundColor={colorBackground}
+                    borderBottomColor={colorOutlineVariant}
+                    borderBottomWidth={1}
+                    height={80}
+                    {item}
+                    marginBottom={34}
+                    marginLeft={60}
+                    opacity={(item.onMap && item.groupOnMap) || 0.6}
+                    padding="4 0 2 10"
+                    propsBottom={34}
+                    propsLeft={60}
+                    rightTextPadding={40}
+                    rippleColor={colorPrimary}
+                    selectable={false}
+                    showIcon={false}
+                    subtitleEnabled={false}
+                    titleVerticalTextAlignment="middle"
+                    on:tap={(e) => onItemTap(item, e)}
+                    on:longPress={(e) => onItemLongPress(item, e)}>
+                    <image borderRadius={8} disableCss={true} height={50} horizontalAlignment="left" marginTop={6} src={item.image_path} stretch="aspectFill" verticalAlignment="top" width={50} />
+                    <canvasView on:draw={(event) => onDrawRouteIcon(item, event)} />
+                    <SelectedIndicator selected={item.selected} />
+                    <IconButton slot="above" gray={true} horizontalAlignment="right" text="mdi-dots-vertical" verticalAlignment="top" on:tap={(e) => showItemMoreMenu(item, e)} />
+                </BottomSheetInfoView>
+            </Template>
+            <Template let:item>
+                <BottomSheetInfoView
+                    backgroundColor={colorBackground}
+                    borderBottomColor={colorOutlineVariant}
+                    borderBottomWidth={1}
+                    height={80}
+                    {item}
+                    opacity={(item.onMap && item.groupOnMap) || 0.6}
+                    rippleColor={colorPrimary}
+                    selectable={false}
+                    on:tap={(e) => onItemTap(item, e)}
+                    on:longPress={(e) => onItemLongPress(item, e)}>
+                    <SelectedIndicator selected={item.selected} />
+                    <IconButton slot="above" gray={true} horizontalAlignment="right" text="mdi-dots-vertical" verticalAlignment="top" on:tap={(e) => showItemMoreMenu(item, e)} />
+                </BottomSheetInfoView>
+            </Template>
+        </collectionview>
+        <canvaslabel
+            color={colorOnSurfaceVariant}
+            row={1}
+            text={tabIndex === 1 ? lc('no_marker') : lc('no_route')}
+            textAlignment="center"
+            verticalTextAlignment="middle"
+            visibility={loading || itemsCount ? 'hidden' : 'visible'} />
+        <mdactivityindicator busy={true} horizontalAlignment="center" row={1} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
+
         <CActionBar forceCanGoBack={nbSelected > 0} onGoBack={nbSelected ? unselectAll : null} title={nbSelected ? lc('selected', nbSelected) : lc('items')}>
             <IconButton color={colorError} isVisible={nbSelected > 0} text="mdi-delete" on:tap={deleteSelectedItems} />
             <IconButton color={actionBarLabelColor} isVisible={nbSelected > 0} text="mdi-share-variant" on:tap={shareSelectedItems} />
@@ -744,78 +870,5 @@ LEFT JOIN  (
                 <absolutelayout backgroundColor={actionBarLabelColor} colSpan={2} height={3} horizontalAlignment={tabIndex === 1 ? 'right' : 'left'} verticalAlignment="bottom" width="50%" />
             </gridlayout>
         </CActionBar>
-        <collectionview
-            bind:this={collectionView}
-            itemTemplateSelector={(item) => item.type || (!!item.route ? 'route' : 'default')}
-            {items}
-            row={1}
-            android:paddingBottom={windowInsetBottom}
-            on:swipe={onCollectionSwipe}>
-            <Template key="group" let:item>
-                <gridlayout backgroundColor={colorOutlineVariant} height={50} rippleColor={colorPrimary} on:tap={(e) => onItemTap(item, e)} on:longPress={(e) => onItemLongPress(item, e)}>
-                    <canvasview margin="5 30 5 10" on:draw={(e) => onDrawGroup(item, e)} />
-                    <IconButton
-                        id="collapseButton"
-                        horizontalAlignment="right"
-                        marginRight={10}
-                        rotate={item.collapse ? 180 : 0}
-                        size={40}
-                        text="mdi-chevron-up"
-                        tooltip={lc('collapse')}
-                        verticalAlignment="middle"
-                        on:tap={(e) => switchGroupCollapsed(item, e)} />
-                    <SelectedIndicator selected={item.selected} />
-                </gridlayout>
-            </Template>
-            <Template key="route" let:item>
-                <BottomSheetInfoView
-                    backgroundColor={colorBackground}
-                    borderBottomColor={colorOutlineVariant}
-                    borderBottomWidth={1}
-                    height={80}
-                    {item}
-                    marginBottom={34}
-                    marginLeft={60}
-                    opacity={(item.onMap && item.groupOnMap) || 0.6}
-                    padding="4 0 2 10"
-                    propsBottom={34}
-                    propsLeft={60}
-                    rightTextPadding={40}
-                    rippleColor={colorPrimary}
-                    showIcon={false}
-                    subtitleEnabled={false}
-                    titleVerticalTextAlignment="middle"
-                    on:tap={(e) => onItemTap(item, e)}
-                    on:longPress={(e) => onItemLongPress(item, e)}>
-                    <image borderRadius={8} disableCss={true} height={50} horizontalAlignment="left" marginTop={6} src={item.image_path} stretch="aspectFill" verticalAlignment="top" width={50} />
-                    <canvasView on:draw={(event) => onDrawRouteIcon(item, event)} />
-                    <SelectedIndicator selected={item.selected} />
-                    <IconButton slot="above" gray={true} horizontalAlignment="right" text="mdi-dots-vertical" verticalAlignment="top" on:tap={(e) => showItemMoreMenu(item, e)} />
-                </BottomSheetInfoView>
-            </Template>
-            <Template let:item>
-                <BottomSheetInfoView
-                    backgroundColor={colorBackground}
-                    borderBottomColor={colorOutlineVariant}
-                    borderBottomWidth={1}
-                    height={80}
-                    {item}
-                    opacity={(item.onMap && item.groupOnMap) || 0.6}
-                    rippleColor={colorPrimary}
-                    on:tap={(e) => onItemTap(item, e)}
-                    on:longPress={(e) => onItemLongPress(item, e)}>
-                    <SelectedIndicator selected={item.selected} />
-                    <IconButton slot="above" gray={true} horizontalAlignment="right" text="mdi-dots-vertical" verticalAlignment="top" on:tap={(e) => showItemMoreMenu(item, e)} />
-                </BottomSheetInfoView>
-            </Template>
-        </collectionview>
-        <canvaslabel
-            color={colorOnSurfaceVariant}
-            row={1}
-            text={tabIndex === 1 ? lc('no_marker') : lc('no_route')}
-            textAlignment="center"
-            verticalTextAlignment="middle"
-            visibility={loading || itemsCount ? 'hidden' : 'visible'} />
-        <mdactivityindicator busy={true} horizontalAlignment="center" row={1} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
     </gridlayout>
 </page>
