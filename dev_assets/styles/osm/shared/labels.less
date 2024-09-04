@@ -212,8 +212,8 @@
 		shield-file: url(shields/empty.png);
 		shield-text-dy: 0;
 		[zoom<=7] {
-			shield-file: url(shields/circle.png);
-			shield-text-dy: @city-label-dy;
+			shield-file: url(shields/place.svg);
+			shield-text-dy: @city-label-dy / [nuti::_fontscale];
 		}
 
 	}
@@ -446,7 +446,7 @@
 			text-size: @poi_label_width;
 			text-wrap-width: @poi_label_wrap_width;
 			text-wrap-character: @wrap_characters;
-			text-dy: @poi_label_dy;
+			text-dy: @poi_label_dy / [nuti::_fontscale];
 			text-fill: darken(@poi-lodging-fill, 10%);
 			text-allow-overlap-same-feature-id: true;
 			text-same-feature-id-dependent: true;
@@ -478,7 +478,7 @@
 			text-size: @poi_label_width;
 			text-wrap-width: @poi_label_wrap_width;
 			text-wrap-character: @wrap_characters;
-			text-dy: @poi_label_dy;
+			text-dy: @poi_label_dy / [nuti::_fontscale];
 			text-fill: darken(@poi-campsite-fill, 30%);
 			text-allow-overlap-same-feature-id: true;
 			text-same-feature-id-dependent: true;
@@ -507,7 +507,7 @@
 		text-size: @poi_label_width;
 		text-wrap-width: @poi_label_wrap_width;
 		text-wrap-character: @wrap_characters;
-		text-dy: @poi_label_dy;
+		text-dy: @poi_label_dy / [nuti::_fontscale];
 		text-fill: darken(@poi-water-fill, 30%);
 		text-allow-overlap-same-feature-id: true;
 		text-same-feature-id-dependent: true;
@@ -577,7 +577,8 @@
 				text-size: @poi_label_width;
 				text-wrap-width: @poi_label_wrap_width;
 				text-wrap-character: @wrap_characters;
-				text-dy: @poi_label_dy;
+				text-dy: @poi_label_dy / [nuti::_fontscale];
+				// text-vertical-alignment: bottom;
 				text-fill: darken(@poi-fill, 30%);
 				text-allow-overlap-same-feature-id: true;
 				text-same-feature-id-dependent: true;
@@ -639,7 +640,7 @@
 		text-size: @poi_label_width;
 		text-wrap-width: @poi_label_wrap_width;
 		text-wrap-character: @wrap_characters;
-		text-dy: @poi_label_dy;
+		text-dy: @poi_label_dy / [nuti::_fontscale];
 		text-fill: darken(@poi-park-fill, 30%);
 		text-size:@poi_national_park_label_width;
 		text-wrap-width: @poi_national_park_wrap_width;
