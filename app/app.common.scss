@@ -38,10 +38,6 @@
     --actionBarHeight: 60;
 }
 
-// .lato {
-//     font-family: 'Lato Regular', 'res/lato';
-// }
-
 %mdi {
     font-family: $mdiFontFamily;
 }
@@ -51,18 +47,8 @@
 }
 
 %icon-btn {
-    // ripple-color: gray;
-
-
     color: var(--colorPrimary);
     ripple-color: var(--colorPrimary);
-    // color: var(--colorOnBackground);
-    // ripple-color: var(--colorOnPrimary);
-
-    // .ns-dark & {
-        // color: var(--colorOnPrimary);
-        // ripple-color: var(--colorOnPrimary);
-    // }
 
     width: var(--actionBarButtonHeight);
     height: var(--actionBarButtonHeight);
@@ -110,10 +96,6 @@ page {
     background-color: var(--colorBackground);
     status-bar-color: var(--colorBackground);
 
-    // .ns-dark &,
-    // &.ns-dark {
-    //     status-bar-style: dark;
-    // }
     .ns-eink & {
         status-bar-style: light;
     }
@@ -123,37 +105,11 @@ htmllabel,
 canvaslabel,
 label {
     color: var(--colorOnBackground);
-
 }
-// mdbutton {
-//     color: var(--colorOnPrimary);
-// }
-
-// mdbutton,
-// button {
-//     ripple-color: var(--colorOnBackground);
-
-//     .ns-dark & {
-//         ripple-color: var(--colorOnPrimary);
-//     }
-// }
-
-// mdbutton {
-//     padding: 4 10 4 10;
-// }
-
-// mdbutton[variant=text] {
-//     padding: 0;
-// }
-
 
 
 .textRipple {
     ripple-color: var(--colorOnBackground);
-
-    // .ns-dark & {
-    //     ripple-color: var(--colorOnPrimary);
-    // }
 }
 
 .sectionHeader {
@@ -275,12 +231,7 @@ label {
     @extend .mdi;
     width: var(--actionBarButtonHeight);
     height: var(--actionBarButtonHeight);
-    // color: black;
-
-    // .ns-dark & {
     color: var(--colorOnPrimary);
-    // }
-
     margin: 0;
     padding: 0;
     font-size: 24;
@@ -294,15 +245,10 @@ label {
 }
 
 .actionBarTitle {
-    // @extend .lato;
     font-size: 20;
     font-weight: 500;
-    // color: black;
 
-    // .ns-dark & {
-        color: var(--colorOnPrimary);
-        // }
-
+    color: var(--colorOnPrimary);
     &:transparent {
         color: var(--colorOnSurface);
     }
@@ -331,18 +277,8 @@ label {
 .icon-label {
     @extend %mdi;
     @extend %icon-btn;
-
-    // color: var(--colorOnBackground);
-
-    // .ns-dark & {
-    //     color: var(--colorOnPrimary);
-    // }
-
-    // width: var(--actionBarButtonHeight);
-    // height: var(--actionBarButtonHeight);
     text-align: center;
     vertical-text-alignment: center;
-    // font-size: 24;
 }
 
 .transitIconLabel {
