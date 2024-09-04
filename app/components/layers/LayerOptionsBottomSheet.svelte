@@ -211,7 +211,7 @@
 </script>
 
 <gesturerootview {...$$restProps} height={240}>
-    <gridlayout backgroundColor={colorBackground} columns="*,auto" rows="auto,*">
+    <gridlayout  columns="*,auto" rows="auto,*">
         <label fontSize={20} fontWeight="bold" padding="10 10 0 20" text={getTitle()} />
         <scrollview bind:this={scrollView} id="scrollView" row={1}>
             <stacklayout>
