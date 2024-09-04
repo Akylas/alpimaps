@@ -24,6 +24,7 @@
     export let item: Item;
     export let symbolSize = 34;
     export let subtitleEnabled = true;
+    export let selectable = true;
     export let marginLeft = 40;
     export let marginTop = null;
     export let marginBottom = 18;
@@ -292,7 +293,7 @@
             fontSize={18}
             fontWeight="bold"
             maxFontSize={18}
-            selectable={true}
+            {selectable}
             text={itemTitle}
             textWrap={true}
             verticalTextAlignment={titleVerticalTextAlignment || (itemSubtitle ? 'bottom' : 'middle')} />
@@ -304,7 +305,7 @@
                 flexShrink={0}
                 fontSize={13}
                 maxLines={2}
-                selectable={true}
+                {selectable}
                 text={itemSubtitle}
                 verticalTextAlignment="top"
                 visibility={itemSubtitle ? 'visible' : 'collapse'} />
