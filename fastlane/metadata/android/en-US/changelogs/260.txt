@@ -1,0 +1,14 @@
+### Features
+- new map font scale option to scale all labels on map
+- new map options bottom sheet available through  a long press on the ⋮ button
+
+### Bug fixes
+- share item fix
+- a lot of transit fixes
+- contour style fix
+- style improvements for latest map data
+- max_hiking_difficulty to 6 for all profiles to ensure we use all available paths
+- added options to disable address geocoding
+- a lot of fixes for the items list page
+- chart not drawing correctly on older android
+- button not having
