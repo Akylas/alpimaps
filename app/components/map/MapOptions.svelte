@@ -1,24 +1,22 @@
 <script context="module" lang="ts">
+    import { l, lc } from '@nativescript-community/l';
+    import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
+    import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { ApplicationSettings, Color, ObservableArray, Utils } from '@nativescript/core';
     import { Template } from 'svelte-native/components';
-    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { colors, fonts } from '~/variables';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
-    import CustomLayersModule from '~/mapModules/CustomLayersModule';
-    import IconButton from '../common/IconButton.svelte';
-    import { contourLinesOpacity, mapFontScale, pitchEnabled, projectionModeSpherical, show3DBuildings, showContourLines } from '~/stores/mapStore';
-    import { showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
-    import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { l, lc } from '@nativescript-community/l';
-    import { showError } from '~/utils/error';
-    import { getMapContext } from '~/mapModules/MapModule';
-    import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
-    import { ALERT_OPTION_MAX_HEIGHT, MAP_FONT_SCALE, SETTINGS_MAP_FONT_SCALE } from '~/utils/constants';
-    import { onServiceLoaded } from '~/services/BgService.common';
-    import { GeoHandler } from '~/handlers/GeoHandler';
-    import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { Writable } from 'svelte/store';
+    import { GeoHandler } from '~/handlers/GeoHandler';
+    import CustomLayersModule from '~/mapModules/CustomLayersModule';
+    import { getMapContext } from '~/mapModules/MapModule';
+    import { onServiceLoaded } from '~/services/BgService.common';
+    import { contourLinesOpacity, mapFontScale, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, show3DBuildings, showContourLines } from '~/stores/mapStore';
+    import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
+    import { showError } from '~/utils/error';
+    import { showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
+    import { colors } from '~/variables';
+    import IconButton from '../common/IconButton.svelte';
+    import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     export interface MapOptionType {
         title: string;
         color?: Color | string;
@@ -32,22 +30,6 @@
     const customLayers: CustomLayersModule = getMapContext().mapModule('customLayers');
     let collectionView: NativeViewElementNode<CollectionViewWithSwipeMenu>;
 
-    async function setContoursOpacity(event) {
-        try {
-            await showSliderPopover({
-                debounceDuration: 100,
-                step: null,
-                anchor: event.object,
-                vertPos: VerticalPosition.ABOVE,
-                value: $contourLinesOpacity,
-                onChange(value) {
-                    $contourLinesOpacity = value;
-                }
-            });
-        } catch (error) {
-            showError(error);
-        }
-    }
     function getTitle(item) {
         switch (item.id) {
             case 'token':
@@ -207,20 +189,14 @@
     </collectionview>
     <stacklayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} orientation="horizontal">
         {#if !!customLayers?.hasLocalData}
-            <IconButton
-                gray={true}
-                isSelected={$showContourLines}
-                onLongPress={setContoursOpacity}
-                text="mdi-bullseye"
-                tooltip={lc('show_contour_lines')}
-                on:tap={() => showContourLines.set(!$showContourLines)} />
+            <IconButton gray={true} isSelected={$showContourLines} text="mdi-bullseye" tooltip={lc('show_contour_lines')} on:tap={() => showContourLines.set(!$showContourLines)} />
         {/if}
         {#if !!customLayers?.hasLocalData}
             <IconButton gray={true} isSelected={$show3DBuildings} text="mdi-domain" tooltip={lc('buildings_3d')} on:tap={() => show3DBuildings.set(!$show3DBuildings)} />
         {/if}
         <IconButton gray={true} isSelected={$projectionModeSpherical} text="mdi-globe-model" tooltip={lc('globe_mode')} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} />
-        <!-- <IconButton gray={true} isSelected={$rotateEnabled} text="mdi-rotate-3d-variant" tooltip={lc('map_rotation')} on:tap={() => rotateEnabled.set(!$rotateEnabled)} /> -->
+        <IconButton gray={true} isSelected={$rotateEnabled} text="mdi-rotate-3d-variant" tooltip={lc('map_rotation')} on:tap={() => rotateEnabled.set(!$rotateEnabled)} />
         <IconButton gray={true} isSelected={$pitchEnabled} text="mdi-rotate-orbit" tooltip={lc('map_pitch')} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
-        <!-- <IconButton gray={true} isSelected={$preloading} tooltip={lc('preloading')} text="mdi-map-clock" on:tap={() => preloading.set(!$preloading)} /> -->
+        <IconButton gray={true} isSelected={$preloading} text="mdi-map-clock" tooltip={lc('preloading')} on:tap={() => preloading.set(!$preloading)} />
     </stacklayout>
 </gesturerootview>
