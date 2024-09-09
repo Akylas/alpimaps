@@ -1680,6 +1680,12 @@
         try {
             const options = [
                 {
+                    accessibilityValue: 'settingsBtn',
+                    title: lc('settings'),
+                    id: 'settings',
+                    icon: 'mdi-cogs'
+                },
+                {
                     title: lc('location_info'),
                     id: 'location_info',
                     icon: 'mdi-speedometer'
@@ -1734,12 +1740,6 @@
                         title: lc('import_data'),
                         id: 'import',
                         icon: 'mdi-import'
-                    },
-                    {
-                        accessibilityValue: 'settingsBtn',
-                        title: lc('settings'),
-                        id: 'settings',
-                        icon: 'mdi-cogs'
                     }
                 ] as any);
             if (customLayersModule.hasLocalData) {
