@@ -92,6 +92,7 @@ export default [
             '@typescript-eslint/unified-signatures': 'off',
             '@typescript-eslint/no-unused-expressions': 'off',
             '@typescript-eslint/no-unsafe-function-type': 'off', // '@stylistic/type-annotation-spacing': 'error',
+            '@typescript-eslint/prefer-promise-reject-errors': 'off',
             // '@stylistic/semi': ['error'],
             // '@stylistic/member-delimiter-style': 'error',
             // '@stylistic/quotes': [
