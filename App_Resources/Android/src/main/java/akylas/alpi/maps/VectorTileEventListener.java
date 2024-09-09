@@ -30,8 +30,8 @@ public class VectorTileEventListener extends AKVectorTileEventListener {
             // featureLayerName.equals("place") ||
             // featureLayerName.equals("contour") ||
             // featureLayerName.equals("hillshade") ||
-            (featureLayerName.equals("park") && geometry instanceof com.carto.geometry.PolygonGeometry
-) ||
+            // (featureLayerName.equals("park") && geometry instanceof com.carto.geometry.PolygonGeometry
+// ) ||
             ((featureLayerName.equals("building") || featureLayerName.equals("landcover" )|| featureLayerName.equals(  "landuse")) && name != null)
         ) {
             return false;
