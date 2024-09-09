@@ -100,6 +100,7 @@
 
     let selectedOSMId: string;
     let selectedId: string;
+    let selectedMapId: string;
     let selectedPosMarker: Point<LatLonKeys>;
     const selectedItem = watcher<Item>(null, onSelectedItemChanged);
     let editingItem: Item = null;
@@ -751,6 +752,7 @@
         isFeatureInteresting = false,
         peek = true,
         setSelected = true,
+        setMapSelected = false,
         showButtons = false,
         preventZoom = true,
         minZoom,
@@ -763,6 +765,7 @@
         isFeatureInteresting: boolean;
         peek?: boolean;
         setSelected?: boolean;
+        setMapSelected?: boolean;
         preventZoom?: boolean;
         minZoom?: number;
         zoom?: number;
@@ -790,7 +793,10 @@
                 if (setSelected && route) {
                     (async () => {
                         TEST_LOG && console.log('selected_id', typeof route.osmid, route.osmid, typeof props.id, props.id, setSelected);
-
+                        if (selectedMapId) {
+                            mapContext.mapDecoder.setJSONStyleParameters({ selected_id: '' });
+                            selectedMapId = null;
+                        }
                         // selected_osmid is for routes
                         // mapContext.mapDecoder.setStyleParameter('selected_id', '');
                         const styleParameters = {};
@@ -836,13 +842,20 @@
                             selectedPosMarker.position = position;
                             selectedPosMarker.visible = true;
                         }
-                        if (setSelected) {
+                        if (setMapSelected) {
                             // TODO: not enabled for now as really slow
+                            DEV_LOG && console.log('mapDecoder selected_id', props.name + props.class);
                             // if (props.subclass) {
-                            //     mapContext.mapDecoder.setStyleParameter('selected_id', props.name + props.subclass);
+                            selectedMapId = props.name + props.class;
+                            mapContext.mapDecoder.setJSONStyleParameters({ selected_id: selectedMapId });
                             // } else {
-                            //     mapContext.mapDecoder.setStyleParameter('selected_id', '');
+                            // mapContext.mapDecoder.setStyleParameter('selected_id', '');
                             // }
+                        } else if (selectedMapId) {
+                            mapContext.mapDecoder.setJSONStyleParameters({ selected_id: '' });
+                            selectedMapId = null;
+                        }
+                        if (setSelected) {
                             const styleParameters = {};
                             if (props.id !== undefined) {
                                 selectedId = props.id;
@@ -986,6 +999,11 @@
             setSelectedItem(null);
             if (selectedPosMarker) {
                 selectedPosMarker.visible = false;
+            }
+
+            if (selectedMapId) {
+                selectedMapId = null;
+                mapContext.mapDecoder.setJSONStyleParameters({ selected_id: '' });
             }
             const styleParameters = {};
             if (selectedOSMId !== undefined) {
@@ -1147,7 +1165,7 @@
         }
         const { clickType, featureId, position, featureLayerName, featureData, featurePosition, featureGeometry, layer } = data;
 
-        // TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, position, featurePosition, featureGeometry);
+        TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, position, featurePosition, featureGeometry);
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data) as boolean;
         if (!handledByModules && clickType === ClickType.SINGLE) {
             // if (showClickedFeatures) {
@@ -1215,12 +1233,8 @@
                 return false;
             }
 
-            const isFeatureInteresting =
-                featureLayerName === 'poi' ||
-                featureLayerName === 'mountain_peak' ||
-                featureLayerName === 'housenumber' ||
-                (!!featureData.name && (featureData.class !== 'national_park' || cartoMap.zoom < 9) && (featureData.class !== 'protected_area' || cartoMap.zoom < 11) && !selectedRoutes);
-            // DEV_LOG && console.log('isFeatureInteresting', featureLayerName, featureData.name, isFeatureInteresting);
+            const isFeatureInteresting = featureLayerName === 'poi' || featureLayerName === 'mountain_peak' || featureLayerName === 'housenumber' || (!!featureData.name && !selectedRoutes);
+            DEV_LOG && console.log('isFeatureInteresting', featureLayerName, featureData.name, isFeatureInteresting, featureGeometry.constructor.name, featurePosition, position);
             if (isFeatureInteresting) {
                 ignoreNextMapClick = false;
                 selectedRoutes = null;
@@ -1232,10 +1246,11 @@
                     properties: featureData,
                     geometry: {
                         type: 'Point',
+                        // coordinates: [featurePosition.lon, featurePosition.lat]
                         coordinates: isFeatureInteresting && !/Line|Polygon/.test(featureGeometry.constructor.name) ? [featurePosition.lon, featurePosition.lat] : [position.lon, position.lat]
                     }
                 };
-                selectItem({ item: result, isFeatureInteresting, showButtons: featureData.class === 'bus' || featureData.subclass === 'tram_stop' });
+                selectItem({ item: result, isFeatureInteresting, showButtons: featureData.class === 'bus' || featureData.subclass === 'tram_stop', setMapSelected: featureLayerName === 'park' });
             }
             unFocusSearch();
             // if (isFeatureInteresting && showClickedFeatures) {
