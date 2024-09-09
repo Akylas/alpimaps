@@ -170,19 +170,13 @@
                     id: 'language',
                     description: () => getLocaleDisplayName(),
                     title: lc('language')
+                },
+                {
+                    id: 'map_language',
+                    description: () => getLocaleDisplayName(ApplicationSettings.getString('map_language')),
+                    title: lc('map_language')
                 }
             ]
-                .concat(
-                    !PLAY_STORE_BUILD && customLayers.hasLocalData
-                        ? [
-                              {
-                                  id: 'map_language',
-                                  description: () => getLocaleDisplayName(ApplicationSettings.getString('map_language')),
-                                  title: lc('map_language')
-                              }
-                          ]
-                        : ([] as any)
-                )
                 .concat([
                     {
                         id: 'dark_mode',
