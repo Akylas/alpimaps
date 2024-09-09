@@ -249,7 +249,7 @@ export default class CustomLayersModule extends MapModule {
             // maxOverzoomLevel: 0,
             visibleZoomRange: [4, 24],
             layerBlendingSpeed: 0,
-            preloading: get(preloading),
+            // preloading: get(preloading),
             visible: get(showRoutes),
             tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
             labelRenderOrder: VectorTileRenderOrder.LAST,
@@ -480,13 +480,26 @@ export default class CustomLayersModule extends MapModule {
                               databasePath
                           })
                         : dataSource,
-                zoomLevelBias,
+                zoomLevelBias: ApplicationSettings.getNumber(`${id}_zoomLevelBias`, 0),
                 labelRenderOrder: VectorTileRenderOrder.LAST,
-                decoder: mapContext.innerDecoder,
-                // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
+                decoder: mapContext.mapDecoder,
                 visible: opacity !== 0,
+                layerBlendingSpeed: 3,
+                labelBlendingSpeed: 3,
+                opacity,
+                preloading: ApplicationSettings.getBoolean(`${id}_preloading`, false),
+                // tileCacheCapacity: 30 * 1024 * 1024,
+                // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                 ...provider.layerOptions
             });
+            (layer as VectorTileLayer).setVectorTileEventListener<LatLonKeys>(
+                {
+                    onVectorTileClicked: mapContext.vectorTileClicked
+                },
+                mapContext.getProjection()
+                // TODO: fix this to be optimized too on iOS
+                // __ANDROID__ ? akylas.alpi.maps.VectorTileEventListener : undefined
+            );
         } else {
             const downloadable = provider.downloadable || !PRODUCTION || this.devMode;
             const cacheable = provider.cacheable || !PRODUCTION;
@@ -501,6 +514,7 @@ export default class CustomLayersModule extends MapModule {
                               databasePath
                           })
                         : dataSource,
+                preloading: ApplicationSettings.getBoolean(`${id}_preloading`, false),
                 zoomLevelBias,
                 // cacheSize,
                 opacity,
@@ -899,7 +913,8 @@ export default class CustomLayersModule extends MapModule {
                     decoder: mapContext.mapDecoder,
                     // clickHandlerLayerFilter: PRODUCTION ? undefined : '.*',
                     // clickHandlerLayerFilter: PRODUCTION ? '(.*::(icon|label)|waterway|transportation)' : '.*',
-                    clickHandlerLayerFilter: PRODUCTION ? '.*::(icon|label)' : '.*',
+                    // clickHandlerLayerFilter: PRODUCTION ? '.*::(icon|label)' : '.*',
+                    clickHandlerLayerFilter: '.*::(icon|label)',
                     tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                     visible: opacity !== 0
                 });
@@ -907,9 +922,9 @@ export default class CustomLayersModule extends MapModule {
                     {
                         onVectorTileClicked: (e) => mapContext.vectorTileClicked(e)
                     },
-                    mapContext.getProjection(),
+                    mapContext.getProjection()
                     // TODO: fix this to be optimized too on iOS
-                    __ANDROID__ ? akylas.alpi.maps.VectorTileEventListener : undefined
+                    // __ANDROID__ ? akylas.alpi.maps.VectorTileEventListener : undefined
                 );
                 if (!packageService.localVectorTileLayer) {
                     packageService.localVectorTileLayer = layer;
