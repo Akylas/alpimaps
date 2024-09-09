@@ -1,5 +1,6 @@
 import { HTTPTileDataSourceOptions } from '@nativescript-community/ui-carto/datasources/http';
 import { RasterTileLayerOptions } from '@nativescript-community/ui-carto/layers/raster';
+import { VectorTileLayerOptions } from '@nativescript-community/ui-carto/layers/vector';
 
 export interface DataProviderOptions {
     [k: string]: any;
@@ -27,7 +28,7 @@ export interface Provider {
     attribution?: string;
     legend?: string;
     sourceOptions?: Partial<HTTPTileDataSourceOptions>;
-    layerOptions?: Partial<RasterTileLayerOptions>;
+    layerOptions?: Partial<RasterTileLayerOptions | VectorTileLayerOptions>;
     variants?: { [k: string]: Provider | string };
 }
 
@@ -195,6 +196,20 @@ export const data: { [k: string]: Provider } = {
     },
     Avalanches: {
         url: 'http://vmapfishbda.grenoble.cemagref.fr/cgi-bin/mapserv?map=/var/www/prod/test.map&LAYERS=zont%2Clint&TRANSPARENT=true&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&EXCEPTIONS=application%2Fvnd.ogc.se_inimage&FORMAT=image%2Fpng&SRS=EPSG%3A27572&BBOX={bbox}&WIDTH=300&HEIGHT=300'
+    },
+    AmericanaOSM: {
+        url: 'https://d17gef4m69t9r4.cloudfront.net/planet/{z}/{x}/{y}.mvt',
+        attribution: '<a href="https://tile.ourmap.us/">AmericanaOSM</a>',
+        sourceOptions: {
+            minZoom: 0,
+            maxZoom: 14,
+            httpHeaders: {
+                'User-Agent': 'AlpiMaps'
+            }
+        },
+        layerOptions: {
+            clickHandlerLayerFilter: '.*::(icon|label)'
+        }
     },
     OpenStreetMap: {
         url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
