@@ -715,8 +715,8 @@ export default class CustomLayersModule extends MapModule {
                     }
                     const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
                     if (this.customSources.length === 0 && savedSources.length === 0) {
-                        savedSources.push('openstreetmap');
-                        ApplicationSettings.setString('added_providers', '["openstreetmap"]');
+                        savedSources.push('americanaosm');
+                        ApplicationSettings.setString('added_providers', '["americanaosm"]');
                     }
                     if (savedSources.length > 0) {
                         await this.getSourcesLibrary();
@@ -1227,7 +1227,7 @@ export default class CustomLayersModule extends MapModule {
             savedSources.splice(index, 1);
             ApplicationSettings.setString('added_providers', JSON.stringify(savedSources));
             if (this.customSources.length === 0 && savedSources.length === 0) {
-                const provider = this.baseProviders['openstreetmap'];
+                const provider = this.baseProviders['americanaosm'];
                 const data = await this.createDataSourceAndMapLayer(provider.id, provider);
                 this.addDataSource(data);
             }
