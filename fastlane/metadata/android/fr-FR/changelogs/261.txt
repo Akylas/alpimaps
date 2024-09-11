@@ -1,0 +1,7 @@
+### Features
+- new default source using vector tiles! It opens almost all Alpimaps features to everyone! If you dont get it by default on next app start you can add the source `AmericanaOSM` (you can remove the openstreetmap source)
+
+### Bug fixes
+- differentiate languages variants based on the locale
+- new Americana OSM vector tile data source
+- when selecting a park, highlight it on the map
