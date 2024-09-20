@@ -1,14 +1,14 @@
-import { GPS, GenericGeoLocation, Options as GeolocationOptions, LocationMonitor } from '@nativescript-community/gps';
+import { GPS, GenericGeoLocation, Options as GeolocationOptions } from '@nativescript-community/gps';
 import { check, request } from '@nativescript-community/perms';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
-import { AndroidActivityResultEventData, AndroidApplication, Application, ApplicationEventData, ApplicationSettings, CoreTypes, EventData, Observable, Utils } from '@nativescript/core';
+import { AndroidActivityResultEventData, AndroidApplication, Application, ApplicationEventData, ApplicationSettings, CoreTypes, EventData, Utils } from '@nativescript/core';
 import { SDK_VERSION } from '@nativescript/core/utils';
 import { bind } from 'helpful-decorators/dist-src/bind';
 import { convertDurationSeconds, formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
+import type { BgService as AndroidBgService } from '~/services/android/BgService';
 import { BgServiceCommon } from '~/services/BgService.common';
 import { Handler } from './Handler';
-import type { BgService as AndroidBgService } from '~/services/android/BgService';
 
 let geolocation: GPS;
 
@@ -277,7 +277,7 @@ export class GeoHandler extends Handler {
         return Promise.resolve();
     }
     getLastKnownLocation(): GeoLocation {
-        return LocationMonitor.getLastKnownLocation<LatLonKeys>();
+        return geolocation.getLastKnownLocation<LatLonKeys>();
     }
 
     async getLocation(options?) {
