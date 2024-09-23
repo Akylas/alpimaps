@@ -66,6 +66,20 @@ Alpi Maps data is base on OpenStreetMap, which means you can access almost anyth
 * use the Google Maps gestures you love so much like the double tap and drag to zoom!
 * query weather data for any point on the map( requires [OSS Weather](https://github.com/Akylas/oss-weather) to be installed)
 
+## Default Vector AmericanOSM map
+
+AlpiMaps uses [AmericanaOSM](https://tile.ourmap.us) as a default Vector data source. At first Alpimaps was providing a free instance for all to share.
+However i quickly got over the limit so i had to close it.
+So now instead i share how to create your own free instance and use it in the app. For that you need to create a AWS account and setup an instance.
+It is very easy, follow this [tutorial](https://docs.protomaps.com/deploy/aws#_2-cloudformation-template). Only the `CloudFormation Template` section is needed.
+Once you've set it up you'll end up with a `https://SUBDOMAIN.cloudfront.net` URL. Now go into AlpiMaps Settings/ApiKeys and set that URL for `americanaosm`.
+Then you can add the AmericanaOSM data source and it will be using your own instance.
+
+### Tip
+When setting up your AWS account, if the account creation force you to setup a credit card, don't be scared:
+* it is your instance, nor i nor anyone else won't have access to it. So you dont risk much
+* setup alert on tier limit (how i discovered mine was quickly growing) following this [guide](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/tracking-free-tier-usage.html)
+
 ## Offline Maps
 
 *AlpiMaps* was created to be used with offline data so that you get access to everything offline.
