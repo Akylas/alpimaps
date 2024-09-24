@@ -12,6 +12,7 @@ declare const gVars: {
     CARTO_TOKEN: string;
     // FACEBOOK_TOKEN: string;
     IGN_TOKEN: string;
+    AMERICANA_OSM_URL: string;
     THUNDERFOREST_TOKEN: string;
     MAPBOX_TOKEN: string;
     MAPTILER_TOKEN: string;

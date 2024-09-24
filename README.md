@@ -71,8 +71,9 @@ Alpi Maps data is base on OpenStreetMap, which means you can access almost anyth
 AlpiMaps uses [AmericanaOSM](https://tile.ourmap.us) as a default Vector data source. At first Alpimaps was providing a free instance for all to share.
 However i quickly got over the limit so i had to close it.
 So now instead i share how to create your own free instance and use it in the app. For that you need to create a AWS account and setup an instance.
-It is very easy, follow this [tutorial](https://docs.protomaps.com/deploy/aws#_2-cloudformation-template). Only the `CloudFormation Template` section is needed.
-Once you've set it up you'll end up with a `https://SUBDOMAIN.cloudfront.net` URL. Now go into AlpiMaps Settings/ApiKeys and set that URL for `americanaosm`.
+It is very easy, follow this [tutorial](https://docs.protomaps.com/deploy/aws#_2-cloudformation-template), only the `CloudFormation Template` section is needed. **One important thing not there is that the `BucketName` is `osmus-tile` and you must make sure your stack is created in the `us-east-2` region**. Only the `CloudFormation Template` section is needed.
+To make sure the region is correct. Once the stack is created you can check the `LambdaFunctionUrl` in the stack `Resources` section. It should start with `arn:aws:lambda:us-east-2`.
+Once you've set it up you'll end up with a `https://SUBDOMAIN.cloudfront.net` URL in the "Outputs" section of the created stack. Now go into AlpiMaps Settings/ApiKeys and set that URL for `americanaosm`.
 Then you can add the AmericanaOSM data source and it will be using your own instance.
 
 ### Tip
