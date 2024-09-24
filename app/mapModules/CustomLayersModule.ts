@@ -326,6 +326,7 @@ export default class CustomLayersModule extends MapModule {
 
     getTokenKeys() {
         return {
+            americanaosm: ApplicationSettings.getString('americanaosmToken', this.devMode ? gVars.AMERICANA_OSM_URL : undefined),
             carto: ApplicationSettings.getString('cartoToken', this.devMode ? gVars.CARTO_TOKEN : undefined),
             here_appid: ApplicationSettings.getString('here_appidToken', this.devMode ? gVars.HER_APP_ID : undefined),
             here_appcode: ApplicationSettings.getString('here_appcodeToken', this.devMode ? gVars.HER_APP_CODE : undefined),
@@ -334,8 +335,7 @@ export default class CustomLayersModule extends MapModule {
             maptiler: ApplicationSettings.getString('maptilerToken', this.devMode ? gVars.MAPTILER_TOKEN : undefined),
             google: ApplicationSettings.getString('googleToken', this.devMode ? gVars.GOOGLE_TOKEN : undefined),
             thunderforest: ApplicationSettings.getString('thunderforestToken', this.devMode ? gVars.THUNDERFOREST_TOKEN : undefined),
-            ign: ApplicationSettings.getString('ignToken', this.devMode ? gVars.IGN_TOKEN : undefined),
-            americanaosm: ApplicationSettings.getString('ignToken', this.devMode ? gVars.AMERICANA_OSM_URL : undefined)
+            ign: ApplicationSettings.getString('ignToken', this.devMode ? gVars.IGN_TOKEN : undefined)
         };
     }
     set devMode(value: boolean) {
@@ -697,6 +697,13 @@ export default class CustomLayersModule extends MapModule {
         }
     }
 
+    get americanaOSMHTML() {
+        return lc(
+            'americanaosm_presentation_detailed',
+            ...['<a href="https://tile.ourmap.us">AmericanaOSM</a>', `<a href="https://github.com/Akylas/alpimaps/?tab=readme-ov-file#default-vector-americanosm-map">${lc('tutorial')}</a>`]
+        );
+    }
+
     onMapReady(mapView: CartoMap<LatLonKeys>) {
         super.onMapReady(mapView);
         (async () => {
@@ -750,13 +757,7 @@ export default class CustomLayersModule extends MapModule {
                                     padding: '10 20 0 20',
                                     textWrap: true,
                                     color: colorOnSurfaceVariant as any,
-                                    html: lc(
-                                        'americanaosm_presentation_detailed',
-                                        ...[
-                                            '<a href="https://tile.ourmap.us">AmericanaOSM</a>',
-                                            `<a href="https://github.com/Akylas/alpimaps/?tab=readme-ov-file#default-vector-americanosm-map">${lc('tutorial')}</a>`
-                                        ]
-                                    )
+                                    html: this.americanaOSMHTML
                                 },
                                 {
                                     linkTap: (e) => openLink(e.link)
@@ -766,7 +767,7 @@ export default class CustomLayersModule extends MapModule {
                         if (promptResult.result && promptResult?.text.length > 0) {
                             this.saveToken('americanaosm', promptResult.text);
                         }
-                        // ApplicationSettings.setBoolean('showAmericanaOSMPresentation', false);
+                        ApplicationSettings.setBoolean('showAmericanaOSMPresentation', false);
                     }
                     if (this.customSources.length === 0 && savedSources.length === 0) {
                         savedSources.push(this.defaultOnlineSource);
