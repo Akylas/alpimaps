@@ -24,11 +24,11 @@ export async function askForManagePermission() {
         const REQUEST_CODE = 6646;
         const onActivityResultHandler = (data: AndroidActivityResultEventData) => {
             if (data.requestCode === REQUEST_CODE) {
-                Application.android.off(AndroidApplication.activityResultEvent, onActivityResultHandler);
+                Application.android.off(Application.android.activityResultEvent, onActivityResultHandler);
                 resolve(android.provider.Settings.canDrawOverlays(activity));
             }
         };
-        Application.android.on(AndroidApplication.activityResultEvent, onActivityResultHandler);
+        Application.android.on(Application.android.activityResultEvent, onActivityResultHandler);
         const intent = new android.content.Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, android.net.Uri.parse('package:' + __APP_ID__));
         activity.startActivityForResult(intent, REQUEST_CODE);
     });
@@ -72,7 +72,7 @@ export async function getDefaultMBTilesDir() {
         //     })();
         // }
     }
-    if (ANDROID_30) {
+    if (ANDROID_30 && !PLAY_STORE_BUILD) {
         await askForManagePermission();
         if (!checkManagePermission()) {
             throw new Error(lc('missing_manage_permission'));
