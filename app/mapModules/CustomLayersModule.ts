@@ -25,9 +25,11 @@ import { toDegrees, toRadians } from '~/utils/geo';
 import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
 
 import { SDK_VERSION } from '@akylas/nativescript/utils';
-import { showSnack } from '~/utils/ui';
+import { createView, showSnack } from '~/utils/ui';
 import { data as TileSourcesData } from '~/data/tilesources';
 import { openLink } from '~/utils/ui';
+import { Label } from '@nativescript-community/ui-label';
+import { colors } from '~/variables';
 const mapContext = getMapContext();
 
 export enum RoutesType {
@@ -332,7 +334,8 @@ export default class CustomLayersModule extends MapModule {
             maptiler: ApplicationSettings.getString('maptilerToken', this.devMode ? gVars.MAPTILER_TOKEN : undefined),
             google: ApplicationSettings.getString('googleToken', this.devMode ? gVars.GOOGLE_TOKEN : undefined),
             thunderforest: ApplicationSettings.getString('thunderforestToken', this.devMode ? gVars.THUNDERFOREST_TOKEN : undefined),
-            ign: ApplicationSettings.getString('ignToken', this.devMode ? gVars.IGN_TOKEN : undefined)
+            ign: ApplicationSettings.getString('ignToken', this.devMode ? gVars.IGN_TOKEN : undefined),
+            americanaosm: ApplicationSettings.getString('ignToken', this.devMode ? gVars.AMERICANA_OSM_URL : undefined)
         };
     }
     set devMode(value: boolean) {
@@ -686,6 +689,14 @@ export default class CustomLayersModule extends MapModule {
         }
     }
 
+    get defaultOnlineSource() {
+        if (this.tokenKeys.americanaosm) {
+            return 'americanaosm';
+        } else {
+            return 'openstreetmap';
+        }
+    }
+
     onMapReady(mapView: CartoMap<LatLonKeys>) {
         super.onMapReady(mapView);
         (async () => {
@@ -699,24 +710,67 @@ export default class CustomLayersModule extends MapModule {
                         if (this.customSources.length === 0) {
                             const showFirstPresentation = ApplicationSettings.getBoolean('showFirstPresentation', true);
                             if (showFirstPresentation) {
-                                confirm({
+                                const result = await confirm({
                                     title: lc('app.name'),
                                     message: lc('app_generate_date_presentation'),
                                     okButtonText: lc('open_github'),
                                     cancelButtonText: lc('cancel')
-                                }).then((result) => {
-                                    if (result) {
-                                        openLink(GIT_URL);
-                                    }
-                                    ApplicationSettings.setBoolean('showFirstPresentation', false);
                                 });
+                                if (result) {
+                                    openLink(GIT_URL);
+                                }
+                                ApplicationSettings.setBoolean('showFirstPresentation', false);
                             }
                         }
                     }
+
                     const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
+                    const showAmericanaOSMPresentation = ApplicationSettings.getBoolean('showAmericanaOSMPresentation', true);
+                    if (showAmericanaOSMPresentation) {
+                        const currentIndex = savedSources.indexOf('americanaosm');
+                        DEV_LOG && console.log('savedSources', currentIndex, savedSources);
+                        if (currentIndex !== -1) {
+                            savedSources.splice(currentIndex, 1);
+                            ApplicationSettings.setString('added_providers', JSON.stringify(savedSources));
+                        }
+                        const { colorOnSurfaceVariant } = get(colors);
+                        const promptResult = await prompt({
+                            title: lc('app.name'),
+                            // message: lc('americanaosm_presentation'),
+                            okButtonText: lc('save'),
+                            cancelButtonText: lc('cancel'),
+                            textFieldProperties: {
+                                variant: 'outline',
+                                hint: lc('americanaosm_url'),
+                                margin: 10
+                            },
+                            view: createView(
+                                Label,
+                                {
+                                    padding: '10 20 0 20',
+                                    textWrap: true,
+                                    color: colorOnSurfaceVariant as any,
+                                    html: lc(
+                                        'americanaosm_presentation_detailed',
+                                        ...[
+                                            '<a href="https://tile.ourmap.us">AmericanaOSM</a>',
+                                            `<a href="https://github.com/Akylas/alpimaps/?tab=readme-ov-file#default-vector-americanosm-map">${lc('tutorial')}</a>`
+                                        ]
+                                    )
+                                },
+                                {
+                                    linkTap: (e) => openLink(e.link)
+                                }
+                            )
+                        });
+                        if (promptResult.result && promptResult?.text.length > 0) {
+                            this.saveToken('americanaosm', promptResult.text);
+                        }
+                        // ApplicationSettings.setBoolean('showAmericanaOSMPresentation', false);
+                    }
                     if (this.customSources.length === 0 && savedSources.length === 0) {
-                        savedSources.push('americanaosm');
-                        ApplicationSettings.setString('added_providers', '["americanaosm"]');
+                        savedSources.push(this.defaultOnlineSource);
+                        ApplicationSettings.setString('added_providers', `["${this.defaultOnlineSource}"]`);
                     }
                     if (savedSources.length > 0) {
                         await this.getSourcesLibrary();
@@ -1087,7 +1141,6 @@ export default class CustomLayersModule extends MapModule {
                             },
                             onDownloadStarting: (tileCount: number) => {
                                 DEV_LOG && console.log('onDownloadStarting', tileCount);
-                                // showSnack({ message: lc('download_area_started', bounds.toString()) });
                                 const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
                                 if (itemIndex) {
                                     const item = this.customSources.getItem(itemIndex);
@@ -1149,11 +1202,9 @@ export default class CustomLayersModule extends MapModule {
                 title: l('pick_source'),
                 showFilter: true,
                 rowHeight: 56,
-                options:
-                    //  [{ name: l('pick'), isPick: true }].concat
-                    Object.keys(this.baseProviders)
-                        .sort()
-                        .map((s) => ({ name: s, isPick: false, data: this.baseProviders[s] }))
+                options: Object.keys(this.baseProviders)
+                    .sort()
+                    .map((s) => ({ name: s, isPick: false, data: this.baseProviders[s] }))
             }
         });
         const result = Array.isArray(results) ? results[0] : results;
@@ -1227,7 +1278,7 @@ export default class CustomLayersModule extends MapModule {
             savedSources.splice(index, 1);
             ApplicationSettings.setString('added_providers', JSON.stringify(savedSources));
             if (this.customSources.length === 0 && savedSources.length === 0) {
-                const provider = this.baseProviders['americanaosm'];
+                const provider = this.baseProviders[this.defaultOnlineSource];
                 const data = await this.createDataSourceAndMapLayer(provider.id, provider);
                 this.addDataSource(data);
             }
