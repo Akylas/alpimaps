@@ -99,7 +99,12 @@
                 });
                 return newItems;
             case 'api_keys':
-                const tokenSettings = [];
+                const tokenSettings = [
+                    {
+                        type: 'html',
+                        description: getMapContext().mapModules.customLayers.americanaOSMHTML
+                    }
+                ] as any[];
                 Object.keys(customLayers.tokenKeys).forEach((k) => {
                     tokenSettings.push({
                         id: 'token',
@@ -854,6 +859,16 @@
                     rightValue={item.rightValue}
                     showBottomLine={false}
                     subtitle={getSubtitle(item)}
+                    title={getTitle(item)}
+                    on:tap={(event) => onTap(item, event)}
+                    on:longPress={(event) => onLongPress(item, event)}>
+                </ListItemAutoSize>
+            </Template>
+            <Template key="html" let:item>
+                <ListItemAutoSize
+                    html={getSubtitle(item)}
+                    rightValue={item.rightValue}
+                    showBottomLine={false}
                     title={getTitle(item)}
                     on:tap={(event) => onTap(item, event)}
                     on:longPress={(event) => onLongPress(item, event)}>
