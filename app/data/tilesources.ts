@@ -198,7 +198,7 @@ export const data: { [k: string]: Provider } = {
         url: 'http://vmapfishbda.grenoble.cemagref.fr/cgi-bin/mapserv?map=/var/www/prod/test.map&LAYERS=zont%2Clint&TRANSPARENT=true&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&EXCEPTIONS=application%2Fvnd.ogc.se_inimage&FORMAT=image%2Fpng&SRS=EPSG%3A27572&BBOX={bbox}&WIDTH=300&HEIGHT=300'
     },
     AmericanaOSM: {
-        url: 'https://d2o31c98a3edno.cloudfront.net/planet/{z}/{x}/{y}.mvt',
+        url: '{americanaosm}/planet/{z}/{x}/{y}.mvt',
         attribution: '<a href="https://tile.ourmap.us/">AmericanaOSM</a>',
         sourceOptions: {
             minZoom: 0,
