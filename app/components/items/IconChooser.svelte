@@ -82,7 +82,6 @@
 <!-- <page actionBarHidden={true}> -->
 <gesturerootview>
     <gridlayout backgroundColor={colorSurfaceContainer} borderRadius={8} {elevation} {margin} rows="auto,auto,250">
-        <!-- <CActionBar canGoBack modalWindow title={lc('icon')} /> -->
         <gridlayout margin={10} row={1}>
             <textfield
                 bind:this={textfield}
