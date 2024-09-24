@@ -102,15 +102,7 @@
                     if (dataSource instanceof PersistentCacheTileDataSource) {
                         dataSource.clear();
                     }
-                    // const result = await confirm({
-                    //     title: lc('clear'),
-                    //     message: lc('confirm_clear_tile_cache'),
-                    //     okButtonText: lc('clear'),
-                    //     cancelButtonText: lc('cancel')
-                    // });
-                    // if (result) {
                     layer.clearTileCaches(true);
-                    // }
                     break;
                 }
                 case 'download_area': {
@@ -211,7 +203,7 @@
 </script>
 
 <gesturerootview {...$$restProps} height={240}>
-    <gridlayout  columns="*,auto" rows="auto,*">
+    <gridlayout columns="*,auto" rows="auto,*">
         <label fontSize={20} fontWeight="bold" padding="10 10 0 20" text={getTitle()} />
         <scrollview bind:this={scrollView} id="scrollView" row={1}>
             <stacklayout>
