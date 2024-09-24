@@ -73,7 +73,7 @@
         on:textChange={onTextChange}
         on:returnPress={onKeyboardReturn} />
     {#if foundGroups.length > 0}
-        <label row={2} text={lc('existing_groups')}  marginTop={15}/>
+        <label marginTop={15} row={2} text={lc('existing_groups')} />
         <wraplayout margin={5} row={3}>
             {#each foundGroups as group}
                 <mdbutton height={30} margin="2" text={group.name} on:tap={() => onGroupTap(group)} />
