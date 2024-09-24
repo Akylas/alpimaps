@@ -22,6 +22,7 @@
     export let fontWeight: any = 'normal';
     export let subtitleFontSize: number = 14;
     export let title: string = null;
+    export let html: string = null;
     export let titleColor: string = null;
     export let color: string = null;
     export let subtitleColor: string = null;
@@ -115,6 +116,7 @@
         paddingBottom={addedPadding}
         paddingLeft={extraPaddingLeft}
         paddingTop={addedPadding}
+        html={html}
         textWrap={true}
         verticalAlignment="center"
         verticalTextAlignment="center">
