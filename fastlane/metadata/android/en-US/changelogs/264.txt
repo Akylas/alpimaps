@@ -1,0 +1,2 @@
+### Bug fixes
+- Sadly the shared AmericanaOSM instance limit got reached very quickly. I cant share mine anymore. Instead i explain in the readme and in the app how to create your own instance and use it.
