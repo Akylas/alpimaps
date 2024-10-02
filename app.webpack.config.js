@@ -106,7 +106,7 @@ module.exports = (env, params = {}) => {
         keep_classnames_functionnames = true,
         testZipStyles = false,
         accessibility = true,
-        locale = 'auto',
+        locale = 'en',
         theme = 'auto',
         adhoc
     } = env;
