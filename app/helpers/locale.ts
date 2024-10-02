@@ -61,7 +61,7 @@ langStore.subscribe((newLang: string) => {
     loadDayjsLang(lang);
     try {
         // const localeData = require(`~/i18n/${lang}.json`);
-        loadLocaleJSON(`~/i18n/${lang}.json`, '~/i18n/en.json');
+        loadLocaleJSON(`~/i18n/${lang}.json`, `~/i18n/${DEFAULT_LOCALE}.json`);
     } catch (err) {
         console.error(lang, `~/i18n/${lang}.json`, File.exists(`~/i18n/${lang}.json`), err, err.stack);
     }
@@ -104,7 +104,7 @@ function setLang(newLang) {
     langStore.set(actualNewLang);
 }
 
-const deviceLanguage = getString('language', DEFAULT_LOCALE);
+const deviceLanguage = getString('language', 'auto');
 function getActualLanguage(language) {
     if (language === 'auto') {
         if (__ANDROID__) {
@@ -215,7 +215,7 @@ export function getCurrentISO3Language() {
 async function internalSelectLanguage() {
     // try {
     const actions = SUPPORTED_LOCALES;
-    const currentLanguage = getString('language', DEFAULT_LOCALE);
+    const currentLanguage = getString('language', 'auto');
     const component = (await import('~/components/common/OptionSelect.svelte')).default;
     return showAlertOptionSelect(
         component,
