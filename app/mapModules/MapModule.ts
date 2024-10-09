@@ -23,7 +23,7 @@ import { getBGServiceInstance } from '~/services/BgService';
 import { packageService } from '~/services/PackageService';
 import { createGlobalEventListener, globalObservable, navigate } from '~/utils/svelte/ui';
 import { getCartoBitmap } from '@nativescript-community/ui-carto';
-import { theme } from '~/helpers/theme';
+import { colorTheme, theme } from '~/helpers/theme';
 // export interface IMapModule {
 //     onMapReady(mapView: CartoMap<LatLonKeys>);
 //     onMapDestroyed();
@@ -166,7 +166,7 @@ const mapContext: MapContext = {
         options.setSeamlessPanning(false);
         options.setRestrictedPanning(true);
         options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
-        if (theme === 'eink') {
+        if (colorTheme === 'eink') {
             options.setBackgroundBitmap(getCartoBitmap('~/assets/images/eink-map-background.png'));
         }
 

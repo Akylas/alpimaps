@@ -9,7 +9,7 @@ const NOTIFICATION_ID = 3426124;
 @NativeClass
 @JavaProxy('__PACKAGE__.BgService')
 export class BgService extends android.app.Service {
-    // export const BgService = (android.app.Service as any).extend('akylas.alpi.maps.BgService', {
+    // export const BgService = (android.app.Service as any).extend('__PACKAGE__.BgService', {
     currentNotifText: string;
     geoHandler: GeoHandler;
     bounded: boolean;
