@@ -2,8 +2,9 @@ import * as https from '@nativescript-community/https';
 import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
 import * as appavailability from '@nativescript/appavailability';
 import { Application, ApplicationEventData, ApplicationSettings, Connectivity, EventData, Folder, Observable, Utils } from '@nativescript/core';
+import { wrapNativeException } from '@nativescript/core/utils';
 import dayjs from 'dayjs';
-import { HTTPError, NoNetworkError, TimeoutError, wrapNativeException } from '~/utils/error';
+import { HTTPError, TimeoutError } from '~/utils/error';
 import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
 import { getDataFolder } from '~/utils/utils';
 
@@ -20,7 +21,7 @@ export type HTTPOptions = https.HttpsRequestOptions;
 export interface HttpRequestOptions extends HTTPOptions {
     body?;
     cachePolicy?: https.CachePolicy;
-    queryParams?: {};
+    queryParams?: object;
     apiPath?: string;
     multipartParams?;
     canRetry?;
@@ -220,7 +221,7 @@ export function wrapNativeHttpException(error, requestParams: HttpRequestOptions
 
 export interface HttpRequestOptions extends HTTPOptions {
     toJSON?: boolean;
-    queryParams?: {};
+    queryParams?: object;
 }
 
 export function queryString(params, location) {
@@ -898,7 +899,7 @@ export class NetworkService extends Observable {
             intent.putExtra('id', id);
             intent.putExtra('lat', lat);
             intent.putExtra('lon', lon);
-            intent.putExtra('package', 'akylas.alpi.maps');
+            intent.putExtra('package', __APP_ID__);
             intent.setPackage('com.akylas.weather');
             const context: android.content.Context = Utils.android.getApplicationContext();
 
