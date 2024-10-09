@@ -183,9 +183,11 @@ label {
     margin: 8;
     width: 54;
     height: 54;
+    
     .ns-eink & {
-        color: black;
-        // background-color: white;
+        elevation: 0;
+        border-color: black;
+        border-width: 1;
     }
 }
 .floating-btn-themed {
@@ -193,9 +195,11 @@ label {
     background-color: var(--colorPrimaryContainer);
     ripple-color: var(--colorPrimaryContainer);
     color: var(--colorOnPrimaryContainer);
+    
     .ns-eink & {
-        color: black;
-        background-color: white;
+        elevation: 0;
+        border-color: black;
+        border-width: 1;
     }
 
 }
@@ -211,6 +215,12 @@ label {
     width: 40;
     height: 40;
     margin: 8;
+
+    .ns-eink & {
+        elevation: 0;
+        border-color: black;
+        border-width: 1;
+    }
 }
 
 .section-title {

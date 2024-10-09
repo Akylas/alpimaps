@@ -14,7 +14,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { actionBarButtonHeight, colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import SearchCollectionView from './SearchCollectionView.svelte';

@@ -1,7 +1,5 @@
 <script lang="ts">
-    import { getFromLocation } from '@nativescript-community/geocoding';
     import { isSensorAvailable } from '@nativescript-community/sensors';
-    import { getCartoBitmap } from '@nativescript-community/ui-carto';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { ClickType, MapBounds, toNativeMapRange, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
     import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
@@ -12,20 +10,19 @@
     import { VectorLayer, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
     import { Projection } from '@nativescript-community/ui-carto/projections';
     import { EPSG3857 } from '@nativescript-community/ui-carto/projections/epsg3857';
-    import { CartoMap, MapClickInfo, PanningMode, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
+    import { EPSG4326 } from '@nativescript-community/ui-carto/projections/epsg4326';
+    import { CartoMap, MapClickInfo, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
     import { ZippedAssetPackage, nativeVectorToArray, setShowDebug, setShowError, setShowInfo, setShowWarn } from '@nativescript-community/ui-carto/utils';
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
     import { closeBottomSheet, isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { action, prompt } from '@nativescript-community/ui-material-dialogs';
-    import { showSnack } from '~/utils/ui';
+    import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
-    import { AbsoluteLayout, Application, ApplicationSettings, Color, File, Page, Utils } from '@nativescript/core';
+    import { Application, ApplicationSettings, Color, File, Page, Utils } from '@nativescript/core';
     import type { AndroidActivityBackPressedEventData, OrientationChangedEventData } from '@nativescript/core/application/application-interfaces';
-    import { EPSG4326 } from '@nativescript-community/ui-carto/projections/epsg4326';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Screen } from '@nativescript/core/platform';
     import { debounce } from '@nativescript/core/utils';
@@ -40,7 +37,7 @@
     import Search from '~/components/search/Search.svelte';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { l, lc, lt, onLanguageChanged, onMapLanguageChanged } from '~/helpers/locale';
-    import { forceDarkMode, sTheme, theme, toggleForceDarkMode, toggleTheme } from '~/helpers/theme';
+    import { forceDarkMode, theme, toggleForceDarkMode } from '~/helpers/theme';
     import watcher from '~/helpers/watcher';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
@@ -51,7 +48,7 @@
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
     import type { NetworkConnectionStateEventData } from '~/services/NetworkService';
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
-    import { GeoResult, packageService } from '~/services/PackageService';
+    import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
     import { NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
     import {
@@ -67,19 +64,16 @@
         showRoutes,
         showSlopePercentages
     } from '~/stores/mapStore';
-    import { showError } from '~/utils/error';
-    import { computeDistanceBetween, getBoundsZoomLevel } from '~/utils/geo';
+    import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
+    import { getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
     import { Sentry, isSentryEnabled } from '~/utils/sentry';
     import { share } from '~/utils/share';
+    import { showError } from '~/utils/showError';
     import { navigate } from '~/utils/svelte/ui';
-    import { hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu } from '~/utils/ui';
+    import { hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
     import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, setTimeout } from '~/utils/utils';
     import { colors, screenHeightDips, windowInset } from '../../variables';
-    import dayjs from 'dayjs';
-    import { request } from '@nativescript-community/perms';
-    import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
-    import AltimeterView from '../compass/AltimeterView.svelte';
 
     $: ({ colorPrimary, colorError, colorBackground } = $colors);
     $: ({ top: windowInsetTop, bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight } = $windowInset);
@@ -1422,9 +1416,7 @@
 
         DEV_LOG && console.log('selectStyle', screenHeightDips, ALERT_OPTION_MAX_HEIGHT);
         const actions = styles;
-        const component = (await import('~/components/common/OptionSelect.svelte')).default;
         const result = await showAlertOptionSelect(
-            component,
             {
                 height: Math.min(actions.length * 56, ALERT_OPTION_MAX_HEIGHT),
                 rowHeight: 56,
