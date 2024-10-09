@@ -9,7 +9,7 @@
     import { lc } from '~/helpers/locale';
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { pickColor } from '~/utils/utils';
     import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';

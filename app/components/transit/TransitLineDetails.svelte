@@ -14,7 +14,8 @@
     import { onNetworkChanged } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { MetroLineStop, TransitRoute, transitService } from '~/services/TransitService';
-    import { NoNetworkError, showError } from '~/utils/error';
+    import { NoNetworkError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { goBack, navigate } from '~/utils/svelte/ui';
     import { colors, fonts, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';

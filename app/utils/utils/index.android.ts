@@ -1,10 +1,11 @@
 export * from './index.common';
-import { Application, ApplicationSettings, Color, Device, File, Folder, Frame, Utils, View, path } from '@nativescript/core';
-import { Dayjs } from 'dayjs';
-import { AndroidActivityResultEventData, AndroidApplication, getRootView } from '@nativescript/core/application';
+export { gClearInterval as clearInterval, gClearTimeout as clearTimeout, gSetInterval as setInterval, gSetTimeout as setTimeout };
 import { lc } from '@nativescript-community/l';
-import { clock_24 } from '~/helpers/locale';
 import { request } from '@nativescript-community/perms';
+import { Application, Color, Device, File, Frame, Utils, View, path } from '@nativescript/core';
+import { AndroidActivityResultEventData } from '@nativescript/core/application';
+import { Dayjs } from 'dayjs';
+import { clock_24 } from '~/helpers/locale';
 import { getDataFolder, getSavedMBTilesDir, permResultCheck, setSavedMBTilesDir } from './index.common';
 
 export const sdkVersion = parseInt(Device.sdkVersion, 10);
@@ -124,7 +125,7 @@ export async function pickDate(currentDate: Dayjs) {
                 }
             })
         );
-        const parentView = Frame.topmost() || getRootView();
+        const parentView = Frame.topmost() || Application.getRootView();
         datePicker.show(parentView._getRootFragmentManager(), 'datepicker');
     });
 }
@@ -146,7 +147,7 @@ export async function pickTime(currentDate: Dayjs) {
                 }
             })
         );
-        const parentView = Frame.topmost() || getRootView();
+        const parentView = Frame.topmost() || Application.getRootView();
         timePicker.show(parentView._getRootFragmentManager(), 'timepicker');
     });
 }
@@ -243,12 +244,7 @@ export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath:
     }
 }
 
-export function restartApp() {
-    akylas.alpi.maps.Utils.restartApp(Utils.android.getApplicationContext(), Application.android.startActivity);
-}
-
 const gSetTimeout = setTimeout;
 const gSetInterval = setInterval;
 const gClearTimeout = clearTimeout;
 const gClearInterval = clearInterval;
-export { gSetTimeout as setTimeout, gSetInterval as setInterval, gClearTimeout as clearTimeout, gClearInterval as clearInterval };

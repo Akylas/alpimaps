@@ -12,7 +12,7 @@
     import { onServiceLoaded } from '~/services/BgService.common';
     import { contourLinesOpacity, mapFontScale, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, show3DBuildings, showContourLines } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
@@ -93,7 +93,6 @@
                             }
                         });
                     } else {
-                        const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
                         const currentValue = ApplicationSettings.getNumber(item.key, item.default);
                         let selectedIndex = -1;
                         const options = item.values.map((k, index) => {
@@ -110,7 +109,6 @@
                             };
                         });
                         const result = await showAlertOptionSelect(
-                            OptionSelect,
                             {
                                 height: Math.min(options.length * 56, ALERT_OPTION_MAX_HEIGHT),
                                 rowHeight: 56,

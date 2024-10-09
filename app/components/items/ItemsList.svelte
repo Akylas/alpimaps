@@ -17,7 +17,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { Group, Item } from '~/models/Item';
     import { isServiceStarted, onServiceStarted } from '~/services/BgService.common';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { goBack, navigate } from '~/utils/svelte/ui';
     import { onBackButton } from '~/utils/ui';
     import { hideLoading, promptForGroup, showLoading, showPopoverMenu } from '~/utils/ui/index.common';

@@ -18,7 +18,7 @@
     import { onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item } from '~/models/Item';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { colors, fonts } from '~/variables';
     import { SDK_VERSION } from '@akylas/nativescript/utils';
     $: ({ colorOnSurface, colorPrimary, colorOutlineVariant } = $colors);

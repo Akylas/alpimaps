@@ -14,7 +14,7 @@
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
     import { contourLinesOpacity, pitchEnabled, projectionModeSpherical, show3DBuildings, showContourLines } from '~/stores/mapStore';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { openLink, showSliderPopover } from '~/utils/ui/index.common';
     import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';

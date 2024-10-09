@@ -28,7 +28,7 @@
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { MOBILITY_URL } from '~/services/TransitService';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { defaultProfileCostingOptions, getSavedProfile, getValhallaSettings, removeSavedProfile, savedProfile, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
     import { colors, fonts, windowInset } from '~/variables';
     import { Themes, onThemeChanged, theme } from '~/helpers/theme';
