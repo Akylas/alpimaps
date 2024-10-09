@@ -3,7 +3,7 @@
     import { onMount } from 'svelte';
     import { closeModal, goBack } from '~/utils/svelte/ui';
     import { actionBarHeight, colors, windowInset } from '~/variables';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     $: ({ colorOnSurface } = $colors);
     $: ({ top: windowInsetTop } = $windowInset);
 

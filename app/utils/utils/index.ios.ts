@@ -17,13 +17,13 @@ export async function getDefaultMBTilesDir() {
     // let localMbtilesSource = null;
 
     // if (!localMbtilesSource) {
-        const localMbtilesSource = path.normalize(path.join(getDataFolder(), 'alpimaps_mbtiles'));
-        // DEV_LOG && console.log('resultPath', resultPath);
-        // if (resultPath) {
-            // localMbtilesSource = resultPath;
-            // setSavedMBTilesDir(localMbtilesSource);
-            // ApplicationSettings.setString('local_mbtiles_directory', resultPath);
-        // }
+    const localMbtilesSource = path.normalize(path.join(getDataFolder(), 'alpimaps_mbtiles'));
+    // DEV_LOG && console.log('resultPath', resultPath);
+    // if (resultPath) {
+    // localMbtilesSource = resultPath;
+    // setSavedMBTilesDir(localMbtilesSource);
+    // ApplicationSettings.setString('local_mbtiles_directory', resultPath);
+    // }
     // }
     DEV_LOG && console.log('getDefaultMBTilesDir', localMbtilesSource);
     return localMbtilesSource;
@@ -93,9 +93,6 @@ export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath:
         }
         fileManager.copyItemAtPathToPathError(sourceLocationPath, targetLocationPath);
     }
-}
-export function restartApp() {
-    throw new Error('not possible on iOS');
 }
 
 export const setTimeout = global.__ns__setTimeout;

@@ -14,11 +14,11 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { clock_24, getLocaleDisplayName, l, lc, onLanguageChanged, onMapLanguageChanged, selectLanguage, selectMapLanguage, slc } from '~/helpers/locale';
-    import { getThemeDisplayName, onThemeChanged, selectTheme } from '~/helpers/theme';
+    import { getColorThemeDisplayName, getThemeDisplayName, onThemeChanged, selectColorTheme, selectTheme } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { Sentry } from '~/utils/sentry';
     import { share } from '~/utils/share';
     import { showSnack } from '~/utils/ui';
@@ -184,9 +184,20 @@
             ]
                 .concat([
                     {
-                        id: 'dark_mode',
+                        id: 'theme',
                         description: () => getThemeDisplayName(),
                         title: lc('theme.title')
+                    },
+                    {
+                        id: 'color_theme',
+                        description: () => getColorThemeDisplayName(),
+                        title: lc('color_theme.title')
+                    },
+                    {
+                        type: 'switch',
+                        id: 'auto_black',
+                        title: lc('auto_black'),
+                        value: ApplicationSettings.getBoolean('auto_black', false)
                     },
                     {
                         type: 'switch',
@@ -505,8 +516,11 @@
                 case 'map_language':
                     await selectMapLanguage();
                     break;
-                case 'dark_mode':
+                case 'theme':
                     await selectTheme();
+                    break;
+                case 'color_theme':
+                    await selectColorTheme();
                     break;
                 case 'feedback': {
                     if (SENTRY_ENABLED) {
@@ -697,7 +711,6 @@
                             };
                         });
                         const result = await showAlertOptionSelect(
-                            OptionSelect,
                             {
                                 height: Math.min(options.length * 56, ALERT_OPTION_MAX_HEIGHT),
                                 rowHeight: 56,
