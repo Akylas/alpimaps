@@ -60,6 +60,7 @@
     "attributions": "attributions",
     "audioguide": "audioguide",
     "auto": "auto",
+    "auto_black": "Use true black for auto-dark theme",
     "auto_fetch_profile": "auto fetch elevation profile",
     "auto_fetch_profile_desc": "this takes more time",
     "auto_fetch_stats": "auto fetch road stats",
@@ -150,6 +151,12 @@
     "coffee": "coffee",
     "collapse": "collapse",
     "college": "college",
+    "color_theme": {
+        "default": "default",
+        "dynamic": "dynamic colors",
+        "eink": "eink",
+        "title": "color theme"
+    },
     "comments": "comments",
     "commercial": "commercial",
     "communications_tower": "communications tower",
@@ -615,7 +622,6 @@
         "auto": "Auto",
         "black": "Black",
         "dark": "Dark",
-        "eink": "EInk",
         "light": "Light",
         "title": "Theme"
     },

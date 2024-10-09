@@ -17,7 +17,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { formatDistance } from '~/helpers/formatter';
     import { formatTime, lc } from '~/helpers/locale';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { getDataFolder } from '~/utils/utils';
     import { colors, fonts, windowInset } from '~/variables';
 

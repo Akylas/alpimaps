@@ -17,7 +17,7 @@ import { get } from 'svelte/store';
 import { getBoundsOfDistance, getDistanceSimple, getMetersPerPixel } from '~/helpers/geolib';
 import { GroupRepository, IItem, Item, ItemRepository, Route, RouteInstruction, RouteProfile, RouteStats } from '~/models/Item';
 import { maxAgeMonth, networkService } from '~/services/NetworkService';
-import { showError } from '~/utils/error';
+import { showError } from '~/utils/showError';
 import { JSONtoXML, importGPXToGeojson } from '~/utils/gpx';
 import { shareFile } from '~/utils/share';
 import { clearTimeout, getItemsDataFolder, pick, setTimeout } from '~/utils/utils';

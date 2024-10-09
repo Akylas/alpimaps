@@ -16,7 +16,7 @@
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import { Item } from '~/models/Item';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { goBack } from '~/utils/svelte/ui';
     import { pickColor } from '~/utils/utils';
     import { colors, fonts, windowInset } from '~/variables';
