@@ -1,4 +1,5 @@
 import { WorkerEventType } from './BaseWorker';
+import { getWorkerContextValue, setWorkerContextValue } from '@akylas/nativescript-app-utils';
 
 export function prepareWorker(worker) {
     const messagePromises: { [key: string]: { resolve: Function; reject: Function; timeoutTimer: number }[] } = {};
@@ -33,8 +34,8 @@ export function prepareWorker(worker) {
                     const nativeDatas: { [k: string]: any } = {};
                     if (__ANDROID__) {
                         data.nativeDataKeys.forEach((k) => {
-                            nativeDatas[k] = akylas.alpi.maps.WorkersContext.getValue(`${id}_${k}`);
-                            akylas.alpi.maps.WorkersContext.setValue(`${id}_${k}`, null);
+                            nativeDatas[k] = getWorkerContextValue(`${id}_${k}`);
+                            setWorkerContextValue(`${id}_${k}`, null);
                         });
                         data.nativeDatas = nativeDatas;
                     }

@@ -1,8 +1,8 @@
 <script context="module" lang="ts">
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { MapPos } from '@nativescript-community/ui-carto/core';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { showSnack } from '~/utils/ui';
-    import { Page, View } from '@nativescript/core';
+    import { Page } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
     import dayjs, { Dayjs } from 'dayjs';
     import { onMount } from 'svelte';
@@ -13,12 +13,13 @@
     import { onThemeChanged } from '~/helpers/theme';
     import { onNetworkChanged } from '~/services/NetworkService';
     import { MetroTimesheet, MetroTripStop, TransitRoute, transitService } from '~/services/TransitService';
-    import { NoNetworkError, showError } from '~/utils/error';
+    import { NoNetworkError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { navigate } from '~/utils/svelte/ui';
+    import { showSnack } from '~/utils/ui';
     import { pickDate, pickTime } from '~/utils/utils';
     import { colors, fonts, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
-    import { MapPos } from '@nativescript-community/ui-carto/core';
 
     const timePaint = new Paint();
     timePaint.textSize = 12;

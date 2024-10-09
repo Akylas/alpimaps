@@ -18,7 +18,7 @@
     import type { IItem } from '~/models/Item';
     import { RouteInstruction, RoutingAction } from '~/models/Item';
     import { queryingLocation, watchingLocation } from '~/stores/mapStore';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { navigate } from '~/utils/svelte/ui';
     import { openLink } from '~/utils/ui';
     import { colors, fonts } from '~/variables';
