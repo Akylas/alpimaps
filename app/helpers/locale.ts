@@ -12,9 +12,12 @@ import utc from 'dayjs/plugin/utc';
 import { derived, get, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
 import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
-import { showError } from '~/utils/error';
+import { showError } from '~/utils/showError';
 import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
 import { showAlertOptionSelect } from '~/utils/ui';
+
+import { getISO3Language } from '@akylas/nativescript-app-utils';
+
 const supportedLanguages = SUPPORTED_LOCALES;
 
 // dayjs.extend(updateLocale);
@@ -205,29 +208,31 @@ export function getLocaleDisplayName(locale?, canReturnEmpty = false) {
     }
 }
 export function getCurrentISO3Language() {
-    if (__IOS__) {
-        return NSLocale.alloc().initWithLocaleIdentifier(lang)['ISO639_2LanguageCode']();
-    } else {
-        const locale = java.util.Locale.forLanguageTag(lang);
-        return locale.getISO3Language();
-    }
+    return getISO3Language(lang);
 }
 async function internalSelectLanguage() {
     // try {
     const actions = SUPPORTED_LOCALES;
     const currentLanguage = getString('language', 'auto');
-    const component = (await import('~/components/common/OptionSelect.svelte')).default;
+    let selectedIndex = -1;
+    const options = [{ name: lc('auto'), data: 'auto' }].concat(actions.map((k) => ({ name: getLocaleDisplayName(k.replace('_', '-')), data: k }))).map((d, index) => {
+        const selected = currentLanguage === d.data;
+        if (selected) {
+            selectedIndex = index;
+        }
+        return {
+            ...d,
+            boxType: 'circle',
+            type: 'checkbox',
+            value: selected
+        };
+    });
     return showAlertOptionSelect(
-        component,
         {
             height: Math.min(actions.length * 56, ALERT_OPTION_MAX_HEIGHT),
             rowHeight: 56,
-            options: [{ name: lc('auto'), data: 'auto' }].concat(actions.map((k) => ({ name: getLocaleDisplayName(k.replace('_', '-')), data: k }))).map((d) => ({
-                ...d,
-                boxType: 'circle',
-                type: 'checkbox',
-                value: currentLanguage === d.data
-            }))
+            selectedIndex,
+            options
         },
         {
             title: lc('select_language')
