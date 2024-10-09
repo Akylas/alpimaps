@@ -1,19 +1,20 @@
 import { InAppBrowser } from '@akylas/nativescript-inappbrowser';
 import { lc } from '@nativescript-community/l';
-import { Label } from '@nativescript-community/ui-label';
 import { AlertDialog, MDCAlertControlerOptions, alert, confirm } from '@nativescript-community/ui-material-dialogs';
-import { ActivityIndicator, AlertOptions, StackLayout, Utils, View } from '@nativescript/core';
-import { Group } from '~/models/Item';
-import { colors, fontScale, screenWidthDips } from '~/variables';
-import { ComponentInstanceInfo, NativeViewElementNode, createElement, resolveComponentElement } from 'svelte-native/dom';
-import { get } from 'svelte/store';
+import { SnackBarOptions, showSnack as mdShowSnack } from '@nativescript-community/ui-material-snackbar';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
-import { showError } from '../error';
+import { AlertOptions, GridLayout, Utils, View } from '@nativescript/core';
+import { debounce } from '@nativescript/core/utils';
+import { ComponentProps } from 'svelte';
+import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
+import { get } from 'svelte/store';
 import type LoadingIndicator__SvelteComponent_ from '~/components/common/LoadingIndicator.svelte';
 import LoadingIndicator from '~/components/common/LoadingIndicator.svelte';
-import { debounce } from '@nativescript/core/utils';
-import { SnackBarOptions, showSnack as mdShowSnack } from '@nativescript-community/ui-material-snackbar';
+import type OptionSelect__SvelteComponent_ from '~/components/common/OptionSelect.svelte';
+import { Group } from '~/models/Item';
+import { showError } from '~/utils/showError';
+import { colors, fontScale, screenWidthDips } from '~/variables';
 import { navigate } from '../svelte/ui';
 
 export function timeout(ms) {
@@ -148,10 +149,11 @@ export async function promptForGroup(defaultGroup: string, groups?: Group[]): Pr
     return null;
 }
 
-export async function showAlertOptionSelect<T>(viewSpec: typeof SvelteComponent<T>, props?: T, options?: Partial<AlertOptions & MDCAlertControlerOptions>) {
-    let componentInstanceInfo: ComponentInstanceInfo;
+export async function showAlertOptionSelect<T>(props?: ComponentProps<OptionSelect__SvelteComponent_>, options?: Partial<AlertOptions & MDCAlertControlerOptions>) {
+    const component = (await import('~/components/common/OptionSelect.svelte')).default;
+    let componentInstanceInfo: ComponentInstanceInfo<GridLayout, OptionSelect__SvelteComponent_>;
     try {
-        componentInstanceInfo = resolveComponentElement(viewSpec, {
+        componentInstanceInfo = resolveComponentElement(component, {
             onClose: (result) => {
                 view.bindingContext.closeCallback(result);
             },
@@ -160,7 +162,7 @@ export async function showAlertOptionSelect<T>(viewSpec: typeof SvelteComponent<
             },
             trackingScrollView: 'collectionView',
             ...props
-        });
+        }) as ComponentInstanceInfo<GridLayout, OptionSelect__SvelteComponent_>;
         const view: View = componentInstanceInfo.element.nativeView;
         const result = await alert({
             view,

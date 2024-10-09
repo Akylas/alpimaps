@@ -11,17 +11,15 @@ import { install as installBottomSheets } from '@nativescript-community/ui-mater
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
 import installWebRTC from '@nativescript-community/ui-webview-rtc';
-import { Application, Trace } from '@nativescript/core';
-import { Frame, NavigatedData, Page, ScrollView } from '@nativescript/core/ui';
+import { Application } from '@nativescript/core';
+import { Frame, NavigatedData, Page } from '@nativescript/core/ui';
 import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
 import Map from '~/components/map/Map.svelte';
-import { start as startThemeHelper } from '~/helpers/theme';
 import { getBGServiceInstance } from '~/services/BgService';
 import { networkService } from '~/services/NetworkService';
 import { startSentry } from '~/utils/sentry';
 import { NestedScrollView } from './NestedScrollView';
-import { ChartTraceCategory } from '@nativescript-community/ui-chart';
 // import './app.scss';
 
 try {
@@ -111,7 +109,6 @@ try {
     // we need to instantiate it to "start" it
     const bgService = getBGServiceInstance();
     Application.on(Application.launchEvent, () => {
-        startThemeHelper();
         networkService.start();
         bgService.start();
     });

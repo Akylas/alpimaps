@@ -26,7 +26,7 @@
     import type { Item, RouteInstruction } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { computeDistanceBetween } from '~/utils/geo';
     import { share } from '~/utils/share';
     import { navigate } from '~/utils/svelte/ui';

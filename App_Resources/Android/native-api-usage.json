@@ -91,6 +91,7 @@
         "com.google.android.material.internal*:*",
         "com.google.android.material.transformation*:*",
         "com.google.android.material.theme*:*",
+
         "com.carto.services*:*",
         "com.carto.*Pelias*",
         "com.carto.layers.*MapBox*",
@@ -145,6 +146,7 @@
         "com.google.android.material.internal*:*",
         "com.google.android.material.transformation*:*",
         "com.google.android.material.theme*:*",
+        
         "com.carto.services*:*",
         "com.carto.*Pelias*",
         "com.carto.layers.*MapBox*",

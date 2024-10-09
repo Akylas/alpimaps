@@ -17,7 +17,7 @@
     import type { GeoLocation } from '~/handlers/GeoHandler';
     import { CompassInfo, getCompassInfo } from '~/helpers/geolib';
     import { formatTime, getLocalTime, lc } from '~/helpers/locale';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
     import { PI_DIV2, TO_DEG, TO_RAD } from '~/utils/geo';
     import { pickDate } from '~/utils/utils';
     import { colors, fonts } from '~/variables';

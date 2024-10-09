@@ -49,7 +49,7 @@
     import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
     import { debounce, throttle } from '@nativescript/core/utils';
     import { isMobile, settings } from 'geo-three/webapp/settings';
-    import { showError } from '~/utils/error';
+    import { showError } from '~/utils/showError';
 </script>
 
 <script lang="ts">
