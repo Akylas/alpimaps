@@ -1,10 +1,10 @@
 import { Session, SessionState } from '~/handlers/GeoHandler';
 import { lc, lt } from '~/helpers/locale';
 
-export const ACTION_START = 'akylas.alpi.maps.action.START';
-export const ACTION_STOP = 'akylas.alpi.maps.action.STOP';
-export const ACTION_RESUME = 'akylas.alpi.maps.action.RESUME';
-export const ACTION_PAUSE = 'akylas.alpi.maps.action.PAUSE';
+export const ACTION_START = '__PACKAGE__.action.START';
+export const ACTION_STOP = '__PACKAGE__.action.STOP';
+export const ACTION_RESUME = '__PACKAGE__.action.RESUME';
+export const ACTION_PAUSE = '__PACKAGE__.action.PAUSE';
 export const NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL = 'alpimaps_service';
 export const NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL = 'alpimaps_keepawake';
 // export const NOTIFICATION_CHANEL_ID_SCREENSHOT_CHANNEL = 'alpimaps_screenshot';

@@ -30,6 +30,7 @@ app_identifier = ENV["APP_ID"] || CredentialsManager::AppfileConfig.try_fetch_va
 app_name = i18nEnJSON['app']['name']
 sentry_project_slug = ENV["SENTRY_PROJECT_SLUG"]
 app_build_path = ENV["APP_BUILD_PATH"] || "platforms" # based on nativescript.config.js !!!
+git_basic_authorization = Base64.strict_encode64(ENV["GIT_AUTHORIZATION"])
 
 desc 'test lane'
 lane :test do
@@ -54,7 +55,8 @@ lane :test do
 end
 desc 'Check Git Status'
 lane :checkGitStatus do
-    Dir.chdir("..") do
+    if (ENV["GITHUB_ACTIONS"] != 'true')
+      Dir.chdir("..") do
         repo_status = Actions.sh("git status --porcelain -uno")
         repo_clean = repo_status.empty?
         if repo_clean
@@ -63,7 +65,9 @@ lane :checkGitStatus do
           error_message = "Git repository is dirty! Please ensure the repo is in a clean state by committing/stashing/discarding all changes first."
           UI.user_error!(error_message)
         end
+      end
     end
+    
 end
 desc 'Check Sentry Cli Status'
 lane :checkSentryClitatus do
@@ -247,23 +251,58 @@ platform :ios do
           changelog:params[:changelog],
           distribute_external: true,
           groups: [params[:flavor]],
+          # skip_waiting_for_build_processing: true
           notify_external_testers: true
         )
     end
   end
   desc 'Fetch certificates and provisioning profiles'
   lane :certificates do
-      match(type: 'development', clone_branch_directly:true, generate_apple_certs: false)
-      match(type: "appstore", clone_branch_directly:true, generate_apple_certs: false)
+    api_key = app_store_connect_api_key(
+      key_id: ENV['APPLE_KEY_ID'],
+      issuer_id: ENV['APPLE_ISSUER_ID'],
+      key_content: ENV['APPLE_KEY_CONTENT']
+    )
+    match(
+      type: 'development', 
+      clone_branch_directly:true,
+      generate_apple_certs: false,
+      git_basic_authorization: git_basic_authorization,
+      api_key: api_key
+      )
+    match(
+      type: "appstore",
+      clone_branch_directly:true,
+      generate_apple_certs: false,
+      git_basic_authorization: git_basic_authorization,
+      api_key: api_key
+      )
   end
 
   desc 'Build the iOS application.'
   lane :build do |params| 
+      api_key = app_store_connect_api_key(
+        key_id: ENV['APPLE_KEY_ID'],
+        issuer_id: ENV['APPLE_ISSUER_ID'],
+        key_content: ENV['APPLE_KEY_CONTENT']
+      )
       if (params[:flavor] == "appcenter")
         register_devices(devices_file: "./fastlane/devices.txt")
-        match(type: "adhoc", force_for_new_devices: true, generate_apple_certs: false)
+        match(
+          type: "adhoc",
+          force_for_new_devices: true,
+          generate_apple_certs: false,
+          git_basic_authorization: git_basic_authorization,
+          api_key: api_key
+        )
       else
-        match(type: "appstore", clone_branch_directly:true, generate_apple_certs: false)
+        match(
+          type: "appstore",
+          clone_branch_directly:true,
+          generate_apple_certs: false,
+          git_basic_authorization: git_basic_authorization,
+          api_key: api_key
+        )
       end
       prepare(platform:'ios')
       build_ios_app(

@@ -1,4 +1,4 @@
-import type { HttpsRequestOptions as HTTPSOptions } from '@nativescript-community/https';
+import type { Headers, HttpsRequestOptions as HTTPSOptions } from '@nativescript-community/https';
 import { l, lc } from '@nativescript-community/l';
 import { BaseError } from 'make-error';
 
@@ -170,6 +170,12 @@ export class NoSpaceLeftError extends CustomError {
             'NoSpaceLeftError'
         );
     }
+}
+export interface HTTPErrorProps {
+    statusCode: number;
+    responseHeaders?: Headers;
+    message: string;
+    requestParams: HTTPSOptions;
 }
 export class HTTPError extends CustomError {
     statusCode: number;
