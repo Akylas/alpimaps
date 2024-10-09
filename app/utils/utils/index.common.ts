@@ -1,6 +1,6 @@
 import { executeOnMainThread } from '@nativescript/core/utils';
-import { Application, ApplicationSettings, Device, File, FileSystemEntity, Folder, Utils, knownFolders, path } from '@nativescript/core';
-import { timeout } from '~/handlers/GeoHandler';
+import { Application, ApplicationSettings, CSSUtils, Device, File, FileSystemEntity, Folder, Utils, knownFolders, path } from '@nativescript/core';
+export { restartApp } from '@akylas/nativescript-app-utils';
 
 let savedMBTilesDir = ApplicationSettings.getString('local_mbtiles_directory');
 
@@ -265,4 +265,30 @@ export async function promiseSeq(tasks, delay = 0) {
         }
     }
     return results;
+}
+
+export function setCustomCssRootClass(className, oldClassName?) {
+    const rootView = Application.getRootView();
+    const rootModalViews = rootView._getRootModalViews();
+    DEV_LOG && console.log('setCustomCssRootClass', rootView, className, oldClassName);
+    function addCssClass(rootView, cssClass) {
+        cssClass = `${CSSUtils.CLASS_PREFIX}${cssClass}`;
+        CSSUtils.pushToSystemCssClasses(cssClass);
+        rootView.cssClasses.add(cssClass);
+        rootModalViews.forEach((rootModalView) => {
+            rootModalView.cssClasses.add(cssClass);
+        });
+    }
+    function removeCssClass(rootView, cssClass) {
+        cssClass = `${CSSUtils.CLASS_PREFIX}${cssClass}`;
+        CSSUtils.removeSystemCssClass(cssClass);
+        rootView.cssClasses.delete(cssClass);
+        rootModalViews.forEach((rootModalView) => {
+            rootModalView.cssClasses.delete(cssClass);
+        });
+    }
+    addCssClass(rootView, className);
+    if (oldClassName) {
+        removeCssClass(rootView, oldClassName);
+    }
 }
