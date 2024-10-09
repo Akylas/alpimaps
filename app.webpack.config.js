@@ -435,7 +435,7 @@ module.exports = (env, params = {}) => {
         TEST_LOG: !!devlog || !!testlog
     };
     try {
-        const keys = require(resolve(__dirname, 'API_KEYS')).keys;
+        const keys = process.env.API_KEYS ? JSON.parse(process.env.API_KEYS) : require(resolve(__dirname, 'API_KEYS'));
         Object.keys(keys).forEach((s) => {
             if (s === 'ios' || s === 'android') {
                 if (s === platform) {
@@ -448,7 +448,7 @@ module.exports = (env, params = {}) => {
             }
         });
     } catch (error) {
-        console.error('could not access API_KEYS.js');
+        console.error('could not access API_KEYS.json');
     }
     Object.assign(config.plugins.find((p) => p.constructor.name === 'DefinePlugin').definitions, defines);
 
