@@ -5,8 +5,8 @@ export declare class IBgServiceBinder extends android.os.Binder {
     setService(service: BgService);
 }
 @NativeClass
-@JavaProxy('akylas.alpi.maps.BgServiceBinder')
-// export const BgServiceBinder = (android.os.Binder as any).extend('akylas.alpi.maps.BgServiceBinder', {
+@JavaProxy('__PACKAGE__.BgServiceBinder')
+// export const BgServiceBinder = (android.os.Binder as any).extend('__PACKAGE__.BgServiceBinder', {
 export class BgServiceBinder extends android.os.Binder {
     service: BgService;
     getService() {
