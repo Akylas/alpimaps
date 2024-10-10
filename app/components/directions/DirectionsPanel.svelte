@@ -31,7 +31,7 @@
     import { showError } from '~/utils/showError';
     import { defaultProfileCostingOptions, getSavedProfile, getValhallaSettings, removeSavedProfile, savedProfile, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
     import { colors, fonts, windowInset } from '~/variables';
-    import { Themes, onThemeChanged, theme } from '~/helpers/theme';
+    import { Themes, colorTheme, onThemeChanged, theme } from '~/helpers/theme';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { MapClickInfo } from '@nativescript-community/ui-carto/ui';
     import { promiseSeq } from '~/utils/utils';
@@ -105,7 +105,7 @@
     let requestProfile = ApplicationSettings.getBoolean('auto_fetch_profile', false);
     let requestStats = ApplicationSettings.getBoolean('auto_fetch_stats', false);
 
-    let eink = theme === 'eink';
+    let eink = colorTheme === 'eink';
     let buttonsColor = eink ? 'black' : 'white';
     const buttonsColorAlpha = new Color(buttonsColor).setAlpha(50);
 
@@ -1192,7 +1192,7 @@
         collectionView?.nativeView.refreshVisibleItems();
     }
     onThemeChanged((theme: Themes) => {
-        eink = theme === 'eink';
+        eink = colorTheme === 'eink';
         buttonsColor = eink ? 'black' : 'white';
         refreshCollectionView();
     });
