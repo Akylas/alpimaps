@@ -25,6 +25,12 @@
 [<img src="badge_github.png" alt="Get it on GitHub" height="80">](https://github.com/Akylas/alpimaps/releases)
 <div>
 
+#### AppVerifier hashes 
+**AlpiMaps**: 
+```
+akylas.alpi.maps
+39:EA:68:80:92:09:BA:74:AF:24:F0:8E:DE:D1:CB:79:D7:BE:B6:9D:47:3D:99:FF:DF:1A:51:54:0F:A3:54:72
+```
 <!-- <a href="https://apps.apple.com/us/app/alpimaps/id6472918564"><img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&amp;releaseDate=1496188800" alt="Download on the App Store" height="58"></a>
 </div> -->
  
