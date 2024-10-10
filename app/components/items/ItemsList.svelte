@@ -12,7 +12,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { UNITS, convertElevation, convertValueToUnit, osmicon } from '~/helpers/formatter';
     import { convertDurationSeconds, lc, lu, onLanguageChanged } from '~/helpers/locale';
-    import { onThemeChanged, theme } from '~/helpers/theme';
+    import { colorTheme, onThemeChanged, theme } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import { Group, Item } from '~/models/Item';
@@ -778,7 +778,7 @@ LEFT JOIN  (
             canvas.drawText(itemIcon, paddingLeft + 17, 63, iconPaint);
         }
     }
-    $: actionBarLabelColor = theme === 'eink' ? colorOnSurface : colorOnPrimary;
+    $: actionBarLabelColor = colorTheme === 'eink' ? colorOnSurface : colorOnPrimary;
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
