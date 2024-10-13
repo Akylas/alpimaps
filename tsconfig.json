@@ -1,28 +1,6 @@
 {
+    "extends":"./tools/tsconfig",
     "compilerOptions": {
-        "target": "es2020",
-        "module": "esnext",
-        "moduleResolution": "node",
-        "declaration": false,
-        "removeComments": true,
-        "emitDecoratorMetadata": false,
-        "experimentalDecorators": true,
-        "sourceMap": true,
-        "skipLibCheck": true,
-        "skipDefaultLibCheck": true,
-        "preserveSymlinks": true,
-        "allowUnreachableCode": false,
-        "allowSyntheticDefaultImports": true,
-        "allowUnusedLabels": false,
-        "noEmitHelpers": true,
-        "noEmitOnError": false,
-        "noImplicitAny": false,
-        "noImplicitReturns": false,
-        "noImplicitUseStrict": false,
-        "noFallthroughCasesInSwitch": true,
-        "resolveJsonModule": true,
-        "lib": ["esnext", "es2017", "dom"],
-        "types": ["node", "svelte-native", "geojson", "offscreencanvas"],
         "baseUrl": ".",
         "paths": {
             "~/*": ["app/*"],
@@ -33,5 +11,4 @@
         }
     },
     "include": ["app/**/*", "typings/*.d.ts"],
-    "exclude": ["node_modules"]
 }
