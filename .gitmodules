@@ -1,3 +1,6 @@
 [submodule "geo-three"]
 	path = geo-three
 	url = git@github.com:farfromrefug/geo-three.git
+[submodule "tools"]
+	path = tools
+	url = https://github.com/Akylas/app-tools.git
