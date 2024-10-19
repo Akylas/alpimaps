@@ -7,5 +7,7 @@
     "add_source": "přidat zdroj",
     "address": "adresa",
     "airfield": "polní letiště",
-    "all": "vše"
+    "all": "vše",
+    "alley_factor": "faktor aplikovaný na uličky (pokuta)",
+    "alpine_hut": "horská chata"
 }
