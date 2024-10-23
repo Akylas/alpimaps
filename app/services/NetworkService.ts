@@ -207,7 +207,7 @@ export function getCacheControl(maxAge = 60, stale = 59) {
 
 export function wrapNativeHttpException(error, requestParams: HttpRequestOptions) {
     return wrapNativeException(error, (message) => {
-        if (/(SocketTimeout|SocketException|UnknownHost)/.test(message)) {
+        if (/(SocketTimeout|ConnectException|SocketException|UnknownHost)/.test(message)) {
             return new TimeoutError();
         } else {
             return new HTTPError({
