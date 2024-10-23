@@ -17,7 +17,7 @@
     import type { GeoLocation } from '~/handlers/GeoHandler';
     import { CompassInfo, getCompassInfo } from '~/helpers/geolib';
     import { formatTime, getLocalTime, lc } from '~/helpers/locale';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
     import { PI_DIV2, TO_DEG, TO_RAD } from '~/utils/geo';
     import { pickDate } from '~/utils/utils';
     import { colors, fonts } from '~/variables';
@@ -492,7 +492,7 @@
     {/if}
 
     <CompassView date={startTime} {location} row={4} updateWithSensor={false} />
-    <canvasview col={1} fontSize={13} padding={10} row={4} on:draw={onSubCanvasDraw}>
+    <canvasview col={1} padding={10} row={4} on:draw={onSubCanvasDraw}>
         <!-- <cgroup paddingTop={10}>
             <cspan color="#ffa500" fontFamily={$fonts.mdi} text="mdi-weather-sunset-up" />
             <cspan text={lc('sunrise')} />

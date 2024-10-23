@@ -20,7 +20,7 @@ import { l, lc } from '~/helpers/locale';
 import MapModule, { getMapContext } from '~/mapModules/MapModule';
 import { packageService } from '~/services/PackageService';
 import { preloading, showRoutes } from '~/stores/mapStore';
-import { showError } from '~/utils/showError';
+import { showError } from '@shared/utils/showError';
 import { toDegrees, toRadians } from '~/utils/geo';
 import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
 

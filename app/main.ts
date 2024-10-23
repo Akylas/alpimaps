@@ -18,7 +18,7 @@ import { FrameElement, PageElement, registerElement, registerNativeViewElement }
 import Map from '~/components/map/Map.svelte';
 import { getBGServiceInstance } from '~/services/BgService';
 import { networkService } from '~/services/NetworkService';
-import { startSentry } from '~/utils/sentry';
+import { startSentry } from '@shared/utils/sentry';
 import { NestedScrollView } from './NestedScrollView';
 // import './app.scss';
 
