@@ -1,4 +1,4 @@
-import type { Headers, HttpsRequestOptions as HTTPSOptions } from '@nativescript-community/https';
+import type { HttpsRequestOptions as HTTPSOptions, Headers } from '@nativescript-community/https';
 import { l, lc } from '@nativescript-community/l';
 import { BaseError } from 'make-error';
 
@@ -113,7 +113,7 @@ export class TimeoutError extends CustomError {
         super(
             Object.assign(
                 {
-                    message: 'timeout_error'
+                    message: lc('timeout_error')
                 },
                 props
             ),
@@ -125,7 +125,7 @@ export class PermissionError extends CustomError {
     constructor(message?) {
         super(
             {
-                message: message ?? 'permission_error'
+                message: message ?? lc('permission_error')
             },
             'PermissionError'
         );
