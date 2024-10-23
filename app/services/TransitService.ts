@@ -72,9 +72,8 @@ export interface MetroTrip {
 }
 
 export interface TransitRoute extends MetroRoute {
-    stopIds: string[];
-    position: GenericMapPos<LatLonKeys>;
-    id: string;
+    stopIds?: string[];
+    position?: GenericMapPos<LatLonKeys>;
     geometry?;
 }
 

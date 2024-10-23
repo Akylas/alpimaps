@@ -14,12 +14,12 @@
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
     import { contourLinesOpacity, pitchEnabled, projectionModeSpherical, show3DBuildings, showContourLines } from '~/stores/mapStore';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
     import { openLink, showSliderPopover } from '~/utils/ui/index.common';
     import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    $: ({ colorBackground, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorError, colorPrimary } = $colors);
+    $: ({ colorBackground, colorError, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
 
     const mapContext = getMapContext();
     let gridLayout: NativeViewElementNode<GridLayout>;
@@ -238,7 +238,7 @@ while being shown using bottomsheet. We remove it with paddingTop -->
                         variant="text"
                         verticalTextAlignment="middle"
                         width={60}
-                        on:tap={deleteSource(item)} />
+                        on:tap={() => deleteSource(item)} />
                 </swipemenu>
             </Template>
         </collectionview>

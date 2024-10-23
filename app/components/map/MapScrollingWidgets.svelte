@@ -18,13 +18,13 @@
     import type { IItem } from '~/models/Item';
     import { RouteInstruction, RoutingAction } from '~/models/Item';
     import { queryingLocation, watchingLocation } from '~/stores/mapStore';
-    import { showError } from '~/utils/showError';
-    import { navigate } from '~/utils/svelte/ui';
+    import { showError } from '@shared/utils/showError';
+    import { navigate } from '@shared/utils/svelte/ui';
     import { openLink } from '~/utils/ui';
     import { colors, fonts } from '~/variables';
 
-    let { colorPrimaryContainer, colorOnPrimaryContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorOnPrimary, colorSurfaceContainer } = $colors;
-    $: ({ colorPrimaryContainer, colorOnPrimaryContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorOnPrimary, colorSurfaceContainer } = $colors);
+    let { colorOnPrimary, colorOnPrimaryContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorPrimaryContainer, colorSurfaceContainer } = $colors;
+    $: ({ colorOnPrimary, colorOnPrimaryContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorPrimaryContainer, colorSurfaceContainer } = $colors);
 
     // const currentMapZoom = 0;
     let totalDownloadProgress = 0;
@@ -33,7 +33,7 @@
 
     let selectedItem: IItem = null;
 
-    export let userInteractionEnabled: boolean = true;
+    export let isUserInteractionEnabled: boolean = true;
 
     // let scaleView: ScaleView;
     let userLocationModule: UserLocationModule = null;
@@ -172,7 +172,7 @@
 
     let iconPaint: Paint;
     let textPaint: Paint;
-    function drawNavigationInstruction({ canvas, object }: { canvas: Canvas; object: Canvas }) {
+    function drawNavigationInstruction({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
         const w = canvas.getWidth();
         const h = canvas.getHeight();
         if (!iconPaint) {
@@ -290,7 +290,7 @@
     }
 </script>
 
-<gridlayout bind:this={gridLayout} id="scrollingWidgets" {...$$restProps} columns="60,*,70" isPassThroughParentEnabled={true} rows="auto,*,auto,auto" {userInteractionEnabled}>
+<gridlayout bind:this={gridLayout} id="scrollingWidgets" {...$$restProps} columns="60,*,70" isPassThroughParentEnabled={true} {isUserInteractionEnabled} rows="auto,*,auto,auto">
     <stacklayout col={2} padding={2} row={2} verticalAlignment="bottom">
         <mdbutton id="directions" class="floating-btn-themed" col={2} rowSpan={2} text="mdi-directions" visibility={selectedItemHasPosition ? 'visible' : 'hidden'} on:tap={startDirections} />
         <mdcardview id="location" class={` ${locationButtonClass} floating-btn`} shape="medium" on:tap={askUserLocation} on:longPress={onWatchLocation}>

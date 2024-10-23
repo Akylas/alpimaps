@@ -49,7 +49,7 @@
     import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
     import { debounce, throttle } from '@nativescript/core/utils';
     import { isMobile, settings } from 'geo-three/webapp/settings';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
 </script>
 
 <script lang="ts">
@@ -214,8 +214,8 @@
                     break;
                 }
                 case 'outline': {
-                    outlinePass.enabled = !withoutOutline();
-                    mainPass.renderToScreen = !outlinePass.enabled;
+                    outlinePass['enabled'] = !withoutOutline();
+                    mainPass.renderToScreen = !outlinePass['enabled'];
                     break;
                 }
                 case 'near': {
@@ -276,8 +276,8 @@
                 case 'rasterProviderZoomDelta':
                 case 'flipRasterImages':
                 case 'mapMap': {
-                    outlinePass.enabled = !withoutOutline();
-                    mainPass.renderToScreen = !outlinePass.enabled;
+                    outlinePass['enabled'] = !withoutOutline();
+                    mainPass.renderToScreen = !outlinePass['enabled'];
                     updateSky();
                     updateAmbientLight();
                     sharedMaterial.uniforms.computeNormals.value = shouldComputeNormals();
@@ -324,8 +324,8 @@
                     break;
                 }
                 case 'debug': {
-                    outlinePass.enabled = !withoutOutline();
-                    mainPass.renderToScreen = !outlinePass.enabled;
+                    outlinePass['enabled'] = !withoutOutline();
+                    mainPass.renderToScreen = !outlinePass['enabled'];
                     updateSky();
 
                     sharedMaterial.uniforms.computeNormals.value = shouldComputeNormals();
@@ -444,7 +444,7 @@
             this.onCompassNeedsCalibrationEventBound = this.onCompassNeedsCalibrationEvent.bind(this);
 
             window.addEventListener('orientationchange', this.onScreenOrientationChangeEventBound, false);
-            if ('ondeviceorientationabsolute' in window) {
+            if (window['ondeviceorientationabsolute']) {
                 window.addEventListener('deviceorientationabsolute', this.onDeviceOrientationChangeEventBound, false);
             } else {
                 window.addEventListener('deviceorientation', this.onDeviceOrientationChangeEventBound, false);
@@ -459,7 +459,7 @@
             this.deviceOrientationEnabled = false;
             this.rotateTo(this.orientationAzimuth, this.orientationPolar);
             window.removeEventListener('orientationchange', this.onScreenOrientationChangeEventBound, false);
-            if ('ondeviceorientationabsolute' in window) {
+            if (window['ondeviceorientationabsolute']) {
                 window.removeEventListener('deviceorientationabsolute', this.onDeviceOrientationChangeEventBound, false);
             } else {
                 window.removeEventListener('deviceorientation', this.onDeviceOrientationChangeEventBound, false);
@@ -653,7 +653,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
     let sized = false;
     let canCreateMap = true;
 
-    const renderer = new WebGLRenderer({
+    let renderer = new WebGLRenderer({
         canvas,
         antialias: false,
         alpha: true,
@@ -681,7 +681,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
     // 	// precision: isMobile ? 'mediump' : 'highp'
     // });
 
-    const pointBufferTarget = new WebGLRenderTarget(100, 100, {
+    let pointBufferTarget = new WebGLRenderTarget(100, 100, {
         generateMipmaps: false,
         stencilBuffer: false,
         depthBuffer: false,
@@ -689,7 +689,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
         magFilter: NearestFilter
     });
     let renderTargetHelper;
-    const composer = new EffectComposer(renderer, {});
+    let composer = new EffectComposer(renderer, {});
 
     export function shouldComputeNormals() {
         return settings.computeNormals || settings.drawNormals || settings.generateColor || ((settings.debug || settings.mapMap || settings.shadows) && settings.dayNightCycle);
@@ -936,7 +936,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
     function createProvider() {
         let provider;
         if (settings.mapMap) {
-            provider = new RasterMapProvider(settings.local);
+            provider = new RasterMapProvider(settings);
             provider.zoomDelta = settings.rasterProviderZoomDelta;
         } else if (settings.debug) {
             provider = new DebugProvider();
@@ -968,7 +968,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
             scene.remove(map);
             clearCacheRecursive(map.root);
         }
-        heightProvider = new LocalHeightProvider(settings.local);
+        heightProvider = new LocalHeightProvider(settings);
         setSettings('terrarium', heightProvider.terrarium, false);
         setupLOD();
         const provider = createProvider();
@@ -1904,9 +1904,9 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
         if (renderTargetHelper) {
             renderTargetHelper.update();
         }
-        if (stats) {
-            stats.update();
-        }
+        // if (stats) {
+        //     stats.update();
+        // }
         // }
     }
 
@@ -1919,7 +1919,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
     // 	});
     // }
 
-    function startAnimation({ from, to, duration, onUpdate, onEnd, preventComputeFeatures }: { from; to; duration; onUpdate?; onEnd?; preventComputeFeatures? }) {
+    function startAnimation({ duration, from, onEnd, onUpdate, preventComputeFeatures, to }: { from; to; duration; onUpdate?; onEnd?; preventComputeFeatures? }) {
         animating = preventComputeFeatures;
         if (animating) {
             // ctx2d.clearRect(0, 0, featuresDrawingCanvas.width, featuresDrawingCanvas.height);
@@ -2017,7 +2017,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
         canvas = args.object;
         const context = canvas.getContext('webgl2');
         try {
-            const { drawingBufferWidth: width, drawingBufferHeight: height } = context;
+            const { drawingBufferHeight: height, drawingBufferWidth: width } = context;
             renderer = new WebGLRenderer({
                 context,
                 antialias: false,
