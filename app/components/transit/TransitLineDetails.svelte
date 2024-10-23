@@ -14,16 +14,17 @@
     import { onNetworkChanged } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { MetroLineStop, TransitRoute, transitService } from '~/services/TransitService';
-    import { NoNetworkError } from '~/utils/error';
-    import { showError } from '~/utils/showError';
-    import { goBack, navigate } from '~/utils/svelte/ui';
+    import { NoNetworkError } from '@shared/utils/error';
+    import { showError } from '@shared/utils/showError';
+    import { goBack, navigate } from '@shared/utils/svelte/ui';
     import { colors, fonts, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import { FeatureCollection } from 'geojson';
     import { MapPos } from '@nativescript-community/ui-carto/core';
     import { getDistanceSimple } from '~/helpers/geolib';
     $: ({ bottom: windowInsetBottom } = $windowInset);
-    $: ({ colorSurfaceContainer, colorBackground, colorPrimary, colorOnBackground } = $colors);
+    let { colorBackground, colorOnBackground, colorPrimary } = $colors;
+    $: ({ colorBackground, colorOnBackground, colorPrimary } = $colors);
     interface Item extends MetroLineStop {
         selected: boolean;
         color: string;

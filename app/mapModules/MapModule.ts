@@ -21,7 +21,7 @@ import type UserLocationModule from '~/mapModules/UserLocationModule';
 import type { IItem } from '~/models/Item';
 import { getBGServiceInstance } from '~/services/BgService';
 import { packageService } from '~/services/PackageService';
-import { createGlobalEventListener, globalObservable, navigate } from '~/utils/svelte/ui';
+import { createGlobalEventListener, globalObservable, navigate } from '@shared/utils/svelte/ui';
 import { getCartoBitmap } from '@nativescript-community/ui-carto';
 import { colorTheme, theme } from '~/helpers/theme';
 // export interface IMapModule {

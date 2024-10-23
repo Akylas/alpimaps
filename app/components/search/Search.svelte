@@ -4,8 +4,8 @@
     import { ClusteredVectorLayer } from '@nativescript-community/ui-carto/layers/vector';
     import { PointStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/point';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
     import { Animation, ApplicationSettings, GridLayout, ObservableArray, TextField } from '@nativescript/core';
+    import { showError } from '@shared/utils/showError';
     import type { Point } from 'geojson';
     import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -14,13 +14,13 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
-    import { showError } from '~/utils/showError';
+    import { showPopoverMenu } from '~/utils/ui/index.common';
     import { actionBarButtonHeight, colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import SearchCollectionView from './SearchCollectionView.svelte';
-    import { showPopoverMenu } from '~/utils/ui/index.common';
 
-    $: ({ colorSurfaceContainerHigh, colorWidgetBackground, colorOnSurface } = $colors);
+    let { colorOnSurface, colorWidgetBackground } = $colors;
+    $: ({ colorOnSurface, colorWidgetBackground } = $colors);
 
     const SEARCH_COLLECTIONVIEW_HEIGHT = 250;
     let animating = false;

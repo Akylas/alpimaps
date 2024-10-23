@@ -13,9 +13,9 @@
     import { onThemeChanged } from '~/helpers/theme';
     import { onNetworkChanged } from '~/services/NetworkService';
     import { MetroTimesheet, MetroTripStop, TransitRoute, transitService } from '~/services/TransitService';
-    import { NoNetworkError } from '~/utils/error';
-    import { showError } from '~/utils/showError';
-    import { navigate } from '~/utils/svelte/ui';
+    import { NoNetworkError } from '@shared/utils/error';
+    import { showError } from '@shared/utils/showError';
+    import { navigate } from '@shared/utils/svelte/ui';
     import { showSnack } from '~/utils/ui';
     import { pickDate, pickTime } from '~/utils/utils';
     import { colors, fonts, windowInset } from '~/variables';
@@ -26,7 +26,7 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorOutlineVariant, colorOnBackground, colorOnSurfaceVariant, colorPrimary } = $colors);
+    $: ({ colorOnBackground, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
     $: ({ bottom: windowInsetBottom } = $windowInset);
 
     export let line: TransitRoute;

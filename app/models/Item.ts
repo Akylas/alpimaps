@@ -1,10 +1,10 @@
 import { MapBounds } from '@nativescript-community/ui-carto/core';
 import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+import NSQLDatabase from '@shared/db/NSQLDatabase';
 import type { Geometry, Point } from 'geojson';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
-import NSQLDatabase from '../mapModules/NSQLDatabase';
 // import SimpleOpeningHours from '~/helpers/SimpleOpeningHours';
 const extend = require('just-extend');
 

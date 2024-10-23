@@ -1,4 +1,3 @@
-import { Canvas, Rect } from '@nativescript-community/ui-canvas';
 import { GenericMapPos, MapBounds } from '@nativescript-community/ui-carto/core';
 import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
 import { PolygonGeometry } from '@nativescript-community/ui-carto/geometry';
@@ -11,19 +10,19 @@ import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescrip
 import { getImagePipeline } from '@nativescript-community/ui-image';
 import { ShareFile } from '@nativescript-community/ui-share-file';
 import { File, Folder, ImageSource, Screen, knownFolders, path, profile } from '@nativescript/core';
+import { shareFile } from '@shared/utils/share';
+import { showError } from '@shared/utils/showError';
 import type { Feature, FeatureCollection, Point as GeometryPoint } from 'geojson';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import { get } from 'svelte/store';
 import { getBoundsOfDistance, getDistanceSimple, getMetersPerPixel } from '~/helpers/geolib';
 import { GroupRepository, IItem, Item, ItemRepository, Route, RouteInstruction, RouteProfile, RouteStats } from '~/models/Item';
 import { maxAgeMonth, networkService } from '~/services/NetworkService';
-import { showError } from '~/utils/showError';
 import { JSONtoXML, importGPXToGeojson } from '~/utils/gpx';
-import { shareFile } from '~/utils/share';
 import { clearTimeout, getItemsDataFolder, pick, setTimeout } from '~/utils/utils';
 import { fonts } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
-import NSQLDatabase from './NSQLDatabase';
+import NSQLDatabase from '@shared/db/NSQLDatabase';
 const mapContext = getMapContext();
 
 let writer: GeoJSONGeometryWriter<LatLonKeys>;

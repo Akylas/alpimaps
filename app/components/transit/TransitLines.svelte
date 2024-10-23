@@ -8,9 +8,9 @@
     import { lc } from '~/helpers/locale';
     import { onNetworkChanged } from '~/services/NetworkService';
     import { MetroRoute, transitService } from '~/services/TransitService';
-    import { NoNetworkError } from '~/utils/error';
-    import { showError } from '~/utils/showError';
-    import { navigate } from '~/utils/svelte/ui';
+    import { NoNetworkError } from '@shared/utils/error';
+    import { showError } from '@shared/utils/showError';
+    import { navigate } from '@shared/utils/svelte/ui';
     import { fonts, windowInset } from '~/variables';
 
     $: ({ bottom: windowInsetBottom } = $windowInset);
@@ -134,7 +134,7 @@
         </collectionview>
         <mdactivityindicator busy={loading} row={1} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
         {#if noNetworkAndNoData}
-            <canvaslabel row={1} v->
+            <canvaslabel row={1}>
                 <cgroup textAlignment="center" verticalAlignment="middle">
                     <cspan fontFamily={$fonts.mdi} fontSize={50} text="mdi-alert-circle-outline" />
                     <cspan fontSize={20} text={'\n' + lc('no_network')} />
