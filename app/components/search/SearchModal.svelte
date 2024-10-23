@@ -5,7 +5,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoLocation } from '~/handlers/GeoHandler';
     import { lc } from '~/helpers/locale';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
     import { colors } from '~/variables';
     import { PhotonFeature } from './Features';
     import SearchCollectionView from './SearchCollectionView.svelte';

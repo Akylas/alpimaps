@@ -12,7 +12,7 @@
     import { ApplicationSettings, Color, ContentView, Device, GridLayout, ObservableArray, StackLayout, TextField, Utils, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
     import type { Feature, Point } from 'geojson';
-    import { createEventDispatcher } from '~/utils/svelte/ui';
+    import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -28,7 +28,7 @@
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { MOBILITY_URL } from '~/services/TransitService';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
     import { defaultProfileCostingOptions, getSavedProfile, getValhallaSettings, removeSavedProfile, savedProfile, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
     import { colors, fonts, windowInset } from '~/variables';
     import { Themes, colorTheme, onThemeChanged, theme } from '~/helpers/theme';
