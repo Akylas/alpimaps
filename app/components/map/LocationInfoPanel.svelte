@@ -34,7 +34,7 @@
 
     const mapContext = getMapContext();
     mapContext.onVectorElementClicked((data: VectorElementEventData<LatLonKeys>) => {
-        const { clickType, position, elementPos, metaData, element } = data;
+        const { clickType, element, elementPos, metaData, position } = data;
         // console.log('LocationInfoPanel onVectorElementClicked', clickType, position, metaData);
         if ((metaData['userMarker'] as any) === true) {
             switchLocationInfo();

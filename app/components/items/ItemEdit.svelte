@@ -16,15 +16,15 @@
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import { Item } from '~/models/Item';
-    import { showError } from '~/utils/showError';
-    import { goBack } from '~/utils/svelte/ui';
+    import { showError } from '@shared/utils/showError';
+    import { goBack } from '@shared/utils/svelte/ui';
     import { pickColor } from '~/utils/utils';
     import { colors, fonts, windowInset } from '~/variables';
-    import CActionBar from '../common/CActionBar.svelte';
-    import IconButton from '../common/IconButton.svelte';
-    import TagView from '../common/TagView.svelte';
+    import CActionBar from '~/components/common/CActionBar.svelte';
+    import IconButton from '~/components/common/IconButton.svelte';
+    import TagView from '~/components/common/TagView.svelte';
 
-    $: ({ colorBackground, colorSurfaceContainerHigh, colorOnSurfaceVariant, colorPrimary, colorOnPrimary } = $colors);
+    $: ({ colorBackground, colorOnPrimary, colorOnSurfaceVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
     $: ({ bottom: windowInsetBottom } = $windowInset);
     export let item: Item;
     let itemColor: string;
@@ -320,7 +320,7 @@
         itemIsRoute = !!item.route;
         const props = { ...item.properties, ...updatedProperties };
         const propsKeys = Object.keys(props).filter((s) => propsToFilter.indexOf(s) === -1);
-        const { route, profile, ...toPrint } = props;
+        const { profile, route, ...toPrint } = props;
         items = new ObservableArray(
             (
                 [
@@ -407,7 +407,7 @@
             <IconButton color={colorOnPrimary} isVisible={!itemIsRoute} text="mdi-web-sync" on:tap={fetchOSMDetails} />
         </CActionBar>
         <cartomap row={1} zoom={16} on:mapReady={onMapReady} on:layoutChanged={onLayoutChanged} />
-        <canvaslabel fontSize={16} height={50} horizontalAlignment="right" row={1} verticalAlignment="bottom" width={50} on:tap={pickOptionColor(itemColor)}>
+        <canvaslabel fontSize={16} height={50} horizontalAlignment="right" row={1} verticalAlignment="bottom" width={50} on:tap={() => pickOptionColor(itemColor)}>
             <circle antiAlias={true} fillColor={colorOnSurfaceVariant} horizontalAlignment="right" paintStyle="fill" radius={15} strokeWidth={2} verticalAlignment="middle" width={20} />
             <circle
                 antiAlias={true}

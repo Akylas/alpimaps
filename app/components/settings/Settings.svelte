@@ -18,9 +18,9 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
-    import { showError } from '~/utils/showError';
-    import { Sentry } from '~/utils/sentry';
-    import { share } from '~/utils/share';
+    import { showError } from '@shared/utils/showError';
+    import { Sentry } from '@shared/utils/sentry';
+    import { share } from '@shared/utils/share';
     import { showSnack } from '~/utils/ui';
     import { createView, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui/index.common';
     import { ANDROID_30, getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, moveFileOrFolder, resetItemsDataFolder, restartApp, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';

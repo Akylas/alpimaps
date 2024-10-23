@@ -67,16 +67,16 @@
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
-    import { Sentry, isSentryEnabled } from '~/utils/sentry';
-    import { share } from '~/utils/share';
-    import { showError } from '~/utils/showError';
-    import { navigate } from '~/utils/svelte/ui';
+    import { Sentry, isSentryEnabled } from '@shared/utils/sentry';
+    import { share } from '@shared/utils/share';
+    import { showError } from '@shared/utils/showError';
+    import { navigate } from '@shared/utils/svelte/ui';
     import { hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
     import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, setTimeout } from '~/utils/utils';
     import { colors, screenHeightDips, windowInset } from '../../variables';
 
-    $: ({ colorPrimary, colorError, colorBackground } = $colors);
-    $: ({ top: windowInsetTop, bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight } = $windowInset);
+    $: ({ colorBackground, colorError, colorPrimary } = $colors);
+    $: ({ bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight, top: windowInsetTop } = $windowInset);
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
 
     const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'admin', 'routes', 'transit', 'hillshade', 'items', 'directions', 'search', 'selection', 'userLocation'];
@@ -189,7 +189,7 @@
                         });
                         transitVectorTileLayer.setVectorTileEventListener<LatLonKeys>(
                             {
-                                onVectorTileClicked: ({ featureId, featureData, featureLayerName, featureGeometry }) => {
+                                onVectorTileClicked: ({ featureData, featureGeometry, featureId, featureLayerName }) => {
                                     if (handleSelectedRouteTimer) {
                                         return;
                                     }
@@ -275,7 +275,7 @@
                     });
                     adminVectorTileLayer.setVectorTileEventListener<LatLonKeys>(
                         {
-                            onVectorTileClicked: ({ featureId, featureData, featureLayerName, featureGeometry }) => {
+                            onVectorTileClicked: ({ featureData, featureGeometry, featureId, featureLayerName }) => {
                                 if (handleSelectedRouteTimer) {
                                     return;
                                 }
@@ -742,17 +742,17 @@
         $selectedItem = item;
     }
     async function selectItem({
-        item,
+        forceZoomOut = false,
         isFeatureInteresting = false,
-        peek = true,
-        setSelected = true,
-        setMapSelected = false,
-        showButtons = false,
-        preventZoom = true,
+        item,
         minZoom,
+        peek = true,
+        preventZoom = true,
+        setMapSelected = false,
+        setSelected = true,
+        showButtons = false,
         zoom,
-        zoomDuration,
-        forceZoomOut = false
+        zoomDuration
     }: {
         item: IItem;
         showButtons?: boolean;
@@ -942,7 +942,7 @@
         }
     }
 
-    export function zoomToItem({ item, zoom, minZoom, duration = 200, forceZoomOut = false }: { item: IItem; zoom?: number; minZoom?: number; duration?; forceZoomOut?: boolean }) {
+    export function zoomToItem({ duration = 200, forceZoomOut = false, item, minZoom, zoom }: { item: IItem; zoom?: number; minZoom?: number; duration?; forceZoomOut?: boolean }) {
         const viewPort = getMapViewPort();
         DEV_LOG && console.log('zoomToItem', viewPort, item.properties?.zoomBounds, item.properties?.extent, !!item.route);
         // we ensure the viewPort is squared for the screen captured
@@ -1151,13 +1151,13 @@
     // }
 
     function onRasterTileClicked(data: RasterTileClickInfo<LatLonKeys>) {
-        const { clickType, position, nearestColor, layer } = data;
+        const { clickType, layer, nearestColor, position } = data;
     }
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
         if (handleSelectedTransitLinesTimer) {
             return;
         }
-        const { clickType, featureId, position, featureLayerName, featureData, featurePosition, featureGeometry, layer } = data;
+        const { clickType, featureData, featureGeometry, featureId, featureLayerName, featurePosition, layer, position } = data;
 
         TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, position, featurePosition, featureGeometry);
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data) as boolean;
@@ -1257,7 +1257,7 @@
         return handledByModules;
     }
     function onVectorElementClicked(data: VectorElementEventData<LatLonKeys>) {
-        const { clickType, position, elementPos, metaData, element } = data;
+        const { clickType, element, elementPos, metaData, position } = data;
         TEST_LOG && console.log('onVectorElementClicked', clickType, position, metaData);
         Object.keys(metaData).forEach((k) => {
             if (metaData[k][0] === '{' || metaData[k][0] === '[') {
@@ -1293,7 +1293,7 @@
         return !!handledByModules;
     }
     function onVectorTileElementClicked(data: VectorTileEventData<LatLonKeys>) {
-        const { clickType, position, featurePosition, featureData } = data;
+        const { clickType, featureData, featurePosition, position } = data;
         TEST_LOG && console.log('onVectorTileElementClicked', clickType, position, featurePosition, featureData.id);
         const itemModule = mapContext.mapModule('items');
         const feature = itemModule.getFeature(featureData.id);
@@ -2104,7 +2104,6 @@
                     height={30}
                     horizontalAlignment="right"
                     isUserInteractionEnabled={false}
-                    orientation="vertical"
                     textAlignment="center"
                     verticalAlignment="middle"
                     width={20}>
@@ -2133,7 +2132,7 @@
                 horizontalAlignment="right"
                 translateY={Math.max(topTranslationY - 50, 0)}
             /> -->
-                <MapScrollingWidgets bind:this={mapScrollingWidgets} opacity={scrollingWidgetsOpacity} userInteractionEnabled={scrollingWidgetsOpacity > 0.3} bind:navigationInstructions />
+                <MapScrollingWidgets bind:this={mapScrollingWidgets} opacity={scrollingWidgetsOpacity} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} bind:navigationInstructions />
                 <DirectionsPanel
                     bind:this={directionsPanel}
                     {editingItem}

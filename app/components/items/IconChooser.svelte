@@ -28,7 +28,7 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorOnSurface, colorSurfaceContainerHigh, colorSurfaceContainer } = $colors);
+    $: ({ colorOnSurface, colorSurfaceContainer, colorSurfaceContainerHigh } = $colors);
     if (!items) {
         items = Object.keys(osmIcons)
             .map((k) => ({ fontFamily: 'osm', icon: osmIcons[k], name: k }))
@@ -101,7 +101,7 @@
         <collectionview bind:this={collectionView} colWidth={ICON_SIZE} itemIdGenerator={(item, i) => i} items={filteredItems} row={2} rowHeight={ICON_SIZE}>
             <Template let:item>
                 <gridlayout padding={2}>
-                    <canvasview backgroundColor={colorSurfaceContainerHigh} borderRadius={4} rippleColor={colorOnSurface} on:draw={(e) => onDraw(item, e)} on:tap={selectIcon(item)} />
+                    <canvasview backgroundColor={colorSurfaceContainerHigh} borderRadius={4} rippleColor={colorOnSurface} on:draw={(e) => onDraw(item, e)} on:tap={() => selectIcon(item)} />
                 </gridlayout>
             </Template>
         </collectionview>
