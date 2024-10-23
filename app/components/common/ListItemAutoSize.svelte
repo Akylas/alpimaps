@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-    import { createEventDispatcher } from '~/utils/svelte/ui';
+    import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { colors, fontScale, fonts } from '~/variables';
     const iconPaint = new Paint();
     // iconPaint.setTextAlign(Align.CENTER);

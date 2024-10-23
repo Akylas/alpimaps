@@ -9,12 +9,12 @@
     import { lc } from '~/helpers/locale';
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
     import { pickColor } from '~/utils/utils';
     import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import { createView } from '~/utils/ui';
-    $: ({ colorBackground, colorOnSurfaceVariant, colorOutlineVariant, colorError } = $colors);
+    $: ({ colorBackground, colorError, colorOnSurfaceVariant, colorOutlineVariant } = $colors);
     import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
     import type SettingsSlider__SvelteComponent_ from '~/components/settings/SettingsSlider.svelte';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
@@ -209,7 +209,7 @@
             <stacklayout>
                 {#each Object.entries(options) as [name, option]}
                     {#if option.type === 'color'}
-                        <gridlayout columsn="*" height={50} on:tap={pickOptionColor(name, optionValue(name))}>
+                        <gridlayout columns="*" height={50} on:tap={() => pickOptionColor(name, optionValue(name))}>
                             <canvaslabel fontSize={13} padding={10}>
                                 <cspan horizontalAlignment="left" paddingLeft={10} text={name} verticalAlignment="middle" width={100} />
                                 <circle
