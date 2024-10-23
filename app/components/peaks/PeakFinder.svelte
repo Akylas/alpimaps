@@ -17,7 +17,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { formatDistance } from '~/helpers/formatter';
     import { formatTime, lc } from '~/helpers/locale';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
     import { getDataFolder } from '~/utils/utils';
     import { colors, fonts, windowInset } from '~/variables';
 
@@ -628,7 +628,7 @@
                             <checkbox checked={item.value} text={item.title} on:checkedChange={(e) => onCheckBox(item, e.value)} />
                         </Template>
                         <Template key="slider" let:item>
-                            <gridlayout columns="*,auto" orientation="horizontal" padding="0 10 0 10" rows="auto,*">
+                            <gridlayout columns="*,auto" padding="0 10 0 10" rows="auto,*">
                                 <label colSpan={2} text={item.title} />
                                 <slider
                                     maxValue={item.max * (item.decimalFactor || 1)}
@@ -648,7 +648,7 @@
                             <checkbox checked={item.value} text={item.title} on:checkedChange={(e) => onCheckBox(item, e.value)} />
                         </Template>
                         <Template key="slider" let:item>
-                            <gridlayout columns="*,auto" orientation="horizontal" padding="0 10 0 10" rows="auto,*">
+                            <gridlayout columns="*,auto" padding="0 10 0 10" rows="auto,*">
                                 <label colSpan={2} text={item.title} />
                                 <slider
                                     maxValue={item.max * (item.decimalFactor || 1)}

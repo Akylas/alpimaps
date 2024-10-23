@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { Frame } from '@nativescript/core/ui/frame';
+    import { CoreTypes, Frame } from '@nativescript/core';
     import { onMount } from 'svelte';
-    import { closeModal, goBack } from '~/utils/svelte/ui';
+    import { closeModal, goBack } from '@shared/utils/svelte/ui';
     import { actionBarHeight, colors, windowInset } from '~/variables';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
     $: ({ colorOnSurface } = $colors);
     $: ({ top: windowInsetTop } = $windowInset);
 
@@ -21,6 +21,8 @@
     let menuIconVisible: boolean;
     export let labelsDefaultVisualState = null;
     export let buttonsDefaultVisualState = null;
+
+    let menuIconVisibility: CoreTypes.VisibilityType;
 
     onMount(() => {
         const frame = Frame.topmost();

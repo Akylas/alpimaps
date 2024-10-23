@@ -1,12 +1,12 @@
 <svelte:options accessors />
 
 <script lang="ts">
-    import { createEventDispatcher } from '~/utils/svelte/ui';
+    import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { onMount } from 'svelte';
     import { lc } from '~/helpers/locale';
     import { getMapContext } from '~/mapModules/MapModule';
     import { Group } from '~/models/Item';
-    import MiniSearch from '~/utils/minisearch';
+    import MiniSearch from '@shared/utils/minisearch';
     import SqlQuery from '@akylas/kiss-orm/dist/Queries/SqlQuery';
 
     const dispatch = createEventDispatcher();
