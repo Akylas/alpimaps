@@ -6,7 +6,7 @@
     import { ApplicationSettings, ObservableArray, Screen } from '@nativescript/core';
     import deburr from 'deburr';
     import type { Point } from 'geojson';
-    import { createEventDispatcher } from '~/utils/svelte/ui';
+    import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { Template } from 'svelte-native/components';
     import { formatDistance, osmicon } from '~/helpers/formatter';
     import { getBoundsOfDistance, getMetersPerPixel } from '~/helpers/geolib';

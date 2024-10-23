@@ -8,9 +8,9 @@
     import { lc } from '~/helpers/locale';
     import { onNetworkChanged } from '~/services/NetworkService';
     import { TransitRoute, transitService } from '~/services/TransitService';
-    import { NoNetworkError } from '~/utils/error';
-    import { showError } from '~/utils/showError';
-    import { navigate } from '~/utils/svelte/ui';
+    import { NoNetworkError } from '@shared/utils/error';
+    import { showError } from '@shared/utils/showError';
+    import { navigate } from '@shared/utils/svelte/ui';
     import { fonts, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
 

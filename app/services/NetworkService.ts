@@ -4,8 +4,8 @@ import * as appavailability from '@nativescript/appavailability';
 import { Application, ApplicationEventData, ApplicationSettings, Connectivity, EventData, Folder, Observable, Utils } from '@nativescript/core';
 import { wrapNativeException } from '@nativescript/core/utils';
 import dayjs from 'dayjs';
-import { HTTPError, TimeoutError } from '~/utils/error';
-import { createGlobalEventListener, globalObservable } from '~/utils/svelte/ui';
+import { HTTPError, TimeoutError } from '@shared/utils/error';
+import { createGlobalEventListener, globalObservable } from '@shared/utils/svelte/ui';
 import { getDataFolder } from '~/utils/utils';
 
 export const onNetworkChanged = createGlobalEventListener('network');

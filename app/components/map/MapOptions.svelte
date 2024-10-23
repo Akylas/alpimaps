@@ -12,7 +12,7 @@
     import { onServiceLoaded } from '~/services/BgService.common';
     import { contourLinesOpacity, mapFontScale, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, show3DBuildings, showContourLines } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
     import { showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';

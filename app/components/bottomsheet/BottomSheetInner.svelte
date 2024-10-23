@@ -26,10 +26,10 @@
     import type { Item, RouteInstruction } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
-    import { showError } from '~/utils/showError';
+    import { showError } from '@shared/utils/showError';
     import { computeDistanceBetween } from '~/utils/geo';
-    import { share } from '~/utils/share';
-    import { navigate } from '~/utils/svelte/ui';
+    import { share } from '@shared/utils/share';
+    import { navigate } from '@shared/utils/svelte/ui';
     import { hideLoading, openLink, showLoading, showPopoverMenu } from '~/utils/ui/index.common';
     import { actionBarButtonHeight, colors } from '~/variables';
     import ElevationChart from '../chart/ElevationChart.svelte';
@@ -38,7 +38,7 @@
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
 
-    $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorOutlineVariant, colorWidgetBackground, colorError } = $colors);
+    $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorWidgetBackground } = $colors);
     const PROFILE_HEIGHT = 150;
     const STATS_HEIGHT = 180;
     const WEB_HEIGHT = 400;
@@ -89,7 +89,7 @@
     let dataToUpdateOnItemSelect = null;
 
     mapContext.onVectorTileElementClicked((data: VectorTileEventData<LatLonKeys>) => {
-        const { position, feature, featureData } = data;
+        const { feature, featureData, position } = data;
         DEV_LOG && console.log('BottomSheetInner onVectorTileElementClicked', item?.id, featureData, feature.properties);
         if (featureData?.route) {
             if (item && item.id && feature.properties?.id === item.id) {
@@ -134,7 +134,7 @@
         try {
             if (elevationChart && chartLoadHighlightData) {
                 try {
-                    const { onPathIndex, remainingDistance, remainingTime, highlight } = chartLoadHighlightData;
+                    const { highlight, onPathIndex, remainingDistance, remainingTime } = chartLoadHighlightData;
                     elevationChart.hilghlightPathIndex(onPathIndex, remainingDistance, remainingTime, highlight, false);
                 } catch (error) {
                     console.error(error);
@@ -452,7 +452,7 @@
         }
     }
 
-    function onChartHighlight({ lat, lon, highlight }: any) {
+    function onChartHighlight({ highlight, lat, lon }: any) {
         DEV_LOG && console.log('BottomSheetInner onChartHighlight', lat, lon, highlight);
         updateRouteItemWithPosition(item, { lat, lon }, false, true, highlight);
     }
@@ -788,7 +788,7 @@
         statsCanvas?.nativeView?.invalidate();
     }
 
-    function drawStats({ canvas }: { canvas: Canvas; object: Canvas }) {
+    function drawStats({ canvas }: { canvas: Canvas; object: CanvasView }) {
         try {
             if (!item?.stats) {
                 return;
