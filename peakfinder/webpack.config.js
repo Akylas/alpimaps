@@ -25,6 +25,7 @@ module.exports = (env = {}, params = {}) => {
     const mode = production !== undefined ? (!!production ? 'production' : 'development') : process.env.NODE_ENV || 'development';
     const platform = env && ((env.android && 'android') || (env.ios && 'ios'));
     const prod = mode === 'production';
+    console.log('buildpeakfinder', prod);
     return {
         mode,
         target: 'web',
@@ -33,7 +34,7 @@ module.exports = (env = {}, params = {}) => {
         resolve: {
             exportsFields: [],
             conditionNames: ['svelte'],
-            modules: [resolve(__dirname, '..', 'node_modules'), resolve(__dirname, '..', 'geo-three', 'node_modules') ],
+            modules: [resolve(__dirname, '..', 'node_modules'), resolve(__dirname, '..', 'geo-three', 'node_modules')],
             alias: {
                 './LocalHeightProvider': resolve(__dirname, '..', 'peakfinder/LocalHeightProvider'),
                 './TestMapProvider': resolve(__dirname, '..', 'peakfinder/RasterMapProvider')
