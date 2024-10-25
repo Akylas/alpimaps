@@ -33,6 +33,7 @@ module.exports = (env, params = {}) => {
         env = Object.assign(
             {},
             {
+                buildpeakfinder: true,
                 production: env.production !== false,
                 sentry: true,
                 uploadSentry: true,
@@ -946,7 +947,7 @@ module.exports = (env, params = {}) => {
         })
     ];
     if (buildpeakfinder) {
-        return [require('./peakfinder.webpack.config.js')(env, params), config];
+        return [require('./peakfinder/webpack.config.js')(env, params), config];
     } else {
         return config;
     }
