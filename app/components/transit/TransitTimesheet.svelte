@@ -30,7 +30,6 @@
     $: ({ bottom: windowInsetBottom } = $windowInset);
 
     export let line: TransitRoute;
-    export let position: MapPos<LatLonKeys> = null;
     let loading = false;
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
