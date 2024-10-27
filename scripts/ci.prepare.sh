@@ -38,7 +38,7 @@ else
 fi
 
 
-git clone -b alpimaps https://github.com/nativescript-community/ui-carto.git
+git clone --recurse-submodules -b alpimaps https://github.com/nativescript-community/ui-carto.git
 
 if ["${PLATFORM}" -eq "android"]
 then
@@ -46,7 +46,12 @@ then
   mv carto-mobile-sdk-$CARTO_SDK_VERSION.aar ./ui-carto/packages/ui-carto/platforms/android
 else
   wget https://github.com/Akylas/mobile-sdk/releases/download/v$CARTO_SDK_VERSION/carto-mobile-sdk-ios-$CARTO_SDK_VERSION.zip
-  unzip -o-d ./ui-carto/packages/ui-carto/platforms/io carto-mobile-sdk-ios-$CARTO_SDK_VERSION.zip
+  unzip -o -d ./ui-carto/packages/ui-carto/platforms/io carto-mobile-sdk-ios-$CARTO_SDK_VERSION.zip
 fi
 
+cd ui-carto
+touch yarn.lock
+yarn
+npm run build
+cd ..git
 yarn link -r ./ui-carto/packages/ui-carto
