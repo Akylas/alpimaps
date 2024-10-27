@@ -107,7 +107,7 @@ const onInitRootView = function () {
                 right: 0
             });
             AppUtilsAndroid.listenForWindowInsets((inset: [number, number, number, number, number]) => {
-                DEV_LOG && console.log('onApplyWindowInsets', inset[0], inset[1], inset[2], inset[3], inset[4]);
+                // DEV_LOG && console.log('onApplyWindowInsets', inset[0], inset[1], inset[2], inset[3], inset[4]);
                 windowInset.set({
                     top: Utils.layout.toDeviceIndependentPixels(inset[0]),
                     bottom: Utils.layout.toDeviceIndependentPixels(Math.max(inset[1], inset[4])),
