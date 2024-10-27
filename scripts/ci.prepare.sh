@@ -26,16 +26,17 @@ for i in "$@"; do
   esac
 done
 
+echo "PLATFORM  = ${PLATFORM}"
+echo "VERSION   = ${VERSION}"
+echo "FLAVOR    = ${FLAVOR}"
+echo "FLAVOR    = $(dirname $0)"
+
 if [[ -z "${CARTO_SDK_VERSION}" ]]; then
   CARTO_SDK_VERSION="5.0.0-rc.2"
 else
   CARTO_SDK_VERSION="${CARTO_SDK_VERSION}"
 fi
 
-echo "PLATFORM  = ${PLATFORM}"
-echo "VERSION   = ${VERSION}"
-echo "FLAVOR    = ${FLAVOR}"
-echo "FLAVOR    = $(dirname $0)"
 
 git clone -b alpimaps https://github.com/nativescript-community/ui-carto.git
 
