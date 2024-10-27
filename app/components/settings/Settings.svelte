@@ -6,7 +6,7 @@
     import { openFilePicker, pickFolder, saveFile } from '@nativescript-community/ui-document-picker';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-    import { TextField } from '@nativescript-community/ui-material-textfield';
+    import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { TextView } from '@nativescript-community/ui-material-textview';
     import { ApplicationSettings, File, Folder, ObservableArray, ScrollView, StackLayout, Utils, View, path } from '@nativescript/core';
     import dayjs from 'dayjs';
@@ -17,7 +17,15 @@
     import { getColorThemeDisplayName, getThemeDisplayName, onThemeChanged, selectColorTheme, selectTheme } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
-    import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
+    import {
+        ALERT_OPTION_MAX_HEIGHT,
+        DEFAULT_VALHALLA_MAX_DISTANCE_AUTO,
+        DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE,
+        DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
+        SETTINGS_VALHALLA_MAX_DISTANCE_AUTO,
+        SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE,
+        SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN
+    } from '~/utils/constants';
     import { showError } from '@shared/utils/showError';
     import { Sentry } from '@shared/utils/sentry';
     import { share } from '@shared/utils/share';
@@ -29,6 +37,8 @@
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import { Writable, get } from 'svelte/store';
     import { useOfflineGeocodeAddress, useSystemGeocodeAddress } from '~/stores/mapStore';
+    import { packageService } from '~/services/PackageService';
+    import { Label } from '@nativescript-community/ui-label';
 
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
 </script>
@@ -83,6 +93,54 @@
                         mapStore: useSystemGeocodeAddress,
                         value: get(useSystemGeocodeAddress),
                         title: lc('use_system_geocoding_address')
+                    }
+                ];
+            case 'valhalla':
+                return [
+                    {
+                        id: 'setting',
+                        type: 'prompt',
+                        title: lc('offline_routing_pedestrian_max_distance'),
+                        key: SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
+                        valueType: 'number',
+                        default: DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
+                        textFieldProperties: {
+                            keyboardType: 'number',
+                            autocapitalizationType: 'none',
+                            autocorrect: false
+                        } as TextFieldProperties,
+                        onUpdate: (key, defaultValue) => packageService.setValhallaSetting(key, defaultValue),
+                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN, DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN)
+                    },
+                    {
+                        id: 'setting',
+                        type: 'prompt',
+                        title: lc('offline_routing_bicycle_max_distance'),
+                        key: SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE,
+                        valueType: 'number',
+                        default: DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE,
+                        textFieldProperties: {
+                            keyboardType: 'number',
+                            autocapitalizationType: 'none',
+                            autocorrect: false
+                        } as TextFieldProperties,
+                        onUpdate: (key, defaultValue) => packageService.setValhallaSetting(key, defaultValue),
+                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE, DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE)
+                    },
+                    {
+                        id: 'setting',
+                        type: 'prompt',
+                        title: lc('offline_routing_auto_max_distance'),
+                        key: SETTINGS_VALHALLA_MAX_DISTANCE_AUTO,
+                        valueType: 'number',
+                        default: DEFAULT_VALHALLA_MAX_DISTANCE_AUTO,
+                        textFieldProperties: {
+                            keyboardType: 'number',
+                            autocapitalizationType: 'none',
+                            autocorrect: false
+                        } as TextFieldProperties,
+                        onUpdate: (key, defaultValue) => packageService.setValhallaSetting(key, defaultValue),
+                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_VALHALLA_MAX_DISTANCE_AUTO, DEFAULT_VALHALLA_MAX_DISTANCE_AUTO)
                     }
                 ];
             case 'geolocation':
@@ -277,7 +335,22 @@
                         title: lc('geolocation'),
                         description: lc('geolocation_settings'),
                         options: () => getSubSettings('geolocation')
-                    },
+                    }
+                ] as any)
+                .concat(
+                    packageService.offlineRoutingSearchService
+                        ? [
+                              {
+                                  id: 'sub_settings',
+                                  icon: 'mdi-routes',
+                                  title: lc('offline_routing'),
+                                  description: lc('offline_routing_settings'),
+                                  options: () => getSubSettings('valhalla')
+                              }
+                          ]
+                        : ([] as any)
+                )
+                .concat([
                     {
                         id: 'sub_settings',
                         icon: 'mdi-key',
@@ -365,6 +438,7 @@
         }
     }
     function updateItem(item, key = 'key') {
+        item.onUpdate?.(item[key], item.default);
         const index = items.findIndex((it) => it[key] === item[key]);
         if (index !== -1) {
             items.setItem(index, item);
@@ -659,7 +733,24 @@
                             okButtonText: l('save'),
                             cancelButtonText: l('cancel'),
                             autoFocus: true,
-                            defaultText: ApplicationSettings.getNumber(item.key, item.default) + ''
+                            textFieldProperties: item.textFieldProperties,
+                            defaultText: ApplicationSettings.getNumber(item.key, item.default) + '',
+                            view: item.useHTML
+                                ? createView(
+                                      Label,
+                                      {
+                                          padding: '10 20 0 20',
+                                          textWrap: true,
+                                          color: colorOnSurfaceVariant as any,
+                                          html: item.full_description || item.description
+                                      },
+                                      item.onLinkTap
+                                          ? {
+                                                linkTap: item.onLinkTap
+                                            }
+                                          : undefined
+                                  )
+                                : undefined
                         });
                         Utils.dismissSoftInput();
                         if (result && !!result.result && result.text.length > 0) {
