@@ -34,6 +34,14 @@ import { networkService } from './NetworkService';
 import { Application, ApplicationSettings } from '@akylas/nativescript';
 import { get } from 'svelte/store';
 import { useOfflineGeocodeAddress, useSystemGeocodeAddress } from '~/stores/mapStore';
+import {
+    DEFAULT_VALHALLA_MAX_DISTANCE_AUTO,
+    DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE,
+    DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
+    SETTINGS_VALHALLA_MAX_DISTANCE_AUTO,
+    SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE,
+    SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN
+} from '~/utils/constants';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
@@ -772,11 +780,11 @@ class PackageService extends Observable {
     }
 
     async getStats({
+        attributes = ['edge.surface', 'edge.road_class', 'edge.sac_scale', 'edge.use', 'edge.length'],
         item,
-        projection,
         points,
         profile,
-        attributes = ['edge.surface', 'edge.road_class', 'edge.sac_scale', 'edge.use', 'edge.length'],
+        projection,
         shape_match = 'walk_or_snap'
     }: {
         item;
@@ -837,7 +845,7 @@ class PackageService extends Observable {
             return webResult.edges;
         }
     }
-    async fetchStats({ projection, positions, item, route, profile }: { projection; positions?; item?; route?: Route; profile?: ValhallaProfile }) {
+    async fetchStats({ item, positions, profile, projection, route }: { projection; positions?; item?; route?: Route; profile?: ValhallaProfile }) {
         if (!route) {
             route = item.route;
         }
@@ -897,14 +905,23 @@ class PackageService extends Observable {
         return resultStats;
     }
     hasOfflineRouting = true;
+
+    setValhallaSetting(key, defaultValue) {
+        const source = this.mLocalOfflineRoutingSearchService;
+        const value = ApplicationSettings.getNumber(key, defaultValue);
+        if (value !== defaultValue) {
+            source.setConfigurationParameter(key, value);
+        }
+    }
     offlineRoutingSearchService() {
         if (this.hasOfflineRouting && !this.mLocalOfflineRoutingSearchService) {
             const files = this.findFilesWithExtension('.vtiles');
             // console.log('offlineRoutingSearchService', files);
             if (files.length) {
                 const source = (this.mLocalOfflineRoutingSearchService = new MultiValhallaOfflineRoutingService());
-                source.setConfigurationParameter('service_limits.bicycle.max_distance', 255000);
-                source.setConfigurationParameter('service_limits.trace.max_distance', 500000);
+                this.setValhallaSetting(SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN, DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN);
+                this.setValhallaSetting(SETTINGS_VALHALLA_MAX_DISTANCE_AUTO, DEFAULT_VALHALLA_MAX_DISTANCE_AUTO);
+                this.setValhallaSetting(SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE, DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE);
                 files.forEach((f) => source.add(f.path));
             } else {
                 this.hasOfflineRouting = false;
