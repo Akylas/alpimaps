@@ -51,7 +51,10 @@ fi
 
 cd ui-carto
 touch yarn.lock
-yarn
+yarn config set -H enableImmutableInstalls false
+YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn
 npm run build
-cd ..git
+cd ..
+ls -la ./ui-carto/packages/ui-carto
+ls -la ./ui-carto/packages/ui-carto/packagemanager
 yarn link -r ./ui-carto/packages/ui-carto
