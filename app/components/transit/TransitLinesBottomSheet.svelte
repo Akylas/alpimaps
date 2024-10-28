@@ -68,8 +68,7 @@
             navigate({
                 page: component,
                 props: {
-                    line: item,
-                    position
+                    line: item
                 }
             });
         } catch (error) {
