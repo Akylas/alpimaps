@@ -151,7 +151,8 @@
     },
     "workspaces": [
         "./",
-        "./peakfinder"
+        "./peakfinder",
+        "./geo-three"
     ],
     "packageManager": "yarn@4.3.1"
 }
