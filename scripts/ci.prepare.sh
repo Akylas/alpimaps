@@ -32,7 +32,7 @@ echo "FLAVOR    = ${FLAVOR}"
 echo "FLAVOR    = $(dirname $0)"
 
 if [[ -z "${CARTO_SDK_VERSION}" ]]; then
-  CARTO_SDK_VERSION="5.0.0-rc.2"
+  CARTO_SDK_VERSION="5.0.0-rc.4"
 else
   CARTO_SDK_VERSION="${CARTO_SDK_VERSION}"
 fi
@@ -40,8 +40,7 @@ fi
 
 git clone --recurse-submodules -b alpimaps https://github.com/nativescript-community/ui-carto.git
 
-if ["${PLATFORM}" -eq "android"]
-then
+if [ "$PLATFORM" = "android" ]; then
   wget https://github.com/Akylas/mobile-sdk/releases/download/v$CARTO_SDK_VERSION/carto-mobile-sdk-$CARTO_SDK_VERSION.aar
   mv carto-mobile-sdk-$CARTO_SDK_VERSION.aar ./ui-carto/packages/ui-carto/platforms/android
 else
@@ -55,6 +54,5 @@ yarn config set -H enableImmutableInstalls false
 YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn
 npm run build
 cd ..
-ls -la ./ui-carto/packages/ui-carto
-ls -la ./ui-carto/packages/ui-carto/packagemanager
+ls -la ./ui-carto/packages/ui-carto/platforms/android
 yarn link -r ./ui-carto/packages/ui-carto
