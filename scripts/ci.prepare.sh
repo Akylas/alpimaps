@@ -41,11 +41,11 @@ fi
 git clone --recurse-submodules -b alpimaps https://github.com/nativescript-community/ui-carto.git
 
 if [ "$PLATFORM" = "android" ]; then
-  wget https://github.com/Akylas/mobile-sdk/releases/download/v$CARTO_SDK_VERSION/carto-mobile-sdk-$CARTO_SDK_VERSION.aar
-  mv carto-mobile-sdk-$CARTO_SDK_VERSION.aar ./ui-carto/packages/ui-carto/platforms/android
+  wget https://github.com/Akylas/mobile-sdk/releases/download/v$CARTO_SDK_VERSION/carto-mobile-sdk-android-$CARTO_SDK_VERSION.aar
+  mv carto-mobile-sdk-android-$CARTO_SDK_VERSION.aar ./ui-carto/packages/ui-carto/platforms/android
 else
   wget https://github.com/Akylas/mobile-sdk/releases/download/v$CARTO_SDK_VERSION/carto-mobile-sdk-ios-$CARTO_SDK_VERSION.zip
-  unzip -o -d ./ui-carto/packages/ui-carto/platforms/io carto-mobile-sdk-ios-$CARTO_SDK_VERSION.zip
+  unzip -o -d ./ui-carto/packages/ui-carto/platforms/ios carto-mobile-sdk-ios-$CARTO_SDK_VERSION.zip
 fi
 
 cd ui-carto
