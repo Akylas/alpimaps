@@ -26,7 +26,6 @@ export const currentTheme = writable('auto');
 export const currentColorTheme = writable('default');
 export const currentRealTheme = writable('auto');
 
-
 colorTheme = getString(SETTINGS_COLOR_THEME, DEFAULT_COLOR_THEME) as ColorThemes;
 DEV_LOG && console.log('theme', 'start');
 
@@ -354,8 +353,13 @@ export function start() {
             Application.once(Application.launchEvent, onReady);
         }
 
-        Application.android.on(Application.android.activityStartedEvent, () => {
-            // getRealThemeAndUpdateColors();
+        // we need to update the theme on every activity start
+        // to get dynamic colors
+        Application.android.on(Application.android.activityStartedEvent, (event) => {
+            if (useDynamicColors && event.activity['isNativeScriptActivity'] === true) {
+                AppUtilsAndroid.applyDynamicColors(event.activity);
+                getRealThemeAndUpdateColors();
+            }
         });
     } else {
         // without rootController systemAppearance will be null
