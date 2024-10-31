@@ -764,7 +764,7 @@
                     } else if (item.type === 'slider') {
                         await showSliderPopover({
                             anchor: event.object,
-                            value: item.currentValue(),
+                            value: (item.currentValue || item.rightValue)?.(),
                             ...item,
                             onChange(value) {
                                 if (item.transformValue) {
@@ -785,7 +785,6 @@
                             }
                         });
                     } else {
-                        const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
                         const currentValue = ApplicationSettings.getNumber(item.key, item.default);
                         let selectedIndex = -1;
                         const options = item.values.map((k, index) => {
