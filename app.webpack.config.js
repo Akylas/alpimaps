@@ -603,10 +603,10 @@ module.exports = (env, params = {}) => {
                   }
                 : undefined
         },
-        // {
-        //     from: 'node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf',
-        //     to: 'fonts',
-        //     globOptions
+        {
+            from: 'node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf',
+            to: 'fonts',
+            globOptions
         // transform: !!production
         //     ? {
         //           transformer(content, path) {
@@ -625,7 +625,7 @@ module.exports = (env, params = {}) => {
         //           }
         //       }
         //     : undefined
-        // },
+        },
         {
             from: 'css/osm.scss',
             to: 'osm_icons.json',
