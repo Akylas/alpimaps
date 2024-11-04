@@ -499,10 +499,12 @@
         }
     });
     function onColorsChange() {
-        mapContext.innerDecoder.setJSONStyleParameters({
-            main_color: $colors.colorPrimary,
-            main_darker_color: new Color($colors.colorPrimary).darken(10).hex
-        });
+        if (cartoMap) {
+            mapContext.innerDecoder.setJSONStyleParameters({
+                main_color: $colors.colorPrimary,
+                main_darker_color: new Color($colors.colorPrimary).darken(10).hex
+            });
+        }
     }
     // function onLoaded() {}
     onDestroy(() => {
@@ -2132,7 +2134,7 @@
                 horizontalAlignment="right"
                 translateY={Math.max(topTranslationY - 50, 0)}
             /> -->
-                <MapScrollingWidgets bind:this={mapScrollingWidgets} opacity={scrollingWidgetsOpacity} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} bind:navigationInstructions />
+                <MapScrollingWidgets bind:this={mapScrollingWidgets} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} opacity={scrollingWidgetsOpacity} bind:navigationInstructions />
                 <DirectionsPanel
                     bind:this={directionsPanel}
                     {editingItem}
