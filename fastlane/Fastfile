@@ -518,7 +518,8 @@ platform :android do
     system 'mkdir', '-p', metadata_dir
     files = []
     metadata_languages.each { |lang| 
-      changelogFolderPath = File.join(metadata_dir, "changelogs", lang)
+      changelogFolderPath = File.join(metadata_dir, lang, "changelogs")
+      puts "changelogFolderPath: #{changelogFolderPath}"
       if (Dir.exist?(changelogFolderPath)) 
         changelogFilePath = File.join(changelogFolderPath, "#{version}.txt")
         writeFileIfNotExist(changelogFilePath, changelog)
