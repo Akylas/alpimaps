@@ -27,7 +27,7 @@ export const currentColorTheme = writable('default');
 export const currentRealTheme = writable('auto');
 
 colorTheme = getString(SETTINGS_COLOR_THEME, DEFAULT_COLOR_THEME) as ColorThemes;
-DEV_LOG && console.log('theme', 'start');
+DEV_LOG && console.log('theme', 'start', colorTheme);
 
 export let useDynamicColors = colorTheme === 'dynamic';
 
@@ -335,6 +335,7 @@ export function start() {
     });
 
     function onReady() {
+        DEV_LOG && console.log('theme', 'onReady', colorTheme);
         setCustomCssRootClass(colorTheme);
 
         applyTheme(theme);
@@ -356,8 +357,10 @@ export function start() {
         // we need to update the theme on every activity start
         // to get dynamic colors
         Application.android.on(Application.android.activityStartedEvent, (event) => {
-            if (useDynamicColors && event.activity['isNativeScriptActivity'] === true) {
-                AppUtilsAndroid.applyDynamicColors(event.activity);
+            if (event.activity['isNativeScriptActivity'] === true) {
+                if (useDynamicColors) {
+                    AppUtilsAndroid.applyDynamicColors(event.activity);
+                }
                 getRealThemeAndUpdateColors();
             }
         });
