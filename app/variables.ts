@@ -203,7 +203,7 @@ if (__ANDROID__) {
 
 export function updateThemeColors(theme: Themes, colorTheme: ColorThemes = ApplicationSettings.getString(SETTINGS_COLOR_THEME, DEFAULT_COLOR_THEME) as ColorThemes, force = false) {
     try {
-        DEV_LOG && console.log('updateThemeColors', theme);
+        DEV_LOG && console.log('updateThemeColors', theme, colorTheme);
         const currentColors = get(colors);
         let rootView = Application.getRootView();
         if (rootView?.parent) {
@@ -247,22 +247,22 @@ export function updateThemeColors(theme: Themes, colorTheme: ColorThemes = Appli
 
         if (colorTheme === 'eink') {
             currentColors.colorWidgetBackground = currentColors.colorSurface;
-        } else {
-            currentColors.colorWidgetBackground = new Color(currentColors.colorSurface).setAlpha(230).hex;
-        }
-
-        if (theme === 'black') {
-            currentColors.colorBackground = '#000000';
-        }
-        if (theme === 'dark') {
-            currentColors.colorSurfaceTint = new Color(currentColors.colorPrimary).lighten(10).hex;
-            currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).lighten(10).hex;
-            currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).lighten(20).hex;
-        } else {
             currentColors.colorSurfaceTint = new Color(currentColors.colorPrimary).darken(10).hex;
             currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).darken(10).hex;
             currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).darken(20).hex;
+        } else {
+            currentColors.colorWidgetBackground = new Color(currentColors.colorSurface).setAlpha(230).hex;
+            if (theme === 'black') {
+                currentColors.colorBackground = '#000000';
+            }
+            if (theme === 'dark') {
+                currentColors.colorSurfaceTint = new Color(currentColors.colorPrimary).lighten(10).hex;
+                currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).lighten(10).hex;
+                currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).lighten(20).hex;
+            } else {
+            }
         }
+
         currentColors.colorOnSurfaceVariant2 = new Color(currentColors.colorOnSurfaceVariant).setAlpha(170).hex;
         currentColors.colorOnSurfaceDisabled = new Color(currentColors.colorOnSurface).setAlpha(50).hex;
         Object.keys(currentColors).forEach((c) => {

@@ -499,10 +499,12 @@
         }
     });
     function onColorsChange() {
-        mapContext.innerDecoder.setJSONStyleParameters({
-            main_color: $colors.colorPrimary,
-            main_darker_color: new Color($colors.colorPrimary).darken(10).hex
-        });
+        if (cartoMap) {
+            mapContext.innerDecoder.setJSONStyleParameters({
+                main_color: $colors.colorPrimary,
+                main_darker_color: new Color($colors.colorPrimary).darken(10).hex
+            });
+        }
     }
     // function onLoaded() {}
     onDestroy(() => {
