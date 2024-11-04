@@ -151,6 +151,12 @@ const onInitRootView = function () {
     if (__IOS__) {
         const rootView = Application.getRootView();
         const rootViewStyle = rootView?.style;
+        windowInset.set({
+            top: 0,
+            bottom: Utils.layout.toDeviceIndependentPixels(Application.ios.window.safeAreaInsets.bottom),
+            left: 0,
+            right: 0
+        });
         DEV_LOG && console.log('initRootView', rootView);
         fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily'), app: rootViewStyle.getCssVariable('--appFontFamily') });
 
