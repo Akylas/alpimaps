@@ -3,23 +3,22 @@
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { confirm } from '@nativescript-community/ui-material-dialogs';
-    import { showSnack } from '~/utils/ui';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { AndroidActivityBackPressedEventData, Application, LayoutBase, NavigatedData, ObservableArray, Page, Utils, View } from '@nativescript/core';
+    import { showError } from '@shared/utils/showError';
+    import { goBack, navigate } from '@shared/utils/svelte/ui';
     import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { UNITS, convertElevation, convertValueToUnit, osmicon } from '~/helpers/formatter';
     import { convertDurationSeconds, lc, lu, onLanguageChanged } from '~/helpers/locale';
-    import { colorTheme, onThemeChanged, theme } from '~/helpers/theme';
+    import { colorTheme, onThemeChanged } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import { Group, Item } from '~/models/Item';
     import { isServiceStarted, onServiceStarted } from '~/services/BgService.common';
-    import { showError } from '@shared/utils/showError';
-    import { goBack, navigate } from '@shared/utils/svelte/ui';
-    import { onBackButton } from '~/utils/ui';
+    import { onBackButton, showSnack } from '~/utils/ui';
     import { hideLoading, promptForGroup, showLoading, showPopoverMenu } from '~/utils/ui/index.common';
     import { colors, fonts, windowInset } from '~/variables';
     import BottomSheetInfoView from '../bottomsheet/BottomSheetInfoView.svelte';
@@ -41,7 +40,7 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorBackground, colorOnSurface, colorSurfaceContainerHigh, colorOnSurfaceVariant, colorPrimary, colorOnPrimary, colorOutlineVariant, colorError } = $colors);
+    $: ({ colorBackground, colorError, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
     $: ({ bottom: windowInsetBottom } = $windowInset);
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
