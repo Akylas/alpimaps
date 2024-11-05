@@ -686,5 +686,6 @@
     "population": "Bevölkerung",
     "tutorial": "Tutorial",
     "website": "Website",
-    "wheelchair": "Rollstuhl"
+    "wheelchair": "Rollstuhl",
+    "permission_error": "fehlende Berechtigung"
 }
