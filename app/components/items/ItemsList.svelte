@@ -499,9 +499,9 @@ LEFT JOIN  (
     let ignoreTap = false;
     function onItemLongPress(item: CollectionItemOrGroup, event?) {
         // console.log('onItemLongPress', event && event.ios && event.ios.state);
-        if (event && event.ios && event.ios.state !== 1) {
-            return;
-        }
+        // if (event && event.ios && event.ios.state !== 1) {
+        //     return;
+        // }
         if (event && event.ios) {
             ignoreTap = true;
         }
