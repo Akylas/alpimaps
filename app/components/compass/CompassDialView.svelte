@@ -41,8 +41,8 @@
 </script>
 
 <script lang="ts">
-    let { colorBackground, colorPrimary, colorSurfaceContainerHighest, colorOnSurface, colorOutlineVariant } = $colors;
-    $: ({ colorBackground, colorPrimary, colorSurfaceContainerHighest, colorOnSurface, colorOutlineVariant } = $colors);
+    let { colorBackground, colorOnSurface, colorOutlineVariant, colorPrimary, colorSurfaceContainerHighest } = $colors;
+    $: ({ colorBackground, colorOnSurface, colorOutlineVariant, colorPrimary, colorSurfaceContainerHighest } = $colors);
     // $: textPaint.color = colorOnSurface;
     export let drawInsideGrid = false;
     export let tickColor = '#888';

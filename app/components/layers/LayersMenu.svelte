@@ -2,7 +2,7 @@
     import { lc } from '@nativescript-community/l';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { closeBottomSheet, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { ContentView, GridLayout } from '@nativescript/core';
+    import { ContentView, GridLayout, TouchGestureEventData } from '@nativescript/core';
     import { setNumber } from '@nativescript/core/application-settings';
     import { ObservableArray } from '@nativescript/core/data/observable-array';
     import { debounce } from '@nativescript/core/utils';
@@ -36,13 +36,13 @@
     onMount(() => {
         customLayers = mapContext.mapModule('customLayers');
         if (customLayers) {
-            if (__IOS__) {
-                setTimeout(() => {
-                    customSources = customLayers.customSources;
-                }, 0);
-            } else {
-                customSources = customLayers.customSources;
-            }
+            // if (__IOS__) {
+            // setTimeout( () => {
+            // customSources = customLayers.customSources;
+            // }, 0);
+            // } else {
+            customSources = customLayers.customSources;
+            // }
             // customSources.forEach((s) => {
             //     const dataSource = s.layer.dataSource;
             //     if (dataSource instanceof PersistentCacheTileDataSource) {
@@ -107,13 +107,16 @@
         );
     }
     async function onItemReordered(e) {
+        DEV_LOG && console.log('onItemReordered');
         (e.view as ContentView).content.opacity = 1;
     }
     async function onItemReorderStarting(e) {
+        DEV_LOG && console.log('onItemReorderStarting');
         (e.view as ContentView).content.opacity = 0.6;
     }
-    function onButtonLongPress(item, event) {
-        collectionView.nativeView.startDragging(customSources.indexOf(item));
+    function onButtonLongPress(item, event: TouchGestureEventData) {
+        DEV_LOG && console.log('onButtonLongPress');
+        collectionView.nativeView.startDragging(customSources.indexOf(item), event.getAllPointers()?.[0]);
     }
     function onLinkTap(e) {
         openLink(e.link);
