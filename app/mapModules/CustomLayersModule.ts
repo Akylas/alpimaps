@@ -746,6 +746,7 @@ export default class CustomLayersModule extends MapModule {
                             // message: lc('americanaosm_presentation'),
                             okButtonText: lc('save'),
                             cancelButtonText: lc('cancel'),
+                            defaultText: this.tokenKeys['americanaosm'],
                             textFieldProperties: {
                                 variant: 'outline',
                                 hint: lc('americanaosm_url'),
@@ -1065,7 +1066,7 @@ export default class CustomLayersModule extends MapModule {
         }
     }
 
-    async downloadDataSource({ dataSource, provider, minZoom, maxZoom }: { dataSource: TileDataSource<any, any>; provider: Provider; minZoom?; maxZoom? }) {
+    async downloadDataSource({ dataSource, maxZoom, minZoom, provider }: { dataSource: TileDataSource<any, any>; provider: Provider; minZoom?; maxZoom? }) {
         TEST_LOG && console.log('downloadDataSource', dataSource.constructor.name, provider, minZoom, maxZoom);
         try {
             if (this.currentlyDownloadind) {
