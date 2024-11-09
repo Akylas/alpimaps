@@ -5,12 +5,14 @@
         line-opacity: @border_country_opacity;
         line-dasharray: @border_country_dasharray;
     }
-    [admin_level=4][zoom>=4][zoom<=14],
-    [admin_level>=5][zoom>=7][zoom<=14] {
-        line-color: @border_region;
-        line-width: @border_region_width;
-        line-opacity: @border_region_opacity;
-        line-dasharray: @border_region_dasharray;
+    ['nuti::sub_boundaries'>0] {
+        [admin_level=4][zoom>=4][zoom<=14],
+        [admin_level>=5][zoom>=7][zoom<=14] {
+            line-color: @border_region;
+            line-width: @border_region_width;
+            line-opacity: @border_region_opacity;
+            line-dasharray: @border_region_dasharray;
+        }
     }
 }
 
