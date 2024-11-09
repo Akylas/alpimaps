@@ -20,7 +20,7 @@
     import { GeoLocation } from '~/handlers/GeoHandler';
     import { formatDistance } from '~/helpers/formatter';
     import { getDistance } from '~/helpers/geolib';
-    import { lc } from '~/helpers/locale';
+    import { lang, lc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem, IItem as Item, RouteInstruction, RouteProfile, RouteStats, DirectionWayPoint as WayPoint } from '~/models/Item';
@@ -77,8 +77,8 @@
 </script>
 
 <script lang="ts">
-    let { colorPrimary, colorOnPrimary, colorSurfaceTint } = $colors;
-    $: ({ colorPrimary, colorOnPrimary, colorSurfaceTint } = $colors);
+    let { colorOnPrimary, colorPrimary, colorSurfaceTint } = $colors;
+    $: ({ colorOnPrimary, colorPrimary, colorSurfaceTint } = $colors);
     const mapContext = getMapContext();
     const dispatch = createEventDispatcher();
     let _routeDataSource: GeoJSONVectorTileDataSource;
@@ -581,7 +581,7 @@
     }
 
     export function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
-        const { clickType, position, featureLayerName, featureData } = data;
+        const { clickType, featureData, featureLayerName, position } = data;
         if (clickType === ClickType.LONG && waypoints.length > 0) {
             mapContext.unFocusSearch();
             featureData.layer = featureLayerName;
@@ -742,7 +742,8 @@
             let startTime = Date.now();
             const projection = mapContext.getProjection();
             const customOptions = {
-                directions_options: { language: Device.language },
+                //TODO: we need to full language code like en-US
+                directions_options: { language: lang },
                 costing_options
             };
             DEV_LOG && console.log('calculateRoute', profile, JSON.stringify(points), JSON.stringify(customOptions));
