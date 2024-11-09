@@ -164,9 +164,7 @@
                 try {
                     if (!transitVectorTileLayer && !fetchingTransitLines) {
                         fetchingTransitLines = true;
-                        DEV_LOG && console.time('getTransitLines');
                         const result = await transitService.getTransitLines();
-                        DEV_LOG && console.timeEnd('getTransitLines');
                         const transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
                             // simplifyTolerance: 0,
                             minZoom: 0,
