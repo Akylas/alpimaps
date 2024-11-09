@@ -1298,14 +1298,15 @@ export default class CustomLayersModule extends MapModule {
             return false;
         });
         const layerIndex = mapContext.getLayerTypeFirstIndex('customLayers');
+        DEV_LOG && console.log('moveSource', name, index, layerIndex, newIndex);
         if (index !== -1) {
             const item = this.customSources.getItem(index);
             const layer = item.layer;
             mapContext.moveLayer(layer, newIndex + layerIndex);
-            if (index !== newIndex) {
-                this.customSources.splice(index, 1);
-                this.customSources.splice(newIndex, 0, item);
-            }
+            // if (index !== newIndex) {
+            //     this.customSources.splice(index, 1);
+            //     this.customSources.splice(newIndex, 0, item);
+            // }
         }
         const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
         index = savedSources.findIndex((s) => (typeof s === 'string' ? s : s?.id) === name);
