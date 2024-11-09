@@ -1551,12 +1551,18 @@
     //     };
     // }
 
-    function bottomSheetTranslationFunction(translation, maxTranslation, progress) {
+    function getWidgetsOpacity(translation) {
         if (translation >= -300) {
-            scrollingWidgetsOpacity = 1;
+            return 1;
         } else {
-            scrollingWidgetsOpacity = Math.max(0, 1 - (-translation - 300) / 30);
+            return Math.max(0, 1 - (-translation - 300) / 30);
         }
+    }
+
+    $: scrollingWidgetsOpacity = windowInsetBottom > 200 ? 0 : getWidgetsOpacity(mapTranslation);
+
+    function bottomSheetTranslationFunction(translation, maxTranslation, progress) {
+        scrollingWidgetsOpacity = getWidgetsOpacity(translation);
         // mapTranslation = translation - (__IOS__ && translation !== 0 ? $navigationBarHeight : 0);
         mapTranslation = translation;
         const result = {
