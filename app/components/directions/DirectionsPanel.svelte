@@ -292,7 +292,15 @@
         }
         return _routeDataSource;
     }
-    function getRouteLayer() {
+
+    function updateRouteLayer() {
+        cancel();
+        const oldLayer = _routeLayer;
+        _routeLayer = null;
+        getRouteLayer(false);
+        mapContext.replaceLayer(oldLayer, _routeLayer);
+    }
+    function getRouteLayer(add = true) {
         if (!_routeLayer) {
             _routeLayer = new VectorTileLayer({
                 dataSource: getRouteDataSource(),
@@ -302,6 +310,7 @@
                 layerBlendingSpeed: 0,
                 labelBlendingSpeed: 0
             });
+            mapContext.innerDecoder.once('change', updateRouteLayer);
             _routeLayer.setVectorTileEventListener<LatLonKeys>(
                 {
                     onVectorTileClicked(info: VectorTileEventData<LatLonKeys>) {
@@ -315,7 +324,9 @@
                 },
                 mapContext.getProjection()
             );
-            mapContext.addLayer(_routeLayer, 'directions');
+            if (add) {
+                mapContext.addLayer(_routeLayer, 'directions');
+            }
         }
         return _routeLayer;
     }
