@@ -271,6 +271,7 @@ export async function handleMapAction(action: string, options?) {
             await showBottomSheet({
                 parent,
                 view: AstronomyView,
+                skipCollapsedState: true,
                 peekHeight: options.name ? 350 : 300,
                 props: {
                     ...options,
@@ -287,6 +288,7 @@ export async function handleMapAction(action: string, options?) {
                 await showBottomSheet({
                     parent,
                     view: CompassView,
+                    skipCollapsedState: true,
                     transparent: true,
                     props: {
                         location,
@@ -304,6 +306,7 @@ export async function handleMapAction(action: string, options?) {
                 const GpsStatusView = (await import('~/components/gps/GpsStatusView.svelte')).default;
                 await showBottomSheet({
                     parent,
+                    skipCollapsedState: true,
                     view: GpsStatusView
                 });
             } catch (err) {
@@ -315,7 +318,7 @@ export async function handleMapAction(action: string, options?) {
         case 'altimeter':
             try {
                 const AltimeterView = (await import('~/components/compass/AltimeterView.svelte')).default;
-                await showBottomSheet({ parent, view: AltimeterView });
+                await showBottomSheet({ parent, skipCollapsedState: true, view: AltimeterView });
             } catch (err) {
                 console.error('showAltimeter', err, err['stack']);
             }

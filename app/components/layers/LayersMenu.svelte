@@ -96,6 +96,7 @@
                 showBottomSheet({
                     parent: gridLayout,
                     view: LayerOptionsBottomSheet,
+                    skipCollapsedState: true,
                     dismissOnBackgroundTap: true,
                     disableDimBackground: true,
                     props: {
