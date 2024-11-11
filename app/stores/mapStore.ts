@@ -48,3 +48,5 @@ export const pitchEnabled = settingsStore('mapPitchEnabled', false);
 export const routesType = settingsStore<RoutesType>('routes_type', 0);
 export const useOfflineGeocodeAddress = settingsStore('useOfflineGeocodeAddress', true);
 export const useSystemGeocodeAddress = settingsStore('useSystemGeocodeAddress', true);
+export const emphasisRails = settingsStore('emphasisRails', false);
+export const showSubBoundaries = settingsStore('showSubBoundaries', true);
