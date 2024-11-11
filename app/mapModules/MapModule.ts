@@ -1,5 +1,6 @@
 import { l } from '@nativescript-community/l';
 import Observable from '@nativescript-community/observable';
+import { getCartoBitmap } from '@nativescript-community/ui-carto';
 import { MapPos, arrayToNativeVector } from '@nativescript-community/ui-carto/core';
 import { Layer } from '@nativescript-community/ui-carto/layers';
 import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
@@ -11,20 +12,19 @@ import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortile
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { Application, ApplicationSettings, File, Frame, Page, knownFolders, path } from '@nativescript/core';
 import { executeOnMainThread } from '@nativescript/core/utils';
+import { createGlobalEventListener, globalObservable, navigate } from '@shared/utils/svelte/ui';
 import { NativeViewElementNode } from 'svelte-native/dom';
 import { get } from 'svelte/store';
 import type DirectionsPanel from '~/components/directions/DirectionsPanel.svelte';
 import { GeoHandler } from '~/handlers/GeoHandler';
+import { colorTheme } from '~/helpers/theme';
 import type CustomLayersModule from '~/mapModules/CustomLayersModule';
 import type ItemsModule from '~/mapModules/ItemsModule';
 import type UserLocationModule from '~/mapModules/UserLocationModule';
 import type { IItem } from '~/models/Item';
 import { getBGServiceInstance } from '~/services/BgService';
 import { routesType } from '~/stores/mapStore';
-import { packageService } from '~/services/PackageService';
-import { createGlobalEventListener, globalObservable, navigate } from '@shared/utils/svelte/ui';
-import { getCartoBitmap } from '@nativescript-community/ui-carto';
-import { colorTheme, theme } from '~/helpers/theme';
+import { showSnack } from '~/utils/ui';
 // export interface IMapModule {
 //     onMapReady(mapView: CartoMap<LatLonKeys>);
 //     onMapDestroyed();
@@ -76,6 +76,7 @@ export interface MapContext {
     showMapOptions(event);
     setMapDefaultOptions(options);
     createMapDecoder(mapStyle, mapStyleLayer): MBVectorTileDecoder;
+    setInnerStyle(style: string);
     mapModule<T extends keyof MapModules>(id: T): MapModules[T];
     onOtherAppTextSelected(callback: ContextCallback, once?: boolean);
     onMapReady(callback: ContextCallback, once?: boolean);
