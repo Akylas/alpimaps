@@ -134,7 +134,7 @@
     let showTransitLines = false;
     let showAdmins = false;
 
-    // let transitVectorTileDataSource: GeoJSONVectorTileDataSource;
+    let transitVectorTileDataSource: GeoJSONVectorTileDataSource;
     let transitVectorTileLayer: VectorTileLayer;
     // let localVectorDataSource: LocalVectorDataSource;
     let localVectorLayer: VectorLayer;
@@ -157,6 +157,81 @@
     //         }
     //     }
     // }
+    function updateTransitLayer() {
+        const oldLayer = transitVectorTileLayer;
+        transitVectorTileLayer = null;
+        createTransitLayer(false);
+        mapContext.replaceLayer(oldLayer, transitVectorTileLayer);
+    }
+    function createTransitLayer(add = true) {
+        transitVectorTileLayer = new VectorTileLayer({
+            // preloading: true,
+            visibleZoomRange: [7, 24],
+            layerBlendingSpeed: 3,
+            labelBlendingSpeed: 3,
+            preloading: $preloading,
+            tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
+            labelRenderOrder: VectorTileRenderOrder.LAST,
+            dataSource: transitVectorTileDataSource,
+            decoder: mapContext.innerDecoder
+        });
+        mapContext.innerDecoder.once('change', updateTransitLayer);
+        transitVectorTileLayer.setVectorTileEventListener<LatLonKeys>(
+            {
+                onVectorTileClicked: ({ featureData, featureGeometry, featureId, featureLayerName }) => {
+                    if (handleSelectedRouteTimer) {
+                        return;
+                    }
+                    DEV_LOG && console.log('clicked on transit data', featureId, featureLayerName, featureGeometry, handleSelectedTransitLinesTimer);
+                    if (featureLayerName === 'routes') {
+                        if (handleSelectedTransitLinesTimer) {
+                            clearTimeout(handleSelectedTransitLinesTimer);
+                        }
+                        const id = featureData.route_id || featureData.id || featureId;
+                        selectedTransitLines = selectedTransitLines || [];
+                        handleSelectedTransitLinesTimer = setTimeout(() => {
+                            handleSelectedTransitLines();
+                        }, 10);
+
+                        if (selectedTransitLines.findIndex((s) => s.properties.id === id) === -1) {
+                            const color = featureData['route_color']?.length ? featureData['route_color'] : transitService.defaultTransitLineColor;
+                            const agency = featureData['agency_id'];
+                            const textColor = new Color(color).getBrightness() >= 186 ? '#000000' : '#ffffff';
+                            const lineName = featureData['CODE'].split('_')[1];
+                            const item: IItem = {
+                                properties: {
+                                    class: 'bus',
+                                    id,
+                                    ref: featureData['route_short_name'],
+                                    subtitle: featureData['agency_name'],
+                                    name: featureData['route_long_name'],
+                                    symbol: `${color}:${color}:${agency === 'FLIXBUS-eu' ? 'FLIX' : featureData['route_short_name']}:${textColor}`,
+                                    layer: featureLayerName,
+                                    ...featureData
+                                },
+                                route: {
+                                    osmid: id
+                                } as any,
+                                _nativeGeometry: featureGeometry,
+                                layer: transitVectorTileLayer
+                            };
+                            selectedTransitLines.push(item);
+                            ignoreNextMapClick = true;
+                        }
+                        return false;
+                    }
+                    // selectItem({ item, isFeatureInteresting: true });
+                    // return true;
+                    // mapContext.vectorTileClicked(e);
+                }
+            },
+            mapContext.getProjection()
+        );
+        mapContext.innerDecoder.setStyleParameter('default_transit_color', transitService.defaultTransitLineColor);
+        if (add) {
+            addLayer(transitVectorTileLayer, 'transit');
+        }
+    }
     $: {
         if (showTransitLines) {
             // const pos = cartoMap.focusPos;
@@ -164,79 +239,21 @@
                 try {
                     if (!transitVectorTileLayer && !fetchingTransitLines) {
                         fetchingTransitLines = true;
-                        const result = await transitService.getTransitLines();
-                        const transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
-                            // simplifyTolerance: 0,
-                            minZoom: 0,
-                            maxZoom: 24
-                        });
-                        transitVectorTileDataSource.createLayer('routes');
-                        transitVectorTileDataSource.setLayerGeoJSONString(1, result);
-                        // if (!transitVectorTileLayer) {
-                        mapContext.innerDecoder.setStyleParameter('default_transit_color', transitService.defaultTransitLineColor);
-                        transitVectorTileLayer = new VectorTileLayer({
-                            // preloading: true,
-                            visibleZoomRange: [7, 24],
-                            layerBlendingSpeed: 3,
-                            labelBlendingSpeed: 3,
-                            preloading: $preloading,
-                            tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
-                            labelRenderOrder: VectorTileRenderOrder.LAST,
-                            dataSource: transitVectorTileDataSource,
-                            decoder: mapContext.innerDecoder
-                        });
-                        transitVectorTileLayer.setVectorTileEventListener<LatLonKeys>(
-                            {
-                                onVectorTileClicked: ({ featureData, featureGeometry, featureId, featureLayerName }) => {
-                                    if (handleSelectedRouteTimer) {
-                                        return;
-                                    }
-                                    DEV_LOG && console.log('clicked on transit data', featureId, featureLayerName, featureGeometry, handleSelectedTransitLinesTimer);
-                                    if (featureLayerName === 'routes') {
-                                        if (handleSelectedTransitLinesTimer) {
-                                            clearTimeout(handleSelectedTransitLinesTimer);
-                                        }
-                                        const id = featureData.route_id || featureData.id || featureId;
-                                        selectedTransitLines = selectedTransitLines || [];
-                                        handleSelectedTransitLinesTimer = setTimeout(() => {
-                                            handleSelectedTransitLines();
-                                        }, 10);
 
-                                        if (selectedTransitLines.findIndex((s) => s.properties.id === id) === -1) {
-                                            const color = featureData['route_color']?.length ? featureData['route_color'] : transitService.defaultTransitLineColor;
-                                            const agency = featureData['agency_id'];
-                                            const textColor = new Color(color).getBrightness() >= 186 ? '#000000' : '#ffffff';
-                                            const lineName = featureData['CODE'].split('_')[1];
-                                            const item: IItem = {
-                                                properties: {
-                                                    class: 'bus',
-                                                    id,
-                                                    ref: featureData['route_short_name'],
-                                                    subtitle: featureData['agency_name'],
-                                                    name: featureData['route_long_name'],
-                                                    symbol: `${color}:${color}:${agency === 'FLIXBUS-eu' ? 'FLIX' : featureData['route_short_name']}:${textColor}`,
-                                                    layer: featureLayerName,
-                                                    ...featureData
-                                                },
-                                                route: {
-                                                    osmid: id
-                                                } as any,
-                                                _nativeGeometry: featureGeometry,
-                                                layer: transitVectorTileLayer
-                                            };
-                                            selectedTransitLines.push(item);
-                                            ignoreNextMapClick = true;
-                                        }
-                                        return false;
-                                    }
-                                    // selectItem({ item, isFeatureInteresting: true });
-                                    // return true;
-                                    // mapContext.vectorTileClicked(e);
-                                }
-                            },
-                            mapContext.getProjection()
-                        );
-                        addLayer(transitVectorTileLayer, 'transit');
+                        const result = await transitService.getTransitLines();
+                        if (!transitVectorTileDataSource) {
+                            transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
+                                // simplifyTolerance: 0,
+                                minZoom: 0,
+                                maxZoom: 24
+                            });
+                            transitVectorTileDataSource.createLayer('routes');
+                        }
+                        transitVectorTileDataSource.setLayerGeoJSONString(1, result);
+                        if (!transitVectorTileLayer) {
+                            createTransitLayer();
+                        }
+                        // if (!transitVectorTileLayer) {
                         // } else {
                         //     transitVectorTileLayer.visible = true;
                         // }
