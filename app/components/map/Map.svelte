@@ -1086,6 +1086,7 @@
                     const results = await showBottomSheet({
                         parent: page,
                         view: RouteSelect,
+                        skipCollapsedState: true,
                         props: {
                             // title: l('pick_route'),
                             options: selectedRoutes.map((s) => ({ name: s.properties.name, route: s }))
@@ -1119,6 +1120,7 @@
                     const results = await showBottomSheet({
                         parent: page,
                         view: RouteSelect,
+                        skipCollapsedState: true,
                         props: {
                             options: selectedTransitLines
                                 .map((s) => ({ name: s.properties.name, route: s }))
@@ -1848,7 +1850,8 @@
         try {
             const MapOptions = (await import('~/components/map/MapOptions.svelte')).default;
             return showBottomSheet({
-                view: MapOptions
+                view: MapOptions,
+                skipCollapsedState: true
             });
         } catch (error) {
             showError(error);

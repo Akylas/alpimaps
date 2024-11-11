@@ -1205,6 +1205,7 @@ export default class CustomLayersModule extends MapModule {
         const results = await showBottomSheet({
             parent: null,
             view: OptionSelect,
+            skipCollapsedState: true,
             props: {
                 height: 400,
                 title: l('pick_source'),
@@ -1308,23 +1309,12 @@ export default class CustomLayersModule extends MapModule {
         if (index !== -1) {
             const item = this.customSources.getItem(index);
             const layer = item.layer;
-            mapContext.moveLayer(layer, newIndex + layerIndex);
-            // if (index !== newIndex) {
-            //     this.customSources.splice(index, 1);
-            //     this.customSources.splice(newIndex, 0, item);
-            // }
+            // DEV_LOG && console.log('moveLayer', name, index, layerIndex, newIndex, newIndex + layerIndex);
+            mapContext.moveLayer(layer, newIndex + (layerIndex >= 0 ? layerIndex : 0));
         }
         const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
         index = savedSources.findIndex((s) => (typeof s === 'string' ? s : s?.id) === name);
         if (index !== -1) {
-            // let firstNonLocalIndex = -1;
-            // this.customSources.some((d, i) => {
-            //     if (d.local !== true) {
-            //         firstNonLocalIndex = i;
-            //         return true;
-            //     }
-            //     return false;
-            // });
             savedSources.splice(index, 1);
             if (item.provider.type) {
                 savedSources.splice(newIndex, 0, item.provider);

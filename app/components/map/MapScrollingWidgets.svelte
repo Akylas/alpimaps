@@ -163,6 +163,7 @@
         try {
             const LayersMenu = (await import('~/components/layers/LayersMenu.svelte')).default;
             return showBottomSheet({
+                skipCollapsedState: true,
                 view: LayersMenu
             });
         } catch (error) {
