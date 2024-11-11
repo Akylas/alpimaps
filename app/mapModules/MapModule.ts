@@ -9,10 +9,10 @@ import { CartoMap, MapClickInfo, MapInteractionInfo, PanningMode } from '@native
 import { DirAssetPackage, ZippedAssetPackage } from '@nativescript-community/ui-carto/utils';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-import { showSnack } from '~/utils/ui';
-import { Application, File, Frame, Page, knownFolders, path } from '@nativescript/core';
+import { Application, ApplicationSettings, File, Frame, Page, knownFolders, path } from '@nativescript/core';
 import { executeOnMainThread } from '@nativescript/core/utils';
 import { NativeViewElementNode } from 'svelte-native/dom';
+import { get } from 'svelte/store';
 import type DirectionsPanel from '~/components/directions/DirectionsPanel.svelte';
 import { GeoHandler } from '~/handlers/GeoHandler';
 import type CustomLayersModule from '~/mapModules/CustomLayersModule';
@@ -20,6 +20,7 @@ import type ItemsModule from '~/mapModules/ItemsModule';
 import type UserLocationModule from '~/mapModules/UserLocationModule';
 import type { IItem } from '~/models/Item';
 import { getBGServiceInstance } from '~/services/BgService';
+import { routesType } from '~/stores/mapStore';
 import { packageService } from '~/services/PackageService';
 import { createGlobalEventListener, globalObservable, navigate } from '@shared/utils/svelte/ui';
 import { getCartoBitmap } from '@nativescript-community/ui-carto';
@@ -144,7 +145,6 @@ export function createTileDecoder(name: string, style: string = 'voyager') {
                 ? new ZippedAssetPackage({
                       liveReload: !PRODUCTION,
                       zipPath: `~/assets/styles/${name}.zip`,
-                      loadAsset,
                       basePack,
                       getAssetNames: getAssetNamesWithMaterial
                   })
@@ -228,11 +228,24 @@ const mapContext: MapContext = {
                       // getAssetNames: getAssetNamesWithMaterial
                   })
         });
+        mapContext.setInnerStyle(mapStyleLayer.indexOf('eink') !== -1 ? 'eink' : 'voyager');
         oldDecoder?.dispose();
         mapContext.runOnModules('vectorTileDecoderChanged', oldDecoder, mapContext.mapDecoder);
         return mapContext.mapDecoder;
     },
-    innerDecoder: createTileDecoder('inner')
+    setInnerStyle(style: string) {
+        const currentValue = ApplicationSettings.getString('innerStyle', 'voyager');
+        DEV_LOG && console.log('setInnerStyle', currentValue, style);
+        if (style !== currentValue) {
+            ApplicationSettings.setString('innerStyle', style);
+            const oldDecoder = mapContext.innerDecoder;
+            const decoder = (mapContext.innerDecoder = createTileDecoder('inner', style));
+            decoder.setStyleParameter('routes_type', get(routesType) + '');
+            oldDecoder.notify({ eventName: 'change' });
+            oldDecoder?.dispose();
+        }
+    },
+    innerDecoder: createTileDecoder('inner', ApplicationSettings.getString('innerStyle', 'voyager'))
 } as any;
 
 export function setMapContext(ctx) {
