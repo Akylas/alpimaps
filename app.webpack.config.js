@@ -98,7 +98,7 @@ module.exports = (env, params = {}) => {
         testlog,
         fork = true,
         buildpeakfinder,
-        buildstyle,
+        buildstyle = true,
         report,
         disableoffline = false,
         busSupport = true,
@@ -607,24 +607,24 @@ module.exports = (env, params = {}) => {
             from: 'node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf',
             to: 'fonts',
             globOptions
-        // transform: !!production
-        //     ? {
-        //           transformer(content, path) {
-        //               return new Promise((resolve, reject) => {
-        //                   new Fontmin()
-        //                       .src(content)
-        //                       .use(Fontmin.glyph({ subset: usedMDIICons }))
-        //                       .run(function (err, files) {
-        //                           if (err) {
-        //                               reject(err);
-        //                           } else {
-        //                               resolve(files[0].contents);
-        //                           }
-        //                       });
-        //               });
-        //           }
-        //       }
-        //     : undefined
+            // transform: !!production
+            //     ? {
+            //           transformer(content, path) {
+            //               return new Promise((resolve, reject) => {
+            //                   new Fontmin()
+            //                       .src(content)
+            //                       .use(Fontmin.glyph({ subset: usedMDIICons }))
+            //                       .run(function (err, files) {
+            //                           if (err) {
+            //                               reject(err);
+            //                           } else {
+            //                               resolve(files[0].contents);
+            //                           }
+            //                       });
+            //               });
+            //           }
+            //       }
+            //     : undefined
         },
         {
             from: 'css/osm.scss',
@@ -829,14 +829,15 @@ module.exports = (env, params = {}) => {
             new WebpackShellPluginNext({
                 onBuildStart: {
                     scripts: [
-                        'fontforge --script ./fixFontDirection_overlap.pe app/fonts/osm.ttf ./dev_assets/styles/base/fonts/osm.ttf',
-                        'fontforge --script ./fixFontDirection.pe node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf ./dev_assets/styles/inner_cleaned/fonts/materialdesignicons-webfont.ttf',
+                        'fontforge --script ./fixFontDirection_overlap.pe app/fonts/osm.ttf ./dev_assets/styles/inner/fonts/osm.ttf',
+                        'fontforge --script ./fixFontDirection.pe node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf ./dev_assets/styles/inner/fonts/materialdesignicons-webfont.ttf',
                         `./${css2xmlBin} dev_assets/styles/osm/streets.json dev_assets/styles/osmxml_cleaned/streets.xml`,
                         `./${css2xmlBin} dev_assets/styles/osm/osm.json dev_assets/styles/osmxml_cleaned/osm.xml`,
                         `./${css2xmlBin} dev_assets/styles/osm/outdoors.json dev_assets/styles/osmxml_cleaned/outdoors.xml`,
                         `./${css2xmlBin} dev_assets/styles/osm/eink.json dev_assets/styles/osmxml_cleaned/eink.xml`,
                         'cd ./dev_assets/styles/osmxml_cleaned && zip -r ../../../app/assets/styles/osm.zip ./* && cd -',
                         `./${css2xmlBin} dev_assets/styles/inner/voyager.json dev_assets/styles/inner_cleaned/voyager.xml`,
+                        `./${css2xmlBin} dev_assets/styles/inner/eink.json dev_assets/styles/inner_cleaned/eink.xml`,
                         'cd ./dev_assets/styles/inner_cleaned && zip -r ../../../app/assets/styles/inner.zip ./* && cd -',
                         `./${css2xmlBin} dev_assets/styles/admin/voyager.json dev_assets/styles/admin_cleaned/voyager.xml`,
                         'cd ./dev_assets/styles/admin_cleaned && zip -r ../../../app/assets/styles/admin.zip ./* && cd -',
@@ -847,22 +848,23 @@ module.exports = (env, params = {}) => {
                 }
             })
         );
+        config.plugins.unshift(
+            new WebpackShellPluginNext({
+                onBuildExit: {
+                    scripts: [
+                        `cp dev_assets/styles/inner/fonts/materialdesignicons-webfont.ttf ${join(dist, 'fonts')}`,
+                        // `cp dev_assets/styles/inner_cleaned/fonts/materialdesignicons-webfont.ttf ${join(dist, 'assets/styles/inner/fonts')}`,
+                        `cp dev_assets/styles/inner/fonts/osm.ttf ${join(dist, 'fonts')}`,
+                        `cp dev_assets/styles/inner/fonts/osm.ttf dev_assets/styles/osm/fonts`
+                        // `cp dev_assets/styles/base/fonts/osm.ttf ${join(dist, 'assets/styles/inner/fonts')}`,
+                        // `cp dev_assets/styles/base/fonts/osm.ttf ${join(dist, 'assets/styles/osm/fonts')}`
+                    ],
+                    blocking: true,
+                    parallel: false
+                }
+            })
+        );
     }
-    config.plugins.unshift(
-        new WebpackShellPluginNext({
-            onBuildExit: {
-                scripts: [
-                    `cp dev_assets/styles/inner_cleaned/fonts/materialdesignicons-webfont.ttf ${join(dist, 'fonts')}`,
-                    `cp dev_assets/styles/inner_cleaned/fonts/materialdesignicons-webfont.ttf ${join(dist, 'assets/styles/inner/fonts')}`,
-                    `cp dev_assets/styles/base/fonts/osm.ttf ${join(dist, 'fonts')}`,
-                    `cp dev_assets/styles/base/fonts/osm.ttf ${join(dist, 'assets/styles/inner/fonts')}`,
-                    `cp dev_assets/styles/base/fonts/osm.ttf ${join(dist, 'assets/styles/osm/fonts')}`
-                ],
-                blocking: true,
-                parallel: false
-            }
-        })
-    );
 
     if (hiddenSourceMap || sourceMap) {
         if (!!sentry && !!uploadSentry) {
