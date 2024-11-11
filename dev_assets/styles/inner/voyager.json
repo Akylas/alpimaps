@@ -9,6 +9,7 @@
     ],
     "styles": [
         "voyager/style.mss",
+        "shared/style.mss",
         "shared/route.mss",
         "shared/transit.mss",
         "shared/items.mss",
@@ -18,6 +19,7 @@
         "lang": "en",
         "fallback_lang": "en",
         "routes_type": 0,
+        "routes_dash_min_zoom": 14,
         "hide_unselected": 0,
         "selected_id": -1,
         "editing_id": -1,
