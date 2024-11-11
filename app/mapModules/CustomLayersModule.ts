@@ -243,7 +243,10 @@ export default class CustomLayersModule extends MapModule {
             });
         }
     }
-
+    updateRouteLayer(oldRouteLayer) {
+        const newRouteLayer = this.createRouteLayer(oldRouteLayer.dataSource);
+        mapContext.replaceLayer(oldRouteLayer, newRouteLayer);
+    }
     createRouteLayer(dataSource: TileDataSource<any, any>) {
         const routeLayer = new VectorTileLayer({
             dataSource,
@@ -256,6 +259,9 @@ export default class CustomLayersModule extends MapModule {
             tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
             labelRenderOrder: VectorTileRenderOrder.LAST,
             decoder: mapContext.innerDecoder
+        });
+        mapContext.innerDecoder.once('change', () => {
+            this.updateRouteLayer(routeLayer);
         });
         routeLayer.setVectorTileEventListener<LatLonKeys>(
             {

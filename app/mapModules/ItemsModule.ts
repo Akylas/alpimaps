@@ -128,15 +128,23 @@ export default class ItemsModule extends MapModule {
             this.localVectorLayer = null;
         }
     }
-
-    getOrCreateLocalVectorLayer() {
+    updateLocalLayer() {
+        DEV_LOG && console.log('updateLocalLayer');
+        const oldLayer = this.localVectorLayer;
+        this.localVectorLayer = null;
+        this.getOrCreateLocalVectorLayer(false);
+        mapContext.replaceLayer(oldLayer, this.localVectorLayer);
+    }
+    getOrCreateLocalVectorLayer(add = true) {
         if (!this.localVectorLayer) {
-            this.localVectorDataSource = new GeoJSONVectorTileDataSource({
-                simplifyTolerance: 2,
-                minZoom: 0,
-                maxZoom: 24
-            });
-            this.localVectorDataSource.createLayer('items');
+            if (!this.localVectorDataSource) {
+                this.localVectorDataSource = new GeoJSONVectorTileDataSource({
+                    simplifyTolerance: 2,
+                    minZoom: 0,
+                    maxZoom: 24
+                });
+                this.localVectorDataSource.createLayer('items');
+            }
             // this.localVectorDataSource.setGeometrySimplifier(new DouglasPeuckerGeometrySimplifier({ tolerance: 2 }));
             this.localVectorLayer = new VectorTileLayer({
                 labelBlendingSpeed: 0,
@@ -146,6 +154,7 @@ export default class ItemsModule extends MapModule {
                 dataSource: this.localVectorDataSource,
                 decoder: mapContext.innerDecoder
             });
+            mapContext.innerDecoder.once('change', this.updateLocalLayer);
             this.localVectorLayer.setVectorTileEventListener<LatLonKeys>(
                 {
                     onVectorTileClicked(info: VectorTileEventData<LatLonKeys>) {
@@ -154,8 +163,9 @@ export default class ItemsModule extends MapModule {
                 },
                 mapContext.getProjection()
             );
-
-            mapContext.addLayer(this.localVectorLayer, 'items');
+            if (add) {
+                mapContext.addLayer(this.localVectorLayer, 'items');
+            }
         }
     }
     createLocalPoint(position: GenericMapPos<LatLonKeys>, options: PointStyleBuilderOptions) {

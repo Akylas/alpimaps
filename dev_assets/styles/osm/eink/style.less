@@ -75,6 +75,7 @@
 @border_region_color: lighten(#787b8ca9, @applied_eink_lighten);
 @border_region: linear([view::zoom], (11, @border_region_color), (13, fadeout(@border_region_color, 0.5)), (14, fadeout(@border_region_color, 1)));
 @border_region_dasharray: 1, 2;
+@border_country_dasharray: none;
 
 @contour_width: linear([view::zoom], (16, 0.6), (22, 1.6));
 @contour_label: @contour_color;
@@ -225,9 +226,9 @@
 
 @railway: @pedestrian-polygon-fill;
 @railway-line: linear([view::zoom], (8, lighten(@railway-line-color, 60%)), (10, lighten(@railway-line-color, 50%)), (13, @railway-line-color));
-@railway-line-width: linear([view::zoom], (8, 0.8), (16, 1));
-@railway-track-line-width: linear([view::zoom], (8, 1), (14, 2), (20, 5));
-@railway-track-line-dasharray: 0.5, 30;
+@railway-line-width: linear([view::zoom], (8, 1), (16, 2));
+@railway-track-line-width: linear([view::zoom], (8, 1.5), (14, 4), (20, 6));
+@railway-track-line-dasharray: 1, 30;
 @railway-track-line: @railway-line;
 
 @aerial-width: linear([view::zoom], (14, 0.5), (20, 1));
