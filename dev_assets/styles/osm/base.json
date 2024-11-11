@@ -54,6 +54,7 @@
         "lang": "en",
         "selected_id": "",
         "buildings": 1,
+        "emphasis_rails": 0,
         "sub_boundaries": 1,
         "contours": 1,
         "contoursOpacity": 0.4,
