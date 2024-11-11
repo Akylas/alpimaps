@@ -26,6 +26,10 @@
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Screen } from '@nativescript/core/platform';
     import { debounce } from '@nativescript/core/utils';
+    import { Sentry, isSentryEnabled } from '@shared/utils/sentry';
+    import { share } from '@shared/utils/share';
+    import { showError } from '@shared/utils/showError';
+    import { navigate } from '@shared/utils/svelte/ui';
     import type { Point as GeoJSONPoint } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -53,6 +57,7 @@
     import { NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
     import {
         contourLinesOpacity,
+        emphasisRails,
         mapFontScale,
         pitchEnabled,
         preloading,
@@ -62,15 +67,12 @@
         show3DBuildings,
         showContourLines,
         showRoutes,
-        showSlopePercentages
+        showSlopePercentages,
+        showSubBoundaries
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
-    import { Sentry, isSentryEnabled } from '@shared/utils/sentry';
-    import { share } from '@shared/utils/share';
-    import { showError } from '@shared/utils/showError';
-    import { navigate } from '@shared/utils/svelte/ui';
     import { hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
     import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, setTimeout } from '~/utils/utils';
     import { colors, screenHeightDips, windowInset } from '../../variables';
@@ -1052,6 +1054,9 @@
     $: cartoMap?.getOptions().setRenderProjectionMode($projectionModeSpherical ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR);
     $: vectorTileDecoder && setStyleParameter('buildings', !!$show3DBuildings ? '2' : '1');
     $: vectorTileDecoder && setStyleParameter('contours', $showContourLines ? '1' : '0');
+    $: vectorTileDecoder && setStyleParameter('sub_boundaries', $showSubBoundaries ? '1' : '0');
+    $: vectorTileDecoder && setStyleParameter('emphasis_rails', $emphasisRails ? '1' : '0');
+    $: DEV_LOG && console.log('emphasis_rails', $emphasisRails);
     $: vectorTileDecoder && $contourLinesOpacity >= 0 && setStyleParameter('contoursOpacity', $contourLinesOpacity.toFixed(1));
     $: vectorTileDecoder && $mapFontScale > 0 && setStyleParameter('_fontscale', $mapFontScale.toFixed(2));
     $: {
@@ -1389,16 +1394,8 @@
         if (layerStyle !== currentLayerStyle || !!force) {
             currentLayerStyle = layerStyle;
             ApplicationSettings.setString('mapStyle', layerStyle);
-            // if (layerStyle === 'default') {
-            //     vectorTileDecoder = new CartoOnlineVectorTileLayer({
-            //         style: mapStyleLayer
-            //     }).getTileDecoder();
-            //     // if (!PRODUCTION) {
-            //     //     vectorTileDecoder.setStyleParameter('debug', '1')
-            //     // }
-            // } else {
+
             try {
-                // const start = Date.now();
                 vectorTileDecoder = mapContext.createMapDecoder(mapStyle, mapStyleLayer);
             } catch (err) {
                 showError(err);
