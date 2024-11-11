@@ -2,7 +2,8 @@
     import { l, lc } from '@nativescript-community/l';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
-    import { ApplicationSettings, Color, ObservableArray, Utils } from '@nativescript/core';
+    import { ApplicationSettings, Color, ObservableArray, Utils, View } from '@nativescript/core';
+    import { showError } from '@shared/utils/showError';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { Writable } from 'svelte/store';
@@ -10,13 +11,13 @@
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
-    import { contourLinesOpacity, mapFontScale, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, show3DBuildings, showContourLines } from '~/stores/mapStore';
+    import { contourLinesOpacity, emphasisRails, mapFontScale, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, show3DBuildings, showContourLines, showSubBoundaries } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
-    import { showError } from '@shared/utils/showError';
     import { showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
+    import { CheckBox } from '@nativescript-community/ui-checkbox';
     export interface MapOptionType {
         title: string;
         color?: Color | string;
@@ -26,7 +27,8 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorPrimary, colorOutlineVariant } = $colors);
+    let { colorOutlineVariant } = $colors;
+    $: ({ colorOutlineVariant } = $colors);
     const customLayers: CustomLayersModule = getMapContext().mapModule('customLayers');
     let collectionView: NativeViewElementNode<CollectionViewWithSwipeMenu>;
 
@@ -47,8 +49,17 @@
             items.setItem(index, item);
         }
     }
+    let checkboxTapTimer;
     async function onTap(item, event) {
         try {
+            if (item.type === 'checkbox' || item.type === 'switch') {
+                // we dont want duplicate events so let s timeout and see if we clicking diretly on the checkbox
+                const checkboxView: CheckBox = ((event.object as View).parent as View).getViewById('checkbox');
+                checkboxTapTimer = setTimeout(() => {
+                    checkboxView.checked = !checkboxView.checked;
+                }, 10);
+                return;
+            }
             switch (item.id) {
                 case 'setting': {
                     if (item.type === 'prompt') {
@@ -166,6 +177,18 @@
                     type: 'slider',
                     rightValue: () => $contourLinesOpacity.toFixed(2),
                     currentValue: () => $contourLinesOpacity
+                },
+                {
+                    mapStore: showSubBoundaries,
+                    type: 'switch',
+                    value: $showSubBoundaries,
+                    title: lc('show_sub_boundaries')
+                },
+                {
+                    mapStore: emphasisRails,
+                    type: 'switch',
+                    value: $emphasisRails,
+                    title: lc('emphasis_rail_tracks')
                 }
             );
         }
@@ -174,12 +197,48 @@
     onServiceLoaded((handler: GeoHandler) => {
         refresh();
     });
+
+    function onCheckBox(item, event) {
+        if (item.value === event.value) {
+            return;
+        }
+        const value = event.value;
+        item.value = value;
+        if (checkboxTapTimer) {
+            clearTimeout(checkboxTapTimer);
+            checkboxTapTimer = null;
+        }
+        try {
+            if (item.mapStore) {
+                (item.mapStore as Writable<boolean>).set(value);
+            } else {
+                ApplicationSettings.setBoolean(item.key || item.id, value);
+            }
+        } catch (error) {
+            console.error(error, error.stack);
+        }
+    }
+    function itemTemplateSelector(item, index, items) {
+        if (item.type === 'prompt') {
+            return 'default';
+        }
+
+        if (item.icon) {
+            return 'leftIcon';
+        }
+        return item.type || 'default';
+    }
 </script>
 
 <gesturerootview height={240} rows="auto,*">
-    <collectionview bind:this={collectionView} {items} row={1} ios:contentInsetAdjustmentBehavior={2} rowHeight={56}>
+    <collectionview bind:this={collectionView} {itemTemplateSelector} {items} row={1} ios:contentInsetAdjustmentBehavior={2} rowHeight={56}>
         <Template key="sectionheader" let:item>
             <label class="sectionHeader" text={item.title} />
+        </Template>
+        <Template key="switch" let:item>
+            <ListItemAutoSize leftIcon={item.icon} mainCol={1} subtitle={getSubtitle(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
+                <switch id="checkbox" checked={item.value} col={2} on:checkedChange={(e) => onCheckBox(item, e)} />
+            </ListItemAutoSize>
         </Template>
         <Template let:item>
             <ListItemAutoSize rightValue={item.rightValue} showBottomLine={false} subtitle={getSubtitle(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}></ListItemAutoSize>
