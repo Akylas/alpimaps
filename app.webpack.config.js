@@ -1,6 +1,6 @@
 const webpackConfig = require('./webpack.config.js');
 const webpack = require('webpack');
-const { readFileSync, readdirSync } = require('fs');
+const { readFileSync, readdirSync, existsSync, mkdirSync } = require('fs');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const { basename, dirname, join, relative, resolve } = require('path');
 const nsWebpack = require('@akylas/nativescript-webpack');
@@ -438,6 +438,7 @@ module.exports = (env, params = {}) => {
     };
     try {
         const keys = process.env.API_KEYS ? JSON.parse(process.env.API_KEYS) : require(resolve(__dirname, 'API_KEYS'));
+        console.log('got API_KEYS.json', Object.keys(keys));
         Object.keys(keys).forEach((s) => {
             if (s === 'ios' || s === 'android') {
                 if (s === platform) {
@@ -825,6 +826,22 @@ module.exports = (env, params = {}) => {
 
     if (buildstyle) {
         const css2xmlBin = `css2xml_${process.platform}`;
+        let dir1 = join(projectRoot, 'dev_assets/styles/inner_cleaned');
+        if (!existsSync(dir1)) {
+            mkdirSync(dir1);
+        }
+        dir1 = join(projectRoot, 'dev_assets/styles/osm_cleaned');
+        if (!existsSync(dir1)) {
+            mkdirSync(dir1);
+        }
+        dir1 = join(projectRoot, 'dev_assets/styles/admin_cleaned');
+        if (!existsSync(dir1)) {
+            mkdirSync(dir1);
+        }
+        dir1 = join(projectRoot, 'app/assets/styles');
+        if (!existsSync(dir1)) {
+            mkdirSync(dir1);
+        }
         config.plugins.unshift(
             new WebpackShellPluginNext({
                 onBuildStart: {
