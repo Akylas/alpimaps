@@ -1,0 +1,11 @@
+Features:
+- allow customizing valhalla offline routing service
+
+Bug fixes:
+- dynamic color support and color theme (with eink)
+- crash on opening github
+- eink color theme fix
+- valhalla use device language
+- inner style (routes, items, transit...) now have a eink version
+- new map style parameters
+- settings icon not updating correctly on dark mode change
