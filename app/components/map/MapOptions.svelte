@@ -230,7 +230,7 @@
     }
 </script>
 
-<gesturerootview height={240} rows="auto,*">
+<gesturerootview height={350} rows="auto,*">
     <collectionview bind:this={collectionView} {itemTemplateSelector} {items} row={1} ios:contentInsetAdjustmentBehavior={2} rowHeight={56}>
         <Template key="sectionheader" let:item>
             <label class="sectionHeader" text={item.title} />
