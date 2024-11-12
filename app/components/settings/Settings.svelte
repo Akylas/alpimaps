@@ -4,19 +4,26 @@
     import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { openFilePicker, pickFolder, saveFile } from '@nativescript-community/ui-document-picker';
+    import { Label } from '@nativescript-community/ui-label';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { TextView } from '@nativescript-community/ui-material-textview';
     import { ApplicationSettings, File, Folder, ObservableArray, ScrollView, StackLayout, Utils, View, path } from '@nativescript/core';
+    import { Sentry } from '@shared/utils/sentry';
+    import { share } from '@shared/utils/share';
+    import { showError } from '@shared/utils/showError';
     import dayjs from 'dayjs';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Writable, get } from 'svelte/store';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { clock_24, getLocaleDisplayName, l, lc, onLanguageChanged, onMapLanguageChanged, selectLanguage, selectMapLanguage, slc } from '~/helpers/locale';
     import { getColorThemeDisplayName, getThemeDisplayName, onThemeChanged, selectColorTheme, selectTheme } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
+    import { packageService } from '~/services/PackageService';
+    import { useOfflineGeocodeAddress, useSystemGeocodeAddress } from '~/stores/mapStore';
     import {
         ALERT_OPTION_MAX_HEIGHT,
         DEFAULT_VALHALLA_MAX_DISTANCE_AUTO,
@@ -26,25 +33,19 @@
         SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE,
         SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN
     } from '~/utils/constants';
-    import { showError } from '@shared/utils/showError';
-    import { Sentry } from '@shared/utils/sentry';
-    import { share } from '@shared/utils/share';
     import { showSnack } from '~/utils/ui';
     import { createView, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui/index.common';
     import { ANDROID_30, getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, moveFileOrFolder, resetItemsDataFolder, restartApp, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';
     import { colors, fonts, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
-    import { Writable, get } from 'svelte/store';
-    import { useOfflineGeocodeAddress, useSystemGeocodeAddress } from '~/stores/mapStore';
-    import { packageService } from '~/services/PackageService';
-    import { Label } from '@nativescript-community/ui-label';
 
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
 </script>
 
 <script lang="ts">
-    $: ({ colorOnSurfaceVariant, colorOutlineVariant } = $colors);
+    let { colorOnBackground, colorOnSurfaceVariant } = $colors;
+    $: ({ colorOnBackground, colorOnSurfaceVariant } = $colors);
     $: ({ bottom: windowInsetBottom } = $windowInset);
 
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -954,7 +955,7 @@
                     subtitle={getSubtitle(item)}
                     title={getTitle(item)}
                     on:tap={(event) => onTap(item, event)}>
-                    <label col={0} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} verticalAlignment="center" />
+                    <label col={0} color={colorOnBackground} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} verticalAlignment="center" />
                 </ListItemAutoSize>
             </Template>
             <Template let:item>
