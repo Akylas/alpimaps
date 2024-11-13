@@ -687,5 +687,7 @@
     "tutorial": "Tutorial",
     "website": "Website",
     "wheelchair": "Rollstuhl",
-    "permission_error": "fehlende Berechtigung"
+    "permission_error": "fehlende Berechtigung",
+    "ENE": "ONO",
+    "ESE": "OSO"
 }
