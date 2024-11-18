@@ -57,6 +57,7 @@
     let loading = false;
 
     function onNavigatedTo(args: NavigatedData) {
+        DEV_LOG && console.log('onNavigatedTo', args.isBackNavigation, navigatedTo);
         if (!args.isBackNavigation && !navigatedTo) {
             navigatedTo = true;
             if (isServiceStarted()) {
@@ -65,6 +66,7 @@
         }
     }
     onServiceStarted(() => {
+        DEV_LOG && console.log('onServiceStarted', needsFirstRefresh, navigatedTo);
         if (navigatedTo && needsFirstRefresh) {
             refresh();
         }
@@ -129,6 +131,7 @@
             return;
         }
         const firstLoad = !!needsFirstRefresh;
+        DEV_LOG && console.log('refresh');
         needsFirstRefresh = false;
         loading = true;
         // if itemslist is opened too fast the db might not be fully initialized
@@ -136,8 +139,8 @@
             try {
                 nbSelected = 0;
                 if (firstLoad) {
-                    const result = await itemsModule.itemRepository.database.query(SqlQuery.createFromTemplateString`SELECT COUNT(*) FROM Items WHERE "route" IS NOT NULL`);
-                    tabIndex = result[0]['COUNT(*)'] > 0 ? 0 : 1;
+                    // const result = await itemsModule.itemRepository.database.query(SqlQuery.createFromTemplateString`SELECT COUNT(*) FROM Items WHERE "route" IS NOT NULL`);
+                    // tabIndex = result[0]['COUNT(*)'] > 0 ? 0 : 1;
                 }
                 const searchArgs = {
                     where: tabIndex === 1 ? SqlQuery.createFromTemplateString`"route" IS NULL` : SqlQuery.createFromTemplateString`"route" IS NOT NULL`,
@@ -151,7 +154,8 @@ LEFT JOIN  (
    ) t USING (id)`
                 };
                 const sqlItems = (await itemsModule.itemRepository.searchItem(searchArgs)).map((i) => ({ ...i }));
-                const oldGroups = groups;
+        DEV_LOG && console.log('sqlItems', sqlItems, groups);
+        const oldGroups = groups;
                 groups = groupBy<Group>(await itemsModule.groupsRepository.search(), (i) => i.name);
                 if (!groups['none']) {
                     await itemsModule.groupsRepository.create({ id: Date.now() + '', name: 'none', onMap: 1, collapse: 0 });
@@ -164,7 +168,9 @@ LEFT JOIN  (
                 //         }
                 //     });
                 // }
-                groupedItems = groupByArray<Item>(sqlItems, (i) => i.groups);
+        DEV_LOG && console.log('groups', groups);
+        groupedItems = groupByArray<Item>(sqlItems, (i) => i.groups);
+                DEV_LOG && console.log('groupedItems', groupedItems);
                 const groupsCount = Object.keys(groupedItems).length;
                 const noneGroupItems: CollectionItem[] = groupsCount > 1 ? [] : groupedItems['none'] || [];
                 if (groupsCount === 1) {
@@ -308,6 +314,7 @@ LEFT JOIN  (
                     DEV_LOG && console.log('deleteItem group', group, groupIndex, groupedForItem.length);
                     if (groupIndex >= 0) {
                         const groupItem = items.getItem(groupIndex) as CollectionGroup;
+                        DEV_LOG && console.log('groupedForItem', groupedForItem);
                         groupItem.count = groupedForItem.length;
                         updateGroupItemData(groupItem);
                         DEV_LOG && console.log('update group', groupItem);
@@ -586,6 +593,7 @@ LEFT JOIN  (
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
+        DEV_LOG && console.log('onMount', !!getMapContext(), !!getMapContext().mapModules['items']);
         getMapContext().mapModules['items'].on('itemChanged', refresh);
         // TODO: listen for item change
     });
@@ -875,7 +883,7 @@ LEFT JOIN  (
                     color={actionBarLabelColor}
                     disableCss={true}
                     fontSize={15}
-                    fontWeight="500"
+                    fontWeight={500}
                     rippleColor={actionBarLabelColor}
                     text={lu('routes')}
                     textAlignment="center"
