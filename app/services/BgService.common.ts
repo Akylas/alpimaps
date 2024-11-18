@@ -76,7 +76,7 @@ export abstract class BgServiceCommon extends Observable {
             DEV_LOG && console.log(TAG, 'stop');
             await this.geoHandler.stop();
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
             this.notify({
                 eventName: BgServiceErrorEvent,
                 object: this,
@@ -103,7 +103,7 @@ export abstract class BgServiceCommon extends Observable {
             onServiceStartedListeners.forEach((l) => l(this.geoHandler));
             onServiceStartedListeners = [];
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
             this.notify({
                 eventName: BgServiceErrorEvent,
                 object: this,
