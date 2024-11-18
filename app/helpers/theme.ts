@@ -278,15 +278,19 @@ export function start() {
         if (__ANDROID__) {
             if (colorTheme !== DEFAULT_COLOR_THEME) {
                 const context = Utils.android.getApplicationContext();
-                let nativeTheme = 'AppTheme';
+                let nativeTheme;
                 switch (colorTheme) {
                     case 'eink':
                         nativeTheme = 'AppTheme.EInk';
                         break;
                 }
-                const themeId = context.getResources().getIdentifier(nativeTheme, 'style', context.getPackageName());
-                DEV_LOG && console.log(SETTINGS_COLOR_THEME, nativeTheme, themeId);
-                ApplicationSettings.setNumber('SET_THEME_ON_LAUNCH', themeId);
+                if (nativeTheme) {
+                    const themeId = context.getResources().getIdentifier(nativeTheme, 'style', context.getPackageName());
+                    DEV_LOG && console.log(SETTINGS_COLOR_THEME, nativeTheme, themeId);
+                    ApplicationSettings.setNumber('SET_THEME_ON_LAUNCH', themeId);
+                } else {
+                    ApplicationSettings.remove('SET_THEME_ON_LAUNCH');
+                }
             } else {
                 ApplicationSettings.remove('SET_THEME_ON_LAUNCH');
             }
