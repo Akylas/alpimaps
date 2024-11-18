@@ -28,7 +28,7 @@
     import { packageService } from '~/services/PackageService';
     import { showError } from '@shared/utils/showError';
     import { computeDistanceBetween } from '~/utils/geo';
-    import { share } from '@shared/utils/share';
+    import { share } from '@akylas/nativescript-app-utils/share';
     import { navigate } from '@shared/utils/svelte/ui';
     import { hideLoading, openLink, showLoading, showPopoverMenu } from '~/utils/ui/index.common';
     import { actionBarButtonHeight, colors } from '~/variables';
@@ -137,7 +137,7 @@
                     const { highlight, onPathIndex, remainingDistance, remainingTime } = chartLoadHighlightData;
                     elevationChart.hilghlightPathIndex(onPathIndex, remainingDistance, remainingTime, highlight, false);
                 } catch (error) {
-                    console.error(error);
+                    console.error(error, error.stack);
                 } finally {
                     chartLoadHighlightData = null;
                 }
@@ -189,7 +189,7 @@
                 }
             }
         } catch (err) {
-            console.error(err);
+            console.error(err, err.stack);
             if (query) {
                 const url = `https://duckduckgo.com/?kae=d&ks=s&ko=-2&kaj=m&k1=-1&q=${encodeURIComponent(query).toLowerCase().replace('/s+/g', '+')}`;
                 openLink(url);

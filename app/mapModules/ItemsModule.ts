@@ -10,7 +10,7 @@ import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescrip
 import { getImagePipeline } from '@nativescript-community/ui-image';
 import { ShareFile } from '@nativescript-community/ui-share-file';
 import { File, Folder, ImageSource, Screen, knownFolders, path, profile } from '@nativescript/core';
-import { shareFile } from '@shared/utils/share';
+import { shareFile } from '@akylas/nativescript-app-utils/share';
 import { showError } from '@shared/utils/showError';
 import type { Feature, FeatureCollection, Point as GeometryPoint } from 'geojson';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
