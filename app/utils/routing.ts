@@ -30,7 +30,7 @@ export function valhallaSettingColor(key: string, profile: string, options: any,
             return new Color(baseColor).setAlpha(perc * 200 + 55).hex;
         }
     } catch (error) {
-        console.error(key, error);
+        console.error(key, error, error.stack);
     }
 }
 

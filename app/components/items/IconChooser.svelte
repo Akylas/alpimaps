@@ -74,7 +74,7 @@
                 canvas.drawText(item.icon, w / 2, h / 2 + 10, iconPaint);
             }
         } catch (err) {
-            console.error(err);
+            console.error(err, err.stack);
         }
     }
 </script>
