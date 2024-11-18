@@ -11,7 +11,7 @@
     import { TextView } from '@nativescript-community/ui-material-textview';
     import { ApplicationSettings, File, Folder, ObservableArray, ScrollView, StackLayout, Utils, View, path } from '@nativescript/core';
     import { Sentry } from '@shared/utils/sentry';
-    import { share } from '@shared/utils/share';
+    import { share } from '@akylas/nativescript-app-utils/share';
     import { showError } from '@shared/utils/showError';
     import dayjs from 'dayjs';
     import { Template } from 'svelte-native/components';
