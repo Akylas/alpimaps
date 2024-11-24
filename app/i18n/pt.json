@@ -126,5 +126,7 @@
     "campsite": "acampamento",
     "caravan_park": "parque de caravana",
     "cant_delete_last_layer": "você não pode excluir a última camada restante",
-    "aerialway": "via aérea"
+    "aerialway": "via aérea",
+    "choose": "escolher",
+    "all": "todos"
 }
