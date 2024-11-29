@@ -226,7 +226,7 @@ export default class UserLocationModule extends MapModule {
             showSnack({
                 message: lc('location_error', event.error.toString())
             });
-            console.error(event.error);
+            console.error(event.error, event.error.stack);
             return;
         } else if (event.location) {
             if (get(queryingLocation) && event.location.horizontalAccuracy <= 20 && event.location.age < 10000) {

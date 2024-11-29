@@ -13,7 +13,7 @@
     import { Item } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { showError } from '@shared/utils/showError';
-    import { share } from '@shared/utils/share';
+    import { share } from '@akylas/nativescript-app-utils/share';
     import { openLink } from '~/utils/ui/index.common';
     import { actionBarButtonHeight, actionBarHeight, colors, fonts } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
