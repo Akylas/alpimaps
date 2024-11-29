@@ -11,16 +11,19 @@ export class ProcessTextActivity extends androidx.appcompat.app.AppCompatActivit
         super.onCreate(savedInstanceState);
         // const intent = this.getIntent();
         const context = Utils.android.getApplicationContext();
-        const intent = context.getPackageManager().getLaunchIntentForPackage(__APP_ID__);
+        const intent = this.getIntent() || context.getPackageManager().getLaunchIntentForPackage(__APP_ID__);
+
         if (intent) {
-            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
-            intent.setData(android.net.Uri.parse(this.getIntent().getStringExtra('android.intent.extra.PROCESS_TEXT')));
-            context.startActivity(intent);
+            const data = this.getIntent().getStringExtra('android.intent.extra.TEXT') || this.getIntent().getStringExtra('android.intent.extra.PROCESS_TEXT');
+            const newIntent = context.getPackageManager().getLaunchIntentForPackage(__APP_ID__);
+            newIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+            newIntent.setData(android.net.Uri.parse(data));
+            context.startActivity(newIntent);
+            DEV_LOG && console.log('ProcessTextActivity', 'onCreate', intent.getAction(), data);
             // return true;
         }
         // globalObservable.notify({ eventName: 'onOtherAppTextSelected', data: intent.getStringExtra('android.intent.extra.PROCESS_TEXT') });
 
-        DEV_LOG && console.log('ProcessTextActivity', 'onCreate', intent.getAction(), intent.getStringExtra('android.intent.extra.PROCESS_TEXT'));
         this.finish();
     }
 
