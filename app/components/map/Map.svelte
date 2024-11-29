@@ -27,7 +27,7 @@
     import { Screen } from '@nativescript/core/platform';
     import { debounce } from '@nativescript/core/utils';
     import { Sentry, isSentryEnabled } from '@shared/utils/sentry';
-    import { share } from '@shared/utils/share';
+    import { share } from '@akylas/nativescript-app-utils/share';
     import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';
     import type { Point as GeoJSONPoint } from 'geojson';
