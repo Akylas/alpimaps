@@ -434,7 +434,7 @@ export class NetworkService extends Observable {
                 //@ts-ignore
                 https.addNetworkInterceptor(com.nativescript.https.CacheInterceptor.INTERCEPTOR);
             } catch (error) {
-                console.error(error);
+                console.error(error, error.stack);
             }
         }
     }
