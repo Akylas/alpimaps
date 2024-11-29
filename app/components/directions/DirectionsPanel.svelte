@@ -230,7 +230,7 @@
             profileCostingOptions = profileCostingOptions; // for svelte to see the update
             saveProfileSettings(profile);
         } catch (error) {
-            console.error(key, error);
+            console.error(key, error, error.stack);
         }
     }
     // function valhallaSettingColor(key: string, options: any = profileCostingOptions) {
