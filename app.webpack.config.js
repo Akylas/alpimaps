@@ -938,7 +938,7 @@ module.exports = (env, params = {}) => {
         new TerserPlugin({
             parallel: true,
             terserOptions: {
-                ecma: isAndroid ? 2020 : 2020,
+                ecma: 2020,
                 module: true,
                 toplevel: false,
                 keep_classnames: actual_keep_classnames_functionnames,
@@ -947,12 +947,14 @@ module.exports = (env, params = {}) => {
                     comments: false,
                     semicolons: !isAnySourceMapEnabled
                 },
-                mangle: {
-                    properties: {
-                        reserved: ['__metadata'],
-                        regex: /^(m[A-Z])/
-                    }
-                },
+                mangle: isAndroid
+                    ? {
+                          properties: {
+                              reserved: ['__metadata'],
+                              regex: /^(m[A-Z])/
+                          }
+                      }
+                    : true,
                 compress: {
                     booleans_as_integers: false,
                     // The Android SBG has problems parsing the output
