@@ -438,6 +438,11 @@ export class NetworkService extends Observable {
             }
         }
     }
+    clearRequests(...tags) {
+        for (let index = 0; index < tags.length; index++) {
+            https.cancelRequest(tags[index]);
+        }
+    }
     stop() {
         if (!this.monitoring) {
             return;
