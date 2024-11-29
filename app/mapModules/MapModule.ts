@@ -139,6 +139,7 @@ export interface MapModules {
 }
 
 export function createTileDecoder(name: string, style: string = 'voyager') {
+    DEV_LOG && console.log('createTileDecoder', name, style, PRODUCTION, TEST_ZIP_STYLES);
     return new MBVectorTileDecoder({
         style,
         pack:

@@ -126,5 +126,16 @@
     "campsite": "acampamento",
     "caravan_park": "parque de caravana",
     "cant_delete_last_layer": "você não pode excluir a última camada restante",
-    "aerialway": "via aérea"
+    "aerialway": "via aérea",
+    "choose": "escolher",
+    "all": "todos",
+    "cinema": "cinema",
+    "city": "cidade",
+    "city_gate": "portão da cidade",
+    "clear": "claro",
+    "coffee": "café",
+    "camera_fov": "campo de visão da câmera",
+    "college": "colégio",
+    "commercial": "comercial",
+    "computer": "computador"
 }
