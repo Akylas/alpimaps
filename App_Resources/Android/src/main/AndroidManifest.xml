@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:installLocation="auto">
+    <queries>
+        <intent>
+        <action android:name="android.intent.action.PROCESS_TEXT" />
+        <data android:mimeType="text/plain" />
+        </intent>
+    </queries>
     <supports-screens android:smallScreens="true" android:normalScreens="true"
         android:largeScreens="true" android:xlargeScreens="true" />
     <uses-sdk tools:overrideLibrary="com.nativescript.documentpicker" />
@@ -116,7 +122,7 @@
                 <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\.geojson" />
                 <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\.geojson" />
                 <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\.gpx" />
-            </intent-filter>geojson
+            </intent-filter>
         </activity>
         <activity android:name=".ProcessTextActivity" android:theme="@style/FloatingActivityTheme"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|locale|uiMode"
@@ -127,6 +133,18 @@
             <intent-filter>
                 <action android:name="android.intent.action.PROCESS_TEXT" />
                 <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
