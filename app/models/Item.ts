@@ -201,7 +201,7 @@ export class GroupRepository extends CrudRepository<Group> {
                     [key]: GroupRepository.migrations[key]
                 });
             } catch (error) {
-                console.error(error);
+                console.error(error, error.stack);
             }
         }
     }
@@ -330,7 +330,7 @@ export class ItemRepository extends CrudRepository<Item> {
             item.groups = item.groups || [];
             item.groups.push(groupId);
         } catch (error) {
-            console.error(error);
+            console.error(error, error.stack);
         }
     }
     async setItemGroup(item: Item, groupName?: string) {
