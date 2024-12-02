@@ -147,7 +147,7 @@
         return geoHandler.enableLocation().then(() => {
             geoHandler
                 .getLocation({ maximumAge: 120000 })
-                .then((r) => getAirportPressureAtLocation(gVars.AVWX_API_KEY, r.lat, r.lon))
+                .then((r) => getAirportPressureAtLocation(AVWX_API_KEY, r.lat, r.lon))
                 .then((r) => {
                     referencePressure = r.pressure;
                     airportRefName = r.name;

@@ -24,6 +24,20 @@ declare const gVars: {
     AVWX_API_KEY: string;
 };
 
+declare const CARTO_TOKEN: string;
+// FACEBOOK_TOKEN: string;
+declare const IGN_TOKEN: string;
+declare const AMERICANA_OSM_URL: string;
+declare const THUNDERFOREST_TOKEN: string;
+declare const MAPBOX_TOKEN: string;
+declare const MAPTILER_TOKEN: string;
+declare const MAPQUEST_TOKEN: string;
+declare const HER_APP_ID: string;
+declare const HER_APP_CODE: string;
+declare const BUGNSAG: string;
+declare const GOOGLE_TOKEN: string;
+declare const AVWX_API_KEY: string;
+
 declare const TNS_ENV: string;
 declare const DEV_LOG: boolean;
 declare const NO_CONSOLE: boolean;

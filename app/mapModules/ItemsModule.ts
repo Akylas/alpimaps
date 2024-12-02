@@ -754,7 +754,7 @@ export default class ItemsModule extends MapModule {
     //         url: 'https://graph.facebook.com/search',
     //         method: 'GET',
     //         queryParams: {
-    //             access_token: gVars.FACEBOOK_TOKEN,
+    //             access_token: FACEBOOK_TOKEN,
     //             fields: 'hours,phone,name,location,cover,about,description,emails,food_styles,restaurant_services,restaurant_specialties,payment_options,link,price_range,website',
     //             type: 'page',
     //             q: item.properties.name,
