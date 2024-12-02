@@ -709,7 +709,7 @@ export class NetworkService extends Observable {
     // }
     // actualMapquestElevationProfile(_points: MapPos<LatLonKeys>[]) {
     //     const params = {
-    //         key: gVars.MAPQUEST_TOKEN,
+    //         key: MAPQUEST_TOKEN,
     //         inFormat: 'json',
     //         outFormat: 'json'
     //     };
