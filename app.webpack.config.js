@@ -443,11 +443,11 @@ module.exports = (env, params = {}) => {
             if (s === 'ios' || s === 'android') {
                 if (s === platform) {
                     Object.keys(keys[s]).forEach((s2) => {
-                        defines[`gVars.${s2}`] = apiKeys ? `'${keys[s][s2]}'` : 'undefined';
+                        defines[`${s2}`] = apiKeys ? `'${keys[s][s2]}'` : 'undefined';
                     });
                 }
             } else {
-                defines[`gVars.${s}`] = apiKeys ? `'${keys[s]}'` : 'undefined';
+                defines[`${s}`] = apiKeys ? `'${keys[s]}'` : 'undefined';
             }
         });
     } catch (error) {
