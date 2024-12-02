@@ -332,16 +332,16 @@ export default class CustomLayersModule extends MapModule {
 
     getTokenKeys() {
         return {
-            americanaosm: ApplicationSettings.getString('americanaosmToken', this.devMode ? gVars.AMERICANA_OSM_URL : undefined),
-            carto: ApplicationSettings.getString('cartoToken', this.devMode ? gVars.CARTO_TOKEN : undefined),
-            here_appid: ApplicationSettings.getString('here_appidToken', this.devMode ? gVars.HER_APP_ID : undefined),
-            here_appcode: ApplicationSettings.getString('here_appcodeToken', this.devMode ? gVars.HER_APP_CODE : undefined),
-            mapbox: ApplicationSettings.getString('mapboxToken', this.devMode ? gVars.MAPBOX_TOKEN : undefined),
-            mapquest: ApplicationSettings.getString('mapquestToken', this.devMode ? gVars.MAPQUEST_TOKEN : undefined),
-            maptiler: ApplicationSettings.getString('maptilerToken', this.devMode ? gVars.MAPTILER_TOKEN : undefined),
-            google: ApplicationSettings.getString('googleToken', this.devMode ? gVars.GOOGLE_TOKEN : undefined),
-            thunderforest: ApplicationSettings.getString('thunderforestToken', this.devMode ? gVars.THUNDERFOREST_TOKEN : undefined),
-            ign: ApplicationSettings.getString('ignToken', this.devMode ? gVars.IGN_TOKEN : undefined)
+            americanaosm: ApplicationSettings.getString('americanaosmToken', this.devMode ? AMERICANA_OSM_URL : undefined),
+            carto: ApplicationSettings.getString('cartoToken', this.devMode ? CARTO_TOKEN : undefined),
+            here_appid: ApplicationSettings.getString('here_appidToken', this.devMode ? HER_APP_ID : undefined),
+            here_appcode: ApplicationSettings.getString('here_appcodeToken', this.devMode ? HER_APP_CODE : undefined),
+            mapbox: ApplicationSettings.getString('mapboxToken', this.devMode ? MAPBOX_TOKEN : undefined),
+            mapquest: ApplicationSettings.getString('mapquestToken', this.devMode ? MAPQUEST_TOKEN : undefined),
+            maptiler: ApplicationSettings.getString('maptilerToken', this.devMode ? MAPTILER_TOKEN : undefined),
+            google: ApplicationSettings.getString('googleToken', this.devMode ? GOOGLE_TOKEN : undefined),
+            thunderforest: ApplicationSettings.getString('thunderforestToken', this.devMode ? THUNDERFOREST_TOKEN : undefined),
+            ign: ApplicationSettings.getString('ignToken', this.devMode ? IGN_TOKEN : undefined)
         };
     }
     set devMode(value: boolean) {
