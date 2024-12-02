@@ -933,7 +933,7 @@ class PackageService extends Observable {
     onlineRoutingSearchService() {
         if (!this.mOnlineRoutingSearchService) {
             this.mOnlineRoutingSearchService = new ValhallaOnlineRoutingService({
-                apiKey: gVars.MAPBOX_TOKEN,
+                apiKey: MAPBOX_TOKEN,
                 customServiceURL: 'https://valhalla1.openstreetmap.de/{service}',
                 profile: 'pedestrian'
             });
