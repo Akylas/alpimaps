@@ -654,7 +654,7 @@
             cartoMap.setFocusPos(pos, 0);
             cartoMap.setZoom(zoom, 0);
             cartoMap.setBearing(bearing, 0);
-            DEV_LOG && console.log('onMainMapReady', pos, zoom, bearing, addedLayers, theme);
+            DEV_LOG && console.log('onMainMapReady', pos, zoom, bearing, addedLayers.length, theme);
             try {
                 packageService.start();
                 transitService.start();
@@ -1479,6 +1479,7 @@
     }
     function replaceLayer(oldLayer: Layer<any, any>, layer: Layer<any, any>) {
         const index = addedLayers.findIndex((d) => d.layer === oldLayer);
+        DEV_LOG && console.log('replaceLayer', index, oldLayer, layer);
         if (index !== -1) {
             addedLayers[index].layer = layer;
             cartoMap.getLayers().set(index, layer);
