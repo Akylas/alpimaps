@@ -29,6 +29,7 @@ dayjs.extend(utc);
 
 export let lang;
 export const langStore = writable(null);
+export const fullLangStore = writable(null);
 let default24Clock = false;
 if (__ANDROID__) {
     default24Clock = android.text.format.DateFormat.is24HourFormat(Utils.android.getApplicationContext());
@@ -70,8 +71,16 @@ langStore.subscribe((newLang: string) => {
     }
     globalObservable.notify({ eventName: 'language', data: lang });
 });
+
+function setFullLanguageCode(currentLanguage) {
+    currentLanguage = currentLanguage.replace('_', '-');
+    fullLangStore.set(currentLanguage.split('-').length === 1 ? currentLanguage + '-' + currentLanguage.toUpperCase() : currentLanguage);
+}
 function setLang(newLang) {
-    let actualNewLang = getActualLanguage(newLang);
+    let actualNewLang;
+    let trueNewLang;
+    // eslint-disable-next-line prefer-const
+    [actualNewLang, trueNewLang] = getActualLanguage(newLang);
     DEV_LOG && console.log('setLang', newLang, actualNewLang);
     if (__IOS__) {
         overrideNativeLocale(actualNewLang);
@@ -99,43 +108,46 @@ function setLang(newLang) {
             androidx.appcompat.app.AppCompatDelegate['setApplicationLocales'](appLocale);
             currentLocale = null;
             // TODO: check why getEmptyLocaleList does not reset the locale to system
-            actualNewLang = getActualLanguage(newLang);
+            [actualNewLang, newLang] = getActualLanguage(newLang);
         } catch (error) {
             console.error(error, error.stack);
         }
     }
     langStore.set(actualNewLang);
+    setFullLanguageCode(trueNewLang);
 }
 
 const deviceLanguage = getString('language', 'auto');
 function getActualLanguage(language) {
-    if (language === 'auto') {
+    let result = language;
+    if (result === 'auto') {
         if (__ANDROID__) {
             // N Device.language reads app config which thus does return locale app language and not device language
-            language = java.util.Locale.getDefault().getLanguage();
+            language = result = java.util.Locale.getDefault().toLanguageTag();
         } else {
-            language = Device.language;
+            language = result = Device.language;
         }
     }
-    switch (language) {
+    if (supportedLanguages.indexOf(result) === -1) {
+        result = result.split('-')[0].toLowerCase();
+        if (supportedLanguages.indexOf(result) === -1) {
+            result = 'en';
+        }
+    }
+
+    switch (result) {
         case 'cs':
-            language = 'cz';
+            result = 'cz';
             break;
         case 'jp':
-            language = 'ja';
+            result = 'ja';
             break;
         case 'lv':
-            language = 'la';
+            result = 'la';
             break;
     }
 
-    if (supportedLanguages.indexOf(language) === -1) {
-        language = language.split('-')[0].toLowerCase();
-        if (supportedLanguages.indexOf(language) === -1) {
-            language = 'en';
-        }
-    }
-    return language;
+    return [result, language];
 }
 
 export function getLocalTime(timestamp?: number | string | dayjs.Dayjs | Date, timezoneOffset?: number) {
@@ -291,6 +303,7 @@ Application.on('activity_started', () => {
             const actualNewLang = getActualLanguage(lang);
             if (actualNewLang !== get(langStore)) {
                 langStore.set(actualNewLang);
+                setFullLanguageCode(lang);
             }
         }
     }

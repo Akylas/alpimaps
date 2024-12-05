@@ -342,6 +342,10 @@ module.exports = (env, params = {}) => {
     const supportedLocales = readdirSync(join(projectRoot, appPath, 'i18n'))
         .filter((s) => s.endsWith('.json'))
         .map((s) => s.replace('.json', ''));
+
+    const supportedValhallaLocales = readdirSync(join(projectRoot, appPath, 'assets', 'valhalla'))
+        .filter((s) => s.endsWith('.json'))
+        .map((s) => s.replace('.json', ''));
     config.externals.push('~/licenses.json');
     config.externals.push('~/osm_icons.json');
     config.externals.push('~/material_icons.json');
@@ -359,6 +363,9 @@ module.exports = (env, params = {}) => {
     });
     supportedLocales.forEach((l) => {
         config.externals.push(`~/i18n/${l}.json`);
+    });
+    supportedValhallaLocales.forEach((l) => {
+        config.externals.push(`~/assets/valhalla/${l}.json`);
     });
 
     // disable resolve of symlinks so that stack dont use real path but node_modules ones
@@ -413,6 +420,7 @@ module.exports = (env, params = {}) => {
         __APP_BUILD_NUMBER__: `"${buildNumber}"`,
         __DISABLE_OFFLINE__: disableoffline,
         SUPPORTED_LOCALES: JSON.stringify(supportedLocales),
+        SUPPORTED_VALHALLA_LOCALES: JSON.stringify(supportedValhallaLocales),
         DEFAULT_LOCALE: `"${locale}"`,
         WITH_BUS_SUPPORT: busSupport,
         DEFAULT_THEME: `"${theme}"`,
