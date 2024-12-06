@@ -32,13 +32,13 @@ echo "FLAVOR    = ${FLAVOR}"
 echo "FLAVOR    = $(dirname $0)"
 
 if [[ -z "${CARTO_SDK_VERSION}" ]]; then
-  CARTO_SDK_VERSION="5.0.0-rc.4"
+  CARTO_SDK_VERSION="5.0.0-rc.6"
 else
   CARTO_SDK_VERSION="${CARTO_SDK_VERSION}"
 fi
 
 
-git clone --recurse-submodules -b alpimaps https://github.com/nativescript-community/ui-carto.git
+git clone --recurse-submodules https://github.com/nativescript-community/ui-carto.git
 
 if [ "$PLATFORM" = "android" ]; then
   sudo apt-get -y install fontforge
