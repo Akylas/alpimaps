@@ -956,14 +956,6 @@ module.exports = (env, params = {}) => {
                     comments: false,
                     semicolons: !isAnySourceMapEnabled
                 },
-                mangle: isAndroid
-                    ? {
-                          properties: {
-                              reserved: ['__metadata'],
-                              regex: /^(m[A-Z])/
-                          }
-                      }
-                    : true,
                 compress: {
                     booleans_as_integers: false,
                     // The Android SBG has problems parsing the output
