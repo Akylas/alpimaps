@@ -1,0 +1,5 @@
+Features:
+- offline valhalla custom locale support
+
+Bug fixes:
+- cancel request on search cancel
