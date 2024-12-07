@@ -308,8 +308,9 @@ export function start() {
         updateThemeColors(getRealTheme(theme), colorTheme);
         globalObservable.notify({ eventName: 'color_theme', data: colorTheme });
     });
+
     prefs.on('key:theme', () => {
-        let newTheme = getString('theme') as Themes;
+        let newTheme = getString('theme', DEFAULT_THEME) as Themes;
         DEV_LOG && console.log('key:theme', theme, newTheme, autoDarkToBlack);
         if (__IOS__ && SDK_VERSION < 13) {
             newTheme = 'light';
