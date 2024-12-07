@@ -128,6 +128,7 @@ function getActualLanguage(language) {
             language = result = Device.language;
         }
     }
+
     if (supportedLanguages.indexOf(result) === -1) {
         result = result.split('-')[0].toLowerCase();
         if (supportedLanguages.indexOf(result) === -1) {
