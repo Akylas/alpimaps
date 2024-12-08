@@ -141,5 +141,15 @@
     "communications_tower": "信号塔",
     "compass": "指南针",
     "computer": "电脑",
-    "crane": "起重机"
+    "crane": "起重机",
+    "day_time": "日间",
+    "day_night_cycle": "日夜循环",
+    "daylight_left": "白昼剩余",
+    "debug_gpu_picking": "调试GPU拣选",
+    "debug_mode": "调试模式",
+    "defibrillator": "除颤器",
+    "description": "描述",
+    "description_required": "需要描述",
+    "devmode_off": "开发模式已禁用",
+    "devmode_on": "开发模式已启用"
 }
