@@ -12,7 +12,7 @@
     "auto": "ⴰⵡⵓⵔⵎⴰⵏ",
     "add_source": "ⵔⵏⵓ ⴰⵙⴰⴳⵎ",
     "address": "ⴰⵏⵙⴰ",
-    "airfield": "",
+    "airfield": "ⴰⵣⴰⴳⵯⵣ",
     "airport": "ⴰⵣⴰⴳⵯⵣ",
     "alcohol_shop": "ⵜⴰⵃⴰⵏⵓⵜ ⵏ ⵡⴰⵍⴽⵓⵍ",
     "altimeter": "ⵜⴰⵎⵙⵖⴰⵍⵜ ⵏ ⵜⴰⵜⵜⵓⵢⵜ",
@@ -25,5 +25,14 @@
     "archaeological_site": "ⴰⵏⵙⴰ ⴰⵕⴽⵢⵓⵍⵓⵊⵉ",
     "art": "ⵜⴰⵥⵓⵕⵉ",
     "barometer": "ⴰⴱⴰⵕⵓⵎⵉⵟⵕ",
-    "barrier": "ⴰⴼⵔⴰⴳ"
+    "barrier": "ⴰⴼⵔⴰⴳ",
+    "aquarium": "ⵜⴰⵙⴳⵎⵉⵍⵜ",
+    "astronomy": "ⵜⴰⵚⵟⵕⵓⵏⵓⵎⵜ",
+    "artwork": "ⵜⴰⵡⵓⵔⵉ ⵜⴰⵥⵓⵕⴰⵏⵜ",
+    "atm": "ⴰⵙⴽⵙⵍ ⴰⵡⵓⵔⵎⴰⵏ",
+    "alley_factor": "ⴰⵎⵙⴽⴰⵔ ⵉⵣⵣⴳⴰⵔⵏ ⵅⴼ ⵜⵙⵡⴰⴽ (ⵜⴰⴼⴳⵓⵔⵜ)",
+    "address_settings": "ⵜⵉⵙⵖⴰⵍ ⵏ ⵓⵙⴷⵖⵔ ⴰⵊⵖⵔⴰⴼⵉ",
+    "all": "ⵇⴰⵃ",
+    "alpine_hut": "ⴰⵙⵏⵙⵓ ⴰⵎⴷⵔⴰⵔ",
+    "amusement_arcade": "ⴰⵙⴰⵢⵔⴰⵔ ⵏ ⵓⵡⵔⴰⵔ"
 }
