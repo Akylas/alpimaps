@@ -1,6 +1,5 @@
 import { capitalize, l, lc, loadLocaleJSON, lt, lu, overrideNativeLocale } from '@nativescript-community/l';
 import { Application, ApplicationSettings, Device, EventData, File, Utils } from '@nativescript/core';
-import { getString } from '@nativescript/core/application-settings';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
@@ -11,7 +10,7 @@ import utc from 'dayjs/plugin/utc';
 
 import { derived, get, writable } from 'svelte/store';
 import { prefs } from '~/services/preferences';
-import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
+import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_LOCALE, SETTINGS_LANGUAGE } from '~/utils/constants';
 import { showError } from '@shared/utils/showError';
 import { createGlobalEventListener, globalObservable } from '@shared/utils/svelte/ui';
 import { showAlertOptionSelect } from '~/utils/ui';
@@ -37,7 +36,7 @@ if (__ANDROID__) {
 export let clock_24 = ApplicationSettings.getBoolean('clock_24', default24Clock) || default24Clock;
 export const clock_24Store = writable(null);
 
-export const onLanguageChanged = createGlobalEventListener<string, EventData & { clock_24: boolean }>('language');
+export const onLanguageChanged = createGlobalEventListener<string, EventData & { clock_24: boolean }>(SETTINGS_LANGUAGE);
 export const onMapLanguageChanged = createGlobalEventListener<string>('map_language');
 // export const onTimeChanged = createGlobalEventListener('time');
 
@@ -65,11 +64,11 @@ langStore.subscribe((newLang: string) => {
     loadDayjsLang(lang);
     try {
         // const localeData = require(`~/i18n/${lang}.json`);
-        loadLocaleJSON(`~/i18n/${lang}.json`, `~/i18n/${DEFAULT_LOCALE}.json`);
+        loadLocaleJSON(`~/i18n/${lang}.json`, `~/i18n/${FALLBACK_LOCALE}.json`);
     } catch (err) {
         console.error(lang, `~/i18n/${lang}.json`, File.exists(`~/i18n/${lang}.json`), err, err.stack);
     }
-    globalObservable.notify({ eventName: 'language', data: lang });
+    globalObservable.notify({ eventName: SETTINGS_LANGUAGE, data: lang });
 });
 
 function setFullLanguageCode(currentLanguage) {
@@ -117,7 +116,7 @@ function setLang(newLang) {
     setFullLanguageCode(trueNewLang);
 }
 
-const deviceLanguage = getString('language', 'auto');
+const deviceLanguage = ApplicationSettings.getString(SETTINGS_LANGUAGE, DEFAULT_LOCALE);
 function getActualLanguage(language) {
     let result = language;
     if (result === 'auto') {
@@ -186,8 +185,8 @@ export function formatTime(date: number | dayjs.Dayjs | string | Date, formatStr
     return '';
 }
 
-prefs.on('key:language', () => {
-    const newLanguage = getString('language');
+prefs.on(`key:${SETTINGS_LANGUAGE}`, () => {
+    const newLanguage = ApplicationSettings.getString(SETTINGS_LANGUAGE, DEFAULT_LOCALE);
     DEV_LOG && console.log('language changed', newLanguage);
     // on pref change we are updating
     if (newLanguage === lang) {
@@ -202,7 +201,7 @@ prefs.on('key:clock_24', () => {
     clock_24 = newValue;
     clock_24Store.set(newValue);
     // we fake a language change to update the UI
-    globalObservable.notify({ eventName: 'language', data: lang, clock_24: true });
+    globalObservable.notify({ eventName: SETTINGS_LANGUAGE, data: lang, clock_24: true });
 });
 
 let currentLocale: any = null;
@@ -226,7 +225,7 @@ export function getCurrentISO3Language() {
 async function internalSelectLanguage() {
     // try {
     const actions = SUPPORTED_LOCALES;
-    const currentLanguage = getString('language', 'auto');
+    const currentLanguage = ApplicationSettings.getString(SETTINGS_LANGUAGE, DEFAULT_LOCALE);
     let selectedIndex = -1;
     const options = [{ name: lc('auto'), data: 'auto' }].concat(actions.map((k) => ({ name: getLocaleDisplayName(k.replace('_', '-')), data: k }))).map((d, index) => {
         const selected = currentLanguage === d.data;
@@ -257,7 +256,7 @@ export async function selectLanguage() {
         const result = await internalSelectLanguage();
         DEV_LOG && console.log('selectLanguage', result);
         if (result?.data) {
-            ApplicationSettings.setString('language', result.data);
+            ApplicationSettings.setString(SETTINGS_LANGUAGE, result.data);
         }
     } catch (err) {
         showError(err);
@@ -295,11 +294,11 @@ export function convertDurationSeconds(seconds, formatStr?: string) {
 // TODO: on android 13 check for per app language, we dont need to store it
 setLang(deviceLanguage);
 
-Application.on('activity_started', () => {
-    // on android after switching to auto we dont get the actual language
-    // before an activity restart
-    if (__ANDROID__) {
-        const lang = ApplicationSettings.getString('language');
+if (__ANDROID__) {
+    Application.android.on(Application.android.activityStartedEvent, () => {
+        // on android after switching to auto we dont get the actual language
+        // before an activity restart
+        const lang = ApplicationSettings.getString(SETTINGS_LANGUAGE, DEFAULT_LOCALE);
         if (lang === 'auto') {
             const actualNewLang = getActualLanguage(lang);
             if (actualNewLang !== get(langStore)) {
@@ -307,8 +306,8 @@ Application.on('activity_started', () => {
                 setFullLanguageCode(lang);
             }
         }
-    }
-});
+    });
+}
 
 export { l, lc, lt, lu };
 export const sl = derived([langStore], () => l);
