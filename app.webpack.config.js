@@ -422,7 +422,7 @@ module.exports = (env, params = {}) => {
         __DISABLE_OFFLINE__: disableoffline,
         SUPPORTED_LOCALES: JSON.stringify(supportedLocales),
         SUPPORTED_VALHALLA_LOCALES: JSON.stringify(supportedValhallaLocales),
-        DEFAULT_LOCALE: `"${locale}"`,
+        FALLBACK_LOCALE: `"${locale}"`,
         WITH_BUS_SUPPORT: busSupport,
         DEFAULT_THEME: `"${theme}"`,
         SENTRY_ENABLED: !!sentry,
