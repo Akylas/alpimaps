@@ -1867,7 +1867,7 @@
                 hintText: lc('description'),
                 helperText: lc('please_describe_error')
             });
-            if (result.result) {
+            if (result?.result) {
                 Sentry.captureMessage(result.text);
                 // flush is not yet working on Android
                 // event will be sent on restart
