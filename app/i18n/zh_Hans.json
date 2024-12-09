@@ -160,5 +160,18 @@
     "dentist": "牙医诊所",
     "department_store": "百货商场",
     "directions_settings": "所有方向相关设置",
-    "dirt": "天然"
+    "dirt": "天然",
+    "barometer": "气压计",
+    "baseball": "棒球",
+    "building_alt1": "建筑物",
+    "bus": "巴士",
+    "bus_stop": "巴士站",
+    "cave": "洞穴",
+    "current_temperature": "当前温度",
+    "clear": "清除",
+    "convenience": "便利",
+    "bicycle": "单车",
+    "bookmaker": "博彩商",
+    "bus_stop_infos": "巴士站资讯",
+    "bust": "半身像"
 }
