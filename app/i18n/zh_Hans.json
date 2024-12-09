@@ -173,5 +173,17 @@
     "bicycle": "单车",
     "bookmaker": "博彩商",
     "bus_stop_infos": "巴士站资讯",
-    "bust": "半身像"
+    "bust": "半身像",
+    "danger": "危险",
+    "dark": "深色",
+    "dark_mode": "深色模式",
+    "daylight_duration": "日照时长",
+    "custom": "自定义",
+    "cycleway": "自行车道",
+    "cycling_speed": "骑行速度",
+    "dairy": "乳品店",
+    "dam": "水坝",
+    "data_source_already_added": "新的数据源已添加：%1$s",
+    "date": "日期",
+    "dayNightCycle": "昼/夜循环"
 }
