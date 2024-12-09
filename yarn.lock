@@ -43,7 +43,7 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=775e40&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=3cc613&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.28.0"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -98,7 +98,7 @@ __metadata:
     typescript: "npm:5.7.2"
     typescript-eslint: "npm:^8.17.0"
     webpack-bundle-analyzer: "npm:^4.10.2"
-  checksum: 10/d5eab3cf4d7878af303036b784aae20582d88ea1ce5db10d04235f34ef58000dbb527c70a490ace272edfcba74a6ed35e74afe0e4f6ece692942fe243a722c1f
+  checksum: 10/80b85a93a9d0af3f9eb876bc5ad1b8cf02be9cfa82435e82a3d7bff0f7be3d9cc2c53ba08ed099305e7d2d3de77c473b4d10f878aa4072afed379a04f79cb27b
   languageName: node
   linkType: hard
 
@@ -2386,7 +2386,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/text@npm:1.6.6, @nativescript-community/text@npm:^1.5.2, @nativescript-community/text@npm:^1.5.33, @nativescript-community/text@npm:^1.6.3":
+"@nativescript-community/text@npm:1.6.7":
+  version: 1.6.7
+  resolution: "@nativescript-community/text@npm:1.6.7"
+  checksum: 10/49fd2ee8ddadd010c4db40e75e6bbca26274131694f711e991ce4f9124fffe19cabb9dda5452bc911b8558575f220f18b30783cd85a54a47197e4718165dd45e
+  languageName: node
+  linkType: hard
+
+"@nativescript-community/text@npm:^1.5.2, @nativescript-community/text@npm:^1.5.33, @nativescript-community/text@npm:^1.6.3":
   version: 1.6.6
   resolution: "@nativescript-community/text@npm:1.6.6"
   checksum: 10/75504a5491cf111e6d3b6fb26c6d05f7e4a00b2513e8e67b4ff68adb2ace7b1fa436556ae77cb8dec8ebe852823ffc0c546ca5e469c40508babad31db5303018
@@ -13836,7 +13843,7 @@ __metadata:
     "@nativescript-community/sentry": "npm:4.6.38"
     "@nativescript-community/sqlite": "npm:3.5.1"
     "@nativescript-community/systemui": "npm:1.1.23"
-    "@nativescript-community/text": "npm:1.6.6"
+    "@nativescript-community/text": "npm:1.6.7"
     "@nativescript-community/ui-canvas": "npm:4.6.36"
     "@nativescript-community/ui-canvaslabel": "npm:1.2.39"
     "@nativescript-community/ui-carto": "npm:1.8.18"
