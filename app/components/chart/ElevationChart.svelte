@@ -21,7 +21,7 @@
     import { showError } from '@shared/utils/showError';
     import { colors, fonts } from '~/variables';
     import { SDK_VERSION } from '@akylas/nativescript/utils';
-    $: ({ colorOnSurface, colorPrimary, colorOutlineVariant } = $colors);
+    $: ({ colorOnSurface, colorOutlineVariant, colorPrimary } = $colors);
 
     const dispatch = createEventDispatcher();
     const mapContext = getMapContext();
@@ -52,7 +52,7 @@
         try {
             const chart = event.object as LineChart;
             const xAxisRender = chart.xAxisRenderer;
-            const { min, max } = xAxisRender.getCurrentMinMax();
+            const { max, min } = xAxisRender.getCurrentMinMax();
             const dataSet = chart.data.getDataSetByIndex(0);
             dataSet.ignoreFiltered = true;
             const minX = dataSet.getEntryIndexForXValue(min, NaN, Rounding.CLOSEST);
@@ -257,7 +257,6 @@
             const xAxis = chartView.xAxis;
             if (!chartInitialized) {
                 chartInitialized = true;
-                chartView.panGestureOptions = { minDist: 40, failOffsetYEnd: 20 };
                 chartView.highlightPerDragEnabled = true;
                 chartView.highlightPerTapEnabled = true;
                 chartView.scaleXEnabled = true;
@@ -266,24 +265,19 @@
                 chartView.clipHighlightToContent = false;
                 chartView.zoomedPanWith2Pointers = true;
                 chartView.clipDataToContent = true;
-                // chartView.clipValuesToContent=(false);
 
-                // chartView.extraTopOffset=(30);
                 chartView.minOffset = 0;
                 chartView.setExtraOffsets(0, 24, 0, 10);
-                // chartView.axisRight.setEnabled(false);
                 leftAxis.textColor = colorOnSurface;
                 leftAxis.drawZeroLine = true;
                 leftAxis.gridColor = colorOutlineVariant;
 
                 leftAxis.gridDashPathEffect = new DashPathEffect([6, 3], 0);
                 leftAxis.ensureLastLabel = true;
-                // leftAxis.labelCount=(3);
 
                 xAxis.position = XAxisPosition.TOP;
                 xAxis.labelTextAlign = Align.CENTER;
                 xAxis.ensureLastLabel = true;
-                // xAxis.labelCount=(4);
                 xAxis.textColor = colorOnSurface;
                 xAxis.gridColor = colorOutlineVariant;
                 xAxis.drawGridLines = false;
@@ -307,7 +301,6 @@
                     }
                 };
             } else {
-                // console.log('clearing highlight')
                 chartView.highlightValues(null);
                 chartView.resetZoom();
             }
@@ -325,9 +318,6 @@
             const chartData = chartView.data;
             if (!chartData) {
                 const set = new LineDataSet(profileData, 'a', 'd', 'a');
-                // set.drawValues=(false);
-                // set.valueTextColor=(colorOnSurface);
-                // set.valueTextSize=(10);
                 set.maxFilterNumber = 50;
                 set.useColorsForFill = true;
                 set.fillFormatter = {
@@ -350,7 +340,6 @@
                     set.lineWidth = 2;
                     set.colors = profile.colors as any;
                 }
-                // set.mode=(Mode.LINEAR);
                 sets.push(set);
                 const lineData = new LineData(sets);
                 chartView.data = lineData;
@@ -373,9 +362,22 @@
 
             onChartDataUpdateCallbacks.forEach((c) => c());
             onChartDataUpdateCallbacks = [];
-            // chartView.zoomAndCenter(7, 1, 100, 0, AxisDependency.LEFT);
         }
     }
 </script>
 
-<linechart bind:this={chart} hardwareAccelerated={__ANDROID__ && SDK_VERSION >= 28} {...$$restProps} on:highlight={onChartHighlight} on:zoom={onChartPanOrZoom} on:pan={onChartPanOrZoom} />
+<linechart
+    bind:this={chart}
+    hardwareAccelerated={__ANDROID__ && SDK_VERSION >= 28}
+    {...$$restProps}
+    doubleTapGestureOptions={{
+        maxDelayMs: 100
+    }}
+    panGestureOptions={{
+        minDist: 20,
+        failOffsetYStart: -20,
+        failOffsetYEnd: 20
+    }}
+    on:highlight={onChartHighlight}
+    on:zoom={onChartPanOrZoom}
+    on:pan={onChartPanOrZoom} />
