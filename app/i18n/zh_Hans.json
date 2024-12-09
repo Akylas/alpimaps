@@ -134,7 +134,8 @@
     "color_theme": {
         "dynamic": "动态色彩",
         "eink": "墨水屏",
-        "title": "主题色"
+        "title": "主题色",
+        "default": "系统默认"
     },
     "comments": "建议",
     "commercial": "商业",
@@ -151,5 +152,13 @@
     "description": "描述",
     "description_required": "需要描述",
     "devmode_off": "开发模式已禁用",
-    "devmode_on": "开发模式已启用"
+    "devmode_on": "开发模式已启用",
+    "clear_cache": "清除缓存数据",
+    "collapse": "崩溃",
+    "delete": "删除",
+    "deli": "熟食店",
+    "dentist": "牙医诊所",
+    "department_store": "百货商场",
+    "directions_settings": "所有方向相关设置",
+    "dirt": "天然"
 }
