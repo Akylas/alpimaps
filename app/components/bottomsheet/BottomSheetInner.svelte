@@ -619,10 +619,16 @@
             updatingItem = true;
             const query = formatter.getItemTitle(item);
             const geometry = item.geometry as Point;
-            let url = `weather://query?lat=${geometry.coordinates[1]}&lon=${geometry.coordinates[0]}&name=${query}`;
-            if (item.properties.address) {
-                url += `&address=${JSON.stringify(item.properties.address)}`;
+            let url;
+            if (__ANDROID__) {
+                url = `weather://query?lat=${geometry.coordinates[1]}&lon=${geometry.coordinates[0]}&name=${query}`;
+                if (item.properties.address) {
+                    url += `&address=${JSON.stringify(item.properties.address)}`;
+                }
+            } else {
+                url = `https://weather.apple.com/?lat=${geometry.coordinates[1]}&lng=${geometry.coordinates[0]}`;
             }
+            DEV_LOG && console.log('checkWeather', url);
             openUrl(url);
         } catch (err) {
             showError(err);
