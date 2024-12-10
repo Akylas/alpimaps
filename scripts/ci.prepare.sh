@@ -43,11 +43,15 @@ git clone --recurse-submodules -b alpimaps https://github.com/nativescript-commu
 if [ "$PLATFORM" = "android" ]; then
   sudo apt-get -y install fontforge
   wget https://github.com/Akylas/mobile-sdk/releases/download/v$CARTO_SDK_VERSION/carto-mobile-sdk-android-$CARTO_SDK_VERSION.aar
+  wget https://github.com/Akylas/mobile-sdk/releases/download/v$CARTO_SDK_VERSION/css2xml_linux.zip 
   mv carto-mobile-sdk-android-$CARTO_SDK_VERSION.aar ./ui-carto/packages/ui-carto/platforms/android
+  unzip -o -d ./css2xml_linux.zip
 else
   brew install fontforge
   wget https://github.com/Akylas/mobile-sdk/releases/download/v$CARTO_SDK_VERSION/carto-mobile-sdk-ios-$CARTO_SDK_VERSION.zip
   unzip -o -d ./ui-carto/packages/ui-carto/platforms/ios carto-mobile-sdk-ios-$CARTO_SDK_VERSION.zip
+  wget https://github.com/Akylas/mobile-sdk/releases/download/v$CARTO_SDK_VERSION/css2xml_macos.zip 
+  unzip -o -d ./css2xml_macos.zip
 fi
 
 cd ui-carto
