@@ -834,7 +834,7 @@ module.exports = (env, params = {}) => {
     }
 
     if (buildstyle) {
-        const css2xmlBin = `css2xml_${process.platform}`;
+        const css2xmlBin = `css2xml_${process.platform === 'darwin' ? 'macos' : process.platform}`;
         let dir1 = join(projectRoot, 'dev_assets/styles/inner_cleaned');
         if (!existsSync(dir1)) {
             mkdirSync(dir1);
