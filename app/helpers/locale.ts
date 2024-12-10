@@ -300,10 +300,10 @@ if (__ANDROID__) {
         // before an activity restart
         const lang = ApplicationSettings.getString(SETTINGS_LANGUAGE, DEFAULT_LOCALE);
         if (lang === 'auto') {
-            const actualNewLang = getActualLanguage(lang);
+            const [actualNewLang, trueNewLang] = getActualLanguage(lang);
             if (actualNewLang !== get(langStore)) {
                 langStore.set(actualNewLang);
-                setFullLanguageCode(lang);
+                setFullLanguageCode(trueNewLang);
             }
         }
     });
