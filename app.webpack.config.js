@@ -9,6 +9,7 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const IgnoreNotFoundExportPlugin = require('./tools/scripts/IgnoreNotFoundExportPlugin');
+const WaitPlugin = require('./tools/scripts/WaitPlugin');
 const Fontmin = require('@nativescript-community/fontmin');
 const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 const WebpackShellPluginNext = require('webpack-shell-plugin-next');
@@ -342,6 +343,10 @@ module.exports = (env, params = {}) => {
     const supportedLocales = readdirSync(join(projectRoot, appPath, 'i18n'))
         .filter((s) => s.endsWith('.json'))
         .map((s) => s.replace('.json', ''));
+
+    const supportedValhallaLocales = readdirSync(join(projectRoot, appPath, 'assets', 'valhalla'))
+        .filter((s) => s.endsWith('.json'))
+        .map((s) => s.replace('.json', ''));
     config.externals.push('~/licenses.json');
     config.externals.push('~/osm_icons.json');
     config.externals.push('~/material_icons.json');
@@ -359,6 +364,9 @@ module.exports = (env, params = {}) => {
     });
     supportedLocales.forEach((l) => {
         config.externals.push(`~/i18n/${l}.json`);
+    });
+    supportedValhallaLocales.forEach((l) => {
+        config.externals.push(`~/assets/valhalla/${l}.json`);
     });
 
     // disable resolve of symlinks so that stack dont use real path but node_modules ones
@@ -413,7 +421,8 @@ module.exports = (env, params = {}) => {
         __APP_BUILD_NUMBER__: `"${buildNumber}"`,
         __DISABLE_OFFLINE__: disableoffline,
         SUPPORTED_LOCALES: JSON.stringify(supportedLocales),
-        DEFAULT_LOCALE: `"${locale}"`,
+        SUPPORTED_VALHALLA_LOCALES: JSON.stringify(supportedValhallaLocales),
+        FALLBACK_LOCALE: `"${locale}"`,
         WITH_BUS_SUPPORT: busSupport,
         DEFAULT_THEME: `"${theme}"`,
         SENTRY_ENABLED: !!sentry,
@@ -443,11 +452,11 @@ module.exports = (env, params = {}) => {
             if (s === 'ios' || s === 'android') {
                 if (s === platform) {
                     Object.keys(keys[s]).forEach((s2) => {
-                        defines[`gVars.${s2}`] = apiKeys ? `'${keys[s][s2]}'` : 'undefined';
+                        defines[`${s2}`] = apiKeys ? `'${keys[s][s2]}'` : 'undefined';
                     });
                 }
             } else {
-                defines[`gVars.${s}`] = apiKeys ? `'${keys[s]}'` : 'undefined';
+                defines[`${s}`] = apiKeys ? `'${keys[s]}'` : 'undefined';
             }
         });
     } catch (error) {
@@ -947,14 +956,6 @@ module.exports = (env, params = {}) => {
                     comments: false,
                     semicolons: !isAnySourceMapEnabled
                 },
-                mangle: isAndroid
-                    ? {
-                          properties: {
-                              reserved: ['__metadata'],
-                              regex: /^(m[A-Z])/
-                          }
-                      }
-                    : true,
                 compress: {
                     booleans_as_integers: false,
                     // The Android SBG has problems parsing the output
@@ -968,6 +969,9 @@ module.exports = (env, params = {}) => {
         })
     ];
     if (buildpeakfinder) {
+        if (env.adhoc || env.adhoc_sentry) {
+            config.plugins.push(new WaitPlugin(join(projectRoot, appPath, 'assets', 'peakfinder', 'index.html'), 100, 60000));
+        }
         return [require('./peakfinder/webpack.config.js')(env, params), config];
     } else {
         return config;

@@ -39,11 +39,11 @@ export const data: { [k: string]: Provider } = {
     //         // style:'style',
     //         // styleFile:'mapzen.zip'
     //     },
-    //     url: ['carto.streets', 'https://a.tiles.mapbox.com/v4/mapbox.mapbox-terrain-v2/{zoom}/{x}/{y}.vector.pbf?access_token=' + gVars.MAPBOX_TOKEN]
+    //     url: ['carto.streets', 'https://a.tiles.mapbox.com/v4/mapbox.mapbox-terrain-v2/{zoom}/{x}/{y}.vector.pbf?access_token=' + MAPBOX_TOKEN]
     // },
     // MapBoxVector: {
     //     // styleFile: "carto_mapbox.zip",
-    //     url: 'https://a.tiles.mapbox.com/v4/{variant}/{zoom}/{x}/{y}.vector.pbf?access_token=' + gVars.MAPBOX_TOKEN,
+    //     url: 'https://a.tiles.mapbox.com/v4/{variant}/{zoom}/{x}/{y}.vector.pbf?access_token=' + MAPBOX_TOKEN,
     //     attribution: 'Imagery from <a href="http://mapbox.com/about/maps/">MapBox</a> &mdash; ' + 'Map data {attribution.OpenStreetMap}',
     //     urlOptions: {
     //         variant: 'mapbox.mapbox-streets-v7'
