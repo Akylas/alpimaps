@@ -438,6 +438,11 @@ export class NetworkService extends Observable {
             }
         }
     }
+    clearRequests(...tags) {
+        for (let index = 0; index < tags.length; index++) {
+            https.cancelRequest(tags[index]);
+        }
+    }
     stop() {
         if (!this.monitoring) {
             return;
@@ -704,7 +709,7 @@ export class NetworkService extends Observable {
     // }
     // actualMapquestElevationProfile(_points: MapPos<LatLonKeys>[]) {
     //     const params = {
-    //         key: gVars.MAPQUEST_TOKEN,
+    //         key: MAPQUEST_TOKEN,
     //         inFormat: 'json',
     //         outFormat: 'json'
     //     };

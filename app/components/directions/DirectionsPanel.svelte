@@ -20,7 +20,7 @@
     import { GeoLocation } from '~/handlers/GeoHandler';
     import { formatDistance } from '~/helpers/formatter';
     import { getDistance } from '~/helpers/geolib';
-    import { lang, lc } from '~/helpers/locale';
+    import { fullLangStore, lang, lc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem, IItem as Item, RouteInstruction, RouteProfile, RouteStats, DirectionWayPoint as WayPoint } from '~/models/Item';
@@ -753,8 +753,7 @@
             let startTime = Date.now();
             const projection = mapContext.getProjection();
             const customOptions = {
-                //TODO: we need to full language code like en-US
-                directions_options: { language: lang },
+                language: $fullLangStore,
                 costing_options
             };
             DEV_LOG && console.log('calculateRoute', profile, JSON.stringify(points), JSON.stringify(customOptions));
