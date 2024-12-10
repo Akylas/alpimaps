@@ -23,7 +23,7 @@ import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector'
 import { Projection } from '@nativescript-community/ui-carto/projections';
 import { MultiValhallaOfflineRoutingService, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
 import { SearchRequest, VectorTileSearchService } from '@nativescript-community/ui-carto/search';
-import { Folder, knownFolders, path } from '@nativescript/core/file-system';
+import { File, Folder, knownFolders, path } from '@nativescript/core/file-system';
 import type { Point as GeoJSONPoint } from 'geojson';
 import { LineString, MultiLineString, Point } from 'geojson';
 import { getMapContext } from '~/mapModules/MapModule';
@@ -42,6 +42,7 @@ import {
     SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE,
     SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN
 } from '~/utils/constants';
+import { fullLangStore } from '~/helpers/locale';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
@@ -357,7 +358,7 @@ class PackageService extends Observable {
             let foundAddress = false;
             const geometry = item.geometry as GeoJSONPoint;
             const location = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-            DEV_LOG && console.log('fetching addresses', !!service, location, get(useOfflineGeocodeAddress), get(useSystemGeocodeAddress), geocodingAvailable);
+            DEV_LOG && console.log('fetching addresses', !!service, location, get(useOfflineGeocodeAddress), get(useSystemGeocodeAddress), geocodingAvailable, !!service);
             if (get(useOfflineGeocodeAddress) && service) {
                 const radius = 200;
                 const res = await packageService.searchInGeocodingService(service, {
@@ -916,13 +917,18 @@ class PackageService extends Observable {
     offlineRoutingSearchService() {
         if (this.hasOfflineRouting && !this.mLocalOfflineRoutingSearchService) {
             const files = this.findFilesWithExtension('.vtiles');
-            // console.log('offlineRoutingSearchService', files);
+            const currentLanguage = get(fullLangStore);
             if (files.length) {
                 const source = (this.mLocalOfflineRoutingSearchService = new MultiValhallaOfflineRoutingService());
                 this.setValhallaSetting(SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN, DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN);
                 this.setValhallaSetting(SETTINGS_VALHALLA_MAX_DISTANCE_AUTO, DEFAULT_VALHALLA_MAX_DISTANCE_AUTO);
                 this.setValhallaSetting(SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE, DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE);
                 files.forEach((f) => source.add(f.path));
+                if (currentLanguage !== 'en-US' && SUPPORTED_VALHALLA_LOCALES.indexOf(currentLanguage) !== -1) {
+                    const localeData = require(`~/assets/valhalla/${currentLanguage}.json`);
+                    DEV_LOG && console.log('loading custom valhalla locale', currentLanguage);
+                    this.mLocalOfflineRoutingSearchService.addLocale(currentLanguage, JSON.stringify(localeData));
+                }
             } else {
                 this.hasOfflineRouting = false;
             }
@@ -933,7 +939,7 @@ class PackageService extends Observable {
     onlineRoutingSearchService() {
         if (!this.mOnlineRoutingSearchService) {
             this.mOnlineRoutingSearchService = new ValhallaOnlineRoutingService({
-                apiKey: gVars.MAPBOX_TOKEN,
+                apiKey: MAPBOX_TOKEN,
                 customServiceURL: 'https://valhalla1.openstreetmap.de/{service}',
                 profile: 'pedestrian'
             });

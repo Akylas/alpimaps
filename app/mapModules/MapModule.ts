@@ -274,7 +274,7 @@ export async function handleMapAction(action: string, options?) {
                 parent,
                 view: AstronomyView,
                 skipCollapsedState: true,
-                peekHeight: options.name ? 350 : 300,
+                peekHeight: options?.name ? 350 : 300,
                 props: {
                     ...options,
                     location
