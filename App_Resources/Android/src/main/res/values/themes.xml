@@ -57,7 +57,6 @@
         <!-- <item name="bottomSheetDialogTheme">@style/ThemeOverlay.App.BottomSheetDialogEInk</item> -->
     </style>
     <style name="AppTheme.EInk" parent="AppTheme">
-        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.App.EinkBottomSheetDialog</item>
         <item name="android:windowTranslucentStatus">false</item>
         <item name="android:windowActionBarOverlay">false</item>
         <item name="android:windowTranslucentNavigation">false</item>

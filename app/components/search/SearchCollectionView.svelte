@@ -145,11 +145,12 @@
         }
         const result = await networkService.request({
             url: 'https://places.cit.api.here.com/places/v1/discover/search',
+            tag: 'here',
             method: 'GET',
             queryParams: {
                 q: options.query,
-                app_id: gVars.HER_APP_ID,
-                app_code: gVars.HER_APP_CODE,
+                app_id: HER_APP_ID,
+                app_code: HER_APP_CODE,
                 radius: options.locationRadius,
                 tf: 'plain',
                 show_content: 'wikipedia',
@@ -184,6 +185,7 @@
         }
         const results = await networkService.request<Photon>({
             url: 'https://photon.komoot.io/api',
+            tag: 'photon',
             method: 'GET',
             queryParams: {
                 q: options.query,
@@ -286,6 +288,7 @@
         }
     }
     export function clearSearch(clearQuery = true) {
+        networkService.clearRequests('photon', 'here');
         loading = false;
         dataItems = new ObservableArray();
         // filteredDataItems = [];
