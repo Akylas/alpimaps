@@ -21,6 +21,7 @@
     import { colors } from '~/variables';
     import CompassDialView from './CompassDialView.svelte';
     import IconButton from '../common/IconButton.svelte';
+    import { showError } from '@shared/utils/showError';
     $: ({ colorPrimary } = $colors);
 
     let currentHeading: number = 0;
@@ -41,16 +42,17 @@
     const behavior = new SmoothCompassBehavior(0.5);
     let canvas: NativeViewElementNode<CanvasView>;
 
-    function startHeadingListener() {
+    async function startHeadingListener() {
         if (!listeningForHeading) {
             listeningForHeading = true;
-            startListeningForSensor('heading', onSensor, 100, 0, { headingFilter: 0 });
+
+            return startListeningForSensor('heading', onSensor, 100, 0, { headingFilter: 0 });
         }
     }
-    function stopHeadingListener() {
+    async function stopHeadingListener() {
         if (listeningForHeading) {
             listeningForHeading = false;
-            stopListeningForSensor('heading', onSensor);
+            return stopListeningForSensor('heading', onSensor);
         }
     }
     let androidDeclination;
@@ -83,17 +85,21 @@
         }
     }
 
-    $: {
+    $: setListeningState(updateWithSensor);
+
+    function setListeningState(updateWithSensor) {
         try {
+            DEV_LOG && console.log('updateWithSensor', updateWithSensor);
             if (updateWithSensor) {
                 startHeadingListener();
             } else {
                 stopHeadingListener();
             }
-        } catch (err) {
-            console.error('startHeadingListener', err, err['stack']);
+        } catch (error) {
+            showError(error);
         }
     }
+    setListeningState(updateWithSensor);
 
     $: {
         if (location) {
