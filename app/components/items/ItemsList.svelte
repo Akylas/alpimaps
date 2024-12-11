@@ -13,7 +13,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { UNITS, convertElevation, convertValueToUnit, osmicon } from '~/helpers/formatter';
     import { convertDurationSeconds, lc, lu, onLanguageChanged } from '~/helpers/locale';
-    import { colorTheme, onThemeChanged } from '~/helpers/theme';
+    import { colorTheme, isEInk, onThemeChanged } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import { Group, Item } from '~/models/Item';
@@ -154,8 +154,8 @@ LEFT JOIN  (
    ) t USING (id)`
                 };
                 const sqlItems = (await itemsModule.itemRepository.searchItem(searchArgs)).map((i) => ({ ...i }));
-        DEV_LOG && console.log('sqlItems', sqlItems, groups);
-        const oldGroups = groups;
+                DEV_LOG && console.log('sqlItems', sqlItems, groups);
+                const oldGroups = groups;
                 groups = groupBy<Group>(await itemsModule.groupsRepository.search(), (i) => i.name);
                 if (!groups['none']) {
                     await itemsModule.groupsRepository.create({ id: Date.now() + '', name: 'none', onMap: 1, collapse: 0 });
@@ -168,8 +168,8 @@ LEFT JOIN  (
                 //         }
                 //     });
                 // }
-        DEV_LOG && console.log('groups', groups);
-        groupedItems = groupByArray<Item>(sqlItems, (i) => i.groups);
+                DEV_LOG && console.log('groups', groups);
+                groupedItems = groupByArray<Item>(sqlItems, (i) => i.groups);
                 DEV_LOG && console.log('groupedItems', groupedItems);
                 const groupsCount = Object.keys(groupedItems).length;
                 const noneGroupItems: CollectionItem[] = groupsCount > 1 ? [] : groupedItems['none'] || [];
@@ -785,7 +785,7 @@ LEFT JOIN  (
             canvas.drawText(itemIcon, paddingLeft + 17, 63, iconPaint);
         }
     }
-    $: actionBarLabelColor = colorTheme === 'eink' ? colorOnSurface : colorOnPrimary;
+    $: actionBarLabelColor = isEInk ? colorOnSurface : colorOnPrimary;
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>

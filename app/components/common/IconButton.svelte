@@ -1,7 +1,9 @@
 <script context="module" lang="ts">
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Color } from '@nativescript/core';
     import { conditionalEvent } from '@shared/utils/svelte/ui';
+    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { isEInk } from '~/helpers/theme';
     import { showToolTip } from '~/utils/ui';
     import { actionBarButtonHeight, colors, fonts } from '~/variables';
 
@@ -16,12 +18,14 @@
     export let white = false;
     export let isEnabled = true;
     export let small = false;
-    export let gray = false;
+    export let toggable = false;
+    export let gray = toggable;
     export let isSelected = false;
     export let text = null;
     export let fontFamily = $fonts.mdi;
     export let selectedColor = white ? 'white' : undefined;
-    export let color = null;
+
+    export let color: string | Color = toggable ? (isEInk ? '#C4C7C8' : null) : null;
     export let onLongPress: Function = null;
     export let fontSize = 0;
     export let size: any = small ? 30 : $actionBarButtonHeight;
@@ -39,10 +43,10 @@
     $: actualLongPress =
         onLongPress || tooltip
             ? (event) => {
-                DEV_LOG && console.log('onLongPress');
-                //   if (event.ios && event.ios.state !== 3) {
-                //       return;
-                //   }
+                  DEV_LOG && console.log('onLongPress');
+                  //   if (event.ios && event.ios.state !== 3) {
+                  //       return;
+                  //   }
                   if (onLongPress) {
                       onLongPress(event);
                   } else {
@@ -64,7 +68,7 @@
             iconPaint.fontFamily = theFontFamily;
         }
         iconPaint.textSize = fontSize ? fontSize : small ? 16 : 24;
-        iconPaint.color = isEnabled ? (isSelected ? selectedColor || colorPrimary : actualColor) : 'lightgray';
+        iconPaint.color = isEnabled ? (isSelected ? selectedColor || colorPrimary : actualColor) : isEInk ? '#ccc' : 'lightgray';
         const w = canvas.getWidth();
         const w2 = w / 2;
         const h2 = canvas.getHeight() / 2;

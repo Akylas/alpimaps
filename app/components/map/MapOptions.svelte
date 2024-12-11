@@ -11,13 +11,25 @@
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
-    import { contourLinesOpacity, emphasisRails, mapFontScale, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, show3DBuildings, showContourLines, showSubBoundaries } from '~/stores/mapStore';
+    import {
+        contourLinesOpacity,
+        emphasisRails,
+        mapFontScale,
+        pitchEnabled,
+        preloading,
+        projectionModeSpherical,
+        rotateEnabled,
+        show3DBuildings,
+        showContourLines,
+        showSubBoundaries
+    } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import { CheckBox } from '@nativescript-community/ui-checkbox';
+    import { isEInk } from '~/helpers/theme';
     export interface MapOptionType {
         title: string;
         color?: Color | string;
@@ -246,14 +258,14 @@
     </collectionview>
     <stacklayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} orientation="horizontal">
         {#if !!customLayers?.hasLocalData}
-            <IconButton gray={true} isSelected={$showContourLines} text="mdi-bullseye" tooltip={lc('show_contour_lines')} on:tap={() => showContourLines.set(!$showContourLines)} />
+            <IconButton isSelected={$showContourLines} text="mdi-bullseye" toggable={true} tooltip={lc('show_contour_lines')} on:tap={() => showContourLines.set(!$showContourLines)} />
         {/if}
         {#if !!customLayers?.hasLocalData}
-            <IconButton gray={true} isSelected={$show3DBuildings} text="mdi-domain" tooltip={lc('buildings_3d')} on:tap={() => show3DBuildings.set(!$show3DBuildings)} />
+            <IconButton isSelected={$show3DBuildings} text="mdi-domain" toggable={true} tooltip={lc('buildings_3d')} on:tap={() => show3DBuildings.set(!$show3DBuildings)} />
         {/if}
-        <IconButton gray={true} isSelected={$projectionModeSpherical} text="mdi-globe-model" tooltip={lc('globe_mode')} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} />
-        <IconButton gray={true} isSelected={$rotateEnabled} text="mdi-rotate-3d-variant" tooltip={lc('map_rotation')} on:tap={() => rotateEnabled.set(!$rotateEnabled)} />
-        <IconButton gray={true} isSelected={$pitchEnabled} text="mdi-rotate-orbit" tooltip={lc('map_pitch')} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
-        <IconButton gray={true} isSelected={$preloading} text="mdi-map-clock" tooltip={lc('preloading')} on:tap={() => preloading.set(!$preloading)} />
+        <IconButton isSelected={$projectionModeSpherical} text="mdi-globe-model" toggable={true} tooltip={lc('globe_mode')} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} />
+        <IconButton isSelected={$rotateEnabled} text="mdi-rotate-3d-variant" toggable={true} tooltip={lc('map_rotation')} on:tap={() => rotateEnabled.set(!$rotateEnabled)} />
+        <IconButton isSelected={$pitchEnabled} text="mdi-rotate-orbit" toggable={true} tooltip={lc('map_pitch')} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
+        <IconButton isSelected={$preloading} text="mdi-map-clock" toggable={true} tooltip={lc('preloading')} on:tap={() => preloading.set(!$preloading)} />
     </stacklayout>
 </gesturerootview>

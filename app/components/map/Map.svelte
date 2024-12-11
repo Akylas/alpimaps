@@ -41,7 +41,7 @@
     import Search from '~/components/search/Search.svelte';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { l, lc, lt, onLanguageChanged, onMapLanguageChanged } from '~/helpers/locale';
-    import { forceDarkMode, theme, toggleForceDarkMode } from '~/helpers/theme';
+    import { forceDarkMode, isEInk, theme, toggleForceDarkMode } from '~/helpers/theme';
     import watcher from '~/helpers/watcher';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
@@ -2100,7 +2100,7 @@
                     id="mapButtonsNew"
                     buttonSize={40}
                     buttons={sideButtons}
-                    color="#666"
+                    color={isEInk ? '#aaa' : '#666'}
                     gray={true}
                     horizontalAlignment="left"
                     marginLeft={5}
