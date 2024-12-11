@@ -31,7 +31,7 @@
     import { showError } from '@shared/utils/showError';
     import { defaultProfileCostingOptions, getSavedProfile, getValhallaSettings, removeSavedProfile, savedProfile, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
     import { colors, fonts, windowInset } from '~/variables';
-    import { Themes, colorTheme, onThemeChanged, theme } from '~/helpers/theme';
+    import { Themes, colorTheme, isEInk, onThemeChanged, theme } from '~/helpers/theme';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { MapClickInfo } from '@nativescript-community/ui-carto/ui';
     import { promiseSeq } from '~/utils/utils';
@@ -105,8 +105,7 @@
     let requestProfile = ApplicationSettings.getBoolean('auto_fetch_profile', false);
     let requestStats = ApplicationSettings.getBoolean('auto_fetch_stats', false);
 
-    let eink = colorTheme === 'eink';
-    let buttonsColor = eink ? 'black' : 'white';
+    let buttonsColor = isEInk ? 'black' : 'white';
     const buttonsColorAlpha = new Color(buttonsColor).setAlpha(50);
 
     export let editingItem: IItem = null;
@@ -1203,8 +1202,7 @@
         collectionView?.nativeView.refreshVisibleItems();
     }
     onThemeChanged((theme: Themes) => {
-        eink = colorTheme === 'eink';
-        buttonsColor = eink ? 'black' : 'white';
+        buttonsColor = isEInk ? 'black' : 'white';
         refreshCollectionView();
     });
 </script>
@@ -1272,10 +1270,10 @@
                             verticalAlignment="middle" />
 
                         <gridlayout
-                            backgroundColor={eink ? 'white' : colorSurfaceTint}
+                            backgroundColor={isEInk ? 'white' : colorSurfaceTint}
                             borderColor="black"
                             borderRadius={8}
-                            borderWidth={eink ? 1 : 0}
+                            borderWidth={isEInk ? 1 : 0}
                             columns=" *,auto"
                             height={30}
                             margin="0 0 0 30"
