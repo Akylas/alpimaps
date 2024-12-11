@@ -30,6 +30,7 @@ colorTheme = getString(SETTINGS_COLOR_THEME, DEFAULT_COLOR_THEME) as ColorThemes
 DEV_LOG && console.log('theme', 'start', colorTheme);
 
 export let useDynamicColors = colorTheme === 'dynamic';
+export let isEInk = colorTheme === 'eink';
 
 let started = false;
 let autoDarkToBlack = getBoolean('auto_black', false);
@@ -274,6 +275,7 @@ export function start() {
         const oldColorTheme = colorTheme;
         colorTheme = newColorTheme;
         useDynamicColors = colorTheme === 'dynamic';
+        isEInk = colorTheme === 'eink';
         currentColorTheme.set(colorTheme);
         if (__ANDROID__) {
             if (colorTheme !== DEFAULT_COLOR_THEME) {

@@ -5,8 +5,8 @@
     import { showToolTip } from '~/utils/ui';
     import { actionBarButtonHeight, colors, fonts } from '~/variables';
 
-    let { colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorPrimaryContainer, colorOutlineVariant, colorSurfaceContainer } = $colors;
-    $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorPrimaryContainer, colorOutlineVariant, colorSurfaceContainer } = $colors);
+    let { colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
+    $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
 
     export let orientation = 'vertical';
     export let buttons = [];

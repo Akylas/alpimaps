@@ -17,7 +17,7 @@ import { NativeViewElementNode } from 'svelte-native/dom';
 import { get } from 'svelte/store';
 import type DirectionsPanel from '~/components/directions/DirectionsPanel.svelte';
 import { GeoHandler } from '~/handlers/GeoHandler';
-import { colorTheme } from '~/helpers/theme';
+import { colorTheme, isEInk } from '~/helpers/theme';
 import type CustomLayersModule from '~/mapModules/CustomLayersModule';
 import type ItemsModule from '~/mapModules/ItemsModule';
 import type UserLocationModule from '~/mapModules/UserLocationModule';
@@ -168,7 +168,7 @@ const mapContext: MapContext = {
         options.setSeamlessPanning(false);
         options.setRestrictedPanning(true);
         options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
-        if (colorTheme === 'eink') {
+        if (isEInk) {
             options.setBackgroundBitmap(getCartoBitmap('~/assets/images/eink-map-background.png'));
         }
 
