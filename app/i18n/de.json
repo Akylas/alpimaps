@@ -156,8 +156,6 @@
     "depth_multiplier": "Tiefenmultiplikator",
     "description": "Beschreibung",
     "description_required": "eine Beschreibung wird benötigt",
-    "devmode_off": "Dev-Modus deaktiviert",
-    "devmode_on": "Dev-Modus aktiviert",
     "diamond": "Diamant",
     "dirt": "natürlich",
     "distance": "Entfernung",
