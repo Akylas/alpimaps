@@ -70,7 +70,7 @@
         showSlopePercentages,
         showSubBoundaries
     } from '~/stores/mapStore';
-    import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
+    import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_AUTO_START } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
     import { hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
@@ -441,6 +441,13 @@
             page?.nativeElement?.requestLayout();
         }
     }
+    function onLayersReady() {
+        updateSideButtons();
+
+        if (autoStartWebServer) {
+            startStopWebServer();
+        }
+    }
     onMount(() => {
         Application.on(Application.orientationChangedEvent, onOrientationChanged);
         networkService.on(NetworkConnectionStateEvent, onNetworkChange);
@@ -449,7 +456,7 @@
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
         }
         customLayersModule = new CustomLayersModule();
-        customLayersModule.once('ready', updateSideButtons);
+        customLayersModule.once('ready', onLayersReady);
         setMapContext({
             // drawer: drawer.nativeView,
             getMap: () => cartoMap,
@@ -1691,6 +1698,40 @@
         }
     }
 
+    const autoStartWebServer = ApplicationSettings.getBoolean(SETTINGS_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_AUTO_START);
+    let webserver;
+
+    function startStopWebServer() {
+        if (webserver) {
+            webserver.stop();
+            webserver = null;
+        } else {
+            try {
+                const hillshadeDatasource = packageService.hillshadeLayer?.dataSource;
+                const vectorDataSource = packageService.localVectorTileLayer?.dataSource;
+                const vDataSource = vectorDataSource.getNative();
+                DEV_LOG && console.log('webserver', vDataSource, hillshadeDatasource?.getNative());
+                webserver = new (akylas.alpi as any).maps.WebServer(8080, hillshadeDatasource?.getNative(), vDataSource, vDataSource, null);
+                webserver.start();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    }
+
+    // onMount(() => {
+    // console.log('onMount', !!vectorDataSource, !!dataSource, !!rasterDataSource);
+    // try {
+    //     const vDataSource = (vectorDataSource || getDefaultDataSource()).getNative();
+    //     webserver = new (akylas.alpi as any).maps.WebServer(8080, dataSource.getNative(), vDataSource, vDataSource, rasterDataSource?.getNative());
+    //     webserver.start();
+    // } catch (err) {
+    //     console.error(err);
+    // }
+    // });
+    onDestroy(() => {
+        webserver?.stop();
+    });
     async function showMapMenu(event) {
         try {
             const options = [
@@ -1779,6 +1820,13 @@
                     icon: 'mdi-altimeter'
                 });
             }
+            if (__ANDROID__ && packageService.localVectorTileLayer) {
+                options.push({
+                    title: webserver ? lc('stop_tile_server') : lc('start_tile_server'),
+                    id: 'web_server',
+                    icon: 'mdi-server'
+                });
+            }
 
             await showPopoverMenu({
                 options,
@@ -1829,6 +1877,10 @@
                                         await getMapContext().mapModule('items').importGeoJSONFile(filePath);
                                     }
                                 }
+                                break;
+                            }
+                            case 'web_server': {
+                                startStopWebServer();
                                 break;
                             }
                             default:

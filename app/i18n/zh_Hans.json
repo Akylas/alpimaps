@@ -151,8 +151,6 @@
     "defibrillator": "除颤器",
     "description": "描述",
     "description_required": "需要描述",
-    "devmode_off": "开发模式已禁用",
-    "devmode_on": "开发模式已启用",
     "clear_cache": "清除缓存数据",
     "collapse": "崩溃",
     "delete": "删除",
