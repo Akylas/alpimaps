@@ -2,6 +2,7 @@
     "whitelist-plugins-usages": true,
     "whitelist": [
         "akylas.alpi.maps*:*",
+        "fi.iki.elonen:NanoHTTPD",
         "android.view:View.OnApplyWindowInsetsListener",
         "android.view:WindowInsets",
         "android.graphics:Insets",

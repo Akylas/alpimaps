@@ -26,9 +26,11 @@
     import { useOfflineGeocodeAddress, useSystemGeocodeAddress } from '~/stores/mapStore';
     import {
         ALERT_OPTION_MAX_HEIGHT,
+        DEFAULT_TILE_SERVER_AUTO_START,
         DEFAULT_VALHALLA_MAX_DISTANCE_AUTO,
         DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE,
         DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
+        SETTINGS_TILE_SERVER_AUTO_START,
         SETTINGS_VALHALLA_MAX_DISTANCE_AUTO,
         SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE,
         SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN
@@ -144,6 +146,15 @@
                         rightValue: () => ApplicationSettings.getNumber(SETTINGS_VALHALLA_MAX_DISTANCE_AUTO, DEFAULT_VALHALLA_MAX_DISTANCE_AUTO)
                     }
                 ];
+            case 'offline_data':
+                return [
+                    {
+                        type: 'switch',
+                        key: SETTINGS_TILE_SERVER_AUTO_START,
+                        value: ApplicationSettings.getBoolean(SETTINGS_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_AUTO_START),
+                        title: lc('auto_start_tile_server')
+                    }
+                ];
             case 'geolocation':
                 const newItems = [];
                 const geoSettings = geoHandler.getWatchSettings();
@@ -192,7 +203,7 @@
         if (nbDevModeTap === 6) {
             const devMode = (customLayers.devMode = !customLayers.devMode);
             nbDevModeTap = 0;
-            showSnack({ message: devMode ? lc('devmode_on') : lc('devmode_off') });
+            showSnack({ message: devMode ? 'devmode on' : 'devmode off' });
             refresh();
             return;
         }
@@ -347,6 +358,19 @@
                                   title: lc('offline_routing'),
                                   description: lc('offline_routing_settings'),
                                   options: () => getSubSettings('valhalla')
+                              }
+                          ]
+                        : ([] as any)
+                )
+                .concat(
+                    packageService.localVectorTileLayer
+                        ? [
+                              {
+                                  id: 'sub_settings',
+                                  icon: 'mdi-database',
+                                  title: lc('offline_data'),
+                                  description: lc('offline_data_settings'),
+                                  options: () => getSubSettings('offline_data')
                               }
                           ]
                         : ([] as any)
@@ -929,9 +953,16 @@
                         {/if}
                     </gridlayout>
 
-                    <gridlayout columns="*,auto,*" marginTop={20} paddingLeft={16} paddingRight={16} row={1} verticalAlignment="center" on:touch={(e) => onTouch(item, e)}>
+                    <gridlayout columns="*,auto,*" marginTop={20} paddingLeft={16} paddingRight={16} row={1} verticalAlignment="center">
                         <image borderRadius={25} col={1} height={50} horizontalAlignment="center" marginBottom={20} src="res://icon" width={50} />
-                        <label col={1} fontSize={13} marginTop={4} text={version} verticalAlignment="bottom" on:longPress={(event) => onLongPress({ id: 'version' }, event)} />
+                        <label
+                            col={1}
+                            fontSize={13}
+                            marginTop={4}
+                            text={version}
+                            verticalAlignment="bottom"
+                            on:longPress={(event) => onLongPress({ id: 'version' }, event)}
+                            on:touch={(e) => onTouch(item, e)} />
                     </gridlayout>
                 </gridlayout>
             </Template>
