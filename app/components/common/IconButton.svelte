@@ -95,7 +95,7 @@
         use:conditionalEvent={{ condition: !!actualLongPress, event: 'longPress', callback: actualLongPress }} />
 {:else}
     <mdbutton
-        color={isSelected ? selectedColor : actualColor}
+        color={isSelected ? (selectedColor || colorPrimary) : actualColor}
         disableCss={true}
         {fontFamily}
         {isEnabled}
@@ -110,6 +110,7 @@
         height={height || size}
         width={width || size}
         on:tap
+        on:loaded
         on:longPress={actualLongPress}
         use:conditionalEvent={{ condition: !!actualLongPress, event: 'longPress', callback: actualLongPress }} /> --> />
 {/if}
