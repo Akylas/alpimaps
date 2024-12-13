@@ -19,7 +19,7 @@
     import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import ReorderLongPressHandler from './ReorderLongPressHandler.ios';
+    import ReorderLongPressHandler from './ReorderLongPressHandler';
     $: ({ colorBackground, colorError, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
 
     const mapContext = getMapContext();
