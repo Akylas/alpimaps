@@ -789,7 +789,7 @@ LEFT JOIN  (
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
-    <gridlayout rows="auto,*">
+    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*">
         <collectionview
             bind:this={collectionView}
             itemTemplateSelector={(item) => item.type || (!!item.route ? 'route' : 'default')}

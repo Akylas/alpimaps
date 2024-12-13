@@ -1,4 +1,5 @@
 <script context="module" lang="ts">
+    import { share } from '@akylas/nativescript-app-utils/share';
     import { isPermResultAuthorized, request } from '@nativescript-community/perms';
     import { SDK_VERSION } from '@nativescript-community/sentry';
     import { CheckBox } from '@nativescript-community/ui-checkbox';
@@ -11,7 +12,6 @@
     import { TextView } from '@nativescript-community/ui-material-textview';
     import { ApplicationSettings, File, Folder, ObservableArray, ScrollView, StackLayout, Utils, View, path } from '@nativescript/core';
     import { Sentry } from '@shared/utils/sentry';
-    import { share } from '@akylas/nativescript-app-utils/share';
     import { showError } from '@shared/utils/showError';
     import dayjs from 'dayjs';
     import { Template } from 'svelte-native/components';
@@ -36,8 +36,8 @@
         SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN
     } from '~/utils/constants';
     import { showSnack } from '~/utils/ui';
-    import { createView, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui/index.common';
-    import { ANDROID_30, getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, moveFileOrFolder, resetItemsDataFolder, restartApp, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';
+    import { confirmRestartApp, createView, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui/index.common';
+    import { ANDROID_30, getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, moveFileOrFolder, resetItemsDataFolder, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';
     import { colors, fonts, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
@@ -450,10 +450,7 @@
                                     }
                                 });
                         }
-                        alert({
-                            title: lc('setting_update'),
-                            message: lc('please_restart_app')
-                        });
+                        confirmRestartApp();
                     }
                     break;
                 }
@@ -568,18 +565,7 @@
                             });
                         }
                         await hideLoading();
-                        if (__ANDROID__) {
-                            const result = await confirm({
-                                message: lc('restart_app'),
-                                okButtonText: lc('restart'),
-                                cancelButtonText: lc('later')
-                            });
-                            if (result) {
-                                restartApp();
-                            }
-                        } else {
-                            showSnack({ message: lc('please_restart_app') });
-                        }
+                        confirmRestartApp();
                     }
                     break;
                 case 'share':
@@ -697,10 +683,7 @@
                         if (toUsePath !== getSavedMBTilesDir()) {
                             setSavedMBTilesDir(toUsePath);
                             updateItem(item, 'id');
-                            alert({
-                                title: lc('setting_update'),
-                                message: lc('please_restart_app')
-                            });
+                            confirmRestartApp();
                         }
                     }
                     break;
@@ -920,7 +903,7 @@
 </script>
 
 <page actionBarHidden={true}>
-    <gridlayout rows="auto,*">
+    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*">
         <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={windowInsetBottom}>
             <Template key="sectionheader" let:item>
                 <label class="sectionHeader" text={item.title} />

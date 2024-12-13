@@ -22,7 +22,6 @@
     import { colors, fonts, windowInset } from '~/variables';
 
     $: ({ colorOnSurface, colorPrimary, colorSurfaceContainer } = $colors);
-    $: ({ bottom: windowInsetBottom } = $windowInset);
     export let position;
     export let bearing;
     export let terrarium: boolean = false;
@@ -555,7 +554,9 @@
         stepIndex={bottomSheetStepIndex}
         steps={[0, 300]}
         on:stepIndexChange={(e) => (bottomSheetStepIndex = e.value)}
-        android:marginBottom={windowInsetBottom}>
+        android:marginBottom={$windowInset.bottom}
+        android:paddingLeft={$windowInset.left}
+        android:paddingRight={$windowInset.right}>
         <gridlayout height="100%" width="100%" on:layoutChanged={onLayoutChanged}>
             <awebview
                 bind:this={webView}
