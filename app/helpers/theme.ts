@@ -1,19 +1,18 @@
+import { AppUtilsAndroid } from '@akylas/nativescript-app-utils';
 import Theme from '@nativescript-community/css-theme';
-import { Application, ApplicationSettings, Device, EventData, SystemAppearanceChangedEventData, Utils } from '@nativescript/core';
+import { closePopover } from '@nativescript-community/ui-popover/svelte';
+import { Application, ApplicationSettings, SystemAppearanceChangedEventData, Utils } from '@nativescript/core';
 import { getBoolean, getString, setString } from '@nativescript/core/application-settings';
-import { prefs } from '~/services/preferences';
+import { SDK_VERSION } from '@nativescript/core/utils';
 import { showError } from '@shared/utils/showError';
 import { createGlobalEventListener, globalObservable } from '@shared/utils/svelte/ui';
-import { updateThemeColors } from '~/variables';
-import { lc } from '~/helpers/locale';
 import { get, writable } from 'svelte/store';
-import { SDK_VERSION } from '@nativescript/core/utils';
-import { showAlertOptionSelect } from '~/utils/ui';
-import { closePopover } from '@nativescript-community/ui-popover/svelte';
+import { lc } from '~/helpers/locale';
+import { prefs } from '~/services/preferences';
 import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_COLOR_THEME, SETTINGS_COLOR_THEME } from '~/utils/constants';
-import { confirm } from '@nativescript-community/ui-material-dialogs';
-import { restartApp, setCustomCssRootClass } from '~/utils/utils';
-import { AppUtilsAndroid } from '@akylas/nativescript-app-utils';
+import { confirmRestartApp, showAlertOptionSelect } from '~/utils/ui';
+import { setCustomCssRootClass } from '~/utils/utils';
+import { updateThemeColors } from '~/variables';
 
 export type Themes = 'auto' | 'light' | 'dark' | 'black';
 export type ColorThemes = 'default' | 'eink' | 'dynamic';
@@ -296,14 +295,7 @@ export function start() {
             } else {
                 ApplicationSettings.remove('SET_THEME_ON_LAUNCH');
             }
-            const result = await confirm({
-                message: lc('restart_app'),
-                okButtonText: lc('restart'),
-                cancelButtonText: lc('later')
-            });
-            if (result) {
-                restartApp();
-            }
+            confirmRestartApp();
         } else {
             setCustomCssRootClass(colorTheme, oldColorTheme);
         }
