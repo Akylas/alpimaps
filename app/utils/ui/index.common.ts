@@ -1,3 +1,4 @@
+import { restartApp } from '@akylas/nativescript-app-utils';
 import { lc } from '@nativescript-community/l';
 import { MDCAlertControlerOptions, alert, confirm } from '@nativescript-community/ui-material-dialogs';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
@@ -6,7 +7,7 @@ import { AlertOptions, GridLayout, View } from '@nativescript/core';
 import { debounce } from '@nativescript/core/utils';
 import { showError } from '@shared/utils/showError';
 import { navigate } from '@shared/utils/svelte/ui';
-import { hideLoading } from '@shared/utils/ui';
+import { hideLoading, showSnack } from '@shared/utils/ui';
 import { ComponentProps } from 'svelte';
 import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
@@ -187,4 +188,29 @@ export async function showSettings(props?) {
         page: Settings,
         props
     });
+}
+
+let confirmingRestart = false;
+export async function confirmRestartApp() {
+    if (confirmingRestart) {
+        return;
+    }
+    try {
+        confirmingRestart = true;
+        if (__ANDROID__) {
+            DEV_LOG && console.log('confirm restart');
+            const result = await confirm({
+                message: lc('restart_app'),
+                okButtonText: lc('restart'),
+                cancelButtonText: lc('later')
+            });
+            if (result) {
+                restartApp();
+            }
+        } else {
+            await showSnack({ message: lc('please_restart_app') });
+        }
+    } finally {
+        confirmingRestart = false;
+    }
 }
