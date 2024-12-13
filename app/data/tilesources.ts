@@ -100,11 +100,11 @@ export const data: { [k: string]: Provider } = {
     IGN: {
         tokenKey: 'ign',
         category: 'france',
-        legend: 'https://www.geoportail.gouv.fr/depot/layers/{variant}/legendes/{variant}-legend.png',
-        url: 'http://wxs.ign.fr/{ign}/geoportail/wmts?LAYER={variant}&EXCEPTIONS=text/xml&FORMAT={format}&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&STYLE={style}&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
+        legend: 'https://data.geopf.fr/annexes/ressources/legendes/{variant}-legend.png',
+        url: ' https://data.geopf.fr/wmts?LAYER={variant}&apikey={ign}&FORMAT={format}&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&STYLE={style}&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
         cacheable: true,
         urlOptions: {
-            variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS',
+            variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.BDUNI.J1',
             format: 'image/jpeg',
             style: 'normal'
         },
@@ -115,14 +115,11 @@ export const data: { [k: string]: Provider } = {
             maxZoom: 16
         },
         variants: {
-            // PlanV2: {
-            //     urlOptions: {
-            //         variant: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2'
-            //     },
-            //     sourceOptions: {
-            //         minZoom: 6
-            //     }
-            // },
+            PlanV2: {
+                urlOptions: {
+                    variant: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2'
+                },
+            },
             // Satellite: {
             //     urlOptions: {
             //         variant: 'ORTHOIMAGERY.ORTHOPHOTOS'
@@ -134,12 +131,12 @@ export const data: { [k: string]: Provider } = {
             //         format: "image/png"
             //     }
             // },
-            // Cadastre: {
-            //     urlOptions: {
-            //         variant: "CADASTRALPARCELS.PARCELS",
-            //         format: "image/png"
-            //     }
-            // },
+            Cadastre: {
+                urlOptions: {
+                    variant: "CADASTRALPARCELS.PARCELS",
+                    format: "image/png"
+                }
+            },
             // ScanExpress: {
             //     urlOptions: {
             //         variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD'
@@ -147,6 +144,7 @@ export const data: { [k: string]: Provider } = {
             //     }
             // },
             Scan25: {
+                url: ' https://data.geopf.fr/private/wmts?LAYER={variant}&apikey={ign}&FORMAT={format}&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&STYLE={style}&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
                 urlOptions: {
                     variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN25TOUR'
                     // format: 'image/png',
@@ -164,28 +162,28 @@ export const data: { [k: string]: Provider } = {
             //     // TMSScheme:true
             //     // }
             // },
-            'SCAN OACI': {
+            // 'SCAN OACI': {
+            //     urlOptions: {
+            //         variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-OACI'
+            //     }
+            //     // sourceOptions: {
+            //     //     TMSScheme: true
+            //     // }
+            // },
+            Slopes: {
                 urlOptions: {
-                    variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-OACI'
+                    variant: 'GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN',
+                    format: 'image/png'
                 }
-                // sourceOptions: {
-                //     TMSScheme: true
-                // }
-            }
-            // Slopes: {
-            //     urlOptions: {
-            //         variant: 'GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN',
-            //         format: 'image/png'
-            //     }
-            // },
-            // HillShading: {
-            //     isOverlay: true,
-            //     urlOptions: {
-            //         variant: 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW',
-            //         style: 'estompage_grayscale',
-            //         format: 'image/png'
-            //     }
-            // },
+            },
+            HillShading: {
+                isOverlay: true,
+                urlOptions: {
+                    variant: 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW',
+                    style: 'estompage_grayscale',
+                    format: 'image/png'
+                }
+            },
             // ELEVATION: {
             //     urlOptions: {
             //         variant: 'ELEVATION.SLOPES'
