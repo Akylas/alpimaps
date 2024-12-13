@@ -25,7 +25,6 @@
     import TagView from '~/components/common/TagView.svelte';
 
     $: ({ colorBackground, colorOnPrimary, colorOnSurfaceVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
-    $: ({ bottom: windowInsetBottom } = $windowInset);
     export let item: Item;
     let itemColor: string;
     let itemIsRoute = false;
@@ -400,7 +399,7 @@
 </script>
 
 <page actionBarHidden={true}>
-    <gridlayout rows="auto,*,auto,2.5*,auto" android:paddingBottom={windowInsetBottom}>
+    <gridlayout rows="auto,*,auto,2.5*,auto" android:paddingBottom={$windowInset.bottom} paddingLeft={$windowInset.left} paddingRight={$windowInset.right}>
         <CActionBar canGoBack title={lc('edit')}>
             <IconButton color={colorOnPrimary} isEnabled={canSave} text="mdi-content-save-outline" on:tap={(e) => updateItem()} />
             <IconButton color={colorOnPrimary} text="mdi-playlist-plus" on:tap={addField} />
@@ -482,7 +481,7 @@
                 </label>
             </gridlayout>
         {/if}
-        <collectionview bind:this={collectionView} itemTemplateSelector={(item) => item.type || 'textfield'} {items} row={3} android:paddingBottom={windowInsetBottom}>
+        <collectionview bind:this={collectionView} itemTemplateSelector={(item) => item.type || 'textfield'} {items} row={3} android:paddingBottom={$windowInset.bottom}>
             <Template key="taggroup" let:item>
                 <TagView padding="5 10 0 10" showDefaultGroups={false} topGroup={item.groups?.[0]} on:groupSelected={onTagViewSelectedGroup} />
             </Template>

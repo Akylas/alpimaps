@@ -123,7 +123,7 @@
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatingTo={onNavigatingTo}>
-    <gridlayout rows="auto,*" on:layoutChanged={onLayoutChanged}>
+    <gridlayout rows="auto,*" on:layoutChanged={onLayoutChanged} paddingLeft={$windowInset.left} paddingRight={$windowInset.right}>
         <collectionview items={dataItems} row={1} android:marginBottom={windowInsetBottom}>
             <Template let:item>
                 <stacklayout>
