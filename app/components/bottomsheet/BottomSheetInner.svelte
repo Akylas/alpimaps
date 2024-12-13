@@ -203,7 +203,7 @@
             // }
             const ItemInfo = (await import('~/components/items/ItemInfo.svelte')).default;
             // const hasOpenHours = !!item.properties?.opening_hours;
-            const hasOpenHours = true;
+            const hasOpenHours = __ANDROID__;
             await showBottomSheet({
                 parent: mapContext.getMainPage(),
                 view: ItemInfo,

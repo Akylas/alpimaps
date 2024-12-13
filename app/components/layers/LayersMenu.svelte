@@ -5,7 +5,7 @@
     import { ContentView, GridLayout, TouchGestureEventData } from '@nativescript/core';
     import { setNumber } from '@nativescript/core/application-settings';
     import { ObservableArray } from '@nativescript/core/data/observable-array';
-    import { debounce } from '@nativescript/core/utils';
+    import { debounce, throttle } from '@nativescript/core/utils';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -19,6 +19,7 @@
     import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import ReorderLongPressHandler from './ReorderLongPressHandler.ios';
     $: ({ colorBackground, colorError, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
 
     const mapContext = getMapContext();
@@ -162,6 +163,19 @@
             showError(error);
         }
     }
+    let reorderLongPressHandler;
+    let reorderLongPressGesture;
+
+    function onReorderButtonLoaded(event) {
+        try {
+            DEV_LOG && console.log('onReorderButtonLoaded');
+            reorderLongPressHandler = ReorderLongPressHandler.initWithOwner(new WeakRef(collectionView.nativeElement));
+            reorderLongPressGesture = UILongPressGestureRecognizer.alloc().initWithTargetAction(reorderLongPressHandler, 'longPress');
+            event.object.nativeViewProtected.addGestureRecognizer(reorderLongPressGesture);
+        } catch (error) {
+            showError(error);
+        }
+    }
 </script>
 
 <!-- on iOS the collectionview is applied a padding because of the safearea
@@ -173,7 +187,7 @@ while being shown using bottomsheet. We remove it with paddingTop -->
             id="scrollView"
             items={customSources}
             ios:contentInsetAdjustmentBehavior={2}
-            reorderEnabled={true}
+            android:reorderEnabled={true}
             rowHeight={56}
             on:itemReordered={onItemReordered}
             on:itemReorderStarting={onItemReorderStarting}>
@@ -226,7 +240,14 @@ while being shown using bottomsheet. We remove it with paddingTop -->
                             value={item.layer.opacity}
                             verticalAlignment="middle"
                             on:valueChange={(event) => onLayerOpacityChanged(item, event)} />
-                        <IconButton col={2} gray={true} onLongPress={(event) => onButtonLongPress(item, event)} rowSpan={2} text="mdi-dots-vertical" on:tap={() => showSourceOptions(item)} />
+                        <IconButton
+                            col={2}
+                            gray={true}
+                            onLongPress={__ANDROID__ ? (event) => onButtonLongPress(item, event) : null}
+                            rowSpan={2}
+                            text="mdi-dots-vertical"
+                            on:tap={() => showSourceOptions(item)}
+                            on:loaded={onReorderButtonLoaded} />
                         <mdprogress colSpan={3} value={item.downloadProgress} verticalAlignment="bottom" visibility={item.downloading > 0 ? 'visible' : 'collapse'} />
                     </gridlayout>
                     <mdbutton
