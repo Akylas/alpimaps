@@ -98,7 +98,7 @@
     "cinema": "电影院",
     "city": "城市",
     "confectionery": "糖果店",
-    "confirm_area_download": "您确定要下载整个可见区域的图像吗？根据当前的缩放级别，这可能代表了很多数据",
+    "confirm_area_download": "您确定要下载整个可见区域的图像吗？根据当前的缩放级别，这可能会下载很多数据",
     "construction": "建设",
     "contour_lines_opacity": "等高线透明度设置",
     "confirm_delete_items": "您确定要删除这%1$s 项吗？",
@@ -109,7 +109,7 @@
     "butcher": "肉店",
     "cache_only_mode": "仅离线模式",
     "cafe": "咖啡店",
-    "camera_fov": "监控范围",
+    "camera_fov": "图像采集区域",
     "cancel": "取消",
     "caravan_park": "房车公园",
     "carpet": "地毯",
@@ -306,5 +306,8 @@
     "hunting_stand": "狩猎点",
     "internet_cafe": "网吧",
     "library": "图书馆",
-    "import_file": "导入"
+    "import_file": "导入",
+    "alcohol_shop": "酒品店",
+    "barrier": "障碍",
+    "enable_map_rotation": "取消地图方向锁定"
 }
