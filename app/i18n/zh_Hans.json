@@ -309,5 +309,13 @@
     "import_file": "导入",
     "alcohol_shop": "酒品店",
     "barrier": "障碍",
-    "enable_map_rotation": "取消地图方向锁定"
+    "enable_map_rotation": "取消地图方向锁定",
+    "firestation": "消防站",
+    "entrance": "入口",
+    "entrance_alt1": "入口",
+    "error": "错误",
+    "fishing": "钓鱼",
+    "florist": "花店",
+    "fitness": "健身房",
+    "fitness_centre": "健身中心"
 }
