@@ -687,5 +687,6 @@
     "wheelchair": "Rollstuhl",
     "permission_error": "fehlende Berechtigung",
     "ENE": "ONO",
-    "ESE": "OSO"
+    "ESE": "OSO",
+    "auto_start_tile_server": "Kachelserver beim Start starten"
 }
