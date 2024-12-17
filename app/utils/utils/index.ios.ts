@@ -78,8 +78,8 @@ export function showToolTip(tooltip: string, view?: View) {
 }
 
 export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath: string, fileManager: NSFileManager = NSFileManager.defaultManager) {
-    if (fileManager.fileExistsAtPathIsDirectory(sourceLocationPath, true)) {
-        if (!fileManager.fileExistsAtPathIsDirectory(targetLocationPath, true)) {
+    if (fileManager.fileExistsAtPathIsDirectory(sourceLocationPath, true as any)) {
+        if (!fileManager.fileExistsAtPathIsDirectory(targetLocationPath, true as any)) {
             fileManager.createDirectoryAtPathAttributes(targetLocationPath, null);
         }
 
@@ -88,7 +88,7 @@ export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath:
             moveFileOrFolder(path.join(sourceLocationPath, children.objectAtIndex(i)), path.join(targetLocationPath, children.objectAtIndex(i)));
         }
     } else {
-        if (fileManager.fileExistsAtPathIsDirectory(targetLocationPath, false)) {
+        if (fileManager.fileExistsAtPathIsDirectory(targetLocationPath, false as any)) {
             fileManager.removeItemAtPathError(targetLocationPath);
         }
         fileManager.copyItemAtPathToPathError(sourceLocationPath, targetLocationPath);
