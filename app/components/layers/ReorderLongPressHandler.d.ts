@@ -1,1 +1,3 @@
-export class ReorderLongPressHandler {}
+export default class ReorderLongPressHandler {
+    static initWithOwner(owner: WeakRef<IOSCollectionView>): ReorderLongPressHandler 
+}
