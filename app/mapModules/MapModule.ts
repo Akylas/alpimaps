@@ -81,7 +81,7 @@ export interface MapContext {
     onOtherAppTextSelected(callback: ContextCallback, once?: boolean);
     onMapReady(callback: ContextCallback, once?: boolean);
     onMapMove(callback: ContextCallback<{ userAction: boolean }>, once?: boolean);
-    onMapInteraction(callback: ContextCallback<{ interaction: MapInteractionInfo }>, once?: boolean);
+    onMapInteraction(callback: ContextCallback<{ data: MapInteractionInfo }>, once?: boolean);
     onMapStable(callback: ContextCallback, once?: boolean);
     getMapViewPort(): { left: number; width: number; top: number; height: number };
     onMapIdle(callback: ContextCallback, once?: boolean);
@@ -180,7 +180,7 @@ const mapContext: MapContext = {
     onOtherAppTextSelected: createGlobalEventListener('onOtherAppTextSelected'),
     onMapReady: createGlobalEventListener<never>('onMapReady'),
     onMapMove: createGlobalEventListener<{ userInteraction: boolean }>('onMapMove'),
-    onMapInteraction: createGlobalEventListener<{ interaction: MapInteractionInfo }>('onMapInteraction'),
+    onMapInteraction: createGlobalEventListener<{ data: MapInteractionInfo }>('onMapInteraction'),
     onMapStable: createGlobalEventListener<never>('onMapStable'),
     onMapIdle: createGlobalEventListener<never>('onMapIdle'),
     onMapClicked: createGlobalEventListener<MapClickInfo<MapPos<LatLonKeys>>>('onMapClicked'),
@@ -344,7 +344,7 @@ export default abstract class MapModule extends Observable /*  implements IMapMo
     onServiceLoaded?(geoHandler: GeoHandler);
     onServiceUnloaded?(geoHandler: GeoHandler);
     onMapMove?(e: { data: { userAction: boolean } });
-    onMapInteraction?(e: { data: { interaction: MapInteractionInfo } });
+    onMapInteraction?(e: { data: MapInteractionInfo });
     onMapClicked?(e: { data: MapClickInfo });
     onVectorTileClicked?(data: VectorTileEventData<LatLonKeys>);
     onVectorElementClicked?(data: VectorElementEventData<LatLonKeys>);
