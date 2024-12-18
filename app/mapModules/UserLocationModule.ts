@@ -88,10 +88,10 @@ export default class UserLocationModule extends MapModule {
             mapContext.addLayer(this.localVectorLayer, 'userLocation');
         }
     }
-    override onMapInteraction(e: { data: { interaction: MapInteractionInfo } }) {
+    override onMapInteraction(e: { data: MapInteractionInfo }) {
         const interaction = e.data.interaction;
         // DEV_LOG && console.log('onMapInteraction', interaction);
-        if (!interaction.isZoomAction && interaction.isPanAction && interaction.userAction) {
+        if (!interaction.isZoomAction && interaction.isPanAction && e.data.userAction) {
             this.userFollow = false;
         }
     }
