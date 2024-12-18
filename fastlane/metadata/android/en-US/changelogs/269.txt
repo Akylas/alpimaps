@@ -1,0 +1,4 @@
+Bug fixes:
+- tile server support. AlpiMaps can now provide tiles to other apps (for offline maps)
+- landscape layout fix
+- IGN data source fix
