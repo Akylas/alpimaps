@@ -493,6 +493,9 @@
             updatingItem = true;
             const itemsModule = mapContext.mapModule('items');
             let item = mapContext.getSelectedItem();
+            if (!item) {
+                return;
+            }
 
             item = await itemsModule.saveItem(item);
             if (item.route) {
