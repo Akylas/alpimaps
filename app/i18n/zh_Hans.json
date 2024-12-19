@@ -382,7 +382,7 @@
     "observation_tower": "观景塔",
     "optician": "眼镜商",
     "noodle": "面条",
-    "offline_routing_pedestrian_max_distance": "计算离线步行导航时，能接受的最大距离是多少",
+    "offline_routing_pedestrian_max_distance": "在计算离线步行导航时，能接受的最大距离是多少",
     "non_valid_email": "这个邮箱地址好像不对哦",
     "notes": "笔记",
     "obelisk": "方尖碑",
@@ -398,5 +398,13 @@
     "houseware": "家居用品",
     "offline_mode": "离线模式",
     "offline_packages": "离线数据包",
-    "ok": "ok"
+    "ok": "ok",
+    "osm": "osm",
+    "outdoor_seating": "户外座椅",
+    "palace": "总统府",
+    "park": "公园",
+    "park_alt1": "公园",
+    "parking": "停车场",
+    "parking_entrance_multistorey": "停车场入口",
+    "parking_entrance_underground": "停车场入口"
 }
