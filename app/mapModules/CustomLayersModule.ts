@@ -328,7 +328,7 @@ export default class CustomLayersModule extends MapModule {
             }
         }
     }
-    mDevMode = ApplicationSettings.getBoolean('devMode', !PRODUCTION);
+    mDevMode = ApplicationSettings.getBoolean('devMode', false);
 
     getTokenKeys() {
         return {
