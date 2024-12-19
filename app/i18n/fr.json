@@ -292,9 +292,9 @@
         "NSLocationAlwaysUsageDescription": "« Alpi Maps » utilise votre position GPS pour l'afficher sur la carte",
         "NSLocationWhenInUseUsageDescription": "« Alpi Maps » utilise votre position GPS pour l'afficher sur la carte"
     },
-    "item_now_hidden": "l'objet est désormais masqué sur la carte",
-    "item_now_visible": "l'objet est désormais visible sur la carte",
-    "items": "articles",
+    "item_now_hidden": "l'élément est désormais masqué sur la carte",
+    "item_now_visible": "l'élément est désormais visible sur la carte",
+    "items": "éléments",
     "jewelry": "bijoux",
     "jewelry_store": "bijouterie",
     "karaoke": "karaoké",
