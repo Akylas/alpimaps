@@ -696,5 +696,13 @@
     "network": "réseau",
     "opening_hours": "horaires d'ouverture",
     "phone": "téléphone",
-    "shadows": "ombres"
+    "shadows": "ombres",
+    "auto_start_tile_server": "démarrer le serveur de tuiles au démarrage",
+    "emphasis_rail_tracks": "mettre l'accent sur les voies ferrées",
+    "offline_data": "données hors ligne",
+    "select_color_theme": "sélectionner le thème de couleur",
+    "start_tile_server": "démarrer le serveur de tuiles",
+    "show_sub_boundaries": "afficher les sous-limites",
+    "offline_data_settings": "paramètres liés aux données hors ligne",
+    "stop_tile_server": "arrêter le serveur de tuiles"
 }
