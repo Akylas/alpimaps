@@ -406,5 +406,10 @@
     "park_alt1": "公园",
     "parking": "停车场",
     "parking_entrance_multistorey": "停车场入口",
-    "parking_entrance_underground": "停车场入口"
+    "parking_entrance_underground": "停车场入口",
+    "parking_garage": "停车库",
+    "parking_tickets": "停车票",
+    "paved_rough": "鹅卵石",
+    "paved_smooth": "沥青",
+    "peak": "山顶"
 }
