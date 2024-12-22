@@ -411,5 +411,6 @@
     "parking_tickets": "停车票",
     "paved_rough": "鹅卵石",
     "paved_smooth": "沥青",
-    "peak": "山顶"
+    "peak": "山顶",
+    "api_keys_settings": "用于在线服务的API密钥"
 }
