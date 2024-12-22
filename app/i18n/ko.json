@@ -37,7 +37,7 @@
     "api_keys": "API 키",
     "api_keys_settings": "사용된 온라인 서비스 API 키",
     "app": {
-        "name": "AlpiMaps"
+        "name": "Alpi Maps"
     },
     "app_generate_date_presentation": "Alpi Maps의 진정한 강점은 오프라인으로 생성된 데이터를 활용하는 데 있습니다. 고도 프로필, 고도 기울기, 슬로프, 경로 통계, 오프라인 라우팅/지오코딩 등 여러 앱 기능은 생성된 데이터를 통해서만 작동합니다. GitHub에서 이 데이터를 생성하는 방법을 확인하시겠습니까?",
     "approximate_accuracy": "추정된 정확도",
@@ -122,7 +122,7 @@
     "cave": "동굴",
     "city": "도시",
     "audioguide": "음성 안내",
-    "americanaosm_presentation_detailed": "AlpiMaps는 기본 벡터 데이터로 %1$s를 사용합니다. 처음에는 모든 사용자를 위해 공유 가능한 무료 인스턴스를 제공했지만, 곧 사용량 제한을 초과하게 되어 서비스를 중단해야 했습니다.\n·그래서 직접 무료 인스턴스를 생성하고 앱에서 활용할 수 있는 방법을 공유합니다. 자세한 설정 방법은 $2$s를 참고해주세요. 이미 인스턴스를 마련하셨다면 여기에서 URL을 입력할 수 있습니다. 아직 설정하지 않았다면 기본 소스로 OpenStreetMap 래스터 타일을 사용합니다",
+    "americanaosm_presentation_detailed": "Alpi Maps는 기본 벡터 데이터로 %1$s를 사용합니다. 처음에는 모든 사용자를 위해 공유 가능한 무료 인스턴스를 제공했지만, 곧 사용량 제한을 초과하게 되어 서비스를 중단해야 했습니다.\n·그래서 직접 무료 인스턴스를 생성하고 앱에서 활용할 수 있는 방법을 공유합니다. 자세한 설정 방법은 $2$s를 참고해주세요. 이미 인스턴스를 마련하셨다면 여기에서 URL을 입력할 수 있습니다. 아직 설정하지 않았다면 기본 소스로 OpenStreetMap 래스터 타일을 사용합니다",
     "auto_fetch_profile": "고도 프로필 자동 불러오기",
     "color_theme": {
         "default": "기본",
@@ -232,7 +232,7 @@
     "draw_elevations": "고도 시각화",
     "furniture": "가구",
     "geolocation_settings": "지리 위치 관련 설정",
-    "export_settings_desc": "AlpiMaps의 모든 설정을 복구할 수 있도록 설정한 내용들을 내보냅니다",
+    "export_settings_desc": "Alpi Maps의 모든 설정을 복구할 수 있도록 설정한 내용들을 내보냅니다",
     "feedback_sent": "피드백이 전송되었습니다",
     "dentist": "치과 의사",
     "gps_desired_accuracy_desc": "원하는 정확도를 미터 단위로 지정하세요",
@@ -266,7 +266,7 @@
     "select_local_folder": "로컬 폴더 선택",
     "select_style": "스타일 선택",
     "import_settings_desc": "이전에 백업한 설정 파일에서 모든 설정을 가져옵니다",
-    "gps_not_authorized": "AlpiMaps에서 GPS를 사용할 권한이 없습니다",
+    "gps_not_authorized": "Alpi Maps에서 GPS를 사용할 권한이 없습니다",
     "ios.info.plist": {
         "NSLocationWhenInUseUsageDescription": "«Alpi Maps»는 GPS 위치를 기반으로 지도를 표시합니다",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "«Alpi Maps»는 GPS 위치를 기반으로 지도를 표시합니다",
@@ -489,7 +489,7 @@
     "rental_car": "렌터카",
     "reset_setting": "\"%1$s\"에 대한 설정을 초기화하겠습니까?",
     "residential_community": "주거 단지",
-    "restart_app": "AlpiMaps 재시작",
+    "restart_app": "Alpi Maps 재시작",
     "restaurant": "레스토랑",
     "review_application": "앱 리뷰",
     "road": "도로",
@@ -509,7 +509,7 @@
     "sauna": "사우나",
     "save": "저장",
     "satellites_view": "위성 뷰",
-    "screen_awake_notification": "AlpiMaps가 화면을 켠 채로 유지하고 있습니다",
+    "screen_awake_notification": "Alpi Maps가 화면을 켠 채로 유지하고 있습니다",
     "seafood": "해산물",
     "search": "검색",
     "search_package": "검색 패키지",
@@ -639,7 +639,7 @@
     "use_ferry": "페리를 이용해야 합니다",
     "use_tracks": "선로를 거쳐야 합니다",
     "swimming": "수영",
-    "tap_to_open": "AlpiMaps에서 당신의 위치를 추적하고 있습니다. 탭하여 열기",
+    "tap_to_open": "Alpi Maps에서 당신의 위치를 추적하고 있습니다. 탭하여 열기",
     "taxi": "택시",
     "third_parties": "서드 파티 라이브러리",
     "tile_filter_mode": "Tile 필터 모드",
@@ -690,7 +690,7 @@
     "social_facility": "공공 시설",
     "racetrack": "경기장",
     "move_items_data_files": "%1$s에서 %2$s로 파일을 이동하시겠습니까? %2$s의 기존 파일이 모두 대체됩니다!",
-    "keepawake_notification_desc": "이 알림은 AlpiMaps에서 화면이 꺼지지 않도록 유지하고 있음을 의미합니다",
+    "keepawake_notification_desc": "이 알림은 Alpi Maps에서 화면이 꺼지지 않도록 유지하고 있음을 의미합니다",
     "geometry_size": "기하학적 크기",
     "mast_communications": "마스트 통신",
     "map_package": "지도 패키지",
@@ -704,5 +704,5 @@
     "outdoor_seating": "야외 좌석",
     "search_in_vectortiles": "벡터 타일에서 검색",
     "tower_lattice_communication": "송신탑",
-    "use_hills": "언덕을 이용할 수 있도록 허용하기"
+    "use_hills": "언덕 이용 허용하기"
 }
