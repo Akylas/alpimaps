@@ -662,7 +662,8 @@
     "color_theme": {
         "dynamic": "dynamische Farben",
         "title": "Farbthema",
-        "default": "Standard"
+        "default": "Standard",
+        "eink": "eInk"
     },
     "americanaosm_url": "URL der AmericanaOSM-Instanz",
     "auto_black": "Echtes Schwarz für das automatische dunkle Thema verwenden",
@@ -688,5 +689,21 @@
     "permission_error": "fehlende Berechtigung",
     "ENE": "ONO",
     "ESE": "OSO",
-    "auto_start_tile_server": "Kachelserver beim Start starten"
+    "auto_start_tile_server": "Kachelserver beim Start starten",
+    "offline_data": "Offlinedaten",
+    "offline_data_settings": "Offlinedaten-Einstellungen",
+    "offline_routing_auto_max_distance": "Erlaubte Maximaldistanz beim Berechnen von Autorouten im Offlinemodus",
+    "offline_routing_pedestrian_max_distance": "Erlaubte Maximaldistanz beim Berechnen von Fußgängerrouten im Offlinemodus",
+    "offline_routing_settings": "Einstellungen zur Offline-Routenplanung mit Valhalla",
+    "show_sub_boundaries": "Unterbegrenzungen anzeigen",
+    "start_tile_server": "Tile-Server starten",
+    "stop_tile_server": "Tile-Server anhalten",
+    "confirm_delete_items": "Wollen Sie diese %1$s Werte/Dateien wirklich löschen?",
+    "offline_routing": "Offline-Routenplanung",
+    "emphasis_rail_tracks": "Gewichtete Schienenwege",
+    "offline_routing_bicycle_max_distance": "Erlaubte Maximaldistanz beim Berechnen von Fahrradrouten im Offlinemodus",
+    "americanaosm_presentation_detailed": "AlpiMaps nutzt %1$ als Standard-Vektor-Kartenquelle. Zu Beginn stellte AlpiMaps dazu eine kostenfreie Instanz für alle zur Verfügung. Die Zugriffe überschritten allerdings schnell das Limit, weshalb ich mich entschied diese zu schließen. Deshalb erkläre ich jetzt, wie man seine eigene Instanz erstellt und in der App verwendet. Lesen Sie sich %2$s für Erklärungen durch. Wenn Sie die Instanz bereits aufgesetzt haben, können Sie hier die URL einsetzen. Bis dahin werden OpenstreetMap-Rasterkarten genutzt als Standard genutzt.",
+    "select_color_theme": "Wählen Sie ein Farbthema aus",
+    "timeout_error": "Die Anfrage hat ihre Zeit überschritten. Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es dann noch einmal.",
+    "outline": "Kontur"
 }
