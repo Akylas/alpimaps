@@ -481,5 +481,11 @@
     "picnic_site": "野餐地点",
     "pitch": "球场",
     "pizza": "披萨",
-    "road_accident": "交通事故"
+    "road_accident": "交通事故",
+    "attraction": "景点",
+    "audioguide": "语音导览（机）",
+    "auto_start_tile_server": "启动瓦片服务器",
+    "car_parts": "",
+    "auto_black": "在自动深色主题中使用纯黑色",
+    "auto_fetch_profile": "自动获取高程剖面图"
 }
