@@ -532,5 +532,19 @@
     "sac_scale_1": "徒步旅行路线",
     "select_language": "选择语言",
     "search_web": "使用web进行搜索",
-    "send_feedback": "发送评价"
+    "send_feedback": "发送评价",
+    "stopped_watching_location": "已停止定位服务",
+    "show_routes": "显示远足/骑行路线",
+    "show_screen_lock": "锁屏显示",
+    "show_transit_lines": "显示公交车路线",
+    "shower": "淋浴室",
+    "shrine": "神社",
+    "slipway": "下水船台",
+    "source_code": "源代码",
+    "speedometer": "速度表",
+    "social_facility": "社会设施",
+    "slaughterhouse": "屠宰场",
+    "stop_tile_server": "停止 tile 服务器",
+    "share_screenshot": "分享截图",
+    "soccer": "足球"
 }
