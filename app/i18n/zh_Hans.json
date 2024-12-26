@@ -552,5 +552,18 @@
     "taxi": "出租车",
     "teahouse": "茶馆",
     "show_love": "如果您喜欢这个项目，欢迎您分享以表达支持。我们也非常期待您能与我们一起加入这个项目",
-    "tap_to_open": "「AlpiMaps」正在获取您的位置，点击以打开"
+    "tap_to_open": "「AlpiMaps」正在获取您的位置，点击以打开",
+    "use_ferry": "应该乘坐渡轮",
+    "use_highways": "应该上高速",
+    "tower_lighting": "照明塔",
+    "town_hall": "市政厅",
+    "tutorial": "教程",
+    "unknown": "未知",
+    "tower_cantilever_communication": "通信塔",
+    "timeout_error": "喂！你他娘的网断了，检查一下你的网",
+    "tower_cooling": "冷却塔",
+    "tower_lattice_lighting": "照明塔",
+    "token_key": "API令牌「%s」",
+    "tower_generic": "塔",
+    "tower_defensive": "防御塔"
 }
