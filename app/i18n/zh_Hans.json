@@ -703,5 +703,6 @@
     "use_living_streets": "应使用生活街道",
     "use_roads": "应使用道路",
     "use_hills": "允许使用丘陵",
-    "fence": "栅栏"
+    "fence": "栅栏",
+    "until": "直到"
 }
