@@ -6235,21 +6235,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"camera-controls@npm:2.9.0":
-  version: 2.9.0
-  resolution: "camera-controls@npm:2.9.0"
+"camera-controls@npm:1.33.1":
+  version: 1.33.1
+  resolution: "camera-controls@npm:1.33.1"
   peerDependencies:
     three: ">=0.126.1"
-  checksum: 10/f121d626f3c85210573a58de4d6c20082f8dce31623c9e6f3b72c7fbc2352b12f324e36c1098aafe3c6e3d4f848f5cce5895ffaae4629986b4dd2b6ae014332e
-  languageName: node
-  linkType: hard
-
-"camera-controls@npm:^1.33.1":
-  version: 1.38.2
-  resolution: "camera-controls@npm:1.38.2"
-  peerDependencies:
-    three: ">=0.126.1"
-  checksum: 10/02126b12fe980090ed40d5d7fe2fbd37762bdeb4471c4c0abea27dab4b3629069bb2f8cb299f3a98b21c1f185d7612c0f6665d4cc45bec8b1a9a45af62c4f775
+  checksum: 10/e65d48676f5ee9b61ebce9cb10b524d49bf05b40d3cd2636163f9bf4941a08d69f57d7899fd4dcad87bc25d2efddbe2abe489e10e428c3ab77a5d0a9162c3af9
   languageName: node
   linkType: hard
 
@@ -9124,7 +9115,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^5.8.0"
     "@typescript-eslint/parser": "npm:^5.8.0"
     additween: "npm:^3.0.0"
-    camera-controls: "npm:^1.33.1"
+    camera-controls: "npm:1.33.1"
     delatin: "npm:^0.2.0"
     eslint: "npm:^8.5.0"
     eslint-plugin-import: "npm:~2.25.3"
@@ -9137,7 +9128,6 @@ __metadata:
     rollup: "npm:2.61.1"
     stats.js: "npm:^0.17.0"
     three: "npm:0.135.0"
-    three-csm: "npm:^1.1.1"
     three-rt-helper: "npm:^0.0.6"
     three-screen-quad: "npm:^0.2.1"
     tslib: "npm:2.3.1"
@@ -13891,7 +13881,7 @@ __metadata:
     "@types/three": "npm:^0.171.0"
     additween: "npm:3.0.0"
     alpimaps-non-playstore: "portal:plugin_non_playstore"
-    camera-controls: "npm:2.9.0"
+    camera-controls: "npm:1.33.1"
     dayjs: "npm:1.11.13"
     deburr: "npm:0.0.3"
     downsample: "npm:1.4.0"
@@ -15219,13 +15209,6 @@ __metadata:
   peerDependencies:
     tslib: ^2
   checksum: 10/5c3954b67391d1432c252cb7089f29480e2164f06987a63d83c9747aa6999bfc313d6edfce71ed967316a3378dfcaf38f35ea77aaa5d423edaf776b8ff854f83
-  languageName: node
-  linkType: hard
-
-"three-csm@npm:^1.1.1":
-  version: 1.1.1
-  resolution: "three-csm@npm:1.1.1"
-  checksum: 10/ef384f0eaba1069260cf868a59dc0419dcfb8cb893b12fb3a401c12305839e5a05b81ab19779acfe3333502ef12a3e3dfe8c147b4f19d2c6667f0507e3daceb6
   languageName: node
   linkType: hard
 
