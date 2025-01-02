@@ -247,6 +247,7 @@ module.exports = (env = {}, params = {}) => {
             }),
             new MiniCssExtractPlugin(),
             new HtmlWebpackPlugin({
+                scriptLoading:'blocking',
                 template: path.resolve(__dirname, 'public/index.html')
             })
         ],
