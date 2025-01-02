@@ -1,6 +1,6 @@
 import { AppUtilsAndroid } from '@akylas/nativescript-app-utils';
 import { themer } from '@nativescript-community/ui-material-core';
-import { Application, ApplicationSettings, Color, Frame, Page, Screen, Utils } from '@nativescript/core';
+import { Application, ApplicationSettings, Color, Frame, InitRootViewEventData, Page, Screen, Utils, View } from '@nativescript/core';
 import { getCurrentFontScale } from '@nativescript/core/accessibility/font-scale';
 import { get, writable } from 'svelte/store';
 import { ColorThemes, Themes, getRealTheme, getRealThemeAndUpdateColors, theme } from './helpers/theme';
@@ -78,10 +78,12 @@ if (__ANDROID__) {
         AppUtilsAndroid.prepareWindow(event.object['_dialogFragment'].getDialog().getWindow());
     });
 }
-function getRootViewStyle() {
-    let rootView = Application.getRootView();
-    if (rootView?.parent) {
-        rootView = rootView.parent as any;
+function getRootViewStyle(rootView?: View) {
+    if (!rootView) {
+        rootView = Application.getRootView();
+        if (rootView?.parent) {
+            rootView = rootView.parent as any;
+        }
     }
     return rootView?.style;
 }
@@ -90,12 +92,13 @@ if (__ANDROID__) {
         AppUtilsAndroid.prepareWindow(event.window);
     });
 }
-const onInitRootView = function () {
+const onInitRootView = function (event: InitRootViewEventData) {
+    DEV_LOG && console.log('onInitRootView', event.rootView, Application.getRootView());
+    let rootView = event.rootView || Application.getRootView();
     // we need a timeout to read rootView css variable. not 100% sure why yet
     if (__ANDROID__) {
         // setTimeout(() => {
-        let rootView = Application.getRootView();
-        if (rootView.parent) {
+        if (rootView?.parent) {
             rootView = rootView.parent as any;
         }
         if (rootView) {
@@ -116,7 +119,7 @@ const onInitRootView = function () {
                 });
             });
         }
-        const rootViewStyle = getRootViewStyle();
+        const rootViewStyle = getRootViewStyle(rootView);
         fonts.set({ mdi: rootViewStyle.getCssVariable('--mdiFontFamily'), app: rootViewStyle.getCssVariable('--appFontFamily') });
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
@@ -149,7 +152,6 @@ const onInitRootView = function () {
     }
 
     if (__IOS__) {
-        const rootView = Application.getRootView();
         const rootViewStyle = rootView?.style;
         windowInset.set({
             top: 0,
