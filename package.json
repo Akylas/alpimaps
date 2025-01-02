@@ -101,7 +101,7 @@
         "@tmcw/togeojson": "^6.0.0",
         "additween": "3.0.0",
         "alpimaps-non-playstore": "portal:plugin_non_playstore",
-        "camera-controls": "2.9.0",
+        "camera-controls": "1.33.1",
         "dayjs": "1.11.13",
         "deburr": "0.0.3",
         "downsample": "1.4.0",
