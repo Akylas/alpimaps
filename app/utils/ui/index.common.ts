@@ -4,10 +4,10 @@ import { MDCAlertControlerOptions, alert, confirm } from '@nativescript-communit
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
 import { AlertOptions, GridLayout, View } from '@nativescript/core';
-import { debounce } from '@nativescript/core/utils';
+import { SDK_VERSION, copyToClipboard, debounce } from '@nativescript/core/utils';
 import { showError } from '@shared/utils/showError';
 import { navigate } from '@shared/utils/svelte/ui';
-import { hideLoading, showSnack } from '@shared/utils/ui';
+import { hideLoading, showSnack, showToast } from '@shared/utils/ui';
 import { ComponentProps } from 'svelte';
 import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
@@ -213,4 +213,9 @@ export async function confirmRestartApp() {
     } finally {
         confirmingRestart = false;
     }
+}
+
+export function copyTextToClipboard(text) {
+    copyToClipboard(text);
+    showToast(lc('copied_to_clipboard', text));
 }
