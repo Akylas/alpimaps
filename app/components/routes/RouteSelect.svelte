@@ -45,10 +45,9 @@
                 borderRadius={30}
                 extraPaddingLeft={44}
                 fontSize={15}
+                item={{ ...item, title: itemTitle(item), subtitle: itemSubtitle(item) }}
                 showSymbol
-                subtitle={itemSubtitle(item)}
                 symbol={formatter.getSymbol(item.route.properties)}
-                symbolColor={item.route.properties?.color || colorOnSurface}
                 title={itemTitle(item)}
                 on:tap={(event) => onTap(item, event)} />
         </Template>

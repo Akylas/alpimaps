@@ -248,12 +248,13 @@
             <label class="sectionHeader" text={item.title} />
         </Template>
         <Template key="switch" let:item>
-            <ListItemAutoSize leftIcon={item.icon} mainCol={1} subtitle={getSubtitle(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
-                <switch id="checkbox" checked={item.value} col={2} on:checkedChange={(e) => onCheckBox(item, e)} />
+            <ListItemAutoSize fontSize={20} item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} leftIcon={item.icon} on:tap={(event) => onTap(item, event)}>
+                <checkbox id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} />
             </ListItemAutoSize>
         </Template>
         <Template let:item>
-            <ListItemAutoSize rightValue={item.rightValue} showBottomLine={false} subtitle={getSubtitle(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}></ListItemAutoSize>
+            <ListItemAutoSize item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} rightValue={item.rightValue} showBottomLine={false} on:tap={(event) => onTap(item, event)}
+            ></ListItemAutoSize>
         </Template>
     </collectionview>
     <stacklayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} orientation="horizontal">

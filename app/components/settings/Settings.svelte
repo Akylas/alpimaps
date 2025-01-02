@@ -27,10 +27,12 @@
     import {
         ALERT_OPTION_MAX_HEIGHT,
         DEFAULT_TILE_SERVER_AUTO_START,
+        DEFAULT_TILE_SERVER_PORT,
         DEFAULT_VALHALLA_MAX_DISTANCE_AUTO,
         DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE,
         DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
         SETTINGS_TILE_SERVER_AUTO_START,
+        SETTINGS_TILE_SERVER_PORT,
         SETTINGS_VALHALLA_MAX_DISTANCE_AUTO,
         SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE,
         SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN
@@ -153,6 +155,20 @@
                         key: SETTINGS_TILE_SERVER_AUTO_START,
                         value: ApplicationSettings.getBoolean(SETTINGS_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_AUTO_START),
                         title: lc('auto_start_tile_server')
+                    },
+                    {
+                        id: 'setting',
+                        type: 'prompt',
+                        title: lc('tile_server_port'),
+                        key: SETTINGS_TILE_SERVER_PORT,
+                        valueType: 'number',
+                        default: DEFAULT_TILE_SERVER_PORT,
+                        textFieldProperties: {
+                            keyboardType: 'number',
+                            autocapitalizationType: 'none',
+                            autocorrect: false
+                        } as TextFieldProperties,
+                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_TILE_SERVER_PORT, DEFAULT_TILE_SERVER_PORT)
                     }
                 ];
             case 'geolocation':
@@ -950,44 +966,38 @@
                 </gridlayout>
             </Template>
             <Template key="switch" let:item>
-                <ListItemAutoSize leftIcon={item.icon} mainCol={1} subtitle={getSubtitle(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
-                    <switch id="checkbox" checked={item.value} col={2} on:checkedChange={(e) => onCheckBox(item, e)} />
+                <ListItemAutoSize fontSize={20} item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} leftIcon={item.icon} on:tap={(event) => onTap(item, event)}>
+                    <switch id="checkbox" checked={item.value} col={1} on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
             <Template key="checkbox" let:item>
-                <ListItemAutoSize leftIcon={item.icon} mainCol={1} subtitle={getSubtitle(item)} title={getTitle(item)} on:tap={(event) => onTap(item, event)}>
-                    <checkbox id="checkbox" checked={item.value} col={2} on:checkedChange={(e) => onCheckBox(item, e)} />
+                <ListItemAutoSize fontSize={20} item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} leftIcon={item.icon} on:tap={(event) => onTap(item, event)}>
+                    <checkbox id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
             <Template key="leftIcon" let:item>
                 <ListItemAutoSize
                     columns="auto,*,auto"
                     fontSize={20}
+                    item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }}
                     mainCol={1}
-                    rightValue={item.rightValue}
                     showBottomLine={false}
-                    subtitle={getSubtitle(item)}
-                    title={getTitle(item)}
                     on:tap={(event) => onTap(item, event)}>
                     <label col={0} color={colorOnBackground} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} verticalAlignment="center" />
                 </ListItemAutoSize>
             </Template>
             <Template let:item>
                 <ListItemAutoSize
-                    rightValue={item.rightValue}
+                    item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }}
                     showBottomLine={false}
-                    subtitle={getSubtitle(item)}
-                    title={getTitle(item)}
                     on:tap={(event) => onTap(item, event)}
                     on:longPress={(event) => onLongPress(item, event)}>
                 </ListItemAutoSize>
             </Template>
             <Template key="html" let:item>
                 <ListItemAutoSize
-                    html={getSubtitle(item)}
-                    rightValue={item.rightValue}
+                    item={{ ...item, title: getTitle(item), html: getSubtitle(item) }}
                     showBottomLine={false}
-                    title={getTitle(item)}
                     on:tap={(event) => onTap(item, event)}
                     on:longPress={(event) => onLongPress(item, event)}>
                 </ListItemAutoSize>

@@ -1,9 +1,8 @@
 <script context="module" lang="ts">
-    import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-    import { createEventDispatcher } from '@shared/utils/svelte/ui';
-    import { colors, fontScale, fonts } from '~/variables';
-    const iconPaint = new Paint();
-    // iconPaint.setTextAlign(Align.CENTER);
+    import { Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
+    import { conditionalEvent, createEventDispatcher } from '@shared/utils/svelte/ui';
+    import { colors, fontScale } from '~/variables';
+    import { ListItem } from './ListItem';
     const linePaint = new Paint();
     linePaint.strokeWidth = 1;
 </script>
@@ -11,60 +10,49 @@
 <script lang="ts">
     const dispatch = createEventDispatcher();
     // technique for only specific properties to get updated on store change
-    let { colorOutlineVariant, colorOnSurfaceVariant, colorPrimary, colorOnSurface, colorOnSurfaceDisabled } = $colors;
-    $: ({ colorOutlineVariant, colorOnSurfaceVariant, colorPrimary, colorOnSurface, colorOnSurfaceDisabled } = $colors);
+    let { colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant } = $colors;
+    $: ({ colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant } = $colors);
 
     $: linePaint.color = colorOutlineVariant;
     export let showBottomLine: boolean = false;
-    export let iconFontSize: number = 24;
-    export let rightIconFontSize: number = 30;
+    // export let iconFontSize: number = 24;
+    export let item: ListItem;
     export let fontSize: number = 17;
     export let fontWeight: any = 'normal';
     export let subtitleFontSize: number = 14;
-    export let title: string = null;
-    export let html: string = null;
-    export let titleColor: string = null;
-    export let color: string = null;
-    export let subtitleColor: string = null;
-    export let subtitle: string = null;
-    export let leftIcon: string = null;
-    export let rightIcon: string = null;
-    export let rightValue: string | Function = null;
-    const leftColumn = iconFontSize * 1.4 * $fontScale;
-    export let columns: string = leftIcon ? `${leftColumn},*,auto` : 'auto,*,auto';
-    export let leftIconFonFamily: string = $fonts.mdi;
-    export let rightIconFonFamily: string = $fonts.mdi;
-    export let mainCol = 1;
-    export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
+    export let columns: string = '*,auto';
+    export let mainCol = 0;
+    export let onLinkTap: (event) => void = null;
+    export let onDraw: (item: ListItem, event: { canvas: Canvas; object: CanvasView }) => void = null;
+    export let onLongPress: (item, e) => void = null;
+
     export let symbol: string = null;
     export let showSymbol: boolean = false;
     export let symbolColor: string = null;
     export let extraPaddingLeft: number = 0;
 
-    let addedPadding = 0;
-
     function draw(event: { canvas: Canvas; object: CanvasView }) {
         const canvas = event.canvas;
         const h = canvas.getHeight();
-        const w = canvas.getHeight();
+        const w = canvas.getWidth();
 
-        if (showBottomLine) {
+        if (item.showBottomLine || showBottomLine) {
             event.canvas.drawLine(20, h - 1, w, h - 1, linePaint);
         }
-        if (leftIcon) {
-            const fontSize = iconFontSize * $fontScale;
-            iconPaint.textSize = fontSize;
-            iconPaint.color = titleColor || color || colorOnSurface;
-            iconPaint.fontFamily = leftIconFonFamily;
-            const staticLayout = new StaticLayout(leftIcon, iconPaint, leftColumn, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
-            canvas.translate(6, h / 2 - staticLayout.getHeight() / 2);
-            // canvas.drawRect(0,0,leftColumn,  staticLayout.getHeight(), iconPaint);
-            staticLayout.draw(canvas);
-        }
-        onDraw?.(event);
+        // if (leftIcon) {
+        //     const fontSize = iconFontSize * $fontScale;
+        //     iconPaint.textSize = fontSize;
+        //     iconPaint.color = titleColor || color || colorOnSurface;
+        //     iconPaint.fontFamily = leftIconFonFamily;
+        //     const staticLayout = new StaticLayout(leftIcon, iconPaint, leftColumn, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
+        //     canvas.translate(6, h / 2 - staticLayout.getHeight() / 2);
+        //     // canvas.drawRect(0,0,leftColumn,  staticLayout.getHeight(), iconPaint);
+        //     staticLayout.draw(canvas);
+        // }
+        (item.onDraw || onDraw)?.(item, event);
     }
 
-    $: addedPadding = (subtitle?.length > 0 ? 0 : 10) + (__ANDROID__ ? 8 : 12);
+    $: addedPadding = (item.subtitle?.length > 0 ? 6 : 10) + (__ANDROID__ ? 8 : 12);
 </script>
 
 <!-- <gridlayout>
@@ -90,13 +78,11 @@
 
 <canvasview
     {columns}
-    disableCss={true}
-    paddingLeft={16}
-    paddingRight={16}
-    rippleColor={color || colorOnSurface}
+    padding="0 16 0 16"
+    rippleColor={item.color || colorOnSurface}
     on:tap={(event) => dispatch('tap', event)}
-    on:longPress={(event) => dispatch('longPress', event)}
     on:draw={draw}
+    use:conditionalEvent={{ condition: !!onLongPress, event: 'longPress', callback: (e) => onLongPress(item, e) }}
     {...$$restProps}>
     {#if showSymbol}
         <symbolshape color={symbolColor} height={34} {symbol} verticalAlignment="middle" width={34} />
@@ -111,45 +97,34 @@
         width={iconFontSize * 2} /> -->
     <label
         col={mainCol}
+        color={item.titleColor || item.color || colorOnSurface}
         disableCss={true}
-        lineBreak="end"
+        fontSize={fontSize * $fontScale}
+        {fontWeight}
+        html={item.html}
         paddingBottom={addedPadding}
         paddingLeft={extraPaddingLeft}
         paddingTop={addedPadding}
-        html={html}
+        text={item.text}
         textWrap={true}
-        verticalAlignment="center"
-        verticalTextAlignment="center">
-        <cspan color={titleColor || color || colorOnSurface} fontSize={fontSize * $fontScale} {fontWeight} text={title} />
-        <cspan color={subtitleColor || colorOnSurfaceVariant} fontSize={subtitleFontSize * $fontScale} text={subtitle ? '\n' + subtitle : null} />
+        verticalTextAlignment="center"
+        {...item.titleProps || $$restProps?.titleProps}
+        use:conditionalEvent={{ condition: !!(item.onLinkTap || onLinkTap), event: 'linkTap', callback: item.onLinkTap || onLinkTap }}>
+        <cspan text={item.title || item.name} />
+        <cspan color={item.subtitleColor || colorOnSurfaceVariant} fontSize={(item.subtitleFontSize || subtitleFontSize) * $fontScale} text={item.subtitle ? '\n' + item.subtitle : null} />
     </label>
 
     <label
-        col={2}
-        color={subtitleColor}
+        col={1}
+        color={item.subtitleColor}
         disableCss={true}
+        fontSize={(item.rightValueFontSize || subtitleFontSize) * $fontScale}
         marginLeft={16}
         paddingLeft={extraPaddingLeft}
+        text={typeof item.rightValue === 'function' ? item.rightValue() : item.rightValue}
         textAlignment="right"
         verticalAlignment="middle"
-        visibility={!!rightValue || rightIcon ? 'visible' : 'collapse'}>
-        <cspan fontSize={subtitleFontSize * $fontScale} text={typeof rightValue === 'function' ? rightValue() : rightValue} />
-        <cspan fontFamily={rightIconFonFamily} fontSize={rightIconFontSize * $fontScale} text={rightIcon} />
-    </label>
-    <!-- <label
-        col={2}
-        color={subtitleColor}
-        fontFamily={rightIconFonFamily}
-        fontSize={rightIconFontSize}
-        horizontalAlignment="right"
-        marginLeft={16}
-        marginRight={16}
-        text={rightIcon}
-        verticalAlignment="center"
-        visibility={!!rightIcon ? 'visible' : 'hidden'}
-        width={25} /> -->
+        visibility={!!item.rightValue ? 'visible' : 'collapse'}
+        on:tap={(event) => dispatch('rightIconTap', event)} />
     <slot />
-    <!-- <canvasView> -->
-    <!-- <line color={colorOutlineVariant} height="1" startX="20" startY="0" stopX="100%" stopY="0" strokeWidth="1" verticalAlignment="bottom" visibility={showBottomLine ? 'visible' : 'hidden'} /> -->
-    <!-- </canvasView> -->
 </canvasview>
