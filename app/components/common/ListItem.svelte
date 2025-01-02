@@ -1,8 +1,9 @@
 <script lang="ts">
     import { Canvas, CanvasView } from '@nativescript-community/ui-canvas';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
+    import { conditionalEvent } from '@shared/utils/svelte/ui';
     import { colors, fontScale, fonts } from '~/variables';
-    let { colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors;
+    import { ListItem } from './ListItem';
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
     const dispatch = createEventDispatcher();
     // technique for only specific properties to get updated on store change
@@ -10,41 +11,40 @@
     export let extraPaddingLeft: number = 0;
     export let iconFontSize: number = 24;
     export let fontSize: number = 17;
-    export let fontWeight: string | number = 'bold';
+    export let fontWeight: string | number = 500;
     export let subtitleFontSize: number = 14;
-    export let title: string = null;
-    // export let titleColor: string = colorOnSurface;
-    // export let subtitleColor: string = subtitleColor;
-    export let subtitle: string = null;
-    export let leftIcon: string = null;
     export let columns: string = '*';
     export let mainCol = 0;
+    export let onLongPress: (item, e) => void = null;
     export let leftIconFonFamily: string = $fonts.mdi;
-    export let symbol: string = null;
-    export let symbolColor: string = null;
-    export let color: string = null;
-    export let showSymbol: boolean = false;
+    export let color: string | Color = colorOnSurface;
+    export let subtitleColor: string | Color = null;
+    export let item: ListItem;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
 </script>
 
-<canvasview {columns} disableCss={true} rippleColor={color || colorOnSurface} on:tap={(event) => dispatch('tap', event)} {...$$restProps} padding="10 16 10 16">
-    <symbolshape color={symbolColor} height={34} {symbol} verticalAlignment="middle" visibility={showSymbol ? 'visible' : 'hidden'} width={34} />
-    <canvaslabel col={mainCol} on:draw={onDraw}>
-        <cgroup paddingBottom={subtitle ? 10 : 0} verticalAlignment="middle">
-            <cspan
-                color={color || colorOnSurface}
-                fontFamily={leftIconFonFamily}
-                fontSize={iconFontSize * $fontScale}
-                paddingLeft="10"
-                text={leftIcon}
-                visibility={leftIcon ? 'visible' : 'hidden'}
-                width={iconFontSize * 2} />
+<canvasview
+    {columns}
+    padding="0 16 0 16"
+    rippleColor={colorPrimary}
+    on:tap
+    use:conditionalEvent={{ condition: !!onLongPress, event: 'longPress', callback: (e) => onLongPress(item, e) }}
+    {...$$restProps}>
+    <canvaslabel col={mainCol} color={item.color || color || colorOnSurface} on:draw={onDraw}>
+        <cgroup paddingBottom={item.subtitle ? 10 : 0} verticalAlignment="middle">
+            <cspan fontFamily={leftIconFonFamily} fontSize={iconFontSize * $fontScale} paddingLeft="8" text={item.icon} visibility={item.icon ? 'visible' : 'hidden'} width={iconFontSize * 2} />
         </cgroup>
-        <cgroup paddingLeft={(leftIcon ? iconFontSize * 2 : 0) + extraPaddingLeft} textAlignment="left" verticalAlignment="middle">
-            <cspan color={color || colorOnSurface} fontSize={fontSize * $fontScale} {fontWeight} text={title} />
-            <cspan color={colorOnSurfaceVariant} fontSize={subtitleFontSize * $fontScale} text={subtitle ? '\n' + subtitle : ''} visibility={subtitle ? 'visible' : 'hidden'} />
+        <cgroup paddingLeft={(item.icon ? 38 : 0) + extraPaddingLeft} textAlignment="left" verticalAlignment="middle">
+            <cspan fontSize={(item.fontSize || fontSize) * $fontScale} {fontWeight} text={item.title || item.name} />
+            <cspan
+                color={item.subtitleColor || subtitleColor || colorOnSurfaceVariant}
+                fontSize={(item.subtitleFontSize || subtitleFontSize) * $fontScale}
+                text={item.subtitle ? '\n' + item.subtitle : ''}
+                visibility={item.subtitle ? 'visible' : 'hidden'} />
         </cgroup>
     </canvaslabel>
     <slot />
-    <line color={colorOutlineVariant} height="1" startX="20" startY="0" stopX="100%" stopY="0" strokeWidth="1" verticalAlignment="bottom" visibility={showBottomLine ? 'visible' : 'hidden'} />
+    {#if showBottomLine}
+        <line color={colorOutlineVariant} height="1" startX="20" startY="0" stopX="100%" stopY="0" strokeWidth="1" verticalAlignment="bottom" />
+    {/if}
 </canvasview>

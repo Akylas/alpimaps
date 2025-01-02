@@ -8,6 +8,7 @@
     import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
     import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
     import { VectorLayer, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
+    import { copyTextToClipboard } from '~/utils/ui';
     import { Projection } from '@nativescript-community/ui-carto/projections';
     import { EPSG3857 } from '@nativescript-community/ui-carto/projections/epsg3857';
     import { EPSG4326 } from '@nativescript-community/ui-carto/projections/epsg4326';
@@ -70,7 +71,7 @@
         showSlopePercentages,
         showSubBoundaries
     } from '~/stores/mapStore';
-    import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_AUTO_START } from '~/utils/constants';
+    import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
     import { hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
@@ -1088,6 +1089,7 @@
     // $: shouldShowNavigationBarOverlay = $navigationBarHeight !== 0 && !!selectedItem;
 
     async function handleSelectedRoutes() {
+        DEV_LOG && console.log('handleSelectedRoutes');
         unFocusSearch();
         try {
             if (selectedRoutes && selectedRoutes.length > 0) {
@@ -1111,7 +1113,7 @@
                 }
             }
         } catch (err) {
-            console.error('handleSelectedRoutes', err, err['stack']);
+            console.error('handleSelectedRoutes', err, err.stack);
         }
         selectedRoutes = null;
         handleSelectedRouteTimer = null;
@@ -1190,8 +1192,8 @@
         }
         const { clickType, featureData, featureGeometry, featureId, featureLayerName, featurePosition, layer, position } = data;
 
-        TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, position, featurePosition, featureGeometry);
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data) as boolean;
+        TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, position, featurePosition,handledByModules);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             // if (showClickedFeatures) {
             //     clickedFeatures.push({
@@ -1238,6 +1240,7 @@
             }
             featureData.layer = featureLayerName;
             if (featureLayerName === 'route') {
+                DEV_LOG && console.log('handling route ');
                 if (handleSelectedRouteTimer) {
                     clearTimeout(handleSelectedRouteTimer);
                 }
@@ -1711,7 +1714,13 @@
                 const vectorDataSource = packageService.localVectorTileLayer?.dataSource;
                 const vDataSource = vectorDataSource.getNative();
                 DEV_LOG && console.log('webserver', vDataSource, hillshadeDatasource?.getNative());
-                webserver = new (akylas.alpi as any).maps.WebServer(8080, hillshadeDatasource?.getNative(), vDataSource, vDataSource, null);
+                webserver = new (akylas.alpi as any).maps.WebServer(
+                    ApplicationSettings.getNumber(SETTINGS_TILE_SERVER_PORT, DEFAULT_TILE_SERVER_PORT),
+                    hillshadeDatasource?.getNative(),
+                    vDataSource,
+                    vDataSource,
+                    null
+                );
                 webserver.start();
             } catch (err) {
                 console.error(err);
@@ -1836,6 +1845,16 @@
                 props: {
                     // autoSizeListItem: true,
                     maxHeight: Screen.mainScreen.heightDIPs - 100
+                },
+                onLongPress: async (result) => {
+                    DEV_LOG && console.log('onLongPress', result);
+                    if (result) {
+                        switch (result.id) {
+                            case 'web_server':
+                                copyTextToClipboard(`http://127.0.0.1:${ApplicationSettings.getNumber(SETTINGS_TILE_SERVER_PORT, DEFAULT_TILE_SERVER_PORT)}?source=data&x={x}&y={y}&z={z}`);
+                                break;
+                        }
+                    }
                 },
                 onClose: async (result) => {
                     if (result) {
