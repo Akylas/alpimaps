@@ -20,7 +20,17 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
         // DynamicColors
         // akylas.alpi.maps.Utils.applyDynamicColors(this);
         // this.getWindow().setStatusBarColor(getThemeColor(this, 'colorPrimaryDark'));
+        const context = Utils.android.getApplicationContext();
         Application.android.init(this.getApplication());
+
+        const intent = this.getIntent() || context.getPackageManager().getLaunchIntentForPackage(__APP_ID__);
+        if (intent) {
+            const data = this.getIntent().getStringExtra('android.intent.extra.TEXT') || this.getIntent().getStringExtra('android.intent.extra.PROCESS_TEXT');
+            if (data) {
+                intent.setData(android.net.Uri.parse(data));
+                DEV_LOG && console.log('PROCESS_TEXT', intent.getAction(), data);
+            }
+        }
         // Set the isNativeScriptActivity in onCreate (as done in the original NativeScript activity code)
         // The JS constructor might not be called because the activity is created from Android.
         this.isNativeScriptActivity = true;
