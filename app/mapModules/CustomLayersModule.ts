@@ -756,7 +756,8 @@ export default class CustomLayersModule extends MapModule {
                             textFieldProperties: {
                                 variant: 'outline',
                                 hint: lc('americanaosm_url'),
-                                margin: 10
+                                margin: 10,
+                                width: { unit: '%', value: 100 }
                             },
                             view: createView(
                                 Label,
