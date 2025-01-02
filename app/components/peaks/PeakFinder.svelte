@@ -87,13 +87,14 @@
             webView.nativeView.src = '~/assets/peakfinder/index.html';
         }
     }
-
+    let webViewLoaded = false;
     function webviewLoaded(args: LoadEventData) {
         const webview = args.object as AWebView;
 
         webview.once(AWebView.loadFinishedEvent, (args: LoadFinishedEventData) => {
             const startValues = {
                 terrarium,
+                secondsInDay,
                 setPosition: { ...position, altitude: currentAltitude },
                 setAzimuth: bearing
             };
@@ -104,6 +105,7 @@
                 startValues[item.key || item['method']] = item.value as number;
             });
             args.object.executeJavaScript(`webapp.callMethods(${JSON.stringify(startValues)});`);
+            webViewLoaded = true;
         });
 
         webview.on('requestPermissions', async (args: any) => {
@@ -143,10 +145,10 @@
 
     function callJSFunction(method: string, ...args) {
         // if (DEV_LOG) {
-        //     console.log('callJSFunction', method, `webapp.${method}(${args ? args.map((s) => (typeof s === 'string' ? `"${s}"` : s)).join(',') : ''})`);
+        //     console.log('callJSFunction', method, `webapp.${method}(${args ? args.map((s) => (typeof s === 'string' ? `"${s}"` : s)).join(',') : ''})`, new Error().stack);
         // }
         const nView = webView?.nativeView;
-        if (!nView) {
+        if (!nView || !webViewLoaded) {
             return;
         }
         try {
@@ -395,9 +397,8 @@
         // Your logic here
         return item.type;
     }
-    $: {
-        callJSFunction('setDate', secondsInDay);
-    }
+    $: callJSFunction('setSettings', 'secondsInDay', secondsInDay);
+
     $: currentAltitude = position.altitude;
     $: updateElevation(currentAltitude);
 
