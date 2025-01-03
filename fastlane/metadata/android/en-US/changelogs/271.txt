@@ -1,0 +1,5 @@
+Bug fixes:
+- prevent error on process text from other apps
+- welcome dialog textfield not using full width
+- peak finder fix
+- long press "start tile server" to copy the server url
