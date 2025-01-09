@@ -11,6 +11,7 @@
     import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { TextView } from '@nativescript-community/ui-material-textview';
     import { ApplicationSettings, File, Folder, ObservableArray, ScrollView, StackLayout, Utils, View, path } from '@nativescript/core';
+    import { inappItems, presentInAppSponsorBottomsheet } from '@shared/utils/inapp-purchase';
     import { Sentry } from '@shared/utils/sentry';
     import { showError } from '@shared/utils/showError';
     import dayjs from 'dayjs';
@@ -53,6 +54,8 @@
     $: ({ bottom: windowInsetBottom } = $windowInset);
 
     let collectionView: NativeViewElementNode<CollectionView>;
+
+    const inAppAvailable = PLAY_STORE_BUILD && inappItems?.length > 0;
 
     export let title = null;
     export let actionBarButtons = [
@@ -251,7 +254,7 @@
             [
                 {
                     type: 'header',
-                    title: __IOS__ ? lc('show_love') : lc('donate')
+                    title: __IOS__ && !inAppAvailable ? lc('show_love') : lc('donate')
                 },
                 {
                     type: 'sectionheader',
@@ -602,9 +605,13 @@
                             break;
 
                         default:
-                            // Apple wants us to use in-app purchase for donations => taking 30% ...
-                            // so lets just open github and ask for love...
-                            openLink(__IOS__ ? GIT_URL : SPONSOR_URL);
+                            if (inAppAvailable) {
+                                presentInAppSponsorBottomsheet();
+                            } else {
+                                // Apple wants us to use in-app purchase for donations => taking 30% ...
+                                // so lets just open github and ask for love...
+                                openLink(__IOS__ ? GIT_URL : SPONSOR_URL);
+                            }
                             break;
                     }
                     break;
