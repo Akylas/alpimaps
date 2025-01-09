@@ -325,6 +325,18 @@
     "import_file": "import",
     "import_settings": "import settings",
     "import_settings_desc": "import all settings from a previous backup",
+    "inapp": {
+        "bigtip": "a very nice donation",
+        "bigtip_desc": "new features are coming!",
+        "largertip": "a pint",
+        "largertip_desc": "ideas are going to flow!",
+        "largetip": "a beer",
+        "largetip_desc": "chill out and go back to work!",
+        "mediumtip": "a big coffee",
+        "mediumtip_desc": "my eyes are open!",
+        "smalltip": "a coffee",
+        "smalltip_desc": "everything helps to work at night!"
+    },
     "industry": "industry",
     "information": "information",
     "interior_decoration": "interior decoration",
