@@ -254,7 +254,7 @@
             [
                 {
                     type: 'header',
-                    title: __IOS__ && !inAppAvailable ? lc('show_love') : lc('donate')
+                    title: lc('donate')
                 },
                 {
                     type: 'sectionheader',
@@ -605,7 +605,7 @@
                             break;
 
                         default:
-                            if (inAppAvailable) {
+                            if (__IOS__ && PLAY_STORE_BUILD) {
                                 presentInAppSponsorBottomsheet();
                             } else {
                                 // Apple wants us to use in-app purchase for donations => taking 30% ...
