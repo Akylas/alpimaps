@@ -76,6 +76,7 @@ try {
     registerNativeViewElement('symbolshape', () => require('~/components/common/SymbolShape').default);
     registerNativeViewElement('awebview', () => require('@nativescript-community/ui-webview').AWebView);
     registerNativeViewElement('checkbox', () => require('@nativescript-community/ui-checkbox').CheckBox);
+    registerNativeViewElement('lottie', () => require('@nativescript-community/ui-lottie').LottieView);
     CollectionViewElement.register();
     SwipeMenuElement.register();
     PagerElement.register();
