@@ -704,5 +704,8 @@
     "use_roads": "应使用道路",
     "use_hills": "允许使用丘陵",
     "fence": "栅栏",
-    "until": "直到"
+    "until": "直到",
+    "inapp": {
+        "bigtip_desc": "敬请期待新功能！"
+    }
 }
