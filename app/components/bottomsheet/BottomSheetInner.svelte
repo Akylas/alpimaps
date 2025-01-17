@@ -746,14 +746,14 @@
     let loaded = false;
     let loadedListeners = [];
     export async function loadView() {
-        DEV_LOG && console.log('loadView', loaded, Date.now());
+        // DEV_LOG && console.log('loadView', loaded, Date.now());
         if (!loaded) {
             await new Promise((resolve) => {
                 loadedListeners.push(resolve);
                 loaded = true;
             });
         }
-        DEV_LOG && console.log('loadView done', loaded);
+        // DEV_LOG && console.log('loadView done', loaded);
     }
     $: {
         try {
