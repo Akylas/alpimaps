@@ -20,7 +20,7 @@
     import { closeBottomSheet, isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
     import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
     import { Application, ApplicationSettings, Color, File, GridLayout, Page, Utils } from '@nativescript/core';
     import type { AndroidActivityBackPressedEventData, OrientationChangedEventData } from '@nativescript/core/application/application-interfaces';
@@ -29,7 +29,6 @@
     import { debounce } from '@nativescript/core/utils';
     import { Sentry, isSentryEnabled } from '@shared/utils/sentry';
     import { share } from '@akylas/nativescript-app-utils/share';
-    import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';
     import type { Point as GeoJSONPoint } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
@@ -240,8 +239,8 @@
     $: {
         if (showTransitLines) {
             // const pos = cartoMap.focusPos;
-            (async () => {
-                try {
+            tryCatch(
+                async () => {
                     if (!transitVectorTileLayer && !fetchingTransitLines) {
                         fetchingTransitLines = true;
 
@@ -265,13 +264,14 @@
                     } else if (transitVectorTileLayer) {
                         transitVectorTileLayer.visible = true;
                     }
-                } catch (error) {
+                },
+                () => {
                     showTransitLines = false;
-                    showError(error);
-                } finally {
+                },
+                () => {
                     fetchingTransitLines = false;
                 }
-            })();
+            );
         } else if (transitVectorTileLayer) {
             transitVectorTileLayer.visible = false;
         }
@@ -281,44 +281,44 @@
         // DEV_LOG && console.log('showAdmins', showAdmins, customLayersModule?.hasLocalData, adminVectorTileLayer);
         if (showAdmins && customLayersModule?.hasLocalData) {
             // const pos = cartoMap.focusPos;
-            try {
-                if (!adminVectorTileLayer) {
-                    DEV_LOG && console.log('show admins ');
-                    adminVectorTileLayer = new VectorTileLayer({
-                        layerBlendingSpeed: 3,
-                        labelBlendingSpeed: 3,
-                        preloading: $preloading,
-                        tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
-                        labelRenderOrder: VectorTileRenderOrder.LAST,
-                        dataSource: (getLayers('map')[0].layer as any as VectorTileLayer).dataSource,
-                        decoder: createTileDecoder('admin')
-                    });
-                    adminVectorTileLayer.setVectorTileEventListener<LatLonKeys>(
-                        {
-                            onVectorTileClicked: ({ featureData, featureGeometry, featureId, featureLayerName }) => {
-                                if (handleSelectedRouteTimer) {
-                                    return;
+            tryCatch(
+                async () => {
+                    if (!adminVectorTileLayer) {
+                        DEV_LOG && console.log('show admins ');
+                        adminVectorTileLayer = new VectorTileLayer({
+                            layerBlendingSpeed: 3,
+                            labelBlendingSpeed: 3,
+                            preloading: $preloading,
+                            tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
+                            labelRenderOrder: VectorTileRenderOrder.LAST,
+                            dataSource: (getLayers('map')[0].layer as any as VectorTileLayer).dataSource,
+                            decoder: createTileDecoder('admin')
+                        });
+                        adminVectorTileLayer.setVectorTileEventListener<LatLonKeys>(
+                            {
+                                onVectorTileClicked: ({ featureData, featureGeometry, featureId, featureLayerName }) => {
+                                    if (handleSelectedRouteTimer) {
+                                        return;
+                                    }
+                                    DEV_LOG && console.log('onVectorTileClicked', featureId, featureLayerName, featureData);
+                                    return false;
+                                    // selectItem({ item, isFeatureInteresting: true });
+                                    // return true;
+                                    // mapContext.vectorTileClicked(e);
                                 }
-                                DEV_LOG && console.log('onVectorTileClicked', featureId, featureLayerName, featureData);
-                                return false;
-                                // selectItem({ item, isFeatureInteresting: true });
-                                // return true;
-                                // mapContext.vectorTileClicked(e);
-                            }
-                        },
-                        mapContext.getProjection()
-                    );
-                    addLayer(adminVectorTileLayer, 'admin');
-                    // } else {
-                    //     transitVectorTileLayer.visible = true;
-                    // }
-                } else if (adminVectorTileLayer) {
-                    adminVectorTileLayer.visible = true;
-                }
-            } catch (error) {
-                showAdmins = false;
-                showError(error);
-            }
+                            },
+                            mapContext.getProjection()
+                        );
+                        addLayer(adminVectorTileLayer, 'admin');
+                        // } else {
+                        //     transitVectorTileLayer.visible = true;
+                        // }
+                    } else if (adminVectorTileLayer) {
+                        adminVectorTileLayer.visible = true;
+                    }
+                },
+                () => (showAdmins = false)
+            );
         } else if (adminVectorTileLayer) {
             adminVectorTileLayer.visible = false;
         }
@@ -327,19 +327,19 @@
         }
     }
 
-    async function onAppUrl(link: string) {
-        // if (__ANDROID__) {
-        //     const activity = Application.android.startActivity;
-        //     const visible = activity && activity.getWindow().getDecorView().getRootView().isShown();
-        //     if (!visible) {
-        //         if (args && args.eventName === AndroidApplication.activityStartedEvent) {
-        //             //ignoring newIntent in background as we already received start activity event with intent
-        //             return;
-        //         } else {
-        //         }
-        //     }
-        // }
-        try {
+    const onAppUrl = tryCatchFunction(
+        async (link: string) => {
+            // if (__ANDROID__) {
+            //     const activity = Application.android.startActivity;
+            //     const visible = activity && activity.getWindow().getDecorView().getRootView().isShown();
+            //     if (!visible) {
+            //         if (args && args.eventName === AndroidApplication.activityStartedEvent) {
+            //             //ignoring newIntent in background as we already received start activity event with intent
+            //             return;
+            //         } else {
+            //         }
+            //     }
+            // }
             TEST_LOG && console.log('Got the following appURL', link);
             if (link.startsWith('geo')) {
                 const latlong = link.split(':')[1].split(',').map(parseFloat) as [number, number];
@@ -423,13 +423,10 @@
             } else {
                 searchView.searchForQuery(link);
             }
-        } catch (err) {
-            console.error(err, err.stack);
-            showError(err);
-        } finally {
-            hideLoading();
-        }
-    }
+        },
+        undefined,
+        hideLoading
+    );
 
     async function onNetworkChange(event: NetworkConnectionStateEventData) {
         networkConnected = event.data.connected;
@@ -665,14 +662,12 @@
             cartoMap.setZoom(zoom, 0);
             cartoMap.setBearing(bearing, 0);
             DEV_LOG && console.log('onMainMapReady', pos, zoom, bearing, addedLayers.length, theme);
-            try {
+            tryCatch(() => {
                 packageService.start();
                 transitService.start();
                 setMapStyle(ApplicationSettings.getString('mapStyle', PRODUCTION || TEST_ZIP_STYLES ? 'osm.zip~osm' : 'osm~osm'), true);
                 // setMapStyle('mobile-sdk-styles~voyager', true);
-            } catch (err) {
-                showError(err);
-            }
+            });
             if (addedLayers) {
                 Object.values(addedLayers).forEach((d) => {
                     addLayer(d.layer, d.layerId, true);
@@ -1255,7 +1250,7 @@
             }
 
             const isFeatureInteresting = featureLayerName === 'poi' || featureLayerName === 'mountain_peak' || featureLayerName === 'housenumber' || (!!featureData.name && !selectedRoutes);
-            DEV_LOG && console.log('isFeatureInteresting', featureLayerName, featureData.name, isFeatureInteresting, featureGeometry.constructor.name, featurePosition, position);
+            // DEV_LOG && console.log('isFeatureInteresting', featureLayerName, featureData.name, isFeatureInteresting, featureGeometry.constructor.name, featurePosition, position);
             if (isFeatureInteresting) {
                 ignoreNextMapClick = false;
                 selectedRoutes = null;
@@ -1398,25 +1393,30 @@
             currentLayerStyle = layerStyle;
             ApplicationSettings.setString('mapStyle', layerStyle);
 
-            try {
-                vectorTileDecoder = mapContext.createMapDecoder(mapStyle, mapStyleLayer);
-            } catch (err) {
-                showError(err);
-                vectorTileDecoder = null;
-            }
+            tryCatch(
+                () => {
+                    vectorTileDecoder = mapContext.createMapDecoder(mapStyle, mapStyleLayer);
+                },
+                () => {
+                    vectorTileDecoder = null;
+                }
+            );
             // }
             handleNewLanguage(currentLanguage);
         }
     }
 
     async function selectStyle() {
+        function filterEntity(e){
+            return !/(inner|admin|cleaned|base)/.test(e.name)
+        }
         const styles = [];
         const stylePath = path.join(knownFolders.currentApp().path, 'assets', 'styles');
-        const entities = (await Folder.fromPath(stylePath).getEntities()).filter((e) => !/(inner|admin|cleaned)/.test(e.path));
+        const entities = (await Folder.fromPath(stylePath).getEntities()).filter(filterEntity);
         for (let index = 0; index < entities.length; index++) {
             const e = entities[index];
             if (Folder.exists(e.path)) {
-                const subs = await Folder.fromPath(e.path).getEntities();
+                const subs = (await Folder.fromPath(e.path).getEntities()).filter(filterEntity);
                 styles.push(
                     ...subs
                         .filter((s) => s.name.endsWith('.json') || s.name.endsWith('.xml'))
@@ -1482,7 +1482,7 @@
     }
     function replaceLayer(oldLayer: Layer<any, any>, layer: Layer<any, any>) {
         const index = addedLayers.findIndex((d) => d.layer === oldLayer);
-        DEV_LOG && console.log('replaceLayer', index, oldLayer, layer);
+        // DEV_LOG && console.log('replaceLayer', index, oldLayer, layer);
         if (index !== -1) {
             addedLayers[index].layer = layer;
             cartoMap.getLayers().set(index, layer);
@@ -1624,19 +1624,15 @@
     async function switchKeepAwake() {
         keepScreenAwake = !keepScreenAwake;
     }
-    async function switchShowOnLockscreen() {
-        try {
-            if (showOnLockscreen) {
-                disableShowWhenLockedAndTurnScreenOn();
-                showOnLockscreen = false;
-            } else {
-                enableShowWhenLockedAndTurnScreenOn();
-                showOnLockscreen = true;
-            }
-        } catch (err) {
-            showError(err);
+    const switchShowOnLockscreen = tryCatchFunction(async () => {
+        if (showOnLockscreen) {
+            disableShowWhenLockedAndTurnScreenOn();
+            showOnLockscreen = false;
+        } else {
+            enableShowWhenLockedAndTurnScreenOn();
+            showOnLockscreen = true;
         }
-    }
+    });
 
     function switchLocationInfo() {
         locationInfoPanel.switchLocationInfo();
@@ -1734,37 +1730,52 @@
     onDestroy(() => {
         webserver?.stop();
     });
-    async function showMapMenu(event) {
-        try {
-            const options = [
-                {
-                    accessibilityValue: 'settingsBtn',
-                    title: lc('settings'),
-                    id: 'settings',
-                    icon: 'mdi-cogs'
-                },
-                {
-                    title: lc('location_info'),
-                    id: 'location_info',
-                    icon: 'mdi-speedometer'
-                },
-                {
-                    title: lc('share_screenshot'),
-                    id: 'share_screenshot',
-                    icon: 'mdi-cellphone-screenshot'
-                },
-                // {
-                //     title: lc('keep_awake'),
-                //     color: keepAwakeEnabled ? colorError : '#00ff00',
-                //     id: 'keep_awake',
-                //     icon: keepAwakeEnabled ? 'mdi-sleep' : 'mdi-sleep-off'
-                // },
-                {
-                    title: lc('compass'),
-                    id: 'compass',
-                    icon: 'mdi-compass'
-                }
-            ]
+    const showMapMenu = tryCatchFunction(
+        async (event) => {
+            const options = (
+                [
+                    {
+                        accessibilityValue: 'settingsBtn',
+                        title: lc('settings'),
+                        id: 'settings',
+                        icon: 'mdi-cogs'
+                    }
+                ] as any
+            )
+                .concat(
+                    customLayersModule.hasLocalData
+                        ? [
+                              {
+                                  title: lc('select_style'),
+                                  id: 'select_style',
+                                  icon: 'mdi-layers'
+                              }
+                          ]
+                        : []
+                )
+                .concat([
+                    {
+                        title: lc('location_info'),
+                        id: 'location_info',
+                        icon: 'mdi-speedometer'
+                    },
+                    {
+                        title: lc('share_screenshot'),
+                        id: 'share_screenshot',
+                        icon: 'mdi-cellphone-screenshot'
+                    },
+                    // {
+                    //     title: lc('keep_awake'),
+                    //     color: keepAwakeEnabled ? colorError : '#00ff00',
+                    //     id: 'keep_awake',
+                    //     icon: keepAwakeEnabled ? 'mdi-sleep' : 'mdi-sleep-off'
+                    // },
+                    {
+                        title: lc('compass'),
+                        id: 'compass',
+                        icon: 'mdi-compass'
+                    }
+                ])
                 .concat(
                     __ANDROID__
                         ? [
@@ -1800,13 +1811,7 @@
                         icon: 'mdi-import'
                     }
                 ] as any);
-            if (customLayersModule.hasLocalData) {
-                options.unshift({
-                    title: lc('select_style'),
-                    id: 'select_style',
-                    icon: 'mdi-layers'
-                });
-            }
+
             if (SENTRY_ENABLED && isSentryEnabled) {
                 options.push({
                     title: lc('bug_report'),
@@ -1839,7 +1844,7 @@
                     // autoSizeListItem: true,
                     maxHeight: Screen.mainScreen.heightDIPs - 100
                 },
-                onLongPress: async (result) => {
+                onLongPress: tryCatchFunction(async (result) => {
                     DEV_LOG && console.log('onLongPress', result);
                     if (result) {
                         switch (result.id) {
@@ -1848,7 +1853,7 @@
                                 break;
                         }
                     }
-                },
+                }),
                 onClose: async (result) => {
                     if (result) {
                         switch (result.id) {
@@ -1902,23 +1907,17 @@
                     }
                 }
             });
-        } catch (err) {
-            showError(err);
-        } finally {
-            hideLoading();
-        }
-    }
-    async function showMapOptions() {
-        try {
-            const MapOptions = (await import('~/components/map/MapOptions.svelte')).default;
-            return showBottomSheet({
-                view: MapOptions,
-                skipCollapsedState: true
-            });
-        } catch (error) {
-            showError(error);
-        }
-    }
+        },
+        undefined,
+        hideLoading
+    );
+    const showMapOptions = tryCatchFunction(async () => {
+        const MapOptions = (await import('~/components/map/MapOptions.svelte')).default;
+        return showBottomSheet({
+            view: MapOptions,
+            skipCollapsedState: true
+        });
+    });
 
     async function sendBugReport() {
         if (SENTRY_ENABLED) {
@@ -1941,14 +1940,10 @@
         }
     }
 
-    async function showTransitLinesPage() {
-        try {
-            const component = (await import('~/components/transit/TransitLines.svelte')).default;
-            navigate({ page: component });
-        } catch (error) {
-            showError(error);
-        }
-    }
+    const showTransitLinesPage = tryCatchFunction(async () => {
+        const component = (await import('~/components/transit/TransitLines.svelte')).default;
+        navigate({ page: component });
+    });
 
     let drawn = false;
     function reportFullyDrawn() {
@@ -2046,74 +2041,72 @@
             }
         ];
         if ((WITH_BUS_SUPPORT && customLayersModule?.devMode) || customLayersModule?.hasLocalData) {
-            async function onShowMore(event) {
-                try {
-                    const options = []
-                        .concat(
-                            WITH_BUS_SUPPORT && customLayersModule?.devMode
-                                ? [
-                                      {
-                                          icon: 'mdi-bus-marker',
-                                          id: 'transit_lines',
-                                          title: lc('show_transit_lines'),
-                                          color: showTransitLines ? colorPrimary : undefined
-                                      }
-                                  ]
-                                : []
-                        )
-                        .concat(
-                            customLayersModule.hasLocalData
-                                ? [
-                                      {
-                                          icon: 'mdi-vector-polygon',
-                                          id: 'show_admin_regions',
-                                          title: lc('show_admin_regions'),
-                                          color: showAdmins ? colorPrimary : undefined
-                                      }
-                                  ]
-                                : []
-                        );
-
-                    await showPopoverMenu({
-                        options,
-                        vertPos: VerticalPosition.ALIGN_BOTTOM,
-                        horizPos: HorizontalPosition.LEFT,
-                        anchor: event.object,
-                        props: {
-                            // autoSizeListItem: true,
-                            maxHeight: Screen.mainScreen.heightDIPs - 100
-                        },
-                        onLongPress: async (result) => {
-                            if (result) {
-                                switch (result.id) {
-                                    case 'transit_lines':
-                                        await showTransitLinesPage();
-                                        break;
-                                }
-                            }
-                        },
-                        onClose: async (result) => {
-                            if (result) {
-                                switch (result.id) {
-                                    case 'transit_lines':
-                                        showTransitLines = !showTransitLines;
-                                        break;
-                                    case 'show_admin_regions':
-                                        showAdmins = !showAdmins;
-                                        break;
-                                }
-                            }
-                        }
-                    });
-                } catch (err) {
-                    showError(err);
-                } finally {
-                    hideLoading();
-                }
-            }
             newButtons.push({
                 text: 'mdi-dots-vertical',
-                onTap: onShowMore
+                onTap: tryCatchFunction(
+                    async (event) => {
+                        const options = []
+                            .concat(
+                                WITH_BUS_SUPPORT && customLayersModule?.devMode
+                                    ? [
+                                          {
+                                              icon: 'mdi-bus-marker',
+                                              id: 'transit_lines',
+                                              title: lc('show_transit_lines'),
+                                              color: showTransitLines ? colorPrimary : undefined
+                                          }
+                                      ]
+                                    : []
+                            )
+                            .concat(
+                                customLayersModule.hasLocalData
+                                    ? [
+                                          {
+                                              icon: 'mdi-vector-polygon',
+                                              id: 'show_admin_regions',
+                                              title: lc('show_admin_regions'),
+                                              color: showAdmins ? colorPrimary : undefined
+                                          }
+                                      ]
+                                    : []
+                            );
+
+                        await showPopoverMenu({
+                            options,
+                            vertPos: VerticalPosition.ALIGN_BOTTOM,
+                            horizPos: HorizontalPosition.LEFT,
+                            anchor: event.object,
+                            props: {
+                                // autoSizeListItem: true,
+                                maxHeight: Screen.mainScreen.heightDIPs - 100
+                            },
+                            onLongPress: tryCatchFunction(async (result) => {
+                                if (result) {
+                                    switch (result.id) {
+                                        case 'transit_lines':
+                                            closePopover();
+                                            await showTransitLinesPage();
+                                            break;
+                                    }
+                                }
+                            }),
+                            onClose: async (result) => {
+                                if (result) {
+                                    switch (result.id) {
+                                        case 'transit_lines':
+                                            showTransitLines = !showTransitLines;
+                                            break;
+                                        case 'show_admin_regions':
+                                            showAdmins = !showAdmins;
+                                            break;
+                                    }
+                                }
+                            }
+                        });
+                    },
+                    undefined,
+                    hideLoading
+                )
             });
         }
 

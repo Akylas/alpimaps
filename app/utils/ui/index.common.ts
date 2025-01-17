@@ -5,6 +5,7 @@ import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescr
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
 import { AlertOptions, GridLayout, View } from '@nativescript/core';
 import { SDK_VERSION, copyToClipboard, debounce } from '@nativescript/core/utils';
+import { tryCatchFunction } from '@shared/utils';
 import { showError } from '@shared/utils/showError';
 import { navigate } from '@shared/utils/svelte/ui';
 import { hideLoading, showSnack, showToast } from '@shared/utils/ui';
@@ -94,23 +95,21 @@ export async function showPopoverMenu<T = any>({
             width: 200 * get(fontScale),
             options,
             onLongPress,
-            onClose: async (item) => {
-                if (closeOnClose) {
-                    if (__IOS__) {
-                        // on iOS we need to wait or if onClose shows an alert dialog it wont work
-                        await closePopover();
-                    } else {
-                        closePopover();
+            onClose: tryCatchFunction(
+                async (item) => {
+                    if (closeOnClose) {
+                        if (__IOS__) {
+                            // on iOS we need to wait or if onClose shows an alert dialog it wont work
+                            await closePopover();
+                        } else {
+                            closePopover();
+                        }
                     }
-                }
-                try {
-                    await onClose?.(item);
-                } catch (error) {
-                    showError(error);
-                } finally {
-                    hideLoading();
-                }
-            },
+                    return onClose?.(item);
+                },
+                undefined,
+                hideLoading
+            ),
             ...(props || {})
         }
     });
