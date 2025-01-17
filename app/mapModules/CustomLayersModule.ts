@@ -44,7 +44,10 @@ const mbTilesSourceGenerator = (s, minZoom) =>
         databasePath: s
     });
 
-const DEFAULT_HILLSHADE_SHADER = `uniform vec4 u_shadowColor;
+let DEFAULT_HILLSHADE_SHADER;
+function getDefaultShader() {
+    if (!DEFAULT_HILLSHADE_SHADER) {
+        DEFAULT_HILLSHADE_SHADER = `uniform vec4 u_shadowColor;
 uniform vec4 u_highlightColor;
 uniform vec4 u_accentColor;
 uniform vec3 u_lightDir;
@@ -56,21 +59,53 @@ vec4 applyLighting(lowp vec4 color, mediump vec3 normal, mediump vec3 surfaceNor
     lowp vec4 shade_color = vec4(mix(u_shadowColor.rgb, u_highlightColor.rgb, lighting), alpha);
     return (accent_color * (1.0 - shade_color.a) + shade_color) * color * intensity;
 }`;
+    }
+    return DEFAULT_HILLSHADE_SHADER;
+}
 
-const SLOPE_STEPS = [30, 35, 40, 45].reverse();
-const SLOPE_COLORS = ['#f0e64e', '#e87639', '#ff0000', '#c18bb7'].reverse();
+export const SLOPE_STEPS = [30, 35, 40, 45];
+export const SLOPE_COLORS = ['#f0e64e', '#e87639', '#ff0000', '#c18bb7'];
 
-const SLOPE_HILLSHADE_SHADER = `uniform vec4 u_shadowColor;
-uniform vec3 u_lightDir;
-vec4 applyLighting(lowp vec4 color, mediump vec3 normal, mediump vec3 surfaceNormal, mediump float intensity) {
-   mediump float lighting = max(0.0, dot(normal, u_lightDir));
-   mediump float slope = acos(dot(normal, surfaceNormal)) *180.0 / 3.14159 * 1.2;
-   ${SLOPE_STEPS.map((step, index) => {
-       const color = new Color(SLOPE_COLORS[index]);
-       return `if (slope >= ${step.toFixed(1)}) {return vec4(${color.r / 255}, ${color.g / 255}, ${color.b / 255}, 1.0) * 0.5; }\n`;
-   }).join('')}
-   return vec4(0, 0, 0, 0.0);
-}`;
+let SLOPE_HILLSHADE_SHADER;
+function getSlopeHillshadeShader() {
+    if (!SLOPE_HILLSHADE_SHADER) {
+        SLOPE_HILLSHADE_SHADER = `uniform vec4 u_shadowColor;
+        uniform vec3 u_lightDir;
+        vec4 applyLighting(lowp vec4 color, mediump vec3 normal, mediump vec3 surfaceNormal, mediump float intensity) {
+           mediump float slope = acos(dot(normal, surfaceNormal)) *180.0 / 3.14159 * 1.2;
+           ${SLOPE_STEPS.slice()
+               .reverse()
+               .map((step, index) => {
+                   const color = new Color(SLOPE_COLORS[SLOPE_STEPS.length - 1 - index]);
+                   return `if (slope >= ${step.toFixed(1)}) {return vec4(${color.r / 255}, ${color.g / 255}, ${color.b / 255}, 1.0) * 0.5; }\n`;
+               })
+               .join('')}
+           return vec4(0, 0, 0, 0.0);
+        }`;
+    }
+    return SLOPE_HILLSHADE_SHADER;
+}
+// export const RELIEF_STEPS = [-850, 50, 150, 250, 450, 925, 1850, 2775, 3700, 8700];
+// export const RELIEF_COLORS = ['#22e9df', '#97e697', '#83e183', '#6edc6e', '#59d759', '#45d245', '#F0FAA0', '#E6DCAA', '#DCDCDC', '#FAFAFA', 'white'];
+
+// let RELIEF_HILLSHADE_SHADER;
+// function getReliefeHillshadeShader() {
+//     if (!RELIEF_HILLSHADE_SHADER) {
+//         RELIEF_HILLSHADE_SHADER = `uniform vec4 u_shadowColor;
+//         uniform vec3 u_lightDir;
+//         vec4 applyLighting(lowp vec4 color, mediump vec3 normal, mediump vec3 surfaceNormal, mediump float intensity) {
+//            ${RELIEF_STEPS.slice()
+//                .reverse()
+//                .map((step, index) => {
+//                    const color = new Color(RELIEF_COLORS[RELIEF_STEPS.length - 1 - index]);
+//                    return `if (normal.z >= ${step.toFixed(1)}) {return vec4(${color.r / 255}, ${color.g / 255}, ${color.b / 255}, 1.0) * 0.5; }\n`;
+//                })
+//                .join('')}
+//            return vec4(0, 0, 0, 0.0);
+//         }`;
+//     }
+//     return RELIEF_HILLSHADE_SHADER;
+// }
 
 function getProviderAttribution(pr) {
     return pr.attribution || (pr.urlOptions && pr.urlOptions.attribution);
@@ -305,7 +340,7 @@ export default class CustomLayersModule extends MapModule {
             contrast,
             // maxSourceOverzoomLevel: 1,
             // exagerateHeightScaleEnabled: false,
-            normalMapLightingShader: DEFAULT_HILLSHADE_SHADER,
+            normalMapLightingShader: getDefaultShader(),
             tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
             illuminationDirection: [Math.sin(toRadians(illuminationDirection)), Math.cos(toRadians(illuminationDirection)), 0],
             highlightColor,
@@ -322,9 +357,9 @@ export default class CustomLayersModule extends MapModule {
         if (this.hillshadeLayer && this.hillshadeLayer.exagerateHeightScaleEnabled !== !value) {
             this.hillshadeLayer.exagerateHeightScaleEnabled = !value;
             if (value) {
-                this.hillshadeLayer.normalMapLightingShader = SLOPE_HILLSHADE_SHADER;
+                this.hillshadeLayer.normalMapLightingShader = getSlopeHillshadeShader();
             } else {
-                this.hillshadeLayer.normalMapLightingShader = DEFAULT_HILLSHADE_SHADER;
+                this.hillshadeLayer.normalMapLightingShader = getDefaultShader();
             }
         }
     }

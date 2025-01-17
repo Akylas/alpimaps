@@ -8,7 +8,7 @@
     import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
     import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
     import { VectorLayer, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
-    import { copyTextToClipboard } from '~/utils/ui';
+    import { copyTextToClipboard, showToolTip } from '~/utils/ui';
     import { Projection } from '@nativescript-community/ui-carto/projections';
     import { EPSG3857 } from '@nativescript-community/ui-carto/projections/epsg3857';
     import { EPSG4326 } from '@nativescript-community/ui-carto/projections/epsg4326';
@@ -22,7 +22,7 @@
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
-    import { Application, ApplicationSettings, Color, File, Page, Utils } from '@nativescript/core';
+    import { Application, ApplicationSettings, Color, File, GridLayout, Page, Utils } from '@nativescript/core';
     import type { AndroidActivityBackPressedEventData, OrientationChangedEventData } from '@nativescript/core/application/application-interfaces';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Screen } from '@nativescript/core/platform';
@@ -76,7 +76,8 @@
     import { parseUrlQueryParameters } from '~/utils/http';
     import { hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
     import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, setTimeout } from '~/utils/utils';
-    import { colors, screenHeightDips, windowInset } from '../../variables';
+    import { colors, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
+    import { tryCatch, tryCatchFunction } from '@shared/utils';
 
     $: ({ colorBackground, colorError, colorPrimary } = $colors);
     $: ({ bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight, top: windowInsetTop } = $windowInset);
@@ -87,6 +88,7 @@
     let defaultLiveSync = global.__onLiveSync;
 
     let page: NativeViewElementNode<Page>;
+    let widgetsHolder: NativeViewElementNode<GridLayout>;
     let cartoMap: CartoMap<LatLonKeys>;
     let directionsPanel: DirectionsPanel;
     let bottomSheetInner: BottomSheetInner;
@@ -1042,16 +1044,7 @@
             }
         }
     }
-    async function selectShownRoutes(event) {
-        try {
-            const component = (await import('~/components/routes/RoutesTypePopover.svelte')).default;
-            await showPopover({
-                view: component,
-                anchor: event.object,
-                vertPos: VerticalPosition.ALIGN_TOP
-            });
-        } catch (error) {}
-    }
+
     $: {
         try {
             cartoMap && mapContext?.innerDecoder?.setStyleParameter('routes_type', $routesType + '');
@@ -1193,7 +1186,7 @@
         const { clickType, featureData, featureGeometry, featureId, featureLayerName, featurePosition, layer, position } = data;
 
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data) as boolean;
-        TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, position, featurePosition,handledByModules);
+        TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, position, featurePosition, handledByModules);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             // if (showClickedFeatures) {
             //     clickedFeatures.push({
@@ -1977,7 +1970,6 @@
         // sideButtons.find((b) => b.id === 'contours').visible = !!customLayersModule?.hasLocalData;
         sideButtons = sideButtons;
     }
-
     $: {
         const newButtons: any[] = [
             {
@@ -2001,7 +1993,20 @@
                 tooltip: lc('show_percentage_slopes'),
                 isSelected: $showSlopePercentages,
                 visible: !!customLayersModule?.hasTerrain,
-                onTap: () => showSlopePercentages.set(!$showSlopePercentages)
+                onTap: () => showSlopePercentages.set(!$showSlopePercentages),
+                onLongPress: tryCatchFunction(async (event, button) => {
+                    if ($showSlopePercentages) {
+                        const component = (await import('~/components/map/SlopesInfoPopover.svelte')).default;
+                        await showPopover({
+                            view: component,
+                            anchor: event.object,
+                            vertPos: VerticalPosition.ALIGN_TOP,
+                            horizPos: HorizontalPosition.RIGHT
+                        });
+                    } else {
+                        showToolTip(button.tooltip);
+                    }
+                })
             },
             {
                 text: 'mdi-routes',
@@ -2010,7 +2015,15 @@
                 isSelected: $showRoutes,
                 visible: !!customLayersModule?.hasRoute,
                 onTap: () => showRoutes.set(!$showRoutes),
-                onLongPress: selectShownRoutes
+                onLongPress: tryCatchFunction(async (event) => {
+                    const component = (await import('~/components/routes/RoutesTypePopover.svelte')).default;
+                    await showPopover({
+                        view: component,
+                        anchor: event.object,
+                        vertPos: VerticalPosition.ALIGN_TOP,
+                        horizPos: HorizontalPosition.RIGHT
+                    });
+                })
             },
             // {
             //     text: 'mdi-speedometer',
@@ -2166,7 +2179,7 @@
             {steps}
             translationFunction={bottomSheetTranslationFunction}
             on:stepIndexChange={onStepIndexChanged}>
-            <gridlayout height="100%" isPassThroughParentEnabled={true} width="100%">
+            <gridlayout bind:this={widgetsHolder} height="100%" isPassThroughParentEnabled={true} width="100%">
                 <ButtonBar
                     id="mapButtonsNew"
                     buttonSize={40}
@@ -2244,7 +2257,7 @@
                 horizontalAlignment={isLandscape ? 'left' : 'stretch'}
                 item={$selectedItem}
                 updating={itemLoading}
-                width={isLandscape ? 400 : '100%'}
+                width={isLandscape ? Math.max(screenWidthDips / 2, 400) : '100%'}
                 bind:navigationInstructions
                 bind:steps />
         </bottomsheet>
