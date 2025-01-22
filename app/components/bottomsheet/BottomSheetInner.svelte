@@ -956,45 +956,43 @@
         </swipemenu>
 
         <scrollview borderBottomWidth={1} borderColor={colorOutlineVariant} borderTopWidth={1} colSpan={2} orientation="horizontal" row={1}>
-            <gridlayout columns="auto" rows="*">
-                <stacklayout id="bottomsheetbuttons" orientation="horizontal">
-                    <IconButton isVisible={item && !itemIsRoute} rounded={false} text="mdi-information-outline" tooltip={lc('information')} on:tap={() => showInformation()} />
-                    <IconButton isVisible={itemCanBeAdded} rounded={false} text={itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus'} tooltip={lc('save')} on:tap={() => saveItem()} />
+            <stacklayout id="bottomsheetbuttons" orientation="horizontal">
+                <IconButton isVisible={item && !itemIsRoute} rounded={false} text="mdi-information-outline" tooltip={lc('information')} on:tap={() => showInformation()} />
+                <IconButton isVisible={itemCanBeAdded} rounded={false} text={itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus'} tooltip={lc('save')} on:tap={() => saveItem()} />
 
-                    <!-- {#if packageService.hasElevation()} -->
-                    <IconButton isVisible={itemIsRoute && itemCanQueryProfile} rounded={false} text="mdi-chart-areaspline" tooltip={lc('elevation_profile')} on:tap={() => getProfile()} />
-                    <!-- {/if} -->
-                    <!-- {#if packageService.offlineRoutingSearchService()} -->
-                    <IconButton isVisible={itemIsRoute && itemCanQueryStats} rounded={false} text="mdi-chart-bar-stacked" tooltip={lc('road_stats')} on:tap={() => getStats()} />
-                    <!-- {/if} -->
-                    <IconButton isVisible={!!item?.id && itemIsRoute} rounded={false} text="mdi-eye-off" tooltip={lc('hide')} on:tap={hideItem} />
-                    <IconButton isVisible={itemCanBeEdited} rounded={false} text="mdi-pencil" tooltip={lc('edit')} on:tap={startEditingItem} />
-                    <IconButton
-                        isVisible={item && (!itemIsRoute || (!!item.properties?.name && item.properties.hasRealName !== false))}
-                        onLongPress={() => searchWeb(false)}
-                        rounded={false}
-                        text="mdi-web"
-                        tooltip={lc('search_web')}
-                        on:tap={() => searchWeb()} />
-                    <IconButton isVisible={!itemIsRoute && item && item.properties && !!item.properties.name} rounded={false} text="mdi-wikipedia" tooltip={lc('wikipedia')} on:tap={openWikipedia} />
-                    {#if networkService.canCheckWeather}
-                        <IconButton isVisible={!itemIsRoute} rounded={false} text="mdi-weather-partly-cloudy" tooltip={lc('weather')} on:tap={checkWeather} />
-                    {/if}
-                    <IconButton id="astronomy" isVisible={!itemIsRoute} rounded={false} text="mdi-weather-night" tooltip={lc('astronomy')} on:tap={showAstronomy} />
-                    {#if WITH_PEAK_FINDER && __ANDROID__ && packageService.hasElevation()}
-                        <IconButton isVisible={!itemIsRoute} rounded={false} text="mdi-summit" tooltip={lc('peaks')} on:tap={openPeakFinder} />
-                    {/if}
-                    {#if WITH_3D_MAP && __ANDROID__ && packageService.hasElevation()}
-                        <IconButton isVisible={!itemIsRoute} rounded={false} text="mdi-video-3d" tooltip={lc('threed_map')} on:tap={open3DMap} />
-                    {/if}
-                    <IconButton isVisible={(itemIsRoute && !item?.id) || !!currentLocation} rounded={false} text="mdi-compass-outline" tooltip={lc('compass')} on:tap={openCompass} />
+                <!-- {#if packageService.hasElevation()} -->
+                <IconButton isVisible={itemIsRoute && itemCanQueryProfile} rounded={false} text="mdi-chart-areaspline" tooltip={lc('elevation_profile')} on:tap={() => getProfile()} />
+                <!-- {/if} -->
+                <!-- {#if packageService.offlineRoutingSearchService()} -->
+                <IconButton isVisible={itemIsRoute && itemCanQueryStats} rounded={false} text="mdi-chart-bar-stacked" tooltip={lc('road_stats')} on:tap={() => getStats()} />
+                <!-- {/if} -->
+                <IconButton isVisible={!!item?.id && itemIsRoute} rounded={false} text="mdi-eye-off" tooltip={lc('hide')} on:tap={hideItem} />
+                <IconButton isVisible={itemCanBeEdited} rounded={false} text="mdi-pencil" tooltip={lc('edit')} on:tap={startEditingItem} />
+                <IconButton
+                    isVisible={item && (!itemIsRoute || (!!item.properties?.name && item.properties.hasRealName !== false))}
+                    onLongPress={() => searchWeb(false)}
+                    rounded={false}
+                    text="mdi-web"
+                    tooltip={lc('search_web')}
+                    on:tap={() => searchWeb()} />
+                <IconButton isVisible={!itemIsRoute && item && item.properties && !!item.properties.name} rounded={false} text="mdi-wikipedia" tooltip={lc('wikipedia')} on:tap={openWikipedia} />
+                {#if networkService.canCheckWeather}
+                    <IconButton isVisible={!itemIsRoute} rounded={false} text="mdi-weather-partly-cloudy" tooltip={lc('weather')} on:tap={checkWeather} />
+                {/if}
+                <IconButton id="astronomy" isVisible={!itemIsRoute} rounded={false} text="mdi-weather-night" tooltip={lc('astronomy')} on:tap={showAstronomy} />
+                {#if WITH_PEAK_FINDER && __ANDROID__ && packageService.hasElevation()}
+                    <IconButton isVisible={!itemIsRoute} rounded={false} text="mdi-summit" tooltip={lc('peaks')} on:tap={openPeakFinder} />
+                {/if}
+                {#if WITH_3D_MAP && __ANDROID__ && packageService.hasElevation()}
+                    <IconButton isVisible={!itemIsRoute} rounded={false} text="mdi-video-3d" tooltip={lc('threed_map')} on:tap={open3DMap} />
+                {/if}
+                <IconButton isVisible={(itemIsRoute && !item?.id) || !!currentLocation} rounded={false} text="mdi-compass-outline" tooltip={lc('compass')} on:tap={openCompass} />
 
-                    <IconButton isVisible={itemIsBusStop} rounded={false} text="mdi-bus" tooltip={lc('bus_stop_infos')} on:tap={getTransitLines} />
-                    <IconButton rounded={false} text="mdi-share-variant" tooltip={lc('share')} on:tap={shareItem} />
+                <IconButton isVisible={itemIsBusStop} rounded={false} text="mdi-bus" tooltip={lc('bus_stop_infos')} on:tap={getTransitLines} />
+                <IconButton rounded={false} text="mdi-share-variant" tooltip={lc('share')} on:tap={shareItem} />
 
-                    <!-- <IconButton on:tap={deleteItem} tooltip={lc('delete')} isVisible={!!item?.id} color="red" text="mdi-delete" rounded={false} /> -->
-                </stacklayout>
-            </gridlayout>
+                <!-- <IconButton on:tap={deleteItem} tooltip={lc('delete')} isVisible={!!item?.id} color="red" text="mdi-delete" rounded={false} /> -->
+            </stacklayout>
         </scrollview>
         <!-- <label height={PROFILE_HEIGHT} row={2} visibility={graphAvailable ? 'visible' : 'collapse'}/> -->
         <ElevationChart bind:this={elevationChart} colSpan={2} {item} row={2} visibility={graphAvailable ? 'visible' : 'collapse'} on:highlight={onChartHighlight} />
