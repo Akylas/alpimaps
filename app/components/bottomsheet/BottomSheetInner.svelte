@@ -677,6 +677,28 @@
             showError(err);
         }
     }
+    async function open3DMap() {
+        try {
+            const geometry = item.geometry as Point;
+            const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0], altitude: geometry.coordinates[2] };
+            if (!position.altitude) {
+                position.altitude = item.properties.ele || (await packageService.getElevation(position));
+            }
+            // const { default: component } = await import('~/components/PeakFinder.svelte');
+            const component = (await import('~/components/3d/3DMap.svelte')).default;
+            navigate({
+                page: component,
+                props: {
+                    position,
+                    pitch: 45,
+                    zoom: mapContext.getMap().zoom,
+                    bearing: mapContext.getMap().bearing
+                }
+            });
+        } catch (err) {
+            showError(err);
+        }
+    }
     async function openCompass() {
         try {
             const selected = mapContext.getSelectedItem();
@@ -959,8 +981,11 @@
                         <IconButton isVisible={!itemIsRoute} rounded={false} text="mdi-weather-partly-cloudy" tooltip={lc('weather')} on:tap={checkWeather} />
                     {/if}
                     <IconButton id="astronomy" isVisible={!itemIsRoute} rounded={false} text="mdi-weather-night" tooltip={lc('astronomy')} on:tap={showAstronomy} />
-                    {#if packageService.hasElevation()}
+                    {#if WITH_PEAK_FINDER && __ANDROID__ && packageService.hasElevation()}
                         <IconButton isVisible={!itemIsRoute} rounded={false} text="mdi-summit" tooltip={lc('peaks')} on:tap={openPeakFinder} />
+                    {/if}
+                    {#if WITH_3D_MAP && __ANDROID__ && packageService.hasElevation()}
+                        <IconButton isVisible={!itemIsRoute} rounded={false} text="mdi-video-3d" tooltip={lc('threed_map')} on:tap={open3DMap} />
                     {/if}
                     <IconButton isVisible={(itemIsRoute && !item?.id) || !!currentLocation} rounded={false} text="mdi-compass-outline" tooltip={lc('compass')} on:tap={openCompass} />
 
