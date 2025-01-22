@@ -247,7 +247,7 @@
     "golf": "golf",
     "gps_desired_accuracy": "précision",
     "gps_desired_accuracy_desc": "Spécifie la précision souhaitée en mètres",
-    "gps_not_authorized": "AlipMaps n'a pas l'autorisation d'utiliser le GPS",
+    "gps_not_authorized": "AlpiMaps n'a pas l'autorisation d'utiliser le GPS",
     "gps_not_enabled": "votre GPS n'est pas activé",
     "gps_update_distance": "distance de mise à jour",
     "gps_update_distance_desc": "Mettre à jour le filtre de distance en mètres. \nSpécifie la fréquence de mise à jour",
@@ -704,5 +704,21 @@
     "start_tile_server": "démarrer le serveur de tuiles",
     "show_sub_boundaries": "afficher les sous-limites",
     "offline_data_settings": "paramètres liés aux données hors ligne",
-    "stop_tile_server": "arrêter le serveur de tuiles"
+    "stop_tile_server": "arrêter le serveur de tuiles",
+    "inapp": {
+        "bigtip": "un très beau don",
+        "bigtip_desc": "de nouvelles fonctionnalités arrivent !",
+        "largertip": "une pinte",
+        "largertip_desc": "les idées vont fuser !",
+        "largetip_desc": "Détendez-vous et retournez au travail !",
+        "mediumtip": "un grand café",
+        "mediumtip_desc": "mes yeux sont ouverts !",
+        "smalltip": "un café",
+        "smalltip_desc": "tout aide à travailler la nuit !",
+        "largetip": "une bière"
+    },
+    "thank_you": "Merci !",
+    "thank_you_subtitle": "votre don aidera le projet à grandir et me donnera le temps d'implémenter plus de fonctionnalités",
+    "tile_server_port": "port du serveur de tuiles",
+    "copied_to_clipboard": "copié dans le presse-papiers : %1$s"
 }
