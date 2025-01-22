@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { request } from '@nativescript-community/perms';
+    import { isPermResultAuthorized, request } from '@nativescript-community/perms';
     import { estimateMagneticField, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
     import { MultiTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
@@ -123,7 +123,7 @@
                 })
                 .filter((p) => !!p);
             const res = await request(wantedPerssions[0]);
-            args.callback(res[0] === 'authorized');
+            args.callback(isPermResultAuthorized(res));
         });
     }
 
@@ -538,7 +538,7 @@
     function createCustomWebViewClient(webview: AWebView, webClientClass) {
         const originalClient = new webClientClass(webview);
         const vDataSource = (vectorDataSource || getDefaultDataSource()).getNative();
-        const client = new (akylas as any).alpi.maps.WebViewClient(originalClient, dataSource?.getNative(), vDataSource, vDataSource, rasterDataSource?.getNative());
+        const client = new (akylas as any).alpi.maps.WebViewClient(originalClient, dataSource?.getNative(), vDataSource, vDataSource, rasterDataSource?.getNative(), null);
         // this crashes in production saying no originalClient property ...
         // client.originalClient = originalClient;
         return client;
