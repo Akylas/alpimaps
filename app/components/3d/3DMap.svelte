@@ -1,9 +1,12 @@
 <script lang="ts">
-    import { debounce } from '@nativescript/core/utils';
     import { AWebView } from '@nativescript-community/ui-webview';
-    import { LoadEventData, Page } from '@nativescript/core';
+    import { LoadEventData, Page, knownFolders, path } from '@nativescript/core';
+    import { debounce } from '@nativescript/core/utils';
     // import type { Feature } from 'geojson';
     import { NativeViewElementNode } from 'svelte-native/dom';
+    import { lang } from '~/helpers/locale';
+    import { getMapContext } from '~/mapModules/MapModule';
+    import { packageService } from '~/services/PackageService';
 
     export let position;
     // export let terrarium: boolean = false;
@@ -12,6 +15,16 @@
     // export let rasterDataSource: TileDataSource<any, any>;
     let webView: NativeViewElementNode<AWebView>;
     let page: NativeViewElementNode<Page>;
+
+    export let bearing;
+    export let zoom;
+    export let pitch;
+
+    const mapContext = getMapContext();
+    const hillshadeDatasource = packageService.hillshadeLayer?.dataSource;
+    const vectorDataSource = packageService.localVectorTileLayer?.dataSource;
+    // const contoursDataSource = mapContext.getLayers('routes')?.[0]?.layer.dataSource;
+    const routeDataSource = mapContext.getLayers('routes')?.[0]?.layer.dataSource;
     // let webserver;
     // const selectedItem: Feature & { distance: number } = null;
 
@@ -36,14 +49,13 @@
         }
         shown = true;
         if (webView) {
-            webView.nativeView.src = '~/assets/3dterrain/index.html';
+            const devMode = getMapContext().mapModule('customLayers').devMode;
+            webView.nativeView.src = `~/assets/3dmap/index.html?zoom=${zoom}&bearing=${bearing}&pitch=${pitch}&position=${position.lat},${position.lon}&lang=${lang}&hideAttribution=${devMode}`;
         }
     }
 
     function webviewLoaded(args: LoadEventData) {
-        // const webview = args.object as AWebView;
-        // webview.registerLocalResource('https://api.maptiler.com/maps/topo/sprite@2x.json', '~/assets/3dterrain/sprite@2x.json')
-        // webview.registerLocalResource('https://api.maptiler.com/maps/topo/sprite@2x.png', '~/assets/3dterrain/sprite@2x.png')
+        const webview = args.object as AWebView;
         // webview.once('layoutChanged', () => {
         // webview.src = '~/assets/webapp.html';
         // });
@@ -68,12 +80,25 @@
     // }
     // });
 
+    function createCustomWebViewClient(webview: AWebView, webClientClass) {
+        const originalClient = new webClientClass(webview);
+        const vDataSource = vectorDataSource?.getNative();
+
+        const client = new (akylas as any).alpi.maps.WebViewClient(originalClient, hillshadeDatasource?.getNative(), vDataSource, vDataSource, null, routeDataSource?.getNative());
+
+        client.registerLocalResource('http://127.0.0.1/sprite@2x.json', path.join(knownFolders.currentApp().path, 'assets/3dmap/sprite@2x.json'));
+        client.registerLocalResource('http://127.0.0.1/sprite@2x.png', path.join(knownFolders.currentApp().path, 'assets/3dmap/sprite@2x.png'));
+        // this crashes in production saying no originalClient property ...
+        // client.originalClient = originalClient;
+        return client;
+    }
+
     $: currentAltitude = position.altitude + 10;
     $: updateElevation(currentAltitude);
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout>
-        <awebview bind:this={webView} displayZoomControls={false} normalizeUrls={false} webConsoleEnabled={consoleEnabled} on:loaded={webviewLoaded} />
+        <awebview bind:this={webView} createWebViewClient={createCustomWebViewClient} displayZoomControls={false} normalizeUrls={false} webConsoleEnabled={consoleEnabled} on:loaded={webviewLoaded} />
     </gridlayout>
 </page>

@@ -4,8 +4,10 @@ package akylas.alpi.maps;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
+import java.util.zip.GZIPInputStream ;
 import java.util.Map;
 import java.util.Arrays;
 import java.util.Set;
@@ -39,6 +41,11 @@ import com.carto.core.MapBounds;
 
 public class WebViewClient extends android.webkit.WebViewClient {
     static final String AUTHORITY = "127.0.0.1:8080";
+
+    // static final Map<String, String> headers = Map.of(
+    //     "access-control-allow-origin", "*",
+    //     "content-encoding", "gzip"
+    // );
     
     android.webkit.WebViewClient originalClient;
 
@@ -46,9 +53,12 @@ public class WebViewClient extends android.webkit.WebViewClient {
     TileDataSource peaksDataSource;
     TileDataSource contoursDataSource;
     TileDataSource rasterDataSource;
+    TileDataSource routesDataSource;
     MBVectorTileDecoder decoder;
     EPSG4326 projection;
     GeoJSONGeometryWriter geojsonWriter;
+    HashMap<String, String> localResources = new HashMap<String, String>();
+    
 
     private double tile2lon(int x, int z) {
         return x / Math.pow(2, z) * 360.0f - 180.0f;
@@ -66,17 +76,22 @@ public class WebViewClient extends android.webkit.WebViewClient {
         return new double[] {w, s, e, n};
     }
 
-    public WebViewClient(android.webkit.WebViewClient originalClient, TileDataSource heightDataSource, TileDataSource peaksDataSource, TileDataSource contoursDataSource, TileDataSource rasterDataSource) {
+    public WebViewClient(android.webkit.WebViewClient originalClient, TileDataSource heightDataSource, TileDataSource peaksDataSource, TileDataSource contoursDataSource, TileDataSource rasterDataSource, TileDataSource routesDataSource) {
         super();
         this.originalClient = originalClient;
         this.heightDataSource = heightDataSource;
         this.peaksDataSource = peaksDataSource;
         this.rasterDataSource = rasterDataSource;
         this.contoursDataSource = contoursDataSource;
+        this.routesDataSource = routesDataSource;
         decoder = new MBVectorTileDecoder(new CartoCSSStyleSet("#mountain_peak { text-name: [name];}"));
         projection = new EPSG4326();
         geojsonWriter = new GeoJSONGeometryWriter();
         geojsonWriter.setSourceProjection(peaksDataSource.getProjection());
+    }
+
+    public void registerLocalResource(String key, String value) {
+        localResources.put(key, value);
     }
 
     @Override
@@ -101,6 +116,14 @@ public class WebViewClient extends android.webkit.WebViewClient {
 
         String server = uri.getAuthority();
         if (!server.equals(AUTHORITY)) {
+            if (localResources.containsKey(uri.toString())) {
+                try {
+                    java.io.FileInputStream stream = new java.io.FileInputStream(new java.io.File(localResources.get(uri.toString())));
+                    return new WebResourceResponse("application/octet-stream", "binary", stream);
+                } catch(Exception exception) {
+                    return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream(exception.toString().getBytes(StandardCharsets.UTF_8)));
+                }
+            }
             return null;
         }
         String path = uri.getPath();
@@ -108,7 +131,6 @@ public class WebViewClient extends android.webkit.WebViewClient {
         Set<String> args = uri.getQueryParameterNames();
         final String source = uri.getQueryParameter("source");
         final String imageFormat = args.contains("format") ? uri.getQueryParameter("format") : "png";
-
         TileDataSource dataSource = null;
 
         switch (source) {
@@ -120,6 +142,9 @@ public class WebViewClient extends android.webkit.WebViewClient {
                 break;
             case "contours":
                 dataSource = contoursDataSource;
+                break;
+            case "routes":
+                dataSource = routesDataSource;
                 break;
             case "peaks":
             case "data":
@@ -174,10 +199,14 @@ public class WebViewClient extends android.webkit.WebViewClient {
         }
         byte[] binaryDataData = binaryData.getData();
         InputStream targetStream = new ByteArrayInputStream(binaryDataData);
-        if (source.equals("data") || source.equals("contours")) {
-            return new WebResourceResponse("application/x-protobuf", "utf-8", targetStream);
+        if (source.equals("data") || source.equals("routes") || source.equals("contours")) {
+            try {
+                return new WebResourceResponse("application/x-protobuf", "utf-8", new GZIPInputStream(targetStream));
+            } catch(Exception exception) {
+                return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream(exception.toString().getBytes(StandardCharsets.UTF_8)));
+            }
         }
-            return new WebResourceResponse("image/" + imageFormat, "utf-8", targetStream);
+        return new WebResourceResponse("image/" + imageFormat, "utf-8", targetStream);
     }
 
     @Override
