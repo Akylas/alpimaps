@@ -1,0 +1,6 @@
+Features:
+- longpress the slope button when active to show legend
+- basic 3dmap available as new "button" on map selection. Available only with offline elevation data
+
+Bug fixes:
+- bottomsheet buttons bar was not scrollable (in case there are many buttons)
