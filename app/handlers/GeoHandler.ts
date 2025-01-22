@@ -1,5 +1,5 @@
 import { GPS, GenericGeoLocation, Options as GeolocationOptions } from '@nativescript-community/gps';
-import { check, request } from '@nativescript-community/perms';
+import { check, isPermResultAuthorized, request } from '@nativescript-community/perms';
 import { confirm } from '@nativescript-community/ui-material-dialogs';
 import { AndroidActivityResultEventData, AndroidApplication, Application, ApplicationEventData, ApplicationSettings, CoreTypes, EventData, Utils } from '@nativescript/core';
 import { SDK_VERSION } from '@nativescript/core/utils';
@@ -210,8 +210,8 @@ export class GeoHandler extends Handler {
     }
     async authorizeLocation() {
         const result = await request('location');
-        if ((Array.isArray(result) && result[0] !== 'authorized') || Object.keys(result).some((s) => result[s] !== 'authorized')) {
-            throw new Error('gps_denied');
+        if (!isPermResultAuthorized(result)) {
+            throw new Error(lc('missing_location_permission'));
         }
         this.gpsEnabled = geolocation.isEnabled();
         return result;
@@ -219,7 +219,7 @@ export class GeoHandler extends Handler {
     async checkEnabledAndAuthorized(always = false) {
         try {
             await check('location').then((r) => {
-                if (r[0] !== 'authorized') {
+                if (isPermResultAuthorized(r)) {
                     return this.authorizeLocation();
                 }
             });
