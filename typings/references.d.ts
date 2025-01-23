@@ -46,6 +46,8 @@ declare const TEST_LOG: boolean;
 declare const PRODUCTION: boolean;
 declare const __DISABLE_OFFLINE__: boolean;
 declare const WITH_BUS_SUPPORT: boolean;
+declare const WITH_PEAK_FINDER: boolean;
+declare const WITH_3D_MAP: boolean;
 declare const SENTRY_ENABLED: boolean;
 declare const SENTRY_DSN: string;
 declare const SENTRY_PREFIX: string;

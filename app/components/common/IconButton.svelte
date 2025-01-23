@@ -21,6 +21,7 @@
     export let toggable = false;
     export let gray = toggable;
     export let isSelected = false;
+    export let borderRadius = 4;
     export let text = null;
     export let fontFamily = $fonts.mdi;
     export let selectedColor = white ? 'white' : undefined;
@@ -82,7 +83,7 @@
 {#if __ANDROID__}
     <canvasview
         bind:this={canvas}
-        borderRadius={shape === 'round' || (rounded && !shape) ? (height || size) / 2 : null}
+        borderRadius={shape === 'round' || (rounded && !shape) ? (height || size) / 2 : borderRadius}
         disableCss={true}
         isUserInteractionEnabled={isEnabled}
         rippleColor={actualColor}
@@ -95,7 +96,8 @@
         use:conditionalEvent={{ condition: !!actualLongPress, event: 'longPress', callback: actualLongPress }} />
 {:else}
     <mdbutton
-        color={isSelected ? (selectedColor || colorPrimary) : actualColor}
+        borderRadius={shape || rounded ? null : borderRadius}
+        color={isSelected ? selectedColor || colorPrimary : actualColor}
         disableCss={true}
         {fontFamily}
         {isEnabled}

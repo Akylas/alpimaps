@@ -11,8 +11,8 @@ android {
   defaultConfig {  
     multiDexEnabled false
     minSdkVersion 21
-    versionCode 271
-    versionName "2.8.9"
+    versionCode 272
+    versionName "2.8.10"
 
     // if (project.hasProperty('resConfigs')) {
     //   def resConfigs = project.findProperty('resConfigs')
@@ -115,6 +115,7 @@ android {
     pickFirst 'lib/x86_64/libc++_shared.so'
     pickFirst 'lib/x86/libc++_shared.so'
     exclude "assets/app/**/*.js.map"
+    exclude "assets/app/**/*.LICENSE.txt"
     exclude "org/bouncycastle/**"
     exclude "license/**"
     jniLibs {

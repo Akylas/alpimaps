@@ -93,7 +93,8 @@
             index = Math.floor(event.getX() / buttonSize);
         }
         if (index >= 0) {
-            visibleButtons()[index].onTap?.(event);
+            const button = visibleButtons()[index];
+            button.onTap?.(event, button);
         }
     }
     function onLongPress(event) {
@@ -107,7 +108,7 @@
         if (index >= 0) {
             const button = visibleButtons()[index];
             if (button.onLongPress) {
-                button.onLongPress(event);
+                button.onLongPress(event, button);
             } else if (button.tooltip) {
                 showToolTip(button.tooltip);
             }

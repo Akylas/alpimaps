@@ -705,5 +705,19 @@
     "americanaosm_presentation_detailed": "AlpiMaps nutzt %1$ als Standard-Vektor-Kartenquelle. Zu Beginn stellte AlpiMaps dazu eine kostenfreie Instanz für alle zur Verfügung. Die Zugriffe überschritten allerdings schnell das Limit, weshalb ich mich entschied diese zu schließen. Deshalb erkläre ich jetzt, wie man seine eigene Instanz erstellt und in der App verwendet. Lesen Sie sich %2$s für Erklärungen durch. Wenn Sie die Instanz bereits aufgesetzt haben, können Sie hier die URL einsetzen. Bis dahin werden OpenstreetMap-Rasterkarten genutzt als Standard genutzt.",
     "select_color_theme": "Wählen Sie ein Farbthema aus",
     "timeout_error": "Die Anfrage hat ihre Zeit überschritten. Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es dann noch einmal.",
-    "outline": "Kontur"
+    "outline": "Kontur",
+    "inapp": {
+        "bigtip": "Eine nette Spende",
+        "bigtip_desc": "Es wird bald neue Funktionen geben!",
+        "largertip": "Eine Halbe",
+        "largertip_desc": "Ideen werden nur so strömen!",
+        "largetip": "Ein Bier",
+        "largetip_desc": "Fertig mit Chillen, zurück zur Arbeit!",
+        "mediumtip": "Ein großer Kaffee",
+        "mediumtip_desc": "Meine Augen sind wieder offen!",
+        "smalltip": "Ein Kaffee",
+        "smalltip_desc": "Alles, was für Nachtarbeit hilft!"
+    },
+    "tile_server_port": "Server-Schnittstelle für Kacheln",
+    "copied_to_clipboard": "In den Zwischenspeicher kopiert: %1$s"
 }
