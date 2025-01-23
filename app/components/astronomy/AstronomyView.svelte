@@ -59,7 +59,7 @@
             const nTimezone = java.util.TimeZone.getTimeZone(timezone);
             timezoneOffset = nTimezone.getOffset(Date.now()) / 3600000;
         } else {
-            timezoneOffset = NSTimeZone.alloc().initWithName(timezone).daylightSavingTimeOffsetForDate(new Date()) / 3600;
+            timezoneOffset = NSTimeZone.alloc().initWithName(timezone).secondsFromGMTForDate(new Date()) / 3600;
         }
     }
     export let startTime = getLocalTime(undefined, timezoneOffset);
