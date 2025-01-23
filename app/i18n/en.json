@@ -1,4 +1,5 @@
 {
+    "threed_map": "3D Map",
     "E": "E",
     "ENE": "ENE",
     "ESE": "ESE",
@@ -402,6 +403,7 @@
     "min_zoom": "min zoom",
     "miniature_golf": "miniature golf",
     "missing_api_token": "Can't add that source without an API token",
+    "missing_location_permission": "missing location permission",
     "missing_manage_permission": "missing permission for manage all files",
     "missing_storage_perm_settings": "storage permission is needed to export settings",
     "missing_storage_permission": "missing storage permission",
