@@ -399,7 +399,7 @@ class PackageService extends Observable {
             }
             if (!foundAddress && get(useSystemGeocodeAddress) && geocodingAvailable) {
                 const results = await getFromLocation(location.lat, location.lon, 10);
-                DEV_LOG && console.log('getFromLocation', results);
+                DEV_LOG && console.log('getFromLocation', JSON.stringify(results));
                 if (results?.length > 0) {
                     const result = results[0];
                     return {
