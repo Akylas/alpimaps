@@ -154,7 +154,7 @@ export default class ItemsModule extends MapModule {
                 dataSource: this.localVectorDataSource,
                 decoder: mapContext.innerDecoder
             });
-            mapContext.innerDecoder.once('change', this.updateLocalLayer);
+            mapContext.innerDecoder.once('change', this.updateLocalLayer, this);
             this.localVectorLayer.setVectorTileEventListener<LatLonKeys>(
                 {
                     onVectorTileClicked(info: VectorTileEventData<LatLonKeys>) {
