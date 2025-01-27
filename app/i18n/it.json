@@ -416,5 +416,9 @@
     "viewpoint": "punto di osservazione",
     "map_package": "pacchetto mappa",
     "map_rotation": "rotazione mappa",
-    "massage": "massaggio"
+    "massage": "massaggio",
+    "ENE": "ENE",
+    "ESE": "ESE",
+    "SSW": "SSO",
+    "threed_map": "Mappa 3D"
 }
