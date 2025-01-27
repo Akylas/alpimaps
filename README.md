@@ -165,3 +165,36 @@ The Translations are hosted by [Weblate.org](https://hosted.weblate.org/engage/a
 	<img src='https://raw.githubusercontent.com/farfromrefug/sponsorkit/main/sponsors.svg'/>
   </a>
 </p>
+
+## Building Setup
+
+### Nativescript
+
+First [setup Nativescript](https://docs.nativescript.org/setup/linux)
+
+This project is optimized to be built with [Akylas Fork](https://github.com/Akylas/NativeScript). Though it would work with main it is best to use this fork. The `package.json` defines a resolution to `../NativeScript/dist/packages/core` so clone the fork and build it using `npm run setup:yarn && npm run ui-mobile-base:build && npm run core:build`
+
+### Yarn
+
+You need to use yarn with this project as it uses the `portal:` protocol for some dependencies.
+Note that the project has some `yarn link` for easy local dev for me. The best is for you to remove the `resolutions` part of the `package.json`
+
+### dotenv
+
+The app uses `.env` file to set up needed environment variables. `.env` is not commited as it contains sensitive data
+Simply create a `.env` file with:
+```
+source .env.ci
+```
+
+Then "source" the file in the terminal so that variable are exported and available to nativescript cli.
+I use dotenv plugin for zsh which automatically loads the `.env` file
+
+### Building
+
+Now that all is setup and that you prepared the 3rd party libraries you can actually build and run the app:
+
+* `yarn`
+* `ns run android --no-hmr --env.devlog` (replace by `ios` for iOS...)
+
+This should run the app on the first discovered device or emulator.
