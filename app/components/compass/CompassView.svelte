@@ -89,7 +89,6 @@
 
     function setListeningState(updateWithSensor) {
         try {
-            DEV_LOG && console.log('updateWithSensor', updateWithSensor);
             if (updateWithSensor) {
                 startHeadingListener();
             } else {
