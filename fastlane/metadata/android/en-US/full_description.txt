@@ -1,5 +1,7 @@
-<p><i>Alpi Maps</i> is an outdoor companion app</p>
+<i>Alpi Maps</i> is an outdoor companion app
+
 <b>Map features:</b>
+
 - enjoy more that 50 different map styles
 - enjoy more that 20 different map overlay styles like ski trails
 - enable / disable HD map for each style
@@ -10,6 +12,7 @@
 - see slopes percentages (based on hill-shading data source offline/online)
 
 <b>GPS features:</b>
+
 - follow your location on the map
 - choose wether to follow your location or only query your location when needed for the lowest battery consumption
 - choose the accuracy of the GPS for even lower battery consumption
@@ -20,10 +23,12 @@
 - get navigation directions
 
 <b>Markers features:</b>
+
 - add a marker from any point on the map
 - find the altitude of any point on the map
 
 <b>Offline features:</b>
+
 - everything map you see is cached. Prepare your hike in advance, look where you are going and access your maps offline while hiking.
 - every single marker and all its details are available offline
 - offline itinerary profile
@@ -36,6 +41,7 @@
 - then use the search to look for businesses, restaurants, ... in the region you are currently seeing
 
 <b>Other features:</b>
+
 - Compass tool
 - Moon / Sun information tool
 - GPS Satellites testing tool (useful to understand why you get a slow GPS fix)
