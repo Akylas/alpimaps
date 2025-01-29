@@ -1,5 +1,7 @@
-<p><i>Alpi Maps</i> est une application Open Source pour vous accompagner lors de vos activités en extérieur</p>
+<i>Alpi Maps</i> est une application Open Source pour vous accompagner lors de vos activités en extérieur
+
 <b>Caractéristiques de la carte:</b>
+
 - profiter de plus de 50 styles de carte différents
 - Profitez de plus de 20 styles différents de overlay de carte comme les pistes de ski
 - activer / désactiver carte HD pour chaque style
@@ -10,6 +12,7 @@
 - voir les pourcentages de pentes (basés sur la source de données en forme de colline hors ligne/en ligne)
 
 <b>Caractéristiques GPS:</b>
+
 - Suivez votre emplacement sur la carte
 - choisissez wether pour suivre votre emplacement ou seulement demander votre emplacement si nécessaire pour la plus faible consommation de batterie
 - choisir la précision du GPS pour une consommation de batterie encore plus faible
@@ -20,10 +23,12 @@
 - obtenir des directions de navigation
 
 <b>Caractéristiques des marqueurs:</b>
+
 - ajouter un marqueur de n'importe quel point sur la carte
 - trouver l'altitude de n'importe quel point sur la carte
 
 <b>Caractéristiques hors ligne:</b>
+
 - tout ce que vous voyez est mis en cache. Préparez votre randonnée à l'avance, regardez où vous allez et accédez à vos cartes hors ligne pendant la randonnée.
 - chaque marqueur et tous ses détails sont disponibles hors ligne
 - Profil d’itinéraire hors ligne
@@ -31,11 +36,13 @@
 - utilisez votre mode d'avion de téléphone pour s'assurer que vous n'êtes pas sûr de trop de batterie (la recherche réseau peut drainer votre batterie), et toujours accéder à vos données.
 
 <b>Caractéristiques de recherche:</b>
+
 - Les cartes Alpi utilisent les API Here/Photon pour demander des données.
 - utilisez la fonction de recherche que vous tapez pour chercher rapidement quelque chose dans vos marqueurs ou partout dans le monde
 - puis utiliser la recherche pour chercher des entreprises, restaurants, ... dans la région que vous voyez actuellement
 
 <b>Autres caractéristiques:</b>
+
 - Outil compas
 - Lune / Soleil informations
 - Outil de test de satellites GPS (utile pour comprendre pourquoi le signal GPS est lent)
