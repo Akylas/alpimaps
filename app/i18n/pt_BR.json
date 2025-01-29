@@ -87,5 +87,13 @@
     "import_settings": "importar configurações",
     "language": "idioma",
     "open": "abrir",
-    "non_valid_email": "endereço de email inválido"
+    "non_valid_email": "endereço de email inválido",
+    "art_gallery": "galeria de arte",
+    "arts_centre": "centro de artes",
+    "threed_map": "Mapa 3D",
+    "amusement_arcade": "fliperama",
+    "art": "arte",
+    "auto_fetch_profile": "perfil de elevação de busca automática",
+    "backup_restore": "backup / restaurar",
+    "auto_black": "Use preto verdadeiro para o tema escuro automático"
 }
