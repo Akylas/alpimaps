@@ -1,45 +1,44 @@
 <p><i>Alpi Maps</i> is an outdoor companion app</p>
+<b>Map features:</b>
+- enjoy more that 50 different map styles
+- enjoy more that 20 different map overlay styles like ski trails
+- enable / disable HD map for each style
+- combine map styles with opacity to create your own map
+- enjoy Google Maps style, traffic layers and buildings
+- enjoy rotating and tilting map
+- use the Google Maps gestures you love so much like the double tap and drag to zoom!
+- see slopes percentages (based on hill-shading data source offline/online)
 
-Map features:
-• enjoy more that 50 different map styles
-• enjoy more that 20 different map overlay styles like ski trails
-• enable / disable HD map for each style
-• combine map styles with opacity to create your own map
-• enjoy Google Maps style, traffic layers and buildings
-• enjoy rotating and tilting map
-• use the Google Maps gestures you love so much like the double tap and drag to zoom!
-• see slopes percentages (based on hill-shading data source offline/online)
+<b>GPS features:</b>
+- follow your location on the map
+- choose wether to follow your location or only query your location when needed for the lowest battery consumption
+- choose the accuracy of the GPS for even lower battery consumption
+- access useful information about your position like altitude, orientation, sunset, sunrise...
+- track your position on any computed itinerary to see where you are at
+- see where you are from any point on the map : distance, orientation and altitude
+- share your location with a screenshot of the map
+- get navigation directions
 
-GPS features:
-• follow your location on the map
-• choose wether to follow your location or only query your location when needed for the lowest battery consumption
-• choose the accuracy of the GPS for even lower battery consumption
-• access useful information about your position like altitude, orientation, sunset, sunrise...
-• track your position on any computed itinerary to see where you are at
-• see where you are from any point on the map : distance, orientation and altitude
-• share your location with a screenshot of the map
-• get navigation directions
+<b>Markers features:</b>
+- add a marker from any point on the map
+- find the altitude of any point on the map
 
-Markers features:
-• add a marker from any point on the map
-• find the altitude of any point on the map
+<b>Offline features:</b>
+- everything map you see is cached. Prepare your hike in advance, look where you are going and access your maps offline while hiking.
+- every single marker and all its details are available offline
+- offline itinerary profile
+- get navigation directions of saved itineraries
+- use your phone airplane mode to make sure you don't sure too much battery (network search can drain your battery), and still access your data. 
 
-Offline features:
-• everything map you see is cached. Prepare your hike in advance, look where you are going and access your maps offline while hiking.
-• every single marker and all its details are available offline
-• offline itinerary profile
-• get navigation directions of saved itineraries
-• use your phone airplane mode to make sure you don't sure too much battery (network search can drain your battery), and still access your data. 
+<b>Search features:</b>
+- Alpi Maps use the Here/Photon APIs to query data.
+- use the search as you type feature to quickly look for something in your markers or anywhere in the world
+- then use the search to look for businesses, restaurants, ... in the region you are currently seeing
 
-Search features:
-• Alpi Maps use the Here/Photon APIs to query data.
-• use the search as you type feature to quickly look for something in your markers or anywhere in the world
-• then use the search to look for businesses, restaurants, ... in the region you are currently seeing
-
-Other features
-• Compass tool
-• Moon / Sun information tool
-• GPS Satellites testing tool (useful to understand why you get a slow GPS fix)
-• Altitude based pressure
-• View on lockscreen mode
-• Keep screen alive mode
+<b>Other features:</b>
+- Compass tool
+- Moon / Sun information tool
+- GPS Satellites testing tool (useful to understand why you get a slow GPS fix)
+- Altitude based pressure
+- View on lockscreen mode
+- Keep screen alive mode
