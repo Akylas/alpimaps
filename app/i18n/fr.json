@@ -720,5 +720,7 @@
     "thank_you": "Merci !",
     "thank_you_subtitle": "votre don aidera le projet à grandir et me donnera le temps d'implémenter plus de fonctionnalités",
     "tile_server_port": "port du serveur de tuiles",
-    "copied_to_clipboard": "copié dans le presse-papiers : %1$s"
+    "copied_to_clipboard": "copié dans le presse-papiers : %1$s",
+    "missing_location_permission": "autorisation de localisation manquante",
+    "threed_map": "Carte 3D"
 }
