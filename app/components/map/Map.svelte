@@ -76,7 +76,7 @@
     import { hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
     import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, setTimeout } from '~/utils/utils';
     import { colors, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
-    import { tryCatch, tryCatchFunction } from '@shared/utils';
+    import { tryCatch, tryCatchFunction } from '@shared/utils/ui';
 
     $: ({ colorBackground, colorError, colorPrimary } = $colors);
     $: ({ bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight, top: windowInsetTop } = $windowInset);

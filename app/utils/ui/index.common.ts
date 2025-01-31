@@ -5,7 +5,7 @@ import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescr
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
 import { AlertOptions, GridLayout, View } from '@nativescript/core';
 import { SDK_VERSION, copyToClipboard, debounce } from '@nativescript/core/utils';
-import { tryCatchFunction } from '@shared/utils';
+import { tryCatchFunction } from '@shared/utils/ui';
 import { showError } from '@shared/utils/showError';
 import { navigate } from '@shared/utils/svelte/ui';
 import { hideLoading, showSnack, showToast } from '@shared/utils/ui';
