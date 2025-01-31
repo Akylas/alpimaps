@@ -43,7 +43,7 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=484412&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=8769e9&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.28.0"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -98,16 +98,16 @@ __metadata:
     typescript: "npm:5.7.2"
     typescript-eslint: "npm:^8.17.0"
     webpack-bundle-analyzer: "npm:^4.10.2"
-  checksum: 10/e0795cc37d4ed19b2363cebd716a71ed3fb7b70ce2ae857c08ceca68927efafff204f93f51960f316caa1e3212780a30277e5f2df315f0fd97fe1d708b23bd97
+  checksum: 10/210f51d8444f500a1bcc57920fc57f3c65352ff1bbeef3d610d618ba22128737164d05996d3dd861dcda43abe2ba6dd0225d76330411fb027ab3bd45dd3fcdef
   languageName: node
   linkType: hard
 
-"@akylas/nativescript-app-utils@npm:2.2.1":
-  version: 2.2.1
-  resolution: "@akylas/nativescript-app-utils@npm:2.2.1"
+"@akylas/nativescript-app-utils@npm:2.2.2":
+  version: 2.2.2
+  resolution: "@akylas/nativescript-app-utils@npm:2.2.2"
   dependencies:
     "@nativescript-community/ui-share-file": "npm:1.3.3"
-  checksum: 10/866dd5707123423d32aa80205946a70d789b32ab65764f716404a2fa8daf0a7f63d9b662d5350abe929fea91bb74f90890023041f041d847244838e6993682b0
+  checksum: 10/ec33cf584870186eac970b3e5a21d2d6bd97fa0563a0de9e4c2569d4931674ef42cc4e204e13e4a2cdf99febb4f17939de7425dcc274bc9060aef280f5c2d69d
   languageName: node
   linkType: hard
 
@@ -2333,10 +2333,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/perms@npm:3.0.0":
-  version: 3.0.0
-  resolution: "@nativescript-community/perms@npm:3.0.0"
-  checksum: 10/48787c3a6888e4c2b3063c491ee3fddbac327be43607de7a3acff15586ba952c51420ff2e0c3f41f3665e41ffa84b74211f67ab2180ff14c7b43902ab9c68a1a
+"@nativescript-community/perms@npm:3.0.3":
+  version: 3.0.3
+  resolution: "@nativescript-community/perms@npm:3.0.3"
+  checksum: 10/0e6a7af274a87505dd45152d2818e5a094676744b8ed7bbad77015975ba554d38336991853acefba0751d62431f90dccc5169602e1b5e42db0f8d5a894800177
   languageName: node
   linkType: hard
 
@@ -2668,10 +2668,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-pager@npm:14.1.32":
-  version: 14.1.32
-  resolution: "@nativescript-community/ui-pager@npm:14.1.32"
-  checksum: 10/985ad7c53b0f2aa2f7c6594cf59c36345fb8f165a863a50ea92aa8bfdbd4d33e360e995dafefd63b2567de3437204e3a8352bcb7215015ab5045c65b576df600
+"@nativescript-community/ui-pager@npm:14.1.33":
+  version: 14.1.33
+  resolution: "@nativescript-community/ui-pager@npm:14.1.33"
+  checksum: 10/6fdc2df55ed287a585989b276dbb3ddb2c430e1a7c610e8f232957f0bbbafdbc8d1581203c3868631c724ae1afc1b36a2d86572d1a46287eaeacb35d26a00794
   languageName: node
   linkType: hard
 
@@ -3102,22 +3102,6 @@ __metadata:
   peerDependencies:
     rollup: ^1.20.0 || ^2.0.0
   checksum: 10/0a4b9c45eecd285186dbed1025ebfdd823748648df768bdd28e8b8495002cd54ba1e9642a2c6187915b5227b252f458181d8e21c42452f1798dda276700278f4
-  languageName: node
-  linkType: hard
-
-"@rollup/plugin-terser@npm:^0.4.4":
-  version: 0.4.4
-  resolution: "@rollup/plugin-terser@npm:0.4.4"
-  dependencies:
-    serialize-javascript: "npm:^6.0.1"
-    smob: "npm:^1.0.0"
-    terser: "npm:^5.17.4"
-  peerDependencies:
-    rollup: ^2.0.0||^3.0.0||^4.0.0
-  peerDependenciesMeta:
-    rollup:
-      optional: true
-  checksum: 10/a5e066ddea55fc8c32188bc8b484cca619713516f10e3a06801881ec98bf37459ca24e5fe8711f93a5fa7f26a6e9132a47bc1a61c01e0b513dfd79a96cdc6eb7
   languageName: node
   linkType: hard
 
@@ -3562,15 +3546,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tmcw/togeojson@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "@tmcw/togeojson@npm:6.0.0"
-  dependencies:
-    "@rollup/plugin-terser": "npm:^0.4.4"
+"@tmcw/togeojson@npm:^6.0.1":
+  version: 6.0.1
+  resolution: "@tmcw/togeojson@npm:6.0.1"
   peerDependencies:
     "@types/geojson": "*"
     "@xmldom/xmldom": ^0.9.5
-  checksum: 10/fd8d1e51dd1bfff49ac2e0b9ae7d10e59afa2e9622d2402ece2f5371c44295424000e17d3b86bac978049e7e99feb0d9ca0da0cdb244d8b832ecd79135ed6a7b
+  checksum: 10/a4a6e80fbc37519eadaeb25ca04892e659518333be0fff507ddd74cbc9026095b8f0b52bb81a35c23ff531efb4fe04225415a045dff3f4f7e5189813519bb1a0
   languageName: node
   linkType: hard
 
@@ -14019,7 +14001,7 @@ __metadata:
     "@akylas/nativescript": "npm:8.8.10"
     "@akylas/nativescript-android-runtime": "npm:8.8.5"
     "@akylas/nativescript-app-tools": "file:tools"
-    "@akylas/nativescript-app-utils": "npm:2.2.1"
+    "@akylas/nativescript-app-utils": "npm:2.2.2"
     "@akylas/nativescript-inapp-purchase": "npm:0.0.4"
     "@akylas/nativescript-inappbrowser": "npm:3.1.8"
     "@akylas/nativescript-ios-runtime": "npm:8.8.2"
@@ -14037,7 +14019,7 @@ __metadata:
     "@nativescript-community/l": "npm:4.3.10"
     "@nativescript-community/licenses": "npm:2.0.9"
     "@nativescript-community/observable": "npm:2.0.11"
-    "@nativescript-community/perms": "npm:3.0.0"
+    "@nativescript-community/perms": "npm:3.0.3"
     "@nativescript-community/preferences": "npm:1.3.2"
     "@nativescript-community/sensors": "npm:1.4.0"
     "@nativescript-community/sentry": "npm:4.6.38"
@@ -14068,7 +14050,7 @@ __metadata:
     "@nativescript-community/ui-material-switch": "npm:7.2.70"
     "@nativescript-community/ui-material-textfield": "npm:7.2.70"
     "@nativescript-community/ui-material-textview": "npm:7.2.70"
-    "@nativescript-community/ui-pager": "npm:14.1.32"
+    "@nativescript-community/ui-pager": "npm:14.1.33"
     "@nativescript-community/ui-persistent-bottomsheet": "npm:0.0.29"
     "@nativescript-community/ui-popover": "npm:0.1.21"
     "@nativescript-community/ui-share-file": "npm:1.3.3"
@@ -14081,7 +14063,7 @@ __metadata:
     "@nativescript/core": "npm:8.8.6"
     "@nativescript/email": "npm:^2.1.0"
     "@swc/core": "npm:1.6.13"
-    "@tmcw/togeojson": "npm:^6.0.0"
+    "@tmcw/togeojson": "npm:^6.0.1"
     "@types/geojson": "npm:^7946.0.14"
     "@types/offscreencanvas": "npm:^2019.7.3"
     "@types/suncalc": "npm:^1.9.2"
@@ -14612,13 +14594,6 @@ __metadata:
   version: 4.2.0
   resolution: "smart-buffer@npm:4.2.0"
   checksum: 10/927484aa0b1640fd9473cee3e0a0bcad6fce93fd7bbc18bac9ad0c33686f5d2e2c422fba24b5899c184524af01e11dd2bd051c2bf2b07e47aff8ca72cbfc60d2
-  languageName: node
-  linkType: hard
-
-"smob@npm:^1.0.0":
-  version: 1.5.0
-  resolution: "smob@npm:1.5.0"
-  checksum: 10/a1ea453bcea89989062626ea30a1fcb42c62e96255619c8641ffa1d7ab42baf415975c67c718127036901b9e487d8bf4c46219e50cec54295412c1227700b8fe
   languageName: node
   linkType: hard
 
@@ -15371,7 +15346,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"terser@npm:^5.10.0, terser@npm:^5.17.4, terser@npm:^5.26.0":
+"terser@npm:^5.10.0, terser@npm:^5.26.0":
   version: 5.36.0
   resolution: "terser@npm:5.36.0"
   dependencies:
