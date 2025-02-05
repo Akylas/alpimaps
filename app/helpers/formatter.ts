@@ -171,7 +171,7 @@ export function getAddress(item: IItem, startIndex = -1, endIndex = -1) {
         }
     }
     const result = addressFormatter.format(address, {
-        fallbackCountryCode: langToCountryCode(get(langStore))
+        // fallbackCountryCode: langToCountryCode(get(langStore))
     });
     if (startIndex >= 0 || endIndex >= 0) {
         return result.split('\n').slice(startIndex, endIndex);
