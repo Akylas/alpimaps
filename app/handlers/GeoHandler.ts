@@ -218,11 +218,7 @@ export class GeoHandler extends Handler {
     }
     async checkEnabledAndAuthorized(always = false) {
         try {
-            await check('location').then((r) => {
-                if (isPermResultAuthorized(r)) {
-                    return this.authorizeLocation();
-                }
-            });
+            await this.authorizeLocation();
             await this.askToEnableIfNotEnabled();
         } catch (err) {
             if (err && /denied/i.test(err.message)) {
@@ -345,7 +341,7 @@ export class GeoHandler extends Handler {
             skipPermissionCheck: true,
             ...opts
         };
-        TEST_LOG && console.log('startWatch', options);
+        TEST_LOG && console.log('startWatch', JSON.stringify(options));
 
         if (__IOS__) {
             geolocation.iosChangeLocManager.showsBackgroundLocationIndicator = true;
