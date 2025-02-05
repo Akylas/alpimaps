@@ -336,7 +336,7 @@
     }
     function zoomToItem() {
         closeSwipeMenu();
-        mapContext.zoomToItem({ item, forceZoomOut: true });
+        mapContext.zoomToItem({ item, forceZoomOut: true, minZoom: 15 });
     }
     // let webViewHeight = 0;
     // let listViewAvailable = false;
@@ -491,23 +491,7 @@
         DEV_LOG && console.log('saveItem', item);
         try {
             updatingItem = true;
-            const itemsModule = mapContext.mapModule('items');
-            let item = mapContext.getSelectedItem();
-            if (!item) {
-                return;
-            }
-
-            item = await itemsModule.saveItem(item);
-            if (item.route) {
-                mapContext.mapModules.directionsPanel.cancel(false);
-            }
-            if (item.route) {
-                itemsModule.takeItemPicture(item);
-            } else {
-                mapContext.selectItem({ item, isFeatureInteresting: true, peek, preventZoom: false });
-            }
-        } catch (err) {
-            showError(err);
+            await mapContext.saveItem(mapContext.getSelectedItem());
         } finally {
             updatingItem = false;
         }
