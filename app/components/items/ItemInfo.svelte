@@ -24,6 +24,7 @@
     $: ({ colorBackground, colorOnSurface, colorOutlineVariant } = $colors);
 
     export let item: Item;
+    export let openHoursExpanded = false;
     export let height: number | string = '100%';
     let extraProps = {};
     const mapContext = getMapContext();
@@ -74,6 +75,7 @@
                     subtitleColor: data.color,
                     leftIcon: 'mdi-clock-outline',
                     expandable: true,
+                    expanded: openHoursExpanded,
                     expandedHeight: 224,
                     opening_hours: data.oh
                 });
@@ -181,9 +183,6 @@
                 switch (k) {
                     case 'population':
                         toDraw.push({
-                            // paint: wiPaint,
-                            // color: item.cloudColor,
-                            // iconFontSize,
                             icon: 'mdi-account-group',
                             value: itemProperties[k],
                             subvalue: lc('population')
@@ -191,9 +190,6 @@
                         break;
                     case 'wheelchair':
                         toDraw.push({
-                            // paint: wiPaint,
-                            // color: item.cloudColor,
-                            // iconFontSize,
                             icon: 'mdi-wheelchair',
                             value: lc('wheelchair')
                         });
@@ -201,9 +197,6 @@
                     case 'ele':
                         if (item.properties.class === 'natural') {
                             toDraw.push({
-                                // paint: wiPaint,
-                                // color: item.cloudColor,
-                                // iconFontSize,
                                 icon: 'mdi-triangle-outline',
                                 value: convertElevation(itemProperties[k]),
                                 subvalue: lc('elevation')
@@ -213,29 +206,13 @@
                     case 'currency:XLT':
                     case 'currency':
                         toDraw.push({
-                            // paint: wiPaint,
-                            // color: item.cloudColor,
-                            // iconFontSize,
                             icon: 'mdi-currency-eur',
                             value: (itemProperties[k] + '').toLowerCase()
-                        });
-                        break;
-                    case 'currency':
-                        toDraw.push({
-                            // paint: wiPaint,
-                            // color: item.cloudColor,
-                            // iconFontSize,
-                            icon: 'mdi-currency-eur',
-                            value: lc(k),
-                            subvalue: (itemProperties[k] + '').toLowerCase()
                         });
                         break;
                     case 'cuisine':
                         itemProperties[k].split(',').forEach((value) =>
                             toDraw.push({
-                                // paint: wiPaint,
-                                // color: item.cloudColor,
-                                // iconFontSize,
                                 icon: 'mdi-food',
                                 value: value.toLowerCase()
                             })
@@ -270,11 +247,6 @@
                     Object.keys(result.tags).forEach((k) => {
                         const value = result.tags[k];
                         if (!k.startsWith('addr:') && ignoredKeys.indexOf(k) === -1 && value !== item.properties.class) {
-                            // const prefixIndex = k.indexOf(':');
-                            // if (prefixIndex !== -1) {
-                            //     k = k.substring(prefixIndex + 1);
-                            // }
-
                             newProps[k] = itemProperties[k] = value;
                         }
                     });
@@ -423,7 +395,7 @@
         }
     }
     async function onItemRightTap(event, listItem) {
-        DEV_LOG && console.log('onItemRightTap', listItem);
+        // DEV_LOG && console.log('onItemRightTap', listItem);
         try {
             switch (listItem.id) {
                 case 'network':
