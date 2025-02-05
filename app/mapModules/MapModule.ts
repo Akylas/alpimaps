@@ -16,6 +16,7 @@ import { createGlobalEventListener, globalObservable, navigate } from '@shared/u
 import { NativeViewElementNode } from 'svelte-native/dom';
 import { get } from 'svelte/store';
 import type DirectionsPanel from '~/components/directions/DirectionsPanel.svelte';
+import type MapResultPager from '~/components/search/MapResultPager.svelte';
 import { GeoHandler } from '~/handlers/GeoHandler';
 import { colorTheme, isEInk } from '~/helpers/theme';
 import type CustomLayersModule from '~/mapModules/CustomLayersModule';
@@ -110,9 +111,12 @@ export interface MapContext {
     unselectItem: () => void;
     selectStyle: () => Promise<void>;
     unFocusSearch: () => void;
+    showMapResultsPager: (items: IItem[]) => void;
+    clearSearch: () => void;
     getCurrentLanguage: () => string;
     getSelectedItem: () => IItem;
     setSelectedItem: (item: IItem) => void;
+    saveItem: (item?: IItem, peek?: boolean) => Promise<void>;
     getEditingItem: () => IItem;
     getLayers: (layerId?: LayerType) => { layer: VectorTileLayer; id: string }[];
     addLayer: (layer: Layer<any, any>, layerId: LayerType) => number;
@@ -134,6 +138,7 @@ export interface MapContext {
 export interface MapModules {
     customLayers: CustomLayersModule;
     directionsPanel: DirectionsPanel;
+    mapResultsPager: MapResultPager;
     userLocation: UserLocationModule;
     items: ItemsModule;
 }
