@@ -25,7 +25,7 @@
         "rock_pattern_zoom":10,
         "scree_pattern_zoom":12,
         "scrub_pattern_zoom":12,
-        "forest_pattern_zoom":12,
+        "forest_pattern_zoom":11,
         "water_pattern_zoom":0, 
         "water_pattern":"symbols/wetland.png",
         "cemetery_pattern_zoom":15,
