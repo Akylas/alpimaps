@@ -1,7 +1,7 @@
 <script lang="ts">
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
     import { ClusterElementBuilder } from '@nativescript-community/ui-carto/layers/cluster';
-    import { ClusteredVectorLayer } from '@nativescript-community/ui-carto/layers/vector';
+    import { ClusteredVectorLayer, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
     import { PointStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/point';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { Animation, ApplicationSettings, GridLayout, ObservableArray, TextField } from '@nativescript/core';
@@ -18,6 +18,7 @@
     import { actionBarButtonHeight, colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import SearchCollectionView from './SearchCollectionView.svelte';
+    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
 
     let { colorOnSurface, colorWidgetBackground } = $colors;
     $: ({ colorOnSurface, colorWidgetBackground } = $colors);
@@ -55,8 +56,10 @@
     let textField: NativeViewElementNode<TextField>;
     let collectionViewHolder: NativeViewElementNode<GridLayout>;
     let collectionView: SearchCollectionView;
-    let _searchDataSource: LocalVectorDataSource<LatLonKeys>;
-    let _searchLayer: ClusteredVectorLayer;
+    // let _searchDataSource: LocalVectorDataSource<LatLonKeys>;
+    let _searchDataSource: GeoJSONVectorTileDataSource;
+    // let _searchLayer: ClusteredVectorLayer;
+    let _searchLayer: VectorTileLayer;
     let searchAsTypeTimer;
     let loading = false;
     // let filteringOSMKey = false;
@@ -71,29 +74,46 @@
 
     function getSearchDataSource() {
         if (!_searchDataSource) {
-            const projection = mapContext.getProjection();
-            _searchDataSource = new LocalVectorDataSource<LatLonKeys>({ projection });
+            // const projection = mapContext.getProjection();
+            // _searchDataSource = new LocalVectorDataSource<LatLonKeys>({ projection });
+            _searchDataSource = new GeoJSONVectorTileDataSource({
+                simplifyTolerance: 2,
+                minZoom: 0,
+                maxZoom: 24
+            });
+            _searchDataSource.createLayer('search');
         }
         return _searchDataSource;
     }
     function getSearchLayer() {
         if (!_searchLayer) {
-            _searchLayer = new ClusteredVectorLayer({
-                visibleZoomRange: [0, 24],
+            _searchLayer = new VectorTileLayer({
+                labelBlendingSpeed: 0,
+                layerBlendingSpeed: 0,
+                labelRenderOrder: VectorTileRenderOrder.LAST,
+                clickRadius: 6,
                 dataSource: getSearchDataSource(),
-                minimumClusterDistance: 30,
-                builder: new ClusterElementBuilder({
-                    color: 'red',
-                    // textColor: 'white',
-                    // textSize: 15,
-                    size: 20,
-                    bbox: true,
-                    shape: 'point'
-                })
+                decoder: mapContext.innerDecoder
             });
-            _searchLayer.setVectorElementEventListener<LatLonKeys>({
-                onVectorElementClicked: (data) => mapContext.vectorElementClicked(data)
-            });
+            // _searchLayer = new ClusteredVectorLayer({
+            //     visibleZoomRange: [0, 24],
+            //     dataSource: getSearchDataSource(),
+            //     minimumClusterDistance: 30,
+            //     builder: new ClusterElementBuilder({
+            //         color: 'red',
+            //         // textColor: 'white',
+            //         // textSize: 15,
+            //         size: 20,
+            //         bbox: true,
+            //         shape: 'point'
+            //     })
+            // });
+            _searchLayer.setVectorTileEventListener<LatLonKeys>(
+                {
+                    onVectorTileClicked: (data) => mapContext.vectorTileClicked(data)
+                },
+                mapContext.getProjection()
+            );
             mapContext.addLayer(_searchLayer, 'search');
         }
         return _searchLayer;
@@ -106,6 +126,7 @@
     let focused = false;
     let searchResultsCount;
     $: searchResultsVisible = focused && searchResultsCount > 0;
+    $: DEV_LOG && console.log('searchResultsVisible', searchResultsVisible, focused, searchResultsCount);
     // $: {
     //     if (nGridLayout) {
     //         animateView(nGridLayout, { elevation: $currentTheme !== 'dark' && focused ? 10 : 0, borderRadius: searchResultsVisible ? 10 : 25 }, 100);
@@ -123,16 +144,21 @@
             // animateView(nCollectionView, { height: searchResultsVisible ? SEARCH_COLLECTIONVIEW_HEIGHT : 0 }, 100);
         }
     }
-
-    onDestroy(() => {
+    function clearLayer() {
         if (_searchDataSource) {
-            _searchDataSource.clear();
+            mapContext.unselectItem(); // TODO: only if selected one!
+            _searchDataSource.deleteLayer(1);
+            _searchDataSource.createLayer('search');
             _searchDataSource = null;
         }
         if (_searchLayer) {
-            _searchLayer.setVectorElementEventListener(null);
+            mapContext.removeLayer(_searchLayer, 'search');
+            _searchLayer.setVectorTileEventListener(null);
             _searchLayer = null;
         }
+    }
+    onDestroy(() => {
+        clearLayer();
     });
 
     export function hasFocus() {
@@ -222,7 +248,7 @@
             loading = false;
         }
     }
-    function clearSearch(clearQuery = true) {
+    export function clearSearch(clearQuery = true) {
         didSearch = false;
         loading = false;
         if (collectionView) {
@@ -237,16 +263,8 @@
             textField.nativeView.text = '';
             showingOnMap = false;
         }
-        if (_searchDataSource) {
-            mapContext.unselectItem(); // TODO: only if selected one!
-            _searchDataSource.clear();
-            _searchDataSource = null;
-        }
-        if (_searchLayer) {
-            mapContext.removeLayer(_searchLayer, 'search');
-            _searchLayer.setVectorElementEventListener(null);
-            _searchLayer = null;
-        }
+        clearLayer();
+        mapContext.showMapResultsPager(null);
     }
     export function unfocus() {
         if (searchAsTypeTimer) {
@@ -278,6 +296,10 @@
     //     showResultsOnMap();
     // }
     // }
+
+    $: if (showingOnMap && dataItems) {
+        showResultsOnMap(dataItems, false);
+    }
     function toggleShowResultsOnMap() {
         if (showingOnMap) {
             showingOnMap = false;
@@ -288,42 +310,48 @@
     }
     let showingOnMap = false;
     let searchStyle: PointStyleBuilder;
-    function showResultsOnMap(items) {
+    function showResultsOnMap(items: ObservableArray<SearchItem>, shouldUnfocus = true) {
         try {
             if (!items || items.length === 0) {
-                return;
-            }
-            showingOnMap = true;
-            if (!_searchDataSource) {
+                _searchDataSource.deleteLayer(1);
+                _searchDataSource.createLayer('search');
+                mapContext.showMapResultsPager(null);
+                showingOnMap = false;
+            } else {
+                showingOnMap = true;
+                // if (!_searchDataSource) {
                 const dataSource = getSearchDataSource();
-                // const items = filteredDataItems.filter(
-                //     // (d) => !!d && (d.provider === 'here' || (d.provider === 'carto' && d.properties.layer === 'poi'))
-                //     (d) => !!d && (d.properties.provider === 'here' || d.properties.provider === 'carto')
-                // );
-                // if (items.length === 0) {
-                //     return;
-                // }
                 const geojson = {
                     type: 'FeatureCollection',
                     features: items.map((s) => ({ type: 'Feature', ...s }))
                 };
-                if (!searchStyle) {
-                    searchStyle = new PointStyleBuilder({ color: 'red', size: 10 });
-                }
+                // if (!searchStyle) {
+                //     searchStyle = new PointStyleBuilder({ color: 'red', size: 10 });
+                // }
                 const featureCollection = packageService.getGeoJSONReader().readFeatureCollection(geojson);
-                dataSource.clear();
-                dataSource.addFeatureCollection(featureCollection, searchStyle);
+                // dataSource.clear();
+                dataSource.setLayerGeoJSONString(1, geojson);
                 // items.forEach((d) => {
                 //     dataSource.add(createSearchMarker(d));
                 // });
                 ensureSearchLayer();
                 const mapBounds = featureCollection.getBounds();
-                mapContext.getMap().moveToFitBounds(mapBounds, undefined, false, false, false, 100);
-            } else {
-                getSearchLayer().visible = true;
-            }
 
-            unfocus();
+                const viewPort = mapContext.getMapViewPort();
+                // we ensure the viewPort is squared for the screen captured
+                const screenBounds = {
+                    min: { x: viewPort.left, y: viewPort.top },
+                    max: { x: viewPort.left + viewPort.width, y: viewPort.top + viewPort.height - 200 }
+                };
+                mapContext.getMap().moveToFitBounds(mapBounds, screenBounds, false, false, false, 100);
+                // } else {
+                // getSearchLayer().visible = true;
+                // }
+                mapContext.showMapResultsPager(items['_array'].slice());
+            }
+            if (shouldUnfocus) {
+                unfocus();
+            }
         } catch (error) {
             showError(error);
         }
@@ -429,6 +457,7 @@
         floating={false}
         height={$actionBarButtonHeight}
         hint={$slc('search')}
+        paddingLeft={0}
         placeholder={$slc('search')}
         returnKeyType="search"
         variant="none"
