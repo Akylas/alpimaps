@@ -919,7 +919,7 @@ export default class CustomLayersModule extends MapModule {
             const worldTerrainMbtilesEntity = entities.find((e) => e.name.endsWith('.etiles'));
 
             const folders = entities.filter((e) => e.isFolder).sort((a, b) => b.name.localeCompare(a.name));
-            DEV_LOG && console.log('loadLocalMbtiles', folders);
+            DEV_LOG && console.log('loadLocalMbtiles', JSON.stringify(folders));
             for (let i = 0; i < folders.length; i++) {
                 const f = folders[i];
                 const subentities = listFolder(f.path);
@@ -990,13 +990,7 @@ export default class CustomLayersModule extends MapModule {
                 this.hasLocalData = true;
                 const name = 'Local';
                 const dataSource = new MultiTileDataSource();
-                DEV_LOG &&
-                    console.log(
-                        'mbtiles',
-                        mbtiles,
-                        mbtiles.map((s) => s?.options.databasePath),
-                        get(preloading)
-                    );
+                DEV_LOG && console.log('mbtiles', JSON.stringify(mbtiles.map((s) => s?.options.databasePath)), get(preloading));
                 mbtiles.forEach((s) => dataSource.add(s));
                 const opacity = ApplicationSettings.getNumber(name + '_opacity', 1);
                 // const zoomLevelBias = Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2);
