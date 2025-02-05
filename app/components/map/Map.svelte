@@ -30,6 +30,7 @@
     import { Sentry, isSentryEnabled } from '@shared/utils/sentry';
     import { share } from '@akylas/nativescript-app-utils/share';
     import { navigate } from '@shared/utils/svelte/ui';
+    import { tryCatch, tryCatchFunction } from '@shared/utils/ui';
     import type { Point as GeoJSONPoint } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -90,6 +91,7 @@
     let widgetsHolder: NativeViewElementNode<GridLayout>;
     let cartoMap: CartoMap<LatLonKeys>;
     let directionsPanel: DirectionsPanel;
+    let mapResultsPager: MapResultPager;
     let bottomSheetInner: BottomSheetInner;
     let mapScrollingWidgets: MapScrollingWidgets;
     let locationInfoPanel: LocationInfoPanel;
@@ -475,6 +477,7 @@
             selectItem,
             unselectItem,
             unFocusSearch,
+            clearSearch,
             addLayer,
             insertLayer,
             getLayerIndex,
@@ -486,6 +489,8 @@
             setSelectedItem,
             moveLayer,
             zoomToItem,
+            showMapResultsPager,
+            saveItem,
             setBottomSheetStepIndex: (index: number) => {
                 DEV_LOG && console.log('setBottomSheetStepIndex', bottomSheetStepIndex, steps);
                 bottomSheetStepIndex = index;
@@ -497,6 +502,7 @@
                 userLocation: new UserLocationModule(),
                 customLayers: customLayersModule,
                 directionsPanel,
+                mapResultsPager,
                 mapScrollingWidgets
             }
         });
@@ -965,6 +971,12 @@
             console.error(error, error.stack);
         }
     }
+    let mapResultItems: IItem<GeoJSONPoint>[] = [];
+    let mapResultPagerLaoded = false;
+    export function showMapResultsPager(items: IItem<GeoJSONPoint>[]) {
+        mapResultPagerLaoded = true;
+        mapResultItems = items || [];
+    }
 
     export function zoomToItem({ duration = 200, forceZoomOut = false, item, minZoom, zoom }: { item: IItem; zoom?: number; minZoom?: number; duration?; forceZoomOut?: boolean }) {
         const viewPort = getMapViewPort();
@@ -1358,6 +1370,12 @@
         }
         // });
     }
+    function clearSearch() {
+        // executeOnMainThread(function () {
+        // TEST_LOG && console.log('unFocusSearch', searchView?.hasFocus());
+        searchView?.clearSearch();
+        // });
+    }
 
     function setStyleParameter(key: string, value: string | number) {
         const decoder = mapContext.mapDecoder;
@@ -1604,6 +1622,23 @@
         };
         return result;
     }
+
+    const saveItem = tryCatchFunction(async (item: IItem = $selectedItem, peek = true) => {
+        DEV_LOG && console.log('saveItem', item);
+        if (!item) {
+            return;
+        }
+        const itemsModule = mapContext.mapModule('items');
+        item = await itemsModule.saveItem(item);
+        if (item.route) {
+            mapContext.mapModules.directionsPanel.cancel(false);
+        }
+        if (item.route) {
+            itemsModule.takeItemPicture(item);
+        } else {
+            mapContext.selectItem({ item, isFeatureInteresting: true, peek, preventZoom: false });
+        }
+    });
 
     async function showHideKeepAwakeNotification(value: boolean) {
         if (__ANDROID__) {
@@ -2193,6 +2228,7 @@
                     verticalAlignment="top" />
                 <Search
                     bind:this={searchView}
+                    style="z-index:1000;"
                     defaultElevation={0}
                     isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
                     margin={10}
@@ -2242,6 +2278,9 @@
                     width="100%"
                     bind:translationY={topTranslationY}
                     on:cancel={onDirectionsCancel} />
+                {#if mapResultPagerLaoded}
+                    <MapResultPager bind:this={mapResultsPager} style="z-index:9000;" items={mapResultItems} translateY={mapTranslation} verticalAlignment="bottom" width="100%" />
+                {/if}
             </gridlayout>
             <BottomSheetInner
                 prop:bottomSheet
