@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { share } from '@akylas/nativescript-app-utils/share';
     import { isSensorAvailable } from '@nativescript-community/sensors';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { ClickType, MapBounds, toNativeMapRange, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
@@ -8,7 +9,6 @@
     import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
     import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
     import { VectorLayer, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
-    import { copyTextToClipboard, showToolTip } from '~/utils/ui';
     import { Projection } from '@nativescript-community/ui-carto/projections';
     import { EPSG3857 } from '@nativescript-community/ui-carto/projections/epsg3857';
     import { EPSG4326 } from '@nativescript-community/ui-carto/projections/epsg4326';
@@ -28,7 +28,6 @@
     import { Screen } from '@nativescript/core/platform';
     import { debounce } from '@nativescript/core/utils';
     import { Sentry, isSentryEnabled } from '@shared/utils/sentry';
-    import { share } from '@akylas/nativescript-app-utils/share';
     import { navigate } from '@shared/utils/svelte/ui';
     import { tryCatch, tryCatchFunction } from '@shared/utils/ui';
     import type { Point as GeoJSONPoint } from 'geojson';
@@ -74,10 +73,10 @@
     import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
-    import { hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
+    import { copyTextToClipboard, hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack, showToolTip } from '~/utils/ui';
     import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, setTimeout } from '~/utils/utils';
     import { colors, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
-    import { tryCatch, tryCatchFunction } from '@shared/utils/ui';
+    import MapResultPager from '../search/MapResultPager.svelte';
 
     $: ({ colorBackground, colorError, colorPrimary } = $colors);
     $: ({ bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight, top: windowInsetTop } = $windowInset);
@@ -914,7 +913,7 @@
                             if (!props.address?.['city']) {
                                 const r = await packageService.getItemAddress(item, projection);
                                 if (r && $selectedItem.geometry === item.geometry) {
-                                    DEV_LOG && console.log('found addresses', r);
+                                    DEV_LOG && console.log('found addresses', JSON.stringify(r));
                                     toUpdate.address = r;
                                     // $selectedItem.properties.address = r;
                                     if (r.name && !$selectedItem.properties.name) {
@@ -1298,6 +1297,7 @@
                 metaData[k] = JSON.parse(metaData[k]);
             }
         });
+
         const handledByModules = mapContext.runOnModules('onVectorElementClicked', data);
         // if (DEV_LOG) {
         //     console.log('handledByModules', handledByModules);
@@ -1378,10 +1378,8 @@
     }
 
     function setStyleParameter(key: string, value: string | number) {
-        const decoder = mapContext.mapDecoder;
-        if (!!decoder) {
-            decoder.setStyleParameter(key, value + '');
-        }
+        // DEV_LOG && console.log('setStyleParameter', key, value);
+        mapContext.mapDecoder?.setStyleParameter(key, value + '');
     }
 
     function handleNewLanguage(newLang) {
@@ -1425,8 +1423,8 @@
     }
 
     async function selectStyle() {
-        function filterEntity(e){
-            return !/(inner|admin|cleaned|base)/.test(e.name)
+        function filterEntity(e) {
+            return !/(inner|admin|cleaned|base)/.test(e.name);
         }
         const styles = [];
         const stylePath = path.join(knownFolders.currentApp().path, 'assets', 'styles');
@@ -1452,17 +1450,25 @@
         }
 
         DEV_LOG && console.log('selectStyle', screenHeightDips, ALERT_OPTION_MAX_HEIGHT);
-        const actions = styles;
+        let selectedIndex = -1;
+        const options = styles.map((d, index) => {
+            const value = currentLayerStyle === d.data;
+            if (value) {
+                selectedIndex = index;
+            }
+            return {
+                ...d,
+                boxType: 'circle',
+                type: 'checkbox',
+                value
+            };
+        });
         const result = await showAlertOptionSelect(
             {
-                height: Math.min(actions.length * 56, ALERT_OPTION_MAX_HEIGHT),
+                height: Math.min(options.length * 56, ALERT_OPTION_MAX_HEIGHT),
                 rowHeight: 56,
-                options: actions.map((d) => ({
-                    ...d,
-                    boxType: 'circle',
-                    type: 'checkbox',
-                    value: currentLayerStyle === d.data
-                }))
+                selectedIndex,
+                options
             },
             {
                 title: lc('select_style')
@@ -1619,7 +1625,14 @@
                 translateY: translation,
                 opacity: scrollingWidgetsOpacity
             }
-        };
+        } as any;
+        if (mapResultsPager) {
+            result.mapResultsPager = {
+                target: mapResultsPager.getNativeView(),
+                translateY: translation,
+                opacity: scrollingWidgetsOpacity
+            };
+        }
         return result;
     }
 
