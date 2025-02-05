@@ -6,6 +6,7 @@
         "shared/route.mss",
         "shared/transit.mss",
         "shared/items.mss",
-        "shared/directions.mss"
+        "shared/directions.mss",
+        "shared/search.mss"
     ]
 }
