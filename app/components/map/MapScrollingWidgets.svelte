@@ -22,6 +22,7 @@
     import { navigate } from '@shared/utils/svelte/ui';
     import { openLink } from '~/utils/ui';
     import { colors, fonts } from '~/variables';
+    import MapResultPager from '../search/MapResultPager.svelte';
 
     let { colorOnPrimary, colorOnPrimaryContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorPrimaryContainer, colorSurfaceContainer } = $colors;
     $: ({ colorOnPrimary, colorOnPrimaryContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorPrimaryContainer, colorSurfaceContainer } = $colors);
@@ -293,7 +294,14 @@
 
 <gridlayout bind:this={gridLayout} id="scrollingWidgets" {...$$restProps} columns="60,*,70" isPassThroughParentEnabled={true} {isUserInteractionEnabled} rows="auto,*,auto,auto">
     <stacklayout col={2} padding={2} row={2} verticalAlignment="bottom">
-        <mdbutton id="directions" class="floating-btn-themed" col={2} rowSpan={2} text="mdi-directions" visibility={selectedItemHasPosition ? 'visible' : 'hidden'} on:tap={startDirections} />
+        <mdbutton
+            id="directions"
+            class="small-floating-btn btn-themed"
+            col={2}
+            rowSpan={2}
+            text="mdi-directions"
+            visibility={selectedItemHasPosition ? 'visible' : 'hidden'}
+            on:tap={startDirections} />
         <mdcardview id="location" class={` ${locationButtonClass} floating-btn`} shape="medium" on:tap={askUserLocation} on:longPress={onWatchLocation}>
             <label
                 class={`mdi ${locationButtonLabelClass}`}
