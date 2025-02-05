@@ -99,5 +99,8 @@
     "astronomy": "astronomia",
     "aquarium": "aquário",
     "archaeological_site": "sítio arqueológico",
-    "arrow": "seta"
+    "arrow": "seta",
+    "americanaosm_url": "URL de instância AmericanaOSM",
+    "attraction": "atração",
+    "attributions": "atribuições"
 }
