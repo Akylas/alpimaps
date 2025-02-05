@@ -41,7 +41,7 @@
 
 <script lang="ts">
     $: ({ colorBackground, colorError, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
-    $: ({ bottom: windowInsetBottom } = $windowInset);
+    $: ({ bottom: windowInsetBottom, keyboard: keyboardInset } = $windowInset);
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
     let items: ObservableArray<CollectionItemOrGroup>;
@@ -795,7 +795,7 @@ LEFT JOIN  (
             itemTemplateSelector={(item) => item.type || (!!item.route ? 'route' : 'default')}
             {items}
             row={1}
-            android:paddingBottom={windowInsetBottom}
+            android:paddingBottom={windowInsetBottom + keyboardInset}
             on:swipe={onCollectionSwipe}>
             <Template key="group" let:item>
                 <gridlayout backgroundColor={colorOutlineVariant} height={50} rippleColor={colorPrimary} on:tap={(e) => onItemTap(item, e)} on:longPress={(e) => onItemLongPress(item, e)}>
