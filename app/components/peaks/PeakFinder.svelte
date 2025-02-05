@@ -20,6 +20,7 @@
     import { showError } from '@shared/utils/showError';
     import { getDataFolder } from '~/utils/utils';
     import { colors, fonts, windowInset } from '~/variables';
+    import { isEInk } from '~/helpers/theme';
 
     $: ({ colorOnSurface, colorPrimary, colorSurfaceContainer } = $colors);
     export let position;
@@ -623,7 +624,7 @@
         <gridlayout prop:bottomSheet backgroundColor={colorSurfaceContainer} columns="*,*" height={300} rows="30,*" width="100%" on:tap={() => {}}>
             <mdbutton class="mdi" fontSize={16} text="mdi-cog" variant="text" width={undefined} on:tap={() => (selectedPageIndex = 0)} />
             <mdbutton class="mdi" col={1} fontSize={16} text="mdi-bug" variant="text" width={undefined} on:tap={() => (selectedPageIndex = 1)} />
-            <pager colSpan={2} disableSwipe={false} row={1} selectedIndex={selectedPageIndex} on:selectedIndexChange={(e) => (selectedPageIndex = e['value'])}>
+            <pager colSpan={2} disableAnimation={isEInk} disableSwipe={false} row={1} selectedIndex={selectedPageIndex} on:selectedIndexChange={(e) => (selectedPageIndex = e['value'])}>
                 <pageritem>
                     <collectionview bind:this={collectionView1} {itemIdGenerator} itemTemplateSelector={selectTemplate} items={listView1Items} android:marginBottom={$windowInset.bottom}>
                         <Template key="checkbox" let:item>
