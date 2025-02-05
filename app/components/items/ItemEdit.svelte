@@ -399,7 +399,7 @@
 </script>
 
 <page actionBarHidden={true}>
-    <gridlayout rows="auto,*,auto,2.5*,auto" android:paddingBottom={$windowInset.bottom} paddingLeft={$windowInset.left} paddingRight={$windowInset.right}>
+    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*,auto,2.5*,auto" android:paddingBottom={$windowInset.bottom}>
         <CActionBar canGoBack title={lc('edit')}>
             <IconButton color={colorOnPrimary} isEnabled={canSave} text="mdi-content-save-outline" on:tap={(e) => updateItem()} />
             <IconButton color={colorOnPrimary} text="mdi-playlist-plus" on:tap={addField} />
@@ -481,7 +481,7 @@
                 </label>
             </gridlayout>
         {/if}
-        <collectionview bind:this={collectionView} itemTemplateSelector={(item) => item.type || 'textfield'} {items} row={3} android:paddingBottom={$windowInset.bottom}>
+        <collectionview bind:this={collectionView} itemTemplateSelector={(item) => item.type || 'textfield'} {items} row={3} android:paddingBottom={$windowInset.bottom + $windowInset.keyboard}>
             <Template key="taggroup" let:item>
                 <TagView padding="5 10 0 10" showDefaultGroups={false} topGroup={item.groups?.[0]} on:groupSelected={onTagViewSelectedGroup} />
             </Template>
