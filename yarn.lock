@@ -2675,12 +2675,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-persistent-bottomsheet@npm:0.0.29":
-  version: 0.0.29
-  resolution: "@nativescript-community/ui-persistent-bottomsheet@npm:0.0.29"
+"@nativescript-community/ui-persistent-bottomsheet@npm:0.0.30":
+  version: 0.0.30
+  resolution: "@nativescript-community/ui-persistent-bottomsheet@npm:0.0.30"
   dependencies:
     "@nativescript-community/gesturehandler": "npm:^2.0.8"
-  checksum: 10/5c7872adc80113f31baecbaa6e2922d987e7ecf66d5aea6707d5f6366afc24227f4c3d9fcf00303c334b9c2e5adfac426175db2a3cd4d9cccf403c1d0a278456
+  checksum: 10/920bc53378b35726251afc8cdaffa2ac55d75a4a43b8c623d0926d2b4a8e004e212b3c880f201c0169461f691a483eacc091ac791a857ce0880497f63a9b21b6
   languageName: node
   linkType: hard
 
@@ -14051,7 +14051,7 @@ __metadata:
     "@nativescript-community/ui-material-textfield": "npm:7.2.70"
     "@nativescript-community/ui-material-textview": "npm:7.2.70"
     "@nativescript-community/ui-pager": "npm:14.1.33"
-    "@nativescript-community/ui-persistent-bottomsheet": "npm:0.0.29"
+    "@nativescript-community/ui-persistent-bottomsheet": "npm:0.0.30"
     "@nativescript-community/ui-popover": "npm:0.1.21"
     "@nativescript-community/ui-share-file": "npm:1.3.3"
     "@nativescript-community/ui-svg": "npm:0.2.11"
