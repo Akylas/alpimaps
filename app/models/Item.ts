@@ -142,7 +142,7 @@ export class Group {
     public onMap: 1 | 0;
     public collapse: 1 | 0;
 }
-export class Item {
+export class Item<T extends Geometry = Geometry> {
     public id!: number;
     type?: string;
 
@@ -151,7 +151,7 @@ export class Item {
 
     public properties?: ItemProperties | null;
     public _properties?: string;
-    public geometry?: Geometry;
+    public geometry?: T;
     public _geometry?: string;
     public _nativeGeometry?: any;
 
@@ -168,12 +168,30 @@ export class Item {
 
     public groups?: string[];
 }
-export type IItem = Partial<Item> & {
-    layer?: VectorTileLayer;
-    // vectorElement?: VectorElement<any, any>;
-};
 
-export class GroupRepository extends CrudRepository<Group> {
+export interface IItem<T extends Geometry = Geometry> extends Partial<Item<T>> {
+    layer?: VectorTileLayer;
+}
+
+export class BaseRepository<T, U = T, V = any> extends CrudRepository<T, U, V> {
+    constructor(data) {
+        super(data);
+    }
+    migrations = {};
+    async applyMigrations() {
+        const { migrations } = this;
+        if (!migrations) {
+            return;
+        }
+        try {
+            await this.database.migrate(migrations);
+        } catch (error) {
+            console.error(error, error.stack);
+        }
+    }
+}
+
+export class GroupRepository extends BaseRepository<Group> {
     constructor(database: NSQLDatabase) {
         super({
             database,
@@ -182,31 +200,20 @@ export class GroupRepository extends CrudRepository<Group> {
             model: Group
         });
     }
-    static migrations = {
+    migrations = {
         addGroupName: sql`ALTER TABLE Groups ADD COLUMN name TEXT`,
         addGroupOnMap: sql`ALTER TABLE Groups ADD COLUMN onMap INTEGER`,
         addGroupCollapse: sql`ALTER TABLE Groups ADD COLUMN collapse INTEGER`
     };
     async createTables() {
-        await this.database.query(sql`
+        return this.database.query(sql`
         CREATE TABLE IF NOT EXISTS "Groups" (
             id TEXT PRIMARY KEY NOT NULL
         );
         `);
-        const migrationKeys = Object.keys(GroupRepository.migrations);
-        for (let index = 0; index < migrationKeys.length; index++) {
-            const key = migrationKeys[index];
-            try {
-                await this.database.migrate({
-                    [key]: GroupRepository.migrations[key]
-                });
-            } catch (error) {
-                console.error(error, error.stack);
-            }
-        }
     }
 }
-export class ItemRepository extends CrudRepository<Item> {
+export class ItemRepository extends BaseRepository<Item> {
     constructor(
         database: NSQLDatabase,
         public groupsRepository: GroupRepository
