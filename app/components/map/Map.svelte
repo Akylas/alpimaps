@@ -302,7 +302,7 @@
                                     if (handleSelectedRouteTimer) {
                                         return;
                                     }
-                                    DEV_LOG && console.log('onVectorTileClicked', featureId, featureLayerName, featureData);
+                                    // DEV_LOG && console.log('onVectorTileClicked', featureId, featureLayerName, JSON.stringify(featureData));
                                     return false;
                                     // selectItem({ item, isFeatureInteresting: true });
                                     // return true;
@@ -625,7 +625,7 @@
             width: width - 2 * left,
             height: height - top - bottom
         };
-        DEV_LOG && console.log('getMapViewPort', width, height, mapTranslation, topTranslationY, result);
+        // DEV_LOG && console.log('getMapViewPort', width, height, mapTranslation, topTranslationY, result);
         return result;
     }
     const saveSettings = debounce(function () {
@@ -667,7 +667,7 @@
             cartoMap.setFocusPos(pos, 0);
             cartoMap.setZoom(zoom, 0);
             cartoMap.setBearing(bearing, 0);
-            DEV_LOG && console.log('onMainMapReady', pos, zoom, bearing, addedLayers.length, theme);
+            DEV_LOG && console.log('onMainMapReady', JSON.stringify(pos), zoom, bearing, addedLayers.length, theme);
             tryCatch(() => {
                 packageService.start();
                 transitService.start();
@@ -742,7 +742,7 @@
 
     function onMainMapClicked(e: { data: MapClickInfo<MapPos<LatLonKeys>> }) {
         const { clickType, position } = e.data;
-        TEST_LOG && console.log('onMainMapClicked', clickType, position, ignoreNextMapClick);
+        // TEST_LOG && console.log('onMainMapClicked', clickType, JSON.stringify(position), ignoreNextMapClick);
         // handleClickedFeatures(position);
         if (ignoreNextMapClick) {
             ignoreNextMapClick = false;
@@ -764,7 +764,7 @@
     }
 
     function setSelectedItem(item, updateProperties?) {
-        DEV_LOG && console.log('setSelectedItem', item?.id, Date.now());
+        // DEV_LOG && console.log('setSelectedItem', item?.id, Date.now());
         if (updateProperties) {
             item.properties = item.properties || {};
             Object.assign(item.properties, updateProperties);
@@ -980,7 +980,7 @@
 
     export function zoomToItem({ duration = 200, forceZoomOut = false, item, minZoom, zoom }: { item: IItem; zoom?: number; minZoom?: number; duration?; forceZoomOut?: boolean }) {
         const viewPort = getMapViewPort();
-        DEV_LOG && console.log('zoomToItem', viewPort, item.properties?.zoomBounds, item.properties?.extent, !!item.route);
+        // DEV_LOG && console.log('zoomToItem', viewPort, item.properties?.zoomBounds, item.properties?.extent, !!item.route);
         // we ensure the viewPort is squared for the screen captured
         const screenBounds = {
             min: { x: viewPort.left, y: viewPort.top },
@@ -1020,10 +1020,10 @@
             const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
             cartoMap.setFocusPos(position, duration);
         }
-        DEV_LOG && console.log('zoomToItem done ');
+        // DEV_LOG && console.log('zoomToItem done ');
     }
     export function unselectItem(updateBottomSheet = true) {
-        TEST_LOG && console.log('unselectItem', updateBottomSheet, !!$selectedItem);
+        // TEST_LOG && console.log('unselectItem', updateBottomSheet, !!$selectedItem);
         if (!!$selectedItem) {
             // mapContext.mapDecoder.setStyleParameter('selected_id', '');
             setSelectedItem(null);
@@ -1193,7 +1193,7 @@
         const { clickType, featureData, featureGeometry, featureId, featureLayerName, featurePosition, layer, position } = data;
 
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data) as boolean;
-        TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, position, featurePosition, handledByModules);
+        // TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, JSON.stringify(position), JSON.stringify(featurePosition), handledByModules);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             // if (showClickedFeatures) {
             //     clickedFeatures.push({
@@ -1328,7 +1328,7 @@
     }
     function onVectorTileElementClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, featureData, featurePosition, position } = data;
-        TEST_LOG && console.log('onVectorTileElementClicked', clickType, position, featurePosition, featureData.id);
+        // TEST_LOG && console.log('onVectorTileElementClicked', clickType, position, featurePosition, featureData.id);
         const itemModule = mapContext.mapModule('items');
         const feature = itemModule.getFeature(featureData.id);
         if (!feature) {
@@ -1385,7 +1385,7 @@
     }
 
     function handleNewLanguage(newLang) {
-        DEV_LOG && console.log('handleNewLanguage', newLang);
+        // DEV_LOG && console.log('handleNewLanguage', newLang);
         currentLanguage = newLang;
         packageService.currentLanguage = newLang;
         setStyleParameter('lang', newLang);
@@ -1880,7 +1880,6 @@
                     maxHeight: Screen.mainScreen.heightDIPs - 100
                 },
                 onLongPress: tryCatchFunction(async (result) => {
-                    DEV_LOG && console.log('onLongPress', result);
                     if (result) {
                         switch (result.id) {
                             case 'web_server':

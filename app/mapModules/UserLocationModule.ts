@@ -131,7 +131,7 @@ export default class UserLocationModule extends MapModule {
         if (altitude !== null) {
             position.altitude = Math.round(altitude);
         }
-        DEV_LOG && console.log('updateUserLocation', geoPos);
+        // DEV_LOG && console.log('updateUserLocation', JSON.stringify(geoPos));
         let accuracyColor = '#0e7afe';
         const accuracy = geoPos.horizontalAccuracy || 0;
         if (geoPos.age > 120000) {

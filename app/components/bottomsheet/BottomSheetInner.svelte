@@ -90,7 +90,7 @@
 
     mapContext.onVectorTileElementClicked((data: VectorTileEventData<LatLonKeys>) => {
         const { feature, featureData, position } = data;
-        DEV_LOG && console.log('BottomSheetInner onVectorTileElementClicked', item?.id, featureData, feature.properties);
+        // DEV_LOG && console.log('BottomSheetInner onVectorTileElementClicked', item?.id, featureData, feature.properties);
         if (featureData?.route) {
             if (item && item.id && feature.properties?.id === item.id) {
                 DEV_LOG && console.log('onVectorTileElementClicked updateRouteItemWithPosition', position);
