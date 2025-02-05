@@ -220,7 +220,7 @@
             verticalTextAlignment="center"
             visibility={line.longName ? 'visible' : 'collapse'} />
         <cartomap row={2} useTextureView={false} zoom={16} on:mapReady={onMapReady} />
-        <collectionview bind:this={collectionView} items={dataItems} row={3} android:paddingBottom={windowInsetBottom}>
+        <collectionview bind:this={collectionView} items={dataItems} row={3} android:paddingBottom={windowInsetBottom + $windowInset.keyboard}>
             <Template let:item>
                 <canvasview columns="*,auto" on:tap={() => selectStop(item)}>
                     <line horizontalAlignment="left" startX={30} startY={0} stopX={30} stopY="50%" strokeColor={item.color} strokeWidth={4} visibility={item.first ? 'hidden' : 'visible'} />
