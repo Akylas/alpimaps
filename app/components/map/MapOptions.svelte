@@ -1,5 +1,6 @@
 <script context="module" lang="ts">
     import { l, lc } from '@nativescript-community/l';
+    import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { ApplicationSettings, Color, ObservableArray, Utils, View } from '@nativescript/core';
@@ -28,8 +29,6 @@
     import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
-    import { CheckBox } from '@nativescript-community/ui-checkbox';
-    import { isEInk } from '~/helpers/theme';
     export interface MapOptionType {
         title: string;
         color?: Color | string;
@@ -162,6 +161,7 @@
             newItems.push(
                 {
                     id: 'setting',
+                    key: 'mapFontScale',
                     mapStore: mapFontScale,
                     min: 0.5,
                     max: 4,
@@ -178,6 +178,7 @@
                 {
                     id: 'setting',
                     mapStore: contourLinesOpacity,
+                    key: 'contourLinesOpacity',
                     min: 0,
                     max: 1,
                     step: null,
@@ -243,13 +244,13 @@
 </script>
 
 <gesturerootview height={350} rows="auto,*">
-    <collectionview bind:this={collectionView} {itemTemplateSelector} {items} row={1} ios:contentInsetAdjustmentBehavior={2} rowHeight={56}>
+    <collectionview bind:this={collectionView} {itemTemplateSelector} {items} row={1} ios:contentInsetAdjustmentBehavior={2}>
         <Template key="sectionheader" let:item>
             <label class="sectionHeader" text={item.title} />
         </Template>
         <Template key="switch" let:item>
-            <ListItemAutoSize fontSize={20} item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} leftIcon={item.icon} on:tap={(event) => onTap(item, event)}>
-                <checkbox id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} />
+            <ListItemAutoSize item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} leftIcon={item.icon} on:tap={(event) => onTap(item, event)}>
+                <switch id="checkbox" checked={item.value} col={1} on:checkedChange={(e) => onCheckBox(item, e)} />
             </ListItemAutoSize>
         </Template>
         <Template let:item>
