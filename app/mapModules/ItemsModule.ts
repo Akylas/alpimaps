@@ -80,10 +80,17 @@ export default class ItemsModule extends MapModule {
                 // threading: true,
                 transformBlobs: false
             } as any);
+
             this.groupsRepository = new GroupRepository(this.db);
             this.itemRepository = new ItemRepository(this.db, this.groupsRepository);
             await this.groupsRepository.createTables();
             await this.itemRepository.createTables();
+            try {
+                await this.db.migrate(Object.assign({}, this.groupsRepository.migrations, this.itemRepository.migrations));
+            } catch (error) {
+                console.error('error applying migrations', error.stack);
+            }
+
             this.dbInitialized = true;
             this.onDbInitListeners.forEach((l) => l());
             this.onDbInitListeners = [];
