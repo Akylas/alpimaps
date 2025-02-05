@@ -1,7 +1,7 @@
 <script lang="ts">
     import { l } from '@nativescript-community/l';
     import type { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
-    import { SearchRequest } from '@nativescript-community/ui-carto/search';
+    import { SearchRequest, VectorTileSearchServiceOptions } from '@nativescript-community/ui-carto/search';
     import { showSnack } from '~/utils/ui';
     import { ApplicationSettings, ObservableArray, Screen } from '@nativescript/core';
     import deburr from 'deburr';
@@ -25,6 +25,7 @@
     import { onThemeChanged } from '~/helpers/theme';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
 
     $: ({ colorOnSurface, colorOnSurfaceVariant } = $colors);
 
@@ -36,6 +37,7 @@
     let currentQuery;
     export let searchResultsCount = 0;
     const mapContext = getMapContext();
+
 
     // export function getFilteredDataItems() {
     //     return filteredDataItems;
@@ -92,7 +94,7 @@
         callback(
             r.map((s: SearchItem) => {
                 const title = getItemTitle(s);
-                return { ...s, color: getItemIconColor(s), icon: getItemIcon(s), title, subtitle: getItemSubtitle(s, title) || lc(s.properties.class) };
+                return { ...s, style: { color: getItemIconColor(s), icon: getItemIcon(s) }, title, subtitle: getItemSubtitle(s, title) || lc(s.properties.class) };
             })
         );
     }
@@ -114,29 +116,17 @@
             'distance'
         ) as GeoResult[];
     }
-    async function searchInVectorTiles(enabled: boolean, options: SearchRequest) {
+    async function searchInVectorTiles(enabled: boolean, options: SearchRequest & VectorTileSearchServiceOptions) {
         if (!enabled) {
             return [];
         }
-        // console.log('searchInVectorTiles', options)
-        let result: GeoResult[] = (await packageService.searchInVectorTiles(options)) as any;
+        DEV_LOG && console.log('searchInVectorTiles', JSON.stringify(options));
+        const result = await packageService.searchInVectorTiles(options);
         if (result) {
-            result = packageService.convertFeatureCollection(result as any, options);
+            return packageService.convertFeatureCollection(result, options);
         } else {
-            result = [];
+            return [];
         }
-        return result;
-        // console.log('searchInVectorTiles result', result)
-        // return arraySortOn(
-        //     result.map((r) => {
-        //         r['distance'] = computeDistanceBetween(options.position, {
-        //             lat: r.geometry.coordinates[1],
-        //             lon: r.geometry.coordinates[0]
-        //         });
-        //         return r;
-        //     }),
-        //     'distance'
-        // ) as any as GeoResult[];
     }
 
     async function herePlaceSearch(enabled: boolean, options: { query: string; language?: string; location?: MapPos<LatLonKeys>; locationRadius?: number }) {
@@ -235,14 +225,12 @@
                 bounds: getBoundsOfDistance(position, searchRadius)
                 // locationRadius: 1000,
             };
-            DEV_LOG && console.log('instantSearch', position, mapContext.getMap().getZoom(), mpp, options);
-            dataItems = new ObservableArray();
-
-            // TODO: dont fail when offline!!!
+            DEV_LOG && console.log('instantSearch', JSON.stringify(position), mapContext.getMap().getZoom(), mpp, JSON.stringify(options));
+            let newDataItems = new ObservableArray<SearchItem>();
 
             function addItems(items: SearchItem[]) {
-                if (dataItems.length === 0) {
-                    dataItems = new ObservableArray(items);
+                if (newDataItems.length === 0) {
+                    dataItems = newDataItems = new ObservableArray(items);
                 } else {
                     items.forEach((item) => {
                         const index = dataItems.findIndex((i) => i.distance > item.distance);
@@ -257,25 +245,47 @@
                 }
                 // updateFilteredDataItems(filteringOSMKey);
             }
-            const searchInTiles = ApplicationSettings.getBoolean('searchInTiles', true);
-            const searchInGeocoding = ApplicationSettings.getBoolean('searchInGeocoding', true);
-            const searchUsingHere = networkService.connected && ApplicationSettings.getBoolean('searchUsingHere', false);
-            const searchUsingPhoton = networkService.connected && ApplicationSettings.getBoolean('searchUsingPhoton', true);
-            await Promise.all([
-                searchInGeocodingService(searchInGeocoding, options)
+            if (/^(class|subclass)/.test(currentQuery)) {
+                const bounds = mapContext.getMap().getMapBounds();
+                DEV_LOG && console.log('bounds', bounds);
+
+                const zoom = /peak|campsite/.test(currentQuery) ? 11 : 14;
+                const geometry = new LineGeometry<LatLonKeys>({
+                    poses: [bounds.northeast, { lat: bounds.southwest.lat, lon: bounds.northeast.lon }, { lat: bounds.southwest.lat, lon: bounds.southwest.lon }, bounds.northeast]
+                });
+                const array = currentQuery.split(':');
+                await searchInVectorTiles(true, {
+                    projection: options.projection,
+                    geometry,
+                    minZoom: zoom,
+                    maxZoom: zoom,
+                    filterExpression: `regexp_ilike(${array[0]},'.*${array[1]}.*')`
+                    // layers: ['poi', 'mountain_peak']
+                })
                     .then((r) => prepareItems(r, addItems))
-                    .catch((err) => console.error('searchInGeocodingService', err)),
-                searchInVectorTiles(searchInTiles, { ...options, searchRadius: Math.min(options.searchRadius, 50000) })
-                    .then((r) => prepareItems(r, addItems))
-                    .catch((err) => console.error('searchInVectorTiles', err, err.stack)),
-                herePlaceSearch(searchUsingHere, options)
-                    .then((r) => prepareItems(r, addItems))
-                    .catch((err) => console.error('herePlaceSearch', err, err.stack)),
-                photonSearch(searchUsingPhoton, options as any)
-                    .then((r) => prepareItems(r, addItems))
-                    .catch((err) => console.error('photonSearch', err, err.stack))
-            ]);
-            if (dataItems.length === 0) {
+                    .catch((err) => console.error('searchInVectorTiles', err, err.stack));
+            } else {
+                const searchInTiles = ApplicationSettings.getBoolean('searchInTiles', true);
+                const searchInGeocoding = ApplicationSettings.getBoolean('searchInGeocoding', true);
+                const searchUsingHere = networkService.connected && ApplicationSettings.getBoolean('searchUsingHere', false);
+                const searchUsingPhoton = networkService.connected && ApplicationSettings.getBoolean('searchUsingPhoton', true);
+                await Promise.all([
+                    searchInGeocodingService(searchInGeocoding, options)
+                        .then((r) => prepareItems(r, addItems))
+                        .catch((err) => console.error('searchInGeocodingService', err)),
+                    searchInVectorTiles(searchInTiles, { ...options, searchRadius: Math.min(options.searchRadius, 50000) })
+                        .then((r) => prepareItems(r, addItems))
+                        .catch((err) => console.error('searchInVectorTiles', err, err.stack)),
+                    herePlaceSearch(searchUsingHere, options)
+                        .then((r) => prepareItems(r, addItems))
+                        .catch((err) => console.error('herePlaceSearch', err, err.stack)),
+                    photonSearch(searchUsingPhoton, options as any)
+                        .then((r) => prepareItems(r, addItems))
+                        .catch((err) => console.error('photonSearch', err, err.stack))
+                ]);
+            }
+            if (newDataItems.length === 0) {
+                dataItems = newDataItems;
                 showSnack({ message: l('no_result_found') });
                 // } else {
                 // await loadView();
@@ -288,6 +298,7 @@
         }
     }
     export function clearSearch(clearQuery = true) {
+        DEV_LOG && console.log('clearSearch', clearQuery, new Error().stack);
         networkService.clearRequests('photon', 'here');
         loading = false;
         dataItems = new ObservableArray();
@@ -306,8 +317,8 @@
 <collectionview bind:this={collectionView} items={dataItems} rowHeight={52} {...$$restProps}>
     <Template let:item>
         <canvaslabel color={colorOnSurface} columns="34,*" disableCss={true} padding="0 10 0 10" rippleColor={colorOnSurface} rows="*,auto,auto,*" on:tap={() => dispatch('tap', item)}>
-            <cspan color={item.color} fontFamily="osm" fontSize={20} text={item.icon} verticalAlignment="middle" />
-            <cgroup paddingLeft={34} paddingRight={34} verticalAlignment="middle">
+            <cspan color={item.style.color} fontFamily="osm" fontSize={20} text={item.style.icon} verticalAlignment="middle" />
+            <cgroup paddingLeft={34} paddingRight={80} verticalAlignment="middle">
                 <cspan fontSize={13} fontWeight="bold" text={item.title} />
                 <cspan color={colorOnSurfaceVariant} fontSize={11} text={!!item.subtitle ? '\n' + item.subtitle : null} visibility={!!item.subtitle ? 'visible' : 'collapse'} />
             </cgroup>
