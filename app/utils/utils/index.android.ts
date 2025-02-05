@@ -47,7 +47,6 @@ export async function getDefaultMBTilesDir() {
         // and will report never_ask_again on >= 33
         const result = await request('storage', { read: true, write: true });
 
-        DEV_LOG && console.log('storage', result);
         if (!permResultCheck(result)) {
             throw new Error(lc('missing_storage_permission'));
         }
