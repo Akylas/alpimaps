@@ -22,7 +22,7 @@ import { HillshadeRasterTileLayer } from '@nativescript-community/ui-carto/layer
 import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { Projection } from '@nativescript-community/ui-carto/projections';
 import { MultiValhallaOfflineRoutingService, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
-import { SearchRequest, VectorTileSearchService } from '@nativescript-community/ui-carto/search';
+import { SearchRequest, VectorTileSearchService, VectorTileSearchServiceOptions } from '@nativescript-community/ui-carto/search';
 import { File, Folder, knownFolders, path } from '@nativescript/core/file-system';
 import type { Point as GeoJSONPoint } from 'geojson';
 import { LineString, MultiLineString, Point } from 'geojson';
@@ -65,6 +65,8 @@ function dist2d(latlng1, latlng2) {
         c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return EARTH_RADIUS * c;
 }
+
+const VECTORTILESEARCH_OPTIONS = ['minZoom', 'maxZoom', 'maxResults', 'layers', 'preventDuplicates', 'sortByDistance'];
 
 // class WindowKalmanFilter extends MathFilter {
 //     windowLength: number;
@@ -358,7 +360,7 @@ class PackageService extends Observable {
             let foundAddress = false;
             const geometry = item.geometry as GeoJSONPoint;
             const location = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-            DEV_LOG && console.log('fetching addresses', !!service, location, get(useOfflineGeocodeAddress), get(useSystemGeocodeAddress), geocodingAvailable, !!service);
+            // DEV_LOG && console.log('fetching addresses', !!service, JSON.stringify(location), get(useOfflineGeocodeAddress), get(useSystemGeocodeAddress), geocodingAvailable, !!service);
             if (get(useOfflineGeocodeAddress) && service) {
                 const radius = 200;
                 const res = await packageService.searchInGeocodingService(service, {
@@ -399,7 +401,7 @@ class PackageService extends Observable {
             }
             if (!foundAddress && get(useSystemGeocodeAddress) && geocodingAvailable) {
                 const results = await getFromLocation(location.lat, location.lon, 10);
-                DEV_LOG && console.log('getFromLocation', JSON.stringify(results));
+                // DEV_LOG && console.log('getFromLocation', JSON.stringify(results));
                 if (results?.length > 0) {
                     const result = results[0];
                     return {
@@ -434,12 +436,24 @@ class PackageService extends Observable {
         }
         return this.searchInGeocodingService(service, options);
     }
-    async searchInVectorTiles(options: SearchRequest): Promise<VectorTileFeatureCollection> {
+
+    async searchInVectorTiles(options: SearchRequest & VectorTileSearchServiceOptions): Promise<VectorTileFeatureCollection> {
         const service = this.vectorTileSearchService;
         if (!service) {
             return null;
         }
-        return new Promise((resolve) => service.findFeatures(options, resolve));
+        const toRestoreSettings = {};
+        Object.keys(options)
+            .filter((s) => VECTORTILESEARCH_OPTIONS.indexOf(s) !== -1)
+            .forEach((s) => {
+                toRestoreSettings[s] = service[s];
+                service[s] = options[s];
+            });
+        const result = await new Promise<VectorTileFeatureCollection<LatLonKeys>>((resolve) => service.findFeatures(options, resolve));
+        Object.keys(toRestoreSettings).forEach((s) => {
+            service[s] = toRestoreSettings[s];
+        });
+        return result;
     }
 
     getTimezone(position: MapPos<LatLonKeys>) {

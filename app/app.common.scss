@@ -223,6 +223,18 @@ label {
     }
 }
 
+.btn-themed {
+    background-color: var(--colorPrimaryContainer);
+    ripple-color: var(--colorPrimaryContainer);
+    color: var(--colorOnPrimaryContainer);
+    
+    .ns-eink & {
+        elevation: 0;
+        border-color: black;
+        border-width: 1;
+    }
+
+}
 .section-title {
     font-size: 10;
 }
@@ -289,6 +301,13 @@ label {
     @extend %icon-btn;
     text-align: center;
     vertical-text-alignment: center;
+}
+
+.cardview {
+    border-radius: 12;
+    background-color: var(--colorSurface);
+    border-color: var(--colorOutline);
+    border-width: 1;
 }
 
 .transitIconLabel {
