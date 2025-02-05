@@ -5,7 +5,7 @@
 
 @background: lighten(#e6e4e0, @applied_eink_lighten);
 @contour_color: lighten(#29660a, @applied_eink_lighten);
-@water: lighten(#7fcae0, @applied_eink_lighten);
+@water: lighten(#9ecad8, @applied_eink_lighten);
 @park: lighten(#C8FACC, @applied_eink_lighten_light);
 @n_park: lighten(#b6e69e, @applied_eink_lighten);
 @park_line: lighten(#82bf5a, @applied_eink_lighten);
@@ -101,11 +101,11 @@
 @protected-area_halo: #ffffff88;
 @aboriginal_label: #82643a;
 
-@grass: linear([view::zoom], (6, fadeout(@grass_color, 0.7)), (12, @grass_color));
-@scrub: linear([view::zoom], (6, fadeout(@scrub_color, 0.7)), (12, @scrub_color));
-@heath: linear([view::zoom], (6, fadeout(@heath_color, 0.7)), (12, @heath_color));
-@fell: @heath;
-@forest: linear([view::zoom], (6, fadeout(@forest_color, 0.7)), (12, @forest_color));
+@grass: linear([view::zoom], (6, fadeout(@grass_color, 0.7)), (12, fadeout(@grass_color, 0.5)));
+@scrub: linear([view::zoom], (6, fadeout(@scrub_color, 0.7)), (12, fadeout(@scrub_color, 0.5)));
+@heath: linear([view::zoom], (6, fadeout(@heath_color, 0.7)), (12, fadeout(@heath_color, 0.5)));
+@fell: @heath; 
+@forest: linear([view::zoom], (6, fadeout(@forest_color, 0.3)), (10, fadeout(@forest_color, 0.3)), (12, fadeout(@forest_color, 0.5)));
 
 @forest_pattern_opacity: 0.4;
 @allotments: linear([view::zoom], (6, fadeout(@allotments_color, 0.7)), (12, @allotments_color));
