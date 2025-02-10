@@ -56,6 +56,7 @@
     import { transitService } from '~/services/TransitService';
     import { NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
     import {
+        cityMinZoom,
         contourLinesOpacity,
         emphasisRails,
         mapFontScale,
@@ -1063,9 +1064,9 @@
     $: vectorTileDecoder && setStyleParameter('contours', $showContourLines ? '1' : '0');
     $: vectorTileDecoder && setStyleParameter('sub_boundaries', $showSubBoundaries ? '1' : '0');
     $: vectorTileDecoder && setStyleParameter('emphasis_rails', $emphasisRails ? '1' : '0');
-    $: DEV_LOG && console.log('emphasis_rails', $emphasisRails);
     $: vectorTileDecoder && $contourLinesOpacity >= 0 && setStyleParameter('contoursOpacity', $contourLinesOpacity.toFixed(1));
     $: vectorTileDecoder && $mapFontScale > 0 && setStyleParameter('_fontscale', $mapFontScale.toFixed(2));
+    $: vectorTileDecoder && $cityMinZoom > 0 && setStyleParameter('city_min_zoom', $cityMinZoom);
     $: {
         const visible = $showRoutes;
         getLayers('routes').forEach((l) => {
