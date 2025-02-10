@@ -13,6 +13,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import {
+        cityMinZoom,
         contourLinesOpacity,
         emphasisRails,
         mapFontScale,
@@ -190,6 +191,22 @@
                     type: 'slider',
                     rightValue: () => $contourLinesOpacity.toFixed(2),
                     currentValue: () => $contourLinesOpacity
+                },
+                {
+                    id: 'setting',
+                    mapStore: cityMinZoom,
+                    key: 'cityMinZoom',
+                    min: 0,
+                    max: 24,
+                    step: 1,
+                    formatter: (value) => value,
+                    transformValue: (value, item) => value,
+                    valueFormatter: (value, item) => value,
+                    title: lc('city_min_zoom'),
+                    description: lc('city_min_zoom_desc'),
+                    type: 'slider',
+                    rightValue: () => $cityMinZoom,
+                    currentValue: () => $cityMinZoom
                 },
                 {
                     mapStore: showSubBoundaries,

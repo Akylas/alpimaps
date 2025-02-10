@@ -50,3 +50,4 @@ export const useOfflineGeocodeAddress = settingsStore('useOfflineGeocodeAddress'
 export const useSystemGeocodeAddress = settingsStore('useSystemGeocodeAddress', true);
 export const emphasisRails = settingsStore('emphasisRails', false);
 export const showSubBoundaries = settingsStore('showSubBoundaries', true);
+export const cityMinZoom = settingsStore('cityMinZoom', 4);
