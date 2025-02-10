@@ -58,6 +58,7 @@
         "sub_boundaries": 1,
         "contours": 1,
         "contoursOpacity": 0.4,
+        "city_min_zoom": 4,
         "fallback_lang": "en",
         "osm-border_control": "\uea8f",
         "osm-collecting": "\uea86",
