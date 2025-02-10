@@ -1,5 +1,5 @@
-import { WorkerEventType } from './BaseWorker';
 import { getWorkerContextValue, setWorkerContextValue } from '@akylas/nativescript-app-utils';
+import { WorkerEventType } from '@akylas/nativescript-app-utils/worker/BaseWorker';
 
 export function prepareWorker(worker) {
     const messagePromises: { [key: string]: { resolve: Function; reject: Function; timeoutTimer: number }[] } = {};
@@ -68,15 +68,6 @@ export function prepareWorker(worker) {
                 }
                 messagePromises[id].push({ reject, resolve, timeoutTimer });
             }
-
-            // const result = worker.processImage(image, { width, height, rotation });
-            // handleContours(result.contours, rotation, width, height);
-            // const keys = Object.keys(nativeData);
-            // if (__ANDROID__) {
-            //     keys.forEach((k) => {
-            //         akylas.alpi.maps.WorkersContext.setValue(`${id}_${k}`, nativeData[k]._native || nativeData[k]);
-            //     });
-            // }
             const data = {
                 error: error !== undefined ? JSON.stringify({ message: error.toString(), stack: error.stack }) : undefined,
                 id,

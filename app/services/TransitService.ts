@@ -1,12 +1,10 @@
 import Observable from '@nativescript-community/observable';
 import { GenericMapPos } from '@nativescript-community/ui-carto/core';
-import { ApplicationSettings, Color } from '@nativescript/core';
+import { Color } from '@nativescript/core';
 import { getCacheControl, maxAgeMonth, networkService } from './NetworkService';
 
+import { createAndWaitForWorkerMessage } from '@akylas/nativescript-app-utils/worker';
 import { SQLiteDatabase } from '@nativescript-community/sqlite';
-import { FeatureCollection } from 'geojson';
-import { prepareWorker } from '~/workers/utils';
-import dayjs from 'dayjs';
 export const MOBILITY_URL = 'https://data.mobilites-m.fr';
 export const MOBILITY_API_URL = MOBILITY_URL + '/api';
 // const navitiaAPIEndPoint = 'https://api.navitia.io/v1/';
@@ -109,10 +107,14 @@ class TransitService extends Observable {
                 codes: line
             }
         });
-        const worker = prepareWorker(new Worker('~/workers/TransitLinesWorker'));
 
-        const result = await worker.sendMessageToWorker('getTransitLines', { transitLines, metroData: JSON.stringify(data) }, Date.now());
-        return result.messageData;
+        // const workerHandler = new BaseWorkerHandler(()=>new Worker('~/workers/TransitLinesWorker'))
+        // const worker = prepareWorker(new Worker('~/workers/TransitLinesWorker'));
+        DEV_LOG && console.log('starting TransitLinesWorker');
+        const result = await createAndWaitForWorkerMessage(() => new Worker('~/workers/TransitLinesWorker'), 'getTransitLines', { transitLines, metroData: JSON.stringify(data) });
+        // DEV_LOG && console.log(' TransitLinesWorker result', result);
+        // const result = await worker.sendMessageToWorker(, Date.now());
+        return result;
         // const features = featureCollection.features;
         // for (let index = features.length - 1; index >= 0; index--) {
         //     const f = features[index];
