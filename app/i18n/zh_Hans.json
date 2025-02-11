@@ -706,6 +706,9 @@
     "fence": "栅栏",
     "until": "直到",
     "inapp": {
-        "bigtip_desc": "敬请期待新功能！"
-    }
+        "bigtip_desc": "敬请期待新功能！",
+        "bigtip": "非常好的赞助"
+    },
+    "threed_map": "3D地图",
+    "copied_to_clipboard": "已复制到剪切板"
 }
