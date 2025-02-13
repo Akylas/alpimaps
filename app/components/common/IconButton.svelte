@@ -56,6 +56,7 @@
             : null;
     $: refresh(text);
     $: refresh(color);
+    $: refresh(isSelected);
 
     function refresh(...args) {
         canvas?.nativeView?.redraw();
