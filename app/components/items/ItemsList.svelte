@@ -154,23 +154,16 @@ LEFT JOIN  (
    ) t USING (id)`
                 };
                 const sqlItems = (await itemsModule.itemRepository.searchItem(searchArgs)).map((i) => ({ ...i }));
-                DEV_LOG && console.log('sqlItems', sqlItems, groups);
-                const oldGroups = groups;
+                // DEV_LOG && console.log('sqlItems', sqlItems, groups);
+                // const oldGroups = groups;
                 groups = groupBy<Group>(await itemsModule.groupsRepository.search(), (i) => i.name);
                 if (!groups['none']) {
                     await itemsModule.groupsRepository.create({ id: Date.now() + '', name: 'none', onMap: 1, collapse: 0 });
                     groups['none'] = { name: 'none', onMap: 1, id: 'none', collapse: 0 };
                 }
-                // if (oldGroups) {
-                //     Object.keys(oldGroups).forEach((k) => {
-                //         if (groups[k]) {
-                //             groups[k].collapse = oldGroups[k].collapse;
-                //         }
-                //     });
-                // }
-                DEV_LOG && console.log('groups', groups);
+                DEV_LOG && console.log('groups', JSON.stringify(groups));
                 groupedItems = groupByArray<Item>(sqlItems, (i) => i.groups);
-                DEV_LOG && console.log('groupedItems', groupedItems);
+                // DEV_LOG && console.log('groupedItems', JSON.stringify(groupedItems));
                 const groupsCount = Object.keys(groupedItems).length;
                 const noneGroupItems: CollectionItem[] = groupsCount > 1 ? [] : groupedItems['none'] || [];
                 if (groupsCount === 1) {
