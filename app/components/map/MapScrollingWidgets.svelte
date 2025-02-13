@@ -14,7 +14,7 @@
     import { convertDistance } from '~/helpers/formatter';
     import { onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
-    import UserLocationModule from '~/mapModules/UserLocationModule';
+    import UserLocationModule, { navigationModeStore } from '~/mapModules/UserLocationModule';
     import type { IItem } from '~/models/Item';
     import { RouteInstruction, RoutingAction } from '~/models/Item';
     import { queryingLocation, watchingLocation } from '~/stores/mapStore';
@@ -102,7 +102,7 @@
     $: locationButtonClass = !$queryingLocation && $watchingLocation ? 'buttonthemed' : 'buttontext';
     $: locationButtonLabelClass = $queryingLocation ? 'fade-blink' : '';
     $: selectedItemHasPosition = selectedItem && !selectedItem.route && selectedItem.geometry.type === 'Point';
-    $: DEV_LOG && console.log('locationButtonClass', locationButtonClass);
+    // $: DEV_LOG && console.log('locationButtonClass', locationButtonClass);
     export function onSelectedItem(item: IItem, oldItem: IItem) {
         selectedItem = item;
     }
@@ -311,6 +311,17 @@
                 verticalAlignment="middle" />
         </mdcardview>
     </stacklayout>
+    <IconButton
+        col={1}
+        color={colorOnSurfaceVariant}
+        horizontalAlignment="right"
+        isSelected={$navigationModeStore}
+        isVisible={$watchingLocation && !$queryingLocation}
+        marginBottom={16}
+        row={2}
+        text="mdi-navigation"
+        verticalAlignment="bottom"
+        on:tap={() => (userLocationModule.navigationMode = !$navigationModeStore)} />
     <stacklayout horizontalAlignment="left" marginTop={80} row={2} verticalAlignment="bottom">
         <!-- <mdbutton on:tap={open3DMap} class="small-floating-btn" color={colorPrimary} text="mdi-video-3d" /> -->
         <mdbutton class="small-floating-btn" text="mdi-format-list-checkbox" on:tap={showItemsList} />
