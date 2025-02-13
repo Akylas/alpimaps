@@ -1,6 +1,6 @@
 import { GenericMapPos, MapBounds } from '@nativescript-community/ui-carto/core';
 import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
-import { PolygonGeometry } from '@nativescript-community/ui-carto/geometry';
+import { LineGeometry, PolygonGeometry } from '@nativescript-community/ui-carto/geometry';
 import { VectorTileFeatureCollection } from '@nativescript-community/ui-carto/geometry/feature';
 import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
 import { VectorTileEventData, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
@@ -12,7 +12,7 @@ import { ShareFile } from '@nativescript-community/ui-share-file';
 import { File, Folder, ImageSource, Screen, knownFolders, path, profile } from '@nativescript/core';
 import { shareFile } from '@akylas/nativescript-app-utils/share';
 import { showError } from '@shared/utils/showError';
-import type { Feature, FeatureCollection, Point as GeometryPoint } from 'geojson';
+import type { Feature, FeatureCollection, Point as GeometryPoint, LineString } from 'geojson';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import { get } from 'svelte/store';
 import { getBoundsOfDistance, getDistanceSimple, getMetersPerPixel } from '~/helpers/geolib';
@@ -23,6 +23,8 @@ import { clearTimeout, getItemsDataFolder, pick, setTimeout } from '~/utils/util
 import { fonts } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
 import NSQLDatabase from '@shared/db/NSQLDatabase';
+import { showSnack } from '~/utils/ui';
+import { lc } from '@nativescript-community/l';
 const mapContext = getMapContext();
 
 let writer: GeoJSONGeometryWriter<LatLonKeys>;
@@ -577,15 +579,21 @@ export default class ItemsModule extends MapModule {
         for (let index = 0; index < featuresToImport.length; index++) {
             const item = featuresToImport[index];
             const props = item.properties;
+            ['groups', 'route', 'profile', 'route', 'route', 'type', 'creation_date'].forEach((k) => {
+                if (props[k]) {
+                    item[k] = props[k];
+                    delete props[k];
+                }
+            });
             if (props.mapFontFamily) {
                 const filtered = pick(props, 'mapFontFamily', 'fontFamily', 'iconSize', 'iconDx', 'icon', 'color');
                 // old style we need to clear it
                 props.style = { ...(props.style || {}), ...filtered };
                 Object.keys(filtered).forEach((k) => delete props[k]);
             }
-            if (typeof item.image === 'string') {
-                const image = await ImageSource.fromBase64(item.image);
-                delete item.image;
+            if (typeof props.image === 'string') {
+                const image = await ImageSource.fromBase64(props.image);
+                delete props.image;
                 item.image_path = this.getItemImagePath();
                 await image.saveToFileAsync(item.image_path, 'jpg');
             } else if (!item.image_path || !File.exists(dbItem.image_path)) {
@@ -608,25 +616,43 @@ export default class ItemsModule extends MapModule {
             mapContext.selectItem({ item: dbItem, isFeatureInteresting: true, peek: true, preventZoom: false, forceZoomOut: true, zoomDuration: 0 });
         }
     }
-    async shareItemsAsGeoJSON(items: IItem[], name = 'items') {
+    async itemsAsGeoJSON(items: IItem[]) {
         const features = [];
         for (let index = 0; index < items.length; index++) {
             const item = items[index];
-            const { id, image_path, onMap, ...toShare } = item;
+            // const { id, image_path, profile, layer, onMap, ...toShare } = item;
+
             const itemIsRoute = !!item.route;
+            const toShare = {
+                type: 'Feature',
+                properties: {
+                    ...item.properties,
+                    stats: item.stats,
+                    type: item.type,
+                    instructions: item.instructions,
+                    groups: item.groups,
+                    route: item.route,
+                    profile: item.profile
+                },
+                geometry: item.geometry
+            };
             toShare.type = 'Feature';
-            if (!itemIsRoute && image_path) {
-                toShare['image'] = await (await ImageSource.fromFile(image_path)).toBase64StringAsync('jpg');
+            if (itemIsRoute && item.profile) {
+                // we add elevation to coordinates
+                (item.geometry as LineString).coordinates.forEach((c, index) => {
+                    c.push(item.profile.data[index].a);
+                });
             }
+            DEV_LOG && console.log('shareItemsAsGeoJSON', JSON.stringify(toShare));
             // in case of routes the image will be created on import
+            if (!itemIsRoute && item.image_path) {
+                toShare.properties['image'] = await (await ImageSource.fromFile(item.image_path)).toBase64StringAsync('jpg');
+            }
             features.push(toShare);
         }
-
-        await shareFile(JSON.stringify({ type: 'FeatureCollection', features } as FeatureCollection), name + '.geojson', {
-            // type: 'text/json'
-        });
+        return { type: 'FeatureCollection', features } as FeatureCollection;
     }
-    async shareItemsAsGPX(items: IItem[], name = 'items') {
+    async itemsAsGPX(items: IItem[], name = 'items') {
         // all items are routes!
         const mapBounds = {
             northeast: {
@@ -665,8 +691,8 @@ export default class ItemsModule extends MapModule {
                         }
                     } as any;
                     if (profile) {
-                        trkpt.ele = profile?.[index].a;
-                        trkpt.grade = profile?.[index].g;
+                        trkpt.trkpt.ele = profile?.[index].a;
+                        trkpt.trkpt.grade = profile?.[index].g;
                     }
                     return trkpt;
                 })
@@ -700,10 +726,30 @@ export default class ItemsModule extends MapModule {
                 trk: tracks
             }
         });
-        console.log('gpx', gpx);
-        await shareFile(gpx, name + '.gpx', {
+        return gpx;
+    }
+
+    async shareItemsAsGeoJSON(items: IItem[], name = 'items') {
+        return shareFile(JSON.stringify(await this.itemsAsGeoJSON(items)), name + '.geojson', {
             // type: 'text/json'
         });
+    }
+    async exportItemsAsGeoJSON(items: IItem[], name = 'items') {
+        const exportPath = __ANDROID__ ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() : knownFolders.externalDocuments().path;
+        const filePath = path.join(exportPath, name + '.geojson');
+        await File.fromPath(path.join(exportPath, name + '.geojson')).writeText(JSON.stringify(await this.itemsAsGeoJSON(items)));
+        return showSnack({ message: lc('saved', filePath) });
+    }
+    async shareItemsAsGPX(items: IItem[], name = 'items') {
+        await shareFile(await this.itemsAsGPX(items, name), name + '.gpx', {
+            // type: 'text/json'
+        });
+    }
+    async exportItemsAsGPX(items: IItem[], name = 'items') {
+        const exportPath = __ANDROID__ ? android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() : knownFolders.externalDocuments().path;
+        const filePath = path.join(exportPath, name + '.gpx');
+        await File.fromPath(filePath).writeText(await this.itemsAsGPX(items));
+        return showSnack({ message: lc('saved', filePath) });
     }
 
     async setItemGroup(item: Item, groupName: string) {
