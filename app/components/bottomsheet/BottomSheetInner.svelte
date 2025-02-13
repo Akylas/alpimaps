@@ -93,7 +93,7 @@
         // DEV_LOG && console.log('BottomSheetInner onVectorTileElementClicked', item?.id, featureData, feature.properties);
         if (featureData?.route) {
             if (item && item.id && feature.properties?.id === item.id) {
-                DEV_LOG && console.log('onVectorTileElementClicked updateRouteItemWithPosition', position);
+                // DEV_LOG && console.log('onVectorTileElementClicked updateRouteItemWithPosition', position);
                 updateRouteItemWithPosition(item, position, false);
             } else {
                 // we can update with position once the item is selected
@@ -269,10 +269,10 @@
                 // const props = routeItem.properties;
                 const route = routeItem.route;
                 const positions = packageService.getRouteItemPoses(routeItem);
-                DEV_LOG && console.log('updateRouteItemWithPosition', JSON.stringify(location), JSON.stringify(positions));
+                // DEV_LOG && console.log('updateRouteItemWithPosition', JSON.stringify(location), JSON.stringify(positions));
                 const onPathIndex = isLocationOnPath(location, positions, false, true, 15);
                 let remainingDistance: number, remainingTime: number;
-                DEV_LOG && console.log('updateRouteItemWithPosition onPathIndex', onPathIndex);
+                // DEV_LOG && console.log('updateRouteItemWithPosition onPathIndex', onPathIndex);
                 if (onPathIndex !== -1 && (graphAvailable || highlight || (routeItem.instructions && updateNavigationInstruction && !graphAvailable))) {
                     remainingDistance = distanceToEnd(onPathIndex, positions);
                     remainingTime = (route.totalTime * remainingDistance) / route.totalDistance;

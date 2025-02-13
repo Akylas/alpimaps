@@ -82,7 +82,7 @@
         }
     }
     async function onChartHighlight(event: HighlightEventData) {
-        DEV_LOG && console.log('onChartHighlight', event.highlight);
+        // DEV_LOG && console.log('onChartHighlight', event.highlight);
         if (!item) {
             return;
         }
@@ -91,7 +91,7 @@
         const positions = item.geometry?.['coordinates'];
         const actualIndex = Math.max(0, Math.min(entryIndex, positions.length - 1));
         const position = positions[actualIndex];
-        DEV_LOG && console.log('onChartHighlight', entryIndex, position, shouldSelectItem);
+        // DEV_LOG && console.log('onChartHighlight', entryIndex, position, shouldSelectItem);
 
         if (position) {
             if (event.highlight) {
@@ -163,7 +163,7 @@
             return;
         }
         const nChart = chart?.nativeView;
-        DEV_LOG && console.log('hilghlightPathIndex', !!item, onPathIndex, remainingDistance, remainingTime, highlight, nChart);
+        // DEV_LOG && console.log('hilghlightPathIndex', !!item, onPathIndex, remainingDistance, remainingTime, JSON.stringify(highlight), nChart);
         if (onPathIndex === -1) {
             if (nChart) {
                 nChart.highlight(null);

@@ -931,7 +931,7 @@
                                 const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
                                 const r = await packageService.getElevation(position);
                                 if (r && $selectedItem.geometry === item.geometry) {
-                                    DEV_LOG && console.log('found elevation', r);
+                                    // DEV_LOG && console.log('found elevation', r);
                                     toUpdate.ele = r;
                                     // $selectedItem.properties = $selectedItem.properties || {};
                                     // $selectedItem.properties['ele'] = r;
