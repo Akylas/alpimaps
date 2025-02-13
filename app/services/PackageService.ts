@@ -536,59 +536,59 @@ class PackageService extends Observable {
         }
         return null;
     }
-    getSmoothedGradient(points: { d: number; a: number; avg: number; g }[]) {
-        const finalGrades = [];
-        const grades: { grad: number; dist: number }[] = [null];
-        grades[points.length - 1] = null;
-        for (let index = 1; index < points.length - 1; index++) {
-            const dist = points[index + 1].d - points[index - 1].d;
-            if (dist > 0) {
-                const grad = Math.max(Math.min((100 * (points[index + 1].avg - points[index - 1].avg)) / dist, 30), -30);
-                grades[index] = {
-                    grad,
-                    dist: points[index].d
-                };
-            } else {
-                grades[index] = grades[index - 1];
-            }
-        }
-        for (let index = points.length - 2; 0 <= index; index--) {
-            if (null === grades[index] && null !== grades[index + 1]) {
-                grades[index] = {
-                    grad: grades[index + 1].grad,
-                    dist: points[index].d
-                };
-            }
-        }
-        for (let index = 1; index < points.length; index++) {
-            if (null === grades[index] && null !== grades[index - 1]) {
-                grades[index] = {
-                    grad: grades[index - 1].grad,
-                    dist: points[index].d
-                };
-            }
-        }
-        const dist = Math.max(Math.min(5, grades.length / 50), 50);
-        const lastDist = grades[grades.length - 1].dist;
-        const g = Math.min(lastDist / 50, 500);
-        for (let index = 0; index < grades.length; index++) {
-            let d = 0,
-                f = 0;
-            let e = 0;
-            for (let k = 1; k <= dist && e < g; k++) {
-                e = grades.at(index + k < grades.length ? index + k : -1).dist - grades[0 <= index - k ? index - k : 0].dist;
-                for (let h = index - k; h < index + k; h++) {
-                    if (undefined !== grades[h] && null !== grades[h]) {
-                        e = Math.pow(grades[h].dist, 2) / (Math.abs(h - index) + 1);
-                        f += e * grades[h].grad;
-                        d += e;
-                    }
-                }
-            }
-            finalGrades[index] = points[index].g = Math.round(f / d);
-        }
-        return finalGrades;
-    }
+    // getSmoothedGradient(points: { d: number; a: number; avg: number; g }[]) {
+    //     const finalGrades = [];
+    //     const grades: { grad: number; dist: number }[] = [null];
+    //     grades[points.length - 1] = null;
+    //     for (let index = 1; index < points.length - 1; index++) {
+    //         const dist = points[index + 1].d - points[index - 1].d;
+    //         if (dist > 0) {
+    //             const grad = Math.max(Math.min((100 * (points[index + 1].avg - points[index - 1].avg)) / dist, 30), -30);
+    //             grades[index] = {
+    //                 grad,
+    //                 dist: points[index].d
+    //             };
+    //         } else {
+    //             grades[index] = grades[index - 1];
+    //         }
+    //     }
+    //     for (let index = points.length - 2; 0 <= index; index--) {
+    //         if (null === grades[index] && null !== grades[index + 1]) {
+    //             grades[index] = {
+    //                 grad: grades[index + 1].grad,
+    //                 dist: points[index].d
+    //             };
+    //         }
+    //     }
+    //     for (let index = 1; index < points.length; index++) {
+    //         if (null === grades[index] && null !== grades[index - 1]) {
+    //             grades[index] = {
+    //                 grad: grades[index - 1].grad,
+    //                 dist: points[index].d
+    //             };
+    //         }
+    //     }
+    //     const dist = Math.max(Math.min(5, grades.length / 50), 50);
+    //     const lastDist = grades[grades.length - 1].dist;
+    //     const g = Math.min(lastDist / 50, 500);
+    //     for (let index = 0; index < grades.length; index++) {
+    //         let d = 0,
+    //             f = 0;
+    //         let e = 0;
+    //         for (let k = 1; k <= dist && e < g; k++) {
+    //             e = grades.at(index + k < grades.length ? index + k : -1).dist - grades[0 <= index - k ? index - k : 0].dist;
+    //             for (let h = index - k; h < index + k; h++) {
+    //                 if (undefined !== grades[h] && null !== grades[h]) {
+    //                     e = Math.pow(grades[h].dist, 2) / (Math.abs(h - index) + 1);
+    //                     f += e * grades[h].grad;
+    //                     d += e;
+    //                 }
+    //             }
+    //         }
+    //         finalGrades[index] = points[index].g = Math.round(f / d);
+    //     }
+    //     return finalGrades;
+    // }
 
     computeProfileFromHeights(positions: MapPosVector<LatLonKeys>, elevations: IntVector | number[]) {
         let last: { lat: number; lon: number; altitude: number; tmpElevation?: number },
@@ -626,6 +626,7 @@ class PackageService extends Observable {
         let descent = 0;
         let lastAlt;
         const filterStep = 10;
+        const avgs = [];
         for (let i = 0; i < nbPoints; i++) {
             const sample = profile[i];
 
@@ -646,13 +647,11 @@ class PackageService extends Observable {
             }
             currentHeight = Math.round(sample.altitude);
             const avg = Math.round(sample.tmpElevation);
-
+            avgs.push(avg);
             result.data.push({
-                d: currentDistance,
-                a: currentHeight,
-                g: 0,
-                avg
-            } as any);
+                d: Math.round(currentDistance * 100) / 100,
+                a: currentHeight
+            });
             if (currentHeight > result.max[1]) {
                 result.max[1] = currentHeight;
             }
@@ -671,22 +670,27 @@ class PackageService extends Observable {
         lastAlt = result.data[0].a;
         for (let i = 0; i < result.data.length; i++) {
             const pt1 = result.data[i];
-
             let idelta = 1;
-            let pt2 = result.data[Math.min(i + idelta, profile.length - 1)];
+            let prevIndex = Math.min(i + idelta, profile.length - 1);
+            let pt2 = result.data[prevIndex];
             if (pt2.d - pt1.d < 20) {
                 if (grade === undefined) {
                     while (pt2.d - pt1.d < 20 && i + idelta < profile.length) {
                         idelta++;
-                        pt2 = result.data[Math.min(i + idelta, profile.length - 1)];
+                        prevIndex = Math.min(i + idelta, profile.length - 1);
+                        pt2 = result.data[prevIndex];
                     }
                 } else {
-                    pt1.g = grade;
+                    if (grade !== 0) {
+                        pt1.g = Math.round(grade * 100) / 100;
+                    }
                     continue;
                 }
             }
-            grade = ((pt2.avg - pt1.avg) / (pt2.d - pt1.d)) * 100;
-            pt1.g = grade;
+            grade = ((avgs[prevIndex] - avgs[i]) / (pt2.d - pt1.d)) * 100;
+            if (grade !== 0) {
+                pt1.g = Math.round(grade * 100) / 100;
+            }
             gradeSum += grade;
             gradesCounter += 1;
             if (pt1.d / 1000 > lastKm) {
@@ -700,7 +704,7 @@ class PackageService extends Observable {
                     color: getGradeColor(Math.abs(avgGrade))
                 });
                 for (let j = lastIndex; j <= i; j++) {
-                    result.data[j].avg = avgGrade;
+                    avgs[j] = avgGrade;
                 }
                 lastIndex = i;
                 lastAlt = pt1.a;
@@ -759,7 +763,7 @@ class PackageService extends Observable {
                 }
                 const elevations = await this.getElevations(positions);
                 const result = this.computeProfileFromHeights(positions, elevations);
-                DEV_LOG && console.log('getElevations done', Date.now() - startTime, 'ms');
+                DEV_LOG && console.log('getElevations done', Date.now() - startTime, 'ms', JSON.stringify(result));
                 return result;
             } else {
                 const startTime = Date.now();
