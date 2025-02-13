@@ -1,12 +1,10 @@
-import { MapBounds } from '@nativescript-community/ui-carto/core';
-import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
-import { File, knownFolders, path } from '@nativescript/core';
+import { File } from '@nativescript/core';
 import { gpx } from '@tmcw/togeojson';
 import { Feature, LineString } from 'geojson';
-import { DOMParser, XMLSerializer } from 'xmldom';
+import { toXML } from 'jstoxml';
+import { DOMParser } from 'xmldom';
 import { getBoundsAndDistance } from '~/helpers/geolib';
 import { IItem } from '~/models/Item';
-import { toXML } from 'jstoxml';
 
 export function importGPXToGeojson(filePath: string) {
     const str = File.fromPath(filePath).readTextSync();
@@ -41,5 +39,5 @@ export function importGPXToGeojson(filePath: string) {
 }
 
 export function JSONtoXML(json) {
-    return toXML(json);
+    return toXML(json) as string;
 }
