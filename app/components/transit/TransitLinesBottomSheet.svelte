@@ -140,5 +140,5 @@
             </cgroup>
         </canvaslabel>
     {/if}
-    <mdactivityindicator busy={true} horizontalAlignment="right" verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
+    <activityindicator busy={true} horizontalAlignment="right" verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
 </gesturerootview>
