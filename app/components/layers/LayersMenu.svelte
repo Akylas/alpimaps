@@ -248,7 +248,7 @@ while being shown using bottomsheet. We remove it with paddingTop -->
                             text="mdi-dots-vertical"
                             on:tap={() => showSourceOptions(item)}
                             on:loaded={onReorderButtonLoaded} />
-                        <mdprogress colSpan={3} value={item.downloadProgress} verticalAlignment="bottom" visibility={item.downloading > 0 ? 'visible' : 'collapse'} />
+                        <progress colSpan={3} value={item.downloadProgress} verticalAlignment="bottom" visibility={item.downloading > 0 ? 'visible' : 'collapse'} />
                     </gridlayout>
                     <mdbutton
                         prop:leftDrawer

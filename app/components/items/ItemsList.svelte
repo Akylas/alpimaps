@@ -865,7 +865,7 @@ LEFT JOIN  (
             textAlignment="center"
             verticalTextAlignment="middle"
             visibility={loading || itemsCount ? 'hidden' : 'visible'} />
-        <mdactivityindicator busy={true} horizontalAlignment="center" row={1} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
+        <activityindicator busy={true} horizontalAlignment="center" row={1} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
 
         <CActionBar forceCanGoBack={nbSelected > 0} onGoBack={nbSelected ? unselectAll : null} title={nbSelected ? lc('selected', nbSelected) : lc('items')}>
             <IconButton color={colorError} isVisible={nbSelected > 0} text="mdi-delete" on:tap={deleteSelectedItems} />

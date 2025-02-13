@@ -610,7 +610,7 @@
                 <mdbutton class="small-floating-btn" color={colorPrimary} text="mdi-compass" on:tap={(e) => (listeningForHeading ? stopHeadingListener() : startHeadingListener())} />
                 <mdbutton class="small-floating-btn" color={colorPrimary} text="mdi-cog" on:tap={(e) => (bottomSheetStepIndex = 1 - bottomSheetStepIndex)} />
             </stacklayout>
-            <mdactivityindicator busy={true} horizontalAlignment="right" verticalAlignment="bottom" visibility={listeningForHeading ? 'visible' : 'hidden'} />
+            <activityindicator busy={true} horizontalAlignment="right" verticalAlignment="bottom" visibility={listeningForHeading ? 'visible' : 'hidden'} />
             <label color={colorOnSurface} fontSize={12} horizontalAlignment="right" paddingRight={10} text={currentAltitude?.toFixed(0) + 'm'} verticalAlignment="bottom" />
             <label
                 class="alpimaps"

@@ -1241,7 +1241,7 @@
                 text="mdi-magnify"
                 on:tap={() => computeRoutes()}
                 on:longPress={() => computeRoutes(true)} />
-            <mdactivityindicator busy={true} colSpan={2} color={buttonsColor} height={40} horizontalAlignment="right" visibility={loading ? 'visible' : 'hidden'} width={40} />
+            <activityindicator busy={true} colSpan={2} color={buttonsColor} height={40} horizontalAlignment="right" visibility={loading ? 'visible' : 'hidden'} width={40} />
             <collectionview
                 bind:this={collectionView}
                 animateItemUpdate={true}

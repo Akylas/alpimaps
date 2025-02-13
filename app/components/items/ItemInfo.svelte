@@ -433,7 +433,7 @@
         <stacklayout col={2} orientation="horizontal">
             <IconButton isVisible={Object.keys(extraProps).length > 0} text="mdi-content-save-outline" on:tap={() => saveItem()} />
             <IconButton text="mdi-autorenew" on:tap={() => refresh(true)} />
-            <mdactivityindicator busy={loading} height={$actionBarButtonHeight} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapse'} width={$actionBarButtonHeight} />
+            <activityindicator busy={loading} height={$actionBarButtonHeight} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapse'} width={$actionBarButtonHeight} />
         </stacklayout>
     </gridlayout>
     <canvasview height={60} row={1} visibility={topItemsToDraw.length ? 'visible' : 'collapse'} on:draw={onTopDraw} />
