@@ -8,7 +8,7 @@ import { Tween } from '@nativescript-community/ui-chart/animation/Tween';
 import { showSnack } from '~/utils/ui';
 import { Color } from '@nativescript/core';
 import dayjs from 'dayjs';
-import { get } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import { GeoHandler, GeoLocation, UserLocationdEvent, UserLocationdEventData } from '~/handlers/GeoHandler';
 import { packageService } from '~/services/PackageService';
 import { queryingLocation, watchingLocation } from '~/stores/mapStore';
@@ -17,6 +17,8 @@ import MapModule, { getMapContext } from './MapModule';
 import { MapInteractionInfo } from '@nativescript-community/ui-carto/ui';
 
 const LOCATION_ANIMATION_DURATION = 300;
+
+export const navigationModeStore = writable(false);
 
 // const NOTIFICATION_SERVICE = android.content.Context.NOTIFICATION_SERVICE;
 
@@ -37,6 +39,18 @@ export default class UserLocationModule extends MapModule {
     set userFollow(value: boolean) {
         if (value !== this.mUserFollow) {
             this.mUserFollow = value;
+            if (!value) {
+                this.navigationMode = false;
+            }
+        }
+    }
+    get navigationMode() {
+        return get(navigationModeStore);
+    }
+    set navigationMode(value: boolean) {
+        navigationModeStore.set(value);
+        if (value) {
+            this.userFollow = true;
         }
     }
     override onMapDestroyed() {
@@ -95,7 +109,7 @@ export default class UserLocationModule extends MapModule {
             this.userFollow = false;
         }
     }
-    public mLastUserLocation: MapPos<LatLonKeys> & { horizontalAccuracy: number; verticalAccuracy: number; speed: number } = null;
+    public mLastUserLocation: GeoLocation = null;
     get lastUserLocation() {
         return this.mLastUserLocation;
     }
@@ -217,6 +231,10 @@ export default class UserLocationModule extends MapModule {
         }
         this.mapView.setZoom(Math.max(this.mapView.zoom, 14), LOCATION_ANIMATION_DURATION);
         this.mapView.setFocusPos(this.mLastUserLocation, LOCATION_ANIMATION_DURATION);
+        if (this.navigationMode) {
+            this.mapView.setBearing(this.mLastUserLocation.bearing, LOCATION_ANIMATION_DURATION);
+            this.mapView.setTilt(45, LOCATION_ANIMATION_DURATION);
+        }
     }
     onLocation(event: UserLocationdEventData) {
         // const { android, ios, ...toPrint } = data.location;

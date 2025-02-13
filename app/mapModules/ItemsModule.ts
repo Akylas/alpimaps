@@ -579,12 +579,15 @@ export default class ItemsModule extends MapModule {
         for (let index = 0; index < featuresToImport.length; index++) {
             const item = featuresToImport[index];
             const props = item.properties;
-            ['groups', 'route', 'profile', 'route', 'route', 'type', 'creation_date'].forEach((k) => {
+            ['groups', 'profile', 'type', 'creation_date', 'instructions'].forEach((k) => {
                 if (props[k]) {
                     item[k] = props[k];
                     delete props[k];
                 }
             });
+            if (props.route) {
+                item.route = props.route;
+            }
             if (props.mapFontFamily) {
                 const filtered = pick(props, 'mapFontFamily', 'fontFamily', 'iconSize', 'iconDx', 'icon', 'color');
                 // old style we need to clear it
