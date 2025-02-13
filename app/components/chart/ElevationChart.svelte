@@ -225,7 +225,7 @@
                     dataSet.ignoreFiltered = true;
                     const item = profileData[onPathIndex];
                     dataSet.ignoreFiltered = false;
-                    DEV_LOG && console.log('highlight', onPathIndex, item.d, item);
+                    DEV_LOG && console.log('highlight', onPathIndex, item.d, JSON.stringify(item));
                     const highlight = {
                         dataSetIndex: 0,
                         entryIndex: onPathIndex,

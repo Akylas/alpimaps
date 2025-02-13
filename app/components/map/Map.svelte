@@ -1347,7 +1347,7 @@
         if (!!featureData.instruction) {
             return true;
         }
-        TEST_LOG && console.log('onVectorTileElementClicked2', clickType, position, featurePosition, featureData.id, handledByModules, $selectedItem?.id);
+        TEST_LOG && console.log('onVectorTileElementClicked', clickType, JSON.stringify(position), JSON.stringify(featurePosition), featureData.id, handledByModules, $selectedItem?.id);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             const item: IItem = feature;
             // }
