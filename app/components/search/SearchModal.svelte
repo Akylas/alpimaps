@@ -90,7 +90,7 @@
 <gesturerootview columns="auto">
     <gridlayout backgroundColor={colorWidgetBackground} borderRadius={8} {elevation} {margin} rows="auto,auto,240" {width}>
         <!-- <CActionBar title={lc('search')} modalWindow>
-            <mdactivityIndicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapse'} />
+            <activityindicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapse'} />
         </CActionBar> -->
         <textfield
             bind:this={textField}

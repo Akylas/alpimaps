@@ -343,7 +343,7 @@
         <mdbutton class="mdi" col={1} color={colorOnPrimaryContainer} fontSize={13} marginRight={10} text="mdi-close" variant="text" width={40} on:tap={stopDatasourceDownload} />
     </gridlayout>
 
-    <mdprogress colSpan={3} row={3} value={totalDownloadProgress} verticalAlignment="bottom" visibility={totalDownloadProgress > 0 ? 'visible' : 'collapse'} />
+    <progress colSpan={3} row={3} value={totalDownloadProgress} verticalAlignment="bottom" visibility={totalDownloadProgress > 0 ? 'visible' : 'collapse'} />
     <canvasview
         bind:this={navigationCanvas}
         backgroundColor={colorSurfaceContainer}

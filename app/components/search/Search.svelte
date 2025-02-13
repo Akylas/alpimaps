@@ -466,7 +466,7 @@
         on:returnPress={onReturnKey}
         on:textChange={(e) => onTextChanged(e['value'])}
         on:focus={onFocus} />
-    <mdactivityindicator busy={true} col={2} height={20} visibility={loading ? 'visible' : 'hidden'} width={20} />
+    <activityindicator busy={true} col={2} height={20} visibility={loading ? 'visible' : 'hidden'} width={20} />
     <IconButton col={2} gray={true} isVisible={currentSearchText && currentSearchText.length > 0 && !loading && didSearch} text="mdi-refresh" on:tap={reloadSearch} />
     <IconButton col={3} gray={true} isVisible={currentSearchText && currentSearchText.length > 0} text="mdi-close" on:tap={() => clearSearch()} />
     <IconButton accessibilityValue="menuBtn" col={4} gray={true} onLongPress={showMapOptions} text="mdi-dots-vertical" on:tap={showMapMenu} />

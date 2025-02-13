@@ -240,7 +240,7 @@
                 </canvasview>
             </Template>
         </collectionview>
-        <mdactivityindicator busy={loading} row={3} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
+        <activityindicator busy={loading} row={3} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
         {#if noNetworkAndNoData}
             <canvaslabel row={3}>
                 <cgroup textAlignment="center" verticalAlignment="middle">
