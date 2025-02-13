@@ -269,7 +269,7 @@
                 // const props = routeItem.properties;
                 const route = routeItem.route;
                 const positions = packageService.getRouteItemPoses(routeItem);
-                DEV_LOG && console.log('updateRouteItemWithPosition', location, JSON.stringify(positions));
+                DEV_LOG && console.log('updateRouteItemWithPosition', JSON.stringify(location), JSON.stringify(positions));
                 const onPathIndex = isLocationOnPath(location, positions, false, true, 15);
                 let remainingDistance: number, remainingTime: number;
                 DEV_LOG && console.log('updateRouteItemWithPosition onPathIndex', onPathIndex);
@@ -525,12 +525,15 @@
         // }
         try {
             const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
-            const options = [{ name: lc('geoson'), data: 'geojson' }];
+            const options = [
+                { name: lc('share_geoson'), data: 'share_geojson' },
+                { name: lc('export_geoson'), data: 'export_geojson' }
+            ];
             if (item.properties?.address) {
                 options.unshift({ name: lc('address'), data: 'address' });
             }
             if (itemIsRoute) {
-                options.push({ name: lc('gpx'), data: 'gpx' });
+                options.push({ name: lc('share_gpx'), data: 'share_gpx' }, { name: lc('export_gpx'), data: 'export_gpx' });
             } else {
                 options.push({ name: lc('position'), data: 'position' });
             }
@@ -580,11 +583,19 @@
                                     }
                                 );
                                 break;
-                            case 'geojson':
+                            case 'export_geojson':
+                                showLoading();
+                                await mapContext.mapModule('items').exportItemsAsGeoJSON([item]);
+                                break;
+                            case 'export_gpx':
+                                showLoading();
+                                await mapContext.mapModule('items').exportItemsAsGPX([item]);
+                                break;
+                            case 'share_geojson':
                                 showLoading();
                                 await mapContext.mapModule('items').shareItemsAsGeoJSON([item]);
                                 break;
-                            case 'gpx':
+                            case 'share_gpx':
                                 showLoading();
                                 await mapContext.mapModule('items').shareItemsAsGPX([item]);
                                 break;
@@ -922,7 +933,7 @@
             rightSwipeDistance={0}
             translationFunction={drawerTranslationFunction}>
             <BottomSheetInfoView bind:this={infoView} prop:mainContent colSpan={2} {item} rightTextPadding={itemIsRoute ? $actionBarButtonHeight : 0}>
-                <mdactivityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
+                <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
             </BottomSheetInfoView>
             <IconButton prop:leftDrawer backgroundColor={colorError} color="white" height="100%" shape="none" text="mdi-trash-can" tooltip={lc('delete')} width={60} on:tap={deleteItem} />
 
