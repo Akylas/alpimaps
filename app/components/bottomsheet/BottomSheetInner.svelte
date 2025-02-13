@@ -102,12 +102,11 @@
         }
     });
 
-    // $: {
-    //     if (itemIsRoute && currentLocation) {
-    //         DEV_LOG && console.log('currentLocation', 'updateRouteItemWithPosition');
-    //         updateRouteItemWithPosition(item, currentLocation);
-    //     }
-    // }
+    $: {
+        if (itemIsRoute && currentLocation) {
+            updateRouteItemWithPosition(item, currentLocation);
+        }
+    }
     // $: {
     //     if (item) {
     //         console.log('selected item ', item.id, item.properties?.address, item.geometry);
@@ -263,7 +262,7 @@
     $: updateSelectedItem(item);
 
     function updateRouteItemWithPosition(routeItem: Item, location: GenericMapPos<LatLonKeys>, updateNavigationInstruction = true, updateGraph = true, highlight?: Highlight<Entry>) {
-        // DEV_LOG && console.log('updateRouteItemWithPosition', !!routeItem?.route, location, updateNavigationInstruction, updateGraph, !!highlight);
+        // DEV_LOG && console.log('updateRouteItemWithPosition', !!routeItem?.route, JSON.stringify(location), updateNavigationInstruction, updateGraph, !JSON.stringify(!highlight));
         try {
             if (routeItem?.route) {
                 // const props = routeItem.properties;
@@ -272,7 +271,7 @@
                 // DEV_LOG && console.log('updateRouteItemWithPosition', JSON.stringify(location), JSON.stringify(positions));
                 const onPathIndex = isLocationOnPath(location, positions, false, true, 15);
                 let remainingDistance: number, remainingTime: number;
-                // DEV_LOG && console.log('updateRouteItemWithPosition onPathIndex', onPathIndex);
+                // DEV_LOG && console.log('updateRouteItemWithPosition onPathIndex', onPathIndex, JSON.stringify(routeItem.instructions));
                 if (onPathIndex !== -1 && (graphAvailable || highlight || (routeItem.instructions && updateNavigationInstruction && !graphAvailable))) {
                     remainingDistance = distanceToEnd(onPathIndex, positions);
                     remainingTime = (route.totalTime * remainingDistance) / route.totalDistance;
@@ -453,7 +452,7 @@
     }
 
     function onChartHighlight({ highlight, lat, lon }: any) {
-        DEV_LOG && console.log('BottomSheetInner onChartHighlight', lat, lon, highlight);
+        // DEV_LOG && console.log('BottomSheetInner onChartHighlight', lat, lon, highlight);
         updateRouteItemWithPosition(item, { lat, lon }, false, true, highlight);
     }
 
