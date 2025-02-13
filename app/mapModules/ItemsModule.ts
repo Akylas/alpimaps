@@ -466,7 +466,7 @@ export default class ItemsModule extends MapModule {
         }
     }
     async takeItemPicture(item, restore = false) {
-        console.log('takeItemPicture', new Error().stack);
+        // console.log('takeItemPicture', new Error().stack);
         //item needs to be already selected
         // we hide other items before the screenshot
         // and we show theme again after it
@@ -497,10 +497,10 @@ export default class ItemsModule extends MapModule {
                 let image: ImageSource;
                 let canvasImage: ImageSource;
                 try {
-                    DEV_LOG && console.log('takeItemPicture', 'onMapStable');
+                    // DEV_LOG && console.log('takeItemPicture', 'onMapStable');
                     // const startTime = Date.now();
                     image = await mapView.captureRendering(true);
-                    DEV_LOG && console.log('takeItemPicture', 'onMapStable1');
+                    // DEV_LOG && console.log('takeItemPicture', 'onMapStable1');
                     image.saveToFile(item.image_path, 'jpg');
                     // restore everyting
                     mapContext.innerDecoder.setStyleParameter('hide_unselected', '0');
