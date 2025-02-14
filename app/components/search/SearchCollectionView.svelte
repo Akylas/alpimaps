@@ -1,16 +1,20 @@
 <script lang="ts">
     import { l } from '@nativescript-community/l';
-    import type { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
+    import { GenericMapPos, MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
+    import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
     import { SearchRequest, VectorTileSearchServiceOptions } from '@nativescript-community/ui-carto/search';
-    import { showSnack } from '~/utils/ui';
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { ApplicationSettings, ObservableArray, Screen } from '@nativescript/core';
-    import deburr from 'deburr';
-    import type { Point } from 'geojson';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
+    import deburr from 'deburr';
+    import type { Point as GeoJSONPoint } from 'geojson';
     import { Template } from 'svelte-native/components';
+    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { GeoLocation } from '~/handlers/GeoHandler';
     import { formatDistance, osmicon } from '~/helpers/formatter';
-    import { getBoundsOfDistance, getMetersPerPixel } from '~/helpers/geolib';
+    import { getBoundsOfDistance, getDistance, getDistanceSimple, getMetersPerPixel } from '~/helpers/geolib';
     import { lc } from '~/helpers/locale';
+    import { onThemeChanged } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item } from '~/models/Item';
@@ -19,13 +23,10 @@
     import type { GeoResult } from '~/services/PackageService';
     import { packageService } from '~/services/PackageService';
     import { computeDistanceBetween } from '~/utils/geo';
+    import { showSnack } from '~/utils/ui';
     import { arraySortOn } from '~/utils/utils';
     import { colors } from '~/variables';
     import { HereFeature, PhotonFeature } from './Features';
-    import { onThemeChanged } from '~/helpers/theme';
-    import { NativeViewElementNode } from 'svelte-native/dom';
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
 
     $: ({ colorOnSurface, colorOnSurfaceVariant } = $colors);
 
@@ -37,7 +38,6 @@
     let currentQuery;
     export let searchResultsCount = 0;
     const mapContext = getMapContext();
-
 
     // export function getFilteredDataItems() {
     //     return filteredDataItems;
@@ -116,11 +116,10 @@
             'distance'
         ) as GeoResult[];
     }
-    async function searchInVectorTiles(enabled: boolean, options: SearchRequest & VectorTileSearchServiceOptions) {
+    async function searchInVectorTiles(enabled: boolean, options: SearchRequest & VectorTileSearchServiceOptions & { bounds?: MapBounds }) {
         if (!enabled) {
             return [];
         }
-        DEV_LOG && console.log('searchInVectorTiles', JSON.stringify(options));
         const result = await packageService.searchInVectorTiles(options);
         if (result) {
             return packageService.convertFeatureCollection(result, options);
@@ -202,13 +201,46 @@
             'distance'
         );
     }
-    export async function instantSearch(_query, position = mapContext.getMap().focusPos) {
+    export async function instantSearch(_query, position?: GenericMapPos<LatLonKeys>, item?: Item) {
         try {
             loading = true;
             currentQuery = cleanUpString(_query);
-            const mpp = getMetersPerPixel(position, mapContext.getMap().getZoom());
-            const searchRadius = Math.min(Math.max(mpp * Screen.mainScreen.widthPixels * 2, mpp * Screen.mainScreen.heightPixels * 2), 50000); //meters;
+            let bounds: MapBounds<LatLonKeys>;
+            if (!position) {
+                if (item) {
+                    if (item.properties?.zoomBounds) {
+                        bounds = item.properties.zoomBounds;
+                    } else if (item.properties?.extent) {
+                        let extent: [number, number, number, number] = item.properties.extent as [number, number, number, number];
+                        if (typeof extent === 'string') {
+                            if (extent[0] !== '[') {
+                                extent = `[${extent as string}]` as any;
+                            }
+                            extent = JSON.parse(extent as any);
+                        }
+                        bounds = new MapBounds({ lat: extent[1], lon: extent[0] }, { lat: extent[3], lon: extent[2] });
+                    } else if (item.route) {
+                        const geometry = packageService.getRouteItemGeometry(item);
+                        //we need to convert geometry bounds to wgs84
+                        //not perfect as vectorTile geometry might not represent the whole entier route at higher zoom levels
+                        bounds = geometry?.getBounds();
+                    } else {
+                        const geometry = item.geometry as GeoJSONPoint;
+                        position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+                    }
+                    if (bounds && !position) {
+                        position = { lat: bounds.southwest.lat + (bounds.northeast.lat - bounds.southwest.lat) / 2, lon: bounds.southwest.lon + (bounds.northeast.lon - bounds.southwest.lon) / 2 };
+                    }
+                } else {
+                    position = mapContext.getMap().focusPos;
+                }
+            }
 
+            const mpp = getMetersPerPixel(position, mapContext.getMap().getZoom());
+            const searchRadius = bounds
+                ? Math.max(getDistanceSimple(position, { lat: bounds.southwest.lat, lon: position.lon }), getDistanceSimple(position, { lon: bounds.southwest.lon, lat: position.lat })) + 1000
+                : Math.min(Math.max(mpp * Screen.mainScreen.widthPixels * 2, mpp * Screen.mainScreen.heightPixels * 2), 50000); //meters;
+            DEV_LOG && console.log('instantSearch', currentQuery, !!item, position, bounds, searchRadius);
             const options = {
                 query: currentQuery,
                 projection: mapContext.getProjection(),
@@ -222,10 +254,10 @@
                 position,
                 locationRadius: searchRadius,
                 searchRadius,
-                bounds: getBoundsOfDistance(position, searchRadius)
+                bounds: bounds || getBoundsOfDistance(position, searchRadius) // only for Photon
                 // locationRadius: 1000,
             };
-            DEV_LOG && console.log('instantSearch', JSON.stringify(position), mapContext.getMap().getZoom(), mpp, JSON.stringify(options));
+            // DEV_LOG && console.log('instantSearch', JSON.stringify(position), mapContext.getMap().getZoom(), mpp, JSON.stringify(options));
             let newDataItems = new ObservableArray<SearchItem>();
 
             function addItems(items: SearchItem[]) {
@@ -246,7 +278,7 @@
                 // updateFilteredDataItems(filteringOSMKey);
             }
             if (/^(class|subclass)/.test(currentQuery)) {
-                const bounds = mapContext.getMap().getMapBounds();
+                bounds = bounds || mapContext.getMap().getMapBounds();
                 DEV_LOG && console.log('bounds', bounds);
 
                 const zoom = /peak|campsite/.test(currentQuery) ? 11 : 14;
@@ -257,6 +289,7 @@
                 await searchInVectorTiles(true, {
                     projection: options.projection,
                     geometry,
+                    bounds,
                     minZoom: zoom,
                     maxZoom: zoom,
                     filterExpression: `regexp_ilike(${array[0]},'.*${array[1]}.*')`
@@ -298,7 +331,7 @@
         }
     }
     export function clearSearch(clearQuery = true) {
-        DEV_LOG && console.log('clearSearch', clearQuery, new Error().stack);
+        // DEV_LOG && console.log('clearSearch', clearQuery, new Error().stack);
         networkService.clearRequests('photon', 'here');
         loading = false;
         dataItems = new ObservableArray();

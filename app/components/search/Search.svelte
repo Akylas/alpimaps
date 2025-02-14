@@ -62,8 +62,10 @@
     let _searchLayer: VectorTileLayer;
     let searchAsTypeTimer;
     let loading = false;
+    let searchAroundItem = false;
     // let filteringOSMKey = false;
     export let dataItems: ObservableArray<SearchItem> = null;
+    export let item: Item;
     // let text: string = null;
     let currentSearchText: string = null;
     const mapContext = getMapContext();
@@ -239,7 +241,7 @@
                 await loadView();
             }
             needToShowOnResult = true;
-            await collectionView?.instantSearch(_query);
+            await collectionView?.instantSearch(_query, undefined, searchAroundItem ? item : undefined);
             didSearch = true;
         } catch (err) {
             needToShowOnResult = false;
@@ -313,11 +315,12 @@
     function showResultsOnMap(items: ObservableArray<SearchItem>, shouldUnfocus = true) {
         try {
             if (!items || items.length === 0) {
-                _searchDataSource.deleteLayer(1);
-                _searchDataSource.createLayer('search');
+                _searchDataSource?.deleteLayer(1);
+                _searchDataSource?.createLayer('search');
                 mapContext.showMapResultsPager(null);
                 showingOnMap = false;
             } else {
+                getSearchLayer().visible = true;
                 showingOnMap = true;
                 // if (!_searchDataSource) {
                 const dataSource = getSearchDataSource();
@@ -328,13 +331,13 @@
                 // if (!searchStyle) {
                 //     searchStyle = new PointStyleBuilder({ color: 'red', size: 10 });
                 // }
-                const featureCollection = packageService.getGeoJSONReader().readFeatureCollection(geojson);
                 // dataSource.clear();
                 dataSource.setLayerGeoJSONString(1, geojson);
                 // items.forEach((d) => {
                 //     dataSource.add(createSearchMarker(d));
                 // });
                 ensureSearchLayer();
+                const featureCollection = packageService.getGeoJSONReader().readFeatureCollection(geojson);
                 const mapBounds = featureCollection.getBounds();
 
                 const viewPort = mapContext.getMapViewPort();
@@ -443,7 +446,7 @@
     id="search"
     {...$$restProps}
     backgroundColor={colorWidgetBackground}
-    columns="auto,*,auto,auto,auto"
+    columns="auto,*,auto,auto,auto,auto"
     elevation={$currentTheme !== 'dark' && focused ? 6 : 0}
     rows="auto,auto"
     on:tap={() => {}}>
@@ -468,8 +471,9 @@
         on:focus={onFocus} />
     <activityindicator busy={true} col={2} height={20} visibility={loading ? 'visible' : 'hidden'} width={20} />
     <IconButton col={2} gray={true} isVisible={currentSearchText && currentSearchText.length > 0 && !loading && didSearch} text="mdi-refresh" on:tap={reloadSearch} />
-    <IconButton col={3} gray={true} isVisible={currentSearchText && currentSearchText.length > 0} text="mdi-close" on:tap={() => clearSearch()} />
-    <IconButton accessibilityValue="menuBtn" col={4} gray={true} onLongPress={showMapOptions} text="mdi-dots-vertical" on:tap={showMapMenu} />
+    <IconButton col={3} isSelected={searchAroundItem} isVisible={focused && !!item} text="mdi-map-marker-path" on:tap={() => (searchAroundItem = !searchAroundItem)} />
+    <IconButton col={4} gray={true} isVisible={currentSearchText && currentSearchText.length > 0} text="mdi-close" on:tap={() => clearSearch()} />
+    <IconButton accessibilityValue="menuBtn" col={5} gray={true} onLongPress={showMapOptions} text="mdi-dots-vertical" on:tap={showMapMenu} />
     {#if loaded}
         <absolutelayout bind:this={collectionViewHolder} id="searchCollectionViewHolder" clipToBounds={true} colSpan={7} height={0} isUserInteractionEnabled={searchResultsVisible} row={1}>
             <gridlayout id="searchCollectionViewSubHolder" columns="auto,auto,*" height={SEARCH_COLLECTIONVIEW_HEIGHT} rows="*,auto" width="100%">

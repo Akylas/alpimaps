@@ -72,30 +72,25 @@ export const measures = {
 };
 // }
 
-export function getValue(point, index, possibleValues, raw) {
+export function getValue(point, index, possibleValues) {
     let result;
-    if (Array.isArray(point)) {
+    if (typeof point === 'object') {
+        for (let index = 0; index < possibleValues.length; index++) {
+            const value = point[possibleValues[index]];
+            if (value !== undefined) {
+                return value;
+            }
+        }
+    } else if (Array.isArray(point)) {
         result = point[index];
-    } else if (typeof point === 'object') {
-        possibleValues.every(function (val) {
-            return point.hasOwnProperty(val)
-                ? (function () {
-                      result = point[val];
-                      return false;
-                  })()
-                : true;
-        });
-        // result = getValue(['lat', 'latitude']);
     } else {
         result = parseFloat(point);
     }
-    // return raw !== false ? result : useDecimal(result);
     return result;
 }
 // returns latitude of a given point, converted to decimal
-// set raw to true to avoid conversion
-export function getLat(point, raw?) {
-    return getValue(point, 1, ['lat', 'latitude'], raw);
+export function getLat(point) {
+    return getValue(point, 1, ['lat', 'latitude']);
 }
 
 // Alias for getLat
@@ -104,9 +99,8 @@ export function latitude(point) {
 }
 
 // returns longitude of a given point, converted to decimal
-// set raw to true to avoid conversion
-export function getLon(point, raw?) {
-    return getValue(point, 0, ['lng', 'lon', 'longitude'], raw);
+export function getLon(point) {
+    return getValue(point, 0, ['lon', 'lng', 'longitude']);
 }
 
 // Alias for getLon
@@ -114,8 +108,8 @@ export function longitude(point) {
     return getLon(point);
 }
 
-export function getAlt(point, raw?) {
-    return getValue(point, 2, ['alt', 'altitude', 'elevation', 'elev'], raw);
+export function getAlt(point) {
+    return getValue(point, 2, ['alt', 'altitude', 'elevation', 'elev']);
 }
 
 // Alias for getAlt
@@ -127,18 +121,13 @@ export function altitude(point) {
     return getAlt(point);
 }
 
-export function coords(point, raw?) {
+export function coords(point) {
     const retval = {
-        latitude: getLat(point, raw),
-        longitude: getLon(point, raw),
-        altitude: getAlt(point, raw)
+        lat: getLat(point),
+        lon: getLon(point),
+        altitude: getAlt(point)
     };
     return retval;
-}
-
-// Alias for coords
-export function ll(point, raw) {
-    return coords(point, raw);
 }
 
 // checks if a variable contains a valid latlong object
@@ -188,12 +177,12 @@ export function getDistance(start, end, accuracy?) {
     const a = 6378137,
         b = 6356752.314245,
         f = 1 / 298.257223563; // WGS-84 ellipsoid params
-    const L = (e['longitude'] - s['longitude']).toRad();
+    const L = (e.lon - s.lon).toRad();
 
     let cosSigma, sigma, sinAlpha, cosSqAlpha, cos2SigmaM, sinSigma;
 
-    const U1 = Math.atan((1 - f) * Math.tan(parseFloat(s['latitude']).toRad()));
-    const U2 = Math.atan((1 - f) * Math.tan(parseFloat(e['latitude']).toRad()));
+    const U1 = Math.atan((1 - f) * Math.tan(parseFloat(s.lat).toRad()));
+    const U2 = Math.atan((1 - f) * Math.tan(parseFloat(e.lat).toRad()));
     const sinU1 = Math.sin(U1),
         cosU1 = Math.cos(U1);
     const sinU2 = Math.sin(U2),
@@ -269,13 +258,13 @@ export function getDistanceSimple(start, end, accuracy?) {
     accuracy = Math.floor(accuracy) || 1;
     const s = coords(start);
     const e = coords(end);
-    if (s.latitude === e.latitude && s.longitude === e.longitude) {
+    if (s.lat === e.lat && s.lon === e.lon) {
         return 0;
     }
-    const slat = s['latitude'].toRad();
-    const slon = s['longitude'].toRad();
-    const elat = e['latitude'].toRad();
-    const elon = e['longitude'].toRad();
+    const slat = s.lat.toRad();
+    const slon = s.lon.toRad();
+    const elat = e.lat.toRad();
+    const elon = e.lon.toRad();
     const distance = Math.round(Math.acos(Math.sin(elat) * Math.sin(slat) + Math.cos(elat) * Math.cos(slat) * Math.cos(slon - elon)) * earthRadius);
 
     return Math.round(distance / accuracy) * accuracy;
@@ -386,10 +375,10 @@ export function getBounds(theCoords) {
     let coord;
     for (let i = 0, l = theCoords.length; i < l; ++i) {
         coord = coords(theCoords[i]);
-        stats.maxLat = Math.max(coord['latitude'], stats.maxLat);
-        stats.minLat = Math.min(coord['latitude'], stats.minLat);
-        stats.maxLng = Math.max(coord['longitude'], stats.maxLng);
-        stats.minLng = Math.min(coord['longitude'], stats.minLng);
+        stats.maxLat = Math.max(coord.lat, stats.maxLat);
+        stats.minLat = Math.min(coord.lat, stats.minLat);
+        stats.maxLng = Math.max(coord.lon, stats.maxLng);
+        stats.minLng = Math.min(coord.lon, stats.minLng);
     }
     if (stats.maxLat === stats.minLat) {
         stats.maxLat += 0.002;
@@ -402,39 +391,39 @@ export function getBounds(theCoords) {
 
     return stats;
 }
-export function scaleBounds(_region, _deltaFactor) {
-    if (_deltaFactor !== 0) {
-        const delta = Math.max(_region.ne.latitude - _region.sw.latitude, _region.ne.longitude - _region.sw.longitude) * _deltaFactor;
-        _region.sw.latitude -= delta;
-        _region.sw.longitude -= delta;
-        _region.ne.latitude += delta;
-        _region.ne.longitude += delta;
-    }
-    return _region;
-}
-export function getAroundData(bounds) {
-    const center = getCenter([bounds.sw, bounds.ne]);
-    const distance = Math.max(
-        getDistance(
-            {
-                latitude: bounds.sw.latitude,
-                longitude: bounds.sw.longitude
-            },
-            center
-        ),
-        getDistance(
-            {
-                latitude: bounds.ne.latitude,
-                longitude: bounds.ne.longitude
-            },
-            center
-        )
-    );
-    return {
-        centerCoordinate: center,
-        radius: distance
-    };
-}
+// export function scaleBounds(_region, _deltaFactor) {
+//     if (_deltaFactor !== 0) {
+//         const delta = Math.max(_region.ne.latitude - _region.sw.latitude, _region.ne.longitude - _region.sw.longitude) * _deltaFactor;
+//         _region.sw.latitude -= delta;
+//         _region.sw.longitude -= delta;
+//         _region.ne.latitude += delta;
+//         _region.ne.longitude += delta;
+//     }
+//     return _region;
+// }
+// export function getAroundData(bounds) {
+//     const center = getCenter([bounds.sw, bounds.ne]);
+//     const distance = Math.max(
+//         getDistance(
+//             {
+//                 latitude: bounds.sw.latitude,
+//                 longitude: bounds.sw.longitude
+//             },
+//             center
+//         ),
+//         getDistance(
+//             {
+//                 latitude: bounds.ne.latitude,
+//                 longitude: bounds.ne.longitude
+//             },
+//             center
+//         )
+//     );
+//     return {
+//         centerCoordinate: center,
+//         radius: distance
+//     };
+// }
 export function getBoundsOfDistance(point, distance) {
     const lat = latitude(point);
     const lon = longitude(point);
@@ -494,24 +483,25 @@ export function getBoundsOfDistance(point, distance) {
  * @param        array       array with coords e.g. [{latitude: 51.5143, longitude: 7.4138} {latitude: 123, longitude: 123} ...]
  * @return       bool        true if the coordinate is inside the given polygon
  */
-export function isPointInside(latlng, coords) {
+export function isPointInside(latlng, crds) {
     let ci,
         cj,
         result = false;
     const c = coords(latlng);
-    for (let i = -1, l = coords.length, j = l - 1; ++i < l; j = i) {
-        ci = coords(coords[i]);
-        cj = coords(coords[j]);
+    for (let i = -1, l = crds.length, j = l - 1; ++i < l; j = i) {
+        ci = coords(crds[i]);
+        cj = coords(crds[j]);
 
-        if (
-            ((ci.longitude <= c.longitude && c.longitude < cj.longitude) || (cj.longitude <= c.longitude && c.longitude < ci.longitude)) &&
-            c.latitude < ((cj.latitude - ci.latitude) * (c.longitude - ci.longitude)) / (cj.longitude - ci.longitude) + ci.latitude
-        ) {
+        if (((ci.lon <= c.lon && c.lon < cj.lon) || (cj.lon <= c.lon && c.lon < ci.lon)) && c.lat < ((cj.lat - ci.lat) * (c.lon - ci.lon)) / (cj.lon - ci.lon) + ci.lat) {
             result = !result;
         }
     }
 
     return result;
+}
+export function isPointInsideBounds(latlng, mapBounds) {
+    const c = coords(latlng);
+    return c.lat >= mapBounds.southwest.lat && c.lat <= mapBounds.northeast.lat && c.lon >= mapBounds.southwest.lon && c.lon <= mapBounds.northeast.lon;
 }
 
 /**
@@ -611,10 +601,10 @@ export function withinRadius(latlng, center, radius) {
  */
 export function getRhumbLineBearing(originLL, destLL) {
     // difference of longitude coords
-    let diffLon = longitude(destLL).toRad() - longitude(originLL).toRad();
+    let diffLon = getLon(destLL).toRad() - getLon(originLL).toRad();
 
     // difference latitude coords phi
-    const diffPhi = Math.log(Math.tan(latitude(destLL).toRad() / 2 + PI_DIV4) / Math.tan(latitude(originLL).toRad() / 2 + PI_DIV4));
+    const diffPhi = Math.log(Math.tan(getLat(destLL).toRad() / 2 + PI_DIV4) / Math.tan(getLat(originLL).toRad() / 2 + PI_DIV4));
 
     // recalculate diffLon if it is greater than pi
     if (Math.abs(diffLon) > Math.PI) {
@@ -637,10 +627,10 @@ export function getRhumbLineBearing(originLL, destLL) {
  * @return       integer     calculated bearing
  */
 export function getBearing(originLL, destLL) {
-    const da = latitude(destLL),
-        dl = longitude(destLL),
-        al = latitude(originLL),
-        ol = longitude(originLL);
+    const da = getLat(destLL),
+        dl = getLon(destLL),
+        al = getLat(originLL),
+        ol = getLon(originLL);
 
     const bearing =
         (Math.atan2(
@@ -829,25 +819,25 @@ export function getMppAtZoom(_zoom, pos) {
  * @param        mixed       array or object with coords [{latitude: 51.5143, longitude: 7.4138} {latitude: 123, longitude: 123} ...]
  * @return       array       ordered array
  */
-export function orderByDistance(latlng, coords) {
-    const coordsArray = [];
+// export function orderByDistance(latlng, coords) {
+//     const coordsArray = [];
 
-    for (const coord in coords) {
-        const c = coords(coords[coord]);
-        const d = getDistance(latlng, c);
+//     for (const coord in coords) {
+//         const c = coords(coords[coord]);
+//         const d = getDistance(latlng, c);
 
-        coordsArray.push({
-            key: coord,
-            latitude: latitude(coords[coord]),
-            longitude: longitude(coords[coord]),
-            distance: d
-        });
-    }
+//         coordsArray.push({
+//             key: coord,
+//             latitude: latitude(coords[coord]),
+//             longitude: longitude(coords[coord]),
+//             distance: d
+//         });
+//     }
 
-    return coordsArray.sort(function (a, b) {
-        return a.distance - b.distance;
-    });
-}
+//     return coordsArray.sort(function (a, b) {
+//         return a.distance - b.distance;
+//     });
+// }
 
 /**
  * Finds the nearest coordinate to a reference coordinate
@@ -856,17 +846,17 @@ export function orderByDistance(latlng, coords) {
  * @param        mixed       array or object with coords [{latitude: 51.5143, longitude: 7.4138} {latitude: 123, longitude: 123} ...]
  * @return       array       ordered array
  */
-export function findNearest(latlng, coords, offset, limit) {
-    offset = offset || 0;
-    limit = limit || 1;
-    const ordered = orderByDistance(latlng, coords);
+// export function findNearest(latlng, coords, offset, limit) {
+//     offset = offset || 0;
+//     limit = limit || 1;
+//     const ordered = orderByDistance(latlng, coords);
 
-    if (limit === 1) {
-        return ordered[offset];
-    } else {
-        return ordered.splice(offset, limit);
-    }
-}
+//     if (limit === 1) {
+//         return ordered[offset];
+//     } else {
+//         return ordered.splice(offset, limit);
+//     }
+// }
 
 /**
  * Calculates the length of a given path
@@ -954,35 +944,35 @@ export function getMetersPerPixel(_pos, _zoom) {
 //     _unit = _unit || (metrics ? 'm' : 'ft');
 //     return (_altitude * measures[_unit]).toFixed() + ' ' + _unit;
 // }
-function latLng(_obj, _format) {
-    const c = coords(_obj);
-    const result = {
-        latitude: c.latitude,
-        longitude: c.latitude,
-        altitude: c.altitude ? altitude(c.altitude) : undefined
-    };
-    switch (_format) {
-        case 2:
-            result.latitude = c.latitude.toFixed(4) + '° N';
-            result.longitude = c.longitude.toFixed(4) + '° E';
-            break;
-        // case 1:
-        //     result.latitude = decimal2sexagesimal(c.latitude);
-        //     result.longitude = decimal2sexagesimal(c.longitude);
-        //     break;
-        default:
-        case 0:
-            result.latitude = c.latitude.toFixed(6);
-            result.longitude = c.longitude.toFixed(6);
-            break;
-    }
-    return result;
-}
-export function latLngString(_obj, _format, _join?) {
-    const result = latLng(_obj, _format);
+// function latLng(_obj, _format) {
+//     const c = coords(_obj);
+//     const result = {
+//         lat: c.lat,
+//         lon: c.lon,
+//         altitude: c.altitude ? altitude(c.altitude) : undefined
+//     };
+//     switch (_format) {
+//         case 2:
+//             result.lat = c.lat.toFixed(4) + '° N';
+//             result.lon = c.lon.toFixed(4) + '° E';
+//             break;
+//         // case 1:
+//         //     result.latitude = decimal2sexagesimal(c.latitude);
+//         //     result.longitude = decimal2sexagesimal(c.longitude);
+//         //     break;
+//         default:
+//         case 0:
+//             result.lat = c.lat.toFixed(6);
+//             result.lon = c.lon.toFixed(6);
+//             break;
+//     }
+//     return result;
+// }
+// export function latLngString(_obj, _format, _join?) {
+//     const result = latLng(_obj, _format);
 
-    return result.latitude + (_join || ' ') + result.longitude;
-}
+//     return result.lat + (_join || ' ') + result.lon;
+// }
 // export function distanceStr(_distance, _unit?, _factor?) {
 //     // input in meters!
 //     _unit = _unit || (metrics ? 'm' : 'ft');
@@ -1211,10 +1201,10 @@ export function getBoundsAndDistance(theCoords) {
             distance += getDistanceSimple(coord, last);
         }
         last = coord;
-        bounds.maxLat = Math.max(coord['latitude'], bounds.maxLat);
-        bounds.minLat = Math.min(coord['latitude'], bounds.minLat);
-        bounds.maxLng = Math.max(coord['longitude'], bounds.maxLng);
-        bounds.minLng = Math.min(coord['longitude'], bounds.minLng);
+        bounds.maxLat = Math.max(coord.lat, bounds.maxLat);
+        bounds.minLat = Math.min(coord.lat, bounds.minLat);
+        bounds.maxLng = Math.max(coord.lon, bounds.maxLng);
+        bounds.minLng = Math.min(coord.lon, bounds.minLng);
     }
     if (bounds.maxLat === bounds.minLat) {
         bounds.maxLat += 0.002;
