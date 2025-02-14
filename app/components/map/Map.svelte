@@ -2244,6 +2244,7 @@
                     style="z-index:1000;"
                     defaultElevation={0}
                     isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
+                    item={$selectedItem}
                     margin={10}
                     verticalAlignment="top"
                     android:marginTop={windowInsetTop + 10} />

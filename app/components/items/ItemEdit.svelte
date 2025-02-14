@@ -7,7 +7,7 @@
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { Color, File, ObservableArray, Utils, View } from '@nativescript/core';
-    import type { Point as GeoJSONPoint, Point } from 'geojson';
+    import type { Point as GeoJSONPoint } from 'geojson';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { GeoLocation } from '~/handlers/GeoHandler';
@@ -262,7 +262,7 @@
     async function featchAddress(listItem, event) {
         try {
             const SearchModal = (await import('~/components/search/SearchModal.svelte')).default;
-            const geometry = item.geometry as Point;
+            const geometry = item.geometry as GeoJSONPoint;
             const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0], altitude: geometry.coordinates[2] } as GeoLocation;
             // const result: any = await showModal({ page: Settings, fullscreen: true, props: { position } });
             const anchorView = event.object as View;
