@@ -62,6 +62,9 @@
         canvas?.nativeView?.redraw();
     }
     function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
+        if (!text) {
+            return;
+        }
         const theFontFamily = fontFamily || $fonts.mdi;
         let iconPaint = iconPaints[theFontFamily];
         if (!iconPaint) {

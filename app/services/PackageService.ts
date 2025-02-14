@@ -1,6 +1,6 @@
 import { getFromLocation } from '@nativescript-community/geocoding';
 import Observable from '@nativescript-community/observable';
-import { GenericMapPos, IntVector, MapPos, MapPosVector, fromNativeMapPos, nativeVectorToArray } from '@nativescript-community/ui-carto/core';
+import { GenericMapPos, IntVector, MapBounds, MapPos, MapPosVector, fromNativeMapPos, nativeVectorToArray } from '@nativescript-community/ui-carto/core';
 import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
 import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
 import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
@@ -43,6 +43,7 @@ import {
     SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN
 } from '~/utils/constants';
 import { fullLangStore } from '~/helpers/locale';
+import { isPointInsideBounds } from '~/helpers/geolib';
 
 export type PackageType = 'geo' | 'routing' | 'map';
 
@@ -206,7 +207,7 @@ class PackageService extends Observable {
         return items;
     }
 
-    convertFeatureCollection(features: VectorTileFeatureCollection, options: SearchRequest) {
+    convertFeatureCollection(features: VectorTileFeatureCollection, options: SearchRequest & { bounds?: MapBounds }) {
         const projection = this.vectorTileSearchService.options.layer.dataSource.getProjection();
         let feature: VectorTileFeature;
         const count = features.getFeatureCount();
@@ -217,6 +218,9 @@ class PackageService extends Observable {
                 continue;
             }
             const position = projection.toWgs84(feature.geometry.getCenterPos());
+            if (options.bounds && !isPointInsideBounds(position, options.bounds)) {
+                continue;
+            }
             // if (result.findIndex((i) => i.geometry.coordinates[0] === position.lon && i.geometry.coordinates[1] === position.lat) >= 0) {
             //     continue;
             // }
@@ -449,6 +453,7 @@ class PackageService extends Observable {
                 toRestoreSettings[s] = service[s];
                 service[s] = options[s];
             });
+        DEV_LOG && console.log('searchInVectorTiles', service.minZoom, service.maxZoom, JSON.stringify(toRestoreSettings));
         const result = await new Promise<VectorTileFeatureCollection<LatLonKeys>>((resolve) => service.findFeatures(options, resolve));
         Object.keys(toRestoreSettings).forEach((s) => {
             service[s] = toRestoreSettings[s];
@@ -741,7 +746,7 @@ class PackageService extends Observable {
         if (!item._nativeGeometry) {
             item._nativeGeometry = geometry.getNative?.() || geometry;
         }
-        return item._nativeGeometry as Geometry;
+        return item._nativeGeometry as Geometry<LatLonKeys>;
     }
 
     getRouteItemPoses(item: Item) {
