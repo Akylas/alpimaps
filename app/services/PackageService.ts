@@ -207,7 +207,7 @@ class PackageService extends Observable {
         return items;
     }
 
-    convertFeatureCollection(features: VectorTileFeatureCollection, options: SearchRequest & { bounds?: MapBounds }) {
+    convertFeatureCollection(features: VectorTileFeatureCollection, options: SearchRequest & { bounds?: IMapBounds }) {
         const projection = this.vectorTileSearchService.options.layer.dataSource.getProjection();
         let feature: VectorTileFeature;
         const count = features.getFeatureCount();
