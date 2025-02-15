@@ -59,7 +59,7 @@
     }
 
     interface SearchItem extends Item {
-        geometry: Point;
+        geometry: GeoJSONPoint;
         distance: number;
     }
 
@@ -116,7 +116,7 @@
             'distance'
         ) as GeoResult[];
     }
-    async function searchInVectorTiles(enabled: boolean, options: SearchRequest & VectorTileSearchServiceOptions & { bounds?: MapBounds }) {
+    async function searchInVectorTiles(enabled: boolean, options: SearchRequest & VectorTileSearchServiceOptions & { bounds?: IMapBounds }) {
         if (!enabled) {
             return [];
         }

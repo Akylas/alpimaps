@@ -67,6 +67,12 @@ declare const TEST_ZIP_STYLES: boolean;
 declare const PLAY_STORE_BUILD: boolean;
 // declare const process: { env: any };
 
+
+interface IMapBounds<T = DefaultLatLonKeys> {
+    northeast: GenericMapPos<T>;
+    southwest: GenericMapPos<T>;
+}
+
 interface LatLonKeys {
     lat: number;
     lon: number;
