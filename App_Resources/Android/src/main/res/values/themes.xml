@@ -4,28 +4,31 @@
     <style name="LaunchScreenThemeBase" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorSurface">@color/md_theme_primary</item>
         <item name="android:windowBackground">@drawable/splash_screen</item>
-        <item name="android:windowActionBarOverlay">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
+        <item name="android:fitsSystemWindows">false</item>
+        <item name="android:enforceStatusBarContrast">false</item>
     </style>
     <style name="LaunchScreenTheme" parent="LaunchScreenThemeBase"></style>
 
     <style name="AppThemeBase" parent="Theme.Material3.DayNight">
-        <item name="windowActionBar">false</item>
+    </style>
+
+    <style name="AppTheme" parent="AppThemeBase">
+            <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="switchPreferenceCompatStyle">
             @style/Preference.SwitchPreferenceCompat.Material3
         </item>
 
         <item name="bottomSheetDialogTheme">@style/ThemeOverlay.App.BottomSheetDialog</item>
-        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentStatus">false</item>
         <!-- <item name="android:navigationBarColor">@color/md_theme_background</item>
         <item name="android:windowLightNavigationBar">true</item> -->
-        <item name="android:windowActionBarOverlay">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
-    </style>
-
-    <style name="AppTheme" parent="AppThemeBase">
+        <item name="android:windowActionBarOverlay">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
         <item name="colorPrimary">@color/md_theme_primary</item>
         <item name="colorOnPrimary">@color/md_theme_onPrimary</item>
         <item name="colorPrimaryContainer">@color/md_theme_primaryContainer</item>
@@ -57,9 +60,9 @@
         <!-- <item name="bottomSheetDialogTheme">@style/ThemeOverlay.App.BottomSheetDialogEInk</item> -->
     </style>
     <style name="AppTheme.EInk" parent="AppTheme">
-        <item name="android:windowTranslucentStatus">false</item>
+        <!-- <item name="android:windowTranslucentStatus">false</item>
         <item name="android:windowActionBarOverlay">false</item>
-        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:windowTranslucentNavigation">false</item> -->
         <item name="android:navigationBarColor">@color/md_theme_eink_background</item>
         <item name="android:windowLightNavigationBar">true</item>
         <item name="android:windowLightStatusBar">true</item>

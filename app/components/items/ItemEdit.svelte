@@ -398,7 +398,7 @@
     }
 </script>
 
-<page actionBarHidden={true}>
+<page actionBarHidden={true} statusBarColor={colorPrimary} statusBarStyle="dark">
     <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*,auto,2.5*,auto" android:paddingBottom={$windowInset.bottom}>
         <CActionBar canGoBack title={lc('edit')}>
             <IconButton color={colorOnPrimary} isEnabled={canSave} text="mdi-content-save-outline" on:tap={(e) => updateItem()} />
