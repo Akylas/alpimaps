@@ -161,7 +161,7 @@ LEFT JOIN  (
                     await itemsModule.groupsRepository.create({ id: Date.now() + '', name: 'none', onMap: 1, collapse: 0 });
                     groups['none'] = { name: 'none', onMap: 1, id: 'none', collapse: 0 };
                 }
-                DEV_LOG && console.log('groups', JSON.stringify(groups));
+                // DEV_LOG && console.log('groups', JSON.stringify(groups));
                 groupedItems = groupByArray<Item>(sqlItems, (i) => i.groups);
                 // DEV_LOG && console.log('groupedItems', JSON.stringify(groupedItems));
                 const groupsCount = Object.keys(groupedItems).length;

@@ -49,7 +49,7 @@
     let updatedProperties = {};
     let canSave = false;
     $: canSave = Object.keys(updatedProperties).length > 0;
-    $: DEV_LOG && console.log('itemColor', itemColor);
+    // $: DEV_LOG && console.log('itemColor', itemColor);
     const mapContext = getMapContext();
     function blurTextField(event) {
         Utils.dismissSoftInput(event?.object.nativeViewProtected);
