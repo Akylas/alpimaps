@@ -302,7 +302,7 @@
             text="mdi-directions"
             visibility={selectedItemHasPosition ? 'visible' : 'hidden'}
             on:tap={startDirections} />
-        <mdcardview id="location" class={` ${locationButtonClass} floating-btn`} shape="medium" on:tap={askUserLocation} on:longPress={onWatchLocation}>
+        <mdcardview id="location" class={` ${locationButtonClass} floating-btn`} on:tap={askUserLocation} on:longPress={onWatchLocation}>
             <label
                 class={`mdi ${locationButtonLabelClass}`}
                 color={$watchingLocation && !$queryingLocation ? colorOnPrimary : colorPrimary}
