@@ -63,7 +63,8 @@
     @extend %alpimaps;
 }
 
-mdtextfield[variant=outline], mdtextfield[variant=fill] {
+mdtextfield[variant=outline],
+mdtextfield[variant=fill] {
     color: var(--colorOnSurface);
     stroke-color: var(--colorOutline);
     placeholder-color: var(--colorOutline);
@@ -73,6 +74,7 @@ mdtextfield[variant=outline], mdtextfield[variant=fill] {
 
 .directionsPanel {
     background-color: var(--colorPrimary);
+
     .ns-eink & {
         background-color: white;
         border-bottom-width: 1;
@@ -91,10 +93,28 @@ frame {
     background-color: var(--colorBackground);
 }
 
+// page {
+//     status-bar-style: dark;
+//     background-color: var(--colorBackground);
+//     status-bar-color: var(--colorBackground);
+
+//     .ns-eink & {
+//         status-bar-style: light;
+//     }
+// }
+
+
 page {
-    status-bar-style: dark;
+    status-bar-style: light;
     background-color: var(--colorBackground);
     status-bar-color: var(--colorBackground);
+
+    .ns-dark &,
+    &.ns-dark,
+    .ns-black &,
+    &.ns-black {
+        status-bar-style: dark;
+    }
 
     .ns-eink & {
         status-bar-style: light;
@@ -123,6 +143,7 @@ label {
     background-color: var(--colorPrimary);
     color: var(--colorOnPrimary);
     ripple-color: var(--colorOnPrimary);
+
     .ns-eink & {
         color: white;
         background-color: black;
@@ -133,6 +154,7 @@ label {
     background-color: var(--colorBackground);
     color: var(--colorPrimary);
     ripple-color: var(--colorPrimary);
+
     .ns-eink & {
         background-color: white;
         color: black;
@@ -183,19 +205,20 @@ label {
     margin: 8;
     width: 54;
     height: 54;
-    
+
     .ns-eink & {
         elevation: 0;
         border-color: black;
         border-width: 1;
     }
 }
+
 .floating-btn-themed {
     @extend .floating-btn;
     background-color: var(--colorPrimaryContainer);
     ripple-color: var(--colorPrimaryContainer);
     color: var(--colorOnPrimaryContainer);
-    
+
     .ns-eink & {
         elevation: 0;
         border-color: black;
@@ -227,7 +250,7 @@ label {
     background-color: var(--colorPrimaryContainer);
     ripple-color: var(--colorPrimaryContainer);
     color: var(--colorOnPrimaryContainer);
-    
+
     .ns-eink & {
         elevation: 0;
         border-color: black;
@@ -235,15 +258,18 @@ label {
     }
 
 }
+
 .section-title {
     font-size: 10;
 }
 
 .actionBar {
     background-color: var(--colorPrimary);
+
     &:transparent {
         background-color: transparent;
     }
+
     .ns-eink & {
         background-color: white;
     }
@@ -261,6 +287,7 @@ label {
     &:transparent {
         color: var(--colorOnSurface);
     }
+
     .ns-eink & {
         color: var(--colorOnSurface);
     }
@@ -271,9 +298,11 @@ label {
     font-weight: 500;
 
     color: var(--colorOnPrimary);
+
     &:transparent {
         color: var(--colorOnSurface);
     }
+
     .ns-eink & {
         color: var(--colorOnSurface);
     }
@@ -286,6 +315,7 @@ label {
     &:transparent {
         color: var(--colorOnSurface);
     }
+
     .ns-eink & {
         color: var(--colorOnSurface);
     }
