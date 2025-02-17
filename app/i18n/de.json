@@ -719,5 +719,11 @@
         "smalltip_desc": "Alles, was für Nachtarbeit hilft!"
     },
     "tile_server_port": "Server-Schnittstelle für Kacheln",
-    "copied_to_clipboard": "In den Zwischenspeicher kopiert: %1$s"
+    "copied_to_clipboard": "In den Zwischenspeicher kopiert: %1$s",
+    "threed_map": "3D-Karte",
+    "export_geoson": "GeoJSON exportieren",
+    "saved": "gespeichert: %1$s",
+    "export_gpx": "GPX exportieren",
+    "share_gpx": "GPX teilen",
+    "share_geoson": "GeoJSON teilen"
 }
