@@ -670,5 +670,20 @@
     "dowload_area_minzoom": "minimální přiblížení pro stažení dlaždic",
     "elevator": "výtah",
     "americanaosm_presentation_detailed": "AlpiMaps používá %1$s jako výchozí vektorový zdroj dat. Původně AlpiMaps poskytoval zdarma instanci pro všechny, aby ji mohli sdílet. Rychle jsem ale překročil limit, takže jsem ji musel zavřít.\nNyní místo toho sdílím, jak si vytvořit vlastní bezplatnou instanci a použít ji v aplikaci. Přečtěte si %2$s pro instrukce. Pokud už jste to udělali, můžete nastavit URL zde. Dokud to neuděláte, budou jako výchozí zdroj použity rastrové dlaždice OpenStreetMap",
-    "reset_settings": "resetovat nastavení"
+    "reset_settings": "resetovat nastavení",
+    "token_key": "API token: %s",
+    "tower_defensive": "bašta",
+    "tower_observation": "rozhledna",
+    "tower_dome": "kupolová věž",
+    "trade": "obchod",
+    "slipway": "skluz",
+    "storage_tank": "skladovací nádrž",
+    "tile_filter_mode": "Režim Filtrování Dlaždic",
+    "tower_lighting": "hromosvodová věž",
+    "tower_lattice_lighting": "hromosvodová věž",
+    "tower_lattice_communication": "komunikační věž",
+    "use_hills": "povolit použití kopců",
+    "vehicle_inspection": "kontrola vozidla",
+    "waytypes": "typy cest",
+    "wilderness_hut": "chata v divočině"
 }
