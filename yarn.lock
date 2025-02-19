@@ -2739,6 +2739,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nativescript/android@npm:8.9.0-napi-quickjs.6":
+  version: 8.9.0-napi-quickjs.6
+  resolution: "@nativescript/android@npm:8.9.0-napi-quickjs.6"
+  checksum: 10/25970b8bba96dd77a550e36e03a07400fd34f4faf26da1ceebe1aa6cd533af44166db3736a77738314d62a89a01ac618d0382b29b58092c828ceb98139deede0
+  languageName: node
+  linkType: hard
+
 "@nativescript/appavailability@npm:2.0.0":
   version: 2.0.0
   resolution: "@nativescript/appavailability@npm:2.0.0"
@@ -14059,6 +14066,7 @@ __metadata:
     "@nativescript-community/ui-webview-rtc": "npm:1.5.2"
     "@nativescript-community/universal-links": "npm:3.0.1"
     "@nativescript-use/nativescript-clipboard": "npm:^0.0.3"
+    "@nativescript/android": "npm:8.9.0-napi-quickjs.6"
     "@nativescript/appavailability": "npm:2.0.0"
     "@nativescript/core": "npm:8.8.6"
     "@nativescript/email": "npm:^2.1.0"
