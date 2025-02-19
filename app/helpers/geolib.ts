@@ -74,15 +74,15 @@ export const measures = {
 
 export function getValue(point, index, possibleValues) {
     let result;
-    if (typeof point === 'object') {
+    if (Array.isArray(point)) {
+        result = point[index];
+    } else if (typeof point === 'object') {
         for (let index = 0; index < possibleValues.length; index++) {
             const value = point[possibleValues[index]];
             if (value !== undefined) {
                 return value;
             }
         }
-    } else if (Array.isArray(point)) {
-        result = point[index];
     } else {
         result = parseFloat(point);
     }
@@ -170,7 +170,6 @@ export function coords(point) {
  */
 export function getDistance(start, end, accuracy?) {
     accuracy = Math.floor(accuracy) || 1;
-
     const s = coords(start);
     const e = coords(end);
 
