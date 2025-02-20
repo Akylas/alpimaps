@@ -492,7 +492,7 @@
             showMapResultsPager,
             saveItem,
             setBottomSheetStepIndex: (index: number) => {
-                DEV_LOG && console.log('setBottomSheetStepIndex', bottomSheetStepIndex, steps);
+                // DEV_LOG && console.log('setBottomSheetStepIndex', bottomSheetStepIndex, JSON.stringify(steps));
                 bottomSheetStepIndex = index;
             },
             showMapMenu,
@@ -803,7 +803,7 @@
             didIgnoreAlreadySelected = false;
             if (isFeatureInteresting) {
                 const isCurrentItem = item === $selectedItem;
-                TEST_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons, Date.now());
+                // TEST_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons, Date.now());
                 if (setSelected && isCurrentItem && !item) {
                     unselectItem(false);
                 }
