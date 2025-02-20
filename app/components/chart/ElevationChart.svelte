@@ -185,7 +185,7 @@
                         text: 'mdi-triangle-outline'
                     },
                     {
-                        text: highlight.entry.a.toFixed() + 'm' + '  '
+                        text: (highlight.entry.a || 0).toFixed() + 'm' + '  '
                     },
                     {
                         fontFamily: $fonts.app,
@@ -193,7 +193,7 @@
                         text: 'alpimaps-angle'
                     },
                     {
-                        text: '~' + highlight.entry.g.toFixed() + '%'
+                        text: '~' + (highlight.entry.g || 0).toFixed() + '%'
                     }
                 ];
                 if (!isNaN(remainingTime)) {
