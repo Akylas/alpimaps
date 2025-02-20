@@ -698,6 +698,7 @@
     "use_system_geocoding_address": "use system geocoding database if available to find locations addresses",
     "use_tolls": "should use tolls",
     "use_tracks": "should use tracks",
+    "valhalla_online_url": "Valhalla server URL",
     "variety_store": "variety store",
     "vehicle_inspection": "vehicle inspection",
     "version": "version",
