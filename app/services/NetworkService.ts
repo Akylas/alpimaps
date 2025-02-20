@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import { HTTPError, TimeoutError } from '@shared/utils/error';
 import { createGlobalEventListener, globalObservable } from '@shared/utils/svelte/ui';
 import { getDataFolder } from '~/utils/utils';
+import { DEFAULT_VALHALLA_ONLINE_URL, SETTINGS_VALHALLA_ONLINE_URL } from '~/utils/constants';
 
 export const onNetworkChanged = createGlobalEventListener('network');
 
@@ -540,41 +541,37 @@ export class NetworkService extends Observable {
     }
 
     async getValhallaElevationProfile(points: [number, number][]) {
+        const serviceUrl = ApplicationSettings.getString(SETTINGS_VALHALLA_ONLINE_URL, DEFAULT_VALHALLA_ONLINE_URL);
         return this.request({
-            url: 'https://valhalla1.openstreetmap.de/height',
-            queryParams: {
-                json: {
-                    range: true,
-                    encoded_polyline: compress(points, 6)
-                }
+            url: `${serviceUrl}/height`,
+            body: {
+                range: true,
+                encoded_polyline: compress(points, 6)
             },
             headers: {
                 'User-Agent': 'AlpiMaps',
                 'Cache-Control': getCacheControl(maxAgeMonth, maxAgeMonth - 1)
             },
-            // silent:_params.silent,
-            method: 'GET',
+            method: 'POST',
             timeout: 60000
         });
     }
 
     async getValhallaTraceAttributes(points: [number, number][], options = {}) {
+        const serviceUrl = ApplicationSettings.getString(SETTINGS_VALHALLA_ONLINE_URL, DEFAULT_VALHALLA_ONLINE_URL);
         return this.request({
-            url: 'https://valhalla1.openstreetmap.de/trace_attributes',
-            queryParams: {
-                json: {
-                    range: true,
-                    encoded_polyline: compress(points, 6),
-                    costing: 'pedestrian',
-                    ...options
-                }
+            url: `${serviceUrl}/trace_attributes`,
+            body: {
+                range: true,
+                encoded_polyline: compress(points, 6),
+                costing: 'pedestrian',
+                ...options
             },
             headers: {
                 'User-Agent': 'AlpiMaps',
                 'Cache-Control': getCacheControl(maxAgeMonth, maxAgeMonth - 1)
             },
-            // silent:_params.silent,
-            method: 'GET',
+            method: 'POST',
             timeout: 60000
         });
     }
