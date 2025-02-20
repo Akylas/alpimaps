@@ -16,9 +16,11 @@ export const SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE = 'service_limits.bicycle.ma
 export const SETTINGS_VALHALLA_MAX_DISTANCE_AUTO = 'service_limits.auto.max_distance';
 export const SETTINGS_TILE_SERVER_AUTO_START = 'tile.server.auto.start';
 export const SETTINGS_TILE_SERVER_PORT = 'tile.server.port';
+export const SETTINGS_VALHALLA_ONLINE_URL = 'online_valhalla_url';
 
 export const DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN = 250000;
 export const DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE = 500000;
 export const DEFAULT_VALHALLA_MAX_DISTANCE_AUTO = 5000000;
 export const DEFAULT_TILE_SERVER_AUTO_START = false;
 export const DEFAULT_TILE_SERVER_PORT = 8081;
+export const DEFAULT_VALHALLA_ONLINE_URL = 'https://valhalla1.openstreetmap.de';

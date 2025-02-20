@@ -32,11 +32,13 @@
         DEFAULT_VALHALLA_MAX_DISTANCE_AUTO,
         DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE,
         DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
+        DEFAULT_VALHALLA_ONLINE_URL,
         SETTINGS_TILE_SERVER_AUTO_START,
         SETTINGS_TILE_SERVER_PORT,
         SETTINGS_VALHALLA_MAX_DISTANCE_AUTO,
         SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE,
-        SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN
+        SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
+        SETTINGS_VALHALLA_ONLINE_URL
     } from '~/utils/constants';
     import { showSnack } from '~/utils/ui';
     import { confirmRestartApp, createView, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui/index.common';
@@ -86,6 +88,21 @@
                         key: 'startDirDest',
                         value: ApplicationSettings.getBoolean('startDirDest', false),
                         title: lc('start_direction_dest')
+                    },
+                    {
+                        id: 'setting',
+                        type: 'prompt',
+                        title: lc('valhalla_online_url'),
+                        description: () => ApplicationSettings.getString(SETTINGS_VALHALLA_ONLINE_URL, DEFAULT_VALHALLA_ONLINE_URL),
+                        currentValue: () => ApplicationSettings.getString(SETTINGS_VALHALLA_ONLINE_URL, DEFAULT_VALHALLA_ONLINE_URL),
+                        onUpdate: (key, value, defaultValue) => packageService.setOnlineRoutingUrl(value),
+                        key: SETTINGS_VALHALLA_ONLINE_URL,
+                        valueType: 'string',
+                        textFieldProperties: {
+                            keyboardType: 'url',
+                            autocapitalizationType: 'none',
+                            autocorrect: false
+                        } as TextFieldProperties
                     }
                 ];
             case 'address':
@@ -111,13 +128,12 @@
                         title: lc('offline_routing_pedestrian_max_distance'),
                         key: SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
                         valueType: 'number',
-                        default: DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
                         textFieldProperties: {
                             keyboardType: 'number',
                             autocapitalizationType: 'none',
                             autocorrect: false
                         } as TextFieldProperties,
-                        onUpdate: (key, defaultValue) => packageService.setValhallaSetting(key, defaultValue),
+                        onUpdate: (key, value, defaultValue) => packageService.setValhallaSetting(key, defaultValue),
                         rightValue: () => ApplicationSettings.getNumber(SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN, DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN)
                     },
                     {
@@ -126,13 +142,12 @@
                         title: lc('offline_routing_bicycle_max_distance'),
                         key: SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE,
                         valueType: 'number',
-                        default: DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE,
                         textFieldProperties: {
                             keyboardType: 'number',
                             autocapitalizationType: 'none',
                             autocorrect: false
                         } as TextFieldProperties,
-                        onUpdate: (key, defaultValue) => packageService.setValhallaSetting(key, defaultValue),
+                        onUpdate: (key, value, defaultValue) => packageService.setValhallaSetting(key, defaultValue),
                         rightValue: () => ApplicationSettings.getNumber(SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE, DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE)
                     },
                     {
@@ -141,13 +156,12 @@
                         title: lc('offline_routing_auto_max_distance'),
                         key: SETTINGS_VALHALLA_MAX_DISTANCE_AUTO,
                         valueType: 'number',
-                        default: DEFAULT_VALHALLA_MAX_DISTANCE_AUTO,
                         textFieldProperties: {
                             keyboardType: 'number',
                             autocapitalizationType: 'none',
                             autocorrect: false
                         } as TextFieldProperties,
-                        onUpdate: (key, defaultValue) => packageService.setValhallaSetting(key, defaultValue),
+                        onUpdate: (key, value, defaultValue) => packageService.setValhallaSetting(key, defaultValue),
                         rightValue: () => ApplicationSettings.getNumber(SETTINGS_VALHALLA_MAX_DISTANCE_AUTO, DEFAULT_VALHALLA_MAX_DISTANCE_AUTO)
                     }
                 ];
@@ -479,7 +493,7 @@
         }
     }
     function updateItem(item, key = 'key') {
-        item.onUpdate?.(item[key], item.default);
+        item.onUpdate?.(key, item[key], item.default);
         const index = items.findIndex((it) => it[key] === item[key]);
         if (index !== -1) {
             items.setItem(index, item);
@@ -765,7 +779,7 @@
                             cancelButtonText: l('cancel'),
                             autoFocus: true,
                             textFieldProperties: item.textFieldProperties,
-                            defaultText: ApplicationSettings.getNumber(item.key, item.default) + '',
+                            defaultText: (item.currentValue || item.rightValue)?.() + '',
                             view: item.useHTML
                                 ? createView(
                                       Label,

@@ -38,9 +38,11 @@ import {
     DEFAULT_VALHALLA_MAX_DISTANCE_AUTO,
     DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE,
     DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
+    DEFAULT_VALHALLA_ONLINE_URL,
     SETTINGS_VALHALLA_MAX_DISTANCE_AUTO,
     SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE,
-    SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN
+    SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
+    SETTINGS_VALHALLA_ONLINE_URL
 } from '~/utils/constants';
 import { fullLangStore } from '~/helpers/locale';
 import { isPointInsideBounds } from '~/helpers/geolib';
@@ -791,7 +793,7 @@ class PackageService extends Observable {
                 }
                 DEV_LOG && console.log('getValhallaElevationProfile', positions.length);
                 const webResult = await networkService.getValhallaElevationProfile(positions);
-                DEV_LOG && console.log('getValhallaElevationProfile elevations', Object.keys(webResult), webResult.range_height.length, webResult.range_height);
+                DEV_LOG && console.log('getValhallaElevationProfile elevations', Object.keys(webResult), webResult.range_height.length, JSON.stringify(webResult.range_height));
                 const result = this.computeProfileFromHeights(
                     positions,
                     webResult.range_height.map((e) => e[1])
@@ -916,16 +918,7 @@ class PackageService extends Observable {
                 .sort((a, b) => b.perc - a.perc)
         };
 
-        DEV_LOG &&
-            console.log(
-                'stats',
-                resultStats.waytypes.reduce((prev, current) => prev + current.dist, 0),
-                resultStats.surfaces.reduce((prev, current) => prev + current.perc, 0),
-                resultStats.waytypes.reduce((prev, current) => prev + current.perc, 0),
-                JSON.stringify(resultStats),
-                resultStats.waytypes.map((s) => s.id),
-                resultStats.surfaces.map((s) => s.id)
-            );
+        DEV_LOG && console.log('stats', JSON.stringify(resultStats));
         return resultStats;
     }
     hasOfflineRouting = true;
@@ -959,11 +952,16 @@ class PackageService extends Observable {
         return this.mLocalOfflineRoutingSearchService;
     }
 
+    setOnlineRoutingUrl(url: string) {
+        if (this.mOnlineRoutingSearchService) {
+            this.mOnlineRoutingSearchService.customServiceURL = url + +'/{service}';
+        }
+    }
+
     onlineRoutingSearchService() {
         if (!this.mOnlineRoutingSearchService) {
             this.mOnlineRoutingSearchService = new ValhallaOnlineRoutingService({
-                apiKey: MAPBOX_TOKEN,
-                customServiceURL: 'https://valhalla1.openstreetmap.de/{service}',
+                customServiceURL: ApplicationSettings.getString(SETTINGS_VALHALLA_ONLINE_URL, DEFAULT_VALHALLA_ONLINE_URL) + '/{service}',
                 profile: 'pedestrian'
             });
         }
