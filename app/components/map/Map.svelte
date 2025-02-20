@@ -683,7 +683,10 @@
             if (transitVectorTileLayer) {
                 addLayer(transitVectorTileLayer, 'transit');
             }
+            // setTimeout(() => {
             mapContext.runOnModules('onMapReady', cartoMap);
+
+            // }, 0);
             if (!appUrlRegistered) {
                 appUrlRegistered = true;
                 registerUniversalLinkCallback(onAppUrl);
@@ -1525,7 +1528,10 @@
         const layerIndex = LAYERS_ORDER.indexOf(layerId);
         const startIndex = addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) === layerIndex);
         const endIndex = addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) > layerIndex);
-        return addedLayers.slice(startIndex, endIndex !== -1 ? endIndex : undefined);
+        if (startIndex !== -1) {
+            return addedLayers.slice(startIndex, endIndex !== -1 ? endIndex : undefined);
+        }
+        return [];
     }
     function addLayer(layer: Layer<any, any>, layerId: LayerType, force = false) {
         // console.log('addLayer', layer.constructor.name, layerId);
