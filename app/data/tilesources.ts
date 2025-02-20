@@ -118,7 +118,7 @@ export const data: { [k: string]: Provider } = {
             PlanV2: {
                 urlOptions: {
                     variant: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2'
-                },
+                }
             },
             // Satellite: {
             //     urlOptions: {
@@ -133,8 +133,8 @@ export const data: { [k: string]: Provider } = {
             // },
             Cadastre: {
                 urlOptions: {
-                    variant: "CADASTRALPARCELS.PARCELS",
-                    format: "image/png"
+                    variant: 'CADASTRALPARCELS.PARCELS',
+                    format: 'image/png'
                 }
             },
             // ScanExpress: {
@@ -183,7 +183,7 @@ export const data: { [k: string]: Provider } = {
                     style: 'estompage_grayscale',
                     format: 'image/png'
                 }
-            },
+            }
             // ELEVATION: {
             //     urlOptions: {
             //         variant: 'ELEVATION.SLOPES'
@@ -197,7 +197,7 @@ export const data: { [k: string]: Provider } = {
     },
     AmericanaOSM: {
         tokenKey: 'americanaosm',
-        url: '{americanaosm}/planet/{z}/{x}/{y}.mvt',
+        url: '{americanaosm}',
         attribution: '<a href="https://tile.ourmap.us/">AmericanaOSM</a>',
         sourceOptions: {
             minZoom: 0,
