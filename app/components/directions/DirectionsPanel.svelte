@@ -433,7 +433,7 @@
 
     function addInternalStopPoint(position: MapPos<LatLonKeys>, metaData?) {
         const lastPoint = waypoints.getItem(waypoints.length - 1);
-        DEV_LOG && console.log('addInternalStopPoint', position, lastPoint?.properties);
+        // DEV_LOG && console.log('addInternalStopPoint', position, lastPoint?.properties);
         if (lastPoint.geometry.coordinates[0] === position.lon && lastPoint.geometry.coordinates[1] === position.lat) {
             return;
         }
