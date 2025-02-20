@@ -455,10 +455,14 @@ export default class CustomLayersModule extends MapModule {
                     showSnack({ message: lc('missing_api_token') });
                     return;
                 }
+                let toReplace = this.tokenKeys[tok];
+                if (tok === 'americanaosm' && toReplace.indexOf('{x}') === -1) {
+                    toReplace = toReplace + '/planet/{z}/{x}/{y}.mvt';
+                }
                 if (Array.isArray(url)) {
-                    url = url.map((u) => u.replace(`{${tok}}`, this.tokenKeys[tok]));
+                    url = url.map((u) => u.replace(`{${tok}}`, toReplace));
                 } else {
-                    url = url.replace(`{${tok}}`, this.tokenKeys[tok]);
+                    url = url.replace(`{${tok}}`, toReplace);
                 }
             });
         }
