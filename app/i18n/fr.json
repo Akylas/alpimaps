@@ -722,5 +722,11 @@
     "tile_server_port": "port du serveur de tuiles",
     "copied_to_clipboard": "copié dans le presse-papiers : %1$s",
     "missing_location_permission": "autorisation de localisation manquante",
-    "threed_map": "Carte 3D"
+    "threed_map": "Carte 3D",
+    "share_gpx": "partager GPX",
+    "share_geoson": "partager GeoJSON",
+    "valhalla_online_url": "URL du serveur Valhalla",
+    "export_geoson": "exporter GeoJSON",
+    "export_gpx": "exporter GPX",
+    "saved": "enregistré : %1$s"
 }

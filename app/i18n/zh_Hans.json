@@ -710,5 +710,10 @@
         "bigtip": "非常好的赞助"
     },
     "threed_map": "3D地图",
-    "copied_to_clipboard": "已复制到剪切板"
+    "copied_to_clipboard": "已复制到剪切板",
+    "missing_location_permission": "没有位置权限",
+    "export_geoson": "导出 GeoJSON",
+    "export_gpx": "导出 GPX",
+    "share_geoson": "分享 GeoJSON",
+    "share_gpx": "分享 GPX"
 }
