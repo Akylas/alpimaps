@@ -314,7 +314,7 @@
                 {
                     onVectorTileClicked(info: VectorTileEventData<LatLonKeys>) {
                         const feature = features.find((f) => f.properties.id === info.featureData.id);
-                        if (feature && feature.geometry.type === 'Point') {
+                        if (feature) {
                             mapContext.selectItem({ item: feature as any, isFeatureInteresting: true });
                             return true;
                         }

@@ -1013,13 +1013,13 @@
             const bounds = geometry?.getBounds();
             const projection = new EPSG3857();
             cartoMap.moveToFitBounds(new MapBounds(projection.toWgs84(bounds.getMin()), projection.toWgs84(bounds.getMax())), screenBounds, true, true, false, 200);
-        } else {
+        } else if (item.geometry.type === 'Point') {
             if (zoom) {
                 cartoMap.setZoom(zoom, duration);
             } else if (minZoom) {
                 cartoMap.setZoom(Math.max(minZoom, cartoMap.zoom), duration);
             }
-            const geometry = item.geometry as GeoJSONPoint;
+            const geometry = item.geometry;
             const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
             cartoMap.setFocusPos(position, duration);
         }
