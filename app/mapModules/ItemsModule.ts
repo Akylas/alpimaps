@@ -643,7 +643,10 @@ export default class ItemsModule extends MapModule {
             if (itemIsRoute && item.profile) {
                 // we add elevation to coordinates
                 (item.geometry as LineString).coordinates.forEach((c, index) => {
-                    c.push(item.profile.data[index].a);
+                    const d = item.profile.data[index];
+                    if (c.length === 2) {
+                        c.push(d.a);
+                    }
                 });
             }
             DEV_LOG && console.log('shareItemsAsGeoJSON', JSON.stringify(toShare));
