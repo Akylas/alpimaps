@@ -1,0 +1,13 @@
+Features:
+- new design for "show search results on map". It comes with more details and features
+- you can now search "around" a saved route
+- you can now specify your own valhalla instance for online directions/elevation/stats
+- allow to use custom tiles url for americanaosm
+
+Bug fixes:
+- timezone offset fix for some locations
+- hiding contour lines was not working
+- some addresses were wrongly formatted as being in the US
+- smaller directions button
+- Map options bottom sheet fix
+- map saved m
