@@ -543,7 +543,7 @@
                 vertPos: VerticalPosition.ABOVE,
                 onClose: async (result) => {
                     if (result) {
-                        const filename = dayjs().format('YYYY-MM-DDTHH:mm:ss')
+                        const filename = dayjs().format('YYYY-MM-DDTHH-mm-ss')
                         switch (result.data) {
                             case 'address':
                                 const address = { ...item.properties.address };
