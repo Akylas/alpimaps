@@ -543,6 +543,7 @@
                 vertPos: VerticalPosition.ABOVE,
                 onClose: async (result) => {
                     if (result) {
+                        const filename = dayjs().format('YYYY-MM-DDTHH:mm:ss')
                         switch (result.data) {
                             case 'address':
                                 const address = { ...item.properties.address };
@@ -585,19 +586,19 @@
                                 break;
                             case 'export_geojson':
                                 showLoading();
-                                await mapContext.mapModule('items').exportItemsAsGeoJSON([item], dayjs().format());
+                                await mapContext.mapModule('items').exportItemsAsGeoJSON([item], filename);
                                 break;
                             case 'export_gpx':
                                 showLoading();
-                                await mapContext.mapModule('items').exportItemsAsGPX([item], dayjs().format());
+                                await mapContext.mapModule('items').exportItemsAsGPX([item], filename);
                                 break;
                             case 'share_geojson':
                                 showLoading();
-                                await mapContext.mapModule('items').shareItemsAsGeoJSON([item], dayjs().format());
+                                await mapContext.mapModule('items').shareItemsAsGeoJSON([item], filename);
                                 break;
                             case 'share_gpx':
                                 showLoading();
-                                await mapContext.mapModule('items').shareItemsAsGPX([item], dayjs().format());
+                                await mapContext.mapModule('items').shareItemsAsGPX([item], filename);
                                 break;
                             default:
                                 throw new Error('command not found');
