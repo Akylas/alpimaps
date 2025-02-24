@@ -37,6 +37,7 @@
     import { compareArrays } from '~/utils/utils';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import dayjs from 'dayjs';
 
     $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorWidgetBackground } = $colors);
     const PROFILE_HEIGHT = 150;
@@ -584,19 +585,19 @@
                                 break;
                             case 'export_geojson':
                                 showLoading();
-                                await mapContext.mapModule('items').exportItemsAsGeoJSON([item]);
+                                await mapContext.mapModule('items').exportItemsAsGeoJSON([item], dayjs().format());
                                 break;
                             case 'export_gpx':
                                 showLoading();
-                                await mapContext.mapModule('items').exportItemsAsGPX([item]);
+                                await mapContext.mapModule('items').exportItemsAsGPX([item], dayjs().format());
                                 break;
                             case 'share_geojson':
                                 showLoading();
-                                await mapContext.mapModule('items').shareItemsAsGeoJSON([item]);
+                                await mapContext.mapModule('items').shareItemsAsGeoJSON([item], dayjs().format());
                                 break;
                             case 'share_gpx':
                                 showLoading();
-                                await mapContext.mapModule('items').shareItemsAsGPX([item]);
+                                await mapContext.mapModule('items').shareItemsAsGPX([item], dayjs().format());
                                 break;
                             default:
                                 throw new Error('command not found');
