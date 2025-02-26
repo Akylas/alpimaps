@@ -1,0 +1,3 @@
+Bug fixes:
+- improved navigation mode (with settings in `directions` settings section)
+- new option to emphasis drinking water points and springs
