@@ -49,6 +49,7 @@
         "orchard_pattern":"symbols/orchard.png"
     },
     "nutiparameters": {
+        "highlight_drinking_water": 0,
         "hide_admins": 0,
         "_fontscale": 1.0,
         "lang": "en",
@@ -62,6 +63,7 @@
         "fallback_lang": "en",
         "osm-border_control": "\uea8f",
         "osm-collecting": "\uea86",
+        "osm-droplet": "\uea94",
         "osm-frame": "\uea87",
         "osm-games": "\uea88",
         "osm-escape_game": "\uea88",
