@@ -15,6 +15,7 @@
     import {
         cityMinZoom,
         contourLinesOpacity,
+        emphasisDrinkingWater,
         emphasisRails,
         mapFontScale,
         pitchEnabled,
@@ -213,6 +214,12 @@
                     type: 'switch',
                     value: $showSubBoundaries,
                     title: lc('show_sub_boundaries')
+                },
+                {
+                    mapStore: emphasisDrinkingWater,
+                    type: 'switch',
+                    value: $emphasisDrinkingWater,
+                    title: lc('emphasis_drinking_water')
                 },
                 {
                     mapStore: emphasisRails,
