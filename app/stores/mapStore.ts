@@ -49,5 +49,6 @@ export const routesType = settingsStore<RoutesType>('routes_type', 0);
 export const useOfflineGeocodeAddress = settingsStore('useOfflineGeocodeAddress', true);
 export const useSystemGeocodeAddress = settingsStore('useSystemGeocodeAddress', true);
 export const emphasisRails = settingsStore('emphasisRails', false);
+export const emphasisDrinkingWater = settingsStore('emphasisDrinkingWater', false);
 export const showSubBoundaries = settingsStore('showSubBoundaries', true);
 export const cityMinZoom = settingsStore('cityMinZoom', 4);

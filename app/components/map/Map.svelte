@@ -58,6 +58,7 @@
     import {
         cityMinZoom,
         contourLinesOpacity,
+        emphasisDrinkingWater,
         emphasisRails,
         mapFontScale,
         pitchEnabled,
@@ -1067,6 +1068,7 @@
     $: vectorTileDecoder && setStyleParameter('contours', $showContourLines ? '1' : '0');
     $: vectorTileDecoder && setStyleParameter('sub_boundaries', $showSubBoundaries ? '1' : '0');
     $: vectorTileDecoder && setStyleParameter('emphasis_rails', $emphasisRails ? '1' : '0');
+    $: vectorTileDecoder && setStyleParameter('highlight_drinking_water', $emphasisDrinkingWater ? '1' : '0');
     $: vectorTileDecoder && $contourLinesOpacity >= 0 && setStyleParameter('contoursOpacity', $contourLinesOpacity.toFixed(1));
     $: vectorTileDecoder && $mapFontScale > 0 && setStyleParameter('_fontscale', $mapFontScale.toFixed(2));
     $: vectorTileDecoder && $cityMinZoom > 0 && setStyleParameter('city_min_zoom', $cityMinZoom);

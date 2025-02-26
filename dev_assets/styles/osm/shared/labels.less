@@ -485,18 +485,26 @@
 		}
 	}
 }
+
 #poi[class=spring][zoom>=12] {
 	::icon {
 		text-placement: nutibillboard;
-		text-name: @osm_icon;
 		text-feature-id: @featureId;
 		text-face-name: @osm;
 		text-halo-fill: @poi_icon_halo;
+		text-name: @osm_icon ;
 		text-halo-radius: @poi-spring_halo_radius;
+		text-size: @poi-spring-size ;
 		text-fill: @poi-water-fill;
-		text-size: @poi-spring-size;
 		text-allow-overlap: true;
+		text-clip: false;
 		text-allow-overlap-same-feature-id: true;
+		['nuti::highlight_drinking_water'>0] {
+			text-name: [nuti::osm-droplet];
+			text-halo-radius: @poi_icon_halo_radius;
+			text-size: @poi-spring-size + 10;
+
+		}
 	}
 	[zoom>=17]::label {
 		text-name: @name;
@@ -515,6 +523,7 @@
 	}
 }
 #poi[class!=lodging][class!=spring][class!=campsite] {
+	['nuti::highlight_drinking_water'>0][class='drinking_water'],
 	[zoom=14][rank<=5][class!='restaurant'][class!='park'][class!='bar'][class!='parking'][class!='school'][class!='college'][subclass!='community_centre'][subclass!='tram_stop'][class!='bus'],
 	[zoom=15][rank<=10][class!='restaurant'][class!='park'][class!='bar'][class!='parking'][class!='school'][class!='college'][subclass!='community_centre'][subclass!='tram_stop'],
 	[zoom=16][rank<=30][class!='shop'],
@@ -550,6 +559,11 @@
 				text-fill: @poi-pharmacy-fill;
 			}
 			[class=fountain],[class=drinking_water],[class=bassin],[class=waterfall] {
+				['nuti::highlight_drinking_water'>0][class=drinking_water] {
+					text-allow-overlap: true;
+					text-clip: false;
+					text-size: @poi_icon_width  + 3;
+		}
 				text-fill: @poi-water-fill;
 			}
 			[class=bakery] {
