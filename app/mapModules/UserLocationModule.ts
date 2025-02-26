@@ -1,12 +1,12 @@
 import { lc } from '@nativescript-community/l';
-import { MapPos, MapPosVector } from '@nativescript-community/ui-carto/core';
+import { MapPos, MapPosVector, fromNativeMapPos, fromNativeScreenPos, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
 import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
 import { VectorLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
 import { Polygon } from '@nativescript-community/ui-carto/vectorelements/polygon';
 import { Tween } from '@nativescript-community/ui-chart/animation/Tween';
 import { showSnack } from '~/utils/ui';
-import { Color } from '@nativescript/core';
+import { ApplicationSettings, Color, Utils } from '@nativescript/core';
 import dayjs from 'dayjs';
 import { get, writable } from 'svelte/store';
 import { GeoHandler, GeoLocation, UserLocationdEvent, UserLocationdEventData } from '~/handlers/GeoHandler';
@@ -15,6 +15,8 @@ import { queryingLocation, watchingLocation } from '~/stores/mapStore';
 import { EARTH_RADIUS, PI_X2, TO_DEG, TO_RAD } from '~/utils/geo';
 import MapModule, { getMapContext } from './MapModule';
 import { MapInteractionInfo } from '@nativescript-community/ui-carto/ui';
+import { DEFAULT_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_TILT, SETTINGS_NAVIGATION_POSITION_OFFSET, SETTINGS_NAVIGATION_TILT } from '~/utils/constants';
+import { screenHeightDips } from '~/variables';
 
 const LOCATION_ANIMATION_DURATION = 300;
 
@@ -230,10 +232,23 @@ export default class UserLocationModule extends MapModule {
             return;
         }
         this.mapView.setZoom(Math.max(this.mapView.zoom, 14), LOCATION_ANIMATION_DURATION);
-        this.mapView.setFocusPos(this.mLastUserLocation, LOCATION_ANIMATION_DURATION);
         if (this.navigationMode) {
+            const options = mapContext.getMap().getOptions();
+            options.setFocusPointOffset(
+                toNativeScreenPos({
+                    x: mapContext.focusOffset.x,
+                    y: mapContext.focusOffset.y - Utils.layout.toDevicePixels(screenHeightDips) * ApplicationSettings.getNumber(SETTINGS_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_POSITION_OFFSET)
+                })
+            );
+            this.mapView.setFocusPos(this.mLastUserLocation, LOCATION_ANIMATION_DURATION);
+
             this.mapView.setBearing(this.mLastUserLocation.bearing, LOCATION_ANIMATION_DURATION);
-            this.mapView.setTilt(45, LOCATION_ANIMATION_DURATION);
+            const tilt = ApplicationSettings.getNumber(SETTINGS_NAVIGATION_TILT, DEFAULT_NAVIGATION_TILT);
+            if (tilt > 0) {
+                this.mapView.setTilt(tilt, LOCATION_ANIMATION_DURATION);
+            }
+        } else {
+            this.mapView.setFocusPos(this.mLastUserLocation, LOCATION_ANIMATION_DURATION);
         }
     }
     onLocation(event: UserLocationdEventData) {

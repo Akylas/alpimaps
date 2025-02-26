@@ -419,6 +419,8 @@
     "musical_instrument": "musical instrument",
     "name": "name",
     "natural": "natural",
+    "navigation_position_offset": "vertical offset of of your position while in navigation (percentage of screen height)",
+    "navigation_tilt": "Map tilt to apply while in navigation mode",
     "network": "network",
     "newsagent": "newsagent",
     "nightclub": "nightclub",

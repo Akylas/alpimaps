@@ -133,6 +133,7 @@ export interface MapContext {
     // getCurrentLayer(): VectorTileLayer;
     runOnModulesOnMainThread(functionName: string, ...args);
     runOnModules(functionName: string, ...args);
+    focusOffset: { x: number; y: number };
 }
 
 export interface MapModules {
@@ -252,7 +253,8 @@ const mapContext: MapContext = {
             oldDecoder?.dispose();
         }
     },
-    innerDecoder: createTileDecoder('inner', ApplicationSettings.getString('innerStyle', 'voyager'))
+    innerDecoder: createTileDecoder('inner', ApplicationSettings.getString('innerStyle', 'voyager')),
+    focusOffset: { x: 0, y: 0 }
 } as any;
 
 export function setMapContext(ctx) {
