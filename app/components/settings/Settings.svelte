@@ -27,12 +27,16 @@
     import { useOfflineGeocodeAddress, useSystemGeocodeAddress } from '~/stores/mapStore';
     import {
         ALERT_OPTION_MAX_HEIGHT,
+        DEFAULT_NAVIGATION_POSITION_OFFSET,
+        DEFAULT_NAVIGATION_TILT,
         DEFAULT_TILE_SERVER_AUTO_START,
         DEFAULT_TILE_SERVER_PORT,
         DEFAULT_VALHALLA_MAX_DISTANCE_AUTO,
         DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE,
         DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
         DEFAULT_VALHALLA_ONLINE_URL,
+        SETTINGS_NAVIGATION_POSITION_OFFSET,
+        SETTINGS_NAVIGATION_TILT,
         SETTINGS_TILE_SERVER_AUTO_START,
         SETTINGS_TILE_SERVER_PORT,
         SETTINGS_VALHALLA_MAX_DISTANCE_AUTO,
@@ -103,6 +107,26 @@
                             autocapitalizationType: 'none',
                             autocorrect: false
                         } as TextFieldProperties
+                    },
+                    {
+                        id: 'setting',
+                        key: SETTINGS_NAVIGATION_TILT,
+                        min: 0,
+                        max: 90,
+                        step: 1,
+                        title: lc('navigation_tilt'),
+                        type: 'slider',
+                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_NAVIGATION_TILT, DEFAULT_NAVIGATION_TILT)
+                    },
+                    {
+                        id: 'setting',
+                        key: SETTINGS_NAVIGATION_POSITION_OFFSET,
+                        min: 0,
+                        max: 0.5,
+                        step: 0.1,
+                        title: lc('navigation_position_offset'),
+                        type: 'slider',
+                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_POSITION_OFFSET)
                     }
                 ];
             case 'address':
@@ -1009,6 +1033,7 @@
             </Template>
             <Template let:item>
                 <ListItemAutoSize
+                    fontSize={20}
                     item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }}
                     showBottomLine={false}
                     on:tap={(event) => onTap(item, event)}
@@ -1017,6 +1042,7 @@
             </Template>
             <Template key="html" let:item>
                 <ListItemAutoSize
+                    fontSize={20}
                     item={{ ...item, title: getTitle(item), html: getSubtitle(item) }}
                     showBottomLine={false}
                     on:tap={(event) => onTap(item, event)}

@@ -1082,7 +1082,12 @@
     $: cartoMap?.getOptions().setTiltRange(toNativeMapRange([$pitchEnabled ? 30 : 90, 90]));
     // $: currentLayer && (currentLayer.preloading = $preloading);
     $: bottomSheetStepIndex === 0 && unselectItem();
-    $: cartoMap?.getOptions().setFocusPointOffset(toNativeScreenPos({ x: 0, y: Utils.layout.toDevicePixels(steps[bottomSheetStepIndex]) / 2 }));
+    $: {
+        if (steps?.length) {
+            mapContext.focusOffset = { x: 0, y: Utils.layout.toDevicePixels(steps[bottomSheetStepIndex]) / 2 };
+            cartoMap?.getOptions().setFocusPointOffset(toNativeScreenPos(mapContext.focusOffset));
+        }
+    }
 
     $: {
         ApplicationSettings.setBoolean(KEEP_AWAKE_KEY, keepScreenAwake);
