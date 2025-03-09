@@ -242,7 +242,7 @@ export default class UserLocationModule extends MapModule {
             );
             this.mapView.setFocusPos(this.mLastUserLocation, LOCATION_ANIMATION_DURATION);
 
-            this.mapView.setBearing(this.mLastUserLocation.bearing, LOCATION_ANIMATION_DURATION);
+            this.mapView.setBearing(-this.mLastUserLocation.bearing, LOCATION_ANIMATION_DURATION);
             const tilt = ApplicationSettings.getNumber(SETTINGS_NAVIGATION_TILT, DEFAULT_NAVIGATION_TILT);
             if (tilt > 0) {
                 this.mapView.setTilt(tilt, LOCATION_ANIMATION_DURATION);
