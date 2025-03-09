@@ -291,6 +291,7 @@ export default class CustomLayersModule extends MapModule {
             layerBlendingSpeed: 0,
             // preloading: get(preloading),
             visible: get(showRoutes),
+            clickRadius: ApplicationSettings.getNumber('route_click_radius', 16),
             tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
             labelRenderOrder: VectorTileRenderOrder.LAST,
             decoder: mapContext.innerDecoder
