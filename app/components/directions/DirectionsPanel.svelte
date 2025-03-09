@@ -305,7 +305,7 @@
                 dataSource: getRouteDataSource(),
                 decoder: mapContext.innerDecoder,
                 labelRenderOrder: VectorTileRenderOrder.LAST,
-                clickRadius: 6,
+                clickRadius: ApplicationSettings.getNumber('route_click_radius', 16),
                 layerBlendingSpeed: 0,
                 labelBlendingSpeed: 0
             });
