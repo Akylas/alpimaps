@@ -364,7 +364,7 @@
         marginBottom={24}
         rowSpan={3}
         verticalAlignment="bottom"
-        visibility={navigationInstructions ? 'visible' : 'collapse'}
+        visibility={'collapse'}
         width="70%"
         on:swipe={() => (navigationInstructions = null)}
         on:draw={drawNavigationInstruction} />
