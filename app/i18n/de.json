@@ -728,5 +728,11 @@
     "share_geoson": "GeoJSON teilen",
     "missing_location_permission": "Standort-Berechtigung fehlt",
     "thank_you": "Vielen Dank!",
-    "thank_you_subtitle": "Ihre Spende wird helfen, dass dieses Projekt wachsen und ich mehr Funktionen hinzufügen kann"
+    "thank_you_subtitle": "Ihre Spende wird helfen, dass dieses Projekt wachsen und ich mehr Funktionen hinzufügen kann",
+    "emphasis_drinking_water": "hebt Trinkwasser und Quellen hervor",
+    "navigation_tilt": "Im Navigationsmodus anzuwendende Kartenneigung",
+    "valhalla_online_url": "Valhalla-Server-URL",
+    "city_min_zoom_desc": "Mindestzoomstufe, ab der die Beschriftung der Städte angezeigt werden soll",
+    "city_min_zoom": "Mindestzoomstufe für Städte",
+    "navigation_position_offset": "vertikale Verschiebung der eigenen Position während der Navigation (in Prozent der Bildschirmhöhe)"
 }
