@@ -120,13 +120,13 @@
                     },
                     {
                         id: 'setting',
-                        key: route_click_radius,
+                        key: 'route_click_radius',
                         min: 5,
                         max: 90,
                         step: 1,
                         title: lc('route_click_radius'),
                         type: 'slider',
-                        rightValue: () => ApplicationSettings.getNumber(route_click_radius, 16)
+                        rightValue: () => ApplicationSettings.getNumber('route_click_radius', 16)
                     },
                     {
                         id: 'setting',
