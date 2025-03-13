@@ -231,7 +231,7 @@ export default class UserLocationModule extends MapModule {
         if (!this.mLastUserLocation) {
             return;
         }
-        this.mapView.setZoom(Math.max(this.mapView.zoom, 14), LOCATION_ANIMATION_DURATION);
+        this.mapView.setZoom(Math.max(this.mapView.zoom, 10), LOCATION_ANIMATION_DURATION);
         if (this.navigationMode) {
             const options = mapContext.getMap().getOptions();
             options.setFocusPointOffset(
