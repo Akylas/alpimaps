@@ -390,7 +390,6 @@ export class GeoHandler extends Handler {
                 formatter: __ANDROID__
                     ? formatDistance
                     : (k) => {
-                          console.log('gps_desired_accuracy formatter', k);
                           return this.IOS_ACCURACIES[k];
                       },
                 type: __ANDROID__ ? 'prompt' : undefined,
@@ -411,7 +410,7 @@ export class GeoHandler extends Handler {
                     title: lc('gps_update_minTime'),
                     description: lc('gps_update_minTime_desc'),
                     default: minimumUpdateTime,
-                    formatter: (n) => convertDurationSeconds(n, 's[s]'),
+                    formatter: (n) => convertDurationSeconds(n / 1000, 's[s]'),
                     type: 'prompt'
                 }
             });
