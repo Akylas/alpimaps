@@ -64,6 +64,25 @@ module.exports = (env, params = {}) => {
             },
             env
         );
+    } else if (env.adhoc_logging) {
+        env = Object.assign(
+            {},
+            {
+                build3dmap: true,
+                buildpeakfinder: true,
+                buildstyle: true,
+                production: true,
+                testlog: true,
+                devlog: true,
+                noconsole: false,
+                sentry: false,
+                uploadSentry: false,
+                apiKeys: true,
+                sourceMap: false,
+                uglify: true
+            },
+            env
+        );
     } else if (env.timeline) {
         env = Object.assign(
             {},
