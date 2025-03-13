@@ -43,11 +43,7 @@
     "api_keys": "API keys",
     "api_keys_settings": "API keys for used online services",
     "app": {
-<<<<<<< HEAD
-        "name": "Mapa ( Los Alcázares (Murcia ( España \taunque no vienen mki \" mi idioma es españo) \" Todo bien"
-=======
         "name": "Alpi Maps"
->>>>>>> parent of 18a801d (fix: Translated by @Amalia Nostalgia <cadenanostalgia@gmail.com> using Weblate (English))
     },
     "app_generate_date_presentation": "the true power of Alpi Maps lies in using offline generated data. Many app features(elevation profile, elevation grade, slopes, route stats, offline routing/geocoding) will only work with generated data. Do you want to see how to generate them on Github?",
     "approximate_accuracy": "approximate accuracy",
@@ -221,7 +217,7 @@
     "doctor": "doctor",
     "doctors": "doctors",
     "dog_park": "dog_park",
-    "donate": "Pl5ease consider making a small donation to help fund the project5000_€",
+    "donate": "Please consider making a small donation to help fund the project",
     "dowload_area_maxzoom": "max zoom to download tiles from. High max zoom requires a lot of data",
     "dowload_area_minzoom": "min zoom to download tiles from",
     "download": "download",
@@ -234,7 +230,7 @@
     "draw_normals": "draw normals",
     "drinking_water": "drinking water",
     "driveway_factor": "factor applied to driveways (penalty)",
-    "duration": "duration \"1 año'",
+    "duration": "duration",
     "edit": "edit",
     "electronics": "electronics",
     "elevation": "elevation",
