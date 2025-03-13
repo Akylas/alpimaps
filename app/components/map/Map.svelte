@@ -125,6 +125,7 @@
 
     let currentLanguage = ApplicationSettings.getString('map_language', ApplicationSettings.getString('language', 'en'));
     let keepScreenAwake = ApplicationSettings.getBoolean(KEEP_AWAKE_KEY, false);
+    let keepScreenAwakeFullBrightness = false;
     let showOnLockscreen = false;
     let currentMapRotation = 0;
 
@@ -1339,7 +1340,7 @@
     }
     function onVectorTileElementClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, featureData, featurePosition, position } = data;
-        // TEST_LOG && console.log('onVectorTileElementClicked', clickType, position, featurePosition, featureData.id);
+        TEST_LOG && console.log('onVectorTileElementClicked', clickType, position, featurePosition, featureData.id);
         const itemModule = mapContext.mapModule('items');
         const feature = itemModule.getFeature(featureData.id);
         if (!feature) {
@@ -2091,6 +2092,7 @@
                 isSelected: keepScreenAwake,
                 tooltip: lc('keep_screen_awake'),
                 selectedColor: colorError,
+                onLongPress: () => keepScreenAwakeFullBrightness = !keepScreenAwakeFullBrightness,
                 onTap: switchKeepAwake
             },
             {
@@ -2210,7 +2212,7 @@
     ios:statusBarStyle="light"
     ios:statusBarColor="transparent"
     {keepScreenAwake}
-    screenBrightness={keepScreenAwake ? 1 : -1}
+    screenBrightness={keepScreenAwake && keepScreenAwakeFullBrightness ? 1 : -1}
     on:navigatingTo={onNavigatingTo}
     on:navigatingFrom={onNavigatingFrom}>
     <gridlayout>
