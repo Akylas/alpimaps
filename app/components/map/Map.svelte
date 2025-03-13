@@ -670,7 +670,7 @@
             cartoMap.setZoom(zoom, 0);
             cartoMap.setBearing(bearing, 0);
             DEV_LOG && console.log('onMainMapReady', JSON.stringify(pos), zoom, bearing, addedLayers.length, theme);
-            tryCatch(() => {
+            tryCatch(async () => {
                 packageService.start();
                 transitService.start();
                 setMapStyle(ApplicationSettings.getString('mapStyle', PRODUCTION || TEST_ZIP_STYLES ? 'osm.zip~osm' : 'osm~osm'), true);
@@ -1422,7 +1422,7 @@
             ApplicationSettings.setString('mapStyle', layerStyle);
 
             tryCatch(
-                () => {
+                async () => {
                     vectorTileDecoder = mapContext.createMapDecoder(mapStyle, mapStyleLayer);
                 },
                 () => {
