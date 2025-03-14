@@ -229,8 +229,8 @@
                     const value = geoSettings[k];
                     newItems.push({
                         key: k,
-                        rightValue: value.formatter ? () => value.formatter(ApplicationSettings.getNumber(k, value.default)) : value.default,
-                        currentValue: value.default,
+                        rightValue: value.formatter ? () => value.formatter(value.value()) : value.value,
+                        currentValue: value.value,
                         ...value,
                         id: 'setting'
                     });
