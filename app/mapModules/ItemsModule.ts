@@ -159,7 +159,7 @@ export default class ItemsModule extends MapModule {
                 labelBlendingSpeed: 0,
                 layerBlendingSpeed: 0,
                 labelRenderOrder: VectorTileRenderOrder.LAST,
-                clickRadius: 6,
+                clickRadius: ApplicationSettings.getNumber('route_click_radius', 16),
                 dataSource: this.localVectorDataSource,
                 decoder: mapContext.innerDecoder
             });
