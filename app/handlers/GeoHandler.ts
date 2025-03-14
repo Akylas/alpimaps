@@ -379,6 +379,7 @@ export class GeoHandler extends Handler {
             gps_update_distance: {
                 title: lc('gps_update_distance'),
                 description: lc('gps_update_distance_desc'),
+                value: () => ApplicationSettings.getNumber('gps_update_distance', updateDistance)
                 default: updateDistance,
                 type: 'prompt',
                 formatter: formatDistance
@@ -387,6 +388,7 @@ export class GeoHandler extends Handler {
                 title: lc('gps_desired_accuracy'),
                 description: lc('gps_desired_accuracy_desc'),
                 default: desiredAccuracy,
+                value: () => ApplicationSettings.getNumber('gps_desired_accuracy', desiredAccuracy)
                 formatter: __ANDROID__
                     ? formatDistance
                     : (k) => {
@@ -410,6 +412,7 @@ export class GeoHandler extends Handler {
                     title: lc('gps_update_minTime'),
                     description: lc('gps_update_minTime_desc'),
                     default: minimumUpdateTime,
+                    value: () => ApplicationSettings.getNumber('gps_update_minTime', minimumUpdateTime)
                     formatter: (n) => convertDurationSeconds(n / 1000, 's[s]'),
                     type: 'prompt'
                 }
