@@ -122,7 +122,7 @@
                         id: 'setting',
                         key: 'route_click_radius',
                         min: 5,
-                        max: 90,
+                        max: 400,
                         step: 1,
                         title: lc('route_click_radius'),
                         type: 'slider',
